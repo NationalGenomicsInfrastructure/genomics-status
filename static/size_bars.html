@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bar Chart</title>
+    <script type="text/javascript" src="d3/d3.js"></script>
+  
+  <style type="text/css">
+
+body {
+  font: 12px sans-serif;
+  align: center;
+  margin: 0 auto;
+}
+
+header {
+  font: 30px sans-serif;
+}
+
+h1 {
+  font: 20px serif;
+}
+
+.chart rect {
+  fill: steelblue;
+  stroke: white;
+}
+
+.bar text.value {
+  fill: white;
+}
+
+.axis {
+  shape-rendering: crispEdges;
+}
+
+.axis path {
+  fill: none;
+}
+
+.x.axis line {
+  stroke: #fff;
+  stroke-opacity: .8;
+}
+
+.y.axis path {
+  stroke: black;
+}
+
+  </style>
+
+  </head>
+  <body>
+    <header>Data</header>
+    <article>
+      <h1>Logged sizes over time</h1>
+      <p>This plot shows size of a directory corresponding to a machine, at
+        certain dates. (Not really implemented)</p>
+
+    <script type="text/javascript">
+
+    // Websocket interface to recieve data from
+
+    var ws = new WebSocket("ws://0.0.0.0:8888/websocket");
+    ws.onopen = function() {
+       ws.send("Hello, world");
+    };
+    ws.onmessage = function (evt) {
+       alert(evt.data);
+    };
+
+    </script>
+
+    <script type="text/javascript" src="size_bars.js"></script>
+
+    <p>Logged sizes over time</p>
+  </article>
+  </body>
+</html>
