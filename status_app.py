@@ -9,6 +9,8 @@ import tornado.web
 import pika
 from pika.adapters.tornado_connection import TornadoConnection
 
+from pymongo import Connection
+
 PORT = 8888
 
 
@@ -24,29 +26,30 @@ class ExampleDataIterator(object):
                 "size": "%i000000" % (self.i % 4 + 1,)}
 
 
-class MessageTransport(object):
+class MessageMixin(object):
     senders = set()
     message = None
 
     def register_sender(self, callback):
-        cls = MessageTransport
+        cls = MessageMixin
         cls.senders.add(callback)
 
     def unregister_sender(self, callback):
-        cls = MessageTransport
+        cls = MessageMixin
         cls.senders.remove(callback)
 
     def new_message(self, message):
-        cls = MessageTransport
+        cls = MessageMixin
         cls.message = message
 
     def send_messages(self):
-        cls = MessageTransport
+        cls = MessageMixin
         for send in cls.senders:
             send(cls.message)
 
 
-class WebSocketMessenger(tornado.websocket.WebSocketHandler, MessageTransport):
+class WebSocketMessenger(tornado.websocket.WebSocketHandler, MessageMixin):
+
     def open(self):
         self.data = ExampleDataIterator()
         self.register_sender(self.write_message)
@@ -62,7 +65,7 @@ class WebSocketMessenger(tornado.websocket.WebSocketHandler, MessageTransport):
         print("WebSocket closed")
 
 
-class PikaClient(MessageTransport):
+class PikaClient(MessageMixin):
 
     def __init__(self):
         self.queue_name = 'tornado-test-app'
@@ -176,9 +179,6 @@ class MainHandler(tornado.web.RequestHandler):
 
     @tornado.web.asynchronous
     def get(self):
-        # Send a sample message
-        # self.application.pika.sample_message(self.request)
-
         # Send our main document
         self.render("status.html",
                     connected=self.application.pika.connected)
@@ -188,9 +188,6 @@ class AjaxHandler(tornado.web.RequestHandler):
 
     @tornado.web.asynchronous
     def get(self):
-        # Send a sample message
-        # self.application.pika.sample_message(self.request)
-
         # Send our output
         self.set_header("Content-type", "application/json")
         # self.write(json.dumps(self.application.pika.get_messages()))
