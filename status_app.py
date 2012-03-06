@@ -54,6 +54,11 @@ class WebSocketMessenger(tornado.websocket.WebSocketHandler, MessageMixin):
         self.data = ExampleDataIterator()
         self.register_sender(self.write_message)
         print("WebSocket opened")
+        last_10_entries = self.application.size_logs.find().sort("date", -1)[:24]
+        for entry in reversed(list(last_10_entries)):
+            entry["_id"] = 0
+            self.new_message(entry)
+            self.send_messages()
 
     def on_message(self, message):
         print("Requested more log data")

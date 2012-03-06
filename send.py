@@ -27,7 +27,7 @@ properties = pika.BasicProperties(content_type="application/json", \
 log_data = {"date": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
             "machine": "SN167",
             "project": "0302_AD07L0ACXX",
-            "size": "%i000000" % (5 - randint(0, 4),)}
+            "size": "%i00000000000" % (5 - randint(0, 4),)}
 body = json.dumps(log_data)
 
 channel.basic_publish(exchange=exchange_name,
