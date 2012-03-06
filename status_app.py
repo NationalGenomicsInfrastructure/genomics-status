@@ -194,27 +194,39 @@ class AjaxHandler(tornado.web.RequestHandler):
         self.finish()
 
 
-if __name__ == '__main__':
-
-    # Setup the Tornado Application
-    settings = {
+class Application(tornado.web.Application):
+    def __init__(self):
+        handlers = [
+            (r"/", MainHandler),
+            (r"/ajax", AjaxHandler),
+            (r"/websocket", WebSocketMessenger)
+        ]
+        # Setup the Tornado Application
+        settings = {
         "debug": True,
         "static_path": os.path.join(os.path.dirname(__file__), "static")
-    }
-    application = tornado.web.Application([
-        (r"/", MainHandler),
-        (r"/ajax", AjaxHandler),
-        (r"/websocket", WebSocketMessenger)
-    ], **settings)
+        }
 
-    # Helper class PikaClient makes coding async Pika apps in tornado easy
-    pc = PikaClient()
-    application.pika = pc  # We want a shortcut for below for easier typing
+        tornado.web.Application.__init__(self, handlers, **settings)
 
-    # Set our pika.log options
+        # Helper class PikaClient makes coding async Pika apps in tornado easy
+        pc = PikaClient()
+        self.pika = pc  # We want a shortcut for below for easier typing
+
+        # Global connection to the log database
+        connection = Connection()
+        self.db = connection.logs
+        self.size_logs = self.db.size_logs
+
+
+def main():
+    # Set pika.log options
     pika.log.setup(color=True)
 
-    # Start the HTTP Server
+    # Instantiate Application
+    application = Application()
+
+    # Start HTTP Server
     pika.log.info("Starting Tornado HTTPServer on port %i" % PORT)
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(PORT)
@@ -222,8 +234,12 @@ if __name__ == '__main__':
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
 
-    # Add our Pika connect to the IOLoop with a deadline in 0.1 seconds
-    ioloop.add_timeout(time.time() + .1, application.pika.connect)
+    # Add the Pika connect to the IOLoop with a deadline in 0.1 seconds
+    ioloop.add_timeout(time.time() + 0.1, application.pika.connect)
 
     # Start the IOLoop
     ioloop.start()
+
+
+if __name__ == '__main__':
+    main()
