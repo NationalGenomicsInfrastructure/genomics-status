@@ -12,6 +12,7 @@ from pika.adapters.tornado_connection import TornadoConnection
 from pymongo import Connection
 
 PORT = 8888
+STORE_IN_DB = False
 
 
 class ExampleDataIterator(object):
@@ -54,7 +55,7 @@ class WebSocketMessenger(tornado.websocket.WebSocketHandler, MessageMixin):
         self.data = ExampleDataIterator()
         self.register_sender(self.write_message)
         print("WebSocket opened")
-        last_10_entries = self.application.size_logs.find().sort("date", -1)[:24]
+        last_10_entries = self.application.size_logs.find({"project": "0244_AC043HACXX"}).sort("date", -1)[:24]
         for entry in reversed(list(last_10_entries)):
             entry["_id"] = 0
             self.new_message(entry)
@@ -185,7 +186,7 @@ class MainHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
         # Send our main document
-        self.render("status.html",
+        self.render("static/index.html",
                     connected=self.application.pika.connected)
 
 
