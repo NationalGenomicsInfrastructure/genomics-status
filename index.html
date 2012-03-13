@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Bootstrap, from Twitter</title>
+    <title>Genomics Status</title>
+    <script src="static/js/d3.v2.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -23,10 +24,39 @@
     <![endif]-->
 
     <!-- Le fav and touch icons -->
+    <link rel="icon" type="/image/vnd.microsoft.icon" 
+        href="http://www.rabbitmq.com/favicon.ico" />
     <link rel="shortcut icon" href="images/favicon.ico">
     <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
     <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+
+       <style type="text/css">
+
+.rule line {
+  stroke: #ccc;
+  shape-rendering: crispEdges;
+}
+
+.rule line.axis {
+  stroke: #000;
+}
+
+.area {
+  fill: #0093B9;
+  opacity: 0.75;
+  -moz-opacity: 0.75;
+  filter:alpha(opacity=75);
+}
+
+.line {
+  fill: none;
+  stroke: #0093B9;
+  stroke-width: 2px;
+}
+
+    </style>
+
   </head>
 
   <body>
@@ -39,7 +69,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="#">Project name</a>
+          <a class="brand" href="#">Status</a>
           <div class="nav-collapse">
             <ul class="nav">
               <li class="active"><a href="#">Home</a></li>
@@ -55,9 +85,11 @@
 
       <!-- Main hero unit for a primary marketing message or call to action -->
       <div class="hero-unit">
-        <h1>Hello, world!</h1>
-        <p>This is a template for a simple marketing or informational website. It includes a large callout called the hero unit and three supporting pieces of content. Use it as a starting point to create something more unique.</p>
-        <p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+        <h1>Basepairs over time</h1>
+        <p>Cumulative amount of basepairs produced, over time.</p>
+        <div class="plot" id="chart"></div>
+        <script src='static/historical_total_size.js' type='text/javascript'></script>
+        <!-- <p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p> -->
       </div>
 
       <!-- Example row of columns -->

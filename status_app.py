@@ -1,5 +1,7 @@
 import time
 import os
+from datetime import datetime
+import json
 
 import tornado.httpserver
 import tornado.websocket
@@ -13,6 +15,11 @@ from pymongo import Connection
 
 PORT = 8888
 STORE_IN_DB = False
+
+
+def dthandler(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
 
 
 class ExampleDataIterator(object):
@@ -55,20 +62,47 @@ class WebSocketMessenger(tornado.websocket.WebSocketHandler, MessageMixin):
         self.data = ExampleDataIterator()
         self.register_sender(self.write_message)
         print("WebSocket opened")
-        last_10_entries = self.application.size_logs.find({"project": "0244_AC043HACXX"}).sort("date", -1)[:24]
-        for entry in reversed(list(last_10_entries)):
-            entry["_id"] = 0
-            self.new_message(entry)
-            self.send_messages()
+        # last_10_entries = self.application.size_logs.find({"project": \
+        #     "0244_AC043HACXX"}).sort("date", -1)[:24]
+        # for entry in reversed(list(last_10_entries)):
+        #     entry["_id"] = 0
+        #     self.new_message(entry)
+        #     self.send_messages()
 
     def on_message(self, message):
-        print("Requested more log data")
-        # self.write_message(json.dumps(self.data.next()))
-        self.send_messages()
+        print("Got message from client")
+
+        if message == "total_over_time":
+            total_over_time = self.get_sizes_over_time()
+            self.new_message(json.dumps(total_over_time, default=dthandler))
+            self.send_messages()
 
     def on_close(self):
         self.unregister_sender(self.write_message)
         print("WebSocket closed")
+
+    def get_sizes_over_time(self):
+        all_projects = self.application.size_logs.distinct("project")
+        final_entries = []
+        for p in all_projects:
+            entry = self.application.size_logs.find({"project": p}).sort("date", -1)[0]
+            final_entries.append(entry)
+
+        final_entries = sorted(final_entries, key=lambda e: e["date"])
+        total = 0
+        total_over_time = {}
+        for entry in final_entries:
+            total += entry["size"]
+            total_over_time[datetime.strptime(entry["date"], \
+                "%Y-%m-%dT%H:%M:%S")] = total
+
+        items = total_over_time.items()
+        items.sort()
+        sizes_over_time = []
+        for date, size in items:
+            sizes_over_time.append({"date": date, "size": size})
+
+        return sizes_over_time
 
 
 class PikaClient(MessageMixin):
@@ -85,7 +119,8 @@ class PikaClient(MessageMixin):
         # A place for us to keep messages sent to us by Rabbitmq
         self.messages = list()
 
-        # A place for us to put pending messages while we're waiting to connect
+        # A place for us to put pending messages
+        # while we're waiting to connect
         self.pending = list()
 
     def connect(self):
@@ -101,7 +136,7 @@ class PikaClient(MessageMixin):
                                           virtual_host="/",
                                           credentials=credentials)
         self.connection = TornadoConnection(param,
-                                            on_open_callback=self.on_connected)
+                                        on_open_callback=self.on_connected)
         self.connection.add_on_close_callback(self.on_closed)
 
     def on_connected(self, connection):
@@ -186,8 +221,7 @@ class MainHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
         # Send our main document
-        self.render("static/index.html",
-                    connected=self.application.pika.connected)
+        self.render("index.html")
 
 
 class AjaxHandler(tornado.web.RequestHandler):
@@ -215,7 +249,8 @@ class Application(tornado.web.Application):
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
-        # Helper class PikaClient makes coding async Pika apps in tornado easy
+        # Helper class PikaClient makes
+        # coding async Pika apps in tornado easy
         pc = PikaClient()
         self.pika = pc  # We want a shortcut for below for easier typing
 
