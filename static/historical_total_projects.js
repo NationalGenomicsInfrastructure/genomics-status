@@ -8,21 +8,21 @@ ws = new WebSocket(ws_uri);
 
 ws.onmessage = function(e) {
   data = JSON.parse(e.data);
-  $("#hero-title").text("Basepairs over time");
+  $("#hero-title").text("Projects over time");
   var last_date = get_date(data[data.length - 1]);
   console.log(last_date);
   var last_date_string = last_date.getDate() + "/" + (last_date.getMonth() + 1) +
   ", " + last_date.getFullYear();
-  var description = "Cumulative amount of basepairs produced, over time. " +
-  "By " + last_date_string + " we had " +
-  Math.round(data[data.length - 1]["size"] / 10000000000) / 100 +
-  " Tbp in total.";
+  var description = "Cumulative number of projects handled, over time. " +
+  "By " + last_date_string + " we had done " +
+  Math.round(data[data.length - 1]["projects"] / 1 ) +
+  " projects in total.";
   $("#hero-description").text(description);
   draw(data);
 };
 
 ws.onopen = function(e) {
-  ws.send("total_over_time");
+  ws.send("projects_over_time");
 };
 
 // Construct linear scales
@@ -40,9 +40,9 @@ function draw(data) {
   var w = 600,
       h = 150,
       p = 30,
-      scaling_factor = 1000000000000,
+      scaling_factor = 1,
       x = d3.time.scale().domain([get_date(data[0]), get_date(data[data.length - 1])]).range([0, w]),
-      y = d3.scale.linear().domain([0, data[data.length - 1].size / scaling_factor]).range([h, 0]);
+      y = d3.scale.linear().domain([0, data[data.length - 1].projects / scaling_factor]).range([h, 0]);
 
   var vis = d3.select("#chart")
     .append("svg")
@@ -78,7 +78,7 @@ function draw(data) {
       .attr("dy", -5)
       .attr("dx", -18)
       .attr("transform", "translate(0,0")
-      .text("Terabasepairs");
+      .text("Projects");
 
       // Area graph
   vis.append("path")
@@ -86,14 +86,14 @@ function draw(data) {
       .attr("d", d3.svg.area()
       .x(function(d) { return x(get_date(d)); })
       .y0(h)
-      .y1(function(d) { return y(d.size / scaling_factor); }));
+      .y1(function(d) { return y(d.projects / scaling_factor); }));
 
       // Bordering line graph
   vis.append("path")
       .attr("class", "line")
       .attr("d", d3.svg.line()
       .x(function(d) { return x(get_date(d)); })
-      .y(function(d) { return y(d.size / scaling_factor); }));
+      .y(function(d) { return y(d.projects / scaling_factor); }));
 
       // x axis
   var x_axis = d3.svg.axis()

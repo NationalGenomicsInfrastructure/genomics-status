@@ -77,6 +77,11 @@ class WebSocketMessenger(tornado.websocket.WebSocketHandler, MessageMixin):
             self.new_message(json.dumps(total_over_time, default=dthandler))
             self.send_messages()
 
+        if message == "projects_over_time":
+            projects_over_time = self.get_num_projects_over_time()
+            self.new_message(json.dumps(projects_over_time, default=dthandler))
+            self.send_messages()
+
     def on_close(self):
         self.unregister_sender(self.write_message)
         print("WebSocket closed")
@@ -103,6 +108,29 @@ class WebSocketMessenger(tornado.websocket.WebSocketHandler, MessageMixin):
             sizes_over_time.append({"date": date, "size": size})
 
         return sizes_over_time
+
+    def get_num_projects_over_time(self):
+        all_projects = self.application.size_logs.distinct("project")
+        final_entries = []
+        for p in all_projects:
+            entry = self.application.size_logs.find({"project": p}).sort("date", -1)[0]
+            final_entries.append(entry)
+
+        final_entries = sorted(final_entries, key=lambda e: e["date"])
+        total = 0
+        total_over_time = {}
+        for entry in final_entries:
+            total += 1
+            total_over_time[datetime.strptime(entry["date"], \
+                "%Y-%m-%dT%H:%M:%S")] = total
+
+        items = total_over_time.items()
+        items.sort()
+        projects_over_time = []
+        for date, projects in items:
+            projects_over_time.append({"date": date, "projects": projects})
+
+        return projects_over_time
 
 
 class PikaClient(MessageMixin):
