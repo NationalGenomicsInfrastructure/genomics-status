@@ -45,7 +45,7 @@ function draw() {
     .append("g")
       .attr("transform", "translate(" + p + "," + p + ")");
 
-      // Grid and axes
+      // Grid rules
   var rules = vis.selectAll("g.rule")
       .data(x.ticks(10))
     .enter().append("g")
@@ -64,13 +64,13 @@ function draw() {
       .attr("x1", 0)
       .attr("x2", w);
 
-  rules.append("text")
-      .data(y.ticks(5))
-      .attr("y", y)
-      .attr("x", -5)
-      .attr("dy", ".35em")
-      .attr("text-anchor", "end")
-      .text(y.tickFormat(10));
+      // Label
+  var y_label = vis.append("text")
+      .attr("class", "label")
+      .attr("dy", -5)
+      .attr("dx", -18)
+      .attr("transform", "translate(0,0")
+      .text("Terabasepairs");
 
       // Area graph
   vis.append("path")
@@ -98,4 +98,14 @@ function draw() {
       .attr("class", "x axis")
       .attr("transform", "translate(0," + h + ")")
       .call(x_axis);
+
+      //y axis
+  var y_axis = d3.svg.axis()
+      .scale(y)
+      .orient("left")
+      .tickSize(1);
+
+  vis.append("g")
+    .attr("class", "y axis")
+    .call(y_axis);
 }
