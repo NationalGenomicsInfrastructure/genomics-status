@@ -5,6 +5,8 @@
     <title>Genomics Status</title>
     <script src="static/js/jquery.js"></script>
     <script src="static/js/d3.v2.js"></script>
+    <script type="text/javascript" src="static/historical_total_projects.js"></script>
+    <script type="text/javascript" src="static/historical_total_size.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -63,10 +65,39 @@
 
   <body>
     <script type="text/javascript">
-     $(document).ready(function() {
-      $.getScript("static/historical_total_projects.js");
+      var ws = null;
+      function set_websocket(ws_uri) {
+        ws = new WebSocket(ws_uri);
+          ws.onopen = function() {
+            $(document).trigger('handshakeComplete');
+        }
+      }
+
+      function send_message(message) {
+        if (ws.readyState == WebSocket.CONNECTING) { // *
+              $(document).bind('handshakeComplete', message, function(event) {
+                  ws.send(event.data);
+              });
+        } else if (ws.readyState == WebSocket.OPEN) {
+            // use the persistent connection
+            ws.send(message);
+        }
+      }
+
+      var ws_uri = "ws://0.0.0.0:8888/websocket";
+      $(document).ready(function() {
+        // $.getScript("static/historical_total_projects.js");
+        var is_set = set_websocket(ws_uri);
+        // $.when(is_set).then(function() {
+          // ws.send("test");
+          // console.log(ws.OPEN);
+          // get_projects_over_time();
+        // });
+        $('#sizes_over_time').trigger('click');
      });
     </script>
+
+
 
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
@@ -79,22 +110,22 @@
           <a class="brand" href="#"><img src="static/img/sllw.gif" width="140" /></a>
           <div class="nav-collapse">
             <ul class="nav">
-              <li class="active"><a href="#">Home</a></li>
+
               <li><a href="#" id="sizes_over_time">Data produced over time</a></li>
 
     <script type="text/javascript">
       $("#sizes_over_time").click(function() {
-        $.getScript("static/historical_total_size.js");
+        get_sizes_over_time();
       })
     </script> 
+
               <li><a href="#" id="projects_over_time">Number of projects over time</a></li>
 
-    <script type="text/javascript">
+     <script type="text/javascript">
       $("#projects_over_time").click(function() {
-        $.getScript("static/historical_total_projects.js");
+        get_projects_over_time();
       })
     </script> 
-
             </ul>
           </div><!--/.nav-collapse -->
         </div>
@@ -108,8 +139,8 @@
         <h1 id="hero-title"></h1>
         <p id="hero-description"></p>
         <div class="plot" id="chart"></div>
+        <p id="hero-summary"></p>
       </div>
-
       <!-- Example row of columns -->
       <div class="row">
         <div class="span4">

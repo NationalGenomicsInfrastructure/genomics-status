@@ -1,48 +1,59 @@
-// A javascript for a page with a cumulative plot over all data produced
+// A javascript for a page with a cumulative plot over the number of projects
 // over time.
 
-// Connect and get data
+// Get data
 
-var ws_uri = "ws://0.0.0.0:8888/websocket";
-ws = new WebSocket(ws_uri);
+// function send_message(message) {
+//     if (ws.readyState == WebSocket.CONNECTING) { // *
+//           $(document).bind('handshakeComplete', message, function(event) {
+//               ws.send(event.data);
+//           });
+//   } else if (ws.readyState == WebSocket.OPEN) {
+//       // use the persistent connection
+//       ws.send(message);
+//   }
+// }
 
-ws.onmessage = function(e) {
-  data = JSON.parse(e.data);
-  $("#hero-title").text("Projects over time");
-  var last_date = get_date(data[data.length - 1]);
-  console.log(last_date);
-  var last_date_string = last_date.getDate() + "/" + (last_date.getMonth() + 1) +
-  ", " + last_date.getFullYear();
-  var description = "Cumulative number of projects handled, over time. " +
-  "By " + last_date_string + " we had done " +
-  Math.round(data[data.length - 1]["projects"] / 1 ) +
-  " projects in total.";
-  $("#hero-description").text(description);
-  draw(data);
-};
+function get_projects_over_time() {
 
-ws.onopen = function(e) {
-  ws.send("projects_over_time");
-};
+  ws.onmessage = function(e) {
+    data = JSON.parse(e.data);
+    
+    $("#hero-title").text("Projects over time");
+    
+    var last_date = get_date(data[data.length - 1]);
+    var last_date_string = last_date.getDate() + "/" +
+    (last_date.getMonth() + 1) +
+    ", " + last_date.getFullYear();
+    
+    var description = "Cumulative number of projects handled, over time.";
+    var summary = "By " + last_date_string + " we had done " +
+    Math.round(data[data.length - 1]["projects"] / 1 ) +
+    " projects in total.";
+    
+    $("#hero-description").text(description);
+    $("#hero-summary").text(summary);
+    draw_projects(data);
+  };
 
-// Construct linear scales
+  send_message("projects_over_time");
 
-
-// var data = d3.range(20).map(function(i) {
-//   return {x: i / 19, y: (Math.sin(i / 3) + 1) / 2};
-// });
+}
 
 function get_date(d) {
   return new Date(d.date);
 }
 
-function draw(data) {
+function draw_projects(data) {
   var w = 600,
       h = 150,
       p = 30,
       scaling_factor = 1,
       x = d3.time.scale().domain([get_date(data[0]), get_date(data[data.length - 1])]).range([0, w]),
       y = d3.scale.linear().domain([0, data[data.length - 1].projects / scaling_factor]).range([h, 0]);
+
+  d3.select("#chart > svg")
+    .remove();
 
   var vis = d3.select("#chart")
     .append("svg")

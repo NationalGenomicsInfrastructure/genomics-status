@@ -279,8 +279,8 @@ class Application(tornado.web.Application):
 
         # Helper class PikaClient makes
         # coding async Pika apps in tornado easy
-        pc = PikaClient()
-        self.pika = pc  # We want a shortcut for below for easier typing
+        # pc = PikaClient()
+        # self.pika = pc  # We want a shortcut for below for easier typing
 
         # Global connection to the log database
         connection = Connection()
@@ -290,7 +290,7 @@ class Application(tornado.web.Application):
 
 def main():
     # Set pika.log options
-    pika.log.setup(color=True)
+    # pika.log.setup(color=True)
 
     # Instantiate Application
     application = Application()
@@ -304,7 +304,7 @@ def main():
     ioloop = tornado.ioloop.IOLoop.instance()
 
     # Add the Pika connect to the IOLoop with a deadline in 0.1 seconds
-    ioloop.add_timeout(time.time() + 0.1, application.pika.connect)
+    # ioloop.add_timeout(time.time() + 0.1, application.pika.connect)
 
     # Start the IOLoop
     ioloop.start()
