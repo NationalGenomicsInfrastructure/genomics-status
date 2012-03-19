@@ -91,20 +91,41 @@ function draw_projects(data) {
       .attr("transform", "translate(0,0")
       .text("Projects");
 
-      // Area graph
-  vis.append("path")
-      .attr("class", "area")
-      .attr("d", d3.svg.area()
-      .x(function(d) { return x(get_date(d)); })
-      .y0(h)
-      .y1(function(d) { return y(d.projects / scaling_factor); }));
-
       // Bordering line graph
+  var flat_line = d3.svg.line()
+      .x(function(d) { return x(get_date(d)); })
+      .y(h);
+
+  var line = d3.svg.line()
+      .x(function(d) { return x(get_date(d)); })
+      .y(function(d) { return y(d.projects / scaling_factor); });
+
   vis.append("path")
       .attr("class", "line")
-      .attr("d", d3.svg.line()
+      .attr("d", flat_line);
+
+  d3.selectAll("path.line").transition()
+      .duration(200)
+      .attr("d", line);
+
+      // Area graph
+  var flat_area = d3.svg.area()
+      .x(function(d) {return x(get_date(d)); })
+      .y0(h)
+      .y1(h);
+
+  var area = d3.svg.area()
       .x(function(d) { return x(get_date(d)); })
-      .y(function(d) { return y(d.projects / scaling_factor); }));
+      .y0(h)
+      .y1(function(d) { return y(d.projects / scaling_factor); });
+
+  vis.append("path")
+      .attr("class", "area")
+      .attr("d", flat_area);
+
+  d3.selectAll("path.area").transition()
+      .duration(200)
+      .attr("d", area);
 
       // x axis
   var x_axis = d3.svg.axis()
