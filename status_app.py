@@ -1,7 +1,7 @@
-import time
 import os
 from datetime import datetime
 import json
+from collections import defaultdict
 
 import tornado.httpserver
 import tornado.websocket
@@ -70,7 +70,7 @@ class WebSocketMessenger(tornado.websocket.WebSocketHandler, MessageMixin):
         #     self.send_messages()
 
     def on_message(self, message):
-        print("Got message from client")
+        print("Got message from client: %s" % message)
 
         if message == "total_over_time":
             total_over_time = self.get_sizes_over_time()
@@ -80,6 +80,11 @@ class WebSocketMessenger(tornado.websocket.WebSocketHandler, MessageMixin):
         if message == "projects_over_time":
             projects_over_time = self.get_num_projects_over_time()
             self.new_message(json.dumps(projects_over_time, default=dthandler))
+            self.send_messages()
+
+        if message == "storage_load_over_time":
+            storage_load_over_time = self.get_storage_load_over_time()
+            self.new_message(json.dumps(storage_load_over_time, default=dthandler))
             self.send_messages()
 
     def on_close(self):
@@ -131,6 +136,23 @@ class WebSocketMessenger(tornado.websocket.WebSocketHandler, MessageMixin):
             projects_over_time.append({"date": date, "projects": projects})
 
         return projects_over_time
+
+    def get_storage_load_over_time(self):
+        all_entries = self.application.size_logs.find()
+        date_size_dict = defaultdict(int)
+
+        for entry in all_entries:
+            date_size_dict[datetime.strptime(entry["date"], \
+                "%Y-%m-%dT%H:%M:%S")] += entry["size"]
+
+        items = date_size_dict.items()
+        items.sort()
+        storage_load_over_time = []
+
+        for date, size in items:
+            storage_load_over_time.append({"date": date, "size": size})
+
+        return storage_load_over_time
 
 
 class PikaClient(MessageMixin):

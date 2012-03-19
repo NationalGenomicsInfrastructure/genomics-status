@@ -7,17 +7,43 @@
     <script src="static/js/d3.v2.js"></script>
     <script type="text/javascript" src="static/historical_total_projects.js"></script>
     <script type="text/javascript" src="static/historical_total_size.js"></script>
+    <script type="text/javascript" src="static/storage_load_over_time.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <!--    <script src='static/historical_total_projects.js' type='text/javascript'></script> -->
     <!-- Le styles -->
     <link href="static/css/bootstrap.css" rel="stylesheet">
     <style type="text/css">
       body {
         padding-top: 60px;
         padding-bottom: 40px;
+      }
+
+      .rule line {
+        stroke: #ccc;
+        shape-rendering: crispEdges;
+      }
+
+      .rule line.axis {
+        stroke: #000;
+      }
+
+      .area {
+        fill: #0093B9;
+        opacity: 0.50;
+        -moz-opacity: 0.50;
+        filter:alpha(opacity=50);
+      }
+
+      .line {
+        fill: none;
+        stroke: #0093B9;
+        stroke-width: 3px;
+      }
+
+      .bar {
+        fill: #0093B9;
       }
     </style>
     <link href="static/css/bootstrap-responsive.css" rel="stylesheet">
@@ -34,32 +60,6 @@
     <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
     <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
-
-       <style type="text/css">
-
-.rule line {
-  stroke: #ccc;
-  shape-rendering: crispEdges;
-}
-
-.rule line.axis {
-  stroke: #000;
-}
-
-.area {
-  fill: #0093B9;
-  opacity: 0.50;
-  -moz-opacity: 0.50;
-  filter:alpha(opacity=50);
-}
-
-.line {
-  fill: none;
-  stroke: #0093B9;
-  stroke-width: 3px;
-}
-
-    </style>
 
   </head>
 
@@ -126,6 +126,13 @@
         get_projects_over_time();
       })
     </script> 
+
+              <li><a href="#" id="storage_load_over_time">Used space on sequencer dump</a></li>
+     <script type="text/javascript">
+      $("#storage_load_over_time").click(function() {
+        get_storage_load_over_time();
+      })
+    </script> 
             </ul>
           </div><!--/.nav-collapse -->
         </div>
@@ -145,17 +152,30 @@
       <div class="row">
         <div class="span4">
           <h2>Heading</h2>
-           <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+           <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+           tellus ac cursus commodo, tortor mauris condimentum nibh, ut
+           fermentum massa justo sit amet risus. Etiam porta sem malesuada
+           magna mollis euismod. Donec sed odio dui. </p>
           <p><a class="btn" href="#">View details &raquo;</a></p>
         </div>
         <div class="span4">
           <h2>Heading</h2>
-           <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+           <p>
+            Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+            tellus ac cursus commodo, tortor mauris condimentum nibh, ut
+            fermentum massa justo sit amet risus. Etiam porta sem malesuada
+            magna mollis euismod. Donec sed odio dui.
+             </p>
           <p><a class="btn" href="#">View details &raquo;</a></p>
        </div>
         <div class="span4">
           <h2>Heading</h2>
-          <p>Donec sed odio dui. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Vestibulum id ligula porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
+          <p>
+            Donec sed odio dui. Cras justo odio, dapibus ac facilisis in,
+            egestas eget quam. Vestibulum id ligula porta felis euismod semper.
+            Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum
+            nibh, ut fermentum massa justo sit amet risus.
+          </p>
           <p><a class="btn" href="#">View details &raquo;</a></p>
         </div>
       </div>
