@@ -33,7 +33,7 @@ function get_date(d) {
 }
 
 function draw_sizes(data) {
-  var w = 600,
+  var w = 800,
       h = 150,
       p = 30,
       scaling_factor = 1000000000000,
@@ -46,7 +46,8 @@ function draw_sizes(data) {
   var vis = d3.select("#chart")
     .append("svg")
       .data([data])
-      .attr("width", w + p * 2)
+      .attr("viewBox", "0 0 " + (w + p * 2) + " " + (h + p * 2))
+      .attr("preserveAspectRatio", "xMinYMin meet")
       .attr("height", h + p * 2)
     .append("g")
       .attr("transform", "translate(" + p + "," + p + ")");

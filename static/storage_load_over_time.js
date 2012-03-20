@@ -24,7 +24,7 @@ function get_storage_load_over_time() {
 get_size = function(d) {return d["size"] / 10000000000; };
 
 function draw_storage_load(data) {
-  var w = 600,
+  var w = 800,
       h = 150,
       p = 30,
       x = d3.time.scale().domain([get_date(data[0]), get_date(data[data.length - 1])]).range([0, w]),
@@ -35,7 +35,8 @@ function draw_storage_load(data) {
 
   var vis = d3.select("#chart")
     .append("svg")
-      .attr("width", w + p * 2)
+      .attr("viewBox", "0 0 " + (w + p * 2) + " " + (h + p * 2))
+      .attr("preserveAspectRatio", "xMinYMin meet")
       .attr("height", h + p * 2)
     .append("g")
       .attr("transform", "translate(" + p + "," + p + ")");
