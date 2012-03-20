@@ -84,9 +84,9 @@
         }
       }
 
-      var ws_uri = "ws://0.0.0.0:8888/websocket";
+      var ws_uri = "ws://" + top.location.host + "/websocket";
       $(document).ready(function() {
-        // $.getScript("static/historical_total_projects.js");
+        // $.getScript("static/historical_totacl_projects.js");
         var is_set = set_websocket(ws_uri);
         // $.when(is_set).then(function() {
           // ws.send("test");

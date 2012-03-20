@@ -14,7 +14,6 @@ from pika.adapters.tornado_connection import TornadoConnection
 from pymongo import Connection
 
 PORT = 8888
-STORE_IN_DB = False
 
 
 def dthandler(obj):
@@ -62,30 +61,21 @@ class WebSocketMessenger(tornado.websocket.WebSocketHandler, MessageMixin):
         self.data = ExampleDataIterator()
         self.register_sender(self.write_message)
         print("WebSocket opened")
-        # last_10_entries = self.application.size_logs.find({"project": \
-        #     "0244_AC043HACXX"}).sort("date", -1)[:24]
-        # for entry in reversed(list(last_10_entries)):
-        #     entry["_id"] = 0
-        #     self.new_message(entry)
-        #     self.send_messages()
 
     def on_message(self, message):
         print("Got message from client: %s" % message)
 
         if message == "total_over_time":
             total_over_time = self.get_sizes_over_time()
-            self.new_message(json.dumps(total_over_time, default=dthandler))
-            self.send_messages()
+            self.write_message(json.dumps(total_over_time, default=dthandler))
 
         if message == "projects_over_time":
             projects_over_time = self.get_num_projects_over_time()
-            self.new_message(json.dumps(projects_over_time, default=dthandler))
-            self.send_messages()
+            self.write_message(json.dumps(projects_over_time, default=dthandler))
 
         if message == "storage_load_over_time":
             storage_load_over_time = self.get_storage_load_over_time()
-            self.new_message(json.dumps(storage_load_over_time, default=dthandler))
-            self.send_messages()
+            self.write_message(json.dumps(storage_load_over_time, default=dthandler))
 
     def on_close(self):
         self.unregister_sender(self.write_message)
