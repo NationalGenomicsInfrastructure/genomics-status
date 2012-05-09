@@ -1,15 +1,16 @@
 import os
 from datetime import datetime
+import dateutil.parser
 import json
-from collections import defaultdict
 
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 
-from pymongo import Connection
+from couchdb import Server
+import yaml
 
-PORT = 8888
+PORT = 9999
 
 
 def dthandler(obj):
@@ -19,26 +20,30 @@ def dthandler(obj):
 
 class MainHandler(tornado.web.RequestHandler):
 
-    @tornado.web.asynchronous
     def get(self):
         # Send our main document
         self.render("index.html")
 
 
-class AjaxHandler(tornado.web.RequestHandler):
+class DataHandler(tornado.web.RequestHandler):
 
-    @tornado.web.asynchronous
     def get(self):
-        # Send our output
+        dates_and_sizes = []
+        for i in self.application.illumina_db.view("status/final_sizes_tmp", group_level=1):
+            dates_and_sizes.append({"time": dateutil.parser.parse(i.value[0]), "size": i.value[1]})
+        dates_and_sizes = sorted(dates_and_sizes, key=lambda entry: entry["time"])
+
         self.set_header("Content-type", "application/json")
-        self.finish()
+        print(self.application.illumina_db)
+
+        self.write(json.dumps(dates_and_sizes, default=dthandler))
 
 
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", MainHandler),
-            (r"/ajax", AjaxHandler),
+            (r"/data.json", DataHandler),
         ]
         # Setup the Tornado Application
         settings = {
@@ -48,10 +53,12 @@ class Application(tornado.web.Application):
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
+        with open("settings.yaml") as settings_file:
+            server_settings = yaml.load(settings_file)
+
         # Global connection to the log database
-        connection = Connection()
-        self.db = connection.logs
-        self.size_logs = self.db.size_logs
+        couch = Server(server_settings["couch_server"])
+        self.illumina_db = couch["illumina_logs"]
 
 
 def main():
