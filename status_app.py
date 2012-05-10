@@ -10,6 +10,8 @@ import tornado.web
 from couchdb import Server
 import yaml
 
+import random
+
 PORT = 9999
 
 
@@ -22,36 +24,45 @@ class MainHandler(tornado.web.RequestHandler):
 
     def get(self):
         # Send our main document
-        self.render("index.html")
+        self.render("/Users/vale/html/ajax.html")
 
 
 class DataHandler(tornado.web.RequestHandler):
 
-    def get(self):
-        dates_and_sizes = []
-        for i in self.application.illumina_db.view("status/final_sizes_tmp", group_level=1):
-            dates_and_sizes.append({"time": dateutil.parser.parse(i.value[0]), "size": i.value[1]})
-        dates_and_sizes = sorted(dates_and_sizes, key=lambda entry: entry["time"])
+    def options(self):
+        self.set_header('Access-Control-Allow-Origin', '*')
+        self.set_header('Access-Control-Allow-Methods', 'GET', 'OPTIONS')
+
+    def get(self, q1, q2):
+        # dates_and_sizes = []
+        # for i in self.application.illumina_db.view("status/final_sizes_tmp", group_level=1):
+        #     dates_and_sizes.append({"time": dateutil.parser.parse(i.value[0]), "size": i.value[1]})
+        # dates_and_sizes = sorted(dates_and_sizes, key=lambda entry: entry["time"])
 
         self.set_header("Content-type", "application/json")
-        print(self.application.illumina_db)
+        # print(self.application.illumina_db)
 
-        self.write(json.dumps(dates_and_sizes, default=dthandler))
+        if q1 == "test":
+            self.write(json.dumps(self.random_series(int(q2)), default=dthandler))
+
+        else:
+            # self.write(json.dumps(dates_and_sizes, default=dthandler))
+            self.write(json.dumps((q1, q2), default=dthandler))
+
+    def random_series(self, n):
+        s = [{"y":random.randint(10, 99), "x":i} for i in xrange(int(n))]
+        d = dict()
+        d["data"] = s
+        d["name"] = "series"
+        return [d]
 
 
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", MainHandler),
-            (r"/data.json", DataHandler),
+            ("/data/(\w+)?/(\w+)?", DataHandler)
         ]
-        # Setup the Tornado Application
-        settings = {
-        "debug": True,
-        "static_path": os.path.join(os.path.dirname(__file__), "static")
-        }
-
-        tornado.web.Application.__init__(self, handlers, **settings)
 
         with open("settings.yaml") as settings_file:
             server_settings = yaml.load(settings_file)
@@ -59,6 +70,14 @@ class Application(tornado.web.Application):
         # Global connection to the log database
         couch = Server(server_settings["couch_server"])
         self.illumina_db = couch["illumina_logs"]
+
+        # Setup the Tornado Application
+        settings = {
+        "debug": True,
+        "static_path": server_settings["static_path"]
+        }
+
+        tornado.web.Application.__init__(self, handlers, **settings)
 
 
 def main():
