@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+<div class="row">
+  {% for i in range(17) %}
+    <div class="span4">
+      <h2>000{{ i }}</h2>
+        <div id="chart_container">
+          <div id="chart{{ i }}"></div>
+        </div>
+      <p><a class="btn" href="#">View details &raquo;</a></p>
+    </div>
+  {% end %}
+</div>
+<div class="row">
+</div>
+
+<script>
+
+{% for i in range(17) %}
+var ajaxGraph{{ i }} = new Rickshaw.Graph.Ajax( {
+
+  element: document.getElementById("chart{{ i }}"),
+  renderer: 'area',
+  dataURL: 'data/test/{{ 10 + i }}',
+  // dataURL: 'data/sizes/100',
+  onData: function(d) { return d },
+  series: [
+    {
+      name: 'series',
+      color: '#0093B9',
+    }
+  ]
+} );
+{% end %}
+
+</script>
+
+{% end %}
+

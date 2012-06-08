@@ -6,6 +6,7 @@ import json
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
+from tornado import template
 
 from couchdb import Server
 import yaml
@@ -14,14 +15,20 @@ import random
 
 
 def dthandler(obj):
+    """ISO formatting for datetime to be used in JSON.
+    """
     if isinstance(obj, datetime):
         return obj.isoformat()
 
 
 class MainHandler(tornado.web.RequestHandler):
-    def get(self):
+    def get(self, q):
         # Send our main document
-        self.render("/Users/vale/html/ajax.html")
+        if q == "test":
+            t = self.application.loader.load("test_grid.html")
+            self.write(t.generate())
+        elif q == None:
+            self.write("works")
 
 
 class DataHandler(tornado.web.RequestHandler):
@@ -37,6 +44,9 @@ class DataHandler(tornado.web.RequestHandler):
 
         elif q1 == "quotas":
             self.write(json.dumps(self.project_storage_quota(q2), default=dthandler))
+
+        elif q1 == "projects":
+            self.write(json.dumps(self.list_projects()))
 
         else:
             # self.write(json.dumps(dates_and_sizes, default=dthandler))
@@ -87,13 +97,23 @@ class DataHandler(tornado.web.RequestHandler):
         d["name"] = "series"
         return d
 
+    def list_projects(self):
+        project_list = []
+        for row in self.application.uppmax_db.view("status/projects", group_level=1):
+            project_list.append(row.key)
+
+        return project_list
+
 
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
-            (r"/", MainHandler),
+            ("/(\w+)?", MainHandler),
             ("/data/(\w+)?/(\w+)?", DataHandler)
         ]
+
+        # Load templates
+        self.loader = template.Loader("design")
 
         # Global connection to the log database
         couch = Server(settings.get("couch_server", None))
@@ -103,7 +123,7 @@ class Application(tornado.web.Application):
         # Setup the Tornado Application
         settings = {
         "debug": True,
-        "static_path": settings.get("static_path", None)
+        "static_path": "static"
         }
 
         tornado.web.Application.__init__(self, handlers, **settings)
