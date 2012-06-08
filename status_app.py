@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 from dateutil import parser
 import time
@@ -12,8 +11,6 @@ from couchdb import Server
 import yaml
 
 import random
-
-PORT = 9999
 
 
 def dthandler(obj):
@@ -92,36 +89,36 @@ class DataHandler(tornado.web.RequestHandler):
 
 
 class Application(tornado.web.Application):
-    def __init__(self):
+    def __init__(self, settings):
         handlers = [
             (r"/", MainHandler),
             ("/data/(\w+)?/(\w+)?", DataHandler)
         ]
 
-        with open("settings.yaml") as settings_file:
-            server_settings = yaml.load(settings_file)
-
         # Global connection to the log database
-        couch = Server(server_settings.get("couch_server", None))
+        couch = Server(settings.get("couch_server", None))
         self.illumina_db = couch["illumina_logs"]
         self.uppmax_db = couch["uppmax"]
 
         # Setup the Tornado Application
         settings = {
         "debug": True,
-        "static_path": server_settings.get("static_path", None)
+        "static_path": settings.get("static_path", None)
         }
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
 
 def main():
+    with open("settings.yaml") as settings_file:
+        server_settings = yaml.load(settings_file)
+
     # Instantiate Application
-    application = Application()
+    application = Application(server_settings)
 
     # Start HTTP Server
     http_server = tornado.httpserver.HTTPServer(application)
-    http_server.listen(PORT)
+    http_server.listen(server_settings.get("port", 8888))
 
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
