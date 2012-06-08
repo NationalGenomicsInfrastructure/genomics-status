@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+<div class="row">
+ <div class="span12">
+    <h2>a2010002</h2>
+      <div id="chart_container">
+        <div id="chart"></div>
+      </div>
+  </div>
+</div>
+<div class="row">
+</div>
+
+<script>
+
+var graph = new Rickshaw.Graph.Ajax( {
+
+  element: document.getElementById("chart"),
+  renderer: 'bar',
+  dataURL: 'data/quotas/a2010002',
+  onData: function(d) { return d },
+  series: [
+    {
+      name: 'series',
+      color: '#0093B9',
+    }
+  ]
+} );
+
+graph.render();
+
+var axes = new Rickshaw.Graph.Axis.Time( {
+  graph: graph
+} );
+axes.render()
+
+</script>
+
+{% end %}

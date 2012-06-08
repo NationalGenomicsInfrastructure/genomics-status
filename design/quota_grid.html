@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+<div class="row">
+  {% for project in projects %}
+    <div class="span4">
+      <h2>{{ project }}</h2>
+        <div id="chart_container">
+          <div id="chart_{{ project }}"></div>
+        </div>
+      <p><a class="btn" href="#">View details &raquo;</a></p>
+    </div>
+  {% end %}
+</div>
+<div class="row">
+</div>
+
+<script>
+
+{% for project in projects %}
+var ajaxGraph_{{ project }} = new Rickshaw.Graph.Ajax( {
+
+  element: document.getElementById("chart_{{ project }}"),
+  renderer: 'area',
+  dataURL: 'data/quotas/{{ project }}',
+  onData: function(d) { return d },
+  series: [
+    {
+      name: 'series',
+      color: '#0093B9',
+    }
+  ]
+} );
+
+{% end %}
+
+</script>
+
+{% end %}

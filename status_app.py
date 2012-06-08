@@ -28,7 +28,9 @@ class MainHandler(tornado.web.RequestHandler):
             t = self.application.loader.load("test_grid.html")
             self.write(t.generate())
         elif q == None:
-            self.write("works")
+            projects = ["a2010002", "a2010003", "a2012043", "b2010029", "b2010062"]
+            t = self.application.loader.load("quota.html")
+            self.write(t.generate())
 
 
 class DataHandler(tornado.web.RequestHandler):
@@ -95,7 +97,7 @@ class DataHandler(tornado.web.RequestHandler):
         d = dict()
         d["data"] = data
         d["name"] = "series"
-        return d
+        return [d]
 
     def list_projects(self):
         project_list = []
