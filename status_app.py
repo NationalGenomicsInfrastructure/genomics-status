@@ -23,28 +23,19 @@ def dthandler(obj):
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self, q):
-        # Send our main document
         if q == None:
-            t = self.application.loader.load("base.html")
-            self.write(t.generate())
-            return
+            q = "quotas"
 
-        q = q.split("/")
-
-        if q[0] == "test":
+        if q == "test":
             t = self.application.loader.load("test_grid.html")
             self.write(t.generate())
 
-        elif q[0] == "quotas":
-            if len(q) == 1:
-                projects = ["a2010002", "a2010003", "a2012043", "b2010029", "b2010062"]
-                t = self.application.loader.load("quota_grid.html")
-                self.write(t.generate(projects=projects))
-
-            elif len(q) == 2:
-                projects = ["a2010002", "a2010003", "a2012043", "b2010029", "b2010062"]
-                t = self.application.loader.load("quota_grid.html")
-                self.write(t.generate(projects=projects))
+        elif q == "quotas":
+            projects = ["a2010002", "a2010003", "a2012043", "b2010029", "b2010062"]
+            # Above hardcoded list should be replaced by some sort of REST call,
+            # either here or in the template, to */data/projects/.
+            t = self.application.loader.load("quota_grid.html")
+            self.write(t.generate(projects=projects))
 
         else:
             self.write(q)
@@ -140,10 +131,7 @@ class Application(tornado.web.Application):
         self.uppmax_db = couch["uppmax"]
 
         # Setup the Tornado Application
-        settings = {
-        "debug": True,
-        "static_path": "static"
-        }
+        settings = {"static_path": "static"}
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
