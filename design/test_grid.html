@@ -7,7 +7,7 @@
     <div class="span4">
       <h2>000{{ i }}</h2>
         <div id="chart_container">
-          <div id="chart{{ i }}"></div>
+          <div id="chart_{{ i }}"></div>
         </div>
       <p><a class="btn" href="#">View details &raquo;</a></p>
     </div>
@@ -19,16 +19,17 @@
 <script>
 
 {% for i in range(17) %}
-var ajaxGraph{{ i }} = new Rickshaw.Graph.Ajax( {
+var my_data
+var m = $.getJSON("data/test/{{ 10 + i }}")
+var graph_{{ i }} = new Rickshaw.Graph( {
 
-  element: document.getElementById("chart{{ i }}"),
+  element: document.getElementById("chart_{{ i }}"),
   renderer: 'area',
   dataURL: 'data/test/{{ 10 + i }}',
-  // dataURL: 'data/sizes/100',
-  onData: function(d) { return d },
   series: [
     {
-      name: 'series',
+      data : my_data["data"],
+      name: my_data["name"],
       color: '#0093B9',
     }
   ]
