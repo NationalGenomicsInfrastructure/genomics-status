@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block head %}
+<p>Historical storage quota used on UPPMAX projects.</p>
+{% end %}
+
 <!-- Example row of columns -->
 {% block stuff %}
 <div class="row">
@@ -22,7 +26,7 @@
 var ajaxGraph_{{ project }} = new Rickshaw.Graph.Ajax( {
 
   element: document.getElementById("chart_{{ project }}"),
-  renderer: 'area',
+  renderer: 'bar',
   dataURL: 'data/quotas/{{ project }}',
   onData: function(d) { return d },
   series: [
