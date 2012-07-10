@@ -2,6 +2,7 @@
 
 <!-- Example row of columns -->
 {% block stuff %}
+
 <div class="row">
   {% for i in range(17) %}
     <div class="span4">
@@ -17,10 +18,10 @@
 </div>
 
 <script>
-
 {% for i in range(17) %}
-var my_data
-var m = $.getJSON("data/test/{{ 10 + i }}")
+
+var my_data_{{ i }}
+var m_{{ i }} = $.getJSON("data/test/{{ 10 + i }}")
 var graph_{{ i }} = new Rickshaw.Graph( {
 
   element: document.getElementById("chart_{{ i }}"),

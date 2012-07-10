@@ -42,6 +42,12 @@ class QuotasHandler(tornado.web.RequestHandler):
         self.write(t.generate(projects=projects))
 
 
+class TestGridHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("test_grid.html")
+        self.write(t.generate())
+
+
 class QuotaHandler(tornado.web.RequestHandler):
     def get(self, project):
         t = self.application.loader.load("quota.html")
@@ -94,9 +100,9 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
 
 
 class TestDataHandler(tornado.web.RequestHandler):
-    def get(self):
+    def get(self, n):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.random_series(int(100)), default=dthandler))
+        self.write(json.dumps(self.random_series(int(n)), default=dthandler))
 
     def random_series(self, n):
         s = [{"y":random.randint(10, 99), "x":i} for i in xrange(int(n))]
@@ -146,8 +152,10 @@ class Application(tornado.web.Application):
             ("/data/quotas/(\w+)?", QuotaDataHandler),
             ("/data/projects", ProjectsDataHandler),
             ("/data/data_generation", Data_generationDataHandler),
+            ("/data/test/(\w+)?", TestDataHandler),
             ("/quotas", QuotasHandler),
-            ("/quotas/(\w+)?", QuotaHandler)
+            # ("/quotas/(\w+)?", QuotaHandler),
+            ("/quotas/test", TestGridHandler)
         ]
 
         # Load templates
