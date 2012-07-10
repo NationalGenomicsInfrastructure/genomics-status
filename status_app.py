@@ -163,8 +163,9 @@ class Application(tornado.web.Application):
 
         # Global connection to the log database
         couch = Server(settings.get("couch_server", None))
-        self.illumina_db = couch["illumina_logs"]
-        self.uppmax_db = couch["uppmax"]
+        if couch:
+            self.illumina_db = couch["illumina_logs"]
+            self.uppmax_db = couch["uppmax"]
 
         # Setup the Tornado Application
         settings = {
