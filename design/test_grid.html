@@ -4,7 +4,7 @@
 {% block stuff %}
 
 <div class="row">
-  {% for i in range(17) %}
+  {% for i in range(23) %}
     <div class="span4">
       <h2>000{{ i }}</h2>
         <div id="chart_container">
@@ -18,23 +18,30 @@
 </div>
 
 <script>
-{% for i in range(17) %}
+{% for i in range(23) %}
 
 var my_data_{{ i }}
-var m_{{ i }} = $.getJSON("data/test/{{ 10 + i }}")
-var graph_{{ i }} = new Rickshaw.Graph( {
+var graph_{{ i }}
+$.getJSON("/data/test/{{ 10 + i }}", function(data) {
+  my_data_{{ i }} = data[0];
 
-  element: document.getElementById("chart_{{ i }}"),
-  renderer: 'area',
-  dataURL: 'data/test/{{ 10 + i }}',
-  series: [
-    {
-      data : my_data["data"],
-      name: my_data["name"],
-      color: '#0093B9',
-    }
-  ]
-} );
+  graph_{{ i }} = new Rickshaw.Graph( {
+
+    element: document.getElementById("chart_{{ i }}"),
+    renderer: 'bar',
+    series: [
+      {
+        data:  my_data_{{ i }}["data"],
+        name: my_data_{{ i }}["name"],
+        color: '#0093b9',
+      }
+    ]
+  } );
+
+  graph_{{ i }}.render();
+
+});
+
 {% end %}
 
 </script>
