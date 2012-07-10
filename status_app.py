@@ -22,80 +22,43 @@ def dthandler(obj):
 
 
 class MainHandler(tornado.web.RequestHandler):
-    def get(self, q):
+    def get(self):
         # Send our main document
-        if q == None:
-            t = self.application.loader.load("base.html")
-            self.write(t.generate())
-            return
-
-        q = q.split("/")
-
-        if q[0] == "test":
-            t = self.application.loader.load("test_grid.html")
-            self.write(t.generate())
-
-        elif q[0] == "quotas":
-            if len(q) == 1:
-                projects = ["a2010002", "a2010003", "a2012043", "b2010029", "b2010062"]
-                t = self.application.loader.load("quota_grid.html")
-                self.write(t.generate(projects=projects))
-
-            elif len(q) == 2:
-                projects = ["a2010002", "a2010003", "a2012043", "b2010029", "b2010062"]
-                t = self.application.loader.load("quota_grid.html")
-                self.write(t.generate(projects=projects))
-
-        else:
-            self.write(q)
+        t = self.application.loader.load("base.html")
+        self.write(t.generate())
 
 
-class DataHandler(tornado.web.RequestHandler):
-    def get(self, q1, q2):
+class TestHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("test_grid.html")
+        self.write(t.generate())
 
+
+class QuotasHandler(tornado.web.RequestHandler):
+    def get(self):
+        # TODO: Get projects list from database.
+        projects = ["a2010002", "a2010003", "a2012043", "b2010029", "b2010062"]
+        t = self.application.loader.load("quota_grid.html")
+        self.write(t.generate(projects=projects))
+
+
+class QuotaHandler(tornado.web.RequestHandler):
+    def get(self, project):
+        t = self.application.loader.load("quota.html")
+        self.write(t.generate(project=project))
+
+
+class QuotasDataHandler(tornado.web.RequestHandler):
+    def get(self):
         self.set_header("Content-type", "application/json")
+        self.write("TODO: Implement")
+        return
 
-        if q1 == "test":
-            self.write(json.dumps(self.random_series(int(q2)), default=dthandler))
 
-        elif q1 == "sizes":
-            self.write(json.dumps(self.cum_flowcell_sizes(), default=dthandler))
-
-        elif q1 == "quotas":
-            self.write(json.dumps(self.project_storage_quota(q2), default=dthandler))
-
-        elif q1 == "projects":
-            self.write(json.dumps(self.list_projects()))
-
-        else:
-            # self.write(json.dumps(dates_and_sizes, default=dthandler))
-            self.write(json.dumps((q1, q2), default=dthandler))
-
-    def random_series(self, n):
-        s = [{"y":random.randint(10, 99), "x":i} for i in xrange(int(n))]
-        d = dict()
-        d["data"] = s
-        d["name"] = "series"
-        return [d]
-
-    def cum_flowcell_sizes(self):
-        fc_list = []
-        for row in self.application.illumina_db.view("status/final_flowcell_sizes", group_level=1):
-            fc_list.append({"name": row.key, "time": row.value[0], "size": row.value[1]})
-
-        fc_list = sorted(fc_list, key=lambda fc: fc["time"])
-
-        fc = fc_list[0]
-        cum_list = [{"x": int(time.mktime(parser.parse(fc["time"]).timetuple()) * 1000), \
-                     "y": fc["size"]}]
-        for fc in fc_list[1:]:
-            cum_list.append({"x": int(time.mktime(parser.parse(fc["time"]).timetuple()) * 1000), \
-                             "y": fc["size"] + cum_list[-1]["y"]})
-
-        d = dict()
-        d["data"] = cum_list
-        d["name"] = "series"
-        return [d]
+class QuotaDataHandler(tornado.web.RequestHandler):
+    def get(self, project):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.project_storage_quota(project), default=dthandler))
 
     def project_storage_quota(self, project):
         proj_getter = lambda row: row.key[0]
@@ -116,6 +79,12 @@ class DataHandler(tornado.web.RequestHandler):
         d["name"] = "series"
         return [d]
 
+
+class ProjectsDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_projects()))
+
     def list_projects(self):
         project_list = []
         for row in self.application.uppmax_db.view("status/projects", group_level=1):
@@ -124,11 +93,61 @@ class DataHandler(tornado.web.RequestHandler):
         return project_list
 
 
+class TestDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.random_series(int(100)), default=dthandler))
+
+    def random_series(self, n):
+        s = [{"y":random.randint(10, 99), "x":i} for i in xrange(int(n))]
+        d = dict()
+        d["data"] = s
+        d["name"] = "series"
+        return [d]
+
+
+class Data_generationDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.cum_flowcell_sizes(), default=dthandler))
+
+    def cum_flowcell_sizes(self):
+        fc_list = []
+        for row in self.application.illumina_db.view("status/final_flowcell_sizes", group_level=1):
+            fc_list.append({"name": row.key, "time": row.value[0], "size": row.value[1]})
+
+        fc_list = sorted(fc_list, key=lambda fc: fc["time"])
+
+        fc = fc_list[0]
+        cum_list = [{"x": int(time.mktime(parser.parse(fc["time"]).timetuple()) * 1000), \
+                     "y": fc["size"]}]
+        for fc in fc_list[1:]:
+            cum_list.append({"x": int(time.mktime(parser.parse(fc["time"]).timetuple()) * 1000), \
+                             "y": fc["size"] + cum_list[-1]["y"]})
+
+        d = dict()
+        d["data"] = cum_list
+        d["name"] = "series"
+        return [d]
+
+
+class DataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(str(self.application.handlers))
+
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
-            ("/(\w+)?", MainHandler),
-            ("/data/(\w+)?/(\w+)?", DataHandler)
+            ("/", MainHandler),
+            ("/data", DataHandler),
+            ("/data/quotas", QuotasDataHandler),
+            ("/data/quotas/(\w+)?", QuotaDataHandler),
+            ("/data/projects", ProjectsDataHandler),
+            ("/data/data_generation", Data_generationDataHandler),
+            ("/quotas", QuotasHandler),
+            ("/quotas/(\w+)?", QuotaHandler)
         ]
 
         # Load templates
