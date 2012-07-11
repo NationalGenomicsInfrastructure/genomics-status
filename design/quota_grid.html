@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block head %}
-<p>Historical storage quota used on UPPMAX projects.</p>
-{% end %}
-
 <!-- Example row of columns -->
 {% block stuff %}
-<div class="row-fluid">
+
+<div class="fluid-row">
+  <h2>Historical storage quota used on UPPMAX projects</h2>
+</div>
+<div class="row">
   {% for project in projects %}
     <div class="span4">
       <h2><a href="/quotas/{{ project }}">{{ project }}</a></h2>
@@ -17,11 +17,8 @@
     </div>
   {% end %}
 </div>
-<div class="row-fluid">
-</div>
 
 <script>
-
 var time = new Rickshaw.Fixtures.Time();
 var time_unit = time.unit('3week');
 
