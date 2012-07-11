@@ -58,6 +58,7 @@ body {
 -------------------------------------------------- */
 .chart_container {
   position: relative;
+  margin-bottom: 20px;
 }
 
 .chart {
