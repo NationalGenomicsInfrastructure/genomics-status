@@ -3,18 +3,15 @@
 <!-- Example row of columns -->
 {% block stuff %}
 
-<div class="row">
+<div class="span9 well row">
   {% for i in range(23) %}
     <div class="span4">
       <h2>000{{ i }}</h2>
-        <div id="chart_container">
-          <div id="chart_{{ i }}"></div>
+        <div class="chart_container" id="chart_container">
+          <div class="chart" id="chart_{{ i }}"></div>
         </div>
-      <p><a class="btn" href="#">View details &raquo;</a></p>
     </div>
   {% end %}
-</div>
-<div class="row">
 </div>
 
 <script>
