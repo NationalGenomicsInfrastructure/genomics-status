@@ -31,7 +31,6 @@
 
   </head>
 
-
   <body>
   <!-- Navbar
     ================================================== -->
@@ -46,31 +45,24 @@
   <div class="container-fluid">
     <div class="row-fluid">
 
-    <!-- Masthead
-    ================================================== -->
-    <header class="jumbotron masthead">
-      <div class="inner">
-        {% block head %}
+      <!-- Sidebar
+      ================================================== -->
+      <div class="span2">
+        <div class="well sidebar-nav">
+          <ul class="nav nav-list">
+            <li class="nav-header">Sidebar</li>
+            <li class="active"><a href="#">Link</a></li>
+            <li><a href="#">Link</a></li>
+            <li><a href="#">Link</a></li>
+            <li><a href="#">Link</a></li>
+          </ul>
+        </div><!--/.well -->
+      </div><!--/span-->
+
+      <div class="span9 well">
+        {% block stuff %}
         {% end %}
       </div>
-    </header>
-
-    <!-- Sidebar
-    ================================================== -->
-    <div class="span2">
-      <div class="well sidebar-nav">
-        <ul class="nav nav-list">
-          <li class="nav-header">Sidebar</li>
-          <li class="active"><a href="#">Link</a></li>
-          <li><a href="#">Link</a></li>
-          <li><a href="#">Link</a></li>
-          <li><a href="#">Link</a></li>
-        </ul>
-      </div><!--/.well -->
-    </div><!--/span-->
-
-          {% block stuff %}
-          {% end %}
     </div>
 
     <hr>
