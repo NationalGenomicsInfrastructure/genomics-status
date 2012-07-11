@@ -23,19 +23,28 @@
 <script>
 
 {% for project in projects %}
-var ajaxGraph_{{ project }} = new Rickshaw.Graph.Ajax( {
 
-  element: document.getElementById("chart_{{ project }}"),
-  renderer: 'bar',
-  dataURL: 'data/quotas/{{ project }}',
-  onData: function(d) { return d },
-  series: [
-    {
-      name: 'series',
-      color: '#0093B9',
-    }
-  ]
-} );
+var my_data_{{ project }}
+var graph_{{ project }}
+$.getJSON("/data/quotas/{{ project }}", function(data) {
+  my_data_{{ project }} = data[0];
+
+  graph_{{ project }} = new Rickshaw.Graph( {
+
+    element: $("#chart_{{ project }}").get(0),
+    renderer: 'bar',
+    series: [
+      {
+        data:  my_data_{{ project }}["data"],
+        name: my_data_{{ project }}["name"],
+        color: '#0093b9',
+      }
+    ]
+  } );
+
+  graph_{{ project }}.render();
+
+});
 
 {% end %}
 
