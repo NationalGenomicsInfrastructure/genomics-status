@@ -155,8 +155,8 @@ class Application(tornado.web.Application):
             ("/data/data_generation", Data_generationDataHandler),
             ("/data/test/(\w+)?", TestDataHandler),
             ("/quotas", QuotasHandler),
-            # ("/quotas/(\w+)?", QuotaHandler),
-            ("/quotas/test", TestGridHandler)
+            ("/quotas/test", TestGridHandler),
+            ("/quotas/(\w+)?", QuotaHandler)
         ]
 
         # Load templates
