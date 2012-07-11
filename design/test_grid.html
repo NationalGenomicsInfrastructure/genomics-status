@@ -27,7 +27,7 @@ $.getJSON("/data/test/{{ 10 + i }}", function(data) {
 
   graph_{{ i }} = new Rickshaw.Graph( {
 
-    element: document.getElementById("chart_{{ i }}"),
+    element: $("#chart_{{ i }}").get(0),
     renderer: 'bar',
     series: [
       {
