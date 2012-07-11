@@ -75,10 +75,11 @@ class QuotaDataHandler(tornado.web.RequestHandler):
         r_list = filter(proj_checker, self.application.uppmax_db.view("status/project_quota_usage_over_time"))
         r_list = sorted(r_list, key=date_getter)
 
+        gb = 1024 ** 3
         data = []
         for row in r_list:
-            data.append({"x": int(time.mktime(parser.parse(date_getter(row)).timetuple()) * 1000), \
-                         "y": row.value[0]})
+            data.append({"x": int(time.mktime(parser.parse(date_getter(row)).timetuple())), \
+                         "y": row.value[0] * gb})
 
         d = dict()
         d["data"] = data
