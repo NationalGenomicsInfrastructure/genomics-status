@@ -22,7 +22,7 @@
 
 var my_data_{{ i }}
 var graph_{{ i }}
-$.getJSON("/data/test/{{ 10 + i }}", function(data) {
+$.getJSON("/api/v1/test/{{ 10 + i }}", function(data) {
   my_data_{{ i }} = data[0];
 
   graph_{{ i }} = new Rickshaw.Graph( {

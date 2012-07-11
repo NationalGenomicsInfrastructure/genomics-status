@@ -6,9 +6,9 @@
 
 <!-- Example row of columns -->
 {% block stuff %}
-<div class="row">
+<div class="row-fluid">
   {% for project in projects %}
-    <div class="span6">
+    <div class="span4">
       <h2><a href="/quotas/{{ project }}">{{ project }}</a></h2>
       <div class="chart_container" id="chart_container">
         <div class="y_axis" id="y_axis_{{ project }}"></div>
@@ -17,7 +17,7 @@
     </div>
   {% end %}
 </div>
-<div class="row">
+<div class="row-fluid">
 </div>
 
 <script>
@@ -29,7 +29,7 @@ var time_unit = time.unit('3week');
 
 var my_data_{{ project }}
 var graph_{{ project }}
-$.getJSON("/data/quotas/{{ project }}", function(data) {
+$.getJSON("/api/v1/quotas/{{ project }}", function(data) {
   my_data_{{ project }} = data[0];
 
   graph_{{ project }} = new Rickshaw.Graph( {

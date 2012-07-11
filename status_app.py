@@ -148,12 +148,12 @@ class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
             ("/", MainHandler),
-            ("/data", DataHandler),
-            ("/data/quotas", QuotasDataHandler),
-            ("/data/quotas/(\w+)?", QuotaDataHandler),
-            ("/data/projects", ProjectsDataHandler),
-            ("/data/data_generation", Data_generationDataHandler),
-            ("/data/test/(\w+)?", TestDataHandler),
+            ("/api/v1", DataHandler),
+            ("/api/v1/quotas", QuotasDataHandler),
+            ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
+            ("/api/v1/projects", ProjectsDataHandler),
+            ("/api/v1/data_generation", Data_generationDataHandler),
+            ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/quotas", QuotasHandler),
             ("/quotas/test", TestGridHandler),
             ("/quotas/(\w+)?", QuotaHandler)
