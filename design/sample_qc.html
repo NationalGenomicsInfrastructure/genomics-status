@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+
+<div class="fluid-row">
+  <h2>{{ sample }}</h2>
+</div>
+<div class="fluid-row" id="sample_summary">
+  <h3>Summary</h3>
+  <table class="table table-bordered" id="summary_table">
+    <thead>
+      <tr>
+        <th>Flowcell id</th>
+        <th>Lane</th>
+        <th>Sequence</th>
+      </tr>
+    </thead>
+    <tbody><tr></tr></tbody>
+  </table>
+</div>
+
+<script>
+$.getJSON("/api/v1/qc_summary/{{ sample }}", function(data) {
+  $("#summary_table tr:last").after(
+    "<td>" + data["flowcell_id"] + "</td><td>" + data["lane"] + "</td><td>" + 
+    data["sequence"] + "</td>"
+  )
+})
+</script>
+
+{% end %}
+

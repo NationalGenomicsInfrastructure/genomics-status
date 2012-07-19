@@ -6,6 +6,7 @@ import json
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
+import tornado.autoreload
 from tornado import template
 
 from couchdb import Server
@@ -174,6 +175,12 @@ class SampleQCSummaryDataHandler(tornado.web.RequestHandler):
         return result.rows[0].value
 
 
+class SampleQCSummaryHandler(tornado.web.RequestHandler):
+    def get(self, sample):
+        t = self.application.loader.load("sample_qc.html")
+        self.write(t.generate(sample=sample))
+
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
@@ -188,6 +195,7 @@ class Application(tornado.web.Application):
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", ProjectsDataHandler),
             ("/qc", QCHandler),
+            ("/qc/(\w+)?", SampleQCSummaryHandler),
             ("/quotas", QuotasHandler),
             ("/quotas/test", TestGridHandler),
             ("/quotas/(\w+)?", QuotaHandler),
@@ -209,6 +217,9 @@ class Application(tornado.web.Application):
         "debug": True,
         "static_path": "static"
         }
+
+        tornado.autoreload.watch("design/sample_qc.html")
+        tornado.autoreload.watch("design/samples.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
