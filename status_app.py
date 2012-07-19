@@ -144,16 +144,31 @@ class DataHandler(tornado.web.RequestHandler):
         self.write(str(self.application.handlers))
 
 
+class QCDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_samples()))
+
+    def list_samples(self):
+        sample_list = []
+        for row in self.application.qc_db.view("samples/names"):
+            sample_list.append(row.key)
+
+        return sample_list
+
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
             ("/", MainHandler),
             ("/api/v1", DataHandler),
+            ("/api/v1/data_generation", Data_generationDataHandler),
+            ("/api/v1/samples", QCDataHandler),
+            ("/api/v1/qc", QCDataHandler),
             ("/api/v1/quotas", QuotasDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
-            ("/api/v1/projects", ProjectsDataHandler),
-            ("/api/v1/data_generation", Data_generationDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
+            ("/api/v1/uppmax_projects", ProjectsDataHandler),
             ("/quotas", QuotasHandler),
             ("/quotas/test", TestGridHandler),
             ("/quotas/(\w+)?", QuotaHandler)
@@ -167,6 +182,7 @@ class Application(tornado.web.Application):
         if couch:
             self.illumina_db = couch["illumina_logs"]
             self.uppmax_db = couch["uppmax"]
+            self.qc_db = couch["qc"]
 
         # Setup the Tornado Application
         settings = {
