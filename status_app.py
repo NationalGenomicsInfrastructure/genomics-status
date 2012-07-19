@@ -157,6 +157,12 @@ class QCDataHandler(tornado.web.RequestHandler):
         return sample_list
 
 
+class QCHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("samples.html")
+        self.write(t.generate())
+
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
@@ -169,9 +175,11 @@ class Application(tornado.web.Application):
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", ProjectsDataHandler),
+            ("/qc", QCHandler),
             ("/quotas", QuotasHandler),
             ("/quotas/test", TestGridHandler),
-            ("/quotas/(\w+)?", QuotaHandler)
+            ("/quotas/(\w+)?", QuotaHandler),
+            ("/samples", QCHandler)
         ]
 
         # Load templates
