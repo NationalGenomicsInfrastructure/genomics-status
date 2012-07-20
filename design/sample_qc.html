@@ -20,11 +20,44 @@
   </table>
 </div>
 
+<div class="fluid-row" id="sample_qc">
+  <h3>QC</h3>
+  <table class="table table-bordered" id="qc_table">
+    <thead>
+      <tr>
+        <th>Total</th>
+        <th>Aligned</th>
+        <th>Pair duplicates</th>
+        <th>Insert size</th>
+        <th>On target bases</th>
+        <th>Mean target coverage</th>
+        <th>X10x coverage targets</th>
+        <th>Zero coverage targets</th>
+      </tr>
+    </thead>
+    <tbody><tr></tr></tbody>
+  </table>
+</div>
+
 <script>
-$.getJSON("/api/v1/qc_summary/{{ sample }}", function(data) {
-  $("#summary_table tr:last").after(
-    "<td>" + data["flowcell_id"] + "</td><td>" + data["lane"] + "</td><td>" + 
+$.getJSON("/api/v1/sample_summary/{{ sample }}", function(data) {
+  $("#summary_table tr:last").after("<td>" +
+    data["flowcell_id"] + "</td><td>" +
+    data["lane"] + "</td><td>" +
     data["sequence"] + "</td>"
+  )
+})
+
+$.getJSON("/api/v1/qc/{{ sample }}", function(data) {
+  $("#qc_table tr:last").after("<td>" +
+    data["bc_count"] + "</td><td>" +
+    data["pct_aligned"] + "</td><td>" +
+    data["pair_duplicates"] + "</td><td>" +
+    data["insert_size"] + "</td><td>" +
+    data["on_target"] + "</td><td>" +
+    data["mean_target_coverage"] + "</td><td>" +
+    data["x10x_coverage_targets"] + "</td><td>" +
+    data["zero_coverage_targets"] + "</td>"
   )
 })
 </script>
