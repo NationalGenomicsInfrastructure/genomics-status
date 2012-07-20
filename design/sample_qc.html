@@ -22,20 +22,9 @@
 
 <div class="fluid-row" id="sample_qc">
   <h3>QC</h3>
-  <table class="table table-bordered" id="qc_table">
-    <thead>
-      <tr>
-        <th>Total</th>
-        <th>Aligned</th>
-        <th>Pair duplicates</th>
-        <th>Insert size</th>
-        <th>On target bases</th>
-        <th>Mean target coverage</th>
-        <th>X10x coverage targets</th>
-        <th>Zero coverage targets</th>
-      </tr>
-    </thead>
-    <tbody><tr></tr></tbody>
+  <table class="table table-bordered zebra-striped" id="qc_table">
+    <tbody>
+    </tbody>
   </table>
 </div>
 
@@ -49,15 +38,15 @@ $.getJSON("/api/v1/sample_summary/{{ sample }}", function(data) {
 })
 
 $.getJSON("/api/v1/qc/{{ sample }}", function(data) {
-  $("#qc_table tr:last").after("<td>" +
-    data["bc_count"] + "</td><td>" +
-    data["pct_aligned"] + "</td><td>" +
-    data["pair_duplicates"] + "</td><td>" +
-    data["insert_size"] + "</td><td>" +
-    data["on_target"] + "</td><td>" +
-    data["mean_target_coverage"] + "</td><td>" +
-    data["x10x_coverage_targets"] + "</td><td>" +
-    data["zero_coverage_targets"] + "</td>"
+  $("#qc_table tbody").append(
+    "<tr><th>Total</th><td>" + data["bc_count"] + "</td></tr>" +
+    "<tr><th>Aligned</th><td>" + data["pct_aligned"] + "</td></tr>" +
+    "<tr><th>Pair duplicates</th><td>" + data["pair_duplicates"] + "</td></tr>" +
+    "<tr><th>Insert size</th><td>" + data["insert_size"] + "</td></tr>" +
+    "<tr><th>On target bases</th><td>" + data["on_target"] + "</td></tr>" +
+    "<tr><th>Mean target coverage</th><td>" + data["mean_target_coverage"] + "</td></tr>" +
+    "<tr><th>X10x coverage targets</th><td>" + data["x10x_coverage_targets"] + "</td></tr>" +
+    "<tr><th>Zero coverage targets</th><td>" + data["zero_coverage_targets"] + "</td></tr>"
   )
 })
 </script>
