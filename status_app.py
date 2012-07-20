@@ -175,6 +175,17 @@ class SampleQCSummaryDataHandler(tornado.web.RequestHandler):
         return result.rows[0].value
 
 
+class SampleQCDataHandler(tornado.web.RequestHandler):
+    def get(self, sample):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.sample_summary(sample), default=dthandler))
+
+    def sample_summary(self, sample):
+        result = self.application.qc_db.view("samples/qc_summary", key=sample)
+
+        return result.rows[0].value
+
+
 class SampleQCSummaryHandler(tornado.web.RequestHandler):
     def get(self, sample):
         t = self.application.loader.load("sample_qc.html")
@@ -189,7 +200,8 @@ class Application(tornado.web.Application):
             ("/api/v1/data_generation", Data_generationDataHandler),
             ("/api/v1/samples", QCDataHandler),
             ("/api/v1/qc", QCDataHandler),
-            ("/api/v1/qc_summary/(\w+)?", SampleQCSummaryDataHandler),
+            ("/api/v1/qc/(\w+)?", SampleQCDataHandler),
+            ("/api/v1/sample_summary/(\w+)?", SampleQCSummaryDataHandler),
             ("/api/v1/quotas", QuotasDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
