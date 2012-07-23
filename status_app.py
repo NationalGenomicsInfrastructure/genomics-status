@@ -142,7 +142,11 @@ class Data_generationDataHandler(tornado.web.RequestHandler):
 class DataHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
-        self.write(str(self.application.handlers))
+        handlers = [h[0] for h in self.application.declared_handlers]
+        api = filter(lambda h: h.startswith("/api"), handlers)
+        pages = list(set(handlers).difference(set(api)))
+        pages = filter(lambda h: not h.endswith("?"), pages)
+        self.write(json.dumps({"api": api, "pages": pages}))
 
 
 class QCDataHandler(tornado.web.RequestHandler):
@@ -213,6 +217,8 @@ class Application(tornado.web.Application):
             ("/quotas/(\w+)?", QuotaHandler),
             ("/samples", QCHandler)
         ]
+
+        self.declared_handlers = handlers
 
         # Load templates
         self.loader = template.Loader("design")
