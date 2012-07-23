@@ -238,6 +238,7 @@ class Application(tornado.web.Application):
 
         tornado.autoreload.watch("design/sample_qc.html")
         tornado.autoreload.watch("design/samples.html")
+        tornado.autoreload.watch("design/base.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
