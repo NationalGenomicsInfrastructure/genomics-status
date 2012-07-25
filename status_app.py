@@ -38,9 +38,8 @@ class TestHandler(tornado.web.RequestHandler):
 class QuotasHandler(tornado.web.RequestHandler):
     def get(self):
         # TODO: Get projects list from database.
-        projects = ["a2010002", "a2010003", "a2012043", "b2010029", "b2010062"]
         t = self.application.loader.load("quota_grid.html")
-        self.write(t.generate(projects=projects))
+        self.write(t.generate())
 
 
 class TestGridHandler(tornado.web.RequestHandler):
@@ -59,7 +58,6 @@ class QuotasDataHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write("TODO: Implement")
-        return
 
 
 class QuotaDataHandler(tornado.web.RequestHandler):
@@ -114,7 +112,7 @@ class TestDataHandler(tornado.web.RequestHandler):
         return [d]
 
 
-class Data_generationDataHandler(tornado.web.RequestHandler):
+class ProductionDataHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.cum_flowcell_sizes(), default=dthandler))
@@ -201,13 +199,13 @@ class Application(tornado.web.Application):
         handlers = [
             ("/", MainHandler),
             ("/api/v1", DataHandler),
-            ("/api/v1/data_generation", Data_generationDataHandler),
-            ("/api/v1/samples", QCDataHandler),
+            ("/api/v1/production", ProductionDataHandler),
             ("/api/v1/qc", QCDataHandler),
             ("/api/v1/qc/(\w+)?", SampleQCDataHandler),
-            ("/api/v1/sample_summary/(\w+)?", SampleQCSummaryDataHandler),
             ("/api/v1/quotas", QuotasDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
+            ("/api/v1/sample_summary/(\w+)?", SampleQCSummaryDataHandler),
+            ("/api/v1/samples", QCDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", ProjectsDataHandler),
             ("/qc", QCHandler),
@@ -236,6 +234,7 @@ class Application(tornado.web.Application):
         "static_path": "static"
         }
 
+        tornado.autoreload.watch("design/quota_grid.html")
         tornado.autoreload.watch("design/sample_qc.html")
         tornado.autoreload.watch("design/samples.html")
         tornado.autoreload.watch("design/base.html")

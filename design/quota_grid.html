@@ -7,64 +7,120 @@
   <h2>Historical storage quota used on UPPMAX projects</h2>
 </div>
 <div class="row">
-  {% for project in projects %}
-    <div class="span4">
-      <h2><a href="/quotas/{{ project }}">{{ project }}</a></h2>
-      <div class="chart_container" id="chart_container">
-        <div class="y_axis" id="y_axis_{{ project }}"></div>
-        <div class="chart" id="chart_{{ project }}"></div>
-      </div>
-    </div>
-  {% end %}
+
+  <!-- <div class="span4"> -->
+    <!-- <h2><a href="/quotas/{ project }}">{ project }}</a></h2> -->
+    <!-- <div class="chart_container" id="chart_container"> -->
+      <!-- <div class="y_axis" id="y_axis_{ project }}"></div> -->
+      <!-- <div class="chart" id="chart_{ project }}"></div> -->
+    <!-- </div> -->
+  <!-- </div> -->
+
 </div>
 
 <script>
+
 var time = new Rickshaw.Fixtures.Time();
-var time_unit = time.unit('3week');
+var graphs = []
+var ups
+$.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
 
-{% for project in projects %}
+  ups = uppmax_projects
 
-var my_data_{{ project }}
-var graph_{{ project }}
-$.getJSON("/api/v1/quotas/{{ project }}", function(data) {
-  my_data_{{ project }} = data[0];
+  $.each(ups, function(i, up) {
+    $(".row").append('<div class="span4" id="container_' + up + '"></div>')
 
-  graph_{{ project }} = new Rickshaw.Graph( {
+    var chart = '<div class="chart_container">' + 
+    '<div class="y_axis" id="y_axis_' + up + '"></div>' +
+    '<div class="chart" id="chart_' + up + '"></div>' +
+    '</div>'
 
-    element: $("#chart_{{ project }}").get(0),
-    renderer: 'bar',
-    series: [
-      {
-        data:  my_data_{{ project }}["data"],
-        name: my_data_{{ project }}["name"],
-        color: '#0093b9',
-      }
-    ]
-  } );
-
-  graph_{{ project }}.render();
-
-  var hoverDetail_{{ project }} = new Rickshaw.Graph.HoverDetail( {
-    graph: graph_{{ project }}
-  } );
-
-  var axes = new Rickshaw.Graph.Axis.Time( {
-    graph: graph_{{ project }},
-    timeUnit: time_unit
-  } );
-  axes.render();
-
-  var yAxis = new Rickshaw.Graph.Axis.Y({
-      graph: graph_{{ project }},
-      orientation: 'left',
-      element: $("#y_axis_{{ project }}").get(0),
-      tickFormat: Rickshaw.Fixtures.Number.formatBase1024KMGTP
+    $("#container_" + up)
+          .append("<h2>" + up + "</h2>")
+          .append(chart)
   });
-  yAxis.render();
 
+}).then(function() {
+
+$.each(ups, function(j, up) {
+  $.getJSON("/api/v1/quotas/" + up, function(data) {
+
+    var my_data = data[0]
+
+    var graph = new Rickshaw.Graph( {
+
+      element: $("#chart_" + up).get(0),
+      renderer: "bar",
+      series: [
+        {
+          data: my_data["data"],
+          name: "my_data",
+          color: "#0093b9"
+        }
+      ]
+
+    });
+
+    graph.render();
+
+    var yAxis = new Rickshaw.Graph.Axis.Y({
+    graph: graph_{ project }},
+    orientation: 'left',
+    element: $("#y_axis_" + up).get(0),
+    tickFormat: Rickshaw.Fixtures.Number.formatBase1024KMGTP
+    });
+
+    yAxis.render();
+
+  });
+});
 });
 
-{% end %}
+// var time_unit = time.unit('3week');
+
+// { for project in projects %}
+
+// var my_data_{ project }}
+// var graph_{ project }}
+// $.getJSON("/api/v1/quotas/{ project }}", function(data) {
+//   my_data_{ project }} = data[0];
+
+//   graph_{ project }} = new Rickshaw.Graph( {
+
+//     element: $("#chart_{ project }}").get(0),
+//     renderer: 'bar',
+//     series: [
+//       {
+//         data:  my_data_{ project }}["data"],
+//         name: my_data_{ project }}["name"],
+//         color: '#0093b9',
+//       }
+//     ]
+//   } );
+
+//   graph_{ project }}.render();
+
+//   var hoverDetail_{ project }} = new Rickshaw.Graph.HoverDetail( {
+//     graph: graph_{ project }}
+//   } );
+
+//   var axes = new Rickshaw.Graph.Axis.Time( {
+//     graph: graph_{ project }},
+//     timeUnit: time_unit
+//   } );
+//   axes.render();
+
+//   var yAxis = new Rickshaw.Graph.Axis.Y({
+//       graph: graph_{ project }},
+//       orientation: 'left',
+//       element: $("#y_axis_{ project }}").get(0),
+//       tickFormat: Rickshaw.Fixtures.Number.formatBase1024KMGTP
+//   });
+//   yAxis.render();
+
+// });
+
+// { end %}
 
 </script>
 
