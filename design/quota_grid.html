@@ -21,8 +21,9 @@
 <script>
 
 var time = new Rickshaw.Fixtures.Time();
-var graphs = []
+var time_unit = time.unit('month');
 var ups
+
 $.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
 
   ups = uppmax_projects
@@ -36,91 +37,58 @@ $.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
     '</div>'
 
     $("#container_" + up)
-          .append("<h2>" + up + "</h2>")
+          .append('<h2><a href="/quotas/' + up + '">' + up + '</h2></a>')
           .append(chart)
   });
 
 }).then(function() {
 
-$.each(ups, function(j, up) {
-  $.getJSON("/api/v1/quotas/" + up, function(data) {
+  $.each(ups, function(j, up) {
+    $.getJSON("/api/v1/quotas/" + up, function(data) {
 
-    var my_data = data[0]
+      var my_data = data[0]
 
-    var graph = new Rickshaw.Graph( {
+      var graph = new Rickshaw.Graph( {
 
-      element: $("#chart_" + up).get(0),
-      renderer: "bar",
-      series: [
-        {
-          data: my_data["data"],
-          name: "my_data",
-          color: "#0093b9"
-        }
-      ]
+        element: $("#chart_" + up).get(0),
+        renderer: "bar",
+        series: [
+          {
+            data: my_data["data"],
+            name: "my_data",
+            color: "#0093b9"
+          }
+        ]
+
+      });
+
+      graph.render();
+
+    var hoverDetail = new Rickshaw.Graph.HoverDetail( {
+      graph: graph
+    } );
+
+    var x_axes = new Rickshaw.Graph.Axis.Time( {
+      graph: graph,
+      timeUnit: time_unit
+    } );
+
+    x_axes.render();
+
+      var y_axis = new Rickshaw.Graph.Axis.Y({
+
+      graph: graph,
+      orientation: 'left',
+      element: $("#y_axis_" + up).get(0),
+      tickFormat: Rickshaw.Fixtures.Number.formatBase1024KMGTP
+
+      });
+
+      y_axis.render();
 
     });
-
-    graph.render();
-
-    var yAxis = new Rickshaw.Graph.Axis.Y({
-    graph: graph_{ project }},
-    orientation: 'left',
-    element: $("#y_axis_" + up).get(0),
-    tickFormat: Rickshaw.Fixtures.Number.formatBase1024KMGTP
-    });
-
-    yAxis.render();
-
   });
 });
-});
-
-// var time_unit = time.unit('3week');
-
-// { for project in projects %}
-
-// var my_data_{ project }}
-// var graph_{ project }}
-// $.getJSON("/api/v1/quotas/{ project }}", function(data) {
-//   my_data_{ project }} = data[0];
-
-//   graph_{ project }} = new Rickshaw.Graph( {
-
-//     element: $("#chart_{ project }}").get(0),
-//     renderer: 'bar',
-//     series: [
-//       {
-//         data:  my_data_{ project }}["data"],
-//         name: my_data_{ project }}["name"],
-//         color: '#0093b9',
-//       }
-//     ]
-//   } );
-
-//   graph_{ project }}.render();
-
-//   var hoverDetail_{ project }} = new Rickshaw.Graph.HoverDetail( {
-//     graph: graph_{ project }}
-//   } );
-
-//   var axes = new Rickshaw.Graph.Axis.Time( {
-//     graph: graph_{ project }},
-//     timeUnit: time_unit
-//   } );
-//   axes.render();
-
-//   var yAxis = new Rickshaw.Graph.Axis.Y({
-//       graph: graph_{ project }},
-//       orientation: 'left',
-//       element: $("#y_axis_{ project }}").get(0),
-//       tickFormat: Rickshaw.Fixtures.Number.formatBase1024KMGTP
-//   });
-//   yAxis.render();
-
-// });
-
-// { end %}
 
 </script>
 
