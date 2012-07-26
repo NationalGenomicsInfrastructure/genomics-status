@@ -54,6 +54,12 @@ class QuotaHandler(tornado.web.RequestHandler):
         self.write(t.generate(project=project))
 
 
+class ProductionHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("production.html")
+        self.write(t.generate())
+
+
 class QuotasDataHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -213,6 +219,7 @@ class Application(tornado.web.Application):
             ("/quotas", QuotasHandler),
             ("/quotas/test", TestGridHandler),
             ("/quotas/(\w+)?", QuotaHandler),
+            ("/production", ProductionHandler),
             ("/samples", QCHandler)
         ]
 
@@ -238,6 +245,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/sample_qc.html")
         tornado.autoreload.watch("design/samples.html")
         tornado.autoreload.watch("design/base.html")
+        tornado.autoreload.watch("design/production.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
