@@ -20,12 +20,36 @@
   </table>
 </div>
 
-<div class="fluid-row" id="sample_qc">
+<div class="fluid-row well" id="sample_qc">
   <h3>QC</h3>
   <table class="table table-bordered zebra-striped" id="qc_table">
     <tbody>
     </tbody>
   </table>
+</div>
+
+<div class="fluid-row well">
+
+  <div class="span5 well">
+    <div class="fluid-row well">
+      <div class="span3 well">
+        <h3>Mapping summary</h3>
+      </div>
+      <div class="span3 well">
+          <h3>*LEGEND*</h3>
+          <svg id="legend"></svg>
+      </div>
+    </div>
+
+    <svg id="mapping"></svg> 
+  </div>
+
+  <div class="span5 well">
+    <div class="span2 well">
+      <h3>Insert size distribution</h3>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -48,8 +72,73 @@ $.getJSON("/api/v1/qc/{{ sample }}", function(data) {
     "<tr><th>X10x coverage targets</th><td>" + data["x10x_coverage_targets"] + "</td></tr>" +
     "<tr><th>Zero coverage targets</th><td>" + data["zero_coverage_targets"] + "</td></tr>"
   )
-})
+});
+
+var align_data = [];
+
+$.getJSON("/api/v1/sample_alignment/{{ sample }}", function(data) {
+  align_data.push({
+    key: "Origin",
+    values: [{x: 0, y: 0, size: 0.1}]
+  });
+
+  align_data.push({
+    key: "Aligned",
+    values: [{x: 1, y: parseInt(data["aligned"]["first_of_pair"]), size: 0.9, shape: 'circle'},
+             {x: 2, y: parseInt(data["aligned"]["second_of_pair"]), size: 0.9, shape: 'circle'},
+             {x: 3, y: parseInt(data["aligned"]["pair"]), size: 0.9, shape: 'circle'}]
+  });
+
+  align_data.push({
+    key: "Reads",
+    values: [{x: 1, y: parseInt(data["reads"]["first_of_pair"]), size: 0.9, shape: 'circle'},
+             {x: 2, y: parseInt(data["reads"]["second_of_pair"]), size: 0.9, shape: 'circle'},
+             {x: 3, y: parseInt(data["reads"]["pair"]), size: 0.9, shape: 'circle'}]
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+                    .color(d3.scale.category10().range())
+                    .showLegend(false)
+                    .showControls(false)
+                    .margin({top: 60, right: 20, bottom: 50, left: 60});
+
+    chart.yAxis.tickFormat(d3.format('.5s'))
+
+    d3.select('#mapping')
+        .datum(align_data)
+      .transition().duration(200)
+        .call(chart);
+
+
+    return chart;
+  });
+
+  nv.addGraph({
+    generate: function() {
+      var legend = nv.models.legend().
+                        width(400).
+                        height(100);
+
+      d3.select('#legend')
+          .attr('width', 400)
+          .attr('height', 100)
+          .datum(align_data)
+          .call(legend);
+
+      return legend;
+    },
+    callback: function(graph) {
+      var chart = graph,
+      height = chart.height();
+
+      d3.select('#legend')
+          .attr('height', height)
+          .call(chart)
+    }
+  })
+});
+
 </script>
 
 {% end %}
-
