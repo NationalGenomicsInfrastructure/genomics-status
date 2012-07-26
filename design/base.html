@@ -7,12 +7,28 @@
 
     <link type="text/css" rel="stylesheet" href="/static/rickshaw/src/css/graph.css">
 
+    <link type="text/css" rel="stylesheet" href="/static/nvd3/src/nv.d3.css">
+
+<!-- 
   <script src="/static/rickshaw/vendor/d3.min.js"></script>
+
   <script src="/static/rickshaw/vendor/d3.layout.min.js"></script>
+ -->
+
+  <script src="/static/nvd3/lib/d3.v2.js"></script>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
 
   <script src="/static/rickshaw/rickshaw.js"></script>
+
+  <script src="/static/nvd3/lib/fisheye.js"></script>
+  <script src="/static/nvd3/nv.d3.js"></script>
+  <script src="/static/nvd3/src/tooltip.js"></script>
+  <script src="/static/nvd3/src/models/legend.js"></script>
+  <script src="/static/nvd3/src/models/axis.js"></script>
+  <script src="/static/nvd3/src/models/distribution.js"></script>
+  <script src="/static/nvd3/src/models/scatter.js"></script>
+  <script src="/static/nvd3/src/models/scatterChart.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
@@ -30,6 +46,26 @@
     <![endif]-->
 
   </head>
+
+  <style>
+    
+    svg {
+      overflow: hidden;
+    }
+
+    body {
+      overflow-y:scroll;
+    }
+
+    #mapping {
+      height: 300px;
+    }
+
+    #legend {
+      height: 100px;
+    }
+
+  </style>
 
   <body>
   <!-- Navbar
