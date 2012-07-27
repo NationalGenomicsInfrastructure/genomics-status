@@ -222,6 +222,17 @@ class SampleQCInsertSizesDataHandler(tornado.web.RequestHandler):
         return result.rows[0].value
 
 
+class SampleQCCoverageDataHandler(tornado.web.RequestHandler):
+    def get(self, sample):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.sample_summary(sample), default=dthandler))
+
+    def sample_summary(self, sample):
+        result = self.application.qc_db.view("samples/coverage", key=sample)
+
+        return result.rows[0].value
+
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
@@ -232,8 +243,9 @@ class Application(tornado.web.Application):
             ("/api/v1/qc/(\w+)?", SampleQCDataHandler),
             ("/api/v1/quotas", QuotasDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
-            ("/api/v1/sample_summary/(\w+)?", SampleQCSummaryDataHandler),
             ("/api/v1/sample_alignment/(\w+)?", SampleQCAlignmentDataHandler),
+            ("/api/v1/sample_coverage/(\w+)?", SampleQCCoverageDataHandler),
+            ("/api/v1/sample_summary/(\w+)?", SampleQCSummaryDataHandler),
             ("/api/v1/sample_insert_sizes/(\w+)?", SampleQCInsertSizesDataHandler),
             ("/api/v1/samples", QCDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
