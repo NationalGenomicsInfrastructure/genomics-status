@@ -30,14 +30,15 @@
 
 <div class="fluid-row">
 
-  <div class="span5 fluid-row">
-    <h3 class="span1">Mapping summary</h3>
+  <div class="span5">
+    <h3 class="span2">Mapping summary</h3>
     <svg class="span3" id="legend"></svg>
     <svg class="span4" id="mapping"></svg> 
   </div>
 
-  <div class="span5 fluid-row">
-    <h3 class="span1">Insert size distribution</h3>
+  <div class="span5">
+    <h3 class="span2">Insert size distribution</h3>
+    <svg class="span4" id="distribution"></svg>
   </div>
 
 </div>
@@ -139,6 +140,36 @@ $.getJSON("/api/v1/sample_alignment/{{ sample }}", function(data) {
           .call(chart)
     }
   })
+});
+
+$.getJSON("/api/v1/sample_insert_sizes/{{ sample }}", function(data) {
+  var ins_dist = []
+
+  $.each(data, function(length, num) {
+    ins_dist.push({x: length, y: parseInt(num)})
+    if (length > 1000) {
+      return false
+    };
+  });
+
+  console.log(d3.max(data))
+
+  var ins_dist_data = [
+    {
+      values: ins_dist,
+      key: 'Insert size'
+    }
+  ];
+
+  var chart = nv.models.lineChart()
+                  .showLegend(false);
+
+  d3.select('#distribution')
+      .datum(ins_dist_data)
+    .transition().duration(200)
+      .call(chart);
+
+  return chart
 });
 
 </script>
