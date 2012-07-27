@@ -246,6 +246,12 @@ class BarcodeDataHandler(tornado.web.RequestHandler):
         return barcode_list
 
 
+class BarcodeHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("barcodes.html")
+        self.write(t.generate())
+
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
@@ -265,6 +271,7 @@ class Application(tornado.web.Application):
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", ProjectsDataHandler),
             ("/qc", QCHandler),
+            ("/qc/barcodes", BarcodeHandler),
             ("/qc/(\w+)?", SampleQCSummaryHandler),
             ("/quotas", QuotasHandler),
             ("/quotas/test", TestGridHandler),
@@ -296,6 +303,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/samples.html")
         tornado.autoreload.watch("design/base.html")
         tornado.autoreload.watch("design/production.html")
+        tornado.autoreload.watch("design/barcodes.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
