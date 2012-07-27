@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+<div class="span9">
+<div class="hero-unit">
+    <h2>Data production</h2>
+    <div class="chart_container" id="chart_container">
+      <div class="chart" id="chart"></div>
+    </div>
+  </div>
+</div>
+<div class="row-fluid">
+</div>
+
+<script>
+
+var my_data
+var graph
+$.getJSON("/api/v1/production", function(data) {
+  my_data = data[0];
+
+  graph = new Rickshaw.Graph( {
+
+    element: $("#chart").get(0),
+    renderer: 'area',
+    series: [
+      {
+        data:  my_data["data"],
+        name: my_data["name"],
+        color: '#0093b9',
+      }
+    ]
+  } );
+
+  graph.render();
+
+});
+
+</script>
+
+{% end %}
