@@ -41,6 +41,11 @@
     <svg class="span4" id="distribution"></svg>
   </div>
 
+  <div class="span5">
+    <h3 class="span2">Coverage summary</h3>
+    <svg class="span4" id="coverage"></svg>
+  </div
+
 </div>
 
 <script>
@@ -170,6 +175,27 @@ $.getJSON("/api/v1/sample_insert_sizes/{{ sample }}", function(data) {
       .call(chart);
 
   return chart
+});
+
+$.getJSON("/api/v1/sample_coverage/{{ sample }}", function(data) {
+  coverage_data = []
+  coverage_data.push({"label": "X2", "value": parseFloat(data[0])})
+  coverage_data.push({"label": "X10", "value": parseFloat(data[1])})
+  coverage_data.push({"label": "X20", "value": parseFloat(data[2])})
+  coverage_data.push({"label": "X30", "value": parseFloat(data[3])})
+
+  the_cov_data = [{key: "Coverage", values: coverage_data}]
+
+  var chart = nv.models.discreteBarChart()
+                  .x(function(d) { return d.label })
+                  .y(function(d) { return d.value });
+
+  d3.select('#coverage')
+      .datum(the_cov_data)
+    .transition().duration(200)
+      .call(chart);
+
+  return chart;
 });
 
 </script>
