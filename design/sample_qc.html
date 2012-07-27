@@ -20,7 +20,7 @@
   </table>
 </div>
 
-<div class="fluid-row well" id="sample_qc">
+<div class="fluid-row" id="sample_qc">
   <h3>QC</h3>
   <table class="table table-bordered zebra-striped" id="qc_table">
     <tbody>
@@ -28,26 +28,16 @@
   </table>
 </div>
 
-<div class="fluid-row well">
+<div class="fluid-row">
 
-  <div class="span5 well">
-    <div class="fluid-row well">
-      <div class="span3 well">
-        <h3>Mapping summary</h3>
-      </div>
-      <div class="span3 well">
-          <h3>*LEGEND*</h3>
-          <svg id="legend"></svg>
-      </div>
-    </div>
-
-    <svg id="mapping"></svg> 
+  <div class="span5 fluid-row">
+    <h3 class="span1">Mapping summary</h3>
+    <svg class="span3" id="legend"></svg>
+    <svg class="span4" id="mapping"></svg> 
   </div>
 
-  <div class="span5 well">
-    <div class="span2 well">
-      <h3>Insert size distribution</h3>
-    </div>
+  <div class="span5 fluid-row">
+    <h3 class="span1">Insert size distribution</h3>
   </div>
 
 </div>
@@ -75,6 +65,7 @@ $.getJSON("/api/v1/qc/{{ sample }}", function(data) {
 });
 
 var align_data = [];
+var mapping;
 
 $.getJSON("/api/v1/sample_alignment/{{ sample }}", function(data) {
   align_data.push({
@@ -100,8 +91,7 @@ $.getJSON("/api/v1/sample_alignment/{{ sample }}", function(data) {
     var chart = nv.models.scatterChart()
                     .color(d3.scale.category10().range())
                     .showLegend(false)
-                    .showControls(false)
-                    .margin({top: 60, right: 20, bottom: 50, left: 60});
+                    .showControls(false);
 
     chart.yAxis.tickFormat(d3.format('.5s'))
 
@@ -110,30 +100,42 @@ $.getJSON("/api/v1/sample_alignment/{{ sample }}", function(data) {
       .transition().duration(200)
         .call(chart);
 
+    mapping = chart;
 
     return chart;
   });
 
   nv.addGraph({
     generate: function() {
-      var legend = nv.models.legend().
-                        width(400).
-                        height(100);
+      var legend = nv.models.legend()
+                    .color(d3.scale.category10().range())
+                    .width(220);
 
       d3.select('#legend')
-          .attr('width', 400)
-          .attr('height', 100)
           .datum(align_data)
           .call(legend);
+
+      legend.dispatch.on('legendClick', function(d,i) {
+        d.disabled = !d.disabled;
+
+        if (!align_data.filter(function(d) { return !d.disabled }).length) {
+          align_data.map(function(d) {
+            d.disabled = false;
+            wrap.selectAll('.series').classed('disabled', false);
+            return d;
+          });
+        }
+
+        mapping.update()
+
+      });
 
       return legend;
     },
     callback: function(graph) {
-      var chart = graph,
-      height = chart.height();
+      var chart = graph;
 
       d3.select('#legend')
-          .attr('height', height)
           .call(chart)
     }
   })
