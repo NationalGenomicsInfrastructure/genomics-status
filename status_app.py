@@ -233,6 +233,19 @@ class SampleQCCoverageDataHandler(tornado.web.RequestHandler):
         return result.rows[0].value
 
 
+class BarcodeDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_barcodes()))
+
+    def list_barcodes(self):
+        barcode_list = []
+        for row in self.application.qc_db.view("barcodes/scores", group_level=1):
+            barcode_list.append([row.key, row.value])
+
+        return barcode_list
+
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
@@ -240,6 +253,7 @@ class Application(tornado.web.Application):
             ("/api/v1", DataHandler),
             ("/api/v1/production", ProductionDataHandler),
             ("/api/v1/qc", QCDataHandler),
+            ("/api/v1/qc/barcodes", BarcodeDataHandler),
             ("/api/v1/qc/(\w+)?", SampleQCDataHandler),
             ("/api/v1/quotas", QuotasDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
