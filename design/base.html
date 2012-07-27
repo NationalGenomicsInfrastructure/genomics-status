@@ -29,6 +29,8 @@
   <script src="/static/nvd3/src/models/distribution.js"></script>
   <script src="/static/nvd3/src/models/scatter.js"></script>
   <script src="/static/nvd3/src/models/scatterChart.js"></script>
+  <script src="/static/nvd3/src/models/line.js"></script>
+  <script src="/static/nvd3/src/models/lineChart.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
@@ -54,10 +56,14 @@
     }
 
     body {
-      overflow-y:scroll;
+      overflow-y: scroll;
     }
 
     #mapping {
+      height: 300px;
+    }
+
+    #distribution {
       height: 300px;
     }
 
@@ -91,7 +97,7 @@
         </div><!--/.well -->
       </div><!--/span-->
 
-      <div class="span9 well">
+      <div class="span9 well row">
         {% block stuff %}
         {% end %}
       </div>
