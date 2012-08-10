@@ -211,6 +211,12 @@ class SampleQCSummaryHandler(tornado.web.RequestHandler):
         self.write(t.generate(sample=sample))
 
 
+class ProjectSamplesHandler(tornado.web.RequestHandler):
+    def get(self, project):
+        t = self.application.loader.load("project_samples.html")
+        self.write(t.generate(project=project))
+
+
 class SampleQCAlignmentDataHandler(tornado.web.RequestHandler):
     def get(self, sample):
         self.set_header("Content-type", "application/json")
@@ -289,7 +295,7 @@ class Application(tornado.web.Application):
             ("/api/v1", DataHandler),
             ("/api/v1/production", ProductionDataHandler),
             ("/api/v1/projects", ProjectsDataHandler),
-            ("/api/v1/projects/(\w+\.*\w+)+?", ProjectSamplesDataHandler),
+            ("/api/v1/projects/(\w\.*\w+)+?", ProjectSamplesDataHandler),
             ("/api/v1/qc", QCDataHandler),
             ("/api/v1/qc/barcodes", BarcodeDataHandler),
             ("/api/v1/qc/(\w+)?", SampleQCDataHandler),
@@ -310,6 +316,7 @@ class Application(tornado.web.Application):
             ("/quotas/(\w+)?", QuotaHandler),
             ("/production", ProductionHandler),
             ("/projects", ProjectsHandler),
+            ("/projects/(\w+\.*\w+)+?", ProjectSamplesHandler),
             ("/samples", QCHandler)
         ]
 
@@ -335,6 +342,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/sample_qc.html")
         tornado.autoreload.watch("design/samples.html")
         tornado.autoreload.watch("design/projects.html")
+        tornado.autoreload.watch("design/project_samples.html")
         tornado.autoreload.watch("design/base.html")
         tornado.autoreload.watch("design/production.html")
         tornado.autoreload.watch("design/barcodes.html")

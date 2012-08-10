@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+
+<div class="fluid-row">
+  <h2>{{ project }} - Samples</h2>
+</div>
+<div class="fluid-row" id="sample_list">
+</div>
+
+<script>
+$.getJSON("/api/v1/projects/{{ project }}", function(data) {
+  $.each(data, function (index, project) {
+    $("#sample_list").append('<div class="span3"><p><a href="/qc/' + 
+      project + '">' + project + '</p></div>')
+  });
+});
+
+</script>
+
+{% end %}
