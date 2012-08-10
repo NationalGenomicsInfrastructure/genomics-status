@@ -92,7 +92,7 @@ class QuotaDataHandler(tornado.web.RequestHandler):
         return [d]
 
 
-class ProjectsDataHandler(tornado.web.RequestHandler):
+class UppmaxProjectsDataHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_projects()))
@@ -252,12 +252,26 @@ class BarcodeHandler(tornado.web.RequestHandler):
         self.write(t.generate())
 
 
+class ProjectsDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_projects()))
+
+    def list_projects(self):
+        project_list = []
+        for row in self.application.qc_db.view("projects/sample_list"):
+            project_list.append(row.key)
+
+        return project_list
+
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
             ("/", MainHandler),
             ("/api/v1", DataHandler),
             ("/api/v1/production", ProductionDataHandler),
+            ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/qc", QCDataHandler),
             ("/api/v1/qc/barcodes", BarcodeDataHandler),
             ("/api/v1/qc/(\w+)?", SampleQCDataHandler),
@@ -269,7 +283,7 @@ class Application(tornado.web.Application):
             ("/api/v1/sample_insert_sizes/(\w+)?", SampleQCInsertSizesDataHandler),
             ("/api/v1/samples", QCDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
-            ("/api/v1/uppmax_projects", ProjectsDataHandler),
+            ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/qc", QCHandler),
             ("/qc/barcodes", BarcodeHandler),
             ("/qc/(\w+)?", SampleQCSummaryHandler),
