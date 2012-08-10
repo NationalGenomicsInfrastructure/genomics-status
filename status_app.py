@@ -265,6 +265,12 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
         return project_list
 
 
+class ProjectsHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("projects.html")
+        self.write(t.generate())
+
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
@@ -291,6 +297,7 @@ class Application(tornado.web.Application):
             ("/quotas/test", TestGridHandler),
             ("/quotas/(\w+)?", QuotaHandler),
             ("/production", ProductionHandler),
+            ("/projects", ProjectsHandler),
             ("/samples", QCHandler)
         ]
 
@@ -315,6 +322,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/quota_grid.html")
         tornado.autoreload.watch("design/sample_qc.html")
         tornado.autoreload.watch("design/samples.html")
+        tornado.autoreload.watch("design/projects.html")
         tornado.autoreload.watch("design/base.html")
         tornado.autoreload.watch("design/production.html")
         tornado.autoreload.watch("design/barcodes.html")
