@@ -339,6 +339,7 @@ class Application(tornado.web.Application):
         }
 
         tornado.autoreload.watch("design/quota_grid.html")
+        tornado.autoreload.watch("design/quota.html")
         tornado.autoreload.watch("design/sample_qc.html")
         tornado.autoreload.watch("design/samples.html")
         tornado.autoreload.watch("design/projects.html")

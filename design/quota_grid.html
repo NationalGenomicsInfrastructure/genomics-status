@@ -23,7 +23,7 @@ $.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
 
     var chart = '<div class="chart_container">' + 
     '<div class="y_axis" id="y_axis_' + up + '"></div>' +
-    '<div class="chart" id="chart_' + up + '"></div>' +
+    '<svg id="chart_' + up + '"></svg>' +
     '</div>'
 
     $("#container_" + up)
@@ -32,52 +32,29 @@ $.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
   });
 
 }).then(function() {
-
   $.each(ups, function(j, up) {
     $.getJSON("/api/v1/quotas/" + up, function(data) {
 
-      var my_data = data[0]
+      var my_data = data[0]["data"]
 
-      var graph = new Rickshaw.Graph( {
+      var chart = nv.models.linePlusBarChart()
+              .x(function(d) { return d["x"] * 1000 })
+              .y(function(d) { return d["y"] });
 
-        element: $("#chart_" + up).get(0),
-        renderer: "bar",
-        series: [
-          {
-            data: my_data["data"],
-            name: "my_data",
-            color: "#0093b9"
-          }
-        ]
+      chart.xAxis
+        .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
 
-      });
+      chart.yAxis1
+          .tickFormat(d3.format("2.2s"))
 
-      graph.render();
+      d3.select("#chart_" + up)
+          .datum([{values: my_data, key: "banana", bar: true}])
+        .call(chart);
 
-    var hoverDetail = new Rickshaw.Graph.HoverDetail( {
-      graph: graph
-    } );
+      return chart;
 
-    var x_axes = new Rickshaw.Graph.Axis.Time( {
-      graph: graph,
-      timeUnit: time_unit
-    } );
-
-    x_axes.render();
-
-      var y_axis = new Rickshaw.Graph.Axis.Y({
-
-      graph: graph,
-      orientation: 'left',
-      element: $("#y_axis_" + up).get(0),
-      tickFormat: Rickshaw.Fixtures.Number.formatBase1024KMGTP
-
-      });
-
-      y_axis.render();
-
-    });
-  });
+    })
+  })
 });
 
 </script>
