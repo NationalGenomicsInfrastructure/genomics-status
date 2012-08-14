@@ -1,3 +1,4 @@
+
 /* Body and structure
 -------------------------------------------------- */
 body {
@@ -72,3 +73,34 @@ body {
   bottom: 0;
   width: 40px;
 }
+
+/* NVD3 Graphs
+------------------------------------------------- */
+    
+    svg {
+      overflow: hidden;
+    }
+
+    body {
+      overflow-y: scroll;
+    }
+
+    #mapping {
+      height: 300px;
+    }
+
+    #distribution {
+      height: 300px;
+    }
+
+    #coverage {
+      height: 300px;
+    }
+
+    #production {
+      height: 600px;
+    }
+
+    #legend {
+      height: 20px;
+    }
