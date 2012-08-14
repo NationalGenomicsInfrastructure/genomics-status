@@ -62,9 +62,10 @@ body {
   margin-bottom: 20px;
 }
 
-.chart {
-  position: relative;
-  margin: 0 0 0 40px;
+#chart {
+  /*position: relative;*/
+  /*margin: 0 0 0 40px;*/
+  height: 300px;
 }
 
 .y_axis {
