@@ -10,8 +10,6 @@
 
 <script>
 
-var time = new Rickshaw.Fixtures.Time();
-var time_unit = time.unit('month');
 var ups
 
 $.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
@@ -39,7 +37,8 @@ $.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
 
       var chart = nv.models.linePlusBarChart()
               .x(function(d) { return d["x"] * 1000 })
-              .y(function(d) { return d["y"] });
+              .y(function(d) { return d["y"] })
+              .showLegend(false);
 
       chart.xAxis
         .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
@@ -48,7 +47,7 @@ $.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
           .tickFormat(d3.format("2.2s"))
 
       d3.select("#chart_" + up)
-          .datum([{values: my_data, key: "banana", bar: true}])
+          .datum([{values: my_data, key: "quota", bar: true}])
         .call(chart);
 
       return chart;
