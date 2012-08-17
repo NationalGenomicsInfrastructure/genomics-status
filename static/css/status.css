@@ -68,6 +68,11 @@ body {
   height: 300px;
 }
 
+#amanita_chart {
+  /*position: relative;*/
+  /*margin: 0 0 0 40px;*/
+  height: 600px;
+}
 .y_axis {
   position: absolute;
   top: 0;
