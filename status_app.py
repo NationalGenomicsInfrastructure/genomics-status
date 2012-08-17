@@ -288,11 +288,63 @@ class ProjectsHandler(tornado.web.RequestHandler):
         self.write(t.generate())
 
 
+class AmanitaHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("amanita.html")
+        self.write(t.generate())
+
+
+class AmanitaHomeDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.home_usage()))
+
+    def home_usage(self):
+        sizes = []
+        for row in self.application.amanita_db.view("sizes/home_total"):
+            sizes.append({"x": int(time.mktime(parser.parse(row.key).timetuple()) * 1000), \
+                          "y": row.value * 1024})
+
+        return sizes
+
+
+class AmanitaHomeUserDataHandler(tornado.web.RequestHandler):
+    def get(self, user):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.home_usage(user)))
+
+    def home_usage(self, user):
+        sizes = []
+        for row in self.application.amanita_db.view("sizes/home_user", \
+        startkey=[user, "0"], endkey=[user, "a"], group=True):
+            sizes.append({"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000), \
+                          "y": row.value * 1024})
+
+        return sizes
+
+
+class AmanitaUsersDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.home_users()))
+
+    def home_users(self):
+        users = []
+        for row in self.application.amanita_db.view("sizes/home_user", group_level=1):
+            if "/" not in row.key[0]:
+                users.append(row.key[0])
+
+        return users
+
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
             ("/", MainHandler),
             ("/api/v1", DataHandler),
+            ("/api/v1/amanita_home", AmanitaHomeDataHandler),
+            ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
+            ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
             ("/api/v1/production", ProductionDataHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/projects/(\w\.*\w+)+?", ProjectSamplesDataHandler),
@@ -308,6 +360,7 @@ class Application(tornado.web.Application):
             ("/api/v1/samples", QCDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
+            ("/amanita", AmanitaHandler),
             ("/qc", QCHandler),
             ("/qc/barcodes", BarcodeHandler),
             ("/qc/(\w+)?", SampleQCSummaryHandler),
@@ -331,6 +384,7 @@ class Application(tornado.web.Application):
             self.illumina_db = couch["illumina_logs"]
             self.uppmax_db = couch["uppmax"]
             self.qc_db = couch["qc"]
+            self.amanita_db = couch["amanita"]
 
         # Setup the Tornado Application
         settings = {
@@ -347,6 +401,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/base.html")
         tornado.autoreload.watch("design/production.html")
         tornado.autoreload.watch("design/barcodes.html")
+        tornado.autoreload.watch("design/amanita.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
