@@ -68,18 +68,6 @@ body {
   height: 300px;
 }
 
-#amanita_chart {
-  /*position: relative;*/
-  /*margin: 0 0 0 40px;*/
-  height: 600px;
-}
-.y_axis {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 40px;
-}
-
 /* NVD3 Graphs
 ------------------------------------------------- */
     
@@ -91,6 +79,13 @@ body {
       overflow-y: scroll;
     }
 
+#amanita_chart {
+  height: 600px;
+}
+
+#picea_chart {
+  height: 600px;
+}
     #mapping {
       height: 300px;
     }
