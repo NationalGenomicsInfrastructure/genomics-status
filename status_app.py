@@ -337,6 +337,55 @@ class AmanitaUsersDataHandler(tornado.web.RequestHandler):
         return users
 
 
+class PiceaHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("picea.html")
+        self.write(t.generate())
+
+
+class PiceaHomeDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.home_usage()))
+
+    def home_usage(self):
+        sizes = []
+        for row in self.application.picea_db.view("sizes/home_total"):
+            sizes.append({"x": int(time.mktime(parser.parse(row.key).timetuple()) * 1000), \
+                          "y": row.value * 1024})
+
+        return sizes
+
+
+class PiceaHomeUserDataHandler(tornado.web.RequestHandler):
+    def get(self, user):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.home_usage(user)))
+
+    def home_usage(self, user):
+        sizes = []
+        for row in self.application.picea_db.view("sizes/home_user", \
+        startkey=[user, "0"], endkey=[user, "a"], group=True):
+            sizes.append({"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000), \
+                          "y": row.value * 1024})
+
+        return sizes
+
+
+class PiceaUsersDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.home_users()))
+
+    def home_users(self):
+        users = []
+        for row in self.application.picea_db.view("sizes/home_user", group_level=1):
+            if "/" not in row.key[0]:
+                users.append(row.key[0])
+
+        return users
+
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
@@ -345,6 +394,9 @@ class Application(tornado.web.Application):
             ("/api/v1/amanita_home", AmanitaHomeDataHandler),
             ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
+            ("/api/v1/picea_home", PiceaHomeDataHandler),
+            ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
+            ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
             ("/api/v1/production", ProductionDataHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/projects/(\w\.*\w+)+?", ProjectSamplesDataHandler),
@@ -361,6 +413,7 @@ class Application(tornado.web.Application):
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/amanita", AmanitaHandler),
+            ("/picea", PiceaHandler),
             ("/qc", QCHandler),
             ("/qc/barcodes", BarcodeHandler),
             ("/qc/(\w+)?", SampleQCSummaryHandler),
@@ -385,6 +438,7 @@ class Application(tornado.web.Application):
             self.uppmax_db = couch["uppmax"]
             self.qc_db = couch["qc"]
             self.amanita_db = couch["amanita"]
+            self.picea_db = couch["picea"]
 
         # Setup the Tornado Application
         settings = {
