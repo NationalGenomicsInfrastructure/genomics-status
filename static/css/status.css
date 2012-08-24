@@ -18,6 +18,10 @@ body {
   background-color: #FBFEF8;
 }
 
+.brand {
+  background-color: white;
+}
+
 .navbar-inner {
   visibility: hidden;
   background-color: #F3F9FB;
