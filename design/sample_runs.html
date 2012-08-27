@@ -4,14 +4,14 @@
 {% block stuff %}
 
 <div class="fluid-row">
-  <h2>Samples</h2>
+  <h2>Runs of {{ sample }}</h2>
 </div>
 <div class="row" id="sample_list"></div>
 
 <script>
-$.getJSON("/api/v1/samples", function(data) {
+$.getJSON("/api/v1/samples/{{ sample }}", function(data) {
   for (var i = 0; i < data.length; i++) {
-    $("#sample_list").append('<div class="span3"><p><a href="/samples/' + data[i] 
+    $("#sample_list").append('<div class="span3"><p><a href="/qc/' + data[i] 
       + '">' + data[i] + '</a></p></div>')
   };
 })
