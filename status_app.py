@@ -160,7 +160,7 @@ class QCDataHandler(tornado.web.RequestHandler):
 
     def list_samples(self):
         sample_list = []
-        for row in self.application.qc_db.view("samples/names"):
+        for row in self.application.qc_db.view("samples/runs", group_level=1):
             sample_list.append(row.key)
 
         return sample_list
@@ -207,7 +207,7 @@ class ProjectSamplesDataHandler(tornado.web.RequestHandler):
 
 class SampleQCSummaryHandler(tornado.web.RequestHandler):
     def get(self, sample):
-        t = self.application.loader.load("sample_qc.html")
+        t = self.application.loader.load("sample_run_qc.html")
         self.write(t.generate(sample=sample))
 
 
@@ -343,6 +343,12 @@ class PiceaHandler(tornado.web.RequestHandler):
         self.write(t.generate())
 
 
+class SampleRunHandler(tornado.web.RequestHandler):
+    def get(self, sample):
+        t = self.application.loader.load("sample_runs.html")
+        self.write(t.generate(sample=sample))
+
+
 class PiceaHomeDataHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -386,6 +392,19 @@ class PiceaUsersDataHandler(tornado.web.RequestHandler):
         return users
 
 
+class SampleRunDataHandler(tornado.web.RequestHandler):
+    def get(self, sample):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.sample_runs(sample)))
+
+    def sample_runs(self, sample):
+        sample_run_list = []
+        for row in self.application.qc_db.view("samples/runs", key=sample, reduce=False):
+            sample_run_list.append(row.value)
+
+        return sample_run_list
+
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
@@ -410,6 +429,7 @@ class Application(tornado.web.Application):
             ("/api/v1/sample_summary/(\w+)?", SampleQCSummaryDataHandler),
             ("/api/v1/sample_insert_sizes/(\w+)?", SampleQCInsertSizesDataHandler),
             ("/api/v1/samples", QCDataHandler),
+            ("/api/v1/samples/(\w+)?", SampleRunDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/amanita", AmanitaHandler),
@@ -423,7 +443,8 @@ class Application(tornado.web.Application):
             ("/production", ProductionHandler),
             ("/projects", ProjectsHandler),
             ("/projects/(\w+\.*\w+)+?", ProjectSamplesHandler),
-            ("/samples", QCHandler)
+            ("/samples", QCHandler),
+            ("/samples/(\w+)?", SampleRunHandler)
         ]
 
         self.declared_handlers = handlers
@@ -448,7 +469,8 @@ class Application(tornado.web.Application):
 
         tornado.autoreload.watch("design/quota_grid.html")
         tornado.autoreload.watch("design/quota.html")
-        tornado.autoreload.watch("design/sample_qc.html")
+        tornado.autoreload.watch("design/sample_run_qc.html")
+        tornado.autoreload.watch("design/sample_runs.html")
         tornado.autoreload.watch("design/samples.html")
         tornado.autoreload.watch("design/projects.html")
         tornado.autoreload.watch("design/project_samples.html")
