@@ -29,6 +29,8 @@ $.getJSON("/api/v1/production", function(data) {
         .datum([{"values": my_data["data"], "key": "Basepairs sequenced"}])
         .call(chart);
 
+    nv.utils.windowResize(function() {d3.select('#production').call(chart)})
+
     return chart
   });
 
