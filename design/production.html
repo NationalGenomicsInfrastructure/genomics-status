@@ -17,7 +17,8 @@ $.getJSON("/api/v1/production", function(data) {
     var chart = nv.models.stackedAreaChart()
                   .x(function(d) { return d["x"] })
                   .y(function(d) { return d["y"] })
-                  .showControls(false);
+                  .showControls(false)
+                  .color(["#4D91A1"]);
 
     chart.xAxis
         .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });

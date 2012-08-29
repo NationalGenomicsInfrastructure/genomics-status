@@ -11,6 +11,7 @@
 <script>
 
 var ups
+var chart
 
 $.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
 
@@ -20,8 +21,7 @@ $.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
     $(".row").append('<div class="span4" id="container_' + up + '"></div>')
 
     var chart = '<div class="chart_container">' + 
-    '<div class="y_axis" id="y_axis_' + up + '"></div>' +
-    '<svg id="chart_' + up + '"></svg>' +
+    '<svg class="quota_chart" id="chart_' + up + '"></svg>' +
     '</div>'
 
     $("#container_" + up)
@@ -35,10 +35,11 @@ $.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
 
       var my_data = data[0]["data"]
 
-      var chart = nv.models.linePlusBarChart()
+      chart = nv.models.linePlusBarChart()
               .x(function(d) { return d["x"] * 1000 })
               .y(function(d) { return d["y"] })
-              .showLegend(false);
+              .showLegend(false)
+              .color(["#4D91A1"]);
 
       chart.xAxis
         .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
