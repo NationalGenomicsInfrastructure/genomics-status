@@ -143,6 +143,26 @@ class ProductionDataHandler(tornado.web.RequestHandler):
         return [d]
 
 
+class BPProductionDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.cum_date_bpcounts(), default=dthandler))
+
+    def cum_date_bpcounts(self):
+        view = self.application.qc_db.view("barcodes/date_read_counts", group_level=1)
+        row0 = view.rows[0]
+        current = row0.value * 200
+        bp_list = [{"x": int(time.mktime(parser.parse(row0.key).timetuple()) * 1000), \
+                    "y": current}]
+        for row in view.rows[1:]:
+            current += row.value * 200
+            bp_list.append({"x": int(time.mktime(parser.parse(row.key).timetuple()) * 1000), \
+                            "y": current})
+
+        d = {"data": bp_list, "name": "series"}
+        return [d]
+
+
 class DataHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -416,7 +436,7 @@ class Application(tornado.web.Application):
             ("/api/v1/picea_home", PiceaHomeDataHandler),
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
-            ("/api/v1/production", ProductionDataHandler),
+            ("/api/v1/production", BPProductionDataHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/projects/(\w\.*\w+)+?", ProjectSamplesDataHandler),
             ("/api/v1/qc", QCDataHandler),
