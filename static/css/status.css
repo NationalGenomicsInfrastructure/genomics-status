@@ -9,7 +9,6 @@ Colors: http://colorschemedesigner.com/#3n52e1uYmw0w0 */
 body {
   background-image: url('/static/img/absurdidad/absurdidad.png');
   background-color: #F7FDF1;
-  height: 100%;
   padding-bottom: 40px;
   padding-top: 20px;
 }
@@ -87,29 +86,26 @@ a {
   line-height: 36px;
 }
 
-/* Rickshaw graphs
--------------------------------------------------- */
 .chart_container {
   position: relative;
   margin-bottom: 20px;
 }
 
-#chart {
-  /*position: relative;*/
-  /*margin: 0 0 0 40px;*/
-  height: 300px;
-}
 
 /* NVD3 Graphs
 ------------------------------------------------- */
     
-    svg {
-      overflow: hidden;
-    }
+svg {
+  overflow: hidden;
+}
 
-    body {
-      overflow-y: scroll;
-    }
+body {
+  overflow-y: scroll;
+}
+
+.quota_chart {
+  height: 300px;
+}
 
 #amanita_chart {
   height: 600px;

@@ -169,7 +169,7 @@ class DataHandler(tornado.web.RequestHandler):
         handlers = [h[0] for h in self.application.declared_handlers]
         api = filter(lambda h: h.startswith("/api"), handlers)
         pages = list(set(handlers).difference(set(api)))
-        pages = filter(lambda h: not h.endswith("?"), pages)
+        pages = filter(lambda h: not (h.endswith("?") or h.endswith("$")), pages)
         self.write(json.dumps({"api": api, "pages": pages}))
 
 
@@ -181,6 +181,19 @@ class QCDataHandler(tornado.web.RequestHandler):
     def list_samples(self):
         sample_list = []
         for row in self.application.qc_db.view("samples/runs", group_level=1):
+            sample_list.append(row.key)
+
+        return sample_list
+
+
+class PagedQCDataHandler(tornado.web.RequestHandler):
+    def get(self, startkey):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_samples(startkey)))
+
+    def list_samples(self, startkey):
+        sample_list = []
+        for row in self.application.qc_db.view("samples/runs", group_level=1, limit=50, startkey=startkey):
             sample_list.append(row.key)
 
         return sample_list
@@ -438,7 +451,7 @@ class Application(tornado.web.Application):
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
             ("/api/v1/production", BPProductionDataHandler),
             ("/api/v1/projects", ProjectsDataHandler),
-            ("/api/v1/projects/(\w\.*\w+)+?", ProjectSamplesDataHandler),
+            ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/qc", QCDataHandler),
             ("/api/v1/qc/(\w+)?", SampleQCDataHandler),
             ("/api/v1/quotas", QuotasDataHandler),
@@ -448,7 +461,8 @@ class Application(tornado.web.Application):
             ("/api/v1/sample_summary/(\w+)?", SampleQCSummaryDataHandler),
             ("/api/v1/sample_insert_sizes/(\w+)?", SampleQCInsertSizesDataHandler),
             ("/api/v1/samples", QCDataHandler),
-            ("/api/v1/samples/(\w+)?", SampleRunDataHandler),
+            ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
+            ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/amanita", AmanitaHandler),
@@ -456,13 +470,13 @@ class Application(tornado.web.Application):
             ("/qc", QCHandler),
             ("/qc/(\w+)?", SampleQCSummaryHandler),
             ("/quotas", QuotasHandler),
-            ("/quotas/test", TestGridHandler),
+            # ("/quotas/test", TestGridHandler),
             ("/quotas/(\w+)?", QuotaHandler),
             ("/production", ProductionHandler),
             ("/projects", ProjectsHandler),
-            ("/projects/(\w+\.*\w+)+?", ProjectSamplesHandler),
+            ("/projects/([^/]*)$", ProjectSamplesHandler),
             ("/samples", QCHandler),
-            ("/samples/(\w+)?", SampleRunHandler)
+            ("/samples/([^/]*)$", SampleRunHandler)
         ]
 
         self.declared_handlers = handlers
