@@ -144,12 +144,12 @@ class ProductionDataHandler(tornado.web.RequestHandler):
 
 
 class BPProductionDataHandler(tornado.web.RequestHandler):
-    def get(self):
+    def get(self, start):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.cum_date_bpcounts(), default=dthandler))
+        self.write(json.dumps(self.cum_date_bpcounts(start), default=dthandler))
 
-    def cum_date_bpcounts(self):
-        view = self.application.qc_db.view("barcodes/date_read_counts", group_level=1)
+    def cum_date_bpcounts(self, start):
+        view = self.application.qc_db.view("barcodes/date_read_counts", group_level=1, startkey=start)
         row0 = view.rows[0]
         current = row0.value * 200
         bp_list = [{"x": int(time.mktime(parser.parse(row0.key).timetuple()) * 1000), \
@@ -449,7 +449,7 @@ class Application(tornado.web.Application):
             ("/api/v1/picea_home", PiceaHomeDataHandler),
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
-            ("/api/v1/production", BPProductionDataHandler),
+            ("/api/v1/production/([^/]*)$", BPProductionDataHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/qc", QCDataHandler),
