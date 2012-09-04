@@ -149,14 +149,14 @@ class BPProductionDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.cum_date_bpcounts(start), default=dthandler))
 
     def cum_date_bpcounts(self, start):
-        view = self.application.qc_db.view("barcodes/date_read_counts", group_level=1, startkey=start)
+        view = self.application.qc_db.view("barcodes/date_read_counts", group_level=3, startkey=start)
         row0 = view.rows[0]
         current = row0.value * 200
-        bp_list = [{"x": int(time.mktime(parser.parse(row0.key).timetuple()) * 1000), \
+        bp_list = [{"x": int(time.mktime(parser.parse("".join(row0.key)).timetuple()) * 1000), \
                     "y": current}]
         for row in view.rows[1:]:
             current += row.value * 200
-            bp_list.append({"x": int(time.mktime(parser.parse(row.key).timetuple()) * 1000), \
+            bp_list.append({"x": int(time.mktime(parser.parse("".join(row.key)).timetuple()) * 1000), \
                             "y": current})
 
         d = {"data": bp_list, "name": "series"}
