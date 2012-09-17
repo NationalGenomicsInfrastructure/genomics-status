@@ -146,7 +146,8 @@ class ProductionDataHandler(tornado.web.RequestHandler):
 class BPProductionDataHandler(tornado.web.RequestHandler):
     def get(self, start):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.cum_date_bpcounts(start), default=dthandler))
+        strt = [start[:2], start[2:4], start[4:]]
+        self.write(json.dumps(self.cum_date_bpcounts(strt), default=dthandler))
 
     def cum_date_bpcounts(self, start):
         view = self.application.qc_db.view("barcodes/date_read_counts", group_level=3, startkey=start)
