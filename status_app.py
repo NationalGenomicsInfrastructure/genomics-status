@@ -181,7 +181,7 @@ class QCDataHandler(tornado.web.RequestHandler):
 
     def list_samples(self):
         sample_list = []
-        for row in self.application.qc_db.view("samples/runs", group_level=1):
+        for row in self.application.qc_db.view("samples/name_runs", group_level=1):
             sample_list.append(row.key)
 
         return sample_list
@@ -194,7 +194,7 @@ class PagedQCDataHandler(tornado.web.RequestHandler):
 
     def list_samples(self, startkey):
         sample_list = []
-        for row in self.application.qc_db.view("samples/runs", group_level=1, limit=50, startkey=startkey):
+        for row in self.application.qc_db.view("samples/name_runs", group_level=1, limit=50, startkey=startkey):
             sample_list.append(row.key)
 
         return sample_list
@@ -316,9 +316,28 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
         return project_list
 
 
+class FlowcellsDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_projects()))
+
+    def list_projects(self):
+        project_list = []
+        for row in self.application.qc_db.view("flowcells/dates", reduce=False):
+            project_list.append(row.value)
+
+        return project_list
+
+
 class ProjectsHandler(tornado.web.RequestHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
+        self.write(t.generate())
+
+
+class FlowcellsHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("flowcells.html")
         self.write(t.generate())
 
 
@@ -433,7 +452,7 @@ class SampleRunDataHandler(tornado.web.RequestHandler):
 
     def sample_runs(self, sample):
         sample_run_list = []
-        for row in self.application.qc_db.view("samples/runs", key=sample, reduce=False):
+        for row in self.application.qc_db.view("samples/name_runs", key=sample, reduce=False):
             sample_run_list.append(row.value)
 
         return sample_run_list
@@ -447,6 +466,7 @@ class Application(tornado.web.Application):
             ("/api/v1/amanita_home", AmanitaHomeDataHandler),
             ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
+            ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/picea_home", PiceaHomeDataHandler),
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
@@ -467,11 +487,11 @@ class Application(tornado.web.Application):
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/amanita", AmanitaHandler),
+            ("/flowcells", FlowcellsHandler),
             ("/picea", PiceaHandler),
             ("/qc", QCHandler),
             ("/qc/(\w+)?", SampleQCSummaryHandler),
             ("/quotas", QuotasHandler),
-            # ("/quotas/test", TestGridHandler),
             ("/quotas/(\w+)?", QuotaHandler),
             ("/production", ProductionHandler),
             ("/projects", ProjectsHandler),
