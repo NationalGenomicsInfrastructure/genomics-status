@@ -12,7 +12,7 @@
 <script>
 $.getJSON("/api/v1/projects/{{ project }}", function(data) {
   $.each(data, function (index, project) {
-    $("#sample_list").append('<div class="span3"><p><a href="/qc/' + 
+    $("#sample_list").append('<div class="span3"><p><a href="/samples/' + 
       project + '">' + project + '</p></div>')
   });
 });
