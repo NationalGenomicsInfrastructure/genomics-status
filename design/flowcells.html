@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+
+<div class="fluid-row">
+  <h2>Projects</h2>
+</div>
+<div class="row" id="project_list"></div>
+
+<script>
+$.getJSON("/api/v1/flowcells", function(data) {
+  for (var i = data.length - 1; i >= 0; i--) {
+    $("#project_list").append('<div class="span3"><p><a href="/flowcells/'
+      + data[i] + '">' + data[i] + '</a></p></div>')
+  };
+})
+</script>
+
+{% end %}
