@@ -11,8 +11,8 @@
 <script>
 $.getJSON("/api/v1/projects", function(data) {
   for (var i = data.length - 1; i >= 0; i--) {
-    $("#project_list").append('<div class="span3"><p><a href="/projects/' + data[i] 
-      + '">' + data[i] + '</a></p></div>')
+    $("#project_list").append('<div class="span3"><p><a href="/projects/' 
+      + data[i] + '">' + data[i] + '</a></p></div>')
   };
 })
 </script>

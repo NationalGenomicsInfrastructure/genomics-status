@@ -180,7 +180,7 @@ class QCDataHandler(tornado.web.RequestHandler):
 
     def list_samples(self):
         sample_list = []
-        for row in self.application.qc_db.view("samples/runs", group_level=1):
+        for row in self.application.qc_db.view("samples/name_runs", group_level=1):
             sample_list.append(row.key)
 
         return sample_list
@@ -193,7 +193,7 @@ class PagedQCDataHandler(tornado.web.RequestHandler):
 
     def list_samples(self, startkey):
         sample_list = []
-        for row in self.application.qc_db.view("samples/runs", group_level=1, limit=50, startkey=startkey):
+        for row in self.application.qc_db.view("samples/name_runs", group_level=1, limit=50, startkey=startkey):
             sample_list.append(row.key)
 
         return sample_list
@@ -432,7 +432,7 @@ class SampleRunDataHandler(tornado.web.RequestHandler):
 
     def sample_runs(self, sample):
         sample_run_list = []
-        for row in self.application.qc_db.view("samples/runs", key=sample, reduce=False):
+        for row in self.application.qc_db.view("samples/name_runs", key=sample, reduce=False):
             sample_run_list.append(row.value)
 
         return sample_run_list
