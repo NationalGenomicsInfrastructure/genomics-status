@@ -171,6 +171,8 @@ class DataHandler(tornado.web.RequestHandler):
         api = filter(lambda h: h.startswith("/api"), handlers)
         pages = list(set(handlers).difference(set(api)))
         pages = filter(lambda h: not (h.endswith("?") or h.endswith("$")), pages)
+        pages.sort(reverse=True)
+        api.sort(reverse=True)
         self.write(json.dumps({"api": api, "pages": pages}))
 
 
@@ -185,6 +187,19 @@ class QCDataHandler(tornado.web.RequestHandler):
             sample_list.append(row.key)
 
         return sample_list
+
+
+class ApplicationsDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_applications()))
+
+    def list_applications(self):
+        applications = {}
+        for row in self.application.qc_db.view("projects/applications", group_level=1):
+            applications[row.key] = row.value
+
+        return applications
 
 
 class PagedQCDataHandler(tornado.web.RequestHandler):
@@ -335,6 +350,12 @@ class ProjectsHandler(tornado.web.RequestHandler):
         self.write(t.generate())
 
 
+class ApplicationsHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("applications.html")
+        self.write(t.generate())
+
+
 class FlowcellsHandler(tornado.web.RequestHandler):
     def get(self):
         t = self.application.loader.load("flowcells.html")
@@ -463,6 +484,7 @@ class Application(tornado.web.Application):
         handlers = [
             ("/", MainHandler),
             ("/api/v1", DataHandler),
+            ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/amanita_home", AmanitaHomeDataHandler),
             ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
@@ -487,6 +509,7 @@ class Application(tornado.web.Application):
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/amanita", AmanitaHandler),
+            ("/applications", ApplicationsHandler),
             ("/flowcells", FlowcellsHandler),
             ("/picea", PiceaHandler),
             ("/qc", QCHandler),
@@ -529,6 +552,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/project_samples.html")
         tornado.autoreload.watch("design/base.html")
         tornado.autoreload.watch("design/production.html")
+        tornado.autoreload.watch("design/applications.html")
         tornado.autoreload.watch("design/barcodes.html")
         tornado.autoreload.watch("design/amanita.html")
 
