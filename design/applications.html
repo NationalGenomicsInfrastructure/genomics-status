@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+
+<div class="fluid-row">
+  <h2>Project Applications</h2>
+</div>
+<table class="table table-bordered" id="application_table">
+    <thead></thead>
+    <tbody></tbody>
+</table>
+
+<script>
+$.getJSON("/api/v1/applications", function(data) {
+  for (d in data) {
+    $("#application_table tbody").append('<tr><td>' + d +
+        '</td><td>' + data[d]+ '</td></tr>')
+  };
+})
+</script>
+
+{% end %}
