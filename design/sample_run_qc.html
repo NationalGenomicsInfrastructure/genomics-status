@@ -108,6 +108,8 @@ $.getJSON("/api/v1/sample_alignment/{{ sample }}", function(data) {
 
     mapping = chart;
 
+    nv.utils.windowResize(function() {d3.select('#mapping').call(chart)})
+
     return chart;
   });
 
@@ -172,6 +174,8 @@ $.getJSON("/api/v1/sample_insert_sizes/{{ sample }}", function(data) {
     .transition().duration(200)
       .call(chart);
 
+  nv.utils.windowResize(function() {d3.select('#distribution').call(chart)})
+
   return chart
 });
 
@@ -192,6 +196,8 @@ $.getJSON("/api/v1/sample_coverage/{{ sample }}", function(data) {
       .datum(the_cov_data)
     .transition().duration(200)
       .call(chart);
+
+  nv.utils.windowResize(function() {d3.select('#coverage').call(chart)})
 
   return chart;
 });
