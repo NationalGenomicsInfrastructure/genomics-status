@@ -117,29 +117,22 @@ body {
   height: 300px;
 }
 
-#amanita_chart {
+.single_chart_container {
   height: 600px;
 }
 
-#picea_chart {
-  height: 600px;
+#mapping {
+  height: 300px;
 }
-    #mapping {
-      height: 300px;
-    }
 
-    #distribution {
-      height: 300px;
-    }
+#distribution {
+  height: 300px;
+}
 
-    #coverage {
-      height: 300px;
-    }
+#coverage {
+  height: 300px;
+}
 
-    #production {
-      height: 600px;
-    }
-
-    #legend {
-      height: 20px;
-    }
+#legend {
+  height: 20px;
+}

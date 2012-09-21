@@ -2,54 +2,58 @@
 
 <!-- Example row of columns -->
 {% block stuff %}
-<div class="span9">
+<div class="container-fluid">
   <h2>Picea</h2>
-  <div class="chart_container" id="chart_container">
-    <!-- <div class="y_axis" id="y_axis"></div> -->
+  <div class="single_chart_container" id="chart_container">
     <svg id="picea_chart"></svg>
   </div>
-</div>
-<div class="row-fluid">
 </div>
 
 <script>
 
-var users
-var user_data = []
+var users = [""];
+var user_data = [];
+
+var chart = nv.models.lineWithFocusChart()
+  .x(function(d) { return d["x"] })
+  .y(function(d) { return d["y"] });
+
+chart.xAxis
+  .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
+
+chart.x2Axis
+  .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
+
+chart.yAxis
+    .tickFormat(d3.format("2.2s"));
+
+chart.y2Axis
+    .tickFormat(d3.format("2.2s"));
+
+nv.utils.windowResize(function() {d3.select('#picea_chart').call(chart)})
 
 $.getJSON("api/v1/picea_home/users/", function(users_json) {
   users = users_json;
+})
+.then(function() {
+  $.getJSON("/api/v1/picea_home", function(total_json) {
+    user_data.push({values: total_json, key: "Total"});
+  })
+  .then(function() {
 
-}).then(function() {
+    $.each(users, function(i, user) {
+      $.getJSON("/api/v1/picea_home/" + user, function(user_json) {
+        user_data.push({values: user_json, key: user});
+      })
+      .then(function() {
 
-  $.each(users, function(i, user) {
-    $.getJSON("/api/v1/picea_home/" + user, function(user_json) {
-      user_data.push({values: user_json, key: user});
+        d3.select("#picea_chart")
+            .datum(user_data)
+          .call(chart);
+
+      });
     });
   });
-}).then(function() {
-
-  $.getJSON("/api/v1/picea_home", function(data) {
-    user_data.push({values: data, key: "Total"})
-  }).then(function() {
-    
-    var chart = nv.models.lineChart()
-      .x(function(d) { return d["x"] })
-      .y(function(d) { return d["y"] });
-
-    chart.xAxis
-      .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
-
-    chart.yAxis
-        .tickFormat(d3.format("2.2s"))
-
-    d3.select("#picea_chart")
-        .datum(user_data)
-      .call(chart);
-
-    return chart;
-  })
-
 });
 
 </script>

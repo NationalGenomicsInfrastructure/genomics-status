@@ -555,6 +555,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/applications.html")
         tornado.autoreload.watch("design/barcodes.html")
         tornado.autoreload.watch("design/amanita.html")
+        tornado.autoreload.watch("design/flowcells.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 

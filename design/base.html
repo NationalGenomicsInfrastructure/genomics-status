@@ -38,21 +38,26 @@
   <body>
 
   <div class="container-fluid">
+    <div class="row-fluid">
       <!-- Sidebar
       ================================================== -->
-      <div class="span2">
-        <div class="well sidebar-nav">
+        <div class="span2">
+          <div class="sidebar-nav">
           <ul class="nav nav-list">
             <div class="brand"><img src="/static/img/SciLifeLab-1.logotyp.PMS376.gif"></div>
             <li class="nav-header">Genomics Status</li>
           </ul>
+          </div>
         </div><!--/.well -->
-      </div><!--/span-->
 
-      <div class="span9 well row">
+      <div class="span10">
+        <div class="well">
         {% block stuff %}
         {% end %}
+        </div>
       </div>
+
+    </div>
   </div>
 
   <!-- Le javascript

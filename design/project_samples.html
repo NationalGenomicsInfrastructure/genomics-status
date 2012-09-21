@@ -3,16 +3,14 @@
 <!-- Example row of columns -->
 {% block stuff %}
 
-<div class="fluid-row">
-  <h2>{{ project }} - Samples</h2>
-</div>
-<div class="fluid-row" id="sample_list">
+<div class="container-fluid" id="sample_list">
+  <h2>{{ project }} - Samples</h2><br>
 </div>
 
 <script>
 $.getJSON("/api/v1/projects/{{ project }}", function(data) {
   $.each(data, function (index, project) {
-    $("#sample_list").append('<div class="span3"><p><a href="/samples/' + 
+    $("#sample_list").append('<div class="span2"><p><a href="/samples/' + 
       project + '">' + project + '</p></div>')
   });
 });
