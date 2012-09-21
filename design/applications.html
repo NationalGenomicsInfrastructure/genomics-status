@@ -3,13 +3,13 @@
 <!-- Example row of columns -->
 {% block stuff %}
 
-<div class="fluid-row">
+<div class="container-fluid">
   <h2>Project Applications</h2>
-</div>
 <table class="table table-bordered" id="application_table">
     <thead></thead>
     <tbody></tbody>
 </table>
+</div>
 
 <script>
 $.getJSON("/api/v1/applications", function(data) {

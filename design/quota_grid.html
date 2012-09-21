@@ -3,22 +3,21 @@
 <!-- Example row of columns -->
 {% block stuff %}
 
-<div class="fluid-row">
+<div class="container-fluid" id="quota_grid">
   <h2>Historical storage quota used on UPPMAX projects</h2>
 </div>
-<div class="row"></div>
 
 <script>
 
 var ups
 var chart
 
-$.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
+$.getJSON('/api/v1/uppmax_projects', function(uppmax_projects) {
 
   ups = uppmax_projects
 
   $.each(ups, function(i, up) {
-    $(".row").append('<div class="span4" id="container_' + up + '"></div>')
+    $("#quota_grid").append('<div class="span5" id="container_' + up + '"></div>')
 
     var chart = '<div class="chart_container">' + 
     '<svg class="quota_chart" id="chart_' + up + '"></svg>' +
@@ -50,6 +49,8 @@ $.getJSON("/api/v1/uppmax_projects", function(uppmax_projects) {
       d3.select("#chart_" + up)
           .datum([{values: my_data, key: "quota", bar: true}])
         .call(chart);
+
+      nv.utils.windowResize(function() {d3.select('#chart_' + up).call(chart)})
 
       return chart;
 
