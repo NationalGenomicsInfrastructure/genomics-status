@@ -3,14 +3,14 @@
 <!-- Example row of columns -->
 {% block stuff %}
 
-<div class="container-fluid" id="project_list">
+<div class="container-fluid" id="flowcell_list">
   <h2>Flowcells</h2><br>
 </div>
 
 <script>
 $.getJSON("/api/v1/flowcells", function(data) {
   for (var i = data.length - 1; i >= 0; i--) {
-    $("#project_list").append('<div class="span3"><p><a href="/flowcells/'
+    $("#flowcell_list").append('<div class="span3"><p><a href="/flowcells/'
       + data[i] + '">' + data[i] + '</a></p></div>')
   };
 })

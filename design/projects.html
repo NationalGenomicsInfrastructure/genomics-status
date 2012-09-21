@@ -3,10 +3,9 @@
 <!-- Example row of columns -->
 {% block stuff %}
 
-<div class="fluid-row">
-  <h2>Projects</h2>
+<div class="container-fluid" id="project_list">
+  <h2>Projects</h2><br>
 </div>
-<div class="row" id="project_list"></div>
 
 <script>
 $.getJSON("/api/v1/projects", function(data) {
