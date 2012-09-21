@@ -3,13 +3,12 @@
 <!-- Example row of columns -->
 {% block stuff %}
 
-<div class="fluid-row">
-  <h2>Samples</h2>
+<div class="container-fluid" id="sample_list">
+  <h2>Samples</h2><br>
   <div class="progress progress-striped progress-info active">
     <div class="bar" style="width: 100%;">Loading samples</div>
   </div>
 </div>
-<div class="row" id="sample_list"></div>
 
 <script>
 $('body').attr('data-spy', "scroll");
