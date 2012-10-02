@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+
+<div class="container-fluid" id="sample_list">
+  <h2>{{ flowcell }} - Sample Runs</h2><br>
+</div>
+
+<script>
+$.getJSON("/api/v1/flowcells/{{ flowcell }}", function(data) {
+  $.each(data, function (index, sample_run) {
+    $("#sample_list").append('<div class="span3"><p><a href="/qc/' + 
+      sample_run + '">' + sample_run + '</p></div>')
+  });
+});
+
+</script>
+
+{% end %}
