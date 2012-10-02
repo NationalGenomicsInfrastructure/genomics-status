@@ -48,7 +48,7 @@ $.getJSON("api/v1/amanita_home/users/", function(users_json) {
       .then(function() {
 
         d3.select("#amanita_chart")
-            .datum(user_data)
+          .datum(user_data)
           .call(chart);
 
       });
