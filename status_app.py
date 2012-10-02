@@ -325,6 +325,20 @@ class FlowcellsDataHandler(tornado.web.RequestHandler):
         return flowcell_list
 
 
+class FlowcellDataHandler(tornado.web.RequestHandler):
+    def get(self, flowcell):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_sample_runs(flowcell)))
+
+    def list_sample_runs(self, flowcell):
+        sample_run_list = []
+        fc_view = self.application.samples_db.view("flowcell/name", reduce=False)
+        for row in fc_view[flowcell]:
+            sample_run_list.append(row.value)
+
+        return sample_run_list
+
+
 class ProjectsHandler(tornado.web.RequestHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
@@ -341,6 +355,12 @@ class FlowcellsHandler(tornado.web.RequestHandler):
     def get(self):
         t = self.application.loader.load("flowcells.html")
         self.write(t.generate())
+
+
+class FlowcellHandler(tornado.web.RequestHandler):
+    def get(self, flowcell):
+        t = self.application.loader.load("flowcell_samples.html")
+        self.write(t.generate(flowcell=flowcell))
 
 
 class AmanitaHandler(tornado.web.RequestHandler):
@@ -470,6 +490,7 @@ class Application(tornado.web.Application):
             ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
+            ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
             ("/api/v1/picea_home", PiceaHomeDataHandler),
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
@@ -492,6 +513,7 @@ class Application(tornado.web.Application):
             ("/amanita", AmanitaHandler),
             ("/applications", ApplicationsHandler),
             ("/flowcells", FlowcellsHandler),
+            ("/flowcells/([^/]*)$", FlowcellHandler),
             ("/picea", PiceaHandler),
             ("/qc", QCHandler),
             ("/qc/(\w+)?", SampleQCSummaryHandler),
@@ -535,6 +557,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/project_samples.html")
         tornado.autoreload.watch("design/base.html")
         tornado.autoreload.watch("design/production.html")
+        tornado.autoreload.watch("design/flowcell_samples.html")
         tornado.autoreload.watch("design/applications.html")
         tornado.autoreload.watch("design/barcodes.html")
         tornado.autoreload.watch("design/amanita.html")
