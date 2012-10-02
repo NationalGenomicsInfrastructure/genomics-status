@@ -150,7 +150,7 @@ class BPProductionDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.cum_date_bpcounts(strt), default=dthandler))
 
     def cum_date_bpcounts(self, start):
-        view = self.application.qc_db.view("barcodes/date_read_counts", group_level=3, startkey=start)
+        view = self.application.samples_db.view("barcodes/date_read_counts", group_level=3, startkey=start)
         row0 = view.rows[0]
         current = row0.value * 200
         bp_list = [{"x": int(time.mktime(parser.parse("".join(row0.key)).timetuple()) * 1000), \
@@ -183,7 +183,7 @@ class QCDataHandler(tornado.web.RequestHandler):
 
     def list_samples(self):
         sample_list = []
-        for row in self.application.qc_db.view("samples/name_runs", group_level=1):
+        for row in self.application.samples_db.view("names/samplename_run", group_level=1):
             sample_list.append(row.key)
 
         return sample_list
@@ -196,7 +196,7 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
 
     def list_applications(self):
         applications = {}
-        for row in self.application.qc_db.view("projects/applications", group_level=1):
+        for row in self.application.projects_db.view("project/applications", group_level=1):
             applications[row.key] = row.value
 
         return applications
@@ -209,7 +209,7 @@ class PagedQCDataHandler(tornado.web.RequestHandler):
 
     def list_samples(self, startkey):
         sample_list = []
-        for row in self.application.qc_db.view("samples/name_runs", group_level=1, limit=50, startkey=startkey):
+        for row in self.application.samples_db.view("names/samplename_run", group_level=1, limit=50, startkey=startkey):
             sample_list.append(row.key)
 
         return sample_list
@@ -227,7 +227,7 @@ class SampleQCSummaryDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.sample_summary(sample), default=dthandler))
 
     def sample_summary(self, sample):
-        result = self.application.qc_db.view("samples/summary", key=sample)
+        result = self.application.samples_db.view("qc/summary", key=sample, reduce=False)
 
         return result.rows[0].value
 
@@ -238,7 +238,7 @@ class SampleQCDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.sample_summary(sample), default=dthandler))
 
     def sample_summary(self, sample):
-        result = self.application.qc_db.view("samples/qc_summary", key=sample)
+        result = self.application.samples_db.view("qc/qc_summary", key=sample)
 
         return result.rows[0].value
 
@@ -249,7 +249,7 @@ class ProjectSamplesDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.sample_list(project), default=dthandler))
 
     def sample_list(self, project):
-        result = self.application.qc_db.view("projects/sample_list", key=project)
+        result = self.application.projects_db.view("project/sample_list", key=project)
 
         return result.rows[0].value
 
@@ -272,7 +272,7 @@ class SampleQCAlignmentDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.sample_summary(sample), default=dthandler))
 
     def sample_summary(self, sample):
-        result = self.application.qc_db.view("samples/alignment_summary", key=sample)
+        result = self.application.samples_db.view("qc/alignment_summary", key=sample)
 
         return result.rows[0].value
 
@@ -283,7 +283,7 @@ class SampleQCInsertSizesDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.sample_summary(sample), default=dthandler))
 
     def sample_summary(self, sample):
-        result = self.application.qc_db.view("samples/insert_size_distribution", key=sample)
+        result = self.application.samples_db.view("qc/insert_size_distribution", key=sample)
 
         return result.rows[0].value
 
@@ -294,28 +294,9 @@ class SampleQCCoverageDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.sample_summary(sample), default=dthandler))
 
     def sample_summary(self, sample):
-        result = self.application.qc_db.view("samples/coverage", key=sample)
+        result = self.application.samples_db.view("qc/coverage", key=sample)
 
         return result.rows[0].value
-
-
-class BarcodeDataHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_barcodes()))
-
-    def list_barcodes(self):
-        barcode_list = []
-        for row in self.application.qc_db.view("barcodes/scores", group_level=1):
-            barcode_list.append([row.key, row.value])
-
-        return barcode_list
-
-
-class BarcodeHandler(tornado.web.RequestHandler):
-    def get(self):
-        t = self.application.loader.load("barcodes.html")
-        self.write(t.generate())
 
 
 class ProjectsDataHandler(tornado.web.RequestHandler):
@@ -325,7 +306,7 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
 
     def list_projects(self):
         project_list = []
-        for row in self.application.qc_db.view("projects/sample_list"):
+        for row in self.application.projects_db.view("project/sample_list"):
             project_list.append(row.key)
 
         return project_list
@@ -334,14 +315,14 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
 class FlowcellsDataHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_projects()))
+        self.write(json.dumps(self.list_flowcells()))
 
-    def list_projects(self):
-        project_list = []
-        for row in self.application.qc_db.view("flowcells/dates", reduce=False):
-            project_list.append(row.value)
+    def list_flowcells(self):
+        flowcell_list = []
+        for row in self.application.flowcells_db.view("time/dates", reduce=False):
+            flowcell_list.append(row.value)
 
-        return project_list
+        return flowcell_list
 
 
 class ProjectsHandler(tornado.web.RequestHandler):
@@ -473,7 +454,7 @@ class SampleRunDataHandler(tornado.web.RequestHandler):
 
     def sample_runs(self, sample):
         sample_run_list = []
-        for row in self.application.qc_db.view("samples/name_runs", key=sample, reduce=False):
+        for row in self.application.samples_db.view("names/runs", key=sample, reduce=False):
             sample_run_list.append(row.value)
 
         return sample_run_list
@@ -533,7 +514,9 @@ class Application(tornado.web.Application):
         if couch:
             self.illumina_db = couch["illumina_logs"]
             self.uppmax_db = couch["uppmax"]
-            self.qc_db = couch["qc"]
+            self.samples_db = couch["samples"]
+            self.projects_db = couch["projects"]
+            self.flowcells_db = couch["flowcells"]
             self.amanita_db = couch["amanita"]
             self.picea_db = couch["picea"]
 
