@@ -19,13 +19,13 @@ $.getJSON('/api/v1/uppmax_projects', function(uppmax_projects) {
   $.each(ups, function(i, up) {
     $("#quota_grid").append('<div class="span5" id="container_' + up + '"></div>')
 
-    var chart = '<div class="chart_container">' + 
-    '<svg class="quota_chart" id="chart_' + up + '"></svg>' +
+    var svg_chart = '<div class="grid_chart">' + 
+    '<svg id="chart_' + up + '"></svg>' +
     '</div>'
 
     $("#container_" + up)
-          .append('<h2><a href="/quotas/' + up + '">' + up + '</h2></a>')
-          .append(chart)
+          .append('<h2><a href="/quotas/' + up + '">' + up + '</a></h2>')
+          .append(svg_chart)
   });
 
 }).then(function() {
@@ -43,7 +43,7 @@ $.getJSON('/api/v1/uppmax_projects', function(uppmax_projects) {
       chart.xAxis
         .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
 
-      chart.yAxis1
+      chart.y1Axis
           .tickFormat(d3.format("2.2s"))
 
       d3.select("#chart_" + up)

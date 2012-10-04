@@ -1,49 +1,53 @@
 {% extends "base.html" %}
 
-<!-- Example row of columns -->
 {% block stuff %}
 
-<div class="fluid-row">
-  <h2>{{ sample }}</h2>
-</div>
-<div class="fluid-row" id="sample_summary">
-  <h3>Summary</h3>
-  <table class="table table-bordered" id="summary_table">
-    <thead>
-      <tr>
-        <th>Flowcell id</th>
-        <th>Lane</th>
-        <th>Sequence</th>
-      </tr>
-    </thead>
-    <tbody><tr></tr></tbody>
-  </table>
-</div>
+<div class="container-fluid">
 
-<div class="fluid-row" id="sample_qc">
-  <h3>QC</h3>
-  <table class="table table-bordered zebra-striped" id="qc_table">
-    <tbody>
-    </tbody>
-  </table>
-</div>
+  <h2>{{ sample }}</h2><br>
 
-<div class="fluid-row">
+  <!-- <div class="span10"> -->
+
+    <h3>Summary</h3>
+    <table class="table table-bordered" id="summary_table">
+      <thead>
+        <tr>
+          <th>Flowcell id</th>
+          <th>Lane</th>
+          <th>Sequence</th>
+        </tr>
+      </thead>
+      <tbody><tr></tr></tbody>
+    </table>
+
+    <h3>QC</h3>
+    <table class="table table-bordered zebra-striped" id="qc_table">
+      <tbody>
+      </tbody>
+    </table>
+
+  <!-- </div> -->
 
   <div class="span5">
-    <h3 class="span2">Mapping summary</h3>
-    <svg class="span3" id="legend"></svg>
-    <svg class="span4" id="mapping"></svg> 
+    <h3>Mapping summary</h3>
+    <div class="grid_chart">
+      <svg class="legend" id="legend"></svg>
+      <svg id="mapping"></svg>
+    </div>
   </div>
 
-  <div class="span5">
-    <h3 class="span2">Insert size distribution</h3>
-    <svg class="span4" id="distribution"></svg>
+  <div class="span5" id="container_a2010002">
+    <h3>Insert size distribution</h3>
+    <div class="grid_chart">
+      <svg id="distribution"></svg>
+    </div>
   </div>
 
-  <div class="span5">
-    <h3 class="span2">Coverage summary</h3>
-    <svg class="span4" id="coverage"></svg>
+  <div class="span5" id="container_a2010003">
+    <h3>Coverage summary</h3>
+    <div class="grid_chart">
+      <svg id="coverage"></svg>
+    </div>
   </div>
 
 </div>

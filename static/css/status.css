@@ -36,6 +36,7 @@ body {
 
 .progress.active .bar {
   -webkit-animation: progress-bar-stripes 0.25s linear infinite;
+  -ms-animation: progress-bar-stripes 0.25s linear infinite;
   -moz-animation: progress-bar-stripes 0.25s linear infinite;
   animation: progress-bar-stripes 0.25s linear infinite;
 }
@@ -113,26 +114,14 @@ body {
   overflow-y: scroll;
 }
 
-.quota_chart {
-  height: 300px;
-}
-
 .single_chart_container {
   height: 600px;
 }
 
-#mapping {
+.grid_chart {
   height: 300px;
 }
 
-#distribution {
-  height: 300px;
-}
-
-#coverage {
-  height: 300px;
-}
-
-#legend {
-  height: 20px;
+.legend {
+  height: 22px;
 }
