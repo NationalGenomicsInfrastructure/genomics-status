@@ -16,8 +16,6 @@ var my_data
 $.getJSON("/api/v1/quotas/{{ project }}", function(data) {
   my_data = data[0]["data"];
 
-  console.log(my_data)
-
   var chart = nv.models.linePlusBarChart()
         .x(function(d) { return d["x"] * 1000})
         .y(function(d) { return d["y"] })
@@ -27,7 +25,7 @@ $.getJSON("/api/v1/quotas/{{ project }}", function(data) {
     chart.xAxis
       .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
 
-    chart.yAxis1
+    chart.y1Axis
         .tickFormat(d3.format("2.2s"))
 
   d3.select("#chart")
