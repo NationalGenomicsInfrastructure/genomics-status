@@ -5,14 +5,46 @@
 
 <div class="container-fluid" id="flowcell_list">
   <h2>Flowcells</h2><br>
+  <table class="table span11 table-striped" id="fc_table">
+    <thead>
+      <tr>
+        <th>Run id</th>
+        <th>Start date</th>
+        <th>Flowcell</th>
+        <th>Pos</th>
+        <th>Instrument</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
 </div>
 
 <script>
 $.getJSON("/api/v1/flowcells", function(data) {
-  for (var i = data.length - 1; i >= 0; i--) {
-    $("#flowcell_list").append('<div class="span3"><p><a href="/flowcells/'
-      + data[i] + '">' + data[i] + '</a></p></div>')
-  };
+  var tbl_bdy = "";
+  $.each(data, function() {  
+    var tbl_row = "";
+    $.each(this, function(k, v) {
+      tbl_row += "<td>";
+
+      if (k === "run id") {
+        tbl_row += "<a href='/flowcells/" + v + "'>";
+      }
+
+      tbl_row += v
+
+      if (k === "run id") {
+        tbl_row += "</a>";
+      }
+
+      tbl_row += "</td>";
+    })
+
+    tbl_bdy += "<tr>" + tbl_row + "</tr>";
+  })
+
+  $("#fc_table tbody").html(tbl_bdy);
 })
 </script>
 
