@@ -318,11 +318,11 @@ class FlowcellsDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.list_flowcells()))
 
     def list_flowcells(self):
-        flowcell_list = []
-        for row in self.application.flowcells_db.view("time/dates", reduce=False):
-            flowcell_list.append(row.value)
+        flowcells = {}
+        for row in self.application.flowcells_db.view("info/summary"):
+            flowcells[row.key] = row.value
 
-        return flowcell_list
+        return flowcells
 
 
 class FlowcellDataHandler(tornado.web.RequestHandler):

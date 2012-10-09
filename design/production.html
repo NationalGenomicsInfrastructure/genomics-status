@@ -11,7 +11,7 @@
 
 <script>
 
-$.getJSON("/api/v1/production/", function(data) {
+$.getJSON("/api/v1/production/120101", function(data) {
   var my_data = data[0];
   nv.addGraph(function() {
     var chart = nv.models.stackedAreaChart()
