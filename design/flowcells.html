@@ -23,13 +23,13 @@
 <script>
 $.getJSON("/api/v1/flowcells", function(data) {
   var tbl_bdy = "";
-  $.each(data, function() {  
+  $.each(data, function(d) {  
     var tbl_row = "";
     $.each(this, function(k, v) {
       tbl_row += "<td>";
 
       if (k === "run id") {
-        tbl_row += "<a href='/flowcells/" + v + "'>";
+        tbl_row += "<a href='/flowcells/" + d + "'>";
       }
 
       tbl_row += v
