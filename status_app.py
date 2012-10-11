@@ -14,6 +14,8 @@ import yaml
 
 import random
 
+from collections import OrderedDict
+
 
 def dthandler(obj):
     """ISO formatting for datetime to be used in JSON.
@@ -318,11 +320,28 @@ class FlowcellsDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.list_flowcells()))
 
     def list_flowcells(self):
-        flowcells = {}
-        for row in self.application.flowcells_db.view("info/summary"):
+        flowcells = OrderedDict()
+        fc_view = self.application.flowcells_db.view("info/summary", \
+                                                     descending=True)
+        for row in fc_view:
             flowcells[row.key] = row.value
 
         return flowcells
+
+
+class FlowcellsInfoDataHandler(tornado.web.RequestHandler):
+    def get(self, flowcell):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.flowcell_info(flowcell)))
+
+    def flowcell_info(self, flowcell):
+        fc_view = self.application.flowcells_db.view("info/summary", \
+                                                     descending=True)
+        for row in fc_view[flowcell]:
+            flowcell_info = row.value
+            break
+
+        return flowcell_info
 
 
 class FlowcellDataHandler(tornado.web.RequestHandler):
@@ -337,6 +356,20 @@ class FlowcellDataHandler(tornado.web.RequestHandler):
             sample_run_list.append(row.value)
 
         return sample_run_list
+
+
+class FlowcellQCHandler(tornado.web.RequestHandler):
+    def get(self, flowcell):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_sample_runs(flowcell)))
+
+    def list_sample_runs(self, flowcell):
+        lane_qc = {}
+        lane_view = self.application.flowcells_db.view("lanes/qc")
+        for row in lane_view[[flowcell, ""]:[flowcell, "Z"]]:
+            lane_qc[row.key[1]] = row.value
+
+        return lane_qc
 
 
 class ProjectsHandler(tornado.web.RequestHandler):
@@ -474,7 +507,8 @@ class SampleRunDataHandler(tornado.web.RequestHandler):
 
     def sample_runs(self, sample):
         sample_run_list = []
-        for row in self.application.samples_db.view("names/runs", key=sample, reduce=False):
+        run_view = self.application.samples_db.view("names/runs", reduce=False)
+        for row in run_view[sample]:
             sample_run_list.append(row.value)
 
         return sample_run_list
@@ -490,6 +524,8 @@ class Application(tornado.web.Application):
             ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
+            ("/api/v1/flowcell_info/([^/]*)$", FlowcellsInfoDataHandler),
+            ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
             ("/api/v1/picea_home", PiceaHomeDataHandler),
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
@@ -504,7 +540,8 @@ class Application(tornado.web.Application):
             ("/api/v1/sample_alignment/(\w+)?", SampleQCAlignmentDataHandler),
             ("/api/v1/sample_coverage/(\w+)?", SampleQCCoverageDataHandler),
             ("/api/v1/sample_summary/(\w+)?", SampleQCSummaryDataHandler),
-            ("/api/v1/sample_insert_sizes/(\w+)?", SampleQCInsertSizesDataHandler),
+            ("/api/v1/sample_insert_sizes/(\w+)?", \
+                SampleQCInsertSizesDataHandler),
             ("/api/v1/samples", QCDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
