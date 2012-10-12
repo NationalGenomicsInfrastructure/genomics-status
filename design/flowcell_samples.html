@@ -19,6 +19,9 @@
   </table>
 
   <h3>Sample Runs</h3>
+  <table class="table table-striped" id="sample_table">
+    <tbody></tbody>
+  </table>
   <br>
 </div>
 
@@ -90,8 +93,9 @@ $.getJSON("/api/v1/flowcell_demultiplex/{{ flowcell }}", function(data) {
 
 $.getJSON("/api/v1/flowcells/{{ flowcell }}", function(data) {
   $.each(data, function (index, sample_run) {
-    $("#sample_list").append('<div><p><a href="/qc/' + 
-      sample_run + '">' + sample_run + '</p></div>')
+    var tbl_row = '<tr><td><a href="/qc/' + sample_run + '">' + sample_run 
+    + '</a></td></tr>';
+    $("#sample_table").append(tbl_row);
   });
 });
 
