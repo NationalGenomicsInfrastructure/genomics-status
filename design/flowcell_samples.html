@@ -24,6 +24,10 @@
 
 <script>
 
+for (var i = 1; i < 9; i++) {
+  $("#lanes").append('<div class="well" id="lane_' + i + '"><h4>Lane ' + i + '</h4><br></div>')
+};
+
 $.getJSON("/api/v1/flowcell_info/{{ flowcell }}", function(data) {
 
   tbody = "<tr><th>Start date</th><td>" + data["startdate"];
@@ -49,7 +53,7 @@ $.getJSON("/api/v1/flowcell_qc/{{ flowcell }}", function(data) {
       return row
     }
 
-    qc_table += "<tr><th><h4>Lane " + lane + "</h4></th><th>Read 1</th><th>Read 3</th></tr>";
+    qc_table += "<tr><th></th><th>Read 1</th><th>Read 3</th></tr>";
     qc_table += "<tr><th>Clusters raw</th>";
     qc_table += row_pair("ClustersRaw")
     qc_table += "<tr><th>Clusters PF</th>";
@@ -68,15 +72,25 @@ $.getJSON("/api/v1/flowcell_qc/{{ flowcell }}", function(data) {
     qc_table += row_pair("PrcAlign")
     qc_table += "</tbody></table>";
 
-    $("#lanes").append(qc_table);
+    $("#lane_" + lane).append("<h4>QC</h4>" + qc_table)
+
   })
+})
 
-});
+$.getJSON("/api/v1/flowcell_demultiplex/{{ flowcell }}", function(data) {
+  $.each(data, function(lane, d) {
+    var demultiplex_table = '<table class="table table-bordered"><tbody>';
+    demultiplex_table += "<tr><th>Yield</th><td>" + d["yield"] + "</td>";
+    demultiplex_table += "<tr><th>% demultiplexed</th><td>" + parseInt(100 * d["demultiplexed"]) + "%";
+    demultiplex_table += "</td></tr></tbody></table>";
 
+    $("#lane_" + lane).append("<h4>Demultiplex</h4>" + demultiplex_table)
+  })
+})
 
 $.getJSON("/api/v1/flowcells/{{ flowcell }}", function(data) {
   $.each(data, function (index, sample_run) {
-    $("#sample_list").append('<div class="span3"><p><a href="/qc/' + 
+    $("#sample_list").append('<div><p><a href="/qc/' + 
       sample_run + '">' + sample_run + '</p></div>')
   });
 });
