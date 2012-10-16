@@ -10,6 +10,10 @@
     <tbody></tbody>
   </table>
 
+  <table class="table table-bordered" id="reads">
+    <tbody></tbody>
+  </table>
+
   <h3>Lane QC</h3>
   <div id="lanes">
   </div>
@@ -35,10 +39,26 @@ $.getJSON("/api/v1/flowcell_info/{{ flowcell }}", function(data) {
 
   tbody = "<tr><th>Start date</th><td>" + data["startdate"];
   tbody += "<th>Instrument id</th><td>" + data["instrument"];
+  tbody += "<tr></tr>"
   tbody += "<th>Flowcell</th><td>" + data["flowcell"];
+  tbody += "<th>Run number</th><td>" + data["number"];
   tbody += "</td></tr>";
 
   $("#fc_info tbody").html(tbody);
+
+  console.log(data)
+
+  tbody = "<tr><th>Reads</th>";
+  for (r in data["reads"]) {
+    tbody += '<td>' + data["reads"][r]["NumCycles"] + " cycles"
+    if ( data["reads"][r]["IsIndexedRead"] === "Y") {
+      tbody += " (I)"
+    }
+    tbody += '</td>'
+  }
+  tbody += '</tr>'
+
+  $("#reads tbody").html(tbody)
 
 });
 
