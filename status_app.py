@@ -197,7 +197,7 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.list_applications()))
 
     def list_applications(self):
-        applications = {}
+        applications = OrderedDict()
         for row in self.application.projects_db.view("project/applications", group_level=1):
             applications[row.key] = row.value
 
@@ -251,7 +251,8 @@ class ProjectSamplesDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.sample_list(project), default=dthandler))
 
     def sample_list(self, project):
-        result = self.application.projects_db.view("project/sample_list", key=project)
+        sample_view = self.application.projects_db.view("project/samples")
+        result = sample_view[project]
 
         return result.rows[0].value
 
@@ -307,11 +308,22 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.list_projects()))
 
     def list_projects(self):
-        project_list = []
-        for row in self.application.projects_db.view("project/sample_list"):
-            project_list.append(row.key)
+        projects = OrderedDict()
+        for row in self.application.projects_db.view("project/summary"):
+            projects[row.key] = row.value
 
-        return project_list
+        return projects
+
+
+class ProjectDataHandler(tornado.web.RequestHandler):
+    def get(self, project):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.project_info(project)))
+
+    def project_info(self, project):
+        result = self.application.projects_db.view("project/summary")[project]
+
+        return result.rows[0].value
 
 
 class FlowcellsDataHandler(tornado.web.RequestHandler):
@@ -364,7 +376,7 @@ class FlowcellQCHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.list_sample_runs(flowcell)))
 
     def list_sample_runs(self, flowcell):
-        lane_qc = {}
+        lane_qc = OrderedDict()
         lane_view = self.application.flowcells_db.view("lanes/qc")
         for row in lane_view[[flowcell, ""]:[flowcell, "Z"]]:
             lane_qc[row.key[1]] = row.value
@@ -378,7 +390,7 @@ class FlowcellDemultiplexHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.lane_stats(flowcell)))
 
     def lane_stats(self, flowcell):
-        lane_qc = {}
+        lane_qc = OrderedDict()
         lane_view = self.application.flowcells_db.view("lanes/demultiplex")
         for row in lane_view[[flowcell, ""]:[flowcell, "Z"]]:
             lane_qc[row.key[1]] = row.value
@@ -547,6 +559,7 @@ class Application(tornado.web.Application):
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
             ("/api/v1/production/([^/]*)$", BPProductionDataHandler),
             ("/api/v1/projects", ProjectsDataHandler),
+            ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/qc", QCDataHandler),
             ("/api/v1/qc/(\w+)?", SampleQCDataHandler),

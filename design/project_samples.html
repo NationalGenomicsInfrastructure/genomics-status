@@ -4,14 +4,61 @@
 {% block stuff %}
 
 <div class="container-fluid" id="sample_list">
-  <h2>{{ project }} - Samples</h2><br>
+  <h2>{{ project }}</h2><br>
+  <table class="table table-bordered" id="project_info">
+    <tbody></tbody>
+  </table>
+  <h3>Samples</h3>
+  <table class="table" id="sample_table">
+     <thead>
+      <tr>
+        <th>SciLife Sample Name</th>
+        <th>Sample runs</th>
+        <th>Millions reads sequenced</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+
+  </table>
 </div>
 
 <script>
-$.getJSON("/api/v1/projects/{{ project }}", function(data) {
-  $.each(data, function (index, project) {
-    $("#sample_list").append('<div class="span2"><p><a href="/samples/' + 
-      project + '">' + project + '</p></div>')
+$.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
+  
+  tbody = '<tr>'
+  tbody += '<th>Application</th><td>' + data["application"] + '</td>'
+  tbody += '<th>Number of samples</th><td>' + data["no_samples"] + '</td>'
+  tbody += '</tr><tr>'
+  tbody += '<th>Min M reads per sample</th><td>' + data["ordered_reads"] + '</td>'
+  tbody += '<th>Progress</th><td>' + data["passed_samples"] + ' /  ' +
+  data["no_samples"] + '</td>'
+  tbody += '</tr>'
+
+
+  $("#project_info tbody").html(tbody)
+})
+
+$.getJSON("/api/v1/projects/{{ project }}", function (data) {
+  $.each(data, function (sample, info) {
+    tbl_row = "<tr>"
+
+    tbl_row += '<td><a href="/samples/' + sample + '">' + sample + '</td>'
+
+    tbl_row += '<td>'
+    if (info["sample_run_metrics"]) {
+        $.each(info["sample_run_metrics"], function (run, id) {
+            tbl_row += '<a href="/qc/' + run + '">' + run + '</a><br>'
+        })
+    }
+    tbl_row += '</td>'
+
+    tbl_row += '<td>' + info["m_reads_sequenced"] + '</td>'
+
+    tbl_row += '<td>' + info["status"] + '</td>'
+
+    tbl_row += "</tr>"
+    $("#sample_table tbody").append(tbl_row)
   });
 });
 
