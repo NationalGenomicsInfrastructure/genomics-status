@@ -398,6 +398,20 @@ class FlowcellDemultiplexHandler(tornado.web.RequestHandler):
         return lane_qc
 
 
+class FlowcellQ30Handler(tornado.web.RequestHandler):
+    def get(self, flowcell):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.lane_q30(flowcell)))
+
+    def lane_q30(self, flowcell):
+        lane_q30 = OrderedDict()
+        lane_view = self.application.flowcells_db.view("lanes/gtq30", group_level=2)
+        for row in lane_view[[flowcell, ""]:[flowcell, "Z"]]:
+            lane_q30[row.key[1]] = row.value["sum"] / row.value["count"]
+
+        return lane_q30
+
+
 class ProjectsHandler(tornado.web.RequestHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
@@ -553,6 +567,7 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_info/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
             ("/api/v1/flowcell_demultiplex/([^/]*)$", FlowcellDemultiplexHandler),
+            ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
             ("/api/v1/picea_home", PiceaHomeDataHandler),
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),

@@ -45,7 +45,7 @@ $.getJSON("/api/v1/flowcell_info/{{ flowcell }}", function(data) {
 $.getJSON("/api/v1/flowcell_qc/{{ flowcell }}", function(data) {
   $.each(data, function(lane, qc) {
 
-    var qc_table = '<table class="table table-bordered"><tbody>';
+    var qc_table = '<table class="table table-bordered qc"><tbody>';
 
     row_pair = function(key) {
       var row = "<td>" + qc["read1"][key] + " ± ";
@@ -78,6 +78,15 @@ $.getJSON("/api/v1/flowcell_qc/{{ flowcell }}", function(data) {
     $("#lane_" + lane).append("<h4>QC</h4>" + qc_table)
 
   })
+}).then(function () {
+
+  $.getJSON("/api/v1/flowcell_q30/{{ flowcell }}", function(data) {
+    $.each(data, function (l, gtq30) {
+      var tr = '<tr><th>% ≥ Q30</th><td colspan="2">' + gtq30 + '</td></tr>'
+      $("#lane_" + l +" table.qc").append(tr)
+    })
+  })
+
 })
 
 $.getJSON("/api/v1/flowcell_demultiplex/{{ flowcell }}", function(data) {
