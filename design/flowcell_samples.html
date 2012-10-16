@@ -28,7 +28,7 @@
 <script>
 
 for (var i = 1; i < 9; i++) {
-  $("#lanes").append('<div class="well" id="lane_' + i + '"><h4>Lane ' + i + '</h4><br></div>')
+  $("#lanes").append('<div id="lane_' + i + '"><h4>Lane ' + i + '</h4><br></div>')
 };
 
 $.getJSON("/api/v1/flowcell_info/{{ flowcell }}", function(data) {
