@@ -53,6 +53,10 @@
 </div>
 
 <script>
+f = d3.format(',')
+ff = d3.format('.2f')
+fpr = d3.format('.2%')
+
 $.getJSON("/api/v1/sample_summary/{{ sample }}", function(data) {
   $("#summary_table tr:last").after("<td>" +
     data["flowcell_id"] + "</td><td>" +
@@ -63,14 +67,21 @@ $.getJSON("/api/v1/sample_summary/{{ sample }}", function(data) {
 
 $.getJSON("/api/v1/qc/{{ sample }}", function(data) {
   $("#qc_table tbody").append(
-    "<tr><th>Total</th><td>" + data["bc_count"] + "</td></tr>" +
-    "<tr><th>Aligned</th><td>" + data["pct_aligned"] + "</td></tr>" +
-    "<tr><th>Pair duplicates</th><td>" + data["pair_duplicates"] + "</td></tr>" +
-    "<tr><th>Insert size</th><td>" + data["insert_size"] + "</td></tr>" +
-    "<tr><th>On target bases</th><td>" + data["on_target"] + "</td></tr>" +
-    "<tr><th>Mean target coverage</th><td>" + data["mean_target_coverage"] + "</td></tr>" +
-    "<tr><th>X10x coverage targets</th><td>" + data["x10x_coverage_targets"] + "</td></tr>" +
-    "<tr><th>Zero coverage targets</th><td>" + data["zero_coverage_targets"] + "</td></tr>"
+    "<tr><th>Total</th><td>" + f(data["bc_count"]) +
+    "</td></tr>" +
+    "<tr><th>Aligned</th><td>" + fpr(data["pct_aligned"]) + "</td></tr>" +
+    "<tr><th>Pair duplicates</th><td>" + fpr(data["pair_duplicates"]) +
+    "</td></tr>" +
+    "<tr><th>Insert size</th><td>" + ff(data["insert_size"])
+    + "</td></tr>" +
+    "<tr><th>On target bases</th><td>" + fpr(data["on_target"])
+    + "</td></tr>" +
+    "<tr><th>Mean target coverage</th><td>" + ff(data["mean_target_coverage"]) +
+    "</td></tr>" +
+    "<tr><th>X10x coverage targets</th><td>" + fpr(data["x10x_coverage_targets"]) +
+    "</td></tr>" +
+    "<tr><th>Zero coverage targets</th><td>" + fpr(data["zero_coverage_targets"]) +
+    "</td></tr>"
   )
 });
 

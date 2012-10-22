@@ -4,16 +4,45 @@
 {% block stuff %}
 
 <div class="fluid-row">
-  <h2>Runs of {{ sample }}</h2>
+  <h2>{{ sample }}</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Flowcell</th>
+        <th>Lane</th>
+        <th>Index</th>
+        <th>Read count</th>
+        <th>Passed application QC</th>
+        <th>Q >= 20</th>
+        <th>Flowcell QC</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
 </div>
 <div class="row" id="sample_list"></div>
 
 <script>
-$.getJSON("/api/v1/samples/{{ sample }}", function(data) {
-  for (var i = 0; i < data.length; i++) {
-    $("#sample_list").append('<div class="span3"><p><a href="/qc/' + data[i] 
-      + '">' + data[i] + '</a></p></div>')
-  };
+$.getJSON("/api/v1/sample_run_counts/{{ sample }}", function(data) {
+  var tbl_bdy = '<tr>'
+  $.each(data, function(flowcell, info) {
+    var tbl_row = ''
+
+    tbl_row += '<td>' + flowcell + '</td>'
+    tbl_row += '<td>' + info["lane"] + '</td>'
+    tbl_row += '<td>' + info["index"] + '</td>'
+    tbl_row += '<td>' + info["read_count"] + '</td>'
+
+    tbl_row += '<td>' + null + '</td>'
+    tbl_row += '<td>' + null + '</td>'
+    tbl_row += '<td>' + '<i class="icon-question-sign"></i>' + '</td>'
+
+    tbl_bdy += tbl_row + '</tr>'
+  })
+
+
+  $("table tbody").html(tbl_bdy)
 })
 </script>
 
