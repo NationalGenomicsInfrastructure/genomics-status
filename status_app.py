@@ -191,7 +191,7 @@ class BPMonthlyProductionDataHandler(tornado.web.RequestHandler):
             m = row.key[2]
             bp_list.append({"x": [y, m], "y": row.value})
 
-        d = {"data": bp_list, "name": "series"}
+        d = {"data": bp_list, "name": "production"}
         return [d]
 
 
@@ -211,7 +211,7 @@ class BPQuarterlyProductionDataHandler(tornado.web.RequestHandler):
             q = row.key[1]
             bp_list.append({"x": [y, q], "y": row.value})
 
-        d = {"data": bp_list, "name": "series"}
+        d = {"data": bp_list, "name": "production"}
         return [d]
 
 

@@ -4,10 +4,16 @@
 {% block stuff %}
 <div class="container-fluid">
   <h2>Data production - 2012</h2>
+  <div class="single_chart_container">
+    <svg id="monthly"></svg>
+  </div>
+  <div class="single_chart_container">
+    <svg id="quarterly"></svg>
+  </div>
+  <p>
   <div class="single_chart_container" id="chart_container">
     <svg id="production"></svg>
   </div>
-  <p>
     The number of basepairs sequenced over 2012.
   </p>
 </div>
@@ -38,6 +44,44 @@ $.getJSON("/api/v1/production/120101", function(data) {
     return chart
   });
 
+})
+
+$.getJSON("/api/v1/m_production/", function(data) {
+  data = data[0]["data"]
+  nv.addGraph(function() {
+    var monthly_chart = nv.models.discreteBarChart()
+                          .x(function(d) { return d["x"]})
+                          .y(function(d) { return d["y"]})
+                          .color(["#4D91A1"])
+
+    monthly_chart.yAxis
+        .tickFormat(d3.format("2.2s"))
+
+    d3.select("#monthly")
+        .datum([{values: data, "key": "Stuff"}])
+        .call(monthly_chart)
+
+    return monthly_chart;
+  })
+})
+
+$.getJSON("/api/v1/q_production/", function(data) {
+  data = data[0]["data"]
+  nv.addGraph(function() {
+    var quarterly_chart = nv.models.discreteBarChart()
+                          .x(function(d) { return d["x"]})
+                          .y(function(d) { return d["y"]})
+                          .color(["#4D91A1"])
+
+    quarterly_chart.yAxis
+        .tickFormat(d3.format("2.2s"))
+
+    d3.select("#quarterly")
+        .datum([{"values": data, "key": "Stuff"}])
+        .call(quarterly_chart)
+
+    return quarterly_chart;
+  })
 })
 
 </script>
