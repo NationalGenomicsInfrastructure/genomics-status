@@ -23,23 +23,15 @@
 <script>
 $.getJSON("/api/v1/flowcells", function(data) {
   var tbl_bdy = "";
-  $.each(data, function(d) {  
-    var tbl_row = "";
-    $.each(this, function(k, v) {
-      tbl_row += "<td>";
+  $.each(data, function(flowcell, info) {  
 
-      if (k === "run id") {
-        tbl_row += "<a href='/flowcells/" + d + "'>";
-      }
-
-      tbl_row += v
-
-      if (k === "run id") {
-        tbl_row += "</a>";
-      }
-
-      tbl_row += "</td>";
-    })
+    var tbl_row = "<td>"
+    tbl_row += "<a href='/flowcells/" + flowcell + "'>"
+    tbl_row += info["run id"] + '</td>'
+    tbl_row += '<td>' + info['startdate'] + '</td>'
+    tbl_row += '<td>' + info['flowcell'] + '</td>'
+    tbl_row += '<td>' + info['pos'] + '</td>'
+    tbl_row += '<td>' + info['instrument'] + '</td>'
 
     tbl_bdy += "<tr>" + tbl_row + "</tr>";
   })

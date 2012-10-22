@@ -148,18 +148,27 @@ class ProductionDataHandler(tornado.web.RequestHandler):
 class BPProductionDataHandler(tornado.web.RequestHandler):
     def get(self, start):
         self.set_header("Content-type", "application/json")
-        strt = [start[:2], start[2:4], start[4:]]
+        strt = [12, 1, 1, 1]
         self.write(json.dumps(self.cum_date_bpcounts(strt), default=dthandler))
 
     def cum_date_bpcounts(self, start):
-        view = self.application.samples_db.view("barcodes/date_read_counts", group_level=3, startkey=start)
+        view = self.application.samples_db.view("barcodes/date_read_counts", \
+            group_level=4, startkey=start)
         row0 = view.rows[0]
         current = row0.value * 200
-        bp_list = [{"x": int(time.mktime(parser.parse("".join(row0.key)).timetuple()) * 1000), \
+        y = row0.key[0]
+        m = row0.key[2]
+        d = row0.key[3]
+        dt = datetime(y, m, d)
+        bp_list = [{"x": int(time.mktime(dt.timetuple()) * 1000), \
                     "y": current}]
         for row in view.rows[1:]:
             current += row.value * 200
-            bp_list.append({"x": int(time.mktime(parser.parse("".join(row.key)).timetuple()) * 1000), \
+            y = row.key[0]
+            m = row.key[2]
+            d = row.key[3]
+            dt = datetime(y, m, d)
+            bp_list.append({"x": int(time.mktime(dt.timetuple()) * 1000), \
                             "y": current})
 
         d = {"data": bp_list, "name": "series"}
@@ -300,6 +309,34 @@ class SampleQCCoverageDataHandler(tornado.web.RequestHandler):
         result = self.application.samples_db.view("qc/coverage", key=sample)
 
         return result.rows[0].value
+
+
+class SampleReadCountDataHandler(tornado.web.RequestHandler):
+    def get(self, sample):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.sample_read_count(sample), default=dthandler))
+
+    def sample_read_count(self, sample):
+        rc_view = self.application.samples_db.view("samples/read_counts",
+                                                  group_level=1)
+        for row in rc_view[[sample]:[sample, "Z"]]:
+            return row.value["read_count"]
+
+
+class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
+    def get(self, sample):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.sample_read_count(sample), default=dthandler))
+
+    def sample_read_count(self, sample):
+        rc_view = self.application.samples_db.view("samples/read_counts",
+                                                  reduce=False)
+        sample_runs = OrderedDict()
+        for row in rc_view[[sample, "", ""]:[sample, "Z", ""]]:
+            sample_runs[row.key[1]] = row.value
+            sample_runs[row.key[1]]["lane"] = row.key[-1]
+
+        return sample_runs
 
 
 class ProjectsDataHandler(tornado.web.RequestHandler):
@@ -566,7 +603,8 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
-            ("/api/v1/flowcell_demultiplex/([^/]*)$", FlowcellDemultiplexHandler),
+            ("/api/v1/flowcell_demultiplex/([^/]*)$",
+                FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
             ("/api/v1/picea_home", PiceaHomeDataHandler),
@@ -580,6 +618,9 @@ class Application(tornado.web.Application):
             ("/api/v1/qc/(\w+)?", SampleQCDataHandler),
             ("/api/v1/quotas", QuotasDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
+            ("/api/v1/sample_readcount/(\w+)?", SampleReadCountDataHandler),
+            ("/api/v1/sample_run_counts/(\w+)?",
+                SampleRunReadCountDataHandler),
             ("/api/v1/sample_alignment/(\w+)?", SampleQCAlignmentDataHandler),
             ("/api/v1/sample_coverage/(\w+)?", SampleQCCoverageDataHandler),
             ("/api/v1/sample_summary/(\w+)?", SampleQCSummaryDataHandler),
