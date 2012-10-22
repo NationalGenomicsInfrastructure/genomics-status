@@ -175,6 +175,46 @@ class BPProductionDataHandler(tornado.web.RequestHandler):
         return [d]
 
 
+class BPMonthlyProductionDataHandler(tornado.web.RequestHandler):
+    def get(self, start):
+        self.set_header("Content-type", "application/json")
+        strt = [12, 1, 1, 1]
+        self.write(json.dumps(self.bpcounts(strt), default=dthandler))
+
+    def bpcounts(self, start):
+        view = self.application.samples_db.view("barcodes/date_read_counts", \
+            group_level=3)
+
+        bp_list = []
+        for row in view[start:]:
+            y = row.key[0]
+            m = row.key[2]
+            bp_list.append({"x": [y, m], "y": row.value})
+
+        d = {"data": bp_list, "name": "series"}
+        return [d]
+
+
+class BPQuarterlyProductionDataHandler(tornado.web.RequestHandler):
+    def get(self, start):
+        self.set_header("Content-type", "application/json")
+        strt = [12, 1, 1, 1]
+        self.write(json.dumps(self.bpcounts(strt), default=dthandler))
+
+    def bpcounts(self, start):
+        view = self.application.samples_db.view("barcodes/date_read_counts", \
+            group_level=2)
+
+        bp_list = []
+        for row in view[start:]:
+            y = row.key[0]
+            q = row.key[1]
+            bp_list.append({"x": [y, q], "y": row.value})
+
+        d = {"data": bp_list, "name": "series"}
+        return [d]
+
+
 class DataHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -611,6 +651,9 @@ class Application(tornado.web.Application):
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
             ("/api/v1/production/([^/]*)$", BPProductionDataHandler),
+            ("/api/v1/m_production/([^/]*)$", BPMonthlyProductionDataHandler),
+            ("/api/v1/q_production/([^/]*)$", \
+                BPQuarterlyProductionDataHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
