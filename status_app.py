@@ -253,6 +253,16 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
         return applications
 
 
+class SampleInfoDataHandler(tornado.web.RequestHandler):
+    def get(self, sample):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.sample_info(sample)))
+
+    def sample_info(self, sample):
+        for row in self.application.projects_db.view("samples/info")[sample]:
+            return row.value
+
+
 class PagedQCDataHandler(tornado.web.RequestHandler):
     def get(self, startkey):
         self.set_header("Content-type", "application/json")
@@ -361,6 +371,23 @@ class SampleReadCountDataHandler(tornado.web.RequestHandler):
                                                   group_level=1)
         for row in rc_view[[sample]:[sample, "Z"]]:
             return row.value["read_count"]
+
+
+class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.yield_difference(), default=dthandler))
+
+    def yield_difference(self):
+        fc_lanes_total_reads = {}
+        for row in self.application.samples_db.view("barcodes/read_counts", group_level=2):
+            fc_lanes_total_reads[tuple(row.key)] = row.value
+
+        fc_lanes_unmatched_reads = {}
+        for row in self.application.flowcells_db.view("lanes/unmatched", reduce=False):
+            fc_lanes_unmatched_reads[tuple(row.key)] = row.value
+
+        return str(fc_lanes_unmatched_reads)
 
 
 class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
@@ -637,6 +664,7 @@ class Application(tornado.web.Application):
             ("/", MainHandler),
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
+            ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             ("/api/v1/amanita_home", AmanitaHomeDataHandler),
             ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
@@ -661,6 +689,7 @@ class Application(tornado.web.Application):
             ("/api/v1/qc/(\w+)?", SampleQCDataHandler),
             ("/api/v1/quotas", QuotasDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
+            ("/api/v1/sample_info/([^/]*)$", SampleInfoDataHandler),
             ("/api/v1/sample_readcount/(\w+)?", SampleReadCountDataHandler),
             ("/api/v1/sample_run_counts/(\w+)?",
                 SampleRunReadCountDataHandler),
