@@ -15,6 +15,7 @@ import yaml
 import random
 
 from collections import OrderedDict
+from collections import defaultdict
 
 
 def dthandler(obj):
@@ -380,14 +381,40 @@ class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
 
     def yield_difference(self):
         fc_lanes_total_reads = {}
-        for row in self.application.samples_db.view("barcodes/read_counts", group_level=2):
+        for row in self.application.samples_db.view("barcodes/read_counts", \
+            group_level=2):
             fc_lanes_total_reads[tuple(row.key)] = row.value
 
         fc_lanes_unmatched_reads = {}
         for row in self.application.flowcells_db.view("lanes/unmatched", reduce=False):
             fc_lanes_unmatched_reads[tuple(row.key)] = row.value
 
-        return str(fc_lanes_unmatched_reads)
+        fc_lanes_sample_count = {}
+        for row in self.application.samples_db.view("lanes/count", group_level=2):
+            fc_lanes_sample_count[tuple(row.key)] = max(row.value - 1, 1)
+
+        fc_lane_expected_yield = {}
+        for k in fc_lanes_total_reads.keys():
+            fc_lane_expected_yield[k] = \
+            ((fc_lanes_total_reads[k] - fc_lanes_unmatched_reads.get(k, 0)) \
+            / fc_lanes_sample_count[k])
+
+        barcode_relation = defaultdict(list)
+        for fc_lane, expected_yield in fc_lane_expected_yield.items():
+            fc_l = list(fc_lane)
+            rc_view = self.application.samples_db.view("barcodes/read_counts", \
+                reduce=False)
+            for row in rc_view[fc_l + [""]: fc_l + ["Z"]]:
+                try:
+                    barcode_relation[row.key[-1]].append(float(row.value) / expected_yield)
+                except ZeroDivisionError:
+                    pass
+
+        processed_relation = barcode_relation.items()
+        processed_relation = filter(lambda l: len(l[1]) >= 50, processed_relation)
+        processed_relation.sort(key=lambda l: sum(l[1]) / len(l[1]), reverse=True)
+
+        return OrderedDict(processed_relation)
 
 
 class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
