@@ -49,6 +49,15 @@ a {
   color: #78A44E;
 }
 
+.box { font: 10px sans-serif; }
+.box line, .box rect, .box circle { stroke: #000; stroke-width: 1.5px; fill: #fff; }
+.box .center { stroke-dasharray: 3 3; }
+.box .outlier { stroke: none; fill: none; }
+
+line.median {
+  stroke: red;
+}
+
 
 /* Jumbotrons
 -------------------------------------------------- */

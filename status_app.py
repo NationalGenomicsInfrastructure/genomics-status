@@ -271,7 +271,8 @@ class PagedQCDataHandler(tornado.web.RequestHandler):
 
     def list_samples(self, startkey):
         sample_list = []
-        for row in self.application.samples_db.view("names/samplename_run", group_level=1, limit=50, startkey=startkey):
+        for row in self.application.samples_db.view("names/samplename_run", \
+        group_level=1, limit=50, startkey=startkey):
             sample_list.append(row.key)
 
         return sample_list
@@ -373,6 +374,8 @@ class SampleReadCountDataHandler(tornado.web.RequestHandler):
         for row in rc_view[[sample]:[sample, "Z"]]:
             return row.value["read_count"]
 
+import numpy as np
+
 
 class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
     def get(self):
@@ -410,11 +413,15 @@ class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
                 except ZeroDivisionError:
                     pass
 
-        processed_relation = barcode_relation.items()
+        processed_relation = barcode_relation.iteritems()
         processed_relation = filter(lambda l: len(l[1]) >= 50, processed_relation)
-        processed_relation.sort(key=lambda l: sum(l[1]) / len(l[1]), reverse=True)
+        # processed_relation.sort(key=lambda l: np.median(l[1]))
 
-        return OrderedDict(processed_relation)
+        # processed_dict = OrderedDict()
+        # for k, v in processed_relation:
+        #     processed_dict[k] = v
+
+        return processed_relation[0][1]
 
 
 class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
@@ -546,6 +553,12 @@ class FlowcellQ30Handler(tornado.web.RequestHandler):
 class ProjectsHandler(tornado.web.RequestHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
+        self.write(t.generate())
+
+
+class ExpectedHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("expected.html")
         self.write(t.generate())
 
 
@@ -713,17 +726,17 @@ class Application(tornado.web.Application):
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/qc", QCDataHandler),
-            ("/api/v1/qc/(\w+)?", SampleQCDataHandler),
+            ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/quotas", QuotasDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/sample_info/([^/]*)$", SampleInfoDataHandler),
             ("/api/v1/sample_readcount/(\w+)?", SampleReadCountDataHandler),
             ("/api/v1/sample_run_counts/(\w+)?",
                 SampleRunReadCountDataHandler),
-            ("/api/v1/sample_alignment/(\w+)?", SampleQCAlignmentDataHandler),
-            ("/api/v1/sample_coverage/(\w+)?", SampleQCCoverageDataHandler),
-            ("/api/v1/sample_summary/(\w+)?", SampleQCSummaryDataHandler),
-            ("/api/v1/sample_insert_sizes/(\w+)?", \
+            ("/api/v1/sample_alignment/([^/]*)$", SampleQCAlignmentDataHandler),
+            ("/api/v1/sample_coverage/([^/]*)$", SampleQCCoverageDataHandler),
+            ("/api/v1/sample_summary/([^/]*)$", SampleQCSummaryDataHandler),
+            ("/api/v1/sample_insert_sizes/([^/]*)$", \
                 SampleQCInsertSizesDataHandler),
             ("/api/v1/samples", QCDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
@@ -732,11 +745,12 @@ class Application(tornado.web.Application):
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/amanita", AmanitaHandler),
             ("/applications", ApplicationsHandler),
+            ("/expected", ExpectedHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
             ("/picea", PiceaHandler),
             ("/qc", QCHandler),
-            ("/qc/(\w+)?", SampleQCSummaryHandler),
+            ("/qc/([^/]*)$", SampleQCSummaryHandler),
             ("/quotas", QuotasHandler),
             ("/quotas/(\w+)?", QuotaHandler),
             ("/production", ProductionHandler),
@@ -781,6 +795,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/applications.html")
         tornado.autoreload.watch("design/barcodes.html")
         tornado.autoreload.watch("design/amanita.html")
+        tornado.autoreload.watch("design/expected.html")
         tornado.autoreload.watch("design/flowcells.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)

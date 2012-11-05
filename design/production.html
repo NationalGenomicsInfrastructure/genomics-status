@@ -51,7 +51,7 @@ $.getJSON("/api/v1/m_production/", function(data) {
   nv.addGraph(function() {
     var monthly_chart = nv.models.discreteBarChart()
                           .x(function(d) { return d["x"]})
-                          .y(function(d) { return d["y"]})
+                          .y(function(d) { return 200 * d["y"]})
                           .color(["#4D91A1"])
 
     monthly_chart.yAxis
@@ -70,7 +70,7 @@ $.getJSON("/api/v1/q_production/", function(data) {
   nv.addGraph(function() {
     var quarterly_chart = nv.models.discreteBarChart()
                           .x(function(d) { return d["x"]})
-                          .y(function(d) { return d["y"]})
+                          .y(function(d) { return 200 * d["y"]})
                           .color(["#4D91A1"])
 
     quarterly_chart.yAxis

@@ -16,6 +16,7 @@ line.median {
 }
 
 </style>
+
 <body>
 
 <div id='chart'>
@@ -26,9 +27,9 @@ line.median {
 
 <script type="text/javascript">
 
-var margin = {top: 10, right: 5, bottom: 20, left: 5},
-    width = 20 - margin.left - margin.right,
-    height = 300 - margin.top - margin.bottom;
+var margin = {top: 5, right: 10, bottom: 5, left: 10},
+    width = 600 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
 
 var min = Infinity,
     max = -Infinity;
@@ -39,7 +40,7 @@ var chart = boxChart()
     .height(height);
 
 var data = []
-for (var j = 0; j < 25; j++) {
+for (var j = 0; j < 2; j++) {
 
     data.push([0.5]);
     for (var i = 0; i < 20; i++) {
@@ -53,15 +54,9 @@ for (var j = 0; j < 25; j++) {
 
   chart.domain([min, max]);
 
-  var vis = d3.select("#chart").selectAll("svg")
-      .data(data)
-    .enter().append("svg")
-      .attr("class", "box")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.bottom + margin.top)
-    .append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-      .call(chart);
+  var vis = d3.select("#chart")
+      .datum(data)
+      .call(chart)
 
 
 </script>
