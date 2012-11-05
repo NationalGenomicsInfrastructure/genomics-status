@@ -241,6 +241,20 @@ class QCDataHandler(tornado.web.RequestHandler):
         return sample_list
 
 
+class ApplicationDataHandler(tornado.web.RequestHandler):
+    def get(self, application):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_projects(application)))
+
+    def list_projects(self, application):
+        projects = []
+        project_view = self.application.projects_db.view("project/applications", reduce=False)
+        for row in project_view[application:application + " "]:
+            projects.append(row.value)
+
+        return projects
+
+
 class ApplicationsDataHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -568,6 +582,12 @@ class ApplicationsHandler(tornado.web.RequestHandler):
         self.write(t.generate())
 
 
+class ApplicationHandler(tornado.web.RequestHandler):
+    def get(self, application):
+        t = self.application.loader.load("application.html")
+        self.write(t.generate(application=application))
+
+
 class FlowcellsHandler(tornado.web.RequestHandler):
     def get(self):
         t = self.application.loader.load("flowcells.html")
@@ -704,6 +724,7 @@ class Application(tornado.web.Application):
             ("/", MainHandler),
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
+            ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
             ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             ("/api/v1/amanita_home", AmanitaHomeDataHandler),
             ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
@@ -745,6 +766,7 @@ class Application(tornado.web.Application):
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/amanita", AmanitaHandler),
             ("/applications", ApplicationsHandler),
+            ("/application/([^/]*)$", ApplicationHandler),
             ("/expected", ExpectedHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
@@ -797,6 +819,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/amanita.html")
         tornado.autoreload.watch("design/expected.html")
         tornado.autoreload.watch("design/flowcells.html")
+        tornado.autoreload.watch("design/application.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
