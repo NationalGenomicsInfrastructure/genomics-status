@@ -23,8 +23,13 @@
 <script>
 $.getJSON("/api/v1/applications", function(data) {
   for (d in data) {
-    $("#application_table tbody").append('<tr><td>' + d +
-        '</td><td>' + data[d]+ '</td></tr>')
+    var trow = '<tr onclick="document.location = '
+    trow += "'/application/" + d + "'"
+    trow += '" onmouseover="this.style.cursor='
+    trow += "'pointer'"
+    trow += '">'
+    trow += '<td>' + d + '</td><td>' + data[d]+ '</td></tr>'
+    $("#application_table tbody").append(trow)
   };
 
   var f_data = [{key: "Applications", values: []}]
