@@ -17,6 +17,8 @@ import random
 from collections import OrderedDict
 from collections import defaultdict
 
+import numpy as np
+
 
 def dthandler(obj):
     """ISO formatting for datetime to be used in JSON.
@@ -388,12 +390,44 @@ class SampleReadCountDataHandler(tornado.web.RequestHandler):
         for row in rc_view[[sample]:[sample, "Z"]]:
             return row.value["read_count"]
 
-import numpy as np
+
+class ReadsVsQDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        try:
+            start = json.loads(self.get_argument("start", None))
+        except TypeError:
+            start = None
+
+        try:
+            end = json.loads(self.get_argument("end", None))
+        except TypeError:
+            end = None
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.reads_q_data(start, end), default=dthandler))
+
+    def reads_q_data(self, start, end):
+        qv_view = self.application.samples_db.view("qc/date_reads_per_qv")
+        quality_count = np.zeros(45)
+        quality_integral = np.zeros(45)
+        for row in qv_view[start:end]:
+            quality = np.array(row.value["Quality"], dtype=int)
+            integral = np.array(row.value["Cumulative count"], dtype=float)
+            count = np.array(row.value["Count"], dtype=float)
+            quality_count[quality] += count
+            quality_integral[quality] += integral
+
+        quality_count = quality_count / quality_count.sum()
+        quality_integral = quality_integral / quality_integral[2]
+
+        return {"quality": list(quality_count), "cumulative": list(quality_integral)}
 
 
 class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
     def get(self):
+        start = self.get_argument("start", None)
         self.set_header("Content-type", "application/json")
+        # self.write(json.dumps(start, default=dthandler))
         self.write(json.dumps(self.yield_difference(), default=dthandler))
 
     def yield_difference(self):
@@ -429,13 +463,13 @@ class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
 
         processed_relation = barcode_relation.iteritems()
         processed_relation = filter(lambda l: len(l[1]) >= 50, processed_relation)
-        # processed_relation.sort(key=lambda l: np.median(l[1]))
+        processed_relation.sort(key=lambda l: np.median(l[1]))
 
         # processed_dict = OrderedDict()
         # for k, v in processed_relation:
         #     processed_dict[k] = v
 
-        return processed_relation[0][1]
+        return processed_relation
 
 
 class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
@@ -750,6 +784,7 @@ class Application(tornado.web.Application):
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/quotas", QuotasDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
+            ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
             ("/api/v1/sample_info/([^/]*)$", SampleInfoDataHandler),
             ("/api/v1/sample_readcount/(\w+)?", SampleReadCountDataHandler),
             ("/api/v1/sample_run_counts/(\w+)?",
