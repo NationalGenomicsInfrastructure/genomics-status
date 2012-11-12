@@ -391,6 +391,12 @@ class SampleReadCountDataHandler(tornado.web.RequestHandler):
             return row.value["read_count"]
 
 
+class ReadsVsQvhandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("reads_vs_qv.html")
+        self.write(t.generate())
+
+
 class ReadsVsQDataHandler(tornado.web.RequestHandler):
     def get(self):
         try:
@@ -802,7 +808,7 @@ class Application(tornado.web.Application):
             ("/amanita", AmanitaHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
-            ("/expected", ExpectedHandler),
+            # ("/expected", ExpectedHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
             ("/picea", PiceaHandler),
@@ -813,6 +819,7 @@ class Application(tornado.web.Application):
             ("/production", ProductionHandler),
             ("/projects", ProjectsHandler),
             ("/projects/([^/]*)$", ProjectSamplesHandler),
+            ("/reads_vs_qv", ReadsVsQvhandler),
             ("/samples", QCHandler),
             ("/samples/([^/]*)$", SampleRunHandler)
         ]
@@ -855,6 +862,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/expected.html")
         tornado.autoreload.watch("design/flowcells.html")
         tornado.autoreload.watch("design/application.html")
+        tornado.autoreload.watch("design/reads_vs_qv.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
