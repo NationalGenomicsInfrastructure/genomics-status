@@ -469,11 +469,32 @@ class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
         processed_relation = filter(lambda l: len(l[1]) >= 50, processed_relation)
         processed_relation.sort(key=lambda l: np.median(l[1]))
 
-        # processed_dict = OrderedDict()
-        # for k, v in processed_relation:
-        #     processed_dict[k] = v
-
         return processed_relation
+
+
+class BarcodeVsExpectedPlotHandler(BarcodeVsExpectedDataHandler):
+    def get(self):
+        processed_relation = self.yield_difference()
+
+        fig = Figure(figsize=[12, 6])
+        ax = fig.add_axes([0.1, 0.2, 0.8, 0.7])
+
+        ax.boxplot([l[1] for l in processed_relation], 0, '', 0)
+
+        ax.set_xlabel("log((matched yield) / (expected yield))")
+        ax.set_ylabel("Barcode")
+
+        ax.set_yticklabels([l[0] for l in processed_relation], family='monospace')
+
+        FigureCanvasAgg(fig)
+
+        buf = cStringIO.StringIO()
+        fig.savefig(buf, format="png")
+        data = buf.getvalue()
+
+        self.set_header("Content-Type", "image/png")
+        self.set_header("Content-Length", len(data))
+        self.write(data)
 
 
 class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
@@ -675,7 +696,7 @@ class ProjectsHandler(tornado.web.RequestHandler):
 
 class ExpectedHandler(tornado.web.RequestHandler):
     def get(self):
-        t = self.application.loader.load("expected.html")
+        t = self.application.loader.load("barcode_vs_expected.html")
         self.write(t.generate())
 
 
@@ -840,6 +861,7 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
+            ("/api/v1/plot/barcodes_vs_expected.png", BarcodeVsExpectedPlotHandler),
             ("/api/v1/picea_home", PiceaHomeDataHandler),
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
@@ -872,7 +894,7 @@ class Application(tornado.web.Application):
             ("/amanita", AmanitaHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
-            # ("/expected", ExpectedHandler),
+            ("/barcode_vs_expected", ExpectedHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
             ("/q30", Q30Handler),
