@@ -397,6 +397,39 @@ class ReadsVsQvhandler(tornado.web.RequestHandler):
         self.write(t.generate())
 
 
+class PhixErrorRateHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("phix_err_rate.html")
+        self.write(t.generate())
+
+
+class PhixErrorRateDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.phix_err_rate()))
+
+    def phix_err_rate(self):
+        view = self.application.flowcells_db.view("lanes/err_rate_phix_yield")
+
+        err_rates = []
+        yields = []
+
+        for row in view:
+            err_rate = row.value["err_rate_phix"]
+            read_yield = row.value["yield"]
+            if err_rate and read_yield:
+                err_rates.append(err_rate)
+                yields.append(float(read_yield))
+
+        amount_yields, error_rate = np.histogram(err_rates, bins=256, weights=yields)
+
+        fraction_yield = amount_yields / amount_yields.sum()
+
+        return {"error_rate": list(error_rate),
+                "yield_fraction": list(fraction_yield),
+                "cum_yield_fraction": list(fraction_yield.cumsum())}
+
+
 class ReadsVsQDataHandler(tornado.web.RequestHandler):
     def get(self):
         try:
@@ -427,6 +460,98 @@ class ReadsVsQDataHandler(tornado.web.RequestHandler):
         quality_integral = quality_integral / quality_integral[2]
 
         return {"quality": list(quality_count), "cumulative": list(quality_integral)}
+
+
+class UnmatchedVsSamplesPerLaneHandler(tornado.web.RequestHandler):
+    def get(self):
+        t = self.application.loader.load("unmatched_vs_samples_per_lane.html")
+        self.write(t.generate())
+
+
+class UnmatchedVsSamplesPerLaneDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.sample_count_unmatched()))
+
+    def sample_count_unmatched(self):
+        n_samples_view = self.application.samples_db.view("lanes/count", group_level=2)
+        sample_count_fc_lanes = defaultdict(list)
+        for row in n_samples_view:
+            sample_count_fc_lanes[row.value].append(row.key)
+
+        sample_count_unmatched = {}
+        tot_reads_view = self.application.samples_db.view("barcodes/read_counts", group_level=2)
+        unm_reads_view = self.application.flowcells_db.view("lanes/unmatched", reduce=False)
+        for no_samples, fc_lanes in sample_count_fc_lanes.items():
+            ratio_list = []
+            for fc_lane in fc_lanes:
+                # Total read count in a flowcell/lane
+                for row in tot_reads_view[fc_lane + [""]:fc_lane + ["Z"]]:
+                    total = row.value
+                    break
+
+                # Number of unmatched in flowcell/lane
+                for row in unm_reads_view[fc_lane]:
+                    ratio = float(row.value) / total
+                    break
+
+                ratio_list.append(ratio)
+
+            sample_count_unmatched[no_samples] = ratio_list
+
+        fil_s_cnt_unm = dict(filter(lambda (s, a): len(a) > 20, sample_count_unmatched.items()))
+
+        return fil_s_cnt_unm
+
+import matplotlib.gridspec as gridspec
+from matplotlib import cm
+
+
+class UnmatchedVsSamplesPerLanePlotHandler(UnmatchedVsSamplesPerLaneDataHandler):
+    def get(self):
+        sample_count_unmatched = self.sample_count_unmatched()
+
+        gs = gridspec.GridSpec(1, 15)
+
+        fig = Figure()
+        ax = fig.add_subplot(gs[0, :-1])
+        bp = ax.boxplot(sample_count_unmatched.values(), 0, '')
+        ax.set_xticklabels(sample_count_unmatched.keys())
+        ax.set_xlabel("No of samples per lane")
+        ax.set_ylabel("Quotient unmatched / total read counts")
+        n_vls_list = np.array([float(len(v)) for v in sample_count_unmatched.values()])
+        m = max(n_vls_list)
+
+        cs = 0.2
+
+        for box, nvl in zip(bp["boxes"], n_vls_list):
+            plt.setp(box, color=cm.Blues(nvl / m + cs), lw=2.0)
+
+        bpw = bp["whiskers"]
+        for wb, wt, nvl in zip(bpw[::2], bpw[1::2], n_vls_list):
+            plt.setp([wb, wt], color=cm.Blues(nvl / m + cs), lw=2.0)
+
+        lgd = fig.add_subplot(gs[0, -1])
+        a = np.outer(np.arange(0., 1., 0.01), np.ones(1))
+        lgd.imshow(a, cmap=cm.Blues)
+        lgd.grid(False)
+        lgd.set_xticks([])
+        lgd.yaxis.tick_right()
+        lgd.set_yticks(np.minimum((n_vls_list / m + cs), np.ones(len(n_vls_list))) * 100.)
+        lgd.set_yticklabels([str(int(i)) if i < 100 else "> 100" for i in n_vls_list])
+        lgd.invert_yaxis()
+        lgd.yaxis.set_label_position("right")
+        lgd.set_ylabel("Number of observations")
+
+        FigureCanvasAgg(fig)
+
+        buf = cStringIO.StringIO()
+        fig.savefig(buf, format="png")
+        data = buf.getvalue()
+
+        self.set_header("Content-Type", "image/png")
+        self.set_header("Content-Length", len(data))
+        self.write(data)
 
 
 class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
@@ -861,8 +986,10 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
+            ("/api/v1/plot/samples_per_lane.png", UnmatchedVsSamplesPerLanePlotHandler),
             ("/api/v1/plot/barcodes_vs_expected.png", BarcodeVsExpectedPlotHandler),
             ("/api/v1/picea_home", PiceaHomeDataHandler),
+            ("/api/v1/samples_per_lane", UnmatchedVsSamplesPerLaneDataHandler),
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
             ("/api/v1/production/([^/]*)$", BPProductionDataHandler),
@@ -891,6 +1018,7 @@ class Application(tornado.web.Application):
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
+            ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),
             ("/amanita", AmanitaHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
@@ -903,11 +1031,13 @@ class Application(tornado.web.Application):
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             ("/quotas", QuotasHandler),
             ("/quotas/(\w+)?", QuotaHandler),
+            ("/phix_err_rate", PhixErrorRateHandler),
             ("/production", ProductionHandler),
             ("/projects", ProjectsHandler),
             ("/projects/([^/]*)$", ProjectSamplesHandler),
             ("/reads_vs_qv", ReadsVsQvhandler),
             ("/samples", QCHandler),
+            ("/samples_per_lane", UnmatchedVsSamplesPerLaneHandler),
             ("/samples/([^/]*)$", SampleRunHandler)
         ]
 
@@ -951,6 +1081,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/flowcells.html")
         tornado.autoreload.watch("design/application.html")
         tornado.autoreload.watch("design/reads_vs_qv.html")
+        tornado.autoreload.watch("design/phix_err_rate.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
