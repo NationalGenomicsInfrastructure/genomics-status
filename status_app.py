@@ -416,7 +416,7 @@ class PhixErrorRateDataHandler(tornado.web.RequestHandler):
         for row in view:
             err_rate = row.value["err_rate_phix"]
             read_yield = row.value["yield"]
-            if err_rate and read_yield:
+            if err_rate and read_yield and err_rate > 0.0001:
                 err_rates.append(err_rate)
                 yields.append(float(read_yield))
 
