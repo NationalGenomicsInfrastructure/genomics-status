@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+<div class="container-fluid">
+  <h2>Reads per lane</h2>
+  <div id="slider"></div>
+  <h3 id="dates"></h3>
+  <div id="plot"></div> 
+</div>
+
+<script type="text/javascript">
+
+  $("#slider").slider({
+    range: true,
+    min: 1,
+    max: 12,
+    values: [2, 12],
+    stop: function() {
+      values = $("#slider").slider("values")
+      v0 = values[0]
+      v1 = values[1]
+      if (v0 < 10) {
+        v0 = "0" + v0
+      }
+      if (v1 < 10) {
+        v1 = "0" + v1
+      }
+      start = "12" + v0 + "01"
+      stop = "12" + v1 + "01"
+      load_plot(start, stop)
+    }
+  });
+
+  function load_plot(start, stop){
+    $("#dates").text("Date range: " + start + " - " + stop)
+    $("#plot").html('<img src="/api/v1/plot/reads_per_lane.png?start=' + start + '&end=' + stop + '"/>')
+  }
+
+  load_plot("", "Z")
+
+</script>
+
+{% end %}

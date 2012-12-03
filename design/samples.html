@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+
+<div class="container-fluid" id="sample_list">
+  <h2>Samples</h2><br>
+  <div class="progress progress-striped progress-info active">
+    <div class="bar" style="width: 100%;">Loading samples</div>
+  </div>
+</div>
+
+<script>
+$('body').attr('data-spy', "scroll");
+var start = ""
+var incr_load = setInterval(get_samples, 100);
+function get_samples() {
+    $.getJSON("/api/v1/samples/start/" + start, function(data) {
+      for (var i = 0; i < data.length - 1; i++) {
+        $("#sample_list").append('<div class="span3"><p><a href="/samples/' + data[i] 
+          + '">' + data[i] + '</a></p></div>')
+      };
+      if (data.length < 3) {
+        clearInterval(incr_load);
+        $("#sample_list").append('<div class="span3"><p><a href="/samples/' + data[data.length - 1]
+          + '">' + data[data.length - 1] + '</a></p></div>')
+        $(".progress").remove()
+      }
+    start = data[data.length - 1]
+    })
+}
+
+get_samples();
+
+</script>
+
+{% end %}

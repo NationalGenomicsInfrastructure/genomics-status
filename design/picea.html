@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+<div class="container-fluid">
+  <h2>Picea</h2>
+  <div class="single_chart_container" id="chart_container">
+    <svg id="picea_chart"></svg>
+  </div>
+  <div class="span6">
+  <p>
+    This graph shows the historical storage usage on Picea for every
+    user in the HOME directory.
+  </p>
+  </div>
+</div>
+
+<script>
+
+var users = [""];
+var user_data = [];
+
+var chart = nv.models.lineWithFocusChart()
+  .x(function(d) { return d["x"] })
+  .y(function(d) { return d["y"] });
+
+chart.xAxis
+  .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
+
+chart.x2Axis
+  .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
+
+chart.yAxis
+    .tickFormat(d3.format("2.2s"));
+
+chart.y2Axis
+    .tickFormat(d3.format("2.2s"));
+
+nv.utils.windowResize(function() {d3.select('#picea_chart').call(chart)})
+
+$.getJSON("api/v1/picea_home/users/", function(users_json) {
+  users = users_json;
+})
+.then(function() {
+  $.getJSON("/api/v1/picea_home", function(total_json) {
+    user_data.push({values: total_json, key: "Total"});
+  })
+  .then(function() {
+
+    $.each(users, function(i, user) {
+      $.getJSON("/api/v1/picea_home/" + user, function(user_json) {
+        user_data.push({values: user_json, key: user});
+      })
+      .then(function() {
+
+        d3.select("#picea_chart")
+            .datum(user_data)
+          .call(chart);
+
+      });
+    });
+  });
+});
+
+</script>
+
+{% end %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+<div class="container-fluid">
+  <h2></h2>
+  <div id="chart"></div>
+</div>
+
+<script src="/static/js/boxplot.js"></script>
+
+<script>
+
+var margin = {top: 5, right: 10, bottom: 5, left: 10},
+    width = 500 - margin.left - margin.right,
+    height = 20 - margin.top - margin.bottom;
+
+var min = Infinity,
+    max = -Infinity;
+
+var chart = boxChart()
+    .whiskers(iqr(1.5))
+    .width(width)
+    .height(height);
+
+$.getJSON("/api/v1/expected", function(data) {
+
+  md = []
+  for (k in data) {
+    md.push(data[k])
+  }
+
+  max = 3.0
+  min = -1.0
+
+  chart.domain([min, max]);
+
+  var vis = d3.select("#chart").selectAll("svg")
+      .data(md)
+    .enter().append("svg")
+      .attr("class", "box")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.bottom + margin.top)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+      .call(chart);
+})
+
+</script>
+
+{% end %}

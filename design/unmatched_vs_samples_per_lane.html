@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+<div class="container-fluid">
+  <h2>Fraction of unmatched yields vs number of samples per lane</h2>
+  <img src="/api/v1/plot/samples_per_lane.png" />
+</div>
+
+{% end %}
