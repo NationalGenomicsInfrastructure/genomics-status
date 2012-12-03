@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+
+<div class="fluid-row">
+  <h2>{{ sample }}</h2><br>
+  <table class="table table-bordered" id="summary">
+    <tbody></tbody>
+  </table>
+  <h3>Runs</h3>
+  <table class="table table-striped" id="runs">
+    <thead>
+      <tr>
+        <th>Flowcell</th>
+        <th>Lane</th>
+        <th>Index</th>
+        <th>Read count</th>
+        <th>Passed application QC</th>
+        <th>Q >= 20</th>
+        <th>Flowcell QC</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+</div>
+<div class="row" id="sample_list"></div>
+
+<script>
+var reads_ordered = 0
+$.getJSON("/api/v1/sample_info/{{ sample }}", function(data) {
+  reads_ordered = data["ordered_m_reads"] * 1000000
+  var tbl_bdy = '<tr><th>Sample status</th><td>' + data["status"] + '</td></tr>'
+  tbl_bdy += '<tr><th>Read pairs ordered</th><td>' + reads_ordered
+  tbl_bdy += '</td></tr>'
+
+  $("#summary > tbody:last").append(tbl_bdy)
+})
+
+$.getJSON("/api/v1/sample_run_counts/{{ sample }}", function(data) {
+  var tbl_bdy = '<tr>'
+  var total_sequenced = 0
+  $.each(data, function(flowcell, info) {
+    var tbl_row = ''
+
+    tbl_row += '<td><a href="/qc/' + info["sample_run"] + '">' 
+    tbl_row += flowcell + '</td>'
+    tbl_row += '<td>' + info["lane"] + '</td>'
+    tbl_row += '<td>' + info["index"] + '</td>'
+    tbl_row += '<td>' + info["read_count"] + '</td>'
+
+    tbl_row += '<td>' + null + '</td>'
+    tbl_row += '<td>' + null + '</td>'
+    tbl_row += '<td>' + '<i class="icon-question-sign"></i>' + '</td>'
+
+    tbl_bdy += tbl_row + '</tr>'
+
+    total_sequenced += info["read_count"]
+  })
+
+  var sequenced_row = '<tr><th>Total reads sequenced</th><td>'
+  sequenced_row += total_sequenced + '</td></tr>'
+
+  $("#runs tbody").html(tbl_bdy)
+  $("#summary > tbody:last").append(sequenced_row)
+})
+
+// Placeholder value, data not available yet
+var total_after_qc = 0
+var delivered = 0
+
+var after_qc_row = '<tr><th>Total reads after QC</th><td>'
+after_qc_row += total_after_qc + '</td></tr>'
+var reads_left_row = '<tr><th>Read pairs left</th><td>'
+reads_left_row += (reads_ordered - total_after_qc) + '</td></tr>'
+var delivered_row = '<tr><th>Read pairs delivered</th><td>'
+delivered_row += delivered + '</td></tr>'
+
+$("#summary > tbody:last").append(after_qc_row + reads_left_row + delivered_row)
+
+</script>
+
+{% end %}

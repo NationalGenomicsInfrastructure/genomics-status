@@ -1,27 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+
     <meta charset="utf-8">
     <title>Genomics Status</title>
-    <script src="static/js/jquery.js"></script>
+    <script src="/static/js/jquery.js"></script>
 
-    <link type="text/css" rel="stylesheet" href="static/rickshaw/src/css/graph.css">
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css">
+    <link type="text/css" rel="stylesheet" href="/static/nvd3/src/nv.d3.css">
 
-  <script src="static/rickshaw/vendor/d3.min.js"></script>
-  <script src="static/rickshaw/vendor/d3.layout.min.js"></script>
-
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
-
-  <script src="static/rickshaw/rickshaw.js"></script>
+    <script src="/static/nvd3/lib/d3.v2.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+    <script src="/static/nvd3/lib/fisheye.js"></script>
+    <script src="/static/nvd3/nv.d3.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
 
     <!-- Le styles -->
-    <link href="static/css/bootstrap.css" rel="stylesheet">
-    <link href="static/css/bootstrap-responsive.css" rel="stylesheet">
-    <link href="static/css/status.css" rel="stylesheet">
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/status.css" rel="stylesheet">
+    <link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="/static/css/detail.css" rel="stylesheet">
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -31,58 +33,57 @@
   </head>
 
   <body>
-  <!-- Navbar
-    ================================================== -->
-    <div class="navbar">
-      <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="brand" href="#"><img src="static/img/sllw.gif" width="120" /></a>
+
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <!-- Sidebar
+        ================================================== -->
+          <div class="span2">
+            <div class="sidebar-nav">
+            <ul class="nav nav-list">
+              <div class="brand">
+                <img src="/static/img/SciLifeLab-1.logotyp.PMS376.gif">
+              </div>
+              <li class="nav-header">Genomics Status</li>
+            </ul>
+            </div>
+          </div>
+        <!-- Content
+        ================================================== -->
+        <div class="span10">
+          <div class="well">
+          {% block stuff %}
+          {% end %}
+          </div>
         </div>
+
       </div>
     </div>
 
-    <div class="container">
-
-<!-- Masthead
-================================================== -->
-<header class="jumbotron masthead">
-  <div class="inner">
-    {% block head %}
-    {% end %}
-  </div>
-</header>
-
-      {% block stuff %}
-      {% end %}
-
-      <hr>
-
-      <footer>
-        <p>SciLifeLab</p>
-      </footer>
-
-    </div> <!-- /container -->
-
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="static/js/bootstrap-transition.js"></script>
-    <script src="static/js/bootstrap-alert.js"></script>
-    <script src="static/js/bootstrap-modal.js"></script>
-    <script src="static/js/bootstrap-dropdown.js"></script>
-    <script src="static/js/bootstrap-scrollspy.js"></script>
-    <script src="static/js/bootstrap-tab.js"></script>
-    <script src="static/js/bootstrap-tooltip.js"></script>
-    <script src="static/js/bootstrap-popover.js"></script>
-    <script src="static/js/bootstrap-button.js"></script>
-    <script src="static/js/bootstrap-collapse.js"></script>
-    <script src="static/js/bootstrap-carousel.js"></script>
-    <script src="static/js/bootstrap-typeahead.js"></script>
+      <!-- Le javascript
+      ================================================== -->
+      <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/javascript">
+      $.getJSON("/api/v1", function(data) {
+        for (var i = data["pages"].length - 1; i >= 0; i--) {
+          $(".nav-list").append("<li><a href='" + data["pages"][i] + "'>" +
+            data["pages"][i] + "</a></li>")
+        };
+      } );
+    </script>
+        
+    <script src="/static/js/bootstrap-transition.js"></script>
+    <script src="/static/js/bootstrap-alert.js"></script>
+    <script src="/static/js/bootstrap-modal.js"></script>
+    <script src="/static/js/bootstrap-dropdown.js"></script>
+    <script src="/static/js/bootstrap-scrollspy.js"></script>
+    <script src="/static/js/bootstrap-tab.js"></script>
+    <script src="/static/js/bootstrap-tooltip.js"></script>
+    <script src="/static/js/bootstrap-popover.js"></script>
+    <script src="/static/js/bootstrap-button.js"></script>
+    <script src="/static/js/bootstrap-collapse.js"></script>
+    <script src="/static/js/bootstrap-carousel.js"></script>
+    <script src="/static/js/bootstrap-typeahead.js"></script>
 
   </body>
 </html>
