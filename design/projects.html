@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+
+<div class="container-fluid">
+  <h2>Projects</h2><br>
+  <table class="table table-striped" id="project_table">
+    <thead>
+      <tr>
+        <th>Project</th>
+        <th>Application</th>
+        <th>Ordered million reads per sample</th>
+        <th>Sequencing progress</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+$.getJSON("/api/v1/projects", function(data) {
+  var tbl_body = "";
+  $.each(data, function(k1, summary) {
+    tbl_row = "<tr>"
+    tbl_row += '<td><a href="/projects/' + k1 + '">'
+    tbl_row += k1 + '</td>'
+    tbl_row += '<td>' + summary["application"] + '</td>'
+    tbl_row += '<td>' + summary["ordered_reads"] + '</td>'
+    tbl_row += '<td>' + summary["passed_samples"] + " / " 
+    + summary["no_samples"] + ' samples finished</td>'
+    tbl_row += '</tr>'
+    $("#project_table").append(tbl_row)
+  })
+})
+</script>
+
+{% end %}

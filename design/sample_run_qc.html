@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block stuff %}
+
+<div class="container-fluid">
+
+  <h2>{{ sample }}</h2><br>
+
+  <!-- <div class="span10"> -->
+
+    <h3>Summary</h3>
+    <table class="table table-bordered" id="summary_table">
+      <thead>
+        <tr>
+          <th>Flowcell id</th>
+          <th>Lane</th>
+          <th>Sequence</th>
+        </tr>
+      </thead>
+      <tbody><tr></tr></tbody>
+    </table>
+
+    <h3>QC</h3>
+    <table class="table table-bordered zebra-striped" id="qc_table">
+      <tbody>
+      </tbody>
+    </table>
+
+  <!-- </div> -->
+
+  <div class="span5">
+    <h3>Mapping summary</h3>
+    <div class="grid_chart">
+      <svg class="legend" id="legend"></svg>
+      <svg id="mapping"></svg>
+    </div>
+  </div>
+
+  <div class="span5" id="container_a2010002">
+    <h3>Insert size distribution</h3>
+    <div class="grid_chart">
+      <svg id="distribution"></svg>
+    </div>
+  </div>
+
+  <div class="span5" id="container_a2010003">
+    <h3>Coverage summary</h3>
+    <div class="grid_chart">
+      <svg id="coverage"></svg>
+    </div>
+  </div>
+
+</div>
+
+<script>
+f = d3.format(',')
+ff = d3.format('.2f')
+fpr = d3.format('.2%')
+
+$.getJSON("/api/v1/sample_summary/{{ sample }}", function(data) {
+  $("#summary_table tr:last").after("<td>" +
+    data["flowcell_id"] + "</td><td>" +
+    data["lane"] + "</td><td>" +
+    data["sequence"] + "</td>"
+  )
+})
+
+$.getJSON("/api/v1/qc/{{ sample }}", function(data) {
+  $("#qc_table tbody").append(
+    "<tr><th>Total</th><td>" + f(data["bc_count"]) +
+    "</td></tr>" +
+    "<tr><th>Aligned</th><td>" + fpr(data["pct_aligned"]) + "</td></tr>" +
+    "<tr><th>Pair duplicates</th><td>" + fpr(data["pair_duplicates"]) +
+    "</td></tr>" +
+    "<tr><th>Insert size</th><td>" + ff(data["insert_size"])
+    + "</td></tr>" +
+    "<tr><th>On target bases</th><td>" + fpr(data["on_target"])
+    + "</td></tr>" +
+    "<tr><th>Mean target coverage</th><td>" + ff(data["mean_target_coverage"]) +
+    "</td></tr>" +
+    "<tr><th>X10x coverage targets</th><td>" + fpr(data["x10x_coverage_targets"]) +
+    "</td></tr>" +
+    "<tr><th>Zero coverage targets</th><td>" + fpr(data["zero_coverage_targets"]) +
+    "</td></tr>"
+  )
+});
+
+var align_data = [];
+var mapping;
+
+$.getJSON("/api/v1/sample_alignment/{{ sample }}", function(data) {
+  align_data.push({
+    key: "Origin",
+    values: [{x: 0, y: 0, size: 0.1}]
+  });
+
+  align_data.push({
+    key: "Aligned",
+    values: [{x: 1, y: parseInt(data["aligned"]["first_of_pair"]), size: 0.9, shape: 'circle'},
+             {x: 2, y: parseInt(data["aligned"]["second_of_pair"]), size: 0.9, shape: 'circle'},
+             {x: 3, y: parseInt(data["aligned"]["pair"]), size: 0.9, shape: 'circle'}]
+  });
+
+  align_data.push({
+    key: "Reads",
+    values: [{x: 1, y: parseInt(data["reads"]["first_of_pair"]), size: 0.9, shape: 'circle'},
+             {x: 2, y: parseInt(data["reads"]["second_of_pair"]), size: 0.9, shape: 'circle'},
+             {x: 3, y: parseInt(data["reads"]["pair"]), size: 0.9, shape: 'circle'}]
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+                    .color(d3.scale.category10().range())
+                    .showLegend(false)
+                    .showControls(false);
+
+    chart.yAxis.tickFormat(d3.format('.5s'))
+
+    d3.select('#mapping')
+        .datum(align_data)
+      .transition().duration(200)
+        .call(chart);
+
+    mapping = chart;
+
+    nv.utils.windowResize(function() {d3.select('#mapping').call(chart)})
+
+    return chart;
+  });
+
+  nv.addGraph({
+    generate: function() {
+      var legend = nv.models.legend()
+                    .color(d3.scale.category10().range())
+                    .width(220);
+
+      d3.select('#legend')
+          .datum(align_data)
+          .call(legend);
+
+      legend.dispatch.on('legendClick', function(d,i) {
+        d.disabled = !d.disabled;
+
+        if (!align_data.filter(function(d) { return !d.disabled }).length) {
+          align_data.map(function(d) {
+            d.disabled = false;
+            wrap.selectAll('.series').classed('disabled', false);
+            return d;
+          });
+        }
+
+        mapping.update()
+
+      });
+
+      return legend;
+    },
+    callback: function(graph) {
+      var chart = graph;
+
+      d3.select('#legend')
+          .call(chart)
+    }
+  })
+});
+
+$.getJSON("/api/v1/sample_insert_sizes/{{ sample }}", function(data) {
+  var ins_dist = []
+
+  $.each(data, function(length, num) {
+    ins_dist.push({x: length, y: parseInt(num)})
+    if (length > 1000) {
+      return false
+    };
+  });
+
+  var ins_dist_data = [
+    {
+      values: ins_dist,
+      key: 'Insert size'
+    }
+  ];
+
+  var chart = nv.models.lineChart()
+                  .showLegend(false);
+
+  d3.select('#distribution')
+      .datum(ins_dist_data)
+    .transition().duration(200)
+      .call(chart);
+
+  nv.utils.windowResize(function() {d3.select('#distribution').call(chart)})
+
+  return chart
+});
+
+$.getJSON("/api/v1/sample_coverage/{{ sample }}", function(data) {
+  coverage_data = []
+  coverage_data.push({"label": "X2", "value": parseFloat(data[0])})
+  coverage_data.push({"label": "X10", "value": parseFloat(data[1])})
+  coverage_data.push({"label": "X20", "value": parseFloat(data[2])})
+  coverage_data.push({"label": "X30", "value": parseFloat(data[3])})
+
+  the_cov_data = [{key: "Coverage", values: coverage_data}]
+
+  var chart = nv.models.discreteBarChart()
+                  .x(function(d) { return d.label })
+                  .y(function(d) { return d.value });
+
+  d3.select('#coverage')
+      .datum(the_cov_data)
+    .transition().duration(200)
+      .call(chart);
+
+  nv.utils.windowResize(function() {d3.select('#coverage').call(chart)})
+
+  return chart;
+});
+
+</script>
+
+{% end %}
