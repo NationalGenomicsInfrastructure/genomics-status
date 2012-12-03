@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+
+<div class="container-fluid">
+  <h2>Reads vs Quality values</h2>
+
+  <div id="slider"></div><br>
+
+  <h2 id="dates"></h2>
+
+  <div class="grid_chart" id="chart_container">
+    <svg id="quality"></svg>
+  </div>
+
+  <div class="grid_chart" id="chart_container">
+    <svg id="cumulative"></svg>
+  </div>
+
+</div>
+
+<script>
+
+var start = [12, 1, 1, 1]
+var stop = [12, 4, 12, 31]
+
+$("#slider").slider({
+  range: true,
+  min: 1,
+  max: 12,
+  values: [2, 12],
+  stop: function() {
+    values = $("#slider").slider("values")
+    v0 = values[0]
+    v1 = values[1]
+    start = [12, ((v0-1)/3|0)+1, v0, 1]
+    stop = [12, ((v1-1)/3|0)+1, v1, 1]
+    plot_data(start, stop)
+  }
+});
+
+function plot_data(start, stop) {
+
+  $("#dates").text("Date range: " + start + " - " + stop)
+
+  $.getJSON("/api/v1/reads_vs_quality?start=[" + start + "]&end=[" + stop + "]", function(data) {
+    
+    var quality = []
+    for (var i = 0; i < data["quality"].length; i++) {
+      quality.push({"quality": i, "y": data["quality"][i]})
+    };
+
+    nv.addGraph(function() {
+      var chart = nv.models.discreteBarChart()
+          .x(function(d) { return d.quality })
+          .y(function(d) { return d.y })
+          .forceY([0.2])
+          .color(["#4D91A1"])
+
+      d3.select("#quality")
+          .datum([{values: quality, key: "Quality", bar: true}])
+          .call(chart)
+
+      nv.utils.windowResize(function() {d3.select('#quality').call(chart)})
+
+      return chart
+    })
+
+    var cumulative = []
+    for (var i = 0; i < data["cumulative"].length; i++) {
+      // cumulative.push({"cumulative": i, "y": data["cumulative"][i]})
+      cumulative.push({"cumulative": i, "y": data["cumulative"][i]})
+    };
+
+    nv.addGraph(function() {
+      var chart = nv.models.lineChart()
+                    .x(function(d) { return d.cumulative })
+                    .y(function(d) { return d.y })
+                    .color(["#4D91A1"])
+
+      d3.select('#cumulative')
+          .datum([{"values": cumulative, "key": "Integrated", area: true}])
+          .call(chart);
+
+      nv.utils.windowResize(function() {d3.select('#cumulative').call(chart)})
+
+      return chart
+    });
+
+  })
+}
+
+plot_data(start, stop)
+</script>
+
+{% end %}

@@ -1,43 +1,62 @@
 {% extends "base.html" %}
 
-{% block head %}
-<p>Historical storage quota used on UPPMAX projects.</p>
-{% end %}
-
 <!-- Example row of columns -->
 {% block stuff %}
-<div class="row">
-  {% for project in projects %}
-    <div class="span4">
-      <h2>{{ project }}</h2>
-        <div id="chart_container">
-          <div id="chart_{{ project }}"></div>
-        </div>
-      <p><a class="btn" href="#">View details &raquo;</a></p>
-    </div>
-  {% end %}
-</div>
-<div class="row">
+
+<div class="container-fluid" id="quota_grid">
+  <h2>Historical storage quota used on UPPMAX projects</h2><br>
 </div>
 
 <script>
 
-{% for project in projects %}
-var ajaxGraph_{{ project }} = new Rickshaw.Graph.Ajax( {
+var ups
+var chart
 
-  element: document.getElementById("chart_{{ project }}"),
-  renderer: 'bar',
-  dataURL: 'data/quotas/{{ project }}',
-  onData: function(d) { return d },
-  series: [
-    {
-      name: 'series',
-      color: '#0093B9',
-    }
-  ]
-} );
+$.getJSON('/api/v1/uppmax_projects', function(uppmax_projects) {
 
-{% end %}
+  ups = uppmax_projects
+
+  $.each(ups, function(i, up) {
+    $("#quota_grid").append('<div class="span5" id="container_' + up + '"></div>')
+
+    var svg_chart = '<div class="grid_chart">' + 
+    '<svg id="chart_' + up + '"></svg>' +
+    '</div>'
+
+    $("#container_" + up)
+          .append('<h2><a href="/quotas/' + up + '">' + up + '</a></h2>')
+          .append(svg_chart)
+  });
+
+}).then(function() {
+  $.each(ups, function(j, up) {
+    $.getJSON("/api/v1/quotas/" + up, function(data) {
+
+      var my_data = data[0]["data"]
+
+      chart = nv.models.linePlusBarChart()
+              .x(function(d) { return d["x"] * 1000 })
+              .y(function(d) { return d["y"] })
+              .showLegend(false)
+              .color(["#4D91A1"]);
+
+      chart.xAxis
+        .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
+
+      chart.y1Axis
+          .tickFormat(d3.format("2.2s"))
+
+      d3.select("#chart_" + up)
+          .datum([{values: my_data, key: "quota", bar: true}])
+        .call(chart);
+
+      nv.utils.windowResize(function() {d3.select('#chart_' + up).call(chart)})
+
+      return chart;
+
+    })
+  })
+});
 
 </script>
 
