@@ -46,11 +46,18 @@ $.getJSON("/api/v1/production/120101", function(data) {
 
 })
 
+var month_map = {1: "January", 2: "February", 3: "March", 4: "April",
+                 5: "May", 6: "June", 7: "July", 8: "August",
+                 9: "September", 10: "October", 11: "November",
+                12: "December"}
+
 $.getJSON("/api/v1/m_production/", function(data) {
   data = data[0]["data"]
   nv.addGraph(function() {
     var monthly_chart = nv.models.discreteBarChart()
-                          .x(function(d) { return d["x"]})
+                          .x(function(d) { 
+                            return month_map[d["x"][1]]
+                          })
                           .y(function(d) { return 200 * d["y"]})
                           .color(["#4D91A1"])
 
@@ -69,7 +76,9 @@ $.getJSON("/api/v1/q_production/", function(data) {
   data = data[0]["data"]
   nv.addGraph(function() {
     var quarterly_chart = nv.models.discreteBarChart()
-                          .x(function(d) { return d["x"]})
+                          .x(function(d) { 
+                            return "Q" + d["x"][1] + " 20" + d["x"][0]
+                          })
                           .y(function(d) { return 200 * d["y"]})
                           .color(["#4D91A1"])
 
