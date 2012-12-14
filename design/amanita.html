@@ -4,11 +4,8 @@
 {% block stuff %}
 <div class="container-fluid">
   <h2>Amanita</h2>
-  <div class="single_chart_container" id="chart_container">
-    <svg id="amanita_chart"></svg>
-  </div>
+  <div class="chart_container" id="user_chart_container"></div>
   <br>
-  <div class="span6">
   <p>
     This graph shows the historical storage usage on Amanita for every
     user in the HOME directory.
@@ -18,50 +15,96 @@
 
 <script>
 
-var users = [""];
-var user_data = [];
+var context = cubism.context()
+    .step(864e5)
+    .size(365)
+    .stop();
 
-var chart = nv.models.lineWithFocusChart()
-  .x(function(d) { return d["x"] })
-  .y(function(d) { return d["y"] });
+d3.select("#user_chart_container").selectAll(".axis")
+    .data(["top", "bottom"])
+  .enter().append("div")
+    .attr("class", function(d) { return d + " axis"; })
+    .each(function(d) { d3.select(this).call(context.axis().ticks(4).orient(d)); });
 
-chart.xAxis
-  .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
+d3.select("#user_chart_container").append("div")
+    .attr("class", "rule")
+    .call(context.rule());
 
-chart.x2Axis
-  .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
+var h_tot = context.horizon()
+var scale = h_tot.scale()
 
-chart.yAxis
-    .tickFormat(d3.format("2.2s"));
+console.log(scale(1))
 
-chart.y2Axis
-    .tickFormat(d3.format("2.2s"));
+d3.select("#user_chart_container").selectAll(".horizon")
+    .data(["Total"].map(total))
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon")
+  .call(h_tot
+    .height(60)
+    .format(d3.format("+,.3s")));
 
-nv.utils.windowResize(function() {d3.select('#amanita_chart').call(chart)})
+  scale = h_tot.scale()
+  console.log(scale(1))
 
 $.getJSON("api/v1/amanita_home/users/", function(users_json) {
   users = users_json;
 })
-.then(function() {
-  $.getJSON("/api/v1/amanita_home", function(total_json) {
-    user_data.push({values: total_json, key: "Total"});
-  })
-  .then(function() {
-
-    $.each(users, function(i, user) {
-      $.getJSON("/api/v1/amanita_home/" + user, function(user_json) {
-        user_data.push({values: user_json, key: user});
-      })
-      .then(function() {
-
-        d3.select("#amanita_chart")
-          .datum(user_data)
-          .call(chart);
-
-      });
-    });
-  });
+.then(function(users) {
+  d3.select("#user_chart_container").selectAll(".horizon")
+    .data(users.map(user))
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon")
+  .call(context.horizon()
+    .height(30)
+    .scale(scale)
+    .format(d3.format("+,.3s")));
 });
+
+context.on("focus", function(i) {
+  d3.selectAll(".value").style("right", i == null ? null : context.size() - i + "px");
+});
+
+function total(s) {
+  return context.metric(function(start, stop, step, callback) {
+    d3.json("/api/v1/amanita_home", function(json) {
+      var data = json
+      data = data.map(function(d) { return [new Date(d["x"]), d["y"]]})
+      var pre_date = d3.time.day.offset(Date.now(), -365 - 1)
+      var date = data[0][0];
+      var compare = data[data.length - 1][1];
+      var value = data[0][1];
+      var values = [];
+      while ((pre_date = d3.time.day.offset(pre_date, 1)) < date) values.push(0);
+      data.forEach(function(d) {
+        while ((date = d3.time.day.offset(date, 1)) < d[0]) values.push(value);
+        value = d[1];
+        values.push(value)
+      });
+      callback(null, values.slice(-context.size()))
+    });
+  }, s);
+}
+
+function user(username) {
+  return context.metric(function(start, stop, step, callback) {
+    d3.json("/api/v1/amanita_home/" + username, function(json) {
+      var data = json
+      data = data.map(function(d) { return [new Date(d["x"]), d["y"]]})
+      var pre_date = d3.time.day.offset(Date.now(), -365 - 1)
+      var date = data[0][0];
+      var compare = data[data.length - 1][1];
+      var value = data[0][1];
+      var values = [];
+      while ((pre_date = d3.time.day.offset(pre_date, 1)) < date) values.push(0);
+      data.forEach(function(d) {
+        while ((date = d3.time.day.offset(date, 1)) < d[0]) values.push(value);
+        value = d[1];
+        values.push(value)
+      });
+      callback(null, values.slice(-context.size()))
+    });
+  }, username);
+}
 
 </script>
 
