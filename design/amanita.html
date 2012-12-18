@@ -3,19 +3,22 @@
 <!-- Example row of columns -->
 {% block stuff %}
 <div class="container-fluid">
-  <h2>Amanita</h2>
+  <h1>Amanita</h1>
+  <br>
+  <h2>HOME directory sizes for users</h2>
   <div class="chart_container" id="user_chart_container"></div>
   <br>
-  <p>
-    This graph shows the historical storage usage on Amanita for every
-    user in the HOME directory.
-  </p>
+  <h2>Sizes of projects in /srv/box2/projects</h2>
+  <div class="chart_container" id="box2_project_chart_container"></div>
+  <br>
+  <h2>Sizes of projects in /home/projects</h2>
+  <div class="chart_container" id="home_project_chart_container"></div>
   </div>
 </div>
 
 <script>
 
-var context = cubism.context()
+var user_context = cubism.context()
     .step(864e5)
     .size(365)
     .stop();
@@ -24,16 +27,14 @@ d3.select("#user_chart_container").selectAll(".axis")
     .data(["top", "bottom"])
   .enter().append("div")
     .attr("class", function(d) { return d + " axis"; })
-    .each(function(d) { d3.select(this).call(context.axis().ticks(4).orient(d)); });
+    .each(function(d) { d3.select(this).call(user_context.axis().ticks(4).orient(d)); });
 
 d3.select("#user_chart_container").append("div")
     .attr("class", "rule")
-    .call(context.rule());
+    .call(user_context.rule());
 
-var h_tot = context.horizon()
+var h_tot = user_context.horizon()
 var scale = h_tot.scale()
-
-console.log(scale(1))
 
 d3.select("#user_chart_container").selectAll(".horizon")
     .data(["Total"].map(total))
@@ -54,18 +55,106 @@ $.getJSON("api/v1/amanita_home/users/", function(users_json) {
     .data(users.map(user))
   .enter().insert("div", ".bottom")
     .attr("class", "horizon")
-  .call(context.horizon()
+  .call(user_context.horizon()
     .height(30)
     .scale(scale)
     .format(d3.format("+,.3s")));
 });
 
-context.on("focus", function(i) {
-  d3.selectAll(".value").style("right", i == null ? null : context.size() - i + "px");
+user_context.on("focus", function(i) {
+  d3.selectAll(".value").style("right", i == null ? null : user_context.size() - i + "px");
 });
 
+// // //
+
+var b2_proj_context = cubism.context()
+    .step(864e5)
+    .size(365)
+    .stop();
+
+d3.select("#box2_project_chart_container").selectAll(".axis")
+    .data(["top", "bottom"])
+  .enter().append("div")
+    .attr("class", function(d) { return d + " axis"; })
+    .each(function(d) { d3.select(this).call(b2_proj_context.axis().ticks(4).orient(d)); });
+
+d3.select("#box2_project_chart_container").append("div")
+    .attr("class", "rule")
+    .call(b2_proj_context.rule());
+
+d3.select("#box2_project_chart_container").selectAll(".horizon")
+    .data(["Total"].map(box2_total))
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon")
+  .call(b2_proj_context.horizon()
+    .height(60)
+    .format(d3.format("+,.3s")));
+
+$.getJSON("api/v1/amanita_box2/projects/", function(users_json) {
+  users = users_json;
+})
+.then(function(users) {
+  d3.select("#box2_project_chart_container").selectAll(".horizon")
+    .data(users.map(box2_project))
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon")
+  .call(b2_proj_context.horizon()
+    .height(30)
+    .scale(scale)
+    .format(d3.format("+,.3s")));
+});
+
+b2_proj_context.on("focus", function(i) {
+  d3.selectAll(".value").style("right", i == null ? null : b2_proj_context.size() - i + "px");
+});
+
+// // //
+
+var home_proj_context = cubism.context()
+    .step(864e5)
+    .size(365)
+    .stop();
+
+d3.select("#home_project_chart_container").selectAll(".axis")
+    .data(["top", "bottom"])
+  .enter().append("div")
+    .attr("class", function(d) { return d + " axis"; })
+    .each(function(d) { d3.select(this).call(home_proj_context.axis().ticks(4).orient(d)); });
+
+d3.select("#home_project_chart_container").append("div")
+    .attr("class", "rule")
+    .call(home_proj_context.rule());
+
+d3.select("#home_project_chart_container").selectAll(".horizon")
+    .data(["Total"].map(home_total))
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon")
+  .call(home_proj_context.horizon()
+    .height(60)
+    .format(d3.format("+,.3s")));
+
+$.getJSON("api/v1/amanita_home/projects", function(users_json) {
+  users = users_json;
+})
+.then(function(users) {
+  d3.select("#home_project_chart_container").selectAll(".horizon")
+    .data(users.map(home_project))
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon")
+  .call(home_proj_context.horizon()
+    .height(30)
+    .scale(scale)
+    .format(d3.format("+,.3s")));
+});
+
+home_proj_context.on("focus", function(i) {
+  d3.selectAll(".value").style("right", i == null ? null : home_proj_context.size() - i + "px");
+});
+
+// // //
+
 function total(s) {
-  return context.metric(function(start, stop, step, callback) {
+  return user_context.metric(function(start, stop, step, callback) {
     d3.json("/api/v1/amanita_home", function(json) {
       var data = json
       data = data.map(function(d) { return [new Date(d["x"]), d["y"]]})
@@ -80,13 +169,13 @@ function total(s) {
         value = d[1];
         values.push(value)
       });
-      callback(null, values.slice(-context.size()))
+      callback(null, values.slice(-user_context.size()))
     });
   }, s);
 }
 
 function user(username) {
-  return context.metric(function(start, stop, step, callback) {
+  return user_context.metric(function(start, stop, step, callback) {
     d3.json("/api/v1/amanita_home/" + username, function(json) {
       var data = json
       data = data.map(function(d) { return [new Date(d["x"]), d["y"]]})
@@ -101,9 +190,97 @@ function user(username) {
         value = d[1];
         values.push(value)
       });
-      callback(null, values.slice(-context.size()))
+      callback(null, values.slice(-user_context.size()))
     });
   }, username);
+}
+
+// // //
+
+function box2_total(s) {
+  return b2_proj_context.metric(function(start, stop, step, callback) {
+    d3.json("/api/v1/amanita_box2", function(json) {
+      var data = json
+      data = data.map(function(d) { return [new Date(d["x"]), d["y"]]})
+      var pre_date = d3.time.day.offset(Date.now(), -365 - 1)
+      var date = data[0][0];
+      var compare = data[data.length - 1][1];
+      var value = data[0][1];
+      var values = [];
+      while ((pre_date = d3.time.day.offset(pre_date, 1)) < date) values.push(0);
+      data.forEach(function(d) {
+        while ((date = d3.time.day.offset(date, 1)) < d[0]) values.push(value);
+        value = d[1];
+        values.push(value)
+      });
+      callback(null, values.slice(-b2_proj_context.size()))
+    });
+  }, s);
+}
+
+function box2_project(project) {
+  return b2_proj_context.metric(function(start, stop, step, callback) {
+    d3.json("/api/v1/amanita_box2/" + project, function(json) {
+      var data = json
+      data = data.map(function(d) { return [new Date(d["x"]), d["y"]]})
+      var pre_date = d3.time.day.offset(Date.now(), -365 - 1)
+      var date = data[0][0];
+      var compare = data[data.length - 1][1];
+      var value = data[0][1];
+      var values = [];
+      while ((pre_date = d3.time.day.offset(pre_date, 1)) < date) values.push(0);
+      data.forEach(function(d) {
+        while ((date = d3.time.day.offset(date, 1)) < d[0]) values.push(value);
+        value = d[1];
+        values.push(value)
+      });
+      callback(null, values.slice(-b2_proj_context.size()))
+    });
+  }, project);
+}
+
+// // //
+
+function home_total(s) {
+  return b2_proj_context.metric(function(start, stop, step, callback) {
+    d3.json("/api/v1/amanita_home/projects", function(json) {
+      var data = json
+      data = data.map(function(d) { return [new Date(d["x"]), d["y"]]})
+      var pre_date = d3.time.day.offset(Date.now(), -365 - 1)
+      var date = data[0][0];
+      var compare = data[data.length - 1][1];
+      var value = data[0][1];
+      var values = [];
+      while ((pre_date = d3.time.day.offset(pre_date, 1)) < date) values.push(0);
+      data.forEach(function(d) {
+        while ((date = d3.time.day.offset(date, 1)) < d[0]) values.push(value);
+        value = d[1];
+        values.push(value)
+      });
+      callback(null, values.slice(-b2_proj_context.size()))
+    });
+  }, s);
+}
+
+function home_project(project) {
+  return b2_proj_context.metric(function(start, stop, step, callback) {
+    d3.json("/api/v1/amanita_home/projects/" + project, function(json) {
+      var data = json
+      data = data.map(function(d) { return [new Date(d["x"]), d["y"]]})
+      var pre_date = d3.time.day.offset(Date.now(), -365 - 1)
+      var date = data[0][0];
+      var compare = data[data.length - 1][1];
+      var value = data[0][1];
+      var values = [];
+      while ((pre_date = d3.time.day.offset(pre_date, 1)) < date) values.push(0);
+      data.forEach(function(d) {
+        while ((date = d3.time.day.offset(date, 1)) < d[0]) values.push(value);
+        value = d[1];
+        values.push(value)
+      });
+      callback(null, values.slice(-b2_proj_context.size()))
+    });
+  }, project);
 }
 
 </script>
