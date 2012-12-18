@@ -954,6 +954,82 @@ class AmanitaUsersDataHandler(tornado.web.RequestHandler):
         return users
 
 
+class AmanitaBox2DataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.home_usage()))
+
+    def home_usage(self):
+        sizes = []
+        for row in self.application.amanita_db.view("sizes/box2_projects_total"):
+            sizes.append({"x": int(time.mktime(parser.parse(row.key).timetuple()) * 1000), \
+                          "y": row.value * 1024})
+
+        return sizes
+
+
+class AmanitaBox2ProjectDataHandler(tornado.web.RequestHandler):
+    def get(self, project):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.box2_usage(project)))
+
+    def box2_usage(self, project):
+        sizes = []
+        for row in self.application.amanita_db.view("sizes/box2_projects", \
+        startkey=[project, "0"], endkey=[project, "a"], group=True):
+            sizes.append( \
+            {"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000), \
+             "y": row.value * 1024 \
+            })
+
+        return sizes
+
+
+class AmanitaBox2ProjectsDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.box2_projects()))
+
+    def box2_projects(self):
+        proejcts = []
+        for row in self.application.amanita_db.view("sizes/box2_projects", group_level=1):
+            if "/" not in row.key[0]:
+                proejcts.append(row.key[0])
+
+        return proejcts
+
+
+class AmanitaHomeProjectsDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.box2_projects()))
+
+    def box2_projects(self):
+        proejcts = []
+        for row in self.application.amanita_db.view("sizes/home_projects", group_level=1):
+            if "/" not in row.key[0]:
+                proejcts.append(row.key[0])
+
+        return proejcts
+
+
+class AmanitaHomeProjectDataHandler(tornado.web.RequestHandler):
+    def get(self, project):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.home_projects_usage(project)))
+
+    def home_projects_usage(self, project):
+        sizes = []
+        for row in self.application.amanita_db.view("sizes/home_projects", \
+        startkey=[project, "0"], endkey=[project, "a"], group=True):
+            sizes.append( \
+            {"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000), \
+             "y": row.value * 1024 \
+            })
+
+        return sizes
+
+
 class PiceaHandler(tornado.web.RequestHandler):
     def get(self):
         t = self.application.loader.load("picea.html")
@@ -1033,7 +1109,14 @@ class Application(tornado.web.Application):
             ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             ("/api/v1/amanita_home", AmanitaHomeDataHandler),
             ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
+            ("/api/v1/amanita_box2", AmanitaBox2DataHandler),
+            ("/api/v1/amanita_box2/projects/", \
+                AmanitaBox2ProjectsDataHandler),
+            ("/api/v1/amanita_home/projects/([^/]*)$", \
+                AmanitaHomeProjectDataHandler),
+            ("/api/v1/amanita_home/project", AmanitaHomeProjectsDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
+            ("/api/v1/amanita_box2/([^/]*)$", AmanitaBox2ProjectDataHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
@@ -1042,9 +1125,11 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
-            ("/api/v1/plot/samples_per_lane.png", UnmatchedVsSamplesPerLanePlotHandler),
+            ("/api/v1/plot/samples_per_lane.png", \
+                UnmatchedVsSamplesPerLanePlotHandler),
             ("/api/v1/plot/reads_per_lane.png", ReadsPerLanePlotHandler),
-            ("/api/v1/plot/barcodes_vs_expected.png", BarcodeVsExpectedPlotHandler),
+            ("/api/v1/plot/barcodes_vs_expected.png", \
+                BarcodeVsExpectedPlotHandler),
             ("/api/v1/picea_home", PiceaHomeDataHandler),
             ("/api/v1/samples_per_lane", UnmatchedVsSamplesPerLaneDataHandler),
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
@@ -1065,7 +1150,8 @@ class Application(tornado.web.Application):
             ("/api/v1/sample_readcount/(\w+)?", SampleReadCountDataHandler),
             ("/api/v1/sample_run_counts/(\w+)?",
                 SampleRunReadCountDataHandler),
-            ("/api/v1/sample_alignment/([^/]*)$", SampleQCAlignmentDataHandler),
+            ("/api/v1/sample_alignment/([^/]*)$", \
+                SampleQCAlignmentDataHandler),
             ("/api/v1/sample_coverage/([^/]*)$", SampleQCCoverageDataHandler),
             ("/api/v1/sample_summary/([^/]*)$", SampleQCSummaryDataHandler),
             ("/api/v1/sample_insert_sizes/([^/]*)$", \
