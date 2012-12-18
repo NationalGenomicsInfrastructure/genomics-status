@@ -45,7 +45,6 @@ d3.select("#user_chart_container").selectAll(".horizon")
     .format(d3.format("+,.3s")));
 
   scale = h_tot.scale()
-  console.log(scale(1))
 
 $.getJSON("api/v1/amanita_home/users/", function(users_json) {
   users = users_json;
