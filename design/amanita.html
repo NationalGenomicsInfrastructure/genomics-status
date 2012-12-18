@@ -90,12 +90,12 @@ d3.select("#box2_project_chart_container").selectAll(".horizon")
     .height(60)
     .format(d3.format("+,.3s")));
 
-$.getJSON("api/v1/amanita_box2/projects/", function(users_json) {
-  users = users_json;
+$.getJSON("api/v1/amanita_box2/projects/", function(projects_json) {
+  projects = projects_json;
 })
-.then(function(users) {
+.then(function(projects) {
   d3.select("#box2_project_chart_container").selectAll(".horizon")
-    .data(users.map(box2_project))
+    .data(projects.map(box2_project))
   .enter().insert("div", ".bottom")
     .attr("class", "horizon")
   .call(b2_proj_context.horizon()
@@ -133,12 +133,12 @@ d3.select("#home_project_chart_container").selectAll(".horizon")
     .height(60)
     .format(d3.format("+,.3s")));
 
-$.getJSON("api/v1/amanita_home/projects", function(users_json) {
-  users = users_json;
+$.getJSON("api/v1/amanita_home/project", function(projects_json) {
+  projects = projects_json;
 })
-.then(function(users) {
+.then(function(projects) {
   d3.select("#home_project_chart_container").selectAll(".horizon")
-    .data(users.map(home_project))
+    .data(projects.map(home_project))
   .enter().insert("div", ".bottom")
     .attr("class", "horizon")
   .call(home_proj_context.horizon()

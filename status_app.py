@@ -1114,7 +1114,7 @@ class Application(tornado.web.Application):
                 AmanitaBox2ProjectsDataHandler),
             ("/api/v1/amanita_home/projects/([^/]*)$", \
                 AmanitaHomeProjectDataHandler),
-            ("/api/v1/amanita_home/projects", AmanitaHomeProjectsDataHandler),
+            ("/api/v1/amanita_home/project", AmanitaHomeProjectsDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
             ("/api/v1/amanita_box2/([^/]*)$", AmanitaBox2ProjectDataHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
