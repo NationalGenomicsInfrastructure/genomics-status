@@ -212,28 +212,3 @@ class BPQuarterlyProductionDataHandler(tornado.web.RequestHandler):
 
         d = {"data": bp_list, "name": "production"}
         return [d]
-
-
-class ProductionDataHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.cum_flowcell_sizes(), default=dthandler))
-
-    def cum_flowcell_sizes(self):
-        fc_list = []
-        for row in self.application.illumina_db.view("status/final_flowcell_sizes", group_level=1):
-            fc_list.append({"name": row.key, "time": row.value[0], "size": row.value[1]})
-
-        fc_list = sorted(fc_list, key=lambda fc: fc["time"])
-
-        fc = fc_list[0]
-        cum_list = [{"x": int(time.mktime(parser.parse(fc["time"]).timetuple()) * 1000), \
-                     "y": fc["size"]}]
-        for fc in fc_list[1:]:
-            cum_list.append({"x": int(time.mktime(parser.parse(fc["time"]).timetuple()) * 1000), \
-                             "y": fc["size"] + cum_list[-1]["y"]})
-
-        d = dict()
-        d["data"] = cum_list
-        d["name"] = "series"
-        return [d]
