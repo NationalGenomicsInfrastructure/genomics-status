@@ -32,6 +32,8 @@ from status.production import BPMonthlyProductionDataHandler
 from status.production import BPQuarterlyProductionDataHandler
 from status.production import DeliveredMonthlyDataHandler
 from status.production import DeliveredMonthlyPlotHandler
+from status.production import DeliveredQuarterlyDataHandler
+from status.production import DeliveredQuarterlyPlotHandler
 from status.testing import TestDataHandler
 from status.util import dthandler
 
@@ -1085,6 +1087,8 @@ class Application(tornado.web.Application):
             ("/api/v1/amanita_box2/([^/]*)$", AmanitaBox2ProjectDataHandler),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
+            ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
+            ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),

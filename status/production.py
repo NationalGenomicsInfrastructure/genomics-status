@@ -66,6 +66,57 @@ class DeliveredMonthlyPlotHandler(DeliveredMonthlyDataHandler):
         self.write(delivered)
 
 
+class DeliveredQuarterlyDataHandler(tornado.web.RequestHandler):
+    """ Gives the data for quarterly delivered amount of basepairs.
+    """
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.delivered(), default=dthandler))
+
+    def delivered(self):
+        view = self.application.projects_db.view("date/m_bp_delivered", \
+                                                 group_level=2)
+
+        delivered = OrderedDict()
+        for row in view:
+            y = row.key[0]
+            q = row.key[1]
+            delivered[dthandler(datetime(y, q*4 - 3, 1))] = int(row.value * 1e6)
+
+        return delivered
+
+
+class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
+    """ Gives a bar plot for quarterly delivered amount of basepairs.
+    """
+    def get(self):
+        delivered = self.delivered()
+
+        fig = plt.figure(figsize=[10, 8])
+        ax = fig.add_subplot(111)
+
+        dates = [parser.parse(d) for d in delivered.keys()]
+        values = delivered.values()
+        months = [d.month for d in dates]
+
+        ax.bar(dates, values)
+
+        ax.set_xticks(dates)
+        ax.set_xticklabels([d.strftime("%Y\nQ%m") for d in dates])
+
+        ax.set_title("Basepairs delivered per quarter")
+
+        FigureCanvasAgg(fig)
+
+        buf = cStringIO.StringIO()
+        fig.savefig(buf, format="png")
+        delivered = buf.getvalue()
+
+        self.set_header("Content-Type", "image/png")
+        self.set_header("Content-Length", len(delivered))
+        self.write(delivered)
+
+
 class BPProductionDataHandler(tornado.web.RequestHandler):
     def get(self, start):
         self.set_header("Content-type", "application/json")
