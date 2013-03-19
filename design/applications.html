@@ -11,13 +11,19 @@
   </p>
 
   <div class="single_chart_container" id="chart_container">
-    <svg id="pie"></svg>
+    <img src="/api/v1/applications.png">
   </div>
 
   <table class="table table-bordered" id="application_table">
     <thead></thead>
     <tbody></tbody>
   </table>
+
+  <h2>Samples applications</h2>
+  <div class="single_chart_container" id="chart_container">
+    <img src="/api/v1/samples_applications.png">
+  </div>
+
 </div>
 
 <script>
@@ -32,28 +38,8 @@ $.getJSON("/api/v1/applications", function(data) {
     $("#application_table tbody").append(trow)
   };
 
-  var f_data = [{key: "Applications", values: []}]
-  for (d in data) {
-    var app_count = Object()
-    app_count.application = d
-    app_count.count = data[d]
-    f_data[0]["values"].push(app_count)
-  }
-
-  nv.addGraph(function() {
-    var chart = nv.models.pieChart()
-        .x(function(d) { return d.application })
-        .y(function(d) { return d.count })
-        .showLabels(true)
-
-    d3.select("#pie")
-        .datum(f_data)
-        .call(chart)
-
-    return chart
-  })
-
 })
+
 </script>
 
 {% end %}
