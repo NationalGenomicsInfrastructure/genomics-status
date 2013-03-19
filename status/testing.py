@@ -9,6 +9,10 @@ from status.util import dthandler
 
 
 class TestDataHandler(tornado.web.RequestHandler):
+    """ Handler that sends random numeric data in the style of most handlers,
+    useful for testing client side plotting without having the real data one
+    wish to plot.
+    """
     def get(self, n):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.random_series(int(n)), default=dthandler))

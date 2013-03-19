@@ -25,7 +25,6 @@ from status.util import dthandler
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        # Send our main document
         t = self.application.loader.load("base.html")
         self.write(t.generate())
 
