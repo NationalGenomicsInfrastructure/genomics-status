@@ -1,7 +1,16 @@
+
+""" Main genomics-status web application.
+"""
+from collections import OrderedDict
+from collections import defaultdict
 from datetime import datetime
-from dateutil import parser
-import time
 import json
+import time
+import random
+
+from couchdb import Server
+from dateutil import parser
+import numpy as np
 
 import tornado.httpserver
 import tornado.ioloop
@@ -9,21 +18,21 @@ import tornado.web
 import tornado.autoreload
 from tornado import template
 
-from couchdb import Server
 import yaml
 
-import random
+import cStringIO
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
-from collections import OrderedDict
-from collections import defaultdict
+import matplotlib.pyplot as plt
 
-import numpy as np
 
 from status.production import BPProductionDataHandler
 from status.production import BPMonthlyProductionDataHandler
 from status.production import BPQuarterlyProductionDataHandler
+from status.production import DeliveredMonthlyDataHandler
+from status.production import DeliveredMonthlyPlotHandler
 from status.testing import TestDataHandler
-
 from status.util import dthandler
 
 
@@ -694,12 +703,6 @@ class FlowcellDemultiplexHandler(tornado.web.RequestHandler):
 
         return lane_qc
 
-import cStringIO
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_agg import FigureCanvasAgg
-
-import matplotlib.pyplot as plt
-
 
 class Q30PlotHandler(tornado.web.RequestHandler):
     def get(self):
@@ -1080,6 +1083,8 @@ class Application(tornado.web.Application):
             ("/api/v1/amanita_home/project", AmanitaHomeProjectsDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
             ("/api/v1/amanita_box2/([^/]*)$", AmanitaBox2ProjectDataHandler),
+            ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
+            ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),

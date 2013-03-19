@@ -1,35 +1,69 @@
 """ Handlers related to data production.
 """
-import random
+from collections import OrderedDict
+import cStringIO
+from datetime import datetime
 import json
+import random
+
+from dateutil import parser
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 import tornado.web
 
 from status.util import dthandler
 
-class ProductionDataHandler(tornado.web.RequestHandler):
+
+class DeliveredMonthlyDataHandler(tornado.web.RequestHandler):
+    """ Gives the data for monthly delivered amount of basepairs.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.cum_flowcell_sizes(), default=dthandler))
+        self.write(json.dumps(self.delivered(), default=dthandler))
 
-    def cum_flowcell_sizes(self):
-        fc_list = []
-        for row in self.application.illumina_db.view("status/final_flowcell_sizes", group_level=1):
-            fc_list.append({"name": row.key, "time": row.value[0], "size": row.value[1]})
+    def delivered(self):
+        view = self.application.projects_db.view("date/m_bp_delivered", \
+                                                 group_level=3)
 
-        fc_list = sorted(fc_list, key=lambda fc: fc["time"])
+        delivered = OrderedDict()
+        for row in view:
+            y = row.key[0]
+            m = row.key[2]
+            delivered[dthandler(datetime(y, m, 1))] = int(row.value * 1e6)
 
-        fc = fc_list[0]
-        cum_list = [{"x": int(time.mktime(parser.parse(fc["time"]).timetuple()) * 1000), \
-                     "y": fc["size"]}]
-        for fc in fc_list[1:]:
-            cum_list.append({"x": int(time.mktime(parser.parse(fc["time"]).timetuple()) * 1000), \
-                             "y": fc["size"] + cum_list[-1]["y"]})
+        return delivered
 
-        d = dict()
-        d["data"] = cum_list
-        d["name"] = "series"
-        return [d]
+
+class DeliveredMonthlyPlotHandler(DeliveredMonthlyDataHandler):
+    """ Gives a bar plot for monthly delivered amount of basepairs.
+    """
+    def get(self):
+        delivered = self.delivered()
+
+        fig = plt.figure(figsize=[10, 8])
+        ax = fig.add_subplot(111)
+
+        dates = [parser.parse(d) for d in delivered.keys()]
+        values = delivered.values()
+        months = [d.month for d in dates]
+
+        ax.bar(dates, values)
+
+        ax.set_xticks(dates)
+        ax.set_xticklabels([d.strftime("%Y\n%B") for d in dates])
+
+        ax.set_title("Basepairs delivered per month")
+
+        FigureCanvasAgg(fig)
+
+        buf = cStringIO.StringIO()
+        fig.savefig(buf, format="png")
+        delivered = buf.getvalue()
+
+        self.set_header("Content-Type", "image/png")
+        self.set_header("Content-Length", len(delivered))
+        self.write(delivered)
 
 
 class BPProductionDataHandler(tornado.web.RequestHandler):
@@ -99,4 +133,29 @@ class BPQuarterlyProductionDataHandler(tornado.web.RequestHandler):
             bp_list.append({"x": [y, q], "y": row.value})
 
         d = {"data": bp_list, "name": "production"}
+        return [d]
+
+
+class ProductionDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.cum_flowcell_sizes(), default=dthandler))
+
+    def cum_flowcell_sizes(self):
+        fc_list = []
+        for row in self.application.illumina_db.view("status/final_flowcell_sizes", group_level=1):
+            fc_list.append({"name": row.key, "time": row.value[0], "size": row.value[1]})
+
+        fc_list = sorted(fc_list, key=lambda fc: fc["time"])
+
+        fc = fc_list[0]
+        cum_list = [{"x": int(time.mktime(parser.parse(fc["time"]).timetuple()) * 1000), \
+                     "y": fc["size"]}]
+        for fc in fc_list[1:]:
+            cum_list.append({"x": int(time.mktime(parser.parse(fc["time"]).timetuple()) * 1000), \
+                             "y": fc["size"] + cum_list[-1]["y"]})
+
+        d = dict()
+        d["data"] = cum_list
+        d["name"] = "series"
         return [d]
