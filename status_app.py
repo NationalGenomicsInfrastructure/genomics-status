@@ -284,6 +284,40 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
         return applications
 
 
+class ApplicationsPlotHandler(ApplicationsDataHandler):
+    """ Handler for creating a Pie chart of applications over projects.
+    """
+    def get(self):
+        applications = self.list_applications()
+
+        fig = plt.figure(figsize=[10, 8])
+        ax = fig.add_subplot(111)
+
+        cmap = plt.cm.prism
+        colors = cmap(np.linspace(0., 1., len(applications)))
+
+        pie_wedge_collection = ax.pie(applications.values(), \
+                                       colors=colors, \
+                                       labels=applications.keys(), \
+                                       labeldistance=1.05)
+
+        for pie_wedge in pie_wedge_collection[0]:
+            pie_wedge.set_edgecolor('white')
+            pie_wedge.set_linewidth(2)
+
+        fig.subplots_adjust(left=0.15, right=0.75, bottom=0.15)
+
+        FigureCanvasAgg(fig)
+
+        buf = cStringIO.StringIO()
+        fig.savefig(buf, format="png")
+        applications = buf.getvalue()
+
+        self.set_header("Content-Type", "image/png")
+        self.set_header("Content-Length", len(applications))
+        self.write(applications)
+
+
 class SampleInfoDataHandler(tornado.web.RequestHandler):
     def get(self, sample):
         self.set_header("Content-type", "application/json")
@@ -1044,6 +1078,7 @@ class Application(tornado.web.Application):
             ("/", MainHandler),
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
+            ("/api/v1/applications.png", ApplicationsPlotHandler),
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
             ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             ("/api/v1/amanita_home", AmanitaHomeDataHandler),
