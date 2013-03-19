@@ -256,6 +256,21 @@ class ApplicationDataHandler(tornado.web.RequestHandler):
         return projects
 
 
+class SamplesApplicationsDataHandler(tornado.web.RequestHandler):
+    """ Handler for getting per sample application information.
+    """
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_applications()))
+
+    def list_applications(self):
+        applications = OrderedDict()
+        for row in self.application.projects_db.view("project/samples_applications", group_level=1):
+            applications[row.key] = row.value
+
+        return applications
+
+
 class ApplicationsDataHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -1073,6 +1088,7 @@ class Application(tornado.web.Application):
             ("/api/v1/samples", QCDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
+            ("/api/v1/samples_applications", SamplesApplicationsDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),
