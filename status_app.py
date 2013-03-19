@@ -27,7 +27,6 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 import matplotlib.pyplot as plt
 
 
-from status.production import BPProductionDataHandler
 from status.production import BPQuarterlyProductionDataHandler
 from status.production import DeliveredMonthlyDataHandler
 from status.production import DeliveredMonthlyPlotHandler
@@ -1107,7 +1106,6 @@ class Application(tornado.web.Application):
             ("/api/v1/samples_per_lane", UnmatchedVsSamplesPerLaneDataHandler),
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
-            ("/api/v1/production/([^/]*)$", BPProductionDataHandler),
             ("/api/v1/q_production/([^/]*)$", \
                 BPQuarterlyProductionDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
