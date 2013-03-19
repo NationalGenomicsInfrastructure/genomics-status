@@ -256,6 +256,53 @@ class ApplicationDataHandler(tornado.web.RequestHandler):
         return projects
 
 
+class ApplicationsDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_applications()))
+
+    def list_applications(self):
+        applications = OrderedDict()
+        for row in self.application.projects_db.view("project/applications", group_level=1):
+            applications[row.key] = row.value
+
+        return applications
+
+
+class ApplicationsPlotHandler(ApplicationsDataHandler):
+    """ Handler for creating a Pie chart of applications over projects.
+    """
+    def get(self):
+        applications = self.list_applications()
+
+        fig = plt.figure(figsize=[10, 8])
+        ax = fig.add_subplot(111)
+
+        cmap = plt.cm.prism
+        colors = cmap(np.linspace(0., 1., len(applications)))
+
+        pie_wedge_collection = ax.pie(applications.values(), \
+                                       colors=colors, \
+                                       labels=applications.keys(), \
+                                       labeldistance=1.05)
+
+        for pie_wedge in pie_wedge_collection[0]:
+            pie_wedge.set_edgecolor('white')
+            pie_wedge.set_linewidth(2)
+
+        fig.subplots_adjust(left=0.15, right=0.75, bottom=0.15)
+
+        FigureCanvasAgg(fig)
+
+        buf = cStringIO.StringIO()
+        fig.savefig(buf, format="png")
+        applications = buf.getvalue()
+
+        self.set_header("Content-Type", "image/png")
+        self.set_header("Content-Length", len(applications))
+        self.write(applications)
+
+
 class SamplesApplicationsDataHandler(tornado.web.RequestHandler):
     """ Handler for getting per sample application information.
     """
@@ -271,20 +318,7 @@ class SamplesApplicationsDataHandler(tornado.web.RequestHandler):
         return applications
 
 
-class ApplicationsDataHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_applications()))
-
-    def list_applications(self):
-        applications = OrderedDict()
-        for row in self.application.projects_db.view("project/applications", group_level=1):
-            applications[row.key] = row.value
-
-        return applications
-
-
-class ApplicationsPlotHandler(ApplicationsDataHandler):
+class SamplesApplicationsPlotHandler(SamplesApplicationsDataHandler):
     """ Handler for creating a Pie chart of applications over projects.
     """
     def get(self):
@@ -1124,6 +1158,7 @@ class Application(tornado.web.Application):
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/samples_applications", SamplesApplicationsDataHandler),
+            ("/api/v1/samples_applications.png", SamplesApplicationsPlotHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),
