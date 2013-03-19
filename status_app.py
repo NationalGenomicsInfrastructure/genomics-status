@@ -20,13 +20,7 @@ from collections import defaultdict
 import numpy as np
 
 from status.testing import TestDataHandler
-
-
-def dthandler(obj):
-    """ISO formatting for datetime to be used in JSON.
-    """
-    if isinstance(obj, datetime):
-        return obj.isoformat()
+from status.util import dthandler
 
 
 class MainHandler(tornado.web.RequestHandler):
