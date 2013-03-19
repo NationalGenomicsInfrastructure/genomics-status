@@ -1,14 +1,17 @@
 {% extends "base.html" %}
 
 {% block stuff %}
+
 <div class="container-fluid">
-  <h2>Data production - 2012</h2>
-  <p>The number of basepairs sequenced over 2012.</p>
+  <h2>Data production</h2>
+
+  <p>The number of basepairs sequenced over time since January 1st 2012.</p>
+
   <div class="single_chart_container">
     <img src="http://localhost:9761/api/v1/produced_monthly.png">
   </div>
   <div class="single_chart_container">
-    <svg id="quarterly"></svg>
+    <img src="http://localhost:9761/api/v1/produced_quarterly.png">
   </div>
   <div class="single_chart_container">
     <img src="http://localhost:9761/api/v1/delivered_monthly.png">
@@ -18,81 +21,5 @@
   </div>
 </div>
 
-<script>
-
-$.getJSON("/api/v1/production/120101", function(data) {
-  var my_data = data[0];
-  nv.addGraph(function() {
-    var chart = nv.models.stackedAreaChart()
-                  .x(function(d) { return d["x"] })
-                  .y(function(d) { return d["y"] })
-                  .showControls(false)
-                  .color(["#4D91A1"]);
-
-    chart.xAxis
-        .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
-
-    chart.yAxis
-        .tickFormat(d3.format("2.2s"))
-
-    d3.select('#production')
-        .datum([{"values": my_data["data"], "key": "Basepairs sequenced"}])
-        .call(chart);
-
-    nv.utils.windowResize(function() {d3.select('#production').call(chart)})
-
-    return chart
-  });
-
-})
-
-var month_map = {1: "January", 2: "February", 3: "March", 4: "April",
-                 5: "May", 6: "June", 7: "July", 8: "August",
-                 9: "September", 10: "October", 11: "November",
-                12: "December"}
-
-$.getJSON("/api/v1/m_production/", function(data) {
-  data = data[0]["data"]
-  nv.addGraph(function() {
-    var monthly_chart = nv.models.discreteBarChart()
-                          .x(function(d) { 
-                            return month_map[d["x"][1]]
-                          })
-                          .y(function(d) { return 200 * d["y"]})
-                          .color(["#4D91A1"])
-
-    monthly_chart.yAxis
-        .tickFormat(d3.format("2.2s"))
-
-    d3.select("#monthly")
-        .datum([{values: data, "key": "Stuff"}])
-        .call(monthly_chart)
-
-    return monthly_chart;
-  })
-})
-
-$.getJSON("/api/v1/q_production/", function(data) {
-  data = data[0]["data"]
-  nv.addGraph(function() {
-    var quarterly_chart = nv.models.discreteBarChart()
-                          .x(function(d) { 
-                            return "Q" + d["x"][1] + " 20" + d["x"][0]
-                          })
-                          .y(function(d) { return 200 * d["y"]})
-                          .color(["#4D91A1"])
-
-    quarterly_chart.yAxis
-        .tickFormat(d3.format("2.2s"))
-
-    d3.select("#quarterly")
-        .datum([{"values": data, "key": "Stuff"}])
-        .call(quarterly_chart)
-
-    return quarterly_chart;
-  })
-})
-
-</script>
 
 {% end %}
