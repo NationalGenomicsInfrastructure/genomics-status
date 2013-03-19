@@ -1,7 +1,16 @@
+
+""" Main genomics-status web application.
+"""
+from collections import OrderedDict
+from collections import defaultdict
 from datetime import datetime
-from dateutil import parser
-import time
 import json
+import time
+import random
+
+from couchdb import Server
+from dateutil import parser
+import numpy as np
 
 import tornado.httpserver
 import tornado.ioloop
@@ -9,46 +18,36 @@ import tornado.web
 import tornado.autoreload
 from tornado import template
 
-from couchdb import Server
 import yaml
 
-import random
+import cStringIO
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
-from collections import OrderedDict
-from collections import defaultdict
-
-import numpy as np
+import matplotlib.pyplot as plt
 
 
-def dthandler(obj):
-    """ISO formatting for datetime to be used in JSON.
-    """
-    if isinstance(obj, datetime):
-        return obj.isoformat()
+from status.production import DeliveredMonthlyDataHandler
+from status.production import DeliveredMonthlyPlotHandler
+from status.production import DeliveredQuarterlyDataHandler
+from status.production import DeliveredQuarterlyPlotHandler
+from status.production import ProducedMonthlyDataHandler
+from status.production import ProducedMonthlyPlotHandler
+from status.production import ProducedQuarterlyDataHandler
+from status.production import ProducedQuarterlyPlotHandler
+from status.testing import TestDataHandler
+from status.util import dthandler
 
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        # Send our main document
         t = self.application.loader.load("base.html")
-        self.write(t.generate())
-
-
-class TestHandler(tornado.web.RequestHandler):
-    def get(self):
-        t = self.application.loader.load("test_grid.html")
         self.write(t.generate())
 
 
 class QuotasHandler(tornado.web.RequestHandler):
     def get(self):
         t = self.application.loader.load("quota_grid.html")
-        self.write(t.generate())
-
-
-class TestGridHandler(tornado.web.RequestHandler):
-    def get(self):
-        t = self.application.loader.load("test_grid.html")
         self.write(t.generate())
 
 
@@ -107,114 +106,6 @@ class UppmaxProjectsDataHandler(tornado.web.RequestHandler):
             project_list.append(row.key)
 
         return project_list
-
-
-class TestDataHandler(tornado.web.RequestHandler):
-    def get(self, n):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.random_series(int(n)), default=dthandler))
-
-    def random_series(self, n):
-        s = [{"y":random.randint(10, 99), "x":i} for i in xrange(int(n))]
-        d = dict()
-        d["data"] = s
-        d["name"] = "series"
-        return [d]
-
-
-class ProductionDataHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.cum_flowcell_sizes(), default=dthandler))
-
-    def cum_flowcell_sizes(self):
-        fc_list = []
-        for row in self.application.illumina_db.view("status/final_flowcell_sizes", group_level=1):
-            fc_list.append({"name": row.key, "time": row.value[0], "size": row.value[1]})
-
-        fc_list = sorted(fc_list, key=lambda fc: fc["time"])
-
-        fc = fc_list[0]
-        cum_list = [{"x": int(time.mktime(parser.parse(fc["time"]).timetuple()) * 1000), \
-                     "y": fc["size"]}]
-        for fc in fc_list[1:]:
-            cum_list.append({"x": int(time.mktime(parser.parse(fc["time"]).timetuple()) * 1000), \
-                             "y": fc["size"] + cum_list[-1]["y"]})
-
-        d = dict()
-        d["data"] = cum_list
-        d["name"] = "series"
-        return [d]
-
-
-class BPProductionDataHandler(tornado.web.RequestHandler):
-    def get(self, start):
-        self.set_header("Content-type", "application/json")
-        strt = [12, 1, 1, 1]
-        self.write(json.dumps(self.cum_date_bpcounts(strt), default=dthandler))
-
-    def cum_date_bpcounts(self, start):
-        view = self.application.samples_db.view("barcodes/date_read_counts", \
-            group_level=4, startkey=start)
-        row0 = view.rows[0]
-        current = row0.value * 200
-        y = row0.key[0]
-        m = row0.key[2]
-        d = row0.key[3]
-        dt = datetime(y, m, d)
-        bp_list = [{"x": int(time.mktime(dt.timetuple()) * 1000), \
-                    "y": current}]
-        for row in view.rows[1:]:
-            current += row.value * 200
-            y = row.key[0]
-            m = row.key[2]
-            d = row.key[3]
-            dt = datetime(y, m, d)
-            bp_list.append({"x": int(time.mktime(dt.timetuple()) * 1000), \
-                            "y": current})
-
-        d = {"data": bp_list, "name": "series"}
-        return [d]
-
-
-class BPMonthlyProductionDataHandler(tornado.web.RequestHandler):
-    def get(self, start):
-        self.set_header("Content-type", "application/json")
-        strt = [12, 1, 1, 1]
-        self.write(json.dumps(self.bpcounts(strt), default=dthandler))
-
-    def bpcounts(self, start):
-        view = self.application.samples_db.view("barcodes/date_read_counts", \
-            group_level=3)
-
-        bp_list = []
-        for row in view[start:]:
-            y = row.key[0]
-            m = row.key[2]
-            bp_list.append({"x": [y, m], "y": row.value})
-
-        d = {"data": bp_list, "name": "production"}
-        return [d]
-
-
-class BPQuarterlyProductionDataHandler(tornado.web.RequestHandler):
-    def get(self, start):
-        self.set_header("Content-type", "application/json")
-        strt = [12, 1, 1, 1]
-        self.write(json.dumps(self.bpcounts(strt), default=dthandler))
-
-    def bpcounts(self, start):
-        view = self.application.samples_db.view("barcodes/date_read_counts", \
-            group_level=2)
-
-        bp_list = []
-        for row in view[start:]:
-            y = row.key[0]
-            q = row.key[1]
-            bp_list.append({"x": [y, q], "y": row.value})
-
-        d = {"data": bp_list, "name": "production"}
-        return [d]
 
 
 class DataHandler(tornado.web.RequestHandler):
@@ -815,12 +706,6 @@ class FlowcellDemultiplexHandler(tornado.web.RequestHandler):
 
         return lane_qc
 
-import cStringIO
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_agg import FigureCanvasAgg
-
-import matplotlib.pyplot as plt
-
 
 class Q30PlotHandler(tornado.web.RequestHandler):
     def get(self):
@@ -1201,6 +1086,10 @@ class Application(tornado.web.Application):
             ("/api/v1/amanita_home/project", AmanitaHomeProjectsDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
             ("/api/v1/amanita_box2/([^/]*)$", AmanitaBox2ProjectDataHandler),
+            ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
+            ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
+            ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
+            ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
@@ -1218,10 +1107,11 @@ class Application(tornado.web.Application):
             ("/api/v1/samples_per_lane", UnmatchedVsSamplesPerLaneDataHandler),
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
-            ("/api/v1/production/([^/]*)$", BPProductionDataHandler),
-            ("/api/v1/m_production/([^/]*)$", BPMonthlyProductionDataHandler),
-            ("/api/v1/q_production/([^/]*)$", \
-                BPQuarterlyProductionDataHandler),
+            ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
+            ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
+            ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
+            ("/api/v1/produced_quarterly.png", ProducedQuarterlyPlotHandler),
+
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
