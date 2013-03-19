@@ -117,36 +117,6 @@ class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
         self.write(delivered)
 
 
-class BPProductionDataHandler(tornado.web.RequestHandler):
-    def get(self, start):
-        self.set_header("Content-type", "application/json")
-        strt = [12, 1, 1, 1]
-        self.write(json.dumps(self.cum_date_bpcounts(strt), default=dthandler))
-
-    def cum_date_bpcounts(self, start):
-        view = self.application.samples_db.view("barcodes/date_read_counts", \
-            group_level=4, startkey=start)
-        row0 = view.rows[0]
-        current = row0.value * 200
-        y = row0.key[0]
-        m = row0.key[2]
-        d = row0.key[3]
-        dt = datetime(y, m, d)
-        bp_list = [{"x": int(time.mktime(dt.timetuple()) * 1000), \
-                    "y": current}]
-        for row in view.rows[1:]:
-            current += row.value * 200
-            y = row.key[0]
-            m = row.key[2]
-            d = row.key[3]
-            dt = datetime(y, m, d)
-            bp_list.append({"x": int(time.mktime(dt.timetuple()) * 1000), \
-                            "y": current})
-
-        d = {"data": bp_list, "name": "series"}
-        return [d]
-
-
 class ProducedMonthlyDataHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
