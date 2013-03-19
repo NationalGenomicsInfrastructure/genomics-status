@@ -147,24 +147,51 @@ class BPProductionDataHandler(tornado.web.RequestHandler):
         return [d]
 
 
-class BPMonthlyProductionDataHandler(tornado.web.RequestHandler):
-    def get(self, start):
+class ProducedMonthlyDataHandler(tornado.web.RequestHandler):
+    def get(self):
         self.set_header("Content-type", "application/json")
-        strt = [12, 1, 1, 1]
-        self.write(json.dumps(self.bpcounts(strt), default=dthandler))
+        self.write(json.dumps(self.bpcounts(), default=dthandler))
 
-    def bpcounts(self, start):
+    def bpcounts(self):
         view = self.application.samples_db.view("barcodes/date_read_counts", \
             group_level=3)
 
-        bp_list = []
-        for row in view[start:]:
-            y = row.key[0]
+        produced = OrderedDict()
+        for row in view[[12, 1, 1, 1]:]:
+            y = int("20" + str(row.key[0]))
             m = row.key[2]
-            bp_list.append({"x": [y, m], "y": row.value})
+            produced[dthandler(datetime(y, m, 1))] = row.value
 
-        d = {"data": bp_list, "name": "production"}
-        return [d]
+        return produced
+
+
+class ProducedMonthlyPlotHandler(ProducedMonthlyDataHandler):
+    def get(self):
+        produced = self.bpcounts()
+
+        fig = plt.figure(figsize=[10, 8])
+        ax = fig.add_subplot(111)
+
+        dates = [parser.parse(d) for d in produced.keys()]
+        values = produced.values()
+        months = [d.month for d in dates]
+
+        ax.bar(dates, values, width=10)
+
+        ax.set_xticks(dates)
+        ax.set_xticklabels([d.strftime("%b-%Y") for d in dates], rotation=30)
+
+        ax.set_title("Basepairs produced per month")
+
+        FigureCanvasAgg(fig)
+
+        buf = cStringIO.StringIO()
+        fig.savefig(buf, format="png")
+        produced = buf.getvalue()
+
+        self.set_header("Content-Type", "image/png")
+        self.set_header("Content-Length", len(produced))
+        self.write(produced)
 
 
 class BPQuarterlyProductionDataHandler(tornado.web.RequestHandler):
