@@ -28,12 +28,14 @@ import matplotlib.pyplot as plt
 
 
 from status.production import BPProductionDataHandler
-from status.production import BPMonthlyProductionDataHandler
+# from status.production import BPMonthlyProductionDataHandler
 from status.production import BPQuarterlyProductionDataHandler
 from status.production import DeliveredMonthlyDataHandler
 from status.production import DeliveredMonthlyPlotHandler
 from status.production import DeliveredQuarterlyDataHandler
 from status.production import DeliveredQuarterlyPlotHandler
+from status.production import ProducedMonthlyDataHandler
+from status.production import ProducedMonthlyPlotHandler
 from status.testing import TestDataHandler
 from status.util import dthandler
 
@@ -1107,9 +1109,10 @@ class Application(tornado.web.Application):
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
             ("/api/v1/production/([^/]*)$", BPProductionDataHandler),
-            ("/api/v1/m_production/([^/]*)$", BPMonthlyProductionDataHandler),
             ("/api/v1/q_production/([^/]*)$", \
                 BPQuarterlyProductionDataHandler),
+            ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
+            ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
