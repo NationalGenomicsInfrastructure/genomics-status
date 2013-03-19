@@ -48,7 +48,7 @@ class DeliveredMonthlyPlotHandler(DeliveredMonthlyDataHandler):
         values = delivered.values()
         months = [d.month for d in dates]
 
-        ax.bar(dates, values)
+        ax.bar(dates, values, width=10)
 
         ax.set_xticks(dates)
         ax.set_xticklabels([d.strftime("%Y\n%B") for d in dates])
@@ -81,7 +81,7 @@ class DeliveredQuarterlyDataHandler(tornado.web.RequestHandler):
         for row in view:
             y = row.key[0]
             q = row.key[1]
-            delivered[dthandler(datetime(y, q*4 - 3, 1))] = int(row.value * 1e6)
+            delivered[dthandler(datetime(y, (q - 1) * 3 + 1, 1))] = int(row.value * 1e6)
 
         return delivered
 
@@ -164,21 +164,53 @@ class ProducedMonthlyPlotHandler(ProducedMonthlyDataHandler):
         self.write(produced)
 
 
-class BPQuarterlyProductionDataHandler(tornado.web.RequestHandler):
-    def get(self, start):
+class ProducedQuarterlyDataHandler(tornado.web.RequestHandler):
+    """ Gives the data for quarterly produced amount of basepairs.
+    """
+    def get(self):
         self.set_header("Content-type", "application/json")
-        strt = [12, 1, 1, 1]
-        self.write(json.dumps(self.bpcounts(strt), default=dthandler))
+        self.write(json.dumps(self.produced(), default=dthandler))
 
-    def bpcounts(self, start):
+    def produced(self):
         view = self.application.samples_db.view("barcodes/date_read_counts", \
-            group_level=2)
+                                                 group_level=2)
 
-        bp_list = []
-        for row in view[start:]:
-            y = row.key[0]
+        produced = OrderedDict()
+        for row in view[[12,1,1,1]:]:
+            y = int("20" + str(row.key[0]))
             q = row.key[1]
-            bp_list.append({"x": [y, q], "y": row.value})
+            produced[dthandler(datetime(y, (q - 1) * 3 + 1, 1))] = int(row.value * 1e6)
 
-        d = {"data": bp_list, "name": "production"}
-        return [d]
+        return produced
+
+
+class ProducedQuarterlyPlotHandler(ProducedQuarterlyDataHandler):
+    """ Gives a bar plot for quarterly produced amount of basepairs.
+    """
+    def get(self):
+        produced = self.produced()
+
+        fig = plt.figure(figsize=[10, 8])
+        ax = fig.add_subplot(111)
+
+        dates = [parser.parse(d) for d in produced.keys()]
+        values = produced.values()
+        quarters = [(d.month - 1) // 3 + 1 for d in dates]
+        years = [d.year for d in dates]
+
+        ax.bar(dates, values, width=10)
+
+        ax.set_xticks(dates)
+        ax.set_xticklabels(["{}\nQ{}".format(*t) for t in zip(years, quarters)])
+
+        ax.set_title("Basepairs produced per quarter")
+
+        FigureCanvasAgg(fig)
+
+        buf = cStringIO.StringIO()
+        fig.savefig(buf, format="png")
+        produced = buf.getvalue()
+
+        self.set_header("Content-Type", "image/png")
+        self.set_header("Content-Length", len(produced))
+        self.write(produced)
