@@ -1169,13 +1169,13 @@ class Application(tornado.web.Application):
         # Global connection to the log database
         couch = Server(settings.get("couch_server", None))
         if couch:
-            self.illumina_db = couch["illumina_logs"]
-            self.uppmax_db = couch["uppmax"]
-            self.samples_db = couch["samples"]
-            self.projects_db = couch["projects"]
+            self.illumina_db  = couch["illumina_logs"]
+            self.uppmax_db    = couch["uppmax"]
+            self.samples_db   = couch["samples"]
+            self.projects_db  = couch["projects"]
             self.flowcells_db = couch["flowcells"]
-            self.amanita_db = couch["amanita"]
-            self.picea_db = couch["picea"]
+            self.amanita_db   = couch["amanita"]
+            self.picea_db     = couch["picea"]
 
         # Setup the Tornado Application
         settings = {
@@ -1183,26 +1183,26 @@ class Application(tornado.web.Application):
         "static_path": "static"
         }
 
+        tornado.autoreload.watch("design/amanita.html")
+        tornado.autoreload.watch("design/application.html")
+        tornado.autoreload.watch("design/applications.html")
+        tornado.autoreload.watch("design/barcodes.html")
+        tornado.autoreload.watch("design/base.html")
+        tornado.autoreload.watch("design/expected.html")
+        tornado.autoreload.watch("design/flowcell_samples.html")
+        tornado.autoreload.watch("design/flowcells.html")
+        tornado.autoreload.watch("design/phix_err_rate.html")
+        tornado.autoreload.watch("design/production.html")
+        tornado.autoreload.watch("design/projects.html")
+        tornado.autoreload.watch("design/project_samples.html")
+        tornado.autoreload.watch("design/q30.html")
         tornado.autoreload.watch("design/quota_grid.html")
         tornado.autoreload.watch("design/quota.html")
+        tornado.autoreload.watch("design/reads_per_lane.html")
+        tornado.autoreload.watch("design/reads_vs_qv.html")
         tornado.autoreload.watch("design/sample_run_qc.html")
         tornado.autoreload.watch("design/sample_runs.html")
         tornado.autoreload.watch("design/samples.html")
-        tornado.autoreload.watch("design/projects.html")
-        tornado.autoreload.watch("design/project_samples.html")
-        tornado.autoreload.watch("design/base.html")
-        tornado.autoreload.watch("design/production.html")
-        tornado.autoreload.watch("design/flowcell_samples.html")
-        tornado.autoreload.watch("design/applications.html")
-        tornado.autoreload.watch("design/barcodes.html")
-        tornado.autoreload.watch("design/amanita.html")
-        tornado.autoreload.watch("design/q30.html")
-        tornado.autoreload.watch("design/expected.html")
-        tornado.autoreload.watch("design/flowcells.html")
-        tornado.autoreload.watch("design/application.html")
-        tornado.autoreload.watch("design/reads_per_lane.html")
-        tornado.autoreload.watch("design/reads_vs_qv.html")
-        tornado.autoreload.watch("design/phix_err_rate.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
