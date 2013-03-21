@@ -35,6 +35,7 @@ from status.production import ProducedMonthlyDataHandler
 from status.production import ProducedMonthlyPlotHandler
 from status.production import ProducedQuarterlyDataHandler
 from status.production import ProducedQuarterlyPlotHandler
+from status.sequencing import InstrumentErrorrateDataHandler
 from status.testing import TestDataHandler
 from status.util import dthandler
 
@@ -1097,6 +1098,7 @@ class Application(tornado.web.Application):
                 FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
+            ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
             ("/api/v1/plot/samples_per_lane.png", \
                 UnmatchedVsSamplesPerLanePlotHandler),
@@ -1203,6 +1205,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/sample_run_qc.html")
         tornado.autoreload.watch("design/sample_runs.html")
         tornado.autoreload.watch("design/samples.html")
+        tornado.autoreload.watch("design/sequencing_stats.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
