@@ -79,3 +79,11 @@ class InstrumentErrorratePlotHandler(InstrumentErrorrateDataHandler):
         self.set_header("Content-Type", "image/png")
         self.set_header("Content-Length", len(image_data))
         self.write(image_data)
+
+
+class SequencingStatsHandler(tornado.web.RequestHandler):
+    """ Handler for serving up the sequencing stats page.
+    """
+    def get(self):
+        t = self.application.loader.load("sequencing_stats.html")
+        self.write(t.generate())
