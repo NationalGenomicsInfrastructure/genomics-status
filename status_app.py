@@ -26,7 +26,6 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 import matplotlib.pyplot as plt
 
-
 from status.production import DeliveredMonthlyDataHandler
 from status.production import DeliveredMonthlyPlotHandler
 from status.production import DeliveredQuarterlyDataHandler
@@ -35,9 +34,13 @@ from status.production import ProducedMonthlyDataHandler
 from status.production import ProducedMonthlyPlotHandler
 from status.production import ProducedQuarterlyDataHandler
 from status.production import ProducedQuarterlyPlotHandler
+
+from status.sequencing import InstrumentClusterDensityDataHandler
+from status.sequencing import InstrumentClusterDensityPlotHandler
 from status.sequencing import InstrumentErrorrateDataHandler
 from status.sequencing import InstrumentErrorratePlotHandler
 from status.sequencing import SequencingStatsHandler
+
 from status.testing import TestDataHandler
 from status.util import dthandler
 
@@ -1100,6 +1103,8 @@ class Application(tornado.web.Application):
                 FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
+            ("/api/v1/instrument_cluster_density", InstrumentClusterDensityDataHandler),
+            ("/api/v1/instrument_cluster_density.png", InstrumentClusterDensityPlotHandler),
             ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
             ("/api/v1/instrument_error_rates.png", InstrumentErrorratePlotHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
