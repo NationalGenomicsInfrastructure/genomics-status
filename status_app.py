@@ -37,6 +37,7 @@ from status.production import ProducedQuarterlyDataHandler
 from status.production import ProducedQuarterlyPlotHandler
 from status.sequencing import InstrumentErrorrateDataHandler
 from status.sequencing import InstrumentErrorratePlotHandler
+from status.sequencing import SequencingStatsHandler
 from status.testing import TestDataHandler
 from status.util import dthandler
 
@@ -1162,7 +1163,8 @@ class Application(tornado.web.Application):
             ("/reads_per_lane", ReadsPerLaneHandler),
             ("/samples", QCHandler),
             ("/samples_per_lane", UnmatchedVsSamplesPerLaneHandler),
-            ("/samples/([^/]*)$", SampleRunHandler)
+            ("/samples/([^/]*)$", SampleRunHandler),
+            ("/sequencing", SequencingStatsHandler)
         ]
 
         self.declared_handlers = handlers
