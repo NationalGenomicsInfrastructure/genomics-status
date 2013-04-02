@@ -10,38 +10,42 @@ import random
 from dateutil import parser
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-
 import numpy as np
-
 import tornado.web
 
 from status.util import dthandler
 
 
-class InstrumentClusterDensityDataHandler(tornado.web.RequestHandler):
-    """ Gives series for cluster densities for instruments, over time.
+def make_instrument_series_handler(couchdb_view_name):
+    """ Create a handler for a flowcell-instrument series of data for the
+    given couchdb view.
     """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.clusters(), default=dthandler))
+    class InstrumentSeriesDataHandler(tornado.web.RequestHandler):
+        def get(self):
+            self.set_header("Content-type", "application/json")
+            self.write(json.dumps(self.data(), default=dthandler))
 
-    def clusters(self):
-        view = self.application.flowcells_db.view("instrument/clusters_raw")
+        def data(self):
+            view = self.application.flowcells_db.view(couchdb_view_name)
 
-        raw_clusters = defaultdict(lambda :defaultdict(list))
-        for row in view:
-            date = row.key[0]
-            instrument = row.key[1].upper()
-            raw_clusters[instrument][date] += row.value
+            data = defaultdict(lambda :defaultdict(list))
+            for row in view:
+                date = row.key[0]
+                instrument = row.key[1].upper()
+                data[instrument][date] += row.value
 
-        return raw_clusters
+            return data
 
+    return InstrumentSeriesDataHandler
+
+
+InstrumentClusterDensityDataHandler = make_instrument_series_handler("instrument/clusters_raw")
 
 class InstrumentClusterDensityPlotHandler(InstrumentClusterDensityDataHandler):
     """ Gives a plot for series of cluster densities for instruments, over time.
     """
     def get(self):
-        data = self.clusters()
+        data = self.data()
         data = filter(lambda n: n[0] != "NA", data.iteritems())
 
         fig, ax = plt.subplots(len(data), 1, sharex=True, sharey=True, \
@@ -83,30 +87,13 @@ class InstrumentClusterDensityPlotHandler(InstrumentClusterDensityDataHandler):
         self.write(image_data)
 
 
-class InstrumentErrorrateDataHandler(tornado.web.RequestHandler):
-    """ Gives series for phiX error rates for instruments, over time.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.error_rates(), default=dthandler))
-
-    def error_rates(self):
-        view = self.application.flowcells_db.view("instrument/error_rates")
-
-        error_rates = defaultdict(lambda :defaultdict(list))
-        for row in view:
-            date = row.key[0]
-            instrument = row.key[1].upper()
-            error_rates[instrument][date] += row.value
-
-        return error_rates
-
+InstrumentErrorrateDataHandler = make_instrument_series_handler("instrument/error_rates")
 
 class InstrumentErrorratePlotHandler(InstrumentErrorrateDataHandler):
     """ Gives series for phiX error rates for instruments, over time.
     """
     def get(self):
-        data = self.error_rates()
+        data = self.data()
         data = filter(lambda n: n[0] != "NA", data.iteritems())
 
         fig, ax = plt.subplots(len(data), 1, sharex=True, sharey=True, \
@@ -146,49 +133,15 @@ class InstrumentErrorratePlotHandler(InstrumentErrorrateDataHandler):
         self.write(image_data)
 
 
-class InstrumentUnmatchedDataHandler(tornado.web.RequestHandler):
-    """ Gives series for unmatched reads per instrument, over time.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.yields(), default=dthandler))
+InstrumentUnmatchedDataHandler = make_instrument_series_handler("instrument/unmatched")
 
-    def yields(self):
-        view = self.application.flowcells_db.view("instrument/unmatched")
-
-        yields = defaultdict(lambda :defaultdict(list))
-        for row in view:
-            date = row.key[0]
-            instrument = row.key[1].upper()
-            yields[instrument][date] += row.value
-
-        return yields
-
-
-class InstrumentYieldDataHandler(tornado.web.RequestHandler):
-    """ Gives series for yields per instrument, over time.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.yields(), default=dthandler))
-
-    def yields(self):
-        view = self.application.flowcells_db.view("instrument/yield")
-
-        yields = defaultdict(lambda :defaultdict(list))
-        for row in view:
-            date = row.key[0]
-            instrument = row.key[1].upper()
-            yields[instrument][date] += row.value
-
-        return yields
-
+InstrumentYieldDataHandler = make_instrument_series_handler("instrument/yield")
 
 class InstrumentYieldPlotHandler(InstrumentYieldDataHandler):
     """ Gives series for lane yields over instruments, by time.
     """
     def get(self):
-        data = self.yields()
+        data = self.data()
         data = filter(lambda n: n[0] != "NA", data.iteritems())
 
         fig, ax = plt.subplots(len(data), 1, sharex=True, sharey=True, \
