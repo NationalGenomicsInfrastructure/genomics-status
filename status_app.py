@@ -40,6 +40,9 @@ from status.sequencing import InstrumentClusterDensityPlotHandler
 from status.sequencing import InstrumentErrorrateDataHandler
 from status.sequencing import InstrumentErrorratePlotHandler
 from status.sequencing import SequencingStatsHandler
+from status.sequencing import InstrumentUnmatchedDataHandler
+from status.sequencing import InstrumentYieldDataHandler
+from status.sequencing import InstrumentYieldPlotHandler
 
 from status.testing import TestDataHandler
 from status.util import dthandler
@@ -1103,10 +1106,16 @@ class Application(tornado.web.Application):
                 FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
-            ("/api/v1/instrument_cluster_density", InstrumentClusterDensityDataHandler),
-            ("/api/v1/instrument_cluster_density.png", InstrumentClusterDensityPlotHandler),
+            ("/api/v1/instrument_cluster_density", \
+                InstrumentClusterDensityDataHandler),
+            ("/api/v1/instrument_cluster_density.png", \
+                InstrumentClusterDensityPlotHandler),
             ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
-            ("/api/v1/instrument_error_rates.png", InstrumentErrorratePlotHandler),
+            ("/api/v1/instrument_error_rates.png", \
+                InstrumentErrorratePlotHandler),
+            ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
+            ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
+            ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
             ("/api/v1/plot/samples_per_lane.png", \
                 UnmatchedVsSamplesPerLanePlotHandler),
@@ -1121,7 +1130,6 @@ class Application(tornado.web.Application):
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
             ("/api/v1/produced_quarterly.png", ProducedQuarterlyPlotHandler),
-
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
@@ -1144,7 +1152,8 @@ class Application(tornado.web.Application):
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/samples_applications", SamplesApplicationsDataHandler),
-            ("/api/v1/samples_applications.png", SamplesApplicationsPlotHandler),
+            ("/api/v1/samples_applications.png", \
+                SamplesApplicationsPlotHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),
