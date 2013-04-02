@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block stuff %}
+
+<div class="container-fluid">
+  <h1>Various statistics for sequencing</h1>
+  <h2>PhiX error rate per instrument over flowcells sorted by time</h2>
+  <img src="/api/v1/instrument_error_rates.png">
+  <h2>Raw cluster counts over flowcells sorted by time</h2>
+  <img src="/api/v1/instrument_cluster_density.png">
+  <h2>Lane yields over flowecells sorted by time</h2>
+  <img src="/api/v1/instrument_yield.png">
+  <h2>Lane unmatched index reads over flowcells sorted by time</h2>
+  <img src="http://localhost:9761/api/v1/instrument_unmatched.png">
+</div>
+
+{% end %}
