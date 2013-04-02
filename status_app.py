@@ -41,6 +41,7 @@ from status.sequencing import InstrumentErrorrateDataHandler
 from status.sequencing import InstrumentErrorratePlotHandler
 from status.sequencing import SequencingStatsHandler
 from status.sequencing import InstrumentUnmatchedDataHandler
+from status.sequencing import InstrumentUnmatchedPlotHandler
 from status.sequencing import InstrumentYieldDataHandler
 from status.sequencing import InstrumentYieldPlotHandler
 
@@ -1114,6 +1115,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_error_rates.png", \
                 InstrumentErrorratePlotHandler),
             ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
+            ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
