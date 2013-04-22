@@ -3,10 +3,8 @@
 """
 from collections import OrderedDict
 from collections import defaultdict
-from datetime import datetime
 import json
 import time
-import random
 
 from couchdb import Server
 from dateutil import parser
@@ -25,6 +23,9 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 import matplotlib.pyplot as plt
+
+import matplotlib.gridspec as gridspec
+from matplotlib import cm
 
 from status.production import DeliveredMonthlyDataHandler
 from status.production import DeliveredMonthlyPlotHandler
@@ -50,75 +51,16 @@ from status.util import dthandler
 
 
 class MainHandler(tornado.web.RequestHandler):
+    """ Serves the html front page upon request.
+    """
     def get(self):
         t = self.application.loader.load("base.html")
         self.write(t.generate())
 
 
-class QuotasHandler(tornado.web.RequestHandler):
-    def get(self):
-        t = self.application.loader.load("quota_grid.html")
-        self.write(t.generate())
-
-
-class QuotaHandler(tornado.web.RequestHandler):
-    def get(self, project):
-        t = self.application.loader.load("quota.html")
-        self.write(t.generate(project=project))
-
-
-class ProductionHandler(tornado.web.RequestHandler):
-    def get(self):
-        t = self.application.loader.load("production.html")
-        self.write(t.generate())
-
-
-class QuotasDataHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write("TODO: Implement")
-
-
-class QuotaDataHandler(tornado.web.RequestHandler):
-    def get(self, project):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.project_storage_quota(project), default=dthandler))
-
-    def project_storage_quota(self, project):
-        proj_getter = lambda row: row.key[0]
-        proj_checker = lambda row: proj_getter(row) == project
-
-        date_getter = lambda row: row.key[1]
-
-        r_list = filter(proj_checker, self.application.uppmax_db.view("status/project_quota_usage_over_time"))
-        r_list = sorted(r_list, key=date_getter)
-
-        gb = 1024 ** 3
-        data = []
-        for row in r_list:
-            data.append({"x": int(time.mktime(parser.parse(date_getter(row)).timetuple())), \
-                         "y": row.value[0] * gb})
-
-        d = dict()
-        d["data"] = data
-        d["name"] = "series"
-        return [d]
-
-
-class UppmaxProjectsDataHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_projects()))
-
-    def list_projects(self):
-        project_list = []
-        for row in self.application.uppmax_db.view("status/projects", group_level=1):
-            project_list.append(row.key)
-
-        return project_list
-
-
 class DataHandler(tornado.web.RequestHandler):
+    """ Serves a listing of all available URL's in the web service.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         handlers = [h[0] for h in self.application.declared_handlers]
@@ -130,20 +72,100 @@ class DataHandler(tornado.web.RequestHandler):
         self.write(json.dumps({"api": api, "pages": pages}))
 
 
+class QuotasHandler(tornado.web.RequestHandler):
+    """ Serves a grid of time series plots for UPPNEX storage quotas.
+    """
+    def get(self):
+        t = self.application.loader.load("quota_grid.html")
+        self.write(t.generate())
+
+
+class QuotaHandler(tornado.web.RequestHandler):
+    """ Serves a page with a plot of a time series of used storage quota for
+    a provided UPPNEX project.
+    """
+    def get(self, project):
+        t = self.application.loader.load("quota.html")
+        self.write(t.generate(project=project))
+
+
+class QuotaDataHandler(tornado.web.RequestHandler):
+    """ Serves a time series for storage quota usage of a given UPPNEX
+    project.
+    """
+    def get(self, project):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.project_storage_quota(project),
+                              default=dthandler))
+
+    def project_storage_quota(self, project):
+        proj_getter = lambda row: row.key[0]
+        proj_checker = lambda row: proj_getter(row) == project
+        date_getter = lambda row: row.key[1]
+
+        view = self.application.uppmax_db.view("status/project_quota_usage_over_time")
+        r_list = filter(proj_checker, view)
+        r_list = sorted(r_list, key=date_getter)
+
+        # 1024 ** 3
+        gb = 1073741824
+        data = []
+        for row in r_list:
+            data.append({"x": int(time.mktime(parser.parse(date_getter(row)).timetuple())),
+                         "y": row.value[0] * gb})
+
+        d = dict()
+        d["data"] = data
+        d["name"] = "series"
+        return [d]
+
+
+class ProductionHandler(tornado.web.RequestHandler):
+    """ Serves a page with statistics and plots about the amount of
+    sequencing / data produced over time.
+    """
+    def get(self):
+        t = self.application.loader.load("production.html")
+        self.write(t.generate())
+
+
+class UppmaxProjectsDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of UPPNEX projects where the storage quota have
+    been logged.
+    """
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_projects()))
+
+    def list_projects(self):
+        project_list = []
+        view = self.application.uppmax_db.view("status/projects", group_level=1)
+        for row in view:
+            project_list.append(row.key)
+
+        return project_list
+
+
 class QCDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of all names of samples per samplename run.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_samples()))
 
     def list_samples(self):
         sample_list = []
-        for row in self.application.samples_db.view("names/samplename_run", group_level=1):
+        view = self.application.samples_db.view("names/samplename_run", group_level=1)
+        for row in view:
             sample_list.append(row.key)
 
         return sample_list
 
 
 class ApplicationDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of projects which have the application provided as
+    an argument.
+    """
     def get(self, application):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_projects(application)))
@@ -158,20 +180,24 @@ class ApplicationDataHandler(tornado.web.RequestHandler):
 
 
 class ApplicationsDataHandler(tornado.web.RequestHandler):
+    """ Serves the applications performed with the number of projects which
+    have that application.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_applications()))
 
     def list_applications(self):
         applications = OrderedDict()
-        for row in self.application.projects_db.view("project/applications", group_level=1):
+        view = self.application.projects_db.view("project/applications", group_level=1)
+        for row in view:
             applications[row.key] = row.value
 
         return applications
 
 
 class ApplicationsPlotHandler(ApplicationsDataHandler):
-    """ Handler for creating a Pie chart of applications over projects.
+    """ Serves a Pie chart of applications over projects.
     """
     def get(self):
         applications = self.list_applications()
@@ -182,10 +208,10 @@ class ApplicationsPlotHandler(ApplicationsDataHandler):
         cmap = plt.cm.prism
         colors = cmap(np.linspace(0., 1., len(applications)))
 
-        pie_wedge_collection = ax.pie(applications.values(), \
-                                       colors=colors, \
-                                       labels=applications.keys(), \
-                                       labeldistance=1.05)
+        pie_wedge_collection = ax.pie(applications.values(),
+                                      colors=colors,
+                                      labels=applications.keys(),
+                                      labeldistance=1.05)
 
         for pie_wedge in pie_wedge_collection[0]:
             pie_wedge.set_edgecolor('white')
@@ -220,7 +246,7 @@ class SamplesApplicationsDataHandler(tornado.web.RequestHandler):
 
 
 class SamplesApplicationsPlotHandler(SamplesApplicationsDataHandler):
-    """ Handler for creating a Pie chart of applications over projects.
+    """ Serves a Pie chart of applications over projects.
     """
     def get(self):
         applications = self.list_applications()
@@ -231,10 +257,10 @@ class SamplesApplicationsPlotHandler(SamplesApplicationsDataHandler):
         cmap = plt.cm.prism
         colors = cmap(np.linspace(0., 1., len(applications)))
 
-        pie_wedge_collection = ax.pie(applications.values(), \
-                                       colors=colors, \
-                                       labels=applications.keys(), \
-                                       labeldistance=1.05)
+        pie_wedge_collection = ax.pie(applications.values(),
+                                      colors=colors,
+                                      labels=applications.keys(),
+                                      labeldistance=1.05)
 
         for pie_wedge in pie_wedge_collection[0]:
             pie_wedge.set_edgecolor('white')
@@ -250,10 +276,13 @@ class SamplesApplicationsPlotHandler(SamplesApplicationsDataHandler):
 
         self.set_header("Content-Type", "image/png")
         self.set_header("Content-Length", len(applications))
+
         self.write(applications)
 
 
 class SampleInfoDataHandler(tornado.web.RequestHandler):
+    """ Serves the abbreviated sample info for a given sample.
+    """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.sample_info(sample)))
@@ -264,48 +293,62 @@ class SampleInfoDataHandler(tornado.web.RequestHandler):
 
 
 class PagedQCDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of 50 sample names following a given string
+    in alhabetical order.
+    """
     def get(self, startkey):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_samples(startkey)))
 
     def list_samples(self, startkey):
         sample_list = []
-        for row in self.application.samples_db.view("names/samplename_run", \
-        group_level=1, limit=50, startkey=startkey):
+        view = self.application.samples_db.view("names/samplename_run",
+                                                group_level=1,
+                                                limit=50,
+                                                startkey=startkey)
+        for row in view:
             sample_list.append(row.key)
 
         return sample_list
 
 
 class QCHandler(tornado.web.RequestHandler):
+    """ Serves a page with all samples listed.
+    """
     def get(self):
         t = self.application.loader.load("samples.html")
         self.write(t.generate())
 
 
 class SampleQCSummaryDataHandler(tornado.web.RequestHandler):
+    """ Serves the QC Summary data of a given sample.
+    """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.sample_summary(sample), default=dthandler))
 
     def sample_summary(self, sample):
-        result = self.application.samples_db.view("qc/summary", key=sample, reduce=False)
+        result = self.application.samples_db.view("qc/summary", reduce=False)[sample]
 
         return result.rows[0].value
 
 
 class SampleQCDataHandler(tornado.web.RequestHandler):
+    """ Serves the QC data of a given sample.
+    """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.sample_summary(sample), default=dthandler))
 
     def sample_summary(self, sample):
-        result = self.application.samples_db.view("qc/qc_summary", key=sample)
+        result = self.application.samples_db.view("qc/qc_summary")[sample]
 
         return result.rows[0].value
 
 
 class ProjectSamplesDataHandler(tornado.web.RequestHandler):
+    """ Serves brief info about all samples in a given project.
+    """
     def get(self, project):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.sample_list(project), default=dthandler))
@@ -318,40 +361,52 @@ class ProjectSamplesDataHandler(tornado.web.RequestHandler):
 
 
 class SampleQCSummaryHandler(tornado.web.RequestHandler):
+    """ Serves a page which displays QC data with tables and plots for a
+    given sample run.
+    """
     def get(self, sample):
         t = self.application.loader.load("sample_run_qc.html")
         self.write(t.generate(sample=sample))
 
 
 class ProjectSamplesHandler(tornado.web.RequestHandler):
+    """ Serves a page which lists the samples of a given project, with some
+    brief information for each sample.
+    """
     def get(self, project):
         t = self.application.loader.load("project_samples.html")
         self.write(t.generate(project=project))
 
 
 class SampleQCAlignmentDataHandler(tornado.web.RequestHandler):
+    """ Serves alignment QC metrics for a given sample run.
+    """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.sample_summary(sample), default=dthandler))
 
     def sample_summary(self, sample):
-        result = self.application.samples_db.view("qc/alignment_summary", key=sample)
+        result = self.application.samples_db.view("qc/alignment_summary")[sample]
 
         return result.rows[0].value
 
 
 class SampleQCInsertSizesDataHandler(tornado.web.RequestHandler):
+    """ Serves insert size distribution for a given sample run.
+    """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.sample_summary(sample), default=dthandler))
 
     def sample_summary(self, sample):
-        result = self.application.samples_db.view("qc/insert_size_distribution", key=sample)
+        result = self.application.samples_db.view("qc/insert_size_distribution")[sample]
 
         return result.rows[0].value
 
 
 class SampleQCCoverageDataHandler(tornado.web.RequestHandler):
+    """ Serves coverage for a given sample run.
+    """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.sample_summary(sample), default=dthandler))
@@ -363,65 +418,41 @@ class SampleQCCoverageDataHandler(tornado.web.RequestHandler):
 
 
 class SampleReadCountDataHandler(tornado.web.RequestHandler):
+    """ Serves the read counts of a given sample.
+    """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.sample_read_count(sample), default=dthandler))
 
     def sample_read_count(self, sample):
         rc_view = self.application.samples_db.view("samples/read_counts",
-                                                  group_level=1)
+                                                   group_level=1)
         for row in rc_view[[sample]:[sample, "Z"]]:
             return row.value["read_count"]
 
 
 class ReadsVsQvhandler(tornado.web.RequestHandler):
+    """ Serves a page which shows plots of the amount of reads with certain
+    quality values over a given date range.
+    """
     def get(self):
         t = self.application.loader.load("reads_vs_qv.html")
         self.write(t.generate())
 
 
-class PhixErrorRateHandler(tornado.web.RequestHandler):
-    def get(self):
-        t = self.application.loader.load("phix_err_rate.html")
-        self.write(t.generate())
-
-
-class PhixErrorRateDataHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.phix_err_rate()))
-
-    def phix_err_rate(self):
-        view = self.application.flowcells_db.view("lanes/err_rate_phix_yield")
-
-        err_rates = []
-        yields = []
-
-        for row in view:
-            err_rate = row.value["err_rate_phix"]
-            read_yield = row.value["yield"]
-            if err_rate and read_yield and err_rate > 0.0001:
-                err_rates.append(err_rate)
-                yields.append(float(read_yield))
-
-        amount_yields, error_rate = np.histogram(err_rates, bins=256, weights=yields)
-
-        fraction_yield = amount_yields / amount_yields.sum()
-
-        return {"error_rate": list(error_rate),
-                "yield_fraction": list(fraction_yield),
-                "cum_yield_fraction": list(fraction_yield.cumsum())}
-
-
 class ReadsVsQDataHandler(tornado.web.RequestHandler):
+    """ Serves histogram data of reada over average quality values of reads.
+    """
     def get(self):
         try:
             start = json.loads(self.get_argument("start", None))
+
         except TypeError:
             start = None
 
         try:
             end = json.loads(self.get_argument("end", None))
+
         except TypeError:
             end = None
 
@@ -442,29 +473,70 @@ class ReadsVsQDataHandler(tornado.web.RequestHandler):
         quality_count = quality_count / quality_count.sum()
         quality_integral = quality_integral / quality_integral[2]
 
-        return {"quality": list(quality_count), "cumulative": list(quality_integral)}
+        return {"quality": list(quality_count),
+                "cumulative": list(quality_integral)}
 
 
-class UnmatchedVsSamplesPerLaneHandler(tornado.web.RequestHandler):
+class PhixErrorRateHandler(tornado.web.RequestHandler):
+    """ Serves a page which shows the distributions of phiX error rates.
+    """
     def get(self):
-        t = self.application.loader.load("unmatched_vs_samples_per_lane.html")
+        t = self.application.loader.load("phix_err_rate.html")
         self.write(t.generate())
 
 
+class PhixErrorRateDataHandler(tornado.web.RequestHandler):
+    """ Serves a histogram of yields and phiX error rates over all time.
+    """
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.phix_err_rate()))
+
+    def phix_err_rate(self):
+        view = self.application.flowcells_db.view("lanes/err_rate_phix_yield")
+
+        err_rates = []
+        yields = []
+
+        for row in view:
+            err_rate = row.value["err_rate_phix"]
+            read_yield = row.value["yield"]
+            if err_rate and read_yield and err_rate > 0.0001:
+                err_rates.append(err_rate)
+                yields.append(float(read_yield))
+
+        amount_yields, error_rate = np.histogram(err_rates,
+                                                 bins=256,
+                                                 weights=yields)
+
+        fraction_yield = amount_yields / amount_yields.sum()
+
+        return {"error_rate": list(error_rate),
+                "yield_fraction": list(fraction_yield),
+                "cum_yield_fraction": list(fraction_yield.cumsum())}
+
+
 class UnmatchedVsSamplesPerLaneDataHandler(tornado.web.RequestHandler):
+    """ Serves data for the amount of unmatched reads in a lane compared
+    to the number of samples loaded on a lane.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.sample_count_unmatched()))
 
     def sample_count_unmatched(self):
-        n_samples_view = self.application.samples_db.view("lanes/count", group_level=2)
+        n_samples_view = self.application.samples_db.view("lanes/count",
+                                                          group_level=2)
         sample_count_fc_lanes = defaultdict(list)
         for row in n_samples_view:
             sample_count_fc_lanes[row.value].append(row.key)
 
         sample_count_unmatched = {}
-        tot_reads_view = self.application.samples_db.view("barcodes/read_counts", group_level=2)
-        unm_reads_view = self.application.flowcells_db.view("lanes/unmatched", reduce=False)
+        tot_reads_view = self.application.samples_db.view("barcodes/read_counts",
+                                                          group_level=2)
+        unm_reads_view = self.application.flowcells_db.view("lanes/unmatched",
+                                                            reduce=False)
+
         for no_samples, fc_lanes in sample_count_fc_lanes.items():
             ratio_list = []
             for fc_lane in fc_lanes:
@@ -482,15 +554,25 @@ class UnmatchedVsSamplesPerLaneDataHandler(tornado.web.RequestHandler):
 
             sample_count_unmatched[no_samples] = ratio_list
 
-        fil_s_cnt_unm = dict(filter(lambda (s, a): len(a) > 20, sample_count_unmatched.items()))
+        min_sample_filter = lambda s, a: len(a) > 20
+        fil_s_cnt_unm = dict(filter(min_sample_filter, sample_count_unmatched.items()))
 
         return fil_s_cnt_unm
 
-import matplotlib.gridspec as gridspec
-from matplotlib import cm
+
+class UnmatchedVsSamplesPerLaneHandler(tornado.web.RequestHandler):
+    """ Serves a page which displays a plot for the amount of unmatched reads
+    in a lane compared to the number of samples loaded on a lane.
+    """
+    def get(self):
+        t = self.application.loader.load("unmatched_vs_samples_per_lane.html")
+        self.write(t.generate())
 
 
 class UnmatchedVsSamplesPerLanePlotHandler(UnmatchedVsSamplesPerLaneDataHandler):
+    """ Serves a plot for the amount of unmatched reads
+    in a lane compared to the number of samples loaded on a lane.
+    """
     def get(self):
         sample_count_unmatched = self.sample_count_unmatched()
 
@@ -538,14 +620,17 @@ class UnmatchedVsSamplesPerLanePlotHandler(UnmatchedVsSamplesPerLaneDataHandler)
 
 
 class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
+    """ Serves series with number of matched reads to a barcode compared
+    to the expected number of reads matched to a barcode.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.yield_difference(), default=dthandler))
 
     def yield_difference(self):
         fc_lanes_total_reads = {}
-        for row in self.application.samples_db.view("barcodes/read_counts", \
-            group_level=2):
+        for row in self.application.samples_db.view("barcodes/read_counts",
+                                                    group_level=2):
             fc_lanes_total_reads[tuple(row.key)] = row.value
 
         fc_lanes_unmatched_reads = {}
@@ -559,17 +644,19 @@ class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
         fc_lane_expected_yield = {}
         for k in fc_lanes_total_reads.keys():
             fc_lane_expected_yield[k] = \
-            ((fc_lanes_total_reads[k] - fc_lanes_unmatched_reads.get(k, 0)) \
-            / fc_lanes_sample_count[k])
+                ((fc_lanes_total_reads[k] - fc_lanes_unmatched_reads.get(k, 0))
+                 / fc_lanes_sample_count[k])
 
         barcode_relation = defaultdict(list)
         for fc_lane, expected_yield in fc_lane_expected_yield.items():
             fc_l = list(fc_lane)
-            rc_view = self.application.samples_db.view("barcodes/read_counts", \
-                reduce=False)
+            rc_view = self.application.samples_db.view("barcodes/read_counts",
+                                                       reduce=False)
+
             for row in rc_view[fc_l + [""]: fc_l + ["Z"]]:
                 try:
                     barcode_relation[row.key[-1]].append(float(row.value) / expected_yield)
+
                 except ZeroDivisionError:
                     pass
 
@@ -581,6 +668,9 @@ class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
 
 
 class BarcodeVsExpectedPlotHandler(BarcodeVsExpectedDataHandler):
+    """ Serves a boxplot of expected yields vs matched yields for top
+    present barcodes.
+    """
     def get(self):
         processed_relation = self.yield_difference()
 
@@ -606,13 +696,16 @@ class BarcodeVsExpectedPlotHandler(BarcodeVsExpectedDataHandler):
 
 
 class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
+    """ Serves the read counts of a sample, for each run of the sample.
+    """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.sample_read_count(sample), default=dthandler))
+        self.write(json.dumps(self.sample_read_count(sample),
+                              default=dthandler))
 
     def sample_read_count(self, sample):
         rc_view = self.application.samples_db.view("samples/read_counts",
-                                                  reduce=False)
+                                                   reduce=False)
         sample_runs = OrderedDict()
         for row in rc_view[[sample, "", ""]:[sample, "Z", ""]]:
             sample_runs[row.key[1]] = row.value
@@ -622,6 +715,8 @@ class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
 
 
 class ProjectsDataHandler(tornado.web.RequestHandler):
+    """ Serves brief information for each project in the database.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_projects()))
@@ -635,6 +730,8 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
 
 
 class ProjectDataHandler(tornado.web.RequestHandler):
+    """ Serves brief information of a given project.
+    """
     def get(self, project):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.project_info(project)))
@@ -646,13 +743,15 @@ class ProjectDataHandler(tornado.web.RequestHandler):
 
 
 class FlowcellsDataHandler(tornado.web.RequestHandler):
+    """ Serves brief information for each flowcell in the database.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_flowcells()))
 
     def list_flowcells(self):
         flowcells = OrderedDict()
-        fc_view = self.application.flowcells_db.view("info/summary", \
+        fc_view = self.application.flowcells_db.view("info/summary",
                                                      descending=True)
         for row in fc_view:
             flowcells[row.key] = row.value
@@ -661,12 +760,14 @@ class FlowcellsDataHandler(tornado.web.RequestHandler):
 
 
 class FlowcellsInfoDataHandler(tornado.web.RequestHandler):
+    """ Serves brief information about a given flowcell.
+    """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.flowcell_info(flowcell)))
 
     def flowcell_info(self, flowcell):
-        fc_view = self.application.flowcells_db.view("info/summary", \
+        fc_view = self.application.flowcells_db.view("info/summary",
                                                      descending=True)
         for row in fc_view[flowcell]:
             flowcell_info = row.value
@@ -676,6 +777,8 @@ class FlowcellsInfoDataHandler(tornado.web.RequestHandler):
 
 
 class FlowcellDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of sample runs in a flowcell.
+    """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_sample_runs(flowcell)))
@@ -690,6 +793,8 @@ class FlowcellDataHandler(tornado.web.RequestHandler):
 
 
 class FlowcellQCHandler(tornado.web.RequestHandler):
+    """ Serves QC data for each lane in a given flowcell.
+    """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_sample_runs(flowcell)))
@@ -704,6 +809,8 @@ class FlowcellQCHandler(tornado.web.RequestHandler):
 
 
 class FlowcellDemultiplexHandler(tornado.web.RequestHandler):
+    """ Serves demultiplex yield data for each lane in a given flowcell.
+    """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.lane_stats(flowcell)))
@@ -718,6 +825,9 @@ class FlowcellDemultiplexHandler(tornado.web.RequestHandler):
 
 
 class Q30PlotHandler(tornado.web.RequestHandler):
+    """ Serves a plot of the percentages of bases which are at least Q30 for
+    each flowcell.
+    """
     def get(self):
 
         view = self.application.flowcells_db.view("lanes/gtq30", group_level=2)
@@ -771,12 +881,18 @@ class Q30PlotHandler(tornado.web.RequestHandler):
 
 
 class Q30Handler(tornado.web.RequestHandler):
+    """ Serves a page with a plot of the percentages of bases which are at
+    least Q30 for each flowcell.
+    """
     def get(self):
         t = self.application.loader.load("q30.html")
         self.write(t.generate())
 
 
 class ReadsPerLanePlotHandler(tornado.web.RequestHandler):
+    """ Serves a plot of distribution of lane read production for a provided
+    time interval.
+    """
     def get(self):
         start = self.get_argument("start", "")
         end = self.get_argument("end", "Z")
@@ -828,12 +944,18 @@ class ReadsPerLanePlotHandler(tornado.web.RequestHandler):
 
 
 class ReadsPerLaneHandler(tornado.web.RequestHandler):
+    """ Serves a page with a plot of distribution of lane read production for a provided
+    time interval.
+    """
     def get(self):
         t = self.application.loader.load("reads_per_lane.html")
         self.write(t.generate())
 
 
 class FlowcellQ30Handler(tornado.web.RequestHandler):
+    """ Serves the percentage ofr reads over Q30 for each lane in the given
+    flowcell.
+    """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.lane_q30(flowcell)))
@@ -848,48 +970,68 @@ class FlowcellQ30Handler(tornado.web.RequestHandler):
 
 
 class ProjectsHandler(tornado.web.RequestHandler):
+    """ Serves a page with all projects listed, along with some brief info.
+    """
     def get(self):
         t = self.application.loader.load("projects.html")
         self.write(t.generate())
 
 
 class ExpectedHandler(tornado.web.RequestHandler):
+    """ Serves a page with a boxplots of expected yield compared to matched
+    yields for all runs of top bar codes.
+    """
     def get(self):
         t = self.application.loader.load("barcode_vs_expected.html")
         self.write(t.generate())
 
 
 class ApplicationsHandler(tornado.web.RequestHandler):
+    """ Serves a page with stats about the different applications that have
+    been performed for projects/samples.
+    """
     def get(self):
         t = self.application.loader.load("applications.html")
         self.write(t.generate())
 
 
 class ApplicationHandler(tornado.web.RequestHandler):
+    """ Serves a page that list all the projects which has the application
+    provided as a parameter.
+    """
     def get(self, application):
         t = self.application.loader.load("application.html")
         self.write(t.generate(application=application))
 
 
 class FlowcellsHandler(tornado.web.RequestHandler):
+    """ Serves a page which lists all flowcells with some brief info.
+    """
     def get(self):
         t = self.application.loader.load("flowcells.html")
         self.write(t.generate())
 
 
 class FlowcellHandler(tornado.web.RequestHandler):
+    """ Serves a page which shows information and QC stats for a given
+    flowcell.
+    """
     def get(self, flowcell):
         t = self.application.loader.load("flowcell_samples.html")
         self.write(t.generate(flowcell=flowcell))
 
 
 class AmanitaHandler(tornado.web.RequestHandler):
+    """ Serves a page which displays storage usage over time on Amanita.
+    """
     def get(self):
         t = self.application.loader.load("amanita.html")
         self.write(t.generate())
 
 
 class AmanitaHomeDataHandler(tornado.web.RequestHandler):
+    """ Serves a time series of directory usage in HOME on Amanita.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_usage()))
@@ -897,35 +1039,43 @@ class AmanitaHomeDataHandler(tornado.web.RequestHandler):
     def home_usage(self):
         sizes = []
         for row in self.application.amanita_db.view("sizes/home_total"):
-            sizes.append({"x": int(time.mktime(parser.parse(row.key).timetuple()) * 1000), \
+            obs_time = parser.parse(row.key)
+            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
                           "y": row.value * 1024})
 
         return sizes
 
 
 class AmanitaHomeUserDataHandler(tornado.web.RequestHandler):
+    """ Serves a time series of user HOME directory storage usage on
+    Amanita for a provided user.
+    """
     def get(self, user):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_usage(user)))
 
     def home_usage(self, user):
         sizes = []
-        for row in self.application.amanita_db.view("sizes/home_user", \
-        startkey=[user, "0"], endkey=[user, "a"], group=True):
-            sizes.append({"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000), \
+        view = self.application.amanita_db.view("sizes/home_user", group=True)[[user, "0"], [user, "a"]]
+        for row in view:
+            sizes.append({"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000),
                           "y": row.value * 1024})
 
         return sizes
 
 
 class AmanitaUsersDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of users on Amanita.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_users()))
 
     def home_users(self):
         users = []
-        for row in self.application.amanita_db.view("sizes/home_user", group_level=1):
+        view = self.application.amanita_db.view("sizes/home_user",
+                                                group_level=1)
+        for row in view:
             if "/" not in row.key[0]:
                 users.append(row.key[0])
 
@@ -933,6 +1083,8 @@ class AmanitaUsersDataHandler(tornado.web.RequestHandler):
 
 
 class AmanitaBox2DataHandler(tornado.web.RequestHandler):
+    """ Serves a time series of storage usage on the box2 storage of Amanita.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_usage()))
@@ -940,37 +1092,44 @@ class AmanitaBox2DataHandler(tornado.web.RequestHandler):
     def home_usage(self):
         sizes = []
         for row in self.application.amanita_db.view("sizes/box2_projects_total"):
-            sizes.append({"x": int(time.mktime(parser.parse(row.key).timetuple()) * 1000), \
+            obs_time = parser.parse(row.key)
+            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
                           "y": row.value * 1024})
 
         return sizes
 
 
 class AmanitaBox2ProjectDataHandler(tornado.web.RequestHandler):
+    """ Serves a time series of storage usage for a specified project on the
+    box2 storage on Amanita.
+    """
     def get(self, project):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.box2_usage(project)))
 
     def box2_usage(self, project):
         sizes = []
-        for row in self.application.amanita_db.view("sizes/box2_projects", \
-        startkey=[project, "0"], endkey=[project, "a"], group=True):
-            sizes.append( \
-            {"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000), \
-             "y": row.value * 1024 \
-            })
+        view = self.application.amanita_db.view("sizes/box2_projects", group=True)
+        for row in view[[project, "0"], [project, "a"]]:
+            obs_time = parser.parse(row.key[1])
+            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
+                          "y": row.value * 1024})
 
         return sizes
 
 
 class AmanitaBox2ProjectsDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of the projects which uses or have used the box2
+    storage on Amanita.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.box2_projects()))
 
     def box2_projects(self):
         proejcts = []
-        for row in self.application.amanita_db.view("sizes/box2_projects", group_level=1):
+        view = self.application.amanita_db.view("sizes/box2_projects", group_level=1)
+        for row in view:
             if "/" not in row.key[0]:
                 proejcts.append(row.key[0])
 
@@ -978,6 +1137,9 @@ class AmanitaBox2ProjectsDataHandler(tornado.web.RequestHandler):
 
 
 class AmanitaHomeProjectsDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of the projects which have used or uses storage in
+    HOME/projects on Amanita.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.box2_projects()))
@@ -992,35 +1154,35 @@ class AmanitaHomeProjectsDataHandler(tornado.web.RequestHandler):
 
 
 class AmanitaHomeProjectDataHandler(tornado.web.RequestHandler):
+    """ Serves a time series of storage usage of a specified project in
+    HOME/projects on Amanita.
+    """
     def get(self, project):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_projects_usage(project)))
 
     def home_projects_usage(self, project):
         sizes = []
-        for row in self.application.amanita_db.view("sizes/home_projects", \
-        startkey=[project, "0"], endkey=[project, "a"], group=True):
-            sizes.append( \
-            {"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000), \
-             "y": row.value * 1024 \
-            })
+        view = self.application.amanita_db.view("sizes/home_projects", group=True)
+        for row in view[[project, "0"], [project, "a"]]:
+            obs_time = parser.parse(row.key[1])
+            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
+                          "y": row.value * 1024})
 
         return sizes
 
 
 class PiceaHandler(tornado.web.RequestHandler):
+    """ Serves a page with time series of storage usage on Picea.
+    """
     def get(self):
         t = self.application.loader.load("picea.html")
         self.write(t.generate())
 
 
-class SampleRunHandler(tornado.web.RequestHandler):
-    def get(self, sample):
-        t = self.application.loader.load("sample_runs.html")
-        self.write(t.generate(sample=sample))
-
-
 class PiceaHomeDataHandler(tornado.web.RequestHandler):
+    """ Serves a time seris for the total storage usage in HOME on Picea.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_usage()))
@@ -1028,42 +1190,59 @@ class PiceaHomeDataHandler(tornado.web.RequestHandler):
     def home_usage(self):
         sizes = []
         for row in self.application.picea_db.view("sizes/home_total"):
-            sizes.append({"x": int(time.mktime(parser.parse(row.key).timetuple()) * 1000), \
+            obs_time = parser.parse(row.key)
+            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
                           "y": row.value * 1024})
 
         return sizes
 
 
 class PiceaHomeUserDataHandler(tornado.web.RequestHandler):
+    """ Serves a time series for the storage used by as user in HOME on Picea.
+    """
     def get(self, user):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_usage(user)))
 
     def home_usage(self, user):
         sizes = []
-        for row in self.application.picea_db.view("sizes/home_user", \
-        startkey=[user, "0"], endkey=[user, "a"], group=True):
-            sizes.append({"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000), \
+        view = self.application.picea_db.view("sizes/home_user", group=True)
+        for row in view[[user, "0"], [user, "a"]]:
+            obs_time = parser.parse(row.key[1])
+            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
                           "y": row.value * 1024})
 
         return sizes
 
 
 class PiceaUsersDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of users on Picea.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_users()))
 
     def home_users(self):
         users = []
-        for row in self.application.picea_db.view("sizes/home_user", group_level=1):
+        view = self.application.picea_db.view("sizes/home_user", group_level=1)
+        for row in view:
             if "/" not in row.key[0]:
                 users.append(row.key[0])
 
         return users
 
 
+class SampleRunHandler(tornado.web.RequestHandler):
+    """ Serves a page of brief statistics and sample runs of a given sample.
+    """
+    def get(self, sample):
+        t = self.application.loader.load("sample_runs.html")
+        self.write(t.generate(sample=sample))
+
+
 class SampleRunDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of sample runs for a given sample.
+    """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.sample_runs(sample)))
@@ -1089,9 +1268,9 @@ class Application(tornado.web.Application):
             ("/api/v1/amanita_home", AmanitaHomeDataHandler),
             ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
             ("/api/v1/amanita_box2", AmanitaBox2DataHandler),
-            ("/api/v1/amanita_box2/projects/", \
+            ("/api/v1/amanita_box2/projects/",
                 AmanitaBox2ProjectsDataHandler),
-            ("/api/v1/amanita_home/projects/([^/]*)$", \
+            ("/api/v1/amanita_home/projects/([^/]*)$",
                 AmanitaHomeProjectDataHandler),
             ("/api/v1/amanita_home/project", AmanitaHomeProjectsDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
@@ -1107,22 +1286,22 @@ class Application(tornado.web.Application):
                 FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
-            ("/api/v1/instrument_cluster_density", \
+            ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
-            ("/api/v1/instrument_cluster_density.png", \
+            ("/api/v1/instrument_cluster_density.png",
                 InstrumentClusterDensityPlotHandler),
             ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
-            ("/api/v1/instrument_error_rates.png", \
+            ("/api/v1/instrument_error_rates.png",
                 InstrumentErrorratePlotHandler),
             ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
-            ("/api/v1/plot/samples_per_lane.png", \
+            ("/api/v1/plot/samples_per_lane.png",
                 UnmatchedVsSamplesPerLanePlotHandler),
             ("/api/v1/plot/reads_per_lane.png", ReadsPerLanePlotHandler),
-            ("/api/v1/plot/barcodes_vs_expected.png", \
+            ("/api/v1/plot/barcodes_vs_expected.png",
                 BarcodeVsExpectedPlotHandler),
             ("/api/v1/picea_home", PiceaHomeDataHandler),
             ("/api/v1/samples_per_lane", UnmatchedVsSamplesPerLaneDataHandler),
@@ -1137,24 +1316,23 @@ class Application(tornado.web.Application):
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/qc", QCDataHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
-            ("/api/v1/quotas", QuotasDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
             ("/api/v1/sample_info/([^/]*)$", SampleInfoDataHandler),
             ("/api/v1/sample_readcount/(\w+)?", SampleReadCountDataHandler),
             ("/api/v1/sample_run_counts/(\w+)?",
                 SampleRunReadCountDataHandler),
-            ("/api/v1/sample_alignment/([^/]*)$", \
+            ("/api/v1/sample_alignment/([^/]*)$",
                 SampleQCAlignmentDataHandler),
             ("/api/v1/sample_coverage/([^/]*)$", SampleQCCoverageDataHandler),
             ("/api/v1/sample_summary/([^/]*)$", SampleQCSummaryDataHandler),
-            ("/api/v1/sample_insert_sizes/([^/]*)$", \
+            ("/api/v1/sample_insert_sizes/([^/]*)$",
                 SampleQCInsertSizesDataHandler),
             ("/api/v1/samples", QCDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/samples_applications", SamplesApplicationsDataHandler),
-            ("/api/v1/samples_applications.png", \
+            ("/api/v1/samples_applications.png",
                 SamplesApplicationsPlotHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),

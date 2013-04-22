@@ -41,7 +41,6 @@ $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
 })
 
 $.getJSON("/api/v1/projects/{{ project }}", function (data) {
-  console.log(data)
   $.each(data, function (sample, info) {
     tbl_row = "<tr>"
 
