@@ -1213,6 +1213,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/expected.html")
         tornado.autoreload.watch("design/flowcell_samples.html")
         tornado.autoreload.watch("design/flowcells.html")
+        tornado.autoreload.watch("design/index.html")
         tornado.autoreload.watch("design/phix_err_rate.html")
         tornado.autoreload.watch("design/production.html")
         tornado.autoreload.watch("design/projects.html")
