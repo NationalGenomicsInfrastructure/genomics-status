@@ -1067,13 +1067,17 @@ class AmanitaHomeUserDataHandler(tornado.web.RequestHandler):
 
 
 class AmanitaUsersDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of users on Amanita.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_users()))
 
     def home_users(self):
         users = []
-        for row in self.application.amanita_db.view("sizes/home_user", group_level=1):
+        view = self.application.amanita_db.view("sizes/home_user",
+                                                group_level=1)
+        for row in view:
             if "/" not in row.key[0]:
                 users.append(row.key[0])
 
@@ -1081,6 +1085,8 @@ class AmanitaUsersDataHandler(tornado.web.RequestHandler):
 
 
 class AmanitaBox2DataHandler(tornado.web.RequestHandler):
+    """ Serves a time series of storage usage on the box2 storage of Amanita.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_usage()))
@@ -1088,37 +1094,44 @@ class AmanitaBox2DataHandler(tornado.web.RequestHandler):
     def home_usage(self):
         sizes = []
         for row in self.application.amanita_db.view("sizes/box2_projects_total"):
-            sizes.append({"x": int(time.mktime(parser.parse(row.key).timetuple()) * 1000), \
+            obs_time = parser.parse(row.key)
+            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
                           "y": row.value * 1024})
 
         return sizes
 
 
 class AmanitaBox2ProjectDataHandler(tornado.web.RequestHandler):
+    """ Serves a time series of storage usage for a specified project on the
+    box2 storage on Amanita.
+    """
     def get(self, project):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.box2_usage(project)))
 
     def box2_usage(self, project):
         sizes = []
-        for row in self.application.amanita_db.view("sizes/box2_projects", \
-        startkey=[project, "0"], endkey=[project, "a"], group=True):
-            sizes.append( \
-            {"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000), \
-             "y": row.value * 1024 \
-            })
+        view = self.application.amanita_db.view("sizes/box2_projects", group=True)
+        for row in view[[project, "0"], [project, "a"]]:
+            obs_time = parser.parse(row.key[1])
+            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
+                          "y": row.value * 1024})
 
         return sizes
 
 
 class AmanitaBox2ProjectsDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of the projects which uses or have used the box2
+    storage on Amanita.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.box2_projects()))
 
     def box2_projects(self):
         proejcts = []
-        for row in self.application.amanita_db.view("sizes/box2_projects", group_level=1):
+        view = self.application.amanita_db.view("sizes/box2_projects", group_level=1)
+        for row in view:
             if "/" not in row.key[0]:
                 proejcts.append(row.key[0])
 
@@ -1126,6 +1139,9 @@ class AmanitaBox2ProjectsDataHandler(tornado.web.RequestHandler):
 
 
 class AmanitaHomeProjectsDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of the projects which have used or uses storage in
+    HOME/projects on Amanita.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.box2_projects()))
@@ -1140,35 +1156,35 @@ class AmanitaHomeProjectsDataHandler(tornado.web.RequestHandler):
 
 
 class AmanitaHomeProjectDataHandler(tornado.web.RequestHandler):
+    """ Serves a time series of storage usage of a specified project in
+    HOME/projects on Amanita.
+    """
     def get(self, project):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_projects_usage(project)))
 
     def home_projects_usage(self, project):
         sizes = []
-        for row in self.application.amanita_db.view("sizes/home_projects", \
-        startkey=[project, "0"], endkey=[project, "a"], group=True):
-            sizes.append( \
-            {"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000), \
-             "y": row.value * 1024 \
-            })
+        view = self.application.amanita_db.view("sizes/home_projects", group=True)
+        for row in view[[project, "0"], [project, "a"]]:
+            obs_time = parser.parse(row.key[1])
+            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
+                          "y": row.value * 1024})
 
         return sizes
 
 
 class PiceaHandler(tornado.web.RequestHandler):
+    """ Serves a page with time series of storage usage on Picea.
+    """
     def get(self):
         t = self.application.loader.load("picea.html")
         self.write(t.generate())
 
 
-class SampleRunHandler(tornado.web.RequestHandler):
-    def get(self, sample):
-        t = self.application.loader.load("sample_runs.html")
-        self.write(t.generate(sample=sample))
-
-
 class PiceaHomeDataHandler(tornado.web.RequestHandler):
+    """ Serves a time seris for the total storage usage in HOME on Picea.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_usage()))
@@ -1176,42 +1192,59 @@ class PiceaHomeDataHandler(tornado.web.RequestHandler):
     def home_usage(self):
         sizes = []
         for row in self.application.picea_db.view("sizes/home_total"):
-            sizes.append({"x": int(time.mktime(parser.parse(row.key).timetuple()) * 1000), \
+            obs_time = parser.parse(row.key)
+            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
                           "y": row.value * 1024})
 
         return sizes
 
 
 class PiceaHomeUserDataHandler(tornado.web.RequestHandler):
+    """ Serves a time series for the storage used by as user in HOME on Picea.
+    """
     def get(self, user):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_usage(user)))
 
     def home_usage(self, user):
         sizes = []
-        for row in self.application.picea_db.view("sizes/home_user", \
-        startkey=[user, "0"], endkey=[user, "a"], group=True):
-            sizes.append({"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000), \
+        view = self.application.picea_db.view("sizes/home_user", group=True)
+        for row in view[[user, "0"], [user, "a"]]:
+            obs_time = parser.parse(row.key[1])
+            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
                           "y": row.value * 1024})
 
         return sizes
 
 
 class PiceaUsersDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of users on Picea.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_users()))
 
     def home_users(self):
         users = []
-        for row in self.application.picea_db.view("sizes/home_user", group_level=1):
+        view = self.application.picea_db.view("sizes/home_user", group_level=1)
+        for row in view:
             if "/" not in row.key[0]:
                 users.append(row.key[0])
 
         return users
 
 
+class SampleRunHandler(tornado.web.RequestHandler):
+    """ Serves a page of brief statistics and sample runs of a given sample.
+    """
+    def get(self, sample):
+        t = self.application.loader.load("sample_runs.html")
+        self.write(t.generate(sample=sample))
+
+
 class SampleRunDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of sample runs for a given sample.
+    """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.sample_runs(sample)))
