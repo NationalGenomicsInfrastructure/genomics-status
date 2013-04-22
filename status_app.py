@@ -3,10 +3,8 @@
 """
 from collections import OrderedDict
 from collections import defaultdict
-from datetime import datetime
 import json
 import time
-import random
 
 from couchdb import Server
 from dateutil import parser
