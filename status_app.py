@@ -698,9 +698,12 @@ class BarcodeVsExpectedPlotHandler(BarcodeVsExpectedDataHandler):
 
 
 class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
+    """ Serves the read counts of a sample, for each run of the sample.
+    """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.sample_read_count(sample), default=dthandler))
+        self.write(json.dumps(self.sample_read_count(sample),
+                              default=dthandler))
 
     def sample_read_count(self, sample):
         rc_view = self.application.samples_db.view("samples/read_counts",
@@ -714,6 +717,8 @@ class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
 
 
 class ProjectsDataHandler(tornado.web.RequestHandler):
+    """ Serves brief information for each project in the database.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_projects()))
@@ -727,6 +732,8 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
 
 
 class ProjectDataHandler(tornado.web.RequestHandler):
+    """ Serves brief information of a given project.
+    """
     def get(self, project):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.project_info(project)))
@@ -738,13 +745,15 @@ class ProjectDataHandler(tornado.web.RequestHandler):
 
 
 class FlowcellsDataHandler(tornado.web.RequestHandler):
+    """ Serves brief information for each flowcell in the database.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_flowcells()))
 
     def list_flowcells(self):
         flowcells = OrderedDict()
-        fc_view = self.application.flowcells_db.view("info/summary", \
+        fc_view = self.application.flowcells_db.view("info/summary",
                                                      descending=True)
         for row in fc_view:
             flowcells[row.key] = row.value
@@ -753,12 +762,14 @@ class FlowcellsDataHandler(tornado.web.RequestHandler):
 
 
 class FlowcellsInfoDataHandler(tornado.web.RequestHandler):
+    """ Serves brief information about a given flowcell.
+    """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.flowcell_info(flowcell)))
 
     def flowcell_info(self, flowcell):
-        fc_view = self.application.flowcells_db.view("info/summary", \
+        fc_view = self.application.flowcells_db.view("info/summary",
                                                      descending=True)
         for row in fc_view[flowcell]:
             flowcell_info = row.value
@@ -768,6 +779,8 @@ class FlowcellsInfoDataHandler(tornado.web.RequestHandler):
 
 
 class FlowcellDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of sample runs in a flowcell.
+    """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_sample_runs(flowcell)))
@@ -782,6 +795,8 @@ class FlowcellDataHandler(tornado.web.RequestHandler):
 
 
 class FlowcellQCHandler(tornado.web.RequestHandler):
+    """ Serves QC data for each lane in a given flowcell.
+    """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_sample_runs(flowcell)))
@@ -796,6 +811,8 @@ class FlowcellQCHandler(tornado.web.RequestHandler):
 
 
 class FlowcellDemultiplexHandler(tornado.web.RequestHandler):
+    """ Serves demultiplex yield data for each lane in a given flowcell.
+    """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.lane_stats(flowcell)))
@@ -810,6 +827,9 @@ class FlowcellDemultiplexHandler(tornado.web.RequestHandler):
 
 
 class Q30PlotHandler(tornado.web.RequestHandler):
+    """ Serves a plot of the percentages of bases which are at least Q30 for
+    each flowcell.
+    """
     def get(self):
 
         view = self.application.flowcells_db.view("lanes/gtq30", group_level=2)
@@ -863,12 +883,18 @@ class Q30PlotHandler(tornado.web.RequestHandler):
 
 
 class Q30Handler(tornado.web.RequestHandler):
+    """ Serves a page with a plot of the percentages of bases which are at
+    least Q30 for each flowcell.
+    """
     def get(self):
         t = self.application.loader.load("q30.html")
         self.write(t.generate())
 
 
 class ReadsPerLanePlotHandler(tornado.web.RequestHandler):
+    """ Serves a plot of distribution of lane read production for a provided
+    time interval.
+    """
     def get(self):
         start = self.get_argument("start", "")
         end = self.get_argument("end", "Z")
@@ -920,12 +946,18 @@ class ReadsPerLanePlotHandler(tornado.web.RequestHandler):
 
 
 class ReadsPerLaneHandler(tornado.web.RequestHandler):
+    """ Serves a page with a plot of distribution of lane read production for a provided
+    time interval.
+    """
     def get(self):
         t = self.application.loader.load("reads_per_lane.html")
         self.write(t.generate())
 
 
 class FlowcellQ30Handler(tornado.web.RequestHandler):
+    """ Serves the percentage ofr reads over Q30 for each lane in the given
+    flowcell.
+    """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.lane_q30(flowcell)))
@@ -940,48 +972,68 @@ class FlowcellQ30Handler(tornado.web.RequestHandler):
 
 
 class ProjectsHandler(tornado.web.RequestHandler):
+    """ Serves a page with all projects listed, along with some brief info.
+    """
     def get(self):
         t = self.application.loader.load("projects.html")
         self.write(t.generate())
 
 
 class ExpectedHandler(tornado.web.RequestHandler):
+    """ Serves a page with a boxplots of expected yield compared to matched
+    yields for all runs of top bar codes.
+    """
     def get(self):
         t = self.application.loader.load("barcode_vs_expected.html")
         self.write(t.generate())
 
 
 class ApplicationsHandler(tornado.web.RequestHandler):
+    """ Serves a page with stats about the different applications that have
+    been performed for projects/samples.
+    """
     def get(self):
         t = self.application.loader.load("applications.html")
         self.write(t.generate())
 
 
 class ApplicationHandler(tornado.web.RequestHandler):
+    """ Serves a page that list all the projects which has the application
+    provided as a parameter.
+    """
     def get(self, application):
         t = self.application.loader.load("application.html")
         self.write(t.generate(application=application))
 
 
 class FlowcellsHandler(tornado.web.RequestHandler):
+    """ Serves a page which lists all flowcells with some brief info.
+    """
     def get(self):
         t = self.application.loader.load("flowcells.html")
         self.write(t.generate())
 
 
 class FlowcellHandler(tornado.web.RequestHandler):
+    """ Serves a page which shows information and QC stats for a given
+    flowcell.
+    """
     def get(self, flowcell):
         t = self.application.loader.load("flowcell_samples.html")
         self.write(t.generate(flowcell=flowcell))
 
 
 class AmanitaHandler(tornado.web.RequestHandler):
+    """ Serves a page which displays storage usage over time on Amanita.
+    """
     def get(self):
         t = self.application.loader.load("amanita.html")
         self.write(t.generate())
 
 
 class AmanitaHomeDataHandler(tornado.web.RequestHandler):
+    """ Serves a time series of directory usage in HOME on Amanita.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_usage()))
@@ -989,22 +1041,26 @@ class AmanitaHomeDataHandler(tornado.web.RequestHandler):
     def home_usage(self):
         sizes = []
         for row in self.application.amanita_db.view("sizes/home_total"):
-            sizes.append({"x": int(time.mktime(parser.parse(row.key).timetuple()) * 1000), \
+            obs_time = parser.parse(row.key)
+            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
                           "y": row.value * 1024})
 
         return sizes
 
 
 class AmanitaHomeUserDataHandler(tornado.web.RequestHandler):
+    """ Serves a time series of user HOME directory storage usage on
+    Amanita for a provided user.
+    """
     def get(self, user):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.home_usage(user)))
 
     def home_usage(self, user):
         sizes = []
-        for row in self.application.amanita_db.view("sizes/home_user", \
-        startkey=[user, "0"], endkey=[user, "a"], group=True):
-            sizes.append({"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000), \
+        view = self.application.amanita_db.view("sizes/home_user", group=True)[[user, "0"], [user, "a"]]
+        for row in view:
+            sizes.append({"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000),
                           "y": row.value * 1024})
 
         return sizes
@@ -1181,9 +1237,9 @@ class Application(tornado.web.Application):
             ("/api/v1/amanita_home", AmanitaHomeDataHandler),
             ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
             ("/api/v1/amanita_box2", AmanitaBox2DataHandler),
-            ("/api/v1/amanita_box2/projects/", \
+            ("/api/v1/amanita_box2/projects/",
                 AmanitaBox2ProjectsDataHandler),
-            ("/api/v1/amanita_home/projects/([^/]*)$", \
+            ("/api/v1/amanita_home/projects/([^/]*)$",
                 AmanitaHomeProjectDataHandler),
             ("/api/v1/amanita_home/project", AmanitaHomeProjectsDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
@@ -1199,22 +1255,22 @@ class Application(tornado.web.Application):
                 FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
-            ("/api/v1/instrument_cluster_density", \
+            ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
-            ("/api/v1/instrument_cluster_density.png", \
+            ("/api/v1/instrument_cluster_density.png",
                 InstrumentClusterDensityPlotHandler),
             ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
-            ("/api/v1/instrument_error_rates.png", \
+            ("/api/v1/instrument_error_rates.png",
                 InstrumentErrorratePlotHandler),
             ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
-            ("/api/v1/plot/samples_per_lane.png", \
+            ("/api/v1/plot/samples_per_lane.png",
                 UnmatchedVsSamplesPerLanePlotHandler),
             ("/api/v1/plot/reads_per_lane.png", ReadsPerLanePlotHandler),
-            ("/api/v1/plot/barcodes_vs_expected.png", \
+            ("/api/v1/plot/barcodes_vs_expected.png",
                 BarcodeVsExpectedPlotHandler),
             ("/api/v1/picea_home", PiceaHomeDataHandler),
             ("/api/v1/samples_per_lane", UnmatchedVsSamplesPerLaneDataHandler),
@@ -1229,24 +1285,23 @@ class Application(tornado.web.Application):
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/qc", QCDataHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
-            ("/api/v1/quotas", QuotasDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
             ("/api/v1/sample_info/([^/]*)$", SampleInfoDataHandler),
             ("/api/v1/sample_readcount/(\w+)?", SampleReadCountDataHandler),
             ("/api/v1/sample_run_counts/(\w+)?",
                 SampleRunReadCountDataHandler),
-            ("/api/v1/sample_alignment/([^/]*)$", \
+            ("/api/v1/sample_alignment/([^/]*)$",
                 SampleQCAlignmentDataHandler),
             ("/api/v1/sample_coverage/([^/]*)$", SampleQCCoverageDataHandler),
             ("/api/v1/sample_summary/([^/]*)$", SampleQCSummaryDataHandler),
-            ("/api/v1/sample_insert_sizes/([^/]*)$", \
+            ("/api/v1/sample_insert_sizes/([^/]*)$",
                 SampleQCInsertSizesDataHandler),
             ("/api/v1/samples", QCDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/samples_applications", SamplesApplicationsDataHandler),
-            ("/api/v1/samples_applications.png", \
+            ("/api/v1/samples_applications.png",
                 SamplesApplicationsPlotHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
