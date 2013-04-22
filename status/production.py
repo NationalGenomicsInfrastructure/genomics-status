@@ -4,7 +4,6 @@ from collections import OrderedDict
 import cStringIO
 from datetime import datetime
 import json
-import random
 
 from dateutil import parser
 import matplotlib.pyplot as plt
@@ -23,7 +22,7 @@ class DeliveredMonthlyDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.delivered(), default=dthandler))
 
     def delivered(self):
-        view = self.application.projects_db.view("date/m_bp_delivered", \
+        view = self.application.projects_db.view("date/m_bp_delivered",
                                                  group_level=3)
 
         delivered = OrderedDict()
@@ -46,7 +45,6 @@ class DeliveredMonthlyPlotHandler(DeliveredMonthlyDataHandler):
 
         dates = [parser.parse(d) for d in delivered.keys()]
         values = delivered.values()
-        months = [d.month for d in dates]
 
         ax.bar(dates, values, width=10)
 
@@ -74,7 +72,7 @@ class DeliveredQuarterlyDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.delivered(), default=dthandler))
 
     def delivered(self):
-        view = self.application.projects_db.view("date/m_bp_delivered", \
+        view = self.application.projects_db.view("date/m_bp_delivered",
                                                  group_level=2)
 
         delivered = OrderedDict()
@@ -97,7 +95,6 @@ class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
 
         dates = [parser.parse(d) for d in delivered.keys()]
         values = delivered.values()
-        months = [d.month for d in dates]
 
         ax.bar(dates, values)
 
@@ -118,13 +115,15 @@ class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
 
 
 class ProducedMonthlyDataHandler(tornado.web.RequestHandler):
+    """ Serves the amount of data produced per month.
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.bpcounts(), default=dthandler))
 
     def bpcounts(self):
-        view = self.application.samples_db.view("barcodes/date_read_counts", \
-            group_level=3)
+        view = self.application.samples_db.view("barcodes/date_read_counts",
+                                                group_level=3)
 
         produced = OrderedDict()
         for row in view[[12, 1, 1, 1]:]:
@@ -136,6 +135,8 @@ class ProducedMonthlyDataHandler(tornado.web.RequestHandler):
 
 
 class ProducedMonthlyPlotHandler(ProducedMonthlyDataHandler):
+    """ Serves a plot of amount of data produced per month.
+    """
     def get(self):
         produced = self.bpcounts()
 
@@ -144,7 +145,6 @@ class ProducedMonthlyPlotHandler(ProducedMonthlyDataHandler):
 
         dates = [parser.parse(d) for d in produced.keys()]
         values = produced.values()
-        months = [d.month for d in dates]
 
         ax.bar(dates, values, width=10)
 
@@ -172,11 +172,11 @@ class ProducedQuarterlyDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.produced(), default=dthandler))
 
     def produced(self):
-        view = self.application.samples_db.view("barcodes/date_read_counts", \
-                                                 group_level=2)
+        view = self.application.samples_db.view("barcodes/date_read_counts",
+                                                group_level=2)
 
         produced = OrderedDict()
-        for row in view[[12,1,1,1]:]:
+        for row in view[[12, 1, 1, 1]:]:
             y = int("20" + str(row.key[0]))
             q = row.key[1]
             produced[dthandler(datetime(y, (q - 1) * 3 + 1, 1))] = int(row.value * 1e6)
