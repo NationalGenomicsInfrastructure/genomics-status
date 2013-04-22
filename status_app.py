@@ -51,7 +51,7 @@ from status.util import dthandler
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        t = self.application.loader.load("base.html")
+        t = self.application.loader.load("index.html")
         self.write(t.generate())
 
 
