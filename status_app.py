@@ -1369,19 +1369,17 @@ class Application(tornado.web.Application):
         # Global connection to the log database
         couch = Server(settings.get("couch_server", None))
         if couch:
-            self.illumina_db  = couch["illumina_logs"]
-            self.uppmax_db    = couch["uppmax"]
-            self.samples_db   = couch["samples"]
-            self.projects_db  = couch["projects"]
+            self.illumina_db = couch["illumina_logs"]
+            self.uppmax_db = couch["uppmax"]
+            self.samples_db = couch["samples"]
+            self.projects_db = couch["projects"]
             self.flowcells_db = couch["flowcells"]
-            self.amanita_db   = couch["amanita"]
-            self.picea_db     = couch["picea"]
+            self.amanita_db = couch["amanita"]
+            self.picea_db = couch["picea"]
 
         # Setup the Tornado Application
-        settings = {
-        "debug": True,
-        "static_path": "static"
-        }
+        settings = {"debug": True,
+                    "static_path": "static"}
 
         tornado.autoreload.watch("design/amanita.html")
         tornado.autoreload.watch("design/application.html")
