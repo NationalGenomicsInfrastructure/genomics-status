@@ -146,6 +146,54 @@ class UppmaxProjectsDataHandler(tornado.web.RequestHandler):
         return project_list
 
 
+class UpdatedDocumentsDatahandler(tornado.web.RequestHandler):
+    """ Serves a list of references to the last updated documents in the
+    databases Status gets data from.
+
+    Specify to get the <n> latest items by ?items=<n>.
+    """
+    def get(self):
+        num_items = int(self.get_argument("items", 25))
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_updated(num_items)))
+
+    def list_updated(self, num_items=25):
+        last = []
+
+        view = self.application.uppmax_db.view("time/last_updated",
+                                               limit=num_items, descending=True)
+        for doc in view:
+            last.append((doc.key, doc.value, 'UPPNEX Quota usage'))
+
+        view = self.application.samples_db.view("time/last_updated",
+                                                limit=num_items, descending=True)
+        for doc in view:
+            last.append((doc.key, doc.value, 'Sample information'))
+
+        view = self.application.projects_db.view("time/last_updated",
+                                                 limit=num_items, descending=True)
+        for doc in view:
+            last.append((doc.key, doc.value, 'Project information'))
+
+        view = self.application.flowcells_db.view("time/last_updated",
+                                                  limit=num_items, descending=True)
+        for doc in view:
+            last.append((doc.key, doc.value, 'Flowcell information'))
+
+        view = self.application.amanita_db.view("sizes/home_total",
+                                                limit=num_items, descending=True)
+        for doc in view:
+            last.append((doc.key, doc.value, 'Amanita storage usage'))
+
+        view = self.application.picea_db.view("sizes/home_total",
+                                              limit=num_items, descending=True)
+        for doc in view:
+            last.append((doc.key, doc.value, 'Picea storage usage'))
+
+        last = sorted(last, key=lambda tr: tr[0], reverse=True)
+        return last[:num_items]
+
+
 class QCDataHandler(tornado.web.RequestHandler):
     """ Serves a list of all names of samples per samplename run.
     """
@@ -1297,6 +1345,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
+            ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
             ("/api/v1/plot/samples_per_lane.png",
                 UnmatchedVsSamplesPerLanePlotHandler),
@@ -1408,6 +1457,8 @@ class Application(tornado.web.Application):
 
 
 def main():
+    """ Initialte server and start IOLoop.
+    """
     with open("settings.yaml") as settings_file:
         server_settings = yaml.load(settings_file)
 
