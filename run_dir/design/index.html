@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block stuff %}
+<div class="container-fluid">
+
 <h1 id="scilifelabgenomics-status">SciLifeLab Genomics - Status</h1>
+
+<br>
 
 <p>In various stages of data production in the genomics platform metadata about this data
 is created, and stored in a database (known as StatusDB). This service provides an
@@ -26,5 +30,34 @@ are earlier data.</p>
 <p>For general information about Status, or feature requests, contact Valentine Svensson.</p>
 
 <p>Code for Status can be seen on <a href="https://github.com/scilifelab/status">Github</a>.</p>
+
+<h2>Latest updated data</h2>
+
+<table class="table table-striped" id="project_table">
+<thead>
+  <tr>
+    <th>Type</th>
+    <th>Data</th>
+    <th>Update Time</th>
+  </tr>
+</thead>
+<tbody></tbody>
+</table>
+
+</div>
+
+<script>
+$.getJSON("/api/v1/last_updated?items=15", function(data) {
+  var tbl_body = "";
+  $.each(data, function(k1, summary) {
+    tbl_row = '<tr>'
+    tbl_row += '<td>' + summary[2] + '</td>'
+    tbl_row += '<td>' + summary[1] + '</td>'
+    tbl_row += '<td>' + summary[0] + '</td>'
+    tbl_row += '</tr>'
+    $("#project_table").append(tbl_row)
+  })
+})
+</script>
 
 {% end %}

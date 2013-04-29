@@ -158,37 +158,35 @@ class UpdatedDocumentsDatahandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.list_updated(num_items)))
 
     def list_updated(self, num_items=25):
-            # self.uppmax_db = couch["uppmax"]
-            # self.samples_db = couch["samples"]
-            # self.projects_db = couch["projects"]
-            # self.flowcells_db = couch["flowcells"]
-
-            # self.amanita_db = couch["amanita"]
-            # self.picea_db = couch["picea"]
-
         last = []
 
-        view = self.application.uppmax_db.view("time/last_updated", limit=num_items, descending=True)
+        view = self.application.uppmax_db.view("time/last_updated",
+                                               limit=num_items, descending=True)
         for doc in view:
             last.append((doc.key, doc.value, 'UPPNEX Quota usage'))
 
-        view = self.application.samples_db.view("time/last_updated", limit=num_items, descending=True)
+        view = self.application.samples_db.view("time/last_updated",
+                                                limit=num_items, descending=True)
         for doc in view:
             last.append((doc.key, doc.value, 'Sample information'))
 
-        view = self.application.projects_db.view("time/last_updated", limit=num_items, descending=True)
+        view = self.application.projects_db.view("time/last_updated",
+                                                 limit=num_items, descending=True)
         for doc in view:
             last.append((doc.key, doc.value, 'Project information'))
 
-        view = self.application.flowcells_db.view("time/last_updated", limit=num_items, descending=True)
+        view = self.application.flowcells_db.view("time/last_updated",
+                                                  limit=num_items, descending=True)
         for doc in view:
             last.append((doc.key, doc.value, 'Flowcell information'))
 
-        view = self.application.amanita_db.view("sizes/home_total", limit=num_items, descending=True)
+        view = self.application.amanita_db.view("sizes/home_total",
+                                                limit=num_items, descending=True)
         for doc in view:
-            last.append((doc.key, doc.value, 'Amanaita storage usage'))
+            last.append((doc.key, doc.value, 'Amanita storage usage'))
 
-        view = self.application.picea_db.view("sizes/home_total", limit=num_items, descending=True)
+        view = self.application.picea_db.view("sizes/home_total",
+                                              limit=num_items, descending=True)
         for doc in view:
             last.append((doc.key, doc.value, 'Picea storage usage'))
 
