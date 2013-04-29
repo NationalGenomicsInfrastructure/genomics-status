@@ -194,22 +194,6 @@ class UpdatedDocumentsDatahandler(tornado.web.RequestHandler):
         return last[:num_items]
 
 
-class QCDataHandler(tornado.web.RequestHandler):
-    """ Serves a list of all names of samples per samplename run.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_samples()))
-
-    def list_samples(self):
-        sample_list = []
-        view = self.application.samples_db.view("names/samplename_run", group_level=1)
-        for row in view:
-            sample_list.append(row.key)
-
-        return sample_list
-
-
 class ApplicationDataHandler(tornado.web.RequestHandler):
     """ Serves a list of projects which have the application provided as
     an argument.
@@ -358,14 +342,6 @@ class PagedQCDataHandler(tornado.web.RequestHandler):
             sample_list.append(row.key)
 
         return sample_list
-
-
-class QCHandler(tornado.web.RequestHandler):
-    """ Serves a page with all samples listed.
-    """
-    def get(self):
-        t = self.application.loader.load("samples.html")
-        self.write(t.generate())
 
 
 class SampleQCSummaryDataHandler(tornado.web.RequestHandler):
@@ -1363,7 +1339,6 @@ class Application(tornado.web.Application):
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
-            ("/api/v1/qc", QCDataHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
@@ -1377,7 +1352,6 @@ class Application(tornado.web.Application):
             ("/api/v1/sample_summary/([^/]*)$", SampleQCSummaryDataHandler),
             ("/api/v1/sample_insert_sizes/([^/]*)$",
                 SampleQCInsertSizesDataHandler),
-            ("/api/v1/samples", QCDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/samples_applications", SamplesApplicationsDataHandler),
@@ -1394,7 +1368,6 @@ class Application(tornado.web.Application):
             ("/flowcells/([^/]*)$", FlowcellHandler),
             ("/q30", Q30Handler),
             ("/picea", PiceaHandler),
-            ("/qc", QCHandler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             ("/quotas", QuotasHandler),
             ("/quotas/(\w+)?", QuotaHandler),
@@ -1404,7 +1377,6 @@ class Application(tornado.web.Application):
             ("/projects/([^/]*)$", ProjectSamplesHandler),
             ("/reads_vs_qv", ReadsVsQvhandler),
             ("/reads_per_lane", ReadsPerLaneHandler),
-            ("/samples", QCHandler),
             ("/samples_per_lane", UnmatchedVsSamplesPerLaneHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/sequencing", SequencingStatsHandler)
