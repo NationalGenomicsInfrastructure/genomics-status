@@ -53,7 +53,7 @@ $.getJSON("/api/v1/last_updated?items=15", function(data) {
     tbl_row = '<tr>'
     tbl_row += '<td>' + summary[2] + '</td>'
     tbl_row += '<td>' + summary[1] + '</td>'
-    tbl_row += '<td>' + summary[0] + '</td>'
+    tbl_row += '<td>' + new Date(Date.parse(summary[0])) + '</td>'
     tbl_row += '</tr>'
     $("#project_table").append(tbl_row)
   })
