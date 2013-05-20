@@ -49,8 +49,8 @@ $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
   tbody += '<th>Application</th><td>' + data["application"] + '</td>'
   tbody += '<th>Number of samples</th><td>' + data["no_samples"] + '</td>'
   tbody += '</tr><tr>'
-  ordered_reads = data["ordered_reads"].toFixed(2)
-  tbody += '<th>Min M reads per sample</th><td>' + ordered_reads + '</td>'
+  ordered_reads = parseFloat(data["ordered_reads"])
+  tbody += '<th>Min M reads per sample</th><td>' + ordered_reads.toFixed(2) + '</td>'
   tbody += '<th>Progress</th><td>' + data["passed_samples"] + ' /  ' +
   data["no_samples"] + ' samples finished</td>'
   tbody += '</tr>'
@@ -85,10 +85,10 @@ $.getJSON("/api/v1/projects/{{ project }}", function (data) {
     }
     tbl_row += '</td>'
 
-    m_reads_sequenced = parseFloat(info["m_reads_sequenced"]).toFixed(2)
+    m_reads_sequenced = parseFloat(info["m_reads_sequenced"])
 
-    tbl_row += '<td>' + m_reads_sequenced
-    if (m_reads_sequenced >= ordered_reads) {
+    tbl_row += '<td>' + m_reads_sequenced.toFixed(2)
+    if (m_reads_sequenced >= parseFloat(ordered_reads)) {
       tbl_row += ' <i class="icon-ok"></i>'
     }
     tbl_row += '</td>'
