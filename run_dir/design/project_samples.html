@@ -29,6 +29,7 @@
       <tr>
         <th>SciLife Sample Name</th>
         <th>Sample runs</th>
+        <th>Library preps</th>
         <th>Million reads sequenced</th>
         <th>Incoming QC Status</th>
         <th>Status</th>
@@ -47,7 +48,7 @@ $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
   tbody += '<th>Number of samples</th><td>' + data["no_samples"] + '</td>'
   tbody += '</tr><tr>'
   tbody += '<th>Min M reads per sample</th><td>' + data["ordered_reads"] 
-  + '</td>'
+         + '</td>'
   tbody += '<th>Progress</th><td>' + data["passed_samples"] + ' /  ' +
   data["no_samples"] + ' samples finished</td>'
   tbody += '</tr>'
@@ -70,6 +71,14 @@ $.getJSON("/api/v1/projects/{{ project }}", function (data) {
             tbl_row += '<a href="/qc/' + run + '">' + run + '</a><br>'
           })
         }
+      })
+    }
+    tbl_row += '</td>'
+
+    tbl_row += '<td>'
+    if (info["library_prep"]) {
+      $.each(info["library_prep"], function(lib_prep, content) {
+        tbl_row += lib_prep + ' '
       })
     }
     tbl_row += '</td>'
