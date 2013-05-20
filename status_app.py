@@ -36,6 +36,12 @@ from status.production import ProducedMonthlyPlotHandler
 from status.production import ProducedQuarterlyDataHandler
 from status.production import ProducedQuarterlyPlotHandler
 
+from status.projects import ProjectDataHandler
+from status.projects import ProjectsDataHandler
+from status.projects import ProjectSamplesDataHandler
+from status.projects import ProjectSamplesHandler
+from status.projects import ProjectsHandler
+
 from status.sequencing import InstrumentClusterDensityDataHandler
 from status.sequencing import InstrumentClusterDensityPlotHandler
 from status.sequencing import InstrumentErrorrateDataHandler
@@ -370,20 +376,6 @@ class SampleQCDataHandler(tornado.web.RequestHandler):
         return result.rows[0].value
 
 
-class ProjectSamplesDataHandler(tornado.web.RequestHandler):
-    """ Serves brief info about all samples in a given project.
-    """
-    def get(self, project):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.sample_list(project), default=dthandler))
-
-    def sample_list(self, project):
-        sample_view = self.application.projects_db.view("project/samples")
-        result = sample_view[project]
-
-        return result.rows[0].value
-
-
 class SampleQCSummaryHandler(tornado.web.RequestHandler):
     """ Serves a page which displays QC data with tables and plots for a
     given sample run.
@@ -391,15 +383,6 @@ class SampleQCSummaryHandler(tornado.web.RequestHandler):
     def get(self, sample):
         t = self.application.loader.load("sample_run_qc.html")
         self.write(t.generate(sample=sample))
-
-
-class ProjectSamplesHandler(tornado.web.RequestHandler):
-    """ Serves a page which lists the samples of a given project, with some
-    brief information for each sample.
-    """
-    def get(self, project):
-        t = self.application.loader.load("project_samples.html")
-        self.write(t.generate(project=project))
 
 
 class SampleQCAlignmentDataHandler(tornado.web.RequestHandler):
@@ -738,34 +721,6 @@ class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
         return sample_runs
 
 
-class ProjectsDataHandler(tornado.web.RequestHandler):
-    """ Serves brief information for each project in the database.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_projects()))
-
-    def list_projects(self):
-        projects = OrderedDict()
-        for row in self.application.projects_db.view("project/summary"):
-            projects[row.key] = row.value
-
-        return projects
-
-
-class ProjectDataHandler(tornado.web.RequestHandler):
-    """ Serves brief information of a given project.
-    """
-    def get(self, project):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.project_info(project)))
-
-    def project_info(self, project):
-        result = self.application.projects_db.view("project/summary")[project]
-
-        return result.rows[0].value
-
-
 class FlowcellsDataHandler(tornado.web.RequestHandler):
     """ Serves brief information for each flowcell in the database.
     """
@@ -991,14 +946,6 @@ class FlowcellQ30Handler(tornado.web.RequestHandler):
             lane_q30[row.key[1]] = row.value["sum"] / row.value["count"]
 
         return lane_q30
-
-
-class ProjectsHandler(tornado.web.RequestHandler):
-    """ Serves a page with all projects listed, along with some brief info.
-    """
-    def get(self):
-        t = self.application.loader.load("projects.html")
-        self.write(t.generate())
 
 
 class ExpectedHandler(tornado.web.RequestHandler):
