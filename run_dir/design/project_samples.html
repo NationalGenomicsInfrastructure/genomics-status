@@ -30,6 +30,7 @@
         <th>SciLife Sample Name</th>
         <th>Sample runs</th>
         <th>Million reads sequenced</th>
+        <th>Incoming QC Status</th>
         <th>Status</th>
       </tr>
     </thead>
@@ -74,6 +75,8 @@ $.getJSON("/api/v1/projects/{{ project }}", function (data) {
     tbl_row += '</td>'
 
     tbl_row += '<td>' + info["m_reads_sequenced"] + '</td>'
+
+    tbl_row += '<td>' + info["incoming_QC_status"] + '</td>'
 
     tbl_row += '<td>' + info["status"] + '</td>'
 
