@@ -4,7 +4,8 @@
 {% block stuff %}
 
 <div class="container-fluid" id="sample_list">
-  <h2>{{ project }}</h2><br>
+  <h2>{{ project }}</h2>
+  <h3 id="project_name"></h3><br>
   <table class="table table-bordered" id="project_info">
     <tbody></tbody>
   </table>
@@ -36,8 +37,8 @@ $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
   data["no_samples"] + ' samples finished</td>'
   tbody += '</tr>'
 
-
   $("#project_info tbody").html(tbody)
+  $("#project_name").html(data["project_name"])
 })
 
 $.getJSON("/api/v1/projects/{{ project }}", function (data) {
