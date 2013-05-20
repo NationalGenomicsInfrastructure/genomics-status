@@ -5,7 +5,7 @@
 
 <div class="container-fluid">
   <h2>Projects</h2><br>
-  <table class="table table-striped" id="project_table">
+  <table class="table" id="project_table">
     <thead>
       <tr>
         <th>Project</th>
@@ -22,7 +22,13 @@
 $.getJSON("/api/v1/projects", function(data) {
   var tbl_body = "";
   $.each(data, function(k1, summary) {
-    tbl_row = '<tr>'
+    if(summary["passed_samples"] > summary["no_samples"]){
+      tbl_row = '<tr style="background-color: #FDC086;">'
+    }
+    else{
+      tbl_row = '<tr>'
+    }
+
     tbl_row += '<td><a href="/projects/' + k1 + '">'
     tbl_row += k1 + '</td>'
     tbl_row += '<td>' + summary["application"] + '</td>'
@@ -30,6 +36,7 @@ $.getJSON("/api/v1/projects", function(data) {
     tbl_row += '<td>' + summary["passed_samples"] + " / " 
     + summary["no_samples"] + ' samples finished</td>'
     tbl_row += '</tr>'
+
     $("#project_table").append(tbl_row)
   })
 })
