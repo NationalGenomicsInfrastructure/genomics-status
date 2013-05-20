@@ -47,7 +47,9 @@ class ProjectSamplesDataHandler(tornado.web.RequestHandler):
         sample_view = self.application.projects_db.view("project/samples")
         result = sample_view[project]
 
-        return result.rows[0].value
+        samples = result.rows[0].value
+        samples = OrderedDict(sorted(samples.iteritems(), key=lambda x: x[0]))
+        return samples
 
 
 class ProjectSamplesHandler(tornado.web.RequestHandler):
