@@ -50,9 +50,11 @@ $.getJSON("/api/v1/projects/{{ project }}", function (data) {
     tbl_row += '<td>'
     if (info["library_prep"]) {
       $.each(info["library_prep"], function(lib_prep, content) {
-        $.each(content["sample_run_metrics"], function (run, id) {
+        if (content["sample_run_metrics"]) {
+          $.each(content["sample_run_metrics"], function (run, id) {
             tbl_row += '<a href="/qc/' + run + '">' + run + '</a><br>'
-        })
+          })
+        }
       })
     }
     tbl_row += '</td>'
