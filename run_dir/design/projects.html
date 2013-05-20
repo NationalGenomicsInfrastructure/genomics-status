@@ -33,7 +33,12 @@ $.getJSON("/api/v1/projects", function(data) {
     tbl_row += '<td><a href="/projects/' + k1 + '">'
     tbl_row += k1 + '</td>'
     tbl_row += '<td>' + summary["application"] + '</td>'
-    tbl_row += '<td>' + summary["ordered_reads"] + '</td>'
+    if (typeof summary["ordered_reads"] === 'number'){
+      tbl_row += '<td>' + summary["ordered_reads"].toFixed(2) + '</td>'  
+    }
+    else {
+      tbl_row += '<td>' + summary["ordered_reads"] + '</td>'
+    }
 
     // Color cell to indicate complete
     if(summary["passed_samples"] == summary["no_samples"]){

@@ -47,7 +47,7 @@ $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
   tbody += '<th>Application</th><td>' + data["application"] + '</td>'
   tbody += '<th>Number of samples</th><td>' + data["no_samples"] + '</td>'
   tbody += '</tr><tr>'
-  tbody += '<th>Min M reads per sample</th><td>' + data["ordered_reads"] 
+  tbody += '<th>Min M reads per sample</th><td>' + data["ordered_reads"].toFixed(2)
          + '</td>'
   tbody += '<th>Progress</th><td>' + data["passed_samples"] + ' /  ' +
   data["no_samples"] + ' samples finished</td>'
