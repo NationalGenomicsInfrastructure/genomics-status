@@ -42,7 +42,10 @@ class AmanitaHomeUserDataHandler(tornado.web.RequestHandler):
 
     def home_usage(self, user):
         sizes = []
-        view = self.application.amanita_db.view("sizes/home_user", group=True)[[user, "0"], [user, "a"]]
+        view = self.application.amanita_db.view("sizes/home_user",
+                                                group_level=2,
+                                                startkey=[user, "0"],
+                                                endkey=[user, "a"])
         for row in view:
             sizes.append({"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000),
                           "y": row.value * 1024})
@@ -95,8 +98,11 @@ class AmanitaBox2ProjectDataHandler(tornado.web.RequestHandler):
 
     def box2_usage(self, project):
         sizes = []
-        view = self.application.amanita_db.view("sizes/box2_projects", group=True)
-        for row in view[[project, "0"], [project, "a"]]:
+        view = self.application.amanita_db.view("sizes/box2_projects",
+                                                group_level=2,
+                                                startkey=[project, "0"],
+                                                endkey=[project, "a"])
+        for row in view:
             obs_time = parser.parse(row.key[1])
             sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
                           "y": row.value * 1024})
@@ -149,8 +155,11 @@ class AmanitaHomeProjectDataHandler(tornado.web.RequestHandler):
 
     def home_projects_usage(self, project):
         sizes = []
-        view = self.application.amanita_db.view("sizes/home_projects", group=True)
-        for row in view[[project, "0"], [project, "a"]]:
+        view = self.application.amanita_db.view("sizes/home_projects",
+                                                group_level=2,
+                                                startkey=[project, "0"],
+                                                endkey=[project, "a"])
+        for row in view:
             obs_time = parser.parse(row.key[1])
             sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
                           "y": row.value * 1024})

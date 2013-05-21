@@ -1,4 +1,3 @@
-
 """ Main genomics-status web application.
 """
 from collections import OrderedDict
@@ -118,7 +117,6 @@ class QuotaDataHandler(tornado.web.RequestHandler):
         proj_getter = lambda row: row.key[0]
         proj_checker = lambda row: proj_getter(row) == project
         date_getter = lambda row: row.key[1]
-
         view = self.application.uppmax_db.view("status/project_quota_usage_over_time")
         r_list = filter(proj_checker, view)
         r_list = sorted(r_list, key=date_getter)
@@ -1097,14 +1095,14 @@ class Application(tornado.web.Application):
             ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             ("/api/v1/amanita_home", AmanitaHomeDataHandler),
             ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
-            ("/api/v1/amanita_box2", AmanitaBox2DataHandler),
-            ("/api/v1/amanita_box2/projects/",
-                AmanitaBox2ProjectsDataHandler),
+            ("/api/v1/amanita_home/projects", AmanitaHomeProjectsDataHandler),
             ("/api/v1/amanita_home/projects/([^/]*)$",
                 AmanitaHomeProjectDataHandler),
-            ("/api/v1/amanita_home/project", AmanitaHomeProjectsDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
+            ("/api/v1/amanita_box2", AmanitaBox2DataHandler),
             ("/api/v1/amanita_box2/([^/]*)$", AmanitaBox2ProjectDataHandler),
+            ("/api/v1/amanita_box2/projects/",
+                AmanitaBox2ProjectsDataHandler),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
