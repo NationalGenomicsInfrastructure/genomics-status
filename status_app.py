@@ -1,4 +1,3 @@
-
 """ Main genomics-status web application.
 """
 from collections import OrderedDict
@@ -27,6 +26,16 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib import cm
 
+from status.amanita import AmanitaHandler
+from status.amanita import AmanitaHomeDataHandler
+from status.amanita import AmanitaHomeUserDataHandler
+from status.amanita import AmanitaUsersDataHandler
+from status.amanita import AmanitaBox2DataHandler
+from status.amanita import AmanitaBox2ProjectDataHandler
+from status.amanita import AmanitaBox2ProjectsDataHandler
+from status.amanita import AmanitaHomeProjectsDataHandler
+from status.amanita import AmanitaHomeProjectDataHandler
+
 from status.production import DeliveredMonthlyDataHandler
 from status.production import DeliveredMonthlyPlotHandler
 from status.production import DeliveredQuarterlyDataHandler
@@ -35,6 +44,12 @@ from status.production import ProducedMonthlyDataHandler
 from status.production import ProducedMonthlyPlotHandler
 from status.production import ProducedQuarterlyDataHandler
 from status.production import ProducedQuarterlyPlotHandler
+
+from status.projects import ProjectDataHandler
+from status.projects import ProjectsDataHandler
+from status.projects import ProjectSamplesDataHandler
+from status.projects import ProjectSamplesHandler
+from status.projects import ProjectsHandler
 
 from status.sequencing import InstrumentClusterDensityDataHandler
 from status.sequencing import InstrumentClusterDensityPlotHandler
@@ -102,7 +117,6 @@ class QuotaDataHandler(tornado.web.RequestHandler):
         proj_getter = lambda row: row.key[0]
         proj_checker = lambda row: proj_getter(row) == project
         date_getter = lambda row: row.key[1]
-
         view = self.application.uppmax_db.view("status/project_quota_usage_over_time")
         r_list = filter(proj_checker, view)
         r_list = sorted(r_list, key=date_getter)
@@ -370,20 +384,6 @@ class SampleQCDataHandler(tornado.web.RequestHandler):
         return result.rows[0].value
 
 
-class ProjectSamplesDataHandler(tornado.web.RequestHandler):
-    """ Serves brief info about all samples in a given project.
-    """
-    def get(self, project):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.sample_list(project), default=dthandler))
-
-    def sample_list(self, project):
-        sample_view = self.application.projects_db.view("project/samples")
-        result = sample_view[project]
-
-        return result.rows[0].value
-
-
 class SampleQCSummaryHandler(tornado.web.RequestHandler):
     """ Serves a page which displays QC data with tables and plots for a
     given sample run.
@@ -391,15 +391,6 @@ class SampleQCSummaryHandler(tornado.web.RequestHandler):
     def get(self, sample):
         t = self.application.loader.load("sample_run_qc.html")
         self.write(t.generate(sample=sample))
-
-
-class ProjectSamplesHandler(tornado.web.RequestHandler):
-    """ Serves a page which lists the samples of a given project, with some
-    brief information for each sample.
-    """
-    def get(self, project):
-        t = self.application.loader.load("project_samples.html")
-        self.write(t.generate(project=project))
 
 
 class SampleQCAlignmentDataHandler(tornado.web.RequestHandler):
@@ -738,34 +729,6 @@ class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
         return sample_runs
 
 
-class ProjectsDataHandler(tornado.web.RequestHandler):
-    """ Serves brief information for each project in the database.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_projects()))
-
-    def list_projects(self):
-        projects = OrderedDict()
-        for row in self.application.projects_db.view("project/summary"):
-            projects[row.key] = row.value
-
-        return projects
-
-
-class ProjectDataHandler(tornado.web.RequestHandler):
-    """ Serves brief information of a given project.
-    """
-    def get(self, project):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.project_info(project)))
-
-    def project_info(self, project):
-        result = self.application.projects_db.view("project/summary")[project]
-
-        return result.rows[0].value
-
-
 class FlowcellsDataHandler(tornado.web.RequestHandler):
     """ Serves brief information for each flowcell in the database.
     """
@@ -993,14 +956,6 @@ class FlowcellQ30Handler(tornado.web.RequestHandler):
         return lane_q30
 
 
-class ProjectsHandler(tornado.web.RequestHandler):
-    """ Serves a page with all projects listed, along with some brief info.
-    """
-    def get(self):
-        t = self.application.loader.load("projects.html")
-        self.write(t.generate())
-
-
 class ExpectedHandler(tornado.web.RequestHandler):
     """ Serves a page with a boxplots of expected yield compared to matched
     yields for all runs of top bar codes.
@@ -1043,157 +998,6 @@ class FlowcellHandler(tornado.web.RequestHandler):
     def get(self, flowcell):
         t = self.application.loader.load("flowcell_samples.html")
         self.write(t.generate(flowcell=flowcell))
-
-
-class AmanitaHandler(tornado.web.RequestHandler):
-    """ Serves a page which displays storage usage over time on Amanita.
-    """
-    def get(self):
-        t = self.application.loader.load("amanita.html")
-        self.write(t.generate())
-
-
-class AmanitaHomeDataHandler(tornado.web.RequestHandler):
-    """ Serves a time series of directory usage in HOME on Amanita.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.home_usage()))
-
-    def home_usage(self):
-        sizes = []
-        for row in self.application.amanita_db.view("sizes/home_total"):
-            obs_time = parser.parse(row.key)
-            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
-                          "y": row.value * 1024})
-
-        return sizes
-
-
-class AmanitaHomeUserDataHandler(tornado.web.RequestHandler):
-    """ Serves a time series of user HOME directory storage usage on
-    Amanita for a provided user.
-    """
-    def get(self, user):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.home_usage(user)))
-
-    def home_usage(self, user):
-        sizes = []
-        view = self.application.amanita_db.view("sizes/home_user", group=True)[[user, "0"], [user, "a"]]
-        for row in view:
-            sizes.append({"x": int(time.mktime(parser.parse(row.key[1]).timetuple()) * 1000),
-                          "y": row.value * 1024})
-
-        return sizes
-
-
-class AmanitaUsersDataHandler(tornado.web.RequestHandler):
-    """ Serves a list of users on Amanita.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.home_users()))
-
-    def home_users(self):
-        users = []
-        view = self.application.amanita_db.view("sizes/home_user",
-                                                group_level=1)
-        for row in view:
-            if "/" not in row.key[0]:
-                users.append(row.key[0])
-
-        return users
-
-
-class AmanitaBox2DataHandler(tornado.web.RequestHandler):
-    """ Serves a time series of storage usage on the box2 storage of Amanita.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.home_usage()))
-
-    def home_usage(self):
-        sizes = []
-        for row in self.application.amanita_db.view("sizes/box2_projects_total"):
-            obs_time = parser.parse(row.key)
-            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
-                          "y": row.value * 1024})
-
-        return sizes
-
-
-class AmanitaBox2ProjectDataHandler(tornado.web.RequestHandler):
-    """ Serves a time series of storage usage for a specified project on the
-    box2 storage on Amanita.
-    """
-    def get(self, project):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.box2_usage(project)))
-
-    def box2_usage(self, project):
-        sizes = []
-        view = self.application.amanita_db.view("sizes/box2_projects", group=True)
-        for row in view[[project, "0"], [project, "a"]]:
-            obs_time = parser.parse(row.key[1])
-            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
-                          "y": row.value * 1024})
-
-        return sizes
-
-
-class AmanitaBox2ProjectsDataHandler(tornado.web.RequestHandler):
-    """ Serves a list of the projects which uses or have used the box2
-    storage on Amanita.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.box2_projects()))
-
-    def box2_projects(self):
-        proejcts = []
-        view = self.application.amanita_db.view("sizes/box2_projects", group_level=1)
-        for row in view:
-            if "/" not in row.key[0]:
-                proejcts.append(row.key[0])
-
-        return proejcts
-
-
-class AmanitaHomeProjectsDataHandler(tornado.web.RequestHandler):
-    """ Serves a list of the projects which have used or uses storage in
-    HOME/projects on Amanita.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.box2_projects()))
-
-    def box2_projects(self):
-        proejcts = []
-        for row in self.application.amanita_db.view("sizes/home_projects", group_level=1):
-            if "/" not in row.key[0]:
-                proejcts.append(row.key[0])
-
-        return proejcts
-
-
-class AmanitaHomeProjectDataHandler(tornado.web.RequestHandler):
-    """ Serves a time series of storage usage of a specified project in
-    HOME/projects on Amanita.
-    """
-    def get(self, project):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.home_projects_usage(project)))
-
-    def home_projects_usage(self, project):
-        sizes = []
-        view = self.application.amanita_db.view("sizes/home_projects", group=True)
-        for row in view[[project, "0"], [project, "a"]]:
-            obs_time = parser.parse(row.key[1])
-            sizes.append({"x": int(time.mktime(obs_time.timetuple()) * 1000),
-                          "y": row.value * 1024})
-
-        return sizes
 
 
 class PiceaHandler(tornado.web.RequestHandler):
@@ -1291,14 +1095,14 @@ class Application(tornado.web.Application):
             ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             ("/api/v1/amanita_home", AmanitaHomeDataHandler),
             ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
-            ("/api/v1/amanita_box2", AmanitaBox2DataHandler),
-            ("/api/v1/amanita_box2/projects/",
-                AmanitaBox2ProjectsDataHandler),
+            ("/api/v1/amanita_home/projects", AmanitaHomeProjectsDataHandler),
             ("/api/v1/amanita_home/projects/([^/]*)$",
                 AmanitaHomeProjectDataHandler),
-            ("/api/v1/amanita_home/project", AmanitaHomeProjectsDataHandler),
             ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
+            ("/api/v1/amanita_box2", AmanitaBox2DataHandler),
             ("/api/v1/amanita_box2/([^/]*)$", AmanitaBox2ProjectDataHandler),
+            ("/api/v1/amanita_box2/projects/",
+                AmanitaBox2ProjectsDataHandler),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
@@ -1337,8 +1141,8 @@ class Application(tornado.web.Application):
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
             ("/api/v1/produced_quarterly.png", ProducedQuarterlyPlotHandler),
             ("/api/v1/projects", ProjectsDataHandler),
-            ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
+            ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
