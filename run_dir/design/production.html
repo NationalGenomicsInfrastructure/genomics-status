@@ -2,16 +2,76 @@
 
 {% block stuff %}
 
-<div class="container-fluid">
+<div class="container-fluid" id="content">
   <h2>Data production</h2>
 
-  <p>The number of basepairs sequenced over time since January 1st 2012.</p>
-
-  <img src="api/v1/produced_monthly.png">
-  <img src="api/v1/produced_quarterly.png">
-  <img src="api/v1/delivered_monthly.png">
-  <img src="api/v1/delivered_quarterly.png">
+  <p>
+    The number of basepairs sequenced over time since January 1st 2012.
+  </p>
+  <p>
+    For produced data, the numbers comes from counting the number of read
+    pairs during the demultiplexing step for each sample run. These numbers
+    are then converted to basepairs by assuming the sample runs to be 2x101bp
+    reads.
+  </p>
+  <p>
+    The timed used is the flowcell date.
+  </p>
+  <p>
+    For delivered data, the basepair counts are based on the number of reads
+    considered to be sequenced. The timestamps used are the creation of the
+    project document in the database, due to now having any appropriate
+    timestamp for delivery.
+  </p>
+  <p>
+    The date range slider can be used to limit the interval of months from
+    which to generate the plots.
+  </p>
+  <div id="slider"></div>
+    <img id="p_m">
+    <img id="p_q">
+    <img id="d_m">
+    <img id="d_q">
 </div>
+
+<script>
+  var d_min = new Date(2012, 0, 1);
+  var d_max = new Date();
+
+  $("#slider").dateRangeSlider({
+    bounds:
+    {
+      min: d_min,
+      max: d_max
+    },
+    defaultValues:
+    {
+      min: d_min,
+      max: d_max
+    },
+    step:
+    {
+      months: 1
+    }
+  });
+
+  $("#slider").bind("valuesChanged", function(e, data){
+    $('#p_m').attr('src', 'api/v1/produced_monthly.png?start=' + 
+                          data.values.min.toJSON() + '&end=' + 
+                          data.values.max.toJSON())
+    $('#p_q').attr('src', 'api/v1/produced_quarterly.png?start=' + 
+                          data.values.min.toJSON() + '&end=' + 
+                          data.values.max.toJSON())
+    $('#d_m').attr('src', 'api/v1/delivered_monthly.png?start=' + 
+                          data.values.min.toJSON() + '&end=' + 
+                          data.values.max.toJSON())
+    $('#d_q').attr('src', 'api/v1/delivered_quarterly.png?start=' + 
+                          data.values.min.toJSON() + '&end=' + 
+                          data.values.max.toJSON())
+  });
+
+
+</script>
 
 
 {% end %}
