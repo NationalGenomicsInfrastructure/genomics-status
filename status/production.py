@@ -118,15 +118,37 @@ class ProducedMonthlyDataHandler(tornado.web.RequestHandler):
     """ Serves the amount of data produced per month.
     """
     def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.bpcounts(), default=dthandler))
+        start_date = self.get_argument('start', '2012-01-01T00:00:00')
+        end_date = self.get_argument('end', None)
 
-    def bpcounts(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.bpcounts(start_date, end_date), default=dthandler))
+
+    def bpcounts(self, start_date=None, end_date=None):
+        if start_date:
+            start_date = parser.parse(start_date)
+
+        if end_date:
+            end_date = parser.parse(end_date)
+        else:
+            end_date = datetime.now()
+
         view = self.application.samples_db.view("barcodes/date_read_counts",
                                                 group_level=3)
 
         produced = OrderedDict()
-        for row in view[[12, 1, 1, 1]:]:
+
+        start = [start_date.year - 2000,
+                 (start_date.month - 1) // 3 + 1,
+                 start_date.month,
+                 start_date.day]
+
+        end = [end_date.year - 2000,
+               (end_date.month - 1) // 3 + 1,
+               end_date.month,
+               end_date.day]
+
+        for row in view[start:end]:
             y = int("20" + str(row.key[0]))
             m = row.key[2]
             produced[dthandler(datetime(y, m, 1))] = row.value
@@ -138,7 +160,10 @@ class ProducedMonthlyPlotHandler(ProducedMonthlyDataHandler):
     """ Serves a plot of amount of data produced per month.
     """
     def get(self):
-        produced = self.bpcounts()
+        start_date = self.get_argument('start', '2012-01-01T00:00:00')
+        end_date = self.get_argument('end', None)
+
+        produced = self.bpcounts(start_date, end_date)
 
         fig = plt.figure(figsize=[10, 8])
         ax = fig.add_subplot(111)
