@@ -18,15 +18,37 @@ class DeliveredMonthlyDataHandler(tornado.web.RequestHandler):
     """ Gives the data for monthly delivered amount of basepairs.
     """
     def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.delivered(), default=dthandler))
+        start_date = self.get_argument('start', '2012-01-01T00:00:00')
+        end_date = self.get_argument('end', None)
 
-    def delivered(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.delivered(start_date, end_date), default=dthandler))
+
+    def delivered(self, start_date=None, end_date=None):
+        if start_date:
+            start_date = parser.parse(start_date)
+
+        if end_date:
+            end_date = parser.parse(end_date)
+        else:
+            end_date = datetime.now()
+
         view = self.application.projects_db.view("date/m_bp_delivered",
                                                  group_level=3)
 
         delivered = OrderedDict()
-        for row in view:
+
+        start = [start_date.year,
+                 (start_date.month - 1) // 3 + 1,
+                 start_date.month,
+                 start_date.day]
+
+        end = [end_date.year,
+               (end_date.month - 1) // 3 + 1,
+               end_date.month,
+               end_date.day]
+
+        for row in view[start:end]:
             y = row.key[0]
             m = row.key[2]
             delivered[dthandler(datetime(y, m, 1))] = int(row.value * 1e6)
@@ -38,7 +60,10 @@ class DeliveredMonthlyPlotHandler(DeliveredMonthlyDataHandler):
     """ Gives a bar plot for monthly delivered amount of basepairs.
     """
     def get(self):
-        delivered = self.delivered()
+        start_date = self.get_argument('start', '2012-01-01T00:00:00')
+        end_date = self.get_argument('end', None)
+
+        delivered = self.delivered(start_date, end_date)
 
         fig = plt.figure(figsize=[10, 8])
         ax = fig.add_subplot(111)
@@ -68,15 +93,37 @@ class DeliveredQuarterlyDataHandler(tornado.web.RequestHandler):
     """ Gives the data for quarterly delivered amount of basepairs.
     """
     def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.delivered(), default=dthandler))
+        start_date = self.get_argument('start', '2012-01-01T00:00:00')
+        end_date = self.get_argument('end', None)
 
-    def delivered(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.delivered(start_date, end_date), default=dthandler))
+
+    def delivered(self, start_date=None, end_date=None):
+        if start_date:
+            start_date = parser.parse(start_date)
+
+        if end_date:
+            end_date = parser.parse(end_date)
+        else:
+            end_date = datetime.now()
+
         view = self.application.projects_db.view("date/m_bp_delivered",
                                                  group_level=2)
 
         delivered = OrderedDict()
-        for row in view:
+
+        start = [start_date.year,
+                 (start_date.month - 1) // 3 + 1,
+                 start_date.month,
+                 start_date.day]
+
+        end = [end_date.year,
+               (end_date.month - 1) // 3 + 1,
+               end_date.month,
+               end_date.day]
+
+        for row in view[start:end]:
             y = row.key[0]
             q = row.key[1]
             delivered[dthandler(datetime(y, (q - 1) * 3 + 1, 1))] = int(row.value * 1e6)
@@ -88,7 +135,10 @@ class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
     """ Gives a bar plot for quarterly delivered amount of basepairs.
     """
     def get(self):
-        delivered = self.delivered()
+        start_date = self.get_argument('start', '2012-01-01T00:00:00')
+        end_date = self.get_argument('end', None)
+
+        delivered = self.delivered(start_date, end_date)
 
         fig = plt.figure(figsize=[10, 8])
         ax = fig.add_subplot(111)
@@ -99,7 +149,11 @@ class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
         ax.bar(dates, values)
 
         ax.set_xticks(dates)
-        ax.set_xticklabels([d.strftime("%Y\nQ%m") for d in dates])
+        labels = []
+        for d in dates:
+            labels.append("{}\nQ{}".format(d.year, (d.month - 1) // 3 + 1))
+
+        ax.set_xticklabels(labels)
 
         ax.set_title("Basepairs delivered per quarter")
 
@@ -193,15 +247,37 @@ class ProducedQuarterlyDataHandler(tornado.web.RequestHandler):
     """ Gives the data for quarterly produced amount of basepairs.
     """
     def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.produced(), default=dthandler))
+        start_date = self.get_argument('start', '2012-01-01T00:00:00')
+        end_date = self.get_argument('end', None)
 
-    def produced(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.produced(start_date, end_date), default=dthandler))
+
+    def produced(self, start_date=None, end_date=None):
+        if start_date:
+            start_date = parser.parse(start_date)
+
+        if end_date:
+            end_date = parser.parse(end_date)
+        else:
+            end_date = datetime.now()
+
         view = self.application.samples_db.view("barcodes/date_read_counts",
                                                 group_level=2)
 
         produced = OrderedDict()
-        for row in view[[12, 1, 1, 1]:]:
+
+        start = [start_date.year - 2000,
+                 (start_date.month - 1) // 3 + 1,
+                 start_date.month,
+                 start_date.day]
+
+        end = [end_date.year - 2000,
+               (end_date.month - 1) // 3 + 1,
+               end_date.month,
+               end_date.day]
+
+        for row in view[start:end]:
             y = int("20" + str(row.key[0]))
             q = row.key[1]
             produced[dthandler(datetime(y, (q - 1) * 3 + 1, 1))] = int(row.value * 1e6)
@@ -213,7 +289,10 @@ class ProducedQuarterlyPlotHandler(ProducedQuarterlyDataHandler):
     """ Gives a bar plot for quarterly produced amount of basepairs.
     """
     def get(self):
-        produced = self.produced()
+        start_date = self.get_argument('start', '2012-01-01T00:00:00')
+        end_date = self.get_argument('end', None)
+
+        produced = self.produced(start_date, end_date)
 
         fig = plt.figure(figsize=[10, 8])
         ax = fig.add_subplot(111)

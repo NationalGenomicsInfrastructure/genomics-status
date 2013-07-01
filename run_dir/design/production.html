@@ -38,9 +38,15 @@
     $('#p_m').attr('src', 'api/v1/produced_monthly.png?start=' + 
                           data.values.min.toJSON() + '&end=' + 
                           data.values.max.toJSON())
-    $('#p_q').attr('src', 'api/v1/produced_quarterly.png')
-    $('#d_m').attr('src', 'api/v1/delivered_monthly.png')
-    $('#d_q').attr('src', 'api/v1/delivered_quarterly.png')
+    $('#p_q').attr('src', 'api/v1/produced_quarterly.png?start=' + 
+                          data.values.min.toJSON() + '&end=' + 
+                          data.values.max.toJSON())
+    $('#d_m').attr('src', 'api/v1/delivered_monthly.png?start=' + 
+                          data.values.min.toJSON() + '&end=' + 
+                          data.values.max.toJSON())
+    $('#d_q').attr('src', 'api/v1/delivered_quarterly.png?start=' + 
+                          data.values.min.toJSON() + '&end=' + 
+                          data.values.max.toJSON())
   });
 
 
