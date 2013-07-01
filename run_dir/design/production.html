@@ -2,16 +2,49 @@
 
 {% block stuff %}
 
-<div class="container-fluid">
+<div class="container-fluid" id="content">
   <h2>Data production</h2>
 
   <p>The number of basepairs sequenced over time since January 1st 2012.</p>
-
-  <img src="api/v1/produced_monthly.png">
-  <img src="api/v1/produced_quarterly.png">
-  <img src="api/v1/delivered_monthly.png">
-  <img src="api/v1/delivered_quarterly.png">
+  <div id="slider"></div>
+    <img id="p_m">
+    <img id="p_q">
+    <img id="d_m">
+    <img id="d_q">
 </div>
+
+<script>
+  var d_min = new Date(2012, 0, 1);
+  var d_max = new Date();
+
+  $("#slider").dateRangeSlider({
+    bounds:
+    {
+      min: d_min,
+      max: d_max
+    },
+    defaultValues:
+    {
+      min: d_min,
+      max: d_max
+    },
+    step:
+    {
+      months: 1
+    }
+  });
+
+  $("#slider").bind("valuesChanged", function(e, data){
+    $('#p_m').attr('src', 'api/v1/produced_monthly.png?start=' + 
+                          data.values.min.toJSON() + '&end=' + 
+                          data.values.max.toJSON())
+    $('#p_q').attr('src', 'api/v1/produced_quarterly.png')
+    $('#d_m').attr('src', 'api/v1/delivered_monthly.png')
+    $('#d_q').attr('src', 'api/v1/delivered_quarterly.png')
+  });
+
+
+</script>
 
 
 {% end %}
