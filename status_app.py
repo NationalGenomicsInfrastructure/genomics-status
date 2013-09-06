@@ -45,6 +45,12 @@ from status.production import ProducedMonthlyPlotHandler
 from status.production import ProducedQuarterlyDataHandler
 from status.production import ProducedQuarterlyPlotHandler
 
+from status.applications import ApplicationsHandler
+from status.applications import ApplicationsDataHandler
+from status.applications import ApplicationsPlotHandler
+from status.applications import SamplesApplicationsDataHandler
+from status.applications import SamplesApplicationsPlotHandler
+
 from status.projects import ProjectDataHandler
 from status.projects import ProjectsDataHandler
 from status.projects import ProjectSamplesDataHandler
@@ -223,107 +229,6 @@ class ApplicationDataHandler(tornado.web.RequestHandler):
             projects.append(row.value)
 
         return projects
-
-
-class ApplicationsDataHandler(tornado.web.RequestHandler):
-    """ Serves the applications performed with the number of projects which
-    have that application.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_applications()))
-
-    def list_applications(self):
-        applications = OrderedDict()
-        view = self.application.projects_db.view("project/applications", group_level=1)
-        for row in view:
-            applications[row.key] = row.value
-
-        return applications
-
-
-class ApplicationsPlotHandler(ApplicationsDataHandler):
-    """ Serves a Pie chart of applications over projects.
-    """
-    def get(self):
-        applications = self.list_applications()
-
-        fig = plt.figure(figsize=[10, 8])
-        ax = fig.add_subplot(111)
-
-        cmap = plt.cm.prism
-        colors = cmap(np.linspace(0., 1., len(applications)))
-
-        pie_wedge_collection = ax.pie(applications.values(),
-                                      colors=colors,
-                                      labels=applications.keys(),
-                                      labeldistance=1.05)
-
-        for pie_wedge in pie_wedge_collection[0]:
-            pie_wedge.set_edgecolor('white')
-            pie_wedge.set_linewidth(2)
-
-        fig.subplots_adjust(left=0.15, right=0.75, bottom=0.15)
-
-        FigureCanvasAgg(fig)
-
-        buf = cStringIO.StringIO()
-        fig.savefig(buf, format="png")
-        applications = buf.getvalue()
-
-        self.set_header("Content-Type", "image/png")
-        self.set_header("Content-Length", len(applications))
-        self.write(applications)
-
-
-class SamplesApplicationsDataHandler(tornado.web.RequestHandler):
-    """ Handler for getting per sample application information.
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_applications()))
-
-    def list_applications(self):
-        applications = OrderedDict()
-        for row in self.application.projects_db.view("project/samples_applications", group_level=1):
-            applications[row.key] = row.value
-
-        return applications
-
-
-class SamplesApplicationsPlotHandler(SamplesApplicationsDataHandler):
-    """ Serves a Pie chart of applications over projects.
-    """
-    def get(self):
-        applications = self.list_applications()
-
-        fig = plt.figure(figsize=[10, 8])
-        ax = fig.add_subplot(111)
-
-        cmap = plt.cm.prism
-        colors = cmap(np.linspace(0., 1., len(applications)))
-
-        pie_wedge_collection = ax.pie(applications.values(),
-                                      colors=colors,
-                                      labels=applications.keys(),
-                                      labeldistance=1.05)
-
-        for pie_wedge in pie_wedge_collection[0]:
-            pie_wedge.set_edgecolor('white')
-            pie_wedge.set_linewidth(2)
-
-        fig.subplots_adjust(left=0.15, right=0.75, bottom=0.15)
-
-        FigureCanvasAgg(fig)
-
-        buf = cStringIO.StringIO()
-        fig.savefig(buf, format="png")
-        applications = buf.getvalue()
-
-        self.set_header("Content-Type", "image/png")
-        self.set_header("Content-Length", len(applications))
-
-        self.write(applications)
 
 
 class SampleInfoDataHandler(tornado.web.RequestHandler):
@@ -962,15 +867,6 @@ class ExpectedHandler(tornado.web.RequestHandler):
     """
     def get(self):
         t = self.application.loader.load("barcode_vs_expected.html")
-        self.write(t.generate())
-
-
-class ApplicationsHandler(tornado.web.RequestHandler):
-    """ Serves a page with stats about the different applications that have
-    been performed for projects/samples.
-    """
-    def get(self):
-        t = self.application.loader.load("applications.html")
         self.write(t.generate())
 
 
