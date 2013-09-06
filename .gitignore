@@ -1,3 +1,8 @@
 d3/
 jquery/
 *.pyc
+*~
+build/
+dist/
+status.egg-info/
+run_dir/settings.yaml
