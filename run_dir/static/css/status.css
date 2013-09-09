@@ -49,6 +49,11 @@ a {
   color: #78A44E;
 }
 
+tr.a {
+    background-color:#FFF;
+    color:#78A44E;
+}
+
 .box { font: 10px sans-serif; }
 .box line, .box rect, .box circle { stroke: #000; stroke-width: 1.5px; fill: #fff; }
 .box .center { stroke-dasharray: 3 3; }
@@ -125,6 +130,7 @@ body {
 
 .single_chart_container {
   height: 600px;
+  text-align:center;
 }
 
 .grid_chart {
