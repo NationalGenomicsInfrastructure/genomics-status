@@ -29,7 +29,7 @@
 <script>
 $.getJSON("/api/v1/applications", function(data) {
   for (d in data) {
-    var trow = '<tr onclick="document.location = '
+    var trow = '<tr class="a" onclick="document.location = '
     trow += "'/application/" + d + "'"
     trow += '" onmouseover="this.style.cursor='
     trow += "'pointer'"
@@ -37,7 +37,6 @@ $.getJSON("/api/v1/applications", function(data) {
     trow += '<td>' + d + '</td><td>' + data[d]+ '</td></tr>'
     $("#application_table tbody").append(trow)
   };
-
 })
 
 </script>
