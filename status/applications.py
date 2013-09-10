@@ -31,10 +31,10 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_applications()))
 
-    def list_applications(self):
+    def list_applications(self,start="",end="z"):
         applications = OrderedDict()
         view = self.application.projects_db.view("project/applications", group_level=1)
-        for row in view:
+        for row in view[[start,""]:[end,"z"]]:
             applications[row.key] = row.value
 
         return applications
@@ -44,7 +44,10 @@ class ApplicationsPlotHandler(ApplicationsDataHandler):
     """ Serves a Pie chart of applications over projects.
     """
     def get(self):
-        applications = self.list_applications()
+        start = self.get_argument("start","")
+        end = self.get_argument("end","z")
+
+        applications = self.list_applications(start=start,end=end)
 
         fig = plt.figure(figsize=[10, 8])
         ax = fig.add_subplot(111)
