@@ -5,7 +5,9 @@
 
 <div class="container-fluid">
   <h2>Reads vs Quality values</h2>
-
+  <p>
+    Cumulated quality data over selected time period.
+  </p>
   <div id="slider"></div><br>
 
   <h2 id="dates"></h2>
@@ -63,7 +65,7 @@ function plot_data(start, stop) {
       var chart = nv.models.discreteBarChart()
           .x(function(d) { return d.quality })
           .y(function(d) { return d.y })
-          .forceY([0.2])
+          .forceY([0.3])
           .color(["#4D91A1"])
 
       d3.select("#quality")
