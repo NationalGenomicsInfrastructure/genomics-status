@@ -364,17 +364,24 @@ class ReadsVsQDataHandler(tornado.web.RequestHandler):
     """ Serves histogram data of reada over average quality values of reads.
     """
     def get(self):
-        try:
-            start = json.loads(self.get_argument("start", None))
+        start = self.get_argument("start",  '2012-01-01T00:00:00')
+        start_date = parser.parse(start)
 
-        except TypeError:
-            start = None
+        end = self.get_argument("end", None)
+        if end:
+            end_date = parser.parse(end)
+        else:
+            end_date = datetime.now()
 
-        try:
-            end = json.loads(self.get_argument("end", None))
+        start = [start_date.year - 2000,
+                 (start_date.month - 1) // 3 + 1,
+                 start_date.month,
+                 start_date.day]
 
-        except TypeError:
-            end = None
+        end = [end_date.year - 2000,
+               (end_date.month - 1) // 3 + 1,
+               end_date.month,
+               end_date.day]
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.reads_q_data(start, end), default=dthandler))
