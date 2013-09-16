@@ -5,7 +5,9 @@
 
 <div class="container-fluid">
   <h2>Reads vs Quality values</h2>
-
+  <p>
+    Cumulated quality data over selected time period.
+  </p>
   <div id="slider"></div><br>
 
   <h2 id="dates"></h2>
@@ -22,29 +24,37 @@
 
 <script>
 
-var start = [12, 1, 1, 1]
-var stop = [12, 4, 12, 31]
+var start = '2012-01-01T00:00:00'
+var stop = '2013-09-01T00:00:00'
+var d_min = new Date(2012, 0, 1);
+var d_max = new Date();
 
-$("#slider").slider({
-  range: true,
+$("#slider").dateRangeSlider({
+  bounds:
+  {
+    min: d_min,
+    max: d_max
+  },
+  defaultValues:
+  {
+    min: d_min,
+    max: d_max
+  },
   min: 1,
   max: 12,
   values: [2, 12],
-  stop: function() {
-    values = $("#slider").slider("values")
-    v0 = values[0]
-    v1 = values[1]
-    start = [12, ((v0-1)/3|0)+1, v0, 1]
-    stop = [12, ((v1-1)/3|0)+1, v1, 1]
-    plot_data(start, stop)
-  }
+  step:
+  {
+    days: 1
+  },
 });
 
 function plot_data(start, stop) {
+  start_string = $.datepicker.formatDate('yy-mm-dd', start);
+  stop_string = $.datepicker.formatDate('yy-mm-dd',stop);
+  $("#dates").text("Date range: " + start_string  + " - " +stop_string)
 
-  $("#dates").text("Date range: " + start + " - " + stop)
-
-  $.getJSON("/api/v1/reads_vs_quality?start=[" + start + "]&end=[" + stop + "]", function(data) {
+  $.getJSON("/api/v1/reads_vs_quality?start=" + start.toISOString() + "&end=" + stop.toISOString(), function(data) {
     
     var quality = []
     for (var i = 0; i < data["quality"].length; i++) {
@@ -55,7 +65,7 @@ function plot_data(start, stop) {
       var chart = nv.models.discreteBarChart()
           .x(function(d) { return d.quality })
           .y(function(d) { return d.y })
-          .forceY([0.2])
+          .forceY([0.3])
           .color(["#4D91A1"])
 
       d3.select("#quality")
@@ -91,7 +101,10 @@ function plot_data(start, stop) {
   })
 }
 
-plot_data(start, stop)
+$("#slider").bind("valuesChanged", function(e, data){
+    plot_data(data.values.min,data.values.max)
+});
+
 </script>
 
 {% end %}
