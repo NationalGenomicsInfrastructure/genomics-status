@@ -4,9 +4,13 @@
 {% block stuff %}
 
 <div class="container-fluid">
-  <h2>Project Applications</h2>
   <div id="slider"></div>
-  <h2 id="dates"></h2>
+  <h3 id="dates"></h3>
+  <p>
+    Projects that are not loaded from Clarity LIMS have no 'open_date' attribute in Status DB 
+    and will be treated as opened '2012-01-01'.
+  </p>
+  <h2>Project Applications</h2>
   <p>
     Counts of the different sequencing applications that have been run.
   </p>
@@ -18,12 +22,12 @@
     <thead>
     <tr>
     <th>Application</th>
-    <th>Sum</th>
+    <th>Number of Projects</th>
     </thead>
     <tbody id="application_table_body"></tbody>
   </table>
 
-  <h2>Samples applications</h2>
+  <h2>Samples per Application</h2>
   <div class="single_chart_container" id="per_sample_chart">
   </div>
 
@@ -53,8 +57,8 @@ $("#slider").dateRangeSlider({
   },
 });
 
-function load_plot(start, stop){
-  $("#dates").text("Date range: " + start + " - " + stop)
+function load_plots(start, stop){
+  $("#dates").text("Opening Date range: " + start + " - " + stop)
   $("#main_chart").html('<img src="/api/v1/applications.png?start=' + start + '&end=' + stop + '"/>')
   $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?start=' + start + '&end=' + stop + '"/>')
 }
@@ -83,7 +87,7 @@ function load_table(start,stop){
 $("#slider").bind("valuesChanged", function(e, data){
     start_string = $.datepicker.formatDate('yy-mm-dd',data.values.min);
     stop_string = $.datepicker.formatDate('yy-mm-dd',data.values.max);
-    load_plot(start_string,stop_string)
+    load_plots(start_string,stop_string)
     load_table(start_string,stop_string)
 });
 

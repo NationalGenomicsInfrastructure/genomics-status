@@ -41,7 +41,6 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
             # To include null values for open_date
             # a.k.a all data points not fetched from the LIMS
             start = None
-        print "Start: {0}, end: {1}".format(start,end)
         applications = Counter()
         view = self.application.projects_db.view("project/date_applications")
         for row in view[[start,""]:[end,"z"]]:
@@ -110,14 +109,20 @@ class SamplesApplicationsDataHandler(tornado.web.RequestHandler):
     """ Handler for getting per sample application information.
     """
     def get(self):
+        start = self.get_argument("start", None)
+        end = self.get_argument("end", "z")
+
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_applications()))
+        self.write(json.dumps(self.list_applications(start=start,end=end)))
 
-    def list_applications(self):
-        applications = OrderedDict()
-        for row in self.application.projects_db.view("project/samples_applications", group_level=1):
-            applications[row.key] = row.value
-
+    def list_applications(self,start=None,end="z"):
+        if start == '2012-01-01':
+            # To include null values when slider is furthest to the left
+            start = None
+        applications = Counter()
+        view = self.application.projects_db.view("project/date_samples_applications")
+        for row in view[[start,""]:[end,"z"]]:
+            applications[row.key[1]] += row.value
         return applications
 
 
@@ -125,7 +130,10 @@ class SamplesApplicationsPlotHandler(SamplesApplicationsDataHandler):
     """ Serves a Pie chart of applications over projects.
     """
     def get(self):
-        applications = self.list_applications()
+        start = self.get_argument("start",None)
+        end = self.get_argument("end","z")
+
+        applications = self.list_applications(start=start,end=end)
 
         fig = plt.figure(figsize=[10, 8])
         ax = fig.add_subplot(111)
@@ -144,7 +152,7 @@ class SamplesApplicationsPlotHandler(SamplesApplicationsDataHandler):
             reordered.append(applications[i])
             reordered.append(applications[n_app - 1 - i])
 
-        applications_labels = [a[0] for a in reordered]
+        applications_labels = ["{0} ({1})".format(a[0],a[1]) for a in reordered]
         applications_values = [a[1] for a in reordered]
 
         #All small labels will be concentrated in the bottom right quarter, in
