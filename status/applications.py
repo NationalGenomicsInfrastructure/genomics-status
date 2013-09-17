@@ -3,9 +3,10 @@
 import tornado.web
 import json
 import cStringIO
+from datetime import datetime
 from dateutil import parser
 
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
@@ -29,24 +30,22 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
     have that application.
     """
     def get(self):
-        start = self.get_argument("start", '2012-01-01T00:00:00')
-        start_date = parser.parse(start)
-
-        end = self.get_argument("end", None)
-        if end:
-            end_date = parser.parse(end)
-        else:
-            end_date = datetime.now()
+        start = self.get_argument("start", None)
+        end = self.get_argument("end", "z")
 
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_applications()))
+        self.write(json.dumps(self.list_applications(start=start,end=end)))
 
-    def list_applications(self,start="",end="z"):
-        applications = OrderedDict()
-        view = self.application.projects_db.view("project/applications", group_level=1)
+    def list_applications(self,start=None,end="z"):
+        if start == '2012-01-01':
+            # To include null values for open_date
+            # a.k.a all data points not fetched from the LIMS
+            start = None
+        print "Start: {0}, end: {1}".format(start,end)
+        applications = Counter()
+        view = self.application.projects_db.view("project/date_applications")
         for row in view[[start,""]:[end,"z"]]:
-            applications[row.key] = row.value
-
+            applications[row.key[1]] += 1
         return applications
 
 
@@ -54,7 +53,7 @@ class ApplicationsPlotHandler(ApplicationsDataHandler):
     """ Serves a Pie chart of applications over projects.
     """
     def get(self):
-        start = self.get_argument("start","")
+        start = self.get_argument("start",None)
         end = self.get_argument("end","z")
 
         applications = self.list_applications(start=start,end=end)
