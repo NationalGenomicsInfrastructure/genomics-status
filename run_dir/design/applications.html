@@ -6,12 +6,12 @@
 <div class="container-fluid">
   <h2>Project Applications</h2>
   <div id="slider"></div>
+  <h2 id="dates"></h2>
   <p>
     Counts of the different sequencing applications that have been run.
   </p>
 
-  <div class="single_chart_container" id="chart_container">
-    <img src="/api/v1/applications.png">
+  <div class="single_chart_container" id="main_chart">
   </div>
 
   <table class="table table-bordered" id="application_table">
@@ -20,44 +20,47 @@
   </table>
 
   <h2>Samples applications</h2>
-  <div class="single_chart_container" id="chart_container">
-    <img src="/api/v1/samples_applications.png">
+  <div class="single_chart_container" id="per_sample_chart">
   </div>
 
 </div>
 
 <script type="text/javascript">
+var start = new Date(2012,0,1);
+var stop = new Date();
 
-  $("#slider").slider({
-    range: true,
-    min: 1,
-    max: 12,
-    values: [2, 12],
-    stop: function() {
-      values = $("#slider").slider("values")
-      v0 = values[0]
-      v1 = values[1]
-      if (v0 < 10) {
-        v0 = "0" + v0
-      }
-      if (v1 < 10) {
-        v1 = "0" + v1
-      }
-      start = "12" + v0 + "01"
-      stop = "12" + v1 + "01"
-      load_plot(start, stop)
-    }
-  });
+$("#slider").dateRangeSlider({
+  bounds:
+  {
+    min: start,
+    max: stop
+  },
+  defaultValues:
+  {
+    min: start,
+    max: stop
+  },
+  min: 1,
+  max: 12,
+  values: [2, 12],
+  step:
+  {
+    days: 1
+  },
+});
 
-  function load_plot(start, stop){
-    $("#dates").text("Date range: " + start + " - " + stop)
-    $("#plot").html('<img src="/api/v1/plot/application.png?start=' + start + '&end=' + stop + '"/>')
-  }
+function load_plot(start, stop){
+  start_string = $.datepicker.formatDate('yy-mm-dd',start);
+  stop_string = $.datepicker.formatDate('yy-mm-dd',stop);
+  $("#dates").text("Date range: " + start_string + " - " + stop_string)
+  $("#main_chart").html('<img src="/api/v1/applications.png?start=' + start + '&end=' + stop + '"/>')
+  $("#per_sample_chart").html('<img src="/api/v1/samples_application.png?start=' + start + '&end=' + stop + '"/>')
+}
 
-  load_plot("", "Z")
-</script>
+$("#slider").bind("valuesChanged", function(e, data){
+    load_plot(data.values.min,data.values.max)
+});
 
-<script>
 $.getJSON("/api/v1/applications", function(data) {
   for (d in data) {
     var trow = '<tr class="a" onclick="document.location = '

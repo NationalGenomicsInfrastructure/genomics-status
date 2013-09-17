@@ -3,6 +3,7 @@
 import tornado.web
 import json
 import cStringIO
+from dateutil import parser
 
 from collections import OrderedDict
 from matplotlib.figure import Figure
@@ -28,6 +29,15 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
     have that application.
     """
     def get(self):
+        start = self.get_argument("start", '2012-01-01T00:00:00')
+        start_date = parser.parse(start)
+
+        end = self.get_argument("end", None)
+        if end:
+            end_date = parser.parse(end)
+        else:
+            end_date = datetime.now()
+
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.list_applications()))
 
