@@ -40,7 +40,12 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
         applications = Counter()
         view = self.application.projects_db.view("project/date_applications")
         for row in view[[start,""]:[end,"z"]]:
-            applications[row.key[1]] += 1
+            if row.key[1] is None:
+                # This corresponds to StatusDB:s notation 
+                # and avoids conflict with 'None'.
+                applications['null'] += 1
+            else:
+                applications[row.key[1]] += 1
         return applications
 
 
@@ -115,7 +120,10 @@ class SamplesApplicationsDataHandler(tornado.web.RequestHandler):
         applications = Counter()
         view = self.application.projects_db.view("project/date_samples_applications")
         for row in view[[start,""]:[end,"z"]]:
-            applications[row.key[1]] += row.value
+            if row.key[1] is None:
+                applications['null'] += row.value
+            else:
+                applications[row.key[1]] += row.value
         return applications
 
 

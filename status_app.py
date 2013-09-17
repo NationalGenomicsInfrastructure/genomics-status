@@ -224,9 +224,11 @@ class ApplicationDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.list_projects(application)))
 
     def list_projects(self, application):
+        if application == 'null':
+            application=None
         projects = []
         project_view = self.application.projects_db.view("project/applications", reduce=False)
-        for row in project_view[application:application + " "]:
+        for row in project_view[application]:
             projects.append(row.value)
 
         return projects
