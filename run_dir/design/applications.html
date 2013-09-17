@@ -60,8 +60,16 @@ $("#slider").dateRangeSlider({
 
 function load_plots(start, stop){
   $("#dates").text("Opening Date range: " + start + " - " + stop)
-  $("#main_chart").html('<img src="/api/v1/applications.png?start=' + start + '&end=' + stop + '"/>')
-  $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?start=' + start + '&end=' + stop + '"/>')
+  if (start == '2012-01-01')
+      {
+        $("#main_chart").html('<img src="/api/v1/applications.png?end=' + stop + '"/>')
+        $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?end=' + stop + '"/>')
+      }
+  else
+     {
+        $("#main_chart").html('<img src="/api/v1/applications.png?start=' + start + '&end=' + stop + '"/>')
+        $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?start=' + start + '&end=' + stop + '"/>')
+     }
 }
 
 
@@ -77,12 +85,24 @@ function trow_f(d,data){
 
 function load_table(start,stop){
   $("#application_table_body").empty()
-  $.getJSON("/api/v1/applications?start="+start+"&end="+stop, function(data) {
-    for (d in data) {
-      trow = trow_f(d,data)
-      $("#application_table tbody").append(trow)
-    };
-  })
+  if (start == '2012-01-01')
+      {
+        $.getJSON("/api/v1/applications?end="+stop, function(data) {
+           for (d in data) {
+              trow = trow_f(d,data)
+              $("#application_table tbody").append(trow)
+           };
+        })
+      }
+  else
+    {
+      $.getJSON("/api/v1/applications?start="+start+"&end="+stop, function(data) {
+        for (d in data) {
+          trow = trow_f(d,data)
+          $("#application_table tbody").append(trow)
+        };
+      })
+    }
 }
 
 $("#slider").bind("valuesChanged", function(e, data){

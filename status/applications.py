@@ -37,10 +37,6 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.list_applications(start=start,end=end)))
 
     def list_applications(self,start=None,end="z"):
-        if start == '2012-01-01':
-            # To include null values for open_date
-            # a.k.a all data points not fetched from the LIMS
-            start = None
         applications = Counter()
         view = self.application.projects_db.view("project/date_applications")
         for row in view[[start,""]:[end,"z"]]:
@@ -116,9 +112,6 @@ class SamplesApplicationsDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.list_applications(start=start,end=end)))
 
     def list_applications(self,start=None,end="z"):
-        if start == '2012-01-01':
-            # To include null values when slider is furthest to the left
-            start = None
         applications = Counter()
         view = self.application.projects_db.view("project/date_samples_applications")
         for row in view[[start,""]:[end,"z"]]:
