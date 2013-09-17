@@ -15,8 +15,12 @@
   </div>
 
   <table class="table table-bordered" id="application_table">
-    <thead></thead>
-    <tbody></tbody>
+    <thead>
+    <tr>
+    <th>Application</th>
+    <th>Sum</th>
+    </thead>
+    <tbody id="application_table_body"></tbody>
   </table>
 
   <h2>Samples applications</h2>
@@ -50,28 +54,38 @@ $("#slider").dateRangeSlider({
 });
 
 function load_plot(start, stop){
-  start_string = $.datepicker.formatDate('yy-mm-dd',start);
-  stop_string = $.datepicker.formatDate('yy-mm-dd',stop);
-  $("#dates").text("Date range: " + start_string + " - " + stop_string)
+  $("#dates").text("Date range: " + start + " - " + stop)
   $("#main_chart").html('<img src="/api/v1/applications.png?start=' + start + '&end=' + stop + '"/>')
-  $("#per_sample_chart").html('<img src="/api/v1/samples_application.png?start=' + start + '&end=' + stop + '"/>')
+  $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?start=' + start + '&end=' + stop + '"/>')
+}
+
+
+function trow_f(d,data){
+  var trow = '<tr class="a" onclick="document.location = '
+  trow += "'/application/" + d + "'"
+  trow += '" onmouseover="this.style.cursor='
+  trow += "'pointer'"
+  trow += '">'
+  trow += '<td>' + d + '</td><td>' + data[d]+ '</td></tr>'
+  return trow
+}
+
+function load_table(start,stop){
+  $("#application_table_body").empty()
+  $.getJSON("/api/v1/applications?start="+start+"&end="+stop, function(data) {
+    for (d in data) {
+      trow = trow_f(d,data)
+      $("#application_table tbody").append(trow)
+    };
+  })
 }
 
 $("#slider").bind("valuesChanged", function(e, data){
-    load_plot(data.values.min,data.values.max)
+    start_string = $.datepicker.formatDate('yy-mm-dd',data.values.min);
+    stop_string = $.datepicker.formatDate('yy-mm-dd',data.values.max);
+    load_plot(start_string,stop_string)
+    load_table(start_string,stop_string)
 });
-
-$.getJSON("/api/v1/applications", function(data) {
-  for (d in data) {
-    var trow = '<tr class="a" onclick="document.location = '
-    trow += "'/application/" + d + "'"
-    trow += '" onmouseover="this.style.cursor='
-    trow += "'pointer'"
-    trow += '">'
-    trow += '<td>' + d + '</td><td>' + data[d]+ '</td></tr>'
-    $("#application_table tbody").append(trow)
-  };
-})
 
 </script>
 

@@ -4,6 +4,7 @@ from collections import OrderedDict
 from collections import defaultdict
 import json
 import time
+from datetime import datetime
 
 from couchdb import Server
 from dateutil import parser
