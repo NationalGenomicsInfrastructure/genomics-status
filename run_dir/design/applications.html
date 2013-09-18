@@ -4,40 +4,113 @@
 {% block stuff %}
 
 <div class="container-fluid">
+  <div id="slider"></div>
+  <h3 id="dates"></h3>
+  <p>
+    Projects that are not loaded from Clarity LIMS have no 'open_date' attribute in Status DB 
+    and will be treated as opened exactly on '2012-01-01'. Projects that do not have the
+    application field filled in will be listed under 'null'.
+  </p>
   <h2>Project Applications</h2>
-
   <p>
     Counts of the different sequencing applications that have been run.
   </p>
 
-  <div class="single_chart_container" id="chart_container">
-    <img src="/api/v1/applications.png">
+  <div class="single_chart_container" id="main_chart">
   </div>
 
   <table class="table table-bordered" id="application_table">
-    <thead></thead>
-    <tbody></tbody>
+    <thead>
+    <tr>
+    <th>Application</th>
+    <th>Number of Projects</th>
+    </thead>
+    <tbody id="application_table_body"></tbody>
   </table>
 
-  <h2>Samples applications</h2>
-  <div class="single_chart_container" id="chart_container">
-    <img src="/api/v1/samples_applications.png">
+  <h2>Samples per Application</h2>
+  <div class="single_chart_container" id="per_sample_chart">
   </div>
 
 </div>
 
-<script>
-$.getJSON("/api/v1/applications", function(data) {
-  for (d in data) {
-    var trow = '<tr class="a" onclick="document.location = '
-    trow += "'/application/" + d + "'"
-    trow += '" onmouseover="this.style.cursor='
-    trow += "'pointer'"
-    trow += '">'
-    trow += '<td>' + d + '</td><td>' + data[d]+ '</td></tr>'
-    $("#application_table tbody").append(trow)
-  };
-})
+<script type="text/javascript">
+var start = new Date(2012,0,1);
+var stop = new Date();
+
+$("#slider").dateRangeSlider({
+  bounds:
+  {
+    min: start,
+    max: stop
+  },
+  defaultValues:
+  {
+    min: start,
+    max: stop
+  },
+  min: 1,
+  max: 12,
+  values: [2, 12],
+  step:
+  {
+    days: 1
+  },
+});
+
+function load_plots(start, stop){
+  $("#dates").text("Opening Date range: " + start + " - " + stop)
+  if (start == '2012-01-01')
+      {
+        $("#main_chart").html('<img src="/api/v1/applications.png?end=' + stop + '"/>')
+        $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?end=' + stop + '"/>')
+      }
+  else
+     {
+        $("#main_chart").html('<img src="/api/v1/applications.png?start=' + start + '&end=' + stop + '"/>')
+        $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?start=' + start + '&end=' + stop + '"/>')
+     }
+}
+
+
+function trow_f(d,data){
+  var trow = '<tr class="a" onclick="document.location = '
+  trow += "'/application/" + d + "'"
+  trow += '" onmouseover="this.style.cursor='
+  trow += "'pointer'"
+  trow += '">'
+  trow += '<td>' + d + '</td><td>' + data[d]+ '</td></tr>'
+  return trow
+}
+
+function load_table(start,stop){
+  $("#application_table_body").empty()
+  if (start == '2012-01-01')
+      {
+        $.getJSON("/api/v1/applications?end="+stop, function(data) {
+           for (d in data) {
+              trow = trow_f(d,data)
+              $("#application_table tbody").append(trow)
+           };
+        })
+      }
+  else
+    {
+      $.getJSON("/api/v1/applications?start="+start+"&end="+stop, function(data) {
+        for (d in data) {
+          trow = trow_f(d,data)
+          $("#application_table tbody").append(trow)
+        };
+      })
+    }
+}
+
+$("#slider").bind("valuesChanged", function(e, data){
+    start_string = $.datepicker.formatDate('yy-mm-dd',data.values.min);
+    stop_string = $.datepicker.formatDate('yy-mm-dd',data.values.max);
+    load_plots(start_string,stop_string)
+    load_table(start_string,stop_string)
+});
 
 </script>
 

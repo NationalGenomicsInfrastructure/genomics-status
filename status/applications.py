@@ -3,8 +3,10 @@
 import tornado.web
 import json
 import cStringIO
+from datetime import datetime
+from dateutil import parser
 
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
@@ -28,15 +30,22 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
     have that application.
     """
     def get(self):
+        start = self.get_argument("start", None)
+        end = self.get_argument("end", "z")
+
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_applications()))
+        self.write(json.dumps(self.list_applications(start=start,end=end)))
 
-    def list_applications(self):
-        applications = OrderedDict()
-        view = self.application.projects_db.view("project/applications", group_level=1)
-        for row in view:
-            applications[row.key] = row.value
-
+    def list_applications(self,start=None,end="z"):
+        applications = Counter()
+        view = self.application.projects_db.view("project/date_applications")
+        for row in view[[start,""]:[end,"z"]]:
+            if row.key[1] is None:
+                # This corresponds to StatusDB:s notation 
+                # and avoids conflict with 'None'.
+                applications['null'] += 1
+            else:
+                applications[row.key[1]] += 1
         return applications
 
 
@@ -44,7 +53,10 @@ class ApplicationsPlotHandler(ApplicationsDataHandler):
     """ Serves a Pie chart of applications over projects.
     """
     def get(self):
-        applications = self.list_applications()
+        start = self.get_argument("start",None)
+        end = self.get_argument("end","z")
+
+        applications = self.list_applications(start=start,end=end)
 
         fig = plt.figure(figsize=[10, 8])
         ax = fig.add_subplot(111)
@@ -98,14 +110,20 @@ class SamplesApplicationsDataHandler(tornado.web.RequestHandler):
     """ Handler for getting per sample application information.
     """
     def get(self):
+        start = self.get_argument("start", None)
+        end = self.get_argument("end", "z")
+
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_applications()))
+        self.write(json.dumps(self.list_applications(start=start,end=end)))
 
-    def list_applications(self):
-        applications = OrderedDict()
-        for row in self.application.projects_db.view("project/samples_applications", group_level=1):
-            applications[row.key] = row.value
-
+    def list_applications(self,start=None,end="z"):
+        applications = Counter()
+        view = self.application.projects_db.view("project/date_samples_applications")
+        for row in view[[start,""]:[end,"z"]]:
+            if row.key[1] is None:
+                applications['null'] += row.value
+            else:
+                applications[row.key[1]] += row.value
         return applications
 
 
@@ -113,7 +131,10 @@ class SamplesApplicationsPlotHandler(SamplesApplicationsDataHandler):
     """ Serves a Pie chart of applications over projects.
     """
     def get(self):
-        applications = self.list_applications()
+        start = self.get_argument("start",None)
+        end = self.get_argument("end","z")
+
+        applications = self.list_applications(start=start,end=end)
 
         fig = plt.figure(figsize=[10, 8])
         ax = fig.add_subplot(111)
@@ -132,7 +153,7 @@ class SamplesApplicationsPlotHandler(SamplesApplicationsDataHandler):
             reordered.append(applications[i])
             reordered.append(applications[n_app - 1 - i])
 
-        applications_labels = [a[0] for a in reordered]
+        applications_labels = ["{0} ({1})".format(a[0],a[1]) for a in reordered]
         applications_values = [a[1] for a in reordered]
 
         #All small labels will be concentrated in the bottom right quarter, in
