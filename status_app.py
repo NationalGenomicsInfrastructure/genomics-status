@@ -455,8 +455,10 @@ class UnmatchedVsSamplesPerLaneDataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(self.sample_count_unmatched()))
 
     def sample_count_unmatched(self):
+        # The number of samples per (flowcell,lane)
         n_samples_view = self.application.samples_db.view("lanes/count",
                                                           group_level=2)
+        # Group on number of samples
         sample_count_fc_lanes = defaultdict(list)
         for row in n_samples_view:
             sample_count_fc_lanes[row.value].append(row.key)
@@ -476,16 +478,16 @@ class UnmatchedVsSamplesPerLaneDataHandler(tornado.web.RequestHandler):
                     break
 
                 # Number of unmatched in flowcell/lane
+                # Only lanes in the unmatched view will be in the plot
                 for row in unm_reads_view[fc_lane]:
                     ratio = float(row.value) / total
+                    ratio_list.append(ratio)
                     break
-
-                ratio_list.append(ratio)
 
             sample_count_unmatched[no_samples] = ratio_list
 
-        min_sample_filter = lambda s, a: len(a) > 20
-        fil_s_cnt_unm = dict(filter(min_sample_filter, sample_count_unmatched.items()))
+        min_observation_filter = lambda t: len(t[1]) > 20
+        fil_s_cnt_unm = dict(filter(min_observation_filter, sample_count_unmatched.items()))
 
         return fil_s_cnt_unm
 
