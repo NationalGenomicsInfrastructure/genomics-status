@@ -23,6 +23,7 @@ def git_pull():
     """
     with cd('/home/genomics.www/status'):
         sudo('git pull', user='genomics.www')
+        sudo('git submodule update', user='genomics.www')
 
 def install():
     """ Installs the webapp code in the virtual environemnt 'web' on the server.
