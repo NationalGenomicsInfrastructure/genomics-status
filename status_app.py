@@ -487,8 +487,6 @@ class SamplesPerLanePlotHandler(SamplesPerLaneDataHandler):
         ax.set_xlabel("No of samples")
         ax.set_ylabel("No of lanes")
 
-        cs = 0.2
-
         FigureCanvasAgg(fig)
 
         buf = cStringIO.StringIO()
