@@ -446,99 +446,46 @@ class PhixErrorRateDataHandler(tornado.web.RequestHandler):
                 "cum_yield_fraction": list(fraction_yield.cumsum())}
 
 
-class UnmatchedVsSamplesPerLaneDataHandler(tornado.web.RequestHandler):
-    """ Serves data for the amount of unmatched reads in a lane compared
-    to the number of samples loaded on a lane.
+class SamplesPerLaneDataHandler(tornado.web.RequestHandler):
+    """ Serves data for the number of samples loaded on a lane.
     """
     def get(self):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.sample_count_unmatched()))
+        self.write(json.dumps(self.sample_count_per_lane()))
 
-    def sample_count_unmatched(self):
+    def sample_count_per_lane(self):
         # The number of samples per (flowcell,lane)
         n_samples_view = self.application.samples_db.view("lanes/count",
                                                           group_level=2)
-        # Group on number of samples
-        sample_count_fc_lanes = defaultdict(list)
+        samples_per_lane = []
         for row in n_samples_view:
-            sample_count_fc_lanes[row.value].append(row.key)
+            samples_per_lane.append(row.value)
 
-        sample_count_unmatched = {}
-        tot_reads_view = self.application.samples_db.view("barcodes/read_counts",
-                                                          group_level=2)
-        unm_reads_view = self.application.flowcells_db.view("lanes/unmatched",
-                                                            reduce=False)
-
-        for no_samples, fc_lanes in sample_count_fc_lanes.items():
-            ratio_list = []
-            for fc_lane in fc_lanes:
-                # Total read count in a flowcell/lane
-                for row in tot_reads_view[fc_lane + [""]:fc_lane + ["Z"]]:
-                    total = row.value
-                    break
-
-                # Number of unmatched in flowcell/lane
-                # Only lanes in the unmatched view will be in the plot
-                for row in unm_reads_view[fc_lane]:
-                    ratio = float(row.value) / total
-                    ratio_list.append(ratio)
-                    break
-
-            sample_count_unmatched[no_samples] = ratio_list
-
-        min_observation_filter = lambda t: len(t[1]) > 20
-        fil_s_cnt_unm = dict(filter(min_observation_filter, sample_count_unmatched.items()))
-
-        return fil_s_cnt_unm
+        return samples_per_lane
 
 
-class UnmatchedVsSamplesPerLaneHandler(tornado.web.RequestHandler):
-    """ Serves a page which displays a plot for the amount of unmatched reads
-    in a lane compared to the number of samples loaded on a lane.
+class SamplesPerLaneHandler(tornado.web.RequestHandler):
+    """ Serves a page which displays a plot for the number of samples 
+    loaded on a lane.
     """
     def get(self):
-        t = self.application.loader.load("unmatched_vs_samples_per_lane.html")
+        t = self.application.loader.load("samples_per_lane.html")
         self.write(t.generate())
 
 
-class UnmatchedVsSamplesPerLanePlotHandler(UnmatchedVsSamplesPerLaneDataHandler):
-    """ Serves a plot for the amount of unmatched reads
-    in a lane compared to the number of samples loaded on a lane.
+class SamplesPerLanePlotHandler(SamplesPerLaneDataHandler):
+    """ Serves a plot for the number of samples loaded on a lane.
     """
     def get(self):
-        sample_count_unmatched = self.sample_count_unmatched()
+        samples_per_lane = self.sample_count_per_lane()
 
         gs = gridspec.GridSpec(1, 15)
 
         fig = Figure()
         ax = fig.add_subplot(gs[0, :-1])
-        bp = ax.boxplot(sample_count_unmatched.values(), 0, '')
-        ax.set_xticklabels(sample_count_unmatched.keys())
-        ax.set_xlabel("No of samples per lane")
-        ax.set_ylabel("Quotient unmatched / total read counts")
-        n_vls_list = np.array([float(len(v)) for v in sample_count_unmatched.values()])
-        m = max(n_vls_list)
-
-        cs = 0.2
-
-        for box, nvl in zip(bp["boxes"], n_vls_list):
-            plt.setp(box, color=cm.Blues(nvl / m + cs), lw=2.0)
-
-        bpw = bp["whiskers"]
-        for wb, wt, nvl in zip(bpw[::2], bpw[1::2], n_vls_list):
-            plt.setp([wb, wt], color=cm.Blues(nvl / m + cs), lw=2.0)
-
-        lgd = fig.add_subplot(gs[0, -1])
-        a = np.outer(np.arange(0., 1., 0.01), np.ones(1))
-        lgd.imshow(a, cmap=cm.Blues)
-        lgd.grid(False)
-        lgd.set_xticks([])
-        lgd.yaxis.tick_right()
-        lgd.set_yticks(np.minimum((n_vls_list / m + cs), np.ones(len(n_vls_list))) * 100.)
-        lgd.set_yticklabels([str(int(i)) if i < 100 else "> 100" for i in n_vls_list])
-        lgd.invert_yaxis()
-        lgd.yaxis.set_label_position("right")
-        lgd.set_ylabel("Number of observations")
+        bp = ax.hist(samples_per_lane,bins=32)
+        ax.set_xlabel("No of samples")
+        ax.set_ylabel("No of lanes")
 
         FigureCanvasAgg(fig)
 
@@ -1036,12 +983,12 @@ class Application(tornado.web.Application):
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
             ("/api/v1/plot/samples_per_lane.png",
-                UnmatchedVsSamplesPerLanePlotHandler),
+                SamplesPerLanePlotHandler),
             ("/api/v1/plot/reads_per_lane.png", ReadsPerLanePlotHandler),
             ("/api/v1/plot/barcodes_vs_expected.png",
                 BarcodeVsExpectedPlotHandler),
             ("/api/v1/picea_home", PiceaHomeDataHandler),
-            ("/api/v1/samples_per_lane", UnmatchedVsSamplesPerLaneDataHandler),
+            ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
             ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
             ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
@@ -1089,7 +1036,7 @@ class Application(tornado.web.Application):
             ("/projects/([^/]*)$", ProjectSamplesHandler),
             ("/reads_vs_qv", ReadsVsQvhandler),
             ("/reads_per_lane", ReadsPerLaneHandler),
-            ("/samples_per_lane", UnmatchedVsSamplesPerLaneHandler),
+            ("/samples_per_lane", SamplesPerLaneHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/sequencing", SequencingStatsHandler)
         ]
