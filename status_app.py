@@ -447,32 +447,26 @@ class PhixErrorRateDataHandler(tornado.web.RequestHandler):
 
 
 class SamplesPerLaneDataHandler(tornado.web.RequestHandler):
-    """ Serves data for the amount of unmatched reads in a lane compared
-    to the number of samples loaded on a lane.
+    """ Serves data for the number of samples loaded on a lane.
     """
     def get(self):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.sample_count_unmatched()))
+        self.write(json.dumps(self.sample_count_per_lane()))
 
-    def sample_count_unmatched(self):
+    def sample_count_per_lane(self):
         # The number of samples per (flowcell,lane)
         n_samples_view = self.application.samples_db.view("lanes/count",
                                                           group_level=2)
-        # Group on number of samples
-        sample_count_fc_lanes = defaultdict(list)
         samples_per_lane = []
         for row in n_samples_view:
-            sample_count_fc_lanes[row.value].append(row.key)
             samples_per_lane.append(row.value)
-            if row.value > 60:
-                print row.key
 
         return samples_per_lane
 
 
 class SamplesPerLaneHandler(tornado.web.RequestHandler):
-    """ Serves a page which displays a plot for the amount of unmatched reads
-    in a lane compared to the number of samples loaded on a lane.
+    """ Serves a page which displays a plot for the number of samples 
+    loaded on a lane.
     """
     def get(self):
         t = self.application.loader.load("samples_per_lane.html")
@@ -480,11 +474,10 @@ class SamplesPerLaneHandler(tornado.web.RequestHandler):
 
 
 class SamplesPerLanePlotHandler(SamplesPerLaneDataHandler):
-    """ Serves a plot for the amount of unmatched reads
-    in a lane compared to the number of samples loaded on a lane.
+    """ Serves a plot for the number of samples loaded on a lane.
     """
     def get(self):
-        samples_per_lane = self.sample_count_unmatched()
+        samples_per_lane = self.sample_count_per_lane()
 
         gs = gridspec.GridSpec(1, 15)
 
