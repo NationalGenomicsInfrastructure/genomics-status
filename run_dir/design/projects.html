@@ -10,7 +10,7 @@
     <form class="form form-search">
       <fieldset>
 	<div class="control-group">
-	<input class="search search-query" type="text" placeholder="Search..." />
+	  <input class="search search-query" type="text" placeholder="Search..." />
 	</div>
 	<div>
 	  <button class="btn btn-large" href=""> Reset </button>
@@ -47,7 +47,7 @@ $.getJSON("/api/v1/projects", function(data) {
     }
 
     tbl_row += '<td><a class="project" href="/projects/' + k1 + '">'
-	tbl_row += k1  + '</td>'
+    tbl_row += k1  + '</td>'
     tbl_row += '<td class="application">' + summary["application"] + '</td>'
     if (typeof summary["ordered_reads"] === 'number'){
       tbl_row += '<td class="ordered_reads">' + summary["ordered_reads"].toFixed(2) + '</td>'  
