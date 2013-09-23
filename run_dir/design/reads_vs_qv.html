@@ -70,12 +70,24 @@ function plot_data(start, stop) {
 
       d3.select("#quality")
           .datum([{values: quality, key: "Quality", bar: true}])
-          .call(chart)
-
+	  .call(chart)
+          
       nv.utils.windowResize(function() {d3.select('#quality').call(chart)})
 
       return chart
     })
+
+    /* If existing, remove axis descriptions */
+    $("#quality #xDescription").remove()
+
+    d3.select("#quality")
+        .append("text")
+        .attr("id","xDescription")
+        .attr("x", 500)
+        .attr("y", 280)
+	.attr("text-anchor","middle")
+        .text("Quality Values")
+      ;
 
     var cumulative = []
     for (var i = 0; i < data["cumulative"].length; i++) {
