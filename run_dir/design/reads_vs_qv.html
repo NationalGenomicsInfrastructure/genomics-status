@@ -52,6 +52,49 @@ $("#slider").dateRangeSlider({
   },
 });
 
+function add_plot_description() {
+    var xCenter = 490; /* Bad hack, will not be centered on all screen resolutions */
+    var yBottom = 280;
+    var xBorder = 30;
+    var yBorder = 150;
+
+    /* If existing, remove axis descriptions */
+    $("#quality #xDescription_quality").remove()
+
+    d3.select("#quality")
+        .append("text")
+        .attr("id","xDescription_quality")
+        .attr("x", xCenter) 
+        .attr("y", yBottom)
+	.attr("text-anchor","middle")
+        .text("Quality Scores")
+      ;
+
+    $("#quality #yDescription_quality").remove()
+
+    d3.select("#quality")
+        .append("text")
+        .attr("id","yDescription_quality")
+        .attr("x", xBorder)
+        .attr("y", yBorder)
+        .attr("transform","rotate(-90," + xBorder + "," + yBorder+")")
+	.attr("text-anchor","middle")
+        .text("Reads Ratio")
+      ;
+
+    /* If existing, remove axis descriptions */
+    $("#cumulative #xDescription_cumulative").remove()
+
+    d3.select("#cumulative")
+        .append("text")
+        .attr("id","xDescription_cumulative")
+        .attr("x", xCenter) 
+        .attr("y", yBottom)
+	.attr("text-anchor","middle")
+        .text("Quality Scores")
+      ;
+}
+
 function plot_data(start, stop) {
   start_string = $.datepicker.formatDate('yy-mm-dd', start);
   stop_string = $.datepicker.formatDate('yy-mm-dd',stop);
@@ -80,17 +123,6 @@ function plot_data(start, stop) {
       return chart
     })
 
-    /* If existing, remove axis descriptions */
-    $("#quality #xDescription").remove()
-
-    d3.select("#quality")
-        .append("text")
-        .attr("id","xDescription")
-        .attr("x", 500)
-        .attr("y", 280)
-	.attr("text-anchor","middle")
-        .text("Quality Values")
-      ;
 
     var cumulative = []
     for (var i = 0; i < data["cumulative"].length; i++) {
@@ -112,7 +144,7 @@ function plot_data(start, stop) {
 
       return chart
     });
-
+    add_plot_description()
   })
 }
 
