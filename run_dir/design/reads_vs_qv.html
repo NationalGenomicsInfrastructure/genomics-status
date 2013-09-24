@@ -116,8 +116,8 @@ function plot_data(start, stop) {
 
       d3.select("#quality")
           .datum([{values: quality, key: "Quality", bar: true}])
-	  .call(chart)
-          
+          .call(chart)
+      
       nv.utils.windowResize(function() {d3.select('#quality').call(chart)})
 
       return chart
