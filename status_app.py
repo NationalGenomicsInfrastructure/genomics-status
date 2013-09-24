@@ -401,6 +401,7 @@ class ReadsVsQDataHandler(tornado.web.RequestHandler):
             quality_integral[quality] += integral
 
         quality_count = quality_count / quality_count.sum()
+        # 2 is the minimum quality value
         quality_integral = quality_integral / quality_integral[2]
 
         return {"quality": list(quality_count),
@@ -479,11 +480,12 @@ class SamplesPerLanePlotHandler(SamplesPerLaneDataHandler):
     def get(self):
         samples_per_lane = self.sample_count_per_lane()
 
+        max_no_samples_per_lane = max(samples_per_lane)
         gs = gridspec.GridSpec(1, 15)
 
         fig = Figure()
         ax = fig.add_subplot(gs[0, :-1])
-        bp = ax.hist(samples_per_lane,bins=32)
+        bp = ax.hist(samples_per_lane,bins=max_no_samples_per_lane)
         ax.set_xlabel("No of samples")
         ax.set_ylabel("No of lanes")
 
