@@ -12,8 +12,9 @@ def git_pull():
     """ Pulls the changes from the origin/master of the repo on the server.
     """
     with lcd('/home/genomics.www/status'):
-        local('git pull')
-        local('git submodule update')
+        with prefix('source ~/.virtualenvs/web/bin/activate'):
+            local('git pull')
+            local('git submodule update')
 
 def install():
     """ Installs the webapp code in the virtual environemnt 'web' on the server.
@@ -26,7 +27,8 @@ def start():
     """ Starts the genommics-status webapp server, in a screen session.
     """
     with lcd('/home/genomics.www/status/run_dir'):
-        local('status_app.py &')
+        with prefix('source ~/.virtualenvs/web/bin/activate'):
+            local('status_app.py &')
 
 def deploy():
     """ Performs all steps needed to deploy new code.
