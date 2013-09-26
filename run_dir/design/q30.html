@@ -4,7 +4,46 @@
 {% block stuff %}
 <div class="container-fluid">
   <h2>Percentage of bases at least Q30</h2>
-  <img src="/api/v1/plot/q30.png" />
+  <div id="slider"></div>
+  <div id="q30_plot">
+  </div>
 </div>
 
+<script type="text/javascript">
+var stop = new Date();
+var start = new Date(2012,0,1);
+var default_start = new Date();
+default_start.setDate(default_start.getDate() - 60);
+
+$("#slider").dateRangeSlider({
+  bounds:
+  {
+    min: start,
+    max: stop
+  },
+  defaultValues:
+  {
+    min: default_start,
+    max: stop
+  },
+  min: 1,
+  max: 12,
+  values: [2, 12],
+  step:
+  {
+    days: 1
+  },
+});
+
+function load_plots(start, stop){
+   $("#q30_plot").html('<img src="/api/v1/plot/q30.png?start=' + start + '&end=' + stop + '"/>')
+}
+
+$("#slider").bind("valuesChanged", function(e, data){
+    start_string = $.datepicker.formatDate('ymmdd', data.values.min);
+    stop_string = $.datepicker.formatDate('ymmdd', data.values.max);
+    load_plots(start_string,stop_string)
+});
+
+</script>
 {% end %}
