@@ -697,7 +697,7 @@ class Q30PlotHandler(tornado.web.RequestHandler):
 
         cmap = plt.cm.Dark2
 
-        fig = Figure(figsize=[12, 6])
+        fig = Figure(figsize=[12, 8])
         ax = fig.add_axes([0.1, 0.2, 0.8, 0.7])
 
         locs, labels = [], []
