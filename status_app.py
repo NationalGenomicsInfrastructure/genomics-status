@@ -683,26 +683,39 @@ class Q30PlotHandler(tornado.web.RequestHandler):
     """
     def get(self):
 
+        # Fetch all instruments, for stable color mapping
+        instruments_view = self.application.flowcells_db.view("lanes/gtq30", group_level=1)
+        instruments = set()
+        for row in instruments_view:
+            instruments.add(row.value["instrument"])
+
+        instruments = sorted(list(instruments))
+        instrument_color = {}
+
+        i_to_n = dict(zip(instruments, np.linspace(0., 1., len(instruments))))
+        cmap = plt.cm.Dark2
+
+        for instrument in instruments:
+            instrument_color[instrument] = cmap(i_to_n[instrument])
         view = self.application.flowcells_db.view("lanes/gtq30", group_level=2)
 
         flowcells = OrderedDict()
         instruments = set()
 
-        for row in view:
+        start_date = self.get_argument("start", None)
+        end_date = self.get_argument("end","z")
+        for row in view[[start_date]:[end_date]]:
             flowcells[tuple(row.key)] = {"q30": row.value["sum"] / row.value["count"],
                                          "instrument": row.value["instrument"]}
             instruments.add(row.value["instrument"])
 
-        i_to_n = dict(zip(instruments, np.linspace(0., 1., len(instruments))))
-
-        cmap = plt.cm.Dark2
 
         fig = Figure(figsize=[12, 8])
         ax = fig.add_axes([0.1, 0.2, 0.8, 0.7])
 
         locs, labels = [], []
         for instrument in instruments:
-            color = cmap(i_to_n[instrument])
+            color = instrument_color[instrument]
             X = [(k, i["q30"]) for k, i in flowcells.items() if "q30" in i and i["instrument"] == instrument]
             y = [x[1] for x in X]
             x = [parser.parse(x[0][0].split("_")[0]) for x in X]
