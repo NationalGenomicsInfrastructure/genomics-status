@@ -685,30 +685,45 @@ class Q30PlotHandler(tornado.web.RequestHandler):
 
         # Fetch all instruments, for stable color mapping
         instruments_view = self.application.flowcells_db.view("lanes/gtq30", group_level=1)
-        instruments = set()
+        all_instruments = set()
         for row in instruments_view:
-            instruments.add(row.value["instrument"])
+            all_instruments.add(row.value["instrument"])
 
-        instruments = sorted(list(instruments))
-        instrument_color = {}
-
-        i_to_n = dict(zip(instruments, np.linspace(0., 1., len(instruments))))
+        all_instruments = sorted(list(all_instruments))
+        i_to_n = dict(zip(all_instruments, np.linspace(0., 1., len(all_instruments))))
         cmap = plt.cm.Dark2
+        instrument_color = {}
+        for i in all_instruments:
+            instrument_color[i] = cmap(i_to_n[i])
 
-        for instrument in instruments:
-            instrument_color[instrument] = cmap(i_to_n[instrument])
-        view = self.application.flowcells_db.view("lanes/gtq30", group_level=2)
+        instrument_names = {}
+        instrument_types = {}
+        for instrument_type,instruments in self.application.instrument_list.iteritems():
+            for i_id, i_name in instruments.iteritems():
+                instrument_names[i_id] = i_name
+                instrument_types[i_id] = instrument_type
+
+        view = self.application.flowcells_db.view("lanes/gtq30", group_level=3)
 
         flowcells = OrderedDict()
         instruments = set()
-
+                                    
         start_date = self.get_argument("start", None)
         end_date = self.get_argument("end","z")
-        for row in view[[start_date]:[end_date]]:
-            flowcells[tuple(row.key)] = {"q30": row.value["sum"] / row.value["count"],
-                                         "instrument": row.value["instrument"]}
-            instruments.add(row.value["instrument"])
+        runmodes = self.get_arguments("runmodes")
+        print "Runmodes: "
+        print runmodes
 
+        # Special case for machines with null values in db,
+        # will show up as python value None 
+        if 'null' in runmodes:
+            runmodes.append(None)
+        for row in view[[start_date]:[end_date]]:
+            runmode = row.key[1]
+            if (runmodes == []) or (runmode in runmodes):
+                flowcells[tuple(row.key)] = {"q30": row.value["sum"] / row.value["count"],
+                                             "instrument": row.value["instrument"]}
+                instruments.add(row.value["instrument"])
 
         fig = Figure(figsize=[12, 8])
         ax = fig.add_axes([0.1, 0.2, 0.8, 0.7])
@@ -720,7 +735,8 @@ class Q30PlotHandler(tornado.web.RequestHandler):
             y = [x[1] for x in X]
             x = [parser.parse(x[0][0].split("_")[0]) for x in X]
 
-            ax.scatter(x, y, c=color, s=150, marker='o', label=instrument)
+            label = (instrument_names.get(instrument,instrument),instrument_types.get(instrument))
+            ax.scatter(x, y, c=color, s=150, marker='o', label=label)
 
             locs += x
             labels += [a[0][0].split("_")[0] for a in X]
@@ -733,7 +749,7 @@ class Q30PlotHandler(tornado.web.RequestHandler):
         ax.set_ylabel("%")
         ax.set_ylim([0, 100])
 
-        ax.legend(loc="lower right", bbox_to_anchor=(1, 1), ncol=5)
+        ax.legend(loc="lower right", bbox_to_anchor=(1, 1), ncol=4)
 
         FigureCanvasAgg(fig)
 
@@ -752,7 +768,7 @@ class Q30Handler(tornado.web.RequestHandler):
     """
     def get(self):
         t = self.application.loader.load("q30.html")
-        self.write(t.generate())
+        self.write(t.generate(instrument_list = self.application.instrument_list))
 
 
 class ReadsPerLanePlotHandler(tornado.web.RequestHandler):
@@ -1071,6 +1087,9 @@ class Application(tornado.web.Application):
             self.flowcells_db = couch["flowcells"]
             self.amanita_db = couch["amanita"]
             self.picea_db = couch["picea"]
+
+        # Load private instrument listing
+        self.instrument_list = settings.get("instruments")
 
         # Setup the Tornado Application
         settings = {"debug": True,
