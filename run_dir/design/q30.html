@@ -5,13 +5,44 @@
 <div class="container-fluid">
   <h2>Percentage of bases at least Q30</h2>
   <div id="slider"></div>
+  <div class="span6">
+    <form>
+      <fieldset>
+	<legend>HiSeq</legend>
+	<div class="btn-group">
+	  <button type="button" class="btn btn-large" data-toggle="dropdown"> 
+	    RunMode
+	    <span class="caret"></span>
+	  </button>
+	  <ul class="dropdown-menu">
+	    <li>
+	      <a href="#"> RapidRun </a>
+	    </li>
+	    <li>
+	      <a href="#"> HighOutput </a>
+	    </li>
+	  </ul>
+	</div>
+      </fieldset>
+    </form>
+  </div>
+  <div class="span6">
+    <form>
+      <fieldset>
+	<legend>MiSeq</legend>
+	<div class="btn-group">
+	  <button type="button" class="btn btn-large" data-toggle="button"> Filter </button>
+	</div>
+      </fieldset>
+    </form>
+  </div>
   <div id="q30_plot">
   </div>
 </div>
 
 <script type="text/javascript">
 var stop = new Date();
-var start = new Date(2012,0,1);
+var start = new Date(2012,7,1);
 var default_start = new Date();
 default_start.setDate(default_start.getDate() - 60);
 
