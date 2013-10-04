@@ -38,7 +38,7 @@ class BaseHandler(tornado.web.RequestHandler):
         """This method is called before any other method.
 
         Having the decorator @tornado.web.authenticated here implies that all
-        the Handlers that inherist from this one are going to require
+        the Handlers that inherit from this one are going to require
         authentication in all their methods.
         """
         pass
