@@ -67,3 +67,20 @@ class ProjectsHandler(tornado.web.RequestHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
         self.write(t.generate())
+
+
+class UppmaxProjectsDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of UPPNEX projects where the storage quota have
+    been logged.
+    """
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_projects()))
+
+    def list_projects(self):
+        project_list = []
+        view = self.application.uppmax_db.view("status/projects", group_level=1)
+        for row in view:
+            project_list.append(row.key)
+
+        return project_list

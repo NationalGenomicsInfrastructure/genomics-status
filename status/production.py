@@ -14,6 +14,15 @@ import tornado.web
 from status.util import dthandler
 
 
+class ProductionHandler(tornado.web.RequestHandler):
+    """ Serves a page with statistics and plots about the amount of
+    sequencing / data produced over time.
+    """
+    def get(self):
+        t = self.application.loader.load("production.html")
+        self.write(t.generate())
+
+
 class DeliveredMonthlyDataHandler(tornado.web.RequestHandler):
     """ Gives the data for monthly delivered amount of basepairs.
     """

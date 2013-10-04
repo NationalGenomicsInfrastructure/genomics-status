@@ -16,6 +16,7 @@ import matplotlib.gridspec as gridspec
 from matplotlib import cm
 import numpy as np
 
+
 class ApplicationsHandler(tornado.web.RequestHandler):
     """ Serves a page with stats about the different applications that have
     been performed for projects/samples.
@@ -23,6 +24,34 @@ class ApplicationsHandler(tornado.web.RequestHandler):
     def get(self):
         t = self.application.loader.load("applications.html")
         self.write(t.generate())
+
+
+class ApplicationHandler(tornado.web.RequestHandler):
+    """ Serves a page that list all the projects which has the application
+    provided as a parameter.
+    """
+    def get(self, application):
+        t = self.application.loader.load("application.html")
+        self.write(t.generate(application=application))
+
+
+class ApplicationDataHandler(tornado.web.RequestHandler):
+    """ Serves a list of projects which have the application provided as
+    an argument.
+    """
+    def get(self, application):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.list_projects(application)))
+
+    def list_projects(self, application):
+        if application == 'null':
+            application=None
+        projects = []
+        project_view = self.application.projects_db.view("project/applications", reduce=False)
+        for row in project_view[application]:
+            projects.append(row.value)
+
+        return projects
 
 
 class ApplicationsDataHandler(tornado.web.RequestHandler):
@@ -41,7 +70,7 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
         view = self.application.projects_db.view("project/date_applications")
         for row in view[[start,""]:[end,"z"]]:
             if row.key[1] is None:
-                # This corresponds to StatusDB:s notation 
+                # This corresponds to StatusDB:s notation
                 # and avoids conflict with 'None'.
                 applications['null'] += 1
             else:
