@@ -120,7 +120,7 @@ class Q30PlotHandler(tornado.web.RequestHandler):
             x = [parser.parse(x[0][0].split("_")[0]) for x in X]
             
             label = instrument_names.get(instrument,instrument)
-            ax.scatter(x, y, c=color, s=150, marker='o', label=label)
+            ax.scatter(x, y, c=color, s=100, marker='o', label=label)
             
             locs += x
             labels += [a[0][0].split("_")[0] for a in X]
