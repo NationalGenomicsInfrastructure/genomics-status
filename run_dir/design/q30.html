@@ -2,47 +2,89 @@
 
 <!-- Example row of columns -->
 {% block stuff %}
-<div class="container-fluid">
+<div class="row-fluid">
   <h2>Percentage of bases at least Q30</h2>
+  <p>
   <div id="slider"></div>
-  <div class="span6">
-    <form>
-      <fieldset>
-	<legend>HiSeq</legend>
-	<div class="btn-group">
-	  <button type="button" class="btn btn-large" data-toggle="dropdown"> 
-	    RunMode
-	    <span class="caret"></span>
-	  </button>
-	  <ul class="dropdown-menu">
-	    <li>
-	      <a href="#"> RapidRun </a>
-	    </li>
-	    <li>
-	      <a href="#"> HighOutput </a>
-	    </li>
-	  </ul>
+  </p>
+  <p>
+  <div id="form" class="row-fluid">
+    <form id="Filter" class="span12">
+      <legend>Filters</legend>
+      <div class="row-fluid">
+	<div class="span12">
+	  <div id="instruments">
+	    {% for instrument_type, instruments in instrument_list.iteritems() %}
+	      <div class="span2">
+	        <h3> {{instrument_type}} </h3>
+                {% for instrument_id, instrument_name in instruments.iteritems() %}
+	        <label class="checkbox">
+	 	  <input type="checkbox" name={{instrument_id}}> {{instrument_name}} </input>
+	        </label>
+                {% end %}
+	      </div>
+	    {% end %}
+	    </div>
+	  <div class="span2" id="runmodes">
+	    <h3> RunModes </h3>
+	    {% for runmode in runmodes %}
+	    <label class="checkbox">
+	      <input type="checkbox" name={{runmode}}> {{ runmode }} </input>
+	    </label>
+	    {% end %}
+	  </div>
+	  <div class="span2" id="setups">
+	    <h3> Setup </h3>
+	    {% for setup in setups %}
+              <label class="checkbox">
+	        <input type="checkbox" name={{setup}}> {{ setup }} </input>
+	      </label>
+	    {% end %}
+              <label class="checkbox">
+	        <input type="checkbox" name="Other"> Other </input>
+	      </label>
+	  </div>
+	  <div class="btn-toolbar span4">
+	    <p>
+	      <input type="submit" value="Apply Filter" class="btn btn-primary btn-large" id="applyFilter">
+	    </p>
+	    <p>
+	      <button class="btn btn-large" id="reset" >Reset Filter</button>
+	    </p>
+	  </div>
 	</div>
-      </fieldset>
+      </div>
     </form>
   </div>
-  <div class="span6">
-    <form>
-      <fieldset>
-	<legend>MiSeq</legend>
-	<div class="btn-group">
-	  <button type="button" class="btn btn-large" data-toggle="button"> Filter </button>
-	</div>
-      </fieldset>
-    </form>
+  </p>
+  <div id="test_out">
   </div>
   <div id="q30_plot">
   </div>
 </div>
 
 <script type="text/javascript">
+
+
+/* By default, all checkboxes are checked */
+check_all();
+
+/* Reset button handled here */
+$("#reset").click(function( event ) {
+  event.preventDefault();
+  check_all();
+  load_plots();
+});
+
+/* Apply filter button handled here */
+$("#applyFilter").click( function( event ) {
+  event.preventDefault();
+  load_plots();
+});
+
 var stop = new Date();
 var start = new Date(2012,7,1);
+
 var default_start = new Date();
 default_start.setDate(default_start.getDate() - 60);
 
@@ -66,15 +108,53 @@ $("#slider").dateRangeSlider({
   },
 });
 
-function load_plots(start, stop){
-   $("#q30_plot").html('<img src="/api/v1/plot/q30.png?start=' + start + '&end=' + stop + '"/>')
-}
 
 $("#slider").bind("valuesChanged", function(e, data){
-    start_string = $.datepicker.formatDate('ymmdd', data.values.min);
-    stop_string = $.datepicker.formatDate('ymmdd', data.values.max);
-    load_plots(start_string,stop_string)
+    load_plots()
 });
+
+function check_all(){
+  $("#Filter :checkbox").attr('checked', true)
+}
+
+function read_slider_position() {
+  current_min = $("#slider").dateRangeSlider("min")
+  current_max = $("#slider").dateRangeSlider("max")
+  start_string = $.datepicker.formatDate('ymmdd', current_min);
+  stop_string = $.datepicker.formatDate('ymmdd', current_max);
+  return [start_string, stop_string]
+}
+
+function read_current_filtering() {
+  var filtering = new Array();
+  var instruments = new Array();
+  var runmodes = new Array();
+  var setups = new Array();
+  $("#instruments :checkbox:checked").each(function() {
+     instruments.push($(this).attr('name'));
+  });
+  $("#runmodes :checkbox:checked").each(function() {
+     runmodes.push($(this).attr('name'));
+  });
+  $("#setups :checkbox:checked").each(function() {
+     setups.push($(this).attr('name'));
+  });
+  filtering.push(instruments)
+  filtering.push(runmodes)
+  filtering.push(setups)
+  return filtering;
+}
+
+function load_plots(){
+   sp = read_slider_position();
+   start = sp[0];
+   stop = sp[1];
+   filtering = read_current_filtering();
+   instruments = filtering[0]
+   runmodes = filtering[1]
+   setups = filtering[2]
+   $("#q30_plot").html('<img src="/api/v1/plot/q30.png?start=' + start + '&end=' + stop + '&instruments=' + instruments + '&runmodes=' + runmodes + '&setups=' + setups + '"/>')
+}
 
 </script>
 {% end %}
