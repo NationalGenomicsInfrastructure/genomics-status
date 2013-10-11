@@ -156,6 +156,9 @@ class Application(tornado.web.Application):
             self.amanita_db = couch["amanita"]
             self.picea_db = couch["picea"]
 
+        # Load private instrument listing
+        self.instrument_list = settings.get("instruments")
+
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
         settings = {"debug": True,
