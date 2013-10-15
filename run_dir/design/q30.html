@@ -2,9 +2,184 @@
 
 <!-- Example row of columns -->
 {% block stuff %}
-<div class="container-fluid">
+<div class="row-fluid">
   <h2>Percentage of bases at least Q30</h2>
-  <img src="/api/v1/plot/q30.png" />
+  <div class="row-fluid">
+    <div class="span12">
+      <div class="span6">
+	<p>
+	  Choose the time period that you are interested in and/or use the filters to narrow down your search. 
+	  The filters are applied whenever a new time period is chosen or when the 'Apply Filter' button is pressed.
+	  The 'Reset Filter' button will not reset the time interval, this can be achievd by reloading the page.
+	</p>
+      </div>
+      <div class="span6">
+	<p>
+	  Each point corresponds to one flowcell and shows the fraction of bases that achieve at least score Q30. 
+	  All points are sorted on rundate and colored according to instruments.
+	</p>
+      </div>
+    </div>
+  </div>
+  <p>
+  <div id="slider"></div>
+  </p>
+  <p>
+  <div id="form" class="row-fluid">
+    <form id="Filter" class="span12">
+      <legend>Filters</legend>
+      <div class="row-fluid">
+	<div class="span12">
+	<p class="span6">
+	<div class="span6">
+	  </div>
+	</div>
+      </div>
+      <div class="row-fluid">
+	<div class="span12">
+	  <div id="instruments">
+	    {% for instrument_type, instruments in instrument_list.iteritems() %}
+	      <div class="span2">
+	        <h3> {{instrument_type}} </h3>
+                {% for instrument_id, instrument_name in instruments.iteritems() %}
+	        <label class="checkbox">
+	 	  <input type="checkbox" name={{instrument_id}}> {{instrument_name}} </input>
+	        </label>
+                {% end %}
+	      </div>
+	    {% end %}
+	    </div>
+	  <div class="span2" id="runmodes">
+	    <h3> RunModes </h3>
+	    {% for runmode in runmodes %}
+	    <label class="checkbox">
+	      <input type="checkbox" name={{runmode}}> {{ runmode }} </input>
+	    </label>
+	    {% end %}
+	  </div>
+	  <div class="span2" id="setups">
+	    <h3> Setup </h3>
+	    <span class="help-block">Number of cycles from run info includes:</span>
+	    {% for setup in setups %}
+              <label class="checkbox">
+	        <input type="checkbox" name={{setup}}> {{ setup }} </input>
+	      </label>
+	    {% end %}
+              <label class="checkbox">
+	        <input type="checkbox" name="Other"> Other </input>
+	      </label>
+	  </div>
+	  <div class="btn-toolbar span4">
+	    <p>
+	      <input type="submit" value="Apply Filter" class="btn btn-primary btn-large" id="applyFilter">
+	    </p>
+	    <p>
+	      <button class="btn btn-large" id="reset" >Reset Filter</button>
+	    </p>
+	  </div>
+	</div>
+      </div>
+    </form>
+  </div>
+  </p>
+  <div id="test_out">
+  </div>
+  <div id="q30_plot">
+  </div>
 </div>
 
+<script type="text/javascript">
+
+
+/* By default, all checkboxes are checked */
+check_all();
+
+/* Reset button handled here */
+$("#reset").click(function( event ) {
+  event.preventDefault();
+  check_all();
+  load_plots();
+});
+
+/* Apply filter button handled here */
+$("#applyFilter").click( function( event ) {
+  event.preventDefault();
+  load_plots();
+});
+
+var stop = new Date();
+var start = new Date(2012,7,1);
+
+var default_start = new Date();
+default_start.setDate(default_start.getDate() - 60);
+
+$("#slider").dateRangeSlider({
+  bounds:
+  {
+    min: start,
+    max: stop
+  },
+  defaultValues:
+  {
+    min: default_start,
+    max: stop
+  },
+  min: 1,
+  max: 12,
+  values: [2, 12],
+  step:
+  {
+    days: 1
+  },
+});
+
+
+$("#slider").bind("valuesChanged", function(e, data){
+    load_plots()
+});
+
+function check_all(){
+  $("#Filter :checkbox").attr('checked', true)
+}
+
+function read_slider_position() {
+  current_min = $("#slider").dateRangeSlider("min")
+  current_max = $("#slider").dateRangeSlider("max")
+  start_string = $.datepicker.formatDate('ymmdd', current_min);
+  stop_string = $.datepicker.formatDate('ymmdd', current_max);
+  return [start_string, stop_string]
+}
+
+function read_current_filtering() {
+  var filtering = new Array();
+  var instruments = new Array();
+  var runmodes = new Array();
+  var setups = new Array();
+  $("#instruments :checkbox:checked").each(function() {
+     instruments.push($(this).attr('name'));
+  });
+  $("#runmodes :checkbox:checked").each(function() {
+     runmodes.push($(this).attr('name'));
+  });
+  $("#setups :checkbox:checked").each(function() {
+     setups.push($(this).attr('name'));
+  });
+  filtering.push(instruments)
+  filtering.push(runmodes)
+  filtering.push(setups)
+  return filtering;
+}
+
+function load_plots(){
+   sp = read_slider_position();
+   start = sp[0];
+   stop = sp[1];
+   filtering = read_current_filtering();
+   instruments = filtering[0]
+   runmodes = filtering[1]
+   setups = filtering[2]
+   $("#q30_plot").html('<img src="/api/v1/plot/q30.png?start=' + start + '&end=' + stop + '&instruments=' + instruments + '&runmodes=' + runmodes + '&setups=' + setups + '"/>')
+}
+
+</script>
 {% end %}
