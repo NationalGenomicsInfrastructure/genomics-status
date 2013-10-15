@@ -17,7 +17,7 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
 
     def list_projects(self):
         projects = OrderedDict()
-        for row in self.application.projects_db.view("project/summary"):
+        for row in self.application.projects_db.view("project/summary", descending=True):
             projects[row.key] = row.value
 
         return projects
