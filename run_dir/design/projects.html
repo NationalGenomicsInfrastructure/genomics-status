@@ -21,9 +21,12 @@
       <thead>
 	<tr class="a" onmouseover="this.style.cursor='pointer'">
           <th class="sort" data-sort="project">Project</th>
+          <th class="sort" data-sort="project_name">Project Name</th>
+          <th class="sort" data-sort="queued">Queue Date</th>
           <th class="sort" data-sort="application">Application</th>
           <th class="sort" data-sort="ordered_reads">Ordered million reads per sample</th>
           <th class="sort" data-sort="seq_progress">Sequencing progress</th>
+          <th class="sort" data-sort="source">Source</th>
 	</tr>
       </thead>
       <tbody class="list">
@@ -45,9 +48,12 @@ $.getJSON("/api/v1/projects", function(data) {
     else{
       tbl_row = '<tr>'
     }
-
     tbl_row += '<td><a class="project" href="/projects/' + k1 + '">'
     tbl_row += k1  + '</td>'
+    tbl_row += '<td class="project_name">'
+    tbl_row += summary["project_name"]  + '</td>'
+    tbl_row += '<td class="queued">'
+    tbl_row += summary["queued"] + '</td>'
     tbl_row += '<td class="application">' + summary["application"] + '</td>'
     if (typeof summary["ordered_reads"] === 'number'){
       tbl_row += '<td class="ordered_reads">' + summary["ordered_reads"].toFixed(2) + '</td>'  
@@ -63,9 +69,12 @@ $.getJSON("/api/v1/projects", function(data) {
     else{
       tbl_row += '<td'
     }
-
     tbl_row += ' class="seq_progress">' + summary["passed_samples"] + " / " 
     + summary["no_samples"] + ' samples finished</td>'
+
+    tbl_row += '<td class="source">'
+    tbl_row += summary["source"] + '</td>'
+
     tbl_row += '</tr>'
 
     $("#project_table").append(tbl_row)
@@ -73,9 +82,11 @@ $.getJSON("/api/v1/projects", function(data) {
   init_listjs(size)
 })
 
+
+// Initialize sorting and searching javascript plugin
 function init_listjs(no_items) {
     var options = {
-        valueNames: [ 'project', 'application', 'ordered_reads', 'seq_progress'],
+        valueNames: [ 'project', 'project_name', 'queued', 'application', 'ordered_reads', 'seq_progress','source'],
         page: no_items /* Default is to show only 200 items at a time. */
     };
 
