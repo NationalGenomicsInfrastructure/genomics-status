@@ -289,7 +289,7 @@ class ProducedQuarterlyDataHandler(tornado.web.RequestHandler):
         for row in view[start:end]:
             y = int("20" + str(row.key[0]))
             q = row.key[1]
-            produced[dthandler(datetime(y, (q - 1) * 3 + 1, 1))] = int(row.value * 1e6)
+            produced[dthandler(datetime(y, (q - 1) * 3 + 1, 1))] = int(row.value)
 
         return produced
 
