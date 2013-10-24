@@ -8,6 +8,7 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
+from status.util import dthandler
 
 class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
     """ Serves series with number of matched reads to a barcode compared
