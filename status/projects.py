@@ -13,8 +13,10 @@ PROJECTS_COLUMNS = OrderedDict([('Project', 'project'),
                     ('Queue Date', 'queued'),
                     ('Application', 'application'),
                     ('Ordered million reads per sample', 'ordered_reads'),
-                    ('Sequencing progress', 'seq_progress'),
+                    ('Sequencing progress', 'passed_samples'),
+                    ('Number of Samples','no_samples'),
                     ('Source','source')])
+
 
 class ProjectsDataHandler(tornado.web.RequestHandler):
     """ Serves brief information for each project in the database.

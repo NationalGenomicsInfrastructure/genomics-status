@@ -7,82 +7,113 @@
   <h2>Projects</h2>
   <p> You can search for anything in the table and sort on any column by clicking on the column header. </p>
   <div id="project-list">
-    <form class="form form-search">
+    <form id="Filter" class="form form-search">
       <fieldset>
 	<div class="control-group">
 	  <input class="search search-query" type="text" placeholder="Search..." />
 	</div>
 	<div>
-	  <button class="btn btn-large" href=""> Reset </button>
+	  <button id="Reset" class="btn btn-large"> Reset </button>
+	</div>
+	<div>
+	  <input type="submit" value="Apply Filter" class="btn btn-primary btn-large" id="applyFilter">
+	</div>
+	<div class="control-group">
+	  {% for col_display_name, col_name in columns.iteritems() %}
+	    <input type="checkbox" name={{col_name}} id={{col_name}}>
+	    <label for={{col_name}}>
+		{{col_display_name}}
+              </label>
+            </input>
+	  {% end %}
 	</div>
       </fieldset>
     </form>
     <table class="table" id="project_table">
-      <thead>
-	<tr class="a" onmouseover="this.style.cursor='pointer'">
-	  {% for col_display_name, col_name in columns.iteritems() %}
-	  <th class="sort" data-sort={{col_name}}>{{col_display_name}}</th>
-	  {% end %}
-	</tr>
+      <thead id="project_table_head">
       </thead>
-      <tbody class="list">
+      <tbody class="list" id="project_table_body">
       </tbody>
     </table>
   </div>
 </div>
 
 <script>
-$.getJSON("/api/v1/projects", function(data) {
-  var tbl_body = "";
-  var size = 0;
-  $.each(data, function(k1, summary) {
-    size++;
-    // Color row to indicate problem with sample counts
-    if(summary["passed_samples"] > summary["no_samples"]){
-      tbl_row = '<tr style="background-color: #FDC086;">'
-    }
-    else{
-      tbl_row = '<tr>'
-    }
-    tbl_row += '<td><a class="project" href="/projects/' + k1 + '">'
-    tbl_row += k1  + '</td>'
-    tbl_row += '<td class="project_name">'
-    tbl_row += summary["project_name"]  + '</td>'
-    tbl_row += '<td class="queued">'
-    tbl_row += summary["queued"] + '</td>'
-    tbl_row += '<td class="application">' + summary["application"] + '</td>'
-    if (typeof summary["ordered_reads"] === 'number'){
-      tbl_row += '<td class="ordered_reads">' + summary["ordered_reads"].toFixed(2) + '</td>'  
-    }
-    else {
-      tbl_row += '<td class="ordered_reads">' + summary["ordered_reads"] + '</td>'
-    }
+/* check default checkboxes */
+reset_default_checkboxes();
+load_table();
 
-    // Color cell to indicate complete
-    if(summary["passed_samples"] == summary["no_samples"]){
-      tbl_row += '<td style="background-color: #7FC97F;"'
-    }
-    else{
-      tbl_row += '<td'
-    }
-    tbl_row += ' class="seq_progress">' + summary["passed_samples"] + " / " 
-    + summary["no_samples"] + ' samples finished</td>'
+/* Reset button handled here */
+$("#Reset").click(function( event ) {
+  event.preventDefault();
+  reset_default_checkboxes();
+  load_table();
+});
 
-    tbl_row += '<td class="source">'
-    tbl_row += summary["source"] + '</td>'
+/* Apply filter button handled here */
+$("#applyFilter").click( function( event ) {
+  event.preventDefault();
+  load_table();
+});
 
-    tbl_row += '</tr>'
+function reset_default_checkboxes(){
+  $("#Filter :checkbox").attr('checked', true)
+}
 
-    $("#project_table").append(tbl_row)
+function read_current_filtering(){
+  var columns = new Array();
+  $("#Filter :checkbox:checked").each(function() {
+    columns.push([$(this).next('label').text(), $(this).attr('name')]);
+  });
+  return columns
+}
+
+function load_table_head(columns){
+  var tbl_head = '<tr class="a" onmouseover="this.style.cursor="pointer"">'
+  $.each(columns, function(i, column_tuple) {
+    tbl_head += '<th class="sort" data-sort="' + column_tuple[1] + '">' + column_tuple[0] + '</th>'
+  });
+  tbl_head += '</tr>'
+  $("#project_table_head").html(tbl_head)
+}
+
+
+function load_table(){
+  columns = read_current_filtering();
+  load_table_head(columns)
+  /* Project column is treated as special case, since it is a link */
+  var project_column = $("#Filter :checkbox[name='project']").is(":checked")
+  $.getJSON("/api/v1/projects", function(data) {
+    var tbl_body = "";
+    var size = 0;
+    $.each(data, function(key, summary) {
+      size++;
+      tbl_row = '<tr project_column=' + project_column + '>'
+      if(project_column){
+        tbl_row += '<td><a class="project" href="/projects/' + key + '">' + key  + '</td>'
+      }
+      $.each(columns, function(i, column_tuple){
+        if(column_tuple[1]!="project"){
+          tbl_row += '<td class="' + column_tuple[1] + '">' + summary[column_tuple[1]] + '</td>'
+        }
+      })
+      tbl_row += '</tr>'
+      tbl_body += tbl_row
+    })
+    $("#project_table_body").html(tbl_body)
+    init_listjs(size, columns)
   })
-  init_listjs(size)
-})
+}
 
 
 // Initialize sorting and searching javascript plugin
-function init_listjs(no_items) {
+function init_listjs(no_items, columns) {
+    column_names = new Array();
+    $.each(columns, function(i, column_tuple){
+      column_names.push(column_tuple[1])
+    })
     var options = {
-        valueNames: [ 'project', 'project_name', 'queued', 'application', 'ordered_reads', 'seq_progress','source'],
+        valueNames: column_names,
         page: no_items /* Default is to show only 200 items at a time. */
     };
 
