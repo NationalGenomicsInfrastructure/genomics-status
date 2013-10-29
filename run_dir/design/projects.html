@@ -20,13 +20,9 @@
     <table class="table" id="project_table">
       <thead>
 	<tr class="a" onmouseover="this.style.cursor='pointer'">
-          <th class="sort" data-sort="project">Project</th>
-          <th class="sort" data-sort="project_name">Project Name</th>
-          <th class="sort" data-sort="queued">Queue Date</th>
-          <th class="sort" data-sort="application">Application</th>
-          <th class="sort" data-sort="ordered_reads">Ordered million reads per sample</th>
-          <th class="sort" data-sort="seq_progress">Sequencing progress</th>
-          <th class="sort" data-sort="source">Source</th>
+	  {% for col_display_name, col_name in columns.iteritems() %}
+	  <th class="sort" data-sort={{col_name}}>{{col_display_name}}</th>
+	  {% end %}
 	</tr>
       </thead>
       <tbody class="list">

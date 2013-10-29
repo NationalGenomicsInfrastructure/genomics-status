@@ -7,6 +7,14 @@ import tornado.web
 
 from status.util import dthandler
 
+# Constant dictionary with Displayname:internalname pairs
+PROJECTS_COLUMNS = OrderedDict([('Project', 'project'),
+                    ('Project Name', 'project_name'), 
+                    ('Queue Date', 'queued'),
+                    ('Application', 'application'),
+                    ('Ordered million reads per sample', 'ordered_reads'),
+                    ('Sequencing progress', 'seq_progress'),
+                    ('Source','source')])
 
 class ProjectsDataHandler(tornado.web.RequestHandler):
     """ Serves brief information for each project in the database.
@@ -66,8 +74,8 @@ class ProjectsHandler(tornado.web.RequestHandler):
     """
     def get(self):
         t = self.application.loader.load("projects.html")
-        self.write(t.generate())
-
+        self.write(t.generate(columns = PROJECTS_COLUMNS))
+        
 
 class UppmaxProjectsDataHandler(tornado.web.RequestHandler):
     """ Serves a list of UPPNEX projects where the storage quota have
