@@ -17,9 +17,23 @@
 	  <form id="Filter" class="form form-search">
 	    <legend>Filter Columns</legend>
 	    <div class="row-fluid">
-	      <div class="span3">
+	      <div id="default-columns" class="span3">
 		<div class="fieldset">
-		  {% for col_display_name, col_name in columns.iteritems() %}
+		  <h3> Default </h3>
+		  {% for col_display_name, col_name in default_columns.iteritems() %}
+		  <input type="checkbox" name={{col_name}} id={{col_name}}>
+		  <label for={{col_name}}>
+		    {{col_display_name}}
+		  </label>
+                  </input>
+		  <br />
+	          {% end %}
+		</div>
+	      </div>
+	      <div id="other-columns" class="span3">
+		<div class="fieldset">
+		  <h3> Extra </h3>
+		  {% for col_display_name, col_name in other_columns.iteritems() %}
 		  <input type="checkbox" name={{col_name}} id={{col_name}}>
 		  <label for={{col_name}}>
 		    {{col_display_name}}
@@ -76,7 +90,12 @@ $("#applyFilter").click( function( event ) {
 });
 
 function reset_default_checkboxes(){
-  $("#Filter :checkbox").attr('checked', true)
+  {% for col_display_name, column_name in default_columns.iteritems() %}
+    $("#Filter #{{column_name}}").attr('checked', true)
+  {% end %}
+  {% for col_display_name, column_name in other_columns.iteritems() %}
+    $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
 }
 
 function read_current_filtering(){
