@@ -4,10 +4,16 @@ import json
 import requests
 import re
 
+import yaml
+
+TEST_ITEMS = "test_items.yaml"
+
 class TestGet(object):
     def setUp(self):
         """Server Settings"""
         self.url = 'http://localhost:9761'
+        with open(TEST_ITEMS) as test_items:
+            test_items = yaml.load(test_items)
 
     def test_all_pages(self):
         api = requests.get(self.url + '/api/v1')
@@ -39,3 +45,5 @@ class TestGet(object):
 
         assert_true(len(error_pages) == 0,
                     msg=('Requests resulted in error: {0} '.format(error_pages)))
+
+    
