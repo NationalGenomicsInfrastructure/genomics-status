@@ -51,7 +51,7 @@ class TestGet(object):
         assert_true(r.ok)
 
     def test_api_samples(self):
-        """ Matches:
+        """ Testing:
         '/api/v1/samples/start/([^/]*)$'
         '/api/v1/samples/([^/]*)$',
         '/api/v1/sample_summary/([^/]*)$',
@@ -61,6 +61,7 @@ class TestGet(object):
         '/api/v1/sample_info/([^/]*)$',
         '/api/v1/sample_coverage/([^/]*)$',
         '/api/v1/sample_alignment/([^/]*)$',
+        '/api/v1/qc/([^/]*)$'
         """
         sample_id1 = self.test_items['samples']['sample_id1']
         sample_id2 = self.test_items['samples']['sample_id2']
@@ -80,8 +81,52 @@ class TestGet(object):
                 url + 'sample_info/' + sample_id1,
                 url + 'sample_info/' + sample_id2,
                 url + 'sample_coverage/' + sample_run_id,
-                url + 'sample_alignment/' + sample_run_id]
+                url + 'sample_alignment/' + sample_run_id,
+                url + 'qc/' + sample_run_id]
 
         error_pages = filter(lambda u: not requests.get(u).ok, urls)
         assert_true(len(error_pages) == 0,
                     msg=('Sample requests resulted in error {0} '.format(error_pages)))
+
+    def test_api_quotas(self):
+        """ Testing:
+
+        '/api/v1/quotas/(\\w+)?'
+
+        """
+        
+        quota_id = self.test_items['quota']['quota_id']
+        url = self.url + '/api/v1/'
+        urls = [url + 'quotas/' + quota_id]
+
+        error_pages = filter(lambda u: not requests.get(u).ok, urls)
+        assert_true(len(error_pages) == 0,
+                    msg=('Quota requests resulted in error {0} '.format(error_pages)))
+
+    def test_api_rest(self):
+        """ Testing:
+        '/api/v1/project_summary/([^/]*)$'
+        '/api/v1/picea_home/([^/]*)$'
+        '/api/v1/application/([^/]*)$',
+        """
+        pass
+
+    def test_api_flowcells(self):
+        """" Testing:
+        '/api/v1/flowcells/([^/]*)$'
+        '/api/v1/flowcell_qc/([^/]*)$',
+        '/api/v1/flowcell_q30/([^/]*)$',
+        '/api/v1/flowcell_info/([^/]*)$',
+        '/api/v1/flowcell_demultiplex/([^/]*)$',
+        """
+        pass
+    
+    def test_api_amanita(self):
+        """ Testing:
+
+        '/api/v1/amanita_home/projects/([^/]*)$'
+        '/api/v1/amanita_home/([^/]*)$'
+        '/api/v1/amanita_box2/([^/]*)$'
+
+        """
+        pass
