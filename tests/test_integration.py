@@ -62,8 +62,26 @@ class TestGet(object):
         '/api/v1/sample_coverage/([^/]*)$',
         '/api/v1/sample_alignment/([^/]*)$',
         """
-        samples_start_id = self.test_items['samples']['start_id'] 
-        
-        r = requests.get(self.url + '/api/v1' + '/samples/' + 'start/' + samples_start_id)
-        assert_true(r.ok)
-        
+        sample_id1 = self.test_items['samples']['sample_id1']
+        sample_id2 = self.test_items['samples']['sample_id2']
+        sample_run_id = self.test_items['samples']['sample_run_id']
+
+        url = self.url + '/api/v1/'
+        urls = [url + 'samples/start/' + sample_id1,
+                url + 'samples/start/' + sample_id2,
+                url + 'samples/' + sample_id1,
+                url + 'samples/' + sample_id2,
+                url + 'sample_summary/' + sample_run_id,
+                url + 'sample_run_counts/' + sample_id1,
+                url + 'sample_run_counts/' + sample_id2,
+                url + 'sample_readcount/' + sample_id1,
+                url + 'sample_readcount/' + sample_id2,
+                url + 'sample_insert_sizes/' + sample_run_id,
+                url + 'sample_info/' + sample_id1,
+                url + 'sample_info/' + sample_id2,
+                url + 'sample_coverage/' + sample_run_id,
+                url + 'sample_alignment/' + sample_run_id]
+
+        error_pages = filter(lambda u: not requests.get(u).ok, urls)
+        assert_true(len(error_pages) == 0,
+                    msg=('Sample requests resulted in error {0} '.format(error_pages)))
