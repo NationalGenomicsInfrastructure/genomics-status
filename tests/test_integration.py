@@ -103,13 +103,6 @@ class TestGet(object):
         assert_true(len(error_pages) == 0,
                     msg=('Quota requests resulted in error {0} '.format(error_pages)))
 
-    def test_api_rest(self):
-        """ Testing:
-        '/api/v1/project_summary/([^/]*)$'
-        '/api/v1/picea_home/([^/]*)$'
-        '/api/v1/application/([^/]*)$',
-        """
-        pass
 
     def test_api_flowcells(self):
         """" Testing:
@@ -119,8 +112,24 @@ class TestGet(object):
         '/api/v1/flowcell_info/([^/]*)$',
         '/api/v1/flowcell_demultiplex/([^/]*)$',
         """
-        pass
-    
+        flowcell_id = self.test_items['flowcells']['flowcell_id']
+        url = self.url + '/api/v1/'
+        urls = [url + 'flowcells/' + flowcell_id,
+                url + 'flowcell_qc/' + flowcell_id,
+                url + 'flowcell_q30/' + flowcell_id,
+                url + 'flowcell_info/' + flowcell_id,
+                url + 'flowcell_demultiplex/' + flowcell_id]
+
+        error_pages = filter(lambda u: not requests.get(u).ok, urls)
+        assert_true(len(error_pages) == 0,
+                    msg=('Flowcell requests resulted in error {0} '.format(error_pages)))
+        
+        non_error_url = filter(lambda u: u not in error_pages,  urls)
+        empty_json = filter(lambda u: len(json.loads(requests.get(u).content)) == 0, non_error_url)
+        assert_true(len(empty_json) == 0,
+                    msg=('Flowcell requests are empty: {0} '.format(empty_json)))
+
+
     def test_api_amanita(self):
         """ Testing:
 
@@ -129,4 +138,43 @@ class TestGet(object):
         '/api/v1/amanita_box2/([^/]*)$'
 
         """
-        pass
+        project_id = self.test_items['amanita']['project_id']
+        user = self.test_items['amanita']['user']
+        url = self.url + '/api/v1/'
+        urls = [url + 'amanita_home/projects/' + project_id,
+                url + 'amanita_home/' + user,
+                url + 'amanita_box2/' + project_id]
+
+        error_pages = filter(lambda u: not requests.get(u).ok, urls)
+        assert_true(len(error_pages) == 0,
+                    msg=('Amanita requests resulted in error {0} '.format(error_pages)))
+
+        non_error_url = filter(lambda u: u not in error_pages,  urls)
+        empty_json = filter(lambda u: len(json.loads(requests.get(u).content)) == 0, non_error_url)
+        assert_true(len(empty_json) == 0,
+                    msg=('Amanita requests are empty: {0} '.format(empty_json)))
+
+
+    def test_api_misc(self):
+        """ Testing:
+        '/api/v1/project_summary/([^/]*)$'
+        '/api/v1/picea_home/([^/]*)$'
+        '/api/v1/application/([^/]*)$',
+        """
+        project_id = self.test_items['projects']['project_id']
+        user = self.test_items['picea']['user']
+        application = self.test_items['application']['application']
+
+        url = self.url + '/api/v1/'
+        urls = [url + 'project_summary/' + project_id,
+                url + 'picea_home/' + user,
+                url + 'application/' + application]
+
+        error_pages = filter(lambda u: not requests.get(u).ok, urls)
+        assert_true(len(error_pages) == 0,
+                    msg=('Misc requests resulted in error {0} '.format(error_pages)))
+
+        non_error_url = filter(lambda u: u not in error_pages,  urls)
+        empty_json = filter(lambda u: len(json.loads(requests.get(u).content)) == 0, non_error_url)
+        assert_true(len(empty_json) == 0,
+                    msg=('Misc requests are empty: {0} '.format(empty_json)))
