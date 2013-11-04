@@ -29,6 +29,8 @@ def make_instrument_series_handler(couchdb_view_name):
             data = defaultdict(lambda: defaultdict(list))
             for row in view:
                 date = row.key[0]
+                if not date: # Handles null values
+                    continue
                 instrument = row.key[1].upper()
                 data[instrument][date] += row.value
 
