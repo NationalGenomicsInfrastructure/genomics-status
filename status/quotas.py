@@ -25,7 +25,9 @@ class QuotaHandler(tornado.web.RequestHandler):
 
 class QuotaDataHandler(tornado.web.RequestHandler):
     """ Serves a time series for storage quota usage of a given UPPNEX
-    project.
+    project. 
+
+    Handles url: /api/v1/quotas/([^/]*)$
     """
     def get(self, project):
         self.set_header("Content-type", "application/json")
