@@ -71,7 +71,9 @@ class ProjectsHandler(tornado.web.RequestHandler):
 
 class UppmaxProjectsDataHandler(tornado.web.RequestHandler):
     """ Serves a list of UPPNEX projects where the storage quota have
-    been logged.
+    been logged. 
+
+    Handles url: /api/v1/uppmax_projects
     """
     def get(self):
         self.set_header("Content-type", "application/json")
