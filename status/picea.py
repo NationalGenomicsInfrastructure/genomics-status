@@ -18,6 +18,8 @@ class PiceaHandler(tornado.web.RequestHandler):
 
 class PiceaHomeDataHandler(tornado.web.RequestHandler):
     """ Serves a time seris for the total storage usage in HOME on Picea.
+
+    Loaded through /api/v1/picea_home
     """
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -35,6 +37,8 @@ class PiceaHomeDataHandler(tornado.web.RequestHandler):
 
 class PiceaHomeUserDataHandler(tornado.web.RequestHandler):
     """ Serves a time series for the storage used by as user in HOME on Picea.
+
+    Loaded through /api/v1/picea_home/([^/]*)$
     """
     def get(self, user):
         self.set_header("Content-type", "application/json")
@@ -53,6 +57,8 @@ class PiceaHomeUserDataHandler(tornado.web.RequestHandler):
 
 class PiceaUsersDataHandler(tornado.web.RequestHandler):
     """ Serves a list of users on Picea.
+
+    Loaded through /api/v1/picea_home/users/
     """
     def get(self):
         self.set_header("Content-type", "application/json")
