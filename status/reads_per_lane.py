@@ -19,6 +19,8 @@ class ReadsPerLaneHandler(tornado.web.RequestHandler):
 class ReadsPerLanePlotHandler(tornado.web.RequestHandler):
     """ Serves a plot of distribution of lane read production for a provided
     time interval.
+
+    Loaded through /api/v1/plot/reads_per_lane.png
     """
     def get(self):
         start = self.get_argument("start", "")

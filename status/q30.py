@@ -27,6 +27,8 @@ class Q30Handler(tornado.web.RequestHandler):
 class Q30PlotHandler(tornado.web.RequestHandler):
     """ Serves a plot of the percentages of bases which are at least Q30 for
     each flowcell.
+    
+    Loaded through /api/v1/plot/q30.png
     """
     def get(self):
         instrument_color = self._instrument_colors()
