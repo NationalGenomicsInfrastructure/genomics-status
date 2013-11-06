@@ -29,6 +29,8 @@ OTHER_COLUMNS = OrderedDict([('Queue Date', 'queued'),
 
 class ProjectsDataHandler(tornado.web.RequestHandler):
     """ Serves brief information for each project in the database.
+
+    Loaded through /api/v1/projects
     """
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -44,6 +46,8 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
 
 class ProjectDataHandler(tornado.web.RequestHandler):
     """ Serves brief information of a given project.
+
+    Loaded through /api/v1/project_summary/([^/]*)$
     """
     def get(self, project):
         self.set_header("Content-type", "application/json")
@@ -57,6 +61,8 @@ class ProjectDataHandler(tornado.web.RequestHandler):
 
 class ProjectSamplesDataHandler(tornado.web.RequestHandler):
     """ Serves brief info about all samples in a given project.
+
+    Loaded through /api/v1/projects/([^/]*)$
     """
     def get(self, project):
         self.set_header("Content-type", "application/json")
@@ -92,7 +98,7 @@ class UppmaxProjectsDataHandler(tornado.web.RequestHandler):
     """ Serves a list of UPPNEX projects where the storage quota have
     been logged. 
 
-    Handles url: /api/v1/uppmax_projects
+    Loaded through /api/v1/uppmax_projects
     """
     def get(self):
         self.set_header("Content-type", "application/json")

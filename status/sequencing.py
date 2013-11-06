@@ -17,6 +17,9 @@ from status.util import dthandler
 def make_instrument_series_handler(couchdb_view_name):
     """ Create a handler for a flowcell-instrument series of data for the
     given couchdb view.
+
+    Loaded through:
+    /api/v1/instrument_* urls
     """
     class InstrumentSeriesDataHandler(tornado.web.RequestHandler):
         def get(self):
@@ -44,6 +47,7 @@ InstrumentClusterDensityDataHandler = make_instrument_series_handler("instrument
 
 class InstrumentClusterDensityPlotHandler(InstrumentClusterDensityDataHandler):
     """ Gives a plot for series of cluster densities for instruments, over time.
+    Loaded through /api/v1/instrument_cluster_density.png url
     """
     def get(self):
         data = self.data()
@@ -102,6 +106,8 @@ InstrumentErrorrateDataHandler = make_instrument_series_handler("instrument/erro
 
 class InstrumentErrorratePlotHandler(InstrumentErrorrateDataHandler):
     """ Gives series for phiX error rates for instruments, over time.
+
+    Loaded through /api/v1/instrument_error_rates.png url
     """
     def get(self):
         data = self.data()
@@ -158,6 +164,8 @@ InstrumentUnmatchedDataHandler = make_instrument_series_handler("instrument/unma
 
 class InstrumentUnmatchedPlotHandler(InstrumentUnmatchedDataHandler):
     """ Gives series for unmatched reads for flowcell per instrument, over time.
+
+    Loaded through /api/v1/instrument_unmatched.png
     """
     def get(self):
         data = self.data()
@@ -210,6 +218,8 @@ InstrumentYieldDataHandler = make_instrument_series_handler("instrument/yield")
 
 class InstrumentYieldPlotHandler(InstrumentYieldDataHandler):
     """ Gives series for lane yields over instruments, by time.
+
+    Loaded through /api/v1/instrument_yield.png
     """
     def get(self):
         data = self.data()

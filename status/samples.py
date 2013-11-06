@@ -14,6 +14,8 @@ from collections import OrderedDict
 
 class SampleInfoDataHandler(tornado.web.RequestHandler):
     """ Serves the abbreviated sample info for a given sample.
+
+    Loaded through /api/v1/sample_info/([^/]*)$
     """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
@@ -25,6 +27,8 @@ class SampleInfoDataHandler(tornado.web.RequestHandler):
 
 class SampleQCSummaryDataHandler(tornado.web.RequestHandler):
     """ Serves the QC Summary data of a given sample.
+
+    Loaded through /api/v1/sample_summary/([^/]*)$
     """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
@@ -46,6 +50,8 @@ class SampleRunHandler(tornado.web.RequestHandler):
 
 class SampleRunDataHandler(tornado.web.RequestHandler):
     """ Serves a list of sample runs for a given sample.
+
+    Loaded through /api/v1/samples/([^/]*)$
     """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
@@ -62,6 +68,8 @@ class SampleRunDataHandler(tornado.web.RequestHandler):
 
 class SampleQCDataHandler(tornado.web.RequestHandler):
     """ Serves the QC data of a given sample.
+
+    Loaded through /api/v1/qc/([^/]*)$
     """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
@@ -84,6 +92,8 @@ class SampleQCSummaryHandler(tornado.web.RequestHandler):
 
 class SampleQCAlignmentDataHandler(tornado.web.RequestHandler):
     """ Serves alignment QC metrics for a given sample run.
+
+    Loaded through /api/v1/sample_alignment/([^/]*)$
     """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
@@ -97,6 +107,8 @@ class SampleQCAlignmentDataHandler(tornado.web.RequestHandler):
 
 class SampleQCInsertSizesDataHandler(tornado.web.RequestHandler):
     """ Serves insert size distribution for a given sample run.
+    
+    Loaded through /api/v1/sample_insert_sizes/([^/]*)$
     """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
@@ -110,6 +122,8 @@ class SampleQCInsertSizesDataHandler(tornado.web.RequestHandler):
 
 class SampleQCCoverageDataHandler(tornado.web.RequestHandler):
     """ Serves coverage for a given sample run.
+
+    Loaded through /api/v1/sample_coverage/([^/]*)$
     """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
@@ -123,6 +137,8 @@ class SampleQCCoverageDataHandler(tornado.web.RequestHandler):
 
 class SampleReadCountDataHandler(tornado.web.RequestHandler):
     """ Serves the read counts of a given sample.
+
+    Loaded through /api/v1/sample_readcount/(\w+)?
     """
     def get(self, sample):
         self.set_header("Content-type", "application/json")
@@ -137,6 +153,8 @@ class SampleReadCountDataHandler(tornado.web.RequestHandler):
 
 class SamplesPerLaneDataHandler(tornado.web.RequestHandler):
     """ Serves data for the number of samples loaded on a lane.
+
+    Loaded through /api/v1/samples_per_lane
     """
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -164,6 +182,8 @@ class SamplesPerLaneHandler(tornado.web.RequestHandler):
 
 class SamplesPerLanePlotHandler(SamplesPerLaneDataHandler):
     """ Serves a plot for the number of samples loaded on a lane.
+    
+    Loaded through /api/v1/plot/samples_per_lane.png
     """
     def get(self):
         samples_per_lane = self.sample_count_per_lane()
@@ -190,6 +210,8 @@ class SamplesPerLanePlotHandler(SamplesPerLaneDataHandler):
 
 class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
     """ Serves the read counts of a sample, for each run of the sample.
+
+    Loaded through /api/v1/sample_run_counts/(\w+)?
     """
     def get(self, sample):
         self.set_header("Content-type", "application/json")

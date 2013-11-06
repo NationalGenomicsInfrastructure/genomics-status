@@ -76,6 +76,8 @@ class UpdatedDocumentsDatahandler(tornado.web.RequestHandler):
     databases Status gets data from.
 
     Specify to get the <n> latest items by ?items=<n>.
+
+    Loaded through /api/v1/last_updated
     """
     def get(self):
         num_items = int(self.get_argument("items", 25))
@@ -122,6 +124,8 @@ class UpdatedDocumentsDatahandler(tornado.web.RequestHandler):
 class PagedQCDataHandler(tornado.web.RequestHandler):
     """ Serves a list of 50 sample names following a given string
     in alhabetical order.
+
+    loaded through /api/v1/samples/start/([^/]*)$
     """
     def get(self, startkey):
         self.set_header("Content-type", "application/json")
