@@ -12,6 +12,8 @@ class TestDataHandler(tornado.web.RequestHandler):
     """ Handler that sends random numeric data in the style of most handlers,
     useful for testing client side plotting without having the real data one
     wish to plot.
+
+    Loaded through /api/v1/test/(\w+)?
     """
     def get(self, n):
         self.set_header("Content-type", "application/json")
