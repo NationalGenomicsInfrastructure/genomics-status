@@ -26,6 +26,8 @@ class FlowcellHandler(tornado.web.RequestHandler):
 
 class FlowcellsDataHandler(tornado.web.RequestHandler):
     """ Serves brief information for each flowcell in the database.
+    
+    Loaded through /api/v1/flowcells url
     """
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -43,6 +45,8 @@ class FlowcellsDataHandler(tornado.web.RequestHandler):
 
 class FlowcellsInfoDataHandler(tornado.web.RequestHandler):
     """ Serves brief information about a given flowcell.
+    
+    Loaded through /api/v1/flowcell_info/([^/]*)$ url
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
@@ -60,6 +64,8 @@ class FlowcellsInfoDataHandler(tornado.web.RequestHandler):
 
 class FlowcellDataHandler(tornado.web.RequestHandler):
     """ Serves a list of sample runs in a flowcell.
+
+    Loaded through /api/v1/flowcells/([^/]*)$ url
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
@@ -76,6 +82,8 @@ class FlowcellDataHandler(tornado.web.RequestHandler):
 
 class FlowcellQCHandler(tornado.web.RequestHandler):
     """ Serves QC data for each lane in a given flowcell.
+
+    Loaded through /api/v1/flowcell_qc/([^/]*)$ url
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
@@ -92,6 +100,8 @@ class FlowcellQCHandler(tornado.web.RequestHandler):
 
 class FlowcellDemultiplexHandler(tornado.web.RequestHandler):
     """ Serves demultiplex yield data for each lane in a given flowcell.
+
+    Loaded through /api/v1/flowcell_demultiplex/([^/]*)$ url
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
@@ -109,6 +119,8 @@ class FlowcellDemultiplexHandler(tornado.web.RequestHandler):
 class FlowcellQ30Handler(tornado.web.RequestHandler):
     """ Serves the percentage ofr reads over Q30 for each lane in the given
     flowcell.
+
+    Loaded through /api/v1/flowcell_q30/([^/]*)$ url
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")

@@ -17,6 +17,8 @@ class AmanitaHandler(tornado.web.RequestHandler):
 
 class AmanitaHomeDataHandler(tornado.web.RequestHandler):
     """ Serves a time series of directory usage in HOME on Amanita.
+
+    Loaded through /api/v1/amaninta_home url
     """
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -35,6 +37,8 @@ class AmanitaHomeDataHandler(tornado.web.RequestHandler):
 class AmanitaHomeUserDataHandler(tornado.web.RequestHandler):
     """ Serves a time series of user HOME directory storage usage on
     Amanita for a provided user.
+
+    Loaded through /api/v1/amanita_home/([^/]*)$ url
     """
     def get(self, user):
         self.set_header("Content-type", "application/json")
@@ -55,6 +59,8 @@ class AmanitaHomeUserDataHandler(tornado.web.RequestHandler):
 
 class AmanitaUsersDataHandler(tornado.web.RequestHandler):
     """ Serves a list of users on Amanita.
+
+    Loaded through /api/v1/amainta_home/users/ url
     """
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -73,6 +79,8 @@ class AmanitaUsersDataHandler(tornado.web.RequestHandler):
 
 class AmanitaBox2DataHandler(tornado.web.RequestHandler):
     """ Serves a time series of storage usage on the box2 storage of Amanita.
+
+    Loaded through /api/v1/amanita_box2 url
     """
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -91,6 +99,8 @@ class AmanitaBox2DataHandler(tornado.web.RequestHandler):
 class AmanitaBox2ProjectDataHandler(tornado.web.RequestHandler):
     """ Serves a time series of storage usage for a specified project on the
     box2 storage on Amanita.
+
+    Loaded through /api/v1/amanita_box2/([^/]*)$ url
     """
     def get(self, project):
         self.set_header("Content-type", "application/json")
@@ -113,6 +123,8 @@ class AmanitaBox2ProjectDataHandler(tornado.web.RequestHandler):
 class AmanitaBox2ProjectsDataHandler(tornado.web.RequestHandler):
     """ Serves a list of the projects which uses or have used the box2
     storage on Amanita.
+
+    Loaded through /api/v1/amanita_box2/projects/ url
     """
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -131,6 +143,8 @@ class AmanitaBox2ProjectsDataHandler(tornado.web.RequestHandler):
 class AmanitaHomeProjectsDataHandler(tornado.web.RequestHandler):
     """ Serves a list of the projects which have used or uses storage in
     HOME/projects on Amanita.
+
+    Loaded through /api/v1/amanita_home/projects
     """
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -148,6 +162,8 @@ class AmanitaHomeProjectsDataHandler(tornado.web.RequestHandler):
 class AmanitaHomeProjectDataHandler(tornado.web.RequestHandler):
     """ Serves a time series of storage usage of a specified project in
     HOME/projects on Amanita.
+    
+    Loaded through /api/v1/amanita_home/projects/([^/]*)$ url
     """
     def get(self, project):
         self.set_header("Content-type", "application/json")

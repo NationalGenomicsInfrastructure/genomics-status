@@ -14,6 +14,8 @@ class PhixErrorRateHandler(tornado.web.RequestHandler):
 
 class PhixErrorRateDataHandler(tornado.web.RequestHandler):
     """ Serves a histogram of yields and phiX error rates over all time.
+
+    Loaded through /api/v1/phix_err_rate
     """
     def get(self):
         self.set_header("Content-type", "application/json")

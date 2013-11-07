@@ -25,6 +25,8 @@ class ProductionHandler(tornado.web.RequestHandler):
 
 class DeliveredMonthlyDataHandler(tornado.web.RequestHandler):
     """ Gives the data for monthly delivered amount of basepairs.
+
+    Loaded through /api/v1/delivered_monthly url
     """
     def get(self):
         start_date = self.get_argument('start', '2012-01-01T00:00:00')
@@ -67,6 +69,8 @@ class DeliveredMonthlyDataHandler(tornado.web.RequestHandler):
 
 class DeliveredMonthlyPlotHandler(DeliveredMonthlyDataHandler):
     """ Gives a bar plot for monthly delivered amount of basepairs.
+
+    Loaded through /api/v1/delivered_monthly.png url
     """
     def get(self):
         start_date = self.get_argument('start', '2012-01-01T00:00:00')
@@ -100,6 +104,8 @@ class DeliveredMonthlyPlotHandler(DeliveredMonthlyDataHandler):
 
 class DeliveredQuarterlyDataHandler(tornado.web.RequestHandler):
     """ Gives the data for quarterly delivered amount of basepairs.
+
+    Loaded through /api/v1/delivered_quarterly url
     """
     def get(self):
         start_date = self.get_argument('start', '2012-01-01T00:00:00')
@@ -142,6 +148,8 @@ class DeliveredQuarterlyDataHandler(tornado.web.RequestHandler):
 
 class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
     """ Gives a bar plot for quarterly delivered amount of basepairs.
+    
+    Loaded through /api/v1/delivered_quarterly.png
     """
     def get(self):
         start_date = self.get_argument('start', '2012-01-01T00:00:00')
@@ -179,6 +187,8 @@ class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
 
 class ProducedMonthlyDataHandler(tornado.web.RequestHandler):
     """ Serves the amount of data produced per month.
+
+    Loaded through /api/v1/produced_monthly
     """
     def get(self):
         start_date = self.get_argument('start', '2012-01-01T00:00:00')
@@ -221,6 +231,8 @@ class ProducedMonthlyDataHandler(tornado.web.RequestHandler):
 
 class ProducedMonthlyPlotHandler(ProducedMonthlyDataHandler):
     """ Serves a plot of amount of data produced per month.
+
+    Loaded through /api/v1/produced_monthly.png
     """
     def get(self):
         start_date = self.get_argument('start', '2012-01-01T00:00:00')
@@ -254,6 +266,8 @@ class ProducedMonthlyPlotHandler(ProducedMonthlyDataHandler):
 
 class ProducedQuarterlyDataHandler(tornado.web.RequestHandler):
     """ Gives the data for quarterly produced amount of basepairs.
+
+    Loaded through /api/v1/produced_quarterly
     """
     def get(self):
         start_date = self.get_argument('start', '2012-01-01T00:00:00')
