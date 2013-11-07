@@ -13,6 +13,8 @@ from status.util import dthandler
 class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
     """ Serves series with number of matched reads to a barcode compared
     to the expected number of reads matched to a barcode.
+
+    Loaded through /api/v1/expected url
     """
     def get(self):
         self.set_header("Content-type", "application/json")
@@ -61,6 +63,8 @@ class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
 class BarcodeVsExpectedPlotHandler(BarcodeVsExpectedDataHandler):
     """ Serves a boxplot of expected yields vs matched yields for top
     present barcodes.
+
+    Loaded through /api/v1/plot/barcodes_vs_expected.png
     """
     def get(self):
         processed_relation = self.yield_difference()

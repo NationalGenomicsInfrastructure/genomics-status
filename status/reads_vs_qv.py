@@ -19,6 +19,8 @@ class ReadsVsQvhandler(tornado.web.RequestHandler):
 
 class ReadsVsQDataHandler(tornado.web.RequestHandler):
     """ Serves histogram data of reada over average quality values of reads.
+
+    Loaded through /api/v1/reads_vs_qualtiy
     """
     def get(self):
         start = self.get_argument("start",  '2012-01-01T00:00:00')

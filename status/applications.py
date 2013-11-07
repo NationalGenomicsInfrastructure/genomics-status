@@ -38,6 +38,8 @@ class ApplicationHandler(tornado.web.RequestHandler):
 class ApplicationDataHandler(tornado.web.RequestHandler):
     """ Serves a list of projects which have the application provided as
     an argument.
+
+    Loaded through /api/v1/application/([^/]*)$ url
     """
     def get(self, application):
         self.set_header("Content-type", "application/json")
@@ -57,6 +59,8 @@ class ApplicationDataHandler(tornado.web.RequestHandler):
 class ApplicationsDataHandler(tornado.web.RequestHandler):
     """ Serves the applications performed with the number of projects which
     have that application.
+
+    Loaded through /api/v1/applications url
     """
     def get(self):
         start = self.get_argument("start", None)
@@ -80,6 +84,8 @@ class ApplicationsDataHandler(tornado.web.RequestHandler):
 
 class ApplicationsPlotHandler(ApplicationsDataHandler):
     """ Serves a Pie chart of applications over projects.
+
+    Loaded through /api/v1/applications.png url
     """
     def get(self):
         start = self.get_argument("start",None)
@@ -137,6 +143,8 @@ class ApplicationsPlotHandler(ApplicationsDataHandler):
 
 class SamplesApplicationsDataHandler(tornado.web.RequestHandler):
     """ Handler for getting per sample application information.
+
+    Loaded through /api/v1/samples_applications
     """
     def get(self):
         start = self.get_argument("start", None)
@@ -158,6 +166,8 @@ class SamplesApplicationsDataHandler(tornado.web.RequestHandler):
 
 class SamplesApplicationsPlotHandler(SamplesApplicationsDataHandler):
     """ Serves a Pie chart of applications over projects.
+
+    Loaded through /api/v1/samples_applications.png
     """
     def get(self):
         start = self.get_argument("start",None)
