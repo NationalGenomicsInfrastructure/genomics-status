@@ -128,8 +128,8 @@ class FlowcellQ30Handler(tornado.web.RequestHandler):
 
     def lane_q30(self, flowcell):
         lane_q30 = OrderedDict()
-        lane_view = self.application.flowcells_db.view("lanes/gtq30", group_level=2)
+        lane_view = self.application.flowcells_db.view("lanes/gtq30", group_level=3)
         for row in lane_view[[flowcell, ""]:[flowcell, "Z"]]:
-            lane_q30[row.key[1]] = row.value["sum"] / row.value["count"]
+            lane_q30[row.key[2]] = row.value["sum"] / row.value["count"]
 
         return lane_q30
