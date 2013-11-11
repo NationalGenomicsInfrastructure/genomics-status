@@ -9,6 +9,9 @@ import matplotlib.gridspec as gridspec
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
+from status.util import dthandler
+from collections import OrderedDict
+
 class SampleInfoDataHandler(tornado.web.RequestHandler):
     """ Serves the abbreviated sample info for a given sample.
 
