@@ -25,7 +25,7 @@ class QuotaHandler(tornado.web.RequestHandler):
 
 class QuotaDataHandler(tornado.web.RequestHandler):
     """ Serves a time series for storage quota usage of a given UPPNEX
-    project.
+    project. 
 
     Loaded through /api/v1/quotas/(\w+)?
     """
@@ -46,8 +46,12 @@ class QuotaDataHandler(tornado.web.RequestHandler):
         gb = 1073741824
         data = []
         for row in r_list:
+            if row.value[0]:
+                y = row.value[0]
+            else:
+                y = 0
             data.append({"x": int(time.mktime(parser.parse(date_getter(row)).timetuple())),
-                         "y": row.value[0] * gb})
+                         "y": y * gb})
 
         d = dict()
         d["data"] = data
