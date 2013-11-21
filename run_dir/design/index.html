@@ -18,7 +18,7 @@ systems are mostly gathered by cron jobs on the systems in question.</p>
 to keep track of these. For questions regarding this, contact Maya Brandi.</p>
 
 <p>In particular, the number of samples in a project, as well as the minimum
-number of reads per sample is eneterd manually by Mattias Ormestad</p>
+number of reads per sample is entered manually by Mattias Ormestad</p>
 
 <p>Data about runs of samples and flowcells are collected while generating
 statistics in the end of the data processing pipeline, then uploaded to the
@@ -29,7 +29,7 @@ tools</a>).</p>
 <p>Most data have been reliably collected since January 1st 2012, in some instances there
 are earlier data.</p>
 
-<p>For general information about Status, or feature requests, contact Johannes Alneberg.</p>
+<p>For general information about Genomics Status, or feature requests, contact Johannes Alneberg.</p>
 
 <p>Code for Status can be seen on <a href="https://github.com/scilifelab/status">Github</a>.</p>
 
@@ -66,6 +66,15 @@ $.getJSON("/api/v1/last_updated?items=15", function(data) {
 })
 </script>
 
+{% else %}
+
+<div>
+<h2> Get Access </h2>
+<p>
+  To get access to the resources on this site, you first need to log in with your SciLifeLab Google account. 
+</p>
+<a class="btn btn-primary btn-large", href="/login"> Log in </a>
+</div>
 {% end %}
 
 {% end %}
