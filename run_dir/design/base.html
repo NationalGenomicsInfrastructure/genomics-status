@@ -61,7 +61,9 @@
                 <img src="/static/img/SciLifeLab-1.logotyp.PMS376.gif">
               </div>
               <li class="nav-header">Genomics Status</li>
-	      <li class="nav-header">{{user or "Not Logged in"}}</li>
+	      {% if user %}
+	         <li class="nav-header">{{user}} <a href="/logout">Log out</a></li>
+	      {% end %}
             </ul>
             </div>
           </div>
