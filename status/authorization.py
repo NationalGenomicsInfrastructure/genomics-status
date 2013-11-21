@@ -44,7 +44,9 @@ class LogoutHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
 class UnAuthorizedHandler(UnsafeHandler):
     """ Serves a page with unauthorized notice and information about who to contact to get access. """ 
     def get(self):
-        email = self.get_argument("email", None)
+        # The parameters email and name can contain anything, 
+        # be careful not to evaluate them as code
+        email = self.get_argument("email", "user@example.com")
         name = self.get_argument("name", "Dave")
         t = self.application.loader.load("unauthorized.html")
         self.write(t.generate(user = name, email=email))
