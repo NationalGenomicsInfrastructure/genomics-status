@@ -5,7 +5,7 @@ import json
 
 import tornado.web
 
-from status.util import dthandler
+from status.util import dthandler, SafeHandler
 
 # Constant dictionary with Displayname:internalname pairs
 DEFAULT_COLUMNS = OrderedDict([('Project', 'project'),
@@ -27,7 +27,7 @@ OTHER_COLUMNS = OrderedDict([('Queue Date', 'queued'),
                              ('Portal ID', 'Portal_id')])
 
 
-class ProjectsDataHandler(tornado.web.RequestHandler):
+class ProjectsDataHandler(SafeHandler):
     """ Serves brief information for each project in the database.
 
     Loaded through /api/v1/projects
@@ -44,7 +44,7 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
         return projects
 
 
-class ProjectDataHandler(tornado.web.RequestHandler):
+class ProjectDataHandler(SafeHandler):
     """ Serves brief information of a given project.
 
     Loaded through /api/v1/project_summary/([^/]*)$
@@ -59,7 +59,7 @@ class ProjectDataHandler(tornado.web.RequestHandler):
         return result.rows[0].value
 
 
-class ProjectSamplesDataHandler(tornado.web.RequestHandler):
+class ProjectSamplesDataHandler(SafeHandler):
     """ Serves brief info about all samples in a given project.
 
     Loaded through /api/v1/projects/([^/]*)$
@@ -77,24 +77,25 @@ class ProjectSamplesDataHandler(tornado.web.RequestHandler):
         return samples
 
 
-class ProjectSamplesHandler(tornado.web.RequestHandler):
+class ProjectSamplesHandler(SafeHandler):
     """ Serves a page which lists the samples of a given project, with some
     brief information for each sample.
     """
     def get(self, project):
         t = self.application.loader.load("project_samples.html")
-        self.write(t.generate(project=project))
+        self.write(t.generate(project=project, user=self.get_current_user_name()))
 
 
-class ProjectsHandler(tornado.web.RequestHandler):
+class ProjectsHandler(SafeHandler):
     """ Serves a page with all projects listed, along with some brief info.
     """
     def get(self):
         t = self.application.loader.load("projects.html")
-        self.write(t.generate(other_columns = OTHER_COLUMNS, default_columns = DEFAULT_COLUMNS))
-        
+        self.write(t.generate(other_columns = OTHER_COLUMNS, default_columns = DEFAULT_COLUMNS, 
+                              user = self.get_current_user_name()))
 
-class UppmaxProjectsDataHandler(tornado.web.RequestHandler):
+
+class UppmaxProjectsDataHandler(SafeHandler):
     """ Serves a list of UPPNEX projects where the storage quota have
     been logged. 
 

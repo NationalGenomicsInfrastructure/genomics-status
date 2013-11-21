@@ -6,7 +6,6 @@
 <h1 id="scilifelabgenomics-status">SciLifeLab Genomics - Status</h1>
 
 <br>
-
 <p>In various stages of data production in the genomics platform metadata about this data
 is created, and stored in a database (known as StatusDB). This service provides an
 interface to commonly accessed data, and functionality to generate plots regarding
@@ -37,6 +36,7 @@ are earlier data.</p>
 <h2> Additional Resources </h2>
 The Production process Key Performance Indicators are available on the <a href="http://genomics-dashboard.scilifelab.se/">Genomics Process status dashboard</a>.
 
+{% if user %}
 <h2>Latest updated data</h2>
 
 <table class="table table-striped" id="project_table">
@@ -65,5 +65,7 @@ $.getJSON("/api/v1/last_updated?items=15", function(data) {
   })
 })
 </script>
+
+{% end %}
 
 {% end %}
