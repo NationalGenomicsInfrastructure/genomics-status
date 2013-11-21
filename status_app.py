@@ -28,20 +28,17 @@ from status.q30 import *
 from status.quotas import *
 from status.phix_err_rate import *
 from status.testing import *
+from status.authorization import *
 
-
-class MainHandler(tornado.web.RequestHandler):
-    """ Serves the html front page upon request.
-    """
-    def get(self):
-        t = self.application.loader.load("index.html")
-        self.write(t.generate())
-
+from argparse import ArgumentParser
 
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
             ("/", MainHandler),
+            ("/login", LoginHandler),
+            ("/logout", LogoutHandler),
+            ("/unauthorized.*", UnAuthorizedHandler),
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/applications.png", ApplicationsPlotHandler),
@@ -155,6 +152,7 @@ class Application(tornado.web.Application):
             self.flowcells_db = couch["flowcells"]
             self.amanita_db = couch["amanita"]
             self.picea_db = couch["picea"]
+            self.gs_users_db = couch["gs_users"]
 
         # Load private instrument listing
         self.instrument_list = settings.get("instruments")
