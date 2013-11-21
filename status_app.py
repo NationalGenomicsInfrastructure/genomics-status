@@ -159,6 +159,9 @@ class Application(tornado.web.Application):
         # Load private instrument listing
         self.instrument_list = settings.get("instruments")
 
+        # If settings states  mode, no authentication is used
+        self.test_mode = settings["Testing mode"]
+
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
         settings = {"debug": True,
@@ -188,22 +191,28 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/sample_runs.html")
         tornado.autoreload.watch("design/samples.html")
         tornado.autoreload.watch("design/sequencing_stats.html")
+        tornado.autoreload.watch("design/unauthorized.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
 
-def main():
+def main(args):
     """ Initialte server and start IOLoop.
     """
     with open("settings.yaml") as settings_file:
         server_settings = yaml.load(settings_file)
+
+    server_settings["Testing mode"] = args.testing_mode
 
     # Instantiate Application
     application = Application(server_settings)
 
     # Start HTTP Server
     http_server = tornado.httpserver.HTTPServer(application)
-    http_server.listen(server_settings.get("port", 8888))
+    if args.testing_mode:
+        http_server.listen(8889)
+    else:
+        http_server.listen(server_settings.get("port", 8888))
 
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
@@ -213,4 +222,10 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = ArgumentParser()
+    parser.add_argument('--testing_mode', default=False, action='store_true',
+                        help=("WARNING, this option disables "
+                              "all security measures, use only "
+                              "for testing purposes"))
+    args = parser.parse_args()
+    main(args)
