@@ -9,10 +9,10 @@ import matplotlib.gridspec as gridspec
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
-from status.util import dthandler, SafeHandler
+from status.util import dthandler
 from collections import OrderedDict
 
-class SampleInfoDataHandler(SafeHandler):
+class SampleInfoDataHandler(tornado.web.RequestHandler):
     """ Serves the abbreviated sample info for a given sample.
 
     Loaded through /api/v1/sample_info/([^/]*)$
@@ -25,7 +25,7 @@ class SampleInfoDataHandler(SafeHandler):
         for row in self.application.projects_db.view("samples/info")[sample]:
             return row.value
 
-class SampleQCSummaryDataHandler(SafeHandler):
+class SampleQCSummaryDataHandler(tornado.web.RequestHandler):
     """ Serves the QC Summary data of a given sample.
 
     Loaded through /api/v1/sample_summary/([^/]*)$
@@ -40,15 +40,15 @@ class SampleQCSummaryDataHandler(SafeHandler):
         return result.rows[0].value
 
 
-class SampleRunHandler(SafeHandler):
+class SampleRunHandler(tornado.web.RequestHandler):
     """ Serves a page of brief statistics and sample runs of a given sample.
     """
     def get(self, sample):
         t = self.application.loader.load("sample_runs.html")
-        self.write(t.generate(sample=sample, user= self.get_current_user_name()))
+        self.write(t.generate(sample=sample))
 
 
-class SampleRunDataHandler(SafeHandler):
+class SampleRunDataHandler(tornado.web.RequestHandler):
     """ Serves a list of sample runs for a given sample.
 
     Loaded through /api/v1/samples/([^/]*)$
@@ -66,7 +66,7 @@ class SampleRunDataHandler(SafeHandler):
         return sample_run_list
 
 
-class SampleQCDataHandler(SafeHandler):
+class SampleQCDataHandler(tornado.web.RequestHandler):
     """ Serves the QC data of a given sample.
 
     Loaded through /api/v1/qc/([^/]*)$
@@ -81,16 +81,16 @@ class SampleQCDataHandler(SafeHandler):
         return result.rows[0].value
 
 
-class SampleQCSummaryHandler(SafeHandler):
+class SampleQCSummaryHandler(tornado.web.RequestHandler):
     """ Serves a page which displays QC data with tables and plots for a
     given sample run.
     """
     def get(self, sample):
         t = self.application.loader.load("sample_run_qc.html")
-        self.write(t.generate(sample=sample, user= self.get_current_user_name()))
+        self.write(t.generate(sample=sample))
 
 
-class SampleQCAlignmentDataHandler(SafeHandler):
+class SampleQCAlignmentDataHandler(tornado.web.RequestHandler):
     """ Serves alignment QC metrics for a given sample run.
 
     Loaded through /api/v1/sample_alignment/([^/]*)$
@@ -105,7 +105,7 @@ class SampleQCAlignmentDataHandler(SafeHandler):
         return result.rows[0].value
 
 
-class SampleQCInsertSizesDataHandler(SafeHandler):
+class SampleQCInsertSizesDataHandler(tornado.web.RequestHandler):
     """ Serves insert size distribution for a given sample run.
     
     Loaded through /api/v1/sample_insert_sizes/([^/]*)$
@@ -120,7 +120,7 @@ class SampleQCInsertSizesDataHandler(SafeHandler):
         return result.rows[0].value
 
 
-class SampleQCCoverageDataHandler(SafeHandler):
+class SampleQCCoverageDataHandler(tornado.web.RequestHandler):
     """ Serves coverage for a given sample run.
 
     Loaded through /api/v1/sample_coverage/([^/]*)$
@@ -135,7 +135,7 @@ class SampleQCCoverageDataHandler(SafeHandler):
         return result.rows[0].value
 
 
-class SampleReadCountDataHandler(SafeHandler):
+class SampleReadCountDataHandler(tornado.web.RequestHandler):
     """ Serves the read counts of a given sample.
 
     Loaded through /api/v1/sample_readcount/(\w+)?
@@ -151,7 +151,7 @@ class SampleReadCountDataHandler(SafeHandler):
             return row.value["read_count"]
 
 
-class SamplesPerLaneDataHandler(SafeHandler):
+class SamplesPerLaneDataHandler(tornado.web.RequestHandler):
     """ Serves data for the number of samples loaded on a lane.
 
     Loaded through /api/v1/samples_per_lane
@@ -171,13 +171,13 @@ class SamplesPerLaneDataHandler(SafeHandler):
         return samples_per_lane
 
 
-class SamplesPerLaneHandler(SafeHandler):
+class SamplesPerLaneHandler(tornado.web.RequestHandler):
     """ Serves a page which displays a plot for the number of samples
     loaded on a lane.
     """
     def get(self):
         t = self.application.loader.load("samples_per_lane.html")
-        self.write(t.generate(user=self.get_current_user_name()))
+        self.write(t.generate())
 
 
 class SamplesPerLanePlotHandler(SamplesPerLaneDataHandler):
@@ -208,7 +208,7 @@ class SamplesPerLanePlotHandler(SamplesPerLaneDataHandler):
         self.write(data)
 
 
-class SampleRunReadCountDataHandler(SafeHandler):
+class SampleRunReadCountDataHandler(tornado.web.RequestHandler):
     """ Serves the read counts of a sample, for each run of the sample.
 
     Loaded through /api/v1/sample_run_counts/(\w+)?

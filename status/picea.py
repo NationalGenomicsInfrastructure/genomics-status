@@ -7,18 +7,17 @@ import time
 
 from dateutil import parser
 
-from status.util import SafeHandler
 
-class PiceaHandler(SafeHandler):
+class PiceaHandler(tornado.web.RequestHandler):
     """ Serves a page with time series of storage usage on Picea.
     """
     def get(self):
         t = self.application.loader.load("picea.html")
-        self.write(t.generate(user=self.get_current_user_name()))
+        self.write(t.generate())
 
 
-class PiceaHomeDataHandler(SafeHandler):
-    """ Serves a time series for the total storage usage in HOME on Picea.
+class PiceaHomeDataHandler(tornado.web.RequestHandler):
+    """ Serves a time seris for the total storage usage in HOME on Picea.
 
     Loaded through /api/v1/picea_home
     """
@@ -36,7 +35,7 @@ class PiceaHomeDataHandler(SafeHandler):
         return sizes
 
 
-class PiceaHomeUserDataHandler(SafeHandler):
+class PiceaHomeUserDataHandler(tornado.web.RequestHandler):
     """ Serves a time series for the storage used by as user in HOME on Picea.
 
     Loaded through /api/v1/picea_home/([^/]*)$
@@ -56,7 +55,7 @@ class PiceaHomeUserDataHandler(SafeHandler):
         return sizes
 
 
-class PiceaUsersDataHandler(SafeHandler):
+class PiceaUsersDataHandler(tornado.web.RequestHandler):
     """ Serves a list of users on Picea.
 
     Loaded through /api/v1/picea_home/users/

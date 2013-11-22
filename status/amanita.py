@@ -5,17 +5,17 @@ import time
 
 from dateutil import parser
 import tornado.web
-from status.util import SafeHandler
 
-class AmanitaHandler(SafeHandler):
+
+class AmanitaHandler(tornado.web.RequestHandler):
     """ Serves a page which displays storage usage over time on Amanita.
     """
     def get(self):
         t = self.application.loader.load("amanita.html")
-        self.write(t.generate(user = self.get_current_user_name()))
+        self.write(t.generate())
 
 
-class AmanitaHomeDataHandler(SafeHandler):
+class AmanitaHomeDataHandler(tornado.web.RequestHandler):
     """ Serves a time series of directory usage in HOME on Amanita.
 
     Loaded through /api/v1/amaninta_home url
@@ -34,7 +34,7 @@ class AmanitaHomeDataHandler(SafeHandler):
         return sizes
 
 
-class AmanitaHomeUserDataHandler(SafeHandler):
+class AmanitaHomeUserDataHandler(tornado.web.RequestHandler):
     """ Serves a time series of user HOME directory storage usage on
     Amanita for a provided user.
 
@@ -57,7 +57,7 @@ class AmanitaHomeUserDataHandler(SafeHandler):
         return sizes
 
 
-class AmanitaUsersDataHandler(SafeHandler):
+class AmanitaUsersDataHandler(tornado.web.RequestHandler):
     """ Serves a list of users on Amanita.
 
     Loaded through /api/v1/amainta_home/users/ url
@@ -77,7 +77,7 @@ class AmanitaUsersDataHandler(SafeHandler):
         return users
 
 
-class AmanitaBox2DataHandler(SafeHandler):
+class AmanitaBox2DataHandler(tornado.web.RequestHandler):
     """ Serves a time series of storage usage on the box2 storage of Amanita.
 
     Loaded through /api/v1/amanita_box2 url
@@ -96,7 +96,7 @@ class AmanitaBox2DataHandler(SafeHandler):
         return sizes
 
 
-class AmanitaBox2ProjectDataHandler(SafeHandler):
+class AmanitaBox2ProjectDataHandler(tornado.web.RequestHandler):
     """ Serves a time series of storage usage for a specified project on the
     box2 storage on Amanita.
 
@@ -120,7 +120,7 @@ class AmanitaBox2ProjectDataHandler(SafeHandler):
         return sizes
 
 
-class AmanitaBox2ProjectsDataHandler(SafeHandler):
+class AmanitaBox2ProjectsDataHandler(tornado.web.RequestHandler):
     """ Serves a list of the projects which uses or have used the box2
     storage on Amanita.
 
@@ -140,7 +140,7 @@ class AmanitaBox2ProjectsDataHandler(SafeHandler):
         return proejcts
 
 
-class AmanitaHomeProjectsDataHandler(SafeHandler):
+class AmanitaHomeProjectsDataHandler(tornado.web.RequestHandler):
     """ Serves a list of the projects which have used or uses storage in
     HOME/projects on Amanita.
 
@@ -159,7 +159,7 @@ class AmanitaHomeProjectsDataHandler(SafeHandler):
         return proejcts
 
 
-class AmanitaHomeProjectDataHandler(SafeHandler):
+class AmanitaHomeProjectDataHandler(tornado.web.RequestHandler):
     """ Serves a time series of storage usage of a specified project in
     HOME/projects on Amanita.
     
