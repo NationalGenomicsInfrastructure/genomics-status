@@ -11,19 +11,19 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 import tornado.web
 
-from status.util import dthandler, SafeHandler
+from status.util import dthandler
 
 
-class ProductionHandler(SafeHandler):
+class ProductionHandler(tornado.web.RequestHandler):
     """ Serves a page with statistics and plots about the amount of
     sequencing / data produced over time.
     """
     def get(self):
         t = self.application.loader.load("production.html")
-        self.write(t.generate(user=self.get_current_user_name()))
+        self.write(t.generate())
 
 
-class DeliveredMonthlyDataHandler(SafeHandler):
+class DeliveredMonthlyDataHandler(tornado.web.RequestHandler):
     """ Gives the data for monthly delivered amount of basepairs.
 
     Loaded through /api/v1/delivered_monthly url
@@ -102,7 +102,7 @@ class DeliveredMonthlyPlotHandler(DeliveredMonthlyDataHandler):
         self.write(delivered)
 
 
-class DeliveredQuarterlyDataHandler(SafeHandler):
+class DeliveredQuarterlyDataHandler(tornado.web.RequestHandler):
     """ Gives the data for quarterly delivered amount of basepairs.
 
     Loaded through /api/v1/delivered_quarterly url
@@ -185,7 +185,7 @@ class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
         self.write(delivered)
 
 
-class ProducedMonthlyDataHandler(SafeHandler):
+class ProducedMonthlyDataHandler(tornado.web.RequestHandler):
     """ Serves the amount of data produced per month.
 
     Loaded through /api/v1/produced_monthly
@@ -264,7 +264,7 @@ class ProducedMonthlyPlotHandler(ProducedMonthlyDataHandler):
         self.write(produced)
 
 
-class ProducedQuarterlyDataHandler(SafeHandler):
+class ProducedQuarterlyDataHandler(tornado.web.RequestHandler):
     """ Gives the data for quarterly produced amount of basepairs.
 
     Loaded through /api/v1/produced_quarterly
@@ -310,8 +310,6 @@ class ProducedQuarterlyDataHandler(SafeHandler):
 
 class ProducedQuarterlyPlotHandler(ProducedQuarterlyDataHandler):
     """ Gives a bar plot for quarterly produced amount of basepairs.
-
-    Loaded through /api/v1/produced_quarterly.png
     """
     def get(self):
         start_date = self.get_argument('start', '2012-01-01T00:00:00')

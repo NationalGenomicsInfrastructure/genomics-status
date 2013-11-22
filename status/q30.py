@@ -10,12 +10,10 @@ from dateutil import parser
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
-from status.util import SafeHandler
-
 RUNMODES = ['RapidRun', 'HighOutput', 'Undefined']
 SETUPS = ['51','101','151','251','301']
 
-class Q30Handler(SafeHandler):
+class Q30Handler(tornado.web.RequestHandler):
     """ Serves a page with a plot of the percentages of bases which are at
     least Q30 for each flowcell.
     """
@@ -23,11 +21,10 @@ class Q30Handler(SafeHandler):
         t = self.application.loader.load("q30.html")
         self.write(t.generate(instrument_list = self.application.instrument_list, 
                               runmodes = RUNMODES,
-                              setups = SETUPS,
-                              user = self.get_current_user_name()))
+                              setups = SETUPS))
 
 
-class Q30PlotHandler(SafeHandler):
+class Q30PlotHandler(tornado.web.RequestHandler):
     """ Serves a plot of the percentages of bases which are at least Q30 for
     each flowcell.
     
