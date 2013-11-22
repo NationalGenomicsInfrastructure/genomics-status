@@ -11,7 +11,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 import numpy as np
 import tornado.web
 
-from status.util import dthandler
+from status.util import dthandler, SafeHandler
 
 
 def make_instrument_series_handler(couchdb_view_name):
@@ -21,7 +21,7 @@ def make_instrument_series_handler(couchdb_view_name):
     Loaded through:
     /api/v1/instrument_* urls
     """
-    class InstrumentSeriesDataHandler(tornado.web.RequestHandler):
+    class InstrumentSeriesDataHandler(SafeHandler):
         def get(self):
             self.set_header("Content-type", "application/json")
             self.write(json.dumps(self.data(), default=dthandler))
@@ -266,9 +266,9 @@ class InstrumentYieldPlotHandler(InstrumentYieldDataHandler):
         self.write(image_data)
 
 
-class SequencingStatsHandler(tornado.web.RequestHandler):
+class SequencingStatsHandler(SafeHandler):
     """ Handler for serving up the sequencing stats page.
     """
     def get(self):
         t = self.application.loader.load("sequencing_stats.html")
-        self.write(t.generate())
+        self.write(t.generate(user=self.get_current_user_name()))

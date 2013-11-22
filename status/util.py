@@ -9,30 +9,34 @@ from datetime import datetime
 #  Useful misc handlers #
 #########################
 
-class AuthHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
-    @tornado.web.asynchronous
-    def get(self):
-        if self.get_argument("openid.mode", None):
-            self.get_authenticated_user(self.async_callback(self._on_auth))
-            return
-        self.authenticate_redirect()
-
-    def _on_auth(self, user):
-        if not user:
-            raise tornado.web.HTTPError(500, "Google auth failed")
-        self.set_secure_cookie("user", tornado.escape.json_encode(user))
-        self.set_secure_cookie("email", user['email'])
-        self.redirect("/")
-
-
 class BaseHandler(tornado.web.RequestHandler):
-    """Base Handler.
+    """Base Handler. Handlers should not inherit from this 
+    class directly but from either SafeHandler or UnsafeHandler
+    to make security status explicit. 
 
-    Ease the authentication process.
     """
     def get_current_user(self):
-        return self.get_secure_cookie("user")
+        # Disables authentication if test mode to ease integration testing
+        if self.application.test_mode:
+            return json.dumps({'first_name': 'Genomics', 
+                               'name': 'Genomics Status', 
+                               'email': 'genomics.status@example.com'})
+        else:
+            return self.get_secure_cookie("user")
 
+
+    def get_current_user_name(self):
+        user = self.get_current_user()
+        if user:
+            return json.loads(user)["name"]
+        else:
+            return None
+
+
+class SafeHandler(BaseHandler):
+    """ All handlers that need authentication and authorization should inherit
+    from this class.
+    """
     @tornado.web.authenticated
     def prepare(self):
         """This method is called before any other method.
@@ -42,6 +46,19 @@ class BaseHandler(tornado.web.RequestHandler):
         authentication in all their methods.
         """
         pass
+    
+
+class UnsafeHandler(BaseHandler):
+    pass
+
+
+class MainHandler(UnsafeHandler):
+    """ Serves the html front page upon request.
+    """
+    def get(self):
+        t = self.application.loader.load("index.html")
+        self.write(t.generate(user=self.get_current_user_name()))
+
 
 
 def dthandler(obj):
@@ -57,21 +74,22 @@ def dthandler(obj):
 # Useful data-serving handlers #
 ################################
 
-class DataHandler(tornado.web.RequestHandler):
+class DataHandler(UnsafeHandler):
     """ Serves a listing of all available URL's in the web service.
     """
     def get(self):
         self.set_header("Content-type", "application/json")
         handlers = [h[0] for h in self.application.declared_handlers]
         api = filter(lambda h: h.startswith("/api"), handlers)
-        pages = list(set(handlers).difference(set(api)))
+        utils = filter(lambda h: h == "/login" or h == "/logout" or h == "/unauthorized.*", handlers)
+        pages = list(set(handlers).difference(set(api)).difference(set(utils)))
         pages = filter(lambda h: not (h.endswith("?") or h.endswith("$")), pages)
         pages.sort(reverse=True)
         api.sort(reverse=True)
         self.write(json.dumps({"api": api, "pages": pages}))
 
 
-class UpdatedDocumentsDatahandler(tornado.web.RequestHandler):
+class UpdatedDocumentsDatahandler(SafeHandler):
     """ Serves a list of references to the last updated documents in the
     databases Status gets data from.
 
@@ -121,7 +139,7 @@ class UpdatedDocumentsDatahandler(tornado.web.RequestHandler):
         return last[:num_items]
 
 
-class PagedQCDataHandler(tornado.web.RequestHandler):
+class PagedQCDataHandler(SafeHandler):
     """ Serves a list of 50 sample names following a given string
     in alhabetical order.
 
