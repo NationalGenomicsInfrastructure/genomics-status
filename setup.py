@@ -13,6 +13,7 @@ setup(name="status",
                         "couchdb",
                         "pyyaml",
                         "numpy",
-                        "matplotlib"],
+                        "matplotlib",
+                        "argparse"],
       packages=find_packages()
       )

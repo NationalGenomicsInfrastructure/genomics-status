@@ -3,27 +3,27 @@ import json
 import time
 
 from dateutil import parser
-from status.util import dthandler
+from status.util import dthandler, SafeHandler
 
 
-class QuotasHandler(tornado.web.RequestHandler):
+class QuotasHandler(SafeHandler):
     """ Serves a grid of time series plots for UPPNEX storage quotas.
     """
     def get(self):
         t = self.application.loader.load("quota_grid.html")
-        self.write(t.generate())
+        self.write(t.generate(user=self.get_current_user_name()))
 
 
-class QuotaHandler(tornado.web.RequestHandler):
+class QuotaHandler(SafeHandler):
     """ Serves a page with a plot of a time series of used storage quota for
     a provided UPPNEX project.
     """
     def get(self, project):
         t = self.application.loader.load("quota.html")
-        self.write(t.generate(project=project))
+        self.write(t.generate(project=project, user=self.get_current_user_name()))
 
 
-class QuotaDataHandler(tornado.web.RequestHandler):
+class QuotaDataHandler(SafeHandler):
     """ Serves a time series for storage quota usage of a given UPPNEX
     project. 
 
