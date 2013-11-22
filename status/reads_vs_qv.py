@@ -5,19 +5,19 @@ from dateutil import parser
 from datetime import datetime
 import numpy as np
 
-from status.util import dthandler, SafeHandler
+from status.util import dthandler
 
 
-class ReadsVsQvhandler(SafeHandler):
+class ReadsVsQvhandler(tornado.web.RequestHandler):
     """ Serves a page which shows plots of the amount of reads with certain
     quality values over a given date range.
     """
     def get(self):
         t = self.application.loader.load("reads_vs_qv.html")
-        self.write(t.generate(user=self.get_current_user_name()))
+        self.write(t.generate())
 
 
-class ReadsVsQDataHandler(SafeHandler):
+class ReadsVsQDataHandler(tornado.web.RequestHandler):
     """ Serves histogram data of reada over average quality values of reads.
 
     Loaded through /api/v1/reads_vs_qualtiy
