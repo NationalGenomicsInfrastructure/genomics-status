@@ -96,6 +96,7 @@ class Application(tornado.web.Application):
             ("/api/v1/produced_quarterly.png", ProducedQuarterlyPlotHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
+            ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
