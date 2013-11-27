@@ -33,22 +33,23 @@ EXTRA_COLUMNS = OrderedDict([('Queue Date', 'queued'),
                              ('Best Practice Bioinformatics', 'best_practice_bioinformatics'),
                              ('Bioinformatic QC', 'bioinformatic_qc'),
                              ('Comment', 'comment'),
-                             ('Aborted', 'aborted')])
+                             ('Aborted', 'aborted'),
+                             ('Library Prep Start', 'library_prep_start'),
+                             ('QC Library Finished','qc_library_finished'),
+                             ('Sequencing Start', 'sequencing_start_date')])
 
 COLUMNS = dict([('DEFAULT_COLUMNS', DEFAULT_COLUMNS),('EXTRA_COLUMNS', EXTRA_COLUMNS)])
 
-class ProjectsDataHandler(tornado.web.RequestHandler):
-    """ Serves brief information for each project in the database.
 
-    Loaded through /api/v1/projects
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_projects()))
-
-    def list_projects(self):
+class ProjectsBaseDataHandler(tornado.web.RequestHandler):
+    def list_projects(self, all_projects=True):
         projects = OrderedDict()
-        for row in self.application.projects_db.view("project/summary", descending=True):
+
+        summary_view = self.application.projects_db.view("project/summary", descending=True)
+        if not all_projects:
+            summary_view = summary_view[["open",'Z']:["open",'']]
+
+        for row in summary_view:
             # the details key gives values containing multiple udfs on project level
             # and project_summary key gives 'temporary' udfs that will move to 'details'.
             # Include these as normal key:value pairs
@@ -56,20 +57,27 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
                 for summary_key, summary_value in row.value['project_summary'].iteritems():
                     row.value[summary_key] = summary_value
                 row.value.pop("project_summary", None)
+
             # If key is in both project_summary and details, details has precedence
             if 'details' in row.value:
                 for detail_key, detail_value in row.value['details'].iteritems():
                     row.value[detail_key] = detail_value
                 row.value.pop("details", None)
-            projects[row.key] = row.value
+            projects[row.key[1]] = row.value
+
+        # Include dates for each project:
+        for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
+            if row.key[0] in projects:
+                for date_type, date in row.value.iteritems():
+                    projects[row.key[0]][date_type] = date
 
         return projects
 
-    def list_project_fields(self, undefined=False, project_list=None):
+    def list_project_fields(self, undefined=False, project_list=None, all_projects=True):
         # If undefined=True is given, only return fields not in columns defined 
         # in constants in this module
         if project_list is None:
-            project_list = self.list_projects()
+            project_list = self.list_projects(all_projects=all_projects)
         field_items = set()
         for project_id, value in project_list.iteritems():
             for key, _ in value.iteritems():
@@ -79,7 +87,20 @@ class ProjectsDataHandler(tornado.web.RequestHandler):
             field_items = field_items.difference(set(EXTRA_COLUMNS.values()))
         return field_items
 
-class ProjectsFieldsDataHandler(ProjectsDataHandler):
+class ProjectsDataHandler(ProjectsBaseDataHandler):
+    """ Serves brief information for each open project in the database.
+
+    Loaded through /api/v1/projects
+    """
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        all_projects = self.get_argument("all_projects", "True")
+        all_projects = (str(all_projects).lower() == "true")
+
+        self.write(json.dumps(self.list_projects(all_projects)))
+
+
+class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
     """ Serves all fields occuring in the values of the ProjectsDataHandler 
     json object.
 
@@ -88,7 +109,9 @@ class ProjectsFieldsDataHandler(ProjectsDataHandler):
     def get(self):
         undefined = self.get_argument("undefined", "False")
         undefined = (string.lower(undefined) == "true")
-        field_items = self.list_project_fields(undefined)
+        all_projects = self.get_argument("all_projects", "True")
+        all_projects = (str(all_projects).lower() == "true")
+        field_items = self.list_project_fields(undefined=undefined, all_projects=all_projects)
         self.write(json.dumps(list(field_items)))
 
 class ProjectDataHandler(tornado.web.RequestHandler):
@@ -102,7 +125,6 @@ class ProjectDataHandler(tornado.web.RequestHandler):
 
     def project_info(self, project):
         result = self.application.projects_db.view("project/summary")[project]
-
         return result.rows[0].value
 
 
@@ -138,7 +160,15 @@ class ProjectsHandler(tornado.web.RequestHandler):
     """
     def get(self):
         t = self.application.loader.load("projects.html")
-        self.write(t.generate(columns = COLUMNS))
+        self.write(t.generate(columns = COLUMNS, all_projects=True))
+
+
+class OpenProjectsHandler(tornado.web.RequestHandler):
+    """ Serves a page with all OPEN projects listed, along with some brief info.
+    """
+    def get(self):
+        t = self.application.loader.load("projects.html")
+        self.write(t.generate(columns = COLUMNS, all_projects=False))
         
 
 class UppmaxProjectsDataHandler(tornado.web.RequestHandler):
