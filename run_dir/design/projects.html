@@ -4,7 +4,13 @@
 {% block stuff %}
 
 <div class="container-fluid">
-  <h2>Projects</h2>
+  {% if all_projects %}
+    <h2>All Projects</h2>
+    <p> All projects found in statudb. </p>
+  {% else %}
+    <h2>Open Projects</h2>
+    <p> All projects without an explicit close date and loaded from the Lims. </p>
+  {% end %}
   <p> You can search for anything in the table and sort on any column by clicking on the column header. </p>
   <div id="project-list">
     <div class="tabbable tabs-left">
@@ -127,7 +133,11 @@ function load_table_head(columns){
 
 /* Undefined columns handled here */
 function load_undefined_columns() {
-  $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
+  {% if all_projects %}
+    $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
+  {% else %}
+    $.getJSON("/api/v1/projects_fields?undefined=true&all_projects=False", function(data) {
+  {% end %}
     var columns_html = "";
     $.each(data, function(column_no, column) {
       columns_html += '<input type="checkbox" name="' + column + '" id="' + column + '">'
@@ -142,7 +152,11 @@ function load_table(){
   load_table_head(columns)
   /* Project column is treated as special case, since it is a link */
   var project_column = $("#Filter :checkbox[name='project']").is(":checked")
-  $.getJSON("/api/v1/projects", function(data) {
+  {% if all_projects %}
+    $.getJSON("/api/v1/projects", function(data) {
+  {% else %}
+    $.getJSON("/api/v1/projects?all_projects=False", function(data) {
+  {% end %}
     var tbl_body = "";
     var size = 0;
     $.each(data, function(key, summary) {
