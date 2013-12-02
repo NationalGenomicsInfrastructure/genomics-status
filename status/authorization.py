@@ -47,7 +47,6 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
 class LogoutHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
     def get(self):
         self.clear_cookie("user")
-        self.clear_cookie("email")
         self.redirect("/")
 
 
