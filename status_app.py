@@ -160,6 +160,9 @@ class Application(tornado.web.Application):
         # If settings states  mode, no authentication is used
         self.test_mode = settings["Testing mode"]
 
+        # Load password seed
+        self.password_seed = settings.get("password_seed")
+        
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
         settings = {"debug": True,
@@ -190,6 +193,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/samples.html")
         tornado.autoreload.watch("design/sequencing_stats.html")
         tornado.autoreload.watch("design/unauthorized.html")
+        tornado.autoreload.watch("design/login.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 

@@ -18,19 +18,13 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         # Disables authentication if test mode to ease integration testing
         if self.application.test_mode:
-            return json.dumps({'first_name': 'Genomics', 
-                               'name': 'Genomics Status', 
-                               'email': 'genomics.status@example.com'})
+            return 'genomics.status@example.com'
         else:
             return self.get_secure_cookie("user")
 
 
     def get_current_user_name(self):
-        user = self.get_current_user()
-        if user:
-            return json.loads(user)["name"]
-        else:
-            return None
+        return self.get_current_user()
 
 
 class SafeHandler(BaseHandler):
