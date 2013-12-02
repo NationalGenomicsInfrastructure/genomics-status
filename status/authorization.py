@@ -1,38 +1,48 @@
 import tornado.web
 import tornado.auth
 import json
+import hashlib
 
 from status.util import UnsafeHandler
 
 class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
-    @tornado.web.asynchronous
     def get(self):
-        if self.get_argument("openid.mode", None):
-            self.get_authenticated_user(self.async_callback(self._on_auth))
-            return
-        self.authenticate_redirect()
+        error = self.get_argument("error", None)
+        t = self.application.loader.load("login.html")
+        self.write(t.generate(user = None, error=error))
 
-    def _on_auth(self, user):
-        if not user:
-            raise tornado.web.HTTPError(500, "Google auth failed")
-        user_view = self.application.gs_users_db.view("authorized/users", reduce=False)
+    def post(self):
+        user = self.get_argument("inputEmail", None)
+        password = self.get_argument("inputPassword", None)
+
+        # Secret password seed makes it more difficult for a hacker 
+        # to log in even if the hashed password is obtained.
+        seed = self.application.password_seed
+        hashed_password = None
+        
+        if password and seed:
+            # There exists safer hashing algorithms for passwords, 
+            # should be considered if a higher security level is needed.
+            hashed_password = hashlib.sha256(seed + password).hexdigest()
+
         authorized = False
-        for row in user_view[user['email']]:
-            authorized = (row.key == user['email'])
-            break
+        if user and hashed_password:
+            user_view = self.application.gs_users_db.view("authorized/users", reduce=False)[user]
+            rows = user_view.rows
+            if len(rows) == 1:
+                row = rows[0]
+                authorized = (hashed_password == row.value)
+        
         if authorized:
             self.set_secure_cookie("user", tornado.escape.json_encode(user))
-            self.set_secure_cookie("email", user['email'])
             url = self.get_argument('next', None)
             if url:
                 self.redirect(url)
             else:
                 self.redirect("/")
         else:
-            url = "/unauthorized?email={0}".format(user['email'])
-            if "name" in user:
-                url += "&name={0}".format(user["name"])
-            self.redirect(url)
+            error_msg = u"?error=" + tornado.escape.url_escape("Login incorrect.")
+            self.redirect(self.get_login_url() + error_msg)
 
 class LogoutHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
     def get(self):
