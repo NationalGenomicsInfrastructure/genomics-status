@@ -5,7 +5,7 @@ import hashlib
 
 from status.util import UnsafeHandler
 
-class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
+class LoginHandler(UnsafeHandler):
     def get(self):
         error = self.get_argument("error", None)
         t = self.application.loader.load("login.html")
@@ -44,7 +44,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
             error_msg = u"?error=" + tornado.escape.url_escape("Login incorrect.")
             self.redirect(self.get_login_url() + error_msg)
 
-class LogoutHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
+class LogoutHandler(UnsafeHandler):
     def get(self):
         self.clear_cookie("user")
         self.redirect("/")
