@@ -38,7 +38,6 @@ class Application(tornado.web.Application):
             ("/", MainHandler),
             ("/login", LoginHandler),
             ("/logout", LogoutHandler),
-            ("/unauthorized.*", UnAuthorizedHandler),
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/applications.png", ApplicationsPlotHandler),
@@ -192,7 +191,6 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/sample_runs.html")
         tornado.autoreload.watch("design/samples.html")
         tornado.autoreload.watch("design/sequencing_stats.html")
-        tornado.autoreload.watch("design/unauthorized.html")
         tornado.autoreload.watch("design/login.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
