@@ -3,7 +3,7 @@ Managing Users
 Genomic Status reads stored users from the "gs_users" database on the couch_server. 
 The current system is not intended to be a temporary solution and is intended to
 operate behind a firewall. Users has to be manually added as documents with keys 
-"email" and "password_hash" defined. This will not scale at all, but is a 
+"username" and "password_hash" defined. This will not scale at all, but is a 
 reasonably safe solution while staying behind the firewall, denying almost all
 outside connections.
 
