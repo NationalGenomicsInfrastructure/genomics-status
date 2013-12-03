@@ -6,7 +6,7 @@ import string
 
 import tornado.web
 
-from status.util import dthandler
+from status.util import dthandler, SafeHandler
 
 # Constant dictionary with Displayname:internalname pairs
 DEFAULT_COLUMNS = OrderedDict([('Project', 'project'),
@@ -41,7 +41,7 @@ EXTRA_COLUMNS = OrderedDict([('Queue Date', 'queued'),
 COLUMNS = dict([('DEFAULT_COLUMNS', DEFAULT_COLUMNS),('EXTRA_COLUMNS', EXTRA_COLUMNS)])
 
 
-class ProjectsBaseDataHandler(tornado.web.RequestHandler):
+class ProjectsBaseDataHandler(SafeHandler):
     def list_projects(self, all_projects=True):
         projects = OrderedDict()
 
@@ -87,7 +87,7 @@ class ProjectsBaseDataHandler(tornado.web.RequestHandler):
             field_items = field_items.difference(set(EXTRA_COLUMNS.values()))
         return field_items
 
-class ProjectsDataHandler(ProjectsBaseDataHandler):
+class ProjectsDataHandler(SafeHandler):
     """ Serves brief information for each open project in the database.
 
     Loaded through /api/v1/projects
@@ -114,7 +114,7 @@ class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
         field_items = self.list_project_fields(undefined=undefined, all_projects=all_projects)
         self.write(json.dumps(list(field_items)))
 
-class ProjectDataHandler(tornado.web.RequestHandler):
+class ProjectDataHandler(SafeHandler):
     """ Serves brief information of a given project.
 
     Loaded through /api/v1/project_summary/([^/]*)$
@@ -128,7 +128,7 @@ class ProjectDataHandler(tornado.web.RequestHandler):
         return result.rows[0].value
 
 
-class ProjectSamplesDataHandler(tornado.web.RequestHandler):
+class ProjectSamplesDataHandler(SafeHandler):
     """ Serves brief info about all samples in a given project.
 
     Loaded through /api/v1/projects/([^/]*)$
@@ -146,16 +146,16 @@ class ProjectSamplesDataHandler(tornado.web.RequestHandler):
         return samples
 
 
-class ProjectSamplesHandler(tornado.web.RequestHandler):
+class ProjectSamplesHandler(SafeHandler):
     """ Serves a page which lists the samples of a given project, with some
     brief information for each sample.
     """
     def get(self, project):
         t = self.application.loader.load("project_samples.html")
-        self.write(t.generate(project=project))
+        self.write(t.generate(project=project, user=self.get_current_user_name()))
 
 
-class ProjectsHandler(tornado.web.RequestHandler):
+class ProjectsHandler(SafeHandler):
     """ Serves a page with all projects listed, along with some brief info.
     """
     def get(self):
@@ -163,7 +163,7 @@ class ProjectsHandler(tornado.web.RequestHandler):
         self.write(t.generate(columns = COLUMNS, all_projects=True))
 
 
-class OpenProjectsHandler(tornado.web.RequestHandler):
+class OpenProjectsHandler(SafeHandler):
     """ Serves a page with all OPEN projects listed, along with some brief info.
     """
     def get(self):
@@ -171,7 +171,8 @@ class OpenProjectsHandler(tornado.web.RequestHandler):
         self.write(t.generate(columns = COLUMNS, all_projects=False))
         
 
-class UppmaxProjectsDataHandler(tornado.web.RequestHandler):
+
+class UppmaxProjectsDataHandler(SafeHandler):
     """ Serves a list of UPPNEX projects where the storage quota have
     been logged. 
 

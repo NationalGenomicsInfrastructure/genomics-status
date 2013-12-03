@@ -8,9 +8,9 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
-from status.util import dthandler
+from status.util import dthandler, SafeHandler
 
-class BarcodeVsExpectedDataHandler(tornado.web.RequestHandler):
+class BarcodeVsExpectedDataHandler(SafeHandler):
     """ Serves series with number of matched reads to a barcode compared
     to the expected number of reads matched to a barcode.
 
@@ -90,10 +90,10 @@ class BarcodeVsExpectedPlotHandler(BarcodeVsExpectedDataHandler):
         self.write(data)
 
 
-class ExpectedHandler(tornado.web.RequestHandler):
+class ExpectedHandler(SafeHandler):
     """ Serves a page with a boxplots of expected yield compared to matched
     yields for all runs of top bar codes.
     """
     def get(self):
         t = self.application.loader.load("barcode_vs_expected.html")
-        self.write(t.generate())
+        self.write(t.generate(user=self.get_current_user_name()))

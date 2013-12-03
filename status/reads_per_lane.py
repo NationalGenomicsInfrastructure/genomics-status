@@ -6,17 +6,18 @@ import matplotlib.gridspec as gridspec
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
+from status.util import SafeHandler
 
-class ReadsPerLaneHandler(tornado.web.RequestHandler):
+class ReadsPerLaneHandler(SafeHandler):
     """ Serves a page with a plot of distribution of lane read production for a provided
     time interval.
     """
     def get(self):
         t = self.application.loader.load("reads_per_lane.html")
-        self.write(t.generate())
+        self.write(t.generate(user = self.get_current_user_name()))
 
 
-class ReadsPerLanePlotHandler(tornado.web.RequestHandler):
+class ReadsPerLanePlotHandler(SafeHandler):
     """ Serves a plot of distribution of lane read production for a provided
     time interval.
 
