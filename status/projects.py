@@ -63,7 +63,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 for detail_key, detail_value in row.value['details'].iteritems():
                     row.value[detail_key] = detail_value
                 row.value.pop("details", None)
-            projects[row.key[1]] = row.value
+            projects[row.key] = row.value
 
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
@@ -87,7 +87,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             field_items = field_items.difference(set(EXTRA_COLUMNS.values()))
         return field_items
 
-class ProjectsDataHandler(SafeHandler):
+class ProjectsDataHandler(ProjectsBaseDataHandler):
     """ Serves brief information for each open project in the database.
 
     Loaded through /api/v1/projects
@@ -160,7 +160,7 @@ class ProjectsHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("projects.html")
-        self.write(t.generate(columns = COLUMNS, all_projects=True))
+        self.write(t.generate(columns = COLUMNS, all_projects=True, user=self.get_current_user_name()))
 
 
 class OpenProjectsHandler(SafeHandler):
@@ -168,7 +168,7 @@ class OpenProjectsHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("projects.html")
-        self.write(t.generate(columns = COLUMNS, all_projects=False))
+        self.write(t.generate(columns = COLUMNS, all_projects=False, user=self.get_current_user_name()))
         
 
 
