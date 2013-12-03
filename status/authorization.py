@@ -12,8 +12,8 @@ class LoginHandler(UnsafeHandler):
         self.write(t.generate(user = None, error=error))
 
     def post(self):
-        user = self.get_argument("inputEmail", None)
-        password = self.get_argument("inputPassword", None)
+        user = self.get_argument("username", None)
+        password = self.get_argument("password", None)
 
         # Secret password seed makes it more difficult for a hacker 
         # to log in even if the hashed password is obtained.
