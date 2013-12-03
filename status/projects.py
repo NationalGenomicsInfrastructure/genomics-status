@@ -63,7 +63,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 for detail_key, detail_value in row.value['details'].iteritems():
                     row.value[detail_key] = detail_value
                 row.value.pop("details", None)
-            projects[row.key] = row.value
+            projects[row.key[1]] = row.value
 
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
