@@ -24,7 +24,14 @@ class BaseHandler(tornado.web.RequestHandler):
 
 
     def get_current_user_name(self):
-        return self.get_current_user()
+        # Fix ridiculous bug with quotation marks showing on the web
+        user = self.get_current_user()
+        if user:
+            if (user[0] == '"') and (user[-1] == '"'):
+                return user[1:-1]
+            else:
+                return user
+        return user
 
 
 class SafeHandler(BaseHandler):
