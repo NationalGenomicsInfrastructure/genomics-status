@@ -5,10 +5,10 @@ import json
 
 import tornado.web
 
-from status.util import dthandler
+from status.util import dthandler, UnsafeHandler
 
 
-class TestDataHandler(tornado.web.RequestHandler):
+class TestDataHandler(UnsafeHandler):
     """ Handler that sends random numeric data in the style of most handlers,
     useful for testing client side plotting without having the real data one
     wish to plot.
@@ -27,13 +27,13 @@ class TestDataHandler(tornado.web.RequestHandler):
         return [d]
 
 
-class TestGridHandler(tornado.web.RequestHandler):
+class TestGridHandler(UnsafeHandler):
     def get(self):
         t = self.application.loader.load("test_grid.html")
         self.write(t.generate())
 
 
-class TestHandler(tornado.web.RequestHandler):
+class TestHandler(UnsafeHandler):
     def get(self):
         t = self.application.loader.load("test_grid.html")
         self.write(t.generate())

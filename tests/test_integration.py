@@ -13,7 +13,7 @@ TEST_ITEMS = os.path.join(file_dir_path,"test_items.yaml")
 class TestGet(object):
     def setUp(self):
         """Server Settings"""
-        self.url = 'http://localhost:9761'
+        self.url = 'http://localhost:8889'
         self.api = requests.get(self.url + '/api/v1')
         assert_true(self.api.ok)
         with open(TEST_ITEMS) as test_items:

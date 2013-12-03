@@ -16,26 +16,28 @@ import matplotlib.gridspec as gridspec
 from matplotlib import cm
 import numpy as np
 
+from status.util import SafeHandler
 
-class ApplicationsHandler(tornado.web.RequestHandler):
+class ApplicationsHandler(SafeHandler):
     """ Serves a page with stats about the different applications that have
     been performed for projects/samples.
     """
     def get(self):
         t = self.application.loader.load("applications.html")
-        self.write(t.generate())
+        self.write(t.generate(user=self.get_current_user_name()))
 
 
-class ApplicationHandler(tornado.web.RequestHandler):
+class ApplicationHandler(SafeHandler):
     """ Serves a page that list all the projects which has the application
     provided as a parameter.
     """
     def get(self, application):
         t = self.application.loader.load("application.html")
-        self.write(t.generate(application=application))
+        self.write(t.generate(application=application, 
+                              user=self.get_current_user_name()))
 
 
-class ApplicationDataHandler(tornado.web.RequestHandler):
+class ApplicationDataHandler(SafeHandler):
     """ Serves a list of projects which have the application provided as
     an argument.
 
@@ -56,7 +58,7 @@ class ApplicationDataHandler(tornado.web.RequestHandler):
         return projects
 
 
-class ApplicationsDataHandler(tornado.web.RequestHandler):
+class ApplicationsDataHandler(SafeHandler):
     """ Serves the applications performed with the number of projects which
     have that application.
 
@@ -141,7 +143,7 @@ class ApplicationsPlotHandler(ApplicationsDataHandler):
         self.write(applications)
 
 
-class SamplesApplicationsDataHandler(tornado.web.RequestHandler):
+class SamplesApplicationsDataHandler(SafeHandler):
     """ Handler for getting per sample application information.
 
     Loaded through /api/v1/samples_applications
