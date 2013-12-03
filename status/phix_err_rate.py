@@ -2,17 +2,17 @@ import tornado.web
 import json
 
 import numpy as np
+from status.util import SafeHandler
 
-
-class PhixErrorRateHandler(tornado.web.RequestHandler):
+class PhixErrorRateHandler(SafeHandler):
     """ Serves a page which shows the distributions of phiX error rates.
     """
     def get(self):
         t = self.application.loader.load("phix_err_rate.html")
-        self.write(t.generate())
+        self.write(t.generate(user=self.get_current_user_name()))
 
 
-class PhixErrorRateDataHandler(tornado.web.RequestHandler):
+class PhixErrorRateDataHandler(SafeHandler):
     """ Serves a histogram of yields and phiX error rates over all time.
 
     Loaded through /api/v1/phix_err_rate

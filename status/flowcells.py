@@ -5,26 +5,26 @@ import tornado.web
 import json
 
 from collections import OrderedDict
+from status.util import SafeHandler
 
-
-class FlowcellsHandler(tornado.web.RequestHandler):
+class FlowcellsHandler(SafeHandler):
     """ Serves a page which lists all flowcells with some brief info.
     """
     def get(self):
         t = self.application.loader.load("flowcells.html")
-        self.write(t.generate())
+        self.write(t.generate(user=self.get_current_user_name()))
 
 
-class FlowcellHandler(tornado.web.RequestHandler):
+class FlowcellHandler(SafeHandler):
     """ Serves a page which shows information and QC stats for a given
     flowcell.
     """
     def get(self, flowcell):
         t = self.application.loader.load("flowcell_samples.html")
-        self.write(t.generate(flowcell=flowcell))
+        self.write(t.generate(flowcell=flowcell, user=self.get_current_user_name()))
 
 
-class FlowcellsDataHandler(tornado.web.RequestHandler):
+class FlowcellsDataHandler(SafeHandler):
     """ Serves brief information for each flowcell in the database.
     
     Loaded through /api/v1/flowcells url
@@ -43,7 +43,7 @@ class FlowcellsDataHandler(tornado.web.RequestHandler):
         return flowcells
 
 
-class FlowcellsInfoDataHandler(tornado.web.RequestHandler):
+class FlowcellsInfoDataHandler(SafeHandler):
     """ Serves brief information about a given flowcell.
     
     Loaded through /api/v1/flowcell_info/([^/]*)$ url
@@ -62,7 +62,7 @@ class FlowcellsInfoDataHandler(tornado.web.RequestHandler):
         return flowcell_info
 
 
-class FlowcellDataHandler(tornado.web.RequestHandler):
+class FlowcellDataHandler(SafeHandler):
     """ Serves a list of sample runs in a flowcell.
 
     Loaded through /api/v1/flowcells/([^/]*)$ url
@@ -80,7 +80,7 @@ class FlowcellDataHandler(tornado.web.RequestHandler):
         return sample_run_list
 
 
-class FlowcellQCHandler(tornado.web.RequestHandler):
+class FlowcellQCHandler(SafeHandler):
     """ Serves QC data for each lane in a given flowcell.
 
     Loaded through /api/v1/flowcell_qc/([^/]*)$ url
@@ -98,7 +98,7 @@ class FlowcellQCHandler(tornado.web.RequestHandler):
         return lane_qc
 
 
-class FlowcellDemultiplexHandler(tornado.web.RequestHandler):
+class FlowcellDemultiplexHandler(SafeHandler):
     """ Serves demultiplex yield data for each lane in a given flowcell.
 
     Loaded through /api/v1/flowcell_demultiplex/([^/]*)$ url
@@ -116,7 +116,7 @@ class FlowcellDemultiplexHandler(tornado.web.RequestHandler):
         return lane_qc
 
 
-class FlowcellQ30Handler(tornado.web.RequestHandler):
+class FlowcellQ30Handler(SafeHandler):
     """ Serves the percentage ofr reads over Q30 for each lane in the given
     flowcell.
 
