@@ -45,6 +45,29 @@ COLUMNS = dict([('DEFAULT_COLUMNS', DEFAULT_COLUMNS),('EXTRA_COLUMNS', EXTRA_COL
 
 
 class ProjectsBaseDataHandler(SafeHandler):
+    def project_summary_data(self, row):
+        # the details key gives values containing multiple udfs on project level
+        # and project_summary key gives 'temporary' udfs that will move to 'details'.
+        # Include these as normal key:value pairs
+        if 'project_summary' in row.value:
+            for summary_key, summary_value in row.value['project_summary'].iteritems():
+                row.value[summary_key] = summary_value
+            row.value.pop("project_summary", None)
+                
+        # If key is in both project_summary and details, details has precedence
+        if 'details' in row.value:
+            for detail_key, detail_value in row.value['details'].iteritems():
+                row.value[detail_key] = detail_value
+            row.value.pop("details", None)
+
+        if row.key[0] == 'open' and 'queued' in row.value:
+            #Add days in production field
+            now = datetime.datetime.now()
+            queued = row.value['queued']
+            diff = now - dateutil.parser.parse(queued)
+            row.value['days_in_production'] = diff.days
+        return row
+        
     def list_projects(self, all_projects=True):
         projects = OrderedDict()
 
@@ -53,27 +76,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             summary_view = summary_view[["open",'Z']:["open",'']]
 
         for row in summary_view:
-            # the details key gives values containing multiple udfs on project level
-            # and project_summary key gives 'temporary' udfs that will move to 'details'.
-            # Include these as normal key:value pairs
-            if 'project_summary' in row.value:
-                for summary_key, summary_value in row.value['project_summary'].iteritems():
-                    row.value[summary_key] = summary_value
-                row.value.pop("project_summary", None)
-
-            # If key is in both project_summary and details, details has precedence
-            if 'details' in row.value:
-                for detail_key, detail_value in row.value['details'].iteritems():
-                    row.value[detail_key] = detail_value
-                row.value.pop("details", None)
-
-            if row.key[0] == 'open' and 'queued' in row.value:
-                #Add days in production field
-                now = datetime.datetime.now()
-                queued = row.value['queued']
-                diff = now - dateutil.parser.parse(queued)
-                row.value['days_in_production'] = diff.days
-
+            row = self.project_summary_data(row)
             projects[row.key[1]] = row.value
                 
         # Include dates for each project:
@@ -125,7 +128,7 @@ class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
         field_items = self.list_project_fields(undefined=undefined, all_projects=all_projects)
         self.write(json.dumps(list(field_items)))
 
-class ProjectDataHandler(SafeHandler):
+class ProjectDataHandler(ProjectsBaseDataHandler):
     """ Serves brief information of a given project.
 
     Loaded through /api/v1/project_summary/([^/]*)$
@@ -135,8 +138,15 @@ class ProjectDataHandler(SafeHandler):
         self.write(json.dumps(self.project_info(project)))
 
     def project_info(self, project):
-        result = self.application.projects_db.view("project/summary")[project]
-        return result.rows[0].value
+        view = self.application.projects_db.view("project/summary")["open", project]
+        if len(view.rows) == 0:
+            view = self.application.projects_db.view("project/summary")["closed", project]
+        if len(view.rows) != 1:
+            return {}
+        else:
+            row = view.rows[0]
+            row = self.project_summary_data(row)
+            return row
 
 
 class ProjectSamplesDataHandler(SafeHandler):
