@@ -5,6 +5,8 @@ import json
 import string
 
 import tornado.web
+import dateutil.parser
+import datetime
 
 from status.util import dthandler, SafeHandler
 
@@ -17,6 +19,7 @@ DEFAULT_COLUMNS = OrderedDict([('Project', 'project'),
                                ('Type','type')])
 
 EXTRA_COLUMNS = OrderedDict([('Queue Date', 'queued'),
+                             ('Days in Production', 'days_in_production'),
                              ('Ordered million reads per sample', 'ordered_reads'),
                              ('Source','source'),
                              ('Reference Genome', 'reference_genome'),
@@ -63,8 +66,16 @@ class ProjectsBaseDataHandler(SafeHandler):
                 for detail_key, detail_value in row.value['details'].iteritems():
                     row.value[detail_key] = detail_value
                 row.value.pop("details", None)
-            projects[row.key[1]] = row.value
 
+            if row.key[0] == 'open' and 'queued' in row.value:
+                #Add days in production field
+                now = datetime.datetime.now()
+                queued = row.value['queued']
+                diff = now - dateutil.parser.parse(queued)
+                row.value['days_in_production'] = diff.days
+
+            projects[row.key[1]] = row.value
+                
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
             if row.key[0] in projects:
