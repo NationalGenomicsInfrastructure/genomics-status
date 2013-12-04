@@ -6,9 +6,8 @@
 <div class="container-fluid" id="sample_list">
   <h2>{{ project }}</h2>
   <h3 id="project_name"></h3><br>
-  <table class="table table-bordered" id="project_info">
-    <tbody></tbody>
-  </table>
+  <dl class="dl" id="project_info">
+  </dl>
   <p>
     Note that for some projects the ordered number of reads per sample is on a
     per sample basis. At this moment that information is then impossible to
@@ -47,19 +46,11 @@
 var ordered_reads = 0.0
 
 $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
-  
-  tbody = '<tr>'
-  tbody += '<th>Application</th><td>' + data["application"] + '</td>'
-  tbody += '<th>Number of samples</th><td>' + data["no_samples"] + '</td>'
-  tbody += '</tr><tr>'
-  ordered_reads = parseFloat(data["ordered_reads"])
-  tbody += '<th>Min M reads per sample</th><td>' + ordered_reads.toFixed(2) + '</td>'
-  tbody += '<th>Progress</th><td>' + data["passed_samples"] + ' /  ' +
-  data["no_samples"] + ' samples finished</td>'
-  tbody += '</tr>'
-
-  $("#project_info tbody").html(tbody)
-  $("#project_name").html(data["project_name"])
+  tbody = ""
+  $.each(data["value"], function(key, value) {
+    tbody += "<dt>" + key + "</dt><dl>" + value + "</dl>"
+  });
+  $("#project_info").html(tbody)
 })
 
 $.getJSON("/api/v1/projects/{{ project }}", function (data) {
