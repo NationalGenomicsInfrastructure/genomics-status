@@ -14,7 +14,7 @@ from status.util import dthandler, SafeHandler
 DEFAULT_COLUMNS = OrderedDict([('Project', 'project'),
                                ('Project Name', 'project_name'),
                                ('Application', 'application'),
-                               ('Sequencing progress', 'passed_samples'),
+                               ('Passed Samples', 'passed_samples'),
                                ('Number of Samples','no_samples'),
                                ('Type','type')])
 
