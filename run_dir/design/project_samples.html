@@ -5,9 +5,27 @@
 
 <div class="container-fluid" id="sample_list">
   <h2>{{ project }}</h2>
-  <h3 id="project_name"></h3><br>
-  <dl class="dl" id="project_info">
-  </dl>
+  <h3 name="project_name"></h3><br>
+  <div id="project_info">
+    <div class="row-fluid">
+      <div class="span12">
+	<div class="span3">
+	  <dl class="dl" id="project_info_default">
+	    {% for col_display_name, col_name in columns['DEFAULT_COLUMNS'].iteritems() %}
+	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
+	    {% end %}
+	  </dl>
+	</div>
+	<div class="span9">
+	  <dl class="dl" id="project_info_extra">
+	    {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
+	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
+	    {% end %}
+	  </dl>
+	</div>
+      </div>
+    </div>
+  </div>
   <p>
     Note that for some projects the ordered number of reads per sample is on a
     per sample basis. At this moment that information is then impossible to
@@ -16,18 +34,18 @@
   </p>
   <h3>Samples</h3>
   <p>
-
+    
     This lists all samples belonging to the project. Here 'reads sequenced'
     refers to reads passing application QC criterions. If the sequence run is
     paired end, 'reads' are actually read pairs.
-
+    
   </p>
   <p>
     If a sample is named 'Unexptectedbarcode' refers to reads which failed to
     demultiplex.
   </p>
   <table class="table table-striped" id="sample_table">
-     <thead>
+    <thead>
       <tr>
         <th>SciLife Sample Name</th>
         <th>Sample runs</th>
@@ -38,7 +56,7 @@
       </tr>
     </thead>
     <tbody></tbody>
-
+    
   </table>
 </div>
 
@@ -46,12 +64,15 @@
 var ordered_reads = 0.0
 
 $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
-  tbody = ""
-  $.each(data["value"], function(key, value) {
-    tbody += "<dt>" + key + "</dt><dl>" + value + "</dl>"
-  });
-  $("#project_info").html(tbody)
-})
+   $.each(data, function(key, value) {
+      $("[name=" + prettify(key) + "]").text(value)
+   });
+});
+
+function prettify(s) {
+  s2 = s.replace("(", "_").replace(")", "_")
+  return s2
+}
 
 $.getJSON("/api/v1/projects/{{ project }}", function (data) {
   $.each(data, function (sample, info) {
