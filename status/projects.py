@@ -43,8 +43,15 @@ EXTRA_COLUMNS = OrderedDict([('Queue Date', 'queued'),
 
 COLUMNS = dict([('DEFAULT_COLUMNS', DEFAULT_COLUMNS),('EXTRA_COLUMNS', EXTRA_COLUMNS)])
 
-
+    
 class ProjectsBaseDataHandler(SafeHandler):
+    def keys_to_names(self, columns):
+        d = {}
+        for column_category, column_tuples in columns.iteritems():
+            for key, value in column_tuples.iteritems():
+                d[value] = key
+        return d
+
     def project_summary_data(self, row):
         # the details key gives values containing multiple udfs on project level
         # and project_summary key gives 'temporary' udfs that will move to 'details'.
@@ -101,6 +108,9 @@ class ProjectsBaseDataHandler(SafeHandler):
             field_items = field_items.difference(set(EXTRA_COLUMNS.values()))
         return field_items
 
+def prettify_css_names(s):
+    return s.replace("(","_").replace(")", "_")
+
 class ProjectsDataHandler(ProjectsBaseDataHandler):
     """ Serves brief information for each open project in the database.
 
@@ -108,7 +118,7 @@ class ProjectsDataHandler(ProjectsBaseDataHandler):
     """
     def get(self):
         self.set_header("Content-type", "application/json")
-        all_projects = self.get_argument("all_projects", "True")
+        all_projects = self._argument("all_projects", "True")
         all_projects = (str(all_projects).lower() == "true")
 
         self.write(json.dumps(self.list_projects(all_projects)))
@@ -143,10 +153,10 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             view = self.application.projects_db.view("project/summary")["closed", project]
         if len(view.rows) != 1:
             return {}
-        else:
-            row = view.rows[0]
-            row = self.project_summary_data(row)
-            return row
+        row = view.rows[0]
+        row = self.project_summary_data(row)
+
+        return row.value
 
 
 class ProjectSamplesDataHandler(SafeHandler):
@@ -173,7 +183,10 @@ class ProjectSamplesHandler(SafeHandler):
     """
     def get(self, project):
         t = self.application.loader.load("project_samples.html")
-        self.write(t.generate(project=project, user=self.get_current_user_name()))
+        self.write(t.generate(project=project, 
+                              user=self.get_current_user_name(), 
+                              columns = COLUMNS,
+                              prettify = prettify_css_names))
 
 
 class ProjectsHandler(SafeHandler):
