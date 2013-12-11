@@ -118,7 +118,7 @@ class ProjectsDataHandler(ProjectsBaseDataHandler):
     """
     def get(self):
         self.set_header("Content-type", "application/json")
-        all_projects = self._argument("all_projects", "True")
+        all_projects = self.get_argument("all_projects", "True")
         all_projects = (str(all_projects).lower() == "true")
 
         self.write(json.dumps(self.list_projects(all_projects)))
