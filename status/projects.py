@@ -16,34 +16,34 @@ DEFAULT_COLUMNS = OrderedDict([('Project', 'project'),
                                ('Application', 'application'),
                                ('Passed Samples', 'passed_samples'),
                                ('Number of Samples','no_samples'),
-                               ('Type','type')])
+                               ('Type','type'),
+                               ('Queue Date', 'queued')])
 
-EXTRA_COLUMNS = OrderedDict([('Queue Date', 'queued'),
-                             ('Days in Production', 'days_in_production'),
+EXTRA_COLUMNS = OrderedDict([('Days in Production', 'days_in_production'),
                              ('Ordered million reads per sample', 'ordered_reads'),
-                             ('Source','source'),
-                             ('Reference Genome', 'reference_genome'),
                              ('Sequencing Setup', 'sequencing_setup'),
                              ('Customer Reference', 'customer_reference'),
                              ('Sequencing Platform', 'sequencing_platform'),
-                             ('Uppnex ID', 'uppnex_id'),
                              ('Open Date', 'open_date'),
                              ('Disposal of Samples', 'disposal_of_any_remaining_samples'),
                              ('All Samples Sequenced', 'all_samples_sequenced'),
-                             ('Portal ID (somewhere else)', 'Portal_id'),
-                             ('Portal ID (Details)', 'portal_id'),
                              ('Lanes', 'sequence_units_ordered_(lanes)'),
-                             ('Best Practice Bioinformatics', 'best_practice_bioinformatics'),
-                             ('Bioinformatic QC', 'bioinformatic_qc'),
                              ('Comment', 'comment'),
                              ('Aborted', 'aborted'),
                              ('Library Prep Start', 'library_prep_start'),
                              ('QC Library Finished','qc_library_finished'),
                              ('Sequencing Start', 'sequencing_start_date')])
 
-COLUMNS = dict([('DEFAULT_COLUMNS', DEFAULT_COLUMNS),('EXTRA_COLUMNS', EXTRA_COLUMNS)])
+BIOINFO_COLUMNS = OrderedDict([('Source','source'),
+                               ('Uppnex ID', 'uppnex_id'),
+                               ('Portal ID', 'portal_id'),
+                               ('Reference Genome', 'reference_genome'),
+                               ('Best Practice Bioinformatics', 'best_practice_bioinformatics'),
+                               ('Bioinformatic QC', 'bioinformatic_qc')])
+                           
 
-    
+COLUMNS = dict([('DEFAULT_COLUMNS', DEFAULT_COLUMNS), ('EXTRA_COLUMNS', EXTRA_COLUMNS), ('BIOINFO_COLUMNS', BIOINFO_COLUMNS)])
+
 class ProjectsBaseDataHandler(SafeHandler):
     def keys_to_names(self, columns):
         d = {}
@@ -104,8 +104,8 @@ class ProjectsBaseDataHandler(SafeHandler):
             for key, _ in value.iteritems():
                 field_items.add(key)
         if undefined:
-            field_items = field_items.difference(set(DEFAULT_COLUMNS.values()))
-            field_items = field_items.difference(set(EXTRA_COLUMNS.values()))
+            for column_category, column_dict in COLUMNS.iteritems():
+                field_items = field_items.difference(set(column_dict.values()))
         return field_items
 
 def prettify_css_names(s):
