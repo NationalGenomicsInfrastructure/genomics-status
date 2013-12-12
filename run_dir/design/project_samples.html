@@ -67,7 +67,8 @@
 	<th>Library QC Date</th>
         <th>Million reads sequenced</th>
         <th>Incoming QC Status</th>
-        <th>Status</th>
+        <th>Sequencing QC</th>
+	<th>Status Manual</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -170,8 +171,11 @@ $.getJSON("/api/v1/projects/{{ project }}", function (data) {
     else { 
       tbl_row += '<td>' + info["incoming_QC_status"] + '</td>'
     }
+    /* Sequencing QC */
     tbl_row += '<td>' + info["status"] + '</td>'
 
+    /* Status */
+    tbl_row += '<td>' + info["details"]["status_(manual)"] + '</td>'
     tbl_row += "</tr>"
     $("#sample_table tbody").append(tbl_row)
   });
