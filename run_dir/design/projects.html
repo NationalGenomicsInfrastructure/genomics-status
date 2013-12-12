@@ -43,6 +43,19 @@
 	            {% end %}
 		  </div>
 	        </div>
+		<div id="details-columns">
+		  <div class="fieldset">
+		    <h3> Details </h3>
+		    {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
+		    <input type="checkbox" name={{col_name}} id={{col_name}}>
+		    <label for={{col_name}}>
+		      {{col_display_name}}
+		    </label>
+                    </input>
+		    <br />
+	            {% end %}
+		  </div>
+		</div>
 	        <div id="bioinfo-columns">
 		  <div class="fieldset">
 		    <h3> Bioinformatics </h3>
@@ -126,6 +139,9 @@ function reset_default_checkboxes(){
     $("#Filter #{{column_name}}").attr('checked', false)
   {% end %}
   {% for col_display_name, column_name in columns['BIOINFO_COLUMNS'].iteritems() %}
+    $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns['DETAILS_COLUMNS'].iteritems() %}
     $("#Filter #{{column_name}}").attr('checked', false)
   {% end %}
   $("#Filter #undefined_columns").children("input").attr('checked', false)
