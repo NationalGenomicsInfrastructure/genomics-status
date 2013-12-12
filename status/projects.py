@@ -36,7 +36,8 @@ EXTRA_COLUMNS = OrderedDict([('Days in Production', 'days_in_production'),
                              ('Final Number of Samples', 'final_number_of_samples'),
                              ('Close Date', 'close_date'),
                              ('All Raw Data Delivered', 'all_raw_data_delivered'),
-                             ('Best Practice Analysis Completed', 'best_practice_analysis_completed')])
+                             ('Best Practice Analysis Completed', 'best_practice_analysis_completed'),
+                             ('First Initial QC Start Date', 'first_initial_qc_start_date')])
 
 BIOINFO_COLUMNS = OrderedDict([('Source','source'),
                                ('Uppnex ID', 'uppnex_id'),
