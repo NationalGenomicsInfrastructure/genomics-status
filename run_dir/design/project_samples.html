@@ -118,6 +118,7 @@ function prettify(s) {
 
 $.getJSON("/api/v1/projects/{{ project }}", function (data) {
   $.each(data, function (sample, info) {
+    var details = info["details"];
     tbl_row = "<tr>"
 
     tbl_row += '<td><a href="/samples/' + sample + '">' + sample + '</td>'
@@ -187,7 +188,12 @@ $.getJSON("/api/v1/projects/{{ project }}", function (data) {
     tbl_row += '<td>' + info["status"] + '</td>'
 
     /* Status */
-    tbl_row += '<td>' + info["details"]["status_(manual)"] + '</td>'
+    if ('details' in info) {
+      tbl_row += '<td>' + info["details"]["status_(manual)"] + '</td>'
+    }
+    else {
+      tbl_row += '<td>' + "Undefined" + '</td>'
+    }
     tbl_row += "</tr>"
     $("#sample_table tbody").append(tbl_row)
   });
