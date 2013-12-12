@@ -71,7 +71,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             for summary_key, summary_value in row.value['project_summary'].iteritems():
                 row.value[summary_key] = summary_value
             row.value.pop("project_summary", None)
-                
+
         # If key is in both project_summary and details, details has precedence
         if 'details' in row.value:
             for detail_key, detail_value in row.value['details'].iteritems():
@@ -175,9 +175,43 @@ class ProjectSamplesDataHandler(SafeHandler):
 
     Loaded through /api/v1/projects/([^/]*)$
     """
+    def sample_data(self, sample_data):
+        sample_data["sample_run_metrics"] = []
+        sample_data["prep_status"] = []
+        sample_data["prep_finished_date"] = []
+        if "library_prep" in sample_data:
+            for lib_prep, content in sample_data["library_prep"].iteritems():
+                if "sample_run_metrics" in content:
+                    for run, id in content["sample_run_metrics"].iteritems():
+                        sample_data["sample_run_metrics"].append(run)
+                if "prep_status" in content:
+                    if content["prep_status"] == "PASSED":
+                        sample_data["prep_status"].append("P")
+                    else:
+                        sample_data["prep_status"].append("F")
+                if "prep_finished_date" in content:
+                    sample_data["prep_finished_date"].append(content["prep_finished_date"])
+        
+        if "details" in sample_data:
+            for detail_key, detail_value in sample_data["details"].iteritems():
+                sample_data[detail_key] = detail_value
+        return sample_data
+
+    def list_samples(self, project):
+        samples = OrderedDict()
+        sample_view = self.application.projects_db.view("project/samples")
+        result = sample_view[project]
+        samples = result.rows[0].value
+        output = OrderedDict()
+        for sample, sample_data in sorted(samples.iteritems(), key=lambda x: x[0]):
+            sample_data = self.sample_data(sample_data)
+            output[sample] = sample_data
+        return output
+        
     def get(self, project):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.sample_list(project), default=dthandler))
+        # self.write(json.dumps(self.sample_list(project), default=dthandler))
+        self.write(json.dumps(self.list_samples(project), default=dthandler))
 
     def sample_list(self, project):
         sample_view = self.application.projects_db.view("project/samples")
