@@ -10,17 +10,30 @@
     <div class="row-fluid">
       <div class="span12">
 	<div class="span3">
+	  <h3> Basic Information </h3>
 	  <dl class="dl" id="project_info_default">
 	    {% for col_display_name, col_name in columns['DEFAULT_COLUMNS'].iteritems() %}
 	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
 	    {% end %}
 	  </dl>
+	  <h3> Bioinformatics </h3>
+	  <dl class="dl" id="project_info_bioinfo">
+	    {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
+	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
+	    {% end %}
+	  </dl>
 	</div>
-	<div class="span9">
+	<div class="span3">
+	  <h3> Defined Extra </h3>
 	  <dl class="dl" id="project_info_extra">
 	    {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
 	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
 	    {% end %}
+	  </dl>
+	</div>
+	<div class="span6" id="undefined_project_info">
+	  <h3> Undefined Extra </h3>
+	  <dl class="dl">
 	  </dl>
 	</div>
       </div>
@@ -63,11 +76,26 @@
 <script>
 var ordered_reads = 0.0
 
-$.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
-   $.each(data, function(key, value) {
+load_undefined_info()
+load_all_udfs()
+
+function load_undefined_info(){
+  $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
+    var columns_html ="";
+    $.each(data, function(column_no, column) {
+      columns_html += '<dt>' + column + '</dt><dd name=' + prettify(column) + '></dd>'
+    });
+    $("#undefined_project_info dl").html(columns_html)
+  });
+}
+
+function load_all_udfs(){
+  $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
+    $.each(data, function(key, value) {
       $("[name=" + prettify(key) + "]").text(value)
-   });
-});
+    });
+  });
+};
 
 function prettify(s) {
   s2 = s.replace("(", "_").replace(")", "_")
