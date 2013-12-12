@@ -19,6 +19,9 @@ DEFAULT_COLUMNS = OrderedDict([('Project', 'project'),
                                ('Type','type'),
                                ('Queue Date', 'queued')])
 
+DETAILS_COLUMNS = OrderedDict([('Project Comment', 'project_comment'),
+                               ('Customer Project Description', 'customer_project_description')])
+
 EXTRA_COLUMNS = OrderedDict([('Days in Production', 'days_in_production'),
                              ('Ordered million reads per sample', 'ordered_reads'),
                              ('Sequencing Setup', 'sequencing_setup'),
@@ -47,7 +50,10 @@ BIOINFO_COLUMNS = OrderedDict([('Source','source'),
                                ('Bioinformatic QC', 'bioinformatic_qc')])
                            
 
-COLUMNS = dict([('DEFAULT_COLUMNS', DEFAULT_COLUMNS), ('EXTRA_COLUMNS', EXTRA_COLUMNS), ('BIOINFO_COLUMNS', BIOINFO_COLUMNS)])
+COLUMNS = dict([('DEFAULT_COLUMNS', DEFAULT_COLUMNS), 
+                ('DETAILS_COLUMNS', DETAILS_COLUMNS),
+                ('EXTRA_COLUMNS', EXTRA_COLUMNS), 
+                ('BIOINFO_COLUMNS', BIOINFO_COLUMNS)])
 
 class ProjectsBaseDataHandler(SafeHandler):
     def keys_to_names(self, columns):
