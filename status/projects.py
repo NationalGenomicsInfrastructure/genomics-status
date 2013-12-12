@@ -11,49 +11,76 @@ import datetime
 from status.util import dthandler, SafeHandler
 
 # Constant dictionary with Displayname:internalname pairs
-DEFAULT_COLUMNS = OrderedDict([('Project', 'project'),
-                               ('Project Name', 'project_name'),
-                               ('Application', 'application'),
-                               ('Passed Samples', 'passed_samples'),
-                               ('Number of Samples','no_samples'),
-                               ('Type','type'),
-                               ('Queue Date', 'queued')])
-
-DETAILS_COLUMNS = OrderedDict([('Project Comment', 'project_comment'),
-                               ('Customer Project Description', 'customer_project_description')])
-
-EXTRA_COLUMNS = OrderedDict([('Days in Production', 'days_in_production'),
-                             ('Ordered million reads per sample', 'ordered_reads'),
-                             ('Sequencing Setup', 'sequencing_setup'),
-                             ('Customer Reference', 'customer_reference'),
-                             ('Sequencing Platform', 'sequencing_platform'),
-                             ('Open Date', 'open_date'),
-                             ('Disposal of Samples', 'disposal_of_any_remaining_samples'),
-                             ('All Samples Sequenced', 'all_samples_sequenced'),
-                             ('Lanes', 'sequence_units_ordered_(lanes)'),
-                             ('Project Summary Comment', 'comment'),
-                             ('Aborted', 'aborted'),
-                             ('Library Prep Start', 'library_prep_start'),
-                             ('QC Library Finished','qc_library_finished'),
-                             ('Sequencing Start', 'sequencing_start_date'),
-                             ('Final Number of Samples', 'final_number_of_samples'),
-                             ('Close Date', 'close_date'),
-                             ('All Raw Data Delivered', 'all_raw_data_delivered'),
-                             ('Best Practice Analysis Completed', 'best_practice_analysis_completed'),
-                             ('First Initial QC Start Date', 'first_initial_qc_start_date')])
+BASIC_COLUMNS = OrderedDict([('Project', 'project'),
+                             ('Project Name', 'project_name'),
+                             ('Application', 'application'),
+                             ('Passed Samples', 'passed_samples'),
+                             ('Number of Samples','no_samples'),
+                             ('Type','type'),
+                             ('Queue Date', 'queued'), 
+                             ('Days in Production', 'days_in_production'),
+                             ('Open Date', 'open_date')])
 
 BIOINFO_COLUMNS = OrderedDict([('Source','source'),
                                ('Uppnex ID', 'uppnex_id'),
-                               ('Portal ID', 'portal_id'),
                                ('Reference Genome', 'reference_genome'),
                                ('Best Practice Bioinformatics', 'best_practice_bioinformatics'),
-                               ('Bioinformatic QC', 'bioinformatic_qc')])
+                               ('Bioinformatic QC', 'bioinformatic_qc'),
+                               ('All Raw Data Delivered', 'all_raw_data_delivered'),
+                               ('Best Practice Analysis Completed', 'best_practice_analysis_completed'),
+                               ('Custom Capture Design', 'custom_capture_design_id'),
+                               ('Uppmax Project Owner', 'uppmax_project_owner'),
+                               ])
                            
+SEQUENCING_COLUMNS = OrderedDict([('Sequencing Setup', 'sequencing_setup'),
+                                  ('Sequencing Platform', 'sequencing_platform'),
+                                  ('Sequencing Start', 'sequencing_start_date')
+])
 
-COLUMNS = dict([('DEFAULT_COLUMNS', DEFAULT_COLUMNS), 
+DETAILS_COLUMNS = OrderedDict([('Project Comment', 'project_comment'),
+                               ('Customer Project Description', 'customer_project_description'),
+                               ('Portal ID', 'portal_id'),
+                               ('Ordered million reads per sample', 'ordered_reads'),
+                               ('Customer Reference', 'customer_reference'),
+                               ('Disposal of Samples', 'disposal_of_any_remaining_samples'),
+                               ('All Samples Sequenced', 'all_samples_sequenced'),
+                               ('Lanes', 'sequence_units_ordered_(lanes)'),
+                               ('Aborted', 'aborted'),
+                               ('Close Date', 'close_date'),
+                               ('Final Number of Samples', 'final_number_of_samples'),
+                               ('Customer Project Reference', 'customer_project_reference'),
+                               ('Sample Type', 'sample_type'),
+                               ('Customer Project Description', 'customer_project_description'),
+                               ('Invoice Reference', 'invoice_reference'),
+                               ('Organism', 'organism')
+                               ])
+
+LIBRARY_PREP_COLUMNS = OrderedDict([('Library Prep Start', 'library_prep_start'),
+                                    ('QC Library Finished','qc_library_finished'),
+                                    ('Library Construction Method', 'library_construction_method')
+                                    ])
+
+SETUP_PROJECT_COLUMNS = OrderedDict([('Sample Information Received', 'sample_information_received'),
+                                     ('Order Received', 'order_received'),
+                                     ('Contract Received', 'contract_received'),
+                                     ('Contract Sent', 'contract_sent'),
+                                     ('Samples Received', 'samples_received'),
+                                     ('Plates Sent', 'plates_sent')
+                                     ])
+
+EXTRA_COLUMNS = OrderedDict([('Project Summary Comment', 'comment'),
+                             ('First Initial QC Start Date', 'first_initial_qc_start_date')
+                             ])
+
+
+COLUMNS = dict([('BASIC_COLUMNS', BASIC_COLUMNS),
+                ('BIOINFO_COLUMNS', BIOINFO_COLUMNS),
+                ('SEQUENCING_COLUMNS', SEQUENCING_COLUMNS),
                 ('DETAILS_COLUMNS', DETAILS_COLUMNS),
-                ('EXTRA_COLUMNS', EXTRA_COLUMNS), 
-                ('BIOINFO_COLUMNS', BIOINFO_COLUMNS)])
+                ('LIBRARY_PREP_COLUMNS', LIBRARY_PREP_COLUMNS),
+                ('SETUP_PROJECT_COLUMNS', SETUP_PROJECT_COLUMNS),
+                ('EXTRA_COLUMNS', EXTRA_COLUMNS)])
+
 
 class ProjectsBaseDataHandler(SafeHandler):
     def keys_to_names(self, columns):
