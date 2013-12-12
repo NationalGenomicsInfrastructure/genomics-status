@@ -63,6 +63,8 @@
         <th>SciLife Sample Name</th>
         <th>Sample runs</th>
         <th>Library preps</th>
+	<th>Library QC</th>
+	<th>Library QC Date</th>
         <th>Million reads sequenced</th>
         <th>Incoming QC Status</th>
         <th>Status</th>
@@ -123,21 +125,51 @@ $.getJSON("/api/v1/projects/{{ project }}", function (data) {
     tbl_row += '<td>'
     if (info["library_prep"]) {
       $.each(info["library_prep"], function(lib_prep, content) {
-        tbl_row += lib_prep + ' '
+        tbl_row += lib_prep + '<br>'
       })
+    }
+    tbl_row += '</td>'
+
+    tbl_row += '<td>'
+    if (info["library_prep"]) {
+      $.each(info["library_prep"], function(lib_prep, content) {
+        if (content["prep_status"] == "PASSED") {
+          tbl_row += "P" + '<br>'
+        } 
+        else {
+          tbl_row += "F" + '<br>'
+        }
+      });
+    }
+    tbl_row += '</td>'
+    tbl_row += '<td>'
+    if (info["library_prep"]) {
+      $.each(info["library_prep"], function(lib_prep, content) {
+        tbl_row +=  content["prep_finished_date"] + '<br>'
+      });
     }
     tbl_row += '</td>'
 
     m_reads_sequenced = parseFloat(info["m_reads_sequenced"])
 
     tbl_row += '<td>' + m_reads_sequenced.toFixed(2)
-    if (m_reads_sequenced >= parseFloat(ordered_reads)) {
-      tbl_row += ' <i class="icon-ok"></i>'
-    }
+
     tbl_row += '</td>'
 
-    tbl_row += '<td>' + info["incoming_QC_status"] + '</td>'
-
+    if ('details' in info) {
+      passed = info["details"]["passed_initial_qc"] 
+      tbl_row += '<td>'
+      if (passed == "True"){
+        tbl_row += "P"
+      }
+      else {
+        tbl_row += "F"
+      }
+      tbl_row += '</td>'
+    } 
+    else { 
+      tbl_row += '<td>' + info["incoming_QC_status"] + '</td>'
+    }
     tbl_row += '<td>' + info["status"] + '</td>'
 
     tbl_row += "</tr>"
