@@ -30,10 +30,10 @@
 	    <legend>Filter Columns</legend>
 	    <div class="row-fluid">
 	      <div class="span3">
-		<div id="default-columns">
+		<div id="basic-columns">
 		  <div class="fieldset">
-		    <h3> Default </h3>
-		    {% for col_display_name, col_name in columns['DEFAULT_COLUMNS'].iteritems() %}
+		    <h3> Basic </h3>
+		    {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
 		    <label for={{col_name}}>
 		      {{col_display_name}}
@@ -56,6 +56,9 @@
 	            {% end %}
 		  </div>
 		</div>
+	      </div>
+	      <div class="span3">
+
 	        <div id="bioinfo-columns">
 		  <div class="fieldset">
 		    <h3> Bioinformatics </h3>
@@ -69,24 +72,65 @@
 	            {% end %}
 		  </div>
 		</div>
+	        <div id="sequencing-columns">
+		  <div class="fieldset">
+		    <h3> Sequencing </h3>
+		    {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
+		    <input type="checkbox" name={{col_name}} id={{col_name}}>
+		    <label for={{col_name}}>
+		      {{col_display_name}}
+		    </label>
+                    </input>
+		    <br />
+	            {% end %}
+		  </div>
+		</div>
+		<div id="library-prep-columns">
+		  <div class="fieldset">
+		    <h3> Library Prep </h3>
+		    {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
+		    <input type="checkbox" name={{col_name}} id={{col_name}}>
+		    <label for={{col_name}}>
+		      {{col_display_name}}
+		    </label>
+                    </input>
+		    <br />
+	            {% end %}
+		  </div>
+		</div>
 	      </div>
-	      <div id="extra-columns" class="span3">
-		<div class="fieldset">
-		  <h3> Defined Extra </h3>
-		  {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
-		  <input type="checkbox" name={{col_name}} id={{col_name}}>
-		  <label for={{col_name}}>
-		    {{col_display_name}}
-		  </label>
+	      <div class="span3">
+	        <div id="setup-project-columns">
+		  <div class="fieldset">
+		    <h3> Setup Project </h3>
+		    {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
+		    <input type="checkbox" name={{col_name}} id={{col_name}}>
+		    <label for={{col_name}}>
+		      {{col_display_name}}
+		    </label>
+                    </input>
+		    <br />
+	            {% end %}
+		  </div>
+		</div>
+		<div id="extra-columns">
+		  <div class="fieldset">
+		    <h3> Extra </h3>
+		    {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
+		    <input type="checkbox" name={{col_name}} id={{col_name}}>
+		    <label for={{col_name}}>
+		      {{col_display_name}}
+		    </label>
                   </input>
 		  <br />
 	          {% end %}
+		  </div>
 		</div>
-	      </div>
-	      <div id="undefined-columns" class="span3">
-		<div class="fieldset">
-		  <h3> Undefined Extra </h3>
-		  <div id="undefined_columns">
+		<div id="undefined-columns">
+		  <div class="fieldset">
+		    <h3> Undefined </h3>
+		    <div id="undefined_columns">
+		    </div>
 		  </div>
 		</div>
 	      </div>
@@ -132,18 +176,28 @@ $("#applyFilter").click( function( event ) {
 });
 
 function reset_default_checkboxes(){
-  {% for col_display_name, column_name in columns['DEFAULT_COLUMNS'].iteritems() %}
+  {% for col_display_name, column_name in columns['BASIC_COLUMNS'].iteritems() %}
     $("#Filter #{{column_name}}").attr('checked', true)
   {% end %}
-  {% for col_display_name, column_name in columns['EXTRA_COLUMNS'].iteritems() %}
+  {% for col_display_name, column_name in columns['BIOINFO_COLUMNS'].iteritems() %}
     $("#Filter #{{column_name}}").attr('checked', false)
   {% end %}
-  {% for col_display_name, column_name in columns['BIOINFO_COLUMNS'].iteritems() %}
+  {% for col_display_name, column_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
     $("#Filter #{{column_name}}").attr('checked', false)
   {% end %}
   {% for col_display_name, column_name in columns['DETAILS_COLUMNS'].iteritems() %}
     $("#Filter #{{column_name}}").attr('checked', false)
   {% end %}
+  {% for col_display_name, column_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
+    $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
+    $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns['EXTRA_COLUMNS'].iteritems() %}
+    $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+
   $("#Filter #undefined_columns").children("input").attr('checked', false)
 }
 
