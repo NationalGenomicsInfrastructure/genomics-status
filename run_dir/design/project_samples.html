@@ -5,10 +5,76 @@
 
 <div class="container-fluid" id="sample_list">
   <h2>{{ project }}</h2>
-  <h3 id="project_name"></h3><br>
-  <table class="table table-bordered" id="project_info">
-    <tbody></tbody>
-  </table>
+  <h3 name="project_name"></h3><br>
+  <div id="project_info">
+    <div class="row-fluid">
+      <div class="span12">
+	<div class="span6">
+	  <h3> Project Details </h3>
+	  <dl class="dl" id="project_info_details">
+	    {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
+	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
+	    {% end %}
+	  </dl>
+	</div>
+      </div>
+      <div class="span12">
+	<div class="span3">
+	  <h3> Basic Information </h3>
+	  <dl class="dl" id="project_info_basic">
+	    {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
+	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
+	    {% end %}
+	  </dl>
+	</div>
+	<div class="span3">
+	  <h3> Bioinformatics </h3>
+	  <dl class="dl" id="project_info_bioinfo">
+	    {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
+	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
+	    {% end %}
+	  </dl>
+	</div>
+	<div class="span3">
+	  <h3> Sequencing </h3>
+	  <dl class="dl" id="project_info_sequencing">
+	    {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
+	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
+	    {% end %}
+	  </dl>
+	  <h3> Library Prep </h3>
+	  <dl class="dl" id="project_info_library_prep">
+	    {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
+	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
+	    {% end %}
+	  </dl>
+	</div>
+	<div class="span3">
+	  <div>
+	    <h3> Setup Project </h3>
+	    <dl class="dl" id="project_info_setup_project">
+	      {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
+	      <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
+	      {% end %}
+	    </dl>
+	  </div>
+	  <div>
+	    <h3> Extra </h3>
+	    <dl class="dl" id="project_info_extra">
+	      {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
+	      <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
+	      {% end %}
+	    </dl>
+	  </div>
+	  <div id="undefined_project_info">
+	    <h3> Undefined </h3>
+	    <dl class="dl">
+	    </dl>
+	  </div>
+	</div>
+      </div>
+    </div>
+  </div>
   <p>
     Note that for some projects the ordered number of reads per sample is on a
     per sample basis. At this moment that information is then impossible to
@@ -17,88 +83,127 @@
   </p>
   <h3>Samples</h3>
   <p>
-
+    
     This lists all samples belonging to the project. Here 'reads sequenced'
     refers to reads passing application QC criterions. If the sequence run is
     paired end, 'reads' are actually read pairs.
-
+    
   </p>
   <p>
     If a sample is named 'Unexptectedbarcode' refers to reads which failed to
     demultiplex.
   </p>
   <table class="table table-striped" id="sample_table">
-     <thead>
+    <thead>
       <tr>
         <th>SciLife Sample Name</th>
+	<th>Customer Name</th>
         <th>Sample runs</th>
-        <th>Library preps</th>
-        <th>Million reads sequenced</th>
         <th>Incoming QC Status</th>
-        <th>Status</th>
+        <th>Library preps</th>
+	<th>Library QC</th>
+	<th>Library QC Date</th>
+        <th>Million reads sequenced</th>
+        <th>Sequencing QC</th>
+	<th>Status Manual</th>
+	<th>Reads Minimum</th>
+	<th>Reads Required</th>
       </tr>
     </thead>
     <tbody></tbody>
-
+    
   </table>
 </div>
 
 <script>
 var ordered_reads = 0.0
 
-$.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
-  
-  tbody = '<tr>'
-  tbody += '<th>Application</th><td>' + data["application"] + '</td>'
-  tbody += '<th>Number of samples</th><td>' + data["no_samples"] + '</td>'
-  tbody += '</tr><tr>'
-  ordered_reads = parseFloat(data["ordered_reads"])
-  tbody += '<th>Min M reads per sample</th><td>' + ordered_reads.toFixed(2) + '</td>'
-  tbody += '<th>Progress</th><td>' + data["passed_samples"] + ' /  ' +
-  data["no_samples"] + ' samples finished</td>'
-  tbody += '</tr>'
+load_undefined_info()
+load_all_udfs()
 
-  $("#project_info tbody").html(tbody)
-  $("#project_name").html(data["project_name"])
-})
+function load_undefined_info(){
+  $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
+    var columns_html ="";
+    $.each(data, function(column_no, column) {
+      columns_html += '<dt>' + column + '</dt><dd name=' + prettify(column) + '></dd>'
+    });
+    $("#undefined_project_info dl").html(columns_html)
+  });
+}
+
+function load_all_udfs(){
+  $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
+    $.each(data, function(key, value) {
+      $("[name=" + prettify(key) + "]").text(value)
+    });
+  });
+};
+
+function prettify(s) {
+  s2 = s.replace("(", "_").replace(")", "_")
+  return s2
+}
 
 $.getJSON("/api/v1/projects/{{ project }}", function (data) {
   $.each(data, function (sample, info) {
+    var details = info["details"];
     tbl_row = "<tr>"
 
     tbl_row += '<td><a href="/samples/' + sample + '">' + sample + '</td>'
 
+    tbl_row += '<td>' + info['customer_name'] + '</td>'
+
+    tbl_row += '<td>'
+    $.each(info["sample_run_metrics"], function(ix, run) {
+      tbl_row += '<a href="/qc/' + run + '">' + run + '</a><br>'
+    })
+    tbl_row += '</td>'
+
+    if ('passed_initial_qc' in info) {
+      tbl_row += '<td>' + info["passed_initial_qc"] + '</td>'
+    }
+    else {
+      tbl_row += '<td>' + info["incoming_QC_status"] + '</td>'
+    }
+
     tbl_row += '<td>'
     if (info["library_prep"]) {
       $.each(info["library_prep"], function(lib_prep, content) {
-        if (content["sample_run_metrics"]) {
-          $.each(content["sample_run_metrics"], function (run, id) {
-            tbl_row += '<a href="/qc/' + run + '">' + run + '</a><br>'
-          })
-        }
+        tbl_row += lib_prep + '<br>'
       })
     }
     tbl_row += '</td>'
 
     tbl_row += '<td>'
-    if (info["library_prep"]) {
-      $.each(info["library_prep"], function(lib_prep, content) {
-        tbl_row += lib_prep + ' '
-      })
-    }
+    $.each(info["prep_status"], function(ix, prep_status) {
+      tbl_row += prep_status + '<br>'
+    })
+    tbl_row += '</td>'
+
+    tbl_row += '<td>'
+    $.each(info["prep_finished_date"], function(ix, prep_date) {
+      tbl_row += prep_date + '<br>'
+    })
     tbl_row += '</td>'
 
     m_reads_sequenced = parseFloat(info["m_reads_sequenced"])
+    tbl_row += '<td>' + m_reads_sequenced.toFixed(2) + '</td>'
 
-    tbl_row += '<td>' + m_reads_sequenced.toFixed(2)
-    if (m_reads_sequenced >= parseFloat(ordered_reads)) {
-      tbl_row += ' <i class="icon-ok"></i>'
-    }
-    tbl_row += '</td>'
 
-    tbl_row += '<td>' + info["incoming_QC_status"] + '</td>'
-
+    /* Sequencing QC */
     tbl_row += '<td>' + info["status"] + '</td>'
+
+    /* Status */
+    if ('details' in info) {
+      tbl_row += '<td>' + info["details"]["status_(manual)"] + '</td>'
+    }
+    else {
+      tbl_row += '<td>' + "Undefined" + '</td>'
+    }
+    
+    tbl_row += '<td>' + info["reads_min"] + '</td>'
+
+    tbl_row += '<td>' + info["reads_req"] + '</td>'
 
     tbl_row += "</tr>"
     $("#sample_table tbody").append(tbl_row)

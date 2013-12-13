@@ -82,7 +82,7 @@ class DataHandler(UnsafeHandler):
         self.set_header("Content-type", "application/json")
         handlers = [h[0] for h in self.application.declared_handlers]
         api = filter(lambda h: h.startswith("/api"), handlers)
-        utils = filter(lambda h: h == "/login" or h == "/logout" or h == "/unauthorized.*", handlers)
+        utils = filter(lambda h: h == "/login" or h == "/logout", handlers)
         pages = list(set(handlers).difference(set(api)).difference(set(utils)))
         pages = filter(lambda h: not (h.endswith("?") or h.endswith("$")), pages)
         pages.sort(reverse=True)
