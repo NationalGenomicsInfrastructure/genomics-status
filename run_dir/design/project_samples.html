@@ -106,6 +106,8 @@
         <th>Million reads sequenced</th>
         <th>Sequencing QC</th>
 	<th>Status Manual</th>
+	<th>Reads Minimum</th>
+	<th>Reads Required</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -198,6 +200,11 @@ $.getJSON("/api/v1/projects/{{ project }}", function (data) {
     else {
       tbl_row += '<td>' + "Undefined" + '</td>'
     }
+    
+    tbl_row += '<td>' + info["reads_min"] + '</td>'
+
+    tbl_row += '<td>' + info["reads_req"] + '</td>'
+
     tbl_row += "</tr>"
     $("#sample_table tbody").append(tbl_row)
   });
