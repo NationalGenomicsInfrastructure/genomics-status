@@ -4,43 +4,134 @@
 {% block stuff %}
 
 <div class="container-fluid">
-  <h2>Projects</h2>
+  {% if all_projects %}
+    <h2>All Projects</h2>
+    <p> All projects found in statudb. </p>
+  {% else %}
+    <h2>Open Projects</h2>
+    <p> All projects without an explicit close date and loaded from the Lims. </p>
+  {% end %}
   <p> You can search for anything in the table and sort on any column by clicking on the column header. </p>
   <div id="project-list">
     <div class="tabbable tabs-left">
       <ul class="nav nav-tabs">
-	<li class="active"><a href="#Filter-tab" data-toggle="tab">Filter Columns</a></li>
-	<li><a href="#Search-tab" data-toggle="tab">Search</a></li>
+	<li class="active"><a href="#Search-tab" data-toggle="tab">Search</a></li>
+	<li><a href="#Filter-tab" data-toggle="tab">Filter Columns</a></li>
       </ul>
       <div class="tab-content">
-	<div class="tab-pane active" id="Filter-tab">
+	<div class="tab-pane active" id="Search-tab">
+	  <form id="Search-form">
+	    <legend>Search Table Contents</legend>
+	    <input class="search search-query" type="text" placeholder="Search..." />
+	  </form>
+	</div>
+	<div class="tab-pane" id="Filter-tab">
 	  <form id="Filter" class="form form-search">
 	    <legend>Filter Columns</legend>
 	    <div class="row-fluid">
-	      <div id="default-columns" class="span3">
-		<div class="fieldset">
-		  <h3> Default </h3>
-		  {% for col_display_name, col_name in default_columns.iteritems() %}
-		  <input type="checkbox" name={{col_name}} id={{col_name}}>
-		  <label for={{col_name}}>
-		    {{col_display_name}}
-		  </label>
-                  </input>
-		  <br />
-	          {% end %}
+	      <div class="span3">
+		<div id="basic-columns">
+		  <div class="fieldset">
+		    <h3> Basic </h3>
+		    {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
+		    <input type="checkbox" name={{col_name}} id={{col_name}}>
+		    <label for={{col_name}}>
+		      {{col_display_name}}
+		    </label>
+                    </input>
+		    <br />
+	            {% end %}
+		  </div>
+	        </div>
+		<div id="details-columns">
+		  <div class="fieldset">
+		    <h3> Project Details </h3>
+		    {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
+		    <input type="checkbox" name={{col_name}} id={{col_name}}>
+		    <label for={{col_name}}>
+		      {{col_display_name}}
+		    </label>
+                    </input>
+		    <br />
+	            {% end %}
+		  </div>
 		</div>
 	      </div>
-	      <div id="other-columns" class="span3">
-		<div class="fieldset">
-		  <h3> Extra </h3>
-		  {% for col_display_name, col_name in other_columns.iteritems() %}
-		  <input type="checkbox" name={{col_name}} id={{col_name}}>
-		  <label for={{col_name}}>
-		    {{col_display_name}}
-		  </label>
+	      <div class="span3">
+
+	        <div id="bioinfo-columns">
+		  <div class="fieldset">
+		    <h3> Bioinformatics </h3>
+		    {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
+		    <input type="checkbox" name={{col_name}} id={{col_name}}>
+		    <label for={{col_name}}>
+		      {{col_display_name}}
+		    </label>
+                    </input>
+		    <br />
+	            {% end %}
+		  </div>
+		</div>
+	        <div id="sequencing-columns">
+		  <div class="fieldset">
+		    <h3> Sequencing </h3>
+		    {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
+		    <input type="checkbox" name={{col_name}} id={{col_name}}>
+		    <label for={{col_name}}>
+		      {{col_display_name}}
+		    </label>
+                    </input>
+		    <br />
+	            {% end %}
+		  </div>
+		</div>
+		<div id="library-prep-columns">
+		  <div class="fieldset">
+		    <h3> Library Prep </h3>
+		    {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
+		    <input type="checkbox" name={{col_name}} id={{col_name}}>
+		    <label for={{col_name}}>
+		      {{col_display_name}}
+		    </label>
+                    </input>
+		    <br />
+	            {% end %}
+		  </div>
+		</div>
+	      </div>
+	      <div class="span3">
+	        <div id="setup-project-columns">
+		  <div class="fieldset">
+		    <h3> Setup Project </h3>
+		    {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
+		    <input type="checkbox" name={{col_name}} id={{col_name}}>
+		    <label for={{col_name}}>
+		      {{col_display_name}}
+		    </label>
+                    </input>
+		    <br />
+	            {% end %}
+		  </div>
+		</div>
+		<div id="extra-columns">
+		  <div class="fieldset">
+		    <h3> Extra </h3>
+		    {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
+		    <input type="checkbox" name={{col_name}} id={{col_name}}>
+		    <label for={{col_name}}>
+		      {{col_display_name}}
+		    </label>
                   </input>
 		  <br />
 	          {% end %}
+		  </div>
+		</div>
+		<div id="undefined-columns">
+		  <div class="fieldset">
+		    <h3> Undefined </h3>
+		    <div id="undefined_columns">
+		    </div>
+		  </div>
 		</div>
 	      </div>
 	      <div class="span3">
@@ -52,12 +143,6 @@
 		</p>
 	      </div>
 	    </div>
-	  </form>
-	</div>
-	<div class="tab-pane" id="Search-tab">
-	  <form id="Search-form">
-	    <legend>Search Table Contents</legend>
-	    <input class="search search-query" type="text" placeholder="Search..." />
 	  </form>
 	</div>
       </div>
@@ -75,6 +160,7 @@
 /* check default checkboxes */
 reset_default_checkboxes();
 load_table();
+load_undefined_columns();
 
 /* Reset button handled here */
 $("#Reset").click(function( event ) {
@@ -90,12 +176,29 @@ $("#applyFilter").click( function( event ) {
 });
 
 function reset_default_checkboxes(){
-  {% for col_display_name, column_name in default_columns.iteritems() %}
+  {% for col_display_name, column_name in columns['BASIC_COLUMNS'].iteritems() %}
     $("#Filter #{{column_name}}").attr('checked', true)
   {% end %}
-  {% for col_display_name, column_name in other_columns.iteritems() %}
+  {% for col_display_name, column_name in columns['BIOINFO_COLUMNS'].iteritems() %}
     $("#Filter #{{column_name}}").attr('checked', false)
   {% end %}
+  {% for col_display_name, column_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
+    $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns['DETAILS_COLUMNS'].iteritems() %}
+    $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
+    $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
+    $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns['EXTRA_COLUMNS'].iteritems() %}
+    $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+
+  $("#Filter #undefined_columns").children("input").attr('checked', false)
 }
 
 function read_current_filtering(){
@@ -116,12 +219,32 @@ function load_table_head(columns){
 }
 
 
+/* Undefined columns handled here */
+function load_undefined_columns() {
+  {% if all_projects %}
+    $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
+  {% else %}
+    $.getJSON("/api/v1/projects_fields?undefined=true&all_projects=False", function(data) {
+  {% end %}
+    var columns_html = "";
+    $.each(data, function(column_no, column) {
+      columns_html += '<input type="checkbox" name="' + column + '" id="' + column + '">'
+      columns_html += '<label for=' + column + '>' + column + '</label></input><br />'
+    });
+    $("#undefined_columns").html(columns_html)
+  });
+};
+
 function load_table(){
   columns = read_current_filtering();
   load_table_head(columns)
   /* Project column is treated as special case, since it is a link */
   var project_column = $("#Filter :checkbox[name='project']").is(":checked")
-  $.getJSON("/api/v1/projects", function(data) {
+  {% if all_projects %}
+    $.getJSON("/api/v1/projects", function(data) {
+  {% else %}
+    $.getJSON("/api/v1/projects?all_projects=False", function(data) {
+  {% end %}
     var tbl_body = "";
     var size = 0;
     $.each(data, function(key, summary) {
