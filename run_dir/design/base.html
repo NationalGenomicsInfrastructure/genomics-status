@@ -49,14 +49,13 @@
   </head>
 
   <body>
-
     <div class="container-fluid">
       <div class="row-fluid">
         <!-- Sidebar
         ================================================== -->
           <div class="span2">
             <div class="sidebar-nav">
-            <ul class="nav nav-list">
+            <ul class="nav nav-tabs nav-stacked">
               <div class="brand">
                 <img src="/static/img/SciLifeLab-1.logotyp.PMS376.gif">
               </div>
@@ -83,7 +82,7 @@
     <script type="text/javascript">
       $.getJSON("/api/v1", function(data) {
         for (var i = data["pages"].length - 1; i >= 0; i--) {
-          $(".nav-list").append("<li><a href='" + data["pages"][i] + "'>" +
+          $(".nav-tabs").append("<li><a href='" + data["pages"][i] + "'>" +
             data["pages"][i] + "</a></li>")
         };
       } );

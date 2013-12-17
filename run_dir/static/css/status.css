@@ -19,15 +19,6 @@ body {
   background-color: white;
 }
 
-.navbar-inner {
-  visibility: hidden;
-  background-color: #F3F9FB;
-  background-image: none;
-  background-repeat: repeat-x;
-  box-shadow: none;
-  border-color: #000;
-}
-
 .progress-info.progress-striped .bar {
   background-color: #7BA44E;
 }
