@@ -209,8 +209,19 @@ def main(args):
     # Instantiate Application
     application = Application(server_settings)
 
+    # Load ssl certificate and key files
+    ssl_cert = server_settings.get("ssl_cert", None)
+    ssl_key = server_settings.get("ssl_key", None)
+    
+    if ssl_cert and ssl_key:
+        ssl_options = {"certfile": ssl_cert,
+                       "keyfile": ssl_key}
+    else:
+        ssl_options = None
+
     # Start HTTP Server
-    http_server = tornado.httpserver.HTTPServer(application)
+    http_server = tornado.httpserver.HTTPServer(application, 
+                                                ssl_options = ssl_options)
     if args.testing_mode:
         http_server.listen(8889)
     else:
