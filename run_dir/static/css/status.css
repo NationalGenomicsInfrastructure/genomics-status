@@ -43,6 +43,15 @@ line.median {
   stroke: red;
 }
 
+th.a {
+  color: #0088cc;
+}
+
+th.a:hover {
+  color: #0088cc;
+  cursor: pointer;
+  text-decoration: underline;
+}
 
 /* Jumbotrons
 -------------------------------------------------- */
