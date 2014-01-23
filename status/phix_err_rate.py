@@ -9,7 +9,7 @@ class PhixErrorRateHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("phix_err_rate.html")
-        self.write(t.generate(user=self.get_current_user_name()))
+        self.write(t.generate(user=self.get_current_user_name(), deprecated=True))
 
 
 class PhixErrorRateDataHandler(SafeHandler):

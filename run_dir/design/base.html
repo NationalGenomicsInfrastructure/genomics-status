@@ -149,6 +149,19 @@
         <!-- Content
         ================================================== -->
         <div class="span10">
+	  {% try %}
+	  {% if deprecated %}
+	  <div class="alert alert-error">
+	    <button type="button" class="close" data-dismiss="alert">&times;</button>
+	    <strong> Deprecation Warning! </strong>
+	    <p>
+	      This page is deprecated and any information displayed here should be used with caution.
+	    </p>
+	  </div>
+
+	  {% end %}
+	  {% except %}
+	  {% end %}
           {% block stuff %}
           {% end %}
         </div>
