@@ -8,15 +8,15 @@ Colors: http://colorschemedesigner.com/#3n52e1uYmw0w0 */
 
 body {
   padding-bottom: 40px;
-  padding-top: 20px;
+  padding-top: 60px;
 }
-.sidebar-nav {
+.sidebar {
   padding: 9px 0;
   background-color: white;
 }
 
-.brand {
-  background-color: white;
+.sidebar {
+  text-align: center;
 }
 
 .progress-info.progress-striped .bar {
@@ -32,15 +32,6 @@ body {
 
 .well {
   background-color: white;
-}
-
-a {
-  color: #78A44E;
-}
-
-tr.a {
-    background-color:#FFF;
-    color:#78A44E;
 }
 
 .box { font: 10px sans-serif; }
