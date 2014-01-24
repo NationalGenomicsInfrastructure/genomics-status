@@ -21,7 +21,8 @@ class FlowcellHandler(SafeHandler):
     """
     def get(self, flowcell):
         t = self.application.loader.load("flowcell_samples.html")
-        self.write(t.generate(flowcell=flowcell, user=self.get_current_user_name()))
+        self.write(t.generate(flowcell=flowcell, user=self.get_current_user_name(), 
+                              deprecated=True))
 
 
 class FlowcellsDataHandler(SafeHandler):
@@ -87,7 +88,7 @@ class FlowcellQCHandler(SafeHandler):
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_sample_runs(flowcell)))
+        self.write(json.dumps(self.list_sample_runs(flowcell), deprecated = True))
 
     def list_sample_runs(self, flowcell):
         lane_qc = OrderedDict()
@@ -105,7 +106,7 @@ class FlowcellDemultiplexHandler(SafeHandler):
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.lane_stats(flowcell)))
+        self.write(json.dumps(self.lane_stats(flowcell), deprecated=True))
 
     def lane_stats(self, flowcell):
         lane_qc = OrderedDict()
@@ -124,7 +125,7 @@ class FlowcellQ30Handler(SafeHandler):
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.lane_q30(flowcell)))
+        self.write(json.dumps(self.lane_q30(flowcell), deprecated=True))
 
     def lane_q30(self, flowcell):
         lane_q30 = OrderedDict()

@@ -8,24 +8,15 @@ Colors: http://colorschemedesigner.com/#3n52e1uYmw0w0 */
 
 body {
   padding-bottom: 40px;
-  padding-top: 20px;
+  padding-top: 60px;
 }
-.sidebar-nav {
+.sidebar {
   padding: 9px 0;
   background-color: white;
 }
 
-.brand {
-  background-color: white;
-}
-
-.navbar-inner {
-  visibility: hidden;
-  background-color: #F3F9FB;
-  background-image: none;
-  background-repeat: repeat-x;
-  box-shadow: none;
-  border-color: #000;
+.sidebar {
+  text-align: center;
 }
 
 .progress-info.progress-striped .bar {
@@ -43,15 +34,6 @@ body {
   background-color: white;
 }
 
-a {
-  color: #78A44E;
-}
-
-tr.a {
-    background-color:#FFF;
-    color:#78A44E;
-}
-
 .box { font: 10px sans-serif; }
 .box line, .box rect, .box circle { stroke: #000; stroke-width: 1.5px; fill: #fff; }
 .box .center { stroke-dasharray: 3 3; }
@@ -61,6 +43,15 @@ line.median {
   stroke: red;
 }
 
+th.a {
+  color: #0088cc;
+}
+
+th.a:hover {
+  color: #0088cc;
+  cursor: pointer;
+  text-decoration: underline;
+}
 
 /* Jumbotrons
 -------------------------------------------------- */
