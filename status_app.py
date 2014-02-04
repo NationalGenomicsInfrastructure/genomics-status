@@ -162,6 +162,8 @@ class Application(tornado.web.Application):
         # If settings states  mode, no authentication is used
         self.test_mode = settings["Testing mode"]
 
+        # google oauth key
+        self.ouath_key = settings["google_oauth"]["key"]
         # Load password seed
         self.password_seed = settings.get("password_seed")
         
