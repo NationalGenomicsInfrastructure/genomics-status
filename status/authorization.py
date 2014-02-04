@@ -15,7 +15,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
         else:
             self.authorize_redirect(
                         redirect_uri='https://genomics-status.scilifelab.se/login',
-                        client_id=self.application.ouath_key,
+                        client_id=self.application.oauth_key,
                         scope=['profile', 'email'],
                         response_type='code',
                         extra_params={'approval_prompt': 'auto'})

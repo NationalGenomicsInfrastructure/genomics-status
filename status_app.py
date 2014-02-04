@@ -163,7 +163,7 @@ class Application(tornado.web.Application):
         self.test_mode = settings["Testing mode"]
 
         # google oauth key
-        self.ouath_key = settings["google_oauth"]["key"]
+        self.oauth_key = settings["google_oauth"]["key"]
         # Load password seed
         self.password_seed = settings.get("password_seed")
         
@@ -172,7 +172,10 @@ class Application(tornado.web.Application):
         settings = {"debug": True,
                     "static_path": "static",
                     "cookie_secret": cookie_secret,
-                    "login_url": "/login"}
+                    "login_url": "/login",
+                    "google_oauth": {
+                        "key": self.oauth_key}
+                     }
 
         tornado.autoreload.watch("design/amanita.html")
         tornado.autoreload.watch("design/application.html")
