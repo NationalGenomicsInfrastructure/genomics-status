@@ -38,6 +38,7 @@ class Application(tornado.web.Application):
             ("/", MainHandler),
             ("/login", LoginHandler),
             ("/logout", LogoutHandler),
+            ("/unauthorized", UnAuthorizedHandler),
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/applications.png", ApplicationsPlotHandler),
