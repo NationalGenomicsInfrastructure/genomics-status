@@ -176,7 +176,7 @@ class Application(tornado.web.Application):
                     "login_url": "/login",
                     "google_oauth": {
                         "key": self.oauth_key,
-                        "secret": settings["google_auth"]["secret"]}
+                        "secret": settings["google_oauth"]["secret"]}
                      }
 
         tornado.autoreload.watch("design/amanita.html")
