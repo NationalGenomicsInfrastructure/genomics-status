@@ -19,7 +19,8 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                 self.set_secure_cookie('user', user.display_name)
                 url = '/'
             else:
-                url = "/unauthorized?email={0}".format(user.emails[0])
+                url = "/unauthorized?email={0}&contact={1}".format(user.emails[0],
+                        self.application.settings['contact_person'])
             self.redirect(url)
 
         else:
@@ -42,7 +43,8 @@ class UnAuthorizedHandler(UnsafeHandler):
     def get(self):
         # The parameters email and name can contain anything,
         # be careful not to evaluate them as code
-        email = self.get_argument("email", "user@example.com")
-        name = self.get_argument("name", "Dave")
+        email = self.get_argument("email", '')
+        name = self.get_argument("name", '')
+        contact = self.get_argument("contact", "contact@example.com")
         t = self.application.loader.load("unauthorized.html")
-        self.write(t.generate(user = name, email=email))
+        self.write(t.generate(user = name, email=email, contact=contact))
