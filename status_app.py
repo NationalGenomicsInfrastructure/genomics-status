@@ -167,7 +167,7 @@ class Application(tornado.web.Application):
 
         # Load password seed
         self.password_seed = settings.get("password_seed")
-        
+
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
         settings = {"debug": True,
@@ -176,7 +176,8 @@ class Application(tornado.web.Application):
                     "login_url": "/login",
                     "google_oauth": {
                         "key": self.oauth_key,
-                        "secret": settings["google_oauth"]["secret"]}
+                        "secret": settings["google_oauth"]["secret"]},
+                    "contact_person": settings['contact_person']
                      }
 
         tornado.autoreload.watch("design/amanita.html")
@@ -220,7 +221,7 @@ def main(args):
     # Load ssl certificate and key files
     ssl_cert = server_settings.get("ssl_cert", None)
     ssl_key = server_settings.get("ssl_key", None)
-    
+
     if ssl_cert and ssl_key:
         ssl_options = {"certfile": ssl_cert,
                        "keyfile": ssl_key}
@@ -228,7 +229,7 @@ def main(args):
         ssl_options = None
 
     # Start HTTP Server
-    http_server = tornado.httpserver.HTTPServer(application, 
+    http_server = tornado.httpserver.HTTPServer(application,
                                                 ssl_options = ssl_options)
     if args.testing_mode:
         http_server.listen(8889)
