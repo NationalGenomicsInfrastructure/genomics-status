@@ -1,6 +1,7 @@
 import tornado.web
 import tornado.auth
 import json
+import requests
 
 from datetime import datetime
 
@@ -10,9 +11,9 @@ from datetime import datetime
 #########################
 
 class BaseHandler(tornado.web.RequestHandler):
-    """Base Handler. Handlers should not inherit from this 
+    """Base Handler. Handlers should not inherit from this
     class directly but from either SafeHandler or UnsafeHandler
-    to make security status explicit. 
+    to make security status explicit.
 
     """
     def get_current_user(self):
@@ -47,7 +48,7 @@ class SafeHandler(BaseHandler):
         authentication in all their methods.
         """
         pass
-    
+
 
 class UnsafeHandler(BaseHandler):
     pass
@@ -160,3 +161,39 @@ class PagedQCDataHandler(SafeHandler):
             sample_list.append(row.key)
 
         return sample_list
+
+
+########################
+# Other useful classes #
+########################
+
+class GoogleUser(object):
+    """Stores the information that google returns from a user throuhgh its secured API.
+    """
+    def __init__(self, user_token):
+        assert user_token.has_key('access_token')
+
+        self.user_token = user_token
+        self._google_plus_api = "https://www.googleapis.com/plus/v1/people/me"
+
+        #Fetch actual information from Google API
+        params = {'access_token': self.user_token.get('access_token')}
+        r = requests.get(self._google_plus_api, params=params)
+        if not r.status_code == requests.status_codes.codes.OK:
+            self.authenticated = False
+        else:
+            self.authenticated = True
+            info = json.loads(r.text)
+            self.display_name = info.get('displayName', '')
+            self.emails = [email['value'] for email in info.get('emails')]
+
+    def is_authorized(self, user_view):
+        """Checks that the user is actually authorised to use genomics-status.
+        """
+        authenticated = False
+        for email in self.emails:
+            if user_view[email]:
+                self.valid_email = email
+                authenticated = True
+        return authenticated
+
