@@ -1,61 +1,50 @@
 import tornado.web
 import tornado.auth
 import json
-import hashlib
+import requests
 
-from status.util import UnsafeHandler
+from status.util import UnsafeHandler, GoogleUser
 
-class LoginHandler(UnsafeHandler):
+class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
+    @tornado.gen.coroutine
     def get(self):
-        error = self.get_argument("error", None)
-        t = self.application.loader.load("login.html")
-        self.write(t.generate(user = None, error=error))
-
-    def post(self):
-        user = self.get_argument("username", None)
-        password = self.get_argument("password", None)
-
-        # Secret password seed makes it more difficult for a hacker 
-        # to log in even if the hashed password is obtained.
-        seed = self.application.password_seed
-        hashed_password = None
-        
-        if password and seed:
-            # There exists safer hashing algorithms for passwords, 
-            # should be considered if a higher security level is needed.
-            hashed_password = hashlib.sha256(seed + password).hexdigest()
-
-        authorized = False
-        if user and hashed_password:
-            user_view = self.application.gs_users_db.view("authorized/users", reduce=False)[user]
-            rows = user_view.rows
-            if len(rows) == 1:
-                row = rows[0]
-                authorized = (hashed_password == row.value)
-        
-        if authorized:
-            self.set_secure_cookie("user", tornado.escape.json_encode(user))
-            url = self.get_argument('next', None)
-            if url:
-                self.redirect(url)
+        if self.get_argument("code", False):
+            user_token =  yield self.get_authenticated_user(
+                    redirect_uri='https://genomics-status.scilifelab.se/login',
+                code=self.get_argument('code')
+                )
+            user = GoogleUser(user_token)
+            user_view = self.application.gs_users_db.view("authorized/users", reduce=False)
+            if user.authenticated and user.is_authorized(user_view):
+                self.set_secure_cookie('user', user.display_name)
+                url = '/'
             else:
-                self.redirect("/")
-        else:
-            error_msg = u"?error=" + tornado.escape.url_escape("Login incorrect.")
-            self.redirect(self.get_login_url() + error_msg)
+                url = "/unauthorized?email={0}&contact={1}".format(user.emails[0],
+                        self.application.settings['contact_person'])
+            self.redirect(url)
 
-class LogoutHandler(UnsafeHandler):
+        else:
+            self.authorize_redirect(
+                    redirect_uri='https://genomics-status.scilifelab.se/login',
+                        client_id=self.application.oauth_key,
+                        scope=['profile', 'email'],
+                        response_type='code',
+                        extra_params={'approval_prompt': 'auto'})
+
+class LogoutHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
     def get(self):
         self.clear_cookie("user")
+        self.clear_cookie("email")
         self.redirect("/")
 
 
 class UnAuthorizedHandler(UnsafeHandler):
-    """ Serves a page with unauthorized notice and information about who to contact to get access. """ 
+    """ Serves a page with unauthorized notice and information about who to contact to get access. """
     def get(self):
-        # The parameters email and name can contain anything, 
+        # The parameters email and name can contain anything,
         # be careful not to evaluate them as code
-        email = self.get_argument("email", "user@example.com")
-        name = self.get_argument("name", "Dave")
+        email = self.get_argument("email", '')
+        name = self.get_argument("name", '')
+        contact = self.get_argument("contact", "contact@example.com")
         t = self.application.loader.load("unauthorized.html")
-        self.write(t.generate(user = name, email=email))
+        self.write(t.generate(user = name, email=email, contact=contact))

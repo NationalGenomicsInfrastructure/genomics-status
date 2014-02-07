@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block stuff %}
+
+<h1> Unauthorized </h1>
+You are not authorized to access genomics-status, please contact
+<!--This will generate a mail with subject: Genomics Status access request - email -->
+<a href="mailto:{{contact}}?Subject=Genomics Status%20access%20request%20-%20{{email}}">Guillermo Carrasco</a>
+to get an account. 
+{% end %}

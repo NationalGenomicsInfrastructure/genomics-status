@@ -38,6 +38,7 @@ class Application(tornado.web.Application):
             ("/", MainHandler),
             ("/login", LoginHandler),
             ("/logout", LogoutHandler),
+            ("/unauthorized", UnAuthorizedHandler),
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/applications.png", ApplicationsPlotHandler),
@@ -161,15 +162,23 @@ class Application(tornado.web.Application):
         # If settings states  mode, no authentication is used
         self.test_mode = settings["Testing mode"]
 
+        # google oauth key
+        self.oauth_key = settings["google_oauth"]["key"]
+
         # Load password seed
         self.password_seed = settings.get("password_seed")
-        
+
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
         settings = {"debug": True,
                     "static_path": "static",
                     "cookie_secret": cookie_secret,
-                    "login_url": "/login"}
+                    "login_url": "/login",
+                    "google_oauth": {
+                        "key": self.oauth_key,
+                        "secret": settings["google_oauth"]["secret"]},
+                    "contact_person": settings['contact_person']
+                     }
 
         tornado.autoreload.watch("design/amanita.html")
         tornado.autoreload.watch("design/application.html")
@@ -212,7 +221,7 @@ def main(args):
     # Load ssl certificate and key files
     ssl_cert = server_settings.get("ssl_cert", None)
     ssl_key = server_settings.get("ssl_key", None)
-    
+
     if ssl_cert and ssl_key:
         ssl_options = {"certfile": ssl_cert,
                        "keyfile": ssl_key}
@@ -220,7 +229,7 @@ def main(args):
         ssl_options = None
 
     # Start HTTP Server
-    http_server = tornado.httpserver.HTTPServer(application, 
+    http_server = tornado.httpserver.HTTPServer(application,
                                                 ssl_options = ssl_options)
     if args.testing_mode:
         http_server.listen(8889)
