@@ -32,7 +32,7 @@
 	      <div class="span3">
 		<div id="basic-columns">
 		  <div class="fieldset">
-		    <h3 onclick="choose_column('BASIC_COLUMNS')"> Basic </h3>
+		    <h3 onclick="choose_column('basic-columns')"> Basic </h3>
 		    {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
 		    <label for={{col_name}}>
@@ -42,10 +42,10 @@
 		    <br />
 	            {% end %}
 		  </div>
-	        </div>
+	    </div>
 		<div id="details-columns">
 		  <div class="fieldset">
-		    <h3> Project Details </h3>
+		    <h3 onclick="choose_column('details-columns')"> Project Details </h3>
 		    {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
 		    <label for={{col_name}}>
@@ -61,7 +61,7 @@
 
 	        <div id="bioinfo-columns">
 		  <div class="fieldset">
-		    <h3> Bioinformatics </h3>
+		    <h3 onclick="choose_column('bioinfo-columns')"> Bioinformatics </h3>
 		    {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
 		    <label for={{col_name}}>
@@ -74,7 +74,7 @@
 		</div>
 	        <div id="sequencing-columns">
 		  <div class="fieldset">
-		    <h3> Sequencing </h3>
+		    <h3 onclick="choose_column('sequencing-columns')"> Sequencing </h3>
 		    {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
 		    <label for={{col_name}}>
@@ -87,7 +87,7 @@
 		</div>
 		<div id="library-prep-columns">
 		  <div class="fieldset">
-		    <h3> Library Prep </h3>
+		    <h3 onclick="choose_column('library-prep-columns')"> Library Prep </h3>
 		    {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
 		    <label for={{col_name}}>
@@ -102,7 +102,7 @@
 	      <div class="span3">
 	        <div id="setup-project-columns">
 		  <div class="fieldset">
-		    <h3> Setup Project </h3>
+		    <h3 onclick="choose_column('setup-project-columns')"> Setup Project </h3>
 		    {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
 		    <label for={{col_name}}>
@@ -115,7 +115,7 @@
 		</div>
 		<div id="extra-columns">
 		  <div class="fieldset">
-		    <h3> Extra </h3>
+		    <h3 onclick="choose_column('extra-columns')"> Extra </h3>
 		    {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
 		    <label for={{col_name}}>
@@ -128,7 +128,7 @@
 		</div>
 		<div id="undefined-columns">
 		  <div class="fieldset">
-		    <h3> Undefined </h3>
+		    <h3 onclick="choose_column('undefined-columns')"> Undefined </h3>
 		    <div id="undefined_columns">
 		    </div>
 		  </div>
@@ -281,12 +281,26 @@ function init_listjs(no_items, columns) {
     var featureList = new List('project-list', options);
 }
 
+
 //Check or uncheck all fields from clicked category
 function choose_column(col){
-  //XXX In javascript
-  {% for col_display_name, column_name in columns[{{ col }}].iteritems() %}
-    $("#Filter #{{column_name}}").attr('checked', false)
-  {% end %}
+    var column = document.getElementById(col);
+    //Get all the children (checkboxes)
+    cbs = column.getElementsByTagName('input');
+    //If one of them is checked we uncheck it, if none of them are checked, 
+    //we check them all
+    checked = false;
+    for (var i = 0; i < cbs.length; i++) {
+        if (cbs[i].checked) {
+            cbs[i].checked = false;
+            checked = true;
+        }
+    }
+    if (!checked) {
+        for (var i = 0; i < cbs.length; i++) {
+            cbs[i].checked = true;
+        }
+    }
 }
 
 </script>
