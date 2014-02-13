@@ -30,8 +30,7 @@
 	    <legend>Choose Columns</legend>
 	    <div class="row-fluid">
 	      <div class="span3">
-		<div id="basic-columns">
-		  <div class="fieldset">
+		<div class="fieldset" id="basic-columns">
 		    <h3 class="clickable_header"> Basic </h3>
 		    {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
@@ -41,10 +40,8 @@
                     </input>
 		    <br />
 	            {% end %}
-		  </div>
 	    </div>
-		<div id="details-columns">
-		  <div class="fieldset">
+		<div class="fieldset" id="details-columns">
 		    <h3 class="clickable_header"> Project Details </h3>
 		    {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
@@ -55,12 +52,10 @@
 		    <br />
 	            {% end %}
 		  </div>
-		</div>
 	      </div>
 	      <div class="span3">
 
-	        <div id="bioinfo-columns">
-		  <div class="fieldset">
+	      <div class="fieldset" id="bioinfo-columns">
 		    <h3 class="clickable_header"> Bioinformatics </h3>
 		    {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
@@ -70,10 +65,8 @@
                     </input>
 		    <br />
 	            {% end %}
-		  </div>
 		</div>
-	        <div id="sequencing-columns">
-		  <div class="fieldset">
+	        <div class="fieldset" id="sequencing-columns">
 		    <h3 class="clickable_header"> Sequencing </h3>
 		    {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
@@ -83,10 +76,8 @@
                     </input>
 		    <br />
 	            {% end %}
-		  </div>
 		</div>
-		<div id="library-prep-columns">
-		  <div class="fieldset">
+		<div class="fieldset" id="library-prep-columns">
 		    <h3 class="clickable_header"> Library Prep </h3>
 		    {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
@@ -96,12 +87,10 @@
                     </input>
 		    <br />
 	            {% end %}
-		  </div>
 		</div>
 	      </div>
 	      <div class="span3">
-	        <div id="setup-project-columns">
-		  <div class="fieldset">
+	        <div class="fieldset" id="setup-project-columns">
 		    <h3 class="clickable_header"> Setup Project </h3>
 		    {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
@@ -111,10 +100,8 @@
                     </input>
 		    <br />
 	            {% end %}
-		  </div>
 		</div>
-		<div id="extra-columns">
-		  <div class="fieldset">
+		<div class="fieldset" id="extra-columns">
 		    <h3 class="clickable_header"> Extra </h3>
 		    {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
@@ -124,14 +111,11 @@
                   </input>
 		  <br />
 	          {% end %}
-		  </div>
 		</div>
-		<div id="undefined-columns">
-		  <div class="fieldset">
+		<div class="fieldset" id="undefined-columns">
 		    <h3 class="clickable_header"> Undefined </h3>
 		    <div id="undefined_columns">
 		    </div>
-		  </div>
 		</div>
 	      </div>
 	      <div class="span3">
@@ -304,7 +288,7 @@ function choose_column(col){
 }
 
 //For the clockable_header class, execute the choose_column func with the column ID
-$(".clickable_header").click( function( event ) { choose_column($(this).parent().parent().attr("id")) });
+$(".clickable_header").click( function( event ) { choose_column($(this).parent().attr("id")) });
 
 </script>
 
