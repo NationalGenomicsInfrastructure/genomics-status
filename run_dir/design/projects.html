@@ -32,7 +32,7 @@
 	      <div class="span3">
 		<div id="basic-columns">
 		  <div class="fieldset">
-		    <h3> Basic </h3>
+		    <h3 onclick="choose_column('BASIC_COLUMNS')"> Basic </h3>
 		    {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
 		    <input type="checkbox" name={{col_name}} id={{col_name}}>
 		    <label for={{col_name}}>
@@ -279,6 +279,14 @@ function init_listjs(no_items, columns) {
     };
 
     var featureList = new List('project-list', options);
+}
+
+//Check or uncheck all fields from clicked category
+function choose_column(col){
+  //XXX In javascript
+  {% for col_display_name, column_name in columns[{{ col }}].iteritems() %}
+    $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
 }
 
 </script>
