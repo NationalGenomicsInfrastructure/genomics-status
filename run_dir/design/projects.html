@@ -51,7 +51,6 @@
                     </input>
 		    <br />
 	            {% end %}
-		  </div>
 	      </div>
 	      <div class="span3">
 
@@ -287,8 +286,12 @@ function choose_column(col){
     }
 }
 
-//For the clockable_header class, execute the choose_column func with the column ID
-$(".clickable_header").click( function( event ) { choose_column($(this).parent().attr("id")) });
+//For the clickable_header class, execute the choose_column func with the column ID
+$(".clickable_header").click(
+        function(event){ 
+            choose_column($(this).parent().attr("id"))
+        }
+);
 
 </script>
 
