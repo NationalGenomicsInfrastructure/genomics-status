@@ -144,7 +144,7 @@ class Application(tornado.web.Application):
         # Load templates
         self.loader = template.Loader("design")
 
-        # Global connection to the log database
+        # Global connection to the database
         couch = Server(settings.get("couch_server", None))
         if couch:
             self.illumina_db = couch["illumina_logs"]
@@ -155,6 +155,20 @@ class Application(tornado.web.Application):
             self.amanita_db = couch["amanita"]
             self.picea_db = couch["picea"]
             self.gs_users_db = couch["gs_users"]
+
+        #Load columns and presets from genstat-defaults user in StatusDB
+        genstat_id = ''
+        for u in self.gs_users_db.view('authorized/users'):
+            if u.get('key') == 'genstat-defaults':
+                genstat_id = u.get('value')
+
+        #It's important to check that this user exists!
+        if not genstat_id:
+            raise RuntimeError("genstat-defaults user not found on {}, please " \
+                               "make sure that the user is abailable with the " \
+                               "corresponding defaults information.".format(settings.get("couch_server", None)))
+
+        self.genstat_defaults = self.gs_users_db.get(genstat_id)
 
         # Load private instrument listing
         self.instrument_list = settings.get("instruments")
