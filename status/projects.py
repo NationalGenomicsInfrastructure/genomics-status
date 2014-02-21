@@ -218,7 +218,12 @@ class ProjectsHandler(SafeHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(columns=columns, all_projects=True, user=self.get_current_user_name()))
+        default_presets, user_presets = get_presets(self.application.genstat_defaults,
+                                                   self.application.gs_users_db,
+                                                   self.get_secure_cookie('email'))
+        self.write(t.generate(columns=columns, all_projects=True,
+                              user=self.get_current_user_name(),
+                              default_presets=default_presets, user_presets=user_presets))
 
 
 class OpenProjectsHandler(SafeHandler):
@@ -227,7 +232,12 @@ class OpenProjectsHandler(SafeHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(columns=columns, all_projects=False, user=self.get_current_user_name()))
+        default_presets, user_presets = get_presets(self.application.genstat_defaults,
+                                                   self.application.gs_users_db,
+                                                   self.get_secure_cookie('email'))
+        self.write(t.generate(columns=columns, all_projects=False,
+                              user=self.get_current_user_name(),
+                              default_presets=default_presets, user_presets=user_presets))
 
 
 
