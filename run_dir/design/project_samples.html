@@ -5,8 +5,29 @@
 
 <div class="row-fluid">
   <h3 name="project_name"></h3>
-  <div class="alert alert-info" name="project_status">
-  </div>
+  <div class="alert alert-info" name="project_status"> </div>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Order Received</th>
+        <th>Contract Sent</th>
+        <th>Plates Sent</th>
+        <th>Contract Received</th>
+        <th>Sample Information Received</th>
+        <th>Samples Received</th>
+      </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Order Received']}}'></td>
+      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Contract Sent']}}'></td>
+      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Plates Sent']}}'></td>
+      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Contract Received']}}'></td>
+      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Sample Information Received']}}'></td>
+      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Samples Received']}}'></td>
+    </tr>
+    </tbody>
+  </table>
 </div>
 
 <div class="accordion" id="accordion">
@@ -16,7 +37,7 @@
         Project details
       </a>
     </div>
-    <div id="collapseOne" class="accordion-body collapse in">
+    <div id="collapseOne" class="accordion-body collapse">
       <div class="accordion-inner">
         <div class="row-fluid">
           <div class="span12">
