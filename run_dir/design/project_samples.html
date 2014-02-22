@@ -3,7 +3,11 @@
 <!-- Example row of columns -->
 {% block stuff %}
 
-<h3 name="project_name"></h3><br>
+<div class="row-fluid">
+  <h3 name="project_name"></h3>
+  <div class="alert alert-info" name="project_status">
+  </div>
+</div>
 
 <div class="accordion" id="accordion">
   <div class="accordion-group">
@@ -14,82 +18,108 @@
     </div>
     <div id="collapseOne" class="accordion-body collapse in">
       <div class="accordion-inner">
-        <div class="span6">
-          <dl class="dl" id="project_info_details">
-            {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
-            <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-            {% end %}
-          </dl>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" href="#collapseTwo">
-        Project information
-      </a>
-    </div>
-    <div id="collapseTwo" class="accordion-body collapse">
-      <div class="accordion-inner">
-        <div class="span3">
-          <h3> Basic Information </h3>
-          <dl class="dl" id="project_info_basic">
-            {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
-            <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-            {% end %}
-          </dl>
-        </div>
-        <div class="span3">
-          <h3> Bioinformatics </h3>
-          <dl class="dl" id="project_info_bioinfo">
-            {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
-            <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-            {% end %}
-          </dl>
-        </div>
-        <div class="span3">
-          <h3> Sequencing </h3>
-          <dl class="dl" id="project_info_sequencing">
-            {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
-            <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-            {% end %}
-          </dl>
-          <h3> Library Prep </h3>
-          <dl class="dl" id="project_info_library_prep">
-            {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
-            <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-            {% end %}
-          </dl>
-        </div>
-        <div class="span3">
-          <div>
-            <h3> Setup Project </h3>
-            <dl class="dl" id="project_info_setup_project">
-              {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
-              <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-              {% end %}
-            </dl>
-            <div>
-              <dl class="dl" id="project_info_extra">
-                {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
-                <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-                {% end %}
-              </dl>
+        <div class="row-fluid">
+          <div class="span12">
+            <div class="span4">
+              <table class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>Order info</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td>Uppnex ID</td>
+                  <td name='{{columns['BIOINFO_COLUMNS']['Uppnex ID']}}'></td>
+                </tr>
+                <tr>
+                  <td>Type</td>
+                  <td name='{{columns['BASIC_COLUMNS']['Type']}}'></td>
+                </tr>
+                <tr>
+                  <td>Application</td>
+                  <td name='{{columns['BASIC_COLUMNS']['Application']}}'>Application</td>
+                </tr>
+                <tr>
+                  <td>Bioinfo Analysis</td>
+                  <td>what_to_put_here?</td>
+                </tr>
+                <tr>
+                  <td>Reference Genome</td>
+                  <td name='{{columns['BIOINFO_COLUMNS']['Reference Genome']}}'></td>
+                </tr>
+                <tr>
+                  <td>Sequencing Setup</td>
+                  <td name='{{columns['SEQUENCING_COLUMNS']['Sequencing Setup']}}'></td>
+                </tr>
+                </tbody>
+              </table>
             </div>
-            <div id="undefined_project_info">
-              <h3> Undefined </h3>
-              <dl class="dl">
-              </dl>
+            <div class="span4">
+              <table class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>Sample Info</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td>Nr. Samples</td>
+                  <td name='{{columns['BASIC_COLUMNS']['Number of Samples']}}'></td>
+                </tr>
+                <tr>
+                  <td>Nr. Samples passed library QC</td>
+                  <td name='{{columns['BASIC_COLUMNS']['Passed Samples']}}'></td>
+                </tr>
+                <tr>
+                  <td>Total Nr. Samples</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['Final Number of Samples']}}'></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="span4">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Responsible</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td>Bioinfo</td>
+                  <td>what_to_put_here??</td>
+                </tr>
+                <tr>
+                  <td>Lab</td>
+                  <td>what_to_put_here??</td>
+                </tr>
+                </tbody>
+              </table>
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Contacts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td>PI</td>
+                  <td>what_to_put_here??</td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="span11">
+              <p>
+              Note that for some projects the ordered number of reads per sample is on a
+              per sample basis. At this moment that information is then impossible to
+              parse. In the future when the LIMS is being used that information will be
+              available on per sample level.
+              </p>
             </div>
           </div>
         </div>
-        <p>
-        Note that for some projects the ordered number of reads per sample is on a
-        per sample basis. At this moment that information is then impossible to
-        parse. In the future when the LIMS is being used that information will be
-        available on per sample level.
-        </p>
       </div>
     </div>
   </div>
@@ -140,7 +170,7 @@
 <script>
 var ordered_reads = 0.0
 
-  load_undefined_info()
+load_undefined_info()
 load_all_udfs()
 
   function load_undefined_info(){
@@ -156,7 +186,13 @@ load_all_udfs()
 function load_all_udfs(){
   $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
       $.each(data, function(key, value) {
+        if (prettify(key) == 'project_name'){
+        $("[name=" + prettify(key) + "]").text(value);
+        $("[name=project_status]").text("Project status");
+        }
+        else {
         $("[name=" + prettify(key) + "]").text(value)
+        }
         });
       });
 };
