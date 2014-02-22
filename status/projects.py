@@ -10,26 +10,31 @@ import datetime
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
 
-def get_presets(genstat_defaults, gs_users, user):
-    """Get preset choices of columns from StatusDB
+class ProjectViewPresetsHandler(SafeHandler):
+    """Handler to GET and POST/PUT personalized and default set of presets in
 
-    It will return two lists of presets, the default ones and the user defined
-    presets.
-
-    Params:
-        genstat_defaults -- genstat-defaults user content in StatusDB
-        gs_users -- Instance of couchdb.Database with the content of gs_users
-                    database in StatusDB
-        user -- username (email) to look for in the database
+    project view.
     """
-    #Get user presets
-    user_id = ''
-    for u in gs_users.view('authorized/users'):
-        if u.get('key') == user:
-            user_id = u.get('value')
-            break
-    user_info = gs_users.get(user_id)
-    return genstat_defaults.get('pv_presets'), user_info.get('pv_presets', {})
+    def get(self):
+        """Get preset choices of columns from StatusDB
+
+        It will return a JSON with two lists of presets, the default ones and the user defined
+        presets.
+        """
+        self.set_header("Content-type", "application/json")
+        presets = {
+            "default": self.application.genstat_defaults.get('pv_presets'),
+            "user": {}
+        }
+        #Get user presets
+        user_id = ''
+        user = self.get_secure_cookie('email')
+        for u in self.application.gs_users_db.view('authorized/users'):
+            if u.get('key') == user:
+                user_id = u.get('value')
+                break
+        presets['user'] = self.application.gs_users_db.get(user_id).get('pv_presets', {})
+        self.write(json.dumps(presets))
 
 
 class ProjectsBaseDataHandler(SafeHandler):
@@ -218,12 +223,7 @@ class ProjectsHandler(SafeHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        default_presets, user_presets = get_presets(self.application.genstat_defaults,
-                                                   self.application.gs_users_db,
-                                                   self.get_secure_cookie('email'))
-        self.write(t.generate(columns=columns, all_projects=True,
-                              user=self.get_current_user_name(),
-                              default_presets=default_presets, user_presets=user_presets))
+        self.write(t.generate(columns=columns, all_projects=True, user=self.get_current_user_name()))
 
 
 class OpenProjectsHandler(SafeHandler):
@@ -232,12 +232,7 @@ class OpenProjectsHandler(SafeHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        default_presets, user_presets = get_presets(self.application.genstat_defaults,
-                                                   self.application.gs_users_db,
-                                                   self.get_secure_cookie('email'))
-        self.write(t.generate(columns=columns, all_projects=False,
-                              user=self.get_current_user_name(),
-                              default_presets=default_presets, user_presets=user_presets))
+        self.write(t.generate(columns=columns, all_projects=False, user=self.get_current_user_name()))
 
 
 
