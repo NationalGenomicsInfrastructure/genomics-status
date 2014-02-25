@@ -150,12 +150,16 @@
                 </thead>
                 <tbody>
                 <tr>
-                  <td>Bioinfo</td>
-                  <td>what_to_put_here??</td>
+                  <td>Bioinfo. Responsible</td>
+                  <td name='{{columns['BIOINFO_COLUMNS']['Bioinfo. Responsible']}}'></td>
                 </tr>
                 <tr>
-                  <td>Lab</td>
-                  <td>what_to_put_here??</td>
+                  <td>Lab Responsible</td>
+                  <td name='{{columns['SETUP_PROJECT_COLUMNS']['Lab. Responsible']}}'></td>
+                </tr>
+                <tr>
+                  <td>Project Coordinator</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['Project Coordinator']}}'></td>
                 </tr>
                 </tbody>
               </table>
@@ -168,7 +172,7 @@
                 <tbody>
                 <tr>
                   <td>PI</td>
-                  <td>what_to_put_here??</td>
+                  <td>NA</td>
                 </tr>
                 </tbody>
               </table>
@@ -277,21 +281,28 @@ function load_all_udfs(){
         var open_date=data["{{ columns['BASIC_COLUMNS']['Open Date'] }}"];
         var queue_date=data["{{ columns['BASIC_COLUMNS']['Queue Date'] }}"];
         var close_date=data["{{ columns['DETAILS_COLUMNS']['Close Date'] }}"];
-        if (!open_date){
-          $("[name=project_status]").text("Pending");
-          $("[name=project_status]").addClass("alert alert-info");
+        var aborted=data["{{ columns['DETAILS_COLUMNS']['Aborted'] }}"]
+        if (aborted){
+            $("[name=project_status]").text("Aborted");
+            $("[name=project_status]").addClass("alert alert-error");
         }
-        else if (open_date && !queue_date) {
-          $("[name=project_status]").text("Reception Control");
-          $("[name=project_status]").addClass("alert alert-block");
-        }
-        else if (queue_date && !close_date) {
-          $("[name=project_status]").text("Ongoing");
-          $("[name=project_status]").addClass("alert alert-info");
-        }
-        else if (close_date) {
-          $("[name=project_status]").text("Closed");
-          $("[name=project_status]").addClass("alert alert-success");
+        else {
+          if (!open_date){
+            $("[name=project_status]").text("Pending");
+            $("[name=project_status]").addClass("alert alert-info");
+          }
+          else if (open_date && !queue_date) {
+            $("[name=project_status]").text("Reception Control");
+            $("[name=project_status]").addClass("alert alert-block");
+          }
+          else if (queue_date && !close_date) {
+            $("[name=project_status]").text("Ongoing");
+            $("[name=project_status]").addClass("alert alert-info");
+          }
+          else if (close_date) {
+            $("[name=project_status]").text("Closed");
+            $("[name=project_status]").addClass("alert alert-success");
+          }
         }
       }
       else {
