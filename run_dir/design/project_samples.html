@@ -6,28 +6,63 @@
 <div class="row-fluid">
   <h3 name="project_name"></h3>
   <div class="alert alert-info" name="project_status"> </div>
-  <table class="table table-bordered">
-    <thead>
+    <!--Order dates table -->
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Order Received</th>
+          <th>Contract Sent</th>
+          <th>Plates Sent</th>
+          <th>Contract Received</th>
+          <th>Sample Information Received</th>
+          <th>Samples Received</th>
+        </tr>
+      </thead>
+      <tbody>
       <tr>
-        <th>Order Received</th>
-        <th>Contract Sent</th>
-        <th>Plates Sent</th>
-        <th>Contract Received</th>
-        <th>Sample Information Received</th>
-        <th>Samples Received</th>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Order Received']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Contract Sent']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Plates Sent']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Contract Received']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Sample Information Received']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Samples Received']}}'></td>
       </tr>
-    </thead>
-    <tbody>
-    <tr>
-      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Order Received']}}'></td>
-      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Contract Sent']}}'></td>
-      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Plates Sent']}}'></td>
-      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Contract Received']}}'></td>
-      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Sample Information Received']}}'></td>
-      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Samples Received']}}'></td>
-    </tr>
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+    <!-- Protect timeline -->
+    <table class="table table-bordered table-condensed">
+      <thead>
+        <tr>
+          <th>Days in Production</th>
+          <th>Open date</th>
+          <th>First Initial QC Start Date</th>
+          <th>Queue Date</th>
+          <th>Library Prep Start</th>
+          <th>QC Library Finished</th>
+          <th>Sequencing Start</th>
+          <th>All Samples Sequenced</th>
+          <th>All Raw Data Delivered</th>
+          <th>Best Practice Analysis Completed</th>
+          <th>Close Date</th>
+        </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td name='{{columns['BASIC_COLUMNS']['Days in Production']}}'></td>
+        <td name='{{columns['BASIC_COLUMNS']['Open Date']}}'></td>
+        <td name='{{columns['EXTRA_COLUMNS']['First Initial QC Start Date']}}'></td>
+        <td name='{{columns['BASIC_COLUMNS']['Queue Date']}}'></td>
+        <td name='{{columns['LIBRARY_PREP_COLUMNS']['Library Prep Start']}}'></td>
+        <td name='{{columns['LIBRARY_PREP_COLUMNS']['QC Library Finished']}}'></td>
+        <td name='{{columns['SEQUENCING_COLUMNS']['Sequencing Start']}}'></td>
+        <td name='{{columns['DETAILS_COLUMNS']['All Samples Sequenced']}}'></td>
+        <td name='{{columns['BIOINFO_COLUMNS']['All Raw Data Delivered']}}'></td>
+        <td name='{{columns['BIOINFO_COLUMNS']['Best Practice Analysis Completed']}}'></td>
+        <td name='{{columns['DETAILS_COLUMNS']['Close Date']}}'></td>
+      </tr>
+      </tbody>
+    </table>
+    
 </div>
 
 <div class="accordion" id="accordion">
@@ -206,16 +241,16 @@ load_all_udfs()
 
 function load_all_udfs(){
   $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
-      $.each(data, function(key, value) {
-        if (prettify(key) == 'project_name'){
+    $.each(data, function(key, value) {
+      if (prettify(key) == 'project_name'){
         $("[name=" + prettify(key) + "]").text(value);
         $("[name=project_status]").text("Project status");
-        }
-        else {
+      }
+      else {
         $("[name=" + prettify(key) + "]").text(value)
-        }
-        });
-      });
+      }
+    });
+  });
 };
 
 function prettify(s) {
