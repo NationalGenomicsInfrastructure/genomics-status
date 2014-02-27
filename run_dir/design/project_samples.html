@@ -5,29 +5,64 @@
 
 <div class="row-fluid">
   <h3 name="project_name"></h3>
-  <div class="alert alert-info" name="project_status"> </div>
-  <table class="table table-bordered">
-    <thead>
+  <div name="project_status"> </div>
+    <!--Order dates table -->
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Order Received</th>
+          <th>Contract Sent</th>
+          <th>Plates Sent</th>
+          <th>Contract Received</th>
+          <th>Sample Information Received</th>
+          <th>Samples Received</th>
+        </tr>
+      </thead>
+      <tbody>
       <tr>
-        <th>Order Received</th>
-        <th>Contract Sent</th>
-        <th>Plates Sent</th>
-        <th>Contract Received</th>
-        <th>Sample Information Received</th>
-        <th>Samples Received</th>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Order Received']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Contract Sent']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Plates Sent']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Contract Received']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Sample Information Received']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Samples Received']}}'></td>
       </tr>
-    </thead>
-    <tbody>
-    <tr>
-      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Order Received']}}'></td>
-      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Contract Sent']}}'></td>
-      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Plates Sent']}}'></td>
-      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Contract Received']}}'></td>
-      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Sample Information Received']}}'></td>
-      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Samples Received']}}'></td>
-    </tr>
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+    <!-- Protect timeline -->
+    <table class="table table-bordered table-condensed">
+      <thead>
+        <tr>
+          <th>Days in Production</th>
+          <th>Open date</th>
+          <th>First Initial QC Start Date</th>
+          <th>Queue Date</th>
+          <th>Library Prep Start</th>
+          <th>QC Library Finished</th>
+          <th>Sequencing Start</th>
+          <th>All Samples Sequenced</th>
+          <th>All Raw Data Delivered</th>
+          <th>Best Practice Analysis Completed</th>
+          <th>Close Date</th>
+        </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td name='{{columns['BASIC_COLUMNS']['Days in Production']}}'></td>
+        <td name='{{columns['BASIC_COLUMNS']['Open Date']}}'></td>
+        <td name='{{columns['EXTRA_COLUMNS']['First Initial QC Start Date']}}'></td>
+        <td name='{{columns['BASIC_COLUMNS']['Queue Date']}}'></td>
+        <td name='{{columns['LIBRARY_PREP_COLUMNS']['Library Prep Start']}}'></td>
+        <td name='{{columns['LIBRARY_PREP_COLUMNS']['QC Library Finished']}}'></td>
+        <td name='{{columns['SEQUENCING_COLUMNS']['Sequencing Start']}}'></td>
+        <td name='{{columns['DETAILS_COLUMNS']['All Samples Sequenced']}}'></td>
+        <td name='{{columns['BIOINFO_COLUMNS']['All Raw Data Delivered']}}'></td>
+        <td name='{{columns['BIOINFO_COLUMNS']['Best Practice Analysis Completed']}}'></td>
+        <td name='{{columns['DETAILS_COLUMNS']['Close Date']}}'></td>
+      </tr>
+      </tbody>
+    </table>
+    
 </div>
 
 <div class="accordion" id="accordion">
@@ -42,6 +77,7 @@
         <div class="row-fluid">
           <div class="span12">
             <div class="span4">
+              <!--Order Info Table-->
               <table class="table table-bordered table-striped">
                 <thead>
                   <tr>
@@ -62,8 +98,12 @@
                   <td name='{{columns['BASIC_COLUMNS']['Application']}}'>Application</td>
                 </tr>
                 <tr>
+                  <td>Best Practice Bioinformatics</td>
+                  <td name='{{columns['BIOINFO_COLUMNS']['Best Practice Bioinformatics']}}'></td>
+                </tr>
+                <tr>
                   <td>Bioinfo Analysis</td>
-                  <td>what_to_put_here?</td>
+                  <td name='{{columns['BIOINFO_COLUMNS']['Bioinformatic QC']}}'></td>
                 </tr>
                 <tr>
                   <td>Reference Genome</td>
@@ -77,6 +117,7 @@
               </table>
             </div>
             <div class="span4">
+              <!--Sample Info Table-->
               <table class="table table-bordered table-striped">
                 <thead>
                   <tr>
@@ -100,7 +141,8 @@
               </table>
             </div>
             <div class="span4">
-              <table class="table table-bordered">
+              <!-- Responsable and Contacts table -->
+              <table class="table table-bordered table-striped">
                 <thead>
                   <tr>
                     <th>Responsible</th>
@@ -108,16 +150,20 @@
                 </thead>
                 <tbody>
                 <tr>
-                  <td>Bioinfo</td>
-                  <td>what_to_put_here??</td>
+                  <td>Bioinfo. Responsible</td>
+                  <td name='{{columns['BIOINFO_COLUMNS']['Bioinfo. Responsible']}}'></td>
                 </tr>
                 <tr>
-                  <td>Lab</td>
-                  <td>what_to_put_here??</td>
+                  <td>Lab Responsible</td>
+                  <td name='{{columns['SETUP_PROJECT_COLUMNS']['Lab. Responsible']}}'></td>
+                </tr>
+                <tr>
+                  <td>Project Coordinator</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['Project Coordinator']}}'></td>
                 </tr>
                 </tbody>
               </table>
-              <table class="table table-bordered">
+              <table class="table table-bordered table-striped">
                 <thead>
                   <tr>
                     <th>Contacts</th>
@@ -126,11 +172,33 @@
                 <tbody>
                 <tr>
                   <td>PI</td>
-                  <td>what_to_put_here??</td>
+                  <td>NA</td>
                 </tr>
                 </tbody>
               </table>
             </div>
+            <!-- Undefined fields -->
+            <div class="span11">
+              <div class="accordion" id="accordion2">
+                <div class="accordion-group">
+                  <div class="accordion-heading">
+                    <a class="accordion-toggle" data-toggle="collapse" href="#collapseUndefinedFields">
+                      Undefined Fields
+                    </a>
+                  </div>
+                  <div id="collapseUndefinedFields" class="accordion-body collapse">
+                    <div class="accordion-inner">
+                      <!-- Undefined Fields Table -->
+                      <table class="table table-condensed table-hover">
+                        <tbody id="undefined_project_info">
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- -->
             <div class="span11">
               <p>
               Note that for some projects the ordered number of reads per sample is on a
@@ -198,24 +266,50 @@ load_all_udfs()
     $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
         var columns_html ="";
         $.each(data, function(column_no, column) {
-          columns_html += '<dt>' + column + '</dt><dd name=' + prettify(column) + '></dd>'
-          });
-        $("#undefined_project_info dl").html(columns_html)
+          columns_html += '<tr><td>' + column + '</td><td name=' + prettify(column) + '></td></tr>'
+        });
+        $("#undefined_project_info").html(columns_html)
         });
   }
 
 function load_all_udfs(){
   $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
-      $.each(data, function(key, value) {
-        if (prettify(key) == 'project_name'){
+    $.each(data, function(key, value) {
+      if (prettify(key) == 'project_name'){
         $("[name=" + prettify(key) + "]").text(value);
-        $("[name=project_status]").text("Project status");
+        //Decide project status (and color) based on the project dates
+        var open_date=data["{{ columns['BASIC_COLUMNS']['Open Date'] }}"];
+        var queue_date=data["{{ columns['BASIC_COLUMNS']['Queue Date'] }}"];
+        var close_date=data["{{ columns['DETAILS_COLUMNS']['Close Date'] }}"];
+        var aborted=data["{{ columns['DETAILS_COLUMNS']['Aborted'] }}"]
+        if (aborted){
+            $("[name=project_status]").text("Aborted");
+            $("[name=project_status]").addClass("alert alert-error");
         }
         else {
-        $("[name=" + prettify(key) + "]").text(value)
+          if (!open_date){
+            $("[name=project_status]").text("Pending");
+            $("[name=project_status]").addClass("alert alert-info");
+          }
+          else if (open_date && !queue_date) {
+            $("[name=project_status]").text("Reception Control");
+            $("[name=project_status]").addClass("alert alert-block");
+          }
+          else if (queue_date && !close_date) {
+            $("[name=project_status]").text("Ongoing");
+            $("[name=project_status]").addClass("alert alert-info");
+          }
+          else if (close_date) {
+            $("[name=project_status]").text("Closed");
+            $("[name=project_status]").addClass("alert alert-success");
+          }
         }
-        });
-      });
+      }
+      else {
+        $("[name=" + prettify(key) + "]").text(value)
+      }
+    });
+  });
 };
 
 function prettify(s) {

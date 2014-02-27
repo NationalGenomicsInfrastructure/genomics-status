@@ -3,8 +3,10 @@
 import yaml
 import base64
 import uuid
+import collections
 
 from couchdb import Server
+from collections import OrderedDict
 
 import tornado.httpserver
 import tornado.ioloop
@@ -169,7 +171,17 @@ class Application(tornado.web.Application):
                                "make sure that the user is abailable with the " \
                                "corresponding defaults information.".format(settings.get("couch_server", None)))
 
-        self.genstat_defaults = self.gs_users_db.get(genstat_id)
+        # We need to get this database as OrderedDict, so the pv_columns doesn't
+        # mess up
+        user = settings.get("username", None)
+        password = settings.get("password", None)
+        headers = {"Accept": "application/json",
+                   "Authorization": "Basic " + "{}:{}".format(user, password).encode('base64')[:-1]}
+        decoder = json.JSONDecoder(object_pairs_hook=collections.OrderedDict)
+        user_url = "{}/gs_users/{}".format(settings.get("couch_server"), genstat_id)
+        json_user = requests.get(user_url, headers=headers).content.rstrip()
+
+        self.genstat_defaults = decoder.decode(json_user)
 
         # Load private instrument listing
         self.instrument_list = settings.get("instruments")
