@@ -7,112 +7,111 @@
   <div id="slider"></div>
   <h3 id="dates"></h3>
   <p>
-    Projects that are not loaded from Clarity LIMS have no 'open_date' attribute in Status DB 
-    and will be treated as opened exactly on '2012-01-01'. Projects that do not have the
-    application field filled in will be listed under 'null'.
+  Projects that are not loaded from Clarity LIMS have no 'open_date' attribute in Status DB 
+  and will be treated as opened exactly on '2012-01-01'. Projects that do not have the
+  application field filled in will be listed under 'null'.
   </p>
   <h2>Project Applications</h2>
   <p>
-    Counts of the different sequencing applications that have been run.
+  Counts of the different sequencing applications that have been run.
   </p>
-<div id='main_chart' class='span4'>
-  <svg style='height:500px;width:400px'> </svg>
-</div>
-  <div class="single_chart_container" id="main_chart">
+  <div id='main_chart'>
+    <svg style="height:600px"></svg>
   </div>
-
   <table class="table table-bordered" id="application_table">
     <thead>
-    <tr>
-    <th>Application</th>
-    <th>Number of Projects</th>
-    </thead>
-    <tbody id="application_table_body"></tbody>
-  </table>
+      <tr>
+        <th>Application</th>
+        <th>Number of Projects</th>
+      </thead>
+      <tbody id="application_table_body"></tbody>
+    </table>
 
-  <h2>Samples per Application</h2>
-  <div class="single_chart_container" id="per_sample_chart">
+    <h2>Samples per Application</h2>
+    <div class="single_chart_container" id="per_sample_chart">
+    </div>
+
   </div>
 
-</div>
-
-<script type="text/javascript">
+  <script type="text/javascript">
 var start = new Date(2012,0,1);
 var stop = new Date();
 
 $("#slider").dateRangeSlider({
-  bounds:
-  {
-    min: start,
-    max: stop
-  },
-  defaultValues:
-  {
-    min: start,
-    max: stop
-  },
-  min: 1,
-  max: 12,
-  values: [2, 12],
-  step:
-  {
-    days: 1
-  },
+bounds:
+{
+min: start,
+max: stop
+},
+defaultValues:
+{
+min: start,
+max: stop
+},
+min: 1,
+max: 12,
+values: [2, 12],
+step:
+{
+days: 1
+},
 });
 
 function load_plots(start, stop){
   $("#dates").text("Opening Date range: " + start + " - " + stop)
-  if (start == '2012-01-01')
-      {
-        //$.getJSON("/api/v1/applications.png?end=" + stop, function (data) {
-        //Regular pie chart example
-        //XXX Actually call for the JSON and parse it adecuatedly to the nvd3 format
-        nv.addGraph(function() {
-          var chart = nv.models.pieChart().x(function(d) { return d.label }).y(function(d) { return d.value }).showLabels(true);
-          d3.select("#main_chart svg").datum([{'label': 'Test', 'value':50}, {'label': 'Test2', 'value':100}]).transition().duration(350).call(chart); 
-          return chart;});
-        //}); 
-        //$("#main_chart").html('<img src="/api/v1/applications.png?end=' + stop + '"/>')
-        //});
-        $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?end=' + stop + '"/>')
-      }
-  else
-     {
-        $("#main_chart").html('<img src="/api/v1/applications.png?start=' + start + '&end=' + stop + '"/>')
-        $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?start=' + start + '&end=' + stop + '"/>')
-     }
+    if (start == '2012-01-01')
+    {
+      $.getJSON("/api/v1/applications?end=" + stop, function (data) {
+          nvd3_data = [];
+          for (var k in data) {
+            nvd3_data.push({'label': k, 'value': data[k]})
+          }
+            nv.addGraph(function() {
+              var chart = nv.models.pieChart().x(function(d) { return d.label }).y(function(d) { return d.value }).showLabels(true);
+              d3.select("#main_chart svg").datum(nvd3_data).transition().duration(350).call(chart); 
+              return chart;});
+            });
+      //$("#main_chart").html('<img src="/api/v1/applications.png?end=' + stop + '"/>')
+      //});
+      $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?end=' + stop + '"/>')
+}
+else
+{
+  $("#main_chart").html('<img src="/api/v1/applications.png?start=' + start + '&end=' + stop + '"/>')
+    $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?start=' + start + '&end=' + stop + '"/>')
+}
 }
 
 
 function trow_f(d,data){
   var trow = '<tr class="a" onclick="document.location = '
-  trow += "'/application/" + d + "'"
-  trow += '" onmouseover="this.style.cursor='
-  trow += "'pointer'"
-  trow += '">'
-  trow += '<td>' + d + '</td><td>' + data[d]+ '</td></tr>'
-  return trow
+    trow += "'/application/" + d + "'"
+    trow += '" onmouseover="this.style.cursor='
+    trow += "'pointer'"
+    trow += '">'
+    trow += '<td>' + d + '</td><td>' + data[d]+ '</td></tr>'
+    return trow
 }
 
 function load_table(start,stop){
   $("#application_table_body").empty()
-  if (start == '2012-01-01')
-      {
-        $.getJSON("/api/v1/applications?end="+stop, function(data) {
-           for (d in data) {
-              trow = trow_f(d,data)
-              $("#application_table tbody").append(trow)
-           };
-        })
-      }
-  else
+    if (start == '2012-01-01')
     {
-      $.getJSON("/api/v1/applications?start="+start+"&end="+stop, function(data) {
-        for (d in data) {
+      $.getJSON("/api/v1/applications?end="+stop, function(data) {
+          for (d in data) {
           trow = trow_f(d,data)
           $("#application_table tbody").append(trow)
-        };
-      })
+          };
+          })
+    }
+    else
+    {
+      $.getJSON("/api/v1/applications?start="+start+"&end="+stop, function(data) {
+          for (d in data) {
+          trow = trow_f(d,data)
+          $("#application_table tbody").append(trow)
+          };
+          })
     }
 }
 
@@ -121,8 +120,8 @@ $("#slider").bind("valuesChanged", function(e, data){
     stop_string = $.datepicker.formatDate('yy-mm-dd',data.values.max);
     load_plots(start_string,stop_string)
     load_table(start_string,stop_string)
-});
+    });
 
-</script>
+  </script>
 
-{% end %}
+  {% end %}
