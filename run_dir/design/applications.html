@@ -66,6 +66,7 @@ function load_plots(start, stop){
       {
         //$.getJSON("/api/v1/applications.png?end=" + stop, function (data) {
         //Regular pie chart example
+        //XXX Actually call for the JSON and parse it adecuatedly to the nvd3 format
         nv.addGraph(function() {
           var chart = nv.models.pieChart().x(function(d) { return d.label }).y(function(d) { return d.value }).showLabels(true);
           d3.select("#main_chart svg").datum([{'label': 'Test', 'value':50}, {'label': 'Test2', 'value':100}]).transition().duration(350).call(chart); 
