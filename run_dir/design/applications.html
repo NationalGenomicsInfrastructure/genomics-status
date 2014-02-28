@@ -15,7 +15,9 @@
   <p>
     Counts of the different sequencing applications that have been run.
   </p>
-
+<div id='main_chart' class='span4'>
+  <svg style='height:500px;width:400px'> </svg>
+</div>
   <div class="single_chart_container" id="main_chart">
   </div>
 
@@ -62,7 +64,15 @@ function load_plots(start, stop){
   $("#dates").text("Opening Date range: " + start + " - " + stop)
   if (start == '2012-01-01')
       {
-        $("#main_chart").html('<img src="/api/v1/applications.png?end=' + stop + '"/>')
+        //$.getJSON("/api/v1/applications.png?end=" + stop, function (data) {
+        //Regular pie chart example
+        nv.addGraph(function() {
+          var chart = nv.models.pieChart().x(function(d) { return d.label }).y(function(d) { return d.value }).showLabels(true);
+          d3.select("#main_chart svg").datum([{'label': 'Test', 'value':50}, {'label': 'Test2', 'value':100}]).transition().duration(350).call(chart); 
+          return chart;});
+        //}); 
+        //$("#main_chart").html('<img src="/api/v1/applications.png?end=' + stop + '"/>')
+        //});
         $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?end=' + stop + '"/>')
       }
   else
