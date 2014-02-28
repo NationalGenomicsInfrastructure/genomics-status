@@ -62,24 +62,31 @@ function load_plots(start, stop){
     if (start == '2012-01-01')
     {
       $.getJSON("/api/v1/applications?end=" + stop, function (data) {
+          //Prepare the data for nvd3, accepts a list of pairs {label: '', value: ''}
           nvd3_data = [];
           for (var k in data) {
-            nvd3_data.push({'label': k, 'value': data[k]})
+          nvd3_data.push({'label': k, 'value': data[k]})
           }
-            nv.addGraph(function() {
-              var chart = nv.models.pieChart().x(function(d) { return d.label }).y(function(d) { return d.value }).showLabels(true);
-              d3.select("#main_chart svg").datum(nvd3_data).transition().duration(350).call(chart); 
-              return chart;});
+          nv.addGraph(function() {
+            var chart = nv.models.pieChart()
+            .x(function(d) { return d.label })
+            .y(function(d) { return d.value })
+            .showLabels(true);
+            d3.select("#main_chart svg")
+            .datum(nvd3_data)
+            .transition()
+            .duration(350)
+            .call(chart); 
+            return chart;
             });
-      //$("#main_chart").html('<img src="/api/v1/applications.png?end=' + stop + '"/>')
-      //});
+          });
       $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?end=' + stop + '"/>')
-}
-else
-{
-  $("#main_chart").html('<img src="/api/v1/applications.png?start=' + start + '&end=' + stop + '"/>')
-    $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?start=' + start + '&end=' + stop + '"/>')
-}
+    }
+    else
+    {
+      $("#main_chart").html('<img src="/api/v1/applications.png?start=' + start + '&end=' + stop + '"/>')
+        $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?start=' + start + '&end=' + stop + '"/>')
+    }
 }
 
 
