@@ -10,13 +10,15 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
     def get(self):
         if self.get_argument("code", False):
             user_token =  yield self.get_authenticated_user(
-                    redirect_uri='https://genomics-status.scilifelab.se/login',
+                    redirect_uri='http://localhost:9761/login',
                 code=self.get_argument('code')
                 )
             user = GoogleUser(user_token)
             user_view = self.application.gs_users_db.view("authorized/users", reduce=False)
             if user.authenticated and user.is_authorized(user_view):
                 self.set_secure_cookie('user', user.display_name)
+                #It will have at least one email (otherwise she couldn't log in)
+                self.set_secure_cookie('email', user.emails[0])
                 url = '/'
             else:
                 url = "/unauthorized?email={0}&contact={1}".format(user.emails[0],
@@ -25,7 +27,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
 
         else:
             self.authorize_redirect(
-                    redirect_uri='https://genomics-status.scilifelab.se/login',
+                    redirect_uri='http://localhost:9761/login',
                         client_id=self.application.oauth_key,
                         scope=['profile', 'email'],
                         response_type='code',
