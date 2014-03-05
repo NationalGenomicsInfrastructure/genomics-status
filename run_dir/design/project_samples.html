@@ -89,44 +89,12 @@
                 </thead>
                 <tbody>
                 <tr>
-                  <td>Uppnex ID</td>
-                  <td name='{{columns['BIOINFO_COLUMNS']['Uppnex ID']}}'></td>
-                </tr>
-                <tr>
                   <td>Type</td>
                   <td name='{{columns['BASIC_COLUMNS']['Type']}}'></td>
                 </tr>
                 <tr>
                   <td>Application</td>
                   <td name='{{columns['BASIC_COLUMNS']['Application']}}'>Application</td>
-                </tr>
-                <tr>
-                  <td>Best Practice Bioinformatics</td>
-                  <td name='{{columns['BIOINFO_COLUMNS']['Best Practice Bioinformatics']}}'></td>
-                </tr>
-                <tr>
-                  <td>Bioinfo Analysis</td>
-                  <td name='{{columns['BIOINFO_COLUMNS']['Bioinformatic QC']}}'></td>
-                </tr>
-                <tr>
-                  <td>Organism</td>
-                  <td name='{{columns['DETAILS_COLUMNS']['Organism']}}'></td>
-                </tr>
-                <tr>
-                  <td>Reference Genome</td>
-                  <td name='{{columns['BIOINFO_COLUMNS']['Reference Genome']}}'></td>
-                </tr>
-                <tr>
-                  <td>Lanes</td>
-                  <td name='{{columns['DETAILS_COLUMNS']['Lanes']}}'></td>
-                </tr>
-                <tr>
-                  <td>Sequencing Setup</td>
-                  <td name='{{columns['SEQUENCING_COLUMNS']['Sequencing Setup']}}'></td>
-                </tr>
-                <tr>
-                  <td>Ordered Reads</td>
-                  <td name='{{columns['DETAILS_COLUMNS']['Ordered million reads per sample']}}'></td>
                 </tr>
                 <tr>
                   <td>Customer Reference</td>
@@ -149,6 +117,10 @@
                 </thead>
                 <tbody>
                   <tr>
+                    <td>Uppnex ID</td>
+                    <td name='{{columns['BIOINFO_COLUMNS']['Uppnex ID']}}'></td>
+                  </tr>
+                  <tr>
                     <td>Source</td>
                     <td name='{{columns['BIOINFO_COLUMNS']['Source']}}'></td>
                   </tr>
@@ -159,6 +131,22 @@
                   <tr>
                     <td>UPPMAX project owner</td>
                     <td name='{{columns['BIOINFO_COLUMNS']['Uppmax Project Owner']}}'></td>
+                  </tr>
+                  <tr>
+                    <td>Best Practice Bioinformatics</td>
+                    <td name='{{columns['BIOINFO_COLUMNS']['Best Practice Bioinformatics']}}'></td>
+                  </tr>
+                  <tr>
+                    <td>Bioinfo Analysis</td>
+                    <td name='{{columns['BIOINFO_COLUMNS']['Bioinformatic QC']}}'></td>
+                  </tr>
+                  <tr>
+                    <td>Organism</td>
+                    <td name='{{columns['DETAILS_COLUMNS']['Organism']}}'></td>
+                  </tr>
+                  <tr>
+                    <td>Reference Genome</td>
+                    <td name='{{columns['BIOINFO_COLUMNS']['Reference Genome']}}'></td>
                   </tr>
                 </tbody>
               </table>
@@ -181,20 +169,32 @@
                   <td name='{{columns['BASIC_COLUMNS']['Number of Samples']}}'></td>
                 </tr>
                 <tr>
-                  <td>Nr. Samples passed library QC</td>
+                  <td>Final Nr. Samples</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['Final Number of Samples']}}'></td>
+                </tr>
+                <tr>
+                  <td>Completed Samples</td>
                   <td name='{{columns['BASIC_COLUMNS']['Samples Completed']}}'></td>
                 </tr>
                 <tr>
-                  <td>Total Nr. Samples</td>
-                  <td name='{{columns['DETAILS_COLUMNS']['Final Number of Samples']}}'></td>
+                  <td>Lanes</td>
+                  <td name="{{columns['DETAILS_COLUMNS']['Lanes']}}"></td>
                 </tr>
                 <tr>
                   <td>Sequencing Platform</td>
                   <td name='{{columns['SEQUENCING_COLUMNS']['Sequencing Platform']}}'></td>
                 </tr>
                 <tr>
+                  <td>Sequencing Setup</td>
+                  <td name='{{columns['SEQUENCING_COLUMNS']['Sequencing Setup']}}'></td>
+                </tr>
+                <tr>
                   <td>Library Construction Method</td>
                   <td name='{{columns['LIBRARY_PREP_COLUMNS']['Library Construction Method']}}'></td>
+                </tr>
+                <tr>
+                  <td>Ordered Reads</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['Ordered million reads per sample']}}'></td>
                 </tr>
                 </tbody>
               </table>
@@ -227,6 +227,23 @@
                 </tbody>
               </table>
             </div>
+            <!-- Project comment -->
+            <div class="span11">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Project Comment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td >
+                    <p name="project_comment"></p>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
             <!-- Customer project description -->
             <div class="span11">
               <table class="table table-bordered">
@@ -240,7 +257,7 @@
                   <td >
                     <div class="alert">
                       <button type="button" class="close" data-dismiss="alert">&times;</button>
-                      <strong>Warning!</strong> Note that this is the original user description of the project and may not reflect the final. Use with caution!
+                      <strong>Warning!</strong> Note that this is the original user description of the project and may not reflect the final order. Use with caution!
                     </div>
                     <p name="customer_project_description"></p>
                   </td>
@@ -285,15 +302,6 @@
                   </div>
                 </div>
               </div>
-            </div>
-            <!-- -->
-            <div class="span11">
-              <p>
-              Note that for some projects the ordered number of reads per sample is on a
-              per sample basis. At this moment that information is then impossible to
-              parse. In the future when the LIMS is being used that information will be
-              available on per sample level.
-              </p>
             </div>
           </div>
         </div>
@@ -395,7 +403,7 @@ function load_all_udfs(){
         }
       }
       else {
-        $("[name=" + prettify(key) + "]").text(value)
+        $("[name='" + key + "']").text(value)
       }
     });
     //Set some project subtitles
