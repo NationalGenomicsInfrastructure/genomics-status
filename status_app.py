@@ -259,10 +259,8 @@ def main(args):
     # Start HTTP Server
     http_server = tornado.httpserver.HTTPServer(application,
                                                 ssl_options = ssl_options)
-    if args.testing_mode:
-        http_server.listen(8889)
-    else:
-        http_server.listen(server_settings.get("port", 8888))
+
+    http_server.listen(server_settings.get("port", 8888))
 
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
