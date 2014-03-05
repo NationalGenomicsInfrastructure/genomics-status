@@ -204,7 +204,8 @@ class Application(tornado.web.Application):
                     "google_oauth": {
                         "key": self.oauth_key,
                         "secret": settings["google_oauth"]["secret"]},
-                    "contact_person": settings['contact_person']
+                    "contact_person": settings['contact_person'],
+                    "redirect_uri": settings['redirect_uri']
                      }
 
         tornado.autoreload.watch("design/amanita.html")
