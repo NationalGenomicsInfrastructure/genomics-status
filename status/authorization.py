@@ -10,7 +10,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
     def get(self):
         if self.get_argument("code", False):
             user_token =  yield self.get_authenticated_user(
-                    redirect_uri='http://localhost:9761/login',
+                    redirect_uri=self.application.settings['redirect_uri'],
                 code=self.get_argument('code')
                 )
             user = GoogleUser(user_token)
@@ -27,7 +27,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
 
         else:
             self.authorize_redirect(
-                    redirect_uri='http://localhost:9761/login',
+                    redirect_uri=self.application.settings['redirect_uri'],
                         client_id=self.application.oauth_key,
                         scope=['profile', 'email'],
                         response_type='code',
