@@ -355,6 +355,8 @@ valueNames: column_names,
 
             function select_from_preset(preset_type, preset) {
               $.getJSON('/api/v1/project_view_presets', function (data) {
+                //First uncheck everything
+                $('input:checkbox').removeAttr('checked');
                 if (preset_type == "default_presets_dropdown") {
                   var choices = data['default'][preset];
                   for (column in choices) {
