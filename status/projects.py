@@ -143,14 +143,23 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
     def project_info(self, project):
         view = self.application.projects_db.view("project/summary")["open", project]
-        if len(view.rows) == 0:
+        if not view.rows:
             view = self.application.projects_db.view("project/summary")["closed", project]
-        if len(view.rows) != 1:
+        if not len(view.rows) == 1:
             return {}
-        row = view.rows[0]
-        row = self.project_summary_data(row)
 
-        return row.value
+        summary_row = view.rows[0]
+        summary_row = self.project_summary_data(summary_row)
+
+        date_view = self.application.projects_db.view("project/summary_dates",
+                                                      descending=True,
+                                                      group_level=1)
+        date_result = date_view[[project + 'ZZZZ']:[project]]
+        if date_result.rows:
+            for date_row in date_view.rows:
+                for date_type, date in date_row.value.iteritems():
+                    summary_row.value[date_type] = date
+        return summary_row.value
 
 
 class ProjectSamplesDataHandler(SafeHandler):
