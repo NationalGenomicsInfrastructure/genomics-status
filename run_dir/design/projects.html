@@ -28,6 +28,26 @@
                 <div class="tab-pane" id="Filter-tab">
                     <form id="Filter" class="form form-search">
                         <legend>Choose Columns</legend>
+                          <div class="btn-group">
+                            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                              Default presets
+                              <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu" id="default_presets_dropdown">
+                              <!-- Load default presets (to be filled with JS) -->
+                            </ul>
+                          </div>
+                          <!--
+                          <div class="btn-group">
+                            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                              {{user}} presets
+                              <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu" id="user_presets_dropdown">
+                              Load user presets (to be filled with JS) 
+                            </ul>
+                          </div>
+                          -->
                         <div class="row-fluid">
                             <div class="span3">
                                 <div  id="basic-columns">
@@ -120,10 +140,10 @@
                             </div>
                             <div class="span3">
                                 <p>
-                                <button id="Reset" class="btn btn-large"> Reset Filter</button>
+                                <button id="Reset" class="btn btn-large"> Reset</button>
                                 </p>
                                 <p>
-                                <input type="submit" value="Apply Filter" class="btn btn-primary btn-large" id="applyFilter">
+                                <input type="submit" value="Apply" class="btn btn-primary btn-large" id="applyFilter">
                                 </p>
                             </div>
                         </div>
@@ -287,12 +307,76 @@ valueNames: column_names,
                 }
             }
 
-            //For the clickable_header class, execute the choose_column func with the column ID
-            $(".clickable_header").click(
-                    function(event){ 
-                    choose_column($(this).parent().attr("id"))
+            ////////////////////////////////
+            // Presets related functions  //
+            ///////////////////////////////
+
+            function load_presets() {
+                $.getJSON('/api/v1/project_view_presets', function (data) {
+                    var default_presets = data['default'];
+                    var user_presets = data['user'];
+
+                    //Empty previously filled lists of presets
+                    $('ul#default_presets_dropdown').empty();
+                    $('ul#user_presets_dropdown').empty();
+
+                    //Default presets
+                    for (var preset in default_presets) {
+                        var li = '<li class="clickable_dropdown" id="' + preset + '">';
+                        li += '<a tabindex="-1">' + preset + '</a></li>';
+                        $('ul#default_presets_dropdown').append(li);
                     }
+                    //User presets, if there are any
+                    if (!jQuery.isEmptyObject(user_presets)) {
+                        for (var preset in user_presets) {
+                            var li = '<li class="clickable_dropdown" id="' + preset + '">';
+                            li += '<a tabindex="-1">' + preset + '</a></li>';
+                            $('ul#user_presets_dropdown').append(li);
+                        }
+                    }
+                    else {
+                        var li = '<li class="disabled"><a tabindex="-1">';
+                        li += 'No user presets';
+                        li += '</a></li>';
+                        $('ul#user_presets_dropdown').append(li);
+                    }
+
+                    //Execute function select_from_preset when clicking a clickable_dropdown
+                    $(".clickable_dropdown").click(
+                      function(event) {
+                        select_from_preset($(this).parent().attr('id'), $(this).attr('id'))
+                      }
                     );
+                });
+            }
+
+            //Fill in the presets at the beginning
+            load_presets();
+
+            function select_from_preset(preset_type, preset) {
+              $.getJSON('/api/v1/project_view_presets', function (data) {
+                //First uncheck everything
+                $('input:checkbox').removeAttr('checked');
+                if (preset_type == "default_presets_dropdown") {
+                  var choices = data['default'][preset];
+                  for (column in choices) {
+                    for (choice in choices[column]) {
+                      $("#Filter #" + choice).attr('checked', choices[column][choice]);
+                    }
+                  }
+                }
+                else if (preset_type == "users_presets_dropdown") {
+                }
+              });
+            }
+
+          //For the clickable_header class, execute the choose_column func with the column ID
+          $(".clickable_header").click(
+            function(event){ 
+              choose_column($(this).parent().attr("id"))
+            }
+          );
+
 
 </script>
 

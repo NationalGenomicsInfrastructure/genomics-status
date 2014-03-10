@@ -19,7 +19,7 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         # Disables authentication if test mode to ease integration testing
         if self.application.test_mode:
-            return 'genomics.status@example.com'
+            return 'Testing User!'
         else:
             return self.get_secure_cookie("user")
 

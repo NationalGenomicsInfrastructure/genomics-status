@@ -3,8 +3,10 @@
 import yaml
 import base64
 import uuid
+import collections
 
 from couchdb import Server
+from collections import OrderedDict
 
 import tornado.httpserver
 import tornado.ioloop
@@ -95,6 +97,7 @@ class Application(tornado.web.Application):
             ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
+            ("/api/v1/project_view_presets", ProjectViewPresetsHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
@@ -144,7 +147,7 @@ class Application(tornado.web.Application):
         # Load templates
         self.loader = template.Loader("design")
 
-        # Global connection to the log database
+        # Global connection to the database
         couch = Server(settings.get("couch_server", None))
         if couch:
             self.illumina_db = couch["illumina_logs"]
@@ -155,6 +158,30 @@ class Application(tornado.web.Application):
             self.amanita_db = couch["amanita"]
             self.picea_db = couch["picea"]
             self.gs_users_db = couch["gs_users"]
+
+        #Load columns and presets from genstat-defaults user in StatusDB
+        genstat_id = ''
+        for u in self.gs_users_db.view('authorized/users'):
+            if u.get('key') == 'genstat-defaults':
+                genstat_id = u.get('value')
+
+        #It's important to check that this user exists!
+        if not genstat_id:
+            raise RuntimeError("genstat-defaults user not found on {}, please " \
+                               "make sure that the user is abailable with the " \
+                               "corresponding defaults information.".format(settings.get("couch_server", None)))
+
+        # We need to get this database as OrderedDict, so the pv_columns doesn't
+        # mess up
+        user = settings.get("username", None)
+        password = settings.get("password", None)
+        headers = {"Accept": "application/json",
+                   "Authorization": "Basic " + "{}:{}".format(user, password).encode('base64')[:-1]}
+        decoder = json.JSONDecoder(object_pairs_hook=collections.OrderedDict)
+        user_url = "{}/gs_users/{}".format(settings.get("couch_server"), genstat_id)
+        json_user = requests.get(user_url, headers=headers).content.rstrip()
+
+        self.genstat_defaults = decoder.decode(json_user)
 
         # Load private instrument listing
         self.instrument_list = settings.get("instruments")
@@ -177,7 +204,8 @@ class Application(tornado.web.Application):
                     "google_oauth": {
                         "key": self.oauth_key,
                         "secret": settings["google_oauth"]["secret"]},
-                    "contact_person": settings['contact_person']
+                    "contact_person": settings['contact_person'],
+                    "redirect_uri": settings['redirect_uri']
                      }
 
         tornado.autoreload.watch("design/amanita.html")
@@ -231,10 +259,8 @@ def main(args):
     # Start HTTP Server
     http_server = tornado.httpserver.HTTPServer(application,
                                                 ssl_options = ssl_options)
-    if args.testing_mode:
-        http_server.listen(8889)
-    else:
-        http_server.listen(server_settings.get("port", 8888))
+
+    http_server.listen(server_settings.get("port", 8888))
 
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
