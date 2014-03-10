@@ -1,6 +1,5 @@
 """ Handlers for sequencing project information.
 """
-from collections import OrderedDict
 import json
 import string
 
@@ -8,78 +7,34 @@ import tornado.web
 import dateutil.parser
 import datetime
 
+from collections import OrderedDict
 from status.util import dthandler, SafeHandler
 
-# Constant dictionary with Displayname:internalname pairs
-BASIC_COLUMNS = OrderedDict([('Project', 'project'),
-                             ('Project Name', 'project_name'),
-                             ('Application', 'application'),
-                             ('Passed Samples', 'passed_samples'),
-                             ('Number of Samples','no_samples'),
-                             ('Type','type'),
-                             ('Queue Date', 'queued'), 
-                             ('Days in Production', 'days_in_production'),
-                             ('Open Date', 'open_date')])
+class ProjectViewPresetsHandler(SafeHandler):
+    """Handler to GET and POST/PUT personalized and default set of presets in
 
-BIOINFO_COLUMNS = OrderedDict([('Source','source'),
-                               ('Uppnex ID', 'uppnex_id'),
-                               ('Reference Genome', 'reference_genome'),
-                               ('Best Practice Bioinformatics', 'best_practice_bioinformatics'),
-                               ('Bioinformatic QC', 'bioinformatic_qc'),
-                               ('All Raw Data Delivered', 'all_raw_data_delivered'),
-                               ('Best Practice Analysis Completed', 'best_practice_analysis_completed'),
-                               ('Custom Capture Design', 'custom_capture_design_id'),
-                               ('Uppmax Project Owner', 'uppmax_project_owner'),
-                               ])
-                           
-SEQUENCING_COLUMNS = OrderedDict([('Sequencing Setup', 'sequencing_setup'),
-                                  ('Sequencing Platform', 'sequencing_platform'),
-                                  ('Sequencing Start', 'sequencing_start_date')
-])
+    project view.
+    """
+    def get(self):
+        """Get preset choices of columns from StatusDB
 
-DETAILS_COLUMNS = OrderedDict([('Project Comment', 'project_comment'),
-                               ('Customer Project Description', 'customer_project_description'),
-                               ('Portal ID', 'portal_id'),
-                               ('Ordered million reads per sample', 'ordered_reads'),
-                               ('Customer Reference', 'customer_reference'),
-                               ('Disposal of Samples', 'disposal_of_any_remaining_samples'),
-                               ('All Samples Sequenced', 'all_samples_sequenced'),
-                               ('Lanes', 'sequence_units_ordered_(lanes)'),
-                               ('Aborted', 'aborted'),
-                               ('Close Date', 'close_date'),
-                               ('Final Number of Samples', 'final_number_of_samples'),
-                               ('Customer Project Reference', 'customer_project_reference'),
-                               ('Sample Type', 'sample_type'),
-                               ('Customer Project Description', 'customer_project_description'),
-                               ('Invoice Reference', 'invoice_reference'),
-                               ('Organism', 'organism')
-                               ])
-
-LIBRARY_PREP_COLUMNS = OrderedDict([('Library Prep Start', 'library_prep_start'),
-                                    ('QC Library Finished','qc_library_finished'),
-                                    ('Library Construction Method', 'library_construction_method')
-                                    ])
-
-SETUP_PROJECT_COLUMNS = OrderedDict([('Sample Information Received', 'sample_information_received'),
-                                     ('Order Received', 'order_received'),
-                                     ('Contract Received', 'contract_received'),
-                                     ('Contract Sent', 'contract_sent'),
-                                     ('Samples Received', 'samples_received'),
-                                     ('Plates Sent', 'plates_sent')
-                                     ])
-
-EXTRA_COLUMNS = OrderedDict([('Project Summary Comment', 'comment'),
-                             ('First Initial QC Start Date', 'first_initial_qc_start_date')
-                             ])
-
-
-COLUMNS = dict([('BASIC_COLUMNS', BASIC_COLUMNS),
-                ('BIOINFO_COLUMNS', BIOINFO_COLUMNS),
-                ('SEQUENCING_COLUMNS', SEQUENCING_COLUMNS),
-                ('DETAILS_COLUMNS', DETAILS_COLUMNS),
-                ('LIBRARY_PREP_COLUMNS', LIBRARY_PREP_COLUMNS),
-                ('SETUP_PROJECT_COLUMNS', SETUP_PROJECT_COLUMNS),
-                ('EXTRA_COLUMNS', EXTRA_COLUMNS)])
+        It will return a JSON with two lists of presets, the default ones and the user defined
+        presets.
+        """
+        self.set_header("Content-type", "application/json")
+        presets = {
+            "default": self.application.genstat_defaults.get('pv_presets'),
+            "user": {}
+        }
+        #Get user presets
+        user_id = ''
+        user = self.get_secure_cookie('email')
+        for u in self.application.gs_users_db.view('authorized/users'):
+            if u.get('key') == user:
+                user_id = u.get('value')
+                break
+        presets['user'] = self.application.gs_users_db.get(user_id).get('pv_presets', {})
+        self.write(json.dumps(presets))
 
 
 class ProjectsBaseDataHandler(SafeHandler):
@@ -112,7 +67,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             diff = now - dateutil.parser.parse(queued)
             row.value['days_in_production'] = diff.days
         return row
-        
+
     def list_projects(self, all_projects=True):
         projects = OrderedDict()
 
@@ -123,7 +78,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         for row in summary_view:
             row = self.project_summary_data(row)
             projects[row.key[1]] = row.value
-                
+
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
             if row.key[0] in projects:
@@ -133,8 +88,9 @@ class ProjectsBaseDataHandler(SafeHandler):
         return projects
 
     def list_project_fields(self, undefined=False, project_list=None, all_projects=True):
-        # If undefined=True is given, only return fields not in columns defined 
+        # If undefined=True is given, only return fields not in columns defined
         # in constants in this module
+        columns = self.application.genstat_defaults.get('pv_columns')
         if project_list is None:
             project_list = self.list_projects(all_projects=all_projects)
         field_items = set()
@@ -142,7 +98,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             for key, _ in value.iteritems():
                 field_items.add(key)
         if undefined:
-            for column_category, column_dict in COLUMNS.iteritems():
+            for column_category, column_dict in columns.iteritems():
                 field_items = field_items.difference(set(column_dict.values()))
         return field_items
 
@@ -163,7 +119,7 @@ class ProjectsDataHandler(ProjectsBaseDataHandler):
 
 
 class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
-    """ Serves all fields occuring in the values of the ProjectsDataHandler 
+    """ Serves all fields occuring in the values of the ProjectsDataHandler
     json object.
 
     Loaded through /api/v1/projects_fields
@@ -187,14 +143,23 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
     def project_info(self, project):
         view = self.application.projects_db.view("project/summary")["open", project]
-        if len(view.rows) == 0:
+        if not view.rows:
             view = self.application.projects_db.view("project/summary")["closed", project]
-        if len(view.rows) != 1:
+        if not len(view.rows) == 1:
             return {}
-        row = view.rows[0]
-        row = self.project_summary_data(row)
 
-        return row.value
+        summary_row = view.rows[0]
+        summary_row = self.project_summary_data(summary_row)
+
+        date_view = self.application.projects_db.view("project/summary_dates",
+                                                      descending=True,
+                                                      group_level=1)
+        date_result = date_view[[project + 'ZZZZ']:[project]]
+        if date_result.rows:
+            for date_row in date_view.rows:
+                for date_type, date in date_row.value.iteritems():
+                    summary_row.value[date_type] = date
+        return summary_row.value
 
 
 class ProjectSamplesDataHandler(SafeHandler):
@@ -218,7 +183,7 @@ class ProjectSamplesDataHandler(SafeHandler):
                         sample_data["prep_status"].append("F")
                 if "prep_finished_date" in content:
                     sample_data["prep_finished_date"].append(content["prep_finished_date"])
-        
+
         if "details" in sample_data:
             for detail_key, detail_value in sample_data["details"].iteritems():
                 sample_data[detail_key] = detail_value
@@ -234,7 +199,7 @@ class ProjectSamplesDataHandler(SafeHandler):
             sample_data = self.sample_data(sample_data)
             output[sample] = sample_data
         return output
-        
+
     def get(self, project):
         self.set_header("Content-type", "application/json")
         # self.write(json.dumps(self.sample_list(project), default=dthandler))
@@ -255,9 +220,9 @@ class ProjectSamplesHandler(SafeHandler):
     """
     def get(self, project):
         t = self.application.loader.load("project_samples.html")
-        self.write(t.generate(project=project, 
-                              user=self.get_current_user_name(), 
-                              columns = COLUMNS,
+        self.write(t.generate(project=project,
+                              user=self.get_current_user_name(),
+                              columns = self.application.genstat_defaults.get('pv_columns'),
                               prettify = prettify_css_names))
 
 
@@ -266,7 +231,8 @@ class ProjectsHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("projects.html")
-        self.write(t.generate(columns = COLUMNS, all_projects=True, user=self.get_current_user_name()))
+        columns = self.application.genstat_defaults.get('pv_columns')
+        self.write(t.generate(columns=columns, all_projects=True, user=self.get_current_user_name()))
 
 
 class OpenProjectsHandler(SafeHandler):
@@ -274,13 +240,14 @@ class OpenProjectsHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("projects.html")
-        self.write(t.generate(columns = COLUMNS, all_projects=False, user=self.get_current_user_name()))
-        
+        columns = self.application.genstat_defaults.get('pv_columns')
+        self.write(t.generate(columns=columns, all_projects=False, user=self.get_current_user_name()))
+
 
 
 class UppmaxProjectsDataHandler(SafeHandler):
     """ Serves a list of UPPNEX projects where the storage quota have
-    been logged. 
+    been logged.
 
     Loaded through /api/v1/uppmax_projects
     """

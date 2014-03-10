@@ -3,117 +3,362 @@
 <!-- Example row of columns -->
 {% block stuff %}
 
-<div class="container-fluid" id="sample_list">
-  <h2>{{ project }}</h2>
-  <h3 name="project_name"></h3><br>
-  <div id="project_info">
-    <div class="row-fluid">
-      <div class="span12">
-	<div class="span6">
-	  <h3> Project Details </h3>
-	  <dl class="dl" id="project_info_details">
-	    {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
-	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-	    {% end %}
-	  </dl>
-	</div>
-      </div>
-      <div class="span12">
-	<div class="span3">
-	  <h3> Basic Information </h3>
-	  <dl class="dl" id="project_info_basic">
-	    {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
-	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-	    {% end %}
-	  </dl>
-	</div>
-	<div class="span3">
-	  <h3> Bioinformatics </h3>
-	  <dl class="dl" id="project_info_bioinfo">
-	    {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
-	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-	    {% end %}
-	  </dl>
-	</div>
-	<div class="span3">
-	  <h3> Sequencing </h3>
-	  <dl class="dl" id="project_info_sequencing">
-	    {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
-	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-	    {% end %}
-	  </dl>
-	  <h3> Library Prep </h3>
-	  <dl class="dl" id="project_info_library_prep">
-	    {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
-	    <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-	    {% end %}
-	  </dl>
-	</div>
-	<div class="span3">
-	  <div>
-	    <h3> Setup Project </h3>
-	    <dl class="dl" id="project_info_setup_project">
-	      {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
-	      <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-	      {% end %}
-	    </dl>
-	  </div>
-	  <div>
-	    <h3> Extra </h3>
-	    <dl class="dl" id="project_info_extra">
-	      {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
-	      <dt>{{ col_display_name }}</dt><dd name={{prettify(col_name)}}></dd>
-	      {% end %}
-	    </dl>
-	  </div>
-	  <div id="undefined_project_info">
-	    <h3> Undefined </h3>
-	    <dl class="dl">
-	    </dl>
-	  </div>
-	</div>
+<div class="row-fluid">
+  <h3 name="project_name"></h3>
+  <div name="project_status"></div>
+  <dl class="dl-horizontal" name="project_subtitle" style="text-overflow:hidden"></dl>
+    <!--Order dates table -->
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Order Received</th>
+          <th>Contract Sent</th>
+          <th>Plates Sent</th>
+          <th>Contract Received</th>
+          <th>Sample Information Received</th>
+          <th>Samples Received</th>
+          <th>Aborted</th>
+        </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Order Received']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Contract Sent']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Plates Sent']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Contract Received']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Sample Information Received']}}'></td>
+        <td name='{{columns['SETUP_PROJECT_COLUMNS']['Samples Received']}}'></td>
+        <td name='{{columns['DETAILS_COLUMNS']['Aborted']}}'
+      </tr>
+      </tbody>
+    </table>
+    <!-- Protect timeline -->
+    <table class="table table-bordered table-condensed">
+      <thead>
+        <tr>
+          <th>Days in Production</th>
+          <th>Open date</th>
+          <th>First Initial QC Start Date</th>
+          <th>Queue Date</th>
+          <th>Library Prep Start</th>
+          <th>QC Library Finished</th>
+          <th>Sequencing Start</th>
+          <th>All Samples Sequenced</th>
+          <th>All Raw Data Delivered</th>
+          <th>Best Practice Analysis Completed</th>
+          <th>Close Date</th>
+        </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td name='{{columns['BASIC_COLUMNS']['Days in Production']}}'></td>
+        <td name='{{columns['BASIC_COLUMNS']['Open Date']}}'></td>
+        <td name='{{columns['EXTRA_COLUMNS']['First Initial QC Start Date']}}'></td>
+        <td name='{{columns['BASIC_COLUMNS']['Queue Date']}}'></td>
+        <td name='{{columns['LIBRARY_PREP_COLUMNS']['Library Prep Start']}}'></td>
+        <td name='{{columns['LIBRARY_PREP_COLUMNS']['QC Library Finished']}}'></td>
+        <td name='{{columns['SEQUENCING_COLUMNS']['Sequencing Start']}}'></td>
+        <td name='{{columns['DETAILS_COLUMNS']['All Samples Sequenced']}}'></td>
+        <td name='{{columns['BIOINFO_COLUMNS']['All Raw Data Delivered']}}'></td>
+        <td name='{{columns['BIOINFO_COLUMNS']['Best Practice Analysis Completed']}}'></td>
+        <td name='{{columns['DETAILS_COLUMNS']['Close Date']}}'></td>
+      </tr>
+      </tbody>
+    </table>
+    
+</div>
+
+<div class="accordion" id="accordion">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" href="#collapseOne">
+        Project details
+      </a>
+    </div>
+    <div id="collapseOne" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <div class="row-fluid">
+          <div class="span12">
+            <div class="span3">
+              <!--Order Info Table-->
+              <table class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>Order info</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td>Type</td>
+                  <td name='{{columns['BASIC_COLUMNS']['Type']}}'></td>
+                </tr>
+                <tr>
+                  <td>Application</td>
+                  <td name='{{columns['BASIC_COLUMNS']['Application']}}'>Application</td>
+                </tr>
+                <tr>
+                  <td>Disposal Of Samples</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['Disposal of Samples']}}'></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="span3">
+              <!--Bioinformatics Info Table-->
+              <table class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>Bioinformatics</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Uppnex ID</td>
+                    <td name='{{columns['BIOINFO_COLUMNS']['Uppnex ID']}}'></td>
+                  </tr>
+                  <tr>
+                    <td>Source</td>
+                    <td name='{{columns['BIOINFO_COLUMNS']['Source']}}'></td>
+                  </tr>
+                  <tr>
+                    <td>Custom capture design</td>
+                    <td name='{{columns['BIOINFO_COLUMNS']['Custom Capture Design']}}'></td>
+                  </tr>
+                  <tr>
+                    <td>UPPMAX project owner</td>
+                    <td name='{{columns['BIOINFO_COLUMNS']['Uppmax Project Owner']}}'></td>
+                  </tr>
+                  <tr>
+                    <td>Best Practice Bioinformatics</td>
+                    <td name='{{columns['BIOINFO_COLUMNS']['Best Practice Bioinformatics']}}'></td>
+                  </tr>
+                  <tr>
+                    <td>Bioinfo Analysis</td>
+                    <td name='{{columns['BIOINFO_COLUMNS']['Bioinformatic QC']}}'></td>
+                  </tr>
+                  <tr>
+                    <td>Organism</td>
+                    <td name='{{columns['DETAILS_COLUMNS']['Organism']}}'></td>
+                  </tr>
+                  <tr>
+                    <td>Reference Genome</td>
+                    <td name='{{columns['BIOINFO_COLUMNS']['Reference Genome']}}'></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- Wet Lab table -->
+            <div class="span3">
+              <table class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>Wet Lab</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td>Sample type</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['Sample Type']}}'></td>
+                </tr>
+                <tr>
+                  <td>No. Samples</td>
+                  <td name='{{columns['BASIC_COLUMNS']['Number of Samples']}}'></td>
+                </tr>
+                <tr>
+                  <td>Final No. Samples</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['Final Number of Samples']}}'></td>
+                </tr>
+                <tr>
+                  <td>Completed Samples</td>
+                  <td name='{{columns['BASIC_COLUMNS']['Samples Completed']}}'></td>
+                </tr>
+                <tr>
+                  <td>Lanes</td>
+                  <td name="{{columns['DETAILS_COLUMNS']['Lanes']}}"></td>
+                </tr>
+                <tr>
+                  <td>Sequencing Platform</td>
+                  <td name='{{columns['SEQUENCING_COLUMNS']['Sequencing Platform']}}'></td>
+                </tr>
+                <tr>
+                  <td>Sequencing Setup</td>
+                  <td name='{{columns['SEQUENCING_COLUMNS']['Sequencing Setup']}}'></td>
+                </tr>
+                <tr>
+                  <td>Library Construction Method</td>
+                  <td name='{{columns['LIBRARY_PREP_COLUMNS']['Library Construction Method']}}'></td>
+                </tr>
+                <tr>
+                  <td>%phiX</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['%phiX']}}'></td>
+                </tr>
+                <tr>
+                  <td>Low Density</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['Low Density']}}'></td>
+                </tr>
+                <tr>
+                  <td>Custor Primer</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['Custom Primer']}}'></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="span3">
+              <!-- Responsables and Contacts table -->
+              <table class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>Responsibles and contacts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td>Bioinfo. Responsible</td>
+                  <td name='{{columns['BIOINFO_COLUMNS']['Bioinfo. Responsible']}}'></td>
+                </tr>
+                <tr>
+                  <td>Lab Responsible</td>
+                  <td name='{{columns['SETUP_PROJECT_COLUMNS']['Lab. Responsible']}}'></td>
+                </tr>
+                <tr>
+                  <td>Project Coordinator</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['Project Coordinator']}}'></td>
+                </tr>
+                <tr>
+                  <td>Contact</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['PI']}}'></td>
+                </tr>
+                <tr>
+                  <td>Invoice Reference</td>
+                  <td name='{{columns['DETAILS_COLUMNS']['Invoice Reference']}}'></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- Project comment -->
+            <div class="span11">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Project Comment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td >
+                    <p name="project_comment"></p>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- Customer project description -->
+            <div class="span11">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Customer project description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td >
+                    <div class="alert">
+                      <button type="button" class="close" data-dismiss="alert">&times;</button>
+                      <strong>Warning!</strong> Note that this is the original user description of the project and may not reflect the final order. Use with caution!
+                    </div>
+                    <p name="customer_project_description"></p>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- Project summary comment -->
+            <div class="span11">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Project Summary Comment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td >
+                    <p name="comment"></p>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- Undefined fields -->
+            <div class="span11">
+              <div class="accordion" id="accordion2">
+                <div class="accordion-group">
+                  <div class="accordion-heading">
+                    <a class="accordion-toggle" data-toggle="collapse" href="#collapseUndefinedFields">
+                      Undefined Fields
+                    </a>
+                  </div>
+                  <div id="collapseUndefinedFields" class="accordion-body collapse">
+                    <div class="accordion-inner">
+                      <!-- Undefined Fields Table -->
+                      <table class="table table-condensed table-hover">
+                        <tbody id="undefined_project_info">
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-  <p>
-    Note that for some projects the ordered number of reads per sample is on a
-    per sample basis. At this moment that information is then impossible to
-    parse. In the future when the LIMS is being used that information will be
-    available on per sample level.
-  </p>
-  <h3>Samples</h3>
-  <p>
-    
-    This lists all samples belonging to the project. Here 'reads sequenced'
-    refers to reads passing application QC criterions. If the sequence run is
-    paired end, 'reads' are actually read pairs.
-    
-  </p>
-  <p>
-    If a sample is named 'Unexptectedbarcode' refers to reads which failed to
-    demultiplex.
-  </p>
-  <table class="table table-striped" id="sample_table">
-    <thead>
-      <tr>
-        <th>SciLife Sample Name</th>
-	<th>Customer Name</th>
-        <th>Sample runs</th>
-        <th>Incoming QC Status</th>
-        <th>Library preps</th>
-	<th>Library QC</th>
-	<th>Library QC Date</th>
-        <th>Million reads sequenced</th>
-        <th>Sequencing QC</th>
-	<th>Status Manual</th>
-	<th>Reads Minimum</th>
-	<th>Reads Requested</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-    
-  </table>
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" href="#collapseThree">
+        Project Samples
+      </a>
+    </div>
+    <div id="collapseThree" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <p>
+        This lists all samples belonging to the project. Here 'reads sequenced'
+        refers to reads passing application QC criterions. If the sequence run is
+        paired end, 'reads' are actually read pairs.
+        </p>
+        <p>
+        If a sample is named 'Unexptectedbarcode' refers to reads which failed to
+        demultiplex.
+        </p>
+        <table class="table table-striped" id="sample_table">
+          <thead>
+            <tr>
+              <th>SciLife Sample Name</th>
+              <th>Customer Name</th>
+              <th>Sample runs</th>
+              <th>Incoming QC Status</th>
+              <th>Library preps</th>
+              <th>Library QC</th>
+              <th>Library QC Date</th>
+              <th>Million reads sequenced</th>
+              <th>Sequencing QC</th>
+              <th>Status Manual</th>
+              <th>Reads Minimum</th>
+              <th>Reads Requested</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- Javascript -->
 
 <script>
 var ordered_reads = 0.0
@@ -122,92 +367,123 @@ load_undefined_info()
 load_all_udfs()
 
 function load_undefined_info(){
-  $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
+$.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
     var columns_html ="";
     $.each(data, function(column_no, column) {
-      columns_html += '<dt>' + column + '</dt><dd name=' + prettify(column) + '></dd>'
+      columns_html += '<tr><td>' + column + '</td><td name="' + column + '"></td></tr>'
     });
-    $("#undefined_project_info dl").html(columns_html)
-  });
+    $("#undefined_project_info").html(columns_html)
+    });
 }
 
 function load_all_udfs(){
   $.getJSON("/api/v1/project_summary/{{ project }}", function (data) {
     $.each(data, function(key, value) {
-      $("[name=" + prettify(key) + "]").text(value)
+      //Set the project name and status
+      if (prettify(key) == 'project_name'){
+        $("[name=" + prettify(key) + "]").text(value);
+        //Decide project status (and color) based on the project dates
+        var open_date=data["{{ columns['BASIC_COLUMNS']['Open Date'] }}"];
+        var queue_date=data["{{ columns['BASIC_COLUMNS']['Queue Date'] }}"];
+        var close_date=data["{{ columns['DETAILS_COLUMNS']['Close Date'] }}"];
+        var aborted=data["{{ columns['DETAILS_COLUMNS']['Aborted'] }}"]
+        if (aborted){
+            $("[name=project_status]").text("Aborted");
+            $("[name=project_status]").addClass("alert alert-error");
+        }
+        else {
+          if (!open_date){
+            $("[name=project_status]").text("Pending");
+            $("[name=project_status]").addClass("alert alert-info");
+          }
+          else if (open_date && !queue_date) {
+            $("[name=project_status]").text("Reception Control");
+            $("[name=project_status]").addClass("alert alert-block");
+          }
+          else if (queue_date && !close_date) {
+            $("[name=project_status]").text("Ongoing");
+            $("[name=project_status]").addClass("alert alert-info");
+          }
+          else if (close_date) {
+            $("[name=project_status]").text("Closed");
+            $("[name=project_status]").addClass("alert alert-success");
+          }
+        }
+      }
+      else {
+        $("[name='" + key + "']").text(value)
+      }
     });
+    //Set some project subtitles
+    var project_subtitle = "";
+    project_subtitle += "<dt>Project</dt><dd> {{ project }} </dd>"; 
+    project_subtitle += '<dt>Portal ID</dt><dd><a href="https://portal.scilifelab.se/genomics/node/' + data['portal_id'] + '">' + data['portal_id'] + '</a></dd>'; 
+    project_subtitle += "<dt>Customer Project Reference</dt><dd>" + data['customer_project_reference'] + "</dd>";
+    $("[name=project_subtitle]").append(project_subtitle);
   });
 };
 
 function prettify(s) {
   s2 = s.replace("(", "_").replace(")", "_")
-  return s2
+    return s2
 }
 
 $.getJSON("/api/v1/projects/{{ project }}", function (data) {
-  $.each(data, function (sample, info) {
-    var details = info["details"];
-    tbl_row = "<tr>"
-
-    tbl_row += '<td><a href="/samples/' + sample + '">' + sample + '</td>'
-
-    tbl_row += '<td>' + info['customer_name'] + '</td>'
-
-    tbl_row += '<td>'
-    $.each(info["sample_run_metrics"], function(ix, run) {
-      tbl_row += '<a href="/qc/' + run + '">' + run + '</a><br>'
-    })
-    tbl_row += '</td>'
-
-    if ('passed_initial_qc' in info) {
-      tbl_row += '<td>' + info["passed_initial_qc"] + '</td>'
-    }
-    else {
-      tbl_row += '<td>' + info["incoming_QC_status"] + '</td>'
-    }
-
-    tbl_row += '<td>'
-    if (info["library_prep"]) {
-      $.each(info["library_prep"], function(lib_prep, content) {
-        tbl_row += lib_prep + '<br>'
+    $.each(data, function (sample, info) {
+      var details = info["details"];
+      tbl_row = "<tr>"
+      tbl_row += '<td><a href="/samples/' + sample + '">' + sample + '</td>'
+      tbl_row += '<td>' + info['customer_name'] + '</td>'
+      tbl_row += '<td>'      
+      $.each(info["sample_run_metrics"], function(ix, run) {
+        tbl_row += '<a href="/qc/' + run + '">' + run + '</a><br>'
       })
-    }
-    tbl_row += '</td>'
+      tbl_row += '</td>'
+      if ('passed_initial_qc' in info) {
+        tbl_row += '<td>' + info["passed_initial_qc"] + '</td>'
+      }
+      else {
+        tbl_row += '<td>' + info["incoming_QC_status"] + '</td>'
+      }
+      tbl_row += '<td>'
+        if (info["library_prep"]) {
+          $.each(info["library_prep"], function(lib_prep, content) {
+            tbl_row += lib_prep + '<br>'
+          })
+       }
+      tbl_row += '</td>'
+      tbl_row += '<td>'
+      $.each(info["prep_status"], function(ix, prep_status) {
+          tbl_row += prep_status + '<br>'
+      })
+      tbl_row += '</td>'
 
-    tbl_row += '<td>'
-    $.each(info["prep_status"], function(ix, prep_status) {
-      tbl_row += prep_status + '<br>'
-    })
-    tbl_row += '</td>'
+      tbl_row += '<td>'
+      $.each(info["prep_finished_date"], function(ix, prep_date) {
+        tbl_row += prep_date + '<br>'
+      })
+      tbl_row += '</td>'
+        
+      m_reads_sequenced = parseFloat(info["m_reads_sequenced"])
+      tbl_row += '<td>' + m_reads_sequenced.toFixed(2) + '</td>'
 
-    tbl_row += '<td>'
-    $.each(info["prep_finished_date"], function(ix, prep_date) {
-      tbl_row += prep_date + '<br>'
-    })
-    tbl_row += '</td>'
+      /* Sequencing QC */
+      tbl_row += '<td>' + info["status"] + '</td>'
 
-    m_reads_sequenced = parseFloat(info["m_reads_sequenced"])
-    tbl_row += '<td>' + m_reads_sequenced.toFixed(2) + '</td>'
+      /* Status */
+      if ('details' in info) {
+        tbl_row += '<td>' + info["details"]["status_(manual)"] + '</td>'
+      }
+      else {
+        tbl_row += '<td>' + "Undefined" + '</td>'
+      }
 
+      tbl_row += '<td>' + info["reads_min"] + '</td>'
+      tbl_row += '<td>' + info["reads_req"] + '</td>'
 
-    /* Sequencing QC */
-    tbl_row += '<td>' + info["status"] + '</td>'
-
-    /* Status */
-    if ('details' in info) {
-      tbl_row += '<td>' + info["details"]["status_(manual)"] + '</td>'
-    }
-    else {
-      tbl_row += '<td>' + "Undefined" + '</td>'
-    }
-    
-    tbl_row += '<td>' + info["reads_min"] + '</td>'
-
-    tbl_row += '<td>' + info["reads_req"] + '</td>'
-
-    tbl_row += "</tr>"
-    $("#sample_table tbody").append(tbl_row)
-  });
+      tbl_row += "</tr>"
+      $("#sample_table tbody").append(tbl_row)
+    });
 });
 
 </script>
