@@ -119,38 +119,34 @@
 		<li>
 		  <a href="/sequencing" title="Sequencing">Sequencing</a>
 		</li>
-	      </ul>
+	       </ul>
 	    </li>
+	    {% if user %}
+	    <li class="dropdown" id="deprecated">
+	    	<a class="dropdown-toggle" data-toggle="dropdown" href="#deprecated">
+				{{user}}
+				<span class="caret"></span>
+			</a>
+			<ul class="dropdown-menu">
+			<li>
+				<a class="btn" href="/logout">Logout</a>
+			</li>
+			</ul>
+	    </li>
+	    {% else %}
+		<li>
+			<a class="btn" href="/login">Login</a>
+		</li>
+	    {% end %}
 	  </ul>
 	</div>
       </div>
     </div>
     <div class="container-fluid">
       <div class="row-fluid">
-        <!-- Sidebar
-        ================================================== -->
-          <div class="span2 sidebar">
-            <div class="brand">
-              <img src="/static/img/SciLifeLab-1.logotyp.PMS3135.gif">
-            </div>
-            <h3>Genomics Status</h3>
-	    {% if user %}
-	    <h4>Logged in as: </h4>
-	    <p>
-	      {{user}}
-	    </p>
-	    <p>
-	      <a class="btn" href="/logout">Log out</a>
-	    </p>
-	    {% else %}
-	    <p>
-	      <a class="btn" href="/login">Log in</a>
-	    </p>
-	    {% end %}
-	  </div>
         <!-- Content
         ================================================== -->
-        <div class="span10">
+        <div class="span12">
 	  {% try %}
 	  {% if deprecated %}
 	  <div class="alert alert-error">
