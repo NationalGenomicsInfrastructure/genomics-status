@@ -68,11 +68,11 @@ class ProjectsBaseDataHandler(SafeHandler):
             row.value['days_in_production'] = diff.days
         return row
 
-    def list_projects(self, all_projects=True):
+    def list_projects(self, filter_projects='all'):
         projects = OrderedDict()
 
         summary_view = self.application.projects_db.view("project/summary", descending=True)
-        if not all_projects:
+        if not filter_projects == 'all':
             summary_view = summary_view[["open",'Z']:["open",'']]
 
         for row in summary_view:
@@ -85,14 +85,55 @@ class ProjectsBaseDataHandler(SafeHandler):
                 for date_type, date in row.value.iteritems():
                     projects[row.key[0]][date_type] = date
 
+        # Filter requested projects
+        filtered_projects = OrderedDict()
+
+        if filter_projects == 'pending':
+            for p_id, p_info in projects.iteritems():
+                if not 'open_date' in p_info:
+                    filtered_projects[p_id] = p_info
+            return filtered_projects
+
+        elif filter_projects == 'open':
+            for p_id, p_info in projects.iteritems():
+                if 'open_date' in p_info:
+                    filtered_projects[p_id] = p_info
+            return filtered_projects
+
+        elif filter_projects == 'reception_control':
+            for p_id, p_info in projects.iteritems():
+                if p_id == 'P977': import ipdb; ipdb.set_trace()
+                if 'open_date' in p_info and not 'queue_date' in p_info:
+                    filtered_projects[p_id] = p_info
+            return filtered_projects
+
+        elif filter_projects == 'ongoing':
+            for p_id, p_info in projects.iteritems():
+                if 'queue_date' in p_info and not 'close_date' in p_info:
+                    filtered_projects[p_id] = p_info
+            return filtered_projects
+
+        elif filter_projects == 'closed':
+            for p_id, p_info in projects.iteritems():
+                if 'close_date' in p_info:
+                    filtered_projects[p_id] = p_info
+            # Old projects (google docs) will not have close_date field
+            summary_view = self.application.projects_db.view("project/summary", descending=True)
+            summary_view = summary_view[["closed",'Z']:["closed",'']]
+            for row in summary_view:
+                row = self.project_summary_data(row)
+                filtered_projects[row.key[1]] = row.value
+
+            return filtered_projects
+
         return projects
 
-    def list_project_fields(self, undefined=False, project_list=None, all_projects=True):
+    def list_project_fields(self, undefined=False, project_list=None, filter_projects='all'):
         # If undefined=True is given, only return fields not in columns defined
         # in constants in this module
         columns = self.application.genstat_defaults.get('pv_columns')
         if project_list is None:
-            project_list = self.list_projects(all_projects=all_projects)
+            project_list = self.list_projects(filter_projects=filter_projects)
         field_items = set()
         for project_id, value in project_list.iteritems():
             for key, _ in value.iteritems():
@@ -106,16 +147,13 @@ def prettify_css_names(s):
     return s.replace("(","_").replace(")", "_")
 
 class ProjectsDataHandler(ProjectsBaseDataHandler):
-    """ Serves brief information for each open project in the database.
+    """ Serves brief information for project in the database.
 
     Loaded through /api/v1/projects
     """
     def get(self):
         self.set_header("Content-type", "application/json")
-        all_projects = self.get_argument("all_projects", "True")
-        all_projects = (str(all_projects).lower() == "true")
-
-        self.write(json.dumps(self.list_projects(all_projects)))
+        self.write(json.dumps(self.list_projects(self.get_argument('list', 'all'))))
 
 
 class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
@@ -127,9 +165,8 @@ class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
     def get(self):
         undefined = self.get_argument("undefined", "False")
         undefined = (string.lower(undefined) == "true")
-        all_projects = self.get_argument("all_projects", "True")
-        all_projects = (str(all_projects).lower() == "true")
-        field_items = self.list_project_fields(undefined=undefined, all_projects=all_projects)
+        filter_projects = self.get_argument("filter_projects", "all")
+        field_items = self.list_project_fields(undefined=undefined, filter_projects=filter_projects)
         self.write(json.dumps(list(field_items)))
 
 class ProjectDataHandler(ProjectsBaseDataHandler):
@@ -165,7 +202,8 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 class ProjectSamplesDataHandler(SafeHandler):
     """ Serves brief info about all samples in a given project.
 
-    Loaded through /api/v1/projects/([^/]*)$
+    Loaded through /api/v1/project/([^/]*)$ or
+                   /api/v1/projects
     """
     def sample_data(self, sample_data):
         sample_data["sample_run_metrics"] = []
@@ -231,7 +269,7 @@ class ProjectsHandler(SafeHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(columns=columns, all_projects=True, user=self.get_current_user_name()))
+        self.write(t.generate(columns=columns, projects='all', user=self.get_current_user_name()))
 
 
 class OpenProjectsHandler(SafeHandler):
@@ -240,18 +278,18 @@ class OpenProjectsHandler(SafeHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(columns=columns, all_projects=False, user=self.get_current_user_name()))
+        self.write(t.generate(columns=columns, projects='open', user=self.get_current_user_name()))
 
 
-class OngoingProjectsHandler(SafeHandler):
-    """ Serves a page with all ONGOING projects listed, along with some brief info.
+class PendingProjectsHandler(SafeHandler):
+    """ Serves a page with all PENDING projects listed, along with some brief info.
 
-    Ongoing projects are those projects that doesn't have an open date
+    Pending projects are those projects that doesn't have an open date
     """
     def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(columns=columns, ongoing_projects=True, user=self.get_current_user_name()))
+        self.write(t.generate(columns=columns, projects='pending', user=self.get_current_user_name()))
 
 
 class ReceptionControlProjectsHandler(SafeHandler):
@@ -262,7 +300,18 @@ class ReceptionControlProjectsHandler(SafeHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(columns=columns, reception_control_projects=True, user=self.get_current_user_name()))
+        self.write(t.generate(columns=columns, projects='reception_control', user=self.get_current_user_name()))
+
+
+class OngoingProjectsHandler(SafeHandler):
+    """ Serves a page with all ONGOING projects listed, along with some brief info.
+
+    Ongoing projects are those projects that does have queue date, but doesn't have a close date
+    """
+    def get(self):
+        t = self.application.loader.load("projects.html")
+        columns = self.application.genstat_defaults.get('pv_columns')
+        self.write(t.generate(columns=columns, projects='ongoing', user=self.get_current_user_name()))
 
 
 class ClosedProjectsHandler(SafeHandler):
@@ -273,7 +322,7 @@ class ClosedProjectsHandler(SafeHandler):
     def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(columns=columns, closed_projects=True, user=self.get_current_user_name()))
+        self.write(t.generate(columns=columns, projects='closed', user=self.get_current_user_name()))
 
 
 class UppmaxProjectsDataHandler(SafeHandler):

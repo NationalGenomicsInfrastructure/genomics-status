@@ -428,7 +428,7 @@ function prettify(s) {
     return s2
 }
 
-$.getJSON("/api/v1/projects/{{ project }}", function (data) {
+$.getJSON("/api/v1/project/{{ project }}", function (data) {
     $.each(data, function (sample, info) {
       var details = info["details"];
       tbl_row = "<tr>"

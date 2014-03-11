@@ -4,40 +4,52 @@
 {% block stuff %}
 
 <div class="container-fluid">
-    {% if all_projects %}
-    <h2>All Projects</h2>
-    <p> All projects found in statudb. </p>
-    {% else %}
-    <h2>Open Projects</h2>
-    <p> All projects without an explicit close date and loaded from the Lims. </p>
-    {% end %}
-    <p> You can search for anything in the table and sort on any column by clicking on the column header. </p>
-    <div id="project-list">
-        <div class="tabbable tabs-left">
-            <ul class="nav nav-tabs">
-                <li class="active"><a href="#Search-tab" data-toggle="tab">Search</a></li>
-                <li><a href="#Filter-tab" data-toggle="tab">Choose Columns</a></li>
-            </ul>
-            <div class="tab-content">
-                <div class="tab-pane active" id="Search-tab">
-                    <form id="Search-form">
-                        <legend>Search Table Contents</legend>
-                        <input class="search search-query" type="text" placeholder="Search..." />
-                    </form>
-                </div>
-                <div class="tab-pane" id="Filter-tab">
-                    <form id="Filter" class="form form-search">
-                        <legend>Choose Columns</legend>
-                          <div class="btn-group">
-                            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                              Default presets
-                              <span class="caret"></span>
-                            </a>
-                            <ul class="dropdown-menu" id="default_presets_dropdown">
-                              <!-- Load default presets (to be filled with JS) -->
-                            </ul>
-                          </div>
-                          <!--
+  {% if projects == 'all' %}
+  <h2>All Projects</h2>
+  <p> All projects found in statudb. </p>
+  {% elif projects == 'pending' %}
+  <h2>Pending Projects</h2>
+  <p> All projects without open date. </p>
+  {% elif projects == 'open' %}
+  <h2>Open Projects</h2>
+  <p> All projects without an explicit close date and loaded from the Lims. </p>
+  {% elif projects == 'reception_control' %}
+  <h2>Reception Control Projects</h2>
+  <p> All projects with open date but without queue date. </p>
+  {% elif projects == 'ongoing' %}
+  <h2>Ongoing Projects</h2>
+  <p> All projects with a queue date but without a close date. </p>
+  {% elif projects == 'closed' %}
+  <h2>Closed Projects</h2>
+  <p> All projects with a close date. </p>
+  {% end %}
+  <p> You can search for anything in the table and sort on any column by clicking on the column header. </p>
+  <div id="project-list">
+    <div class="tabbable tabs-left">
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#Search-tab" data-toggle="tab">Search</a></li>
+        <li><a href="#Filter-tab" data-toggle="tab">Choose Columns</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane active" id="Search-tab">
+          <form id="Search-form">
+            <legend>Search Table Contents</legend>
+            <input class="search search-query" type="text" placeholder="Search..." />
+          </form>
+        </div>
+        <div class="tab-pane" id="Filter-tab">
+          <form id="Filter" class="form form-search">
+            <legend>Choose Columns</legend>
+            <div class="btn-group">
+              <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                Default presets
+                <span class="caret"></span>
+              </a>
+              <ul class="dropdown-menu" id="default_presets_dropdown">
+                <!-- Load default presets (to be filled with JS) -->
+              </ul>
+            </div>
+            <!--
                           <div class="btn-group">
                             <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
                               {{user}} presets
@@ -48,116 +60,116 @@
                             </ul>
                           </div>
                           -->
-                        <div class="row-fluid">
-                            <div class="span3">
-                                <div  id="basic-columns">
-                                    <h3 class="clickable_header"> Basic </h3>
-                                    {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
-                                    <input type="checkbox" name={{col_name}} id={{col_name}}>
-                                    <label for={{col_name}}>
-                                        {{col_display_name}}
-                                    </label>
-                                    </input>
-                                    <br />
-                                    {% end %}
-                                </div>
-                                <div class="fieldset" id="details-columns">
-                                    <h3 class="clickable_header"> Project Details </h3>
-                                    {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
-                                    <input type="checkbox" name={{col_name}} id={{col_name}}>
-                                    <label for={{col_name}}>
-                                        {{col_display_name}}
-                                    </label>
-                                    </input>
-                                    <br />
-                                    {% end %}
-                                </div>
-                            </div>
-                            <div class="span3">
-
-                                <div class="fieldset" id="bioinfo-columns">
-                                    <h3 class="clickable_header"> Bioinformatics </h3>
-                                    {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
-                                    <input type="checkbox" name={{col_name}} id={{col_name}}>
-                                    <label for={{col_name}}>
-                                        {{col_display_name}}
-                                    </label>
-                                    </input>
-                                    <br />
-                                    {% end %}
-                                </div>
-                                <div class="fieldset" id="sequencing-columns">
-                                    <h3 class="clickable_header"> Sequencing </h3>
-                                    {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
-                                    <input type="checkbox" name={{col_name}} id={{col_name}}>
-                                    <label for={{col_name}}>
-                                        {{col_display_name}}
-                                    </label>
-                                    </input>
-                                    <br />
-                                    {% end %}
-                                </div>
-                                <div class="fieldset" id="library-prep-columns">
-                                    <h3 class="clickable_header"> Library Prep </h3>
-                                    {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
-                                    <input type="checkbox" name={{col_name}} id={{col_name}}>
-                                    <label for={{col_name}}>
-                                        {{col_display_name}}
-                                    </label>
-                                    </input>
-                                    <br />
-                                    {% end %}
-                                </div>
-                            </div>
-                            <div class="span3">
-                                <div class="fieldset" id="setup-project-columns">
-                                    <h3 class="clickable_header"> Setup Project </h3>
-                                    {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
-                                    <input type="checkbox" name={{col_name}} id={{col_name}}>
-                                    <label for={{col_name}}>
-                                        {{col_display_name}}
-                                    </label>
-                                    </input>
-                                    <br />
-                                    {% end %}
-                                </div>
-                                <div class="fieldset" id="extra-columns">
-                                    <h3 class="clickable_header"> Extra </h3>
-                                    {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
-                                    <input type="checkbox" name={{col_name}} id={{col_name}}>
-                                    <label for={{col_name}}>
-                                        {{col_display_name}}
-                                    </label>
-                                    </input>
-                                    <br />
-                                    {% end %}
-                                </div>
-                                <div class="fieldset" id="undefined-columns">
-                                    <h3 class="clickable_header"> Undefined </h3>
-                                    <div id="undefined_columns">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="span3">
-                                <p>
-                                <button id="Reset" class="btn btn-large"> Reset</button>
-                                </p>
-                                <p>
-                                <input type="submit" value="Apply" class="btn btn-primary btn-large" id="applyFilter">
-                                </p>
-                            </div>
-                        </div>
-                    </form>
+            <div class="row-fluid">
+              <div class="span3">
+                <div  id="basic-columns">
+                  <h3 class="clickable_header"> Basic </h3>
+                  {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
+                  <input type="checkbox" name={{col_name}} id={{col_name}}>
+                  <label for={{col_name}}>
+                    {{col_display_name}}
+                  </label>
+                  </input>
+                  <br />
+                  {% end %}
                 </div>
+                <div class="fieldset" id="details-columns">
+                  <h3 class="clickable_header"> Project Details </h3>
+                  {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
+                  <input type="checkbox" name={{col_name}} id={{col_name}}>
+                  <label for={{col_name}}>
+                    {{col_display_name}}
+                  </label>
+                  </input>
+                  <br />
+                  {% end %}
+                </div>
+              </div>
+              <div class="span3">
+
+                <div class="fieldset" id="bioinfo-columns">
+                  <h3 class="clickable_header"> Bioinformatics </h3>
+                  {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
+                  <input type="checkbox" name={{col_name}} id={{col_name}}>
+                  <label for={{col_name}}>
+                    {{col_display_name}}
+                  </label>
+                  </input>
+                  <br />
+                  {% end %}
+                </div>
+                <div class="fieldset" id="sequencing-columns">
+                  <h3 class="clickable_header"> Sequencing </h3>
+                  {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
+                  <input type="checkbox" name={{col_name}} id={{col_name}}>
+                  <label for={{col_name}}>
+                    {{col_display_name}}
+                  </label>
+                  </input>
+                  <br />
+                  {% end %}
+                </div>
+                <div class="fieldset" id="library-prep-columns">
+                  <h3 class="clickable_header"> Library Prep </h3>
+                  {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
+                  <input type="checkbox" name={{col_name}} id={{col_name}}>
+                  <label for={{col_name}}>
+                    {{col_display_name}}
+                  </label>
+                  </input>
+                  <br />
+                  {% end %}
+                </div>
+              </div>
+              <div class="span3">
+                <div class="fieldset" id="setup-project-columns">
+                  <h3 class="clickable_header"> Setup Project </h3>
+                  {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
+                  <input type="checkbox" name={{col_name}} id={{col_name}}>
+                  <label for={{col_name}}>
+                    {{col_display_name}}
+                  </label>
+                  </input>
+                  <br />
+                  {% end %}
+                </div>
+                <div class="fieldset" id="extra-columns">
+                  <h3 class="clickable_header"> Extra </h3>
+                  {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
+                  <input type="checkbox" name={{col_name}} id={{col_name}}>
+                  <label for={{col_name}}>
+                    {{col_display_name}}
+                  </label>
+                  </input>
+                  <br />
+                  {% end %}
+                </div>
+                <div class="fieldset" id="undefined-columns">
+                  <h3 class="clickable_header"> Undefined </h3>
+                  <div id="undefined_columns">
+                  </div>
+                </div>
+              </div>
+              <div class="span3">
+                <p>
+                <button id="Reset" class="btn btn-large"> Reset</button>
+                </p>
+                <p>
+                <input type="submit" value="Apply" class="btn btn-primary btn-large" id="applyFilter">
+                </p>
+              </div>
             </div>
+          </form>
         </div>
-        <table class="table" id="project_table">
-            <thead id="project_table_head">
-            </thead>
-            <tbody class="list" id="project_table_body">
-            </tbody>
-        </table>
+      </div>
     </div>
+    <table class="table" id="project_table">
+      <thead id="project_table_head">
+      </thead>
+      <tbody class="list" id="project_table_body">
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <script>
@@ -168,213 +180,221 @@ load_undefined_columns();
 
 /* Reset button handled here */
 $("#Reset").click(function( event ) {
-        event.preventDefault();
-        reset_default_checkboxes();
-        load_table();
-        });
+    event.preventDefault();
+    reset_default_checkboxes();
+    load_table();
+    });
 
 /* Apply filter button handled here */
 $("#applyFilter").click( function( event ) {
-        event.preventDefault();
-        load_table();
-        });
+    event.preventDefault();
+    load_table();
+    });
 
 function reset_default_checkboxes(){
-    {% for col_display_name, column_name in columns['BASIC_COLUMNS'].iteritems() %}
-    $("#Filter #{{column_name}}").attr('checked', true)
-    {% end %}
-    {% for col_display_name, column_name in columns['BIOINFO_COLUMNS'].iteritems() %}
-    $("#Filter #{{column_name}}").attr('checked', false)
-    {% end %}
-    {% for col_display_name, column_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
-    $("#Filter #{{column_name}}").attr('checked', false)
-    {% end %}
-    {% for col_display_name, column_name in columns['DETAILS_COLUMNS'].iteritems() %}
-    $("#Filter #{{column_name}}").attr('checked', false)
-    {% end %}
-    {% for col_display_name, column_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
-    $("#Filter #{{column_name}}").attr('checked', false)
-    {% end %}
-    {% for col_display_name, column_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
-    $("#Filter #{{column_name}}").attr('checked', false)
-    {% end %}
-    {% for col_display_name, column_name in columns['EXTRA_COLUMNS'].iteritems() %}
-    $("#Filter #{{column_name}}").attr('checked', false)
-    {% end %}
+  {% for col_display_name, column_name in columns['BASIC_COLUMNS'].iteritems() %}
+  $("#Filter #{{column_name}}").attr('checked', true)
+  {% end %}
+  {% for col_display_name, column_name in columns['BIOINFO_COLUMNS'].iteritems() %}
+  $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
+  $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns['DETAILS_COLUMNS'].iteritems() %}
+  $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
+  $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
+  $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns['EXTRA_COLUMNS'].iteritems() %}
+  $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
 
-    $("#Filter #undefined_columns").children("input").attr('checked', false)
+  $("#Filter #undefined_columns").children("input").attr('checked', false)
 }
 
 function read_current_filtering(){
-    var columns = new Array();
-    $("#Filter :checkbox:checked").each(function() {
-            columns.push([$(this).next('label').text(), $(this).attr('name')]);
-            });
-    return columns
+  var columns = new Array();
+  $("#Filter :checkbox:checked").each(function() {
+      columns.push([$(this).next('label').text(), $(this).attr('name')]);
+      });
+  return columns
 }
 
 function load_table_head(columns){
-    var tbl_head = '<tr>'
-        $.each(columns, function(i, column_tuple) {
-                tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">' + column_tuple[0] + '</th>'
-                });
-    tbl_head += '</tr>'
-        $("#project_table_head").html(tbl_head)
+  var tbl_head = '<tr>'
+    $.each(columns, function(i, column_tuple) {
+        tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">' + column_tuple[0] + '</th>'
+        });
+  tbl_head += '</tr>'
+    $("#project_table_head").html(tbl_head)
 }
 
 
 /* Undefined columns handled here */
 function load_undefined_columns() {
-    {% if all_projects %}
-    $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
-            {% else %}
-            $.getJSON("/api/v1/projects_fields?undefined=true&all_projects=False", function(data) {
-                {% end %}
-                var columns_html = "";
-                $.each(data, function(column_no, column) {
-                    columns_html += '<input type="checkbox" name="' + column + '" id="' + column + '">'
-                    columns_html += '<label for=' + column + '>' + column + '</label></input><br />'
-                    });
-                $("#undefined_columns").html(columns_html)
-                });
-            };
+  {% if projects == 'all' %}
+  $.getJSON("/api/v1/projects_fields?undefined=true&filter_projects=all", function(data) {
+      {% else %}
+      $.getJSON("/api/v1/projects_fields?undefined=true&filter_projects=open", function(data) {
+        {% end %}
+        var columns_html = "";
+        $.each(data, function(column_no, column) {
+          columns_html += '<input type="checkbox" name="' + column + '" id="' + column + '">'
+          columns_html += '<label for=' + column + '>' + column + '</label></input><br />'
+          });
+        $("#undefined_columns").html(columns_html)
+        });
+      };
 
-            function load_table(){
-            columns = read_current_filtering();
-            load_table_head(columns)
-            /* Project column is treated as special case, since it is a link */
-            var project_column = $("#Filter :checkbox[name='project']").is(":checked")
-            {% if all_projects %}
-            $.getJSON("/api/v1/projects", function(data) {
-                {% else %}
-                $.getJSON("/api/v1/projects?all_projects=False", function(data) {
-                    {% end %}
-                    var tbl_body = "";
-                    var size = 0;
-                    $.each(data, function(key, summary) {
-                        size++;
-                        tbl_row = '<tr project_column=' + project_column + '>'
-                        if(project_column){
-                        tbl_row += '<td><a class="project" href="/project/' + key + '">' + key  + '</td>'
-                        }
-                        $.each(columns, function(i, column_tuple){
-                            if(column_tuple[1]!="project"){
-                            tbl_row += '<td class="' + column_tuple[1] + '">' + summary[column_tuple[1]] + '</td>'
-                            }
-                            })
-                        tbl_row += '</tr>'
-                        tbl_body += tbl_row
-                        })
-                    $("#project_table_body").html(tbl_body)
-                    init_listjs(size, columns)
-                    })
-            }
+function load_table(){
+  columns = read_current_filtering();
+  load_table_head(columns)
+  /* Project column is treated as special case, since it is a link */
+  var project_column = $("#Filter :checkbox[name='project']").is(":checked")
+  {% if projects == 'all' %}
+  $.getJSON("/api/v1/projects", function(data) {
+  {% elif projects == 'pending' %}
+  $.getJSON("/api/v1/projects?list=pending", function(data) {
+  {% elif projects == 'open' %}
+  $.getJSON("/api/v1/projects?list=open", function(data) {
+  {% elif projects == 'reception_control' %}
+  $.getJSON("/api/v1/projects?list=reception_control", function(data) {
+  {% elif projects == 'ongoing' %}
+  $.getJSON("/api/v1/projects?list=ongoing", function(data) {
+  {% elif projects == 'closed' %}
+  $.getJSON("/api/v1/projects?list=closed", function(data) {
+  {% end %}
+      var tbl_body = "";
+      var size = 0;
+      $.each(data, function(key, summary) {
+        size++;
+        tbl_row = '<tr project_column=' + project_column + '>'
+        if(project_column){
+        tbl_row += '<td><a class="project" href="/project/' + key + '">' + key  + '</td>'
+        }
+        $.each(columns, function(i, column_tuple){
+          if(column_tuple[1]!="project"){
+          tbl_row += '<td class="' + column_tuple[1] + '">' + summary[column_tuple[1]] + '</td>'
+          }
+          })
+        tbl_row += '</tr>'
+        tbl_body += tbl_row
+        })
+      $("#project_table_body").html(tbl_body)
+      init_listjs(size, columns)
+      })
+}
 
 
-            // Initialize sorting and searching javascript plugin
-            function init_listjs(no_items, columns) {
-                column_names = new Array();
-                $.each(columns, function(i, column_tuple){
-                        column_names.push(column_tuple[1])
-                        })
-                var options = {
+      // Initialize sorting and searching javascript plugin
+      function init_listjs(no_items, columns) {
+        column_names = new Array();
+        $.each(columns, function(i, column_tuple){
+            column_names.push(column_tuple[1])
+            })
+        var options = {
 valueNames: column_names,
             page: no_items /* Default is to show only 200 items at a time. */
-                };
+        };
 
-                var featureList = new List('project-list', options);
+        var featureList = new List('project-list', options);
+      }
+
+
+      //Check or uncheck all fields from clicked category
+      function choose_column(col){
+        var column = document.getElementById(col);
+        //Get all the children (checkboxes)
+        cbs = column.getElementsByTagName('input');
+        //If one of them is checked we uncheck it, if none of them are checked, 
+        //we check them all
+        checked = false;
+        for (var i = 0; i < cbs.length; i++) {
+          if (cbs[i].checked) {
+            cbs[i].checked = false;
+            checked = true;
+          }
+        }
+        if (!checked) {
+          for (var i = 0; i < cbs.length; i++) {
+            cbs[i].checked = true;
+          }
+        }
+      }
+
+      ////////////////////////////////
+      // Presets related functions  //
+      ///////////////////////////////
+
+      function load_presets() {
+        $.getJSON('/api/v1/project_view_presets', function (data) {
+            var default_presets = data['default'];
+            var user_presets = data['user'];
+
+            //Empty previously filled lists of presets
+            $('ul#default_presets_dropdown').empty();
+            $('ul#user_presets_dropdown').empty();
+
+            //Default presets
+            for (var preset in default_presets) {
+            var li = '<li class="clickable_dropdown" id="' + preset + '">';
+            li += '<a tabindex="-1">' + preset + '</a></li>';
+            $('ul#default_presets_dropdown').append(li);
+            }
+            //User presets, if there are any
+            if (!jQuery.isEmptyObject(user_presets)) {
+            for (var preset in user_presets) {
+            var li = '<li class="clickable_dropdown" id="' + preset + '">';
+            li += '<a tabindex="-1">' + preset + '</a></li>';
+            $('ul#user_presets_dropdown').append(li);
+            }
+            }
+            else {
+              var li = '<li class="disabled"><a tabindex="-1">';
+              li += 'No user presets';
+              li += '</a></li>';
+              $('ul#user_presets_dropdown').append(li);
             }
 
-
-            //Check or uncheck all fields from clicked category
-            function choose_column(col){
-                var column = document.getElementById(col);
-                //Get all the children (checkboxes)
-                cbs = column.getElementsByTagName('input');
-                //If one of them is checked we uncheck it, if none of them are checked, 
-                //we check them all
-                checked = false;
-                for (var i = 0; i < cbs.length; i++) {
-                    if (cbs[i].checked) {
-                        cbs[i].checked = false;
-                        checked = true;
-                    }
+            //Execute function select_from_preset when clicking a clickable_dropdown
+            $(".clickable_dropdown").click(
+                function(event) {
+                select_from_preset($(this).parent().attr('id'), $(this).attr('id'))
                 }
-                if (!checked) {
-                    for (var i = 0; i < cbs.length; i++) {
-                        cbs[i].checked = true;
-                    }
-                }
+                );
+        });
+      }
+
+      //Fill in the presets at the beginning
+      load_presets();
+
+      function select_from_preset(preset_type, preset) {
+        $.getJSON('/api/v1/project_view_presets', function (data) {
+            //First uncheck everything
+            $('input:checkbox').removeAttr('checked');
+            if (preset_type == "default_presets_dropdown") {
+            var choices = data['default'][preset];
+            for (column in choices) {
+            for (choice in choices[column]) {
+            $("#Filter #" + choice).attr('checked', choices[column][choice]);
             }
-
-            ////////////////////////////////
-            // Presets related functions  //
-            ///////////////////////////////
-
-            function load_presets() {
-                $.getJSON('/api/v1/project_view_presets', function (data) {
-                    var default_presets = data['default'];
-                    var user_presets = data['user'];
-
-                    //Empty previously filled lists of presets
-                    $('ul#default_presets_dropdown').empty();
-                    $('ul#user_presets_dropdown').empty();
-
-                    //Default presets
-                    for (var preset in default_presets) {
-                        var li = '<li class="clickable_dropdown" id="' + preset + '">';
-                        li += '<a tabindex="-1">' + preset + '</a></li>';
-                        $('ul#default_presets_dropdown').append(li);
-                    }
-                    //User presets, if there are any
-                    if (!jQuery.isEmptyObject(user_presets)) {
-                        for (var preset in user_presets) {
-                            var li = '<li class="clickable_dropdown" id="' + preset + '">';
-                            li += '<a tabindex="-1">' + preset + '</a></li>';
-                            $('ul#user_presets_dropdown').append(li);
-                        }
-                    }
-                    else {
-                        var li = '<li class="disabled"><a tabindex="-1">';
-                        li += 'No user presets';
-                        li += '</a></li>';
-                        $('ul#user_presets_dropdown').append(li);
-                    }
-
-                    //Execute function select_from_preset when clicking a clickable_dropdown
-                    $(".clickable_dropdown").click(
-                      function(event) {
-                        select_from_preset($(this).parent().attr('id'), $(this).attr('id'))
-                      }
-                    );
-                });
             }
-
-            //Fill in the presets at the beginning
-            load_presets();
-
-            function select_from_preset(preset_type, preset) {
-              $.getJSON('/api/v1/project_view_presets', function (data) {
-                //First uncheck everything
-                $('input:checkbox').removeAttr('checked');
-                if (preset_type == "default_presets_dropdown") {
-                  var choices = data['default'][preset];
-                  for (column in choices) {
-                    for (choice in choices[column]) {
-                      $("#Filter #" + choice).attr('checked', choices[column][choice]);
-                    }
-                  }
-                }
-                else if (preset_type == "users_presets_dropdown") {
-                }
-              });
             }
-
-          //For the clickable_header class, execute the choose_column func with the column ID
-          $(".clickable_header").click(
-            function(event){ 
-              choose_column($(this).parent().attr("id"))
+            else if (preset_type == "users_presets_dropdown") {
             }
+            });
+      }
+
+      //For the clickable_header class, execute the choose_column func with the column ID
+      $(".clickable_header").click(
+          function(event){ 
+          choose_column($(this).parent().attr("id"))
+          }
           );
 
 
