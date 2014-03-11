@@ -202,7 +202,6 @@ class ProjectSamplesDataHandler(SafeHandler):
 
     def get(self, project):
         self.set_header("Content-type", "application/json")
-        # self.write(json.dumps(self.sample_list(project), default=dthandler))
         self.write(json.dumps(self.list_samples(project), default=dthandler))
 
     def sample_list(self, project):
@@ -243,6 +242,38 @@ class OpenProjectsHandler(SafeHandler):
         columns = self.application.genstat_defaults.get('pv_columns')
         self.write(t.generate(columns=columns, all_projects=False, user=self.get_current_user_name()))
 
+
+class OngoingProjectsHandler(SafeHandler):
+    """ Serves a page with all ONGOING projects listed, along with some brief info.
+
+    Ongoing projects are those projects that doesn't have an open date
+    """
+    def get(self):
+        t = self.application.loader.load("projects.html")
+        columns = self.application.genstat_defaults.get('pv_columns')
+        self.write(t.generate(columns=columns, ongoing_projects=True, user=self.get_current_user_name()))
+
+
+class ReceptionControlProjectsHandler(SafeHandler):
+    """ Serves a page with all projects in RECEPTION CONTROL listed, along with some brief info.
+
+    Projects in reception control are those projects that have an open date but not a queue date
+    """
+    def get(self):
+        t = self.application.loader.load("projects.html")
+        columns = self.application.genstat_defaults.get('pv_columns')
+        self.write(t.generate(columns=columns, reception_control_projects=True, user=self.get_current_user_name()))
+
+
+class ClosedProjectsHandler(SafeHandler):
+    """ Serves a page with all CLOSED projects listed, along with some brief info.
+
+    Close projects are those projects that have a close date
+    """
+    def get(self):
+        t = self.application.loader.load("projects.html")
+        columns = self.application.genstat_defaults.get('pv_columns')
+        self.write(t.generate(columns=columns, closed_projects=True, user=self.get_current_user_name()))
 
 
 class UppmaxProjectsDataHandler(SafeHandler):

@@ -255,7 +255,7 @@ function load_undefined_columns() {
                         size++;
                         tbl_row = '<tr project_column=' + project_column + '>'
                         if(project_column){
-                        tbl_row += '<td><a class="project" href="/projects/' + key + '">' + key  + '</td>'
+                        tbl_row += '<td><a class="project" href="/project/' + key + '">' + key  + '</td>'
                         }
                         $.each(columns, function(i, column_tuple){
                             if(column_tuple[1]!="project"){
