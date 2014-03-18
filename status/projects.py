@@ -102,13 +102,13 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         elif filter_projects == 'reception_control':
             for p_id, p_info in projects.iteritems():
-                if 'open_date' in p_info and not 'queue_date' in p_info:
+                if 'open_date' in p_info and not 'queued' in p_info:
                     filtered_projects[p_id] = p_info
             return filtered_projects
 
         elif filter_projects == 'ongoing':
             for p_id, p_info in projects.iteritems():
-                if 'queue_date' in p_info and not 'close_date' in p_info:
+                if 'queued' in p_info and not 'close_date' in p_info:
                     filtered_projects[p_id] = p_info
             return filtered_projects
 
@@ -127,12 +127,11 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         return projects
 
-    def list_project_fields(self, undefined=False, project_list=None, filter_projects='all'):
+    def list_project_fields(self, undefined=False, project_list='all'):
         # If undefined=True is given, only return fields not in columns defined
         # in constants in this module
         columns = self.application.genstat_defaults.get('pv_columns')
-        if project_list is None:
-            project_list = self.list_projects(filter_projects=filter_projects)
+        project_list = self.list_projects(filter_projects=project_list)
         field_items = set()
         for project_id, value in project_list.iteritems():
             for key, _ in value.iteritems():
@@ -164,8 +163,8 @@ class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
     def get(self):
         undefined = self.get_argument("undefined", "False")
         undefined = (string.lower(undefined) == "true")
-        filter_projects = self.get_argument("filter_projects", "all")
-        field_items = self.list_project_fields(undefined=undefined, filter_projects=filter_projects)
+        project_list = self.get_argument("project_list", "all")
+        field_items = self.list_project_fields(undefined=undefined, project_list=project_list)
         self.write(json.dumps(list(field_items)))
 
 class ProjectDataHandler(ProjectsBaseDataHandler):

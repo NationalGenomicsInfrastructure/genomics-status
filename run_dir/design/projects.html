@@ -237,38 +237,22 @@ function load_table_head(columns){
 
 /* Undefined columns handled here */
 function load_undefined_columns() {
-  {% if projects == 'all' %}
-  $.getJSON("/api/v1/projects_fields?undefined=true&filter_projects=all", function(data) {
-      {% else %}
-      $.getJSON("/api/v1/projects_fields?undefined=true&filter_projects=open", function(data) {
-        {% end %}
-        var columns_html = "";
-        $.each(data, function(column_no, column) {
-          columns_html += '<input type="checkbox" name="' + column + '" id="' + column + '">'
-          columns_html += '<label for=' + column + '>' + column + '</label></input><br />'
-          });
-        $("#undefined_columns").html(columns_html)
-        });
-      };
+  $.getJSON("/api/v1/projects_fields?undefined=true&project_list={{ projects }}", function(data) {
+    var columns_html = "";
+    $.each(data, function(column_no, column) {
+      columns_html += '<input type="checkbox" name="' + column + '" id="' + column + '">'
+      columns_html += '<label for=' + column + '>' + column + '</label></input><br />'
+      });
+    $("#undefined_columns").html(columns_html)
+    });
+  };
 
 function load_table(){
   columns = read_current_filtering();
   load_table_head(columns)
   /* Project column is treated as special case, since it is a link */
   var project_column = $("#Filter :checkbox[name='project']").is(":checked")
-  {% if projects == 'all' %}
-  $.getJSON("/api/v1/projects", function(data) {
-  {% elif projects == 'pending' %}
-  $.getJSON("/api/v1/projects?list=pending", function(data) {
-  {% elif projects == 'open' %}
-  $.getJSON("/api/v1/projects?list=open", function(data) {
-  {% elif projects == 'reception_control' %}
-  $.getJSON("/api/v1/projects?list=reception_control", function(data) {
-  {% elif projects == 'ongoing' %}
-  $.getJSON("/api/v1/projects?list=ongoing", function(data) {
-  {% elif projects == 'closed' %}
-  $.getJSON("/api/v1/projects?list=closed", function(data) {
-  {% end %}
+  $.getJSON("/api/v1/projects?list={{ projects }}", function(data) {
       var tbl_body = "";
       var size = 0;
       $.each(data, function(key, summary) {
