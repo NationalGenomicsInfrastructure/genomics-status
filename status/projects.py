@@ -102,7 +102,6 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         elif filter_projects == 'reception_control':
             for p_id, p_info in projects.iteritems():
-                if p_id == 'P977': import ipdb; ipdb.set_trace()
                 if 'open_date' in p_info and not 'queue_date' in p_info:
                     filtered_projects[p_id] = p_info
             return filtered_projects
