@@ -192,7 +192,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
                                                       group_level=1)
         date_result = date_view[[project + 'ZZZZ']:[project]]
         if date_result.rows:
-            for date_row in date_view.rows:
+            for date_row in date_result.rows:
                 for date_type, date in date_row.value.iteritems():
                     summary_row.value[date_type] = date
         return summary_row.value
