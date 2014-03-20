@@ -85,6 +85,15 @@ class ProjectsBaseDataHandler(SafeHandler):
                 for date_type, date in row.value.iteritems():
                     projects[row.key[0]][date_type] = date
 
+        # Filter aborted projects if not All projects requested: Aborted date has
+        # priority over everything else.
+        if not filter_projects == 'all':
+            aborted_projects = OrderedDict()
+            for p_id, p_info in projects.iteritems():
+                if 'aborted' in p_info:
+                    aborted_projects[p_id] = p_info
+                    del projects[p_id]
+
         # Filter requested projects
         filtered_projects = OrderedDict()
 
