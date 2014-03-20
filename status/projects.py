@@ -273,10 +273,10 @@ class ProjectSamplesHandler(SafeHandler):
 class ProjectsHandler(SafeHandler):
     """ Serves a page with all projects listed, along with some brief info.
     """
-    def get(self):
+    def get(self, projects='all'):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(columns=columns, projects='all', user=self.get_current_user_name()))
+        self.write(t.generate(columns=columns, projects=projects, user=self.get_current_user_name()))
 
 
 class OpenProjectsHandler(SafeHandler):
