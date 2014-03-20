@@ -97,6 +97,9 @@ class ProjectsBaseDataHandler(SafeHandler):
         # Filter requested projects
         filtered_projects = OrderedDict()
 
+        if filter_projects == 'aborted':
+            return aborted_projects
+
         if filter_projects == 'pending':
             for p_id, p_info in projects.iteritems():
                 if not 'open_date' in p_info:

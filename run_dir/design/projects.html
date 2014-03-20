@@ -7,6 +7,9 @@
   {% if projects == 'all' %}
   <h2>All Projects</h2>
   <p> All projects found in statudb. </p>
+  {% elif projects == 'aborted' %}
+  <h2>Aborted Projects</h2>
+  <p> All projects with an aborted date. </p>
   {% elif projects == 'pending' %}
   <h2>Pending Projects</h2>
   <p> All projects without open date. </p>
