@@ -72,7 +72,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         projects = OrderedDict()
 
         summary_view = self.application.projects_db.view("project/summary", descending=True)
-        if not filter_projects == 'all':
+        if not filter_projects in ['all', 'aborted']:
             summary_view = summary_view[["open",'Z']:["open",'']]
 
         for row in summary_view:
