@@ -292,15 +292,31 @@ class RunningNotesDataHandler(SafeHandler):
 
     It connect to the genologics LIMS to fetch and update Running Notes information.
     """
-    def get(self, project_name):
+    def get(self, project):
         self.set_header("Content-type", "application/json")
-        r_n = lims.get_projects(name=project_name)
-        if r_n:
-            running_notes = r_n[0].udf['Running Notes'] if 'Running Notes' in r_n[0].udf else {}
-            self.write(running_notes)
+        p = Project(lims, id=project)
+        p.get(force=True)
+        self.write(p.udf['Running Notes'] if 'Running Notes' in p.udf else {})
+
+    def post(self, project):
+        note = self.get_argument('note', '')
+        user = self.get_secure_cookie('user')
+        email = self.get_secure_cookie('email')
+        if not note:
+            self.set_status(400)
+            self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
-            self.set_status(404)
-            self.finish("<html><body>Project not found</body></html>")
+            p = Project(lims, id=project)
+            p.get(force=True)
+            running_notes = json.loads(p.udf['Running Notes'])
+            running_notes[str(datetime.datetime.now())] = {'name': user,
+                                                      'email': email,
+                                                      'note': note}
+            p.udf['Running Notes'] = json.dumps(running_notes)
+            p.put()
+            self.set_status(200)
+
+
 
 
 class UppmaxProjectsDataHandler(SafeHandler):
