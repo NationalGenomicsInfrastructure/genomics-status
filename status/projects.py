@@ -10,6 +10,12 @@ import datetime
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
 
+from genologics import lims
+from genologics.entities import Project
+from genologics.config import BASEURI, USERNAME, PASSWORD
+
+lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
+
 class ProjectViewPresetsHandler(SafeHandler):
     """Handler to GET and POST/PUT personalized and default set of presets in
 
@@ -212,8 +218,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 class ProjectSamplesDataHandler(SafeHandler):
     """ Serves brief info about all samples in a given project.
 
-    Loaded through /api/v1/project/([^/]*)$ or
-                   /api/v1/projects
+    Loaded through /api/v1/project/([^/]*)$
     """
     def sample_data(self, sample_data):
         sample_data["sample_run_metrics"] = []
@@ -280,6 +285,22 @@ class ProjectsHandler(SafeHandler):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
         self.write(t.generate(columns=columns, projects=projects, user=self.get_current_user_name()))
+
+
+class RunningNotesDataHandler(SafeHandler):
+    """Serves all running notes from a given projects.
+
+    It connect to the genologics LIMS to fetch and update Running Notes information.
+    """
+    def get(self, project_name):
+        self.set_header("Content-type", "application/json")
+        r_n = lims.get_projects(name=project_name)
+        if r_n:
+            running_notes = r_n[0].udf['Running Notes'] if 'Running Notes' in r_n[0].udf else {}
+            self.write(running_notes)
+        else:
+            self.set_status(404)
+            self.finish("<html><body>Project not found</body></html>")
 
 
 class UppmaxProjectsDataHandler(SafeHandler):
