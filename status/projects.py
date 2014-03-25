@@ -296,7 +296,12 @@ class RunningNotesDataHandler(SafeHandler):
         self.set_header("Content-type", "application/json")
         p = Project(lims, id=project)
         p.get(force=True)
-        self.write(p.udf['Running Notes'] if 'Running Notes' in p.udf else {})
+        # Ordered running notes, by date
+        running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
+        sorted_running_notes = OrderedDict()
+        for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0]):
+            sorted_running_notes[k] = v
+        self.write(sorted_running_notes)
 
     def post(self, project):
         note = self.get_argument('note', '')
@@ -308,10 +313,10 @@ class RunningNotesDataHandler(SafeHandler):
         else:
             p = Project(lims, id=project)
             p.get(force=True)
-            running_notes = json.loads(p.udf['Running Notes'])
-            running_notes[str(datetime.datetime.now())] = {'name': user,
-                                                      'email': email,
-                                                      'note': note}
+            running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
+            running_notes[str(datetime.datetime.now())] = {'user': user,
+                                                           'email': email,
+                                                           'note': note}
             p.udf['Running Notes'] = json.dumps(running_notes)
             p.put()
             self.set_status(200)
