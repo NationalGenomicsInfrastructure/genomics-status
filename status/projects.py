@@ -288,15 +288,15 @@ class ProjectsHandler(SafeHandler):
 
 
 class RunningNotesDataHandler(SafeHandler):
-    """Serves all running notes from a given projects.
+    """Serves all running notes from a given project.
 
-    It connect to the genologics LIMS to fetch and update Running Notes information.
+    It connects to the genologics LIMS to fetch and update Running Notes information.
     """
     def get(self, project):
         self.set_header("Content-type", "application/json")
         p = Project(lims, id=project)
         p.get(force=True)
-        # Ordered running notes, by date
+        # Sorted running notes, by date
         running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
         sorted_running_notes = OrderedDict()
         for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0]):
