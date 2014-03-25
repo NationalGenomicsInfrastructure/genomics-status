@@ -418,7 +418,10 @@ $("#running_notes_form").submit( function(e) {
         type: 'POST',
         url: '/api/v1/running_notes/{{ project }}',
         dataType: 'json',
-        data: {"note": text}
+        data: {"note": text},
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+          alert('There was an error inserting the Running Note, pelase try it again.');
+        }
       });
       load_running_notes()
     }
