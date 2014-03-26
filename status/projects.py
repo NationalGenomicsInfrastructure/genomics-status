@@ -10,6 +10,12 @@ import datetime
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
 
+from genologics import lims
+from genologics.entities import Project
+from genologics.config import BASEURI, USERNAME, PASSWORD
+
+lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
+
 class ProjectViewPresetsHandler(SafeHandler):
     """Handler to GET and POST/PUT personalized and default set of presets in
 
@@ -212,8 +218,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 class ProjectSamplesDataHandler(SafeHandler):
     """ Serves brief info about all samples in a given project.
 
-    Loaded through /api/v1/project/([^/]*)$ or
-                   /api/v1/projects
+    Loaded through /api/v1/project/([^/]*)$
     """
     def sample_data(self, sample_data):
         sample_data["sample_run_metrics"] = []
@@ -280,6 +285,43 @@ class ProjectsHandler(SafeHandler):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
         self.write(t.generate(columns=columns, projects=projects, user=self.get_current_user_name()))
+
+
+class RunningNotesDataHandler(SafeHandler):
+    """Serves all running notes from a given project.
+
+    It connects to the genologics LIMS to fetch and update Running Notes information.
+    """
+    def get(self, project):
+        self.set_header("Content-type", "application/json")
+        p = Project(lims, id=project)
+        p.get(force=True)
+        # Sorted running notes, by date
+        running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
+        sorted_running_notes = OrderedDict()
+        for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0]):
+            sorted_running_notes[k] = v
+        self.write(sorted_running_notes)
+
+    def post(self, project):
+        note = self.get_argument('note', '')
+        user = self.get_secure_cookie('user')
+        email = self.get_secure_cookie('email')
+        if not note:
+            self.set_status(400)
+            self.finish('<html><body>No project id or note parameters found</body></html>')
+        else:
+            p = Project(lims, id=project)
+            p.get(force=True)
+            running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
+            running_notes[str(datetime.datetime.now())] = {'user': user,
+                                                           'email': email,
+                                                           'note': note}
+            p.udf['Running Notes'] = json.dumps(running_notes)
+            p.put()
+            self.set_status(200)
+
+
 
 
 class UppmaxProjectsDataHandler(SafeHandler):
