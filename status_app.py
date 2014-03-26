@@ -94,13 +94,14 @@ class Application(tornado.web.Application):
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
             ("/api/v1/produced_quarterly.png", ProducedQuarterlyPlotHandler),
             ("/api/v1/projects", ProjectsDataHandler),
-            ("/api/v1/projects/([^/]*)$", ProjectSamplesDataHandler),
+            ("/api/v1/project/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/project_view_presets", ProjectViewPresetsHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
+            ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
             ("/api/v1/sample_info/([^/]*)$", SampleInfoDataHandler),
             ("/api/v1/sample_readcount/(\w+)?", SampleReadCountDataHandler),
             ("/api/v1/sample_run_counts/(\w+)?",
@@ -132,9 +133,8 @@ class Application(tornado.web.Application):
             ("/quotas/(\w+)?", QuotaHandler),
             ("/phix_err_rate", PhixErrorRateHandler),
             ("/production", ProductionHandler),
-            ("/all_projects", ProjectsHandler),
-            ("/open_projects", OpenProjectsHandler),
-            ("/projects/([^/]*)$", ProjectSamplesHandler),
+            ("/project/([^/]*)$", ProjectSamplesHandler),
+            ("/projects/([^/]*)$", ProjectsHandler),
             ("/reads_vs_qv", ReadsVsQvhandler),
             ("/reads_per_lane", ReadsPerLaneHandler),
             ("/samples_per_lane", SamplesPerLaneHandler),
@@ -204,7 +204,8 @@ class Application(tornado.web.Application):
                     "google_oauth": {
                         "key": self.oauth_key,
                         "secret": settings["google_oauth"]["secret"]},
-                    "contact_person": settings['contact_person']
+                    "contact_person": settings['contact_person'],
+                    "redirect_uri": settings['redirect_uri']
                      }
 
         tornado.autoreload.watch("design/amanita.html")
@@ -258,10 +259,8 @@ def main(args):
     # Start HTTP Server
     http_server = tornado.httpserver.HTTPServer(application,
                                                 ssl_options = ssl_options)
-    if args.testing_mode:
-        http_server.listen(8889)
-    else:
-        http_server.listen(server_settings.get("port", 8888))
+
+    http_server.listen(server_settings.get("port", 8888))
 
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
