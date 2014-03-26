@@ -10,6 +10,12 @@ import datetime
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
 
+from genologics import lims
+from genologics.entities import Project
+from genologics.config import BASEURI, USERNAME, PASSWORD
+
+lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
+
 class ProjectViewPresetsHandler(SafeHandler):
     """Handler to GET and POST/PUT personalized and default set of presets in
 
@@ -68,11 +74,11 @@ class ProjectsBaseDataHandler(SafeHandler):
             row.value['days_in_production'] = diff.days
         return row
 
-    def list_projects(self, all_projects=True):
+    def list_projects(self, filter_projects='all'):
         projects = OrderedDict()
 
         summary_view = self.application.projects_db.view("project/summary", descending=True)
-        if not all_projects:
+        if not filter_projects in ['all', 'aborted']:
             summary_view = summary_view[["open",'Z']:["open",'']]
 
         for row in summary_view:
@@ -85,14 +91,65 @@ class ProjectsBaseDataHandler(SafeHandler):
                 for date_type, date in row.value.iteritems():
                     projects[row.key[0]][date_type] = date
 
+        # Filter aborted projects if not All projects requested: Aborted date has
+        # priority over everything else.
+        if not filter_projects == 'all':
+            aborted_projects = OrderedDict()
+            for p_id, p_info in projects.iteritems():
+                if 'aborted' in p_info:
+                    aborted_projects[p_id] = p_info
+                    del projects[p_id]
+
+        # Filter requested projects
+        filtered_projects = OrderedDict()
+
+        if filter_projects == 'aborted':
+            return aborted_projects
+
+        if filter_projects == 'pending':
+            for p_id, p_info in projects.iteritems():
+                if not 'open_date' in p_info:
+                    filtered_projects[p_id] = p_info
+            return filtered_projects
+
+        elif filter_projects == 'open':
+            for p_id, p_info in projects.iteritems():
+                if 'open_date' in p_info:
+                    filtered_projects[p_id] = p_info
+            return filtered_projects
+
+        elif filter_projects == 'reception_control':
+            for p_id, p_info in projects.iteritems():
+                if 'open_date' in p_info and not 'queued' in p_info:
+                    filtered_projects[p_id] = p_info
+            return filtered_projects
+
+        elif filter_projects == 'ongoing':
+            for p_id, p_info in projects.iteritems():
+                if 'queued' in p_info and not 'close_date' in p_info:
+                    filtered_projects[p_id] = p_info
+            return filtered_projects
+
+        elif filter_projects == 'closed':
+            for p_id, p_info in projects.iteritems():
+                if 'close_date' in p_info:
+                    filtered_projects[p_id] = p_info
+            # Old projects (google docs) will not have close_date field
+            summary_view = self.application.projects_db.view("project/summary", descending=True)
+            summary_view = summary_view[["closed",'Z']:["closed",'']]
+            for row in summary_view:
+                row = self.project_summary_data(row)
+                filtered_projects[row.key[1]] = row.value
+
+            return filtered_projects
+
         return projects
 
-    def list_project_fields(self, undefined=False, project_list=None, all_projects=True):
+    def list_project_fields(self, undefined=False, project_list='all'):
         # If undefined=True is given, only return fields not in columns defined
         # in constants in this module
         columns = self.application.genstat_defaults.get('pv_columns')
-        if project_list is None:
-            project_list = self.list_projects(all_projects=all_projects)
+        project_list = self.list_projects(filter_projects=project_list)
         field_items = set()
         for project_id, value in project_list.iteritems():
             for key, _ in value.iteritems():
@@ -106,16 +163,13 @@ def prettify_css_names(s):
     return s.replace("(","_").replace(")", "_")
 
 class ProjectsDataHandler(ProjectsBaseDataHandler):
-    """ Serves brief information for each open project in the database.
+    """ Serves brief information for project in the database.
 
     Loaded through /api/v1/projects
     """
     def get(self):
         self.set_header("Content-type", "application/json")
-        all_projects = self.get_argument("all_projects", "True")
-        all_projects = (str(all_projects).lower() == "true")
-
-        self.write(json.dumps(self.list_projects(all_projects)))
+        self.write(json.dumps(self.list_projects(self.get_argument('list', 'all'))))
 
 
 class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
@@ -127,9 +181,8 @@ class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
     def get(self):
         undefined = self.get_argument("undefined", "False")
         undefined = (string.lower(undefined) == "true")
-        all_projects = self.get_argument("all_projects", "True")
-        all_projects = (str(all_projects).lower() == "true")
-        field_items = self.list_project_fields(undefined=undefined, all_projects=all_projects)
+        project_list = self.get_argument("project_list", "all")
+        field_items = self.list_project_fields(undefined=undefined, project_list=project_list)
         self.write(json.dumps(list(field_items)))
 
 class ProjectDataHandler(ProjectsBaseDataHandler):
@@ -143,20 +196,29 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
     def project_info(self, project):
         view = self.application.projects_db.view("project/summary")["open", project]
-        if len(view.rows) == 0:
+        if not view.rows:
             view = self.application.projects_db.view("project/summary")["closed", project]
-        if len(view.rows) != 1:
+        if not len(view.rows) == 1:
             return {}
-        row = view.rows[0]
-        row = self.project_summary_data(row)
 
-        return row.value
+        summary_row = view.rows[0]
+        summary_row = self.project_summary_data(summary_row)
+
+        date_view = self.application.projects_db.view("project/summary_dates",
+                                                      descending=True,
+                                                      group_level=1)
+        date_result = date_view[[project + 'ZZZZ']:[project]]
+        if date_result.rows:
+            for date_row in date_result.rows:
+                for date_type, date in date_row.value.iteritems():
+                    summary_row.value[date_type] = date
+        return summary_row.value
 
 
 class ProjectSamplesDataHandler(SafeHandler):
     """ Serves brief info about all samples in a given project.
 
-    Loaded through /api/v1/projects/([^/]*)$
+    Loaded through /api/v1/project/([^/]*)$
     """
     def sample_data(self, sample_data):
         sample_data["sample_run_metrics"] = []
@@ -193,7 +255,6 @@ class ProjectSamplesDataHandler(SafeHandler):
 
     def get(self, project):
         self.set_header("Content-type", "application/json")
-        # self.write(json.dumps(self.sample_list(project), default=dthandler))
         self.write(json.dumps(self.list_samples(project), default=dthandler))
 
     def sample_list(self, project):
@@ -220,19 +281,46 @@ class ProjectSamplesHandler(SafeHandler):
 class ProjectsHandler(SafeHandler):
     """ Serves a page with all projects listed, along with some brief info.
     """
-    def get(self):
+    def get(self, projects='all'):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(columns=columns, all_projects=True, user=self.get_current_user_name()))
+        self.write(t.generate(columns=columns, projects=projects, user=self.get_current_user_name()))
 
 
-class OpenProjectsHandler(SafeHandler):
-    """ Serves a page with all OPEN projects listed, along with some brief info.
+class RunningNotesDataHandler(SafeHandler):
+    """Serves all running notes from a given project.
+
+    It connects to the genologics LIMS to fetch and update Running Notes information.
     """
-    def get(self):
-        t = self.application.loader.load("projects.html")
-        columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(columns=columns, all_projects=False, user=self.get_current_user_name()))
+    def get(self, project):
+        self.set_header("Content-type", "application/json")
+        p = Project(lims, id=project)
+        p.get(force=True)
+        # Sorted running notes, by date
+        running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
+        sorted_running_notes = OrderedDict()
+        for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0]):
+            sorted_running_notes[k] = v
+        self.write(sorted_running_notes)
+
+    def post(self, project):
+        note = self.get_argument('note', '')
+        user = self.get_secure_cookie('user')
+        email = self.get_secure_cookie('email')
+        if not note:
+            self.set_status(400)
+            self.finish('<html><body>No project id or note parameters found</body></html>')
+        else:
+            p = Project(lims, id=project)
+            p.get(force=True)
+            running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
+            running_notes[str(datetime.datetime.now())] = {'user': user,
+                                                           'email': email,
+                                                           'note': note}
+            p.udf['Running Notes'] = json.dumps(running_notes)
+            p.put()
+            self.set_status(200)
+
 
 
 
