@@ -356,6 +356,29 @@
       </div>
     </div>
   </div>
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" href="#collapseFour">
+        Running Notes
+      </a>
+    </div>
+    <div id="collapseFour" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <table class="table">
+          <tbody id="running_notes_table">
+            <!-- Table dynamically built with JS function load_running notes -->
+          </tbody>
+        </table>
+        <form action="" method="POST" id="running_notes_form">
+          <div class="form-actions">
+            <p>Insert new running note:</form>
+            <textarea rows="7" class="span12" id="new_note_text"></textarea>
+            <button type="submit" class="btn btn-primary" id="save_note_button">Save running note</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Javascript -->
@@ -365,9 +388,50 @@ var ordered_reads = 0.0
 
 load_undefined_info()
 load_all_udfs()
+load_running_notes()
+
+function load_running_notes(wait) {
+  //Clear previously loaded notes, if so
+  $("#running_notes_table").empty()
+  $.getJSON("/api/v1/running_notes/{{ project }}", function(data) {
+    $.each(data, function(date, note) {
+      date = new Date(date)
+      row = '<tr>'
+      row += '<td>' + date.toDateString() + ' by '
+      row += '<a href="mailto:' + note['email'] + '">' + note['user'] + '</a></td>'
+      row += '<td><pre>' + note['note'] + '</pre></td>'
+      row += '</tr>'
+      $("#running_notes_table").append(row);
+    });
+  //Clear text area
+  document.getElementById('new_note_text').value = '';
+  });
+}
+
+// Insert new running note and reload the running notes table
+$("#running_notes_form").submit( function(e) {
+    e.preventDefault();
+    var text = document.getElementById('new_note_text').value
+    if (text) {
+      $.ajax({
+        async: false,
+        type: 'POST',
+        url: '/api/v1/running_notes/{{ project }}',
+        dataType: 'json',
+        data: {"note": text},
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+          alert('There was an error inserting the Running Note, pelase try it again.');
+        }
+      });
+      load_running_notes()
+    }
+    else {
+      alert("The running note text cannot be empty. Please fill in the Running Note.")
+    }
+});
 
 function load_undefined_info(){
-$.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
+  $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
     var columns_html ="";
     $.each(data, function(column_no, column) {
       columns_html += '<tr><td>' + column + '</td><td name="' + column + '"></td></tr>'
@@ -387,12 +451,13 @@ function load_all_udfs(){
         var queue_date=data["{{ columns['BASIC_COLUMNS']['Queue Date'] }}"];
         var close_date=data["{{ columns['DETAILS_COLUMNS']['Close Date'] }}"];
         var aborted=data["{{ columns['DETAILS_COLUMNS']['Aborted'] }}"]
+        var source=data["{{ columns['BIOINFO_COLUMNS']['Source'] }}"]
         if (aborted){
             $("[name=project_status]").text("Aborted");
             $("[name=project_status]").addClass("alert alert-error");
         }
         else {
-          if (!open_date){
+          if (!open_date && source == 'lims'){
             $("[name=project_status]").text("Pending");
             $("[name=project_status]").addClass("alert alert-info");
           }
@@ -404,7 +469,7 @@ function load_all_udfs(){
             $("[name=project_status]").text("Ongoing");
             $("[name=project_status]").addClass("alert alert-info");
           }
-          else if (close_date) {
+          else {
             $("[name=project_status]").text("Closed");
             $("[name=project_status]").addClass("alert alert-success");
           }
@@ -428,7 +493,7 @@ function prettify(s) {
     return s2
 }
 
-$.getJSON("/api/v1/projects/{{ project }}", function (data) {
+$.getJSON("/api/v1/project/{{ project }}", function (data) {
     $.each(data, function (sample, info) {
       var details = info["details"];
       tbl_row = "<tr>"
