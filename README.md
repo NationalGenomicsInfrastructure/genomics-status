@@ -70,9 +70,23 @@ visualized on the various pages.
 
 ## Genomics Status architecture
 
-This pictures illustrates the architecture of how Genomics Status is built:
+This pictures illustrates the architecture of how Genomics Status is built with a real example, a request to https://genomics-status.scilifelab.se/projects/all. It is simplified for the sace of comprehension, in reallity there are a few more API calls.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/guillermo-carrasco/status/master/doc/genomics_status.png"
+       alt="Genomics Status Architecture"/>
+</p>
 
+1. The web browser (a human, actually) requests the page /projects/all. The browser sends the request to Tornado, which has assigned the ProjectsHandler to this call.
+2. Tornado returns a rendered template with all the parameters needes to build the projects page, i.e useranme, projects to list, etc.
+3. Within the template, in order to build the project list, it performas a JavaScript (JQuery) call to GenStat API.
+4. Tornado queries StatusDB information about the projects and parses it correctly.
+5. A JSON document is returned to the web browser
+6. Which uses it to build the project list client-side.
+
+This design aims to decouple design and backend, as well as avoid making calls to the database from the web browser. 
+
+It also facilitates the reusability of the API for other possible applications.
 
 ### Tornado
 [Tornado](http://www.tornadoweb.org/en/stable/) is a Python web framework and asynchronous networking library. Genomics Status is based on Tornado. 
