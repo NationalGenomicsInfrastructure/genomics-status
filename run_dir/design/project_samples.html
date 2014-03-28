@@ -461,7 +461,11 @@ function load_all_udfs(){
     $.each(data, function(key, value) {
       //Set the project name and status
       if (prettify(key) == 'project_name'){
-	    project_title = "{{ project }} (<a href='https://portal.scilifelab.se/genomics/node/" + data['portal_id'] + "'>" + data['customer_project_reference'] + "</a>)"; 
+      	if (!data['portal_id']) {
+		    project_title = "{{ project }} (no order in NGI portal)"; 
+      	} else {
+		    project_title = "{{ project }} (<a href='https://portal.scilifelab.se/genomics/node/" + data['portal_id'] + "'>" + data['customer_project_reference'] + "</a>)"; 
+      	}
         $("[name=" + prettify(key) + "]").html(project_title);
         //Decide project status (and color) based on the project dates
         var open_date=data["{{ columns['BASIC_COLUMNS']['Open Date'] }}"];
