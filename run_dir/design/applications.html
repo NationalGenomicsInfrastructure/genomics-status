@@ -57,36 +57,44 @@ days: 1
 },
 });
 
+
+//Store colours of all possible labels in an object
+$(function(){
+    label_colour = {};
+    var colour_gen = d3.scale.category20();
+    $.getJSON("/api/v1/applications", function (data) {
+        for (var i in data) {
+            label_colour[i] = colour_gen(i);
+        }
+    });
+});
+
 function load_plots(start, stop){
   $("#dates").text("Opening Date range: " + start + " - " + stop)
-    if (start == '2012-01-01')
-    {
-      $.getJSON("/api/v1/applications?end=" + stop, function (data) {
-          //Prepare the data for nvd3, accepts a list of pairs {label: '', value: ''}
-          nvd3_data = [];
-          for (var k in data) {
-          nvd3_data.push({'label': k, 'value': data[k]})
-          }
-          nv.addGraph(function() {
-            var chart = nv.models.pieChart()
-            .x(function(d) { return d.label })
-            .y(function(d) { return d.value })
-            .showLabels(true);
-            d3.select("#main_chart svg")
-            .datum(nvd3_data)
-            .transition()
-            .duration(350)
-            .call(chart); 
-            return chart;
-            });
+    var start_req = (start == "2012-01-01" ? "" : ("start=" + start))
+    $.getJSON("/api/v1/applications?" + start_req + "&end=" + stop, function (data) {
+        //Prepare the data for nvd3, accepts a list of pairs {label: '', value: ''}
+        nvd3_data = [];
+        nvd3_colours = [];
+        for (var k in data) {
+          nvd3_data.push({'label': k, 'value': data[k]});
+          nvd3_colours.push(label_colour[k]);
+        }
+        nv.addGraph(function() {
+          var chart = nv.models.pieChart()
+          .color(nvd3_colours)
+          .x(function(d) { return d.label })
+          .y(function(d) { return d.value })
+          .showLabels(true);
+          d3.select("#main_chart svg")
+          .datum(nvd3_data)
+          .transition()
+          .duration(350)
+          .call(chart); 
+          return chart;
           });
-      $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?end=' + stop + '"/>')
-    }
-    else
-    {
-      $("#main_chart").html('<img src="/api/v1/applications.png?start=' + start + '&end=' + stop + '"/>')
-        $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?start=' + start + '&end=' + stop + '"/>')
-    }
+        });
+    $("#per_sample_chart").html('<img src="/api/v1/samples_applications.png?end=' + stop + '"/>')
 }
 
 
