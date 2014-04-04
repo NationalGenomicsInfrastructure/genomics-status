@@ -291,7 +291,7 @@ function load_table(){
 valueNames: column_names,
             page: no_items /* Default is to show only 200 items at a time. */
         };
-        featureList = new List('project-list', options);
+        var featureList = new List('project-list', options);
         featureList.search($('#search_field').val());
       }
 
