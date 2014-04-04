@@ -64,7 +64,7 @@ class ApplicationsDataHandler(SafeHandler):
     def list_applications(self,start=None,end="z"):
         applications = Counter()
         view = self.application.projects_db.view("project/date_applications")
-        for row in view[[start,""]:[end,"z"]]:                
+        for row in view[[start,""]:[end,"z"]]:
             if row.key[1] is None:
                 # This corresponds to StatusDB:s notation
                 # and avoids conflict with 'None'.
