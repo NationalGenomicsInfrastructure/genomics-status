@@ -53,6 +53,19 @@ th.a:hover {
   text-decoration: underline;
 }
 
+th {
+	background-color: #ddd;
+}
+
+.accordion-heading {
+	background-color: #d9edf7;
+}
+
+table {
+    table-layout: fixed;
+    word-wrap: break-word;
+}
+
 /* Jumbotrons
 -------------------------------------------------- */
 .jumbotron {
