@@ -177,7 +177,9 @@
 
 <script>
 /* check default checkboxes */
-reset_default_checkboxes();
+if (!$("#Filter :checked").length) {
+  reset_default_checkboxes();
+}
 load_table();
 load_undefined_columns();
 
