@@ -37,7 +37,7 @@
         <div class="tab-pane active" id="Search-tab">
           <form id="Search-form">
             <legend>Search Table Contents</legend>
-            <input class="search search-query" type="text" placeholder="Search..." />
+            <input class="search search-query" type="text" placeholder="Search..." id="search_field"/>
           </form>
         </div>
         <div class="tab-pane" id="Filter-tab">
@@ -177,7 +177,9 @@
 
 <script>
 /* check default checkboxes */
-reset_default_checkboxes();
+if (!$("#Filter :checked").length) {
+  reset_default_checkboxes();
+}
 load_table();
 load_undefined_columns();
 
@@ -193,6 +195,9 @@ $("#applyFilter").click( function( event ) {
     event.preventDefault();
     load_table();
     });
+
+//Prevent traditional html submit function
+$('#Search-form').submit(function(event){event.preventDefault();});
 
 function reset_default_checkboxes(){
   {% for col_display_name, column_name in columns['BASIC_COLUMNS'].iteritems() %}
@@ -288,8 +293,8 @@ function load_table(){
 valueNames: column_names,
             page: no_items /* Default is to show only 200 items at a time. */
         };
-
         var featureList = new List('project-list', options);
+        featureList.search($('#search_field').val());
       }
 
 
