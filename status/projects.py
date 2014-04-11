@@ -14,6 +14,8 @@ from genologics import lims
 from genologics.entities import Project
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
+from zendesk import Zendesk, get_id_from_url
+
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
 class ProjectViewPresetsHandler(SafeHandler):
@@ -322,6 +324,29 @@ class RunningNotesDataHandler(SafeHandler):
             self.set_status(200)
 
 
+class ProjectTicketsDataHandler(SafeHandler):
+    """ Return a JSON file containing all the tickets in ZenDesk related to this project
+    """
+    def get(self, p_id):
+        self.set_header("Content-type", "application/json")
+        p_name = self.get_argument('p_name', False)
+        if not p_name:
+            self.set_status(400)
+            self.finish('<html><body>No project name specified!</body></html>')
+
+        #Search for all tickets with the given project name
+        tickets = self.application.zendesk.search(query="fieldvalue:{}".format(p_name))
+        total_tickets = {}
+        if tickets['results']:
+            for ticket in tickets['results']:
+                total_tickets[ticket['id']] = ticket
+        page = 2
+        while tickets['next_page']:
+            tickets = self.application.zendesk.search(query="fieldvalue:{}".format(p_name), page=page)
+            for ticket in tickets['results']:
+                total_tickets[ticket['id']] = ticket
+            page += 1
+        self.write(total_tickets)
 
 
 class UppmaxProjectsDataHandler(SafeHandler):
