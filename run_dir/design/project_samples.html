@@ -4,7 +4,7 @@
 {% block stuff %}
 
 <div class="row-fluid">
-  <h3 name="project_name"></h3>
+  <h3 name="project_name" id="project_name"></h3>
   <div name="project_status"></div>
     <!--Order dates table -->
     <table class="table table-bordered table-condensed">
@@ -432,10 +432,45 @@ $('#tab_communication').click(function (e) {
 function load_tickets() {
   var tab_communication = document.getElementById('tab_com_content');
   if (tab_communication.childNodes.length == 1) {
-    console.log('Yes dude!');
-    var p = document.createElement('p');
-    p.textContent = 'This works dude!';
-    tab_communication.appendChild(p);
+    /* TODO
+    1.- Build accordion skeleton
+    2.- Get tickets JSON
+    3.- Fill in accordion with tickets info
+    */
+    var a_header = '<div class="accordion" id="tickets_accordion">';
+    var a_tail = '</div>';
+    var a_group = ' \
+    <div class="accordion-group"> \
+      <div class="accordion-heading"> \
+        <a class="accordion-toggle" data-toggle="collapse" data-parent="#tickets_accordion" href="#c{num_ticket}"> \
+        {thread_name} \
+        </a> \
+      </div> \
+      <div id="c{num_ticket}" class="accordion-body collapse"> \
+        <div class="accordion-inner"> \
+        <pre> \
+          {thread_content} \
+        </pre> \
+        </div> \
+      </div> \
+    </div>';
+    //Get the project name from the header of the page
+    var p_name = $("#project_name").attr('p_name');
+
+    $.getJSON("/api/v1/project/{{ project }}/tickets?p_name=" + p_name, function(data){
+      // Build the accordion with the tickets information
+      var accordion = a_header;
+      var tickets = 1;
+      $.each(data, function(k, v){
+        var title = "Ticket No. " + k + " created at " + v['created_at'].split('T')[0] +
+                    ": " + v['subject'] + ". Status: " + v['status'];
+        accordion += a_group.replace(/{num_ticket}/g, tickets)
+                            .replace(/{thread_name}/g, title)
+                            .replace(/{thread_content}/g, v['description']);
+        tickets++;
+      });
+      $('#tab_com_content').html(accordion);
+    });
   }
 }
 
@@ -500,6 +535,7 @@ function load_all_udfs(){
 		    project_title = "{{ project }}, " + data['project_name'] + " (<a href='https://portal.scilifelab.se/genomics/node/" + data['portal_id'] + "'>" + data['customer_project_reference'] + "</a>)"; 
       	}
         $("[name=" + prettify(key) + "]").html(project_title);
+        $("[name=" + prettify(key) + "]").attr('p_name', data['project_name']);
         //Decide project status (and color) based on the project dates
         var open_date=data["{{ columns['BASIC_COLUMNS']['Open Date'] }}"];
         var queue_date=data["{{ columns['BASIC_COLUMNS']['Queue Date'] }}"];
