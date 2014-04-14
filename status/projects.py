@@ -336,7 +336,7 @@ class ProjectTicketsDataHandler(SafeHandler):
 
         #Search for all tickets with the given project name
         tickets = self.application.zendesk.search(query="fieldvalue:{}".format(p_name))
-        total_tickets = {}
+        total_tickets = OrderedDict()
         if tickets['results']:
             for ticket in tickets['results']:
                 total_tickets[ticket['id']] = ticket
@@ -346,7 +346,8 @@ class ProjectTicketsDataHandler(SafeHandler):
             for ticket in tickets['results']:
                 total_tickets[ticket['id']] = ticket
             page += 1
-        self.write(total_tickets)
+        # Return the most recent ticket first
+        self.write(OrderedDict(sorted(total_tickets.items(), key=lambda x: x[0], reverse=True)))
 
 
 class UppmaxProjectsDataHandler(SafeHandler):
