@@ -366,6 +366,7 @@ class ProjectTicketsDataHandler(SafeHandler):
                         page_r += 1
                 page += 1
             # Return the most recent ticket first
+            import ipdb; ipdb.set_trace()
             self.write(OrderedDict(sorted(total_tickets.items(), key=lambda x: x[0], reverse=True)))
         except ZendeskError:
             console.alert('There was some problem contacting ZenDesk, please try it ' + \
