@@ -431,7 +431,7 @@ $('#tab_communication').click(function (e) {
 
 function load_tickets() {
   var tab_communication = document.getElementById('tab_com_content');
-  if (tab_communication.childNodes.length == 1) {
+  if (tab_communication.children.length == 0) {
     fetching_data.showPleaseWait();
     var a_header = '<div class="accordion" id="tickets_accordion">';
     var a_tail = '</div>';
