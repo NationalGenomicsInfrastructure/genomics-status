@@ -14,7 +14,7 @@ from genologics import lims
 from genologics.entities import Project
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
-from zendesk import Zendesk, get_id_from_url
+from zendesk import Zendesk, ZendeskError, get_id_from_url
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
@@ -334,20 +334,42 @@ class ProjectTicketsDataHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>No project name specified!</body></html>')
 
-        #Search for all tickets with the given project name
-        tickets = self.application.zendesk.search(query="fieldvalue:{}".format(p_name))
-        total_tickets = OrderedDict()
-        if tickets['results']:
-            for ticket in tickets['results']:
-                total_tickets[ticket['id']] = ticket
-        page = 2
-        while tickets['next_page']:
-            tickets = self.application.zendesk.search(query="fieldvalue:{}".format(p_name), page=page)
-            for ticket in tickets['results']:
-                total_tickets[ticket['id']] = ticket
-            page += 1
-        # Return the most recent ticket first
-        self.write(OrderedDict(sorted(total_tickets.items(), key=lambda x: x[0], reverse=True)))
+        try:
+            #Search for all tickets with the given project name
+            tickets = self.application.zendesk.search(query="fieldvalue:{}".format(p_name))
+            total_tickets = OrderedDict()
+            if tickets['results']:
+                for ticket in tickets['results']:
+                    t_id = ticket['id']
+                    total_tickets[t_id] = ticket
+                    # Comments on the ticket (the actual thread) are on a different API call
+                    request = self.application.zendesk.list_comments(request_id=t_id)
+                    total_tickets[t_id]['comments'] = request['comments']
+                    page = 2
+                    while request['next_page']:
+                        request = self.application.zendesk.list_comments(request_id=t_id, page=page)
+                        total_tickets[t_id]['comments'].extend(request['comments'])
+                        page += 1
+
+            page = 2
+            while tickets['next_page']:
+                tickets = self.application.zendesk.search(query="fieldvalue:{}".format(p_name), page=page)
+                for ticket in tickets['results']:
+                    t_id = ticket['id']
+                    total_tickets[t_id] = ticket
+                    request = self.application.zendesk.list_comments(request_id=t_id)
+                    total_tickets[t_id]['comments'] = request['comments']
+                    page_r = 2
+                    while request['next_page']:
+                        request = self.application.zendesk.list_comments(request_id=t_id, page=page_r)
+                        total_tickets[t_id]['comments'].extend(request['comments'])
+                        page_r += 1
+                page += 1
+            # Return the most recent ticket first
+            self.write(OrderedDict(sorted(total_tickets.items(), key=lambda x: x[0], reverse=True)))
+        except ZendeskError:
+            console.alert('There was some problem contacting ZenDesk, please try it ' + \
+                'again in a minute. If the problem persists, contact the administrator.');
 
 
 class UppmaxProjectsDataHandler(SafeHandler):

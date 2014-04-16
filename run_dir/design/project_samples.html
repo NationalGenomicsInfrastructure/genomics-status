@@ -448,9 +448,7 @@ function load_tickets() {
       </div> \
       <div id="c{num_ticket}" class="accordion-body collapse"> \
         <div class="accordion-inner"> \
-        <pre> \
           {thread_content} \
-        </pre> \
         </div> \
       </div> \
     </div>';
@@ -464,9 +462,13 @@ function load_tickets() {
       $.each(data, function(k, v){
         var title = "Ticket No. " + k + " created at " + v['created_at'].split('T')[0] +
                     ": " + v['subject'] + ". Status: " + v['status'];
+        var comments = "";
+        $.each(v['comments'], function(k, c){
+          comments = comments + '<pre>' + c['body'] + '</pre>' + '<hr />';
+        });
         accordion += a_group.replace(/{num_ticket}/g, tickets)
                             .replace(/{thread_name}/g, title)
-                            .replace(/{thread_content}/g, v['description']);
+                            .replace(/{thread_content}/g, comments);
         tickets++;
       });
       $('#tab_com_content').html(accordion);
@@ -634,6 +636,20 @@ $.getJSON("/api/v1/project/{{ project }}", function (data) {
       $("#sample_table tbody").append(tbl_row)
     });
 });
+
+var fetching_data;
+fetching_data = fetching_data || (function () {
+  var pleaseWaitDiv = $('<div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true"><div class="modal-dialog modal-sm"><div class="modal-content"><h3>Fetching data...</h3><div class="progress progress-striped active"><div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100" style="width: 100%"><span class="sr-only"></span></div></div></div></div></div>');
+  return {
+    showPleaseWait: function() {
+      pleaseWaitDiv.modal();
+    },
+      hidePleaseWait: function () {
+        pleaseWaitDiv.modal('hide');
+      },
+
+  };
+})();
 
 </script>
 
