@@ -301,7 +301,7 @@ class RunningNotesDataHandler(SafeHandler):
         # Sorted running notes, by date
         running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
         sorted_running_notes = OrderedDict()
-        for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0]):
+        for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0], reverse=True):
             sorted_running_notes[k] = v
         self.write(sorted_running_notes)
 
