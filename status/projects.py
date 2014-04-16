@@ -366,7 +366,7 @@ class ProjectTicketsDataHandler(SafeHandler):
                         page_r += 1
                 page += 1
             # Return the most recent ticket first
-            self.write(OrderedDict(sorted(total_tickets.items(), key=lambda x: x[0], reverse=True)))
+            self.write(total_tickets)
         except ZendeskError:
             console.alert('There was some problem contacting ZenDesk, please try it ' + \
                 'again in a minute. If the problem persists, contact the administrator.');
