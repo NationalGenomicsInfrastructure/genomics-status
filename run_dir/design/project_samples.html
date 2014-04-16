@@ -452,22 +452,27 @@ function load_tickets() {
     var p_name = $("#project_name").attr('p_name');
 
     $.getJSON("/api/v1/project/{{ project }}/tickets?p_name=" + p_name, function(data){
-      // Build the accordion with the tickets information
-      var accordion = a_header;
-      var tickets = 1;
-      $.each(data, function(k, v){
-        var title = "Ticket No. " + k + " created at " + v['created_at'].split('T')[0] +
-                    ": " + v['subject'] + ". Status: " + v['status'];
-        var comments = "";
-        $.each(v['comments'], function(k, c){
-          comments = comments + '<pre>' + c['body'] + '</pre>' + '<hr />';
+      if ($.isEmptyObject(data)) {
+        $('#tab_com_content').html("<h3>No tickets available for " + p_name + "</h3>");
+      }
+      else {
+        // Build the accordion with the tickets information
+        var accordion = a_header;
+        var tickets = 1;
+        $.each(data, function(k, v){
+          var title = "Ticket No. " + k + " created at " + v['created_at'].split('T')[0] +
+                      ": " + v['subject'] + ". Status: " + v['status'];
+          var comments = "";
+          $.each(v['comments'], function(k, c){
+            comments = comments + '<pre>' + c['body'] + '</pre>' + '<hr />';
+          });
+          accordion += a_group.replace(/{num_ticket}/g, tickets)
+                              .replace(/{thread_name}/g, title)
+                              .replace(/{thread_content}/g, comments);
+          tickets++;
         });
-        accordion += a_group.replace(/{num_ticket}/g, tickets)
-                            .replace(/{thread_name}/g, title)
-                            .replace(/{thread_content}/g, comments);
-        tickets++;
-      });
-      $('#tab_com_content').html(accordion);
+        $('#tab_com_content').html(accordion);
+      }
       fetching_data.hidePleaseWait();
     });
   }
