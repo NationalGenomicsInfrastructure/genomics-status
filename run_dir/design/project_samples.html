@@ -458,8 +458,11 @@ function load_tickets() {
         // Build the accordion with the tickets information
         var accordion = a_header;
         var tickets = 1;
-        $.each(data, function(k, v){
-          var title = "Ticket No. " + k + "<br />" + "created at " + v['created_at'].split('T')[0] +
+        // Javascript Object order is not guaranteed, but we want to show the most recent
+        // issued ticket first
+        $.each(Object.keys(data).reverse(), function(_, k) {
+          var v = data[k];
+          var title = "Ticket No. " + k + "<br />" + "Created at " + v['created_at'].split('T')[0] +
                       "<br /> " + v['subject'] + "." + "<br />" + "Status: " + v['status'];
           var comments = '<center><a href="https://ngisweden.zendesk.com/agent/#/tickets/' + k + '">View it on ZenDesk</a></center>';
           $.each(v['comments'], function(k, c){
