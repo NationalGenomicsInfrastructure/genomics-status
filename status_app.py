@@ -94,6 +94,7 @@ class Application(tornado.web.Application):
             ("/api/v1/produced_quarterly.png", ProducedQuarterlyPlotHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project/([^/]*)$", ProjectSamplesDataHandler),
+            ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/project_view_presets", ProjectViewPresetsHandler),
@@ -188,6 +189,13 @@ class Application(tornado.web.Application):
 
         # google oauth key
         self.oauth_key = settings["google_oauth"]["key"]
+
+        # ZenDesk
+        zendesk_url = settings["zendesk"]["url"]
+        zendesk_user = settings["zendesk"]["username"]
+        zendesk_token = settings["zendesk"]["token"]
+        self.zendesk = Zendesk(zendesk_url, use_api_token=True, zendesk_username=zendesk_user, 
+                                zendesk_password=zendesk_token, api_version=2)
 
         # Load password seed
         self.password_seed = settings.get("password_seed")
