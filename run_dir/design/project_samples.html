@@ -395,6 +395,51 @@
       </div>
     </div>
   </div>
+   <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" href="#collapseFive">
+        Links
+      </a>
+    </div>
+    <div id="collapseFive" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <table class="table">
+          <tbody id="links_table">
+            <!-- Dynamic content -->
+          </tbody>
+        </table>
+        <form role="form" id="link_form" class="form-horizontal">
+          <div id="new_link_alert"></div>
+          <div class="form-actions">
+            <div class="form-group">
+            <label for="new_link_type" class="control-label">Type</label><div class="span1"></div>
+            <select class="form-control" required id="new_link_type">
+              <option value=""></option>
+              <option>Deviation</option>
+              <option>Other</option>
+            </select>
+            </div>
+            <div class="form-group">
+              <label for="new_link_title" class="control-label">Title</label><div class="span1"></div>
+              <input type="text" required class="form-control span8" id="new_link_title" placeholder="14_01 example"/>
+            </div>
+            <div class="form-group">
+              <label for="new_link_url" class="control-label">URL</label><div class="span1"></div>
+              <input type="url" class="form-control span8" id="new_link_url" placeholder="https://docs.google.com/example"/>
+            </div>
+            <div class="form-group">
+              <label for="new_link_desc" class="control-label">Description</label><div class="span1"></div>
+              <textarea rows="4" class="form-control span8" id="new_link_desc" placeholder="Description text"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="save_link_button" class="control-label"></label><div class="span1"></div>
+              <button type="submit" class="btn btn-primary" id="save_link_button">Add link</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Javascript -->
@@ -405,14 +450,57 @@ var ordered_reads = 0.0
 load_undefined_info()
 load_all_udfs()
 load_running_notes()
+load_links()
+
+function load_links() {
+  var link_icon = {'Deviation':'icon-exclamation-sign', 'Other':'icon-file'}
+  $("#links_table").empty()
+  $.getJSON("/api/v1/links/{{ project }}", function(data) {
+    $.each(data, function(key, link) {
+      var date = new Date(key)
+      var row = '<tr>'
+      row += '<td class="span1"><span class="' + link_icon[link['type']] + '"></span></td>'
+      row += '<td>' + '<a' +  (link['url'] === "" ? "" : (' href="' + link['url'] + '"')) + '>'+ link['title'] + '</a>'
+      row += '<p class="small muted">Added by ' + '<a href="mailto:' + link['email'] + '">' + link['user'] + '</a> on ' + date.toDateString() + '</p><td>'
+      row += '<td><pre>' + link['desc'] + '</pre></td>'
+      row += '</tr>'
+      $("#links_table").append(row);
+    });
+  });
+}
+
+$("#link_form").submit(function(e) {
+  e.preventDefault();
+  var type = $('#new_link_type option:selected').val()
+  var title = $('#new_link_title').val()
+  var url = $('#new_link_url').val()
+  var desc = $('#new_link_desc').val()
+
+  if (title && type) {
+    $.ajax({
+      async: false,
+      type: 'POST',
+      url: '/api/v1/links/{{ project }}',
+      dataType: 'json',
+      data: {'type': type, 'title': title, 'url':url, 'desc':desc},
+    });
+    //Clear form fields
+    $('#new_link_type, #new_link_title, #new_link_url, #new_link_desc').val("")
+    load_links();
+  }
+  else if(!$.browser.chrome) {
+    //Non-chrome users might not get a useful html5 message
+    alert('The link needs a title and a type needs to be selected')
+  }
+});
 
 function load_running_notes(wait) {
   //Clear previously loaded notes, if so
   $("#running_notes_table").empty()
   $.getJSON("/api/v1/running_notes/{{ project }}", function(data) {
     $.each(data, function(date, note) {
-      date = new Date(date)
-      row = '<tr>'
+      var date = new Date(date)
+      var row = '<tr>'
       row += '<td>' + date.toDateString() + ' by '
       row += '<a href="mailto:' + note['email'] + '">' + note['user'] + '</a></td>'
       row += '<td><pre>' + note['note'] + '</pre></td>'
