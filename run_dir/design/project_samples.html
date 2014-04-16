@@ -434,7 +434,6 @@ function load_tickets() {
   if (tab_communication.children.length == 0) {
     fetching_data.showPleaseWait();
     var a_header = '<div class="accordion" id="tickets_accordion">';
-    var a_tail = '</div>';
     var a_group = ' \
     <div class="accordion-group"> \
       <div class="accordion-heading"> \
@@ -460,9 +459,9 @@ function load_tickets() {
         var accordion = a_header;
         var tickets = 1;
         $.each(data, function(k, v){
-          var title = "Ticket No. " + k + " created at " + v['created_at'].split('T')[0] +
-                      ": " + v['subject'] + ". Status: " + v['status'];
-          var comments = "";
+          var title = "Ticket No. " + k + "<br />" + "created at " + v['created_at'].split('T')[0] +
+                      "<br /> " + v['subject'] + "." + "<br />" + "Status: " + v['status'];
+          var comments = '<center><a href="https://ngisweden.zendesk.com/agent/#/tickets/' + k + '">View it on ZenDesk</a></center>';
           $.each(v['comments'], function(k, c){
             comments = comments + '<pre>' + c['body'] + '</pre>' + '<hr />';
           });
