@@ -465,8 +465,11 @@ function load_tickets() {
           var title = "Ticket No. " + k + "<br />" + "Created at " + v['created_at'].split('T')[0] +
                       "<br /> " + v['subject'] + "." + "<br />" + "Status: " + v['status'];
           var comments = '<center><a href="https://ngisweden.zendesk.com/agent/#/tickets/' + k + '">View it on ZenDesk</a></center>';
+          v['comments'].reverse();
           $.each(v['comments'], function(k, c){
-            comments = comments + '<pre>' + c['body'] + '</pre>' + '<hr />';
+            comments = comments + '<pre>' + c['body'] + '</pre>';
+            var updated_at = new Date(c['created_at']);
+            comments += "Updated on " + updated_at.toGMTString() + '<hr />';
           });
           accordion += a_group.replace(/{num_ticket}/g, tickets)
                               .replace(/{thread_name}/g, title)
