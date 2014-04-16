@@ -432,11 +432,7 @@ $('#tab_communication').click(function (e) {
 function load_tickets() {
   var tab_communication = document.getElementById('tab_com_content');
   if (tab_communication.childNodes.length == 1) {
-    /* TODO
-    1.- Build accordion skeleton
-    2.- Get tickets JSON
-    3.- Fill in accordion with tickets info
-    */
+    fetching_data.showPleaseWait();
     var a_header = '<div class="accordion" id="tickets_accordion">';
     var a_tail = '</div>';
     var a_group = ' \
@@ -472,6 +468,7 @@ function load_tickets() {
         tickets++;
       });
       $('#tab_com_content').html(accordion);
+      fetching_data.hidePleaseWait();
     });
   }
 }
@@ -639,7 +636,20 @@ $.getJSON("/api/v1/project/{{ project }}", function (data) {
 
 var fetching_data;
 fetching_data = fetching_data || (function () {
-  var pleaseWaitDiv = $('<div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true"><div class="modal-dialog modal-sm"><div class="modal-content"><h3>Fetching data...</h3><div class="progress progress-striped active"><div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100" style="width: 100%"><span class="sr-only"></span></div></div></div></div></div>');
+  var pleaseWaitDiv = $(' \
+    <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true"> \
+      <div class="modal-dialog modal-sm"> \
+        <div class="modal-content"> \
+          <h3>Fetching data from ZenDesk...</h3> \
+          <div class="progress progress-striped active"> \
+            <div class="bar" style="width: 100%"> \
+              <span class="sr-only"> \
+              </span> \
+            </div> \
+          </div> \
+        </div> \
+      </div> \
+    </div>');
   return {
     showPleaseWait: function() {
       pleaseWaitDiv.modal();
@@ -647,7 +657,6 @@ fetching_data = fetching_data || (function () {
       hidePleaseWait: function () {
         pleaseWaitDiv.modal('hide');
       },
-
   };
 })();
 
