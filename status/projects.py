@@ -414,9 +414,8 @@ class ProjectTicketsDataHandler(SafeHandler):
             # Return the most recent ticket first
             self.write(total_tickets)
         except ZendeskError:
-            console.alert('There was some problem contacting ZenDesk, please try it ' + \
-                'again in a minute. If the problem persists, contact the administrator.');
-
+            self.set_status(400)
+            self.finish('<html><body>There was a problem with ZenDesk connection, please try it again later.</body></html>')
 
 class UppmaxProjectsDataHandler(SafeHandler):
     """ Serves a list of UPPNEX projects where the storage quota have
