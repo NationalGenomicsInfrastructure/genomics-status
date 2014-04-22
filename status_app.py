@@ -102,6 +102,7 @@ class Application(tornado.web.Application):
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
+            ("/api/v1/links/([^/]*)$", LinksDataHandler),
             ("/api/v1/sample_info/([^/]*)$", SampleInfoDataHandler),
             ("/api/v1/sample_readcount/(\w+)?", SampleReadCountDataHandler),
             ("/api/v1/sample_run_counts/(\w+)?",
