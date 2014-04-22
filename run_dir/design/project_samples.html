@@ -556,8 +556,8 @@ function load_tickets() {
           v['comments'].reverse();
           $.each(v['comments'], function(k, c){
             var updated_at = new Date(c['created_at']);
-            comments += "Updated on " + updated_at.toGMTString() + '<hr />';
-            comments += '<pre>' + c['body'] + '</pre>';
+            comments += "Updated on " + updated_at.toGMTString();
+            comments += '<pre>' + c['body'] + '</pre><hr />';
           });
           accordion += a_group.replace(/{num_ticket}/g, tickets)
                               .replace(/{thread_name}/g, title)
