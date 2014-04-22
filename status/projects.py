@@ -324,6 +324,52 @@ class RunningNotesDataHandler(SafeHandler):
             self.set_status(200)
 
 
+class LinksDataHandler(SafeHandler):
+    """ Serves external links for each project
+
+        Links are stored as JSON in genologics LIMS / project
+    """
+
+    def get(self, project):
+        self.set_header("Content-type", "application/json")
+        p = Project(lims, id=project)
+        p.get(force=True)
+
+        links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
+        
+        #Sort by descending date, then hopefully have deviations on top
+        sorted_links = OrderedDict()
+        for k, v in sorted(links.iteritems(), key=lambda t: t[0], reverse=True):
+            sorted_links[k] = v
+        sorted_links = OrderedDict(sorted(sorted_links.iteritems(), key=lambda (k,v): v['type']))
+        self.write(sorted_links)
+
+    def post(self, project):
+        user = self.get_secure_cookie('user')
+        email = self.get_secure_cookie('email')
+        a_type = self.get_argument('type', '')
+        title = self.get_argument('title', '')
+        url = self.get_argument('url', '')
+        desc = self.get_argument('desc','')
+
+        if not type or not title:
+            self.set_status(400)
+            self.finish('<html><body>Link title and type is required</body></html>')
+        else:
+            p = Project(lims, id=project)
+            p.get(force=True)
+            links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
+            links[str(datetime.datetime.now())] = {'user': user,
+                                                   'email': email,
+                                                   'type': a_type,
+                                                   'title': title,
+                                                   'url': url,
+                                                   'desc': desc}
+            p.udf['Links'] = json.dumps(links)
+            p.put()
+            self.set_status(200)
+
+
 class ProjectTicketsDataHandler(SafeHandler):
     """ Return a JSON file containing all the tickets in ZenDesk related to this project
     """
