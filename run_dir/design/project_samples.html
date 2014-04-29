@@ -52,15 +52,19 @@
         <td name='{{columns['BASIC_COLUMNS']['Days in Production']}}'></td>
         <td name='{{columns['BASIC_COLUMNS']['Open Date']}}'></td>
         <td name='{{columns['EXTRA_COLUMNS']['First Initial QC Start Date']}}'></td>
-        <td name='{{columns['BASIC_COLUMNS']['Queue Date']}}'></td>
+        <td><div name='{{columns['BASIC_COLUMNS']['Queue Date']}}'></div>
+            <div name='signature_queued'></div></td>
         <td name='{{columns['LIBRARY_PREP_COLUMNS']['Library Prep Start']}}'></td>
         <td name='{{columns['LIBRARY_PREP_COLUMNS']['QC Library Finished']}}'></td>
         <td name='{{columns['SEQUENCING_COLUMNS']['Sequencing Start']}}'></td>
-        <td name='{{columns['DETAILS_COLUMNS']['All Samples Sequenced']}}'></td>
-        <td name='{{columns['BIOINFO_COLUMNS']['All Raw Data Delivered']}}'></td>
-        <td name='{{columns['BIOINFO_COLUMNS']['Best Practice Analysis Completed']}}'></td>
+        <td><div name='{{columns['DETAILS_COLUMNS']['All Samples Sequenced']}}'></div>
+            <div name='signature_all_samples_sequenced'></div></td>
+        <td><div name='{{columns['BIOINFO_COLUMNS']['All Raw Data Delivered']}}'></div>
+            <div name='signature_all_raw_data_delivered'></div></td>
+        <td><div name='{{columns['BIOINFO_COLUMNS']['Best Practice Analysis Completed']}}'></div>
+            <div name='signature_best_practice_analysis_completed'></div></td>
         <td name='{{columns['DETAILS_COLUMNS']['Close Date']}}'></td>
-        <td name='{{columns['DETAILS_COLUMNS']['Aborted']}}'
+        <td name='{{columns['DETAILS_COLUMNS']['Aborted']}}'</td>
       </tr>
       </tbody>
     </table>
