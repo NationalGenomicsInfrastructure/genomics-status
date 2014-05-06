@@ -192,11 +192,11 @@ class Application(tornado.web.Application):
         self.oauth_key = settings["google_oauth"]["key"]
 
         # ZenDesk
-        zendesk_url = settings["zendesk"]["url"]
-        zendesk_user = settings["zendesk"]["username"]
-        zendesk_token = settings["zendesk"]["token"]
-        self.zendesk = Zendesk(zendesk_url, use_api_token=True, zendesk_username=zendesk_user, 
-                                zendesk_password=zendesk_token, api_version=2)
+        self.zendesk_url = settings["zendesk"]["url"]
+        self.zendesk_user = settings["zendesk"]["username"]
+        self.zendesk_token = settings["zendesk"]["token"]
+        self.zendesk = Zendesk(self.zendesk_url, use_api_token=True, zendesk_username=self.zendesk_user, 
+                                zendesk_password=self.zendesk_token, api_version=2)
 
         # Load password seed
         self.password_seed = settings.get("password_seed")
