@@ -94,7 +94,7 @@
 <div class="tabbable">
   <ul class="nav nav-tabs">
     <li class="active"><a href="#tab_details_content" id="tab_details" data-toggle="tab">Project information</a></li>
-    <li><a href="#tab_com_content" id="tab_communication" data-toggle="tab">Customer communication</a></li>
+    <li><a href="#tab_com_content" id="tab_communication" data-toggle="tab" style="display: none;">Customer communication</a></li>
   </ul>
   <div class="tab-content">
     <div class="tab-pane active" id="tab_details_content">
@@ -525,7 +525,8 @@ function load_tickets() {
   var tab_communication = document.getElementById('tab_com_content');
   if (tab_communication.children.length == 0) {
     fetching_data.showPleaseWait();
-    var a_header = '<div class="accordion" id="tickets_accordion">';
+    var a_header = '<p><b>Note:</b> Internal notes are shown in a yellow box </p> \
+                    <div class="accordion" id="tickets_accordion">';
     var a_group = ' \
     <div class="accordion-group"> \
       <div class="accordion-heading"> \
@@ -561,7 +562,12 @@ function load_tickets() {
           $.each(v['comments'], function(k, c){
             var updated_at = new Date(c['created_at']);
             comments += "Updated on " + updated_at.toGMTString();
-            comments += '<pre>' + c['body'] + '</pre><hr />';
+            if (c['public']) {
+              comments += '<pre>' + c['body'] + '</pre><hr />';
+            }
+            else {
+              comments += '<div class="alert alert-warning">' + c['body'] + '</div>';
+            }
           });
           accordion += a_group.replace(/{num_ticket}/g, tickets)
                               .replace(/{thread_name}/g, title)
@@ -670,6 +676,8 @@ function load_all_udfs(){
         $("[name='" + key + "']").text(value)
       }
     });
+    var t = $("#tab_communication");
+    t.show();
   });
 };
 
