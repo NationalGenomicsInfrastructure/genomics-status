@@ -6,6 +6,7 @@ import string
 import tornado.web
 import dateutil.parser
 import datetime
+import requests
 
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
@@ -373,6 +374,22 @@ class LinksDataHandler(SafeHandler):
 class ProjectTicketsDataHandler(SafeHandler):
     """ Return a JSON file containing all the tickets in ZenDesk related to this project
     """
+    def list_ticket_comments(self, ticket_id, page=1):
+        """ Returns comments related to ticket_id
+
+        This is a temporal method until the Python Zendesk module supports this
+        functionality.
+        """
+        auth = (self.application.zendesk_user + '/token', self.application.zendesk_token)
+        url = "{}/api/v2/tickets/{}/comments.json?page={}".format(self.application.zendesk_url, ticket_id, str(page))
+        r = requests.get(url, auth=auth)
+        if r.status_code == requests.status_codes.codes.OK:
+            return r.json()
+        else:
+            self.set_status(400)
+            self.finish('<html><body>There was a problem with ZenDesk connection, please try it again later.</body></html>')
+
+
     def get(self, p_id):
         self.set_header("Content-type", "application/json")
         p_name = self.get_argument('p_name', False)
@@ -389,11 +406,11 @@ class ProjectTicketsDataHandler(SafeHandler):
                     t_id = ticket['id']
                     total_tickets[t_id] = ticket
                     # Comments on the ticket (the actual thread) are on a different API call
-                    request = self.application.zendesk.list_comments(request_id=t_id)
+                    request = self.list_ticket_comments(t_id)
                     total_tickets[t_id]['comments'] = request['comments']
                     page = 2
                     while request['next_page']:
-                        request = self.application.zendesk.list_comments(request_id=t_id, page=page)
+                        request = self.list_ticket_comments(t_id, page=page)
                         total_tickets[t_id]['comments'].extend(request['comments'])
                         page += 1
 
@@ -403,11 +420,11 @@ class ProjectTicketsDataHandler(SafeHandler):
                 for ticket in tickets['results']:
                     t_id = ticket['id']
                     total_tickets[t_id] = ticket
-                    request = self.application.zendesk.list_comments(request_id=t_id)
+                    request = self.list_ticket_comments(t_id)
                     total_tickets[t_id]['comments'] = request['comments']
                     page_r = 2
                     while request['next_page']:
-                        request = self.application.zendesk.list_comments(request_id=t_id, page=page_r)
+                        request = self.list_ticket_comments(t_id, page=page_r)
                         total_tickets[t_id]['comments'].extend(request['comments'])
                         page_r += 1
                 page += 1
