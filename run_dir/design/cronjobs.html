@@ -8,6 +8,79 @@
   <p>
     The tables below show information about all cronjobs running on production servers.
   </p>
+  <p><i>Deactivated (i.e commented) cronjobs will appear in red.</i></p>
 </div>
+
+<script>
+update_cronjob_tables()
+
+function update_cronjob_tables() {
+  var container = $("#content");
+  $.getJSON('/api/v1/production/cronjobs', function(data){
+    $.each(data, function(server, cronjobs){
+      // Create table header with server name and last update
+      var t = document.createElement('table')
+      t.className = "table talbe-hover";
+      var t_header = document.createElement('thead');
+      var tr = document.createElement('tr');
+      var th = document.createElement('th');
+      th.textContent = server + " (last updated " + cronjobs['last_updated'].split(' ')[0] + ")";
+      tr.appendChild(th);
+      t_header.appendChild(tr);
+      t.appendChild(t_header);
+
+      // Create header with name of columns
+      var t_body = document.createElement('tbody');
+      var tr = document.createElement('tr');
+      var headers = ['Minute', 'Hour', 'Day of month', 'Month', 'Day of week', 'Command'];
+      for (var i = 0; i < headers.length; i++){
+        var th = document.createElement('th');
+        th.textContent = headers[i];
+        tr.appendChild(th);
+      }
+      t_body.appendChild(tr);
+
+      // Create table body
+      cronjobs = cronjobs['cronjobs'];
+      $.each(cronjobs, function(cronjob_id, cronjob_data){
+        tr = document.createElement('tr');
+        if (!cronjob_data['Enabled']) {
+          tr.className = "error";
+        }
+        else {
+          tr.className = "";
+        }
+        var td = document.createElement('td');
+        td.textContent = cronjob_data['Minute'];
+        tr.appendChild(td);
+
+        td = document.createElement('td');
+        td.textContent = cronjob_data['Hour'];
+        tr.appendChild(td);
+
+        td = document.createElement('td');
+        td.textContent = cronjob_data['Day of month'];
+        tr.appendChild(td);
+
+        td = document.createElement('td');
+        td.textContent = cronjob_data['Month'];
+        tr.appendChild(td);
+
+        td = document.createElement('td');
+        td.textContent = cronjob_data['Day of week'];
+        tr.appendChild(td);
+
+        td = document.createElement('td');
+        td.textContent = cronjob_data['Command'];
+        tr.appendChild(td);
+
+        t_body.appendChild(tr);
+      });
+      t.appendChild(t_body);
+      container.append(t);
+    });
+  });
+}
+</script>
 
 {% end %}
