@@ -92,6 +92,7 @@ class Application(tornado.web.Application):
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
             ("/api/v1/produced_quarterly.png", ProducedQuarterlyPlotHandler),
+            ("/api/v1/production/cronjobs", ProductionCronjobsDataHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
@@ -158,6 +159,7 @@ class Application(tornado.web.Application):
             self.amanita_db = couch["amanita"]
             self.picea_db = couch["picea"]
             self.gs_users_db = couch["gs_users"]
+            self.cronjobs_db = couch["cronjobs"]
 
         #Load columns and presets from genstat-defaults user in StatusDB
         genstat_id = ''
