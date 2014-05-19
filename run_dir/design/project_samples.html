@@ -64,7 +64,7 @@
         <td><div name='{{columns['BIOINFO_COLUMNS']['Best Practice Analysis Completed']}}'></div>
             <div name='signature_best_practice_analysis_completed'></div></td>
         <td name='{{columns['DETAILS_COLUMNS']['Close Date']}}'></td>
-        <td name='{{columns['DETAILS_COLUMNS']['Aborted']}}'</td>
+        <td name='{{columns['DETAILS_COLUMNS']['Aborted']}}'></td>
       </tr>
       </tbody>
     </table>
@@ -108,9 +108,7 @@
           <div id="collapseOne" class="accordion-body collapse">
             <div class="accordion-inner">
               <div class="row-fluid">
-                <div class="span12">
-
-              <div class="span4">
+                <div class="span4">
                     <!--Order Info Table-->
                     <table class="table table-bordered table-striped">
                       <thead>
@@ -213,7 +211,6 @@
                       </tbody>
                     </table>
                   </div>
-
                   <!-- Wet Lab table -->
                   <div class="span4">
                     <table class="table table-bordered table-striped">
@@ -227,22 +224,6 @@
                       <tr>
                         <td>Sample type</td>
                         <td name='{{columns['DETAILS_COLUMNS']['Sample Type']}}'></td>
-                      </tr>
-                      <tr>
-                        <td>No. Samples</td>
-                        <td name='{{columns['BASIC_COLUMNS']['Number of Samples']}}'></td>
-                      </tr>
-                      <tr>
-                        <td>Final No. Samples</td>
-                        <td name='{{columns['DETAILS_COLUMNS']['Final Number of Samples']}}'></td>
-                      </tr>
-                      <tr>
-                        <td>Completed Samples</td>
-                        <td name='{{columns['BASIC_COLUMNS']['Samples Completed']}}'></td>
-                      </tr>
-                      <tr>
-                        <td>Lanes</td>
-                        <td name="{{columns['DETAILS_COLUMNS']['Lanes']}}"></td>
                       </tr>
                       <tr>
                         <td>Sequencing Platform</td>
@@ -271,7 +252,98 @@
                       </tbody>
                     </table>
                   </div>
-
+                </div>
+                <div class="row-fluid">
+                  <!-- Samples table -->
+                  <div class="span4">
+                  <table class="table table-bordered table-striped">
+                  <thead>
+                    <tr>
+                      <th>Samples</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Final samples</td>
+                      <td name='{{columns['DETAILS_COLUMNS']['Final Number of Samples']}}'></td>
+                    </tr>
+                    <tr>
+                      <td>Samples</td>
+                      <td name='{{columns['BASIC_COLUMNS']['Number of Samples']}}'></td>
+                    </tr>
+                    <tr>
+                      <td>Completed Samples</td>
+                      <td name='{{columns['BASIC_COLUMNS']['Samples Completed']}}'></td>
+                    </tr>
+                    <tr>
+                      <td>Pools</td>
+                      <td></td>
+                    </tr>
+                  </tbody>
+                  </table>
+                  </div>
+                  <!-- Sample status table -->
+                  <div class="span4">
+                  <table class="table table-bordered table-striped">
+                  <thead>
+                    <tr>
+                      <th>Sample Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Finished</td>
+                      <td name='Finished'></td>
+                    </tr>
+                    <tr>
+                      <td>In progress</td>
+                      <td name='In Progress'></td>
+                    <tr>
+                      <td>Aborted</td>
+                      <td name='Aborted'></td>
+                    </tr>
+                  </tbody>
+                  </table>
+                  </div>
+                  <!-- Progress summary table -->
+                  <div class="span4">
+                  <table class="table table-bordered table-striped">
+                  <thead>
+                    <tr>
+                      <th>Progress summary</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Incoming QC</td>
+                      <td name='Inc Passed'></td>
+                    </tr>
+                    <tr>
+                      <td>Library QC</td>
+                      <td name='Lib Passed'></td>
+                    <tr>
+                      <td>Sequencing QC</td>
+                      <td name='Seq Passed'></td>
+                    </tr>
+                    <tr>
+                      <td>Lanes</td>
+                      <td name="{{columns['DETAILS_COLUMNS']['Lanes']}}"></td>
+                    </tr>
+                    <tr>
+                      <td>Library re-preps</td>
+                      <td name='Repreps'></td>
+                    </tr>
+                    <tr>
+                      <td>Sequencing re-runs</td>
+                      <td></td>
+                    </tr>
+                  </tbody>
+                  </table>
+                  </div>
+                </div>
                 
                 <div class="row-fluid">
                     <!-- Customer project description -->
@@ -337,9 +409,7 @@
                         </div>
                       </div>
                     </div>
-                 </div>
-                </div>
-              </div>
+                  </div>
             </div>
           </div>
         </div>
@@ -398,7 +468,7 @@
               </table>
               <form action="" method="POST" id="running_notes_form">
                 <div class="form-actions">
-                  <p>Insert new running note:</form>
+                  <p>Insert new running note:</p>
                   <textarea rows="7" class="span12" id="new_note_text"></textarea>
                   <button type="submit" class="btn btn-primary" id="save_note_button">Save running note</button>
                 </div>
