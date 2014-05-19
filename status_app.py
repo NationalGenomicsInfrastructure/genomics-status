@@ -132,6 +132,7 @@ class Application(tornado.web.Application):
             ("/quotas/(\w+)?", QuotaHandler),
             ("/phix_err_rate", PhixErrorRateHandler),
             ("/production", ProductionHandler),
+            ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesHandler),
             ("/projects/([^/]*)$", ProjectsHandler),
             ("/reads_vs_qv", ReadsVsQvhandler),
