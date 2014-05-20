@@ -66,6 +66,10 @@ table {
     word-wrap: break-word;
 }
 
+pre.cronjob-disabled {
+  color: red;
+}
+
 /* Jumbotrons
 -------------------------------------------------- */
 .jumbotron {
