@@ -421,6 +421,33 @@
               </div>
               <div id="collapseThree" class="accordion-body collapse">
                 <div class="accordion-inner">
+                <div class="tabbable tabs-left">
+                  <ul class="nav nav-tabs">
+                    <li class="active"><a href="#Search-tab" data-toggle="tab">Search</a></li>
+                    <li><a href="#Filter-tab" data-toggle="tab">Choose Columns</a></li>
+                  </ul>
+                  <div class="tab-content">
+                    <div class="tab-pane active" id="Search-tab">
+                      <form id="Search-form">
+                        <legend>Search Table Contents</legend>
+                        <input class="search search-query" type="text" placeholder="Search..." id="search_field"/>
+                      </form>
+                    </div>
+                    <div class="tab-pane" id="Filter-tab">
+                      <form id="Filter" class="form form-search">
+                        <legend>Choose Columns</legend>
+                        <div class="btn-group">
+                          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                            Default presets
+                            <span class="caret"></span>
+                          </a>
+                          <ul class="dropdown-menu" id="default_presets_dropdown">
+                            <!-- Load default presets (to be filled with JS) -->
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <p>
                   This lists all samples belonging to the project. Here 'reads sequenced'
                   refers to reads passing application QC criterions. If the sequence run is
