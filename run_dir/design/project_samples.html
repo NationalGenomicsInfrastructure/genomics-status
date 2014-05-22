@@ -420,7 +420,7 @@
                 </a>
               </div>
               <div id="collapseThree" class="accordion-body collapse">
-                <div class="accordion-inner">
+                <div class="accordion-inner" id="sample-list">
                 <div class="tabbable tabs-left">
                   <ul class="nav nav-tabs">
                     <li class="active"><a href="#Search-tab" data-toggle="tab">Search</a></li>
@@ -474,7 +474,7 @@
                         <th>Reads Requested</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="list" id="table_samples_body">
                     </tbody>
                   </table>
                 </div>
@@ -565,6 +565,26 @@ load_undefined_info()
 load_all_udfs()
 load_running_notes()
 load_links()
+
+// Searching functionality
+
+//Prevent traditional html submit function
+$('#Search-form').submit(function(event){event.preventDefault();});
+
+
+// Initialize sorting and searching javascript plugin
+function init_listjs(no_items, columns) {
+  column_names = new Array();
+  $.each(columns, function(i, column_tuple){
+    column_names.push(column_tuple[1])
+  })
+  var options = {
+    valueNames: column_names,
+    page: no_items /* Default is to show only 200 items at a time. */
+  };
+  var featureList = new List('sample-list', options);
+  featureList.search($('#search_field').val());
+}
 
 function load_links() {
   var link_icon = {'Deviation':'icon-exclamation-sign', 'Other':'icon-file'}
@@ -784,11 +804,14 @@ function prettify(s) {
 }
 
 $.getJSON("/api/v1/project/{{ project }}", function (data) {
+    var size = 0;
+    columns = [["Customer Name", "customer_name"]];
     $.each(data, function (sample, info) {
+      size += 1;
       var details = info["details"];
       tbl_row = "<tr>"
       tbl_row += '<td><a href="/samples/' + sample + '">' + sample + '</td>'
-      tbl_row += '<td>' + info['customer_name'] + '</td>'
+      tbl_row += '<td class="customer_name">' + info['customer_name'] + '</td>'
       tbl_row += '<td>'      
       $.each(info["sample_run_metrics"], function(ix, run) {
         tbl_row += '<a href="/qc/' + run + '">' + run + '</a><br>'
@@ -839,6 +862,7 @@ $.getJSON("/api/v1/project/{{ project }}", function (data) {
       tbl_row += "</tr>"
       $("#sample_table tbody").append(tbl_row)
     });
+    init_listjs(size, columns)
 });
 
 var fetching_data;
