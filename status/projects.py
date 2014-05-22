@@ -335,6 +335,7 @@ class ProjectSamplesHandler(SafeHandler):
         self.write(t.generate(project=project,
                               user=self.get_current_user_name(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
+                              columns_sample = self.application.genstat_defaults.get('sample_columns'),
                               prettify = prettify_css_names))
 
 
@@ -394,7 +395,7 @@ class LinksDataHandler(SafeHandler):
         p.get(force=True)
 
         links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
-        
+
         #Sort by descending date, then hopefully have deviations on top
         sorted_links = OrderedDict()
         for k, v in sorted(links.iteritems(), key=lambda t: t[0], reverse=True):

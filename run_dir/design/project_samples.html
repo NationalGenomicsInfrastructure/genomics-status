@@ -445,6 +445,53 @@
                             <!-- Load default presets (to be filled with JS) -->
                           </ul>
                         </div>
+                        <div class="row-fluid">
+                          <div class="span3">
+                            <div  id="basic-columns">
+                              <h3 class="clickable_header"> Basic </h3>
+                              {% for col_display_name, col_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
+                              <input type="checkbox" name={{col_name}} id={{col_name}}>
+                              <label for={{col_name}}>
+                                {{col_display_name}}
+                              </label>
+                              </input>
+                              <br />
+                              {% end %}
+                            </div>
+                            <div class="fieldset" id="details-columns">
+                              <h3 class="clickable_header"> Sample Details </h3>
+                              {% for col_display_name, col_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
+                              <input type="checkbox" name={{col_name}} id={{col_name}}>
+                              <label for={{col_name}}>
+                                {{col_display_name}}
+                              </label>
+                              </input>
+                              <br />
+                              {% end %}
+                            </div>
+                          </div>
+                          <div class="span3">
+                            <div class="fieldset" id="bioinfo-columns">
+                              <h3 class="clickable_header"> Initial QC </h3>
+                              {% for col_display_name, col_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
+                              <input type="checkbox" name={{col_name}} id={{col_name}}>
+                              <label for={{col_name}}>
+                                {{col_display_name}}
+                              </label>
+                              </input>
+                              <br />
+                              {% end %}
+                            </div>
+                          </div>
+                        <div class="span3">
+                          <p>
+                          <button id="Reset" class="btn btn-large"> Reset</button>
+                          </p>
+                          <p>
+                          <input type="submit" value="Apply" class="btn btn-primary btn-large" id="applyFilter">
+                          </p>
+                        </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -559,12 +606,18 @@
 
 <script>
 
+/* check default checkboxes */
+if (!$("#Filter :checked").length) {
+  reset_default_checkboxes();
+}
+
 var ordered_reads = 0.0
 
-load_undefined_info()
-load_all_udfs()
-load_running_notes()
-load_links()
+load_undefined_info();
+load_all_udfs();
+load_samples_table();
+load_running_notes();
+load_links();
 
 // Searching functionality
 
@@ -585,6 +638,38 @@ function init_listjs(no_items, columns) {
   var featureList = new List('sample-list', options);
   featureList.search($('#search_field').val());
 }
+
+////////////////////////////////////
+// Choose columns related methods //
+////////////////////////////////////
+
+/* Reset button handled here */
+$("#Reset").click(function( event ) {
+  event.preventDefault();
+  reset_default_checkboxes();
+});
+
+/* Apply filter button handled here */
+$("#applyFilter").click( function( event ) {
+  event.preventDefault();
+  load_samples_table();
+});
+
+function reset_default_checkboxes(){
+  {% for col_display_name, column_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
+  $("#Filter #{{column_name}}").attr('checked', true)
+  {% end %}
+  {% for col_display_name, column_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
+  $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+  {% for col_display_name, column_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
+  $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
+
+  $("#Filter #undefined_columns").children("input").attr('checked', false)
+}
+
+// Others
 
 function load_links() {
   var link_icon = {'Deviation':'icon-exclamation-sign', 'Other':'icon-file'}
@@ -803,67 +888,69 @@ function prettify(s) {
     return s2
 }
 
-$.getJSON("/api/v1/project/{{ project }}", function (data) {
-    var size = 0;
-    columns = [["Customer Name", "customer_name"]];
-    $.each(data, function (sample, info) {
-      size += 1;
-      var details = info["details"];
-      tbl_row = "<tr>"
-      tbl_row += '<td><a href="/samples/' + sample + '">' + sample + '</td>'
-      tbl_row += '<td class="customer_name">' + info['customer_name'] + '</td>'
-      tbl_row += '<td>'      
-      $.each(info["sample_run_metrics"], function(ix, run) {
-        tbl_row += '<a href="/qc/' + run + '">' + run + '</a><br>'
-      })
-      tbl_row += '</td>'
-      if ('passed_initial_qc' in info) {
-        tbl_row += '<td>' + info["passed_initial_qc"] + '</td>'
-      }
-      else {
-        tbl_row += '<td>' + info["incoming_QC_status"] + '</td>'
-      }
-      tbl_row += '<td>'
-        if (info["library_prep"]) {
-          $.each(info["library_prep"], function(lib_prep, content) {
-            tbl_row += lib_prep + '<br>'
-          })
-       }
-      tbl_row += '</td>'
-      tbl_row += '<td>'
-      $.each(info["prep_status"], function(ix, prep_status) {
-          tbl_row += prep_status + '<br>'
-      })
-      tbl_row += '</td>'
+function load_samples_table() {
+  $.getJSON("/api/v1/project/{{ project }}", function (data) {
+      var size = 0;
+      columns = [["Customer Name", "customer_name"]];
+      $.each(data, function (sample, info) {
+        size += 1;
+        var details = info["details"];
+        tbl_row = "<tr>"
+        tbl_row += '<td><a href="/samples/' + sample + '">' + sample + '</td>'
+        tbl_row += '<td class="customer_name">' + info['customer_name'] + '</td>'
+        tbl_row += '<td>'      
+        $.each(info["sample_run_metrics"], function(ix, run) {
+          tbl_row += '<a href="/qc/' + run + '">' + run + '</a><br>'
+        })
+        tbl_row += '</td>'
+        if ('passed_initial_qc' in info) {
+          tbl_row += '<td>' + info["passed_initial_qc"] + '</td>'
+        }
+        else {
+          tbl_row += '<td>' + info["incoming_QC_status"] + '</td>'
+        }
+        tbl_row += '<td>'
+          if (info["library_prep"]) {
+            $.each(info["library_prep"], function(lib_prep, content) {
+              tbl_row += lib_prep + '<br>'
+            })
+         }
+        tbl_row += '</td>'
+        tbl_row += '<td>'
+        $.each(info["prep_status"], function(ix, prep_status) {
+            tbl_row += prep_status + '<br>'
+        })
+        tbl_row += '</td>'
 
-      tbl_row += '<td>'
-      $.each(info["prep_finished_date"], function(ix, prep_date) {
-        tbl_row += prep_date + '<br>'
-      })
-      tbl_row += '</td>'
-        
-      m_reads_sequenced = parseFloat(info["m_reads_sequenced"])
-      tbl_row += '<td>' + m_reads_sequenced.toFixed(2) + '</td>'
+        tbl_row += '<td>'
+        $.each(info["prep_finished_date"], function(ix, prep_date) {
+          tbl_row += prep_date + '<br>'
+        })
+        tbl_row += '</td>'
+          
+        m_reads_sequenced = parseFloat(info["m_reads_sequenced"])
+        tbl_row += '<td>' + m_reads_sequenced.toFixed(2) + '</td>'
 
-      /* Sequencing QC */
-      tbl_row += '<td>' + info["status"] + '</td>'
+        /* Sequencing QC */
+        tbl_row += '<td>' + info["status"] + '</td>'
 
-      /* Status */
-      if ('details' in info) {
-        tbl_row += '<td>' + info["details"]["status_(manual)"] + '</td>'
-      }
-      else {
-        tbl_row += '<td>' + "Undefined" + '</td>'
-      }
+        /* Status */
+        if ('details' in info) {
+          tbl_row += '<td>' + info["details"]["status_(manual)"] + '</td>'
+        }
+        else {
+          tbl_row += '<td>' + "Undefined" + '</td>'
+        }
 
-      tbl_row += '<td>' + info["reads_min"] + '</td>'
-      tbl_row += '<td>' + info["reads_req"] + '</td>'
+        tbl_row += '<td>' + info["reads_min"] + '</td>'
+        tbl_row += '<td>' + info["reads_req"] + '</td>'
 
-      tbl_row += "</tr>"
-      $("#sample_table tbody").append(tbl_row)
-    });
-    init_listjs(size, columns)
-});
+        tbl_row += "</tr>"
+        $("#sample_table tbody").append(tbl_row)
+      });
+      init_listjs(size, columns)
+  });
+}
 
 var fetching_data;
 fetching_data = fetching_data || (function () {
