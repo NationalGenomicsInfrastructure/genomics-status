@@ -43,7 +43,7 @@ class ProductionCronjobsDataHandler(SafeHandler):
         servers = self.application.cronjobs_db.view('server/alias')
         for server in servers.rows:
             doc = self.application.cronjobs_db.get(server.value)
-            cronjobs[server.key] =  {"last_updated": doc['Last updated'], 'cronjobs': doc['cronjobs']}
+            cronjobs[server.key] =  {"last_updated": doc['Last updated'], 'users': doc['users']}
         return cronjobs
 
 
@@ -172,7 +172,7 @@ class DeliveredQuarterlyDataHandler(SafeHandler):
 
 class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
     """ Gives a bar plot for quarterly delivered amount of basepairs.
-    
+
     Loaded through /api/v1/delivered_quarterly.png
     """
     def get(self):
