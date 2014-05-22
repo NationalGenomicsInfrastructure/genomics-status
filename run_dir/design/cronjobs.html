@@ -28,7 +28,7 @@ function update_cronjob_tables() {
       t.className = "table";
       var t_header = document.createElement('thead');
       var tr = document.createElement('tr');
-      var headers = ['Minute', 'Hour', 'Day of month', 'Month', 'Day of week', 'Command'];
+      var headers = ['User', 'Minute', 'Hour', 'Day of month', 'Month', 'Day of week', 'Command'];
       for (var i = 0; i < headers.length; i++){
         var th = document.createElement('th');
         th.textContent = headers[i];
@@ -43,41 +43,47 @@ function update_cronjob_tables() {
 
       // Create table body
       var t_body = document.createElement('tbody');
-      cronjobs = cronjobs['cronjobs'];
-      $.each(cronjobs, function(cronjob_id, cronjob_data){
-        tr = document.createElement('tr');
-        var td = document.createElement('td');
-        td.textContent = cronjob_data['Minute'];
-        tr.appendChild(td);
+      users = cronjobs['users'];
+      $.each(users, function(user, cronjobs){
+        $.each(cronjobs, function(cronjob_id, cronjob_data){
+          tr = document.createElement('tr');
+          var td = document.createElement('td');
+          td.textContent = user;
+          tr.appendChild(td);
 
-        td = document.createElement('td');
-        td.textContent = cronjob_data['Hour'];
-        tr.appendChild(td);
+          td = document.createElement('td');
+          td.textContent = cronjob_data['Minute'];
+          tr.appendChild(td);
 
-        td = document.createElement('td');
-        td.textContent = cronjob_data['Day of month'];
-        tr.appendChild(td);
+          td = document.createElement('td');
+          td.textContent = cronjob_data['Hour'];
+          tr.appendChild(td);
 
-        td = document.createElement('td');
-        td.textContent = cronjob_data['Month'];
-        tr.appendChild(td);
+          td = document.createElement('td');
+          td.textContent = cronjob_data['Day of month'];
+          tr.appendChild(td);
 
-        td = document.createElement('td');
-        td.textContent = cronjob_data['Day of week'];
-        tr.appendChild(td);
+          td = document.createElement('td');
+          td.textContent = cronjob_data['Month'];
+          tr.appendChild(td);
 
-        // Command should be within <pre> and <code> tags
-        var pre = document.createElement('pre');
-        if (!cronjob_data['Enabled']) {
-          pre.className = "cronjob-disabled";
-        }
-        var code = document.createElement('code');
-        code.textContent = cronjob_data['Command'];
-        pre.appendChild(code);
-        td = document.createElement('td');
-        tr.appendChild(pre);
+          td = document.createElement('td');
+          td.textContent = cronjob_data['Day of week'];
+          tr.appendChild(td);
 
-        t_body.appendChild(tr);
+          // Command should be within <pre> and <code> tags
+          var pre = document.createElement('pre');
+          if (!cronjob_data['Enabled']) {
+            pre.className = "cronjob-disabled";
+          }
+          var code = document.createElement('code');
+          code.textContent = cronjob_data['Command'];
+          pre.appendChild(code);
+          td = document.createElement('td');
+          tr.appendChild(pre);
+
+          t_body.appendChild(tr);
+        });
       });
       t.appendChild(t_body);
       container.append(t);
