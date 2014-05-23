@@ -507,7 +507,7 @@
                   <table class="table table-striped" id="sample_table">
                     <thead id="samples_table_head">
                     </thead>
-                    <tbody class="list" id="table_samples_body">
+                    <tbody class="list" id="samples_table_body">
                     </tbody>
                   </table>
                 </div>
@@ -894,65 +894,74 @@ function load_table_head(columns){
 function load_samples_table() {
   load_table_head(read_current_filtering());
   $.getJSON("/api/v1/project/{{ project }}", function (data) {
-      var size = 0;
-      columns = [["Customer Name", "customer_name"]];
-      $.each(data, function (sample, info) {
-        size += 1;
-        var details = info["details"];
-        tbl_row = "<tr>"
-        tbl_row += '<td><a href="/samples/' + sample + '">' + sample + '</td>'
-        tbl_row += '<td class="customer_name">' + info['customer_name'] + '</td>'
-        tbl_row += '<td>'      
-        $.each(info["sample_run_metrics"], function(ix, run) {
-          tbl_row += '<a href="/qc/' + run + '">' + run + '</a><br>'
-        })
-        tbl_row += '</td>'
-        if ('passed_initial_qc' in info) {
-          tbl_row += '<td>' + info["passed_initial_qc"] + '</td>'
+    columns = read_current_filtering();
+    var size = columns.length;
+    var tbl_body = "";
+    $.each(data, function (sample, info) {
+      for (var i=0; i < size; i++) {
+        column_name = columns[i][0];
+        column_id = columns[i][1];
+        var tbl_row = '<tr>';
+        // SciLife Sample Name is a link
+        if (column_name == "Scilife Sample Name") {
+          tbl_row += '<td><a class="' + column_id + '" href="/samples' + sample + '">' + sample + '</td>';
         }
+        // Sample runs is another link, and nested
+        else if (column_name == "Sample runs"){
+          $.each(info[column_id], function(ix, run) {
+          tbl_row += '<td><a class="' + column_id + '" ref="/qc/' + run + '">' + run + '</a><br></td>';
+          });
+        }
+        // Incoming QC Status, may have two different ID
+        else if (column_name == "Incoming QC Status") {
+          if ('passed_initial_qc' in info) {
+            tbl_row += '<td class="' + column_id + '">' + info["passed_initial_qc"] + '</td>';
+          }
+          else {
+            tbl_row += '<td class="' + column_id + '">' + info["incoming_QC_status"] + '</td>';
+          }
+        }
+        // Library Prep, nested field
+        else if (column_name == "Library preps") {
+          tbl_row = '<td class="' + column_id + '">'; 
+          $.each(info[column_id], function(lib_prep, content) {
+            tbl_row += lib_prep + '<br>';
+          })
+        }
+        // Prep status, nested field
+        else if (column_name == "Library QC") {
+          tbl_row = '<td class="' + column_id + '">'; 
+          $.each(info[column_id], function(ix, prep_status) {
+              tbl_row += prep_status + '<br>';
+          });
+        }
+        // Library QC Date, nested field
+        else if (column_name == "Library QC Date") {
+          tbl_row = '<td class="' + column_id + '">'; 
+          $.each(info[column_id], function(ix, prep_status) {
+              tbl_row += prep_status + '<br>';
+          });
+        }
+        // Status Manual, escaped id
+        else if (column_name == "Status Manual") {
+          if ('details' in info) {
+            tbl_row += '<td class="' + column_id + '">' + info["details"]["status_(manual)"] + '</td>';
+          }
+          else {
+            tbl_row += '<td class="' + column_id + '">' + "Undefined" + '</td>';
+          }
+        }
+
+        // Non nested or special fields
         else {
-          tbl_row += '<td>' + info["incoming_QC_status"] + '</td>'
+          tbl_row += '<td class="' + column_id + '">' + info[column_id] + '</td>';
         }
-        tbl_row += '<td>'
-          if (info["library_prep"]) {
-            $.each(info["library_prep"], function(lib_prep, content) {
-              tbl_row += lib_prep + '<br>'
-            })
-         }
-        tbl_row += '</td>'
-        tbl_row += '<td>'
-        $.each(info["prep_status"], function(ix, prep_status) {
-            tbl_row += prep_status + '<br>'
-        })
-        tbl_row += '</td>'
-
-        tbl_row += '<td>'
-        $.each(info["prep_finished_date"], function(ix, prep_date) {
-          tbl_row += prep_date + '<br>'
-        })
-        tbl_row += '</td>'
-          
-        m_reads_sequenced = parseFloat(info["m_reads_sequenced"])
-        tbl_row += '<td>' + m_reads_sequenced.toFixed(2) + '</td>'
-
-        /* Sequencing QC */
-        tbl_row += '<td>' + info["status"] + '</td>'
-
-        /* Status */
-        if ('details' in info) {
-          tbl_row += '<td>' + info["details"]["status_(manual)"] + '</td>'
-        }
-        else {
-          tbl_row += '<td>' + "Undefined" + '</td>'
-        }
-
-        tbl_row += '<td>' + info["reads_min"] + '</td>'
-        tbl_row += '<td>' + info["reads_req"] + '</td>'
-
-        tbl_row += "</tr>"
-        $("#sample_table tbody").append(tbl_row)
-      });
-      init_listjs(size, columns)
+        tbl_row += '</tr>';
+        tbl_body += tbl_row;
+      }
+    });
+    $("#samples_table_body").append(tbl_body);
+    init_listjs(size, columns)
   });
 }
 
