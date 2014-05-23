@@ -450,8 +450,8 @@
                             <div  id="basic-columns">
                               <h3 class="clickable_header"> Basic </h3>
                               {% for col_display_name, col_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name={{col_name}} id={{col_name}}>
-                              <label for={{col_name}}>
+                              <input type="checkbox" name={{plain_string(col_name)}} id={{plain_string(col_name)}}>
+                              <label for={{plain_string(col_name)}}>
                                 {{col_display_name}}
                               </label>
                               </input>
@@ -461,8 +461,8 @@
                             <div class="fieldset" id="details-columns">
                               <h3 class="clickable_header"> Sample Details </h3>
                               {% for col_display_name, col_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name={{col_name}} id={{col_name}}>
-                              <label for={{col_name}}>
+                              <input type="checkbox" name={{plain_string(col_name)}} id={{plain_string(col_name)}}>
+                              <label for={{plain_string(col_name)}}>
                                 {{col_display_name}}
                               </label>
                               </input>
@@ -505,21 +505,7 @@
                   demultiplex.
                   </p>
                   <table class="table table-striped" id="sample_table">
-                    <thead>
-                      <tr>
-                        <th>SciLife Sample Name</th>
-                        <th>Customer Name</th>
-                        <th>Sample runs</th>
-                        <th>Incoming QC Status</th>
-                        <th>Library preps</th>
-                        <th>Library QC</th>
-                        <th>Library QC Date</th>
-                        <th>Million reads sequenced</th>
-                        <th>Sequencing QC</th>
-                        <th>Status Manual</th>
-                        <th>Reads Minimum</th>
-                        <th>Reads Requested</th>
-                      </tr>
+                    <thead id="samples_table_head">
                     </thead>
                     <tbody class="list" id="table_samples_body">
                     </tbody>
@@ -655,12 +641,20 @@ $("#applyFilter").click( function( event ) {
   load_samples_table();
 });
 
+function read_current_filtering(){
+  var columns = new Array();
+  $("#Filter :checkbox:checked").each(function() {
+      columns.push([$(this).next('label').text(), $(this).attr('name')]);
+      });
+  return columns
+}
+
 function reset_default_checkboxes(){
   {% for col_display_name, column_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', true)
+  $("#Filter #{{plain_string(column_name)}}").attr('checked', true)
   {% end %}
   {% for col_display_name, column_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false)
+  $("#Filter #{{plain_string(column_name)}}").attr('checked', false)
   {% end %}
   {% for col_display_name, column_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
   $("#Filter #{{column_name}}").attr('checked', false)
@@ -888,7 +882,17 @@ function prettify(s) {
     return s2
 }
 
+function load_table_head(columns){
+  var tbl_head = '<tr>'
+    $.each(columns, function(i, column_tuple) {
+        tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">' + column_tuple[0] + '</th>'
+        });
+  tbl_head += '</tr>'
+    $("#samples_table_head").html(tbl_head)
+}
+
 function load_samples_table() {
+  load_table_head(read_current_filtering());
   $.getJSON("/api/v1/project/{{ project }}", function (data) {
       var size = 0;
       columns = [["Customer Name", "customer_name"]];
