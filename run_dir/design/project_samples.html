@@ -521,6 +521,7 @@
                 </div>
               </div>
             </div>
+            <a href="" class="toggleCollapse plus">[+]</a>
           </div>
         </div>
         <div class="tab-pane" id="tab_com_content">
@@ -538,6 +539,19 @@ load_undefined_info()
 load_all_udfs()
 load_running_notes()
 load_links()
+
+//Hide or show all accordions
+$(document).on('click', '.toggleCollapse',function(e) {
+  e.preventDefault();
+  if ($(this).is('.plus')) {
+    $(this).removeClass('plus'); $(this).text('[-]')
+    $('.tab-pane.active').find('div.collapse').collapse('show')
+  }
+  else {
+    $(this).addClass('plus'); $(this).text('[+]')
+    $('.tab-pane.active').find('div.collapse').collapse('hide')
+  }
+});
 
 function load_links() {
   var link_icon = {'Deviation':'icon-exclamation-sign', 'Other':'icon-file'}
@@ -644,6 +658,7 @@ function load_tickets() {
                               .replace(/{thread_content}/g, comments);
           tickets++;
         });
+        accordion += '<a href="#!" class="toggleCollapse plus">[+]</a>'
         $('#tab_com_content').html(accordion);
       }
       fetching_data.hidePleaseWait();
