@@ -271,6 +271,8 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
         sample_view = self.application.projects_db.view("project/samples")
         samples = sample_view[project].rows[0].value
+        # Not all projects (i.e Pending projects) have samples
+        samples = {} if not samples else samples
         summary_row.value.update(self.sample_progress_rows(samples))
 
         return summary_row.value
@@ -307,7 +309,8 @@ class ProjectSamplesDataHandler(SafeHandler):
         samples = OrderedDict()
         sample_view = self.application.projects_db.view("project/samples")
         result = sample_view[project]
-        samples = result.rows[0].value
+        # Not all projects (i.e Pending projects) have samples!
+        samples = result.rows[0].value if result.rows[0].value else {}
         output = OrderedDict()
         for sample, sample_data in sorted(samples.iteritems(), key=lambda x: x[0]):
             sample_data = self.sample_data(sample_data)
