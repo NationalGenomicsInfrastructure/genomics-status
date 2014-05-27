@@ -927,13 +927,15 @@ function load_samples_table() {
             var column_id = column_tuple[1];
             // Scilife Sample Name is a link
             if (column_id == "scilife_name") {
-              tbl_row += '<td><a class="' + column_id + '" href="/samples/' + info[column_id] + '">' + info[column_id] + '</a></td>';
+              tbl_row += '<td><a class="' + column_id + '" href="/samples/' + 
+                  info[column_id] + '">' + info[column_id] + '</a></td>';
             }
             // Sample run metrics is an array of links
             else if (column_id == 'sample_run_metrics') {
               tbl_row += '<td class="' + column_id + '">';
               for (var i=0; i<info[column_id].length; i++) {
-                tbl_row += '<a href="/qc/' + info[column_id][i] + '">' + info[column_id][i] + '</br></a>';
+                tbl_row += '<a href="/qc/' + info[column_id][i] + '">' + 
+                  info[column_id][i] + '</br></a>';
               }
               tbl_row += '</td>';
             }
@@ -951,17 +953,25 @@ function load_samples_table() {
           });
         }
         else if (subset == "initial-qc-columns") {
-
+          $.each(fields, function(idx, column_tuple){
+            var column_name = column_tuple[0];
+            var column_id = column_tuple[1];
+            tbl_row += '<td class="' + column_id + '">' + info['initial_qc'][column_id] + '</td>';
+          });
         }
         // Details columns
         else {
-
+          $.each(fields, function(idx, column_tuple){
+            var column_name = column_tuple[0];
+            var column_id = column_tuple[1];
+            tbl_row += '<td class="' + column_id + '">' + info['details'][column_id] + '</td>';
+          });
         }
       });
       tbl_row += '</tr>';
       tbl_body += tbl_row;
     });
-    $("#samples_table_body").append(tbl_body);
+    $("#samples_table_body").html(tbl_body);
     columns = read_current_filtering(false);
     init_listjs(size, columns)
   });
