@@ -324,7 +324,7 @@ valueNames: column_names,
       ///////////////////////////////
 
       function load_presets() {
-        $.getJSON('/api/v1/project_view_presets', function (data) {
+        $.getJSON('/api/v1/presets?presets_list=pv_presets', function (data) {
             var default_presets = data['default'];
             var user_presets = data['user'];
 
@@ -366,7 +366,7 @@ valueNames: column_names,
       load_presets();
 
       function select_from_preset(preset_type, preset) {
-        $.getJSON('/api/v1/project_view_presets', function (data) {
+        $.getJSON('/api/v1/presets?presets_list=pv_presets', function (data) {
             //First uncheck everything
             $('input:checkbox').removeAttr('checked');
             if (preset_type == "default_presets_dropdown") {

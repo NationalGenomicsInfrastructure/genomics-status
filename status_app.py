@@ -98,7 +98,7 @@ class Application(tornado.web.Application):
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
-            ("/api/v1/project_view_presets", ProjectViewPresetsHandler),
+            ("/api/v1/presets", PresetsHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
@@ -198,7 +198,7 @@ class Application(tornado.web.Application):
         self.zendesk_url = settings["zendesk"]["url"]
         self.zendesk_user = settings["zendesk"]["username"]
         self.zendesk_token = settings["zendesk"]["token"]
-        self.zendesk = Zendesk(self.zendesk_url, use_api_token=True, zendesk_username=self.zendesk_user, 
+        self.zendesk = Zendesk(self.zendesk_url, use_api_token=True, zendesk_username=self.zendesk_user,
                                 zendesk_password=self.zendesk_token, api_version=2)
 
         # Load password seed

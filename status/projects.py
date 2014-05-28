@@ -21,7 +21,7 @@ from zendesk import Zendesk, ZendeskError, get_id_from_url
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
-class ProjectViewPresetsHandler(SafeHandler):
+class PresetsHandler(SafeHandler):
     """Handler to GET and POST/PUT personalized and default set of presets in
 
     project view.
@@ -32,9 +32,10 @@ class ProjectViewPresetsHandler(SafeHandler):
         It will return a JSON with two lists of presets, the default ones and the user defined
         presets.
         """
+        presets_list = self.get_argument('presets_list', 'pv_presets')
         self.set_header("Content-type", "application/json")
         presets = {
-            "default": self.application.genstat_defaults.get('pv_presets'),
+            "default": self.application.genstat_defaults.get(presets_list),
             "user": {}
         }
         #Get user presets
@@ -44,7 +45,7 @@ class ProjectViewPresetsHandler(SafeHandler):
             if u.get('key') == user:
                 user_id = u.get('value')
                 break
-        presets['user'] = self.application.gs_users_db.get(user_id).get('pv_presets', {})
+        presets['user'] = self.application.gs_users_db.get(user_id).get(presets_list, {})
         self.write(json.dumps(presets))
 
 
