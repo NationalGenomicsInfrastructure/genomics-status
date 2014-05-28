@@ -682,6 +682,96 @@ function reset_default_checkboxes(){
 
   $("#Filter #undefined_columns").children("input").attr('checked', false)
 }
+      
+//Check or uncheck all fields from clicked category
+function choose_column(col){
+  var column = document.getElementById(col);
+  //Get all the children (checkboxes)
+  cbs = column.getElementsByTagName('input');
+  //If one of them is checked we uncheck it, if none of them are checked, 
+  //we check them all
+  checked = false;
+  for (var i = 0; i < cbs.length; i++) {
+    if (cbs[i].checked) {
+      cbs[i].checked = false;
+      checked = true;
+    }
+  }
+  if (!checked) {
+    for (var i = 0; i < cbs.length; i++) {
+      cbs[i].checked = true;
+    }
+  }
+}
+
+//For the clickable_header class, execute the choose_column func with the column ID
+$(".clickable_header").click(function(event){ 
+    choose_column($(this).parent().attr("id"))
+  }
+);
+
+
+////////////////////////////////
+// Presets related functions  //
+///////////////////////////////
+
+function load_presets() {
+  $.getJSON('/api/v1/presets?presets_list=sv_presets', function (data) {
+    var default_presets = data['default'];
+    var user_presets = data['user'];
+
+    //Empty previously filled lists of presets
+    $('ul#default_presets_dropdown').empty();
+    $('ul#user_presets_dropdown').empty();
+
+    //Default presets
+    for (var preset in default_presets) {
+      var li = '<li class="clickable_dropdown" id="' + preset + '">';
+      li += '<a tabindex="-1">' + preset + '</a></li>';
+      $('ul#default_presets_dropdown').append(li);
+    }
+    //User presets, if there are any
+    if (!jQuery.isEmptyObject(user_presets)) {
+      for (var preset in user_presets) {
+        var li = '<li class="clickable_dropdown" id="' + preset + '">';
+        li += '<a tabindex="-1">' + preset + '</a></li>';
+        $('ul#user_presets_dropdown').append(li);
+      }
+    }
+    else {
+      var li = '<li class="disabled"><a tabindex="-1">';
+      li += 'No user presets';
+      li += '</a></li>';
+      $('ul#user_presets_dropdown').append(li);
+    }
+
+    //Execute function select_from_preset when clicking a clickable_dropdown
+    $(".clickable_dropdown").click(function(event) {
+        select_from_preset($(this).parent().attr('id'), $(this).attr('id'))
+      }
+    );
+  });
+}
+
+//Fill in the presets at the beginning
+load_presets();
+
+function select_from_preset(preset_type, preset) {
+  $.getJSON('/api/v1/presets?presets_list=sv_presets', function (data) {
+      //First uncheck everything
+      $('input:checkbox').removeAttr('checked');
+      if (preset_type == "default_presets_dropdown") {
+      var choices = data['default'][preset];
+      for (column in choices) {
+      for (choice in choices[column]) {
+      $("#Filter #" + choice).attr('checked', choices[column][choice]);
+      }
+      }
+      }
+      else if (preset_type == "users_presets_dropdown") {
+      }
+      });
+}
 
 // Others
 
