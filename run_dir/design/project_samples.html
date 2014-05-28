@@ -450,8 +450,8 @@
                             <div  id="basic-columns">
                               <h3 class="clickable_header"> Basic </h3>
                               {% for col_display_name, col_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name={{plain_string(col_name)}} id={{plain_string(col_name)}}>
-                              <label for={{plain_string(col_name)}}>
+                              <input type="checkbox" name={{col_name}} id={{col_name}}>
+                              <label for={{col_name}}>
                                 {{col_display_name}}
                               </label>
                               </input>
@@ -461,8 +461,8 @@
                             <div class="fieldset" id="details-columns">
                               <h3 class="clickable_header"> Sample Details </h3>
                               {% for col_display_name, col_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name={{plain_string(col_name)}} id={{plain_string(col_name)}}>
-                              <label for={{plain_string(col_name)}}>
+                              <input type="checkbox" name={{col_name}} id={{col_name}}>
+                              <label for={{col_name}}>
                                 {{col_display_name}}
                               </label>
                               </input>
@@ -671,13 +671,13 @@ function read_current_filtering(header){
 
 function reset_default_checkboxes(){
   {% for col_display_name, column_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
-  $("#Filter #{{plain_string(column_name)}}").attr('checked', true)
+  document.getElementById("{{column_name}}").checked = true;
   {% end %}
   {% for col_display_name, column_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
-  $("#Filter #{{plain_string(column_name)}}").attr('checked', false)
+  document.getElementById("{{column_name}}").checked = false;
   {% end %}
   {% for col_display_name, column_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false)
+  document.getElementById("{{column_name}}").checked = false;
   {% end %}
 
   $("#Filter #undefined_columns").children("input").attr('checked', false)
@@ -758,19 +758,19 @@ load_presets();
 
 function select_from_preset(preset_type, preset) {
   $.getJSON('/api/v1/presets?presets_list=sv_presets', function (data) {
-      //First uncheck everything
-      $('input:checkbox').removeAttr('checked');
-      if (preset_type == "default_presets_dropdown") {
+    //First uncheck everything
+    $('input:checkbox').removeAttr('checked');
+    if (preset_type == "default_presets_dropdown") {
       var choices = data['default'][preset];
       for (column in choices) {
-      for (choice in choices[column]) {
-      $("#Filter #" + choice).attr('checked', choices[column][choice]);
+        for (choice in choices[column]) {
+          document.getElementById(choice).checked = choices[column][choice];
+        }
       }
-      }
-      }
-      else if (preset_type == "users_presets_dropdown") {
-      }
-      });
+    }
+    else if (preset_type == "users_presets_dropdown") {
+    }
+  });
 }
 
 // Others
@@ -1026,6 +1026,16 @@ function load_samples_table() {
               for (var i=0; i<info[column_id].length; i++) {
                 tbl_row += '<a href="/qc/' + info[column_id][i] + '">' + 
                   info[column_id][i] + '</br></a>';
+              }
+              tbl_row += '</td>';
+            }
+            //Library prep is an array of Objects
+            else if (column_id == 'library_prep') {
+              tbl_row += '<td class="' + column_id + '">';
+                if ('library_prep' in info) {
+                $.each(info[column_id], function(prep, info_prep){
+                  tbl_row += prep + '</ br>';
+                });
               }
               tbl_row += '</td>';
             }
