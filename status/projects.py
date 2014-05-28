@@ -341,13 +341,7 @@ class ProjectSamplesHandler(SafeHandler):
                               user=self.get_current_user_name(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
                               columns_sample = self.application.genstat_defaults.get('sample_columns'),
-                              plain_string=self.plain_string,
                               prettify = prettify_css_names))
-
-    def plain_string(self, s):
-        """ Returns s without special characters
-        """
-        return re.sub(r'[(,),{.}]','',s)
 
 
 class ProjectsHandler(SafeHandler):
