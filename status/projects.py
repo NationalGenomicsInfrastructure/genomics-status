@@ -163,56 +163,6 @@ class ProjectsBaseDataHandler(SafeHandler):
                 field_items = field_items.difference(set(column_dict.values()))
         return field_items
 
-    def sample_progress_rows(self, sample_rows):
-        # Helper function to parse rows from Project > Samples.
-        # Used for sample progress tables.
-
-        progress = {}
-        prep_count = {}
-
-        for sample_name, sample_data in sample_rows.iteritems():
-            details = sample_data.get('details', {})
-            lib_preps = sample_data.get('library_prep', {})
-
-            # Sequencing QC
-            if sample_data.get('status', 'x').upper() == 'P':
-                progress['Seq Passed'] = progress.get('Seq Passed', 0) + 1
-            elif sample_data.get('status', 'x').upper() == 'NP':
-                progress['Seq Passed'] = progress.get('Seq Passed', 0)
-
-            # Status: Finished, Aborted, In Progress
-            if details.get('status_(manual)', False):
-                progress[details.get('status_(manual)')] = progress.get(details.get('status_(manual)'),0) + 1
-
-            # Initial QC
-            if details.get('passed_initial_qc', 'x').upper() == 'TRUE':
-                progress['Inc Passed'] = progress.get('Inc Passed', 0) + 1
-            elif details.get('passed_initial_qc', 'x').upper() == 'FALSE':
-                progress['Inc Passed'] = progress.get('Inc Passed', 0)
-
-            # Library QC. Either from details or from prep fields
-            if details.get('passed_library_qc', 'x').upper() == 'TRUE':
-                progress['Lib Passed'] = progress.get('Lib Passed', 0) + 1
-            elif details.get('passed_library_qc', 'x').upper() == 'FALSE':
-                progress['Lib Passed'] = progress.get('Lib Passed', 0)
-            else:
-                for prep, prep_data in lib_preps.iteritems():
-                    if prep_data.get('prep_status', 'x').upper() == 'PASSED':
-                        progress['Lib Passed'] = progress.get('Lib Passed', 0) + 1
-                        break
-
-            prep_count.update(dict.fromkeys(lib_preps.keys()))
-
-        if 'A' in prep_count:
-            prep_count.pop('A')
-
-        final_samples = len(sample_rows) - progress.get('Aborted',0)
-        for passed in ifilter(lambda x: x in ['Seq Passed', 'Lib Passed', 'Inc Passed'], progress):
-            progress[passed] = "/".join([str(progress[passed]),str(final_samples)]) + " P"
-
-        if len(prep_count):
-            progress['Repreps'] = len(prep_count)
-        return progress
 
 def prettify_css_names(s):
     return s.replace("(","_").replace(")", "_")
@@ -267,10 +217,6 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             for date_row in date_result.rows:
                 for date_type, date in date_row.value.iteritems():
                     summary_row.value[date_type] = date
-
-        sample_view = self.application.projects_db.view("project/samples")
-        samples = sample_view[project].rows[0].value
-        summary_row.value.update(self.sample_progress_rows(samples))
 
         return summary_row.value
 
