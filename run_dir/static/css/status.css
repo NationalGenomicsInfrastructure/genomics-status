@@ -2,9 +2,27 @@ html {
   background: transparent;
   height: 100%;
 }
+
+div .scrollable {
+  overflow: scroll;
+  overflow: auto;
+}
+
+table .scrollable {
+  max-width: max-content;
+}
 /* Body and structure
 -------------------------------------------------- 
 Colors: http://colorschemedesigner.com/#3n52e1uYmw0w0 */
+
+/*
+ * The progress class clashes in the Sample List in project view with the bootstrap
+ * property. This overrides the bootstrap properties.
+ */
+td.progress {
+  background-color: #FFFFFF;
+  background-image: none;
+}
 
 body {
   padding-bottom: 40px;
