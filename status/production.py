@@ -22,6 +22,30 @@ class ProductionHandler(SafeHandler):
         t = self.application.loader.load("production.html")
         self.write(t.generate(user=self.get_current_user_name(), deprecated=True))
 
+class ProductionCronjobsHandler(SafeHandler):
+    """ Serves a page with the information about all cronjobs in production servers.
+    """
+    def get(self):
+        t = self.application.loader.load("cronjobs.html")
+        self.write(t.generate(user=self.get_current_user_name()))
+
+
+class ProductionCronjobsDataHandler(SafeHandler):
+    """ Returns a JSON document with the Cronjobs database information
+    """
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.get_cronjobs()))
+
+    def get_cronjobs(self):
+        cronjobs = {}
+        # Get different servers
+        servers = self.application.cronjobs_db.view('server/alias')
+        for server in servers.rows:
+            doc = self.application.cronjobs_db.get(server.value)
+            cronjobs[server.key] =  {"last_updated": doc['Last updated'], 'users': doc['users']}
+        return cronjobs
+
 
 class DeliveredMonthlyDataHandler(SafeHandler):
     """ Gives the data for monthly delivered amount of basepairs.
@@ -148,7 +172,7 @@ class DeliveredQuarterlyDataHandler(SafeHandler):
 
 class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
     """ Gives a bar plot for quarterly delivered amount of basepairs.
-    
+
     Loaded through /api/v1/delivered_quarterly.png
     """
     def get(self):
