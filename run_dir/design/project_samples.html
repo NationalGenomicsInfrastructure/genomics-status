@@ -1071,7 +1071,7 @@ function load_samples_table() {
             }
           });
         }
-        else if (subset == "initial-qc-columns") {
+        else if (subset == "initial-qc-columns" && info.hasOwnProperty('initial_qc')) {
           $.each(fields, function(idx, column_tuple){
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
