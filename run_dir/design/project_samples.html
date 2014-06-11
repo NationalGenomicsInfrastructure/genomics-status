@@ -249,6 +249,10 @@
                       <td>Custom Primer</td>
                       <td name='{{columns['DETAILS_COLUMNS']['Custom Primer']}}'></td>
                     </tr>
+                    <tr>
+                      <td>Lanes Ordered</td>
+                      <td name="{{columns['DETAILS_COLUMNS']['Lanes']}}"></td>
+                    </tr>
                     </tbody>
                   </table>
                 </div>
@@ -278,7 +282,7 @@
                     </tr>
                     <tr>
                       <td>Pools</td>
-                      <td></td>
+                      <td name ='number_of_pools'></td>
                     </tr>
                     </tbody>
                   </table>
@@ -319,22 +323,22 @@
                       <tbody>
                       <tr>
                         <td>Incoming QC</td>
-                        <td name='Inc Passed'></td>
+                        <td name='passed_initial_qc'></td>
                       </tr>
                       <tr>
                         <td>Library QC</td>
-                        <td name='Lib Passed'></td>
+                        <td name='passed_library_qc'></td>
                         <tr>
                           <td>Sequencing QC</td>
-                          <td name='Seq Passed'></td>
-                        </tr>
-                        <tr>
-                          <td>Lanes</td>
-                          <td name="{{columns['DETAILS_COLUMNS']['Lanes']}}"></td>
+                          <td name='passed_seq_qc'></td>
                         </tr>
                         <tr>
                           <td>Library re-preps</td>
-                          <td name='Repreps'></td>
+                          <td name='library_repreps'></td>
+                        </tr>
+                        <tr>
+                          <td>Lanes sequenced</td>
+                          <td name="lanes_sequenced"></td>
                         </tr>
                         <tr>
                           <td>Sequencing re-runs</td>
