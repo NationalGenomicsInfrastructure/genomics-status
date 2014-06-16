@@ -495,6 +495,7 @@
                           <input type="submit" value="Apply" class="btn btn-primary btn-large" id="applyFilter">
                           </p>
                         </div>
+                      </form>
                         </div>
                       </div>
                     </div>
@@ -913,7 +914,7 @@ function load_running_notes(wait) {
     $.each(data, function(date, note) {
       var date = new Date(date)
       var row = '<tr>'
-      row += '<td>' + date.toDateString() + ' by '
+      row += '<td>' + date.toDateString() + ', ' + date.toLocaleTimeString(date) + ' by '
       row += '<a href="mailto:' + note['email'] + '">' + note['user'] + '</a></td>'
       row += '<td><pre>' + note['note'] + '</pre></td>'
       row += '</tr>'
