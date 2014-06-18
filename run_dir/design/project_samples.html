@@ -1124,6 +1124,19 @@ function load_samples_table() {
             });
           });
         }
+        else if (subset == "library-validation-columns" && info.hasOwnProperty('library_prep')) {
+          $.each(info['library_prep'], function(library, info_library) {
+            if ('library_validation' in info_library) {
+              $.each(info_library['library_validation'], function(process, validation_data){
+                $.each(fields, function(idx, column_tuple){
+                  var column_name = column_tuple[0];
+                  var column_id = column_tuple[1];
+                  tbl_row += '<td class="' + column_id + '">' + validation_data[column_id] + '</td>';
+                });
+              });
+            }
+          });
+        } 
         // Details columns
         else {
           $.each(fields, function(idx, column_tuple){
