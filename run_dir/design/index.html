@@ -6,30 +6,42 @@
 <h1 id="scilifelabgenomics-status">SciLifeLab Genomics - Status</h1>
 
 <br>
-<p>In various stages of data production in the genomics platform metadata about this data
-is created, and stored in a database (known as StatusDB). This service provides an
-interface to commonly accessed data, and functionality to generate plots regarding
-the statistics of this data.</p>
+<p>
+In various stages of data production in the genomics platform metadata about this 
+data is created, and stored in a database (known as StatusDB). This service provides 
+an interface to commonly accessed data, and functionality to generate plots regarding 
+the statistics of this data.
+</p>
 
-<p>Data is put in the database from various sources. Time series statistics about
-systems are mostly gathered by cron jobs on the systems in question.</p>
+<p>
+Data is put in the database from various sources. Time series statistics about systems 
+are mostly gathered by cron jobs on the systems in question.
+</p>
 
-<p>Data about projects and samples are currently converted from the spreadsheets used
-to keep track of these. For questions regarding this, contact Maya Brandi.</p>
+<p>
+<a href="https://github.com/SciLifeLab/scilifelab/blob/master/scilifelab/lims_utils/project_summary_upload_LIMS.py">A script</a>
+running on the background fetches information about Projects and Samples 
+'from the LIMS and populates StatusDB. This is the information used by genomics-status. 
+For questions regarding this, contact Maya Brandi.
+</p>
 
-<p>In particular, the number of samples in a project, as well as the minimum
-number of reads per sample is entered manually by Mattias Ormestad</p>
+<p>
+Data about runs of samples and flowcells are collected while generating statistics 
+in the end of the data processing pipeline, then uploaded to the database. Most of 
+the scripts which generate these statistics and put them in the database have been 
+created by Per Unneberg (as part of the pm tools).
+</p>
 
-<p>Data about runs of samples and flowcells are collected while generating
-statistics in the end of the data processing pipeline, then uploaded to the
-database. Most of the scripts which generate these statistics and put them in
-the database have been created by Per Unneberg (as part of the <a href="https://github.com/SciLifeLab/scilifelab/tree/master/scilifelab/pm">pm
-tools</a>).</p>
+<p>
+Most data have been reliably collected since January 1st 2012, in some instances 
+there are earlier data. For data regarding Projects and Samples only projects opened 
+after July 1st 2013 should be displayed and trusted.
+</p>
 
-<p>Most data have been reliably collected since January 1st 2012, in some instances there
-are earlier data.</p>
-
-<p>For general information about Genomics Status, or feature requests, contact Johannes Alneberg.</p>
+<p>
+For general information about Genomics Status, or feature requests, contact 
+<a href="mailto:guillermo.carrasco@scilifelab.se">Guillermo Carrasco</a> or <a href="mailto:remi-andre.olsen@scilifelab.se">Remi-André Olsen</a>.
+<p>
 
 <p>Code for Status can be seen on <a href="https://github.com/scilifelab/status">Github</a>.</p>
 
