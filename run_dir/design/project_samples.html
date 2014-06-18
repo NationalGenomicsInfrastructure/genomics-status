@@ -450,12 +450,13 @@
                           </ul>
                         </div>
                         <div class="row-fluid">
+                          <div class='span9'>
                           <div class="span3">
                             <div  id="basic-columns">
                               <h3 class="clickable_header"> Basic </h3>
                               {% for col_display_name, col_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name={{col_name}} id={{col_name}}>
-                              <label for={{col_name}}>
+                              <input type="checkbox" name="{{col_name}}" id="{{col_name}}">
+                              <label for="{{col_name}}">
                                 {{col_display_name}}
                               </label>
                               </input>
@@ -465,8 +466,8 @@
                             <div class="fieldset" id="details-columns">
                               <h3 class="clickable_header"> Sample Details </h3>
                               {% for col_display_name, col_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name={{col_name}} id={{col_name}}>
-                              <label for={{col_name}}>
+                              <input type="checkbox" name="{{col_name}}" id="{{col_name}}">
+                              <label for="{{col_name}}">
                                 {{col_display_name}}
                               </label>
                               </input>
@@ -478,7 +479,7 @@
                             <div class="fieldset" id="initial-qc-columns">
                               <h3 class="clickable_header"> Initial QC </h3>
                               {% for col_display_name, col_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name={{col_name}} id={{col_name}}>
+                              <input type="checkbox" name="{{col_name}}" id="{{col_name}}">
                               <label for={{col_name}}>
                                 {{col_display_name}}
                               </label>
@@ -487,16 +488,43 @@
                               {% end %}
                             </div>
                           </div>
-                        <div class="span3">
+                          <div class="span3">
+                            <div class="fieldset" id="library-prep-columns">
+                              <h3 class="clickable_header"> Library Prep </h3>
+                              {% for col_display_name, col_name in columns_sample['LIBRARY_PREP_COLUMNS'].iteritems() %}
+                              <input type="checkbox" name="{{col_name}}" id="{{col_name}}">
+                              <label for="{{col_name}}">
+                                {{col_display_name}}
+                              </label>
+                              </input>
+                              <br />
+                              {% end %}
+                            </div>
+                          </div>
+                          <div class="span3">
+                            <div class="fieldset" id="library-validation-columns">
+                              <h3 class="clickable_header"> Library Validation </h3>
+                              {% for col_display_name, col_name in columns_sample['LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
+                              <input type="checkbox" name="{{col_name}}" id="{{col_name}}">
+                              <label for={{col_name}}>
+                                {{col_display_name}}
+                              </label>
+                              </input>
+                              <br />
+                              {% end %}
+                            </div>
+                          </div>
+                        </div>
+                        <div class='span3'>
                           <p>
-                          <button id="Reset" class="btn btn-large"> Reset</button>
-                          </p>
-                          <p>
-                          <input type="submit" value="Apply" class="btn btn-primary btn-large" id="applyFilter">
-                          </p>
+                            <button id="Reset" class="btn btn-large"> Reset</button>
+                            </p>
+                            <p>
+                            <input type="submit" value="Apply" class="btn btn-primary btn-large" id="applyFilter">
+                            </p>
+                        </div>
                         </div>
                       </form>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -685,6 +713,12 @@ function reset_default_checkboxes(){
   document.getElementById("{{column_name}}").checked = false;
   {% end %}
   {% for col_display_name, column_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
+  document.getElementById("{{column_name}}").checked = false;
+  {% end %}
+  {% for col_display_name, column_name in columns_sample['LIBRARY_PREP_COLUMNS'].iteritems() %}
+  document.getElementById("{{column_name}}").checked = false;
+  {% end %}
+  {% for col_display_name, column_name in columns_sample['LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
   document.getElementById("{{column_name}}").checked = false;
   {% end %}
 
@@ -1081,6 +1115,28 @@ function load_samples_table() {
             tbl_row += '<td class="' + column_id + '">' + info['initial_qc'][column_id] + '</td>';
           });
         }
+        else if (subset == "library-prep-columns" && info.hasOwnProperty('library_prep')) {
+          $.each(info['library_prep'], function(library, info_library) {
+            $.each(fields, function(idx, column_tuple){
+              var column_name = column_tuple[0];
+              var column_id = column_tuple[1];
+              tbl_row += '<td class="' + column_id + '">' + info_library[column_id] + '</td>';
+            });
+          });
+        }
+        else if (subset == "library-validation-columns" && info.hasOwnProperty('library_prep')) {
+          $.each(info['library_prep'], function(library, info_library) {
+            if ('library_validation' in info_library) {
+              $.each(info_library['library_validation'], function(process, validation_data){
+                $.each(fields, function(idx, column_tuple){
+                  var column_name = column_tuple[0];
+                  var column_id = column_tuple[1];
+                  tbl_row += '<td class="' + column_id + '">' + validation_data[column_id] + '</td>';
+                });
+              });
+            }
+          });
+        } 
         // Details columns
         else {
           $.each(fields, function(idx, column_tuple){
