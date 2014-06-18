@@ -715,6 +715,12 @@ function reset_default_checkboxes(){
   {% for col_display_name, column_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
   document.getElementById("{{column_name}}").checked = false;
   {% end %}
+  {% for col_display_name, column_name in columns_sample['LIBRARY_PREP_COLUMNS'].iteritems() %}
+  document.getElementById("{{column_name}}").checked = false;
+  {% end %}
+  {% for col_display_name, column_name in columns_sample['LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
+  document.getElementById("{{column_name}}").checked = false;
+  {% end %}
 
   $("#Filter #undefined_columns").children("input").attr('checked', false)
 }
@@ -1107,6 +1113,15 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">' + info['initial_qc'][column_id] + '</td>';
+          });
+        }
+        else if (subset == "library-prep-columns" && info.hasOwnProperty('library_prep')) {
+          $.each(info['library_prep'], function(library, info_library) {
+            $.each(fields, function(idx, column_tuple){
+              var column_name = column_tuple[0];
+              var column_id = column_tuple[1];
+              tbl_row += '<td class="' + column_id + '">' + info_library[column_id] + '</td>';
+            });
           });
         }
         // Details columns
