@@ -1116,28 +1116,31 @@ function load_samples_table() {
           });
         }
         else if (subset == "library-prep-columns" && info.hasOwnProperty('library_prep')) {
-          $.each(info['library_prep'], function(library, info_library) {
-            $.each(fields, function(idx, column_tuple){
-              var column_name = column_tuple[0];
-              var column_id = column_tuple[1];
-              tbl_row += '<td class="' + column_id + '">' + info_library[column_id] + '</td>';
+          $.each(fields, function(idx, column_tuple){
+            var column_name = column_tuple[0];
+            var column_id = column_tuple[1];
+            tbl_row += '<td class="' + column_id + '">';
+            $.each(info['library_prep'], function(library, info_library) {
+              tbl_row += info_library[column_id] + '</td>';
             });
           });
         }
         else if (subset == "library-validation-columns" && info.hasOwnProperty('library_prep')) {
-          $.each(info['library_prep'], function(library, info_library) {
-            if ('library_validation' in info_library) {
-              //We only want to show up the LIMS process ID with the higher number (the last one)
-              var process_id = max_str(Object.keys(info_library['library_validation']));
-              var validation_data = info_library['library_validation'][process_id];
-              if (validation_data) {
-                $.each(fields, function(idx, column_tuple){
-                  var column_name = column_tuple[0];
-                  var column_id = column_tuple[1];
-                  tbl_row += '<td class="' + column_id + '">' + validation_data[column_id] + '</td>';
-                });
+          $.each(fields, function(idx, column_tuple){
+            var column_name = column_tuple[0];
+            var column_id = column_tuple[1];
+            tbl_row += '<td class="' + column_id + '">';
+            $.each(info['library_prep'], function(library, info_library) {
+              if ('library_validation' in info_library) {
+                //We only want to show up the LIMS process ID with the higher number (the last one)
+                var process_id = max_str(Object.keys(info_library['library_validation']));
+                var validation_data = info_library['library_validation'][process_id];
+                if (validation_data) {
+                  tbl_row += validation_data[column_id] + '<br>';
+                }
               }
-            }
+            });
+            tbl_row += '</td>';
           });
         } 
         // Details columns
