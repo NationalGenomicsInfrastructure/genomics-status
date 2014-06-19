@@ -1090,7 +1090,7 @@ function load_samples_table() {
               tbl_row += '<td class="' + column_id + '">';
                 if ('library_prep' in info) {
                 $.each(info[column_id], function(prep, info_prep){
-                  tbl_row += prep + '</ br>';
+                  tbl_row += prep + "<br>";
                 });
               }
               tbl_row += '</td>';
@@ -1099,7 +1099,7 @@ function load_samples_table() {
             else if (column_id == 'prep_status' || column_id == 'prep_finished_date') {
               tbl_row += '<td class="' + column_id + '">';
               for (var i=0; i<info[column_id].length; i++) {
-                tbl_row += info[column_id][i] + '</ br>';
+                tbl_row += info[column_id][i] + "<br>";
               }
               tbl_row += '</td>';
             }
@@ -1127,13 +1127,16 @@ function load_samples_table() {
         else if (subset == "library-validation-columns" && info.hasOwnProperty('library_prep')) {
           $.each(info['library_prep'], function(library, info_library) {
             if ('library_validation' in info_library) {
-              $.each(info_library['library_validation'], function(process, validation_data){
+              //We only want to show up the LIMS process ID with the higher number (the last one)
+              var process_id = max_str(Object.keys(info_library['library_validation']));
+              var validation_data = info_library['library_validation'][process_id];
+              if (validation_data) {
                 $.each(fields, function(idx, column_tuple){
                   var column_name = column_tuple[0];
                   var column_id = column_tuple[1];
                   tbl_row += '<td class="' + column_id + '">' + validation_data[column_id] + '</td>';
                 });
-              });
+              }
             }
           });
         } 
@@ -1180,6 +1183,17 @@ fetching_data = fetching_data || (function () {
       },
   };
 })();
+
+//Is there any standar method to do this?
+var max_str = function(strs) {
+  max = strs[0];
+  for (var i=0; i < strs.length; i++) {
+    if (strs[i] > max) {
+      max = strs[i];
+    }
+  }
+  return max
+}
 
 </script>
 
