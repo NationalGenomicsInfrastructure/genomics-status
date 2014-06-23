@@ -271,10 +271,9 @@ function load_table(){
         }
         $.each(columns, function(i, column_tuple){
           if(column_tuple[1]=="latest_running_note" && summary[column_tuple[1]]!=undefined) {
-            note = JSON.parse(summary[column_tuple[1]])
-            ndate = undefined
+            var note = JSON.parse(summary[column_tuple[1]])
+            var ndate = undefined
             for (key in note) {ndate = key; break}
-
             tbl_row += '<td class="' + column_tuple[1] + '">' + ndate.split(" ")[0] + ' by ' +
                        note[ndate]['user'] + ':<pre>' + note[ndate]['note'] + '</pre></td>'
           }
