@@ -514,6 +514,19 @@
                               {% end %}
                             </div>
                           </div>
+                          <div class="span3">
+                            <div class="fieldset" id="pre-prep-library-validation-columns">
+                              <h3 class="clickable_header"> Pre Prep Library Validation </h3>
+                              {% for col_display_name, col_name in columns_sample['PRE_PREP_LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
+                              <input type="checkbox" name="{{col_name}}" id="pre-prep-library-validation-columns-{{col_name}}">
+                              <label for={{col_name}}>
+                                {{col_display_name}}
+                              </label>
+                              </input>
+                              <br />
+                              {% end %}
+                            </div>
+                          </div>
                         </div>
                         <div class='span3'>
                           <p>
@@ -720,6 +733,9 @@ function reset_default_checkboxes(){
   {% end %}
   {% for col_display_name, column_name in columns_sample['LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
   document.getElementById("library-validation-columns-{{column_name}}").checked = false;
+  {% end %}
+  {% for col_display_name, column_name in columns_sample['PRE_PREP_LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
+  document.getElementById("pre-prep-library-validation-columns-{{column_name}}").checked = false;
   {% end %}
 
   $("#Filter #undefined_columns").children("input").attr('checked', false)
@@ -1136,6 +1152,24 @@ function load_samples_table() {
                 //We only want to show up the LIMS process ID with the higher number (the last one)
                 var process_id = max_str(Object.keys(info_library['library_validation']));
                 var validation_data = info_library['library_validation'][process_id];
+                if (validation_data) {
+                  tbl_row += validation_data[column_id] + '<br>';
+                }
+              }
+            });
+            tbl_row += '</td>';
+          });
+        } 
+        else if (subset == "pre-prep-library-validation-columns" && info.hasOwnProperty('library_prep')) {
+          $.each(fields, function(idx, column_tuple){
+            var column_name = column_tuple[0];
+            var column_id = column_tuple[1];
+            tbl_row += '<td class="' + column_id + '">';
+            $.each(info['library_prep'], function(library, info_library) {
+              if ('pre_prep_library_validation' in info_library) {
+                //We only want to show up the LIMS process ID with the higher number (the last one)
+                var process_id = max_str(Object.keys(info_library['pre_prep_library_validation']));
+                var validation_data = info_library['pre_prep_library_validation'][process_id];
                 if (validation_data) {
                   tbl_row += validation_data[column_id] + '<br>';
                 }
