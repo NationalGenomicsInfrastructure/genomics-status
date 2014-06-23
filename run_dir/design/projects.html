@@ -270,8 +270,16 @@ function load_table(){
         tbl_row += '<td><a class="project" href="/project/' + key + '">' + key  + '</td>'
         }
         $.each(columns, function(i, column_tuple){
-          if(column_tuple[1]!="project"){
-          tbl_row += '<td class="' + column_tuple[1] + '">' + summary[column_tuple[1]] + '</td>'
+          if(column_tuple[1]=="latest_running_note" && summary[column_tuple[1]]!=undefined) {
+            note = JSON.parse(summary[column_tuple[1]])
+            ndate = undefined
+            for (key in note) {ndate = key; break}
+
+            tbl_row += '<td class="' + column_tuple[1] + '">' + ndate.split(" ")[0] + ' by ' +
+                       note[ndate]['user'] + ':<pre>' + note[ndate]['note'] + '</pre></td>'
+          }
+          else if(column_tuple[1]!="project"){
+            tbl_row += '<td class="' + column_tuple[1] + '">' + summary[column_tuple[1]] + '</td>'
           }
           })
         tbl_row += '</tr>'
