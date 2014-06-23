@@ -265,7 +265,7 @@ function load_table(){
       var size = 0;
       $.each(data, function(key, summary) {
         size++;
-        tbl_row = '<tr project_column=' + project_column + '>'
+        var tbl_row = '<tr project_column=' + project_column + '>'
         if(project_column){
         tbl_row += '<td><a class="project" href="/project/' + key + '">' + key  + '</td>'
         }
@@ -309,10 +309,10 @@ valueNames: column_names,
       function choose_column(col){
         var column = document.getElementById(col);
         //Get all the children (checkboxes)
-        cbs = column.getElementsByTagName('input');
+        var cbs = column.getElementsByTagName('input');
         //If one of them is checked we uncheck it, if none of them are checked, 
         //we check them all
-        checked = false;
+        var checked = false;
         for (var i = 0; i < cbs.length; i++) {
           if (cbs[i].checked) {
             cbs[i].checked = false;
