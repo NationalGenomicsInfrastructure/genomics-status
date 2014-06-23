@@ -455,7 +455,7 @@
                             <div  id="basic-columns">
                               <h3 class="clickable_header"> Basic </h3>
                               {% for col_display_name, col_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name="{{col_name}}" id="{{col_name}}">
+                              <input type="checkbox" name="{{col_name}}" id="basic-columns-{{col_name}}">
                               <label for="{{col_name}}">
                                 {{col_display_name}}
                               </label>
@@ -466,7 +466,7 @@
                             <div class="fieldset" id="details-columns">
                               <h3 class="clickable_header"> Sample Details </h3>
                               {% for col_display_name, col_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name="{{col_name}}" id="{{col_name}}">
+                              <input type="checkbox" name="{{col_name}}" id="details-columns-{{col_name}}">
                               <label for="{{col_name}}">
                                 {{col_display_name}}
                               </label>
@@ -479,7 +479,7 @@
                             <div class="fieldset" id="initial-qc-columns">
                               <h3 class="clickable_header"> Initial QC </h3>
                               {% for col_display_name, col_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name="{{col_name}}" id="{{col_name}}">
+                              <input type="checkbox" name="{{col_name}}" id="initial-qc-columns-{{col_name}}">
                               <label for={{col_name}}>
                                 {{col_display_name}}
                               </label>
@@ -492,7 +492,7 @@
                             <div class="fieldset" id="library-prep-columns">
                               <h3 class="clickable_header"> Library Prep </h3>
                               {% for col_display_name, col_name in columns_sample['LIBRARY_PREP_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name="{{col_name}}" id="{{col_name}}">
+                              <input type="checkbox" name="{{col_name}}" id="library-prep-columns-{{col_name}}">
                               <label for="{{col_name}}">
                                 {{col_display_name}}
                               </label>
@@ -505,7 +505,7 @@
                             <div class="fieldset" id="library-validation-columns">
                               <h3 class="clickable_header"> Library Validation </h3>
                               {% for col_display_name, col_name in columns_sample['LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name="{{col_name}}" id="{{col_name}}">
+                              <input type="checkbox" name="{{col_name}}" id="library-validation-columns-{{col_name}}">
                               <label for={{col_name}}>
                                 {{col_display_name}}
                               </label>
@@ -707,19 +707,19 @@ function read_current_filtering(header){
 
 function reset_default_checkboxes(){
   {% for col_display_name, column_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
-  document.getElementById("{{column_name}}").checked = true;
+  document.getElementById("basic-columns-{{column_name}}").checked = true;
   {% end %}
   {% for col_display_name, column_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
-  document.getElementById("{{column_name}}").checked = false;
+  document.getElementById("details-columns-{{column_name}}").checked = false;
   {% end %}
   {% for col_display_name, column_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
-  document.getElementById("{{column_name}}").checked = false;
+  document.getElementById("initial-qc-columns-{{column_name}}").checked = false;
   {% end %}
   {% for col_display_name, column_name in columns_sample['LIBRARY_PREP_COLUMNS'].iteritems() %}
-  document.getElementById("{{column_name}}").checked = false;
+  document.getElementById("library-prep-columns-{{column_name}}").checked = false;
   {% end %}
   {% for col_display_name, column_name in columns_sample['LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
-  document.getElementById("{{column_name}}").checked = false;
+  document.getElementById("library-validation-columns-{{column_name}}").checked = false;
   {% end %}
 
   $("#Filter #undefined_columns").children("input").attr('checked', false)
@@ -806,7 +806,8 @@ function select_from_preset(preset_type, preset) {
       var choices = data['default'][preset];
       for (column in choices) {
         for (choice in choices[column]) {
-          document.getElementById(choice).checked = choices[column][choice];
+          var column_id = column.toLowerCase().replace(/_/g, '-') + '-' + choice
+          document.getElementById(column_id).checked = choices[column][choice];
         }
       }
     }
