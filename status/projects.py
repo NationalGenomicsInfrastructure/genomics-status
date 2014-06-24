@@ -87,6 +87,16 @@ class ProjectsBaseDataHandler(SafeHandler):
             diff = now - dateutil.parser.parse(queued)
             row.value['days_in_production'] = diff.days
 
+        if row.key[0] == 'open' and 'open_date' in row.value:
+            end_date = datetime.datetime.now()
+            if 'queued' in row.value:
+                end_date =  dateutil.parser.parse(row.value['queued'])
+            diff = (end_date - dateutil.parser.parse(row.value['open_date'])).days
+            if 'queued' not in row.value and diff > 14:
+                row.value['days_in_reception_control'] = '<b class="text-error">{}</b>'.format(diff)
+            else:
+                row.value['days_in_reception_control'] = diff
+
         return row
 
     def list_projects(self, filter_projects='all'):
