@@ -1138,8 +1138,9 @@ function load_samples_table() {
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">';
             $.each(info['library_prep'], function(library, info_library) {
-              tbl_row += info_library[column_id] + '</td>';
+              tbl_row += info_library[column_id] + '<br>';
             });
+            tbl_row += '</td>';
           });
         }
         else if (subset == "library-validation-columns" && info.hasOwnProperty('library_prep')) {
