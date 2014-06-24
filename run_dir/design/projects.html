@@ -265,13 +265,20 @@ function load_table(){
       var size = 0;
       $.each(data, function(key, summary) {
         size++;
-        tbl_row = '<tr project_column=' + project_column + '>'
+        var tbl_row = '<tr project_column=' + project_column + '>'
         if(project_column){
         tbl_row += '<td><a class="project" href="/project/' + key + '">' + key  + '</td>'
         }
         $.each(columns, function(i, column_tuple){
-          if(column_tuple[1]!="project"){
-          tbl_row += '<td class="' + column_tuple[1] + '">' + summary[column_tuple[1]] + '</td>'
+          if(column_tuple[1]=="latest_running_note" && summary[column_tuple[1]]!=undefined) {
+            var note = JSON.parse(summary[column_tuple[1]])
+            var ndate = undefined
+            for (key in note) {ndate = key; break}
+            tbl_row += '<td class="' + column_tuple[1] + '">' + ndate.split(" ")[0] + ' by ' +
+                       note[ndate]['user'] + ':<pre>' + note[ndate]['note'] + '</pre></td>'
+          }
+          else if(column_tuple[1]!="project"){
+            tbl_row += '<td class="' + column_tuple[1] + '">' + summary[column_tuple[1]] + '</td>'
           }
           })
         tbl_row += '</tr>'
@@ -302,10 +309,10 @@ valueNames: column_names,
       function choose_column(col){
         var column = document.getElementById(col);
         //Get all the children (checkboxes)
-        cbs = column.getElementsByTagName('input');
+        var cbs = column.getElementsByTagName('input');
         //If one of them is checked we uncheck it, if none of them are checked, 
         //we check them all
-        checked = false;
+        var checked = false;
         for (var i = 0; i < cbs.length; i++) {
           if (cbs[i].checked) {
             cbs[i].checked = false;

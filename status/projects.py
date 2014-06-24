@@ -72,12 +72,21 @@ class ProjectsBaseDataHandler(SafeHandler):
                 row.value[detail_key] = detail_value
             row.value.pop("details", None)
 
+        # Find the latest running note, return it as a separate field
+        if 'running_notes' in row.value:
+            notes = json.loads(row.value['running_notes'])
+            # note_dates = {datetime obj: time string, ...}
+            note_dates = dict(zip(map(dateutil.parser.parse, notes.keys()), notes.keys()))
+            latest_date = note_dates[max(note_dates.keys())]
+            row.value['latest_running_note'] = json.dumps({latest_date: notes[latest_date]})
+
         if row.key[0] == 'open' and 'queued' in row.value:
             #Add days in production field
             now = datetime.datetime.now()
             queued = row.value['queued']
             diff = now - dateutil.parser.parse(queued)
             row.value['days_in_production'] = diff.days
+
         return row
 
     def list_projects(self, filter_projects='all'):
