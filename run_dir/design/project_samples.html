@@ -456,7 +456,7 @@
                               <h3 class="clickable_header"> Basic </h3>
                               {% for col_display_name, col_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
                               <input type="checkbox" name="{{col_name}}" id="basic-columns-{{col_name}}">
-                              <label for="{{col_name}}">
+                              <label for="basic-columns-{{col_name}}">
                                 {{col_display_name}}
                               </label>
                               <br />
@@ -466,7 +466,7 @@
                               <h3 class="clickable_header"> Sample Details </h3>
                               {% for col_display_name, col_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
                               <input type="checkbox" name="{{col_name}}" id="details-columns-{{col_name}}">
-                              <label for="{{col_name}}">
+                              <label for="details-columns-{{col_name}}">
                                 {{col_display_name}}
                               </label>
                               <br />
@@ -478,7 +478,7 @@
                               <h3 class="clickable_header"> Initial QC </h3>
                               {% for col_display_name, col_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
                               <input type="checkbox" name="{{col_name}}" id="initial-qc-columns-{{col_name}}">
-                              <label for={{col_name}}>
+                              <label for=initial-qc-columns-{{col_name}}>
                                 {{col_display_name}}
                               </label>
                               <br />
@@ -490,7 +490,7 @@
                               <h3 class="clickable_header"> Library Prep </h3>
                               {% for col_display_name, col_name in columns_sample['LIBRARY_PREP_COLUMNS'].iteritems() %}
                               <input type="checkbox" name="{{col_name}}" id="library-prep-columns-{{col_name}}">
-                              <label for="{{col_name}}">
+                              <label for="library-prep-columns-{{col_name}}">
                                 {{col_display_name}}
                               </label>
                               <br />
@@ -502,7 +502,7 @@
                               <h3 class="clickable_header"> Library Validation </h3>
                               {% for col_display_name, col_name in columns_sample['LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
                               <input type="checkbox" name="{{col_name}}" id="library-validation-columns-{{col_name}}">
-                              <label for={{col_name}}>
+                              <label for=library-validation-columns-{{col_name}}>
                                 {{col_display_name}}
                               </label>
                               <br />
@@ -514,7 +514,7 @@
                               <h3 class="clickable_header"> Pre Prep Library Validation </h3>
                               {% for col_display_name, col_name in columns_sample['PRE_PREP_LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
                               <input type="checkbox" name="{{col_name}}" id="pre-prep-library-validation-columns-{{col_name}}">
-                              <label for={{col_name}}>
+                              <label for=pre-prep-library-validation-columns-{{col_name}}>
                                 {{col_display_name}}
                               </label>
                               <br />
