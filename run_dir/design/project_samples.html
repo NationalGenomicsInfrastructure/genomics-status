@@ -1219,9 +1219,9 @@ fetching_data = fetching_data || (function () {
 
 //Is there any standar method to do this?
 var max_str = function(strs) {
-  max = strs[0];
+  var max = strs[0];
   for (var i=0; i < strs.length; i++) {
-    if (strs[i] > max) {
+    if (parseInt(strs[i].split('-')[1]) > parseInt(max.split('-')[1])) {
       max = strs[i];
     }
   }
