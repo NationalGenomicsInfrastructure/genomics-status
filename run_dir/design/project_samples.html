@@ -1082,6 +1082,7 @@ function load_samples_table() {
           $.each(fields, function(idx, column_tuple) {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
+            info[column_id] = round(info[column_id], 2);
             // Scilife Sample Name is a link
             if (column_id == "scilife_name") {
               tbl_row += '<td><a class="' + column_id + '" href="/samples/' + 
@@ -1123,6 +1124,7 @@ function load_samples_table() {
           $.each(fields, function(idx, column_tuple){
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
+            info['initial_qc'][column_id] = round(info['initial_qc'][column_id], 2);
             tbl_row += '<td class="' + column_id + '">' + info['initial_qc'][column_id] + '</td>';
           });
         }
@@ -1132,6 +1134,7 @@ function load_samples_table() {
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">';
             $.each(info['library_prep'], function(library, info_library) {
+              info_library[column_id] = round(info_library[column_id], 2);
               // Special case for workset_setup, which is a link to the LIMS
               if (column_id == "workset_setup") {
                 tbl_row += '<a href="http://genologics.scilifelab.se:8080/clarity/work-complete/';
@@ -1155,6 +1158,7 @@ function load_samples_table() {
                 var process_id = max_str(Object.keys(info_library['library_validation']));
                 var validation_data = info_library['library_validation'][process_id];
                 if (validation_data) {
+                  validation_data[column_id] = round(validation_data[column_id], 2);
                   tbl_row += validation_data[column_id] + '<br>';
                 }
               }
@@ -1173,6 +1177,7 @@ function load_samples_table() {
                 var process_id = max_str(Object.keys(info_library['pre_prep_library_validation']));
                 var validation_data = info_library['pre_prep_library_validation'][process_id];
                 if (validation_data) {
+                  validation_data[column_id] = round(validation_data[column_id], 2);
                   tbl_row += validation_data[column_id] + '<br>';
                 }
               }
@@ -1185,6 +1190,7 @@ function load_samples_table() {
           $.each(fields, function(idx, column_tuple){
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
+            info['details'][column_id] = round(info['details'][column_id], 2);
             tbl_row += '<td class="' + column_id + '">' + info['details'][column_id] + '</td>';
           });
         }
@@ -1233,6 +1239,17 @@ var max_str = function(strs) {
     }
   }
   return max
+}
+
+// Round number to the given number of decimals
+var round = function(n, p) {
+  if (typeof(n) == 'number') {
+    // If it's a float...
+    if (Math.round(n) != n) {
+      n = n.toFixed(p);
+    }
+  }
+  return n;
 }
 
 </script>
