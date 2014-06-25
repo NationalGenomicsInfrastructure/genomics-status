@@ -450,26 +450,25 @@
                           </ul>
                         </div>
                         <div class="row-fluid">
+                          <div class='span9'>
                           <div class="span3">
                             <div  id="basic-columns">
                               <h3 class="clickable_header"> Basic </h3>
                               {% for col_display_name, col_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name={{col_name}} id={{col_name}}>
-                              <label for={{col_name}}>
+                              <input type="checkbox" name="{{col_name}}" id="basic-columns-{{col_name}}">
+                              <label for="basic-columns-{{col_name}}">
                                 {{col_display_name}}
                               </label>
-                              </input>
                               <br />
                               {% end %}
                             </div>
                             <div class="fieldset" id="details-columns">
                               <h3 class="clickable_header"> Sample Details </h3>
                               {% for col_display_name, col_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name={{col_name}} id={{col_name}}>
-                              <label for={{col_name}}>
+                              <input type="checkbox" name="{{col_name}}" id="details-columns-{{col_name}}">
+                              <label for="details-columns-{{col_name}}">
                                 {{col_display_name}}
                               </label>
-                              </input>
                               <br />
                               {% end %}
                             </div>
@@ -478,25 +477,61 @@
                             <div class="fieldset" id="initial-qc-columns">
                               <h3 class="clickable_header"> Initial QC </h3>
                               {% for col_display_name, col_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
-                              <input type="checkbox" name={{col_name}} id={{col_name}}>
-                              <label for={{col_name}}>
+                              <input type="checkbox" name="{{col_name}}" id="initial-qc-columns-{{col_name}}">
+                              <label for=initial-qc-columns-{{col_name}}>
                                 {{col_display_name}}
                               </label>
-                              </input>
                               <br />
                               {% end %}
                             </div>
                           </div>
-                        <div class="span3">
+                          <div class="span3">
+                            <div class="fieldset" id="library-prep-columns">
+                              <h3 class="clickable_header"> Library Prep </h3>
+                              {% for col_display_name, col_name in columns_sample['LIBRARY_PREP_COLUMNS'].iteritems() %}
+                              <input type="checkbox" name="{{col_name}}" id="library-prep-columns-{{col_name}}">
+                              <label for="library-prep-columns-{{col_name}}">
+                                {{col_display_name}}
+                              </label>
+                              <br />
+                              {% end %}
+                            </div>
+                          </div>
+                          <div class="span3">
+                            <div class="fieldset" id="library-validation-columns">
+                              <h3 class="clickable_header"> Library Validation </h3>
+                              {% for col_display_name, col_name in columns_sample['LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
+                              <input type="checkbox" name="{{col_name}}" id="library-validation-columns-{{col_name}}">
+                              <label for=library-validation-columns-{{col_name}}>
+                                {{col_display_name}}
+                              </label>
+                              <br />
+                              {% end %}
+                            </div>
+                          </div>
+                          <div class="span3">
+                            <div class="fieldset" id="pre-prep-library-validation-columns">
+                              <h3 class="clickable_header"> Pre Prep Library Validation </h3>
+                              {% for col_display_name, col_name in columns_sample['PRE_PREP_LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
+                              <input type="checkbox" name="{{col_name}}" id="pre-prep-library-validation-columns-{{col_name}}">
+                              <label for=pre-prep-library-validation-columns-{{col_name}}>
+                                {{col_display_name}}
+                              </label>
+                              <br />
+                              {% end %}
+                            </div>
+                          </div>
+                        </div>
+                        <div class='span3'>
                           <p>
-                          <button id="Reset" class="btn btn-large"> Reset</button>
-                          </p>
-                          <p>
-                          <input type="submit" value="Apply" class="btn btn-primary btn-large" id="applyFilter">
-                          </p>
+                            <button id="Reset" class="btn btn-large"> Reset</button>
+                            </p>
+                            <p>
+                            <input type="submit" value="Apply" class="btn btn-primary btn-large" id="applyFilter">
+                            </p>
+                        </div>
                         </div>
                       </form>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -679,13 +714,22 @@ function read_current_filtering(header){
 
 function reset_default_checkboxes(){
   {% for col_display_name, column_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
-  document.getElementById("{{column_name}}").checked = true;
+  document.getElementById("basic-columns-{{column_name}}").checked = true;
   {% end %}
   {% for col_display_name, column_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
-  document.getElementById("{{column_name}}").checked = false;
+  document.getElementById("details-columns-{{column_name}}").checked = false;
   {% end %}
   {% for col_display_name, column_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
-  document.getElementById("{{column_name}}").checked = false;
+  document.getElementById("initial-qc-columns-{{column_name}}").checked = false;
+  {% end %}
+  {% for col_display_name, column_name in columns_sample['LIBRARY_PREP_COLUMNS'].iteritems() %}
+  document.getElementById("library-prep-columns-{{column_name}}").checked = false;
+  {% end %}
+  {% for col_display_name, column_name in columns_sample['LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
+  document.getElementById("library-validation-columns-{{column_name}}").checked = false;
+  {% end %}
+  {% for col_display_name, column_name in columns_sample['PRE_PREP_LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
+  document.getElementById("pre-prep-library-validation-columns-{{column_name}}").checked = false;
   {% end %}
 
   $("#Filter #undefined_columns").children("input").attr('checked', false)
@@ -772,7 +816,8 @@ function select_from_preset(preset_type, preset) {
       var choices = data['default'][preset];
       for (column in choices) {
         for (choice in choices[column]) {
-          document.getElementById(choice).checked = choices[column][choice];
+          var column_id = column.toLowerCase().replace(/_/g, '-') + '-' + choice
+          document.getElementById(column_id).checked = choices[column][choice];
         }
       }
     }
@@ -1056,7 +1101,7 @@ function load_samples_table() {
               tbl_row += '<td class="' + column_id + '">';
                 if ('library_prep' in info) {
                 $.each(info[column_id], function(prep, info_prep){
-                  tbl_row += prep + '</ br>';
+                  tbl_row += prep + "<br>";
                 });
               }
               tbl_row += '</td>';
@@ -1065,7 +1110,7 @@ function load_samples_table() {
             else if (column_id == 'prep_status' || column_id == 'prep_finished_date') {
               tbl_row += '<td class="' + column_id + '">';
               for (var i=0; i<info[column_id].length; i++) {
-                tbl_row += info[column_id][i] + '</ br>';
+                tbl_row += info[column_id][i] + "<br>";
               }
               tbl_row += '</td>';
             }
@@ -1081,6 +1126,53 @@ function load_samples_table() {
             tbl_row += '<td class="' + column_id + '">' + info['initial_qc'][column_id] + '</td>';
           });
         }
+        else if (subset == "library-prep-columns" && info.hasOwnProperty('library_prep')) {
+          $.each(fields, function(idx, column_tuple){
+            var column_name = column_tuple[0];
+            var column_id = column_tuple[1];
+            tbl_row += '<td class="' + column_id + '">';
+            $.each(info['library_prep'], function(library, info_library) {
+              tbl_row += info_library[column_id] + '<br>';
+            });
+            tbl_row += '</td>';
+          });
+        }
+        else if (subset == "library-validation-columns" && info.hasOwnProperty('library_prep')) {
+          $.each(fields, function(idx, column_tuple){
+            var column_name = column_tuple[0];
+            var column_id = column_tuple[1];
+            tbl_row += '<td class="' + column_id + '">';
+            $.each(info['library_prep'], function(library, info_library) {
+              if ('library_validation' in info_library) {
+                //We only want to show up the LIMS process ID with the higher number (the last one)
+                var process_id = max_str(Object.keys(info_library['library_validation']));
+                var validation_data = info_library['library_validation'][process_id];
+                if (validation_data) {
+                  tbl_row += validation_data[column_id] + '<br>';
+                }
+              }
+            });
+            tbl_row += '</td>';
+          });
+        } 
+        else if (subset == "pre-prep-library-validation-columns" && info.hasOwnProperty('library_prep')) {
+          $.each(fields, function(idx, column_tuple){
+            var column_name = column_tuple[0];
+            var column_id = column_tuple[1];
+            tbl_row += '<td class="' + column_id + '">';
+            $.each(info['library_prep'], function(library, info_library) {
+              if ('pre_prep_library_validation' in info_library) {
+                //We only want to show up the LIMS process ID with the higher number (the last one)
+                var process_id = max_str(Object.keys(info_library['pre_prep_library_validation']));
+                var validation_data = info_library['pre_prep_library_validation'][process_id];
+                if (validation_data) {
+                  tbl_row += validation_data[column_id] + '<br>';
+                }
+              }
+            });
+            tbl_row += '</td>';
+          });
+        } 
         // Details columns
         else {
           $.each(fields, function(idx, column_tuple){
@@ -1124,6 +1216,17 @@ fetching_data = fetching_data || (function () {
       },
   };
 })();
+
+//Is there any standar method to do this?
+var max_str = function(strs) {
+  var max = strs[0];
+  for (var i=0; i < strs.length; i++) {
+    if (parseInt(strs[i].split('-')[1]) > parseInt(max.split('-')[1])) {
+      max = strs[i];
+    }
+  }
+  return max
+}
 
 </script>
 
