@@ -258,9 +258,9 @@ class ProjectSamplesDataHandler(SafeHandler):
                         sample_data["sample_run_metrics"].append(run)
                 if "prep_status" in content:
                     if content["prep_status"] == "PASSED":
-                        sample_data["prep_status"].append("P")
+                        sample_data["prep_status"].append(content["prep_status"])
                     else:
-                        sample_data["prep_status"].append("F")
+                        sample_data["prep_status"].append("FAILED")
                 if "prep_finished_date" in content:
                     sample_data["prep_finished_date"].append(content["prep_finished_date"])
 
