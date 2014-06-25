@@ -1132,7 +1132,14 @@ function load_samples_table() {
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">';
             $.each(info['library_prep'], function(library, info_library) {
-              tbl_row += info_library[column_id] + '<br>';
+              // Special case for workset_setup, which is a link to the LIMS
+              if (column_id == "workset_setup") {
+                tbl_row += '<a href="http://genologics.scilifelab.se:8080/clarity/work-complete/';
+                tbl_row += info_library[column_id].split('-')[1] + '">' + info_library[column_id] + '</a><br>';
+              }
+              else {
+                tbl_row += info_library[column_id] + '<br>';
+              }
             });
             tbl_row += '</td>';
           });
