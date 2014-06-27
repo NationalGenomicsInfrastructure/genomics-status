@@ -1100,7 +1100,7 @@ function load_samples_table() {
             //Library prep is an array of Objects
             else if (column_id == 'library_prep') {
               tbl_row += '<td class="' + column_id + '">';
-                if ('library_prep' in info) {
+                if (info[column_id] !== undefined) {
                 $.each(info[column_id], function(prep, info_prep){
                   tbl_row += prep + "<br>";
                 });
@@ -1120,7 +1120,7 @@ function load_samples_table() {
             }
           });
         }
-        else if (subset == "initial-qc-columns" && info.hasOwnProperty('initial_qc')) {
+        else if (subset == "initial-qc-columns" && info['initial_qc'] !== undefined) {
           $.each(fields, function(idx, column_tuple){
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
@@ -1128,7 +1128,7 @@ function load_samples_table() {
             tbl_row += '<td class="' + column_id + '">' + info['initial_qc'][column_id] + '</td>';
           });
         }
-        else if (subset == "library-prep-columns" && info.hasOwnProperty('library_prep')) {
+        else if (subset == "library-prep-columns" && info['library_prep'] !== undefined) {
           $.each(fields, function(idx, column_tuple){
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
@@ -1147,7 +1147,7 @@ function load_samples_table() {
             tbl_row += '</td>';
           });
         }
-        else if (subset == "library-validation-columns" && info.hasOwnProperty('library_prep')) {
+        else if (subset == "library-validation-columns" && info['library_prep'] !== undefined) {
           $.each(fields, function(idx, column_tuple){
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
@@ -1166,7 +1166,7 @@ function load_samples_table() {
             tbl_row += '</td>';
           });
         } 
-        else if (subset == "pre-prep-library-validation-columns" && info.hasOwnProperty('library_prep')) {
+        else if (subset == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
           $.each(fields, function(idx, column_tuple){
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
