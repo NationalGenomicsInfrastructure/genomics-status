@@ -172,7 +172,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
     def list_project_fields(self, undefined=False, project_list='all'):
         # If undefined=True is given, only return fields not in columns defined
-        # in constants in this module
+        # in constants in StatusDB
         columns = self.application.genstat_defaults.get('pv_columns')
         project_list = self.list_projects(filter_projects=project_list)
         field_items = set()
