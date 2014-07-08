@@ -60,7 +60,8 @@ class Application(tornado.web.Application):
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
             ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
-            ("/api/v1/flowcell_info/([^/]*)$", FlowcellsInfoDataHandler),
+            ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
+            ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
             ("/api/v1/flowcell_demultiplex/([^/]*)$",
                 FlowcellDemultiplexHandler),
@@ -160,7 +161,9 @@ class Application(tornado.web.Application):
             self.picea_db = couch["picea"]
             self.gs_users_db = couch["gs_users"]
             self.cronjobs_db = couch["cronjobs"]
-
+        else:
+            print settings.get("couch_server", None)
+            raise IOError("Cannot connect to couchdb");
         #Load columns and presets from genstat-defaults user in StatusDB
         genstat_id = ''
         for u in self.gs_users_db.view('authorized/users'):
