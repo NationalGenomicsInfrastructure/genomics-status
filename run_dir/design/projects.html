@@ -66,7 +66,7 @@
             <div class="row-fluid">
               <div class="span3">
                 <div  id="basic-columns">
-                  <h3 class="clickable_header"> Basic </h3>
+                  <h3 class="search-action" data-action="filterHeader"> Basic </h3>
                   {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
                   <input type="checkbox" name={{col_name}} id={{col_name}}>
                   <label for={{col_name}}>
@@ -76,7 +76,7 @@
                   {% end %}
                 </div>
                 <div class="fieldset" id="details-columns">
-                  <h3 class="clickable_header"> Project Details </h3>
+                  <h3 class="search-action" data-action="filterHeader"> Project Details </h3>
                   {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
                   <input type="checkbox" name={{col_name}} id={{col_name}}>
                   <label for={{col_name}}>
@@ -89,7 +89,7 @@
               <div class="span3">
 
                 <div class="fieldset" id="bioinfo-columns">
-                  <h3 class="clickable_header"> Bioinformatics </h3>
+                  <h3 class="search-action" data-action="filterHeader"> Bioinformatics </h3>
                   {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
                   <input type="checkbox" name={{col_name}} id={{col_name}}>
                   <label for={{col_name}}>
@@ -99,7 +99,7 @@
                   {% end %}
                 </div>
                 <div class="fieldset" id="sequencing-columns">
-                  <h3 class="clickable_header"> Sequencing </h3>
+                  <h3 class="search-action" data-action="filterHeader"> Sequencing </h3>
                   {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
                   <input type="checkbox" name={{col_name}} id={{col_name}}>
                   <label for={{col_name}}>
@@ -109,7 +109,7 @@
                   {% end %}
                 </div>
                 <div class="fieldset" id="library-prep-columns">
-                  <h3 class="clickable_header"> Library Prep </h3>
+                  <h3 class="search-action" data-action="filterHeader"> Library Prep </h3>
                   {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
                   <input type="checkbox" name={{col_name}} id={{col_name}}>
                   <label for={{col_name}}>
@@ -121,7 +121,7 @@
               </div>
               <div class="span3">
                 <div class="fieldset" id="setup-project-columns">
-                  <h3 class="clickable_header"> Setup Project </h3>
+                  <h3 class="search-action" data-action="filterHeader"> Setup Project </h3>
                   {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
                   <input type="checkbox" name={{col_name}} id={{col_name}}>
                   <label for={{col_name}}>
@@ -131,7 +131,7 @@
                   {% end %}
                 </div>
                 <div class="fieldset" id="extra-columns">
-                  <h3 class="clickable_header"> Extra </h3>
+                  <h3 class="search-action" data-action="filterHeader"> Extra </h3>
                   {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
                   <input type="checkbox" name={{col_name}} id={{col_name}}>
                   <label for={{col_name}}>
@@ -141,7 +141,7 @@
                   {% end %}
                 </div>
                 <div class="fieldset" id="accreditation-columns">
-                  <h3 class="clickable_header"> Accreditation </h3>
+                  <h3 class="search-action" data-action="filterHeader"> Accreditation </h3>
                   {% for col_display_name, col_name in columns['ACCREDITATION_COLUMNS'].iteritems() %}
                   <input type="checkbox" name={{col_name}} id={{col_name}}>
                   <label for={{col_name}}>
@@ -151,17 +151,17 @@
                   {% end %}
                 </div>
                 <div class="fieldset" id="undefined-columns">
-                  <h3 class="clickable_header"> Undefined </h3>
+                  <h3 class="search-action" data-action="filterHeader"> Undefined </h3>
                   <div id="undefined_columns">
                   </div>
                 </div>
               </div>
               <div class="span3">
                 <p>
-                <button id="Reset" class="btn btn-large"> Reset</button>
+                <button class="btn btn-large search-action" data-action="filterReset"> Reset</button>
                 </p>
                 <p>
-                <input type="submit" value="Apply" class="btn btn-primary btn-large" id="applyFilter">
+                <input type="submit" value="Apply" class="btn btn-primary btn-large search-action" data-action="filterApply">
                 </p>
               </div>
             </div>
@@ -179,28 +179,35 @@
 </div>
 
 <script>
-/* check default checkboxes */
-if (!$("#Filter :checked").length) {
-  reset_default_checkboxes();
-}
-load_table();
-load_undefined_columns();
-
-/* Reset button handled here */
-$("#Reset").click(function( event ) {
-    event.preventDefault();
+$(document).ready(function() {
+  /* check default checkboxes */
+  if (!$("#Filter :checked").length) {
     reset_default_checkboxes();
-    load_table();
-    });
+  }
+  load_table();
+  load_undefined_columns();
+  load_presets();
 
-/* Apply filter button handled here */
-$("#applyFilter").click( function( event ) {
+  //Prevent traditional html submit function
+  $('#Search-form').submit(function(event){event.preventDefault();});
+
+  $('body').on('click', '.search-action', function(event) {
     event.preventDefault();
-    load_table();
-    });
-
-//Prevent traditional html submit function
-$('#Search-form').submit(function(event){event.preventDefault();});
+    switch ($(this).data('action')) {
+      case 'filterReset':
+        reset_default_checkboxes();
+      case 'filterApply':
+        load_table();
+        break;
+      case 'filterHeader':
+        choose_column($(this).parent().attr("id"));
+        break;
+      case 'filterDropdown':
+        select_from_preset($(this).parent().attr('id'), $(this).attr('id'));
+        break;
+    }
+  });
+});
 
 function reset_default_checkboxes(){
   {% for col_display_name, column_name in columns['BASIC_COLUMNS'].iteritems() %}
@@ -234,16 +241,16 @@ function reset_default_checkboxes(){
 function read_current_filtering(){
   var columns = new Array();
   $("#Filter :checkbox:checked").each(function() {
-      columns.push([$(this).next('label').text(), $(this).attr('name')]);
-      });
+    columns.push([$(this).next('label').text(), $(this).attr('name')]);
+  });
   return columns
 }
 
 function load_table_head(columns){
   var tbl_head = '<tr>'
     $.each(columns, function(i, column_tuple) {
-        tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">' + column_tuple[0] + '</th>'
-        });
+      tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">' + column_tuple[0] + '</th>'
+    });
   tbl_head += '</tr>'
     $("#project_table_head").html(tbl_head)
 }
@@ -256,152 +263,135 @@ function load_undefined_columns() {
     $.each(data, function(column_no, column) {
       columns_html += '<input type="checkbox" name="' + column + '" id="' + column + '">'
       columns_html += '<label for=' + column + '>' + column + '</label><br />'
-      });
-    $("#undefined_columns").html(columns_html)
     });
-  };
+    $("#undefined_columns").html(columns_html)
+  });
+};
 
 function load_table(){
   columns = read_current_filtering();
   load_table_head(columns)
-  /* Project column is treated as special case, since it is a link */
-  var project_column = $("#Filter :checkbox[name='project']").is(":checked")
-  $.getJSON("/api/v1/projects?list={{ projects }}", function(data) {
+    /* Project column is treated as special case, since it is a link */
+    var project_column = $("#Filter :checkbox[name='project']").is(":checked")
+    $.getJSON("/api/v1/projects?list={{ projects }}", function(data) {
       var tbl_body = "";
       var size = 0;
       $.each(data, function(key, summary) {
         size++;
         var tbl_row = '<tr project_column=' + project_column + '>'
         if(project_column){
-        tbl_row += '<td><a class="project" href="/project/' + key + '">' + key  + '</td>'
+          tbl_row += '<td><a class="project" href="/project/' + key + '">' + key  + '</td>'
         }
-        $.each(columns, function(i, column_tuple){
-          if(column_tuple[1]=="latest_running_note" && summary[column_tuple[1]]!=undefined) {
-            var note = JSON.parse(summary[column_tuple[1]])
-            var ndate = undefined
-            for (key in note) {ndate = key; break}
-            tbl_row += '<td class="' + column_tuple[1] + '">' + ndate.split(" ")[0] + ' by ' +
-                       note[ndate]['user'] + ':<pre>' + note[ndate]['note'] + '</pre></td>'
-          }
-          else if(column_tuple[1]!="project"){
-            tbl_row += '<td class="' + column_tuple[1] + '">' + summary[column_tuple[1]] + '</td>'
-          }
-          })
-        tbl_row += '</tr>'
-        tbl_body += tbl_row
-        })
-      $("#project_table_body").html(tbl_body)
-      init_listjs(size, columns)
+      $.each(columns, function(i, column_tuple){
+        if(column_tuple[1]=="latest_running_note" && summary[column_tuple[1]]!=undefined) {
+          var note = JSON.parse(summary[column_tuple[1]])
+        var ndate = undefined
+        for (key in note) {ndate = key; break}
+      tbl_row += '<td class="' + column_tuple[1] + '">' + ndate.split(" ")[0] + ' by ' +
+        note[ndate]['user'] + ':<pre>' + note[ndate]['note'] + '</pre></td>'
+        }
+        else if(column_tuple[1]!="project"){
+          tbl_row += '<td class="' + column_tuple[1] + '">' + summary[column_tuple[1]] + '</td>'
+        }
       })
+      tbl_row += '</tr>'
+        tbl_body += tbl_row
+      })
+      $("#project_table_body").html(tbl_body)
+        init_listjs(size, columns)
+    })
 }
 
 
-      // Initialize sorting and searching javascript plugin
-      function init_listjs(no_items, columns) {
-        column_names = new Array();
-        $.each(columns, function(i, column_tuple){
-            column_names.push(column_tuple[1])
-            })
-        var options = {
-valueNames: column_names,
-            page: no_items /* Default is to show only 200 items at a time. */
-        };
-        var featureList = new List('project-list', options);
-        featureList.search($('#search_field').val());
+// Initialize sorting and searching javascript plugin
+function init_listjs(no_items, columns) {
+  column_names = new Array();
+  $.each(columns, function(i, column_tuple){
+    column_names.push(column_tuple[1])
+  })
+  var options = {
+    valueNames: column_names,
+    page: no_items /* Default is to show only 200 items at a time. */
+  };
+  var featureList = new List('project-list', options);
+  featureList.search($('#search_field').val());
+}
+
+
+//Check or uncheck all fields from clicked category
+function choose_column(col){
+  var column = document.getElementById(col);
+  //Get all the children (checkboxes)
+  var cbs = column.getElementsByTagName('input');
+  //If one of them is checked we uncheck it, if none of them are checked, 
+  //we check them all
+  var checked = false;
+  for (var i = 0; i < cbs.length; i++) {
+    if (cbs[i].checked) {
+      cbs[i].checked = false;
+      checked = true;
+    }
+  }
+  if (!checked) {
+    for (var i = 0; i < cbs.length; i++) {
+      cbs[i].checked = true;
+    }
+  }
+}
+
+////////////////////////////////
+// Presets related functions  //
+///////////////////////////////
+
+function load_presets() {
+  $.getJSON('/api/v1/presets?presets_list=pv_presets', function (data) {
+    var default_presets = data['default'];
+    var user_presets = data['user'];
+
+    //Empty previously filled lists of presets
+    $('ul#default_presets_dropdown').empty();
+    $('ul#user_presets_dropdown').empty();
+
+    //Default presets
+    for (var preset in default_presets) {
+      var li = '<li class="search-action" data-action="filterDropdown" id="' + preset + '">';
+      li += '<a tabindex="-1">' + preset + '</a></li>';
+      $('ul#default_presets_dropdown').append(li);
+    }
+    //User presets, if there are any
+    if (!jQuery.isEmptyObject(user_presets)) {
+      for (var preset in user_presets) {
+        var li = '<li class="search-action" data-action="filterDropdown" id="' + preset + '">';
+        li += '<a tabindex="-1">' + preset + '</a></li>';
+        $('ul#user_presets_dropdown').append(li);
       }
+    }
+    else {
+      var li = '<li class="disabled"><a tabindex="-1">';
+      li += 'No user presets';
+      li += '</a></li>';
+      $('ul#user_presets_dropdown').append(li);
+    }
 
+  });
+}
 
-      //Check or uncheck all fields from clicked category
-      function choose_column(col){
-        var column = document.getElementById(col);
-        //Get all the children (checkboxes)
-        var cbs = column.getElementsByTagName('input');
-        //If one of them is checked we uncheck it, if none of them are checked, 
-        //we check them all
-        var checked = false;
-        for (var i = 0; i < cbs.length; i++) {
-          if (cbs[i].checked) {
-            cbs[i].checked = false;
-            checked = true;
-          }
+function select_from_preset(preset_type, preset) {
+  $.getJSON('/api/v1/presets?presets_list=pv_presets', function (data) {
+    //First uncheck everything
+    $('input:checkbox').removeAttr('checked');
+    if (preset_type == "default_presets_dropdown") {
+      var choices = data['default'][preset];
+      for (column in choices) {
+        for (choice in choices[column]) {
+          $("#Filter #" + choice).attr('checked', choices[column][choice]);
         }
-        if (!checked) {
-          for (var i = 0; i < cbs.length; i++) {
-            cbs[i].checked = true;
-          }
-        }
       }
-
-      ////////////////////////////////
-      // Presets related functions  //
-      ///////////////////////////////
-
-      function load_presets() {
-        $.getJSON('/api/v1/presets?presets_list=pv_presets', function (data) {
-            var default_presets = data['default'];
-            var user_presets = data['user'];
-
-            //Empty previously filled lists of presets
-            $('ul#default_presets_dropdown').empty();
-            $('ul#user_presets_dropdown').empty();
-
-            //Default presets
-            for (var preset in default_presets) {
-            var li = '<li class="clickable_dropdown" id="' + preset + '">';
-            li += '<a tabindex="-1">' + preset + '</a></li>';
-            $('ul#default_presets_dropdown').append(li);
-            }
-            //User presets, if there are any
-            if (!jQuery.isEmptyObject(user_presets)) {
-            for (var preset in user_presets) {
-            var li = '<li class="clickable_dropdown" id="' + preset + '">';
-            li += '<a tabindex="-1">' + preset + '</a></li>';
-            $('ul#user_presets_dropdown').append(li);
-            }
-            }
-            else {
-              var li = '<li class="disabled"><a tabindex="-1">';
-              li += 'No user presets';
-              li += '</a></li>';
-              $('ul#user_presets_dropdown').append(li);
-            }
-
-            //Execute function select_from_preset when clicking a clickable_dropdown
-            $(".clickable_dropdown").click(
-                function(event) {
-                select_from_preset($(this).parent().attr('id'), $(this).attr('id'))
-                }
-                );
-        });
-      }
-
-      //Fill in the presets at the beginning
-      load_presets();
-
-      function select_from_preset(preset_type, preset) {
-        $.getJSON('/api/v1/presets?presets_list=pv_presets', function (data) {
-            //First uncheck everything
-            $('input:checkbox').removeAttr('checked');
-            if (preset_type == "default_presets_dropdown") {
-            var choices = data['default'][preset];
-            for (column in choices) {
-            for (choice in choices[column]) {
-            $("#Filter #" + choice).attr('checked', choices[column][choice]);
-            }
-            }
-            }
-            else if (preset_type == "users_presets_dropdown") {
-            }
-            });
-      }
-
-      //For the clickable_header class, execute the choose_column func with the column ID
-      $(".clickable_header").click(
-          function(event){ 
-          choose_column($(this).parent().attr("id"))
-          }
-          );
-
+    }
+    else if (preset_type == "users_presets_dropdown") {
+    }
+  });
+}
 
 </script>
 
