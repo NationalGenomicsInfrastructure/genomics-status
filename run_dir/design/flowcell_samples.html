@@ -32,7 +32,7 @@ $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
     tbody = "<tr><th>Sequencing done</th><td>" + data["seqdone"]+"</td></tr>";
     tbody += "<tr><th>Demultiplex</th>";
     if(data.hasOwnProperty("demuldone")){
-        tbody+="<td>Done</td>"
+        tbody+="<td class='text-success'>Done</td>"
         tbody += "</tr><tr>"
         tbody += "<th>Projects :</th><td>";
         tbody += data["plist"].join(", ")
@@ -57,7 +57,16 @@ $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
                 lbody+="<td>"+data['lane'][lid][samplerunid]['SampleName']+"</td>";
                 lbody+="<td>"+data['lane'][lid][samplerunid]['yield']+"</td>";
                 lbody+="<td>"+data['lane'][lid][samplerunid]['readsnb']+"</td>";
-                lbody+="<td>"+data['lane'][lid][samplerunid]['overthirty']+"</td>";
+                if(parseFloat(data['lane'][lid][samplerunid]['overthirty']) < 30){
+                    lbody+="<td class='label-danger'>"
+                }else if(parseFloat(data['lane'][lid][samplerunid]['overthirty']) < 80){
+                    lbody+="<td class='label-warning'>"
+                }else if(parseFloat(data['lane'][lid][samplerunid]['overthirty']) < 100){
+                    lbody+="<td class='label-success'>"
+                }else{
+                    lbody+="<td>"
+                }
+                lbody+=data['lane'][lid][samplerunid]['overthirty']+"</td>";
                 lbody+="<td>"+data['lane'][lid][samplerunid]['barcode']+"</td>";
                 lbody+="<td>"+data['lane'][lid][samplerunid]['desc']+"</td>";
                 lbody+="</tr>";
@@ -69,7 +78,7 @@ $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
 
       }else{
 
-      tbody+="<td>Pending</td></tr>"
+      tbody+="<td class ='text-warning'>Pending</td></tr>"
     
   }
 
