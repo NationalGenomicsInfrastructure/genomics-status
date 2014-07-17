@@ -211,31 +211,31 @@ $(document).ready(function() {
 
 function reset_default_checkboxes(){
   {% for col_display_name, column_name in columns['BASIC_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', true)
+  $("#Filter #{{column_name}}").attr('checked', true);
   {% end %}
   {% for col_display_name, column_name in columns['BIOINFO_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false)
+  $("#Filter #{{column_name}}").attr('checked', false);
   {% end %}
   {% for col_display_name, column_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false)
+  $("#Filter #{{column_name}}").attr('checked', false);
   {% end %}
   {% for col_display_name, column_name in columns['DETAILS_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false)
+  $("#Filter #{{column_name}}").attr('checked', false);
   {% end %}
   {% for col_display_name, column_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false)
+  $("#Filter #{{column_name}}").attr('checked', false);
   {% end %}
   {% for col_display_name, column_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false)
+  $("#Filter #{{column_name}}").attr('checked', false);
   {% end %}
   {% for col_display_name, column_name in columns['EXTRA_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false)
+  $("#Filter #{{column_name}}").attr('checked', false);
   {% end %}
   {% for col_display_name, column_name in columns['ACCREDITATION_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false)
+  $("#Filter #{{column_name}}").attr('checked', false);
   {% end %}
 
-  $("#Filter #undefined_columns").children("input").attr('checked', false)
+  $("#Filter #undefined_columns").children("input").attr('checked', false);
 }
 
 function read_current_filtering(){
@@ -247,12 +247,15 @@ function read_current_filtering(){
 }
 
 function load_table_head(columns){
-  var tbl_head = '<tr>'
-    $.each(columns, function(i, column_tuple) {
-      tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">' + column_tuple[0] + '</th>'
-    });
-  tbl_head += '</tr>'
-    $("#project_table_head").html(tbl_head)
+  var tbl_head = $('<tr>');
+  $.each(columns, function(i, column_tuple) {
+    tbl_head.append($('<th>')
+      .addClass('sort a')
+      .attr('data-sort', column_tuple[1])
+      .text(column_tuple[0])
+    );  
+  });
+  $("#project_table_head").html(tbl_head);
 }
 
 
@@ -261,53 +264,54 @@ function load_undefined_columns() {
   $.getJSON("/api/v1/projects_fields?undefined=true&project_list={{ projects }}", function(data) {
     var columns_html = "";
     $.each(data, function(column_no, column) {
-      columns_html += '<input type="checkbox" name="' + column + '" id="' + column + '">'
-      columns_html += '<label for=' + column + '>' + column + '</label><br />'
+      columns_html += '<input type="checkbox" name="' + column + '" id="' + column + '">';
+      columns_html += '<label for=' + column + '>' + column + '</label><br />';
     });
-    $("#undefined_columns").html(columns_html)
+    $("#undefined_columns").html(columns_html);
   });
 };
 
-function load_table(){
-  columns = read_current_filtering();
-  load_table_head(columns)
-    /* Project column is treated as special case, since it is a link */
-    var project_column = $("#Filter :checkbox[name='project']").is(":checked")
-    $.getJSON("/api/v1/projects?list={{ projects }}", function(data) {
-      var tbl_body = "";
-      var size = 0;
-      $.each(data, function(key, summary) {
-        size++;
-        var tbl_row = '<tr project_column=' + project_column + '>'
-        if(project_column){
-          tbl_row += '<td><a class="project" href="/project/' + key + '">' + key  + '</td>'
-        }
-      $.each(columns, function(i, column_tuple){
-        if(column_tuple[1]=="latest_running_note" && summary[column_tuple[1]]!=undefined) {
-          var note = JSON.parse(summary[column_tuple[1]])
-        var ndate = undefined
-        for (key in note) {ndate = key; break}
-      tbl_row += '<td class="' + column_tuple[1] + '">' + ndate.split(" ")[0] + ' by ' +
-        note[ndate]['user'] + ':<pre>' + note[ndate]['note'] + '</pre></td>'
-        }
-        else if(column_tuple[1]!="project"){
-          tbl_row += '<td class="' + column_tuple[1] + '">' + summary[column_tuple[1]] + '</td>'
-        }
-      })
-      tbl_row += '</tr>'
-        tbl_body += tbl_row
-      })
-      $("#project_table_body").html(tbl_body)
-        init_listjs(size, columns)
-    })
-}
 
+function load_table() {
+  columns = read_current_filtering();
+  load_table_head(columns);
+  $.getJSON("/api/v1/projects?list={{ projects }}", function(data) {
+    $("#project_table_body").empty();
+    var size = 0;
+    $.each(data, function(project_id, summary_row) {
+      size++;
+      var tbl_row = $('<tr>');
+      $.each(columns, function(i, column_tuple){
+        tbl_row.append($('<td>')
+          .addClass(column_tuple[1])
+          .html(summary_row[column_tuple[1]])
+          );
+      });
+      //Add links to projects
+      tbl_row.find('td.project').append(
+        $('<a>').attr('href', "/project/" + project_id).text(project_id)
+        );
+      //parse and display running notes
+      var latest_note = tbl_row.find('td.latest_running_note');
+      if (latest_note.text() !== '') {
+        var note = JSON.parse(latest_note.text());
+        var ndate = undefined;
+        for (key in note) {ndate = key; break;}
+        latest_note.html(
+            ndate.split(" ")[0] + ' by ' + note[ndate]['user'] + ':<pre>' + note[ndate]['note'] + '</pre>'
+            );
+      }
+      $("#project_table_body").append(tbl_row); 
+    });
+    init_listjs(size, columns);
+  });
+}
 
 // Initialize sorting and searching javascript plugin
 function init_listjs(no_items, columns) {
   column_names = new Array();
   $.each(columns, function(i, column_tuple){
-    column_names.push(column_tuple[1])
+    column_names.push(column_tuple[1]);
   })
   var options = {
     valueNames: column_names,
@@ -392,7 +396,6 @@ function select_from_preset(preset_type, preset) {
     }
   });
 }
-
 </script>
 
 {% end %}
