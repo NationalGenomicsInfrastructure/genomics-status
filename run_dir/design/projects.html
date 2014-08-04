@@ -210,32 +210,8 @@ $(document).ready(function() {
 });
 
 function reset_default_checkboxes(){
-  {% for col_display_name, column_name in columns['BASIC_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', true);
-  {% end %}
-  {% for col_display_name, column_name in columns['BIOINFO_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false);
-  {% end %}
-  {% for col_display_name, column_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false);
-  {% end %}
-  {% for col_display_name, column_name in columns['DETAILS_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false);
-  {% end %}
-  {% for col_display_name, column_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false);
-  {% end %}
-  {% for col_display_name, column_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false);
-  {% end %}
-  {% for col_display_name, column_name in columns['EXTRA_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false);
-  {% end %}
-  {% for col_display_name, column_name in columns['ACCREDITATION_COLUMNS'].iteritems() %}
-  $("#Filter #{{column_name}}").attr('checked', false);
-  {% end %}
-
-  $("#Filter #undefined_columns").children("input").attr('checked', false);
+  $('#Filter [id$=columns]').children('input').prop('checked', false);
+  $('#Filter #basic-columns').children('input').prop('checked', true);
 }
 
 function read_current_filtering(){
