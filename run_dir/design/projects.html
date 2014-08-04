@@ -72,7 +72,6 @@
                   <label for={{col_name}}>
                     {{col_display_name}}
                   </label>
-                  </input>
                   <br />
                   {% end %}
                 </div>
@@ -83,7 +82,6 @@
                   <label for={{col_name}}>
                     {{col_display_name}}
                   </label>
-                  </input>
                   <br />
                   {% end %}
                 </div>
@@ -97,7 +95,6 @@
                   <label for={{col_name}}>
                     {{col_display_name}}
                   </label>
-                  </input>
                   <br />
                   {% end %}
                 </div>
@@ -108,7 +105,6 @@
                   <label for={{col_name}}>
                     {{col_display_name}}
                   </label>
-                  </input>
                   <br />
                   {% end %}
                 </div>
@@ -119,7 +115,6 @@
                   <label for={{col_name}}>
                     {{col_display_name}}
                   </label>
-                  </input>
                   <br />
                   {% end %}
                 </div>
@@ -132,7 +127,6 @@
                   <label for={{col_name}}>
                     {{col_display_name}}
                   </label>
-                  </input>
                   <br />
                   {% end %}
                 </div>
@@ -143,7 +137,16 @@
                   <label for={{col_name}}>
                     {{col_display_name}}
                   </label>
-                  </input>
+                  <br />
+                  {% end %}
+                </div>
+                <div class="fieldset" id="accreditation-columns">
+                  <h3 class="clickable_header"> Accreditation </h3>
+                  {% for col_display_name, col_name in columns['ACCREDITATION_COLUMNS'].iteritems() %}
+                  <input type="checkbox" name={{col_name}} id={{col_name}}>
+                  <label for={{col_name}}>
+                    {{col_display_name}}
+                  </label>
                   <br />
                   {% end %}
                 </div>
@@ -221,6 +224,9 @@ function reset_default_checkboxes(){
   {% for col_display_name, column_name in columns['EXTRA_COLUMNS'].iteritems() %}
   $("#Filter #{{column_name}}").attr('checked', false)
   {% end %}
+  {% for col_display_name, column_name in columns['ACCREDITATION_COLUMNS'].iteritems() %}
+  $("#Filter #{{column_name}}").attr('checked', false)
+  {% end %}
 
   $("#Filter #undefined_columns").children("input").attr('checked', false)
 }
@@ -249,7 +255,7 @@ function load_undefined_columns() {
     var columns_html = "";
     $.each(data, function(column_no, column) {
       columns_html += '<input type="checkbox" name="' + column + '" id="' + column + '">'
-      columns_html += '<label for=' + column + '>' + column + '</label></input><br />'
+      columns_html += '<label for=' + column + '>' + column + '</label><br />'
       });
     $("#undefined_columns").html(columns_html)
     });

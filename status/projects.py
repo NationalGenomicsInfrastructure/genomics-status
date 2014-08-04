@@ -74,11 +74,14 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         # Find the latest running note, return it as a separate field
         if 'running_notes' in row.value:
-            notes = json.loads(row.value['running_notes'])
-            # note_dates = {datetime obj: time string, ...}
-            note_dates = dict(zip(map(dateutil.parser.parse, notes.keys()), notes.keys()))
-            latest_date = note_dates[max(note_dates.keys())]
-            row.value['latest_running_note'] = json.dumps({latest_date: notes[latest_date]})
+            try:
+                notes = json.loads(row.value['running_notes'])
+                # note_dates = {datetime obj: time string, ...}
+                note_dates = dict(zip(map(dateutil.parser.parse, notes.keys()), notes.keys()))
+                latest_date = note_dates[max(note_dates.keys())]
+                row.value['latest_running_note'] = json.dumps({latest_date: notes[latest_date]})
+            except ValueError:
+                pass
 
         if row.key[0] == 'open' and 'queued' in row.value:
             #Add days in production field
@@ -172,7 +175,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
     def list_project_fields(self, undefined=False, project_list='all'):
         # If undefined=True is given, only return fields not in columns defined
-        # in constants in this module
+        # in constants in StatusDB
         columns = self.application.genstat_defaults.get('pv_columns')
         project_list = self.list_projects(filter_projects=project_list)
         field_items = set()
