@@ -6,7 +6,7 @@
 <div class="container-fluid" id="sample_list">
 
   <h2>{{ flowcell }}</h2>
-  <table class="table table-bordered" id="fc_info">
+  <table class="table table-bordered narrow-headers" id="fc_info">
     <tbody></tbody>
   </table>
 
@@ -42,9 +42,14 @@ $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
             sbody+=data['yields'][lid];
             sbody+="</td>";
             for(i=1;i<4;i++){
-            sbody+="<tr>";
+                sbody+="<tr>";
                 sbody+="<th>Read "+i+" Error rate :</th>";
-                sbody+="<td>"+data['err'+i][lid]+"</td>";
+                if(data.hasOwnProperty('err'+i)){
+                    sbody+="<td>"+data['err'+i][lid]+"</td>";
+                }else{
+                    sbody+="<td>Not found in the DB</td>";
+                }
+
             }
             sbody+="</tr>";
             $("#summary_lane_"+lid+" tbody").html(sbody);
