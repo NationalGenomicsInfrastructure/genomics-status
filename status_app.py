@@ -207,6 +207,9 @@ class Application(tornado.web.Application):
         # Load password seed
         self.password_seed = settings.get("password_seed")
 
+        # load logins for the genologics sftp
+        self.genologics_login=settings['sftp']['login']
+        self.genologics_pw=settings['sftp']['password']
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
         settings = {"debug": True,

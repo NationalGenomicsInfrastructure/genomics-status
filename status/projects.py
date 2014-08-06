@@ -8,6 +8,8 @@ import dateutil.parser
 import datetime
 import requests
 import re
+import paramiko
+import base64
 
 from itertools import ifilter
 from collections import OrderedDict
@@ -266,10 +268,20 @@ class ProjectSamplesDataHandler(SafeHandler):
                         sample_data["prep_status"].append("FAILED")
                 if "prep_finished_date" in content:
                     sample_data["prep_finished_date"].append(content["prep_finished_date"])
+                if "library_validation" in content:
+                    for agrId, libval in content["library_validation"].iteritems():
+                        if "caliper_image" in libval:
+                            sample_data['library_prep'][lib_prep]['library_validation'][agrId]['caliper_image']=self.get_caliper_image(sample_data['library_prep'][lib_prep]['library_validation'][agrId]['caliper_image'])
 
         if "details" in sample_data:
             for detail_key, detail_value in sample_data["details"].iteritems():
                 sample_data[detail_key] = detail_value
+        if "caliper_image" in sample_data['initial_qc']:
+            print "trying to grab caliper image"
+            #Go grab the image from the sftp server
+            sample_data['initial_qc']['caliper_image']=self.get_caliper_image(sample_data['initial_qc']['caliper_image'])
+        else:
+            print "no caliper image for "
         return sample_data
 
     def list_samples(self, project):
@@ -296,6 +308,20 @@ class ProjectSamplesDataHandler(SafeHandler):
         samples = OrderedDict(sorted(samples.iteritems(), key=lambda x: x[0]))
         return samples
 
+    def get_caliper_image(self,url):
+        """returns a base64 string of the caliper image aksed"""
+        pattern=re.compile("^sftp://([a-z\.]+)(.+)")
+        host=pattern.search(url).group(1)
+        uri=pattern.search(url).group(2)
+
+        transport=paramiko.Transport(host)
+
+        transport.connect(username = self.application.genologics_login, password = self.application.genologics_pw)
+        sftp_client = transport.open_sftp_client()
+        my_file = sftp_client.open(uri, 'r')
+        encoded_string = base64.b64encode(my_file.read())
+        returnHTML='<img src="data:image/png;base64,{}" />'.format(encoded_string)
+        return returnHTML
 
 class ProjectSamplesHandler(SafeHandler):
     """ Serves a page which lists the samples of a given project, with some
