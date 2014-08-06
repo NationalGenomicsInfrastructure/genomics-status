@@ -87,7 +87,9 @@ table {
 pre.cronjob-disabled {
   color: red;
 }
-
+table.narrow-headers th {
+    width: 20%
+}
 /* Jumbotrons
 -------------------------------------------------- */
 .jumbotron {

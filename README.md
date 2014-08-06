@@ -64,6 +64,11 @@ BASEURI=https://genologics-stage.scilifelab.se:8443
 USERNAME=<lims_api_username>
 PASSWORD=<lims_api_password>
 ```
+5 - Run the tornado app from run_dir :
+cd run_dir
+python ../status_app --testing_mode
+
+--testing_mode will skip the google authentication, which is convenient for testing
 
 The status web app both provides the HTML web interface, and a RESTful api for accessing the data being
 visualized on the various pages.
