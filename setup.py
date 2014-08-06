@@ -14,6 +14,7 @@ setup(name="status",
                         "pyyaml",
                         "numpy",
                         "matplotlib",
-                        "argparse"],
+                        "argparse",
+                        "paramiko"],
       packages=find_packages()
       )
