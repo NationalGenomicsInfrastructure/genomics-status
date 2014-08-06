@@ -21,8 +21,7 @@ class FlowcellHandler(SafeHandler):
     """
     def get(self, flowcell):
         t = self.application.loader.load("flowcell_samples.html")
-        self.write(t.generate(flowcell=flowcell, user=self.get_current_user_name(), 
-                              deprecated=True))
+        self.write(t.generate(flowcell=flowcell, user=self.get_current_user_name()))
 
 
 class FlowcellsDataHandler(SafeHandler):
@@ -45,6 +44,26 @@ class FlowcellsDataHandler(SafeHandler):
 
 
 class FlowcellsInfoDataHandler(SafeHandler):
+    """ Serves brief information about a given flowcell.
+    
+    Loaded through /api/v1/flowcell_info/([^/]*)$ url
+    """
+    def get(self, flowcell):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.flowcell_info(flowcell)))
+
+    def flowcell_info(self, flowcell):
+        fc_view = self.application.flowcells_db.view("info/summary2",
+                                                     descending=True)
+        for row in fc_view[flowcell]:
+            flowcell_info = row.value
+            break
+
+        return flowcell_info
+
+
+
+class OldFlowcellsInfoDataHandler(SafeHandler):
     """ Serves brief information about a given flowcell.
     
     Loaded through /api/v1/flowcell_info/([^/]*)$ url

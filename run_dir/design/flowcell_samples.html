@@ -6,28 +6,16 @@
 <div class="container-fluid" id="sample_list">
 
   <h2>{{ flowcell }}</h2>
-  <table class="table table-bordered" id="fc_info">
+  <table class="table table-bordered narrow-headers" id="fc_info">
     <tbody></tbody>
   </table>
 
-  <table class="table table-bordered" id="reads">
-    <tbody></tbody>
-  </table>
 
-  <h3>Lane QC</h3>
+  <h3>Lane info</h3>
   <div id="lanes">
   </div>
   
-  <table class="table table-bordered" id="fc_qc">
-    <tbody></tbody>
-  </table>
-
-  <h3>Sample Runs</h3>
-  <table class="table table-striped" id="sample_table">
-    <tbody></tbody>
-  </table>
-  <br>
-</div>
+  </div>
 
 <script>
 
@@ -35,105 +23,73 @@ f = d3.format(',g')
 fpr = d3.format('.2%')
 
 for (var i = 1; i < 9; i++) {
-  $("#lanes").append('<div id="lane_' + i + '"><h4>Lane ' + i + '</h4><br></div>')
+    $("#lanes").append('<div id="lane_' + i + '"><h4>Lane ' + i + '</h4>');
+    $("#lanes").append('<table class="table table-bordered narrow-headers" id="summary_lane_'+i+'""><tbody></tbody></table><br></div>')
+    $("#lanes").append('<table class="table table-bordered" id="table_lane_'+i+'""><tbody></tbody></table><br></div>')
 };
 
-$.getJSON("/api/v1/flowcell_info/{{ flowcell }}", function(data) {
+$.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
+    tbody = "<tr><th>Sequencing done</th><td>" + data["seqdone"]+"</td></tr>";
+    tbody += "<tr><th>Demultiplex</th>";
+    if(data.hasOwnProperty("demuldone")){
+        tbody+="<td class='text-success'>Done</td>"
+        tbody += "</tr><tr>"
+        tbody += "<th>Projects :</th><td>";
+        tbody += data["plist"].join(", ")
+        tbody += "</td></tr>";
+        for (lid=1;lid<9;lid++){
+            sbody="<tr><th>Total Yield :</th><td>";
+            sbody+=data['yields'][lid];
+            sbody+="</td>";
+            for(i=1;i<4;i++){
+                sbody+="<tr>";
+                sbody+="<th>Read "+i+" Error rate :</th>";
+                if(data.hasOwnProperty('err'+i)){
+                    sbody+="<td>"+data['err'+i][lid]+"</td>";
+                }else{
+                    sbody+="<td>Not found in the DB</td>";
+                }
 
-  tbody = "<tr><th>Start date</th><td>" + data["startdate"];
-  tbody += "<th>Instrument id</th><td>" + data["instrument"];
-  tbody += "</tr><tr>"
-  tbody += "<th>Flowcell</th><td>" + data["flowcell"];
-  tbody += "<th>Run number</th><td>" + data["number"];
-  tbody += "</td></tr>";
+            }
+            sbody+="</tr>";
+            $("#summary_lane_"+lid+" tbody").html(sbody);
+        }
+        for (lid in data['lane']){
+            lbody="";
+            lbody+="<tr><th>Project Name</th><th>Sample Name</th><th>Yield (Mbases)</th><th># Reads</th><th>% >Q30</th><th>Barcode</th><th>Index description</th></tr>";
+            for (samplerunid in data['lane'][lid]){
+                lbody+="<tr><td>"+data['lane'][lid][samplerunid]['Project']+"</td>";
+                lbody+="<td>"+data['lane'][lid][samplerunid]['SampleName']+"</td>";
+                lbody+="<td>"+data['lane'][lid][samplerunid]['yield']+"</td>";
+                lbody+="<td>"+data['lane'][lid][samplerunid]['readsnb']+"</td>";
+                if(parseFloat(data['lane'][lid][samplerunid]['overthirty']) < 30){
+                    lbody+="<td class='label-danger'>"
+                }else if(parseFloat(data['lane'][lid][samplerunid]['overthirty']) < 80){
+                    lbody+="<td class='label-warning'>"
+                }else if(parseFloat(data['lane'][lid][samplerunid]['overthirty']) < 100){
+                    lbody+="<td class='label-success'>"
+                }else{
+                    lbody+="<td>"
+                }
+                lbody+=data['lane'][lid][samplerunid]['overthirty']+"</td>";
+                lbody+="<td>"+data['lane'][lid][samplerunid]['barcode']+"</td>";
+                lbody+="<td>"+data['lane'][lid][samplerunid]['desc']+"</td>";
+                lbody+="</tr>";
+            }
+            console.log("#table_lane_"+lid+" tbody0>\n"+lbody);
+            $("#table_lane_"+lid+" tbody").html(lbody);
+            
+        }
+
+      }else{
+
+      tbody+="<td class ='text-warning'>Pending</td></tr>"
+    
+  }
 
   $("#fc_info tbody").html(tbody);
 
   console.log(data)
-
-  tbody = "<tr><th>Reads</th>";
-  for (r in data["reads"]) {
-    tbody += '<td>' + data["reads"][r]["NumCycles"] + " cycles"
-    if ( data["reads"][r]["IsIndexedRead"] === "Y") {
-      tbody += " (I)"
-    }
-    tbody += '</td>'
-  }
-  tbody += '</tr>'
-
-  $("#reads tbody").html(tbody)
-
-});
-
-$.getJSON("/api/v1/flowcell_qc/{{ flowcell }}", function(data) {
-  $.each(data, function(lane, qc) {
-
-    var qc_table = '<table class="table table-bordered qc"><tbody>';
-
-    row_pair = function(key) {
-      var row = "<td>" + f(qc["read1"][key]) + " ± ";
-      row += f(qc["read1"][key + "SD"]) + "</td>";
-      row += "<td>" + f(qc["read3"][key]) + " ± ";
-      row += f(qc["read3"][key + "SD"]) + "</td>";
-
-      return row
-    }
-
-    qc_table += "<tr><th></th><th>Read 1</th><th>Read 3</th></tr>";
-    qc_table += "<tr><th>Clusters raw</th>";
-    qc_table += row_pair("ClustersRaw")
-    qc_table += "<tr><th>Clusters PF</th>"
-    qc_table += row_pair("ClustersPF")
-    qc_table += "<tr><th>Error rate PhiX</th>";
-    qc_table += row_pair("ErrRatePhiX")
-
-    qc_table += "<tr><th>Phasing</th>";
-    qc_table += "<td>" + fpr(qc["read1"]["Phasing"]) + "</td>";
-    qc_table += "<td>" + fpr(qc["read3"]["Phasing"]) + "</td></tr>";
-    qc_table += "<tr><th>Prephasing</th>";
-    qc_table += "<td>" + fpr(qc["read1"]["Prephasing"]) + "</td>";
-    qc_table += "<td>" + fpr(qc["read3"]["Prephasing"]) + "</td></tr>";
-
-    qc_table += "<tr><th>% aligned</th>";
-    qc_table += row_pair("PrcAlign")
-    qc_table += "</tbody></table>";
-
-    $("#lane_" + lane).append("<h4>QC</h4>" + qc_table)
-
-  })
-}).then(function () {
-
-  $.getJSON("/api/v1/flowcell_q30/{{ flowcell }}", function(data) {
-    $.each(data, function (l, gtq30) {
-      var tr = '<tr><th>% ≥ Q30</th><td colspan="2">'
-      + fpr(d3.round(gtq30 / 100., 8))
-      + '</td></tr>'
-
-      $("#lane_" + l +" table.qc").append(tr)
-    })
-  })
-
-})
-
-$.getJSON("/api/v1/flowcell_demultiplex/{{ flowcell }}", function(data) {
-  $.each(data, function(lane, d) {
-    var demultiplex_table = '<table class="table table-bordered"><tbody>';
-    demultiplex_table += "<tr><th>Yield</th><td>" + d["yield"] + "</td>";
-
-    demultiplex_table += "<tr><th>% demultiplexed</th><td>" 
-    demultiplex_table += fpr(d["demultiplexed"])
-    demultiplex_table += "</td></tr></tbody></table>";
-
-    $("#lane_" + lane).append("<h4>Demultiplex</h4>" + demultiplex_table)
-  })
-})
-
-$.getJSON("/api/v1/flowcells/{{ flowcell }}", function(data) {
-  $.each(data, function (index, sample_run) {
-    var tbl_row = '<tr><td><a href="/qc/' + sample_run + '">' + sample_run 
-    + '</a></td></tr>';
-    $("#sample_table").append(tbl_row);
-  });
 });
 
 </script>
