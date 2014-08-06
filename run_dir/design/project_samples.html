@@ -1077,12 +1077,15 @@ function load_samples_table() {
     $.each(samples_data, function (sample, info) {
       size++;
       tbl_row = '<tr>';
+      console.log(info['caliper_image'])
       $.each(columns, function(subset, fields){
         if (subset == "basic-columns") {
           $.each(fields, function(idx, column_tuple) {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
+            console.log(column_id)
             info[column_id] = round_floats(info[column_id], 2);
+
             // Scilife Sample Name is a link
             if (column_id == "scilife_name") {
               tbl_row += '<td><a class="' + column_id + '" href="/samples/' + 
@@ -1115,7 +1118,9 @@ function load_samples_table() {
               }
               tbl_row += '</td>';
             }
+            
             else {
+                console.log(column_id)
                 tbl_row += '<td class="' + column_id + '">' + info[column_id] + '</td>';
             }
           });
@@ -1124,8 +1129,12 @@ function load_samples_table() {
           $.each(fields, function(idx, column_tuple){
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
-            info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
-            tbl_row += '<td class="' + column_id + '">' + info['initial_qc'][column_id] + '</td>';
+            if (info['initial_qc'].hasOwnProperty(column_id)){
+                info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
+                tbl_row += '<td class="' + column_id + '">' + info['initial_qc'][column_id] + '</td>';
+            }else{
+                 tbl_row += '<td> - </td>';
+            }
           });
         }
         else if (subset == "library-prep-columns" && info['library_prep'] !== undefined) {
@@ -1159,7 +1168,11 @@ function load_samples_table() {
                 var validation_data = info_library['library_validation'][process_id];
                 if (validation_data) {
                   validation_data[column_id] = round_floats(validation_data[column_id], 2);
-                  tbl_row += validation_data[column_id] + '<br>';
+                  if (validation_data.hasOwnProperty(column_id) && validation_data[column_id] !== undefined){
+                    tbl_row += validation_data[column_id] + '<br>';
+                  }else{
+                    tbl_row+= '- <br />';
+                  }
                 }
               }
             });
