@@ -1077,13 +1077,11 @@ function load_samples_table() {
     $.each(samples_data, function (sample, info) {
       size++;
       tbl_row = '<tr>';
-      console.log(info['caliper_image'])
       $.each(columns, function(subset, fields){
         if (subset == "basic-columns") {
           $.each(fields, function(idx, column_tuple) {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
-            console.log(column_id)
             info[column_id] = round_floats(info[column_id], 2);
 
             // Scilife Sample Name is a link
@@ -1120,7 +1118,6 @@ function load_samples_table() {
             }
             
             else {
-                console.log(column_id)
                 tbl_row += '<td class="' + column_id + '">' + info[column_id] + '</td>';
             }
           });
