@@ -276,7 +276,7 @@ class ProjectSamplesDataHandler(SafeHandler):
         if "details" in sample_data:
             for detail_key, detail_value in sample_data["details"].iteritems():
                 sample_data[detail_key] = detail_value
-        if "caliper_image" in sample_data['initial_qc']:
+        if 'initial_qc' in sample_data and "caliper_image" in sample_data['initial_qc']:
             print "trying to grab caliper image"
             #Go grab the image from the sftp server
             sample_data['initial_qc']['caliper_image']=self.get_caliper_image(sample_data['initial_qc']['caliper_image'])
