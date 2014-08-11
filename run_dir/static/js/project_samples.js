@@ -1,24 +1,62 @@
 //Get pseudo-argument for this js file. Ie, project = P1234
 var project = $('#projects-js').attr('data-project');
-
-/* check default checkboxes */
-if (!$("#Filter :checked").length) {
-  reset_default_checkboxes();
-}
-
 var ordered_reads = 0.0;
 
-load_undefined_info();
-load_all_udfs();
-load_samples_table();
-load_running_notes();
-load_links();
+$(document).ready(function() {
+  /* check default checkboxes */
+  if (!$("#Filter :checked").length) {
+    reset_default_checkboxes();
+  }
 
-// Searching functionality
+  //Initialise stuff
+  load_undefined_info();
+  load_all_udfs();
+  load_samples_table();
+  load_running_notes();
+  load_links();
+  load_presets();
 
-//Prevent traditional html submit function
-$('#Search-form').submit(function(event){event.preventDefault();});
+  //Prevent traditional html submit function
+  $('#Search-form').submit(function(event){event.preventDefault();});
 
+  $('body').on('click', '.search-action', function(event) {
+    event.preventDefault();
+    switch ($(this).data('action')) {
+      case 'filterReset':
+        reset_default_checkboxes();
+      case 'filterApply':
+        load_samples_table();
+        break;
+      case 'filterHeader':
+        choose_column($(this).parent().attr("id"));
+        break;
+      case 'filterDropdown':
+        select_from_preset($(this).parent().attr('id'), $(this).attr('id'));
+        break;
+    }
+  });
+
+  //Hide or show all accordions
+  $('body').on('click', '.toggleCollapse',function(e) {
+    e.preventDefault();
+    if ($(this).is('.plus')) {
+      $(this).removeClass('plus'); $(this).text('[-]');
+      $('.tab-pane.active').find('div.collapse').collapse('show');
+    }
+    else {
+      $(this).addClass('plus'); $(this).text('[+]');
+      $('.tab-pane.active').find('div.collapse').collapse('hide');
+    }
+  });
+
+  //Show user communication tab. Loading 
+  $('#tab_communication').click(function (e) {
+    e.preventDefault();
+    $(this).tab('show');
+    load_tickets();
+  });
+
+});
 
 // Initialize sorting and searching javascript plugin
 function init_listjs(no_items, columns) {
@@ -38,17 +76,6 @@ function init_listjs(no_items, columns) {
 // Choose columns related methods //
 ////////////////////////////////////
 
-/* Reset button handled here */
-$("#Reset").click(function( event ) {
-  event.preventDefault();
-  reset_default_checkboxes();
-});
-
-/* Apply filter button handled here */
-$("#applyFilter").click( function( event ) {
-  event.preventDefault();
-  load_samples_table();
-});
 
 function read_current_filtering(header){
   /* If header == True will return a dictionary representing exactly what the
@@ -104,11 +131,6 @@ function choose_column(col){
   }
 }
 
-//For the clickable_header class, execute the choose_column func with the column ID
-$(".clickable_header").click(function(event){ 
-  choose_column($(this).parent().attr("id"));
-});
-
 
 ////////////////////////////////
 // Presets related functions  //
@@ -125,14 +147,14 @@ function load_presets() {
 
     //Default presets
     for (var preset in default_presets) {
-      var li = '<li class="clickable_dropdown" id="' + preset + '">';
+      var li = '<li class="search-action" data-action="filterDropdown" id="' + preset + '">';
       li += '<a tabindex="-1">' + preset + '</a></li>';
       $('ul#default_presets_dropdown').append(li);
     }
     //User presets, if there are any
     if (!jQuery.isEmptyObject(user_presets)) {
       for (var preset in user_presets) {
-        var li = '<li class="clickable_dropdown" id="' + preset + '">';
+        var li = '<li class="search-action" data-action="filterDropdown" id="' + preset + '">';
         li += '<a tabindex="-1">' + preset + '</a></li>';
         $('ul#user_presets_dropdown').append(li);
       }
@@ -144,15 +166,9 @@ function load_presets() {
       $('ul#user_presets_dropdown').append(li);
     }
 
-    //Execute function select_from_preset when clicking a clickable_dropdown
-    $(".clickable_dropdown").click(function(event) {
-      select_from_preset($(this).parent().attr('id'), $(this).attr('id'));
-    });
   });
 }
 
-//Fill in the presets at the beginning
-load_presets();
 
 function select_from_preset(preset_type, preset) {
   $.getJSON('/api/v1/presets?presets_list=sv_presets', function (data) {
@@ -172,20 +188,6 @@ function select_from_preset(preset_type, preset) {
   });
 }
 
-// Others
-
-//Hide or show all accordions
-$(document).on('click', '.toggleCollapse',function(e) {
-  e.preventDefault();
-  if ($(this).is('.plus')) {
-    $(this).removeClass('plus'); $(this).text('[-]');
-    $('.tab-pane.active').find('div.collapse').collapse('show');
-  }
-  else {
-    $(this).addClass('plus'); $(this).text('[+]');
-    $('.tab-pane.active').find('div.collapse').collapse('hide');
-  }
-});
 
 function load_links() {
   var link_icon = {'Deviation':'icon-exclamation-sign', 'Other':'icon-file'};
@@ -229,15 +231,6 @@ $("#link_form").submit(function(e) {
   }
 });
 
-/* This will make that the tickets from ZenDesk are loaded ONLY under request
-(the user clicking to the tab). Otherwise we don't want to query ZenDesk API if
-not requested.
-*/
-$('#tab_communication').click(function (e) {
-  e.preventDefault();
-  $(this).tab('show');
-  load_tickets();
-});
 
 function load_tickets() {
   var tab_communication = document.getElementById('tab_com_content');
