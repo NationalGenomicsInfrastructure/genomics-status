@@ -320,6 +320,7 @@ class ProjectSamplesDataHandler(SafeHandler):
             transport.connect(username = self.application.genologics_login, password = self.application.genologics_pw)
             sftp_client = transport.open_sftp_client()
             my_file = sftp_client.open(uri, 'r')
+            sftp.client.close()
             encoded_string = base64.b64encode(my_file.read())
             returnHTML='<img src="data:image/png;base64,{}" />'.format(encoded_string)
             return returnHTML
