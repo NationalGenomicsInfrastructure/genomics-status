@@ -280,8 +280,6 @@ class ProjectSamplesDataHandler(SafeHandler):
             print "trying to grab caliper image"
             #Go grab the image from the sftp server
             sample_data['initial_qc']['caliper_image']=self.get_caliper_image(sample_data['initial_qc']['caliper_image'])
-        else:
-            print "no caliper image for "
         return sample_data
 
     def list_samples(self, project):
