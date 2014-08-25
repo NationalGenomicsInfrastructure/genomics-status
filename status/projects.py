@@ -314,14 +314,18 @@ class ProjectSamplesDataHandler(SafeHandler):
         host=pattern.search(url).group(1)
         uri=pattern.search(url).group(2)
 
-        transport=paramiko.Transport(host)
+        try:
+            transport=paramiko.Transport(host)
 
-        transport.connect(username = self.application.genologics_login, password = self.application.genologics_pw)
-        sftp_client = transport.open_sftp_client()
-        my_file = sftp_client.open(uri, 'r')
-        encoded_string = base64.b64encode(my_file.read())
-        returnHTML='<img src="data:image/png;base64,{}" />'.format(encoded_string)
-        return returnHTML
+            transport.connect(username = self.application.genologics_login, password = self.application.genologics_pw)
+            sftp_client = transport.open_sftp_client()
+            my_file = sftp_client.open(uri, 'r')
+            encoded_string = base64.b64encode(my_file.read())
+            returnHTML='<img src="data:image/png;base64,{}" />'.format(encoded_string)
+            return returnHTML
+        except Exception, message:
+            return("Error : {0}".format(message))
+
 
 class ProjectSamplesHandler(SafeHandler):
     """ Serves a page which lists the samples of a given project, with some
