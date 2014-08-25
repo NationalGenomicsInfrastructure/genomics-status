@@ -277,7 +277,6 @@ class ProjectSamplesDataHandler(SafeHandler):
             for detail_key, detail_value in sample_data["details"].iteritems():
                 sample_data[detail_key] = detail_value
         if 'initial_qc' in sample_data and "caliper_image" in sample_data['initial_qc']:
-            print "trying to grab caliper image"
             #Go grab the image from the sftp server
             sample_data['initial_qc']['caliper_image']=self.get_caliper_image(sample_data['initial_qc']['caliper_image'])
         return sample_data
@@ -318,8 +317,10 @@ class ProjectSamplesDataHandler(SafeHandler):
             transport.connect(username = self.application.genologics_login, password = self.application.genologics_pw)
             sftp_client = transport.open_sftp_client()
             my_file = sftp_client.open(uri, 'r')
-            sftp_client.close()
             encoded_string = base64.b64encode(my_file.read())
+            my_file.close()
+            sftp_client.close()
+            transport.close()
             returnHTML='<img src="data:image/png;base64,{}" />'.format(encoded_string)
             return returnHTML
         except Exception, message:
