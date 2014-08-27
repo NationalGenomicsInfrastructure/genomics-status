@@ -29,7 +29,7 @@ for (var i = 1; i < 9; i++) {
 };
 
 $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
-    tbody = "<tr><th>Sequencing done</th><td>" + data["seqdone"]+"</td></tr>";
+    var tbody = "<tr><th>Sequencing done</th><td>" + data["seqdone"]+"</td></tr>";
     tbody += "<tr><th>Demultiplex</th>";
     if(data.hasOwnProperty("demuldone")){
         tbody+="<td class='text-success'>Done</td>"
@@ -39,7 +39,7 @@ $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
         tbody += "</td></tr>";
         for (lid=1;lid<9;lid++){
             if (data['yields'][lid] !== 0){
-                sbody="<tr><th>Total Yield :</th><td>";
+                var sbody="<tr><th>Total Yield :</th><td>";
                 sbody+=data['yields'][lid];
                 sbody+="</td></tr>";
             }
@@ -62,7 +62,7 @@ $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
             $("#summary_lane_"+lid+" tbody").html(sbody);
         }
         for (lid in data['lane']){
-            lbody="";
+            var lbody="";
             lbody+="<tr><th>Project Name</th><th>Sample Name</th><th>Yield (Mbases)</th><th># Reads</th><th>% >Q30</th><th>Barcode</th><th>Index description</th></tr>";
             for (samplerunid in data['lane'][lid]){
                 lbody+="<tr><td>"+data['lane'][lid][samplerunid]['Project']+"</td>";
@@ -83,7 +83,6 @@ $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
                 lbody+="<td>"+data['lane'][lid][samplerunid]['desc']+"</td>";
                 lbody+="</tr>";
             }
-            console.log("#table_lane_"+lid+" tbody0>\n"+lbody);
             $("#table_lane_"+lid+" tbody").html(lbody);
             
         }
