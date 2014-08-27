@@ -38,9 +38,16 @@ $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
         tbody += data["plist"].join(", ")
         tbody += "</td></tr>";
         for (lid=1;lid<9;lid++){
-            sbody="<tr><th>Total Yield :</th><td>";
-            sbody+=data['yields'][lid];
-            sbody+="</td>";
+            if (data['yields'][lid] !== 0){
+                sbody="<tr><th>Total Yield :</th><td>";
+                sbody+=data['yields'][lid];
+                sbody+="</td></tr>";
+            }
+            if (data['seq_qc'][lid] !== 0){
+            sbody+="<tr><th>Sequencing QC:</th><td>";
+            sbody+=data['seq_qc'][lid];
+            sbody+="</td></tr>";
+            }
             for(i=1;i<4;i++){
                 sbody+="<tr>";
                 sbody+="<th>Read "+i+" Error rate :</th>";
@@ -49,9 +56,9 @@ $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
                 }else{
                     sbody+="<td>Not found in the DB</td>";
                 }
+                sbody+="</tr>"
 
             }
-            sbody+="</tr>";
             $("#summary_lane_"+lid+" tbody").html(sbody);
         }
         for (lid in data['lane']){
