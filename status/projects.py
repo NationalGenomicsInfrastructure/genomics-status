@@ -342,7 +342,6 @@ class CaliperImageHandler(SafeHandler):
             sftp_client.close()
             transport.close()
             returnHTML=json.dumps(encoded_string)
-            #returnHTML='<img src="data:image/png;base64,{}" />'.format(encoded_string)
             return returnHTML
         except Exception, message:
             return("Error fetching caliper images")
