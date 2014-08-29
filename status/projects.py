@@ -252,7 +252,7 @@ class ProjectSamplesDataHandler(SafeHandler):
 
     Loaded through /api/v1/project/([^/]*)$
     """
-    def sample_data(self, sample_data):
+    def sample_data(self, sample_data,project, sample):
         sample_data["sample_run_metrics"] = []
         sample_data["prep_status"] = []
         sample_data["prep_finished_date"] = []
@@ -271,14 +271,16 @@ class ProjectSamplesDataHandler(SafeHandler):
                 if "library_validation" in content:
                     for agrId, libval in content["library_validation"].iteritems():
                         if "caliper_image" in libval:
-                            sample_data['library_prep'][lib_prep]['library_validation'][agrId]['caliper_image']=self.get_caliper_image(sample_data['library_prep'][lib_prep]['library_validation'][agrId]['caliper_image'])
+                            sample_data['library_prep'][lib_prep]['library_validation'][agrId]['caliper_image'] = "http://{0}{1}".format(
+                                    self.request.host, self.reverse_url('CaliperImageHandler', project, sample, 'libval'))
 
         if "details" in sample_data:
             for detail_key, detail_value in sample_data["details"].iteritems():
                 sample_data[detail_key] = detail_value
         if 'initial_qc' in sample_data and "caliper_image" in sample_data['initial_qc']:
             #Go grab the image from the sftp server
-            sample_data['initial_qc']['caliper_image']=self.get_caliper_image(sample_data['initial_qc']['caliper_image'])
+            sample_data['initial_qc']['caliper_image'] = "http://{0}{1}".format(
+                    self.request.host, self.reverse_url('CaliperImageHandler', project, sample, 'initial_qc'))
         return sample_data
 
     def list_samples(self, project):
@@ -289,7 +291,7 @@ class ProjectSamplesDataHandler(SafeHandler):
         samples = result.rows[0].value if result.rows[0].value else {}
         output = OrderedDict()
         for sample, sample_data in sorted(samples.iteritems(), key=lambda x: x[0]):
-            sample_data = self.sample_data(sample_data)
+            sample_data = self.sample_data(sample_data, project, sample)
             output[sample] = sample_data
         return output
 
@@ -304,6 +306,24 @@ class ProjectSamplesDataHandler(SafeHandler):
         samples = result.rows[0].value
         samples = OrderedDict(sorted(samples.iteritems(), key=lambda x: x[0]))
         return samples
+
+
+class CaliperImageHandler(SafeHandler):
+    """serves caliper images in img tags, with ice and a small umbrella.
+
+    Called through /api/v1/caliper_images/PROJECT/SAMPLE/STEP"""
+
+    def get(self, project, sample, step):
+        self.set_header("Content-type", "application/json")
+        sample_view = self.application.projects_db.view("project/caliper_links")
+        result = sample_view[project]
+        try:
+            data = result.rows[0].value 
+        except TypeError:
+            #can be triggered by the data.get().get() calls.
+            self.write("no caliper image found")
+        else:
+            self.write(self.get_caliper_image(data.get(sample).get(step)))
 
     def get_caliper_image(self,url):
         """returns a base64 string of the caliper image aksed"""
@@ -321,7 +341,8 @@ class ProjectSamplesDataHandler(SafeHandler):
             my_file.close()
             sftp_client.close()
             transport.close()
-            returnHTML='<img src="data:image/png;base64,{}" />'.format(encoded_string)
+            returnHTML=json.dumps(encoded_string)
+            #returnHTML='<img src="data:image/png;base64,{}" />'.format(encoded_string)
             return returnHTML
         except Exception, message:
             return("Error fetching caliper images")

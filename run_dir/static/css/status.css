@@ -141,7 +141,15 @@ table.narrow-headers th {
   position: relative;
   margin-bottom: 20px;
 }
-
+div#caliperModal {
+    width:1040px;
+    height:400px;
+    margin-left:-520px;
+    left:50%;
+}
+img.caliper-img {
+    cursor: pointer;
+}
 
 /* NVD3 Graphs
 ------------------------------------------------- */
