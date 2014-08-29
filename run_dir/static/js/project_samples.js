@@ -509,14 +509,14 @@ function load_samples_table() {
                 var process_id = max_str(Object.keys(info_library['library_validation']));
                 var validation_data = info_library['library_validation'][process_id];
                 if (validation_data) {
-                  validation_data[column_id] = round_floats(validation_data[column_id], 2);
-            if (~column_name.indexOf('Library Validation Caliper Image')){
-                tbl_row+='<div class="caliper-link loading" href="'+validation_data[column_id]+'"><span class="toremove"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>Loading...</span></div>';
-            //tbl_row += '<a href='+validation_data[column_id]+' id="'+sample+'-caliper-initqc" class="caliper-link loading">See Caliper Image</a>';
-            }else{
-                  tbl_row += validation_data[column_id] + '<br>';
-            }
-                }
+                   validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                   if (~column_name.indexOf('Library Validation Caliper Image')){
+                        tbl_row+='<div class="caliper-link loading" href="'+validation_data[column_id]+
+                            '"><span class="toremove"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>Loading...</span></div>';
+                   }else{
+                        tbl_row += validation_data[column_id] + '<br>';
+                   }
+               }
               }
             });
             tbl_row += '</td>';
@@ -567,24 +567,23 @@ function update_caliper(){
         var currentobj=$(this);
         var imglink = $(this).attr('href');
         if(imglink==="undefined"){
-                currentobj.append("No caliper link.")
+                currentobj.append("No caliper link.");
                 currentobj.children('span.toremove').remove();
                 currentobj.removeClass('loading');
         }else{
             var jqxhr=$.getJSON(imglink, function(data){
-                currentobj.append('<img class="caliper-img" src="data:image/png;base64,'+data+'">')
+                currentobj.append('<img class="caliper-img" src="data:image/png;base64,'+data+'">');
                 currentobj.children('span.toremove').remove();
                 currentobj.removeClass('loading');
             })
             .fail(function(){
-                currentobj.append("Error.")
+                currentobj.append("Error.");
                 currentobj.children('span.toremove').remove();
                 currentobj.removeClass('loading');
             });
        }                                    
-});
-
-
+   }
+ });
 }
 var fetching_data;
 fetching_data = fetching_data || (function () {
