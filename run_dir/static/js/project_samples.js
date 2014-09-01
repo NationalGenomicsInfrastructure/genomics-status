@@ -577,7 +577,7 @@ function update_caliper(){
                 currentobj.removeClass('loading');
             })
             .fail(function(){
-                currentobj.append("Error.");
+                currentobj.append("<abbr title='"+imglink+" "+jqxhr.responseText+"'>Error.</abbr>");
                 currentobj.children('span.toremove').remove();
                 currentobj.removeClass('loading');
             });
