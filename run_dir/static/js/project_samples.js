@@ -473,7 +473,7 @@ function load_samples_table() {
             var column_id = column_tuple[1];
             info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
             if (~column_name.indexOf('Initial QC Caliper Image')){
-                tbl_row += '<td class="' + column_id + '"><div class="caliper-link loading" href="'+info['initial_qc'][column_id]+'"><span class="toremove"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>   Loading...</span></div></td>';
+                tbl_row += '<td class="' + column_id + '"><div class="caliper-link loading" href="'+info['initial_qc'][column_id]+'"><span class="toremove"><i class="icon-refresh glyphicon-refresh-animate"></i>&nbsp;Loading...</span></div></td>';
             }else{
                 tbl_row += '<td class="' + column_name + '">' + info['initial_qc'][column_id] + '</td>';
             }
@@ -512,7 +512,7 @@ function load_samples_table() {
                    validation_data[column_id] = round_floats(validation_data[column_id], 2);
                    if (~column_name.indexOf('Library Validation Caliper Image')){
                         tbl_row+='<div class="caliper-link loading" href="'+validation_data[column_id]+
-                            '"><span class="toremove"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>Loading...</span></div>';
+                            '"><span class="toremove"><i class="icon-refresh glyphicon-refresh-animate"></i>&nbsp;Loading...</span></div>';
                    }else{
                         tbl_row += validation_data[column_id] + '<br>';
                    }
