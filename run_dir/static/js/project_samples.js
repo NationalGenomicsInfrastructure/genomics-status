@@ -3,6 +3,14 @@ var project = $('#projects-js').attr('data-project');
 var ordered_reads = 0.0;
 
 $(document).ready(function() {
+/* Caliper buttons click listener*/
+$("body").on('click', '.caliper-img',  function(e) {
+    e.preventDefault();
+    data=$(this).attr('src')
+    $('.modal-body').html("<img src='"+data+"' />");
+    $('#caliperModal').modal();
+    
+});
   /* check default checkboxes */
   if (!$("#Filter :checked").length) {
     reset_default_checkboxes();
@@ -464,7 +472,11 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
-            tbl_row += '<td class="' + column_id + '">' + info['initial_qc'][column_id] + '</td>';
+            if (~column_name.indexOf('Initial QC Caliper Image')){
+                tbl_row += '<td class="' + column_id + '"><div class="caliper-link loading" href="'+info['initial_qc'][column_id]+'"><span class="toremove"><i class="icon-refresh glyphicon-refresh-animate"></i>&nbsp;Loading...</span></div></td>';
+            }else{
+                tbl_row += '<td class="' + column_name + '">' + info['initial_qc'][column_id] + '</td>';
+            }
           });
         }
         else if (subset == "library-prep-columns" && info['library_prep'] !== undefined) {
@@ -497,9 +509,14 @@ function load_samples_table() {
                 var process_id = max_str(Object.keys(info_library['library_validation']));
                 var validation_data = info_library['library_validation'][process_id];
                 if (validation_data) {
-                  validation_data[column_id] = round_floats(validation_data[column_id], 2);
-                  tbl_row += validation_data[column_id] + '<br>';
-                }
+                   validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                   if (~column_name.indexOf('Library Validation Caliper Image')){
+                        tbl_row+='<div class="caliper-link loading" href="'+validation_data[column_id]+
+                            '"><span class="toremove"><i class="icon-refresh glyphicon-refresh-animate"></i>&nbsp;Loading...</span></div>';
+                   }else{
+                        tbl_row += validation_data[column_id] + '<br>';
+                   }
+               }
               }
             });
             tbl_row += '</td>';
@@ -540,9 +557,34 @@ function load_samples_table() {
     $("#samples_table_body").html(tbl_body);
     columns = read_current_filtering(false);
     init_listjs(size, columns);
+    //last step, update caliper images
+    update_caliper();
   });
 }
-
+function update_caliper(){
+  $.each($('.caliper-link'), function(){
+    if($(this).hasClass('loading')){
+        var currentobj=$(this);
+        var imglink = $(this).attr('href');
+        if(imglink==="undefined"){
+                currentobj.append("No caliper link.");
+                currentobj.children('span.toremove').remove();
+                currentobj.removeClass('loading');
+        }else{
+            var jqxhr=$.getJSON(imglink, function(data){
+                currentobj.append('<img class="caliper-img" src="data:image/png;base64,'+data+'">');
+                currentobj.children('span.toremove').remove();
+                currentobj.removeClass('loading');
+            })
+            .fail(function(){
+                currentobj.append("Error.");
+                currentobj.children('span.toremove').remove();
+                currentobj.removeClass('loading');
+            });
+       }                                    
+   }
+ });
+}
 var fetching_data;
 fetching_data = fetching_data || (function () {
   var pleaseWaitDiv = $(' \
