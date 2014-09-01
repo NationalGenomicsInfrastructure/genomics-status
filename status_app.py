@@ -55,6 +55,7 @@ class Application(tornado.web.Application):
             ("/api/v1/amanita_box2/([^/]*)$", AmanitaBox2ProjectDataHandler),
             ("/api/v1/amanita_box2/projects/",
                 AmanitaBox2ProjectsDataHandler),
+            tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
