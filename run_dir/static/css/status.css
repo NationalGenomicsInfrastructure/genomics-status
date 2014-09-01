@@ -150,6 +150,11 @@ div#caliperModal {
 img.caliper-img {
     cursor: pointer;
 }
+img.caliper-modal {
+    width:100%;
+    max-width:1040px;
+    max-height:400px;
+}
 
 /* NVD3 Graphs
 ------------------------------------------------- */
