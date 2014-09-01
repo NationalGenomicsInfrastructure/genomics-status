@@ -271,16 +271,14 @@ class ProjectSamplesDataHandler(SafeHandler):
                 if "library_validation" in content:
                     for agrId, libval in content["library_validation"].iteritems():
                         if "caliper_image" in libval:
-                            sample_data['library_prep'][lib_prep]['library_validation'][agrId]['caliper_image'] = "http://{0}{1}".format(
-                                    self.request.host, self.reverse_url('CaliperImageHandler', project, sample, 'libval'))
+                            sample_data['library_prep'][lib_prep]['library_validation'][agrId]['caliper_image'] = self.reverse_url('CaliperImageHandler', project, sample, 'libval')
 
         if "details" in sample_data:
             for detail_key, detail_value in sample_data["details"].iteritems():
                 sample_data[detail_key] = detail_value
         if 'initial_qc' in sample_data and "caliper_image" in sample_data['initial_qc']:
             #Go grab the image from the sftp server
-            sample_data['initial_qc']['caliper_image'] = "http://{0}{1}".format(
-                    self.request.host, self.reverse_url('CaliperImageHandler', project, sample, 'initial_qc'))
+            sample_data['initial_qc']['caliper_image'] = self.reverse_url('CaliperImageHandler', project, sample, 'initial_qc')
         return sample_data
 
     def list_samples(self, project):
