@@ -7,7 +7,7 @@ $(document).ready(function() {
 $("body").on('click', '.caliper-img',  function(e) {
     e.preventDefault();
     data=$(this).attr('src')
-    $('.modal-body').html("<img src='"+data+"' />");
+    $('.modal-body').html("<img class='caliper-modal' src='"+data+"' />");
     $('#caliperModal').modal();
     
 });
