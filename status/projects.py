@@ -17,6 +17,7 @@ from status.util import dthandler, SafeHandler
 
 from genologics import lims
 from genologics.entities import Project
+from genologics.entities import Process
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
 from zendesk import Zendesk, ZendeskError, get_id_from_url
@@ -355,7 +356,52 @@ class ProjectSamplesHandler(SafeHandler):
                               user=self.get_current_user_name(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
                               columns_sample = self.application.genstat_defaults.get('sample_columns'),
-                              prettify = prettify_css_names))
+                              prettify = prettify_css_names,
+                              limsdata=self.getBasicLimsData(project)))
+
+    def getBasicLimsData(self, project):
+        limsdata={}
+        limsdata['summary']={}
+        p=Project(lims, id=project) 
+        limsdata['contact']=p.researcher.email
+        for field, value in p.udf.items():
+            limsdata[field]=value
+        try:
+            summary=lims.get_processes(type="Project Summary 1.3", projectname=p.name)[0]
+        except IndexError:
+           print "No project summary for project {}".format(project) 
+        else:
+            for field,value in summary.udf.items():
+                limsdata['summary'][field]=value
+
+        limsdata['samples_nb']=0
+        limsdata['samples_inprogress']=0
+        limsdata['samples_aborted']=0
+        limsdata['samples_finished']=0
+        limsdata['pools']=set()
+        limsdata['initqc']=0
+        limsdata['libqc']=0
+        for sample in lims.get_samples(projectlimsid=project):
+            limsdata['samples_nb']+=1
+            try:
+                if sample.udf['Status (manual)']=='In Progress':
+                    limsdata['samples_inprogress']+=1
+                elif sample.udf['Status (manual)']=='Aborted':
+                    limsdata['samples_aborted']+=1
+                elif sample.udf['Status (manual)']=='Finished':
+                    limsdata['samples_finished']+=1
+                if 'Pooling' in sample.udf:
+                    limsdata['pools'].add(sample.udf['Pooling'])
+                if 'Passed Initial QC' in sample.udf and sample.udf['Passed Initial QC']=="True":
+                    limsdata['initqc']+=1
+                if 'Passed Library QC' in sample.udf and sample.udf['Passed Library QC']=="True":
+                    limsdata['libqc']+=1
+            except KeyError:
+                print "Failed to load lims information for the current sample {}".format(sample.name)
+        
+        return limsdata
+
+
 
 
 class ProjectsHandler(SafeHandler):
