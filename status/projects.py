@@ -411,7 +411,6 @@ class ProjectSamplesHandler(SafeHandler):
                         limsdata['libqc_p']+=1
                     elif sample.udf['Passed Library QC']=="False":
                         limsdata['libqc_f']+=1
-                #sample.artifact gives the original artifact for the sample, not the current one. read on genologics artifact states to know more.
                 if len(seqproc)>0:
                     for inp in seqproc[0].all_inputs():
                         samplenames=[s.name for s in inp.samples]
