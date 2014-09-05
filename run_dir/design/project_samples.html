@@ -7,6 +7,7 @@
   <h3 name="project_name" id="project_name"></h3>
   <div name="project_status"></div>
   <!--Order dates table -->
+  {{limsdata}}
   <table class="table table-bordered table-condensed">
     <thead>
       <tr>
@@ -269,16 +270,12 @@
                     </thead>
                     <tbody>
                     <tr>
-                      <td>Final samples</td>
+                      <td>Non-aborted samples</td>
                       <td>{{limsdata.get('samples_nb')-limsdata.get('samples_aborted')}}</td>
                     </tr>
                     <tr>
-                      <td>Samples</td>
+                      <td>Samples provided</td>
                       <td>{{limsdata.get('samples_nb')}}</td>
-                    </tr>
-                    <tr>
-                      <td>Completed Samples</td>
-                      <td name='{{columns['BASIC_COLUMNS']['Samples Completed']}}'></td>
                     </tr>
                     <tr>
                       <td>Pools</td>
@@ -321,24 +318,41 @@
                         </tr>
                       </thead>
                       <tbody>
-                      <tr>
-                        <td>Incoming QC</td>
-                        <td>{{limsdata.get('initqc')}}/{{limsdata.get('samples_nb')}}P</td>
-                      </tr>
-                      <tr>
-                        <td>Library QC</td>
-                        <td>{{limsdata.get('libqc')}}/{{limsdata.get('samples_nb')}}P</td>
                         <tr>
-                          <td>Sequencing QC</td>
-                          <td name='passed_seq_qc'></td>
+                          <td>Passed Initial QC</td>
+                          <td>{{limsdata.get('initqc_p')}}</td>
                         </tr>
                         <tr>
-                          <td>Library re-preps</td>
-                          <td name='library_repreps'></td>
+                          <td>Failed Initial  QC</td>
+                          <td>{{limsdata.get('initqc_f')}}</td>
+                        </tr>
+                        <tr>
+                          <td>Passed Library QC</td>
+                          <td>{{limsdata.get('libqc_p')}}</td>
+                        </tr>
+                        <tr>
+                         <td>Failed Library QC</td>
+                         <td>{{limsdata.get('libqc_f')}}</td>
+                        </tr>
+                        <tr>
+                          <td>Passed Sequencing</td>
+                          <td>{{limsdata.get('seqqc_p')}}</td>
+                        </tr>
+                        <tr>
+                          <td>Failed Sequencing</td>
+                          <td>{{limsdata.get('seqqc_f')}}</td>
                         </tr>
                         <tr>
                           <td>Lanes started</td>
-                          <td name="lanes_sequenced"></td>
+                          <td>{{limsdata.get('lanes')}}</td>
+                        </tr>
+                        <tr>
+                          <td>Sequencing QC (Gdocs)</td>
+                          <td name='passed_seq_qc'></td>
+                        </tr>
+                        <tr>
+                          <td>Library re-preps (Genstat)</td>
+                          <td name='library_repreps'></td>
                         </tr>
                         </tbody>
                       </table>
