@@ -318,28 +318,16 @@
                       </thead>
                       <tbody>
                         <tr>
-                          <td>Passed Initial QC</td>
-                          <td>{{limsdata.get('initqc_p')}}</td>
+                          <td>Passed/Failed Initial QC</td>
+                          <td>{{limsdata.get('initqc_p')}}P / {{limsdata.get('initqc_f')}}F</td>
                         </tr>
                         <tr>
-                          <td>Failed Initial  QC</td>
-                          <td>{{limsdata.get('initqc_f')}}</td>
+                          <td>Passed/Failed Library QC</td>
+                          <td>{{limsdata.get('libqc_p')}}P / {{limsdata.get('libqc_f')}}F</td>
                         </tr>
                         <tr>
-                          <td>Passed Library QC</td>
-                          <td>{{limsdata.get('libqc_p')}}</td>
-                        </tr>
-                        <tr>
-                         <td>Failed Library QC</td>
-                         <td>{{limsdata.get('libqc_f')}}</td>
-                        </tr>
-                        <tr>
-                          <td>Passed Sequencing</td>
-                          <td>{{limsdata.get('seqqc_p')}}</td>
-                        </tr>
-                        <tr>
-                          <td>Failed Sequencing</td>
-                          <td>{{limsdata.get('seqqc_f')}}</td>
+                          <td>Passed/Failed Sequencing</td>
+                          <td>{{limsdata.get('seqqc_p')}}P / {{limsdata.get('seqqc_f')}}F</td>
                         </tr>
                         <tr>
                           <td>Lanes started</td>
