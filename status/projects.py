@@ -17,6 +17,8 @@ from status.util import dthandler, SafeHandler
 
 from genologics import lims
 from genologics.entities import Project
+from genologics.entities import Process
+from genologics.entities import Artifact
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
 from zendesk import Zendesk, ZendeskError, get_id_from_url
@@ -355,7 +357,81 @@ class ProjectSamplesHandler(SafeHandler):
                               user=self.get_current_user_name(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
                               columns_sample = self.application.genstat_defaults.get('sample_columns'),
-                              prettify = prettify_css_names))
+                              prettify = prettify_css_names,
+                              limsdata=self.getBasicLimsData(project)))
+
+    def getBasicLimsData(self, project):
+        limsdata={}
+        limsdata['summary']={}
+        p=Project(lims, id=project) 
+        limsdata['contact']=p.researcher.email
+        for field, value in p.udf.items():
+            limsdata[field]=value
+        try:
+            summary=lims.get_processes(type="Project Summary 1.3", projectname=p.name)[0]
+        except IndexError:
+           print "No project summary for project {}".format(project) 
+        else:
+            for field,value in summary.udf.items():
+                limsdata['summary'][field]=value
+
+        limsdata['samples_nb']=0
+        limsdata['samples_inprogress']=0
+        limsdata['samples_aborted']=0
+        limsdata['samples_finished']=0
+        limsdata['pools']=set()
+        limsdata['initqc_p']=0
+        limsdata['initqc_f']=0
+        limsdata['libqc_p']=0
+        limsdata['libqc_f']=0
+        limsdata['seqqc_p']=0
+        limsdata['seqqc_f']=0
+
+        seqproc=lims.get_processes(type=['Illumina Sequencing (Illumina SBS) 4.0','MiSeq Run (MiSeq) 4.0'], projectname=p.name)
+        lanes=set()
+        for sample in lims.get_samples(projectlimsid=project):
+            limsdata['samples_nb']+=1
+            seqqcflag=''
+            try:
+                if sample.udf['Status (manual)']=='In Progress':
+                    limsdata['samples_inprogress']+=1
+                elif sample.udf['Status (manual)']=='Aborted':
+                    limsdata['samples_aborted']+=1
+                elif sample.udf['Status (manual)']=='Finished':
+                    limsdata['samples_finished']+=1
+                if 'Pooling' in sample.udf:
+                    limsdata['pools'].add(sample.udf['Pooling'])
+                if 'Passed Initial QC' in sample.udf:
+                    if sample.udf['Passed Initial QC']=="True":
+                        limsdata['initqc_p']+=1
+                    elif sample.udf['Passed Initial QC']=="False":
+                        limsdata['initqc_f']+=1
+                if 'Passed Library QC' in sample.udf:
+                    if sample.udf['Passed Library QC']=="True":
+                        limsdata['libqc_p']+=1
+                    elif sample.udf['Passed Library QC']=="False":
+                        limsdata['libqc_f']+=1
+                if len(seqproc)>0:
+                    for inp in seqproc[0].all_inputs():
+                        samplenames=[s.name for s in inp.samples]
+                        if sample.name in samplenames:
+                            seqqcflag=inp.qc_flag
+                            if inp.qc_flag =='PASSED':
+                                limsdata['seqqc_p']+=1
+                            elif inp.qc_flag =='FAILED':
+                                limsdata['seqqc_f']+=1
+                            if seqproc[0]== "MiSeq Run (MiSeq) 4.0":
+                                lanes.add(inp.location[1].split(':')[1])
+                            else:
+                                lanes.add(inp.location[1].split(':')[0])
+
+            except KeyError:
+                print "Failed to load lims information for the current sample {}".format(sample.name)
+        
+        limsdata['lanes']=len(lanes)
+        return limsdata
+
+
 
 
 class ProjectsHandler(SafeHandler):
