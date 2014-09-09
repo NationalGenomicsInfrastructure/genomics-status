@@ -120,15 +120,15 @@
                     <tbody>
                     <tr>
                       <td>Type</td>
-                      <td name='{{columns['BASIC_COLUMNS']['Type']}}'></td>
+                      <td>{{limsdata.get('Type')}}</td>
                     </tr>
                     <tr>
                       <td>Application</td>
-                      <td name='{{columns['BASIC_COLUMNS']['Application']}}'>Application</td>
+                      <td>{{limsdata.get('Application')}}</td>
                     </tr>
                     <tr>
                       <td>Disposal Of Samples</td>
-                      <td name='{{columns['DETAILS_COLUMNS']['Disposal of Samples']}}'></td>
+                      <td>{{limsdata.get('Disposal of any remaining samples')}}</td>
                     </tr>
                     </tbody>
                   </table>
@@ -144,23 +144,23 @@
                     <tbody>
                     <tr>
                       <td>Bioinfo. Responsible</td>
-                      <td name='{{columns['BIOINFO_COLUMNS']['Bioinfo. Responsible']}}'></td>
+                      <td>{{limsdata.get('summary').get('Bioinfo responsible')}}</td>
                     </tr>
                     <tr>
                       <td>Lab Responsible</td>
-                      <td name='{{columns['SETUP_PROJECT_COLUMNS']['Lab. Responsible']}}'></td>
+                      <td>{{limsdata.get('summary').get('Lab responsible')}}</td>
                     </tr>
                     <tr>
                       <td>Project Coordinator</td>
-                      <td name='{{columns['DETAILS_COLUMNS']['Project Coordinator']}}'></td>
+                      <td>{{limsdata.get('project coordinator')}}</td>
                     </tr>
                     <tr>
                       <td>Contact</td>
-                      <td name='{{columns['DETAILS_COLUMNS']['PI']}}'></td>
+                      <td>{{limsdata.get('contact')}}</td>
                     </tr>
                     <tr>
                       <td>Invoice Reference</td>
-                      <td name='{{columns['DETAILS_COLUMNS']['Invoice Reference']}}'></td>
+                      <td>{{limsdata.get('Invoice Reference')}}</td>
                     </tr>
                     </tbody>
                   </table>
@@ -178,35 +178,35 @@
                     <tbody>
                     <tr>
                       <td>Uppnex ID</td>
-                      <td name='{{columns['BIOINFO_COLUMNS']['Uppnex ID']}}'></td>
+                      <td>{{limsdata.get('Uppnex ID')}}</td>
                     </tr>
                     <tr>
                       <td>Source</td>
-                      <td name='{{columns['BIOINFO_COLUMNS']['Source']}}'></td>
+                      <td>lims</td>
                     </tr>
                     <tr>
                       <td>Custom capture design</td>
-                      <td name='{{columns['BIOINFO_COLUMNS']['Custom Capture Design']}}'></td>
+                      <td>{{limsdata.get('Custom Capture Design ID')}}</td>
                     </tr>
                     <tr>
                       <td>UPPMAX project owner</td>
-                      <td name='{{columns['BIOINFO_COLUMNS']['Uppmax Project Owner']}}'></td>
+                      <td>{{limsdata.get('Uppmax Project Owner')}}</td>
                     </tr>
                     <tr>
                       <td>Best Practice Bioinformatics</td>
-                      <td name='{{columns['BIOINFO_COLUMNS']['Best Practice Bioinformatics']}}'></td>
+                      <td>{{limsdata.get('Best practice bioinformatics')}}</td>
                     </tr>
                     <tr>
                       <td>Bioinfo Analysis</td>
-                      <td name='{{columns['BIOINFO_COLUMNS']['Bioinformatic QC']}}'></td>
+                      <td>{{limsdata.get('Bioinformatic QC')}}</td>
                     </tr>
                     <tr>
                       <td>Organism</td>
-                      <td name='{{columns['DETAILS_COLUMNS']['Organism']}}'></td>
+                      <td>{{limsdata.get('Organism')}}</td>
                     </tr>
                     <tr>
                       <td>Reference Genome</td>
-                      <td name='{{columns['BIOINFO_COLUMNS']['Reference Genome']}}'></td>
+                      <td>{{limsdata.get('Reference genome')}}</td>
                     </tr>
                     </tbody>
                   </table>
@@ -223,35 +223,35 @@
                     <tbody>
                     <tr>
                       <td>Sample type</td>
-                      <td name='{{columns['DETAILS_COLUMNS']['Sample Type']}}'></td>
+                      <td>{{limsdata.get('Sample type')}}</td>
                     </tr>
                     <tr>
                       <td>Sequencing Platform</td>
-                      <td name='{{columns['SEQUENCING_COLUMNS']['Sequencing Platform']}}'></td>
+                      <td>{{limsdata.get('Sequencing platform')}}</td>
                     </tr>
                     <tr>
                       <td>Sequencing Setup</td>
-                      <td name='{{columns['SEQUENCING_COLUMNS']['Sequencing Setup']}}'></td>
+                      <td>{{limsdata.get('Sequencing setup')}}</td>
                     </tr>
                     <tr>
                       <td>Library Construction Method</td>
-                      <td name='{{columns['LIBRARY_PREP_COLUMNS']['Library Construction Method']}}'></td>
+                      <td>{{limsdata.get('Library construction method')}}</td>
                     </tr>
                     <tr>
                       <td>%phiX</td>
-                      <td name='{{columns['DETAILS_COLUMNS']['%phiX']}}'></td>
+                      <td>{{limsdata.get('PhiX spike-in (percent)')}}</td>
                     </tr>
                     <tr>
                       <td>Low Diversity</td>
-                      <td name='{{columns['DETAILS_COLUMNS']['Low Diversity']}}'></td>
+                      <td>{{limsdata.get('Low Diversity')}}</td>
                     </tr>
                     <tr>
                       <td>Custom Primer</td>
-                      <td name='{{columns['DETAILS_COLUMNS']['Custom Primer']}}'></td>
+                      <td>{{limsdata.get('Custom Primer')}}</td>
                     </tr>
                     <tr>
                       <td>Lanes Ordered</td>
-                      <td name="{{columns['DETAILS_COLUMNS']['Lanes']}}"></td>
+                      <td>{{limsdata.get('Sequence units ordered (lanes)')}}</td>
                     </tr>
                     </tbody>
                   </table>
@@ -269,20 +269,16 @@
                     </thead>
                     <tbody>
                     <tr>
-                      <td>Final samples</td>
-                      <td name='{{columns['DETAILS_COLUMNS']['Final Number of Samples']}}'></td>
+                      <td>Non-aborted samples</td>
+                      <td>{{limsdata.get('samples_nb')-limsdata.get('samples_aborted')}}</td>
                     </tr>
                     <tr>
-                      <td>Samples</td>
-                      <td name='{{columns['BASIC_COLUMNS']['Number of Samples']}}'></td>
-                    </tr>
-                    <tr>
-                      <td>Completed Samples</td>
-                      <td name='{{columns['BASIC_COLUMNS']['Samples Completed']}}'></td>
+                      <td>Samples provided</td>
+                      <td>{{limsdata.get('samples_nb')}}</td>
                     </tr>
                     <tr>
                       <td>Pools</td>
-                      <td name ='number_of_pools'></td>
+                      <td>{{len(limsdata.get('pools'))}}</td>
                     </tr>
                     </tbody>
                   </table>
@@ -299,14 +295,14 @@
                     <tbody>
                     <tr>
                       <td>Finished</td>
-                      <td name='Finished'></td>
+                      <td>{{limsdata.get('samples_finished')}}</td>
                     </tr>
                     <tr>
                       <td>In progress</td>
-                      <td name='In Progress'></td>
+                      <td>{{limsdata.get('samples_inprogress')}}</td>
                       <tr>
                         <td>Aborted</td>
-                        <td name='Aborted'></td>
+                      <td>{{limsdata.get('samples_aborted')}}</td>
                       </tr>
                       </tbody>
                     </table>
@@ -321,28 +317,29 @@
                         </tr>
                       </thead>
                       <tbody>
-                      <tr>
-                        <td>Incoming QC</td>
-                        <td name='passed_initial_qc'></td>
-                      </tr>
-                      <tr>
-                        <td>Library QC</td>
-                        <td name='passed_library_qc'></td>
                         <tr>
-                          <td>Sequencing QC</td>
-                          <td name='passed_seq_qc'></td>
+                          <td>Passed/Failed Initial QC</td>
+                          <td>{{limsdata.get('initqc_p')}} P / {{limsdata.get('initqc_f')}} F</td>
                         </tr>
                         <tr>
-                          <td>Library re-preps</td>
-                          <td name='library_repreps'></td>
+                          <td>Passed/Failed Library QC</td>
+                          <td>{{limsdata.get('libqc_p')}} P / {{limsdata.get('libqc_f')}} F</td>
+                        </tr>
+                        <tr>
+                          <td>Passed/Failed Sequencing</td>
+                          <td>{{limsdata.get('seqqc_p')}} P / {{limsdata.get('seqqc_f')}} F</td>
                         </tr>
                         <tr>
                           <td>Lanes started</td>
-                          <td name="lanes_sequenced"></td>
+                          <td>{{limsdata.get('lanes')}}</td>
                         </tr>
                         <tr>
-                          <td>Sequencing re-runs</td>
-                          <td></td>
+                          <td>Sequencing QC (Gdocs)</td>
+                          <td name='passed_seq_qc'></td>
+                        </tr>
+                        <tr>
+                          <td>Library re-preps (Genstat)</td>
+                          <td name='library_repreps'></td>
                         </tr>
                         </tbody>
                       </table>
