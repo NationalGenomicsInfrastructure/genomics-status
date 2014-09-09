@@ -11,7 +11,7 @@ various forms. Document specifications for StatusDB are available in the interna
 * you're either running a python virtualenv or you do have root permissions.
 * you have access to both StatusDB and Genologics LIMS
 
-1 - Clone the repository with the ```--recursive``` option (this will also download [nvd3](http://nvd3.org/) library):
+1 - Clone the repository with the `--recursive` option (this will also download [nvd3](http://nvd3.org/) library):
 
 ```
 git clone --recursive https://github.com/SciLifeLab/status.git
@@ -33,7 +33,7 @@ pip install matplotlib
 4 - For running, it requires a `settings.yaml` file which points to the CouchDB server to use, and which port to
 serve the web app to. You will also need a .genologicsrc file with the API credentials for our Genologics LIMS. The files should look like these:
 
-<status_dir>/run_dir/settings.yaml
+`<status_dir>/run_dir/settings.yaml`
 ```yaml
 couch_server: http://<username>:<password>@tools-dev.scilifelab.se:5984
 username: <tools_username>
@@ -57,7 +57,7 @@ instruments:
 password_seed: dont_needed
 ```
 
-~/.genologicsrc
+`~/.genologicsrc`
 ```yaml
 [genologics]
 BASEURI=https://genologics-stage.scilifelab.se:8443
@@ -65,10 +65,12 @@ USERNAME=<lims_api_username>
 PASSWORD=<lims_api_password>
 ```
 5 - Run the tornado app from run_dir :
+```
 cd run_dir
-python ../status_app --testing_mode
+python ../status_app.py --testing_mode
+```
 
---testing_mode will skip the google authentication, which is convenient for testing
+`--testing_mode` will skip the google authentication, which is convenient for testing
 
 The status web app both provides the HTML web interface, and a RESTful api for accessing the data being
 visualized on the various pages.
