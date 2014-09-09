@@ -24,16 +24,18 @@ cd status
 python setup.py install
 ```
 
-3 - You'll need to install matplotlib separatedly:
+3 - You'll need to install a few other pieces separately:
 
 ```
 pip install matplotlib
+pip install Zendesk
+pip install https://github.com/SciLifeLab/genologics/tarball/master
 ```
 
 4 - For running, it requires a `settings.yaml` file which points to the CouchDB server to use, and which port to
 serve the web app to. You will also need a .genologicsrc file with the API credentials for our Genologics LIMS. The files should look like these:
 
-`<status_dir>/run_dir/settings.yaml`
+`<status_dir>/run_dir/settings.yaml`:
 ```yaml
 couch_server: http://<username>:<password>@tools-dev.scilifelab.se:5984
 username: <tools_username>
@@ -57,7 +59,7 @@ instruments:
 password_seed: dont_needed
 ```
 
-`~/.genologicsrc`
+`~/.genologicsrc`:
 ```yaml
 [genologics]
 BASEURI=https://genologics-stage.scilifelab.se:8443
@@ -74,6 +76,8 @@ python ../status_app.py --testing_mode
 
 The status web app both provides the HTML web interface, and a RESTful api for accessing the data being
 visualized on the various pages.
+
+If you've used the `settings.yaml` template above, you should now be able to access the site at `http://localhost:9761/login`
 
 ## Genomics Status architecture
 
