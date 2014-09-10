@@ -1,92 +1,129 @@
 {% extends "base.html" %}
 
 {% block stuff %}
-<div class="container-fluid">
-
 <h1 id="scilifelabgenomics-status">SciLifeLab Genomics - Status</h1>
 
-<br>
-<p>
-In various stages of data production in the genomics platform metadata about this 
-data is created, and stored in a database (known as StatusDB). This service provides 
-an interface to commonly accessed data, and functionality to generate plots regarding 
-the statistics of this data.
-</p>
+{% if not user %}
 
-<p>
-Data is put in the database from various sources. Time series statistics about systems 
-are mostly gathered by cron jobs on the systems in question.
-</p>
+<h2> Get Access </h2>
+<p>To get access to the resources on this site, you first need to log in with the account given to you by your manager.</p>
+<p><a class="btn btn-primary btn-lg", href="/login">Log in</a></p>
 
-<p>
-<a href="https://github.com/SciLifeLab/scilifelab/blob/master/scilifelab/lims_utils/project_summary_upload_LIMS.py">A script</a>
-running on the background fetches information about Projects and Samples 
-'from the LIMS and populates StatusDB. This is the information used by genomics-status. 
-For questions regarding this, contact Maya Brandi.
-</p>
+{% else %}
 
-<p>
-Data about runs of samples and flowcells are collected while generating statistics 
-in the end of the data processing pipeline, then uploaded to the database. Most of 
-the scripts which generate these statistics and put them in the database have been 
-created by Per Unneberg (as part of the pm tools).
-</p>
+<h3>Quick Links</h3>
+<div class="row homepage-ctas">
+	<div class="col-lg-2 col-sm-4 col-xs-6">
+		<div class="well">
+			<h3><a href="/projects/all"><i class="glyphicon glyphicon-search"></i></a></h3>
+			<p><a class="btn btn-primary" href="/projects/all">View All Projects</a></p>
+		</div>
+	</div>
+	<div class="col-lg-2 col-sm-4 col-xs-6">
+		<div class="well">
+			<h3><a href="/projects/pending"><i class="glyphicon glyphicon-time"></i></a></h3>
+			<p><a class="btn btn-primary" href="/projects/pending">Pending Projects</a></p>
+		</div>
+	</div>
+	<div class="col-lg-2 col-sm-4 col-xs-6">
+		<div class="well">
+			<h3><a href="/projects/ongoing"><i class="glyphicon glyphicon-road"></i></a></h3>
+			<p><a class="btn btn-primary" href="/projects/ongoing">Ongoing Projects</a></p>
+		</div>
+	</div>
+	
+	<div class="col-lg-2 col-sm-4 col-xs-6">
+		<div class="well">
+			<h3><a href="http://genomics-dashboard.scilifelab.se/"><i class="glyphicon glyphicon-barcode"></i></a></h3>
+			<p><a class="btn btn-primary"  href="http://genomics-dashboard.scilifelab.se/">Production Dashboard</a></p>
+		</div>
+	</div>
+	<div class="col-lg-2 col-sm-4 col-xs-6">
+		<div class="well">
+			<h3><a href="http://genomics-dashboard.scilifelab.se/Application/"><i class="glyphicon glyphicon-qrcode"></i></a></h3>
+			<p><a class="btn btn-primary"  href="http://genomics-dashboard.scilifelab.se/Application/">Applications Dashboard</a></p>
+		</div>
+	</div>
+	<div class="col-lg-2 col-sm-4 col-xs-6">
+		<div class="well">
+			<h3><a href="/applications"><i class="glyphicon glyphicon-tags"></i></a></h3>
+			<p><a class="btn btn-primary"  href="/applications">Project Type Statistics</a></p>
+		</div>
+	</div>
+</div>
 
-<p>
-Most data have been reliably collected since January 1st 2012, in some instances 
-there are earlier data. For data regarding Projects and Samples only projects opened 
-after July 1st 2013 should be displayed and trusted.
-</p>
+<div class="row">
+	<div class="col-lg-4">
+		<h3>Introduction</h3>
+		<p>In various stages of data production in the genomics platform metadata about this 
+		data is created, and stored in a database (known as StatusDB). This service provides 
+		an interface to commonly accessed data, and functionality to generate plots regarding 
+		the statistics of this data.</p>
 
-<p>
-For general information about Genomics Status, or feature requests, contact 
-<a href="mailto:guillermo.carrasco@scilifelab.se">Guillermo Carrasco</a> or <a href="mailto:remi-andre.olsen@scilifelab.se">Remi-André Olsen</a>.
-<p>
+		<p>Data is put in the database from various sources. Time series statistics about systems 
+		are mostly gathered by cron jobs on the systems in question.</p>
 
-<p>Code for Status can be seen on <a href="https://github.com/scilifelab/status">Github</a>.</p>
+		<p><a href="https://github.com/SciLifeLab/scilifelab/blob/master/scilifelab/lims_utils/project_summary_upload_LIMS.py">A script</a>
+		running on the background fetches information about Projects and Samples 
+		'from the LIMS and populates StatusDB. This is the information used by genomics-status. 
+		For questions regarding this, contact <a href="mailto:maya.brandi@scilifelab.se">Maya Brandi</a>.</p>
 
-<h2> Additional Resources </h2>
-The Production process Key Performance Indicators are available on the <a href="http://genomics-dashboard.scilifelab.se/">Genomics Process status dashboard</a>.
+		<p>Data about runs of samples and flowcells are collected while generating statistics 
+		in the end of the data processing pipeline, then uploaded to the database. Most of 
+		the scripts which generate these statistics and put them in the database have been 
+		created by Per Unneberg (as part of the pm tools).</p>
 
-{% if user %}
-<h2>Latest updated data</h2>
+		<p>Most data have been reliably collected since January 1st 2012, in some instances 
+		there are earlier data. For data regarding Projects and Samples only projects opened 
+		after July 1st 2013 should be displayed and trusted.</p>
 
-<table class="table table-striped" id="project_table">
-<thead>
-  <tr>
-    <th>Type</th>
-    <th>Data</th>
-    <th>Update Time</th>
-  </tr>
-</thead>
-<tbody></tbody>
-</table>
+		<p>For general information about Genomics Status, or feature requests, contact 
+		<a href="mailto:guillermo.carrasco@scilifelab.se">Guillermo Carrasco</a> or <a href="mailto:remi-andre.olsen@scilifelab.se">Remi-André Olsen</a>.<p>
 
+		<p>Code for Status can be seen on <a href="https://github.com/scilifelab/status">Github</a>.</p>
+		
+	</div>
+	<div class="col-lg-8">
+		<h3>Latest Updated Data</h3>
+		<table class="table table-striped table-bordered" id="project_table">
+		<thead>
+		  <tr>
+		    <th>Type</th>
+		    <th>Data</th>
+		    <th>Update Time</th>
+		  </tr>
+		</thead>
+		<tbody></tbody>
+		</table>
+	</div>
 </div>
 
 <script>
 $.getJSON("/api/v1/last_updated?items=15", function(data) {
   var tbl_body = "";
   $.each(data, function(k1, summary) {
-    tbl_row = '<tr>'
-    tbl_row += '<td>' + summary[2] + '</td>'
-    tbl_row += '<td>' + summary[1] + '</td>'
-    tbl_row += '<td>' + new Date(Date.parse(summary[0])) + '</td>'
-    tbl_row += '</tr>'
-    $("#project_table").append(tbl_row)
+		var link = '';
+		var linkend = '';
+		if(summary[2] == 'Project information'){
+			link = '<a href="http://localhost:9761/project/'+summary[1]+'">';
+			linkend = '</a>';
+		} else if(summary[2] == 'Flowcell information'){
+			link = '<a href="http://localhost:9761/flowcells/'+summary[1]+'">';
+			linkend = '</a>';
+		} else if(summary[2] == 'Sample information'){
+			link = '<a href="https://genomics-status.scilifelab.se/samples/'+summary[1]+'">';
+			linkend = '</a>';
+		}
+		tbl_row = '<tr>';
+    tbl_row += '<td>' + link + summary[2] + linkend + '</td>';
+    tbl_row += '<td>' + link + summary[1] + linkend + '</td>';
+    tbl_row += '<td>' + link + moment(summary[0]).format('HH:mm, MMM Do YYYY') + linkend + '</td>';
+    tbl_row += '</tr>';
+    $("#project_table").append(tbl_row);
   })
 })
 </script>
 
-{% else %}
-
-<div>
-<h2> Get Access </h2>
-<p>
-  To get access to the resources on this site, you first need to log in with the account given to you by your manager.
-</p>
-<a class="btn btn-primary btn-large", href="/login"> Log in </a>
-</div>
 {% end %}
 
 {% end %}
