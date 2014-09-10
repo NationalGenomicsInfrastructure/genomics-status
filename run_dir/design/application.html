@@ -12,12 +12,11 @@
 
 <script>
 $.getJSON("/api/v1/application/{{ application }}", function(data) {
-  var tbl_body = "";
+  var tbl_body = '';
   $.each(data, function(k, project) {
-    tbl_row = "<tr>"
-    tbl_row += '<td><a href="/projects/' + project + '">'
-    tbl_row += project + '</td>'
-    tbl_row += '</tr>'
+    tbl_row = '<tr>';
+    tbl_row += '<td><a href="/projects/' + project + '">' + project + '</td>';
+    tbl_row += '</tr>';
     $("#project_table").append(tbl_row)
   })
 })

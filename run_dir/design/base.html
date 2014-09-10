@@ -89,12 +89,7 @@
 					</ul>
 				</li>
 				{% if user %}
-				<li class="dropdown" id="logout">
-					<a class="dropdown-toggle" data-toggle="dropdown" href="#logout">{{user}} <span class="caret"></span></a>
-					<ul class="dropdown-menu" role="menu">
-						<li><a href="/logout" title="Logout">Logout</a></li>
-					</ul>
-				</li>
+				<li><a href="/logout" title="Logout">Log Out {{user}}</a></li>
 				{% else %}
 				<li><a href="/login" title="Login">Login</a></li>
 				{% end %}
@@ -103,25 +98,26 @@
 	</div>
 </nav>
 <div class="container-fluid">
-	<div class="row-fluid">
-		<!-- Content
-			================================================== -->
-			<div class="span12">
-				{% try %}
-				{% if deprecated %}
-				<div class="alert alert-danger">
-					<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-					<p><strong>Deprecation Warning!</strong> This page is deprecated and any information displayed here should be used with caution.</p>
-				</div>
-
-				{% end %}
-				{% except %}
-				{% end %}
-				{% block stuff %}
-				{% end %}
-			</div>
-
-		</div>
+	<!-- Content -->
+	{% try %}
+	{% if deprecated %}
+	<div class="alert alert-danger">
+		<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+		<p><strong>Deprecation Warning!</strong> This page is deprecated and any information displayed here should be used with caution.</p>
 	</div>
+
+	{% end %}
+	{% except %}
+	{% end %}
+	{% block stuff %}
+	{% end %}
+</div>
+<hr>
+<div class="container-fluid footer">
+	<p><a href="/">Genomics Status</a></p>
+	<p>For general information about Genomics Status, or feature requests, contact
+	<a href="mailto:guillermo.carrasco@scilifelab.se">Guillermo Carrasco</a> or
+	<a href="mailto:remi-andre.olsen@scilifelab.se">Remi-André Olsen</a>.</p>
+</div>
 </body>
 </html>

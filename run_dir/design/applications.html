@@ -3,130 +3,150 @@
 <!-- Example row of columns -->
 {% block stuff %}
 
-<div class="container-fluid">
-  <div id="slider"></div>
-  <h3 id="dates"></h3>
-  <p>
-  Projects that are not loaded from Clarity LIMS have no 'open_date' attribute in Status DB 
-  and will be treated as opened exactly on '2012-01-01'. Projects that do not have the
-  application field filled in will be listed under 'null'.
-  </p>
-  <h2>Project Applications</h2>
-  <p>
-  The amount of sequencing projects by application type that were opened within the given timeframe.
-  </p>
-  <div id='main_chart'>
-    <svg style="height:600px"></svg>
-  </div>
-  <table class="table table-bordered" id="application_table">
-    <thead>
-      <tr>
-        <th>Application</th>
-        <th>Number of Projects</th>
-    </thead>
-    <tbody id="application_table_body"></tbody>
-  </table>
-  <h2>Samples per Application</h2>
-  <p>
-  The amount of samples per sequencing application within the same timeframe.
-  </p>
-  <div id='per_sample_chart'>
-    <svg style="height:600px"></svg>
-  </div>
+<h1>Application Statistics</h1>
 
+<div id="date_slider"></div>
+<p>&nbsp;</p><!-- cheating. whatcha' gonna do about it? -->
+<h3 id="dates"></h3>
+<p>Projects that are not loaded from Clarity LIMS have no 'open_date' attribute in Status DB 
+	and will be treated as opened exactly on '2012-01-01'. Projects that do not have the
+	application field filled in will be listed under 'null'.</p>
+
+<h2>Project Applications</h2>
+<p>The amount of sequencing projects by application type that were opened within the given timeframe.</p>
+
+<div class="row">
+	<div class="col-md-9 col-md-push-3">
+		<div id='main_chart'><svg style="height:600px"></svg></div>
+	</div>
+	<div class="col-md-3 col-md-pull-9">
+		<table class="table table-bordered table-nowidth" id="application_table">
+			<thead>
+				<tr>
+					<th>Application</th>
+					<th># Projects</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+	</div>
 </div>
+<hr>
+
+<h2>Samples per Application</h2>
+<p>The amount of samples per sequencing application within the same timeframe.</p>
+<div class="row">
+	<div class="col-md-9 col-md-push-3">
+		<div id='per_sample_chart'><svg style="height:600px"></svg></div>
+	</div>
+	<div class="col-md-3 col-md-pull-9">
+		<table class="table table-bordered table-nowidth" id="samples_table">
+			<thead>
+				<tr>
+					<th>Application</th>
+					<th># Projects</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+	</div>
+</div>
+
 
 <script type="text/javascript">
 var start = new Date(2012,0,1);
 var stop = new Date();
-$("#slider").dateRangeSlider({
-bounds:
-{
-  min: start,
-  max: stop
-},
-defaultValues:
-{
-  min: start,
-  max: stop
-},
-min: 1,
-max: 12,
-values: [2, 12],
-step:
-{
-  days: 1
-},
+$("#date_slider").dateRangeSlider({
+	bounds: {
+		min: start,
+		max: stop
+	},
+	defaultValues: {
+		min: start,
+		max: stop
+	},
+	min: 1,
+	max: 12,
+	values: [2, 12],
+	step: {
+		days: 1
+	},
 });
 
 //Outputs and stores colours from inputs strings
 var colour_gen = d3.scale.category20();
 
+function getSortedKeys(obj) {
+    var keys = []; for(var key in obj) keys.push(key);
+    return keys.sort(function(a,b){return obj[a]-obj[b]}).reverse();
+}
+
 function draw_chart(data, obj) {
-  //Prepare the data for nvd3, accepts a list of pairs {label: '', value: ''}
-  var nvd3_data = [];
-  var nvd3_colours = [];
-  for (var k in data) {
-    nvd3_data.push({'label': k, 'value': data[k]});
-    nvd3_colours.push(colour_gen(k));
-  }
-  nv.addGraph(function() {
-    var chart = nv.models.pieChart()
-    .color(nvd3_colours)
-    .x(function(d) { return d.label })
-    .y(function(d) { return d.value })
-    .labelThreshold(0.05)
-    .showLabels(true);
-  d3.select(obj)
-    .datum(nvd3_data)
-    .transition()
-    .duration(350)
-    .call(chart);
-    return chart;
-    });
+	//Prepare the data for nvd3, accepts a list of pairs {label: '', value: ''}
+	var nvd3_data = [];
+	var nvd3_colours = [];
+	s_keys = getSortedKeys(data);
+	for (k in s_keys) {
+		nvd3_data.push({'label': s_keys[k], 'value': data[s_keys[k]]});
+		nvd3_colours.push(colour_gen(k));
+	}
+	nv.addGraph(function() {
+		var chart = nv.models.pieChart()
+			.color(nvd3_colours)
+			.x(function(d) { return d.label })
+			.y(function(d) { return d.value })
+			.labelThreshold(0.05)
+			.showLabels(true);
+		d3.select(obj)
+			.datum(nvd3_data)
+			.transition()
+			.duration(350)
+			.call(chart);
+		return chart;
+	});
 }
 
-function load_plots(start, stop) {
-  $("#dates").text("Opening Date range: " + start + " - " + stop)
-    var start_param = (start == "2012-01-01" ? "" : ("start=" + start))
-    $.getJSON("/api/v1/applications?" + start_param + "&end=" + stop, function (data) {
-      draw_chart(data, "#main_chart svg");
-    });
+function load_data(start, stop) {
+	$("#dates").text("Opening Date range: " + start + " - " + stop)
+	var start_param = (start == "2012-01-01" ? "" : ("start=" + start))
+	$.getJSON("/api/v1/applications?" + start_param + "&end=" + stop, function (data){
+		// Plot the pie chart
+		draw_chart(data, "#main_chart svg");
+		// Draw the table
+		$("#application_table tbody").empty();
+		s_keys = getSortedKeys(data);
+		for (k in s_keys) {
+			trow = '<tr>';
+			trow += '<td><a href="/application/'+s_keys[k]+'">'+s_keys[k]+'</a></td>';
+			trow += '<td class="rightalign"><a href="/application/'+s_keys[k]+'">'+data[s_keys[k]]+'</a></td>';
+			trow += '</tr>';
+			$("#application_table tbody").append(trow)
+		};
+	});
 
-    $.getJSON("/api/v1/samples_applications?" + start_param + "&end=" + stop, function (data) {
-      draw_chart(data, "#per_sample_chart svg")
-    });
+	$.getJSON("/api/v1/samples_applications?" + start_param + "&end=" + stop, function (data){
+		// Plot the pie chart
+		draw_chart(data, "#per_sample_chart svg");
+		
+		// Draw the table
+		$("#samples_table tbody").empty();
+		s_keys = getSortedKeys(data);
+		for (k in s_keys) {
+			trow = '<tr>';
+			trow += '<td><a href="/application/'+s_keys[k]+'">'+s_keys[k]+'</a></td>';
+			trow += '<td class="rightalign"><a href="/application/'+s_keys[k]+'">'+data[s_keys[k]]+'</a></td>';
+			trow += '</tr>';
+			$("#samples_table tbody").append(trow)
+		};
+	});
 }
 
-
-function trow_f(d,data){
-  var trow = '<tr class="a" onclick="document.location = '
-    trow += "'/application/" + d + "'"
-    trow += '" onmouseover="this.style.cursor='
-    trow += "'pointer'"
-    trow += '">'
-    trow += '<td>' + d + '</td><td>' + data[d]+ '</td></tr>'
-    return trow
-}
-
-function load_table(start,stop){
-  $("#application_table_body").empty()
-  var start_param = (start == "2012-01-01" ? "" : ("start=" + start))
-    $.getJSON("/api/v1/applications?"+ start_param + "&end="+stop, function(data) {
-      for (d in data) {
-        trow = trow_f(d,data)
-        $("#application_table tbody").append(trow)
-      };
-    })
-}
-
-$("#slider").bind("valuesChanged", function(e, data){
-  start_string = $.datepicker.formatDate('yy-mm-dd',data.values.min);
-  stop_string = $.datepicker.formatDate('yy-mm-dd',data.values.max);
-  load_plots(start_string,stop_string)
-  load_table(start_string,stop_string)
+$("#date_slider").bind("valuesChanged", function(e, data){
+	start_string = $.datepicker.formatDate('yy-mm-dd',data.values.min);
+	stop_string = $.datepicker.formatDate('yy-mm-dd',data.values.max);
+	load_data(start_string,stop_string)
 });
 
 </script>
 
-  {% end %}
+{% end %}
