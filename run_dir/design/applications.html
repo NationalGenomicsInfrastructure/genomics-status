@@ -3,15 +3,13 @@
 <!-- Example row of columns -->
 {% block stuff %}
 
-<h1>Application Statistics</h1>
+<h1>Application Statistics <small id="dates"></small></h1>
 
-<div class="row">
+<div class="row slider-spacing">
 	<div class="col-md-10 col-md-push-1">
 		<div id="date_slider"></div>
 	</div>
 </div>
-<p>&nbsp;</p><!-- cheating. whatcha' gonna do about it? -->
-<h3 id="dates"></h3>
 <p>Projects that are not loaded from Clarity LIMS have no 'open_date' attribute in Status DB 
 	and will be treated as opened exactly on '2012-01-01'. Projects that do not have the
 	application field filled in will be listed under 'null'.</p>
