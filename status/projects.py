@@ -10,6 +10,7 @@ import requests
 import re
 import paramiko
 import base64
+import urllib
 
 from itertools import ifilter
 from collections import OrderedDict
@@ -329,7 +330,8 @@ class CaliperImageHandler(SafeHandler):
         """returns a base64 string of the caliper image aksed"""
         pattern=re.compile("^sftp://([a-z\.]+)(.+)")
         host=pattern.search(url).group(1)
-        uri=pattern.search(url).group(2)
+        uri=urllib.unquote(pattern.search(url).group(2))
+
 
         try:
             transport=paramiko.Transport(host)
@@ -344,6 +346,7 @@ class CaliperImageHandler(SafeHandler):
             returnHTML=json.dumps(encoded_string)
             return returnHTML
         except Exception, message:
+            print message
             return("Error fetching caliper images")
 
 
