@@ -7,3 +7,4 @@ dist/
 status.egg-info/
 run_dir/settings.yaml
 tests/test_items.yaml
+.DS_Store
