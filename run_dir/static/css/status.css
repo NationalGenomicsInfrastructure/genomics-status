@@ -51,6 +51,11 @@ body {
     text-decoration:underline;
 }
 
+
+.slider-spacing {
+    margin:40px 0;
+}
+
 .progress-info.progress-striped .bar {
   background-color: #7BA44E;
 }
