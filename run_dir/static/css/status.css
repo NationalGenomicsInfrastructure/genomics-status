@@ -1,16 +1,24 @@
-html {
-  background: transparent;
-  height: 100%;
-}
-
-div .scrollable {
-  overflow: scroll;
+/* Helper classes */
+div.scrollable {
   overflow: auto;
 }
-
-table .scrollable {
-  max-width: max-content;
+pre.scrollable {
+  overflow: auto;
+  word-wrap: normal;
+  white-space: pre;
 }
+
+table.scrollable {
+  max-width: 100%;
+}
+table.table-nowidth {
+    width:auto;
+}
+.rightalign {
+    text-align:right;
+}
+
+
 /* Body and structure
 -------------------------------------------------- 
 Colors: http://colorschemedesigner.com/#3n52e1uYmw0w0 */
@@ -25,16 +33,22 @@ td.progress {
 }
 
 body {
-  padding-bottom: 40px;
   padding-top: 60px;
+  padding-bottom: 40px;
 }
 .sidebar {
   padding: 9px 0;
   background-color: white;
-}
-
-.sidebar {
   text-align: center;
+}
+.footer {
+    font-size:0.9em;
+    color:#999;
+    text-align:center;
+}
+.footer a {
+    color:#999;
+    text-decoration:underline;
 }
 
 .progress-info.progress-striped .bar {
@@ -61,11 +75,12 @@ line.median {
   stroke: red;
 }
 
-th.a {
+th.link {
   color: #0088cc;
+  cursor:pointer;
 }
 
-th.a:hover {
+th.link:hover {
   color: #0088cc;
   cursor: pointer;
   text-decoration: underline;
@@ -84,9 +99,7 @@ table {
     word-wrap: break-word;
 }
 
-pre.cronjob-disabled {
-  color: red;
-}
+
 table.narrow-headers th {
     width: 20%
 }
