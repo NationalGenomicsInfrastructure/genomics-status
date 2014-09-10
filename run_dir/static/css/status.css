@@ -18,6 +18,28 @@ table.table-nowidth {
     text-align:right;
 }
 
+.well > h1, .well > h2, .well > h3, .well > h4, .well > h5, .well > h6 {
+    margin-top:0;
+}
+
+.nav-backgrounds li {
+    margin-bottom:8px;
+}
+.nav-backgrounds li a {
+    background-color:#f9f9f9;
+    border:1px solid #ccc;
+}
+
+.homepage-ctas .well {
+    text-align:center;
+}
+.homepage-ctas .well h3 {
+    font-size:3em;
+}
+.homepage-ctas .well a i {
+    color:#333;
+}
+
 
 /* Body and structure
 -------------------------------------------------- 
@@ -65,10 +87,6 @@ body {
   -ms-animation: progress-bar-stripes 0.25s linear infinite;
   -moz-animation: progress-bar-stripes 0.25s linear infinite;
   animation: progress-bar-stripes 0.25s linear infinite;
-}
-
-.well {
-  background-color: white;
 }
 
 .box { font: 10px sans-serif; }
