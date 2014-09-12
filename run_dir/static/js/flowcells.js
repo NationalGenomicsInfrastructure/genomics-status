@@ -12,14 +12,24 @@ $.getJSON("/api/v1/flowcells", function(data) {
     var chem="-";
     if (info['fctype']){
         var ar=info['fctype'].split(" ");
-        console.log(ar);
         chem=ar[ar.length-1];
+    }else if (info['kitver']){
+        chem=info['kitver'].substr(info['kitver'].length-2);
+        
     }
-
     var recipe='-';
     if (info['recipe']){
         recipe=info['recipe'];
     }
+    var version='-';
+    if (info['appver']){
+        version=info['appver'];
+    }
+    var yield='-';
+    if (info['yield']){
+        yield=info['yield'];
+    }
+
 
 
     var tbl_row = "<td>"
@@ -29,12 +39,12 @@ $.getJSON("/api/v1/flowcells", function(data) {
     tbl_row += '<td>' + system+ '</td>'
     tbl_row += '<td>' + mode+ '</td>'
     tbl_row += '<td>' + chem+ '</td>'
-    tbl_row += '<td>' + info['recipe'] + '</td>'
-    tbl_row += '<td>' + info['appver'] + '</td>'
+    tbl_row += '<td>' + recipe + '</td>'
+    tbl_row += '<td>' + version + '</td>'
+    tbl_row += '<td>' + yield + '</td>'
     tbl_row += '<td>' + info['flowcell'] + '</td>'
     tbl_row += '<td>' + info['pos'] + '</td>'
     tbl_row += '<td>' + info['instrument'] + '</td>'
-
     tbl_bdy += "<tr>" + tbl_row + "</tr>";
   })
 
