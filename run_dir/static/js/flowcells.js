@@ -12,8 +12,10 @@ $.getJSON("/api/v1/flowcells", function(data) {
     var chem="-";
     if (info['fctype']){
         var ar=info['fctype'].split(" ");
-        console.log(ar);
         chem=ar[ar.length-1];
+    }else if (info['kitver']){
+        chem=info['kitver'].substr(info['kitver'].length-2);
+        
     }
     var recipe='-';
     if (info['recipe']){
