@@ -162,6 +162,11 @@ class PagedQCDataHandler(SafeHandler):
 
         return sample_list
 
+class SafeStaticFileHandler(SafeHandler, tornado.web.StaticFileHandler):
+    """ Serve static files for authenticated users
+    """
+    pass
+
 
 ########################
 # Other useful classes #
