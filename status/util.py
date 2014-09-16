@@ -163,6 +163,14 @@ class PagedQCDataHandler(SafeHandler):
         return sample_list
 
 
+class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
+    """ Serves up static files without any tornado caching.
+    https://gist.github.com/omarish/5499385
+    """
+    def set_extra_headers(self, path):
+        self.set_header("Cache-control", "no-cache")
+
+
 ########################
 # Other useful classes #
 ########################
