@@ -131,6 +131,7 @@ class Application(tornado.web.Application):
             ("/q30", Q30Handler),
             ("/picea", PiceaHandler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
+            (r"/qc_reports/(.*)", tornado.web.StaticFileHandler, {"path": 'qc_reports'}),
             ("/quotas", QuotasHandler),
             ("/quotas/(\w+)?", QuotaHandler),
             ("/phix_err_rate", PhixErrorRateHandler),
