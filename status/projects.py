@@ -11,6 +11,7 @@ import re
 import paramiko
 import base64
 import urllib
+import os
 
 from itertools import ifilter
 from collections import OrderedDict
@@ -607,3 +608,41 @@ class UppmaxProjectsDataHandler(SafeHandler):
             project_list.append(row.key)
 
         return project_list
+
+class ProjectQCDataHandler(SafeHandler):
+    """Serves filenames in qc"""
+    def get(self, projectname):
+        paths={}
+        prefix=os.path.join(os.getcwd(), 'qc_reports')
+        #this should be run_dir
+        if re.match("^[A-Z]{1,2}\.[A-Za-z0-9]+\_[0-9]{2}\_[0-9]{2,3}$", projectname):
+            qc_location=os.path.join(prefix,projectname)
+
+            cursample=''
+            currun=''
+            for root, subdirs, files in os.walk(qc_location):
+                rootname=os.path.basename(root)
+                if re.match("^P[0-9]{3,5}\_[0-9]{3,4}$",rootname):
+                    paths[rootname]={}
+                    cursample=rootname
+                    currun=''
+
+                elif re.match("^[0-9]+\_[A-Z0-9]+$",rootname):
+                    paths[cursample][rootname]=[]
+                    currun=rootname
+
+
+
+                for f in files:
+                    try:
+                        paths[cursample][currun].append(os.path.relpath(os.path.join(root,f), prefix))
+                    except KeyError:
+                        print "cannot add {} to paths, one of these two keys does not exist: sample->{} run->{}".format(os.path.relpath(os.path.join(root,f), prefix), cursample, currun)
+
+
+
+
+        self.write(json.dumps(paths))
+
+
+    pass
