@@ -635,5 +635,4 @@ class ProjectQCDataHandler(SafeHandler):
                         paths[cursample][currun].append(os.path.relpath(os.path.join(root,f), prefix))
                     except KeyError:
                         print "cannot add {} to paths, one of these two keys does not exist: sample->{} run->{}".format(os.path.relpath(os.path.join(root,f), prefix), cursample, currun)
-
-        self.write(json.dumps(paths))
+        self.set_header("Content-type", "application/json")
