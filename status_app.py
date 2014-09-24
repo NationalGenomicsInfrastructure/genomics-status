@@ -29,6 +29,7 @@ from status.quotas import *
 from status.phix_err_rate import *
 from status.testing import *
 from status.authorization import *
+from status.suggestion_box import *
 
 from argparse import ArgumentParser
 
@@ -127,7 +128,8 @@ class Application(tornado.web.Application):
             ("/reads_per_lane", ReadsPerLaneHandler),
             ("/samples_per_lane", SamplesPerLaneHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
-            ("/sequencing", SequencingStatsHandler)
+            ("/sequencing", SequencingStatsHandler),
+            ("/suggestion_box", SuggestionBoxHandler)
         ]
 
         self.declared_handlers = handlers
