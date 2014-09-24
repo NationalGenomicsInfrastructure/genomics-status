@@ -4,97 +4,97 @@
 {% block stuff %}
 
 <div class="container-fluid">
-	<h2>Suggestion Box</h2><br>
-	<form class="form-horizontal" role="form" method="post" action="/api/v1/suggestion_box">
-		<div class="control-group">
-			<label class="control-label" for="area">Area of Work</label>
-			<div class="controls">
-				<select id="area" name="area">
-					<option value="">[ select ]</option>
-					<option>Information Management</option>
-					<option>Policy</option>
-					<option>Lab</option>
-					<option>Bioinfo</option>
-					<option>Project Handling</option>
-					<option>Meetings</option>
-					<option>Other</option>
-				</select>
-				<span class="help-block">What area of work is this (mostly) regarding?</span>
-			</div>
-		</div>
-		<div class="control-group">
-			<label class="control-label" for="system">System</label>
-			<div class="controls">
-				<select id="system" name="system">
-					<option value=""></option>
-					<option>Genomics Status</option>
-					<option>LIMS</option>
-					<option>Google Docs</option>
-					<option>Genomics Dashboard</option>
-					<option>StatusDB</option>
-					<option>AM System</option>
-					<option>Trello</option>
-					<option>GitHub</option>
-					<option>Other</option>
-					<option>No System</option>
-				</select>
-				<span class="help-block">What system is this (mostly) regarding?</span>
-			</div>
-		</div>
-		<div class="control-group">
-			<label class="control-label" for="importance">Importance</label>
-			<div class="controls">
-				<select id="system" name="system">
-					<option value="1">1 - Low Priority</option>
-					<option value="2">2 - Medium Priority</option>
-					<option value="3">3 - Important</option>
-					<option value="4">4 - Urgent</option>
-					<option value="5">5 - Critical</option>
-				</select>
-				<span class="help-block">Grade how serious the issue is</span>
-			</div>
-		</div>
-		<div class="control-group">
-			<label class="control-label" for="title">Title</label>
-			<div class="controls">
-				<input type="text" id="title" name="title" placeholder="Issue / Observation">
-				<span class="help-block">Summarize the issue in a few words</span>
-			</div>
-		</div>
-		<div class="control-group">
-			<label class="control-label" for="description">Description</label>
-			<div class="controls">
-				<textarea id="description" name="description"></textarea>
-				<span class="help-block">Describe the issue in more detail</span>
-			</div>
-		</div>
-		<div class="control-group">
-			<label class="control-label" for="suggestion">Suggestion</label>
-			<div class="controls">
-				<textarea id="suggestion" name="suggestion"></textarea>
-				<span class="help-block">Provide a suggestion for how the issue can be solved <em>(optional)</em></span>
-			</div>
-		</div>
-		<div class="control-group">
-			<label class="control-label" for="difficulty">Difficulty</label>
-			<div class="controls">
-				<select id="difficulty" name="difficulty">
-					<option value="">Do not know</option>
-					<option value="1">1 - Easy</option>
-					<option value="2">2 - </option>
-					<option value="3">3 - </option>
-					<option value="4">4 - </option>
-					<option value="5">5 - Very Difficult</option>
-				</select>
-				<span class="help-block">Grade how difficult / much effort it will take to fix the issue</span>
-			</div>
-		</div>
-		<div class="form-actions">
-			<button type="submit" class="btn btn-primary">Save changes</button>
-			<span class="help-block">Your username <strong>{{ user }}</strong> will be recorded when you submit this form.</span>
-		</div>
+  <h2>Suggestion Box</h2><br>
+  <form class="form-horizontal" role="form" method="post" action="/api/v1/suggestion_box">
+    <div class="control-group">
+      <label class="control-label" for="area">Area of Work</label>
+      <div class="controls">
+        <select id="area" name="area">
+          <option value="">[ select ]</option>
+          <option>Information Management</option>
+          <option>Policy</option>
+          <option>Lab</option>
+          <option>Bioinfo</option>
+          <option>Project Handling</option>
+          <option>Meetings</option>
+          <option>Other</option>
+        </select>
+        <span class="help-block">What area of work is this (mostly) regarding?</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="system">System</label>
+      <div class="controls">
+        <select id="system" name="system">
+          <option value=""></option>
+          <option>Genomics Status</option>
+          <option>LIMS</option>
+          <option>Google Docs</option>
+          <option>Genomics Dashboard</option>
+          <option>StatusDB</option>
+          <option>AM System</option>
+          <option>Trello</option>
+          <option>GitHub</option>
+          <option>Other</option>
+          <option>No System</option>
+        </select>
+        <span class="help-block">What system is this (mostly) regarding?</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="importance">Importance</label>
+      <div class="controls">
+        <select id="system" name="system">
+          <option value="1">1 - Low Priority</option>
+          <option value="2">2 - Medium Priority</option>
+          <option value="3">3 - Important</option>
+          <option value="4">4 - Urgent</option>
+          <option value="5">5 - Critical</option>
+        </select>
+        <span class="help-block">Grade how serious the issue is</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="title">Title</label>
+      <div class="controls">
+        <input type="text" id="title" name="title" placeholder="Issue / Observation">
+        <span class="help-block">Summarize the issue in a few words</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="description">Description</label>
+      <div class="controls">
+        <textarea id="description" name="description"></textarea>
+        <span class="help-block">Describe the issue in more detail</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="suggestion">Suggestion</label>
+      <div class="controls">
+        <textarea id="suggestion" name="suggestion"></textarea>
+        <span class="help-block">Provide a suggestion for how the issue can be solved <em>(optional)</em></span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="difficulty">Difficulty</label>
+      <div class="controls">
+        <select id="difficulty" name="difficulty">
+          <option value="">Do not know</option>
+          <option value="1">1 - Easy</option>
+          <option value="2">2 - </option>
+          <option value="3">3 - </option>
+          <option value="4">4 - </option>
+          <option value="5">5 - Very Difficult</option>
+        </select>
+        <span class="help-block">Grade how difficult / much effort it will take to fix the issue</span>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Save changes</button>
+      <span class="help-block">Your username <strong>{{ user }}</strong> will be recorded when you submit this form.</span>
+    </div>
 		  
-	</form>
+  </form>
 </div>
 
 {% end %}
