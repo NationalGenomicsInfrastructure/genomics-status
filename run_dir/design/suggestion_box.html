@@ -5,6 +5,62 @@
 
 <div class="container-fluid">
   <h2>Suggestion Box</h2><br>
+  Your username {{ user }} will be recorded when you submit this form.
+  <form>
+    <fieldset>
+      <legend>Please fill in the following form</legend>
+      <label for="area">Area</label>
+      <span class="help-block">What area of work is this (mostly) regarding?</span>
+      <select id="area">
+        <option value=""></option>
+        <option>Information Management</option>
+        <option>Policy</option>
+        <option>Lab</option>
+        <option>Bioinfo</option>
+        <option>Project Handling</option>
+        <option>Meetings</option>
+        <option>Other</option>
+      </select>
+      <label for="system">System</label>
+      <span class="help-block">What system is this (mostly) regarding?</span>
+      <select id="system">
+        <option value=""></option>
+        <option>Genomics Status</option>
+        <option>LIMS</option>
+        <option>Google Docs</option>
+        <option>Genomics Dashboard</option>
+        <option>StatusDB</option>
+        <option>AM System</option>
+        <option>Trello</option>
+        <option>GitHub</option>
+        <option>Other</option>
+        <option>No System</option>
+      </select>
+      <label>Importance</label>
+      <span class="help-block">Grade how serious the issue is</span>
+      <label class="radio inline">
+        <input type="radio" name="optionsRadios" id="optionsRadios1" value="importance1" checked>
+        1
+      </label>
+      <label class="radio inline">
+        <input type="radio" name="optionsRadios" id="optionsRadios2" value="importance2" checked>
+        2
+      </label>
+      <label class="radio inline">
+        <input type="radio" name="optionsRadios" id="optionsRadios3" value="importance3" checked>
+        3
+      </label>
+      <label class="radio inline">
+        <input type="radio" name="optionsRadios" id="optionsRadios4" value="importance4" checked>
+        4
+      </label>
+      <label class="radio inline">
+        <input type="radio" name="optionsRadios" id="optionsRadios5" value="importance5" checked>
+        5
+      </label>
+      <button type="submit" class="btn">Submit</button>
+    </fieldset>
+  </form>
 </div>
 
 {% end %}
