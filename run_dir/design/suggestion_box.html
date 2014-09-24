@@ -5,12 +5,12 @@
 
 <div class="container-fluid">
   <h2>Suggestion Box</h2><br>
-  <form class="form-horizontal" role="form" method="post" action="/api/v1/suggestion_box">
+  <form class="form-horizontal" role="form" method="post" action="/suggestion_box">
     <div class="control-group">
       <label class="control-label" for="area">Area of Work</label>
       <div class="controls">
         <select id="area" name="area">
-          <option value="">[ select ]</option>
+          <option value=""></option>
           <option>Information Management</option>
           <option>Policy</option>
           <option>Lab</option>
@@ -44,7 +44,7 @@
     <div class="control-group">
       <label class="control-label" for="importance">Importance</label>
       <div class="controls">
-        <select id="system" name="system">
+        <select id="importance" name="importance">
           <option value="1">1 - Low Priority</option>
           <option value="2">2 - Medium Priority</option>
           <option value="3">3 - Important</option>
@@ -96,5 +96,10 @@
 		  
   </form>
 </div>
+
+<!-- Fill in suggestions table -->
+<script type="text/javascript">
+
+</script>
 
 {% end %}

@@ -106,6 +106,7 @@ class Application(tornado.web.Application):
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/samples_applications", SamplesApplicationsDataHandler),
+            ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),
@@ -146,6 +147,7 @@ class Application(tornado.web.Application):
             self.flowcells_db = couch["flowcells"]
             self.gs_users_db = couch["gs_users"]
             self.cronjobs_db = couch["cronjobs"]
+            self.suggestions_db = couch["suggestion_box"]
         else:
             print settings.get("couch_server", None)
             raise IOError("Cannot connect to couchdb");
@@ -188,6 +190,11 @@ class Application(tornado.web.Application):
         self.zendesk_token = settings["zendesk"]["token"]
         self.zendesk = Zendesk(self.zendesk_url, use_api_token=True, zendesk_username=self.zendesk_user,
                                 zendesk_password=self.zendesk_token, api_version=2)
+
+        # Trello
+        self.trello_api_key = settings['trello']['api_key']
+        self.trello_api_secret = settings['trello']['api_secret']
+        self.trello_token = settings['trello']['token']
 
         # Load password seed
         self.password_seed = settings.get("password_seed")
