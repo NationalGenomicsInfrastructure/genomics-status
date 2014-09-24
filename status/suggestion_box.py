@@ -7,6 +7,7 @@ from status.util import SafeHandler
 TITLE_TEMPLATE = "{title} ({area})"
 
 DESCRIPTION_TEMPLATE = """
+* Created on: {date}
 * Area: {area}
 * System: {system}
 * Importance: {importance}
@@ -36,6 +37,7 @@ class SuggestionBoxHandler(SafeHandler):
         list, determined by the "System" attribute given in the form.
         """
         # Get form data
+        date = datetime.now()
         title = self.get_argument('title')
         area = self.get_argument('area')
         system = self.get_argument('system')
@@ -68,7 +70,8 @@ class SuggestionBoxHandler(SafeHandler):
 
         # Create new card using the info from the form
         new_card = card_list.add_card(TITLE_TEMPLATE.format(title=title, area=area))
-        new_card.set_description(DESCRIPTION_TEMPLATE.format(area=area,
+        new_card.set_description(DESCRIPTION_TEMPLATE.format(date = date.ctime(),
+                                                             area=area,
                                                              system=system,
                                                              importance=importance,
                                                              difficulty=difficulty,
@@ -77,7 +80,7 @@ class SuggestionBoxHandler(SafeHandler):
                                                              suggestion=suggestion))
 
         # Save the information of the card in the database
-        self.application.suggestions_db.create({'date': datetime.now().isoformat(),
+        self.application.suggestions_db.create({'date': date.isoformat(),
                                                 'card_id': new_card.id,
                                                 'description': new_card.description,
                                                 'name': new_card.name,
