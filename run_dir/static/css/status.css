@@ -11,6 +11,17 @@ div .scrollable {
 table .scrollable {
   max-width: max-content;
 }
+
+label { 
+  font-weight: bold; 
+}
+
+.help-block { 
+  font-size: small; 
+  color:#999; 
+  margin-top: 10px;
+}
+
 /* Body and structure
 -------------------------------------------------- 
 Colors: http://colorschemedesigner.com/#3n52e1uYmw0w0 */
