@@ -35,14 +35,9 @@ $("#suggestionForm").validate({
     $.post('/suggestion_box', $('#suggestionForm').serialize())
     .done(function() {
       $("#modalBody").html("Suggestion processed correctly! <i class='icon-ok'></i>");
-      //$("#alertDiv").addClass('alert-success');
-      //$("#alertDiv").append("Card successfully created in Trello!");
-      //$("#alertDiv").show();
     })
     .fail(function() {
-      $("#alertDiv").addClass('alert-error');
-      $("#alertDiv").append("Something went wrong when creating the card in Trello. Please try it again.");
-      $("#alertDiv").show();
+      $("#modalBody").html("Ops... something went wrong, please try it again! <i class='icon-thumbs-down'></i>");
     })
     .always(function() {
       fill_suggestions_table();
