@@ -12,7 +12,7 @@ import paramiko
 import base64
 import urllib
 import os
-
+import time
 from itertools import ifilter
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
@@ -372,7 +372,8 @@ class ProjectSamplesHandler(SafeHandler):
         for field, value in p.udf.items():
             limsdata[field]=value
         try:
-            summary=lims.get_processes(type="Project Summary 1.3", projectname=p.name)[0]
+            summaries=lims.get_processes(type="Project Summary 1.3", projectname=p.name)
+            summary=summaries[0]
         except IndexError:
            print "No project summary for project {}".format(project) 
         else:
@@ -388,14 +389,25 @@ class ProjectSamplesHandler(SafeHandler):
         limsdata['initqc_f']=0
         limsdata['libqc_p']=0
         limsdata['libqc_f']=0
-        limsdata['seqqc_p']=0
-        limsdata['seqqc_f']=0
+        limsdata['lanes_p']=0
+        limsdata['lanes_f']=0
 
         seqproc=lims.get_processes(type=['Illumina Sequencing (Illumina SBS) 4.0','MiSeq Run (MiSeq) 4.0'], projectname=p.name)
-        lanes=set()
+        p_lanes=set()
+        f_lanes=set()
+        seq_p=0
+        seq_f=0
         for sample in lims.get_samples(projectlimsid=project):
             limsdata['samples_nb']+=1
             seqqcflag=''
+            for onesum in summaries:
+                for inp in onesum.all_inputs():
+                    samplenames=[s.name for s in inp.samples]
+                    if sample.name in samplenames:
+                        if inp.qc_flag == 'PASSED':
+                            seq_p+=1
+                        if inp.qc_flag == 'FAILED':
+                            seq_f+=1
             try:
                 if sample.udf['Status (manual)']=='In Progress':
                     limsdata['samples_inprogress']+=1
@@ -416,23 +428,33 @@ class ProjectSamplesHandler(SafeHandler):
                     elif sample.udf['Passed Library QC']=="False":
                         limsdata['libqc_f']+=1
                 if len(seqproc)>0:
-                    for inp in seqproc[0].all_inputs():
-                        samplenames=[s.name for s in inp.samples]
-                        if sample.name in samplenames:
-                            seqqcflag=inp.qc_flag
-                            if inp.qc_flag =='PASSED':
-                                limsdata['seqqc_p']+=1
-                            elif inp.qc_flag =='FAILED':
-                                limsdata['seqqc_f']+=1
-                            if seqproc[0]== "MiSeq Run (MiSeq) 4.0":
-                                lanes.add(inp.location[1].split(':')[1])
-                            else:
-                                lanes.add(inp.location[1].split(':')[0])
+                    for run in seqproc:
+                        for inp in run.all_inputs():
+                            samplenames=[s.name for s in inp.samples]
+                            if sample.name in samplenames:
+                                if inp.qc_flag == 'PASSED':
+                                    if run.type.name== "MiSeq Run (MiSeq) 4.0":
+                                        p_lanes.add('{} {} {}'.format(run.udf['Flow Cell ID'], inp.location[1].split(':')[1], inp.qc_flag))
+                                    else:
+                                        p_lanes.add('{} {} {}'.format(run.udf['Flow Cell ID'], inp.location[1].split(':')[0], inp.qc_flag))
+                                elif inp.qc_flag == 'FAILED':
+                                    if run.type.name== "MiSeq Run (MiSeq) 4.0":
+                                        f_lanes.add('{} {} {}'.format(run.udf['Flow Cell ID'], inp.location[1].split(':')[1], inp.qc_flag))
+                                    else:
+                                        f_lanes.add('{} {} {}'.format(run.udf['Flow Cell ID'], inp.location[1].split(':')[0], inp.qc_flag))
+
 
             except KeyError:
                 print "Failed to load lims information for the current sample {}".format(sample.name)
-        
-        limsdata['lanes']=len(lanes)
+
+        limsdata['lanes_p']=len(p_lanes)
+        limsdata['lanes_f']=len(f_lanes)
+        if time.strptime(p.open_date, "%Y-%m-%d") < time.strptime("2014-07-01", "%Y-%m-%d"):
+            limsdata['seq_qc']=""
+            limsdata['seq_origin']="google"
+        else:
+            limsdata['seq_qc']="{} P / {} F".format(seq_p, seq_f)
+            limsdata['seq_origin']="lims"
         return limsdata
 
 

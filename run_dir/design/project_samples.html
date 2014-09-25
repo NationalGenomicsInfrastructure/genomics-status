@@ -326,16 +326,17 @@
                           <td>{{limsdata.get('libqc_p')}} P / {{limsdata.get('libqc_f')}} F</td>
                         </tr>
                         <tr>
+                          <td>Passed/Failed Lanes</td>
+                          <td>{{limsdata.get('lanes_p')}} P / {{limsdata.get('lanes_f')}} F</td>
+                        </tr>
+                        <tr>
+                           {%if limsdata.get('seq_origin') == 'lims'%}
                           <td>Passed/Failed Sequencing</td>
-                          <td>{{limsdata.get('seqqc_p')}} P / {{limsdata.get('seqqc_f')}} F</td>
-                        </tr>
-                        <tr>
-                          <td>Lanes started</td>
-                          <td>{{limsdata.get('lanes')}}</td>
-                        </tr>
-                        <tr>
+                          <td>{{limsdata.get('seq_qc')}}</td>
+                          {%elif limsdata.get('seq_origin') == 'google'%}
                           <td>Sequencing QC (Gdocs)</td>
                           <td name='passed_seq_qc'></td>
+                          {%end%}
                         </tr>
                         <tr>
                           <td>Library re-preps (Genstat)</td>
