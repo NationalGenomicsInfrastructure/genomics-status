@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from datetime import datetime
 import tornado.web
 
@@ -93,6 +94,9 @@ class SuggestionBoxDataHandler(SafeHandler):
     """ Handles URL /api/v1/suggestions
     """
     def get(self):
-        view = self.application.suggestions_db.view("date/title_url", reverse=True)
+        view = self.application.suggestions_db.view("date/title_url")
         self.set_header("Content-type", "application/json")
-        self.write({row.key:row.value for row in view.rows})
+        suggestions = OrderedDict()
+        for row in sorted(view.rows, key=lambda x: x.key, reverse=True):
+            suggestions[row.key] = row.value
+        self.write(suggestions)
