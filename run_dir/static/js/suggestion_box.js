@@ -28,11 +28,16 @@ $.validator.setDefaults({
 //Generate alert when POSTing and refresh suggestions table
 $("#suggestionForm").validate({
   submitHandler: function(form) {
+    $('#modalBody').html("<p>Processing your suggestion...</p>");
+    $("#processingModal").modal('toggle');
+    var target = document.getElementById('modalBody')
+    var spinner = new Spinner().spin(target);
     $.post('/suggestion_box', $('#suggestionForm').serialize())
     .done(function() {
-      $("#alertDiv").addClass('alert-success');
-      $("#alertDiv").append("Card successfully created in Trello!");
-      $("#alertDiv").show();
+      $("#modalBody").html("Suggestion processed correctly! <i class='icon-ok'></i>");
+      //$("#alertDiv").addClass('alert-success');
+      //$("#alertDiv").append("Card successfully created in Trello!");
+      //$("#alertDiv").show();
     })
     .fail(function() {
       $("#alertDiv").addClass('alert-error');
