@@ -1,123 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
 
-<meta charset="utf-8">
-<title>Genomics Status</title>
+    <meta charset="utf-8">
+    <title>Genomics Status</title>
+    <script src="/static/js/jquery.js"></script>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Genomics Status. Keeping track of samples in SciLifeLab">
-<meta name="author" content="Guillermo Carrasco, Remi-André Olsen, many others.">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css">
+    <link type="text/css" rel="stylesheet" href="/static/nvd3/src/nv.d3.css">
 
-<!-- Javascript -->
-<script src="/static/js/jquery.js"></script>
-<script src="/static/js/bootstrap.min.js"></script>
-<script src="/static/js/moment.min.js"></script>
-<!-- Where are you being used, oh libraries
-<script src="/static/js/jquery-ui.min.js"></script>
-<script src="/static/nvd3/lib/d3.v2.js"></script>
-<script src="/static/nvd3/lib/fisheye.js"></script>
-<script src="/static/nvd3/nv.d3.js"></script>
-<script src="/static/js/cubism.v1.js"></script>
-<script src="/static/js/jQDateRangeSlider-min.js"></script>
-<script src="/static/js/list.min.js"></script>
--->
+    <script src="/static/nvd3/lib/d3.v2.js"></script>
+    <script src="https://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+    <script src="/static/nvd3/lib/fisheye.js"></script>
+    <script src="/static/nvd3/nv.d3.js"></script>
+    <script src="/static/js/cubism.v1.js"></script>
+            
+    <script src="/static/js/bootstrap-transition.js"></script>
+    <script src="/static/js/bootstrap-alert.js"></script>
+    <script src="/static/js/bootstrap-modal.js"></script>
+    <script src="/static/js/bootstrap-dropdown.js"></script>
+    <script src="/static/js/bootstrap-scrollspy.js"></script>
+    <script src="/static/js/bootstrap-tab.js"></script>
+    <script src="/static/js/bootstrap-tooltip.js"></script>
+    <script src="/static/js/bootstrap-popover.js"></script>
+    <script src="/static/js/bootstrap-button.js"></script>
+    <script src="/static/js/bootstrap-collapse.js"></script>
+    <script src="/static/js/bootstrap-carousel.js"></script>
+    <script src="/static/js/bootstrap-typeahead.js"></script>
+    <script src="/static/js/jQDateRangeSlider-min.js"></script>
 
-<!-- Le styles -->
-<link type="text/css" rel="stylesheet" href="/static/nvd3/src/nv.d3.css">
-<link rel="stylesheet" href="/static/css/jquery-ui.min.css" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/status.css" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/detail.css" rel="stylesheet">
+    <script src="/static/js/list.min.js"></script>
+    <script src="/static/js/jquery.validate.js"></script>
 
-<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
-<!--[if lt IE 9]>
-<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
-<![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
 
-</head>
+    <!-- Le styles -->
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/status.css" rel="stylesheet">
+    <link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="/static/css/detail.css" rel="stylesheet">
 
-<body>
-<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+  </head>
+
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
 	<div class="container-fluid">
-		
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-				<span class="sr-only">Toggle navigation</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</button>
-			<a class="navbar-brand" href="/">Genomics-Status</a>
-		</div>
-		
-		<div class="collapse navbar-collapse" id="genstat-main-nav-collapse">
-			<ul class="nav navbar-nav navbar-right">
-				<li><a href="/applications">Applications</a></li>
-				<li><a href="/q30">Q30</a></li>
-				<li><a href="/flowcells">Flowcells</a></li>
-				<li class="dropdown" id="production">
-					<a class="dropdown-toggle" data-toggle="dropdown" href="#production">Production <span class="caret"></span></a>
-					<ul class="dropdown-menu" role="menu">
-						<li><a href="/production/cronjobs" title="Cronjobs list">Cronjobs List</a></li>
-					</ul>
-				</li>
-				<li class="dropdown" id="projects">
-					<a class="dropdown-toggle" data-toggle="dropdown" href="#projects">Projects	<span class="caret"></span></a>
-					<ul class="dropdown-menu" role="menu">
-						<li><a href="/projects/all" title="All Projects">All</a></li>
-						<li><a href="/projects/pending" title="Pending Projects">Pending</a></li>
-						<li><a href="/projects/reception_control" title="Reception Control Projects">Reception Control</a></li>
-						<li><a href="/projects/ongoing" title="Ongoing Projects">Ongoing</a></li>
-						<li><a href="/projects/closed" title="Closed Projects">Closed</a></li>
-						<li><a href="/projects/aborted" title="Aborted Projects">Aborted</a></li>
-					</ul>
-				</li>
-				<li class="dropdown" id="deprecated">
-					<a class="dropdown-toggle" data-toggle="dropdown" href="#deprecated">Deprecated Pages <span class="caret"></span></a>
-					<ul class="dropdown-menu" role="menu">
-						<li><a href="/amanita" title="Amanita">Amanita</a></li>
-						<li><a href="/barcode_vs_expected" title="Barcode vs Expected">Barcode vs Expected</a></li>
-						<li><a href="/phix_err_rate" title="Phix error rates">Phix error rates</a></li>
-						<li><a href="/picea" title="Picea">Picea</a></li>
-						<li><a href="/production" title="Production">Production</a></li>
-						<li><a href="/quotas" title="Quotas">Quotas</a></li>
-						<li><a href="/reads_per_lane" title="Reads per Lane">Reads per Lane</a></li>
-						<li><a href="/reads_vs_qv" title="Reads vs QV">Reads vs QV</a></li>
-						<li><a href="/samples_per_lane" title="Samples per Lane">Samples per Lane</a></li>
-						<li><a href="/sequencing" title="Sequencing">Sequencing</a></li>
-					</ul>
-				</li>
-				{% if user %}
-				<li><a href="/logout" title="Logout">Log Out {{user}}</a></li>
-				{% else %}
-				<li><a href="/login" title="Login">Login</a></li>
-				{% end %}
+	  <a class="brand" href="/">Genomics-Status</a>
+	  <ul class="nav nav-pills pull-right">
+	    <li>
+	      <a href="/applications">
+		Applications
+	      </a>
+	    </li>
+	    <li>
+	      <a href="/q30">
+		Q30
+	      </a>
+	    </li>
+	    <li>
+	      <a href="/flowcells">
+		Flowcells
+	      </a>
+	    </li>
+        <li class="dropdown" id="production">
+          <a class="dropdown-toggle" data-toggle="dropdown" href="#production">
+            Production
+            <b class="caret"></b>
+        </a>
+        <ul class="dropdown-menu">
+            <li>
+              <a href="/production/cronjobs" title="Cronjobs list">Cronjobs List</a>
+          </li>
+        </ul>
+        </li>
+	    <li class="dropdown" id="projects">
+	      <a class="dropdown-toggle" data-toggle="dropdown" href="#projects">
+		Projects
+		<b class="caret"></b>
+	      </a>
+	      <ul class="dropdown-menu">
+		<li>
+		  <a href="/projects/all" title="All Projects">All</a>
+		</li>
+		<li>
+		  <a href="/projects/pending" title="Pending Projects">Pending</a>
+		</li>
+		<li>
+		  <a href="/projects/reception_control" title="Reception Control Projects">Reception Control</a>
+		</li>
+		<li>
+		  <a href="/projects/ongoing" title="Ongoing Projects">Ongoing</a>
+		</li>
+		<li>
+		  <a href="/projects/closed" title="Closed Projects">Closed</a>
+		</li>
+		<li>
+		  <a href="/projects/aborted" title="Aborted Projects">Aborted</a>
+		</li>
+	      </ul>
+	    </li>
+	    <li class="dropdown" id="deprecated">
+	      <a class="dropdown-toggle" data-toggle="dropdown" href="#deprecated">
+		Deprecated Pages
+		<span class="caret"></span>
+	      </a>
+	      <ul class="dropdown-menu">
+		<li>
+		  <a href="/barcode_vs_expected" title="Barcode vs Expected">Barcode vs Expected</a>
+		</li>
+		<li>
+		  <a href="/phix_err_rate" title="Phix error rates">Phix error rates</a>
+		</li>
+		<li>
+		  <a href="/production" title="Production">Production</a>
+		</li>
+		<li>
+		  <a href="/quotas" title="Quotas">Quotas</a>
+		</li>
+		<li>
+		  <a href="/reads_per_lane" title="Reads per Lane">Reads per Lane</a>
+		</li>
+		<li>
+		  <a href="/reads_vs_qv" title="Reads vs QV">Reads vs QV</a>
+		</li>
+		<li>
+		  <a href="/samples_per_lane" title="Samples per Lane">Samples per Lane</a>
+		</li>
+		<li>
+		  <a href="/sequencing" title="Sequencing">Sequencing</a>
+		</li>
+	       </ul>
+	    </li>
+	    {% if user %}
+	    <li class="dropdown" id="logout">
+	    	<a class="dropdown-toggle" data-toggle="dropdown" href="#logout">
+				{{user}}
+				<span class="caret"></span>
+			</a>
+			<ul class="dropdown-menu">
+            <li>
+                <a href="/logout" title="Logout">Logout</a>
+            </li>
+            <li>
+                <a href="/suggestion_box" title="suggestion_box">Suggestion Box</a>
+            </li>
 			</ul>
-		</div>
+	    </li>
+	    {% else %}
+		<li>
+			<a href="/login" title="Login">Login</a>
+		</li>
+	    {% end %}
+	  </ul>
 	</div>
-</nav>
-<div class="container-fluid">
-	<!-- Content -->
-	{% try %}
-	{% if deprecated %}
-	<div class="alert alert-danger">
-		<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-		<p><strong>Deprecation Warning!</strong> This page is deprecated and any information displayed here should be used with caution.</p>
-	</div>
+      </div>
+    </div>
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <!-- Content
+        ================================================== -->
+        <div class="span12">
+	  {% try %}
+	  {% if deprecated %}
+	  <div class="alert alert-error">
+	    <button type="button" class="close" data-dismiss="alert">&times;</button>
+	    <strong> Deprecation Warning! </strong>
+	    <p>
+	      This page is deprecated and any information displayed here should be used with caution.
+	    </p>
+	  </div>
 
-	{% end %}
-	{% except %}
-	{% end %}
-	{% block stuff %}
-	{% end %}
-</div>
-<hr>
-<div class="container-fluid footer">
-	<p><a href="/">Genomics Status</a></p>
-	<p>Something broken? For general information about Genomics Status, feature requests or bug reports, please contact
-	<a href="mailto:guillermo.carrasco@scilifelab.se">Guillermo Carrasco</a> or
-	<a href="mailto:remi-andre.olsen@scilifelab.se">Remi-André Olsen</a>.</p>
-</div>
-</body>
+	  {% end %}
+	  {% except %}
+	  {% end %}
+          {% block stuff %}
+          {% end %}
+        </div>
+
+      </div>
+    </div>
+  </body>
 </html>

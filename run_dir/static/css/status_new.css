@@ -1,45 +1,45 @@
-html {
-  background: transparent;
-  height: 100%;
-}
-
-div .scrollable {
-  overflow: scroll;
+/* Helper classes */
+div.scrollable {
   overflow: auto;
 }
-
-table .scrollable {
-  max-width: max-content;
+pre.scrollable {
+  overflow: auto;
+  word-wrap: normal;
+  white-space: pre;
 }
 
-label { 
-  font-weight: bold; 
+table.scrollable {
+  max-width: 100%;
+}
+table.table-nowidth {
+    width:auto;
+}
+.rightalign {
+    text-align:right;
 }
 
-.help-block { 
-  font-size: small; 
-  color:#999; 
-  margin-top: 10px;
+.well > h1, .well > h2, .well > h3, .well > h4, .well > h5, .well > h6 {
+    margin-top:0;
 }
 
-.test_padding {
-  padding: 30px;
+.nav-backgrounds li {
+    margin-bottom:8px;
+}
+.nav-backgrounds li a {
+    background-color:#f9f9f9;
+    border:1px solid #ccc;
 }
 
-.glyphicon-refresh-animate {
-  -animation: spin .7s infinite linear;
-  -webkit-animation: spin2 .7s infinite linear;
+.homepage-ctas .well {
+    text-align:center;
+}
+.homepage-ctas .well h3 {
+    font-size:3em;
+}
+.homepage-ctas .well a i {
+    color:#333;
 }
 
-@-webkit-keyframes spin2 {
-  from { -webkit-transform: rotate(0deg);}
-  to { -webkit-transform: rotate(360deg);}
-}
-
-@keyframes spin {
-  from { transform: scale(1) rotate(0deg);}
-  to { transform: scale(1) rotate(360deg);}
-}
 
 /* Body and structure
 -------------------------------------------------- 
@@ -55,16 +55,27 @@ td.progress {
 }
 
 body {
-  padding-bottom: 40px;
   padding-top: 60px;
+  padding-bottom: 40px;
 }
 .sidebar {
   padding: 9px 0;
   background-color: white;
+  text-align: center;
+}
+.footer {
+    font-size:0.9em;
+    color:#999;
+    text-align:center;
+}
+.footer a {
+    color:#999;
+    text-decoration:underline;
 }
 
-.sidebar {
-  text-align: center;
+
+.slider-spacing {
+    margin:40px 0;
 }
 
 .progress-info.progress-striped .bar {
@@ -78,10 +89,6 @@ body {
   animation: progress-bar-stripes 0.25s linear infinite;
 }
 
-.well {
-  background-color: white;
-}
-
 .box { font: 10px sans-serif; }
 .box line, .box rect, .box circle { stroke: #000; stroke-width: 1.5px; fill: #fff; }
 .box .center { stroke-dasharray: 3 3; }
@@ -91,11 +98,12 @@ line.median {
   stroke: red;
 }
 
-th.a {
+th.link {
   color: #0088cc;
+  cursor:pointer;
 }
 
-th.a:hover {
+th.link:hover {
   color: #0088cc;
   cursor: pointer;
   text-decoration: underline;
@@ -114,9 +122,7 @@ table {
     word-wrap: break-word;
 }
 
-pre.cronjob-disabled {
-  color: red;
-}
+
 table.narrow-headers th {
     width: 20%
 }
