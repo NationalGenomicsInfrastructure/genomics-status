@@ -11,6 +11,36 @@ div .scrollable {
 table .scrollable {
   max-width: max-content;
 }
+
+label { 
+  font-weight: bold; 
+}
+
+.help-block { 
+  font-size: small; 
+  color:#999; 
+  margin-top: 10px;
+}
+
+.test_padding {
+  padding: 30px;
+}
+
+.glyphicon-refresh-animate {
+  -animation: spin .7s infinite linear;
+  -webkit-animation: spin2 .7s infinite linear;
+}
+
+@-webkit-keyframes spin2 {
+  from { -webkit-transform: rotate(0deg);}
+  to { -webkit-transform: rotate(360deg);}
+}
+
+@keyframes spin {
+  from { transform: scale(1) rotate(0deg);}
+  to { transform: scale(1) rotate(360deg);}
+}
+
 /* Body and structure
 -------------------------------------------------- 
 Colors: http://colorschemedesigner.com/#3n52e1uYmw0w0 */
