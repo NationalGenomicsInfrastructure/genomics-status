@@ -127,16 +127,6 @@ class UpdatedDocumentsDatahandler(SafeHandler):
         for doc in view:
             last.append((doc.key, doc.value, 'Flowcell information'))
 
-        view = self.application.amanita_db.view("sizes/home_total",
-                                                limit=num_items, descending=True)
-        for doc in view:
-            last.append((doc.key, doc.value, 'Amanita storage usage'))
-
-        view = self.application.picea_db.view("sizes/home_total",
-                                              limit=num_items, descending=True)
-        for doc in view:
-            last.append((doc.key, doc.value, 'Picea storage usage'))
-
         last = sorted(last, key=lambda tr: tr[0], reverse=True)
         return last[:num_items]
 
@@ -161,6 +151,11 @@ class PagedQCDataHandler(SafeHandler):
             sample_list.append(row.key)
 
         return sample_list
+
+class SafeStaticFileHandler(SafeHandler, tornado.web.StaticFileHandler):
+    """ Serve static files for authenticated users
+    """
+    pass
 
 
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
