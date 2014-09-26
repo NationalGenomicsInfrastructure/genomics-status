@@ -28,10 +28,11 @@ $.validator.setDefaults({
 //Generate alert when POSTing and refresh suggestions table
 $("#suggestionForm").validate({
   submitHandler: function(form) {
-    $('#modalBody').html("<p>Processing your suggestion...</p>");
-    $("#processingModal").modal('toggle');
-    var target = document.getElementById('modalBody')
-    var spinner = new Spinner().spin(target);
+    var spinnerText = "<div class='test_padding'> \
+                        <span class='icon-refresh glyphicon-refresh-animate'></span>  Processing your suggestion... \
+                      </div>"
+    $('#modalBody').html(spinnerText);
+    $('#processingModal').modal('toggle');
     $.post('/suggestion_box', $('#suggestionForm').serialize())
     .done(function() {
       $("#modalBody").html("Suggestion processed correctly! <i class='icon-ok'></i>");
@@ -47,8 +48,4 @@ $("#suggestionForm").validate({
 
 $(document).ready(function() {
   fill_suggestions_table();
-  // Make the button to hide the alert
-  $('#alertButton').live('click', function(event) {        
-    $('#alertDiv').hide();
-  });
 });
