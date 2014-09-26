@@ -15,13 +15,11 @@ import tornado.autoreload
 from tornado import template
 
 from status.util import *
-from status.amanita import *
 from status.production import *
 from status.applications import *
 from status.projects import *
 from status.sequencing import *
 from status.samples import *
-from status.picea import *
 from status.flowcells import *
 from status.barcode_vs_expected import *
 from status.reads_per_lane import *
@@ -31,6 +29,7 @@ from status.quotas import *
 from status.phix_err_rate import *
 from status.testing import *
 from status.authorization import *
+from status.suggestion_box import *
 
 from argparse import ArgumentParser
 
@@ -45,16 +44,6 @@ class Application(tornado.web.Application):
             ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
             ("/api/v1/expected", BarcodeVsExpectedDataHandler),
-            ("/api/v1/amanita_home", AmanitaHomeDataHandler),
-            ("/api/v1/amanita_home/users/", AmanitaUsersDataHandler),
-            ("/api/v1/amanita_home/projects", AmanitaHomeProjectsDataHandler),
-            ("/api/v1/amanita_home/projects/([^/]*)$",
-                AmanitaHomeProjectDataHandler),
-            ("/api/v1/amanita_home/([^/]*)$", AmanitaHomeUserDataHandler),
-            ("/api/v1/amanita_box2", AmanitaBox2DataHandler),
-            ("/api/v1/amanita_box2/([^/]*)$", AmanitaBox2ProjectDataHandler),
-            ("/api/v1/amanita_box2/projects/",
-                AmanitaBox2ProjectsDataHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
@@ -86,10 +75,7 @@ class Application(tornado.web.Application):
             ("/api/v1/plot/reads_per_lane.png", ReadsPerLanePlotHandler),
             ("/api/v1/plot/barcodes_vs_expected.png",
                 BarcodeVsExpectedPlotHandler),
-            ("/api/v1/picea_home", PiceaHomeDataHandler),
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
-            ("/api/v1/picea_home/users/", PiceaUsersDataHandler),
-            ("/api/v1/picea_home/([^/]*)$", PiceaHomeUserDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
@@ -102,6 +88,7 @@ class Application(tornado.web.Application):
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
+            ("/api/v1/projectqc/([^/]*)$", ProjectQCDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
@@ -119,19 +106,18 @@ class Application(tornado.web.Application):
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/samples_applications", SamplesApplicationsDataHandler),
+            ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),
-            ("/amanita", AmanitaHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
             ("/q30", Q30Handler),
-            ("/picea", PiceaHandler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
-            (r"/qc_reports/(.*)", NoCacheStaticFileHandler, {"path": 'qc_reports'}),
+            (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
             ("/quotas", QuotasHandler),
             ("/quotas/(\w+)?", QuotaHandler),
             ("/phix_err_rate", PhixErrorRateHandler),
@@ -143,7 +129,8 @@ class Application(tornado.web.Application):
             ("/reads_per_lane", ReadsPerLaneHandler),
             ("/samples_per_lane", SamplesPerLaneHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
-            ("/sequencing", SequencingStatsHandler)
+            ("/sequencing", SequencingStatsHandler),
+            ("/suggestion_box", SuggestionBoxHandler)
         ]
 
         self.declared_handlers = handlers
@@ -154,15 +141,13 @@ class Application(tornado.web.Application):
         # Global connection to the database
         couch = Server(settings.get("couch_server", None))
         if couch:
-            self.illumina_db = couch["illumina_logs"]
             self.uppmax_db = couch["uppmax"]
             self.samples_db = couch["samples"]
             self.projects_db = couch["projects"]
             self.flowcells_db = couch["flowcells"]
-            self.amanita_db = couch["amanita"]
-            self.picea_db = couch["picea"]
             self.gs_users_db = couch["gs_users"]
             self.cronjobs_db = couch["cronjobs"]
+            self.suggestions_db = couch["suggestion_box"]
         else:
             print settings.get("couch_server", None)
             raise IOError("Cannot connect to couchdb");
@@ -206,6 +191,11 @@ class Application(tornado.web.Application):
         self.zendesk = Zendesk(self.zendesk_url, use_api_token=True, zendesk_username=self.zendesk_user,
                                 zendesk_password=self.zendesk_token, api_version=2)
 
+        # Trello
+        self.trello_api_key = settings['trello']['api_key']
+        self.trello_api_secret = settings['trello']['api_secret']
+        self.trello_token = settings['trello']['token']
+
         # Load password seed
         self.password_seed = settings.get("password_seed")
 
@@ -225,7 +215,6 @@ class Application(tornado.web.Application):
                     "redirect_uri": settings['redirect_uri']
                      }
 
-        tornado.autoreload.watch("design/amanita.html")
         tornado.autoreload.watch("design/application.html")
         tornado.autoreload.watch("design/applications.html")
         tornado.autoreload.watch("design/barcodes.html")
