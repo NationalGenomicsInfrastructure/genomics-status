@@ -1,94 +1,58 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 
 {% block stuff %}
 
 <div class="container-fluid" id="content">
-  <h1>Production cronjobs</h1>
+	<h1>Production cronjobs</h1>
 
-  <p>
-    The tables below show information about all cronjobs running on production servers.
-  </p>
-  <p><i>Deactivated (i.e commented) cronjobs will appear in red.</i></p>
+	<p>The tables below show information about all cronjobs running on production servers.</p>
+	<p><em>Deactivated (i.e commented) cronjobs will appear in red.</em></p>
 </div>
 
 <script>
-update_cronjob_tables()
+update_cronjob_tables();
 
 function update_cronjob_tables() {
-  var container = $("#content");
-  $.getJSON('/api/v1/production/cronjobs', function(data){
-    $.each(data, function(server, cronjobs){
-      // Header with server name and last updated
-      var h = document.createElement('h3');
-      h.textContent = server + " (last updated " + cronjobs['last_updated'].split(' ')[0] + ")";
-      container.append(h);
+	var container = $("#content");
+	$.getJSON('/api/v1/production/cronjobs', function(data){
+		$.each(data, function(server, cronjobs){
+			// Header with server name and last updated
+			$("#content").append('<h3>'+server+' (last updated '+cronjobs['last_updated'].split(' ')[0]+')</h3>');
 
-      // Table and Header
-      var t = document.createElement('table')
-      t.className = "table";
-      var t_header = document.createElement('thead');
-      var tr = document.createElement('tr');
-      var headers = ['User', 'Minute', 'Hour', 'Day of month', 'Month', 'Day of week', 'Command'];
-      for (var i = 0; i < headers.length; i++){
-        var th = document.createElement('th');
-        th.textContent = headers[i];
-        // Last element (cronjob command), shouldn't have span class
-        if (!(i+1 == headers.length)) {
-          th.className = "span2";
-        }
-        tr.appendChild(th);
-      }
-      t_header.appendChild(tr);
-      t.appendChild(t_header);
-
-      // Create table body
-      var t_body = document.createElement('tbody');
-      users = cronjobs['users'];
-      $.each(users, function(user, cronjobs){
-        $.each(cronjobs, function(cronjob_id, cronjob_data){
-          tr = document.createElement('tr');
-          var td = document.createElement('td');
-          td.textContent = user;
-          tr.appendChild(td);
-
-          td = document.createElement('td');
-          td.textContent = cronjob_data['Minute'];
-          tr.appendChild(td);
-
-          td = document.createElement('td');
-          td.textContent = cronjob_data['Hour'];
-          tr.appendChild(td);
-
-          td = document.createElement('td');
-          td.textContent = cronjob_data['Day of month'];
-          tr.appendChild(td);
-
-          td = document.createElement('td');
-          td.textContent = cronjob_data['Month'];
-          tr.appendChild(td);
-
-          td = document.createElement('td');
-          td.textContent = cronjob_data['Day of week'];
-          tr.appendChild(td);
-
-          // Command should be within <pre> and <code> tags
-          var pre = document.createElement('pre');
-          if (!cronjob_data['Enabled']) {
-            pre.className = "cronjob-disabled";
-          }
-          var code = document.createElement('code');
-          code.textContent = cronjob_data['Command'];
-          pre.appendChild(code);
-          td = document.createElement('td');
-          tr.appendChild(pre);
-
-          t_body.appendChild(tr);
-        });
-      });
-      t.appendChild(t_body);
-      container.append(t);
-    });
-  });
+			// Table and Header
+			tbl = $('<table class="table"><thead><tr>'+
+			'<th>User</th>'+
+			'<th>Minute</th>'+
+			'<th>Hour</th>'+
+			'<th>Day of month</th>'+
+			'<th>Month</th>'+
+			'<th>Day of week</th>'+
+			'<th>Command</th>'+
+			'</tr></thead><tbody></tbody></table>');
+	  
+			// Create table body
+			users = cronjobs['users'];
+			$.each(users, function(user, cronjobs){
+				$.each(cronjobs, function(cronjob_id, cronjob_data){
+					var tbl_row = '<tr>';
+					tbl_row += '<td><samp>'+user+'</samp></td>';
+					tbl_row += '<td>'+cronjob_data['Minute']+'</td>';
+					tbl_row += '<td>'+cronjob_data['Hour']+'</td>';
+					tbl_row += '<td>'+cronjob_data['Day of month']+'</td>';
+					tbl_row += '<td>'+cronjob_data['Month']+'</td>';
+					tbl_row += '<td>'+cronjob_data['Day of week']+'</td>';
+					tbl_row += '<td><pre';
+					if (!cronjob_data['Enabled']) {
+						tbl_row += ' class="bg-danger"';
+					}
+					tbl_row += '>'+cronjob_data['Command']+'</pre></td>';
+					tbl_row += '</tr>';
+					$(tbl).find('tbody').append(tbl_row);
+				});
+			});
+			$("#content").append(tbl);
+		});
+	});
 }
 </script>
 
