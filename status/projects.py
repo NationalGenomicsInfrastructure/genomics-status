@@ -12,7 +12,7 @@ import paramiko
 import base64
 import urllib
 import os
-import time
+
 from itertools import ifilter
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
@@ -389,13 +389,6 @@ class ProjectSamplesHandler(SafeHandler):
         limsdata['initqc_f']=0
         limsdata['libqc_p']=0
         limsdata['libqc_f']=0
-        limsdata['lanes_p']=0
-        limsdata['lanes_f']=0
-
-        p_lanes=set()
-        f_lanes=set()
-        seq_p=0
-        seq_f=0
         for sample in lims.get_samples(projectlimsid=project):
             limsdata['samples_nb']+=1
             seqqcflag=''
@@ -419,12 +412,10 @@ class ProjectSamplesHandler(SafeHandler):
                     elif sample.udf['Passed Library QC']=="False":
                         limsdata['libqc_f']+=1
 
-
             except KeyError:
                 print "Failed to load lims information for the current sample {}".format(sample.name)
 
         return limsdata
-
 
 
 
