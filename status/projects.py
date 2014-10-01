@@ -392,7 +392,6 @@ class ProjectSamplesHandler(SafeHandler):
         limsdata['lanes_p']=0
         limsdata['lanes_f']=0
 
-        seqproc=lims.get_processes(type=['Illumina Sequencing (Illumina SBS) 4.0','MiSeq Run (MiSeq) 4.0'], projectname=p.name)
         p_lanes=set()
         f_lanes=set()
         seq_p=0
@@ -400,14 +399,6 @@ class ProjectSamplesHandler(SafeHandler):
         for sample in lims.get_samples(projectlimsid=project):
             limsdata['samples_nb']+=1
             seqqcflag=''
-            for onesum in summaries:
-                for inp in onesum.all_inputs():
-                    samplenames=[s.name for s in inp.samples]
-                    if sample.name in samplenames:
-                        if inp.qc_flag == 'PASSED':
-                            seq_p+=1
-                        if inp.qc_flag == 'FAILED':
-                            seq_f+=1
             try:
                 if sample.udf['Status (manual)']=='In Progress':
                     limsdata['samples_inprogress']+=1
@@ -432,12 +423,6 @@ class ProjectSamplesHandler(SafeHandler):
             except KeyError:
                 print "Failed to load lims information for the current sample {}".format(sample.name)
 
-        if time.strptime(p.open_date, "%Y-%m-%d") < time.strptime("2014-07-01", "%Y-%m-%d"):
-            limsdata['seq_qc']=""
-            limsdata['seq_origin']="google"
-        else:
-            limsdata['seq_qc']="{} P / {} F".format(seq_p, seq_f)
-            limsdata['seq_origin']="lims"
         return limsdata
 
 
