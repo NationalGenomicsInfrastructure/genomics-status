@@ -372,7 +372,8 @@ class ProjectSamplesHandler(SafeHandler):
         for field, value in p.udf.items():
             limsdata[field]=value
         try:
-            summary=lims.get_processes(type="Project Summary 1.3", projectname=p.name)[0]
+            summaries=lims.get_processes(type="Project Summary 1.3", projectname=p.name)
+            summary=summaries[0]
         except IndexError:
            print "No project summary for project {}".format(project) 
         else:
@@ -388,11 +389,6 @@ class ProjectSamplesHandler(SafeHandler):
         limsdata['initqc_f']=0
         limsdata['libqc_p']=0
         limsdata['libqc_f']=0
-        limsdata['seqqc_p']=0
-        limsdata['seqqc_f']=0
-
-        seqproc=lims.get_processes(type=['Illumina Sequencing (Illumina SBS) 4.0','MiSeq Run (MiSeq) 4.0'], projectname=p.name)
-        lanes=set()
         for sample in lims.get_samples(projectlimsid=project):
             limsdata['samples_nb']+=1
             seqqcflag=''
@@ -415,26 +411,11 @@ class ProjectSamplesHandler(SafeHandler):
                         limsdata['libqc_p']+=1
                     elif sample.udf['Passed Library QC']=="False":
                         limsdata['libqc_f']+=1
-                if len(seqproc)>0:
-                    for inp in seqproc[0].all_inputs():
-                        samplenames=[s.name for s in inp.samples]
-                        if sample.name in samplenames:
-                            seqqcflag=inp.qc_flag
-                            if inp.qc_flag =='PASSED':
-                                limsdata['seqqc_p']+=1
-                            elif inp.qc_flag =='FAILED':
-                                limsdata['seqqc_f']+=1
-                            if seqproc[0]== "MiSeq Run (MiSeq) 4.0":
-                                lanes.add(inp.location[1].split(':')[1])
-                            else:
-                                lanes.add(inp.location[1].split(':')[0])
 
             except KeyError:
                 print "Failed to load lims information for the current sample {}".format(sample.name)
-        
-        limsdata['lanes']=len(lanes)
-        return limsdata
 
+        return limsdata
 
 
 
