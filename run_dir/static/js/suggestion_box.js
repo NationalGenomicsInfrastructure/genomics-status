@@ -2,7 +2,7 @@ function fill_suggestions_table() {
   $.getJSON('/api/v1/suggestions', function(data) {
     $("#suggestionsTableBody").empty();
     $.each(data, function(date, card_info) {
-      var card_date = ""
+      var card_date = "";
       if(card_info[2]) {
         card_date = "<tr class='success'>";
       }
