@@ -94,7 +94,7 @@ class SuggestionBoxDataHandler(SafeHandler):
     """ Handles URL /api/v1/suggestions
     """
     def get(self):
-        view = self.application.suggestions_db.view("date/title_url")
+        view = self.application.suggestions_db.view("date/info")
         self.set_header("Content-type", "application/json")
         suggestions = OrderedDict()
         for row in sorted(view.rows, key=lambda x: x.key, reverse=True):
