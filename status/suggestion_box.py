@@ -85,7 +85,8 @@ class SuggestionBoxHandler(SafeHandler):
                                                 'card_id': new_card.id,
                                                 'description': new_card.description,
                                                 'name': new_card.name,
-                                                'url': new_card.url})
+                                                'url': new_card.url,
+                                                'archived': False})
 
         self.set_status(200)
 
