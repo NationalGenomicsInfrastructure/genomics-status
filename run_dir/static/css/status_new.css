@@ -2,6 +2,12 @@
 div.scrollable {
   overflow: auto;
 }
+
+.justified {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
 pre.scrollable {
   overflow: auto;
   word-wrap: normal;
