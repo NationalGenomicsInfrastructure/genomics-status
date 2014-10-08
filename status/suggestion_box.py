@@ -85,7 +85,8 @@ class SuggestionBoxHandler(SafeHandler):
                                                 'card_id': new_card.id,
                                                 'description': new_card.description,
                                                 'name': new_card.name,
-                                                'url': new_card.url})
+                                                'url': new_card.url,
+                                                'archived': False})
 
         self.set_status(200)
 
@@ -94,7 +95,7 @@ class SuggestionBoxDataHandler(SafeHandler):
     """ Handles URL /api/v1/suggestions
     """
     def get(self):
-        view = self.application.suggestions_db.view("date/title_url")
+        view = self.application.suggestions_db.view("date/info")
         self.set_header("Content-type", "application/json")
         suggestions = OrderedDict()
         for row in sorted(view.rows, key=lambda x: x.key, reverse=True):

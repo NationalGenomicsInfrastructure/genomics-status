@@ -67,14 +67,14 @@
         <div class="control-group">
           <label class="control-label" for="description">Description</label>
           <div class="controls">
-            <textarea id="description" name="description" required></textarea>
+            <textarea class="span12" rows="6" id="description" name="description" required></textarea>
             <span class="help-block">Describe the issue in more detail</span>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="suggestion">Suggestion</label>
           <div class="controls">
-            <textarea id="suggestion" name="suggestion"></textarea>
+            <textarea class="span12" rows="6" id="suggestion" name="suggestion"></textarea>
             <span class="help-block">Provide a suggestion for how the issue can be solved <em>(optional)</em></span>
           </div>
         </div>
@@ -102,6 +102,7 @@
       <legend>List of existing suggestions</legend>
       <p>
         Click on a suggestion title to go to it's corresponding Trello card.
+        Archived cards will appear in green.
       </p>
       <table class="table table-bordered" id="suggestionsTable">
         <thead>

@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+import argparse
+import couchdb
+import yaml
+
+import logbook
+import trello
+
+DESCRIPTION = """Updates stauts (archived or not) of the suggestions stored in the database.
+
+Requires the settings.yaml configuration file used to parametrise genomics-status
+"""
+if __name__=="__main__":
+
+    log = logbook.Logger('Update Suggestion Box')
+
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
+    parser.add_argument('config', type=str, help="Path to settings.yaml file")
+    args = parser.parse_args()
+
+    try:
+        with open(args.config, 'r') as f:
+            config = yaml.load(f)
+    except IOError:
+        raise IOError('Please make sure to specify a correct path to settings.yaml file')
+
+    # From here, assume that all credentials are present in the configuration file,
+    # that is actually needed to run genomics-status
+
+    # Connect to Trello
+    api_key = config.get('trello').get('api_key')
+    api_secret = config.get('trello').get('api_secret')
+    token = config.get('trello').get('token')
+    t_client = trello.TrelloClient(api_key=api_key, api_secret=api_secret, token=token)
+
+    # Connect to StatusDB
+    s = couchdb.Server(config.get('couch_server'))
+
+    # Get list of stored suggestions
+    sb_database = s['suggestion_box']
+    cards_in_db = {row.key:row.value for row in sb_database.view('card/id').rows}
+
+    # Get list of cards in Suggestion Box board
+    for b in t_client.list_boards():
+        if b.name == 'Suggestion Box':
+            sb_board = b
+    all_cards = sb_board.all_cards()
+
+    docs = []
+    for card in all_cards:
+        # There are some archived cards from the testing phase that are not on
+        # the database but are still in Trello. They cannot be removed.
+        if card.id in cards_in_db.keys():
+            log.info('Updating status of card {}...'.format(card.name))
+            doc = sb_database.get(cards_in_db[card.id])
+            doc['archived'] = card.closed
+            docs.append(doc)
+    sb_database.update(docs)

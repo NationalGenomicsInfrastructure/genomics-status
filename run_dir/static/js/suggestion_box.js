@@ -2,7 +2,17 @@ function fill_suggestions_table() {
   $.getJSON('/api/v1/suggestions', function(data) {
     $("#suggestionsTableBody").empty();
     $.each(data, function(date, card_info) {
-      var card_date = "<tr><td><a target='_blank' href='" + card_info[1] + "'>" + card_info[0] + "</a></td>";
+      var card_date = "";
+      var card_name = card_info[0];
+      var card_url = card_info[1];
+      var archived = card_info[2];
+      if(archived) {
+        card_date = "<tr class='success'>";
+      }
+      else {
+        card_date = "<tr>";
+      }
+      card_date +=  "<td><a target='_blank' href='" + card_url + "'>" + card_name + "</a></td>";
       var card_link = "<td>" + date.split('T')[0] + ' at ' + date.split('T')[1].split('.')[0] + "</td></tr>";
       $('#suggestionsTableBody').append(card_date + card_link);
     });

@@ -24,12 +24,10 @@ cd status
 python setup.py install
 ```
 
-3 - You'll need to install a few other pieces separately:
+3 - You'll need to install genologics package separately:
 
 ```
-pip install matplotlib
-pip install Zendesk
-pip install https://github.com/SciLifeLab/genologics/tarball/master
+pip install git+https://github.com/SciLifeLab/genologics.git
 ```
 
 4 - For running, it requires a `settings.yaml` file which points to the CouchDB server to use, and which port to
@@ -57,6 +55,12 @@ instruments:
         INSTRUMENT_ID: INSTRUMENT_NAME
 
 password_seed: dont_needed
+
+# You Trello API credentials, you need a board named "Suggestion Box"
+trello:
+    api_key: <trello_api_key>
+    api_secret: <trello_api_secret>
+    token: <trello_token>
 ```
 
 `~/.genologicsrc`:
