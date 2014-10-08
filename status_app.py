@@ -218,6 +218,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/applications.html")
         tornado.autoreload.watch("design/barcodes.html")
         tornado.autoreload.watch("design/base.html")
+        tornado.autoreload.watch("design/base_new.html")
         tornado.autoreload.watch("design/expected.html")
         tornado.autoreload.watch("design/flowcell_samples.html")
         tornado.autoreload.watch("design/flowcells.html")
