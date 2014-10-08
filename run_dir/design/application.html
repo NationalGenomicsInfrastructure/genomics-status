@@ -1,10 +1,15 @@
 {% extends "base_new.html" %}
 
-<!-- Example row of columns -->
+<!-- 
+Template file: application.html
+URL: /application/[application_type]
+Title: Projects with application [application_type]
+Description: Displays a list of Project Identifiers for a given application type
+-->
 {% block stuff %}
 
 <div class="container-fluid">
-  <h2>Projects with application {{ application }}</h2><br>
+  <h2>Projects with application <em>{{ application }}</em></h2><br>
   <table class="table table-striped" id="project_table">
 		<tbody></tbody>
   </table>
