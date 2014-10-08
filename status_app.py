@@ -244,6 +244,10 @@ class Application(tornado.web.Application):
 def main(args):
     """ Initialte server and start IOLoop.
     """
+    
+    # Print a message saying where the server will be running
+    print ("Launching server at http://localhost:9761/")
+    
     with open("settings.yaml") as settings_file:
         server_settings = yaml.load(settings_file)
 

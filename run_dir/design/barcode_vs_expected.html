@@ -1,10 +1,19 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 
 <!-- Example row of columns -->
 {% block stuff %}
 <div class="container-fluid">
   <h2>Expected yield vs matched yield for barcodes</h2>
-  <img src="/api/v1/plot/barcodes_vs_expected.png" />
+  <div id='loading_spinner'><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading image.. <em>(can take up to a minute or so)</em></div>
 </div>
+
+<script type="text/javascript">
+$( document ).ready(function() {
+  // load in the slow image
+  var img = $("<img />").attr('src', '/api/v1/plot/barcodes_vs_expected.png').load(function() {
+      $("#loading_spinner").html(img);
+  });
+});
+</script>
 
 {% end %}
