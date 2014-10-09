@@ -1,101 +1,118 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 
-<!-- Example row of columns -->
+<!-- 
+Template file: flowcell_samples.html
+URL: /flowcells/[flowcell]
+Title: Individual Flowcell Page 
+Description: Shows information about a specific flow cell
+-->
+
 {% block stuff %}
 
 <div class="container-fluid" id="sample_list">
 
-  <h2>{{ flowcell }}</h2>
-  <table class="table table-bordered narrow-headers" id="fc_info">
-    <tbody></tbody>
-  </table>
+    <h2>Flow Cell {{ flowcell }}</h2>
+    <table class="table table-bordered narrow-headers" id="fc_info">
+        <tbody></tbody>
+    </table>
 
 
-  <h3>Lane info</h3>
-  <div id="lanes">
-  </div>
+    <h3>Lane Information</h3>
+    <div id="lanes"></div>
   
-  </div>
+</div>
 
 <script>
 
-f = d3.format(',g')
-fpr = d3.format('.2%')
-
 for (var i = 1; i < 9; i++) {
-    $("#lanes").append('<div id="lane_' + i + '"><h4>Lane ' + i + '</h4>');
-    $("#lanes").append('<table class="table table-bordered narrow-headers" id="summary_lane_'+i+'""><tbody></tbody></table><br></div>')
-    $("#lanes").append('<table class="table table-bordered" id="table_lane_'+i+'""><tbody></tbody></table><br></div>')
+    $("#lanes").append('<div id="lane_' + i + '"> \
+        <h4>Lane ' + i + '</h4> \
+        <table class="table table-bordered narrow-headers" id="summary_lane_'+i+'""> \
+            <tbody></tbody> \
+        </table> \
+    </div>')
 };
 
 $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
-    var tbody = "<tr><th>Sequencing done</th><td>" + data["seqdone"]+"</td></tr>";
-    tbody += "<tr><th>Demultiplex</th>";
+    var tbody = '<tr> \
+                     <th>Sequencing done</th> \
+                     <td>' + data['seqdone'] + '</td> \
+                 </tr> \
+                 <tr> \
+                     <th>Demultiplex</th>';
     if(data.hasOwnProperty("demuldone")){
-        tbody+="<td class='text-success'>Done</td>"
-        tbody += "</tr><tr>"
-        tbody += "<th>Projects :</th><td>";
-        tbody += data["plist"].join(", ")
-        tbody += "</td></tr>";
+        tbody+="<td><span class='label label-success'>Done</label></td> \
+        </tr>\
+        <tr> \
+            <th>Projects :</th>\
+            <td>" + data["plist"].join(", ") + "</td>\
+        </tr>";
         for (lid=1;lid<9;lid++){
             if (data['yields'][lid] !== 0){
-                var sbody="<tr><th>Total Yield :</th><td>";
-                sbody+=data['yields'][lid];
-                sbody+="</td></tr>";
+                var sbody="<tr> \
+                    <th>Total Yield :</th> \
+                    <td>" + data['yields'][lid] + "</td> \
+                </tr>";
             }
             if (data['seq_qc'][lid] !== 0){
-            sbody+="<tr><th>Sequencing QC:</th><td>";
-            sbody+=data['seq_qc'][lid];
-            sbody+="</td></tr>";
+                sbody+="<tr> \
+                    <th>Sequencing QC:</th> \
+                    <td>" + data['seq_qc'][lid] + "</td> \
+                </tr>";
             }
             for(i=1;i<4;i++){
-                sbody+="<tr>";
-                sbody+="<th>Read "+i+" Error rate :</th>";
                 if(data.hasOwnProperty('err'+i)){
-                    sbody+="<td>"+data['err'+i][lid]+"</td>";
-                }else{
-                    sbody+="<td>Not found in the DB</td>";
+                    sbody+="<tr> \
+                        <th>Read "+i+" Error rate :</th> \
+                        <td>"+data['err'+i][lid]+"</td> \
+                    </tr>";
                 }
-                sbody+="</tr>"
-
             }
             $("#summary_lane_"+lid+" tbody").html(sbody);
         }
         for (lid in data['lane']){
-            var lbody="";
-            lbody+="<tr><th>Project Name</th><th>Sample Name</th><th>Yield (Mbases)</th><th># Reads</th><th>% >Q30</th><th>Barcode</th><th>Index description</th></tr>";
-            for (samplerunid in data['lane'][lid]){
-                lbody+="<tr><td>"+data['lane'][lid][samplerunid]['Project']+"</td>";
-                lbody+="<td>"+data['lane'][lid][samplerunid]['SampleName']+"</td>";
-                lbody+="<td>"+data['lane'][lid][samplerunid]['yield']+"</td>";
-                lbody+="<td>"+data['lane'][lid][samplerunid]['readsnb']+"</td>";
-                if(parseFloat(data['lane'][lid][samplerunid]['overthirty']) < 30){
-                    lbody+="<td class='label-danger'>"
-                }else if(parseFloat(data['lane'][lid][samplerunid]['overthirty']) < 80){
-                    lbody+="<td class='label-warning'>"
-                }else if(parseFloat(data['lane'][lid][samplerunid]['overthirty']) < 100){
-                    lbody+="<td class='label-success'>"
-                }else{
-                    lbody+="<td>"
-                }
-                lbody+=data['lane'][lid][samplerunid]['overthirty']+"</td>";
-                lbody+="<td>"+data['lane'][lid][samplerunid]['barcode']+"</td>";
-                lbody+="<td>"+data['lane'][lid][samplerunid]['desc']+"</td>";
-                lbody+="</tr>";
+            if(data['lane'][lid].length == 0){
+                continue;
             }
-            $("#table_lane_"+lid+" tbody").html(lbody);
+            var lbody='<table class="table table-bordered" id="table_lane_' + i + '"> \
+                        <tbody> \
+                            <tr> \
+                                <th>Project Name</th> \
+                                <th>Sample Name</th> \
+                                <th>Yield (<abbr title="Megabases">Mb</abbr>)</th> \
+                                <th># Reads</th> \
+                                <th>% &gt; Q30</th> \
+                                <th>Barcode</th> \
+                                <th>Index description</th> \
+                            </tr>';
+            for (samplerunid in data['lane'][lid]){
+                var q30 = parseFloat(data['lane'][lid][samplerunid]['overthirty']);
+                lbody += "<tr> \
+                    <td>" + data['lane'][lid][samplerunid]['Project'] + "</td> \
+                    <td>" + data['lane'][lid][samplerunid]['SampleName'] + '</td> \
+                    <td class="text-right">' + data['lane'][lid][samplerunid]['yield'] + '</td> \
+                    <td class="text-right">' + data['lane'][lid][samplerunid]['readsnb'] + '</td> \
+                    <td class="text-right ';
+                    if (q30 < 30) lbody += 'danger';
+                    else if(q30 < 80) lbody += 'warning';
+                    else if(q30 < 100) lbody += 'success';
+                lbody += '">' + data['lane'][lid][samplerunid]['overthirty'] + "</td>\
+                    <td>" + data['lane'][lid][samplerunid]['barcode'] + "</td> \
+                    <td>" + data['lane'][lid][samplerunid]['desc'] + "</td> \
+                </tr>";
+            }
+            lbody += '</tbody></table>';
+            $("#lane_"+lid).append(lbody);
             
         }
 
-      }else{
+    } else {
+        tbody+="<td class ='label label-warning'>Pending</td></tr>"
+    }
 
-      tbody+="<td class ='text-warning'>Pending</td></tr>"
-    
-  }
+    $("#fc_info tbody").html(tbody);
 
-  $("#fc_info tbody").html(tbody);
-
-  console.log(data)
+    // console.log(data)
 });
 
 </script>
