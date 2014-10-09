@@ -3,6 +3,50 @@ div.scrollable {
   overflow: auto;
 }
 
+.inline-textbox {
+  display:inline-block;
+  width:200px;
+  margin-left: 10px;
+}
+
+th.sort {
+  cursor:pointer;
+}
+th.sort:after {
+  display:inline-block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  content:"";
+  position: relative;
+  top:-10px;
+  right:-5px;
+}
+th.sort.asc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #000000;
+  content:"";
+  position: relative;
+  top:4px;
+  right:-5px;
+}
+th.sort.desc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid #000000;
+  content:"";
+  position: relative;
+  top:-4px;
+  right:-5px;
+}
+
 .glyphicon-refresh-animate, .glyphicon-spin {
   margin-right:10px;
   -animation: spin .7s infinite linear;

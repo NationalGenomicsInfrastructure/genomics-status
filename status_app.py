@@ -243,11 +243,7 @@ class Application(tornado.web.Application):
 
 def main(args):
     """ Initialte server and start IOLoop.
-    """
-    
-    # Print a message saying where the server will be running
-    print ("Launching server at http://localhost:9761/")
-    
+    """    
     with open("settings.yaml") as settings_file:
         server_settings = yaml.load(settings_file)
 
@@ -271,7 +267,10 @@ def main(args):
                                                 ssl_options = ssl_options)
 
     http_server.listen(server_settings.get("port", 8888))
-
+    
+    # Print a message saying where the server will be running
+    print("Launching server at http://localhost:{}/".format(server_settings.get("port", 8888)))
+    
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
 
