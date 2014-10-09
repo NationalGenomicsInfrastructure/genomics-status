@@ -87,7 +87,7 @@ $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
             // Add the table if it has some content
             if(sbody.length > 0){
                 $('#lane_'+lid).removeClass('hidden').append(' \
-                    <table class="table table-bordered narrow-headers" id="summary_lane_' + lid + '""> \
+                    <table class="table table-bordered narrow-headers no-margin" id="summary_lane_' + lid + '""> \
                         <tbody> \
                             ' + sbody + ' \
                         </tbody> \
