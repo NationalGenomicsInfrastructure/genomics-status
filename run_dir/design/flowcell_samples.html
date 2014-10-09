@@ -69,7 +69,7 @@ $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
                 </tr>";
             }
             status = data['seq_qc'][lid];
-            if (status !== 0){
+            if (status !== '0'){
                 if(status == 'PASSED') status = '<span class="label label-success">Passed</span>';
                 if(status == 'UNKNOWN') status = '<span class="label label-default">Unknown</span>'; 
                 if(status == 'FAILED') status = '<span class="label label-danger">Failed</span>';        
