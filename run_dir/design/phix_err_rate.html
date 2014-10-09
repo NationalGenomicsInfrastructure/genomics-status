@@ -1,6 +1,18 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 
-<!-- Example row of columns -->
+<!-- 
+### DEPRECIATED ###
+Template file: phix_err_rate.html
+URL: /phix_err_rate
+Title: PhiX Error Rate
+Description: Diagnostic page showing PhiX error rates
+
+#TODO - This code is kind of broken, should have a date slider but doesn't work
+#TODO - Make the axes work, give some kind of explanation to what the plots show
+#TODO - Top plot doesn't show anything.
+
+-->
+
 {% block stuff %}
 
 <div class="container-fluid">
@@ -16,6 +28,9 @@
 
 </div>
 
+<script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/nvd3/lib/d3.v2.js"></script>
+<script src="/static/nvd3/nv.d3.js"></script>
 <script>
 
 var start = [12, 1, 1, 1]

@@ -1,4 +1,14 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
+
+<!-- 
+### DEPRECIATED ###
+Template file: production.html
+URL: /production
+Title: Data production
+Description: Diagnostic page showing plots of data production rate
+
+#TODO - Make plots render in front end instead of using python?
+-->
 
 {% block stuff %}
 
@@ -27,13 +37,15 @@
     The date range slider can be used to limit the interval of months from
     which to generate the plots.
   </p>
-  <div id="slider"></div>
+  <div class="row slider-spacing"><div id="slider"></div></div>
     <img id="p_m">
     <img id="p_q">
     <img id="d_m">
     <img id="d_q">
 </div>
 
+<script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/js/jQDateRangeSlider-min.js"></script>
 <script>
   var d_min = new Date(2012, 0, 1);
   var d_max = new Date();
