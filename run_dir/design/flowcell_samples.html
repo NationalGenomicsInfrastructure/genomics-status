@@ -47,11 +47,13 @@ $.getJSON("/api/v1/flowcell_info2/{{ flowcell }}", function(data) {
     } else {
         tbody += '<td><span class="label label-warning"">Pending</span></td></tr>';
     }
-    tbody += "</tr> \
-        <tr> \
+    tbody += "</tr>";
+    if(data.hasOwnProperty("plist")){
+        tbody += "<tr> \
             <th>Projects :</th>\
             <td>" + data["plist"].join(", ") + "</td>\
         </tr>";
+    }
     $("#fc_info tbody").html(tbody);
     
     // If demultiplexed, get additional information for each lane
