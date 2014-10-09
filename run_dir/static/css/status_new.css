@@ -3,6 +3,12 @@ div.scrollable {
   overflow: auto;
 }
 
+.q30_filters {
+  width:200px;
+  float:left;
+  margin-left:15px;
+}
+
 .no-margin {
   margin:0;
 }
