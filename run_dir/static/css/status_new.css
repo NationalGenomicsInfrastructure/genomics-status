@@ -3,6 +3,10 @@ div.scrollable {
   overflow: auto;
 }
 
+.no-margin {
+  margin:0;
+}
+
 .inline-textbox {
   display:inline-block;
   width:200px;
