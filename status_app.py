@@ -219,6 +219,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/barcodes.html")
         tornado.autoreload.watch("design/base.html")
         tornado.autoreload.watch("design/base_new.html")
+        tornado.autoreload.watch("design/cronjobs.html")
         tornado.autoreload.watch("design/expected.html")
         tornado.autoreload.watch("design/flowcell_samples.html")
         tornado.autoreload.watch("design/flowcells.html")
@@ -269,7 +270,8 @@ def main(args):
     http_server.listen(server_settings.get("port", 8888))
     
     # Print a message saying where the server will be running
-    print("Launching server at http://localhost:{}/".format(server_settings.get("port", 8888)))
+    # Spoil sports :P
+    # print("Launching server at http://localhost:{}/".format(server_settings.get("port", 8888)))
     
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()

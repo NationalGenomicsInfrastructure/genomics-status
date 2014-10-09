@@ -4,7 +4,7 @@
 Template file: cronjobs.html
 URL: /production/cronjobs
 Title: Production cronjobs
-Description: Diagnostic page showing active cron jobs on all servers
+Description: Diagnostic page showing all cron jobs on all servers
 -->
 
 {% block stuff %}
@@ -52,7 +52,7 @@ function update_cronjob_tables() {
 					if (!cronjob_data['Enabled']) {
 						tbl_row += ' class="bg-danger"';
 					}
-					tbl_row += '>'+cronjob_data['Command']+'</pre></td>';
+					tbl_row += '><code>'+cronjob_data['Command']+'</code></pre></td>';
 					tbl_row += '</tr>';
 					$(tbl).find('tbody').append(tbl_row);
 				});
