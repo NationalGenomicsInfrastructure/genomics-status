@@ -1,62 +1,82 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
+
+<!-- 
+Template file: quota_grid.html
+URL: /quotas
+Title: Historical UPPMAX storage quota for all UPPMAX projects
+Description: Shows a grid of graphs showing showing storage information
+             for all UPPMAX projects
+
+TODO: Seems to only display graphs sporadically, after a very long time.
+TODO: When graphs do show, the plots seem wrong.
+-->
 
 {% block stuff %}
 
-<div class="container-fluid" id="quota_grid">
-  <h2>Historical storage quota used on UPPMAX projects</h2><br>
-</div>
+<h2>Historical storage quota used on UPPMAX projects</h2>
 
-<script>
+<div id="plots"></div>
 
-var ups
-var chart
 
-$.getJSON('/api/v1/uppmax_projects', function(uppmax_projects) {
-
-  ups = uppmax_projects
-
-  $.each(ups, function(i, up) {
-    $("#quota_grid").append('<div class="span5" id="container_' + up + '"></div>')
-
-    var svg_chart = '<div class="grid_chart">' + 
-    '<svg id="chart_' + up + '"></svg>' +
-    '</div>'
-
-    $("#container_" + up)
-          .append('<h2><a href="/quotas/' + up + '">' + up + '</a></h2>')
-          .append(svg_chart)
-  });
-
-}).then(function() {
-  $.each(ups, function(j, up) {
-    $.getJSON("/api/v1/quotas/" + up, function(data) {
-
-      var my_data = data[0]["data"]
-
-      chart = nv.models.linePlusBarChart()
-              .x(function(d) { return d["x"] * 1000 })
-              .y(function(d) { return d["y"] })
-              .showLegend(false)
-              .color(["#4D91A1"]);
-
-      chart.xAxis
-        .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
-
-      chart.y1Axis
-          .tickFormat(d3.format("2.2s"))
-
-      d3.select("#chart_" + up)
-          .datum([{values: my_data, key: "quota", bar: true}])
-        .call(chart);
-
-      nv.utils.windowResize(function() {d3.select('#chart_' + up).call(chart)})
-
-      return chart;
-
-    })
-  })
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+    
+    // Find the differe UPPMAX Projects
+    $.getJSON('/api/v1/uppmax_projects', function(uppmax_quotas) {
+        $.each(uppmax_quotas, function(i, up) {
+            $("#plots").append('\
+            <div id="container_'+up+'" style="float:left; width: 49%; height:400px;"> \
+                <h2><a href="/quotas/'+up+'">'+up+'</a></h2> \
+                <p id="loading_spinner_'+up+'"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading plot.. <em>(can take some time)</em></p> \
+                <div id="chart_'+up+'"></div> \
+            </div>');
+    
+            // Load the data for this project
+            $.getJSON('/api/v1/quotas/'+up, function(api_data) {
+        
+                // Massage the data
+                var raw_data = api_data[0]["data"];
+                var plot_data = [];
+                $.each(raw_data, function(i, d){
+                    plot_data.push([d.x * 1000, d.y / 1000000000000]);
+                });
+        
+                // Plot the data
+                $('#chart_'+up).highcharts({
+                    chart: { type: 'area'},
+                    title: { text: "Storage Usage Over Time: "+up },
+                    legend: { enabled: false },
+                    xAxis: { 
+                        title: { text: 'Date' },
+                        type: 'datetime'
+                    },
+                    yAxis: {
+                        title: { text: 'Storage' },
+                        labels: {
+                            formatter: function () {
+                                return this.value + 'Tb';
+                            }
+                        }
+                    },
+                    tooltip: {
+                        pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} Tb',
+                    },
+                    series: [{
+                        name: up,
+                        data: plot_data
+                    }]
+                });
+                
+                // Hide the loading spinner
+                $('#loading_spinner_'+up).hide();
+                
+            });
+            
+        });
+    });
 });
-
 </script>
 
 {% end %}

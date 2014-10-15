@@ -1,43 +1,70 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 
-<!-- Example row of columns -->
+<!-- 
+Template file: quota.html
+URL: /quotas/[UPPMAX project]
+Title: Historical UPPMAX storage quota for single UPPMAX project
+Description: Shows a full page graph of storage information for
+             a given UPPMAX project identifier
+
+TODO: Seems to only display a graph sporadically, after a very long time.
+-->
+
 {% block stuff %}
 <div class="container-fluid">
-  <h2>{{ project }}</h2>
+  <h2>Historical UPPMAX storage quota: {{ project }}</h2>
+  <p id="loading_spinner"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading plot.. <em>(can take some time)</em></p>
+  <div id="storage_plot">
   <div class="single_chart_container" id="chart_container">
     <svg id="chart"></svg>
   </div>
 </div>
 
-<script>
-
-var my_data
-
-$.getJSON("/api/v1/quotas/{{ project }}", function(data) {
-  my_data = data[0]["data"];
-
-  var chart = nv.models.linePlusBarChart()
-        .x(function(d) { return d["x"] * 1000})
-        .y(function(d) { return d["y"] })
-        .showLegend(false)
-        .color(["#4D91A1"]);
-
-    chart.xAxis
-      .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
-
-    chart.y1Axis
-        .tickFormat(d3.format("2.2s"))
-
-  d3.select("#chart")
-      .datum([{values: my_data, key: "quota", bar: true}])
-    .call(chart);
-
-  nv.utils.windowResize(function() {d3.select('#chart').call(chart)})
-
-  return chart;
-
-  } );
-
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+    
+    // Load the data
+    $.getJSON("/api/v1/quotas/{{ project }}", function(api_data) {
+        
+        // Massage the data
+        var raw_data = api_data[0]["data"];
+        var plot_data = [];
+        $.each(raw_data, function(i, d){
+            plot_data.push([d.x * 1000, d.y / 1000000000000]);
+        });
+        
+        // Plot the data
+        $('#storage_plot').highcharts({
+            chart: { type: 'area'},
+            title: { text: "Storage Usage Over Time: {{ project }}" },
+            legend: { enabled: false },
+            xAxis: { 
+                title: { text: 'Date' },
+                type: 'datetime'
+            },
+            yAxis: {
+                title: { text: 'Storage' },
+                labels: {
+                    formatter: function () {
+                        return this.value + 'Tb';
+                    }
+                }
+            },
+            tooltip: {
+                pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} Tb',
+            },
+            series: [{
+                name: '{{ project }}',
+                data: plot_data
+            }]
+        });
+        
+        // Hide the loading spinner
+        $('#loading_spinner').slideUp();
+    });
+});
 </script>
 
 {% end %}
