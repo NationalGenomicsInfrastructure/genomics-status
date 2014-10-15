@@ -11,7 +11,15 @@
 
 {% else %}
 
-<h3>Quick Links</h3>
+<p>Genomics status displays information from multiple data sources.</p>
+
+<form class="form-horizontal" role="form">
+    <div id="homepage-searchbar" class="form-group form-group-lg">
+        <label for="typeahead-input" class="control-label">Search for Project or Flow Cell:</label>
+        <input id="typeahead-input" class="typeahead form-control input-lg" type="text" placeholder="Project or Flowcell Name / ID">
+    </div>
+</form>
+
 <div class="row homepage-ctas">
 	<div class="col-lg-2 col-sm-4 col-xs-6">
 		<div class="well">
@@ -51,9 +59,11 @@
 		</div>
 	</div>
 </div>
-<p>Want to see something different here? Let us know on the
-  <a href="/suggestion_box">suggestions page</a>! We're currently collecting feedback on 
-  how the homepage should look..</p>
+<div class="alert alert-info">
+    <p style="text-align:center;">Want to see something different here? Let us know on the
+      <a href="/suggestion_box">suggestions page</a>! We're currently collecting feedback on 
+      how the homepage should look..</p>
+</div>
 
 <div class="row">
 	<div class="col-lg-4 justified">
@@ -101,7 +111,9 @@
 	</div>
 </div>
 
-<script>
+<script src="/static/js/typeahead.bundle.min.js"></script>
+<script type="text/javascript">
+// Get the most recent updates
 $.getJSON("/api/v1/last_updated?items=15", function(data) {
   var tbl_body = "";
   $.each(data, function(k1, summary) {
@@ -124,7 +136,39 @@ $.getJSON("/api/v1/last_updated?items=15", function(data) {
     tbl_row += '</tr>';
     $("#project_table").append(tbl_row);
   })
-})
+});
+
+// Run the typeahead code
+var projectSearch = new Bloodhound({
+    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+    queryTokenizer: Bloodhound.tokenizers.whitespace,
+    remote: '/api/v1/project_search/%QUERY'
+});
+projectSearch.initialize();
+
+var flowcellSearch = new Bloodhound({
+    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+    queryTokenizer: Bloodhound.tokenizers.whitespace,
+    remote: '/api/v1/flowcell_search/%QUERY'
+});
+flowcellSearch.initialize();
+ 
+$('#homepage-searchbar .typeahead').typeahead({
+    minLength: 3,
+    highlight: true,
+}, {
+    name: 'project-search',
+    displayKey: 'name',
+    source: projectSearch.ttAdapter(),
+}, {
+    name: 'flowcell-search',
+    displayKey: 'name',
+    source: flowcellSearch.ttAdapter(),
+}).bind('typeahead:selected', function(obj, datum, name) {      
+    var url = datum.url;
+    window.location.href = url;
+});
+
 </script>
 
 {% end %}
