@@ -2,6 +2,8 @@ import tornado.web
 import tornado.auth
 import json
 import requests
+import os
+import time
 
 from datetime import datetime
 
@@ -130,7 +132,6 @@ class UpdatedDocumentsDatahandler(SafeHandler):
         last = sorted(last, key=lambda tr: tr[0], reverse=True)
         return last[:num_items]
 
-
 class PagedQCDataHandler(SafeHandler):
     """ Serves a list of 50 sample names following a given string
     in alhabetical order.
@@ -164,6 +165,22 @@ class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
     """
     def set_extra_headers(self, path):
         self.set_header("Cache-control", "no-cache")
+
+class LastPSULRunHandler(SafeHandler):
+    """Gives the date of the last PSUL run, assumin the logfile is where we expect it"""
+    def get(self):
+        logfile="/home/hiseq.bioinfo/lims2db_projects.log"
+        try:
+            delta=datetime.now()-datetime.fromtimestamp(int(os.stat(logfile).st_mtime))
+        except OSError:
+            responseText="unknown"
+        else:
+            hours=int(delta.seconds/3600)
+            minutes=int((delta.seconds%3600)/60)
+            seconds=int(delta.seconds%60)
+            responseText="{0} hours,{1} minutes, {2} seconds ago".format(hours, minutes, seconds)
+        self.write(responseText)
+
 
 
 ########################
