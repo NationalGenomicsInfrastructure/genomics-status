@@ -11,7 +11,7 @@
 
 {% else %}
 
-<p>Genomics status displays information from multiple data sources.</p>
+<p>Genomics status displays information from multiple data sources. <span id="updated-status"></span></p>
 
 <form class="form-horizontal" role="form">
     <div id="homepage-searchbar" class="form-group form-group-lg">
@@ -113,62 +113,78 @@
 
 <script src="/static/js/typeahead.bundle.min.js"></script>
 <script type="text/javascript">
-// Get the most recent updates
-$.getJSON("/api/v1/last_updated?items=15", function(data) {
-  var tbl_body = "";
-  $.each(data, function(k1, summary) {
-		var link = '';
-		var linkend = '';
-		if(summary[2] == 'Project information'){
-			link = '<a href="/project/'+summary[1]+'">';
-			linkend = '</a>';
-		} else if(summary[2] == 'Flowcell information'){
-			link = '<a href="/flowcells/'+summary[1]+'">';
-			linkend = '</a>';
-		} else if(summary[2] == 'Sample information'){
-			link = '<a href="/samples/'+summary[1]+'">';
-			linkend = '</a>';
-		}
-		tbl_row = '<tr>';
-    tbl_row += '<td>' + link + summary[2] + linkend + '</td>';
-    tbl_row += '<td>' + link + summary[1] + linkend + '</td>';
-    tbl_row += '<td>' + link + moment(summary[0]).format('HH:mm, MMM Do YYYY') + linkend + '</td>';
-    tbl_row += '</tr>';
-    $("#project_table").append(tbl_row);
-  })
-});
+$(document).ready(function(){
+    // Get the most recent updates
+    $.getJSON("/api/v1/last_updated?items=15", function(data) {
+      var tbl_body = "";
+      $.each(data, function(k1, summary) {
+    		var link = '';
+    		var linkend = '';
+    		if(summary[2] == 'Project information'){
+    			link = '<a href="/project/'+summary[1]+'">';
+    			linkend = '</a>';
+    		} else if(summary[2] == 'Flowcell information'){
+    			link = '<a href="/flowcells/'+summary[1]+'">';
+    			linkend = '</a>';
+    		} else if(summary[2] == 'Sample information'){
+    			link = '<a href="/samples/'+summary[1]+'">';
+    			linkend = '</a>';
+    		}
+    		tbl_row = '<tr>';
+        tbl_row += '<td>' + link + summary[2] + linkend + '</td>';
+        tbl_row += '<td>' + link + summary[1] + linkend + '</td>';
+        tbl_row += '<td>' + link + moment(summary[0]).format('HH:mm, MMM Do YYYY') + linkend + '</td>';
+        tbl_row += '</tr>';
+        $("#project_table").append(tbl_row);
+      })
+    });
 
-// Run the typeahead code
-var projectSearch = new Bloodhound({
-    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-    queryTokenizer: Bloodhound.tokenizers.whitespace,
-    remote: '/api/v1/project_search/%QUERY'
-});
-projectSearch.initialize();
 
-var flowcellSearch = new Bloodhound({
-    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-    queryTokenizer: Bloodhound.tokenizers.whitespace,
-    remote: '/api/v1/flowcell_search/%QUERY'
-});
-flowcellSearch.initialize();
+
+    // Plug in the typeahead search box
+    var projectSearch = new Bloodhound({
+        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        remote: '/api/v1/project_search/%QUERY'
+    });
+    projectSearch.initialize();
+
+    var flowcellSearch = new Bloodhound({
+        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        remote: '/api/v1/flowcell_search/%QUERY'
+    });
+    flowcellSearch.initialize();
  
-$('#homepage-searchbar .typeahead').typeahead({
-    minLength: 3,
-    highlight: true,
-}, {
-    name: 'project-search',
-    displayKey: 'name',
-    source: projectSearch.ttAdapter(),
-}, {
-    name: 'flowcell-search',
-    displayKey: 'name',
-    source: flowcellSearch.ttAdapter(),
-}).bind('typeahead:selected', function(obj, datum, name) {      
-    var url = datum.url;
-    window.location.href = url;
-});
+    $('#homepage-searchbar .typeahead').typeahead({
+        minLength: 3,
+        highlight: true,
+    }, {
+        name: 'project-search',
+        displayKey: 'name',
+        source: projectSearch.ttAdapter(),
+    }, {
+        name: 'flowcell-search',
+        displayKey: 'name',
+        source: flowcellSearch.ttAdapter(),
+    }).bind('typeahead:selected', function(obj, datum, name) {      
+        var url = datum.url;
+        window.location.href = url;
+    });
 
+
+
+    // Find out when the update scripts will next run
+    $.get('/api/v1/last_psul', function(data){
+        if(data == 'unknown'){
+            console.log('Last PSUL update check returned "unknown"');
+        } else {
+            var text = 'The script to pull information from the LIMS last ran '+data+'.';
+            $('#updated-status').html(text);
+        }
+    });
+    
+});
 </script>
 
 {% end %}
