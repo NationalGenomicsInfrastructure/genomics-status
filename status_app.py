@@ -69,6 +69,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
+            ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
