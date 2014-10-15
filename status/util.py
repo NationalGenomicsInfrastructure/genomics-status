@@ -170,16 +170,19 @@ class LastPSULRunHandler(SafeHandler):
     """Gives the date of the last PSUL run, assumin the logfile is where we expect it"""
     def get(self):
         logfile="/home/hiseq.bioinfo/lims2db_projects.log"
+        response = {}
         try:
             delta=datetime.now()-datetime.fromtimestamp(int(os.stat(logfile).st_mtime))
         except OSError:
-            responseText="unknown"
+            response['status'] = "File not found"
         else:
-            hours=int(delta.seconds/3600)
-            minutes=int((delta.seconds%3600)/60)
-            seconds=int(delta.seconds%60)
-            responseText="{0} hours,{1} minutes, {2} seconds ago".format(hours, minutes, seconds)
-        self.write(responseText)
+            response['status'] = "Success"
+            response['hours'] = int(delta.seconds/3600)
+            response['minutes'] = int((delta.seconds%3600)/60)
+            response['seconds'] = int(delta.seconds%60)
+            
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(response))
 
 
 
