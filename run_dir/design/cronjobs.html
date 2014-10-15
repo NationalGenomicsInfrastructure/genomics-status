@@ -17,9 +17,7 @@ Description: Diagnostic page showing all cron jobs on all servers
 </div>
 
 <script>
-update_cronjob_tables();
-
-function update_cronjob_tables() {
+$(document).ready(function(){
 	var container = $("#content");
 	$.getJSON('/api/v1/production/cronjobs', function(data){
 		$.each(data, function(server, cronjobs){
@@ -60,7 +58,7 @@ function update_cronjob_tables() {
 			$("#content").append(tbl);
 		});
 	});
-}
+});
 </script>
 
 {% end %}
