@@ -18,7 +18,6 @@ Description: Diagnostic page showing all cron jobs on all servers
 
 <script>
 $(document).ready(function(){
-	var container = $("#content");
 	$.getJSON('/api/v1/production/cronjobs', function(data){
 		$.each(data, function(server, cronjobs){
 			// Header with server name and last updated
