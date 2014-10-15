@@ -175,12 +175,21 @@ $(document).ready(function(){
 
 
     // Find out when the update scripts will next run
-    $.get('/api/v1/last_psul', function(data){
-        if(data == 'unknown'){
-            console.log('Last PSUL update check returned "unknown"');
-        } else {
-            var text = 'The script to pull information from the LIMS last ran '+data+'.';
+    $.getJSON('/api/v1/last_psul', function(data){
+        var status = data['st']
+        if(data['status'] == 'Success'){
+            var timestring = '';
+            if(data['hours'] > 0){
+                timestring = data['hours']+' hours';
+            } else if(data['minutes'] > 0){
+                timestring = data['minutes']+' minutes';
+            } else if(data['seconds'] > 0){
+                timestring = data['seconds']+' seconds';
+            }
+            var text = 'The script to pull information from the LIMS last ran '+timestring+' ago.';
             $('#updated-status').html(text);
+        } else {
+            console.log('Last PSUL update check failed. Returned "'+data['status']+'"');
         }
     });
     
