@@ -172,9 +172,10 @@ class LastPSULRunHandler(SafeHandler):
         logfile=self.application.psul_log
         response = {}
         try:
-            delta=datetime.now()-datetime.fromtimestamp(int(os.stat(logfile).st_mtime))
-        except OSError:
-            response['status'] = "File not found"
+            text_timestamp = os.stat(logfile).st_mtime
+            delta = datetime.now() - datetime.fromtimestamp(int(text_timestamp))
+        except (OSError, KeyError, TypeError):
+            response['status'] = "Log File '{}' not found.".format(logfile)
         else:
             response['status'] = "Success"
             response['hours'] = int(delta.seconds/3600)
