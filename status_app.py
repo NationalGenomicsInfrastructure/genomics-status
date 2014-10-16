@@ -69,6 +69,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
+            ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
@@ -202,6 +203,9 @@ class Application(tornado.web.Application):
         # load logins for the genologics sftp
         self.genologics_login=settings['sftp']['login']
         self.genologics_pw=settings['sftp']['password']
+
+        #location of the psul log
+        self.psul_log=settings.get("psul_log")
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
         settings = {"debug": True,
