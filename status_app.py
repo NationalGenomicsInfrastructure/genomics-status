@@ -203,6 +203,9 @@ class Application(tornado.web.Application):
         # load logins for the genologics sftp
         self.genologics_login=settings['sftp']['login']
         self.genologics_pw=settings['sftp']['password']
+
+        #location of the psul log
+        self.psul_log=settings.get("psul_log")
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
         settings = {"debug": True,

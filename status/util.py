@@ -169,17 +169,19 @@ class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
 class LastPSULRunHandler(SafeHandler):
     """Gives the date of the last PSUL run, assumin the logfile is where we expect it"""
     def get(self):
-        logfile="/home/hiseq.bioinfo/lims2db_projects.log"
+        logfile=self.application.psul_log
         try:
             delta=datetime.now()-datetime.fromtimestamp(int(os.stat(logfile).st_mtime))
-        except OSError:
-            responseText="unknown"
+        except OSError, KeyError:
+            print self.application.psul_log
+            print delta
+            response=json.dumps({})
         else:
             hours=int(delta.seconds/3600)
             minutes=int((delta.seconds%3600)/60)
             seconds=int(delta.seconds%60)
-            responseText="{0} hours,{1} minutes, {2} seconds ago".format(hours, minutes, seconds)
-        self.write(responseText)
+            response=json.dumps({'hours': hours, 'minutes':minutes, 'seconds':seconds})
+        self.write(response)
 
 
 
