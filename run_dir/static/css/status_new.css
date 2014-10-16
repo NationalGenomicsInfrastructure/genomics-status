@@ -19,6 +19,13 @@ div.scrollable {
   margin-left: 10px;
 }
 
+.input-spinner {
+  margin-left:-35px;
+}
+.subtle-spinner {
+  color:#CCCCCC;
+}
+
 #homepage-searchbar {
   text-align:center;
   border-top:1px solid #ccc;
