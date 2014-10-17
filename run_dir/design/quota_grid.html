@@ -14,7 +14,7 @@ TODO: When graphs do show, the plots seem wrong.
 {% block stuff %}
 
 <h2>Historical storage quota used on UPPMAX projects</h2>
-
+<ul class="quota-nav pagination"></ul>
 <div id="plots"></div>
 
 
@@ -22,12 +22,25 @@ TODO: When graphs do show, the plots seem wrong.
 <script src="http://code.highcharts.com/modules/exporting.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
+    // Highlight plots if clicked from the navigation
+    $('body').on('click', '.quota-nav li a', function(){
+       var target = $(this).attr('href');
+       $('.highlighted').removeClass('highlighted');
+       $(target).addClass('highlighted'); 
+    });
+    
     
     // Find the differe UPPMAX Projects
     $.getJSON('/api/v1/uppmax_projects', function(uppmax_quotas) {
         $.each(uppmax_quotas, function(i, up) {
+            
+            if(i % 8 == 0 && i !== 0){
+                $('.quota-nav:last').after('<ul class="quota-nav pagination"></ul>');
+            }
+            $('.quota-nav:last').append('<li><a href="#container_'+up+'">'+up+'</a></li>');
+            
             $("#plots").append('\
-            <div id="container_'+up+'" style="float:left; width: 49%; height:400px;"> \
+            <div id="container_'+up+'" style="float:left; width: 49%; min-height:400px;"> \
                 <h2><a href="/quotas/'+up+'">'+up+'</a></h2> \
                 <p id="loading_spinner_'+up+'"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading plot.. <em>(can take some time)</em></p> \
                 <div id="chart_'+up+'"></div> \
@@ -45,7 +58,11 @@ $(document).ready(function(){
         
                 // Plot the data
                 $('#chart_'+up).highcharts({
-                    chart: { type: 'area'},
+                    chart: {
+                        type: 'area',
+                        zoomType: 'x',
+                        backgroundColor:'rgba(255, 255, 255, 0.1)'
+                    },
                     title: { text: "Storage Usage Over Time: "+up },
                     legend: { enabled: false },
                     xAxis: { 
