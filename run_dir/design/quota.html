@@ -37,7 +37,10 @@ $(document).ready(function(){
         
         // Plot the data
         $('#storage_plot').highcharts({
-            chart: { type: 'area'},
+            chart: {
+                type: 'area',
+                zoomType:'x'
+            },
             title: { text: "Storage Usage Over Time: {{ project }}" },
             legend: { enabled: false },
             xAxis: { 

@@ -26,6 +26,10 @@ div.scrollable {
   color:#CCCCCC;
 }
 
+.highlighted {
+  background-color: #FFFFCC;
+}
+
 #homepage-searchbar {
   text-align:center;
   border-top:1px solid #ccc;
@@ -72,6 +76,10 @@ div.scrollable {
 }
 .tt-hint {
   visibility:hidden;
+}
+
+.quota-nav {
+  margin-bottom:0;
 }
 
 
