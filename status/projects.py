@@ -376,6 +376,11 @@ class ProjectSamplesHandler(SafeHandler):
             summary=summaries[0]
         except IndexError:
            print "No project summary for project {}".format(project) 
+        except ConnectionError:
+            print "Error Accessing the lims"
+            return limsdata
+
+
         else:
             for field,value in summary.udf.items():
                 limsdata['summary'][field]=value
