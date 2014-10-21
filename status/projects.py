@@ -350,6 +350,21 @@ class CaliperImageHandler(SafeHandler):
             print message
             return("Error fetching caliper images")
 
+
+class ProjectSamplesHandler(SafeHandler):
+        """ Serves a page which lists the samples of a given project, with some
+        brief information for each sample.
+        """
+        def get(self, project):
+            t = self.application.loader.load("project_samples.html")
+            self.write(t.generate(project=project,
+                                      user=self.get_current_user_name(),
+                                      columns = self.application.genstat_defaults.get('pv_columns'),
+                                      columns_sample = self.application.genstat_defaults.get('sample_columns'),
+                                      prettify = prettify_css_names,
+                                      limsdata=self.getBasicLimsData(project)))
+
+
 class ProjectsHandler(SafeHandler):
     """ Serves a page with all projects listed, along with some brief info.
     """
