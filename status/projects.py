@@ -361,8 +361,8 @@ class ProjectSamplesHandler(SafeHandler):
                               user=self.get_current_user_name(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
                               columns_sample = self.application.genstat_defaults.get('sample_columns'),
-                              prettify = prettify_css_names,
-                              limsdata=self.getBasicLimsData(project)))
+                              prettify = prettify_css_names
+                              ))
 
     def getBasicLimsData(self, project):
         limsdata={}
