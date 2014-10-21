@@ -362,7 +362,7 @@ class ProjectSamplesHandler(SafeHandler):
                                       columns = self.application.genstat_defaults.get('pv_columns'),
                                       columns_sample = self.application.genstat_defaults.get('sample_columns'),
                                       prettify = prettify_css_names,
-                                      limsdata=self.getBasicLimsData(project)))
+                                      ))
 
 
 class ProjectsHandler(SafeHandler):
