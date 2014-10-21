@@ -173,8 +173,7 @@ class LastPSULRunHandler(SafeHandler):
         try:
             delta=datetime.now()-datetime.fromtimestamp(int(os.stat(logfile).st_mtime))
         except OSError, KeyError:
-            print self.application.psul_log
-            print delta
+            print "Error trying to find {}".format(self.application.psul_log)
             response=json.dumps({})
         else:
             hours=int(delta.seconds/3600)
