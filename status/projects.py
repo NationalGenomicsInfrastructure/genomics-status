@@ -559,7 +559,7 @@ class UppmaxProjectsDataHandler(SafeHandler):
         for row in view:
             project_list.append(row.key)
 
-        return list(reversed(project_list))
+        return sorted(project_list , reverse=True)
 
 class ProjectQCDataHandler(SafeHandler):
     """Serves filenames in qc_reports"""
