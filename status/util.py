@@ -186,7 +186,6 @@ class LastPSULRunHandler(SafeHandler):
         self.write(json.dumps(response))
 
 
-
 ########################
 # Other useful classes #
 ########################
