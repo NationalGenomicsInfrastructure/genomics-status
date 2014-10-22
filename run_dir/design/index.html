@@ -164,10 +164,16 @@ $(document).ready(function(){
         name: 'project-search',
         displayKey: 'name',
         source: projectSearch.ttAdapter(),
+        templates: {
+            empty: '<div class="empty-message">No projects found</div>'
+        }
     }, {
         name: 'flowcell-search',
         displayKey: 'name',
         source: flowcellSearch.ttAdapter(),
+        templates: {
+            empty: '<div class="empty-message">No flow cells found</div>'
+        }
     }).bind('typeahead:selected', function(obj, datum, name) {      
         var url = datum.url;
         window.location.href = url;
