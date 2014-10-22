@@ -377,71 +377,17 @@ class CaliperImageHandler(SafeHandler):
 
 
 class ProjectSamplesHandler(SafeHandler):
-    """ Serves a page which lists the samples of a given project, with some
-    brief information for each sample.
-    """
-    def get(self, project):
-        t = self.application.loader.load("project_samples.html")
-        self.write(t.generate(project=project,
-                              user=self.get_current_user_name(),
-                              columns = self.application.genstat_defaults.get('pv_columns'),
-                              columns_sample = self.application.genstat_defaults.get('sample_columns'),
-                              prettify = prettify_css_names,
-                              limsdata=self.getBasicLimsData(project)))
-
-    def getBasicLimsData(self, project):
-        limsdata={}
-        limsdata['summary']={}
-        p=Project(lims, id=project) 
-        limsdata['contact']=p.researcher.email
-        for field, value in p.udf.items():
-            limsdata[field]=value
-        try:
-            summaries=lims.get_processes(type="Project Summary 1.3", projectname=p.name)
-            summary=summaries[0]
-        except IndexError:
-           print "No project summary for project {}".format(project) 
-        else:
-            for field,value in summary.udf.items():
-                limsdata['summary'][field]=value
-
-        limsdata['samples_nb']=0
-        limsdata['samples_inprogress']=0
-        limsdata['samples_aborted']=0
-        limsdata['samples_finished']=0
-        limsdata['pools']=set()
-        limsdata['initqc_p']=0
-        limsdata['initqc_f']=0
-        limsdata['libqc_p']=0
-        limsdata['libqc_f']=0
-        for sample in lims.get_samples(projectlimsid=project):
-            limsdata['samples_nb']+=1
-            seqqcflag=''
-            try:
-                if sample.udf['Status (manual)']=='In Progress':
-                    limsdata['samples_inprogress']+=1
-                elif sample.udf['Status (manual)']=='Aborted':
-                    limsdata['samples_aborted']+=1
-                elif sample.udf['Status (manual)']=='Finished':
-                    limsdata['samples_finished']+=1
-                if 'Pooling' in sample.udf:
-                    limsdata['pools'].add(sample.udf['Pooling'])
-                if 'Passed Initial QC' in sample.udf:
-                    if sample.udf['Passed Initial QC']=="True":
-                        limsdata['initqc_p']+=1
-                    elif sample.udf['Passed Initial QC']=="False":
-                        limsdata['initqc_f']+=1
-                if 'Passed Library QC' in sample.udf:
-                    if sample.udf['Passed Library QC']=="True":
-                        limsdata['libqc_p']+=1
-                    elif sample.udf['Passed Library QC']=="False":
-                        limsdata['libqc_f']+=1
-
-            except KeyError:
-                print "Failed to load lims information for the current sample {}".format(sample.name)
-
-        return limsdata
-
+        """ Serves a page which lists the samples of a given project, with some
+        brief information for each sample.
+        """
+        def get(self, project):
+            t = self.application.loader.load("project_samples.html")
+            self.write(t.generate(project=project,
+                                      user=self.get_current_user_name(),
+                                      columns = self.application.genstat_defaults.get('pv_columns'),
+                                      columns_sample = self.application.genstat_defaults.get('sample_columns'),
+                                      prettify = prettify_css_names
+                                      ))
 
 
 class ProjectsHandler(SafeHandler):
