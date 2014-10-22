@@ -74,7 +74,7 @@ class FlowcellSearchHandler(SafeHandler):
         if len(search_string) == 0:
             return ''
         flowcells = []
-        fc_view = self.application.flowcells_db.view("info/summary2", descending=True)
+        fc_view = self.application.flowcells_db.view("info/id")
         for row in fc_view:
             try:
                 if search_string.lower() in row.key.lower():
