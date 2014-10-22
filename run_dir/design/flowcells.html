@@ -44,9 +44,9 @@ $( document ).ready(function() {
     // Populate the page
     $.getJSON("/api/v1/flowcells", function(data) {
         var tbl_bdy = "";
-        var num_rows = data.length;
+        var num_rows = 0;
         $.each(data, function(flowcell, info) {
-        
+            num_rows++;
             var system="-";
             if (info['type']){
                 system=info['type'].split(" ")[0];
@@ -60,28 +60,30 @@ $( document ).ready(function() {
                 chem=info['kitver'].substr(info['kitver'].length-2);
             }
 
-            tbl_bdy += '<tr> \
-                <td class="run_id"><a href="/flowcells/' + flowcell + '">' + info["run id"] + '</a></td> \ 
-                <td class="start_date">20' + info['startdate'].substr(0,2) + '-' + info['startdate'].substr(2,2) + '-' + info['startdate'].substr(4) + '</td> \ 
-                <td class="system">' + system+ '</td> \ 
-                <td class="mode">' + (info['mode'] ? info['mode'] : '-') + '</td> \ 
-                <td class="chemistry" class="text-center">' + chem + '</td> \ 
-                <td class="recipe">' + (info['recipe'] ? info['recipe'] : '-') + '</td> \ 
-                <td class="software_version">' + (info['appver'] ? info['appver'] : '-') + '</td> \ 
-                <td class="yield" class="text-right">' + (info['yield'] ? info['yield'] : '-') + '</td> \ 
-                <td class="flowcell">' + info['flowcell'] + '</td> \ 
-                <td class="pos" class="text-center">' + info['pos'] + '</td> \ 
-                <td class="instrument">' + info['instrument'] + '</td> \
-            </tr>';
+            tbl_bdy += ['<tr>',
+                '<td class="run_id"><a href="/flowcells/' + flowcell + '">' + info["run id"] + '</a></td>',
+                '<td class="start_date">20' + info['startdate'].substr(0,2) + '-' + info['startdate'].substr(2,2) + '-' + info['startdate'].substr(4) + '</td>',
+                '<td class="system">' + system+ '</td>',
+                '<td class="mode">' + (info['mode'] ? info['mode'] : '-') + '</td>',
+                '<td class="chemistry" class="text-center">' + chem + '</td>',
+                '<td class="recipe">' + (info['recipe'] ? info['recipe'] : '-') + '</td>',
+                '<td class="software_version">' + (info['appver'] ? info['appver'] : '-') + '</td>',
+                '<td class="yield" class="text-right">' + (info['yield'] ? info['yield'] : '-') + '</td>',
+                '<td class="flowcell">' + info['flowcell'] + '</td>',
+                '<td class="pos" class="text-center">' + info['pos'] + '</td>',
+                '<td class="instrument">' + info['instrument'] + '</td>',
+            '</tr>'].join('\n');
         })
 
         $("#fc_table tbody").html(tbl_bdy);
-        init_listjs();
+        
+        init_listjs(num_rows);
     });
 });
 
 // Initialize sorting and searching javascript plugin
 function init_listjs (num_rows) {
+    alert(num_rows);
     var options = {
         valueNames: ['run_id', 'start_date', 'system', 'mode', 'chemistry', 'recipe', 'software_version', 'yield', 'flowcell', 'pos', 'instrument'],
         page: num_rows  // Default is to show only 200 items at a time.
