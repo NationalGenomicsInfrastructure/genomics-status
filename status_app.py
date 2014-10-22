@@ -276,10 +276,6 @@ def main(args):
 
     http_server.listen(server_settings.get("port", 8888))
     
-    # Print a message saying where the server will be running
-    # Spoil sports :P
-    # print("Launching server at http://localhost:{}/".format(server_settings.get("port", 8888)))
-    
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
 
