@@ -192,6 +192,20 @@ class ProjectsBaseDataHandler(SafeHandler):
             for column_category, column_dict in columns.iteritems():
                 field_items = field_items.difference(set(column_dict.values()))
         return field_items
+    
+    def search_project_names(self, search_string=''):
+        if len(search_string) == 0:
+            return ''
+        projects = []
+        summary_view = self.application.projects_db.view("project/summary", descending=True)
+        for row in summary_view:
+            if search_string.lower() in row.value['project_name'].lower() or search_string.lower() in row.key[1]:
+                project = {
+                    "url": '/project/'+row.key[1],
+                    "name": row.value['project_name']
+                }
+                projects.append(project);
+        return projects
 
 
 def prettify_css_names(s):
@@ -219,6 +233,17 @@ class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
         project_list = self.get_argument("project_list", "all")
         field_items = self.list_project_fields(undefined=undefined, project_list=project_list)
         self.write(json.dumps(list(field_items)))
+
+
+class ProjectsSearchHandler(ProjectsBaseDataHandler):
+    """ Searches for projects matching the supplied search string
+
+    Loaded through /api/v1/project_search/([^/]*)$
+    """
+    def get(self, search_string):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.search_project_names(search_string)))
+        
 
 class ProjectDataHandler(ProjectsBaseDataHandler):
     """ Serves brief information of a given project.
@@ -534,7 +559,7 @@ class UppmaxProjectsDataHandler(SafeHandler):
         for row in view:
             project_list.append(row.key)
 
-        return project_list
+        return sorted(project_list , reverse=True)
 
 class ProjectQCDataHandler(SafeHandler):
     """Serves filenames in qc_reports"""

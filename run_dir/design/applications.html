@@ -1,6 +1,12 @@
 {% extends "base_new.html" %}
 
-<!-- Example row of columns -->
+<!-- 
+Template file: applications.html
+URL: /applications
+Title: Application Statistics
+Description: Displays pie charts with statistics for numbers of samples + projects in each application type
+-->
+
 {% block stuff %}
 
 <h1>Application Statistics <small id="dates"></small></h1>
@@ -55,9 +61,9 @@
   </div>
 
   <script src="/static/js/jquery-ui.min.js"></script>
+  <script src="/static/js/jQDateRangeSlider-min.js"></script>
   <script src="/static/nvd3/lib/d3.v2.js"></script>
   <script src="/static/nvd3/nv.d3.js"></script>
-  <script src="/static/js/jQDateRangeSlider-min.js"></script>
   <script type="text/javascript">
   var start = new Date(2012,0,1);
   var stop = new Date();
