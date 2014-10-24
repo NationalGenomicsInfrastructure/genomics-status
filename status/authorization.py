@@ -19,15 +19,19 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                 self.set_secure_cookie('user', user.display_name)
                 #It will have at least one email (otherwise she couldn't log in)
                 self.set_secure_cookie('email', user.emails[0])
-                url = '/'
+                url=self.get_secure_cookie("login_redirect")
+                self.clear_cookie("login_redirect")
+                if url is None:
+                    url = '/'
             else:
                 url = "/unauthorized?email={0}&contact={1}".format(user.emails[0],
                         self.application.settings['contact_person'])
             self.redirect(url)
 
         else:
+            self.set_secure_cookie('login_redirect', self.get_argument("next", '/'), 1)
             self.authorize_redirect(
-                    redirect_uri=self.application.settings['redirect_uri'],
+                        redirect_uri=self.application.settings['redirect_uri'],
                         client_id=self.application.oauth_key,
                         scope=['profile', 'email'],
                         response_type='code',
