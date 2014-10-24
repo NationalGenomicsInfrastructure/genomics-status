@@ -57,6 +57,7 @@ class Application(tornado.web.Application):
                 FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
+            ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
             ("/api/v1/instrument_cluster_density.png",
@@ -74,8 +75,7 @@ class Application(tornado.web.Application):
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
             ("/api/v1/plot/reads_per_lane.png", ReadsPerLanePlotHandler),
-            ("/api/v1/plot/barcodes_vs_expected.png",
-                BarcodeVsExpectedPlotHandler),
+            ("/api/v1/plot/barcodes_vs_expected([^/]*)$", BarcodeVsExpectedPlotHandler),
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
@@ -87,6 +87,7 @@ class Application(tornado.web.Application):
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
+            ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/projectqc/([^/]*)$", ProjectQCDataHandler),
@@ -204,8 +205,9 @@ class Application(tornado.web.Application):
         self.genologics_login=settings['sftp']['login']
         self.genologics_pw=settings['sftp']['password']
 
-        #location of the psul log
+        # Location of the psul log
         self.psul_log=settings.get("psul_log")
+        
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
         settings = {"debug": True,
@@ -223,6 +225,8 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/applications.html")
         tornado.autoreload.watch("design/barcodes.html")
         tornado.autoreload.watch("design/base.html")
+        tornado.autoreload.watch("design/base_new.html")
+        tornado.autoreload.watch("design/cronjobs.html")
         tornado.autoreload.watch("design/expected.html")
         tornado.autoreload.watch("design/flowcell_samples.html")
         tornado.autoreload.watch("design/flowcells.html")
@@ -247,7 +251,7 @@ class Application(tornado.web.Application):
 
 def main(args):
     """ Initialte server and start IOLoop.
-    """
+    """    
     with open("settings.yaml") as settings_file:
         server_settings = yaml.load(settings_file)
 
@@ -271,7 +275,7 @@ def main(args):
                                                 ssl_options = ssl_options)
 
     http_server.listen(server_settings.get("port", 8888))
-
+    
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
 

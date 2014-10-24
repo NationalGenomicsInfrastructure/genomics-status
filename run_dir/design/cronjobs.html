@@ -1,5 +1,12 @@
 {% extends "base_new.html" %}
 
+<!-- 
+Template file: cronjobs.html
+URL: /production/cronjobs
+Title: Production cronjobs
+Description: Diagnostic page showing all cron jobs on all servers
+-->
+
 {% block stuff %}
 
 <div class="container-fluid" id="content">
@@ -10,10 +17,7 @@
 </div>
 
 <script>
-update_cronjob_tables();
-
-function update_cronjob_tables() {
-	var container = $("#content");
+$(document).ready(function(){
 	$.getJSON('/api/v1/production/cronjobs', function(data){
 		$.each(data, function(server, cronjobs){
 			// Header with server name and last updated
@@ -45,7 +49,7 @@ function update_cronjob_tables() {
 					if (!cronjob_data['Enabled']) {
 						tbl_row += ' class="bg-danger"';
 					}
-					tbl_row += '>'+cronjob_data['Command']+'</pre></td>';
+					tbl_row += '><code>'+cronjob_data['Command']+'</code></pre></td>';
 					tbl_row += '</tr>';
 					$(tbl).find('tbody').append(tbl_row);
 				});
@@ -53,7 +57,7 @@ function update_cronjob_tables() {
 			$("#content").append(tbl);
 		});
 	});
-}
+});
 </script>
 
 {% end %}

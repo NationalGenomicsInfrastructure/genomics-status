@@ -10,6 +10,9 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from status.util import dthandler, SafeHandler
 
+#TODO - Have date slider to select range
+#TODO - Ask if anyone uses it
+
 class BarcodeVsExpectedDataHandler(SafeHandler):
     """ Serves series with number of matched reads to a barcode compared
     to the expected number of reads matched to a barcode.
@@ -64,20 +67,39 @@ class BarcodeVsExpectedPlotHandler(BarcodeVsExpectedDataHandler):
     """ Serves a boxplot of expected yields vs matched yields for top
     present barcodes.
 
-    Loaded through /api/v1/plot/barcodes_vs_expected.png
+    Loaded through /api/v1/plot/barcodes_vs_expected([^/]*)$ url
     """
-    def get(self):
+    def get(self, graph_type):
         processed_relation = self.yield_difference()
+        
+        # Filter data
+        plot_data = []
+        plot_labels = []
+        for l in processed_relation:
+            if graph_type == "_single.png" and "-" not in l[0]:
+                plot_data.append(l[1])
+                plot_labels.append(l[0])
+            elif graph_type == "_double.png" and "-" in l[0]:
+                plot_data.append(l[1])
+                plot_labels.append(l[0])
+            elif graph_type == ".png":
+                plot_data.append(l[1])
+                plot_labels.append(l[0])
 
-        fig = Figure(figsize=[12, 6])
-        ax = fig.add_axes([0.1, 0.2, 0.8, 0.7])
+        if graph_type == "_single.png":
+            fig = Figure(figsize=[12, 10])
+        elif graph_type == "_double.png":
+            fig = Figure(figsize=[12, 40])
+        else:
+            fig = Figure(figsize=[12, 50])
+        ax = fig.add_axes([0.2, 0.1, 0.8, 0.9])
 
-        ax.boxplot([l[1] for l in processed_relation], 0, '', 0)
+        ax.boxplot(plot_data, 0, '', 0)
 
-        ax.set_xlabel("log((matched yield) / (expected yield))")
+        ax.set_xlabel("log(matched yield / expected yield)")
         ax.set_ylabel("Barcode")
 
-        ax.set_yticklabels([l[0] for l in processed_relation], family='monospace')
+        ax.set_yticklabels(plot_labels, family='monospace')
 
         FigureCanvasAgg(fig)
 

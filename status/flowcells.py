@@ -61,6 +61,31 @@ class FlowcellsInfoDataHandler(SafeHandler):
 
         return flowcell_info
 
+class FlowcellSearchHandler(SafeHandler):
+    """ Searches Flowcells for text string
+    
+    Loaded through /api/v1/flowcell_search/([^/]*)$
+    """
+    def get(self, search_string):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.search_flowcell_names(search_string)))
+
+    def search_flowcell_names(self, search_string=''):
+        if len(search_string) == 0:
+            return ''
+        flowcells = []
+        fc_view = self.application.flowcells_db.view("info/id")
+        for row in fc_view:
+            try:
+                if search_string.lower() in row.key.lower():
+                    fc = {
+                        "url": '/flowcells/'+row.key,
+                        "name": row.key
+                    }
+                    flowcells.append(fc);
+            except AttributeError:
+                pass
+        return flowcells
 
 
 class OldFlowcellsInfoDataHandler(SafeHandler):

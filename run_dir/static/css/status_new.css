@@ -3,6 +3,140 @@ div.scrollable {
   overflow: auto;
 }
 
+.q30_filters {
+  width:200px;
+  float:left;
+  margin-left:15px;
+}
+
+.no-margin {
+  margin:0;
+}
+
+.inline-textbox {
+  display:inline-block;
+  width:200px;
+  margin-left: 10px;
+}
+
+.input-spinner {
+  margin-left:-35px;
+}
+.subtle-spinner {
+  color:#CCCCCC;
+}
+
+.highlighted {
+  background-color: #FFFFCC;
+}
+
+#homepage-searchbar {
+  text-align:center;
+  border-top:1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding:10px 0;
+}
+#homepage-searchbar .control-label {
+  font-size:1.4em;
+  margin-right: 15px;
+  padding-top:0;
+}
+#homepage-searchbar .twitter-typeahead {
+  width: 422px;
+}
+
+.tt-dropdown-menu {
+  width: 422px;
+  margin-top: 12px;
+  padding: 8px 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  -webkit-border-radius: 8px;
+     -moz-border-radius: 8px;
+          border-radius: 8px;
+  -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+     -moz-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+          box-shadow: 0 5px 10px rgba(0,0,0,.2);
+}
+.tt-suggestion {
+  padding: 3px 20px;
+  font-size: 18px;
+  line-height: 24px;
+  cursor:pointer;
+  text-align:left;
+}
+.tt-suggestion.tt-cursor {
+  color: #fff;
+  background-color: #0097cf;
+
+}
+.tt-suggestion p {
+  margin: 0;
+}
+.tt-hint {
+  visibility:hidden;
+}
+
+.quota-nav {
+  margin-bottom:0;
+}
+
+
+
+th.sort {
+  cursor:pointer;
+}
+th.sort:after {
+  display:inline-block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  content:"";
+  position: relative;
+  top:-10px;
+  right:-5px;
+}
+th.sort.asc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #000000;
+  content:"";
+  position: relative;
+  top:4px;
+  right:-5px;
+}
+th.sort.desc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid #000000;
+  content:"";
+  position: relative;
+  top:-4px;
+  right:-5px;
+}
+
+.glyphicon-refresh-animate, .glyphicon-spin {
+  margin-right:10px;
+  -animation: spin .7s infinite linear;
+  -webkit-animation: spin2 .7s infinite linear;
+}
+@keyframes spin {
+  from { transform: scale(1) rotate(0deg);}
+  to { transform: scale(1) rotate(360deg);}
+}
+@-webkit-keyframes spin2 {
+  from { -webkit-transform: rotate(0deg);}
+  to { -webkit-transform: rotate(360deg);}
+}
+
+
 .justified {
   text-align: justify;
   text-justify: inter-word;
