@@ -430,13 +430,8 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             info[column_id] = round_floats(info[column_id], 2);
-            // Scilife Sample Name is a link
-            if (column_id == "scilife_name") {
-              tbl_row += '<td><a class="' + column_id + '" href="/samples/' + 
-              info[column_id] + '">' + info[column_id] + '</a></td>';
-            }
             // Sample run metrics is an array of links
-            else if (column_id == 'sample_run_metrics') {
+            if (column_id == 'sample_run_metrics') {
               tbl_row += '<td class="' + column_id + '">';
               for (var i=0; i<info[column_id].length; i++) {
                 tbl_row += '<a href="/qc/' + info[column_id][i] + '">' + 
