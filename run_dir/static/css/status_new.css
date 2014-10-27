@@ -82,6 +82,12 @@ div.scrollable {
   margin-bottom:0;
 }
 
+/* Suggestions Box */
+#suggestions_table {
+  max-height:800px;
+  overflow-y:scroll;
+}
+
 
 
 th.sort {
