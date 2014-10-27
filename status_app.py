@@ -244,6 +244,7 @@ class Application(tornado.web.Application):
         tornado.autoreload.watch("design/sample_runs.html")
         tornado.autoreload.watch("design/samples.html")
         tornado.autoreload.watch("design/sequencing_stats.html")
+        tornado.autoreload.watch("design/suggestion_box.html")
         tornado.autoreload.watch("design/login.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
