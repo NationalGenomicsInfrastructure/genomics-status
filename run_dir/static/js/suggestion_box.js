@@ -1,21 +1,49 @@
+/*
+File: suggestion_box.js
+URL: /static/js/suggestion_box.js
+Powers /suggestion_box - template is run_dir/design/suggestion_box.html
+*/
+
 function fill_suggestions_table() {
   $.getJSON('/api/v1/suggestions', function(data) {
     $("#suggestionsTableBody").empty();
+    var activeCards = [];
+    var archivedCards = [];
+    
     $.each(data, function(date, card_info) {
-      var card_date = "";
+      // Get the information from the API call
       var card_name = card_info[0];
-      var card_url = card_info[1];
+      var card_link = '<a target="_blank" href="' + card_info[1] + '">';
       var archived = card_info[2];
+      var card_date = date.split('T')[0] + ' at ' + date.split('T')[1].split('.')[0];
+      
+      // Swap out the brackets for a bootstrap label
+      var label_class = 'default';
+      if(card_name.indexOf('Information Management') > 0){ label_class = 'info'; }
+      if(card_name.indexOf('Project Handling') > 0){ label_class = 'success'; }
+      if(card_name.indexOf('Policy') > 0){ label_class = 'danger'; }
+      if(card_name.indexOf('Bioinfo') > 0){ label_class = 'warning'; }
+      if(card_name.indexOf('Meetings') > 0){ label_class = 'primary'; }
+      card_name = card_name.replace(/\((.+)\)/g, '<span class="label label-'+label_class+'">$1</span>');
+      
+      // Push the row HTML to the applicable arrays
       if(archived) {
-        card_date = "<tr class='success'>";
+          archivedCards.push('<tr class="success">'+
+                        '<td>'+card_link+'<s>'+card_name+'</s></a></td>'+
+                        '<td>'+card_link+'<s>'+card_date+'</s></a></td>'+
+                     '</tr>');
       }
       else {
-        card_date = "<tr>";
+          activeCards.push('<tr>'+
+                          '<td>'+card_link+card_name+'</a></td>'+
+                          '<td>'+card_link+card_date+'</a></td>'+
+                       '</tr>');
       }
-      card_date +=  "<td><a target='_blank' href='" + card_url + "'>" + card_name + "</a></td>";
-      var card_link = "<td>" + date.split('T')[0] + ' at ' + date.split('T')[1].split('.')[0] + "</td></tr>";
-      $('#suggestionsTableBody').append(card_date + card_link);
     });
+    
+    // append to the DOM
+    $('#suggestionsTableBody').append(activeCards.join('\n'));
+    $('#suggestionsTableBody').append(archivedCards.join('\n'));
   });
 };
 
