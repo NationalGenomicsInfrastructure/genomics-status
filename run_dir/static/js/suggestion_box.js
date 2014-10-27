@@ -1,3 +1,9 @@
+/*
+File: suggestion_box.js
+URL: /static/js/suggestion_box.js
+Powers /suggestion_box - template is run_dir/design/suggestion_box.html
+*/
+
 function fill_suggestions_table() {
   $.getJSON('/api/v1/suggestions', function(data) {
     $("#suggestionsTableBody").empty();
