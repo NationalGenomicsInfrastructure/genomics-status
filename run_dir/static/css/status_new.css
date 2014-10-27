@@ -88,6 +88,15 @@ div.scrollable {
   overflow-y:scroll;
 }
 
+.depreciated_page {
+  background-color:#f5f5f5;
+}
+#depreciated_header a {
+  color:#333;
+  font-weight:bold;
+  cursor:default;
+}
+
 
 
 th.sort {
