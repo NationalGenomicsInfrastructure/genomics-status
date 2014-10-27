@@ -11,10 +11,22 @@ function fill_suggestions_table() {
     var archivedCards = [];
     
     $.each(data, function(date, card_info) {
+      // Get the information from the API call
       var card_name = card_info[0];
       var card_link = '<a target="_blank" href="' + card_info[1] + '">';
       var archived = card_info[2];
       var card_date = date.split('T')[0] + ' at ' + date.split('T')[1].split('.')[0];
+      
+      // Swap out the brackets for a bootstrap label
+      var label_class = 'default';
+      if(card_name.indexOf('Information Management') > 0){ label_class = 'info'; }
+      if(card_name.indexOf('Project Handling') > 0){ label_class = 'success'; }
+      if(card_name.indexOf('Policy') > 0){ label_class = 'danger'; }
+      if(card_name.indexOf('Bioinfo') > 0){ label_class = 'warning'; }
+      if(card_name.indexOf('Meetings') > 0){ label_class = 'primary'; }
+      card_name = card_name.replace(/\((.+)\)/g, '<span class="label label-'+label_class+'">$1</span>');
+      
+      // Push the row HTML to the applicable arrays
       if(archived) {
           archivedCards.push('<tr class="success">'+
                         '<td>'+card_link+'<s>'+card_name+'</s></a></td>'+
@@ -29,6 +41,7 @@ function fill_suggestions_table() {
       }
     });
     
+    // append to the DOM
     $('#suggestionsTableBody').append(activeCards.join('\n'));
     $('#suggestionsTableBody').append(archivedCards.join('\n'));
   });
