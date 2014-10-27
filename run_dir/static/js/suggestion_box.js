@@ -7,24 +7,30 @@ Powers /suggestion_box - template is run_dir/design/suggestion_box.html
 function fill_suggestions_table() {
   $.getJSON('/api/v1/suggestions', function(data) {
     $("#suggestionsTableBody").empty();
+    var activeCards = [];
+    var archivedCards = [];
+    
     $.each(data, function(date, card_info) {
       var card_name = card_info[0];
       var card_link = '<a target="_blank" href="' + card_info[1] + '">';
       var archived = card_info[2];
       var card_date = date.split('T')[0] + ' at ' + date.split('T')[1].split('.')[0];
       if(archived) {
-          $('#suggestionsTableBody').append('<tr class="success">'+
+          archivedCards.push('<tr class="success">'+
                         '<td>'+card_link+'<s>'+card_name+'</s></a></td>'+
                         '<td>'+card_link+'<s>'+card_date+'</s></a></td>'+
                      '</tr>');
       }
       else {
-          $('#suggestionsTableBody').append('<tr>'+
+          activeCards.push('<tr>'+
                           '<td>'+card_link+card_name+'</a></td>'+
                           '<td>'+card_link+card_date+'</a></td>'+
                        '</tr>');
       }
     });
+    
+    $('#suggestionsTableBody').append(activeCards.join('\n'));
+    $('#suggestionsTableBody').append(archivedCards.join('\n'));
   });
 };
 
