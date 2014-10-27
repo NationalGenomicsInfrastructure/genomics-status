@@ -1,15 +1,40 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 
-<!-- Example row of columns -->
+<!--
+## DEPRECIATED ##
+Template file: reads_per_lane.html
+URL: /reads_per_lane
+Title: 
+Description: 
+
+####
+NOTE - DON'T DELETE THIS. Denis needs to convert it into "clusters per lane"
+####
+-->
+
 {% block stuff %}
 <div class="container-fluid">
   <h2>Reads per lane</h2>
+  
+  <div class="row slider-spacing">
+    <div class="col-md-10 col-md-push-1">
+      <div id="date_slider"></div>
+    </div>
+  </div>
+  
+  
   <div id="slider"></div>
+  
   <h3 id="dates"></h3>
+  
   <div id="plot"></div> 
+  
 </div>
 
+<script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/js/jQDateRangeSlider-min.js"></script>
 <script type="text/javascript">
+
 
   $("#slider").slider({
     range: true,

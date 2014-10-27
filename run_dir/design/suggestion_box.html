@@ -1,18 +1,27 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 
-<!-- Example row of columns -->
+<!--
+Template file: suggestion_box.html
+URL: /suggestion_box
+Title: Suggestion Box
+Description: Form for users to submit suggestions to. Goes to Trello.
+Dependent on /static/js/suggestion_box.js
+-->
+
 {% block stuff %}
 
 <div class="container-fluid">
-  <h2>Suggestion Box</h2><br>
+    
+  <h1>Suggestion Box</h1>
+  
   <div class="row">
-    <div class="span6">
-      <legend>Please fill in the following form</legend>
+    <div class="col-md-6">
+      <legend>Please describe your suggestion below..</legend>
       <form class="form-horizontal" role="form" id="suggestionForm" method="post" action="/suggestion_box">
-        <div class="control-group">
-          <label class="control-label" for="area">Area of Work</label>
-          <div class="controls">
-            <select id="area" name="area" required>
+        <div class="form-group">
+          <label class="col-sm-3 control-label" for="area">Area of Work</label>
+          <div class="col-sm-9">
+            <select class="form-control" id="area" name="area" required>
               <option value="">[ select area ]</option>
               <option>Information Management</option>
               <option>Policy</option>
@@ -25,10 +34,10 @@
             <span class="help-block">What area of work is this (mostly) regarding?</span>
           </div>
         </div>
-        <div class="control-group">
-          <label class="control-label" for="system">System</label>
-          <div class="controls">
-            <select id="system" name="system" required>
+        <div class="form-group">
+          <label class="col-sm-3 control-label" for="system">System</label>
+          <div class="col-sm-9">
+            <select class="form-control" id="system" name="system" required>
               <option value="">[ select system ]</option>
               <option>Genomics Status</option>
               <option>LIMS</option>
@@ -44,10 +53,10 @@
             <span class="help-block">What system is this (mostly) regarding?</span>
           </div>
         </div>
-        <div class="control-group">
-          <label class="control-label" for="importance">Importance</label>
-          <div class="controls">
-            <select id="importance" name="importance" required>
+        <div class="form-group">
+          <label class="col-sm-3 control-label" for="importance">Importance</label>
+          <div class="col-sm-9">
+            <select class="form-control" id="importance" name="importance" required>
               <option value="1">1 - Low Priority</option>
               <option value="2">2 - Medium Priority</option>
               <option value="3">3 - Important</option>
@@ -57,31 +66,31 @@
             <span class="help-block">Grade how serious the issue is</span>
           </div>
         </div>
-        <div class="control-group">
-          <label class="control-label" for="title">Title</label>
-          <div class="controls">
-            <input type="text" id="title" name="title" placeholder="Issue / Observation" required>
+        <div class="form-group">
+          <label class="col-sm-3 control-label" for="title">Title</label>
+          <div class="col-sm-9">
+            <input class="form-control" type="text" id="title" name="title" placeholder="Issue / Observation" required>
             <span class="help-block">Summarize the issue in a few words</span>
           </div>
         </div>
-        <div class="control-group">
-          <label class="control-label" for="description">Description</label>
-          <div class="controls">
-            <textarea class="span12" rows="6" id="description" name="description" required></textarea>
+        <div class="form-group">
+          <label class="col-sm-3 control-label" for="description">Description</label>
+          <div class="col-sm-9">
+            <textarea class="form-control" class="span12" rows="6" id="description" name="description" required></textarea>
             <span class="help-block">Describe the issue in more detail</span>
           </div>
         </div>
-        <div class="control-group">
-          <label class="control-label" for="suggestion">Suggestion</label>
-          <div class="controls">
-            <textarea class="span12" rows="6" id="suggestion" name="suggestion"></textarea>
+        <div class="form-group">
+          <label class="col-sm-3 control-label" for="suggestion">Suggestion</label>
+          <div class="col-sm-9">
+            <textarea class="form-control" class="span12" rows="6" id="suggestion" name="suggestion"></textarea>
             <span class="help-block">Provide a suggestion for how the issue can be solved <em>(optional)</em></span>
           </div>
         </div>
-        <div class="control-group">
-          <label class="control-label" for="difficulty">Difficulty</label>
-          <div class="controls">
-            <select id="difficulty" name="difficulty">
+        <div class="form-group">
+          <label class="col-sm-3 control-label" for="difficulty">Difficulty</label>
+          <div class="col-sm-9">
+            <select class="form-control" id="difficulty" name="difficulty">
               <option value="">Do not know</option>
               <option value="1">1 - Easy</option>
               <option value="2">2 - </option>
@@ -92,36 +101,39 @@
             <span class="help-block">Grade how difficult / much effort it will take to fix the issue</span>
           </div>
         </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Save changes</button>
+        <div class="form-actions col-sm-9 col-sm-offset-3">
+          <button type="submit" class="btn btn-primary btn-lg">Submit Suggestions</button>
           <span class="help-block">Your username <strong>{{ user }}</strong> will be recorded when you submit this form.</span>
         </div>
       </form>
     </div>
-    <div class="span6">
+    
+    <div class="col-md-6">
       <legend>List of existing suggestions</legend>
-      <p>
-        Click on a suggestion title to go to it's corresponding Trello card.
-        Archived cards will appear in green.
-      </p>
-      <table class="table table-bordered" id="suggestionsTable">
-        <thead>
-          <tr>
-            <th>Suggestion</th>
-            <th>Creation Date</th>
-          </tr>
-        </thead>
-        <tbody id="suggestionsTableBody">
-        </tbody>
-      </table>
+      <p>Click on a suggestion title to go to it's corresponding Trello card.
+        Archived cards will appear in green.</p>
+      <div id="suggestions_table">
+          <table class="table table-bordered" id="suggestionsTable">
+            <thead>
+              <tr>
+                <th>Suggestion</th>
+                <th>Creation Date</th>
+              </tr>
+            </thead>
+            <tbody id="suggestionsTableBody">
+            </tbody>
+          </table>
+      </div>
     </div>
   </div>
-  <div class="modal hide fade" id="processingModal">
-    <div class="modal-body .text-center" id="modalBody">
-    </div>
-  </div>
+  
 </div>
 
+<div class="modal hide fade" id="processingModal">
+    <div class="modal-body .text-center" id="modalBody"></div>
+</div>
+
+<script src="/static/js/jquery.validate.js"></script>
 <script src="/static/js/suggestion_box.js" id="suggestions_box-js"></script>
 
 {% end %}
