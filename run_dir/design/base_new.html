@@ -52,13 +52,14 @@
                         <li><a href="/reads_vs_qv" title="Reads vs QV">Reads vs QV</a></li>
                         <li><a href="/production/cronjobs" title="Cronjobs list">Cronjobs List</a></li>
                         <li class="divider"></li>
-                        <li><a href="/barcode_vs_expected" title="Barcode vs Expected">Barcode vs Expected</a></li>
-                        <li><a href="/phix_err_rate" title="Phix error rates">Phix error rates</a></li>
-                        <li><a href="/production" title="Production">Production</a></li>
-                        <li><a href="/quotas" title="Quotas">Quotas</a></li>
-                        <li><a href="/reads_per_lane" title="Reads per Lane">Reads per Lane</a></li>
-                        <li><a href="/samples_per_lane" title="Samples per Lane">Samples per Lane</a></li>
-                        <li><a href="/sequencing" title="Sequencing">Sequencing</a></li>
+                        <li class="depreciated_page" id="depreciated_header"><a href="#">Depreciated Pages</a></li>
+                        <li class="depreciated_page"><a href="/barcode_vs_expected" title="Barcode vs Expected">Barcode vs Expected</a></li>
+                        <li class="depreciated_page"><a href="/phix_err_rate" title="Phix error rates">Phix error rates</a></li>
+                        <li class="depreciated_page"><a href="/production" title="Production">Production</a></li>
+                        <li class="depreciated_page"><a href="/quotas" title="Quotas">Quotas</a></li>
+                        <li class="depreciated_page"><a href="/reads_per_lane" title="Reads per Lane">Reads per Lane</a></li>
+                        <li class="depreciated_page"><a href="/samples_per_lane" title="Samples per Lane">Samples per Lane</a></li>
+                        <li class="depreciated_page"><a href="/sequencing" title="Sequencing">Sequencing</a></li>
                     </ul>
                 </li>
                 <li class="dropdown" id="projects">
@@ -103,5 +104,10 @@
     <p><a href="/">Genomics Status</a></p>
     <p>Something broken or have an idea for an improvement? Please <a href="/suggestion_box">let us know</a>.</p>
 </div>
+<script type="text/javascript">
+$('#depreciated_header').click(function(e){
+   e.preventDefault(); 
+});
+</script>
 </body>
 </html>
