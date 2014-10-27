@@ -1,53 +1,69 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 
-<!-- Example row of columns -->
+<!-- 
+Template file: reads_vs_qv.html
+URL: /reads_vs_qv
+Title: Reads vs Quality values
+Description: Shows quality scores over a time period
+-->
+
 {% block stuff %}
 
 <div class="container-fluid">
-  <h2>Reads vs Quality values</h2>
-  <p>
-    Browse quality data over selected time period. 
+  <h1>Reads vs Quality values</h1>
+  <p>Browse quality data over selected time period. 
     The histogram at the top shows the ratio of reads at each quality score and 
     the bottom graph shows the total ratio of reads with at least the score
-    given by the x-axis.
-  </p>
-  <div id="slider"></div><br>
-
-  <h2 id="dates"></h2>
-
-  <div class="grid_chart" id="chart_container">
-    <svg id="quality"></svg>
+    given by the x-axis.</p>
+   
+  <h3 id="dates"></h3>
+    
+  <div class="row slider-spacing" style="margin-bottom:100px;">
+    <div class="col-md-10 col-md-push-1">
+      <div id="slider"></div>
+    </div>
   </div>
+  
+  <p id="loading_text" class="text-center"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading plots..</p>
 
-  <div class="grid_chart" id="chart_container">
-    <svg id="cumulative"></svg>
+  <div id="plots">
+      <div class="row">
+          <div class="grid_chart col-md-10 col-md-push-1" id="chart_container">
+            <svg id="quality"></svg>
+          </div>
+      </div>
+      <div class="row">
+          <div class="grid_chart col-md-10 col-md-push-1" id="chart_container">
+            <svg id="cumulative"></svg>
+          </div>
+      </div>
   </div>
 
 </div>
 
-<script>
+<script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/js/jQDateRangeSlider-min.js"></script>
+<script src="/static/nvd3/lib/d3.v2.js"></script>
+<script src="/static/nvd3/nv.d3.js"></script>
+<script type="text/javascript">
 
-var start = '2012-01-01T00:00:00'
-var stop = '2013-09-01T00:00:00'
 var d_min = new Date(2012, 0, 1);
 var d_max = new Date();
+var d_default = new Date(d_max.getTime() - (1000 * 60 * 60 * 24 * 60))
 
 $("#slider").dateRangeSlider({
-  bounds:
-  {
+  bounds: {
     min: d_min,
     max: d_max
   },
-  defaultValues:
-  {
-    min: d_min,
+  defaultValues: {
+    min: d_default,
     max: d_max
   },
   min: 1,
   max: 12,
   values: [2, 12],
-  step:
-  {
+  step: {
     days: 1
   },
 });
@@ -64,23 +80,19 @@ function add_plot_description() {
     d3.select("#quality")
         .append("text")
         .attr("id","xDescription_quality")
-        .attr("x", xCenter) 
-        .attr("y", yBottom)
-	.attr("text-anchor","middle")
-        .text("Quality Scores")
-      ;
+        .attr("x", xCenter) .attr("y", yBottom)
+	    .attr("text-anchor","middle")
+        .text("Quality Scores");
 
     $("#quality #yDescription_quality").remove()
 
     d3.select("#quality")
         .append("text")
         .attr("id","yDescription_quality")
-        .attr("x", xBorder)
-        .attr("y", yBorder)
+        .attr("x", xBorder).attr("y", yBorder)
         .attr("transform","rotate(-90," + xBorder + "," + yBorder+")")
-	.attr("text-anchor","middle")
-        .text("Reads Ratio")
-      ;
+	    .attr("text-anchor","middle")
+        .text("Reads Ratio");
 
     /* If existing, remove axis descriptions */
     $("#cumulative #xDescription_cumulative").remove()
@@ -88,19 +100,22 @@ function add_plot_description() {
     d3.select("#cumulative")
         .append("text")
         .attr("id","xDescription_cumulative")
-        .attr("x", xCenter) 
-        .attr("y", yBottom)
-	.attr("text-anchor","middle")
-        .text("Quality Scores")
-      ;
+        .attr("x", xCenter).attr("y", yBottom)
+	    .attr("text-anchor","middle")
+        .text("Quality Scores");
 }
 
 function plot_data(start, stop) {
+  $('#plots').hide();
+  $('#loading_text').show();
   start_string = $.datepicker.formatDate('yy-mm-dd', start);
   stop_string = $.datepicker.formatDate('yy-mm-dd',stop);
   $("#dates").text("Date range: " + start_string  + " - " +stop_string)
 
   $.getJSON("/api/v1/reads_vs_quality?start=" + start.toISOString() + "&end=" + stop.toISOString(), function(data) {
+    
+    $('#plots').show();
+    $('#loading_text').hide();
     
     var quality = []
     for (var i = 0; i < data["quality"].length; i++) {
@@ -119,7 +134,7 @@ function plot_data(start, stop) {
           .call(chart)
       
       nv.utils.windowResize(function() {d3.select('#quality').call(chart)})
-
+      
       return chart
     })
 
@@ -135,7 +150,8 @@ function plot_data(start, stop) {
                     .x(function(d) { return d.cumulative })
                     .y(function(d) { return d.y })
                     .color(["#4D91A1"])
-
+                    .forceY([1.01])
+      
       d3.select('#cumulative')
           .datum([{"values": cumulative, "key": "Integrated", area: true}])
           .call(chart);
