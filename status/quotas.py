@@ -51,10 +51,12 @@ class QuotaDataHandler(SafeHandler):
         for row in r_list:
             if row.value[0]:
                 y = row.value[0]
+                limit = row.value[1]
             else:
                 y = 0
             data.append({"x": int(time.mktime(parser.parse(date_getter(row)).timetuple())),
-                         "y": y * gb})
+                         "y": y * gb,
+                         "limit": limit * gb})
 
         d = dict()
         d["data"] = data
