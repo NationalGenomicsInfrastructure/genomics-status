@@ -42,8 +42,6 @@ $(document).ready(function() {
 
   //Show user communication tab. Loading 
   $('#tab_communication').click(function (e) {
-    e.preventDefault();
-    $(this).tab('show');
     load_tickets();
   });
   
@@ -69,7 +67,7 @@ function init_listjs (no_items, columns) {
     page: no_items /* Default is to show only 200 items at a time. */
   };
   var featureList = new List('sample-list', options);
-  featureList.search($('#search_field').val());
+  // featureList.search($('#search_field').val());
 }
 
 ////////////////////////////////////
@@ -232,68 +230,66 @@ $("#link_form").submit(function(e) {
 
 
 function load_tickets() {
-  var tab_communication = document.getElementById('tab_com_content');
-  if (tab_communication.children.length == 0) {
-    fetching_data.showPleaseWait();
-    var a_header = '<p><b>Note:</b> Internal notes are shown in a yellow box </p> \
-                   <div class="accordion" id="tickets_accordion">';
-    var a_group = ' \
-    <div class="accordion-group"> \
-      <div class="accordion-heading"> \
-        <a class="accordion-toggle" data-toggle="collapse" data-parent="#tickets_accordion" href="#c{num_ticket}"> \
-        {thread_name} \
-        </a> \
-      </div> \
-      <div id="c{num_ticket}" class="accordion-body collapse"> \
-        <div class="accordion-inner"> \
-          {thread_content} \
-        </div> \
-      </div> \
-    </div>';
+  if ($('#com_accordion').children().length == 0) {
+    
     //Get the project name from the header of the page
     var p_name = $("#project_name").attr('p_name');
 
     $.getJSON("/api/v1/project/" + project + "/tickets?p_name=" + p_name, function(data){
+      
       if ($.isEmptyObject(data)) {
-        $('#tab_com_content').html("<h3>No tickets available for " + p_name + "</h3>");
-      }
-      else {
-        // Build the accordion with the tickets information
-        var accordion = a_header;
-        var tickets = 1;
-        // Javascript Object order is not guaranteed, but we want to show the most recent
-        // issued ticket first
+        $('#tab_com_content').html('<div class="alert alert-info">No Zendesk tickets available for ' + p_name + '</div>');
+      } else {
+        // Javascript Object order is not guaranteed, but we want to show the 
+        // most recent issued ticket first
         $.each(Object.keys(data).reverse(), function(_, k) {
           var v = data[k];
-          var title = "Ticket No. " + k + "<br />" + "Created at " + v['created_at'].split('T')[0] +
-          "<br /> " + v['subject'] + "." + "<br />" + "Status: " + v['status'];
-          var comments = '<center><a href="https://ngisweden.zendesk.com/agent/#/tickets/' + k + '">View it on ZenDesk</a></center>';
+          
+          var label_class = 'default';
+          if(v['status'] == 'closed'){ label_class = 'success'; v['status'] = 'Closed'; }
+          var title = '<span class="pull-right">'+
+                         '<a class="text-muted" data-toggle="collapse" data-parent="#accordion" href="#zendesk_ticket_'+k+'">'+
+                           v['created_at'].split('T')[0] + 
+                         '</a> &nbsp; <a href="https://ngisweden.zendesk.com/agent/#/tickets/'+k+'" target="_blank" class="btn btn-primary btn-xs">View ticket on ZenDesk</a>'+
+                      '</span>' +
+                      '<h4 class="panel-title">'+
+                        '<span class="label label-' + label_class + '">' + v['status'] + '</span> ' +
+                        '<a data-toggle="collapse" data-parent="#accordion" href="#zendesk_ticket_'+k+'">'+
+                          '#'+k + ' - ' + v['subject'] + 
+                        '</a>'+
+                      '</h4>';
+          
+          var ticket = '<div class="panel panel-default">' +
+                        '<div class="panel-heading">'+title+'</div>'+
+                        '<div id="zendesk_ticket_'+k+'" class="panel-collapse collapse"><div class="panel-body">';
+
           v['comments'].reverse();
           $.each(v['comments'], function(k, c){
-            var updated_at = new Date(c['created_at']);
-            comments += "Updated on " + updated_at.toGMTString();
+            var panel_class = 'warning';
             if (c['public']) {
-              comments += '<pre>' + c['body'] + '</pre><hr />';
+              var panel_class = 'default';
             }
-            else {
-              comments += '<div class="alert alert-warning">' + c['body'] + '</div>';
-            }
+            var updated_at = new Date(c['created_at']);
+            ticket += '<div class="panel panel-'+panel_class+'">'+
+                        '<div class="panel-heading">'+updated_at.toGMTString() + '</div>'+
+                        '<div class="panel-body"><pre>'+c['body']+'</pre></div>'+
+                      '</div>';
+            
           });
-          accordion += a_group.replace(/{num_ticket}/g, tickets)
-          .replace(/{thread_name}/g, title)
-          .replace(/{thread_content}/g, comments);
-          tickets++;
+          $('#com_accordion').append(ticket);
         });
-        accordion += '<a href="" class="toggleCollapse plus">[+]</a>';
-        $('#tab_com_content').html(accordion);
       }
-      fetching_data.hidePleaseWait();
+      
+      // Hide the loading modal
+      $('#zendesk_loading_spinner').hide();
+      $('#com_accordion').show();
+      
     });
   }
 }
 
 function load_running_notes(wait) {
-  //Clear previously loaded notes, if so
+  // Clear previously loaded notes, if so
   $("#running_notes_table").empty();
   $.getJSON("/api/v1/running_notes/" + project, function(data) {
     $.each(data, function(date, note) {
@@ -301,7 +297,7 @@ function load_running_notes(wait) {
       var row = '<tr>'
       row += '<td>' + date.toDateString() + ', ' + date.toLocaleTimeString(date) + ' by '
       row += '<a href="mailto:' + note['email'] + '">' + note['user'] + '</a></td>'
-      row += '<td><pre>' + note['note'] + '</pre></td>'
+      row += '<td>' + markdown.toHTML(note['note']) + '</td>'
       row += '</tr>'
       $("#running_notes_table").append(row);
     });
@@ -350,7 +346,7 @@ function load_all_udfs(){
         if (!data['portal_id']) {
           project_title = project + ", " + data['project_name'] + " (no order in NGI portal)"; 
         } else {
-          project_title = project + ", " + data['project_name'] + " &nbsp; <small>NGI Portal: <a href='https://portal.scilifelab.se/genomics/node/" + data['portal_id'] + "'>" + data['customer_project_reference'] + '</a></small>'; 
+          project_title = project + ", " + data['project_name'] + ' &nbsp; <small>NGI Portal: <a href="https://portal.scilifelab.se/genomics/node/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>'; 
         }
         $("#" + prettify(key)).html(project_title);
         $("#" + prettify(key)).attr('p_name', data['project_name']);
@@ -620,31 +616,6 @@ function update_caliper(){
    }
  });
 }
-var fetching_data;
-fetching_data = fetching_data || (function () {
-  var pleaseWaitDiv = $(' \
-    <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true"> \
-      <div class="modal-dialog modal-sm"> \
-        <div class="modal-content"> \
-          <h3>Fetching data from ZenDesk...</h3> \
-          <div class="progress progress-striped active"> \
-            <div class="bar" style="width: 100%"> \
-              <span class="sr-only"> \
-              </span> \
-            </div> \
-          </div> \
-        </div> \
-      </div> \
-    </div>');
-  return {
-    showPleaseWait: function() {
-      pleaseWaitDiv.modal();
-    },
-    hidePleaseWait: function () {
-      pleaseWaitDiv.modal('hide');
-    },
-  };
-})();
 
 //Is there any standar method to do this?
 var max_str = function(strs) {

@@ -70,7 +70,7 @@ Description: Details page for a single project
 
       <dt>Queue Date</dt>
       <dd>
-        <span id="{{columns['BASIC_COLUMNS']['Queue Date']}}">-</span>
+        <span id="{{columns['BASIC_COLUMNS']['Queue Date']}}">-</span>&nbsp; 
         <span id="signature_queued" class="label label-default"></span>
       </dd>
 
@@ -85,19 +85,19 @@ Description: Details page for a single project
 
       <dt>All Samples Sequenced</dt>
       <dd>
-        <span id="{{columns['DETAILS_COLUMNS']['All Samples Sequenced']}}">-</span>
+        <span id="{{columns['DETAILS_COLUMNS']['All Samples Sequenced']}}">-</span>&nbsp; 
         <span id="signature_all_samples_sequenced" class="label label-default"></span>
       </dd>
 
       <dt>All Raw Data Delivered</dt>
       <dd>
-        <span id="{{columns['BIOINFO_COLUMNS']['All Raw Data Delivered']}}">-</span>
+        <span id="{{columns['BIOINFO_COLUMNS']['All Raw Data Delivered']}}">-</span>&nbsp; 
         <span id="signature_all_raw_data_delivered" class="label label-default"></span>
       </dd>
 
       <dt><abbr title="Best Practice">BP</abbr> Analysis Completed</dt>
       <dd>
-        <span id="{{columns['BIOINFO_COLUMNS']['Best Practice Analysis Completed']}}">-</span>
+        <span id="{{columns['BIOINFO_COLUMNS']['Best Practice Analysis Completed']}}">-</span>&nbsp; 
         <span id="sdignature_best_practice_analysis_completed" class="label label-default"></span>
       </dd>
 
@@ -133,7 +133,7 @@ Description: Details page for a single project
     <li class="active"><a href="#tab_details_content" role="tab" data-toggle="tab">Project information</a></li>
     <li><a href="#tab_samples_content" role="tab" data-toggle="tab">Samples</a></li>
     <li><a href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
-    <li><a href="#tab_com_content" role="tab" data-toggle="tab" style="display: none;">User communication</a></li>
+    <li><a href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
     <li><a href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
   </ul>
   <div class="tab-content">
@@ -399,9 +399,20 @@ Description: Details page for a single project
         <div class="form-group">
           <label for="new_note_text">Insert new running note:</label>
           <textarea rows="7" class="form-control" id="new_note_text"></textarea>
+          <p class="help-block">Running notes are rendered as Markdown.
+            Test out in <a href="http://dillinger.io/" target="_blank">http://dillinger.io</a>
+            first if you're not sure how this works..<br> <strong>NB:</strong> If you're pasting
+            something with underscores in (such as flow_cells), make sure to wrap this inside
+            backticks - <em>eg.</em> ` ID_HERE `</p>
         </div>
         <button type="submit" class="btn btn-primary" id="save_note_button">Save running note</button>
       </form>
+    </div>
+    
+    <!-- USER COMMUNICATION TAB -->
+    <div class="tab-pane" id="tab_com_content">
+      <div id="zendesk_loading_spinner" style="text-align:center; margin:100px 0;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading ZenDesk tickets..</div>
+      <div class="panel-group" id="com_accordion"></div>
     </div>
     
     <!-- LINKS TAB -->
@@ -461,7 +472,7 @@ Description: Details page for a single project
 
 <!-- SAMPLE FIELD MODAL -->
 <div id="sampleFieldsModal" class="modal fade">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
@@ -560,19 +571,23 @@ Description: Details page for a single project
 
 
 <!-- CALIPER MODAL -->
-<div id="caliperModal" class="modal hide fade">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-    <h3>Caliper Image</h3>
-  </div>
-  <div class="modal-body">
-    <p>Caliper image loading...</p>
-  </div>
-  <div class="modal-footer">
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+<div id="caliperModal" class="modal fade">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4>Caliper Image</h4>
+      </div>
+      <div class="modal-body">
+        <p>Caliper image loading...</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+      </div>
+    </div>
   </div>
 </div>
-    
+
 <!-- Javascript -->
 <script src="/static/js/list.min.js"></script>
 <script src="/static/js/markdown.min.js"></script>
