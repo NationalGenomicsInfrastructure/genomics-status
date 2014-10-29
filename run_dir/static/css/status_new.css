@@ -101,7 +101,34 @@ div.scrollable {
   cursor:default;
 }
 
+.dl-wide dt {
+  width:260px;
+}
+.dl-wide dd {
+  margin-left:280px;
+}
 
+.nav.nav-tabs {
+  margin-bottom:15px;
+}
+
+/* Make the bootstrap labels a little less over-saturated */
+.label {font-weight:normal;}
+.label-default {background-color:#777}
+.label-primary {background-color: #547C9E} /* #428bca} */
+.label-success {background-color: #5D995D} /* #5cb85c} */
+.label-info    {background-color: #5998AB} /* #5bc0de} */
+.label-warning {background-color: #BA945F} /* #f0ad4e} */
+.label-danger  {background-color: #B06361} /* #d9534f} */
+
+/* Make <samp> (flow cell IDs usually) a little smaller */
+samp {
+  font-size:0.8em;
+}
+
+.search-action, .search-action input {
+  cursor:pointer;
+}
 
 th.sort {
   cursor:pointer;
@@ -114,9 +141,7 @@ th.sort:after {
   border-right: 5px solid transparent;
   border-bottom: 5px solid transparent;
   content:"";
-  position: relative;
-  top:-10px;
-  right:-5px;
+  margin-left: 10px;
 }
 th.sort.asc:after {
   width: 0;

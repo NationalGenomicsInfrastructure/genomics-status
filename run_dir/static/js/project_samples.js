@@ -3,35 +3,31 @@ var project = $('#projects-js').attr('data-project');
 var ordered_reads = 0.0;
 
 $(document).ready(function() {
-/* Caliper buttons click listener*/
-$("body").on('click', '.caliper-img',  function(e) {
-    e.preventDefault();
-    data=$(this).attr('src')
-    $('.modal-body').html("<img class='caliper-modal' src='"+data+"' />");
-    $('#caliperModal').modal();
-    
-});
+  
   /* check default checkboxes */
   if (!$("#Filter :checked").length) {
     reset_default_checkboxes();
   }
 
-  //Initialise stuff
-  load_undefined_info();
+  // Initialise everything
   load_all_udfs();
+  load_undefined_info();
   load_samples_table();
   load_running_notes();
   load_links();
   load_presets();
 
-  //Prevent traditional html submit function
-  $('#Search-form').submit(function(event){event.preventDefault();});
-
-  $('body').on('click', '.search-action', function(event) {
-    event.preventDefault();
+  // Prevent traditional html submit function
+  $('#Search-form').submit(function(e){
+    e.preventDefault();
+  });
+  
+  $('body').on('click', '.search-action', function(e) {
+    e.stopPropagation(); // Stop the checkbox from firing if clicked
     switch ($(this).data('action')) {
       case 'filterReset':
         reset_default_checkboxes();
+        break;
       case 'filterApply':
         load_samples_table();
         break;
@@ -44,30 +40,26 @@ $("body").on('click', '.caliper-img',  function(e) {
     }
   });
 
-  //Hide or show all accordions
-  $('body').on('click', '.toggleCollapse',function(e) {
-    e.preventDefault();
-    if ($(this).is('.plus')) {
-      $(this).removeClass('plus'); $(this).text('[-]');
-      $('.tab-pane.active').find('div.collapse').collapse('show');
-    }
-    else {
-      $(this).addClass('plus'); $(this).text('[+]');
-      $('.tab-pane.active').find('div.collapse').collapse('hide');
-    }
-  });
-
   //Show user communication tab. Loading 
   $('#tab_communication').click(function (e) {
     e.preventDefault();
     $(this).tab('show');
     load_tickets();
   });
+  
+  // Caliper buttons click listener
+  $("body").on('click', '.caliper-img',  function(e) {
+      e.preventDefault();
+      data=$(this).attr('src')
+      $('.modal-body').html("<img class='caliper-modal' src='"+data+"' />");
+      $('#caliperModal').modal();
+    
+  });
 
 });
 
 // Initialize sorting and searching javascript plugin
-function init_listjs(no_items, columns) {
+function init_listjs (no_items, columns) {
   column_names = new Array();
   $.each(columns, function(i, column_tuple){
     column_names.push(column_tuple[1]);
@@ -94,50 +86,49 @@ function read_current_filtering(header){
   if (header){
     var columns = new Object();
     $("#Filter :checkbox:checked").each(function() {
-      var p = $(this).parent().attr('id');
+      var p = $(this).data('columngroup');
       if (!columns.hasOwnProperty(p)) {
-        columns[p] = new Array([$(this).next('label').text(), $(this).attr('name')]);
+        columns[p] = new Array([$(this).data('displayname'), $(this).attr('name')]);
       }
       else {
-        columns[p].push([$(this).next('label').text(), $(this).attr('name')]);
+        columns[p].push([$(this).data('displayname'), $(this).attr('name')]);
       }
     });
     return columns
-  }
-  else {
+  } else {
     var columns = new Array();
     $("#Filter :checkbox:checked").each(function() {
-      columns.push([$(this).next('label').text(), $(this).attr('name')]);
+      columns.push([$(this).data('displayname'), $(this).attr('name')]);
     });
     return columns
   }
 }
 
 function reset_default_checkboxes(){
-  $('#Filter [id$=columns]').children('input').prop('checked', false);
-  $('#Filter #basic-columns').children('input').prop('checked', true);
+  $('#Filter input').prop('checked', false); // uncheck everything
+  $('#basic-columns input').prop('checked', true); // check the 'basic' columns
 }
 
 //Check or uncheck all fields from clicked category
 function choose_column(col){
-  var column = document.getElementById(col);
-  //Get all the children (checkboxes)
-  cbs = column.getElementsByTagName('input');
-  //If one of them is checked we uncheck it, if none of them are checked, 
-  //we check them all
-  checked = false;
-  for (var i = 0; i < cbs.length; i++) {
-    if (cbs[i].checked) {
-      cbs[i].checked = false;
-      checked = true;
-    }
+  // If any are checked, uncheck all
+  if($('#'+col+' input.filterCheckbox:checked').length > 0){
+    $('#'+col+' input').prop('checked', false);
   }
-  if (!checked) {
-    for (var i = 0; i < cbs.length; i++) {
-      cbs[i].checked = true;
-    }
+  // Nothing checked - check everything
+  else {
+    $('#'+col+' input').prop('checked', true);
   }
 }
+// Update the header checkbox when clicking in the list
+$('#Filter').on('click', '.filterCheckbox', function(){
+  var group = $(this).closest('.col-sm-4');
+  if(group.find('input.filterCheckbox:checked').length == 0){
+    group.find('.headingCheckbox').prop('checked', false);
+  } else {
+    group.find('.headingCheckbox').prop('checked', true);
+  }
+});
 
 
 ////////////////////////////////
@@ -331,7 +322,7 @@ $("#running_notes_form").submit( function(e) {
       dataType: 'json',
       data: {"note": text},
       error: function(XMLHttpRequest, textStatus, errorThrown) {
-        alert('There was an error inserting the Running Note, please try it again.');
+        alert('There was an error inserting the Running Note, please try it again. '+XMLHttpRequest+' // '+textStatus+' // '+errorThrown);
       }
     });
     load_running_notes()
@@ -343,57 +334,75 @@ $("#running_notes_form").submit( function(e) {
 
 function load_undefined_info(){
   $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
-    var columns_html ="";
     $.each(data, function(column_no, column) {
-      columns_html += '<tr><td>' + column + '</td><td name="' + column + '"></td></tr>';
+      $("#undefined_project_info").append('<dt>' + column + '</dt><dd id="' + column + '"></dd>');
     });
-    $("#undefined_project_info").html(columns_html)
   });
 }
 
 function load_all_udfs(){
   $.getJSON("/api/v1/project_summary/" + project, function (data) {
+    $('#loading_spinner').hide();
+    $('#page_content').show();
     $.each(data, function(key, value) {
-      //Set the project name and status
+      // Set the project name and status
       if (prettify(key) == 'project_name'){
         if (!data['portal_id']) {
           project_title = project + ", " + data['project_name'] + " (no order in NGI portal)"; 
         } else {
-          project_title = project + ", " + data['project_name'] + " (<a href='https://portal.scilifelab.se/genomics/node/" + data['portal_id'] + "'>" + data['customer_project_reference'] + "</a>)"; 
-            }
-            $("[name=" + prettify(key) + "]").html(project_title);
-            $("[name=" + prettify(key) + "]").attr('p_name', data['project_name']);
-            //Decide project status (and color) based on the project dates
-            var open_date=data["open_date"];
-            var queue_date=data["queued"];
-            var close_date=data["close_date"];
-            var aborted=data["aborted"];
-            var source=data["source"];
-            if (aborted){
-              $("[name=project_status]").text("Aborted");
-              $("[name=project_status]").addClass("alert alert-error");
-            }
-            else {
-              if (!open_date && source == 'lims'){
-                $("[name=project_status]").text("Pending");
-                $("[name=project_status]").addClass("alert alert-info");
-              }
-              else if (open_date && !queue_date) {
-                $("[name=project_status]").text("Reception Control");
-                $("[name=project_status]").addClass("alert alert-block");
-              }
-              else if (queue_date && !close_date) {
-                $("[name=project_status]").text("Ongoing");
-                $("[name=project_status]").addClass("alert alert-info");
-              }
-              else {
-                $("[name=project_status]").text("Closed");
-                $("[name=project_status]").addClass("alert alert-success");
-              }
-            }
-      }
-      else {
-        $("[name='" + key + "']").text(value)
+          project_title = project + ", " + data['project_name'] + " &nbsp; <small>NGI Portal: <a href='https://portal.scilifelab.se/genomics/node/" + data['portal_id'] + "'>" + data['customer_project_reference'] + '</a></small>'; 
+        }
+        $("#" + prettify(key)).html(project_title);
+        $("#" + prettify(key)).attr('p_name', data['project_name']);
+        
+        // Decide project status (and color) based on the project dates
+        var open_date = data["open_date"];
+        var queue_date = data["queued"];
+        var close_date = data["close_date"];
+        var aborted = data["aborted"];
+        var source = data["source"];
+        if (aborted){
+          $("#project_status_alert").text("Aborted");
+          $("#project_status_alert").addClass("label-error");
+        }
+        else {
+          if (!open_date && source == 'lims'){
+            $("#project_status_alert").text("Pending");
+            $("#project_status_alert").addClass("label-info");
+          }
+          else if (open_date && !queue_date) {
+            $("#project_status_alert").text("Reception Control");
+            $("#project_status_alert").addClass("label-default");
+          }
+          else if (queue_date && !close_date) {
+            $("#project_status_alert").text("Ongoing");
+            $("#project_status_alert").addClass("label-info");
+          }
+          else {
+            $("#project_status_alert").text("Closed");
+            $("#project_status_alert").addClass("label-success");
+          }
+        }
+      
+      // Make the project contact address clickable
+      } else if (prettify(key) == 'contact'){
+         $('#contact').html('<a href="mailto:'+value+'">'+value+'</a>');
+        
+      // Colour code the project type
+      } else if (prettify(key) == 'type'){
+        if(value == 'Production'){
+          $('#type').html('<span class="label label-primary">Production</span>');
+        } else {
+          $('#type').html('<span class="label label-success">'+value+'</span>');
+        }
+        
+      // Make the comments render Markdown
+      } else if (prettify(key) == 'project_comment'){
+        $('#project_comment').html(markdown.toHTML(value));
+      
+      // Everything else
+      } else {
+        $("#" + key).text(value)
       }
     });
     var t = $("#tab_communication");
@@ -430,7 +439,7 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             info[column_id] = round_floats(info[column_id], 2);
-            // Scilife Sample Name is a link
+            // Scilife Sample Name
             /* // Wire this up to the new QC page
             if (column_id == "scilife_name") {
               tbl_row += '<td><a class="' + column_id + '" href="/samples/' + 
@@ -441,8 +450,8 @@ function load_samples_table() {
             if (column_id == 'sample_run_metrics') {
               tbl_row += '<td class="' + column_id + '">';
               for (var i=0; i<info[column_id].length; i++) {
-                tbl_row += '<a href="/flowcells/' + info[column_id][i] + '">' + 
-                info[column_id][i] + '</br></a>';
+                tbl_row += '<samp><a href="/flowcells/' + info[column_id][i] + '">' + 
+                info[column_id][i] + '</a></samp><br>';
               }
               tbl_row += '</td>';
             }
@@ -456,11 +465,35 @@ function load_samples_table() {
               }
               tbl_row += '</td>';
             }
-            //Prep status and prep finished date are arrays
-            else if (column_id == 'prep_status' || column_id == 'prep_finished_date') {
+            // Prep status is an array, use labels
+            else if (column_id == 'prep_status') {
               tbl_row += '<td class="' + column_id + '">';
               for (var i=0; i<info[column_id].length; i++) {
-                tbl_row += info[column_id][i] + "<br>";
+                if(info[column_id][i] == 'FAILED'){
+                  tbl_row += '<span class="label label-danger">Failed</span> ';
+                } else if(info[column_id][i] == 'PASSED'){
+                  tbl_row += '<span class="label label-success">Passed</span> ';
+                } else {
+                  tbl_row += '<span class="label label-default">'+info[column_id][i]+'</span> ';
+                }
+              }
+              tbl_row += '</td>';
+            }
+            // Status (manual) - use labels
+            else if (column_id == 'status_(manual)') {
+              tbl_row += '<td class="' + column_id + '">';
+              if(info[column_id] == 'Finished'){
+                tbl_row += '<span class="label label-success">Finished</span> ';
+              } else {
+                tbl_row += '<span class="label label-default">'+info[column_id][i]+'</span> ';
+              }
+              tbl_row += '</td>';
+            }
+            // Prep finished date is an arrays
+            else if (column_id == 'prep_finished_date') {
+              tbl_row += '<td class="' + column_id + '">';
+              for (var i=0; i<info[column_id].length; i++) {
+                tbl_row += info[column_id][i]+'<br> ';
               }
               tbl_row += '</td>';
             }
@@ -515,7 +548,7 @@ function load_samples_table() {
                    if (~column_name.indexOf('Library Validation Caliper Image')){
                         tbl_row+='<div class="caliper-link loading" href="'+validation_data[column_id]+
                             '"><span class="toremove"><i class="icon-refresh glyphicon-refresh-animate"></i>&nbsp;Loading...</span></div>';
-                   }else{
+                   } else {
                         tbl_row += validation_data[column_id] + '<br>';
                    }
                }
