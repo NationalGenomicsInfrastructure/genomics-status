@@ -379,6 +379,7 @@ class CaliperImageHandler(SafeHandler):
 class ProjectSamplesHandler(SafeHandler):
         """ Serves a page which lists the samples of a given project, with some
         brief information for each sample.
+        URL: /project/([^/]*)
         """
         def get(self, project):
             t = self.application.loader.load("project_samples.html")
@@ -392,6 +393,7 @@ class ProjectSamplesHandler(SafeHandler):
 
 class ProjectsHandler(SafeHandler):
     """ Serves a page with all projects listed, along with some brief info.
+    URL: /projects/([^/]*)
     """
     def get(self, projects='all'):
         t = self.application.loader.load("projects.html")
@@ -401,8 +403,8 @@ class ProjectsHandler(SafeHandler):
 
 class RunningNotesDataHandler(SafeHandler):
     """Serves all running notes from a given project.
-
     It connects to the genologics LIMS to fetch and update Running Notes information.
+    URL: /api/v1/running_notes/([^/]*)
     """
     def get(self, project):
         self.set_header("Content-type", "application/json")
@@ -436,8 +438,8 @@ class RunningNotesDataHandler(SafeHandler):
 
 class LinksDataHandler(SafeHandler):
     """ Serves external links for each project
-
         Links are stored as JSON in genologics LIMS / project
+        URL: /api/v1/links/([^/]*)
     """
 
     def get(self, project):
@@ -482,6 +484,7 @@ class LinksDataHandler(SafeHandler):
 
 class ProjectTicketsDataHandler(SafeHandler):
     """ Return a JSON file containing all the tickets in ZenDesk related to this project
+    URL: /api/v1/project/([^/]*)/tickets
     """
     def list_ticket_comments(self, ticket_id, page=1):
         """ Returns comments related to ticket_id
@@ -562,7 +565,9 @@ class UppmaxProjectsDataHandler(SafeHandler):
         return sorted(project_list , reverse=True)
 
 class ProjectQCDataHandler(SafeHandler):
-    """Serves filenames in qc_reports"""
+    """Serves filenames in qc_reports
+    URL: /api/v1/projectqc/([^/]*)
+    """
     def get(self, projectname):
         paths={}
         prefix=os.path.join(os.getcwd(), 'qc_reports')
