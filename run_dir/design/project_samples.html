@@ -19,39 +19,21 @@ Description: Details page for a single project
   <div class="col-md-4">
     <h4>Key Project Information</h4>
     <dl class="dl-horizontal">
-      <dt>Type</dt>
-      <dd id="{{columns['BASIC_COLUMNS']['Type']}}">-</dd>
-
-      <dt>Application</dt>
-      <dd id="{{columns['BASIC_COLUMNS']['Application']}}" class="sentenceCase">-</dd>
-
-      <dt>Sequencing Setup</dt>
-      <dd id="{{columns['SEQUENCING_COLUMNS']['Sequencing Setup']}}">-</dd>
-
-      <dt>Library Method</dt>
-      <dd id="{{columns['LIBRARY_PREP_COLUMNS']['Library Construction Method']}}">-</dd>
-    </dl>
+      <dt>Type</dt>									<dd id="type">-</dd>
+      <dt>Application</dt>					<dd id="application" class="sentenceCase">-</dd>
+      <dt>Sequencing Setup</dt>			<dd id="sequencing_setup">-</dd>
+      <dt>Library Method</dt>				<dd id="library_construction_method">-</dd>
+		</dl>
     
     <h4>Order Dates</h4>
     <dl class="dl-horizontal">
-      <dt>Order Received</dt>
-      <dd id="{{columns['SETUP_PROJECT_COLUMNS']['Order Received']}}">-</dd>
-
-      <dt>Contract Sent</dt>
-      <dd id="{{columns['SETUP_PROJECT_COLUMNS']['Contract Sent']}}">-</dd>
-
-      <dt>Plates Sent</dt>
-      <dd id="{{columns['SETUP_PROJECT_COLUMNS']['Plates Sent']}}">-</dd>
-
-      <dt>Contract Received</dt>
-      <dd id="{{columns['SETUP_PROJECT_COLUMNS']['Contract Received']}}">-</dd>
-
-      <dt>Sample Info Received</dt>
-      <dd id="{{columns['SETUP_PROJECT_COLUMNS']['Sample Information Received']}}">-</dd>
-
-      <dt>Samples Received</dt>
-      <dd id="{{columns['SETUP_PROJECT_COLUMNS']['Samples Received']}}">-</dd>
-    </dl>
+      <dt>Order Received</dt>				<dd id="order_received">-</dd>
+      <dt>Contract Sent</dt>				<dd id="contract_sent">-</dd>
+      <dt>Plates Sent</dt>					<dd id="plates_sent">-</dd>
+      <dt>Contract Received</dt>		<dd id="contract_received">-</dd>
+      <dt>Sample Info Received</dt>	<dd id="sample_information_received">-</dd>
+      <dt>Samples Received</dt>			<dd id="samples_received">-</dd>
+		</dl>
     
   </div>
 
@@ -59,53 +41,23 @@ Description: Details page for a single project
   <div class="col-md-4">
     <h4>Project Timeline</h4>
     <dl class="dl-horizontal">
-      <dt>Days in Production</dt>
-      <dd id="{{columns['BASIC_COLUMNS']['Days in Production']}}">-</dd>
-
-      <dt>Open date</dt>
-      <dd id="{{columns['BASIC_COLUMNS']['Open Date']}}">-</dd>
-
+      <dt>Days in Production</dt>					<dd id="days_in_production">-</dd>
+      <dt>Open date</dt>									<dd id="open_date">-</dd>
       <dt><abbr data-toggle="tooltip" title="First Initial Quality Control">QC</abbr> Start Date</dt>
-      <dd id="{{columns['EXTRA_COLUMNS']['First Initial QC Start Date']}}">-</dd>
-
+				<dd id="first_initial_qc_start_date">-</dd>
       <dt>Queue Date</dt>
-      <dd>
-        <span id="{{columns['BASIC_COLUMNS']['Queue Date']}}">-</span>&nbsp; 
-        <span id="signature_queued" class="upperCase label label-default"></span>
-      </dd>
-
-      <dt>Library Prep Start</dt>
-      <dd id="{{columns['LIBRARY_PREP_COLUMNS']['Library Prep Start']}}">-</dd>
-
-      <dt>QC Library Finished</dt>
-      <dd id="{{columns['LIBRARY_PREP_COLUMNS']['QC Library Finished']}}">-</dd>
-
-      <dt>Sequencing Start</dt>
-      <dd id="{{columns['SEQUENCING_COLUMNS']['Sequencing Start']}}">-</dd>
-
+      	<dd><span id="queued">-</span>&nbsp; <span id="signature_queued" class="upperCase label label-default"></span></dd>
+      <dt>Library Prep Start</dt>					<dd id="library_prep_start">-</dd>
+      <dt>QC Library Finished</dt>				<dd id="qc_library_finished">-</dd>
+      <dt>Sequencing Start</dt>						<dd id="sequencing_start_date">-</dd>
       <dt>All Samples Sequenced</dt>
-      <dd>
-        <span id="{{columns['DETAILS_COLUMNS']['All Samples Sequenced']}}">-</span>&nbsp; 
-        <span id="signature_all_samples_sequenced" class="upperCase label label-default"></span>
-      </dd>
-
+      	<dd><span id="all_samples_sequenced">-</span>&nbsp; <span id="signature_all_samples_sequenced" class="upperCase label label-default"></span></dd>
       <dt>All Raw Data Delivered</dt>
-      <dd>
-        <span id="{{columns['BIOINFO_COLUMNS']['All Raw Data Delivered']}}">-</span>&nbsp; 
-        <span id="signature_all_raw_data_delivered" class="label label-default"></span>
-      </dd>
-
+	      <dd><span id="all_raw_data_delivered">-</span>&nbsp; <span id="signature_all_raw_data_delivered" class="label label-default"></span></dd>
       <dt class="bp-dates"><abbr data-toggle="tooltip" title="Best Practice">BP</abbr> Analysis Completed</dt>
-      <dd class="bp-dates">
-        <span id="{{columns['BIOINFO_COLUMNS']['Best Practice Analysis Completed']}}">-</span>&nbsp; 
-        <span id="sdignature_best_practice_analysis_completed" class="upperCase label label-default"></span>
-      </dd>
-
-      <dt>Close Date</dt>
-      <dd id="{{columns['DETAILS_COLUMNS']['Close Date']}}">-</dd>
-
-      <dt class="aborted-dates">Aborted</dt>
-      <dd class="aborted-dates" id="{{columns['DETAILS_COLUMNS']['Aborted']}}">-</dd>
+	      <dd class="bp-dates"><span id="best_practice_analysis_completed">-</span>&nbsp; <span id="sdignature_best_practice_analysis_completed" class="upperCase label label-default"></span></dd>
+      <dt>Close Date</dt>									<dd id="close_date">-</dd>
+      <dt class="aborted-dates">Aborted</dt><dd class="aborted-dates" id="aborted">-</dd>
     </dl>
   </div>
 
@@ -113,12 +65,10 @@ Description: Details page for a single project
   <!-- Project comment -->
   <div class="col-md-4">
     <h4>Project Co-ordinator Comment</h4>
-    <p id="project_comment">-</p>
-    <hr>
+    <p id="project_comment">-</p><hr>
     
     <h4>Project Lab Status</h4>
-    <p id="comment">-</p>
-    <hr>
+    <p id="comment">-</p><hr>
     
     <h4>User project description
       <small class="text-danger">Use with caution! <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="This is the original user description of the project and may not reflect the final order."></i></small>
@@ -148,10 +98,7 @@ Description: Details page for a single project
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Disposal Of Samples</td>
-                <td id="{{columns['DETAILS_COLUMNS']['Disposal of Samples']}}"></td>
-              </tr>
+              <tr><td>Disposal Of Samples</td><td id="disposal_of_any_remaining_samples"></td></tr>
             </tbody>
           </table>
 
@@ -163,26 +110,11 @@ Description: Details page for a single project
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Bioinfo. Responsible</td>
-                <td id="{{columns['BIOINFO_COLUMNS']['Bioinfo. Responsible']}}"></td>
-              </tr>
-              <tr>
-                <td>Lab Responsible</td>
-                <td id="{{columns['SETUP_PROJECT_COLUMNS']['Lab. Responsible']}}"></td>
-              </tr>
-              <tr>
-                <td>Project Coordinator</td>
-                <td id="{{columns['DETAILS_COLUMNS']['Project Coordinator']}}"></td>
-              </tr>
-              <tr>
-                <td>Contact</td>
-                <td id="{{columns['DETAILS_COLUMNS']['PI']}}"></td>
-              </tr>
-              <tr>
-                <td>Invoice Reference</td>
-                <td id="{{columns['DETAILS_COLUMNS']['Invoice Reference']}}"></td>
-              </tr>
+              <tr><td>Bioinfo. Responsible</td><td id="bioinfo_responsible"></td></tr>
+              <tr><td>Lab Responsible</td><td id="lab_responsible"></td></tr>
+              <tr><td>Project Coordinator</td><td id="project_coordinator"></td></tr>
+              <tr><td>Contact</td><td id="contact"></td></tr>
+              <tr><td>Invoice Reference</td><td id="invoice_reference"></td></tr>
             </tbody>
           </table>
         </div>
@@ -191,43 +123,17 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped">
             <thead>
-              <tr>
-                <th colspan="2">Bioinformatics</th>
-              </tr>
+              <tr><th colspan="2">Bioinformatics</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Uppnex ID</td>
-                <td><code id="{{columns['BIOINFO_COLUMNS']['Uppnex ID']}}"></code></td>
-              </tr>
-              <tr>
-                <td>Source</td>
-                <td id="{{columns['BIOINFO_COLUMNS']['Source']}}" class="sentenceCase"></td>
-              </tr>
-              <tr>
-                <td>Custom capture design</td>
-                <td id="{{columns['BIOINFO_COLUMNS']['Custom Capture Design']}}"></td>
-              </tr>
-              <tr>
-                <td>UPPMAX project owner</td>
-                <td id="{{columns['BIOINFO_COLUMNS']['Uppmax Project Owner']}}"></td>
-              </tr>
-              <tr>
-                <td>Best Practice Bioinformatics</td>
-                <td id="{{columns['BIOINFO_COLUMNS']['Best Practice Bioinformatics']}}"></td>
-              </tr>
-              <tr>
-                <td>Bioinfo Analysis</td>
-                <td id="{{columns['BIOINFO_COLUMNS']['Bioinformatic QC']}}"></td>
-              </tr>
-              <tr>
-                <td>Organism</td>
-                <td id="{{columns['DETAILS_COLUMNS']['Organism']}}"></td>
-              </tr>
-              <tr>
-                <td>Reference Genome</td>
-                <td id="{{columns['BIOINFO_COLUMNS']['Reference Genome']}}"></td>
-              </tr>
+              <tr><td>Uppnex ID</td><td><code id="uppnex_id"></code></td></tr>
+              <tr><td>Source</td><td id="source" class="sentenceCase"></td></tr>
+              <tr><td>Custom capture design</td><td id="custom_capture_design_id"></td></tr>
+              <tr><td>UPPMAX project owner</td><td id="uppmax_project_owner"></td></tr>
+              <tr><td>Best Practice Bioinformatics</td><td id="best_practice_bioinformatics"></td></tr>
+              <tr><td>Bioinfo Analysis</td><td id="bioinformatic_qc"></td></tr>
+              <tr><td>Organism</td><td id="organism"></td></tr>
+              <tr><td>Reference Genome</td><td id="reference_genome"></td></tr>
             </tbody>
           </table>
         </div>
@@ -235,35 +141,15 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped">
             <thead>
-              <tr>
-                <th colspan="2">Wet Lab</th>
-              </tr>
+              <tr><th colspan="2">Wet Lab</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Sample type</td>
-                <td id="{{columns['DETAILS_COLUMNS']['Sample Type']}}"></td>
-              </tr>
-              <tr>
-                <td>Sequencing Platform</td>
-                <td id="{{columns['SEQUENCING_COLUMNS']['Sequencing Platform']}}"></td>
-              </tr>
-              <tr>
-                <td>%phiX</td>
-                <td id="{{columns['DETAILS_COLUMNS']['%phiX']}}"></td>
-              </tr>
-              <tr>
-                <td>Low Diversity</td>
-                <td id="{{columns['DETAILS_COLUMNS']['Low Diversity']}}"></td>
-              </tr>
-              <tr>
-                <td>Custom Primer</td>
-                <td id="{{columns['DETAILS_COLUMNS']['Custom Primer']}}"></td>
-              </tr>
-              <tr>
-                <td>Lanes Ordered</td>
-                <td id="{{columns['DETAILS_COLUMNS']['Lanes']}}"></td>
-              </tr>
+              <tr><td>Sample type</td><td id="sample_type"></td></tr>
+              <tr><td>Sequencing Platform</td><td id="sequencing_platform"></td></tr>
+              <tr><td>% phiX</td><td id="phix_spike-in_percent"></td></tr>
+              <tr><td>Low Diversity</td><td id="low_diversity"></td></tr>
+              <tr><td>Custom Primer</td><td id="custom_primer"></td></tr>
+              <tr><td>Lanes Ordered</td><td><span class="badge" id="sequence_units_ordered_lanes"></span></td></tr>
             </tbody>
           </table>
         </div>
@@ -273,23 +159,12 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped">
             <thead>
-              <tr>
-                <th colspan="2">Samples</th>
-              </tr>
+              <tr><th colspan="2">Samples</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Non-aborted samples</td>
-                <td><span class="badge" id="{{columns['DETAILS_COLUMNS']['Final Number of Samples']}}"></span></td>
-              </tr>
-              <tr>
-                <td>Samples provided</td>
-                <td><span class="badge" id="{{columns['BASIC_COLUMNS']['Number of Samples']}}"></span></td>
-              </tr>
-              <tr>
-                <td>Pools</td>
-                <td><span class="badge" name ='number_of_pools'></span></td>
-              </tr>
+              <tr><td>Non-aborted samples</td><td><span class="badge" id="final_number_of_samples"></span></td></tr>
+              <tr><td>Samples provided</td><td><span class="badge" id="no_samples"></span></td></tr>
+              <tr><td>Pools</td><td><span class="badge" id='number_of_pools'></span></td></tr>
             </tbody>
           </table>
         </div>
@@ -297,23 +172,12 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped">
             <thead>
-              <tr>
-                <th colspan="2">Sample Status</th>
-              </tr>
+              <tr><th colspan="2">Sample Status</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Finished</td>
-                <td><span class="badge label-success" id='Finished'></span></td>
-              </tr>
-              <tr>
-                <td>In progress</td>
-                <td><span class="badge" id='In Progress'></span></td>
-              </tr>
-              <tr>
-                <td>Aborted</td>
-                <td><span class="badge label-danger" id='Aborted'></span></td>
-              </tr>
+              <tr><td>Finished</td><td><span class="badge label-success" id='Finished'></span></td></tr>
+              <tr><td>In progress</td><td><span class="badge" id='in_progress'></span></td></tr>
+              <tr><td>Aborted</td><td><span class="badge label-danger" id='Aborted'></span></td></tr>
             </tbody>
           </table>
         </div>
@@ -321,31 +185,14 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped">
             <thead>
-              <tr>
-                <th colspan="2">Progress summary</th>
-              </tr>
+              <tr><th colspan="2">Progress summary</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Passed/Failed Initial QC</td>
-                <td id='passed_initial_qc'></td>
-              </tr>
-              <tr>
-                <td>Passed/Failed Library QC</td>
-                <td id='passed_library_qc'></td>
-              </tr>
-              <tr>
-                <td>Lanes Started</td>
-                <td><span class="badge" id="lanes_sequenced"></span></td>
-              </tr>
-              <tr>
-                <td>Sequencing QC (Gdocs)</td>
-                <td><span class="badge" id='passed_seq_qc'></span></td>
-              </tr>
-              <tr>
-                <td>Library re-preps (Genstat)</td>
-                <td><span class="badge" id='library_repreps'></span></td>
-              </tr>
+              <tr><td>Passed/Failed Initial QC</td><td id='passed_initial_qc'></td></tr>
+              <tr><td>Passed/Failed Library QC</td><td id='passed_library_qc'></td></tr>
+              <tr><td>Lanes Started</td><td><span class="badge" id="lanes_sequenced"></span></td></tr>
+              <tr><td>Sequencing QC (Gdocs)</td><td><span class="badge" id='passed_seq_qc'></span></td></tr>
+              <tr><td>Library re-preps (Genstat)</td><td><span class="badge" id='library_repreps'></span></td></tr>
             </tbody>
           </table>
         </div>
@@ -355,11 +202,7 @@ Description: Details page for a single project
       <div class="panel-group" id="undefined_fields_accordion" role="tablist" aria-multiselectable="true">
         <div class="panel panel-default">
           <div class="panel-heading" role="tab" id="headingOne">
-            <h4 class="panel-title">
-              <a data-toggle="collapse" data-parent="#undefined_fields_accordion" href="#undefined_fields">
-                Undefined Fields
-              </a>
-            </h4>
+            <h4 class="panel-title"><a data-toggle="collapse" data-parent="#undefined_fields_accordion" href="#undefined_fields">Undefined Fields</a></h4>
           </div>
           <div id="undefined_fields" class="panel-collapse collapse" role="tabpanel">
             <div class="panel-body">
@@ -418,11 +261,9 @@ Description: Details page for a single project
     
     <!-- LINKS TAB -->
     <div class="tab-pane fade" id="tab_links_content">
-      <table class="table">
-        <tbody id="links_table">
-          <!-- Dynamic content -->
-        </tbody>
-      </table>
+			<div id="existing_links" class="col-sm-offset-2"></div>
+			<hr>
+
       <form role="form" id="link_form" class="form-horizontal">
         <div id="new_link_alert"></div>
         <div class="form-group">
