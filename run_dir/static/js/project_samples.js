@@ -189,18 +189,29 @@ function select_from_preset(preset_type, preset) {
 
 
 function load_links() {
-  var link_icon = {'Deviation':'icon-exclamation-sign', 'Other':'icon-file'};
-  $("#links_table").empty();
+  var link_icon = {'Deviation':'exclamation-sign', 'Other':'file'};
+  $("#existing_links").empty();
   $.getJSON("/api/v1/links/" + project, function(data) {
     $.each(data, function(key, link) {
-      var date = new Date(key);
-      var row = '<tr>';
-      row += '<td class="span1"><span class="' + link_icon[link['type']] + '"></span></td>';
-      row += '<td>' + '<a' +  (link['url'] === "" ? "" : (' href="' + link['url'] + '"')) + '>'+ link['title'] + '</a>';
+      var link_href = link['url'] === "" ? "" : (' href="' + link['url'] + '"');
+			var date = new Date(key);
+      /*
+			var row = '<tr>';
+      row += '<td class="col-xs-1"><span class="glyphicon glyphicon-' + link_icon[link['type']] + '"></span></td>';
+      row += '<td>' + '<a' +   + '>'+ link['title'] + '</a>';
       row += '<p class="small muted">Added by ' + '<a href="mailto:' + link['email'] + '">' + link['user'] + '</a> on ' + date.toDateString() + '</p><td>';
       row += '<td><pre>' + link['desc'] + '</pre></td>';
       row += '</tr>';
-      $("#links_table").append(row);
+			*/
+      $("#existing_links").append('<div class="media"><a class="media-left"'+link_href+'>'+
+							'<span style="font-size:18px;" class="glyphicon glyphicon-'+link_icon[link['type']]+'"></span>'+
+						'</a><div class="media-body">'+
+							'<h4 class="media-heading">'+link['title']+
+								' &nbsp; <small><a href="mailto:'+link['email']+'">'+link['user']+'</a>'+
+								' - '+date.toDateString()+
+							'</h4>'+
+							link['desc']+
+						'</div></div>');
     });
   });
 }
@@ -269,12 +280,14 @@ function load_tickets() {
           v['comments'].reverse();
           $.each(v['comments'], function(k, c){
             var panel_class = 'warning';
+						var panel_label = ' &nbsp; <span class="label label-warning">Internal</span>';
             if (c['public']) {
-              var panel_class = 'default';
+              panel_class = 'default';
+			  panel_label = '';
             }
             var updated_at = new Date(c['created_at']);
             ticket += '<div class="panel panel-'+panel_class+'">'+
-                        '<div class="panel-heading">'+updated_at.toGMTString() + '</div>'+
+                        '<div class="panel-heading">'+updated_at.toGMTString() + panel_label + '</div>'+
                         '<div class="panel-body"><pre>'+c['body']+'</pre></div>'+
                       '</div>';
             
@@ -426,7 +439,13 @@ function load_all_udfs(){
         }
       // Everything else
       } else {
-        $('#'+key).html(auto_format(value));
+			  if($('#'+prettify(key)).length > 0){
+					$('#'+prettify(key)).html(auto_format(value));
+				} else if($('#'+key).length > 0){
+			  	$('#'+key).html(auto_format(value));
+				} else {
+					// console.log("Can't find field for "+key+': '+value+' (prettified key: '+prettify(key)+')');
+				}
       }
     });
     
@@ -445,7 +464,8 @@ function load_all_udfs(){
 };
 
 function prettify(s) {
-  return s.toLowerCase().replace("(", "_").replace(")", "_").replace(/\s+/g, "_");
+  return s.toLowerCase().replace("(", "_").replace(")", "_").replace(/\s+/g, "_")
+						.replace(/_+/g, "_").replace(/^_/, "").replace(/_$/, "");
 }
 
 function load_table_head(columns){
@@ -682,25 +702,28 @@ function auto_format(value, samples_table){
   }
   
   // Put all False / Failed / Fail into labels
-  if(typeof value == 'string' && (
+  if(value === false || 
+				(typeof value == 'string' && (
             value == 'false' || 
             value == 'failed' || 
             value == 'fail' || 
-            value == 'np' || 
+            value == 'none' || 
+            value == 'no' ||
             value == 'no' ||
             value == 'n/a' || 
-            value == 'aborted' )){
+            value == 'aborted' ))){
     return '<span class="label label-danger sentenceCase">'+value+'</span> ';
   }
 
   // Put all False / Failed / Fail into labels
-  else if(typeof value == 'string' && (
+  else if(value === true || 
+				(typeof value == 'string' && (
             value == 'true' || 
             value == 'passed' || 
             value == 'pass' || 
             value == 'yes' || 
             value == 'finished' ||
-            value == 'p')){
+            value == 'p'))){
     return '<span class="label label-success sentenceCase">'+value+'</span> ';
   }
   
