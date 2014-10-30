@@ -62,8 +62,8 @@ function init_listjs (no_items, columns) {
     valueNames: column_names,
     page: no_items /* Default is to show only 200 items at a time. */
   };
-  var featureList = new List('sample-list', options);
-  // featureList.search($('#search_field').val());
+  var featureList = new List('tab_samples_content', options);
+  featureList.search($('#search_field').val());
 }
 
 ////////////////////////////////////
@@ -249,6 +249,7 @@ function load_tickets() {
           
           var label_class = 'default';
           if(v['status'] == 'closed'){ label_class = 'success'; v['status'] = 'Closed'; }
+          if(v['status'] == 'open'){ label_class = 'danger'; v['status'] = 'Open'; }
           var title = '<span class="pull-right">'+
                          '<a class="text-muted" data-toggle="collapse" data-parent="#accordion" href="#zendesk_ticket_'+k+'">'+
                            v['created_at'].split('T')[0] + 
@@ -300,7 +301,7 @@ function load_running_notes(wait) {
           '<div class="panel-heading">'+
             '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
             date.toDateString() + ', ' + date.toLocaleTimeString(date)+
-          '</div><div class="panel-body">'+markdown.toHTML(note['note'])+'</div></div>');
+          '</div><div class="panel-body"><pre>'+note['note']+'</pre></div></div>');
     });
   });
 }
@@ -409,6 +410,7 @@ function load_all_udfs(){
       
       // Make the comments render Markdown
       else if (prettify(key) == 'project_comment'){
+        value = value.replace(/\_/g, '\\_');
         $('#project_comment').html(markdown.toHTML(value));
       }
         
@@ -520,7 +522,7 @@ function load_samples_table() {
             }
             
             // Convert million reads to just reads
-            else if (column_id == 'total_reads_(m)'){
+            else if (column_id == 'total_reads_(m)' && typeof info[column_id] !== 'undefined'){
               var reads = info[column_id] * 1000000;
               tbl_row += auto_samples_cell(column_id, reads);
             }
@@ -674,8 +676,9 @@ function auto_format(value, samples_table){
   // Default value for function
   samples_table = (typeof samples_table === "undefined") ? false : samples_table;
   
+  var orig = value;
   if(typeof value == 'string'){
-    value = value.toLowerCase();
+    value = value.toLowerCase().trim();
   }
   
   // Put all False / Failed / Fail into labels
@@ -683,6 +686,7 @@ function auto_format(value, samples_table){
             value == 'false' || 
             value == 'failed' || 
             value == 'fail' || 
+            value == 'np' || 
             value == 'no' ||
             value == 'n/a' || 
             value == 'aborted' )){
@@ -695,8 +699,15 @@ function auto_format(value, samples_table){
             value == 'passed' || 
             value == 'pass' || 
             value == 'yes' || 
-            value == 'finished')){
+            value == 'finished' ||
+            value == 'p')){
     return '<span class="label label-success sentenceCase">'+value+'</span> ';
+  }
+  
+  // Warning labels
+  else if(typeof value == 'string' && (
+            value == 'in progress')){
+    return '<span class="label label-warning sentenceCase">'+value+'</span> ';
   }
   
   // Dates
@@ -705,16 +716,18 @@ function auto_format(value, samples_table){
   }
   
   // Put all undefined into labels
-  else if((typeof value == 'string' && value == 'undefined')
-          || typeof value == 'undefined' || typeof value == 'null'){
+  else if((typeof value == 'string' && value == 'undefined') ||
+          (typeof value == 'string' && value == 'null') ||
+          (typeof value == 'string' && value == 'nan') ||
+          typeof value == 'undefined' || typeof value == 'null' || typeof value == 'NaN'){
     return '<span class="label label-default sentenceCase">'+value+'</span> ';
   }
   
   else {
     if(samples_table){
-      return value + '<br>';
+      return orig + '<br>';
     } else {
-      return value;
+      return orig;
     }
   }
 }
