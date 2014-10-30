@@ -4,18 +4,14 @@ var ordered_reads = 0.0;
 
 $(document).ready(function() {
   
-  /* check default checkboxes */
-  if (!$("#Filter :checked").length) {
-    reset_default_checkboxes();
-  }
-
-  // Initialise everything
-  load_all_udfs();
-  load_undefined_info();
-  load_samples_table();
-  load_running_notes();
-  load_links();
-  load_presets();
+  // Initialise everything - order is important :)
+  $.when(load_presets()).done(function(){
+    load_undefined_info();
+    load_all_udfs();
+    load_samples_table();
+    load_running_notes();
+    load_links();
+  });
 
   // Prevent traditional html submit function
   $('#Search-form').submit(function(e){
@@ -34,8 +30,8 @@ $(document).ready(function() {
       case 'filterHeader':
         choose_column($(this).parent().attr("id"));
         break;
-      case 'filterDropdown':
-        select_from_preset($(this).parent().attr('id'), $(this).attr('id'));
+      case 'filterPresets':
+        select_from_preset($(this).parent().attr('id'), $(this).text());
         break;
     }
   });
@@ -83,7 +79,7 @@ function read_current_filtering(header){
   */
   if (header){
     var columns = new Object();
-    $("#Filter :checkbox:checked").each(function() {
+    $("#Filter .filterCheckbox:checked").each(function() {
       var p = $(this).data('columngroup');
       if (!columns.hasOwnProperty(p)) {
         columns[p] = new Array([$(this).data('displayname'), $(this).attr('name')]);
@@ -95,7 +91,7 @@ function read_current_filtering(header){
     return columns
   } else {
     var columns = new Array();
-    $("#Filter :checkbox:checked").each(function() {
+    $("#Filter .filterCheckbox:checked").each(function() {
       columns.push([$(this).data('displayname'), $(this).attr('name')]);
     });
     return columns
@@ -105,6 +101,7 @@ function read_current_filtering(header){
 function reset_default_checkboxes(){
   $('#Filter input').prop('checked', false); // uncheck everything
   $('#basic-columns input').prop('checked', true); // check the 'basic' columns
+  $('#default_view').addClass('active');
 }
 
 //Check or uncheck all fields from clicked category
@@ -134,54 +131,59 @@ $('#Filter').on('click', '.filterCheckbox', function(){
 ///////////////////////////////
 
 function load_presets() {
-  $.getJSON('/api/v1/presets?presets_list=sv_presets', function (data) {
+  return $.getJSON('/api/v1/presets?presets_list=sv_presets', function (data) {
     var default_presets = data['default'];
     var user_presets = data['user'];
 
-    //Empty previously filled lists of presets
-    $('ul#default_presets_dropdown').empty();
-    $('ul#user_presets_dropdown').empty();
+    // Empty previously filled lists of presets
+    $('#default_preset_buttons').empty();
+    $('#user_presets_dropdown').empty();
 
-    //Default presets
+    // Default presets
     for (var preset in default_presets) {
-      var li = '<li class="search-action" data-action="filterDropdown" id="' + preset + '">';
-      li += '<a tabindex="-1">' + preset + '</a></li>';
-      $('ul#default_presets_dropdown').append(li);
+      $('#default_preset_buttons').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-default">'+preset+'</button>');
     }
-    //User presets, if there are any
+    // User presets, if there are any
     if (!jQuery.isEmptyObject(user_presets)) {
       for (var preset in user_presets) {
-        var li = '<li class="search-action" data-action="filterDropdown" id="' + preset + '">';
-        li += '<a tabindex="-1">' + preset + '</a></li>';
-        $('ul#user_presets_dropdown').append(li);
+        $('#user_presets_dropdown').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-default">'+preset+'</button>');
       }
     }
     else {
-      var li = '<li class="disabled"><a tabindex="-1">';
-      li += 'No user presets';
-      li += '</a></li>';
-      $('ul#user_presets_dropdown').append(li);
+      $('#user_presets_dropdown').append('No user presets');
     }
-
+    
+    // Check default checkboxes
+    if (!$("#Filter :checked").length) {
+      reset_default_checkboxes();
+    }
+    
   });
 }
 
 
 function select_from_preset(preset_type, preset) {
   $.getJSON('/api/v1/presets?presets_list=sv_presets', function (data) {
+    
     //First uncheck everything
-    $('input:checkbox').removeAttr('checked');
-    if (preset_type == "default_presets_dropdown") {
+    $('#default_preset_buttons button.active').removeClass('active');
+    $('#Filter input:checkbox').removeAttr('checked');
+    if (preset_type == "default_preset_buttons") {
       var choices = data['default'][preset];
       for (column in choices) {
         for (choice in choices[column]) {
           var column_id = column.toLowerCase().replace(/_/g, '-') + '-' + choice;
-          document.getElementById(column_id).checked = choices[column][choice];
+          $('#'+column_id).prop('checked', choices[column][choice]);
         }
       }
+      $('#'+prettify(preset)).addClass('active');
+      
+    } else if (preset_type == "users_presets_dropdown") {
+      // TODO - implement this
     }
-    else if (preset_type == "users_presets_dropdown") {
-    }
+    
+    // Apply the filter
+    load_samples_table();
   });
 }
 
@@ -294,15 +296,12 @@ function load_running_notes(wait) {
   $.getJSON("/api/v1/running_notes/" + project, function(data) {
     $.each(data, function(date, note) {
       var date = new Date(date);
-      var row = '<tr>'
-      row += '<td>' + date.toDateString() + ', ' + date.toLocaleTimeString(date) + ' by '
-      row += '<a href="mailto:' + note['email'] + '">' + note['user'] + '</a></td>'
-      row += '<td>' + markdown.toHTML(note['note']) + '</td>'
-      row += '</tr>'
-      $("#running_notes_table").append(row);
+      $('#running_notes_panels').append('<div class="panel panel-default">' +
+          '<div class="panel-heading">'+
+            '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
+            date.toDateString() + ', ' + date.toLocaleTimeString(date)+
+          '</div><div class="panel-body">'+markdown.toHTML(note['note'])+'</div></div>');
     });
-    //Clear text area
-    document.getElementById('new_note_text').value = '';
   });
 }
 
@@ -320,8 +319,11 @@ $("#running_notes_form").submit( function(e) {
       error: function(XMLHttpRequest, textStatus, errorThrown) {
         alert('There was an error inserting the Running Note, please try it again. '+XMLHttpRequest+' // '+textStatus+' // '+errorThrown);
       }
+    }).done(function(){
+      load_running_notes();
+      // Clear text area
+      document.getElementById('new_note_text').value = '';
     });
-    load_running_notes()
   }
   else {
     alert("The running note text cannot be empty. Please fill in the Running Note.")
@@ -359,7 +361,7 @@ function load_all_udfs(){
         var source = data["source"];
         if (aborted){
           $("#project_status_alert").text("Aborted");
-          $("#project_status_alert").addClass("label-error");
+          $("#project_status_alert").addClass("label-danger");
         }
         else {
           if (!open_date && source == 'lims'){
@@ -378,43 +380,90 @@ function load_all_udfs(){
             $("#project_status_alert").text("Closed");
             $("#project_status_alert").addClass("label-success");
           }
+          // Hide the aborted dates
+          $('.aborted-dates').hide();
         }
+      }
       
       // Make the project contact address clickable
-      } else if (prettify(key) == 'contact'){
+      else if (prettify(key) == 'contact'){
          $('#contact').html('<a href="mailto:'+value+'">'+value+'</a>');
+      }
         
       // Colour code the project type
-      } else if (prettify(key) == 'type'){
+      else if (prettify(key) == 'type'){
         if(value == 'Production'){
-          $('#type').html('<span class="label label-primary">Production</span>');
-        } else {
+          $('#type').html('<span class="label label-primary">'+value+'</span>');
+        } else if(value == 'Application'){
           $('#type').html('<span class="label label-success">'+value+'</span>');
+        } else {
+          $('#type').html('<span class="label label-default">'+value+'</span>');
         }
-        
-      // Make the comments render Markdown
-      } else if (prettify(key) == 'project_comment'){
-        $('#project_comment').html(markdown.toHTML(value));
+      }
       
+      // Hide the BP Date if no BP
+      else if (prettify(key) == 'best_practice_bioinformatics' && value == 'No'){
+        $('.bp-dates').hide();
+        $('#'+key).html(auto_format(value));
+      }
+      
+      // Make the comments render Markdown
+      else if (prettify(key) == 'project_comment'){
+        $('#project_comment').html(markdown.toHTML(value));
+      }
+        
+      // Pass / Fail sample counts
+      else if (prettify(key) == 'passed_initial_qc' || prettify(key) == 'passed_library_qc'){
+        var parts = value.split('/');
+        if(parts[0].replace(/\D/g,'').length == 0 || parts[1].replace(/\D/g,'').length == 0){
+          $('#'+key).html('<span class="label label-default">'+value+'</span>');
+        } else if(parts[0].replace(/\D/g,'') < parts[1].replace(/\D/g,'')){
+          $('#'+key).html('<span class="label label-danger">'+value+'</span>');
+        } else if(parts[0].replace(/\D/g,'') == parts[1].replace(/\D/g,'')){
+          $('#'+key).html('<span class="label label-success">'+value+'</span>');
+        }
       // Everything else
       } else {
-        $("#" + key).text(value)
+        $('#'+key).html(auto_format(value));
       }
     });
-    var t = $("#tab_communication");
-    t.show();
+    
+    // Everything has loaded - fix the missing 'days in production' if we can
+    if($('#days_in_production').text() == '-' &&
+        $('#open_date').text().length > 0 &&
+        $('#close_date').text().length > 0){
+          
+      var openDate = new Date($('#open_date').text());
+      var closeDate = new Date($('#close_date').text());
+      var timeDiff = Math.abs(closeDate.getTime() - openDate.getTime());
+      var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
+      $('#days_in_production').text(diffDays);
+    }
   });
 };
 
 function prettify(s) {
-  s2 = s.replace("(", "_").replace(")", "_");
-  return s2
+  return s.toLowerCase().replace("(", "_").replace(")", "_").replace(/\s+/g, "_");
 }
 
 function load_table_head(columns){
   var tbl_head = '<tr>';
   $.each(columns, function(i, column_tuple) {
-    tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">' + column_tuple[0] + '</th>';
+    tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">';
+    
+    if(column_tuple[0] == 'SciLife Sample Name') {
+      tbl_head += '<abbr data-toggle="tooltip" title="SciLifeLab Sample Name">Sample</abbr>';
+    } else if(column_tuple[0] == 'Prep Finished Date') {
+      tbl_head += 'Prep Finished';
+    } else if(column_tuple[0] == 'Library Validation Caliper Image') {
+      tbl_head += '<abbr data-toggle="tooltip" title="Latest Library Validation Caliper Image">Caliper Image</abbr>';
+    } else if(column_tuple[0] == 'Million Reads Sequenced') { 
+      tbl_head += '<abbr data-toggle="tooltip" title="Reads passing application QC criteria. If paired end, this is read pairs.">Sequenced Reads</abbr>';
+    } else {
+      tbl_head += column_tuple[0];
+    }
+    
+    tbl_head += '</th>';
   });
   tbl_head += '</tr>';
   $("#samples_table_head").html(tbl_head);
@@ -435,67 +484,52 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             info[column_id] = round_floats(info[column_id], 2);
+            
             // Scilife Sample Name
-            /* // Wire this up to the new QC page
             if (column_id == "scilife_name") {
-              tbl_row += '<td><a class="' + column_id + '" href="/samples/' + 
-              info[column_id] + '">' + info[column_id] + '</a></td>';
+              if(info[column_id] == 'Unexpectedbarcode'){
+                tbl_row += '<td class="'+column_id+'"><span class="label label-danger" data-toggle="tooltip" title="These reads failed to demultiplex">'+
+                            info[column_id] + '</span></td>';
+              } else {
+                // TODO - Wire this up to the new QC page when it's ready
+                tbl_row += '<td class="'+column_id+'"><a target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
+                            'href="http://genologics.scilifelab.se:8080/clarity/search?scope=Sample&query='+info[column_id]+'">'+
+                            info[column_id] + '</a></td>';
+              }
             }
-            */ 
+            
             // Sample run metrics is an array of links - link to flowcells page
-            if (column_id == 'sample_run_metrics') {
+            else if (column_id == 'sample_run_metrics') {
               tbl_row += '<td class="' + column_id + '">';
               for (var i=0; i<info[column_id].length; i++) {
-                tbl_row += '<samp><a href="/flowcells/' + info[column_id][i] + '">' + 
+                tbl_row += '<samp class="nowrap"><a href="/flowcells/' + info[column_id][i] + '">' + 
                 info[column_id][i] + '</a></samp><br>';
               }
               tbl_row += '</td>';
             }
-            //Library prep is an array of Objects
+            
+            // Library prep is an array of *Objects*
             else if (column_id == 'library_prep') {
               tbl_row += '<td class="' + column_id + '">';
               if (info[column_id] !== undefined) {
                 $.each(info[column_id], function(prep, info_prep){
-                  tbl_row += prep + "<br>";
+                  tbl_row += auto_format(prep, true) + ' ';
                 });
               }
               tbl_row += '</td>';
             }
-            // Prep status is an array, use labels
-            else if (column_id == 'prep_status') {
-              tbl_row += '<td class="' + column_id + '">';
-              for (var i=0; i<info[column_id].length; i++) {
-                if(info[column_id][i] == 'FAILED'){
-                  tbl_row += '<span class="label label-danger">Failed</span> ';
-                } else if(info[column_id][i] == 'PASSED'){
-                  tbl_row += '<span class="label label-success">Passed</span> ';
-                } else {
-                  tbl_row += '<span class="label label-default">'+info[column_id][i]+'</span> ';
-                }
-              }
-              tbl_row += '</td>';
+            
+            // Convert million reads to just reads
+            else if (column_id == 'total_reads_(m)'){
+              var reads = info[column_id] * 1000000;
+              tbl_row += auto_samples_cell(column_id, reads);
             }
-            // Status (manual) - use labels
-            else if (column_id == 'status_(manual)') {
-              tbl_row += '<td class="' + column_id + '">';
-              if(info[column_id] == 'Finished'){
-                tbl_row += '<span class="label label-success">Finished</span> ';
-              } else {
-                tbl_row += '<span class="label label-default">'+info[column_id][i]+'</span> ';
-              }
-              tbl_row += '</td>';
-            }
-            // Prep finished date is an arrays
-            else if (column_id == 'prep_finished_date') {
-              tbl_row += '<td class="' + column_id + '">';
-              for (var i=0; i<info[column_id].length; i++) {
-                tbl_row += info[column_id][i]+'<br> ';
-              }
-              tbl_row += '</td>';
-            }
+            
+            // everything else 
             else {
-              tbl_row += '<td class="' + column_id + '">' + info[column_id] + '</td>';
+              tbl_row += auto_samples_cell(column_id, info[column_id]);
             }
+            
           });
         }
         else if (subset == "initial-qc-columns" && info['initial_qc'] !== undefined) {
@@ -503,11 +537,35 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
+            
+            // Caliper image
             if (~column_name.indexOf('Initial QC Caliper Image')){
-                tbl_row += '<td class="' + column_id + '"><div class="caliper-link loading" href="'+info['initial_qc'][column_id]+'"><span class="toremove"><i class="icon-refresh glyphicon-refresh-animate"></i>&nbsp;Loading...</span></div></td>';
-            }else{
-                tbl_row += '<td class="' + column_name + '">' + info['initial_qc'][column_id] + '</td>';
+                tbl_row += '<td class="' + column_id + '">'+
+                            '<div class="caliper-link loading" href="'+info['initial_qc'][column_id]+'">'+
+                              '<span class="toremove">'+
+                                '<i class="icon-refresh glyphicon-refresh-animate"></i>&nbsp;Loading...'+
+                              '</span>'+
+                            '</div>'+
+                          '</td>';
             }
+            
+            // Remove the X from initial QC initials
+            else if(column_id == 'initials'){
+              var sig = info['initial_qc'][column_id];
+              if(sig.length == 3 && sig[2] == 'X'){
+                sig = sig.substring(0,2);
+              }
+              tbl_row += '<td class="'+column_id+'">'+
+                          '<span class="label label-default" data-toggle="tooltip" title="Original signature: '+info['initial_qc'][column_id]+'">'+
+                              sig+'</span></td>';
+            }
+            
+            
+            // everything else 
+            else {
+              tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
+            }
+            
           });
         }
         else if (subset == "library-prep-columns" && info['library_prep'] !== undefined) {
@@ -517,35 +575,48 @@ function load_samples_table() {
             tbl_row += '<td class="' + column_id + '">';
             $.each(info['library_prep'], function(library, info_library) {
               info_library[column_id] = round_floats(info_library[column_id], 2);
+              
               // Special case for workset_setup, which is a link to the LIMS
               if (column_id == "workset_setup" && info_library[column_id]) {
-                tbl_row += '<a href="http://genologics.scilifelab.se:8080/clarity/work-complete/';
-                tbl_row += info_library[column_id].split('-')[1] + '">' + info_library[column_id] + '</a><br>';
+                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a href="http://genologics.scilifelab.se:8080/clarity/work-complete/';
+                tbl_row += info_library[column_id].split('-')[1] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
               }
+              
+              // Make the reagent label use a samp tag
+              else if (column_id == "reagent_label" && info_library[column_id]) {
+                tbl_row += '<samp class="nowrap">' + info_library[column_id] + '</samp><br>';
+              }
+              
               else {
-                tbl_row += info_library[column_id] + '<br>';
+                tbl_row += auto_format(info_library[column_id], true);
               }
             });
             tbl_row += '</td>';
           });
         }
-        else if (subset == "library-validation-columns" && info['library_prep'] !== undefined) {
+        
+        else if ((subset == 'library-validation-columns' || subset == 'pre-prep-library-validation-columns') 
+                && info['library_prep'] !== undefined) {
           $.each(fields, function(idx, column_tuple){
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">';
+            var key = 'library_validation';
+            if(subset == 'pre-prep-library-validation-columns'){
+              key = 'pre_prep_library_validation';
+            }
             $.each(info['library_prep'], function(library, info_library) {
-              if ('library_validation' in info_library) {
-                //We only want to show up the LIMS process ID with the higher number (the last one)
-                var process_id = max_str(Object.keys(info_library['library_validation']));
-                var validation_data = info_library['library_validation'][process_id];
+              if (key in info_library) {
+                // We only want to show up the LIMS process ID with the higher number (the last one)
+                var process_id = max_str(Object.keys(info_library[key]));
+                var validation_data = info_library[key][process_id];
                 if (validation_data) {
                    validation_data[column_id] = round_floats(validation_data[column_id], 2);
                    if (~column_name.indexOf('Library Validation Caliper Image')){
                         tbl_row+='<div class="caliper-link loading" href="'+validation_data[column_id]+
                             '"><span class="toremove"><i class="icon-refresh glyphicon-refresh-animate"></i>&nbsp;Loading...</span></div>';
                    } else {
-                        tbl_row += validation_data[column_id] + '<br>';
+                        tbl_row += auto_format(info_library[column_id], true);
                    }
                }
               }
@@ -553,32 +624,14 @@ function load_samples_table() {
             tbl_row += '</td>';
           });
         } 
-        else if (subset == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
-          $.each(fields, function(idx, column_tuple){
-            var column_name = column_tuple[0];
-            var column_id = column_tuple[1];
-            tbl_row += '<td class="' + column_id + '">';
-            $.each(info['library_prep'], function(library, info_library) {
-              if ('pre_prep_library_validation' in info_library) {
-                //We only want to show up the LIMS process ID with the higher number (the last one)
-                var process_id = max_str(Object.keys(info_library['pre_prep_library_validation']));
-                var validation_data = info_library['pre_prep_library_validation'][process_id];
-                if (validation_data) {
-                  validation_data[column_id] = round_floats(validation_data[column_id], 2);
-                  tbl_row += validation_data[column_id] + '<br>';
-                }
-              }
-            });
-            tbl_row += '</td>';
-          });
-        } 
+        
         // Details columns
         else {
           $.each(fields, function(idx, column_tuple){
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             info['details'][column_id] = round_floats(info['details'][column_id], 2);
-            tbl_row += '<td class="' + column_id + '">' + info['details'][column_id] + '</td>';
+            tbl_row += auto_samples_cell(column_id, info['details'][column_id]);
           });
         }
       });
@@ -615,6 +668,79 @@ function update_caliper(){
        }                                    
    }
  });
+}
+
+function auto_format(value, samples_table){
+  // Default value for function
+  samples_table = (typeof samples_table === "undefined") ? false : samples_table;
+  
+  if(typeof value == 'string'){
+    value = value.toLowerCase();
+  }
+  
+  // Put all False / Failed / Fail into labels
+  if(typeof value == 'string' && (
+            value == 'false' || 
+            value == 'failed' || 
+            value == 'fail' || 
+            value == 'no' ||
+            value == 'n/a' || 
+            value == 'aborted' )){
+    return '<span class="label label-danger sentenceCase">'+value+'</span> ';
+  }
+
+  // Put all False / Failed / Fail into labels
+  else if(typeof value == 'string' && (
+            value == 'true' || 
+            value == 'passed' || 
+            value == 'pass' || 
+            value == 'yes' || 
+            value == 'finished')){
+    return '<span class="label label-success sentenceCase">'+value+'</span> ';
+  }
+  
+  // Dates
+  else if(samples_table && typeof value == 'string' && value.split('-').length == 3 && value.length == 10){
+    return '<span class="label label-default sentenceCase">'+value+'</span> ';
+  }
+  
+  // Put all undefined into labels
+  else if((typeof value == 'string' && value == 'undefined')
+          || typeof value == 'undefined' || typeof value == 'null'){
+    return '<span class="label label-default sentenceCase">'+value+'</span> ';
+  }
+  
+  else {
+    if(samples_table){
+      return value + '<br>';
+    } else {
+      return value;
+    }
+  }
+}
+
+function auto_samples_cell (id, val){
+  
+  // Column returns an array
+  if (val instanceof Array){
+    cell = '<td class="' + id + '">';
+    $.each(val, function(key, val){
+      cell += auto_format(val, true) + ' ';
+    });
+    return cell + '</td>';
+  }
+  
+  // Numeric value - right align
+  else if (!isNaN(parseFloat(val)) && isFinite(val)){
+    // Give numbers spaces in thousands separator
+    val = val.toLocaleString(['fr-FR', 'en-US']);
+    return '<td class="' + id + ' text-right">' + auto_format(val, true) + '</td>';
+  }
+  
+  // Single value
+  else {
+    return '<td class="' + id + '">' + auto_format(val, true) + '</td>';
+  }
 }
 
 //Is there any standar method to do this?
