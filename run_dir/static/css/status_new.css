@@ -123,7 +123,8 @@ div.scrollable {
   margin-left:280px;
 }
 
-.nav.nav-tabs {
+.nav.nav-tabs,
+.marginBottom {
   margin-bottom:15px;
 }
 
@@ -153,6 +154,15 @@ samp {
   font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
   margin:0;
   padding:0;
+}
+
+.link_wrapper {
+	border-bottom:1px solid #DDDDDD;
+	padding-top:15px;
+	padding-bottom:15px;
+}
+.link_wrapper:first-child {
+	padding-top:0;
 }
 
 .search-action, .search-action input {

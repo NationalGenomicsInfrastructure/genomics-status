@@ -189,29 +189,23 @@ function select_from_preset(preset_type, preset) {
 
 
 function load_links() {
-  var link_icon = {'Deviation':'exclamation-sign', 'Other':'file'};
+  var link_icon = {'Deviation':'exclamation-sign text-danger', 'Other':'file text-primary'};
   $("#existing_links").empty();
   $.getJSON("/api/v1/links/" + project, function(data) {
     $.each(data, function(key, link) {
       var link_href = link['url'] === "" ? "" : (' href="' + link['url'] + '"');
 			var date = new Date(key);
-      /*
-			var row = '<tr>';
-      row += '<td class="col-xs-1"><span class="glyphicon glyphicon-' + link_icon[link['type']] + '"></span></td>';
-      row += '<td>' + '<a' +   + '>'+ link['title'] + '</a>';
-      row += '<p class="small muted">Added by ' + '<a href="mailto:' + link['email'] + '">' + link['user'] + '</a> on ' + date.toDateString() + '</p><td>';
-      row += '<td><pre>' + link['desc'] + '</pre></td>';
-      row += '</tr>';
-			*/
-      $("#existing_links").append('<div class="media"><a class="media-left"'+link_href+'>'+
+      $("#existing_links").append('<div class="link_wrapper"><div class="col-sm-8 col-sm-offset-2">'+
+						'<div class="media"><a class="media-left"'+link_href+'>'+
 							'<span style="font-size:18px;" class="glyphicon glyphicon-'+link_icon[link['type']]+'"></span>'+
 						'</a><div class="media-body">'+
-							'<h4 class="media-heading">'+link['title']+
+							'<h4 class="media-heading"><span class="media-left"><a "'+link_href+'>'+link['title']+'</a>'+
 								' &nbsp; <small><a href="mailto:'+link['email']+'">'+link['user']+'</a>'+
 								' - '+date.toDateString()+
-							'</h4>'+
+							'</span></h4>'+
 							link['desc']+
-						'</div></div>');
+						'</div></div>'+
+						'</div><div class="clearfix"></div></div>');
     });
   });
 }
