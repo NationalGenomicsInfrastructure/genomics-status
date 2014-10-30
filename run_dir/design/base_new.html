@@ -106,8 +106,11 @@
     <p>Something broken or have an idea for an improvement? Please <a href="/suggestion_box">let us know</a>.</p>
 </div>
 <script type="text/javascript">
-$('#depreciated_header').click(function(e){
-   e.preventDefault(); 
+$(document).ready(function(){
+  $('#depreciated_header').click(function(e){
+     e.preventDefault(); 
+  });
+  $('body').tooltip({ selector: '[data-toggle="tooltip"]' });
 });
 </script>
 </body>

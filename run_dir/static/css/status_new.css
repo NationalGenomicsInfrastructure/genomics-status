@@ -3,6 +3,13 @@ div.scrollable {
   overflow: auto;
 }
 
+.sentenceCase {
+  text-transform: capitalize;
+}
+.upperCase {
+  text-transform: uppercase;
+}
+
 .q30_filters {
   width:200px;
   float:left;
@@ -11,6 +18,10 @@ div.scrollable {
 
 .no-margin {
   margin:0;
+}
+
+.nowrap {
+  white-space: pre;
 }
 
 .inline-textbox {
