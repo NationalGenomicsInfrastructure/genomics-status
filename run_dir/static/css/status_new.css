@@ -50,12 +50,15 @@ div.scrollable {
   border-top:1px solid #ccc;
   border-bottom: 1px solid #ccc;
   padding:10px 0;
+  display:inline-block;
+  width:100%;
 }
 #homepage-searchbar .control-label {
   font-size:1.4em;
-  margin-right: 15px;
-  padding-top:0;
-  vertical-align:middle;
+  margin: 10px 15px 0 0;
+  padding:0;
+  top:5px;
+  vertical-align:top;
 }
 #homepage-searchbar .twitter-typeahead {
   width: 422px;
