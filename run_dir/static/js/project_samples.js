@@ -173,7 +173,7 @@ function select_from_preset(preset_type, preset) {
       for (column in choices) {
         for (choice in choices[column]) {
           var column_id = column.toLowerCase().replace(/_/g, '-') + '-' + choice;
-          $('#'+column_id).prop('checked', choices[column][choice]);
+          $('#'+prettify(column_id)).prop('checked', choices[column][choice]);
         }
       }
       $('#'+prettify(preset)).addClass('active');
@@ -424,17 +424,23 @@ function load_all_udfs(){
       // Pass / Fail sample counts
       else if (prettify(key) == 'passed_initial_qc' || prettify(key) == 'passed_library_qc'){
         var parts = value.split('/');
-        if(parts[0].replace(/\D/g,'').length == 0 || parts[1].replace(/\D/g,'').length == 0){
+        if(parts[0].replace(/\D/g,'').length > 0 && parts[1].replace(/\D/g,'').length > 0){
+          if(parts[0].replace(/\D/g,'') < parts[1].replace(/\D/g,'')){
+            $('#'+key).html('<span class="label label-danger">'+value+'</span>');
+          } else if(parts[0].replace(/\D/g,'') >= parts[1].replace(/\D/g,'')){
+            $('#'+key).html('<span class="label label-success">'+value+'</span>');
+          }
+        } else {
           $('#'+key).html('<span class="label label-default">'+value+'</span>');
-        } else if(parts[0].replace(/\D/g,'') < parts[1].replace(/\D/g,'')){
-          $('#'+key).html('<span class="label label-danger">'+value+'</span>');
-        } else if(parts[0].replace(/\D/g,'') == parts[1].replace(/\D/g,'')){
-          $('#'+key).html('<span class="label label-success">'+value+'</span>');
         }
+      }
+      
       // Everything else
-      } else {
+      else {
 			  if($('#'+prettify(key)).length > 0){
 					$('#'+prettify(key)).html(auto_format(value));
+        } else if(key.indexOf('(') > 0 || key.indexOf(')') > 0){
+          console.log('Bad ID with underscore skipped: '+key+' = '+value);
 				} else if($('#'+key).length > 0){
 			  	$('#'+key).html(auto_format(value));
 				} else {
@@ -445,15 +451,19 @@ function load_all_udfs(){
     
     // Everything has loaded - fix the missing 'days in production' if we can
     if($('#days_in_production').text() == '-' &&
-        $('#open_date').text().length > 0 &&
-        $('#close_date').text().length > 0){
+        $('#open_date').text() != '-' &&
+        $('#close_date').text() != '-'){
           
       var openDate = new Date($('#open_date').text());
       var closeDate = new Date($('#close_date').text());
       var timeDiff = Math.abs(closeDate.getTime() - openDate.getTime());
-      var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
+      var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
       $('#days_in_production').text(diffDays);
+      
     }
+    
+    // Check the height of the user comment
+    check_fade_height();
   });
 };
 
@@ -794,4 +804,27 @@ var round_floats = function(n, p) {
   }
   return n;
 }
+
+
+
+// Get rid of the "read-more" if we're just not that big
+function check_fade_height(){
+  if($('#customer_project_description_wrapper').outerHeight() < 100){
+    $('.fade-read-more').hide();
+    $('#customer_project_description_wrapper').removeClass('showfade');
+  }
+}
+
+// Fade the "read-more" customer comment
+// Stolen from http://css-tricks.com/text-fade-read-more/
+$('#customer_project_description_wrapper .btn').click(function() {
+	$('#customer_project_description_wrapper')
+		.css({"height": $('#customer_project_description_wrapper').height(),
+			"max-height": 9999})
+		.animate({
+			"height": $('#customer_project_description').height()
+		});
+	$('.fade-read-more').fadeOut();
+	return false;
+});
 
