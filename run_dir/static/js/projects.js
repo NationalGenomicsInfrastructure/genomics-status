@@ -63,6 +63,8 @@ function load_table() {
       }
       $("#project_table_body").append(tbl_row); 
     });
+    
+    // Initialise the Javascript sorting now that we know the number of rows
     init_listjs(size, columns);
   });
 }
@@ -104,12 +106,12 @@ function init_listjs(no_items, columns) {
   column_names = new Array();
   $.each(columns, function(i, column_tuple){
     column_names.push(column_tuple[1]);
-  })
+  });
   var options = {
     valueNames: column_names,
     page: no_items /* Default is to show only 200 items at a time. */
   };
-  var featureList = new List('project-list', options);
+  var featureList = new List('page_content', options);
   featureList.search($('#search_field').val());
 }
 
