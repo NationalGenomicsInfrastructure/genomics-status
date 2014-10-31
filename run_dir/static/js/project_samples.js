@@ -107,12 +107,12 @@ function reset_default_checkboxes(){
 //Check or uncheck all fields from clicked category
 function choose_column(col){
   // If any are checked, uncheck all
-  if($('#'+col+' input.filterCheckbox:checked').length > 0){
-    $('#'+col+' input').prop('checked', false);
+  if(safeobj(col).find('input.filterCheckbox:checked').length > 0){
+    safeobj(col).find('input').prop('checked', false);
   }
   // Nothing checked - check everything
   else {
-    $('#'+col+' input').prop('checked', true);
+    safeobj(col).find('input').prop('checked', true);
   }
 }
 // Update the header checkbox when clicking in the list
@@ -173,10 +173,10 @@ function select_from_preset(preset_type, preset) {
       for (column in choices) {
         for (choice in choices[column]) {
           var column_id = column.toLowerCase().replace(/_/g, '-') + '-' + choice;
-          $('#'+prettify(column_id)).prop('checked', choices[column][choice]);
+          prettyobj(column_id).prop('checked', choices[column][choice]);
         }
       }
-      $('#'+prettify(preset)).addClass('active');
+      prettyobj(preset).addClass('active');
       
     } else if (preset_type == "users_presets_dropdown") {
       // TODO - implement this
@@ -351,6 +351,12 @@ function load_all_udfs(){
     $('#loading_spinner').hide();
     $('#page_content').show();
     $.each(data, function(key, value) {
+      // Rename a few fields to something more sane
+      if(key == 'Aborted'){ key = 'aborted_samples'; }
+      if(key == 'In Progress'){ key = 'in_progress_samples'; }
+      if(key == 'Finished'){ key = 'finished_samples'; }
+      
+      
       // Set the project name and status
       if (prettify(key) == 'project_name'){
         if (!data['portal_id']) {
@@ -358,8 +364,8 @@ function load_all_udfs(){
         } else {
           project_title = project + ", " + data['project_name'] + ' &nbsp; <small>NGI Portal: <a href="https://portal.scilifelab.se/genomics/node/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>'; 
         }
-        $("#" + prettify(key)).html(project_title);
-        $("#" + prettify(key)).attr('p_name', data['project_name']);
+        prettyobj(key).html(project_title);
+        prettyobj(key).attr('p_name', data['project_name']);
         
         // Decide project status (and color) based on the project dates
         var open_date = data["open_date"];
@@ -412,7 +418,7 @@ function load_all_udfs(){
       // Hide the BP Date if no BP
       else if (prettify(key) == 'best_practice_bioinformatics' && value == 'No'){
         $('.bp-dates').hide();
-        $('#'+key).html(auto_format(value));
+        safeobj(key).html(auto_format(value));
       }
       
       // Make the comments render Markdown
@@ -426,23 +432,21 @@ function load_all_udfs(){
         var parts = value.split('/');
         if(parts[0].replace(/\D/g,'').length > 0 && parts[1].replace(/\D/g,'').length > 0){
           if(parts[0].replace(/\D/g,'') < parts[1].replace(/\D/g,'')){
-            $('#'+key).html('<span class="label label-danger">'+value+'</span>');
+            safeobj(key).html('<span class="label label-danger">'+value+'</span>');
           } else if(parts[0].replace(/\D/g,'') >= parts[1].replace(/\D/g,'')){
-            $('#'+key).html('<span class="label label-success">'+value+'</span>');
+            safeobj(key).html('<span class="label label-success">'+value+'</span>');
           }
         } else {
-          $('#'+key).html('<span class="label label-default">'+value+'</span>');
+          safeobj(key).html('<span class="label label-default">'+value+'</span>');
         }
       }
       
       // Everything else
       else {
-			  if($('#'+prettify(key)).length > 0){
-					$('#'+prettify(key)).html(auto_format(value));
-        } else if(key.indexOf('(') > 0 || key.indexOf(')') > 0){
-          console.log('Bad ID with underscore skipped: '+key+' = '+value);
-				} else if($('#'+key).length > 0){
-			  	$('#'+key).html(auto_format(value));
+			  if(prettyobj(key).length > 0){
+					prettyobj(key).html(auto_format(value));
+				} else if(safeobj(key).length > 0){
+			  	safeobj(key).html(auto_format(value));
 				} else {
 					// console.log("Can't find field for "+key+': '+value+' (prettified key: '+prettify(key)+')');
 				}
@@ -468,8 +472,18 @@ function load_all_udfs(){
 };
 
 function prettify(s) {
-  return s.toLowerCase().replace("(", "_").replace(")", "_").replace(/\s+/g, "_")
-						.replace(/_+/g, "_").replace(/^_/, "").replace(/_$/, "");
+  // Replaces whitespace with underscores. Replaces sequential _s with one
+  // Removes trailing underscores
+  return s.toLowerCase().replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_/, "").replace(/_$/, "");
+}
+
+// These functions avoid parsing errors due to jQuery not liking element
+// IDs with brackets in. Otherwise eqivalent to $('#'+s)
+function prettyobj(s) {
+  return $(document.getElementById(prettify(s)));
+}
+function safeobj(s) {
+  return $(document.getElementById(s));
 }
 
 function load_table_head(columns){
