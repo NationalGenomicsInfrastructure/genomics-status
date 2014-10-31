@@ -12,7 +12,7 @@ $(document).ready(function() {
   // Load the presets first (to get the table headers)
   $.when(load_presets()).done(function(){
     // Load the page content
-    $.when(load_table(), load_undefined_columns()).done(function(){
+    $.when(load_undefined_columns()).done(function(){
       // Show the page   
       $('#loading_spinner').hide();
       $('#page_content').show();
