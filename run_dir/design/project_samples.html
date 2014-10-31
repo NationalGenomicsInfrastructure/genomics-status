@@ -20,8 +20,8 @@ Description: Details page for a single project
     <h4>Key Project Information</h4>
     <dl class="dl-horizontal">
       <dt>Type</dt>									<dd id="type">-</dd>
-      <dt>Application</dt>					<dd id="application" class="sentenceCase">-</dd>
-      <dt>Sequencing Setup</dt>			<dd id="sequencing_setup">-</dd>
+      <dt>Application</dt>					<dd id="application">-</dd>
+      <dt>Sequencing Setup</dt>			<dd><span id="sequencing_platform">-</span>, <span id="sequencing_setup"></span></dd>
       <dt>Library Method</dt>				<dd id="library_construction_method">-</dd>
 		</dl>
     
@@ -73,7 +73,10 @@ Description: Details page for a single project
     <h4>User project description
       <small class="text-danger">Use with caution! <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="This is the original user description of the project and may not reflect the final order."></i></small>
     </h4>
-    <p id="customer_project_description"></p>
+    <div id="customer_project_description_wrapper" class="showfade">
+      <p id="customer_project_description"></p>
+      <p class="fade-read-more"><a href="#" class="btn btn-default">Read More</a></p>
+    </div>
   </div>
 </div>
 
@@ -127,7 +130,7 @@ Description: Details page for a single project
             </thead>
             <tbody>
               <tr><td>Uppnex ID</td><td><code id="uppnex_id"></code></td></tr>
-              <tr><td>Source</td><td id="source" class="sentenceCase"></td></tr>
+              <tr><td>Source</td><td id="source"></td></tr>
               <tr><td>Custom capture design</td><td id="custom_capture_design_id"></td></tr>
               <tr><td>UPPMAX project owner</td><td id="uppmax_project_owner"></td></tr>
               <tr><td>Best Practice Bioinformatics</td><td id="best_practice_bioinformatics"></td></tr>
@@ -145,7 +148,6 @@ Description: Details page for a single project
             </thead>
             <tbody>
               <tr><td>Sample type</td><td id="sample_type"></td></tr>
-              <tr><td>Sequencing Platform</td><td id="sequencing_platform"></td></tr>
               <tr><td>% phiX</td><td id="phix_spike-in_percent"></td></tr>
               <tr><td>Low Diversity</td><td id="low_diversity"></td></tr>
               <tr><td>Custom Primer</td><td id="custom_primer"></td></tr>
