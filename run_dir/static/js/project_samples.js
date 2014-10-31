@@ -1,4 +1,10 @@
-//Get pseudo-argument for this js file. Ie, project = P1234
+/*
+File: project_samples.js
+URL: /static/js/project_samples.js
+Powers /project/[PID] - template is run_dir/design/project_samples.html
+*/
+
+// Get pseudo-argument for this js file. Ie, project = P1234
 var project = $('#projects-js').attr('data-project');
 var ordered_reads = 0.0;
 
@@ -88,13 +94,13 @@ function read_current_filtering(header){
         columns[p].push([$(this).data('displayname'), $(this).attr('name')]);
       }
     });
-    return columns
+    return columns;
   } else {
     var columns = new Array();
     $("#Filter .filterCheckbox:checked").each(function() {
       columns.push([$(this).data('displayname'), $(this).attr('name')]);
     });
-    return columns
+    return columns;
   }
 }
 
