@@ -678,10 +678,14 @@ function load_samples_table() {
       tbl_row += '</tr>';
       tbl_body += tbl_row;
     });
+    
     $("#samples_table_body").html(tbl_body);
-    columns = read_current_filtering(false);
+    
+    // Initialise the table sorting
+    var columns = read_current_filtering(false);
     init_listjs(size, columns);
-    //last step, update caliper images
+    
+    // last step, update caliper images
     update_caliper();
   });
 }
@@ -774,7 +778,6 @@ function auto_format(value, samples_table){
 }
 
 function auto_samples_cell (id, val){
-  
   // Column returns an array
   if (val instanceof Array){
     cell = '<td class="' + id + '">';
