@@ -110,7 +110,11 @@ $(document).ready(function(){
   $('#depreciated_header').click(function(e){
      e.preventDefault(); 
   });
-  $('body').tooltip({ selector: '[data-toggle="tooltip"]' });
+  $('body').tooltip({
+		selector: '[data-toggle="tooltip"]',
+		container: 'body',
+		html: true
+	});
 });
 </script>
 </body>
