@@ -13,7 +13,8 @@ Description: Details page for a single project
 <div id="page_content" style="display:none;">
 
 <h1><span id="project_name">-</span> <small><span class="label" id="project_status_alert"></span></small></h1>
-<hr>
+
+<div id="project_timescale"></div>
 
 <div class="row">
   <div class="col-md-4">
@@ -430,5 +431,6 @@ Description: Details page for a single project
 <!-- Javascript -->
 <script src="/static/js/list.min.js"></script>
 <script src="/static/js/markdown.min.js"></script>
+<script src="/static/js/chroma.min.js"></script>
 <script src="/static/js/project_samples.js" id="projects-js" data-project={{project}}></script>
 {% end %}

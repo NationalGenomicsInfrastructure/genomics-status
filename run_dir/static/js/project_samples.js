@@ -459,6 +459,14 @@ function load_all_udfs(){
       }
     });
     
+		// Check that we haven't hidden any fields that have content
+		if($('#best_practice_analysis_completed').text() != '-'){
+			$('.bp-dates').show();
+		}
+		if($('#aborted').text() != '-'){
+			$('.aborted-dates').show();
+		}
+		
     // Everything has loaded - fix the missing 'days in production' if we can
     if($('#days_in_production').text() == '-' &&
         $('#open_date').text() != '-' &&
@@ -471,6 +479,9 @@ function load_all_udfs(){
       $('#days_in_production').text(diffDays);
       
     }
+		
+		// Make the cool timescale bar if we can
+		make_timescale();
     
     // Check the height of the user comment
     check_fade_height();
@@ -850,4 +861,128 @@ $('#customer_project_description_wrapper .btn').click(function() {
 	$('.fade-read-more').fadeOut();
 	return false;
 });
+
+
+
+// Awesome dates timeline
+function make_timescale(){
+	// Which elements are we looking at?
+	var date_ids = [
+				'order_received',
+				'contract_sent',
+				'plates_sent',
+				'contract_received',
+				'sample_information_received',
+				'samples_received',
+				'open_date',
+				'first_initial_qc_start_date',
+				'queued',
+				'library_prep_start',
+				'qc_library_finished',
+				'sequencing_start_date',
+				'all_samples_sequenced',
+				'all_raw_data_delivered',
+				'best_practice_analysis_completed',
+				'close_date',
+				'aborted'
+			];
+	
+	var oldest = new Date();
+	var newest = new Date();
+	var dates = {};
+	$.each(date_ids, function(i, id){
+		if($('#'+id).text() !== '-'){
+			var thisdate = new Date($('#'+id).text());
+			if(typeof dates[thisdate] == 'undefined') {
+				dates[thisdate] = [id];
+			} else {
+			  dates[thisdate].push(id);
+			}
+			if(thisdate.getTime() < oldest.getTime()){
+				oldest = thisdate;
+			}
+			if(id == 'close_date' || id == 'aborted'){
+				newest = thisdate;
+			}
+		}
+	});
+	
+	if(oldest.getTime() < newest.getTime()){
+		// Set up the colour scale with Chroma.js
+		var scale = chroma.scale('RdYlBu').domain([newest.getTime(), oldest.getTime()]);
+		
+		// Set up the CSS on the bar
+		var grad_scale = chroma.scale('RdYlBu').domain([0,100],20).out('hex'), gradient_cols = [];
+		$.each(grad_scale.domain(), function(k, col){ gradient_cols.push(grad_scale(col)); });
+		gradient_cols = gradient_cols.reverse();
+		$('#project_timescale').css('height', '2px');
+		$('#project_timescale').css("background-image", "-webkit-linear-gradient(left, "+gradient_cols.join(',')+")");
+		$('#project_timescale').css("background-image", "-moz-linear-gradient(right, "+gradient_cols.join(',')+")");
+		$('#project_timescale').css("background-image", "-o-linear-gradient(right, "+gradient_cols.join(',')+")");
+		$('#project_timescale').css("background-image", "linear-gradient(to right, "+gradient_cols.join(',')+")");
+	
+		// Go through dates
+		var range =  newest.getTime() - oldest.getTime();
+		$.each(dates, function(thisdate, ids){
+			
+			// Get a nice version of the timestamp to print
+			thisdate = new Date(thisdate);
+			var yyyy = thisdate.getFullYear().toString();                                    
+      var mm = (thisdate.getMonth()+1).toString();
+      var dd  = thisdate.getDate().toString();             
+      var thedate = yyyy + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + (dd[1]?dd:"0"+dd[0]);
+			
+			// Work out the colours for this date
+			var thiscol = scale(thisdate.getTime());
+			var textcol = (chroma.contrast(thiscol, '#FFF') < 2) ? '#000' : '#FFF';
+			
+			// Format the date labels and get nice text descriptions
+			var nicenames = [];
+			$.each(ids, function(j, id){
+				// Get element
+				var el = $('#'+id);
+				// Find a nice name
+				if(el.is('dd')){
+					nicenames.push(el.prev().text());
+				} else if(el.is('span')){
+					nicenames.push(el.parent().prev().text());
+				} else {
+					nicenames.push(id);
+				}
+				// Format the label
+				var thistext = el.text();
+				el.html('<span class="label" style="background-color:'+thiscol+'; color:'+textcol+';">'+thistext+'</span>');
+			});
+			
+			// Print a point onto the timeline
+			var percent = ((thisdate.getTime() - oldest.getTime()) / range) * 100;
+			$('#project_timescale').append('<div style="left:'+percent+'%; background-color:'+thiscol+';" data-toggle="tooltip" data-placement="bottom" title="'+thedate+'<br>'+nicenames.join('<br>')+'"></div>');
+		});
+	}
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
