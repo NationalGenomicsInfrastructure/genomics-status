@@ -652,6 +652,71 @@ function load_samples_table() {
           });
         }
         
+        else if (subset == "library-validation-columns" && info['library_prep'] !== undefined) {
+          $.each(fields, function(idx, column_tuple){
+            var column_name = column_tuple[0];
+            var column_id = column_tuple[1];
+            tbl_row += '<td class="' + column_id + '">';
+            $.each(info['library_prep'], function(library, info_library) {
+              if ('library_validation' in info_library) {
+                // We only want to show up the LIMS process ID with the higher number (the last one)
+                var process_id = max_str(Object.keys(info_library['library_validation']));
+                var validation_data = info_library['library_validation'][process_id];
+                if (validation_data) {
+                  validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                  // Caliper column
+                  if (~column_name.indexOf('Library Validation Caliper Image')){
+                       tbl_row+='<div class="caliper-link loading" href="'+validation_data[column_id]+
+                           '"><span class="toremove"><i class="icon-refresh glyphicon-refresh-animate"></i>&nbsp;Loading...</span></div>';
+                  }
+                  
+                  // Remove the X from initial QC initials
+                  else if(column_id == 'initials'){
+                    var sig = validation_data[column_id];
+                    if(sig.length == 3 && sig[2] == 'X'){
+                      sig = sig.substring(0,2);
+                    }
+                    tbl_row += '<span class="label label-default" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
+                  }
+                  
+                  // Everything else
+                  else {
+                    tbl_row += auto_format(validation_data[column_id], true);
+                  }
+                }
+              }
+            });
+            tbl_row += '</td>';
+          });
+        } 
+        else if (subset == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
+          $.each(fields, function(idx, column_tuple){
+            var column_name = column_tuple[0];
+            var column_id = column_tuple[1];
+            tbl_row += '<td class="' + column_id + '">';
+            $.each(info['library_prep'], function(library, info_library) {
+              if ('pre_prep_library_validation' in info_library) {
+                // We only want to show up the LIMS process ID with the higher number (the last one)
+                var process_id = max_str(Object.keys(info_library['pre_prep_library_validation']));
+                var validation_data = info_library['pre_prep_library_validation'][process_id];
+                if (validation_data) {
+                  validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                  tbl_row += auto_format(validation_data[column_id]);
+                }
+              }
+            });
+            tbl_row += '</td>';
+          });
+        } 
+        
+        
+        
+        
+        
+        
+        
+        /*
+        
         else if ((subset == 'library-validation-columns' || subset == 'pre-prep-library-validation-columns') 
                 && info['library_prep'] !== undefined) {
           $.each(fields, function(idx, column_tuple){
@@ -681,6 +746,8 @@ function load_samples_table() {
             tbl_row += '</td>';
           });
         } 
+        
+        */
         
         // Details columns
         else {
@@ -736,6 +803,7 @@ function auto_format(value, samples_table){
   samples_table = (typeof samples_table === "undefined") ? false : samples_table;
   
   var orig = value;
+  var returnstring;
   if(typeof value == 'string'){
     value = value.toLowerCase().trim();
   }
@@ -751,7 +819,7 @@ function auto_format(value, samples_table){
             value == 'no' ||
             value == 'n/a' || 
             value == 'aborted' ))){
-    return '<span class="label label-danger sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="label label-danger sentenceCase">'+value+'</span> ';
   }
 
   // Put all False / Failed / Fail into labels
@@ -763,18 +831,18 @@ function auto_format(value, samples_table){
             value == 'yes' || 
             value == 'finished' ||
             value == 'p'))){
-    return '<span class="label label-success sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="label label-success sentenceCase">'+value+'</span> ';
   }
   
   // Warning labels
   else if(typeof value == 'string' && (
             value == 'in progress')){
-    return '<span class="label label-warning sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="label label-warning sentenceCase">'+value+'</span> ';
   }
   
   // Dates
   else if(samples_table && typeof value == 'string' && value.split('-').length == 3 && value.length == 10){
-    return '<span class="label label-default sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="label label-date sentenceCase">'+value+'</span> ';
   }
   
   // Put all undefined into labels
@@ -782,15 +850,17 @@ function auto_format(value, samples_table){
           (typeof value == 'string' && value == 'null') ||
           (typeof value == 'string' && value == 'nan') ||
           typeof value == 'undefined' || typeof value == 'null' || typeof value == 'NaN'){
-    return '<span class="label label-default sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="label label-undefined sentenceCase">'+value+'</span> ';
   }
   
   else {
-    if(samples_table){
-      return orig + '<br>';
-    } else {
-      return orig;
-    }
+    returnstring = orig;
+  }
+  
+  if(samples_table){
+    return returnstring + '<br>';
+  } else {
+    return returnstring;
   }
 }
 
