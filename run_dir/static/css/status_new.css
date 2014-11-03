@@ -193,12 +193,16 @@ samp {
 }
 
 #com_accordion pre,
-#running_notes_panels pre {
+#running_notes_panels pre,
+.running-note-panel pre {
   background-color:transparent;
   border:none;
   font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
   margin:0;
   padding:0;
+}
+.running-note-panel pre {
+  max-width:400px;
 }
 
 .link_wrapper {
