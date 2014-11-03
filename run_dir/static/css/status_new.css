@@ -133,13 +133,18 @@ div.scrollable {
 }
 
 /* Make the bootstrap labels a little less over-saturated */
-.label {font-weight:normal;}
-.label-default {background-color:#777}
-.label-primary {background-color: #547C9E} /* #428bca} */
-.label-success {background-color: #5D995D} /* #5cb85c} */
-.label-info    {background-color: #5998AB} /* #5bc0de} */
-.label-warning {background-color: #BA945F} /* #f0ad4e} */
-.label-danger  {background-color: #B06361} /* #d9534f} */
+.label { font-weight:normal; }
+.label-default { background-color:#777; }
+.label-primary { background-color: #547C9E; } /* #428bca} */
+.label-success { background-color: #5D995D; } /* #5cb85c} */
+.label-info    { background-color: #5998AB; } /* #5bc0de} */
+.label-warning { background-color: #BA945F; } /* #f0ad4e} */
+.label-danger  { background-color: #B06361; } /* #d9534f} */
+
+/* Custom Labels */
+.label-undefined  {color: #ccc; }
+.label-date  {color: #333; font-size:80%; }
+
 
 /* Make <samp> (flow cell IDs usually) a little smaller */
 samp {
