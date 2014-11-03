@@ -445,20 +445,27 @@ table.narrow-headers th {
   position: relative;
   margin-bottom: 20px;
 }
-div#caliperModal {
+
+/* Caliper thumbnail image in table */
+.caliper_loading_spinner {
+  display:inline-block;
+  min-width:200px;
+}
+.caliper-thumbnail img {
+  max-width:200px;
+}
+/* Caliper modal */
+#caliperModal .modal-content {
     width:1040px;
-    height:600px;
     margin-left:-520px;
     left:50%;
 }
-img.caliper-img {
-    cursor: pointer;
-}
-img.caliper-modal {
+#caliperModal .modal-body img {
     width:100%;
     max-width:1040px;
     max-height:400px;
 }
+
 
 /* NVD3 Graphs
 ------------------------------------------------- */

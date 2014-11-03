@@ -9,7 +9,7 @@ Description: Details page for a single project
 
 {% block stuff %}
 
-<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading project page..</div>
+<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading project page..</div>
 <div id="page_content" style="display:none;">
 
 <h1><span id="project_name">-</span> <small><span class="label" id="project_status_alert"></span></small></h1>
@@ -412,17 +412,21 @@ Description: Details page for a single project
 
 <!-- CALIPER MODAL -->
 <div id="caliperModal" class="modal fade">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4>Caliper Image</h4>
+        <h3>Caliper Image</h3>
       </div>
       <div class="modal-body">
-        <p>Caliper image loading...</p>
+        <div id="caliper_modal_image_wrapper">
+          <p>Caliper image loading...</p>
+        </div>
+        <a class="left carousel-control" href="#" role="button"><span class="glyphicon glyphicon-chevron-left"></span></a>
+        <a class="right carousel-control" href="#" role="button"><span class="glyphicon glyphicon-chevron-right"></span></a>
       </div>
       <div class="modal-footer">
-        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Close</button>
       </div>
     </div>
   </div>
