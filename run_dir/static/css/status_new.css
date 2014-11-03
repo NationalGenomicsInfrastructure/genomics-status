@@ -1,6 +1,17 @@
+body {
+  font-size:13px;
+}
+
 /* Helper classes */
 div.scrollable {
   overflow: auto;
+}
+
+.sentenceCase {
+  text-transform: capitalize;
+}
+.upperCase {
+  text-transform: uppercase;
 }
 
 .q30_filters {
@@ -11,6 +22,10 @@ div.scrollable {
 
 .no-margin {
   margin:0;
+}
+
+.nowrap {
+  white-space: pre;
 }
 
 .inline-textbox {
@@ -35,11 +50,15 @@ div.scrollable {
   border-top:1px solid #ccc;
   border-bottom: 1px solid #ccc;
   padding:10px 0;
+  display:inline-block;
+  width:100%;
 }
 #homepage-searchbar .control-label {
   font-size:1.4em;
-  margin-right: 15px;
-  padding-top:0;
+  margin: 10px 15px 0 0;
+  padding:0;
+  top:5px;
+  vertical-align:top;
 }
 #homepage-searchbar .twitter-typeahead {
   width: 422px;
@@ -101,7 +120,103 @@ div.scrollable {
   cursor:default;
 }
 
+.dl-wide dt {
+  width:260px;
+}
+.dl-wide dd {
+  margin-left:280px;
+}
 
+.nav.nav-tabs,
+.marginBottom {
+  margin-bottom:15px;
+}
+
+/* Make the bootstrap labels a little less over-saturated */
+.label { font-weight:normal; }
+.label-default { background-color:#777; }
+.label-primary { background-color: #547C9E; } /* #428bca} */
+.label-success { background-color: #5D995D; } /* #5cb85c} */
+.label-info    { background-color: #5998AB; } /* #5bc0de} */
+.label-warning { background-color: #BA945F; } /* #f0ad4e} */
+.label-danger  { background-color: #B06361; } /* #d9534f} */
+
+/* Custom Labels */
+.label-undefined  {color: #ccc; }
+.label-date  {color: #333; font-size:80%; }
+
+
+/* Make <samp> (flow cell IDs usually) a little smaller */
+samp {
+  font-size:0.8em;
+}
+
+/* Cool colour bar for project page */
+#project_timescale {
+	margin: 20px 0;
+	height:1px;
+	background:#eee;
+	position:relative;
+}
+#project_timescale div {
+	height:10px;
+	width:3px;
+	position:absolute;
+	top:-4px;
+  cursor:pointer;
+}
+
+/* Make the user description have a max height */
+#customer_project_description_wrapper.showfade {
+  max-height: 100px;
+	position: relative;
+	overflow: hidden;
+}
+.fade-read-more { 
+	position: absolute; 
+	bottom: 0; left: 0;
+	width: 100%; 
+	text-align: center; 
+	margin: 0; padding: 30px 0; 
+	
+	/* "transparent" only works here because == rgba(0,0,0,0) */ 
+	background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, transparent),color-stop(1, white));
+        background-image: -webkit-linear-gradient(top, transparent, white);
+        background-image: -moz-linear-gradient(top, transparent, white);
+        background-image: -ms-linear-gradient(top, transparent, white);
+        background-image: -o-linear-gradient(top, transparent, white);
+}
+
+#running_notes_table img {
+  max-width:400px;
+  max-height:400px;
+}
+
+#com_accordion pre,
+#running_notes_panels pre,
+.running-note-panel pre {
+  background-color:transparent;
+  border:none;
+  font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
+  margin:0;
+  padding:0;
+}
+.running-note-panel pre {
+  max-width:400px;
+}
+
+.link_wrapper {
+	border-bottom:1px solid #DDDDDD;
+	padding-top:15px;
+	padding-bottom:15px;
+}
+.link_wrapper:first-child {
+	padding-top:0;
+}
+
+.search-action, .search-action input {
+  cursor:pointer;
+}
 
 th.sort {
   cursor:pointer;
@@ -114,9 +229,7 @@ th.sort:after {
   border-right: 5px solid transparent;
   border-bottom: 5px solid transparent;
   content:"";
-  position: relative;
-  top:-10px;
-  right:-5px;
+  margin-left: 10px;
 }
 th.sort.asc:after {
   width: 0;
@@ -336,20 +449,27 @@ table.narrow-headers th {
   position: relative;
   margin-bottom: 20px;
 }
-div#caliperModal {
+
+/* Caliper thumbnail image in table */
+.caliper_loading_spinner {
+  display:inline-block;
+  min-width:200px;
+}
+.caliper-thumbnail img {
+  max-width:200px;
+}
+/* Caliper modal */
+#caliperModal .modal-content {
     width:1040px;
-    height:600px;
     margin-left:-520px;
     left:50%;
 }
-img.caliper-img {
-    cursor: pointer;
-}
-img.caliper-modal {
+#caliperModal .modal-body img {
     width:100%;
     max-width:1040px;
     max-height:400px;
 }
+
 
 /* NVD3 Graphs
 ------------------------------------------------- */
