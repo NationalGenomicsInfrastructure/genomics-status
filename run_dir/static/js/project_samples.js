@@ -25,7 +25,8 @@ $(document).ready(function() {
   });
   
   $('body').on('click', '.search-action', function(e) {
-    e.stopPropagation(); // Stop the checkbox from firing if clicked
+    // Stop the checkbox from firing if clicked, plus stop bubbling
+    e.stopPropagation();
     switch ($(this).data('action')) {
       case 'filterReset':
         reset_default_checkboxes();

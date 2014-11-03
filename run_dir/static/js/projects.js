@@ -56,10 +56,13 @@ function load_table() {
       if (latest_note.text() !== '') {
         var note = JSON.parse(latest_note.text());
         var ndate = undefined;
-        for (key in note) {ndate = key; break;}
-        latest_note.html(
-            ndate.split(" ")[0] + ' by ' + note[ndate]['user'] + ':<pre>' + note[ndate]['note'] + '</pre>'
-            );
+        for (key in note) { ndate = key; break; }
+        notedate = new Date(ndate);
+        latest_note.html('<div class="panel panel-default running-note-panel">' +
+            '<div class="panel-heading">'+
+              note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
+            '</div><div class="panel-body"><pre>'+note[ndate]['note']+'</pre></div></div>');
+
       }
       $("#project_table_body").append(tbl_row); 
     });
