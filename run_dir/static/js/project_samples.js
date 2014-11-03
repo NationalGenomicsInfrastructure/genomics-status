@@ -48,13 +48,14 @@ $(document).ready(function() {
   });
   
   // Caliper buttons click listener
-  $("body").on('click', '.caliper-img',  function(e) {
+  $("body").on('click', '.caliper-thumbnail',  function(e) {
       e.preventDefault();
-      data=$(this).attr('src')
-      $('.modal-body').html("<img class='caliper-modal' src='"+data+"' />");
-      $('#caliperModal').modal();
-    
+      loadCaliperImageModal('#'+$(this).attr('id'));
   });
+  $('#caliperModal .right, #caliperModal .left').click(function(e){
+    e.preventDefault();
+    loadCaliperImageModal($(this).attr('href'));
+  })
 
 });
 
@@ -527,7 +528,14 @@ function load_table_head(columns){
 }
 
 function load_samples_table() {
-  load_table_head(read_current_filtering());
+  // Load the table header and get the filters
+  var cols = read_current_filtering();
+  load_table_head(cols);
+
+  // Display the loading spinner in the table
+  $("#samples_table_body").html('<tr><td colspan="'+cols.length+'" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
+  
+  // Print each sample
   $.getJSON("/api/v1/project/" + project, function (samples_data) {
     columns = read_current_filtering(true);
     var tbl_body = "";
@@ -596,13 +604,12 @@ function load_samples_table() {
             info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
             
             // Caliper image
-            if (~column_name.indexOf('Initial QC Caliper Image')){
+            if (column_id == 'caliper_image'){
                 tbl_row += '<td class="' + column_id + '">'+
-                            '<div class="caliper-link loading" href="'+info['initial_qc'][column_id]+'">'+
-                              '<span class="toremove">'+
-                                '<i class="icon-refresh glyphicon-refresh-animate"></i>&nbsp;Loading...'+
-                              '</span>'+
-                            '</div>'+
+                            '<span class="caliper_loading_spinner">'+
+                              '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading image..</span>'+
+                            '</span>'+
+                            '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+info['initial_qc'][column_id]+'" data-imgtype="Initial QC Caliper Image" data-samplename="'+info['scilife_name']+'"></a>'+
                           '</td>';
             }
             
@@ -665,9 +672,11 @@ function load_samples_table() {
                 if (validation_data) {
                   validation_data[column_id] = round_floats(validation_data[column_id], 2);
                   // Caliper column
-                  if (~column_name.indexOf('Library Validation Caliper Image')){
-                       tbl_row+='<div class="caliper-link loading" href="'+validation_data[column_id]+
-                           '"><span class="toremove"><i class="icon-refresh glyphicon-refresh-animate"></i>&nbsp;Loading...</span></div>';
+                  if(column_id == 'caliper_image'){
+                       tbl_row += '<span class="caliper_loading_spinner">'+
+                                     '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading image..</span>'+
+                                   '</span>'+
+                                   '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
                   }
                   
                   // Remove the X from initial QC initials
@@ -709,46 +718,6 @@ function load_samples_table() {
           });
         } 
         
-        
-        
-        
-        
-        
-        
-        /*
-        
-        else if ((subset == 'library-validation-columns' || subset == 'pre-prep-library-validation-columns') 
-                && info['library_prep'] !== undefined) {
-          $.each(fields, function(idx, column_tuple){
-            var column_name = column_tuple[0];
-            var column_id = column_tuple[1];
-            tbl_row += '<td class="' + column_id + '">';
-            var key = 'library_validation';
-            if(subset == 'pre-prep-library-validation-columns'){
-              key = 'pre_prep_library_validation';
-            }
-            $.each(info['library_prep'], function(library, info_library) {
-              if (key in info_library) {
-                // We only want to show up the LIMS process ID with the higher number (the last one)
-                var process_id = max_str(Object.keys(info_library[key]));
-                var validation_data = info_library[key][process_id];
-                if (validation_data) {
-                   validation_data[column_id] = round_floats(validation_data[column_id], 2);
-                   if (~column_name.indexOf('Library Validation Caliper Image')){
-                        tbl_row+='<div class="caliper-link loading" href="'+validation_data[column_id]+
-                            '"><span class="toremove"><i class="icon-refresh glyphicon-refresh-animate"></i>&nbsp;Loading...</span></div>';
-                   } else {
-                        tbl_row += auto_format(info_library[column_id], true);
-                   }
-               }
-              }
-            });
-            tbl_row += '</td>';
-          });
-        } 
-        
-        */
-        
         // Details columns
         else {
           $.each(fields, function(idx, column_tuple){
@@ -774,28 +743,50 @@ function load_samples_table() {
   });
 }
 function update_caliper(){
-  $.each($('.caliper-link'), function(){
+  $.each($('.caliper-thumbnail'), function(){
     if($(this).hasClass('loading')){
-        var currentobj=$(this);
         var imglink = $(this).attr('href');
+        var el = $(this);
         if(imglink==="undefined"){
-                currentobj.append("No caliper link.");
-                currentobj.children('span.toremove').remove();
-                currentobj.removeClass('loading');
-        }else{
-            var jqxhr=$.getJSON(imglink, function(data){
-                currentobj.append('<img class="caliper-img" src="data:image/png;base64,'+data+'">');
-                currentobj.children('span.toremove').remove();
-                currentobj.removeClass('loading');
-            })
-            .fail(function(){
-                currentobj.append("<abbr title='"+imglink+" "+jqxhr.responseText+"'>Error.</abbr>");
-                currentobj.children('span.toremove').remove();
-                currentobj.removeClass('loading');
+                el.append('<span class="label label-undefined">No caliper link</span>');
+                el.prev('.caliper_loading_spinner').remove();
+                el.removeClass('loading');
+        } else {
+            $.getJSON(imglink, function(data){
+                el.append('<img src="data:image/png;base64,'+data+'">');
+                el.prev('.caliper_loading_spinner').remove();
+                el.removeClass('loading');
+            }).fail(function(){
+                el.append('<span class="label label-danger"><abbr title="'+imglink+' '+jqxhr.responseText+'">Error</abbr></span>');
+                el.prev('.caliper_loading_spinner').remove();
+                el.removeClass('loading');
             });
        }                                    
    }
  });
+}
+function loadCaliperImageModal(target){
+  var data = $(target).find('img').attr('src');
+  var samplename = $(target).data('samplename');
+  var imgtype = $(target).data('imgtype');
+  var nextTarget = $(target).closest('tr').next().find('.caliper-thumbnail').attr('id');
+  var prevTarget = $(target).closest('tr').prev().find('.caliper-thumbnail').attr('id');
+  if(nextTarget === undefined){
+    nextTarget = $('#samples_table_body').find('.caliper-thumbnail:first').attr('id');
+  }
+  if(prevTarget === undefined){
+    prevTarget = $('#samples_table_body').find('.caliper-thumbnail:last').attr('id');
+  }
+  
+  $('#caliperModal .modal-header h3').html(samplename+' <small>'+imgtype+'</small>');
+  if(data === undefined){
+    $('#caliper_modal_image_wrapper').html('<p class="help-block text-center">Data still loading. Please try again in a moment..</p>');
+  } else {
+    $('#caliper_modal_image_wrapper').html('<img src="'+data+'" title="'+name+'" />');  
+  }
+  $('#caliperModal .right').attr('href', '#'+nextTarget);
+  $('#caliperModal .left').attr('href', '#'+prevTarget);
+  $('#caliperModal').modal();
 }
 
 function auto_format(value, samples_table){
@@ -1003,7 +994,7 @@ function make_timescale(){
 	
 	if(oldest.getTime() < newest.getTime()){
 		// Set up the colour scale with Chroma.js
-    var cols = ['#A8D0A2', '#82BFFF', '#5785FF', '#FFC521', '#FA4C47'];
+    var cols = ['#DEDEDE', '#82BFFF', '#5785FF', '#FFC521', '#FA4C47'];
     var colstops = [
           oldest.getTime(),                           // order in - l green
           prodstart.getTime(),                        // prod start  - l blue
