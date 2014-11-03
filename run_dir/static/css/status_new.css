@@ -155,10 +155,10 @@ samp {
 }
 #project_timescale div {
 	height:10px;
-	width:10px;
-	border:1px solid #ccc;
+	width:3px;
 	position:absolute;
 	top:-4px;
+  cursor:pointer;
 }
 
 /* Make the user description have a max height */

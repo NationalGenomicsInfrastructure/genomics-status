@@ -844,14 +844,22 @@ var round_floats = function(n, p) {
 // Get rid of the "read-more" if we're just not that big
 function check_fade_height(){
   if($('#customer_project_description_wrapper').outerHeight() < 100){
-    $('.fade-read-more').hide();
+    $('.fade-read-more').remove();
     $('#customer_project_description_wrapper').removeClass('showfade');
   }
 }
 
 // Fade the "read-more" customer comment
 // Stolen from http://css-tricks.com/text-fade-read-more/
-$('#customer_project_description_wrapper .btn').click(function() {
+$('#customer_project_description_wrapper').hover(function(e){
+  e.stopPropagation();
+  $('.fade-read-more .btn').fadeIn();
+}, function(e){
+  e.stopPropagation();
+  $('.fade-read-more .btn').fadeOut();
+});
+
+$('#customer_project_description_wrapper, #customer_project_description_wrapper .btn').click(function() {
 	$('#customer_project_description_wrapper')
 		.css({"height": $('#customer_project_description_wrapper').height(),
 			"max-height": 9999})
@@ -888,101 +896,89 @@ function make_timescale(){
 			];
 	
 	var oldest = new Date();
+  var prodstart = new Date();
 	var newest = new Date();
 	var dates = {};
 	$.each(date_ids, function(i, id){
 		if($('#'+id).text() !== '-'){
-			var thisdate = new Date($('#'+id).text());
-			if(typeof dates[thisdate] == 'undefined') {
-				dates[thisdate] = [id];
+      // Get date and nice description
+      var el = $('#'+id);
+      var rawdate = el.text();
+			var dateobj = new Date(rawdate);
+      var name = id;
+			if(el.is('dd')){
+				name = el.prev().text();
+			} else if(el.is('span')){
+				name = el.parent().prev().text();
+			}
+      // Push to hash
+			if(typeof dates[rawdate] == 'undefined') {
+				dates[rawdate] = [name];
 			} else {
-			  dates[thisdate].push(id);
+			  dates[rawdate].push(name);
 			}
-			if(thisdate.getTime() < oldest.getTime()){
-				oldest = thisdate;
+			if(dateobj.getTime() < oldest.getTime()){
+				oldest = dateobj;
 			}
+      // Production start date
+			if(id == 'open_date'){
+				prodstart = dateobj;
+			}
+      // Close dates
 			if(id == 'close_date' || id == 'aborted'){
-				newest = thisdate;
+				newest = dateobj;
 			}
 		}
 	});
 	
 	if(oldest.getTime() < newest.getTime()){
 		// Set up the colour scale with Chroma.js
-		var scale = chroma.scale('RdYlBu').domain([newest.getTime(), oldest.getTime()]);
-		
+    var cols = ['#A8D0A2', '#82BFFF', '#5785FF', '#FFC521', '#FA4C47'];
+    var colstops = [
+          oldest.getTime(),                           // order in - l green
+          prodstart.getTime(),                        // prod start  - l blue
+          prodstart.getTime() + (3*7*24*60*60*1000),  // 3 weeks - dark blue
+          prodstart.getTime() + (6*7*24*60*60*1000),  // 6 weeks - orange
+          prodstart.getTime() + (9*7*24*60*60*1000),  // 9 weeks - red
+          newest.getTime()                            // End of bar
+        ];
+
 		// Set up the CSS on the bar
-		var grad_scale = chroma.scale('RdYlBu').domain([0,100],20).out('hex'), gradient_cols = [];
-		$.each(grad_scale.domain(), function(k, col){ gradient_cols.push(grad_scale(col)); });
-		gradient_cols = gradient_cols.reverse();
+		var range = newest.getTime() - oldest.getTime();
+    var gradcols = [];
+    var lastpercent = 0;
+    $.each(colstops, function(j, thetime){
+      if(thetime == oldest.getTime()){ return true; }
+      var percent = ((thetime - oldest.getTime()) / range) * 100;
+      gradcols.push(cols[j-1]+' '+lastpercent+'%, '+cols[j-1]+' '+percent+'%');
+      lastpercent = percent;
+    });
+
 		$('#project_timescale').css('height', '2px');
-		$('#project_timescale').css("background-image", "-webkit-linear-gradient(left, "+gradient_cols.join(',')+")");
-		$('#project_timescale').css("background-image", "-moz-linear-gradient(right, "+gradient_cols.join(',')+")");
-		$('#project_timescale').css("background-image", "-o-linear-gradient(right, "+gradient_cols.join(',')+")");
-		$('#project_timescale').css("background-image", "linear-gradient(to right, "+gradient_cols.join(',')+")");
+		$('#project_timescale').css("background-image", "-webkit-linear-gradient(left, "+gradcols.join(',')+")");
+		$('#project_timescale').css("background-image", "-moz-linear-gradient(right, "+gradcols.join(',')+")");
+		$('#project_timescale').css("background-image", "-o-linear-gradient(right, "+gradcols.join(',')+")");
+		$('#project_timescale').css("background-image", "linear-gradient(to right, "+gradcols.join(',')+")");
 	
-		// Go through dates
-		var range =  newest.getTime() - oldest.getTime();
-		$.each(dates, function(thisdate, ids){
-			
-			// Get a nice version of the timestamp to print
-			thisdate = new Date(thisdate);
-			var yyyy = thisdate.getFullYear().toString();                                    
-      var mm = (thisdate.getMonth()+1).toString();
-      var dd  = thisdate.getDate().toString();             
-      var thedate = yyyy + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + (dd[1]?dd:"0"+dd[0]);
-			
-			// Work out the colours for this date
-			var thiscol = scale(thisdate.getTime());
-			var textcol = (chroma.contrast(thiscol, '#FFF') < 2) ? '#000' : '#FFF';
-			
-			// Format the date labels and get nice text descriptions
-			var nicenames = [];
-			$.each(ids, function(j, id){
-				// Get element
-				var el = $('#'+id);
-				// Find a nice name
-				if(el.is('dd')){
-					nicenames.push(el.prev().text());
-				} else if(el.is('span')){
-					nicenames.push(el.parent().prev().text());
-				} else {
-					nicenames.push(id);
-				}
-				// Format the label
-				var thistext = el.text();
-				el.html('<span class="label" style="background-color:'+thiscol+'; color:'+textcol+';">'+thistext+'</span>');
-			});
-			
-			// Print a point onto the timeline
-			var percent = ((thisdate.getTime() - oldest.getTime()) / range) * 100;
-			$('#project_timescale').append('<div style="left:'+percent+'%; background-color:'+thiscol+';" data-toggle="tooltip" data-placement="bottom" title="'+thedate+'<br>'+nicenames.join('<br>')+'"></div>');
+		// Put date objects onto the timeline
+		$.each(dates, function(rawdate, names){
+			var dateobj = new Date(rawdate);
+      var thiscol;
+      $.each(colstops, function(j, thetime){
+        if(dateobj.getTime() >= thetime){
+          if(j == cols.length){
+            thiscol = cols[j-1];
+          } else {
+            thiscol = cols[j];
+          }
+        }
+      });
+      var timeDiff = dateobj.getTime() - prodstart.getTime();
+      var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+      var diffdaystext = (diffDays > 0) ? '<br>'+diffDays+' days in production' : '';
+			var percent = ((dateobj.getTime() - oldest.getTime()) / range) * 100;
+			$('#project_timescale').append('<div style="left:'+percent+'%; background-color:'+thiscol+';" data-toggle="tooltip" data-placement="bottom" title="'+rawdate+diffdaystext+'<br>'+names.join('<br>')+'"></div>');
 		});
 	}
 	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
