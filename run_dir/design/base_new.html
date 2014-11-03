@@ -10,7 +10,7 @@
 <meta name="author" content="Guillermo Carrasco, Remi-André Olsen, many others.">
 
 <!-- Javascript -->
-<script src="/static/js/jquery.js"></script>
+<script src="/static/js/jquery-1.11.1.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/moment.min.js"></script>
 
@@ -51,12 +51,12 @@
                         <li><a href="/q30">Q30</a></li>
                         <li><a href="/reads_vs_qv" title="Reads vs QV">Reads vs QV</a></li>
                         <li><a href="/production/cronjobs" title="Cronjobs list">Cronjobs List</a></li>
+                        <li><a href="/quotas" title="Quotas">Quotas</a></li>
                         <li class="depreciated_page divider"></li>
                         <li id="depreciated_header"><a href="#">Depreciated Pages</a></li>
                         <li class="depreciated_page"><a href="/barcode_vs_expected" title="Barcode vs Expected">Barcode vs Expected</a></li>
                         <li class="depreciated_page"><a href="/phix_err_rate" title="Phix error rates">Phix error rates</a></li>
                         <li class="depreciated_page"><a href="/production" title="Production">Production</a></li>
-                        <li class="depreciated_page"><a href="/quotas" title="Quotas">Quotas</a></li>
                         <li class="depreciated_page"><a href="/reads_per_lane" title="Reads per Lane">Reads per Lane</a></li>
                         <li class="depreciated_page"><a href="/samples_per_lane" title="Samples per Lane">Samples per Lane</a></li>
                         <li class="depreciated_page"><a href="/sequencing" title="Sequencing">Sequencing</a></li>
@@ -106,8 +106,15 @@
     <p>Something broken or have an idea for an improvement? Please <a href="/suggestion_box">let us know</a>.</p>
 </div>
 <script type="text/javascript">
-$('#depreciated_header').click(function(e){
-   e.preventDefault(); 
+$(document).ready(function(){
+  $('#depreciated_header').click(function(e){
+     e.preventDefault(); 
+  });
+  $('body').tooltip({
+		selector: '[data-toggle="tooltip"]',
+		container: 'body',
+		html: true
+	});
 });
 </script>
 </body>

@@ -1,14 +1,11 @@
 {% extends "base_new.html" %}
 
 <!-- 
-## DEPRECIATED ##
 Template file: quota_grid.html
 URL: /quotas
 Title: Historical UPPMAX storage quota for all UPPMAX projects
 Description: Shows a grid of graphs showing showing storage information
              for all UPPMAX projects
-
-TODO: The API powering this page is dead. Guillermo is looking into it.
 -->
 
 {% block stuff %}
@@ -18,8 +15,8 @@ TODO: The API powering this page is dead. Guillermo is looking into it.
 <div id="plots"></div>
 
 
-<script src="http://code.highcharts.com/highcharts.js"></script>
-<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
     // Highlight plots if clicked from the navigation
