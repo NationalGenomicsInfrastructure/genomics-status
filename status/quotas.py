@@ -47,7 +47,7 @@ class QuotaDataHandler(SafeHandler):
         gb = 1073741824
         data = []
         for row in r_list:
-            if row.value[0]:
+            if row.value:
                 y = row.value[0]
                 limit = row.value[1]
             else:
