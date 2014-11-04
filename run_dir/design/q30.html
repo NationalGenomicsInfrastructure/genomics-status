@@ -26,56 +26,58 @@ Description: Diagnostic page showing percentage of bases getting above q 30
 
 
 <form id="Filter" role="form">
-        
-{% for instrument_type, instruments in instrument_list.iteritems() %}
-    <div class="q30_filters">
-        <h3>{{instrument_type}}</h3>
-        {% for instrument_id, instrument_name in instruments.iteritems() %}
-            <div class="checkbox">
-                <label>
-                    <input type="checkbox" name="{{ instrument_id }}">
-                    {{ instrument_name }}
-	            </label>
-            </div>
-        {% end %}
-    </div>
-{% end %}
 
-<div class="q30_filters" id="runmodes">
-    <h3>RunModes </h3>
-    {% for runmode in runmodes %}
-        <div class="checkbox">
-	        <label>
-	            <input type="checkbox" name="{{ runmode }}">
-                {{ runmode }}
-	        </label>
-        </div>
-    {% end %}
-</div>
+<div class="row">
+  {% for instrument_type, instruments in instrument_list.iteritems() %}
+      <div class="col-xs-6 col-sm-2">
+          <h3>{{instrument_type}}</h3>
+          {% for instrument_id, instrument_name in instruments.iteritems() %}
+              <div class="checkbox">
+                  <label>
+                      <input type="checkbox" name="{{ instrument_id }}">
+                      {{ instrument_name }}
+  	            </label>
+              </div>
+          {% end %}
+      </div>
+  {% end %}
 
-<div class="q30_filters" id="setups">
-    <h3>Setup</h3>
-    <span class="help-block">Number of cycles from run info includes:</span>
-    {% for setup in setups %}
-        <div class="checkbox">
-            <label>
-	            <input type="checkbox" name="{{ setup }}">
-                {{ setup }}
-            </label>
-        </div>
-    {% end %}
-    <div class="checkbox">
-        <label>
-	        <input type="checkbox" name="Other">
-            Other
-        </label>
-    </div>
-</div>
+  <div class="col-xs-6 col-sm-2" id="runmodes">
+      <h3>RunModes </h3>
+      {% for runmode in runmodes %}
+          <div class="checkbox">
+  	        <label>
+  	            <input type="checkbox" name="{{ runmode }}">
+                  {{ runmode }}
+  	        </label>
+          </div>
+      {% end %}
+  </div>
 
-<div class="q30_filters" id="buttons">
-    <h3>Apply Filters</h3>
-    <p><input type="submit" value="Apply Filters" class="btn btn-primary btn-lg" id="applyFilter"></p>
-    <p><button class="btn btn-lg" id="reset" >Reset Filters</button></p>
+  <div class="col-xs-6 col-sm-2" id="setups">
+      <h3>Setup</h3>
+      <span class="help-block">Number of cycles from run info includes:</span>
+      {% for setup in setups %}
+          <div class="checkbox">
+              <label>
+  	            <input type="checkbox" name="{{ setup }}">
+                  {{ setup }}
+              </label>
+          </div>
+      {% end %}
+      <div class="checkbox">
+          <label>
+  	        <input type="checkbox" name="Other">
+              Other
+          </label>
+      </div>
+  </div>
+
+  <div class="col-xs-12 col-sm-4 text-center" id="buttons">
+      <h3>Apply Filters</h3>
+      <p><input type="submit" value="Apply Filters" class="btn btn-primary btn-lg" id="applyFilter"></p>
+      <p><button class="btn btn-lg" id="reset" >Reset Filters</button></p>
+  </div>
 </div>
 
 </form>

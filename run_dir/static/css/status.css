@@ -1,135 +1,97 @@
-body {
-  font-size:13px;
+/* ########################################################################
+~~~~~ status.css ~~~~~
+---- INTRODUCTON ----
+This is the main stylesheet for Genomics Status. It is used to define custom
+structure and design for the website. The site uses the Bootstrap framework
+for basic styling; this stylesheet is loaded after that and can override
+those settings. For more information about Bootstrap (including really good
+documentation), see http://getbootstrap.com/ - it can do most of the things
+that you were about to write yourself already.
+
+To keep this file organised, there are three main sections:
+Reusable Styles / Core Structure / Page-Specific Styles / Unit Styles
+Please keep the code organised.
+
+General notes - IDs should only be used for unique elements. Classes are
+nearly always better if used for design. Please avoid element type
+precursors (eg. use .class instead of div.class) where possible.
+Comment lots - try to make it obvious where styles are being used.
+ ######################################################################## */
+
+/* ########################################################################
+---- REUSABLE STYLES ----
+These classes are for general use across the website. They are used in
+multiple places and typically control typography, or other common elements.
+ ######################################################################## */
+
+/*
+=== Typography ===
+*/
+.highlighted { background-color: #FFFFCC; }
+.sentenceCase { text-transform: capitalize; }
+.upperCase { text-transform: uppercase; }
+.nowrap { white-space: pre; }
+.dl-wide dt { width:260px; }
+.dl-wide dd { margin-left:280px; }
+/* Make <samp> (flow cell IDs usually) a little smaller */
+samp { font-size:0.8em; }
+.justified {
+  text-align: justify;
+  text-justify: inter-word;
+}
+.well > h1, .well > h2, .well > h3, .well > h4, .well > h5, .well > h6 {
+    margin-top:0;
 }
 
-/* Helper classes */
-div.scrollable {
-  overflow: auto;
-}
+/*
+=== Block elements ===
+*/
 
-.sentenceCase {
-  text-transform: capitalize;
-}
-.upperCase {
-  text-transform: uppercase;
-}
-
-.q30_filters {
-  width:200px;
-  float:left;
-  margin-left:15px;
-}
-
-.no-margin {
-  margin:0;
-}
-
-.nowrap {
+.scrollable { overflow: auto; }
+table.scrollable { max-width: 100%; }
+pre.scrollable {
+  word-wrap: normal;
   white-space: pre;
 }
 
+.table-nowidth { width:auto; }
+.no-margin { margin:0; }
 .inline-textbox {
   display:inline-block;
   width:200px;
   margin-left: 10px;
 }
+.nav.nav-tabs, .marginBottom { margin-bottom:15px; }
 
-.input-spinner {
-  margin-left:-35px;
-}
-.subtle-spinner {
-  color:#CCCCCC;
-}
-
-.highlighted {
-  background-color: #FFFFCC;
-}
-
-#homepage-searchbar {
-  text-align:center;
-  border-top:1px solid #ccc;
-  border-bottom: 1px solid #ccc;
-  padding:10px 0;
-  display:inline-block;
-  width:100%;
-}
-#homepage-searchbar .control-label {
-  font-size:1.4em;
-  margin: 10px 15px 0 0;
-  padding:0;
-  top:5px;
-  vertical-align:top;
-}
-#homepage-searchbar .twitter-typeahead {
-  width: 422px;
-}
-
-.tt-dropdown-menu {
-  width: 422px;
-  margin-top: 12px;
-  padding: 8px 0;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  -webkit-border-radius: 8px;
-     -moz-border-radius: 8px;
-          border-radius: 8px;
-  -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
-     -moz-box-shadow: 0 5px 10px rgba(0,0,0,.2);
-          box-shadow: 0 5px 10px rgba(0,0,0,.2);
-}
-.tt-suggestion {
-  padding: 3px 20px;
-  font-size: 18px;
-  line-height: 24px;
+/* Tables */
+th { background-color: #ddd; }
+th.link {
+  color: #0088cc;
   cursor:pointer;
-  text-align:left;
 }
-.tt-suggestion.tt-cursor {
-  color: #fff;
-  background-color: #0097cf;
+th.link:hover {
+  color: #0088cc;
+  cursor: pointer;
+  text-decoration: underline;
+}
+/* Used on the Flow Cell Samples page */
+table.narrow-headers th { width: 20%; }
 
+/*
+=== Common Elements ===
+*/
+.glyphicon-refresh-animate, .glyphicon-spin {
+  margin-right:10px;
+  -animation: spin .7s infinite linear;
+  -webkit-animation: spin2 .7s infinite linear;
 }
-.tt-suggestion p {
-  margin: 0;
+@keyframes spin {
+  from { transform: scale(1) rotate(0deg);}
+  to { transform: scale(1) rotate(360deg);}
 }
-.tt-hint {
-  visibility:hidden;
-}
-
-.quota-nav {
-  margin-bottom:0;
-}
-
-/* Suggestions Box */
-#suggestions_table {
-  max-height:800px;
-  overflow-y:scroll;
-}
-
-.depreciated_page {
-  background-color:#f5f5f5;
-}
-.depreciated_page a {
-  font-style:italic;
-}
-#depreciated_header a {
-  background-color:#f5f5f5;
-  color:#333;
-  font-weight:bold;
-  cursor:default;
-}
-
-.dl-wide dt {
-  width:260px;
-}
-.dl-wide dd {
-  margin-left:280px;
-}
-
-.nav.nav-tabs,
-.marginBottom {
-  margin-bottom:15px;
+@-webkit-keyframes spin2 {
+  from { -webkit-transform: rotate(0deg);}
+  to { -webkit-transform: rotate(360deg);}
 }
 
 /* Make the bootstrap labels a little less over-saturated */
@@ -140,94 +102,14 @@ div.scrollable {
 .label-info    { background-color: #5998AB; } /* #5bc0de} */
 .label-warning { background-color: #BA945F; } /* #f0ad4e} */
 .label-danger  { background-color: #B06361; } /* #d9534f} */
-
 /* Custom Labels */
 .label-undefined  {color: #ccc; }
 .label-date  {color: #333; font-size:80%; }
+/* Date sliders */
+.slider-spacing { margin:40px 0; }
 
-
-/* Make <samp> (flow cell IDs usually) a little smaller */
-samp {
-  font-size:0.8em;
-}
-
-/* Cool colour bar for project page */
-.project_timescale {
-	margin: 20px 0;
-	height:1px;
-	background:#eee;
-	position:relative;
-}
-.project_timescale .timelineTarget {
-	height:16px;
-	width:16px;
-  margin-left:-6px;
-	position:absolute;
-	top:-7px;
-  cursor:pointer;
-}
-.project_timescale .timelineTick {
-  width:3px;
-  height:10px;
-  margin:3px 6.5px;
-}
-
-/* Make the user description have a max height */
-#customer_project_description_wrapper.showfade {
-  max-height: 100px;
-	position: relative;
-	overflow: hidden;
-}
-.fade-read-more { 
-	position: absolute; 
-	bottom: 0; left: 0;
-	width: 100%; 
-	text-align: center; 
-	margin: 0; padding: 30px 0; 
-	
-	/* "transparent" only works here because == rgba(0,0,0,0) */ 
-	background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, transparent),color-stop(1, white));
-        background-image: -webkit-linear-gradient(top, transparent, white);
-        background-image: -moz-linear-gradient(top, transparent, white);
-        background-image: -ms-linear-gradient(top, transparent, white);
-        background-image: -o-linear-gradient(top, transparent, white);
-}
-
-
-#running_notes_table img {
-  max-width:400px;
-  max-height:400px;
-}
-
-#com_accordion pre,
-#running_notes_panels pre,
-.running-note-panel pre {
-  background-color:transparent;
-  border:none;
-  font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
-  margin:0;
-  padding:0;
-}
-.running-note-panel pre {
-  max-width:400px;
-}
-
-.link_wrapper {
-	border-bottom:1px solid #DDDDDD;
-	padding-top:15px;
-	padding-bottom:15px;
-}
-.link_wrapper:first-child {
-	padding-top:0;
-}
-
-.search-action, .search-action input {
-  cursor:pointer;
-}
-
-th.sort {
-  cursor:pointer;
-}
+/* Sortable Tables */
+th.sort { cursor:pointer; }
 th.sort:after {
   display:inline-block;
   width: 0;
@@ -261,86 +143,34 @@ th.sort.desc:after {
   right:-5px;
 }
 
-.glyphicon-refresh-animate, .glyphicon-spin {
-  margin-right:10px;
-  -animation: spin .7s infinite linear;
-  -webkit-animation: spin2 .7s infinite linear;
+/* For NVD3 graphs */
+.box { font: 10px sans-serif; }
+.box line, .box rect, .box circle { stroke: #000; stroke-width: 1.5px; fill: #fff; }
+.box .center { stroke-dasharray: 3 3; }
+.box .outlier { stroke: none; fill: none; }
+line.median { stroke: red; }
+.chart_container {
+  position: relative;
+  margin-bottom: 20px;
 }
-@keyframes spin {
-  from { transform: scale(1) rotate(0deg);}
-  to { transform: scale(1) rotate(360deg);}
+.single_chart_container {
+  height: 600px;
+  text-align:center;
 }
-@-webkit-keyframes spin2 {
-  from { -webkit-transform: rotate(0deg);}
-  to { -webkit-transform: rotate(360deg);}
-}
+svg { overflow: hidden; }
+.grid_chart { height: 300px; }
+.legend { height: 22px; }
 
 
-.justified {
-  text-align: justify;
-  text-justify: inter-word;
-}
 
-pre.scrollable {
-  overflow: auto;
-  word-wrap: normal;
-  white-space: pre;
-}
-
-table.scrollable {
-  max-width: 100%;
-}
-table.table-nowidth {
-    width:auto;
-}
-.rightalign {
-    text-align:right;
-}
-
-.well > h1, .well > h2, .well > h3, .well > h4, .well > h5, .well > h6 {
-    margin-top:0;
-}
-
-.nav-backgrounds li {
-    margin-bottom:8px;
-}
-.nav-backgrounds li a {
-    background-color:#f9f9f9;
-    border:1px solid #ccc;
-}
-
-.homepage-ctas .well {
-    text-align:center;
-}
-.homepage-ctas .well h3 {
-    font-size:3em;
-}
-.homepage-ctas .well a i {
-    color:#333;
-}
-
-
-/* Body and structure
--------------------------------------------------- 
-Colors: http://colorschemedesigner.com/#3n52e1uYmw0w0 */
-
-/*
- * The progress class clashes in the Sample List in project view with the bootstrap
- * property. This overrides the bootstrap properties.
- */
-td.progress {
-  background-color: #FFFFFF;
-  background-image: none;
-}
-
+/* ########################################################################
+---- CORE STRUCTURE ----
+These styles control basic page structure and apply to every page.
+ ######################################################################## */
 body {
+  font-size:13px;
   padding-top: 60px;
   padding-bottom: 40px;
-}
-.sidebar {
-  padding: 9px 0;
-  background-color: white;
-  text-align: center;
 }
 .footer {
     font-size:0.9em;
@@ -352,109 +182,165 @@ body {
     text-decoration:underline;
 }
 
-
-.slider-spacing {
-    margin:40px 0;
+/*
+=== Main Navigation ===
+*/
+/* Depreciated Pages in the dropdown */
+.depreciated_page { background-color:#f5f5f5; }
+.depreciated_page a { font-style:italic; }
+#depreciated_header a {
+  background-color:#f5f5f5;
+  color:#333;
+  font-weight:bold;
+  cursor:default;
 }
 
-.progress-info.progress-striped .bar {
-  background-color: #7BA44E;
+/* ########################################################################
+---- PAGE-SPECIFIC STYLES ----
+These styles are specific to a single page or element. Each page should
+have it's own subheading under this section.
+ ######################################################################## */
+
+/* 
+=== Homepage ===
+*/
+.homepage-ctas .well { text-align:center; }
+.homepage-ctas .well h3 { font-size:3em; }
+.homepage-ctas .well a i { color:#333; }
+
+#homepage-searchbar {
+  text-align:center;
+  border-top:1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding:10px 0;
+  display:inline-block;
+  width:100%;
 }
-
-.progress.active .bar {
-  -webkit-animation: progress-bar-stripes 0.25s linear infinite;
-  -ms-animation: progress-bar-stripes 0.25s linear infinite;
-  -moz-animation: progress-bar-stripes 0.25s linear infinite;
-  animation: progress-bar-stripes 0.25s linear infinite;
+#homepage-searchbar .control-label {
+  font-size:1.4em;
+  margin: 10px 15px 0 0;
+  padding:0;
+  top:5px;
+  vertical-align:top;
 }
+#homepage-searchbar .twitter-typeahead { width: 422px; }
 
-.box { font: 10px sans-serif; }
-.box line, .box rect, .box circle { stroke: #000; stroke-width: 1.5px; fill: #fff; }
-.box .center { stroke-dasharray: 3 3; }
-.box .outlier { stroke: none; fill: none; }
-
-line.median {
-  stroke: red;
+/* .tt = twitter typeahead styles. For homepage search box */
+.input-spinner { margin-left:-35px; }
+.subtle-spinner { color:#CCCCCC; }
+.tt-dropdown-menu {
+  width: 422px;
+  margin-top: 12px;
+  padding: 8px 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  -webkit-border-radius: 8px;
+     -moz-border-radius: 8px;
+          border-radius: 8px;
+  -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+     -moz-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+          box-shadow: 0 5px 10px rgba(0,0,0,.2);
 }
+.tt-suggestion {
+  padding: 3px 20px;
+  font-size: 18px;
+  line-height: 24px;
+  cursor:pointer;
+  text-align:left;
+}
+.tt-suggestion.tt-cursor {
+  color: #fff;
+  background-color: #0097cf;
 
-th.link {
-  color: #0088cc;
+}
+.tt-suggestion p { margin: 0; }
+.tt-hint { visibility:hidden; }
+
+/*
+=== Project Page ===
+*/
+
+/* Samples Table Filter Modal */
+/* .search-action = Column Headers of checkboxes */
+.search-action, .search-action input {
   cursor:pointer;
 }
 
-th.link:hover {
-  color: #0088cc;
-  cursor: pointer;
-  text-decoration: underline;
+/* Make the user description have a max height */
+#customer_project_description_wrapper.showfade {
+  max-height: 100px;
+	position: relative;
+	overflow: hidden;
+}
+.fade-read-more { 
+	position: absolute; 
+	bottom: 0; left: 0;
+	width: 100%; 
+	text-align: center; 
+	margin: 0; padding: 30px 0; 
+	background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, transparent),color-stop(1, white));
+  background-image: -webkit-linear-gradient(top, transparent, white);
+  background-image: -moz-linear-gradient(top, transparent, white);
+  background-image: -ms-linear-gradient(top, transparent, white);
+  background-image: -o-linear-gradient(top, transparent, white);
 }
 
-th {
-	background-color: #ddd;
+/* Samples Table */
+/* The progress class clashes in the Sample List in project view with the bootstrap
+ * property. This overrides the bootstrap properties. */
+td.progress {
+  background-color: #FFFFFF;
+  background-image: none;
 }
 
-.accordion-heading {
-	background-color: #d9edf7;
+/* Running Notes */
+#running_notes_table img {
+  max-width:400px;
+  max-height:400px;
+}
+#com_accordion pre,
+#running_notes_panels pre,
+.running-note-panel pre {
+  background-color:transparent;
+  border:none;
+  font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
+  margin:0;
+  padding:0;
+}
+.running-note-panel pre {
+  max-width:400px;
 }
 
-table {
-    table-layout: auto;
-    word-wrap: break-word;
+/* Links Tab */
+.link_wrapper {
+	border-bottom:1px solid #DDDDDD;
+	padding-top:15px;
+	padding-bottom:15px;
+}
+.link_wrapper:first-child {
+	padding-top:0;
 }
 
-
-table.narrow-headers th {
-    width: 20%
+/* Cool colour bar for project page */
+.project_timescale {
+	margin: 20px 0;
+	height:1px;
+	background:#eee;
+	position:relative;
 }
-/* Jumbotrons
--------------------------------------------------- */
-.jumbotron {
-  position: relative;
+.project_timescale .timelineTarget {
+	height:16px;
+	width:16px;
+  margin-left:-6px;
+	position:absolute;
+	top:-7px;
+  cursor:pointer;
 }
-.jumbotron h1 {
-  margin-bottom: 9px;
-  font-size: 81px;
-  font-weight: bold;
-  letter-spacing: -1px;
-  line-height: 1;
-}
-.jumbotron p {
-  margin-bottom: 18px;
-  font-weight: 300;
-}
-.jumbotron .btn-large {
-  font-size: 20px;
-  font-weight: normal;
-  padding: 14px 24px;
-  margin-right: 10px;
-  -webkit-border-radius: 6px;
-     -moz-border-radius: 6px;
-          border-radius: 6px;
-}
-.jumbotron .btn-large small {
-  font-size: 14px;
-}
-
-/* Masthead (docs home) */
-.masthead {
-  margin-bottom: 10px;
-}
-.masthead h1,
-.masthead p {
-  text-align: center;
-}
-.masthead h1 {
-  margin-bottom: 18px;
-}
-.masthead p {
-  margin-left: 5%;
-  margin-right: 5%;
-  font-size: 30px;
-  line-height: 36px;
-}
-
-.chart_container {
-  position: relative;
-  margin-bottom: 20px;
+.project_timescale .timelineTick {
+  width:3px;
+  height:10px;
+  margin:3px 6.5px;
 }
 
 /* Caliper thumbnail image in table */
@@ -478,34 +364,37 @@ table.narrow-headers th {
 }
 
 
-/* NVD3 Graphs
-------------------------------------------------- */
-    
-svg {
-  overflow: hidden;
-}
 
-body {
-  overflow-y: scroll;
-}
+/*
+=== Quota Page ===
+*/
+.quota-nav { margin-bottom:0; }
 
-.single_chart_container {
-  height: 600px;
-  text-align:center;
-}
 
-.grid_chart {
-  height: 300px;
-}
 
-.legend {
-  height: 22px;
+/*
+=== Suggestions Box ===
+*/
+#suggestions_table {
+  max-height:800px;
+  overflow-y:scroll;
 }
 
 
-/* Cubism
-------------------------------------------------- */
 
+
+
+
+/* ########################################################################
+---- UNIT STYLES ----
+These classes are cut and pasted wholesale into here from other packages.
+ ######################################################################## */
+
+
+
+/*
+=== Cubism ===
+*/
 .group {
   margin-bottom: 1em;
 }
@@ -734,8 +623,7 @@ body {
   cursor:col-resize;
 }
 
-.ui-editRangeSlider .ui-rangeSlider-label{
-}
+.ui-editRangeSlider .ui-rangeSlider-label{}
 
 .ui-rangeSlider-label-inner{
  
