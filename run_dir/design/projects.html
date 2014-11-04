@@ -10,19 +10,19 @@ Description: Shows a table with all projects.
 {% block stuff %}
 
 {% if projects == 'all' %}
-  <h1>All Projects <small>All projects found in statusdb</small></h1>
+  <h1 id="{{ projects }}" class="projects_page_heading">All Projects <small>All projects found in statusdb</small></h1>
 {% elif projects == 'aborted' %}
-  <h1>Aborted Projects <small>All projects with an aborted date</small></h1>
+  <h1 id="{{ projects }}" class="projects_page_heading">Aborted Projects <small>All projects with an aborted date</small></h1>
 {% elif projects == 'pending' %}
-  <h1>Pending Projects <small>All projects without open date</small></h1>
+  <h1 id="{{ projects }}" class="projects_page_heading">Pending Projects <small>All projects without open date</small></h1>
 {% elif projects == 'open' %}
-  <h1>Open Projects <small>All projects without an explicit close date and loaded from the Lims</small></h1>
+  <h1 id="{{ projects }}" class="projects_page_heading">Open Projects <small>All projects without an explicit close date and loaded from the Lims</small></h1>
 {% elif projects == 'reception_control' %}
-  <h1>Reception Control Projects <small>All projects with open date but without queue date</small></h1>
+  <h1 id="{{ projects }}" class="projects_page_heading">Reception Control Projects <small>All projects with open date but without queue date</small></h1>
 {% elif projects == 'ongoing' %}
-  <h1>Ongoing Projects <small>All projects with a queue date but without a close date</small></h1>
+  <h1 id="{{ projects }}" class="projects_page_heading">Ongoing Projects <small>All projects with a queue date but without a close date</small></h1>
 {% elif projects == 'closed' %}
-  <h1>Closed Projects <small>All projects with a close date. Or old closed projects from Google Docs</small></h1>
+  <h1 id="{{ projects }}" class="projects_page_heading">Closed Projects <small>All projects with a close date. Or old closed projects from Google Docs</small></h1>
 {% end %}
 
 

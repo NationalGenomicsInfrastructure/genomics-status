@@ -195,15 +195,22 @@ $('body').on('click', '.search-action', function(event) {
 });
 
 function reset_default_checkboxes(){
-  // Sort out the button classes
-  $('#default_preset_buttons button.active').removeClass('active');
-  $('#resetProjectCols').addClass('active');
-  // Change the checkboxes  
-  $('#Filter input').prop('checked', false); // uncheck everything
-  $('#basic-columns input').prop('checked', true); // check the 'basic' columns
+  // Are we on a filtered page?
+  if($('.projects_page_heading').attr('id') == 'ongoing'){
+    select_from_preset('default_preset_buttons', 'Lab personnel - Ongoing');
+  } else if($('.projects_page_heading').attr('id') == 'reception_control'){
+    select_from_preset('default_preset_buttons', 'Lab personnel - Reception control');
+  } else {
+    // Sort out the button classes
+    $('#default_preset_buttons button.active').removeClass('active');
+    $('#resetProjectCols').addClass('active');
+    // Change the checkboxes  
+    $('#Filter input').prop('checked', false); // uncheck everything
+    $('#basic-columns input').prop('checked', true); // check the 'basic' columns
   
-  // Apply the filter
-  load_table();
+    // Apply the filter
+    load_table();
+  }
 }
 
 function read_current_filtering(){
