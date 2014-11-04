@@ -14,7 +14,8 @@ Description: Details page for a single project
 
 <h1><span id="project_name">-</span> <small><span class="label" id="project_status_alert"></span></small></h1>
 
-<div id="project_timescale"></div>
+<div class="project_timescale" id="project_timescale_production"></div>
+<div class="project_timescale" id="project_timescale_orderdates" style="display:none;"></div>
 
 <div class="row">
   <div class="col-md-4">
@@ -26,7 +27,7 @@ Description: Details page for a single project
       <dt>Library Method</dt>				<dd id="library_construction_method">-</dd>
 		</dl>
     
-    <h4>Order Dates</h4>
+    <h4>Order Dates &nbsp; <a href="#" class="btn btn-default btn-xs" id="show_order_timeline">Show on timeline</a></h4>
     <dl class="dl-horizontal">
       <dt>Order Received</dt>				<dd id="order_received">-</dd>
       <dt>Contract Sent</dt>				<dd id="contract_sent">-</dd>
@@ -191,8 +192,8 @@ Description: Details page for a single project
               <tr><th colspan="2">Progress summary</th></tr>
             </thead>
             <tbody>
-              <tr><td>Passed/Failed Initial QC</td><td id='passed_initial_qc'></td></tr>
-              <tr><td>Passed/Failed Library QC</td><td id='passed_library_qc'></td></tr>
+              <tr><td>Passed Initial QC</td><td id='passed_initial_qc'></td></tr>
+              <tr><td>Passed Library QC</td><td id='passed_library_qc'></td></tr>
               <tr><td>Lanes Started</td><td><span class="badge" id="lanes_sequenced"></span></td></tr>
               <tr><td>Sequencing QC (Gdocs)</td><td><span class="badge" id='passed_seq_qc'></span></td></tr>
               <tr><td>Library re-preps (Genstat)</td><td><span class="badge" id='library_repreps'></span></td></tr>

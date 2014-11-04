@@ -152,13 +152,13 @@ samp {
 }
 
 /* Cool colour bar for project page */
-#project_timescale {
+.project_timescale {
 	margin: 20px 0;
 	height:1px;
 	background:#eee;
 	position:relative;
 }
-#project_timescale .timelineTarget {
+.project_timescale .timelineTarget {
 	height:16px;
 	width:16px;
   margin-left:-6px;
@@ -166,7 +166,7 @@ samp {
 	top:-7px;
   cursor:pointer;
 }
-#project_timescale .timelineTick {
+.project_timescale .timelineTick {
   width:3px;
   height:10px;
   margin:3px 6.5px;
