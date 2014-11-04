@@ -1,4 +1,4 @@
-{% extends "base_new.html" %}
+{% extends "base.html" %}
 
 <!-- 
 Template file: applications.html
@@ -129,7 +129,7 @@ function load_data(start, stop) {
     for (k in s_keys) {
       trow = '<tr>';
       trow += '<td><a href="/application/'+s_keys[k]+'">'+s_keys[k]+'</a></td>';
-      trow += '<td class="rightalign"><a href="/application/'+s_keys[k]+'">'+data[s_keys[k]]+'</a></td>';
+      trow += '<td class="text-right"><a href="/application/'+s_keys[k]+'">'+data[s_keys[k]]+'</a></td>';
       trow += '</tr>';
       $("#application_table tbody").append(trow)
     };
@@ -145,7 +145,7 @@ function load_data(start, stop) {
     for (k in s_keys) {
       trow = '<tr>';
       trow += '<td><a href="/application/'+s_keys[k]+'">'+s_keys[k]+'</a></td>';
-      trow += '<td class="rightalign"><a href="/application/'+s_keys[k]+'">'+data[s_keys[k]]+'</a></td>';
+      trow += '<td class="text-right"><a href="/application/'+s_keys[k]+'">'+data[s_keys[k]]+'</a></td>';
       trow += '</tr>';
       $("#samples_table tbody").append(trow)
     };

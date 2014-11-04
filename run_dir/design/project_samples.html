@@ -1,4 +1,4 @@
-{% extends "base_new.html" %}
+{% extends "base.html" %}
 
 <!-- 
 Template file: project_samples.html
@@ -14,7 +14,8 @@ Description: Details page for a single project
 
 <h1><span id="project_name">-</span> <small><span class="label" id="project_status_alert"></span></small></h1>
 
-<div id="project_timescale"></div>
+<div class="project_timescale" id="project_timescale_production" style="display:none;"></div>
+<div class="project_timescale" id="project_timescale_orderdates"></div>
 
 <div class="row">
   <div class="col-md-4">
@@ -26,7 +27,7 @@ Description: Details page for a single project
       <dt>Library Method</dt>				<dd id="library_construction_method">-</dd>
 		</dl>
     
-    <h4>Order Dates</h4>
+    <h4>Order Dates &nbsp; <a href="#" class="btn btn-default btn-xs" id="show_order_timeline"><span id="show_orderdates_btn" style="display:none;">Show</span> <span id="hide_orderdates_btn">Hide</span> on timeline</a></h4>
     <dl class="dl-horizontal">
       <dt>Order Received</dt>				<dd id="order_received">-</dd>
       <dt>Contract Sent</dt>				<dd id="contract_sent">-</dd>
@@ -98,27 +99,16 @@ Description: Details page for a single project
           <table class="table table-bordered table-striped">
             <thead>
               <tr>
-                <th colspan="2">Order info</th>
+                <th colspan="2">Order info &amp; Contacts</th>
               </tr>
             </thead>
             <tbody>
               <tr><td>Disposal Of Samples</td><td id="disposal_of_any_remaining_samples"></td></tr>
-            </tbody>
-          </table>
-
-          <!-- Responsables and Contacts table -->
-          <table class="table table-bordered table-striped">
-            <thead>
-              <tr>
-                <th colspan="2">Responsibles and contacts</th>
-              </tr>
-            </thead>
-            <tbody>
               <tr><td>Bioinfo. Responsible</td><td id="bioinfo_responsible"></td></tr>
               <tr><td>Lab Responsible</td><td id="lab_responsible"></td></tr>
               <tr><td>Project Coordinator</td><td id="project_coordinator"></td></tr>
               <tr><td>Contact</td><td id="contact"></td></tr>
-              <tr><td>Invoice Reference</td><td id="invoice_reference"></td></tr>
+              <tr><td>Invoice Reference</td><td><code id="invoice_reference"></code></td></tr>
             </tbody>
           </table>
         </div>
@@ -191,8 +181,8 @@ Description: Details page for a single project
               <tr><th colspan="2">Progress summary</th></tr>
             </thead>
             <tbody>
-              <tr><td>Passed/Failed Initial QC</td><td id='passed_initial_qc'></td></tr>
-              <tr><td>Passed/Failed Library QC</td><td id='passed_library_qc'></td></tr>
+              <tr><td>Passed Initial QC</td><td id='passed_initial_qc'></td></tr>
+              <tr><td>Passed Library QC</td><td id='passed_library_qc'></td></tr>
               <tr><td>Lanes Started</td><td><span class="badge" id="lanes_sequenced"></span></td></tr>
               <tr><td>Sequencing QC (Gdocs)</td><td><span class="badge" id='passed_seq_qc'></span></td></tr>
               <tr><td>Library re-preps (Genstat)</td><td><span class="badge" id='library_repreps'></span></td></tr>
@@ -246,14 +236,23 @@ Description: Details page for a single project
     
     <!-- RUNNING NOTES TAB -->
     <div class="tab-pane fade" id="tab_running_notes_content">
-      <div class="panel-group" id="running_notes_panels"></div>
-      <form action="" method="POST" id="running_notes_form" role="form">
-        <div class="form-group">
-          <label for="new_note_text">Insert new running note:</label>
-          <textarea rows="7" class="form-control" id="new_note_text"></textarea>
+      <!-- add running note -->
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <h4 class="panel-title">Add a running note</h4>
         </div>
-        <button type="submit" class="btn btn-primary" id="save_note_button">Save running note</button>
-      </form>
+        <div class="panel-body">
+          <form action="" method="POST" id="running_notes_form" role="form">
+            <div class="form-group">
+              <label for="new_note_text">Insert new running note:</label>
+              <textarea rows="5" class="form-control" id="new_note_text"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" id="save_note_button">Save running note</button>
+          </form>
+        </div>
+      </div>
+      <!-- display running notes -->   
+      <div class="panel-group" id="running_notes_panels"></div>
     </div>
     
     <!-- USER COMMUNICATION TAB -->

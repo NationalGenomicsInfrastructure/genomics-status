@@ -935,15 +935,26 @@ $('#customer_project_description_wrapper, #customer_project_description_wrapper 
 
 
 // Awesome dates timeline
+$('#show_order_timeline').click(function(e){
+  e.preventDefault();
+  $('#project_timescale_production, #project_timescale_orderdates, #show_orderdates_btn, #hide_orderdates_btn').toggle();
+});
 function make_timescale(){
+  make_timescale_bar('#project_timescale_production', false);
+  make_timescale_bar('#project_timescale_orderdates', true);
+}
+
+function make_timescale_bar(tsid, include_orderdates){
 	// Which elements are we looking at?
-	var date_ids = [
-				'order_received',
-				'contract_sent',
-				'plates_sent',
-				'contract_received',
-				'sample_information_received',
-				'samples_received',
+  var order_date_ids = [
+      	'order_received',
+      	'contract_sent',
+      	'plates_sent',
+      	'contract_received',
+      	'sample_information_received',
+      	'samples_received',
+      ];
+	var production_date_ids = [
 				'open_date',
 				'first_initial_qc_start_date',
 				'queued',
@@ -956,7 +967,12 @@ function make_timescale(){
 				'close_date',
 				'aborted'
 			];
-	
+  if(include_orderdates){
+    date_ids = order_date_ids.concat(production_date_ids);
+  } else {
+    date_ids = production_date_ids;
+  }
+  
 	var oldest = new Date();
   var prodstart = new Date();
 	var newest = new Date();
@@ -993,18 +1009,24 @@ function make_timescale(){
 		}
 	});
 	
+  // Which colours and timestops are we using?
+  var production_cols = ['#82BFFF', '#5785FF', '#FFC521', '#FA4C47'];
+  var production_colstops = [
+        prodstart.getTime(),                        // prod start  - l blue
+        prodstart.getTime() + (3*7*24*60*60*1000),  // 3 weeks - dark blue
+        prodstart.getTime() + (6*7*24*60*60*1000),  // 6 weeks - orange
+        prodstart.getTime() + (9*7*24*60*60*1000),  // 9 weeks - red
+        newest.getTime()                            // End of bar
+      ];
+  if(include_orderdates){
+    cols = ['#DEDEDE'].concat(production_cols);
+    colstops = [oldest.getTime()].concat(production_colstops);
+  } else {
+    cols = production_cols;
+    colstops = production_colstops
+  }
+  
 	if(oldest.getTime() < newest.getTime()){
-		// Set up the colour scale with Chroma.js
-    var cols = ['#DEDEDE', '#82BFFF', '#5785FF', '#FFC521', '#FA4C47'];
-    var colstops = [
-          oldest.getTime(),                           // order in - l green
-          prodstart.getTime(),                        // prod start  - l blue
-          prodstart.getTime() + (3*7*24*60*60*1000),  // 3 weeks - dark blue
-          prodstart.getTime() + (6*7*24*60*60*1000),  // 6 weeks - orange
-          prodstart.getTime() + (9*7*24*60*60*1000),  // 9 weeks - red
-          newest.getTime()                            // End of bar
-        ];
-
 		// Set up the CSS on the bar
 		var range = newest.getTime() - oldest.getTime();
     var gradcols = [];
@@ -1016,11 +1038,11 @@ function make_timescale(){
       lastpercent = percent;
     });
 
-		$('#project_timescale').css('height', '2px');
-		$('#project_timescale').css("background-image", "-webkit-linear-gradient(left, "+gradcols.join(',')+")");
-		$('#project_timescale').css("background-image", "-moz-linear-gradient(right, "+gradcols.join(',')+")");
-		$('#project_timescale').css("background-image", "-o-linear-gradient(right, "+gradcols.join(',')+")");
-		$('#project_timescale').css("background-image", "linear-gradient(to right, "+gradcols.join(',')+")");
+		$(tsid).css('height', '2px');
+		$(tsid).css("background-image", "-webkit-linear-gradient(left, "+gradcols.join(',')+")");
+		$(tsid).css("background-image", "-moz-linear-gradient(right, "+gradcols.join(',')+")");
+		$(tsid).css("background-image", "-o-linear-gradient(right, "+gradcols.join(',')+")");
+		$(tsid).css("background-image", "linear-gradient(to right, "+gradcols.join(',')+")");
 	
 		// Put date objects onto the timeline
 		$.each(dates, function(rawdate, names){
@@ -1037,9 +1059,18 @@ function make_timescale(){
       });
       var timeDiff = dateobj.getTime() - prodstart.getTime();
       var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-      var diffdaystext = (diffDays > 0) ? '<br>'+diffDays+' days in production' : '';
+      console.log(names.join(',')+' - '+diffDays);
+      var diffWeeks = 0;
+      while(diffDays >= 7){ diffWeeks += 1; diffDays -= 7; }
+      var diffdaystext = '';
+      if(diffDays > 0 || diffWeeks > 0){
+         diffdaystext = '<br><em>';
+         if(diffWeeks > 0){ diffdaystext += diffWeeks + 'w '; }
+         if(diffDays > 0){ diffdaystext += diffDays + 'd'; }
+         diffdaystext += ' in production</em>';
+      }
 			var percent = ((dateobj.getTime() - oldest.getTime()) / range) * 100;
-			$('#project_timescale').append('<div style="left:'+percent+'%; background-color:'+thiscol+';" data-toggle="tooltip" data-placement="bottom" title="'+rawdate+diffdaystext+'<br>'+names.join('<br>')+'"></div>');
+			$(tsid).append('<div class="timelineTarget" style="left:'+percent+'%;" data-toggle="tooltip" data-placement="bottom" title="'+rawdate+'<br><strong>'+names.join('</strong><br><strong>')+'</strong>'+diffdaystext+'"><div class="timelineTick" style="background-color:'+thiscol+';"></div></div>');
 		});
 	}
 	
