@@ -937,7 +937,7 @@ $('#customer_project_description_wrapper, #customer_project_description_wrapper 
 // Awesome dates timeline
 $('#show_order_timeline').click(function(e){
   e.preventDefault();
-  $('#project_timescale_production, #project_timescale_orderdates').toggle();
+  $('#project_timescale_production, #project_timescale_orderdates, #show_orderdates_btn, #hide_orderdates_btn').toggle();
 });
 function make_timescale(){
   make_timescale_bar('#project_timescale_production', false);
