@@ -52,6 +52,7 @@ class QuotaDataHandler(SafeHandler):
                 limit = row.value[1]
             else:
                 y = 0
+                limit = 0
             data.append({"x": int(time.mktime(parser.parse(date_getter(row)).timetuple())),
                          "y": y * gb,
                          "limit": limit * gb})
