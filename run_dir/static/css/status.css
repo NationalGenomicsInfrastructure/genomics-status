@@ -1,45 +1,324 @@
-html {
-  background: transparent;
-  height: 100%;
+body {
+  font-size:13px;
 }
 
-div .scrollable {
-  overflow: scroll;
+/* Helper classes */
+div.scrollable {
   overflow: auto;
 }
 
-table .scrollable {
-  max-width: max-content;
+.sentenceCase {
+  text-transform: capitalize;
+}
+.upperCase {
+  text-transform: uppercase;
 }
 
-label { 
-  font-weight: bold; 
+.q30_filters {
+  width:200px;
+  float:left;
+  margin-left:15px;
 }
 
-.help-block { 
-  font-size: small; 
-  color:#999; 
-  margin-top: 10px;
+.no-margin {
+  margin:0;
 }
 
-.test_padding {
-  padding: 30px;
+.nowrap {
+  white-space: pre;
 }
 
-.glyphicon-refresh-animate {
+.inline-textbox {
+  display:inline-block;
+  width:200px;
+  margin-left: 10px;
+}
+
+.input-spinner {
+  margin-left:-35px;
+}
+.subtle-spinner {
+  color:#CCCCCC;
+}
+
+.highlighted {
+  background-color: #FFFFCC;
+}
+
+#homepage-searchbar {
+  text-align:center;
+  border-top:1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding:10px 0;
+  display:inline-block;
+  width:100%;
+}
+#homepage-searchbar .control-label {
+  font-size:1.4em;
+  margin: 10px 15px 0 0;
+  padding:0;
+  top:5px;
+  vertical-align:top;
+}
+#homepage-searchbar .twitter-typeahead {
+  width: 422px;
+}
+
+.tt-dropdown-menu {
+  width: 422px;
+  margin-top: 12px;
+  padding: 8px 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  -webkit-border-radius: 8px;
+     -moz-border-radius: 8px;
+          border-radius: 8px;
+  -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+     -moz-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+          box-shadow: 0 5px 10px rgba(0,0,0,.2);
+}
+.tt-suggestion {
+  padding: 3px 20px;
+  font-size: 18px;
+  line-height: 24px;
+  cursor:pointer;
+  text-align:left;
+}
+.tt-suggestion.tt-cursor {
+  color: #fff;
+  background-color: #0097cf;
+
+}
+.tt-suggestion p {
+  margin: 0;
+}
+.tt-hint {
+  visibility:hidden;
+}
+
+.quota-nav {
+  margin-bottom:0;
+}
+
+/* Suggestions Box */
+#suggestions_table {
+  max-height:800px;
+  overflow-y:scroll;
+}
+
+.depreciated_page {
+  background-color:#f5f5f5;
+}
+.depreciated_page a {
+  font-style:italic;
+}
+#depreciated_header a {
+  background-color:#f5f5f5;
+  color:#333;
+  font-weight:bold;
+  cursor:default;
+}
+
+.dl-wide dt {
+  width:260px;
+}
+.dl-wide dd {
+  margin-left:280px;
+}
+
+.nav.nav-tabs,
+.marginBottom {
+  margin-bottom:15px;
+}
+
+/* Make the bootstrap labels a little less over-saturated */
+.label { font-weight:normal; }
+.label-default { background-color:#777; }
+.label-primary { background-color: #547C9E; } /* #428bca} */
+.label-success { background-color: #5D995D; } /* #5cb85c} */
+.label-info    { background-color: #5998AB; } /* #5bc0de} */
+.label-warning { background-color: #BA945F; } /* #f0ad4e} */
+.label-danger  { background-color: #B06361; } /* #d9534f} */
+
+/* Custom Labels */
+.label-undefined  {color: #ccc; }
+.label-date  {color: #333; font-size:80%; }
+
+
+/* Make <samp> (flow cell IDs usually) a little smaller */
+samp {
+  font-size:0.8em;
+}
+
+/* Cool colour bar for project page */
+.project_timescale {
+	margin: 20px 0;
+	height:1px;
+	background:#eee;
+	position:relative;
+}
+.project_timescale .timelineTarget {
+	height:16px;
+	width:16px;
+  margin-left:-6px;
+	position:absolute;
+	top:-7px;
+  cursor:pointer;
+}
+.project_timescale .timelineTick {
+  width:3px;
+  height:10px;
+  margin:3px 6.5px;
+}
+
+/* Make the user description have a max height */
+#customer_project_description_wrapper.showfade {
+  max-height: 100px;
+	position: relative;
+	overflow: hidden;
+}
+.fade-read-more { 
+	position: absolute; 
+	bottom: 0; left: 0;
+	width: 100%; 
+	text-align: center; 
+	margin: 0; padding: 30px 0; 
+	
+	/* "transparent" only works here because == rgba(0,0,0,0) */ 
+	background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, transparent),color-stop(1, white));
+        background-image: -webkit-linear-gradient(top, transparent, white);
+        background-image: -moz-linear-gradient(top, transparent, white);
+        background-image: -ms-linear-gradient(top, transparent, white);
+        background-image: -o-linear-gradient(top, transparent, white);
+}
+
+
+#running_notes_table img {
+  max-width:400px;
+  max-height:400px;
+}
+
+#com_accordion pre,
+#running_notes_panels pre,
+.running-note-panel pre {
+  background-color:transparent;
+  border:none;
+  font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
+  margin:0;
+  padding:0;
+}
+.running-note-panel pre {
+  max-width:400px;
+}
+
+.link_wrapper {
+	border-bottom:1px solid #DDDDDD;
+	padding-top:15px;
+	padding-bottom:15px;
+}
+.link_wrapper:first-child {
+	padding-top:0;
+}
+
+.search-action, .search-action input {
+  cursor:pointer;
+}
+
+th.sort {
+  cursor:pointer;
+}
+th.sort:after {
+  display:inline-block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  content:"";
+  margin-left: 10px;
+}
+th.sort.asc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #000000;
+  content:"";
+  position: relative;
+  top:4px;
+  right:-5px;
+}
+th.sort.desc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid #000000;
+  content:"";
+  position: relative;
+  top:-4px;
+  right:-5px;
+}
+
+.glyphicon-refresh-animate, .glyphicon-spin {
+  margin-right:10px;
   -animation: spin .7s infinite linear;
   -webkit-animation: spin2 .7s infinite linear;
 }
-
+@keyframes spin {
+  from { transform: scale(1) rotate(0deg);}
+  to { transform: scale(1) rotate(360deg);}
+}
 @-webkit-keyframes spin2 {
   from { -webkit-transform: rotate(0deg);}
   to { -webkit-transform: rotate(360deg);}
 }
 
-@keyframes spin {
-  from { transform: scale(1) rotate(0deg);}
-  to { transform: scale(1) rotate(360deg);}
+
+.justified {
+  text-align: justify;
+  text-justify: inter-word;
 }
+
+pre.scrollable {
+  overflow: auto;
+  word-wrap: normal;
+  white-space: pre;
+}
+
+table.scrollable {
+  max-width: 100%;
+}
+table.table-nowidth {
+    width:auto;
+}
+.rightalign {
+    text-align:right;
+}
+
+.well > h1, .well > h2, .well > h3, .well > h4, .well > h5, .well > h6 {
+    margin-top:0;
+}
+
+.nav-backgrounds li {
+    margin-bottom:8px;
+}
+.nav-backgrounds li a {
+    background-color:#f9f9f9;
+    border:1px solid #ccc;
+}
+
+.homepage-ctas .well {
+    text-align:center;
+}
+.homepage-ctas .well h3 {
+    font-size:3em;
+}
+.homepage-ctas .well a i {
+    color:#333;
+}
+
 
 /* Body and structure
 -------------------------------------------------- 
@@ -55,16 +334,27 @@ td.progress {
 }
 
 body {
-  padding-bottom: 40px;
   padding-top: 60px;
+  padding-bottom: 40px;
 }
 .sidebar {
   padding: 9px 0;
   background-color: white;
+  text-align: center;
+}
+.footer {
+    font-size:0.9em;
+    color:#999;
+    text-align:center;
+}
+.footer a {
+    color:#999;
+    text-decoration:underline;
 }
 
-.sidebar {
-  text-align: center;
+
+.slider-spacing {
+    margin:40px 0;
 }
 
 .progress-info.progress-striped .bar {
@@ -78,10 +368,6 @@ body {
   animation: progress-bar-stripes 0.25s linear infinite;
 }
 
-.well {
-  background-color: white;
-}
-
 .box { font: 10px sans-serif; }
 .box line, .box rect, .box circle { stroke: #000; stroke-width: 1.5px; fill: #fff; }
 .box .center { stroke-dasharray: 3 3; }
@@ -91,11 +377,12 @@ line.median {
   stroke: red;
 }
 
-th.a {
+th.link {
   color: #0088cc;
+  cursor:pointer;
 }
 
-th.a:hover {
+th.link:hover {
   color: #0088cc;
   cursor: pointer;
   text-decoration: underline;
@@ -114,9 +401,7 @@ table {
     word-wrap: break-word;
 }
 
-pre.cronjob-disabled {
-  color: red;
-}
+
 table.narrow-headers th {
     width: 20%
 }
@@ -171,20 +456,27 @@ table.narrow-headers th {
   position: relative;
   margin-bottom: 20px;
 }
-div#caliperModal {
+
+/* Caliper thumbnail image in table */
+.caliper_loading_spinner {
+  display:inline-block;
+  min-width:200px;
+}
+.caliper-thumbnail img {
+  max-width:200px;
+}
+/* Caliper modal */
+#caliperModal .modal-content {
     width:1040px;
-    height:600px;
     margin-left:-520px;
     left:50%;
 }
-img.caliper-img {
-    cursor: pointer;
-}
-img.caliper-modal {
+#caliperModal .modal-body img {
     width:100%;
     max-width:1040px;
     max-height:400px;
 }
+
 
 /* NVD3 Graphs
 ------------------------------------------------- */
