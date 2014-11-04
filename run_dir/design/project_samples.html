@@ -1,4 +1,4 @@
-{% extends "base_new.html" %}
+{% extends "base.html" %}
 
 <!-- 
 Template file: project_samples.html
@@ -99,27 +99,16 @@ Description: Details page for a single project
           <table class="table table-bordered table-striped">
             <thead>
               <tr>
-                <th colspan="2">Order info</th>
+                <th colspan="2">Order info &amp; Contacts</th>
               </tr>
             </thead>
             <tbody>
               <tr><td>Disposal Of Samples</td><td id="disposal_of_any_remaining_samples"></td></tr>
-            </tbody>
-          </table>
-
-          <!-- Responsables and Contacts table -->
-          <table class="table table-bordered table-striped">
-            <thead>
-              <tr>
-                <th colspan="2">Responsibles and contacts</th>
-              </tr>
-            </thead>
-            <tbody>
               <tr><td>Bioinfo. Responsible</td><td id="bioinfo_responsible"></td></tr>
               <tr><td>Lab Responsible</td><td id="lab_responsible"></td></tr>
               <tr><td>Project Coordinator</td><td id="project_coordinator"></td></tr>
               <tr><td>Contact</td><td id="contact"></td></tr>
-              <tr><td>Invoice Reference</td><td id="invoice_reference"></td></tr>
+              <tr><td>Invoice Reference</td><td><code id="invoice_reference"></code></td></tr>
             </tbody>
           </table>
         </div>
