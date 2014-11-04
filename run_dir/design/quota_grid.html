@@ -49,8 +49,14 @@ $(document).ready(function(){
                 // Massage the data
                 var raw_data = api_data[0]["data"];
                 var plot_data = [];
+                var quota_limit = raw_data[0].limit / 1000000000000;
+                var max_value = quota_limit;
                 $.each(raw_data, function(i, d){
-                    plot_data.push([d.x * 1000, d.y / 1000000000000]);
+                    d.y /= 1000000000000;
+                    plot_data.push([d.x * 1000, d.y]);
+                    if(max_value < d.y) {
+                        max_value = d.y;
+                    }
                 });
         
                 // Plot the data
@@ -67,12 +73,21 @@ $(document).ready(function(){
                         type: 'datetime'
                     },
                     yAxis: {
+                        min: 0,
+                        max: max_value,
                         title: { text: 'Storage' },
                         labels: {
                             formatter: function () {
                                 return this.value + 'Tb';
                             }
-                        }
+                        },
+                        plotLines: [{
+                            color: 'red',
+                            width: 2,
+                            value: quota_limit,
+                            dashStyle: 'Dash',
+                            zIndex: 5
+                        }]
                     },
                     tooltip: {
                         pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} Tb',
@@ -82,7 +97,6 @@ $(document).ready(function(){
                         data: plot_data
                     }]
                 });
-                
                 // Hide the loading spinner
                 $('#loading_spinner_'+up).hide();
                 
