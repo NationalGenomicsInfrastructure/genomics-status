@@ -246,14 +246,23 @@ Description: Details page for a single project
     
     <!-- RUNNING NOTES TAB -->
     <div class="tab-pane fade" id="tab_running_notes_content">
-      <div class="panel-group" id="running_notes_panels"></div>
-      <form action="" method="POST" id="running_notes_form" role="form">
-        <div class="form-group">
-          <label for="new_note_text">Insert new running note:</label>
-          <textarea rows="7" class="form-control" id="new_note_text"></textarea>
+      <!-- add running note -->
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <h4 class="panel-title">Add a running note</h4>
         </div>
-        <button type="submit" class="btn btn-primary" id="save_note_button">Save running note</button>
-      </form>
+        <div class="panel-body">
+          <form action="" method="POST" id="running_notes_form" role="form">
+            <div class="form-group">
+              <label for="new_note_text">Insert new running note:</label>
+              <textarea rows="5" class="form-control" id="new_note_text"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" id="save_note_button">Save running note</button>
+          </form>
+        </div>
+      </div>
+      <!-- display running notes -->   
+      <div class="panel-group" id="running_notes_panels"></div>
     </div>
     
     <!-- USER COMMUNICATION TAB -->

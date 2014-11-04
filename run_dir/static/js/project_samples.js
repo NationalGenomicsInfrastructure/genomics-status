@@ -1037,9 +1037,18 @@ function make_timescale(){
       });
       var timeDiff = dateobj.getTime() - prodstart.getTime();
       var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-      var diffdaystext = (diffDays > 0) ? '<br>'+diffDays+' days in production' : '';
+      console.log(names.join(',')+' - '+diffDays);
+      var diffWeeks = 0;
+      while(diffDays >= 7){ diffWeeks += 1; diffDays -= 7; }
+      var diffdaystext = '';
+      if(diffDays > 0 || diffWeeks > 0){
+         diffdaystext = '<br><em>';
+         if(diffWeeks > 0){ diffdaystext += diffWeeks + 'w '; }
+         if(diffDays > 0){ diffdaystext += diffDays + 'd'; }
+         diffdaystext += ' in production</em>';
+      }
 			var percent = ((dateobj.getTime() - oldest.getTime()) / range) * 100;
-			$('#project_timescale').append('<div style="left:'+percent+'%; background-color:'+thiscol+';" data-toggle="tooltip" data-placement="bottom" title="'+rawdate+diffdaystext+'<br>'+names.join('<br>')+'"></div>');
+			$('#project_timescale').append('<div class="timelineTarget" style="left:'+percent+'%;" data-toggle="tooltip" data-placement="bottom" title="'+rawdate+'<br><strong>'+names.join('</strong><br><strong>')+'</strong>'+diffdaystext+'"><div class="timelineTick" style="background-color:'+thiscol+';"></div></div>');
 		});
 	}
 	

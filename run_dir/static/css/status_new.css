@@ -158,12 +158,18 @@ samp {
 	background:#eee;
 	position:relative;
 }
-#project_timescale div {
-	height:10px;
-	width:3px;
+#project_timescale .timelineTarget {
+	height:16px;
+	width:16px;
+  margin-left:-6px;
 	position:absolute;
-	top:-4px;
+	top:-7px;
   cursor:pointer;
+}
+#project_timescale .timelineTick {
+  width:3px;
+  height:10px;
+  margin:3px 6.5px;
 }
 
 /* Make the user description have a max height */
@@ -186,6 +192,7 @@ samp {
         background-image: -ms-linear-gradient(top, transparent, white);
         background-image: -o-linear-gradient(top, transparent, white);
 }
+
 
 #running_notes_table img {
   max-width:400px;
