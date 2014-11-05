@@ -181,7 +181,7 @@ $('body').on('click', '.search-action', function(event) {
   event.preventDefault();
   switch ($(this).data('action')) {
     case 'filterReset':
-      reset_default_checkboxes();
+      reset_default_checkboxes(true);
     case 'filterApply':
       load_table();
       break;
@@ -194,13 +194,14 @@ $('body').on('click', '.search-action', function(event) {
   }
 });
 
-function reset_default_checkboxes(){
+function reset_default_checkboxes(setdefault){
+  setdefault = typeof setdefault !== 'undefined' ? setdefault : false;
   // Are we on a filtered page?
-  if($('.projects_page_heading').attr('id') == 'ongoing'){
+  if(!setdefault && $('.projects_page_heading').attr('id') == 'ongoing'){
     select_from_preset('default_preset_buttons', 'Lab personnel - Ongoing');
-  } else if($('.projects_page_heading').attr('id') == 'reception_control'){
+  } else if(!setdefault &&  $('.projects_page_heading').attr('id') == 'reception_control'){
     select_from_preset('default_preset_buttons', 'Lab personnel - Reception control');
-  } else if($('.projects_page_heading').attr('id') == 'pending'){
+  } else if(!setdefault &&  $('.projects_page_heading').attr('id') == 'pending'){
     select_from_preset('default_preset_buttons', 'Order Status');
   } else {
     // Sort out the button classes
