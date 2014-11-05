@@ -486,7 +486,8 @@ function load_all_udfs(){
     }
     
     // Make the page title reflect the page contents
-    document.title = $('#project_name').text() + ' : Genomics Status';
+    // Long string of functions is to remove <small>NGI Portal</small> text..
+    document.title = $("#project_name").attr('p_name') + ' : Genomics Status';
     		
 		// Make the cool timescale bar if we can
 		make_timescale();
