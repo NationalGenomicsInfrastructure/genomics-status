@@ -9,37 +9,35 @@ Description: Shows quality scores over a time period
 
 {% block stuff %}
 
-<div class="container-fluid">
-  <h1>Reads vs Quality values</h1>
-  <p>Browse quality data over selected time period. 
-    The histogram at the top shows the ratio of reads at each quality score and 
-    the bottom graph shows the total ratio of reads with at least the score
-    given by the x-axis.</p>
-   
-  <h3 id="dates"></h3>
-    
-  <div class="row slider-spacing" style="margin-bottom:100px;">
-    <div class="col-md-10 col-md-push-1">
-      <div id="slider"></div>
-    </div>
-  </div>
+<h1 id="page_title">Reads vs Quality values</h1>
+<p>Browse quality data over selected time period. 
+  The histogram at the top shows the ratio of reads at each quality score and 
+  the bottom graph shows the total ratio of reads with at least the score
+  given by the x-axis.</p>
+ 
+<h3 id="dates"></h3>
   
-  <p id="loading_text" class="text-center"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading plots..</p>
-
-  <div id="plots">
-      <div class="row">
-          <div class="grid_chart col-md-10 col-md-push-1" id="chart_container">
-            <svg id="quality"></svg>
-          </div>
-      </div>
-      <div class="row">
-          <div class="grid_chart col-md-10 col-md-push-1" id="chart_container">
-            <svg id="cumulative"></svg>
-          </div>
-      </div>
+<div class="row slider-spacing" style="margin-bottom:100px;">
+  <div class="col-md-10 col-md-push-1">
+    <div id="slider"></div>
   </div>
-
 </div>
+
+<p id="loading_text" class="text-center"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading plots..</p>
+
+<div id="plots">
+    <div class="row">
+        <div class="grid_chart col-md-10 col-md-push-1" id="chart_container">
+          <svg id="quality"></svg>
+        </div>
+    </div>
+    <div class="row">
+        <div class="grid_chart col-md-10 col-md-push-1" id="chart_container">
+          <svg id="cumulative"></svg>
+        </div>
+    </div>
+</div>
+
 
 <script src="/static/js/jquery-ui.min.js"></script>
 <script src="/static/js/jQDateRangeSlider-min.js"></script>
