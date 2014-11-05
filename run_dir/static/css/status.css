@@ -62,6 +62,7 @@ pre.scrollable {
   margin-left: 10px;
 }
 .nav.nav-tabs, .marginBottom { margin-bottom:15px; }
+.borderRight { border-right: 1px solid #eee; }
 
 /* Tables */
 th { background-color: #ddd; }
