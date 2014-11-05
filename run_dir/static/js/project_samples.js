@@ -484,7 +484,10 @@ function load_all_udfs(){
       $('#days_in_production').text(diffDays);
       
     }
-		
+    
+    // Make the page title reflect the page contents
+    document.title = $('#project_name').text() + ' : Genomics Status';
+    		
 		// Make the cool timescale bar if we can
 		make_timescale();
     
@@ -1062,7 +1065,6 @@ function make_timescale_bar(tsid, include_orderdates){
       });
       var timeDiff = dateobj.getTime() - prodstart.getTime();
       var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-      console.log(names.join(',')+' - '+diffDays);
       var diffWeeks = 0;
       while(diffDays >= 7){ diffWeeks += 1; diffDays -= 7; }
       var diffdaystext = '';
