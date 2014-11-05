@@ -8,12 +8,10 @@ Basic Javascript functions to run on every page in Genomics Status
 $(document).ready(function(){
   
   // Make the page title reflect the page contents
-  // Get the heading without the child elements
-  var page_title = $('h1:first').clone().children().remove().end().text().trim();
-  if(page_title.length > 3){
-    document.title = page_title + ' : Genomics Status';
+  if($('#page_title').length > 0 && document.title == 'Genomics Status'){
+    document.title = $('#page_title').text() + ' : Genomics Status';
   }
-  
+
   // Activate bootstrap hover tooltips
   $('body').tooltip({
 		selector: '[data-toggle="tooltip"]',
