@@ -200,6 +200,8 @@ function reset_default_checkboxes(){
     select_from_preset('default_preset_buttons', 'Lab personnel - Ongoing');
   } else if($('.projects_page_heading').attr('id') == 'reception_control'){
     select_from_preset('default_preset_buttons', 'Lab personnel - Reception control');
+  } else if($('.projects_page_heading').attr('id') == 'pending'){
+    select_from_preset('default_preset_buttons', 'Order Status');
   } else {
     // Sort out the button classes
     $('#default_preset_buttons button.active').removeClass('active');
