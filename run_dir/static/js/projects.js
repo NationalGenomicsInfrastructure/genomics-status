@@ -47,10 +47,15 @@ function load_table() {
           .html(summary_row[column_tuple[1]])
           );
       });
-      //Add links to projects
-      tbl_row.find('td.project').append(
-        $('<a>').attr('href', "/project/" + project_id).text(project_id)
-        );
+      
+      // Add links to projects
+      tbl_row.find('td.project').html('<a href="/project/' + project_id + '">' + project_id + '</a>');
+        
+      // Add links to Portal References
+      var portal_name = summary_row['customer_project_reference'];
+      var portal_id = summary_row['portal_id'];
+      tbl_row.find('td.customer_project_reference').html('<a target="_blank" href="https://portal.scilifelab.se/genomics/node/'+portal_id + '">' + portal_name + '</a>');
+      
       //parse and display running notes
       var latest_note = tbl_row.find('td.latest_running_note');
       if (latest_note.text() !== '') {
