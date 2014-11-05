@@ -261,8 +261,11 @@ function load_tickets() {
           var v = data[k];
           
           var label_class = 'default';
-          if(v['status'] == 'closed'){ label_class = 'success'; v['status'] = 'Closed'; }
           if(v['status'] == 'open'){ label_class = 'danger'; v['status'] = 'Open'; }
+          if(v['status'] == 'pending'){ label_class = 'info'; v['status'] = 'Pending'; }
+          if(v['status'] == 'on-hold'){ label_class = 'warning'; v['status'] = 'On-Hold'; }
+          if(v['status'] == 'solved'){ label_class = 'success'; v['status'] = 'Solved'; }
+          if(v['status'] == 'closed'){ label_class = 'success'; v['status'] = 'Closed'; }
           var title = '<span class="pull-right">'+
                          '<a class="text-muted" data-toggle="collapse" data-parent="#accordion" href="#zendesk_ticket_'+k+'">'+
                            v['created_at'].split('T')[0] + 
