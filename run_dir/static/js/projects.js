@@ -11,13 +11,12 @@ $(document).ready(function() {
   
   // Load the presets first (to get the table headers)
   $.when(load_presets()).done(function(){
-    // Load the page content
-    $.when(load_undefined_columns()).done(function(){
-      // Show the page   
-      $('#loading_spinner').hide();
-      $('#page_content').show();
-    });
+    // Show the page   
+    $('#loading_spinner').hide();
+    $('#page_content').show();
     
+    // Load the page content
+    load_undefined_columns();
   });
   
   // Prevent traditional html submit function
@@ -154,10 +153,6 @@ function load_presets() {
     var default_presets = data['default'];
     var user_presets = data['user'];
 
-    // Empty previously filled lists of presets
-    // $('#default_preset_buttons').empty();
-    // $('#user_presets_dropdown').empty();
-
     // Default presets
     for (var preset in default_presets) {
       $('#default_preset_buttons').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-default">'+preset+'</button>');
@@ -175,6 +170,11 @@ function load_presets() {
     // Check default checkboxes
     if (!$("#Filter :checked").length) {
       reset_default_checkboxes();
+    }
+    
+    // Otherwise, load the table
+    else {
+      load_table();
     }
     
   });
