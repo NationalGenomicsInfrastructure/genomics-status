@@ -372,7 +372,7 @@ function load_all_udfs(){
     $('#page_content').show();
     
     // Project not found
-    if(data.length === 0 || data == null || Object.getOwnPropertyNames(data).length == 0){
+    if(Object.getOwnPropertyNames(data).length == 0){
       $('#page_content').html('<h1>Error - Project Not Found</h1><div class="alert alert-danger">Oops! Sorry about that, we can\'t find the project <strong>'+project+'</strong></div>');
       return false;
     }
@@ -570,7 +570,7 @@ function load_samples_table() {
     var size = 0;
     
     // No samples
-    if(samples_data.length === 0 || samples_data == null || Object.getOwnPropertyNames(samples_data).length == 0){
+    if(Object.getOwnPropertyNames(data).length == 0){
       $('#tab_samples_content').html('<div class="alert alert-info">Project <strong>'+project+'</strong> does not yet have any samples..</div>');
       return false;
     }
