@@ -11,13 +11,12 @@ $(document).ready(function() {
   
   // Load the presets first (to get the table headers)
   $.when(load_presets()).done(function(){
-    // Load the page content
-    $.when(load_undefined_columns()).done(function(){
-      // Show the page   
-      $('#loading_spinner').hide();
-      $('#page_content').show();
-    });
+    // Show the page   
+    $('#loading_spinner').hide();
+    $('#page_content').show();
     
+    // Load the page content
+    load_undefined_columns();
   });
   
   // Prevent traditional html submit function
@@ -47,10 +46,15 @@ function load_table() {
           .html(summary_row[column_tuple[1]])
           );
       });
-      //Add links to projects
-      tbl_row.find('td.project').append(
-        $('<a>').attr('href', "/project/" + project_id).text(project_id)
-        );
+      
+      // Add links to projects
+      tbl_row.find('td.project').html('<a href="/project/' + project_id + '">' + project_id + '</a>');
+        
+      // Add links to Portal References
+      var portal_name = summary_row['customer_project_reference'];
+      var portal_id = summary_row['portal_id'];
+      tbl_row.find('td.customer_project_reference').html('<a target="_blank" href="https://portal.scilifelab.se/genomics/node/'+portal_id + '">' + portal_name + '</a>');
+      
       //parse and display running notes
       var latest_note = tbl_row.find('td.latest_running_note');
       if (latest_note.text() !== '') {
@@ -149,10 +153,6 @@ function load_presets() {
     var default_presets = data['default'];
     var user_presets = data['user'];
 
-    // Empty previously filled lists of presets
-    // $('#default_preset_buttons').empty();
-    // $('#user_presets_dropdown').empty();
-
     // Default presets
     for (var preset in default_presets) {
       $('#default_preset_buttons').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-default">'+preset+'</button>');
@@ -172,6 +172,11 @@ function load_presets() {
       reset_default_checkboxes();
     }
     
+    // Otherwise, load the table
+    else {
+      load_table();
+    }
+    
   });
 }
 
@@ -181,7 +186,7 @@ $('body').on('click', '.search-action', function(event) {
   event.preventDefault();
   switch ($(this).data('action')) {
     case 'filterReset':
-      reset_default_checkboxes();
+      reset_default_checkboxes(true);
     case 'filterApply':
       load_table();
       break;
@@ -194,12 +199,15 @@ $('body').on('click', '.search-action', function(event) {
   }
 });
 
-function reset_default_checkboxes(){
+function reset_default_checkboxes(setdefault){
+  setdefault = typeof setdefault !== 'undefined' ? setdefault : false;
   // Are we on a filtered page?
-  if($('.projects_page_heading').attr('id') == 'ongoing'){
+  if(!setdefault && $('.projects_page_heading').attr('id') == 'ongoing'){
     select_from_preset('default_preset_buttons', 'Lab personnel - Ongoing');
-  } else if($('.projects_page_heading').attr('id') == 'reception_control'){
+  } else if(!setdefault &&  $('.projects_page_heading').attr('id') == 'reception_control'){
     select_from_preset('default_preset_buttons', 'Lab personnel - Reception control');
+  } else if(!setdefault &&  $('.projects_page_heading').attr('id') == 'pending'){
+    select_from_preset('default_preset_buttons', 'Order Status');
   } else {
     // Sort out the button classes
     $('#default_preset_buttons button.active').removeClass('active');
