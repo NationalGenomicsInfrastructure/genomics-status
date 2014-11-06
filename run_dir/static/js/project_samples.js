@@ -544,7 +544,7 @@ function load_table_head(columns){
     } else if(column_tuple[0] == 'Library Validation Caliper Image') {
       tbl_head += '<abbr data-toggle="tooltip" title="Latest Library Validation Caliper Image">Caliper Image</abbr>';
     } else if(column_tuple[0] == 'Million Reads Sequenced') { 
-      tbl_head += '<abbr data-toggle="tooltip" title="Reads passing application QC criteria. If paired end, this is read pairs.">Sequenced Reads</abbr>';
+      tbl_head += '<abbr data-toggle="tooltip" title="Reads passing application QC criteria. If paired end, this is read pairs.">Million Reads Sequenced</abbr>';
     } else {
       tbl_head += column_tuple[0];
     }
@@ -619,10 +619,9 @@ function load_samples_table() {
               tbl_row += '</td>';
             }
             
-            // Convert million reads to just reads
+            // Make sure that 'million reads' has two decimal places
             else if (column_id == 'total_reads_(m)' && typeof info[column_id] !== 'undefined'){
-              var reads = info[column_id] * 1000000;
-              tbl_row += auto_samples_cell(column_id, reads);
+              tbl_row += '<td class="' + column_id + ' text-right">' + Number(info[column_id]).toFixed(2) + '</td>';
             }
             
             // everything else 
