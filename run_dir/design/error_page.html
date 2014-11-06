@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+<!--
+Defaut response page for an 404 Page Not Found error
+-->
+
+{% block stuff %}
+<div class="container-fluid">
+  <div class="alert alert-danger" role="alert">
+    ERROR {{ status }} occurred! {{ reason }}
+  </div>
+</div>
+
+{% end %}
