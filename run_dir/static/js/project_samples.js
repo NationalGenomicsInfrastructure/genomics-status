@@ -261,8 +261,11 @@ function load_tickets() {
           var v = data[k];
           
           var label_class = 'default';
-          if(v['status'] == 'closed'){ label_class = 'success'; v['status'] = 'Closed'; }
           if(v['status'] == 'open'){ label_class = 'danger'; v['status'] = 'Open'; }
+          if(v['status'] == 'pending'){ label_class = 'info'; v['status'] = 'Pending'; }
+          if(v['status'] == 'on-hold'){ label_class = 'warning'; v['status'] = 'On-Hold'; }
+          if(v['status'] == 'solved'){ label_class = 'success'; v['status'] = 'Solved'; }
+          if(v['status'] == 'closed'){ label_class = 'success'; v['status'] = 'Closed'; }
           var title = '<span class="pull-right">'+
                          '<a class="text-muted" data-toggle="collapse" data-parent="#accordion" href="#zendesk_ticket_'+k+'">'+
                            v['created_at'].split('T')[0] + 
@@ -481,7 +484,11 @@ function load_all_udfs(){
       $('#days_in_production').text(diffDays);
       
     }
-		
+    
+    // Make the page title reflect the page contents
+    // Long string of functions is to remove <small>NGI Portal</small> text..
+    document.title = $("#project_name").attr('p_name') + ' : Genomics Status';
+    		
 		// Make the cool timescale bar if we can
 		make_timescale();
     
@@ -1059,7 +1066,6 @@ function make_timescale_bar(tsid, include_orderdates){
       });
       var timeDiff = dateobj.getTime() - prodstart.getTime();
       var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-      console.log(names.join(',')+' - '+diffDays);
       var diffWeeks = 0;
       while(diffDays >= 7){ diffWeeks += 1; diffDays -= 7; }
       var diffdaystext = '';
