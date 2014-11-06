@@ -305,6 +305,9 @@ function load_tickets() {
       $('#zendesk_loading_spinner').hide();
       $('#com_accordion').show();
       
+    }).fail(function( jqxhr, textStatus, error ) {
+        var err = textStatus + ", " + error;
+        console.log( "ZenDesk tickets request failed: " + err );
     });
   }
 }
@@ -321,6 +324,9 @@ function load_running_notes(wait) {
             date.toDateString() + ', ' + date.toLocaleTimeString(date)+
           '</div><div class="panel-body"><pre>'+note['note']+'</pre></div></div>');
     });
+  }).fail(function( jqxhr, textStatus, error ) {
+      var err = textStatus + ", " + error;
+      console.log( "Running notes request failed: " + err );
   });
 }
 
@@ -354,6 +360,9 @@ function load_undefined_info(){
     $.each(data, function(column_no, column) {
       $("#undefined_project_info").append('<dt>' + column + '</dt><dd id="' + column + '"></dd>');
     });
+  }).fail(function( jqxhr, textStatus, error ) {
+      var err = textStatus + ", " + error;
+      console.log( "Couldn't load undefined fields: " + err );
   });
 }
 
@@ -361,6 +370,13 @@ function load_all_udfs(){
   $.getJSON("/api/v1/project_summary/" + project, function (data) {
     $('#loading_spinner').hide();
     $('#page_content').show();
+    
+    // Project not found
+    if(data.length === 0 || data == null || Object.getOwnPropertyNames(data).length == 0){
+      $('#page_content').html('<h1>Error - Project Not Found</h1><div class="alert alert-danger">Oops! Sorry about that, we can\'t find the project <strong>'+project+'</strong></div>');
+      return false;
+    }
+    
     $.each(data, function(key, value) {
       // Rename a few fields to something more sane
       if(key == 'Aborted'){ key = 'aborted_samples'; }
@@ -494,6 +510,10 @@ function load_all_udfs(){
     
     // Check the height of the user comment
     check_fade_height();
+  }).fail(function( jqxhr, textStatus, error ) {
+      var err = textStatus + ", " + error;
+      console.log( "Couldn't load all udfs: " + err );
+      $('#page_content').html('<h1>Error - Project Not Found</h1><div class="alert alert-danger">Oops! Sorry about that, we can\'t find the project <strong>'+project+'</strong></div>');
   });
 };
 
@@ -548,6 +568,13 @@ function load_samples_table() {
     columns = read_current_filtering(true);
     var tbl_body = "";
     var size = 0;
+    
+    // No samples
+    if(samples_data.length === 0 || samples_data == null || Object.getOwnPropertyNames(samples_data).length == 0){
+      $('#tab_samples_content').html('<div class="alert alert-info">Project <strong>'+project+'</strong> does not yet have any samples..</div>');
+      return false;
+    }
+    
     $.each(samples_data, function (sample, info) {
       size++;
       tbl_row = '<tr>';
@@ -748,6 +775,9 @@ function load_samples_table() {
     
     // last step, update caliper images
     update_caliper();
+  }).fail(function( jqxhr, textStatus, error ) {
+      var err = textStatus + ", " + error;
+      console.log( "Couldn't load project samples: " + err );
   });
 }
 function update_caliper(){
