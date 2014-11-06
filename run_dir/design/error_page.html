@@ -1,14 +1,21 @@
 {% extends "base.html" %}
 
 <!--
-Defaut response page for an 404 Page Not Found error
+Template file: error_page.html
+URL: /<any unrecognised path>
+Title: 404 Template
+Description: Defaut response page for an 404 Page Not Found error
 -->
 
 {% block stuff %}
-<div class="container-fluid">
-  <div class="alert alert-danger" role="alert">
-    ERROR {{ status }} occurred! {{ reason }}
-  </div>
+
+<h1>Error {{ status }}: {{ reason }}</h1>
+
+<div class="alert alert-danger" role="alert">
+  <h4>Oops, something went wrong with your page request. Sorry about that!</h4>
+  If you don't think that you did anything wrong, please let us know what page
+  you were trying to access, using the <a href="/suggestion_box">Suggestion Box</a>
+  page.
 </div>
 
 {% end %}
