@@ -132,7 +132,8 @@ class Application(tornado.web.Application):
             ("/samples_per_lane", SamplesPerLaneHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/sequencing", SequencingStatsHandler),
-            ("/suggestion_box", SuggestionBoxHandler)
+            ("/suggestion_box", SuggestionBoxHandler),
+            (r'.*', BaseHandler)
         ]
 
         self.declared_handlers = handlers
