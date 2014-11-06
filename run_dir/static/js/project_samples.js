@@ -570,7 +570,7 @@ function load_samples_table() {
     var size = 0;
     
     // No samples
-    if(Object.getOwnPropertyNames(data).length == 0){
+    if(Object.getOwnPropertyNames(samples_data).length == 0){
       $('#tab_samples_content').html('<div class="alert alert-info">Project <strong>'+project+'</strong> does not yet have any samples..</div>');
       return false;
     }
