@@ -15,18 +15,16 @@ Description: Diagnostic page showing PhiX error rates
 
 {% block stuff %}
 
-<div class="container-fluid">
-  <h2>PhiX Error Rate</h2>
+<h1 id="page_title">PhiX Error Rate</h1>
 
-  <div class="grid_chart" id="chart_container">
-    <svg id="err_rate"></svg>
-  </div>
-
-  <div class="grid_chart" id="chart_container">
-    <svg id="cumulative"></svg>
-  </div>
-
+<div class="grid_chart" id="chart_container">
+  <svg id="err_rate"></svg>
 </div>
+
+<div class="grid_chart" id="chart_container">
+  <svg id="cumulative"></svg>
+</div>
+
 
 <script src="/static/js/jquery-ui.min.js"></script>
 <script src="/static/nvd3/lib/d3.v2.js"></script>
