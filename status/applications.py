@@ -47,10 +47,9 @@ class ApplicationDataHandler(SafeHandler):
 
         return projects
 
-
 class ApplicationsDataHandler(SafeHandler):
     """ Serves the applications performed with the number of projects which
-    have that application.
+    have that application. Also gives the number of samples per application.
 
     Loaded through /api/v1/applications url
     """
@@ -59,9 +58,10 @@ class ApplicationsDataHandler(SafeHandler):
         end = self.get_argument("end", "z")
 
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_applications(start=start,end=end)))
+        self.write(json.dumps(self.list_applications_and_samples(start=start,end=end)))
 
-    def list_applications(self,start=None,end="z"):
+    def list_applications_and_samples(self,start=None,end="z"):
+        # Projects per application
         applications = Counter()
         view = self.application.projects_db.view("project/date_applications")
         for row in view[[start,""]:[end,"z"]]:
@@ -71,27 +71,14 @@ class ApplicationsDataHandler(SafeHandler):
                 applications['null'] += 1
             else:
                 applications[row.key[1]] += 1
-        return applications
 
-
-class SamplesApplicationsDataHandler(SafeHandler):
-    """ Handler for getting per sample application information.
-
-    Loaded through /api/v1/samples_applications
-    """
-    def get(self):
-        start = self.get_argument("start", None)
-        end = self.get_argument("end", "z")
-
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_applications(start=start,end=end)))
-
-    def list_applications(self,start=None,end="z"):
-        applications = Counter()
+        # Samples per application
+        samples = Counter()
         view = self.application.projects_db.view("project/date_samples_applications")
         for row in view[[start,""]:[end,"z"]]:
             if row.key[1] is None:
-                applications['null'] += row.value
+                samples['null'] += row.value
             else:
-                applications[row.key[1]] += row.value
-        return applications
+                samples[row.key[1]] += row.value
+        return {'applications': applications, 'samples': samples}
+

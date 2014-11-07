@@ -121,11 +121,12 @@ function load_data(start, stop) {
   $("#dates").text("Opening Date range: " + start + " - " + stop)
   var start_param = (start == "2012-01-01" ? "" : ("start=" + start))
   $.getJSON("/api/v1/applications?" + start_param + "&end=" + stop, function (data){
+    applications = data['applications']
     // Plot the pie chart
-    draw_chart(data, "#main_chart svg");
+    draw_chart(applications, "#main_chart svg");
     // Draw the table
     $("#application_table tbody").empty();
-    s_keys = getSortedKeys(data);
+    s_keys = getSortedKeys(applications);
     for (k in s_keys) {
       trow = '<tr>';
       trow += '<td><a href="/application/'+s_keys[k]+'">'+s_keys[k]+'</a></td>';
@@ -133,15 +134,13 @@ function load_data(start, stop) {
       trow += '</tr>';
       $("#application_table tbody").append(trow)
     };
-  });
 
-  $.getJSON("/api/v1/samples_applications?" + start_param + "&end=" + stop, function (data){
+    samples = data['samples']
     // Plot the pie chart
-    draw_chart(data, "#per_sample_chart svg");
-		
+    draw_chart(samples, "#per_sample_chart svg");
     // Draw the table
     $("#samples_table tbody").empty();
-    s_keys = getSortedKeys(data);
+    s_keys = getSortedKeys(samples);
     for (k in s_keys) {
       trow = '<tr>';
       trow += '<td><a href="/application/'+s_keys[k]+'">'+s_keys[k]+'</a></td>';
