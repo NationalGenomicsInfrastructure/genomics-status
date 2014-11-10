@@ -18,13 +18,21 @@ class BaseHandler(tornado.web.RequestHandler):
     to make security status explicit.
 
     """
+    def get(self):
+        """ The GET method on this handler will be overwritten by all other handler.
+
+        As it is the default handler used to match any request that is not mapped
+        in the main app, a 404 error will be raised in that case (because the get method
+        won't be overwritten in that case)
+        """
+        raise tornado.web.HTTPError(404, reason='Page not found')
+
     def get_current_user(self):
         # Disables authentication if test mode to ease integration testing
         if self.application.test_mode:
             return 'Testing User!'
         else:
             return self.get_secure_cookie("user")
-
 
     def get_current_user_name(self):
         # Fix ridiculous bug with quotation marks showing on the web
@@ -35,6 +43,18 @@ class BaseHandler(tornado.web.RequestHandler):
             else:
                 return user
         return user
+
+    def write_error(self, status_code, **kwargs):
+        """ Overwrites write_error method to have custom error pages.
+
+        http://tornado.readthedocs.org/en/latest/web.html#tornado.web.RequestHandler.write_error
+        """
+        reason = 'Page not found'
+        if 'exc_info' in kwargs:
+            _, error, _ = kwargs['exc_info']
+            reason = error.reason
+        t = self.application.loader.load("error_page.html")
+        self.write(t.generate(status=status_code, reason=reason, user=self.get_current_user_name()))
 
 
 class SafeHandler(BaseHandler):

@@ -12,7 +12,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from status.util import SafeHandler
 
-RUNMODES = ['RapidRun', 'HighOutput', 'Undefined']
+RUNMODES = ['RapidRun', 'HighOutput', 'RapidHighOutput', 'Undefined']
 SETUPS = ['51','101','151','251','301']
 
 class Q30Handler(SafeHandler):
