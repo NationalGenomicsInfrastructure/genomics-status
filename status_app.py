@@ -107,7 +107,6 @@ class Application(tornado.web.Application):
                 SampleQCInsertSizesDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
-            ("/api/v1/samples_applications", SamplesApplicationsDataHandler),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
@@ -132,7 +131,8 @@ class Application(tornado.web.Application):
             ("/samples_per_lane", SamplesPerLaneHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/sequencing", SequencingStatsHandler),
-            ("/suggestion_box", SuggestionBoxHandler)
+            ("/suggestion_box", SuggestionBoxHandler),
+            (r'.*', BaseHandler)
         ]
 
         self.declared_handlers = handlers
