@@ -85,15 +85,15 @@ If you've used the `settings.yaml` template above, you should now be able to acc
 
 ## Genomics Status architecture
 
-This pictures illustrates the architecture of how Genomics Status is built with a real example, a request to https://genomics-status.scilifelab.se/projects/all. It is simplified for the sace of comprehension, in reallity there are a few more API calls.
+This pictures illustrates the architecture of how Genomics Status is built with a real example, a request to https://genomics-status.scilifelab.se/projects/all. It is simplified for the sake of comprehension, in reality there are a few more API calls.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/guillermo-carrasco/status/master/doc/genomics_status.png"
        alt="Genomics Status Architecture"/>
 </p>
 
-1. The web browser (a human, actually) requests the page /projects/all. The browser sends the request to Tornado, which has assigned the ProjectsHandler to this call.
-2. Tornado returns a rendered template with all the parameters needes to build the projects page, i.e useranme, projects to list, etc.
+1. The web browser (a human, actually) requests the page `/projects/all`. The browser sends the request to Tornado, which has assigned the `ProjectsHandler` to this call.
+2. Tornado returns a rendered template with all the parameters needes to build the projects page, i.e username, projects to list, etc.
 3. Within the template, in order to build the project list, it performas a JavaScript (JQuery) call to GenStat API.
 4. Tornado queries StatusDB information about the projects and parses it correctly.
 5. A JSON document is returned to the web browser
@@ -125,11 +125,11 @@ if __name__ == "__main__":
     tornado.ioloop.IOLoop.instance().start()
 ```
 
-Basically, you have to define a handlaer for each URL you want your application to serve. In this case, we define just one handler for the URI '/'. This will just print a "Hello, World" page.
+Basically, you have to define a handlaer for each URL you want your application to serve. In this case, we define just one handler for the URI `'/'`. This will just print a `"Hello, World"` page.
 
 Handlers that inherit from ```tornado.web.RequestHandler``` should implement at least one of the HTTP basic operations, i.e GET, POST or PUT. 
 
 ### Tornado templating
 Tornado templates are a good way to generate dynamic pages server side. The advantage of templates is that you can embeed python code in them. [The official documentation](http://www.tornadoweb.org/en/stable/template.html) is good enough to learn how they work.
 
-On Genomics Status, templates are located in status/run_dir/design
+On Genomics Status, templates are located in `status/run_dir/design`
