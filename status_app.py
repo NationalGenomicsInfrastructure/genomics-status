@@ -1,37 +1,36 @@
 """ Main genomics-status web application.
 """
-import yaml
 import base64
 import uuid
-import collections
+import yaml
 
-from couchdb import Server
 from collections import OrderedDict
+from couchdb import Server
 
+import tornado.autoreload
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
-import tornado.autoreload
-from tornado import template
 
-from status.util import *
-from status.production import *
+from tornado import template
+from tornado.options import define, options
+
 from status.applications import *
-from status.projects import *
-from status.sequencing import *
-from status.samples import *
-from status.flowcells import *
+from status.authorization import *
 from status.barcode_vs_expected import *
+from status.flowcells import *
+from status.phix_err_rate import *
+from status.production import *
+from status.projects import *
+from status.quotas import *
+from status.q30 import *
 from status.reads_per_lane import *
 from status.reads_vs_qv import *
-from status.q30 import *
-from status.quotas import *
-from status.phix_err_rate import *
-from status.testing import *
-from status.authorization import *
+from status.samples import *
+from status.sequencing import *
 from status.suggestion_box import *
-
-from argparse import ArgumentParser
+from status.testing import *
+from status.util import *
 
 class Application(tornado.web.Application):
     def __init__(self, settings):
@@ -107,7 +106,6 @@ class Application(tornado.web.Application):
                 SampleQCInsertSizesDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
-            ("/api/v1/samples_applications", SamplesApplicationsDataHandler),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
@@ -132,7 +130,8 @@ class Application(tornado.web.Application):
             ("/samples_per_lane", SamplesPerLaneHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/sequencing", SequencingStatsHandler),
-            ("/suggestion_box", SuggestionBoxHandler)
+            ("/suggestion_box", SuggestionBoxHandler),
+            (r'.*', BaseHandler)
         ]
 
         self.declared_handlers = handlers
@@ -171,7 +170,7 @@ class Application(tornado.web.Application):
         password = settings.get("password", None)
         headers = {"Accept": "application/json",
                    "Authorization": "Basic " + "{}:{}".format(user, password).encode('base64')[:-1]}
-        decoder = json.JSONDecoder(object_pairs_hook=collections.OrderedDict)
+        decoder = json.JSONDecoder(object_pairs_hook=OrderedDict)
         user_url = "{}/gs_users/{}".format(settings.get("couch_server"), genstat_id)
         json_user = requests.get(user_url, headers=headers).content.rstrip()
 
@@ -221,43 +220,52 @@ class Application(tornado.web.Application):
                     "redirect_uri": settings['redirect_uri']
                      }
 
-        tornado.autoreload.watch("design/application.html")
-        tornado.autoreload.watch("design/applications.html")
-        tornado.autoreload.watch("design/barcodes.html")
-        tornado.autoreload.watch("design/base.html")
-        tornado.autoreload.watch("design/base_new.html")
-        tornado.autoreload.watch("design/cronjobs.html")
-        tornado.autoreload.watch("design/expected.html")
-        tornado.autoreload.watch("design/flowcell_samples.html")
-        tornado.autoreload.watch("design/flowcells.html")
-        tornado.autoreload.watch("design/index.html")
-        tornado.autoreload.watch("design/phix_err_rate.html")
-        tornado.autoreload.watch("design/production.html")
-        tornado.autoreload.watch("design/projects.html")
-        tornado.autoreload.watch("design/project_samples.html")
-        tornado.autoreload.watch("design/q30.html")
-        tornado.autoreload.watch("design/quota_grid.html")
-        tornado.autoreload.watch("design/quota.html")
-        tornado.autoreload.watch("design/reads_per_lane.html")
-        tornado.autoreload.watch("design/reads_vs_qv.html")
-        tornado.autoreload.watch("design/sample_run_qc.html")
-        tornado.autoreload.watch("design/sample_runs.html")
-        tornado.autoreload.watch("design/samples.html")
-        tornado.autoreload.watch("design/sequencing_stats.html")
-        tornado.autoreload.watch("design/suggestion_box.html")
-        tornado.autoreload.watch("design/unauthorized.html")
-        tornado.autoreload.watch("design/login.html")
+        if options['develop']:
+            tornado.autoreload.watch("design/application.html")
+            tornado.autoreload.watch("design/applications.html")
+            tornado.autoreload.watch("design/barcodes.html")
+            tornado.autoreload.watch("design/base.html")
+            tornado.autoreload.watch("design/base_new.html")
+            tornado.autoreload.watch("design/cronjobs.html")
+            tornado.autoreload.watch("design/expected.html")
+            tornado.autoreload.watch("design/flowcell_samples.html")
+            tornado.autoreload.watch("design/flowcells.html")
+            tornado.autoreload.watch("design/index.html")
+            tornado.autoreload.watch("design/phix_err_rate.html")
+            tornado.autoreload.watch("design/production.html")
+            tornado.autoreload.watch("design/projects.html")
+            tornado.autoreload.watch("design/project_samples.html")
+            tornado.autoreload.watch("design/q30.html")
+            tornado.autoreload.watch("design/quota_grid.html")
+            tornado.autoreload.watch("design/quota.html")
+            tornado.autoreload.watch("design/reads_per_lane.html")
+            tornado.autoreload.watch("design/reads_vs_qv.html")
+            tornado.autoreload.watch("design/sample_run_qc.html")
+            tornado.autoreload.watch("design/sample_runs.html")
+            tornado.autoreload.watch("design/samples.html")
+            tornado.autoreload.watch("design/sequencing_stats.html")
+            tornado.autoreload.watch("design/suggestion_box.html")
+            tornado.autoreload.watch("design/unauthorized.html")
+            tornado.autoreload.watch("design/login.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
 
-def main(args):
-    """ Initialte server and start IOLoop.
-    """    
+if __name__ == '__main__':
+    # Tornado built-in command line parsing. Auto configures logging
+    define('testing_mode', default=False, help=("WARNING, this option disables "
+                                                "all security measures, use only "
+                                                "for testing purposes"))
+    define('develop', default=False, help=("Define develop mode to look for changes "
+                                           "in files and automatically reloading them"))
+    # After parsing the command line, the command line flags are stored in tornado.options
+    tornado.options.parse_command_line()
+
+    # Load configuration file
     with open("settings.yaml") as settings_file:
         server_settings = yaml.load(settings_file)
 
-    server_settings["Testing mode"] = args.testing_mode
+    server_settings["Testing mode"] = options['testing_mode']
 
     # Instantiate Application
     application = Application(server_settings)
@@ -283,13 +291,3 @@ def main(args):
 
     # Start the IOLoop
     ioloop.start()
-
-
-if __name__ == '__main__':
-    parser = ArgumentParser()
-    parser.add_argument('--testing_mode', default=False, action='store_true',
-                        help=("WARNING, this option disables "
-                              "all security measures, use only "
-                              "for testing purposes"))
-    args = parser.parse_args()
-    main(args)
