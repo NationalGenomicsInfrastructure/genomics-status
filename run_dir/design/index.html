@@ -196,14 +196,18 @@ $(document).ready(function(){
         var status = data['st']
         if(data['status'] == 'Success'){
             var timestring = '';
-            if(data['hours'] > 0){
-                timestring = data['hours']+' hours';
-            } else if(data['minutes'] > 0){
-                timestring = data['minutes']+' minutes';
-            } else if(data['seconds'] > 0){
-                timestring = data['seconds']+' seconds';
+            if(data['hours'] == 0 && data['minutes'] <= 2){
+              timestring = 'The script to pull information from the LIMS is running now.';
+            } else {
+              if(data['hours'] > 0){
+                  timestring = data['hours']+' hours';
+              } else if(data['minutes'] > 0){
+                  timestring = data['minutes']+' minutes';
+              } else if(data['seconds'] > 0){
+                  timestring = data['seconds']+' seconds';
+              }
+              var text = 'The script to pull information from the LIMS last ran '+timestring+' ago.';
             }
-            var text = 'The script to pull information from the LIMS last ran '+timestring+' ago.';
             $('#updated-status').html(text);
         } else {
             console.log('Last PSUL update check failed. Returned "'+data['status']+'"');
