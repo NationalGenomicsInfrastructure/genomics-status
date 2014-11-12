@@ -322,7 +322,7 @@ function load_running_notes(wait) {
           '<div class="panel-heading">'+
             '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
             date.toDateString() + ', ' + date.toLocaleTimeString(date)+
-          '</div><div class="panel-body"><pre>'+note['note']+'</pre></div></div>');
+          '</div><div class="panel-body"><pre>'+make_project_links(note['note'])+'</pre></div></div>');
     });
   }).fail(function( jqxhr, textStatus, error ) {
       var err = textStatus + ", " + error;
@@ -448,10 +448,10 @@ function load_all_udfs(){
         safeobj(key).html(auto_format(value));
       }
       
-      // Make the comments render Markdown
+      // Make the comments render Markdown and make project IDs into links
       else if (prettify(key) == 'project_comment'){
         value = value.replace(/\_/g, '\\_');
-        $('#project_comment').html(markdown.toHTML(value));
+        $('#project_comment').html(make_project_links(markdown.toHTML(value)));
       }
         
       // Pass / Fail sample counts
@@ -530,6 +530,14 @@ function prettyobj(s) {
 }
 function safeobj(s) {
   return $(document.getElementById(s));
+}
+
+function make_project_links(s){
+  // Searches for P[\d+] and replaces with a link to the project page
+  s = s.replace(/([ ,.:-])(P[\d]{1,5})([ ,.:-])/, '<a href="/project/$2">$1$2$3</a>');
+  // Searches for FlowCell IDs and replaces with a link
+  s = s.replace(/([ ,.:-])(\d{6}_\w{5,10}_\d{3,4}_\w{8,12}[\-\w{3,8}]?)([ ,.:-])/g, '<a href="/flowcells/$2">$1$2$3</a>');
+  return s;
 }
 
 function load_table_head(columns){
