@@ -994,6 +994,14 @@ function make_timescale(){
   make_timescale_bar('#project_timescale_production', false);
   make_timescale_bar('#project_timescale_orderdates', true);
 }
+// Fire tooltips on datestamp hover
+$('.rawdate').hover(
+  function(){
+    $(".project_timescale").find("[data-datestamp='" + $(this).text() + "']").tooltip({html: true}).tooltip('show');
+  }, function() {
+    $(".project_timescale").find("[data-datestamp='" + $(this).text() + "']").tooltip('hide');
+  }
+);
 
 function make_timescale_bar(tsid, include_orderdates){
 	// Which elements are we looking at?
@@ -1004,20 +1012,20 @@ function make_timescale_bar(tsid, include_orderdates){
       	'contract_received',
       	'sample_information_received',
       	'samples_received',
+      	'open_date',
+      	'first_initial_qc_start_date'
       ];
-	var production_date_ids = [
-				'open_date',
-				'first_initial_qc_start_date',
-				'queued',
-				'library_prep_start',
-				'qc_library_finished',
-				'sequencing_start_date',
-				'all_samples_sequenced',
-				'all_raw_data_delivered',
-				'best_practice_analysis_completed',
-				'close_date',
-				'aborted'
-			];
+  var production_date_ids = [
+  			'queued',
+  			'library_prep_start',
+  			'qc_library_finished',
+  			'sequencing_start_date',
+  			'all_samples_sequenced',
+  			'all_raw_data_delivered',
+  			'best_practice_analysis_completed',
+  			'close_date',
+  			'aborted'
+  		];
   if(include_orderdates){
     date_ids = order_date_ids.concat(production_date_ids);
   } else {
@@ -1025,6 +1033,7 @@ function make_timescale_bar(tsid, include_orderdates){
   }
   
 	var oldest = new Date();
+  var opendate = new Date();
   var prodstart = new Date();
 	var newest = new Date();
 	var dates = {};
@@ -1049,8 +1058,12 @@ function make_timescale_bar(tsid, include_orderdates){
 			if(dateobj.getTime() < oldest.getTime()){
 				oldest = dateobj;
 			}
-      // Production start date
+      // Open date
 			if(id == 'open_date'){
+				opendate = dateobj;
+			}
+      // Production start date
+			if(id == 'queued'){
 				prodstart = dateobj;
 			}
       // Close dates
@@ -1061,8 +1074,8 @@ function make_timescale_bar(tsid, include_orderdates){
 	});
 	
   // Which colours and timestops are we using?
-  var production_cols = ['#82BFFF', '#5785FF', '#FFC521', '#FA4C47'];
-  var production_colstops = [
+  var cols = ['#82BFFF', '#5785FF', '#FFC521', '#FA4C47'];
+  var colstops = [
         prodstart.getTime(),                        // prod start  - l blue
         prodstart.getTime() + (3*7*24*60*60*1000),  // 3 weeks - dark blue
         prodstart.getTime() + (6*7*24*60*60*1000),  // 6 weeks - orange
@@ -1070,13 +1083,9 @@ function make_timescale_bar(tsid, include_orderdates){
         newest.getTime()                            // End of bar
       ];
   if(include_orderdates){
-    cols = ['#DEDEDE'].concat(production_cols);
-    colstops = [oldest.getTime()].concat(production_colstops);
-  } else {
-    cols = production_cols;
-    colstops = production_colstops
+    cols = ['#DEDEDE','#A8D0A2'].concat(cols);
+    colstops = [oldest.getTime(), opendate.getTime()].concat(colstops);
   }
-  
 	if(oldest.getTime() < newest.getTime()){
 		// Set up the CSS on the bar
 		var range = newest.getTime() - oldest.getTime();
@@ -1088,7 +1097,8 @@ function make_timescale_bar(tsid, include_orderdates){
       gradcols.push(cols[j-1]+' '+lastpercent+'%, '+cols[j-1]+' '+percent+'%');
       lastpercent = percent;
     });
-
+    
+    // Make the bar coloured
 		$(tsid).css('height', '2px');
 		$(tsid).css("background-image", "-webkit-linear-gradient(left, "+gradcols.join(',')+")");
 		$(tsid).css("background-image", "-moz-linear-gradient(right, "+gradcols.join(',')+")");
@@ -1098,9 +1108,11 @@ function make_timescale_bar(tsid, include_orderdates){
 		// Put date objects onto the timeline
 		$.each(dates, function(rawdate, names){
 			var dateobj = new Date(rawdate);
+      
+      // Find the colour for this date
       var thiscol;
       $.each(colstops, function(j, thetime){
-        if(dateobj.getTime() >= thetime){
+        if(dateobj.getTime() > thetime){
           if(j == cols.length){
             thiscol = cols[j-1];
           } else {
@@ -1108,6 +1120,8 @@ function make_timescale_bar(tsid, include_orderdates){
           }
         }
       });
+      
+      // Write the hover text
       var timeDiff = dateobj.getTime() - prodstart.getTime();
       var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
       var diffWeeks = 0;
@@ -1117,10 +1131,17 @@ function make_timescale_bar(tsid, include_orderdates){
          diffdaystext = '<br><em>';
          if(diffWeeks > 0){ diffdaystext += diffWeeks + 'w '; }
          if(diffDays > 0){ diffdaystext += diffDays + 'd'; }
-         diffdaystext += ' in production</em>';
+         diffdaystext += ' since queue date</em>';
       }
+      
+      // Work out where to place the tick and plot it
 			var percent = ((dateobj.getTime() - oldest.getTime()) / range) * 100;
-			$(tsid).append('<div class="timelineTarget" style="left:'+percent+'%;" data-toggle="tooltip" data-placement="bottom" title="'+rawdate+'<br><strong>'+names.join('</strong><br><strong>')+'</strong>'+diffdaystext+'"><div class="timelineTick" style="background-color:'+thiscol+';"></div></div>');
+			$(tsid).append('<div class="timelineTarget" style="left:'+percent+'%;" data-datestamp="'+rawdate+'" data-toggle="tooltip" data-placement="bottom" title="'+rawdate+'<br><strong>'+names.join('</strong><br><strong>')+'</strong>'+diffdaystext+'"><div class="timelineTick" style="background-color:'+thiscol+';"></div></div>');
+      
+      // Coloured borders next to dates in table
+      if(thiscol !== cols[0] && thiscol !== cols[1]){
+        $(':contains('+rawdate+')').filter(function(){ return $(this).children().length === 0;}).css('border-right', '2px solid '+thiscol).css('padding-right','5px');
+      }
 		});
 	}
 	
