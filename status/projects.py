@@ -433,7 +433,8 @@ class RunningNotesDataHandler(SafeHandler):
                                                            'note': note}
             p.udf['Running Notes'] = json.dumps(running_notes)
             p.put()
-            self.set_status(200)
+            self.set_status(201)
+            self.write('{}')
 
 
 class LinksDataHandler(SafeHandler):
