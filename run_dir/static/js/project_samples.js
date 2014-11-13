@@ -539,7 +539,7 @@ function make_project_links(s){
   // Searches for P[\d+] and replaces with a link to the project page
   s = s.replace(/([ ,.:-])(P[\d]{1,5})([ ,.:-])/, '$1<a href="/project/$2">$2</a>$3');
   // Searches for FlowCell IDs and replaces with a link
-  s = s.replace(/([ ,.:-])(\d{6}_\w{5,10}_\d{3,4}_\w{8,12}[\-\w{3,8}]?)([ ,.:-])/g, '$1<a href="/flowcells/$2">$2</a>$3');
+  s = s.replace(/([ ,.:-])(\d{6})(_\w{5,10}_\d{3,4})(_\w{8,12}[\-\w{3,8}]?)([ ,.:-])/g, '$1<a href="/flowcells/$2$4">$2$3$4</a>$5');
   return s;
 }
 
@@ -613,7 +613,11 @@ function load_samples_table() {
             else if (column_id == 'sample_run_metrics') {
               tbl_row += '<td class="' + column_id + '">';
               for (var i=0; i<info[column_id].length; i++) {
-                tbl_row += '<samp class="nowrap"><a href="/flowcells/' + info[column_id][i] + '">' + 
+                var fc = info[column_id][i];
+                // Remove the lane number and barcode - eg 6_FCID_GTGAAA
+                fc = fc.substring(2);
+                fc = fc.replace(/_[ACTG]+$/,'');
+                tbl_row += '<samp class="nowrap"><a href="/flowcells/' + fc + '">' + 
                 info[column_id][i] + '</a></samp><br>';
               }
               tbl_row += '</td>';
