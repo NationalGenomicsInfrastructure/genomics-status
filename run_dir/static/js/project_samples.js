@@ -537,7 +537,7 @@ function safeobj(s) {
 
 function make_project_links(s){
   // Searches for P[\d+] and replaces with a link to the project page
-  s = s.replace(/([ ,.:-])(P[\d]{1,5})([ ,.:-])/, '$1<a href="/project/$2">$2</a>$3');
+  s = s.replace(/([ ,.:-])(P[\d]{3,5})([ ,.:-])/, '$1<a href="/project/$2">$2</a>$3');
   // Searches for FlowCell IDs and replaces with a link
   s = s.replace(/([ ,.:-])(\d{6})(_\w{5,10}_\d{3,4})(_\w{8,12}[\-\w{3,8}]?)([ ,.:-])/g, '$1<a href="/flowcells/$2$4">$2$3$4</a>$5');
   return s;
