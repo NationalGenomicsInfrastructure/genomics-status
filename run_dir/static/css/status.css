@@ -287,6 +287,9 @@ have it's own subheading under this section.
   background-image: -o-linear-gradient(top, transparent, white);
 }
 
+/* Coloured timeline bar and dates */
+.rawdate { cursor: pointer; }
+
 /* Samples Table */
 /* The progress class clashes in the Sample List in project view with the bootstrap
  * property. This overrides the bootstrap properties. */
