@@ -1110,7 +1110,7 @@ function make_timescale_bar(tsid, include_orderdates){
 			var dateobj = new Date(rawdate);
       
       // Find the colour for this date
-      var thiscol;
+      var thiscol = cols[0];
       $.each(colstops, function(j, thetime){
         if(dateobj.getTime() > thetime){
           if(j == cols.length){
