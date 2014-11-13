@@ -314,7 +314,7 @@ function load_tickets() {
 
 function load_running_notes(wait) {
   // Clear previously loaded notes, if so
-  $("#running_notes_table").empty();
+  $("#running_notes_panels").empty();
   $.getJSON("/api/v1/running_notes/" + project, function(data) {
     $.each(data, function(date, note) {
       var date = new Date(date);
@@ -333,21 +333,24 @@ function load_running_notes(wait) {
 // Insert new running note and reload the running notes table
 $("#running_notes_form").submit( function(e) {
   e.preventDefault();
-  var text = document.getElementById('new_note_text').value
-  if (text) {
+  var text = $('#new_note_text').val().trim();
+  if (text.length > 0) {
     $.ajax({
       async: false,
       type: 'POST',
       url: '/api/v1/running_notes/' + project,
       dataType: 'json',
       data: {"note": text},
-      error: function(XMLHttpRequest, textStatus, errorThrown) {
-        alert('There was an error inserting the Running Note, please try it again. '+XMLHttpRequest+' // '+textStatus+' // '+errorThrown);
+      error: function(xhr, textStatus, errorThrown) {
+        alert('There was an error inserting the Running Note: '+xhr.responseText+' // '+textStatus+' // '+errorThrown);
+        console.log(xhr);
+        console.log(textStatus);
+        console.log(errorThrown);
+      },
+      success: function(data, textStatus, xhr) {
+        load_running_notes();
+        $('#new_note_text').val('');
       }
-    }).done(function(){
-      load_running_notes();
-      // Clear text area
-      document.getElementById('new_note_text').value = '';
     });
   }
   else {
@@ -534,9 +537,9 @@ function safeobj(s) {
 
 function make_project_links(s){
   // Searches for P[\d+] and replaces with a link to the project page
-  s = s.replace(/([ ,.:-])(P[\d]{1,5})([ ,.:-])/, '<a href="/project/$2">$1$2$3</a>');
+  s = s.replace(/([ ,.:-])(P[\d]{1,5})([ ,.:-])/, '$1<a href="/project/$2">$2</a>$3');
   // Searches for FlowCell IDs and replaces with a link
-  s = s.replace(/([ ,.:-])(\d{6}_\w{5,10}_\d{3,4}_\w{8,12}[\-\w{3,8}]?)([ ,.:-])/g, '<a href="/flowcells/$2">$1$2$3</a>');
+  s = s.replace(/([ ,.:-])(\d{6}_\w{5,10}_\d{3,4}_\w{8,12}[\-\w{3,8}]?)([ ,.:-])/g, '$1<a href="/flowcells/$2">$2</a>$3');
   return s;
 }
 
