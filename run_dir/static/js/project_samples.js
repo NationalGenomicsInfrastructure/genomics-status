@@ -314,7 +314,7 @@ function load_tickets() {
 
 function load_running_notes(wait) {
   // Clear previously loaded notes, if so
-  $("#running_notes_table").empty();
+  $("#running_notes_panels").empty();
   $.getJSON("/api/v1/running_notes/" + project, function(data) {
     $.each(data, function(date, note) {
       var date = new Date(date);
@@ -322,7 +322,7 @@ function load_running_notes(wait) {
           '<div class="panel-heading">'+
             '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
             date.toDateString() + ', ' + date.toLocaleTimeString(date)+
-          '</div><div class="panel-body"><pre>'+note['note']+'</pre></div></div>');
+          '</div><div class="panel-body"><pre>'+make_project_links(note['note'])+'</pre></div></div>');
     });
   }).fail(function( jqxhr, textStatus, error ) {
       var err = textStatus + ", " + error;
@@ -333,21 +333,24 @@ function load_running_notes(wait) {
 // Insert new running note and reload the running notes table
 $("#running_notes_form").submit( function(e) {
   e.preventDefault();
-  var text = document.getElementById('new_note_text').value
-  if (text) {
+  var text = $('#new_note_text').val().trim();
+  if (text.length > 0) {
     $.ajax({
       async: false,
       type: 'POST',
       url: '/api/v1/running_notes/' + project,
       dataType: 'json',
       data: {"note": text},
-      error: function(XMLHttpRequest, textStatus, errorThrown) {
-        alert('There was an error inserting the Running Note, please try it again. '+XMLHttpRequest+' // '+textStatus+' // '+errorThrown);
+      error: function(xhr, textStatus, errorThrown) {
+        alert('There was an error inserting the Running Note: '+xhr.responseText+' // '+textStatus+' // '+errorThrown);
+        console.log(xhr);
+        console.log(textStatus);
+        console.log(errorThrown);
+      },
+      success: function(data, textStatus, xhr) {
+        load_running_notes();
+        $('#new_note_text').val('');
       }
-    }).done(function(){
-      load_running_notes();
-      // Clear text area
-      document.getElementById('new_note_text').value = '';
     });
   }
   else {
@@ -448,10 +451,10 @@ function load_all_udfs(){
         safeobj(key).html(auto_format(value));
       }
       
-      // Make the comments render Markdown
+      // Make the comments render Markdown and make project IDs into links
       else if (prettify(key) == 'project_comment'){
         value = value.replace(/\_/g, '\\_');
-        $('#project_comment').html(markdown.toHTML(value));
+        $('#project_comment').html(make_project_links(markdown.toHTML(value)));
       }
         
       // Pass / Fail sample counts
@@ -532,6 +535,14 @@ function safeobj(s) {
   return $(document.getElementById(s));
 }
 
+function make_project_links(s){
+  // Searches for P[\d+] and replaces with a link to the project page
+  s = s.replace(/([ ,.:-])(P[\d]{3,5})([ ,.:-])/, '$1<a href="/project/$2">$2</a>$3');
+  // Searches for FlowCell IDs and replaces with a link
+  s = s.replace(/([ ,.:-])(\d{6})(_\w{5,10}_\d{3,4})(_\w{8,12}[\-\w{3,8}]?)([ ,.:-])/g, '$1<a href="/flowcells/$2$4">$2$3$4</a>$5');
+  return s;
+}
+
 function load_table_head(columns){
   var tbl_head = '<tr>';
   $.each(columns, function(i, column_tuple) {
@@ -602,7 +613,11 @@ function load_samples_table() {
             else if (column_id == 'sample_run_metrics') {
               tbl_row += '<td class="' + column_id + '">';
               for (var i=0; i<info[column_id].length; i++) {
-                tbl_row += '<samp class="nowrap"><a href="/flowcells/' + info[column_id][i] + '">' + 
+                var fc = info[column_id][i];
+                // Remove the lane number and barcode - eg 6_FCID_GTGAAA
+                fc = fc.substring(2);
+                fc = fc.replace(/_[ACTG]+$/,'');
+                tbl_row += '<samp class="nowrap"><a href="/flowcells/' + fc + '">' + 
                 info[column_id][i] + '</a></samp><br>';
               }
               tbl_row += '</td>';
@@ -979,6 +994,14 @@ function make_timescale(){
   make_timescale_bar('#project_timescale_production', false);
   make_timescale_bar('#project_timescale_orderdates', true);
 }
+// Fire tooltips on datestamp hover
+$('.rawdate').hover(
+  function(){
+    $(".project_timescale").find("[data-datestamp='" + $(this).text() + "']").tooltip({html: true}).tooltip('show');
+  }, function() {
+    $(".project_timescale").find("[data-datestamp='" + $(this).text() + "']").tooltip('hide');
+  }
+);
 
 function make_timescale_bar(tsid, include_orderdates){
 	// Which elements are we looking at?
@@ -989,20 +1012,20 @@ function make_timescale_bar(tsid, include_orderdates){
       	'contract_received',
       	'sample_information_received',
       	'samples_received',
+      	'open_date',
+      	'first_initial_qc_start_date'
       ];
-	var production_date_ids = [
-				'open_date',
-				'first_initial_qc_start_date',
-				'queued',
-				'library_prep_start',
-				'qc_library_finished',
-				'sequencing_start_date',
-				'all_samples_sequenced',
-				'all_raw_data_delivered',
-				'best_practice_analysis_completed',
-				'close_date',
-				'aborted'
-			];
+  var production_date_ids = [
+  			'queued',
+  			'library_prep_start',
+  			'qc_library_finished',
+  			'sequencing_start_date',
+  			'all_samples_sequenced',
+  			'all_raw_data_delivered',
+  			'best_practice_analysis_completed',
+  			'close_date',
+  			'aborted'
+  		];
   if(include_orderdates){
     date_ids = order_date_ids.concat(production_date_ids);
   } else {
@@ -1010,6 +1033,7 @@ function make_timescale_bar(tsid, include_orderdates){
   }
   
 	var oldest = new Date();
+  var opendate = new Date();
   var prodstart = new Date();
 	var newest = new Date();
 	var dates = {};
@@ -1034,8 +1058,12 @@ function make_timescale_bar(tsid, include_orderdates){
 			if(dateobj.getTime() < oldest.getTime()){
 				oldest = dateobj;
 			}
-      // Production start date
+      // Open date
 			if(id == 'open_date'){
+				opendate = dateobj;
+			}
+      // Production start date
+			if(id == 'queued'){
 				prodstart = dateobj;
 			}
       // Close dates
@@ -1046,8 +1074,8 @@ function make_timescale_bar(tsid, include_orderdates){
 	});
 	
   // Which colours and timestops are we using?
-  var production_cols = ['#82BFFF', '#5785FF', '#FFC521', '#FA4C47'];
-  var production_colstops = [
+  var cols = ['#82BFFF', '#5785FF', '#FFC521', '#FA4C47'];
+  var colstops = [
         prodstart.getTime(),                        // prod start  - l blue
         prodstart.getTime() + (3*7*24*60*60*1000),  // 3 weeks - dark blue
         prodstart.getTime() + (6*7*24*60*60*1000),  // 6 weeks - orange
@@ -1055,13 +1083,9 @@ function make_timescale_bar(tsid, include_orderdates){
         newest.getTime()                            // End of bar
       ];
   if(include_orderdates){
-    cols = ['#DEDEDE'].concat(production_cols);
-    colstops = [oldest.getTime()].concat(production_colstops);
-  } else {
-    cols = production_cols;
-    colstops = production_colstops
+    cols = ['#DEDEDE','#A8D0A2'].concat(cols);
+    colstops = [oldest.getTime(), opendate.getTime()].concat(colstops);
   }
-  
 	if(oldest.getTime() < newest.getTime()){
 		// Set up the CSS on the bar
 		var range = newest.getTime() - oldest.getTime();
@@ -1073,7 +1097,8 @@ function make_timescale_bar(tsid, include_orderdates){
       gradcols.push(cols[j-1]+' '+lastpercent+'%, '+cols[j-1]+' '+percent+'%');
       lastpercent = percent;
     });
-
+    
+    // Make the bar coloured
 		$(tsid).css('height', '2px');
 		$(tsid).css("background-image", "-webkit-linear-gradient(left, "+gradcols.join(',')+")");
 		$(tsid).css("background-image", "-moz-linear-gradient(right, "+gradcols.join(',')+")");
@@ -1083,9 +1108,11 @@ function make_timescale_bar(tsid, include_orderdates){
 		// Put date objects onto the timeline
 		$.each(dates, function(rawdate, names){
 			var dateobj = new Date(rawdate);
-      var thiscol;
+      
+      // Find the colour for this date
+      var thiscol = cols[0];
       $.each(colstops, function(j, thetime){
-        if(dateobj.getTime() >= thetime){
+        if(dateobj.getTime() > thetime){
           if(j == cols.length){
             thiscol = cols[j-1];
           } else {
@@ -1093,6 +1120,8 @@ function make_timescale_bar(tsid, include_orderdates){
           }
         }
       });
+      
+      // Write the hover text
       var timeDiff = dateobj.getTime() - prodstart.getTime();
       var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
       var diffWeeks = 0;
@@ -1102,10 +1131,17 @@ function make_timescale_bar(tsid, include_orderdates){
          diffdaystext = '<br><em>';
          if(diffWeeks > 0){ diffdaystext += diffWeeks + 'w '; }
          if(diffDays > 0){ diffdaystext += diffDays + 'd'; }
-         diffdaystext += ' in production</em>';
+         diffdaystext += ' since queue date</em>';
       }
+      
+      // Work out where to place the tick and plot it
 			var percent = ((dateobj.getTime() - oldest.getTime()) / range) * 100;
-			$(tsid).append('<div class="timelineTarget" style="left:'+percent+'%;" data-toggle="tooltip" data-placement="bottom" title="'+rawdate+'<br><strong>'+names.join('</strong><br><strong>')+'</strong>'+diffdaystext+'"><div class="timelineTick" style="background-color:'+thiscol+';"></div></div>');
+			$(tsid).append('<div class="timelineTarget" style="left:'+percent+'%;" data-datestamp="'+rawdate+'" data-toggle="tooltip" data-placement="bottom" title="'+rawdate+'<br><strong>'+names.join('</strong><br><strong>')+'</strong>'+diffdaystext+'"><div class="timelineTick" style="background-color:'+thiscol+';"></div></div>');
+      
+      // Coloured borders next to dates in table
+      if(thiscol !== cols[0] && thiscol !== cols[1]){
+        $(':contains('+rawdate+')').filter(function(){ return $(this).children().length === 0;}).css('border-right', '2px solid '+thiscol).css('padding-right','5px');
+      }
 		});
 	}
 	
