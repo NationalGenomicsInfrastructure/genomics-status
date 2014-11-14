@@ -425,16 +425,15 @@ class RunningNotesDataHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
+            newNote = {'user': user, 'email': email, 'note': note}
             p = Project(lims, id=project)
             p.get(force=True)
             running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
-            running_notes[str(datetime.datetime.now())] = {'user': user,
-                                                           'email': email,
-                                                           'note': note}
+            running_notes[str(datetime.datetime.now())] = newNote
             p.udf['Running Notes'] = json.dumps(running_notes)
             p.put()
             self.set_status(201)
-            self.write('{}')
+            self.write(json.dumps(newNote))
 
 
 class LinksDataHandler(SafeHandler):

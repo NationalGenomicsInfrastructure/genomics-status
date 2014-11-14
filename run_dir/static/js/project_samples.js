@@ -348,8 +348,15 @@ $("#running_notes_form").submit( function(e) {
         console.log(errorThrown);
       },
       success: function(data, textStatus, xhr) {
-        load_running_notes();
+        // Clear the text box
         $('#new_note_text').val('');
+        // Create a new running note and slide it in..
+        var now = new Date();
+        $('<div class="panel panel-success"><div class="panel-heading">'+
+              '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
+              now.toDateString() + ', ' + now.toLocaleTimeString(now)+
+            '</div><div class="panel-body"><pre>'+make_project_links(data['note'])+
+            '</pre></div></div>').hide().prependTo('#running_notes_panels').slideDown();
       }
     });
   }
@@ -1139,9 +1146,7 @@ function make_timescale_bar(tsid, include_orderdates){
 			$(tsid).append('<div class="timelineTarget" style="left:'+percent+'%;" data-datestamp="'+rawdate+'" data-toggle="tooltip" data-placement="bottom" title="'+rawdate+'<br><strong>'+names.join('</strong><br><strong>')+'</strong>'+diffdaystext+'"><div class="timelineTick" style="background-color:'+thiscol+';"></div></div>');
       
       // Coloured borders next to dates in table
-      if(thiscol !== cols[0] && thiscol !== cols[1]){
-        $(':contains('+rawdate+')').filter(function(){ return $(this).children().length === 0;}).css('border-right', '2px solid '+thiscol).css('padding-right','5px');
-      }
+      $(':contains('+rawdate+')').filter(function(){ return $(this).children().length === 0;}).css('border-right', '2px solid '+thiscol).css('padding-right','5px');
 		});
 	}
 	
