@@ -518,6 +518,9 @@ function load_all_udfs(){
 		// Make the cool timescale bar if we can
 		make_timescale();
     
+    // Warn users about old projects
+    old_project_warning('2010-07-1');
+    
     // Check the height of the user comment
     check_fade_height();
   }).fail(function( jqxhr, textStatus, error ) {
@@ -1150,4 +1153,15 @@ function make_timescale_bar(tsid, include_orderdates){
 		});
 	}
 	
+}
+
+
+// Warn users about old projects
+function old_project_warning(warndate_raw){
+  var openDate = new Date($('#open_date').text());
+  var warnDate = new Date(warndate_raw);
+  if(openDate.getTime() < warnDate.getTime()){
+    $('#old_project_warning').show();
+    $('#old_project_warning').attr('title', 'This project was created before '+warndate_raw+'.<br>Genomics Status may be inaccruate.');
+  }
 }
