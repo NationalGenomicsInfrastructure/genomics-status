@@ -17,6 +17,8 @@ Description: Shows a table with all projects.
   <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Pending Projects</span> <small>All projects without open date</small></h1>
 {% elif projects == 'open' %}
   <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Open Projects</span> <small>All projects without an explicit close date and loaded from the Lims</small></h1>
+{% elif projects == 'pending_review' %}
+  <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Needs Review</span> <small>All projects with an open review in the lims on any step</small></h1>
 {% elif projects == 'reception_control' %}
   <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Reception Control Projects</span> <small>All projects with open date but without queue date</small></h1>
 {% elif projects == 'ongoing' %}
