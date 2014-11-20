@@ -178,7 +178,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         elif filter_projects == "pending_review":
             for p_id, p_info in projects.iteritems():
-                if 'review' in p_info:
+                if 'pending_reviews' in p_info:
                     filtered_projects[p_id] = p_info
             return filtered_projects
 
