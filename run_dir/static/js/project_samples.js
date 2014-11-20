@@ -468,7 +468,7 @@ function load_all_udfs(){
       else if (prettify(key) == 'pending_reviews'){
           review_links=''
           $.each(value,function(index,limsid){
-              review_links+="<a href='http://genologics-stage.scilifelab.se:8080/clarity/work-complete/"+limsid+"'>Lims Step</a> ";
+              review_links+="<a href='https://genologics.scilifelab.se:8443/clarity/work-complete/"+limsid+"'>Lims Step</a> ";
           });
           $("#review_ids").html(review_links);
           $("#review_alert").show();
