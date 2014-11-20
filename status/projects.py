@@ -174,7 +174,12 @@ class ProjectsBaseDataHandler(SafeHandler):
             for row in summary_view:
                 row = self.project_summary_data(row)
                 filtered_projects[row.key[1]] = row.value
+            return filtered_projects
 
+        elif filter_projects == "pending_review":
+            for p_id, p_info in projects.iteritems():
+                if 'review' in p_info:
+                    filtered_projects[p_id] = p_info
             return filtered_projects
 
         return projects
