@@ -51,7 +51,6 @@ class PresetsHandler(SafeHandler):
             if u.get('key') == user:
                 user_id = u.get('value')
                 break
-        print user_id
         presets['user'] = self.application.gs_users_db.get(user_id).get(presets_list, {})
         self.write(json.dumps(presets))
 
