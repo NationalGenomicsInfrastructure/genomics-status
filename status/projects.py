@@ -78,6 +78,11 @@ class ProjectsBaseDataHandler(SafeHandler):
                 row.value[detail_key] = detail_value
             row.value.pop("details", None)
 
+        # Handle the pending reviews:
+        if 'pending_reviews' in row.value:
+            links = ','.join(['<a href="https://genologics.scilifelab.se:8443/clarity/work-complete/{0}">Review </a>'.format(rid) for rid in row.value['pending_reviews']])
+            row.value['pending_reviews'] = links
+
         # Find the latest running note, return it as a separate field
         if 'running_notes' in row.value:
             try:
@@ -174,7 +179,12 @@ class ProjectsBaseDataHandler(SafeHandler):
             for row in summary_view:
                 row = self.project_summary_data(row)
                 filtered_projects[row.key[1]] = row.value
+            return filtered_projects
 
+        elif filter_projects == "pending_review":
+            for p_id, p_info in projects.iteritems():
+                if 'pending_reviews' in p_info:
+                    filtered_projects[p_id] = p_info
             return filtered_projects
 
         return projects
