@@ -316,6 +316,16 @@ td.progress {
   max-width:400px;
 }
 
+#markdown_help table td {
+  width:50%;
+}
+
+/* Markdown text styles */
+.mkdown blockquote {
+  font-size: 1em;
+  font-style:italic;
+}
+
 /* Links Tab */
 .link_wrapper {
 	border-bottom:1px solid #DDDDDD;

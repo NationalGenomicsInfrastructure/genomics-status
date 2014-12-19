@@ -324,11 +324,17 @@ function load_running_notes(wait) {
   $.getJSON("/api/v1/running_notes/" + project, function(data) {
     $.each(data, function(date, note) {
       var date = new Date(date);
+      if(date > new Date('2014-12-16')){
+        noteText = make_markdown(note['note']);
+      } else {
+        noteText = '<pre>'+make_project_links(note['note'])+'</pre>';
+      }
       $('#running_notes_panels').append('<div class="panel panel-default">' +
           '<div class="panel-heading">'+
             '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
             date.toDateString() + ', ' + date.toLocaleTimeString(date)+
-          '</div><div class="panel-body"><pre>'+make_project_links(note['note'])+'</pre></div></div>');
+          '</div><div class="panel-body">'+noteText+'</div></div>');
+      check_img_sources($('#running_notes_panels img'));
     });
   }).fail(function( jqxhr, textStatus, error ) {
       var err = textStatus + ", " + error;
@@ -341,6 +347,19 @@ $("#running_notes_form").submit( function(e) {
   e.preventDefault();
   var text = $('#new_note_text').val().trim();
   if (text.length > 0) {
+    $('#running_note_preview_body').html(make_markdown(text));
+    check_img_sources($('#running_note_preview_body img'));
+    $('#running_note_preview').modal('show');
+  } else {
+    alert("The running note text cannot be empty. Please fill in the Running Note.")
+  }
+});
+$('#submit_running_note_preview').click(function(e){
+  e.preventDefault();
+  var text = $('#new_note_text').val().trim();
+  $('#running_note_preview_body').html('<div style="text-align:center; margin:20px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Submitting running note..</div>');
+  $('#running_note_preview .modal-header, #running_note_preview .modal-footer').hide();
+  if (text.length > 0) {
     $.ajax({
       async: false,
       type: 'POST',
@@ -348,12 +367,18 @@ $("#running_notes_form").submit( function(e) {
       dataType: 'json',
       data: {"note": text},
       error: function(xhr, textStatus, errorThrown) {
-        alert('There was an error inserting the Running Note: '+xhr.responseText+' // '+textStatus+' // '+errorThrown);
+        alert('There was an error inserting the Running Note: '+errorThrown);
         console.log(xhr);
         console.log(textStatus);
         console.log(errorThrown);
+        // Hide the preview modal
+        $('#running_note_preview').modal('hide');
+        $('#running_note_preview .modal-header, #running_note_preview .modal-footer').show();
       },
       success: function(data, textStatus, xhr) {
+        // Hide the preview modal
+        $('#running_note_preview').modal('hide');
+        $('#running_note_preview .modal-header, #running_note_preview .modal-footer').show();
         // Clear the text box
         $('#new_note_text').val('');
         // Create a new running note and slide it in..
@@ -361,15 +386,16 @@ $("#running_notes_form").submit( function(e) {
         $('<div class="panel panel-success"><div class="panel-heading">'+
               '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
               now.toDateString() + ', ' + now.toLocaleTimeString(now)+
-            '</div><div class="panel-body"><pre>'+make_project_links(data['note'])+
-            '</pre></div></div>').hide().prependTo('#running_notes_panels').slideDown();
+            '</div><div class="panel-body">'+make_markdown(data['note'])+
+            '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
+        check_img_sources($('#running_notes_panels img'));
       }
     });
-  }
-  else {
+  } else {
     alert("The running note text cannot be empty. Please fill in the Running Note.")
   }
 });
+
 
 function load_undefined_info(){
   $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
@@ -467,7 +493,8 @@ function load_all_udfs(){
       // Make the comments render Markdown and make project IDs into links
       else if (prettify(key) == 'project_comment'){
         value = value.replace(/\_/g, '\\_');
-        $('#project_comment').html(make_project_links(markdown.toHTML(value)));
+        $('#project_comment').html(make_markdown(value));
+        check_img_sources($('#project_comment img'));
       }
 
       // Create the links for review and display the banner
@@ -567,6 +594,34 @@ function make_project_links(s){
   s = s.replace(/([ ,.:-])(\d{6})(_\w{5,10}_\d{3,4})(_\w{8,12}[\-\w{3,8}]?)([ ,.:-])/g, '$1<a href="/flowcells/$2$4">$2$3$4</a>$5');
   return s;
 }
+
+function make_markdown(s){
+  // Switch out single line breaks with double line breaks
+  // TODO - harder than it looks without breaking markdown!
+  // Implement this later if *really* needed.
+  // s = s.replace(/([^`]\s*)\n(\s*[^\n`\*>])/g, "$1\n\n$2");
+  // Escape backslashes
+  s = s.replace(/\_/g, "\\_");
+  s = markdown.toHTML(s);
+  s = make_project_links(s);
+  return '<div class="mkdown">'+s+'</div>';
+}
+
+function check_img_sources(obj){
+  // Sort out any missing images
+  // pass some images, eg $('#running_note_preview_body img')
+  // Has to be called AFTER the code has been inserted into the DOM
+  pathArray = window.location.href.split( '/' );
+  var missing_img_src = pathArray[0]+'//'+pathArray[2]+'/static/img/missing_image.png';
+  $(obj).on('error', function () {
+    if($(this).is('img') && $(this).attr('src') !== missing_img_src){
+      $(this).attr('src', missing_img_src);
+    }
+  });
+}
+
+
+
 
 function load_table_head(columns){
   var tbl_head = '<tr>';

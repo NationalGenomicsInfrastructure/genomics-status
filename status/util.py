@@ -12,6 +12,24 @@ from datetime import datetime
 #  Useful misc handlers #
 #########################
 
+ERROR_CODES = {
+    400: 'Bad Request',
+    401: 'Unauthorized',
+    403: 'Forbidden',
+    404: 'Page Not Found',
+    405: 'Method Not Allowed',
+    406: 'Not Acceptable',
+    407: 'Proxy Authentication Required',
+    408: 'Request Timeout',
+    414: 'Request-URI Too Long',
+    500: 'Internal Server Error',
+    501: 'Not Implemented',
+    502: 'Bad Gateway',
+    503: 'Service Unavailable',
+    504: 'Gateway Timeout',
+    511: 'Network Authentication Required'
+}
+
 class BaseHandler(tornado.web.RequestHandler):
     """Base Handler. Handlers should not inherit from this
     class directly but from either SafeHandler or UnsafeHandler
@@ -49,10 +67,17 @@ class BaseHandler(tornado.web.RequestHandler):
 
         http://tornado.readthedocs.org/en/latest/web.html#tornado.web.RequestHandler.write_error
         """
-        reason = 'Page not found'
-        if 'exc_info' in kwargs:
-            _, error, _ = kwargs['exc_info']
-            reason = error.reason
+        reason = 'Unknown Error'
+
+        if status_code in ERROR_CODES.keys():
+            reason = ERROR_CODES[status_code]
+
+        try:
+            if 'exc_info' in kwargs:
+                _, error, _ = kwargs['exc_info']
+                reason = error.reason
+        except AttributeError:
+            pass
         t = self.application.loader.load("error_page.html")
         self.write(t.generate(status=status_code, reason=reason, user=self.get_current_user_name()))
 
