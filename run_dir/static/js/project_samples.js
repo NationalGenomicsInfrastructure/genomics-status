@@ -324,7 +324,7 @@ function load_running_notes(wait) {
   $.getJSON("/api/v1/running_notes/" + project, function(data) {
     $.each(data, function(date, note) {
       var date = new Date(date);
-      if(date > new Date('2014-12-16')){
+      if(date > new Date('2015-01-01')){
         noteText = make_markdown(note['note']);
       } else {
         noteText = '<pre>'+make_project_links(note['note'])+'</pre>';
