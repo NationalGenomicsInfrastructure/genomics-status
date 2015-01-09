@@ -38,18 +38,23 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                     <td>"+project_data['application']+"</td>\
                     <td>"+project_data['library']+"</td></tr></table>";
         content+="<h3>Samples</h3>";
-        content+='<table class="table table-bordered narrow-headers" id="ws-'+project_id+'">';
+        content+='<table class="table table-bordered narrow-headers" id="ws-'+project_id+'"> \
+                     <tr> \
+                     <th>Sample name</th> \
+                     <th>Library</th> \
+                     <th>Sequencing</th> \
+                 </tr> ';
         $.each(project_data.samples, function(sample_id, sample_data){
         content+="<tr><td>"+sample_id+"</td> \
                 <td>";
             $.each(sample_data.library, function(lib_id, lib_data){
                 lims_id=lib_id.split("-")[1];
-                content+="<a href='https://genologics.scilifelab.se:8443/clarity/work-complete/"+lims_id+"'>"+lib_id+"</a><br />"+lib_data['date']+"<br />"+lib_data['status']+"<br /><br />";
+                content+="<a href='https://genologics.scilifelab.se:8443/clarity/work-complete/"+lims_id+"'>"+lib_id+"</a> - "+lib_data['date']+" - "+lib_data['status']+"<br />";
             });
                 content+="</td><td>";
             $.each(sample_data.sequencing, function(seq_id, seq_data){
                 lims_id=seq_id.split("-")[1];
-                content+="<a href='https://genologics.scilifelab.se:8443/clarity/work-complete/"+lims_id+"'>"+seq_id+"</a><br />"+seq_data['date']+"<br />"+seq_data['status']+"<br /><br />";
+                content+="<a href='https://genologics.scilifelab.se:8443/clarity/work-complete/"+lims_id+"'>"+seq_id+"</a> - "+seq_data['date']+" - "+seq_data['status']+"<br />";
             });
                 content+="</td> \
                 </tr>";
