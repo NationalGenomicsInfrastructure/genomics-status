@@ -14,7 +14,7 @@ Description: Shows a table with all projects.
 {% elif projects == 'aborted' %}
   <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Aborted Projects</span> <small>All projects with an aborted date</small></h1>
 {% elif projects == 'pending' %}
-  <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Pending Projects</span> <small>All projects without open date</small></h1>
+  <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Pending Projects</span> <small>All projects with an order date and without open date</small></h1>
 {% elif projects == 'open' %}
   <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Open Projects</span> <small>All projects without an explicit close date and loaded from the Lims</small></h1>
 {% elif projects == 'pending_review' %}
