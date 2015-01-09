@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+<!-- 
+Template file: worksets.html
+URL: /worksets/[optional filter]
+Title: Summary of all Worksets
+Description: Shows a table with all worksets.
+-->
+
+{% block stuff %}
+
+{% if worksets == 'all' %}
+  <h1 id="{{ worksets }}" class="worksets_page_heading"><span id="page_title">All Worksets</span> <small>All worksets found in statusdb</small></h1>
+{% end %}
+
+
+<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading worksets table..</div>
+<div id="page_content" style="display:none;">
+
+<form id="Search-form" class="form-inline marginBottom">
+  <div class="pull-right">
+    <div class="form-group" style="margin-right:15px;">
+      <div class="btn-group btn-group-sm" id="default_preset_buttons">
+        <button id="resetWorksetCols" data-action="filterReset" type="button" class="search-action btn btn-default">Default</button>
+      </div>
+    </div>
+    <button class="pull-right btn btn-primary" data-toggle="modal" data-target="#worksetFieldsModal">Filter Columns</button>
+  </div>
+  <div class="form-group">
+    <label for="search_field">Search Table:</label>
+    <input type="text" class="form-control search search-query" id="search_field" placeholder="Search...">
+    <span class="help-inline text-muted">Tip: Sort columns by clicking on the column headers.</span>
+  </div>
+</form>
+
+<div id="workset-list">
+  <table class="table table-striped table-bordered sortable" id="workset_table">
+    <thead id="workset_table_head">
+    </thead>
+    <tbody class="list" id="workset_table_body">
+    </tbody>
+  </table>
+</div>
+
+</div> <!-- #page_content -->
+
+
+
+<!-- SAMPLE FIELD MODAL -->
+<div id="worksetFieldsModal" class="modal fade">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h3>Filter Workset Table Columns</h3>
+      </div>
+      <div class="modal-body">
+        <form id="Filter" class="form form-search" role="form">
+          <p>Choose which columns you would like to see in the Workset table.
+            Click a heading to select / deselect all checkboxes in that group.</p>
+
+          <div class="row">
+            
+            <!--<div class="col-sm-4" id="basic-columns">
+              <h4 class="search-action" data-action="filterHeader">Basic <input class="headingCheckbox" type="checkbox"></h4>
+              {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" class="filterCheckbox" data-columngroup="basic-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="basic-columns-{{col_name}}">
+                  {{col_display_name}}
+                </label>
+              </div>
+              {% end %}
+            </div>
+            -->
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn btn-default search-action" data-dismiss="modal" data-action="filterReset">Reset</button>
+        <button class="btn btn-primary search-action" data-dismiss="modal" data-action="filterApply" type="submit">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/list.min.js"></script>
+<script src="/static/js/worksets.js" id="worksets-js" data-worksets="{{worksets}}"></script>
+{% end %}
