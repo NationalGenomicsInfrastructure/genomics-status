@@ -499,13 +499,20 @@ function load_all_udfs(){
 
       // Create the links for review and display the banner
       else if (prettify(key) == 'pending_reviews'){
-          review_links=''
-          $.each(value,function(index,limsid){
-              review_links+="<a href='https://genologics.scilifelab.se:8443/clarity/work-complete/"+limsid+"'>Go to the Lims Step</a> ";
+        review_links = '';
+        if($.isArray(value)){
+          $.each(value, function(index, limsid){
+              review_links += "<a href='https://genologics.scilifelab.se:8443/clarity/work-complete/"+limsid+"'>Go to the Lims Step</a> ";
           });
+        } else if (value.substring(0, 2) == '<a'){
+          review_links = value;
+        }
+        if(review_links.length > 0){
           $("#review_ids").html(review_links);
-          $("#review_alert").show();
+          $("#review_alert").show(); 
+        }
       }
+      
       // Pass / Fail sample counts
       else if (prettify(key) == 'passed_initial_qc' || prettify(key) == 'passed_library_qc'){
         var parts = value.split('/');
