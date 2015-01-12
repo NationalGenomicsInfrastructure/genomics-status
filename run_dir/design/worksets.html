@@ -24,7 +24,7 @@ Description: Shows a table with all worksets.
         <button id="resetWorksetCols" data-action="filterReset" type="button" class="search-action btn btn-default">Default</button>
       </div>
     </div>
-    <button class="pull-right btn btn-primary" data-toggle="modal" data-target="#worksetFieldsModal">Filter Columns</button>
+    <!-- <button class="pull-right btn btn-primary" data-toggle="modal" data-target="#worksetFieldsModal">Filter Columns</button> -->
   </div>
   <div class="form-group">
     <label for="search_field">Search Table:</label>
@@ -46,7 +46,7 @@ Description: Shows a table with all worksets.
 
 
 
-<!-- SAMPLE FIELD MODAL -->
+<!-- 
 <div id="worksetFieldsModal" class="modal fade">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -61,18 +61,6 @@ Description: Shows a table with all worksets.
 
           <div class="row">
             
-            <!--<div class="col-sm-4" id="basic-columns">
-              <h4 class="search-action" data-action="filterHeader">Basic <input class="headingCheckbox" type="checkbox"></h4>
-              {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="basic-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="basic-columns-{{col_name}}">
-                  {{col_display_name}}
-                </label>
-              </div>
-              {% end %}
-            </div>
-            -->
           </div>
         </form>
       </div>
@@ -84,7 +72,7 @@ Description: Shows a table with all worksets.
     </div>
   </div>
 </div>
-
+-->
 <script src="/static/js/list.min.js"></script>
 <script src="/static/js/worksets.js" id="worksets-js" data-worksets="{{worksets}}"></script>
 {% end %}
