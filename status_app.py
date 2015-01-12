@@ -114,6 +114,7 @@ class Application(tornado.web.Application):
             ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),
             ("/api/v1/worksets", status.worksets.WorksetsDataHandler),
             ("/api/v1/workset/([^/]*)$", status.worksets.WorksetDataHandler),
+            ("/api/v1/workset_search/([^/]*)$", status.worksets.WorksetSearchHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),

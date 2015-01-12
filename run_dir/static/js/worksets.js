@@ -89,6 +89,7 @@ function init_listjs(no_items, columns) {
 
 
 //Check or uncheck all fields from clicked category
+/*
 function choose_column(col){
   var column = document.getElementById(col);
   //Get all the children (checkboxes)
@@ -133,4 +134,4 @@ function read_current_filtering(){
   });
   return columns;
 }
-
+*/

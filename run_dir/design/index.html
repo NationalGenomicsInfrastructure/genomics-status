@@ -156,6 +156,12 @@ $(document).ready(function(){
         remote: '/api/v1/flowcell_search/%QUERY'
     });
     flowcellSearch.initialize();
+    var worksetSearch = new Bloodhound({
+        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        remote: '/api/v1/workset_search/%QUERY'
+    });
+    worksetSearch.initialize();
  
     $('#homepage-searchbar .typeahead').typeahead({
         minLength: 3,
@@ -173,6 +179,13 @@ $(document).ready(function(){
         source: flowcellSearch.ttAdapter(),
         templates: {
             empty: '<div class="empty-message">No flow cells found</div>'
+        }
+    },{
+        name: 'workset-search',
+        displayKey: 'name',
+        source: worksetSearch.ttAdapter(),
+        templates: {
+            empty: '<div class="empty-message">No Worksets found</div>'
         }
     }).bind('typeahead:selected', function(obj, datum, name) {      
         var url = datum.url;
