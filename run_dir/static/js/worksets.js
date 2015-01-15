@@ -89,7 +89,9 @@ function init_listjs(no_items, columns) {
 
 
 //Check or uncheck all fields from clicked category
-/*
+/* Currently commented,  for the time where there will be a lot of columns
+ * to filter 
+
 function choose_column(col){
   var column = document.getElementById(col);
   //Get all the children (checkboxes)
