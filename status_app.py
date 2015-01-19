@@ -32,6 +32,8 @@ from status.suggestion_box import *
 from status.testing import *
 from status.util import *
 
+import status.worksets
+
 class Application(tornado.web.Application):
     def __init__(self, settings):
         handlers = [
@@ -110,6 +112,9 @@ class Application(tornado.web.Application):
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),
+            ("/api/v1/worksets", status.worksets.WorksetsDataHandler),
+            ("/api/v1/workset/([^/]*)$", status.worksets.WorksetDataHandler),
+            ("/api/v1/workset_search/([^/]*)$", status.worksets.WorksetSearchHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),
@@ -131,6 +136,8 @@ class Application(tornado.web.Application):
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/sequencing", SequencingStatsHandler),
             ("/suggestion_box", SuggestionBoxHandler),
+            ("/worksets", status.worksets.WorksetsHandler),
+            ("/workset/([^/]*)$", status.worksets.WorksetHandler),
             (r'.*', BaseHandler)
         ]
 
@@ -149,6 +156,7 @@ class Application(tornado.web.Application):
             self.gs_users_db = couch["gs_users"]
             self.cronjobs_db = couch["cronjobs"]
             self.suggestions_db = couch["suggestion_box"]
+            self.worksets_db=couch["worksets"]
         else:
             print settings.get("couch_server", None)
             raise IOError("Cannot connect to couchdb");
