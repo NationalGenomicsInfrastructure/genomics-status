@@ -77,6 +77,7 @@ function load_table() {
 }
 
 function load_table_head(columns){
+  console.log(columns);
   var tbl_head = $('<tr>');
   $.each(columns, function(i, column_tuple) {
     tbl_head.append($('<th>')
