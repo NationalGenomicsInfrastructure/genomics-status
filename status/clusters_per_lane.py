@@ -19,7 +19,7 @@ class ClustersPerLaneHandler(SafeHandler):
         start=start[:4]+'01'
         end=end[:4]+'31'
         t = self.application.loader.load("clusters_per_lane.html")
-        self.write(t.generate(user = self.get_current_user_name(), start=start, end=end, deprecated=True))
+        self.write(t.generate(user = self.get_current_user_name(), start=start, end=end))
 
 
 class ClustersPerLanePlotHandler(SafeHandler):
@@ -39,40 +39,43 @@ class ClustersPerLanePlotHandler(SafeHandler):
             y = lane.value.get("filtered_clusters")
             if y:
                 yields_per_lane.append(y)
+        if not yields_per_lane:
+            self.set_header("Content-Type", "text/html")
+            self.write("No flowcells found in this time frame.")
+        else:
 
-        gs = gridspec.GridSpec(16, 1)
+            gs = gridspec.GridSpec(16, 1)
+            fig = Figure(figsize=[10, 8])
 
-        fig = Figure(figsize=[10, 8])
+            portion = 2
 
-        portion = 2
+            ax = fig.add_subplot(gs[:-portion, 0])
+            ax.hist(yields_per_lane, bins=32)
+            ax.grid(b='on')
+            ax.set_ylabel("Lanes")
 
-        ax = fig.add_subplot(gs[:-portion, 0])
-        ax.hist(yields_per_lane, bins=32)
-        ax.grid(b='on')
-        ax.set_ylabel("Lanes")
+            ax.spines["bottom"].set_color('none')
 
-        ax.spines["bottom"].set_color('none')
+            ax.get_xaxis().set_visible(False)
 
-        ax.get_xaxis().set_visible(False)
+            ax = fig.add_subplot(gs[-portion:, 0])
+            ax.grid(b='on', axis='x')
 
-        ax = fig.add_subplot(gs[-portion:, 0])
-        ax.grid(b='on', axis='x')
+            ax.boxplot(yields_per_lane, vert=False, patch_artist=True)
 
-        ax.boxplot(yields_per_lane, vert=False, patch_artist=True)
+            ax.set_xlabel("Clusters")
+            ax.get_yaxis().set_visible(False)
 
-        ax.set_xlabel("Clusters")
-        ax.get_yaxis().set_visible(False)
+            ax.spines["top"].set_linewidth(2)
 
-        ax.spines["top"].set_linewidth(2)
+            fig.subplots_adjust(hspace=0)
 
-        fig.subplots_adjust(hspace=0)
+            FigureCanvasAgg(fig)
 
-        FigureCanvasAgg(fig)
+            buf = cStringIO.StringIO()
+            fig.savefig(buf, format="png")
+            data = buf.getvalue()
 
-        buf = cStringIO.StringIO()
-        fig.savefig(buf, format="png")
-        data = buf.getvalue()
-
-        self.set_header("Content-Type", "image/png")
-        self.set_header("Content-Length", len(data))
-        self.write(data)
+            self.set_header("Content-Type", "image/png")
+            self.set_header("Content-Length", len(data))
+            self.write(data)
