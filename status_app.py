@@ -25,6 +25,7 @@ from status.projects import *
 from status.quotas import *
 from status.q30 import *
 from status.reads_per_lane import *
+from status.clusters_per_lane import *
 from status.reads_vs_qv import *
 from status.samples import *
 from status.sequencing import *
@@ -76,6 +77,7 @@ class Application(tornado.web.Application):
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
             ("/api/v1/plot/reads_per_lane.png", ReadsPerLanePlotHandler),
+            ("/api/v1/plot/clusters_per_lane.png", ClustersPerLanePlotHandler),
             ("/api/v1/plot/barcodes_vs_expected([^/]*)$", BarcodeVsExpectedPlotHandler),
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
@@ -118,6 +120,7 @@ class Application(tornado.web.Application):
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),
+            ("/clusters_per_lane", ClustersPerLaneHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
             ("/q30", Q30Handler),
