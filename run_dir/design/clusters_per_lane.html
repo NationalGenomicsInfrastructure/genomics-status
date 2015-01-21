@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+<!-- Example row of columns -->
+{% block stuff %}
+<h2>Clusters per lane</h2>
+  <div id="slider"></div>
+  <h3 id="dates"></h3>
+<div id="plot"></div> 
+
+<script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/js/jQDateRangeSlider-min.js"></script>
+<script type="text/javascript">
+
+  var def_low='{{start}}';
+  var def_high='{{end}}';
+
+  /*calculating the slider range*/
+  var min_year=parseInt(def_low.substring(0,2));
+  var min_month=parseInt(def_low.substring(2,4));
+  var max_year=parseInt(def_high.substring(0,2));
+  var max_month=parseInt(def_high.substring(2,4));
+
+  var months = 12 - min_month;
+  months = months + 12 * (max_year - (min_year + 1));
+  months = months + max_month;
+
+  $("#slider").slider({
+    range: true,
+    min: 0,
+    max: months,
+    values: [0, months],
+    stop: function() {
+      var values = $("#slider").slider("values");
+      var date0 = new Date(parseInt('20'+ min_year.toString()), min_month+values[0]-1, 1); 
+      var monthvar = (date0.getMonth() + 1) < 10 ? '0' + (date0.getMonth() + 1).toString() : (date0.getMonth() + 1).toString();
+      var start = date0.getFullYear().toString().substring(2,4) + monthvar + '01';
+      var date1 = new Date(parseInt('20'+ min_year.toString()), min_month+values[1]-1, 1);
+      monthvar = (date1.getMonth() + 1) < 10 ? '0' + (date1.getMonth() + 1).toString() : (date1.getMonth() + 1).toString();
+      var stop = date1.getFullYear().toString().substring(2,4) + monthvar + '31';
+      load_plot(start, stop);
+    }
+  });
+
+  function load_plot(start, stop){
+    $("#dates").text("Date range: " + start + " - " + stop)
+    $("#plot").html('<img src="/api/v1/plot/clusters_per_lane.png?start=' + start + '&end=' + stop + '"/>')
+  }
+
+  load_plot(def_low, def_high);
+
+</script>
+
+{% end %}
