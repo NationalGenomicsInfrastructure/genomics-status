@@ -4,7 +4,7 @@ URL: /static/js/worksets.js
 Powers /worksets/[List type] - template is run_dir/design/worksets.html
 */
 
-// Get pseudo-argument for this js file. worksets = 'pending' | 'ongoing' | ... 
+// Get pseudo-argument for this js file. worksets = 'all'
 var worksets_page_type = $('#worksets-js').attr('data-worksets');
 
 $(document).ready(function() {
@@ -23,7 +23,7 @@ $(document).ready(function() {
 // Load the Projects Table
 function load_table() {
   // Get the columns and write the table header
-  columns = [['Workset Name', 'workset_name'],['Projects','projects']];
+  columns = [['Workset Name', 'workset_name'],['Projects (samples)','projects'], ['Operator', 'technician'], ['Application', 'application'], ['Library','library_method'], ['Samples Passed', 'passed'],['Samples Failed', 'failed'], ['Pending Samples', 'unknown'], ['Total samples', 'total']];
   load_table_head(columns);
   
   // Display the loading spinner in the table
@@ -37,25 +37,34 @@ function load_table() {
       size++;
       var tbl_row = $('<tr>');
       $.each(columns, function(i, column_tuple){
+          var content='';
+          if (column_tuple[1] == 'projects'){
+            console.log('machin');
+            $.each(summary_row['projects'], function(project_id, project_data ){
+                content+='<a href="/project/' + project_id + '">' + project_id + '</a> (' + project_data['samples_nb'] + ')  ';
+            });
+          }else if (column_tuple[1] == 'application' || column_tuple[1] == 'library_method'){
+              content = summary_row[column_tuple[1]].join(', ');
+          }else if (column_tuple[1] == 'passed' || column_tuple[1] == 'failed' || column_tuple[1] == 'unknown' || column_tuple[1] == 'total'){
+              content=summary_row['samples'][column_tuple[1]];
+          }else{
+              content=summary_row[column_tuple[1]];
+          }
         tbl_row.append($('<td>')
-          .addClass(column_tuple[1])
-          .html(summary_row[column_tuple[1]])
-          );
+        .addClass(column_tuple[1])
+        .html(content)
+        );
       });
       
       // Add links to worksets
       tbl_row.find('td.workset_name').html('<a href="/workset/' + workset_name+ '">' + workset_name + '</a>');
       // make projects links
-      var links=new Array();
-      $.each(summary_row['projects'], function(i,project_id ){
-          links.push('<a href="/project/' + project_id + '">' + project_id + '</a>');
-      });
-      tbl_row.find('td.projects').html(links.join(", "));
       $("#workset_table_body").append(tbl_row); 
     });
     
     // Initialise the Javascript sorting now that we know the number of rows
     init_listjs(size, columns);
+    console.log(size)
   });
 }
 
