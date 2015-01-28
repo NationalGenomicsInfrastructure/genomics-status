@@ -13,7 +13,21 @@ Description: Shows information about a specific workset
 <div id="page_content" style="display:none;">
 
     <h1>Workset <span id="page_title">{{ workset_name}}</span></h1>
+    <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#modal_plate">
+          Launch plate view
+      </button>
     <div id="workset_tables">
+    </div>
+    <div id="modal_plate" class="modal fade" >
+        <div class="plate_modal modal-dialog"> 
+             <div class="modal-content">
+                <input type="button" Onclick="updatePlate('library')" value="library" />
+                <input type="button" Onclick="updatePlate('rec_ctrl')" value="Reception Control" />
+                <input type="button" Onclick="updatePlate('seq')" value="Sequencing" />
+                <canvas id="myCanvas" width="1278" height="860" style="border:1px solid #000000;">
+                </canvas>
+            </div>
+        </div>
     </div>
 
 
