@@ -39,7 +39,6 @@ function load_table() {
       $.each(columns, function(i, column_tuple){
           var content='';
           if (column_tuple[1] == 'projects'){
-            console.log('machin');
             $.each(summary_row['projects'], function(project_id, project_data ){
                 content+='<a href="/project/' + project_id + '">' + project_id + '</a> (' + project_data['samples_nb'] + ')  ';
             });
@@ -70,7 +69,6 @@ function load_table() {
     
     // Initialise the Javascript sorting now that we know the number of rows
     init_listjs(size, columns);
-    console.log(size)
   });
 }
 
