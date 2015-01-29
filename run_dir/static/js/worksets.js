@@ -47,6 +47,12 @@ function load_table() {
               content = summary_row[column_tuple[1]].join(', ');
           }else if (column_tuple[1] == 'passed' || column_tuple[1] == 'failed' || column_tuple[1] == 'unknown' || column_tuple[1] == 'total'){
               content=summary_row['samples'][column_tuple[1]];
+          }else if (column_tuple[1] == 'technician'){
+              if(summary_row[column_tuple[1]] !== undefined && summary_row[column_tuple[1]].slice(-1) == 'X'){
+                  content=summary_row[column_tuple[1]].slice(0,-1);
+              }else{
+                  content=summary_row[column_tuple[1]];
+              }
           }else{
               content=summary_row[column_tuple[1]];
           }
