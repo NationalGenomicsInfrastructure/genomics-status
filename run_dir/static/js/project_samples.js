@@ -231,15 +231,15 @@ $("#link_form").submit(function(e) {
       type: 'POST',
       url: '/api/v1/links/' + project,
       dataType: 'json',
-      data: {'type': type, 'title': title, 'url':url, 'desc':desc},
+      data: {'type': type, 'title': title, 'url':url, 'desc':desc}
     }).done(function(){
       //Clear form fields
       $('#new_link_type, #new_link_title, #new_link_url, #new_link_desc').val("");
       load_links();
     }).fail(function( jqxhr, textStatus, error ) {
         var err = textStatus + ", " + error;
-        console.log( "Couldn't insert running note: " + err );
-        alert( "Error - Couldn't insert running note..  Is there something weird about this project in the LIMS?" );
+        console.log( "Couldn't insert link: " + err );
+        alert( "Error - Couldn't insert link ..  Is there something weird about this project in the LIMS?" );
     });
     
   }
