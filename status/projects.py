@@ -474,7 +474,7 @@ class LinksDataHandler(SafeHandler):
         url = self.get_argument('url', '')
         desc = self.get_argument('desc','')
 
-        if not type or not title:
+        if not a_type or not title:
             self.set_status(400)
             self.finish('<html><body>Link title and type is required</body></html>')
         else:
@@ -490,6 +490,9 @@ class LinksDataHandler(SafeHandler):
             p.udf['Links'] = json.dumps(links)
             p.put()
             self.set_status(200)
+            #ajax cries if it does not get anything back
+            self.set_header("Content-type", "application/json")
+            self.finish(json.dumps(links))
 
 
 class ProjectTicketsDataHandler(SafeHandler):
