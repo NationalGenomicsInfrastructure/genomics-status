@@ -376,6 +376,12 @@ td.progress {
     max-width:1040px;
     max-height:400px;
 }
+/* worksets modal */
+#modal_plate .modal-content {
+    width:1300px;
+    margin-left:-650px;
+    left: 50%;
+}
 
 
 
