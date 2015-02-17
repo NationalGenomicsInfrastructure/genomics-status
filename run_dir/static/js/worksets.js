@@ -10,7 +10,7 @@ var worksets_page_type = $('#worksets-js').attr('data-worksets');
 $(document).ready(function() {
   
     // Load the data
-    load_table()
+    load_table();
     // Show the page   
     $('#loading_spinner').hide();
     $('#page_content').show();
@@ -20,10 +20,9 @@ $(document).ready(function() {
   
 });
 
-// Load the Projects Table
 function load_table() {
   // Get the columns and write the table header
-  columns = [['Workset Name', 'workset_name'],['Projects (samples)','projects'], ['Operator', 'technician'], ['Application', 'application'], ['Library','library_method'], ['Samples Passed', 'passed'],['Samples Failed', 'failed'], ['Pending Samples', 'unknown'], ['Total samples', 'total']];
+  columns = [['Date Run', 'date_run'],['Workset Name', 'workset_name'],['Projects (samples)','projects'], ['Operator', 'technician'], ['Application', 'application'], ['Library','library_method'], ['Samples Passed', 'passed'],['Samples Failed', 'failed'], ['Pending Samples', 'unknown'], ['Total samples', 'total']];
   load_table_head(columns);
   
   // Display the loading spinner in the table
@@ -101,6 +100,23 @@ function init_listjs(no_items, columns) {
 }
 
 
+function load_workset_notes(wait) {
+  // Clear previously loaded notes, if so
+  $("#workset_notes_panels").empty();
+  $.getJSON("/api/v1/workset_notes/" + worksets_page_type, function(data) {
+    $.each(data, function(date, note) {
+        noteText = make_markdown(note['note']);
+      $('#workset_notes_panels').append('<div class="panel panel-default">' +
+          '<div class="panel-heading">'+
+            '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
+            date.toDateString() + ', ' + date.toLocaleTimeString(date)+
+          '</div><div class="panel-body">'+noteText+'</div></div>');
+    });
+  }).fail(function( jqxhr, textStatus, error ) {
+      var err = textStatus + ", " + error;
+      console.log( "Workset notes request failed: " + err );
+  });
+}
 //Check or uncheck all fields from clicked category
 /* Currently commented,  for the time where there will be a lot of columns
  * to filter 
