@@ -97,6 +97,7 @@ function init_listjs(no_items, columns) {
   };
   var featureList = new List('page_content', options);
   featureList.search($('#search_field').val());
+  featureList.sort('date_run', { order: "desc" })
 }
 
 
