@@ -54,9 +54,12 @@ Description: Shows a table with all projects.
     <tbody class="list" id="project_table_body">
     </tbody>
   </table>
+
 </div>
 
 </div> <!-- #page_content -->
+<div id="dateSlider" style="height: 80px;"> </div>
+<button class="btn btn-primary" onclick="load_table()">Update List</button>
 
 
 
@@ -195,5 +198,7 @@ Description: Shows a table with all projects.
 </div>
 
 <script src="/static/js/list.min.js"></script>
+<script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/js/jQDateRangeSlider-min.js"></script>
 <script src="/static/js/projects.js" id="projects-js" data-projects="{{projects}}"></script>
 {% end %}

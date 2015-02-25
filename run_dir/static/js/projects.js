@@ -7,7 +7,22 @@ Powers /projects/[List type] - template is run_dir/design/projects.html
 // Get pseudo-argument for this js file. projects = 'pending' | 'ongoing' | ... 
 var projects_page_type = $('#projects-js').attr('data-projects');
 
+var begin = new Date(2012,0, 1); 
+var end = new Date();
+
 $(document).ready(function() {
+    //load the slider
+    $("#dateSlider").dateRangeSlider({
+    range: true,
+    bounds:{
+      min: begin,
+      max: end,
+    },
+    defaultValues:{
+        min: begin,
+        max: end,
+    }
+});
   
   // Load the presets first (to get the table headers)
   $.when(load_presets()).done(function(){
@@ -15,6 +30,7 @@ $(document).ready(function() {
     $('#loading_spinner').hide();
     $('#page_content').show();
     
+
     // Load the page content
     load_undefined_columns();
   });
@@ -33,8 +49,10 @@ function load_table() {
   // Display the loading spinner in the table
   $("#project_table_body").html('<tr><td colspan="'+columns.length+'" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
   
+    old_date=$("#dateSlider").dateRangeSlider("values").min.getFullYear()+'-'+('0'+($("#dateSlider").dateRangeSlider("values").min.getMonth()+1)).slice(-2)+'-'+('0'+$("#dateSlider").dateRangeSlider("values").min.getDate()).slice(-2);
+    new_date=$("#dateSlider").dateRangeSlider("values").max.getFullYear()+'-'+('0'+($("#dateSlider").dateRangeSlider("values").max.getMonth()+1)).slice(-2)+'-'+('0'+$("#dateSlider").dateRangeSlider("values").max.getDate()).slice(-2);
   
-  return $.getJSON("/api/v1/projects?list=" + projects_page_type, function(data) {
+  return $.getJSON("/api/v1/projects?list=" + projects_page_type+"&oldest_date="+old_date+"&youngest_date="+new_date, function(data) {
     $("#project_table_body").empty();
     var size = 0;
     $.each(data, function(project_id, summary_row) {
@@ -94,7 +112,7 @@ function load_table_head(columns){
 
 // Undefined columns handled here
 function load_undefined_columns() {
-  return $.getJSON("/api/v1/projects_fields?undefined=true&project_list=" + projects_page_type, function(data) {
+  return $.getJSON("/api/v1/projects_fields?undefined=true&project_list=" + projects_page_type+"&oldest_date="+old_date+"&youngest_date="+new_date, function(data) {
     var columns_html = "";
     $.each(data, function(column_no, column) {
       $("#undefined_columns").append('<div class="checkbox">'+
@@ -121,6 +139,7 @@ function init_listjs(no_items, columns) {
   };
   var featureList = new List('page_content', options);
   featureList.search($('#search_field').val());
+  featureList.sort('project', { order: "desc" } );
 }
 
 

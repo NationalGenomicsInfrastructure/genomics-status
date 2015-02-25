@@ -113,12 +113,17 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         return row
 
-    def list_projects(self, filter_projects='all'):
+    def list_projects(self, filter_projects='all', oldest_date='2010-01-01', youngest_date=datetime.datetime.now().strftime("%Y-%m-%d")):
         projects = OrderedDict()
 
+        oldest_date=self.get_argument('oldest_date', oldest_date)
+        youngest_date=self.get_argument('youngest_date', youngest_date)
         summary_view = self.application.projects_db.view("project/summary", descending=True)
-        if not filter_projects in ['all', 'aborted']:
+        if filter_projects == 'closed':
+            summary_view = summary_view[["closed",'Z']:["closed",'']]
+        elif filter_projects != 'all' :
             summary_view = summary_view[["open",'Z']:["open",'']]
+
 
         for row in summary_view:
             row = self.project_summary_data(row)
@@ -141,6 +146,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         # Filter requested projects
         filtered_projects = OrderedDict()
+
 
         if filter_projects == 'aborted':
             return aborted_projects
@@ -171,14 +177,12 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         elif filter_projects == 'closed':
             for p_id, p_info in projects.iteritems():
-                if 'close_date' in p_info:
+
+                if 'close_date' in p_info and p_info['close_date']>oldest_date and p_info['close_date']<youngest_date:
                     filtered_projects[p_id] = p_info
-            # Old projects (google docs) will not have close_date field
-            summary_view = self.application.projects_db.view("project/summary", descending=True)
-            summary_view = summary_view[["closed",'Z']:["closed",'']]
-            for row in summary_view:
-                row = self.project_summary_data(row)
-                filtered_projects[row.key[1]] = row.value
+                elif 'close_date' not in p_info and oldest_date =='2012-01-01':
+                    filtered_projects[p_id] = p_info
+
             return filtered_projects
 
         elif filter_projects == "pending_review":
