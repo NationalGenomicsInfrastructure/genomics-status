@@ -4,16 +4,15 @@ import argparse
 import couchdb
 import yaml
 
-import logbook
 import trello
+
+from logbook import Logger, FileHandler
 
 DESCRIPTION = """Updates stauts (archived or not) of the suggestions stored in the database.
 
 Requires the settings.yaml configuration file used to parametrise genomics-status
 """
 if __name__=="__main__":
-
-    log = logbook.Logger('Update Suggestion Box')
 
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('config', type=str, help="Path to settings.yaml file")
@@ -27,6 +26,11 @@ if __name__=="__main__":
 
     # From here, assume that all credentials are present in the configuration file,
     # that is actually needed to run genomics-status
+
+    logfile = config.get('sb_log', None) or '~/.suggestion-box.log'
+    fh = FileHandler(logfile)
+    log = Logger('Suggestion Box')
+    log.handlers.append(fh)
 
     # Connect to Trello
     api_key = config.get('trello').get('api_key')
