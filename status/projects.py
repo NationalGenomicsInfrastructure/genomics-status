@@ -116,8 +116,12 @@ class ProjectsBaseDataHandler(SafeHandler):
     def list_projects(self, filter_projects='all', oldest_date='2010-01-01', youngest_date=datetime.datetime.now().strftime("%Y-%m-%d")):
         projects = OrderedDict()
 
-        oldest_date=self.get_argument('oldest_date', oldest_date)
-        youngest_date=self.get_argument('youngest_date', youngest_date)
+        oldest_open_date=self.get_argument('oldest_open_date', oldest_date)
+        youngest_open_date=self.get_argument('youngest_open_date', youngest_date)
+        oldest_close_date=self.get_argument('oldest_close_date', oldest_date)
+        youngest_close_date=self.get_argument('youngest_close_date', youngest_date)
+        oldest_queue_date=self.get_argument('oldest_queue_date', oldest_date)
+        youngest_queue_date=self.get_argument('youngest_queue_date', youngest_date)
         summary_view = self.application.projects_db.view("project/summary", descending=True)
         if filter_projects == 'closed':
             summary_view = summary_view[["closed",'Z']:["closed",'']]
@@ -130,68 +134,80 @@ class ProjectsBaseDataHandler(SafeHandler):
             projects[row.key[1]] = row.value
 
         # Include dates for each project:
-        for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
-            if row.key[0] in projects:
-                for date_type, date in row.value.iteritems():
-                    projects[row.key[0]][date_type] = date
+        #for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
+        #    if row.key[0] in projects:
+        #        for date_type, date in row.value.iteritems():
+        #            projects[row.key[0]][date_type] = date
 
+        filtered_projects = OrderedDict()
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
         if not filter_projects == 'all':
             aborted_projects = OrderedDict()
             for p_id, p_info in projects.iteritems():
-                if 'aborted' in p_info:
-                    aborted_projects[p_id] = p_info
-                    del projects[p_id]
-
-        # Filter requested projects
-        filtered_projects = OrderedDict()
-
-
-        if filter_projects == 'aborted':
-            return aborted_projects
+                if 'aborted' not in p_info:
+                    filtered_projects[p_id] = p_info
+        else:
+            filtered_projects=projects
 
         if filter_projects == 'pending':
             for p_id, p_info in projects.iteritems():
                 if not 'open_date' in p_info:
                     filtered_projects[p_id] = p_info
-            return filtered_projects
 
         elif filter_projects == 'open':
             for p_id, p_info in projects.iteritems():
                 if 'open_date' in p_info:
                     filtered_projects[p_id] = p_info
-            return filtered_projects
 
         elif filter_projects == 'reception_control':
             for p_id, p_info in projects.iteritems():
                 if 'open_date' in p_info and not 'queued' in p_info:
                     filtered_projects[p_id] = p_info
-            return filtered_projects
 
         elif filter_projects == 'ongoing':
             for p_id, p_info in projects.iteritems():
                 if 'queued' in p_info and not 'close_date' in p_info:
                     filtered_projects[p_id] = p_info
-            return filtered_projects
 
         elif filter_projects == 'closed':
             for p_id, p_info in projects.iteritems():
-
-                if 'close_date' in p_info and p_info['close_date']>oldest_date and p_info['close_date']<youngest_date:
+                if 'close_date' in p_info :
                     filtered_projects[p_id] = p_info
-                elif 'close_date' not in p_info and oldest_date =='2012-01-01':
-                    filtered_projects[p_id] = p_info
-
-            return filtered_projects
 
         elif filter_projects == "pending_review":
             for p_id, p_info in projects.iteritems():
                 if 'pending_reviews' in p_info:
                     filtered_projects[p_id] = p_info
-            return filtered_projects
 
-        return projects
+
+        final_projects=self.filter_per_date(filtered_projects, youngest_open_date, oldest_open_date, youngest_queue_date, oldest_queue_date, youngest_close_date, oldest_close_date)
+
+        return final_projects
+    def filter_per_date(self,plist, yod, ood, yqd, oqd, ycd, ocd):
+        default_open_date='2012-01-01'
+        default_close_date=datetime.datetime.now().strftime("%Y-%m-%d")
+        """ yod : youngest open date
+            ood : oldest open date
+            yqd : youngest queue date
+            oqd : oldest queue date
+            ycd : youngest close date
+            ocd : oldest close date"""
+        filtered_projects=OrderedDict()
+        for p_id, p_info in plist.iteritems():
+            if ycd != default_close_date or ocd != default_open_date:
+                if 'close_date' not in p_info or (p_info['close_date']>ycd or p_info['close_date']<ocd):
+                    continue
+            if yqd != default_close_date or oqd != default_open_date:
+                if 'queued' not in p_info or (p_info['queued_date']>yqd or p_info['queued_date']<oqd):
+                    continue
+            if yod != default_close_date or ood != default_open_date:
+                if 'open_date' not in p_info or (p_info['open_date']>yod or p_info['open_date']<ood):
+                    continue
+            filtered_projects[p_id]=p_info
+
+        return filtered_projects
+
 
     def list_project_fields(self, undefined=False, project_list='all'):
         # If undefined=True is given, only return fields not in columns defined
