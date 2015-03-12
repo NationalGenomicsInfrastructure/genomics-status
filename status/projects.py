@@ -133,11 +133,6 @@ class ProjectsBaseDataHandler(SafeHandler):
             row = self.project_summary_data(row)
             projects[row.key[1]] = row.value
 
-        # Include dates for each project:
-        #for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
-        #    if row.key[0] in projects:
-        #        for date_type, date in row.value.iteritems():
-        #            projects[row.key[0]][date_type] = date
 
         filtered_projects = OrderedDict()
         # Filter aborted projects if not All projects requested: Aborted date has
@@ -183,6 +178,11 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         final_projects=self.filter_per_date(filtered_projects, youngest_open_date, oldest_open_date, youngest_queue_date, oldest_queue_date, youngest_close_date, oldest_close_date)
 
+        # Include dates for each project:
+        for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
+            if row.key[0] in final_projects:
+                for date_type, date in row.value.iteritems():
+                    final_projects[row.key[0]][date_type] = date
         return final_projects
     def filter_per_date(self,plist, yod, ood, yqd, oqd, ycd, ocd):
         default_open_date='2012-01-01'
