@@ -43,7 +43,7 @@ Description: Shows a table with all projects.
   <div class="form-group">
     <label for="search_field">Search Table:</label>
     <input type="text" class="form-control search search-query" id="search_field" placeholder="Search...">
-    <span class="help-inline text-muted">Tip: Sort columns by clicking on the column headers.</span>
+    <button class="btn btn-primary" data-toggle="modal" data-target="#projectFilterDate">Filter Dates</button>
   </div>
 </form>
 
@@ -58,8 +58,6 @@ Description: Shows a table with all projects.
 </div>
 
 </div> <!-- #page_content -->
-<div id="dateSlider" style="height: 80px;"> </div>
-<button class="btn btn-primary" onclick="load_table()">Update List</button>
 
 
 
@@ -197,6 +195,37 @@ Description: Shows a table with all projects.
   </div>
 </div>
 
+<div id="projectFilterDate" class="modal fade">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h3>Filter Projects per Date</h3>
+      </div>
+      <div class="modal-body">
+        <div class="panel panel-default">
+        <div class="panel-body">  
+        <label>Open Date</label>
+        <div id="OpenDateSlider" class="dateSlider" style="height: 80px;"> </div>
+        </div>
+        </div>
+        <div class="panel panel-default">
+        <div class="panel-body">  
+        <label>Queue Date</label>
+        <div id="QueueDateSlider" class="dateSlider" style="height: 80px;"> </div>
+        </div>
+        </div>
+        <div class="panel panel-default">
+        <div class="panel-body">  
+        <label>Close Date</label>
+        <div id="CloseDateSlider" class="dateSlider" style="height: 80px;"> </div>
+        </div>
+        </div>
+        <button class="btn btn-primary" onclick="load_table()" data-dismiss="modal" aria-hidden="true">Update List</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="/static/js/list.min.js"></script>
 <script src="/static/js/jquery-ui.min.js"></script>
 <script src="/static/js/jQDateRangeSlider-min.js"></script>
