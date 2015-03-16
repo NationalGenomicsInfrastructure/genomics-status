@@ -199,7 +199,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 if 'close_date' not in p_info or (p_info['close_date']>ycd or p_info['close_date']<ocd):
                     continue
             if yqd != default_close_date or oqd != default_open_date:
-                if 'queued' not in p_info or (p_info['queued_date']>yqd or p_info['queued_date']<oqd):
+                if 'queued' not in p_info or (p_info['queued']>yqd or p_info['queued']<oqd):
                     continue
             if yod != default_close_date or ood != default_open_date:
                 if 'open_date' not in p_info or (p_info['open_date']>yod or p_info['open_date']<ood):
