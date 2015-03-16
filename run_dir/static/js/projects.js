@@ -17,29 +17,7 @@ $('#projectFilterDate').on('shown.bs.modal', function () {
 })
 $(document).ready(function() {
     //load the sliders
-    $("#OpenDateSlider").dateRangeSlider({
-    range: true,
-    bounds:{
-      min: begin,
-      max: end,
-    },
-    defaultValues:{
-        min: begin,
-        max: end,
-    }
-});
-    $("#QueueDateSlider").dateRangeSlider({
-    range: true,
-    bounds:{
-      min: begin,
-      max: end,
-    },
-    defaultValues:{
-        min: begin,
-        max: end,
-    }
-});
-    $("#CloseDateSlider").dateRangeSlider({
+    $(".dateSlider").dateRangeSlider({
     range: true,
     bounds:{
       min: begin,
