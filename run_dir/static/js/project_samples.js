@@ -1238,15 +1238,15 @@ function load_charon_summary(){
       if (data['tot']==0){
           $('#tab_charon_data').html("This project has no data in Charon.");
       }else{
-          table="<table class='table table-bordered table-striped'>";
-          table+="<tr><td>Total amount of samples</td><td>"+data['tot']+"</td></tr>";
-          table+="<tr><td>Sequenced samples</td><td>"+data['seq']+"</td></tr>";
-          table+="<tr><td>Analyzed samples</td><td>"+data['ana']+"</td></tr>";
-          table+="<tr><td>Successful Analysis</td><td>"+data['passed']+"</td></tr>";
-          table+="<tr><td>Failed Analysis</td><td>"+data['failed']+"</td></tr>";
-          table+="<tr><td>Running Analysis</td><td>"+data['runn']+"</td></tr>";
-          table+="<tr><td>Number of Human Genomes covered</td><td>"+data['hge']+"</td></tr>";
-          table+="<table>";
+          $('#charon_tab_link').show();
+          table="<dl class='dl-horizontal'>"
+          table+="<dt>Total amount of samples</dt><dd><span class='badge'>"+data['tot']+"</span></dd>";
+          table+="<dt>Sequenced samples</dt><dd><span class='badge'>"+data['seq']+"</span></dd>";
+          table+="<dt>Analyzed samples</dt><dd><span class='badge'>"+data['ana']+"</span></dd>";
+          table+="<dt>Successful Analysis</dt><dd><span class='badge'>"+data['passed']+"</span></dd>";
+          table+="<dt>Failed Analysis</dt><dd><span class='badge'>"+data['failed']+"</span></dd>";
+          table+="<dt>Running Analysis</dt><dd><span class='badge'>"+data['runn']+"</span></dd>";
+          table+="<dt>Number of Human Genomes covered</dt><dd><span class='badge'>"+data['hge']+"</span></dd>";
           $('#tab_charon_data').html(table);
 
       }
