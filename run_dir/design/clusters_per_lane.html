@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+<!-- 
+Template file : clusters_per_lane.html
+URL: /clusters_per_lane
+Description : displays stastistics about clusters per lane, base on the data in the Flowcell DB
+Uses /api/v1/plot/clusters_per_lane.png
+
+-->
+{% block stuff %}
+<h1 id="page_title">Clusters per lane</h1>
+  <div id="dateSlider"></div>
+<div id="plot"></div> 
+
+<script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/js/jQDateRangeSlider-min.js"></script>
+<script type="text/javascript">
+
+  var def_low='{{start}}';
+  var def_high='{{end}}';
+
+  /*calculating the slider range*/
+  var min_year=parseInt(def_low.substring(0,2));
+  var min_month=parseInt(def_low.substring(2,4));
+  var min_day=parseInt(def_low.substring(4,6));
+  var max_year=parseInt(def_high.substring(0,2));
+  var max_month=parseInt(def_high.substring(2,4));
+  var max_day=parseInt(def_high.substring(4,6));
+
+
+  var begin = new Date(parseInt('20'+ min_year.toString()), min_month-1, min_day); 
+  var end = new Date(parseInt('20'+ max_year.toString()), max_month-1, max_day);
+
+  $("#dateSlider").dateRangeSlider({
+    range: true,
+    bounds:{
+      min: begin,
+      max: end,
+    },
+    defaultValues:{
+        min: begin,
+        max: end,
+    }
+  });
+  $("#dateSlider").bind("valuesChanged", function(e, data){
+      var monthvar = (data.values.min.getMonth() + 1) < 10 ? '0' + (data.values.min.getMonth() + 1).toString() : (data.values.min.getMonth() + 1).toString();
+      var dayvar = data.values.min.getDate() < 10 ? '0' + data.values.min.getDate().toString() : data.values.min.getDate().toString();
+      var start = data.values.min.getFullYear().toString().substring(2,4) + monthvar + dayvar;
+
+       monthvar = (data.values.max.getMonth() + 1) < 10 ? '0' + (data.values.max.getMonth() + 1).toString() : (data.values.max.getMonth() + 1).toString();
+      dayvar = data.values.max.getDate() < 10 ? '0' + data.values.max.getDate().toString() : data.values.max.getDate().toString();
+      var stop= data.values.max.getFullYear().toString().substring(2,4) + monthvar + data.values.max.getDate();
+      load_plot(start, stop);
+            });
+
+  function load_plot(start, stop){
+    $("#plot").html('<img src="/api/v1/plot/clusters_per_lane.png?start=' + start + '&end=' + stop + '"/>')
+  }
+
+  load_plot(def_low, def_high);
+
+</script>
+
+{% end %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+<!-- 
+Template file: workset_sample.html
+URL: /workset/[workset]
+Title: Individual Workset Page 
+Description: Shows information about a specific workset
+-->
+
+{% block stuff %}
+
+<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading workset page..</div>
+<div id="page_content" style="display:none;">
+
+    <h1>Workset <span id="page_title">{{ workset_name}}</span></h1>
+    <h3>Lims Step : <span id="span_lims_step"></span>, run on <span id="date_run"></span></h3>
+    <div id="modal_button">
+        <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#modal_plate">
+          Launch plate view
+        </button>
+    </div>
+    <div class="tabbable">
+        <ul class="nav nav-tabs">
+        <li class="active"><a href="#workset_tables" role="tab" data-toggle="tab">Workset Tables</a></li>
+        <li><a href="#workset_notes_panel" role="tab" data-toggle="tab">Workset Notes</a></li>
+        </ul>
+        <div class="tab-content">
+        <div class="tab-pane fade in active" id="workset_tables">
+        </div> 
+        <div class="tab-pane fade" id="workset_notes_panel">
+          <form action="" method="POST" id="workset_notes_form" role="form">
+            <div class="form-group">
+              <label for="new_note_text">Insert new running note:</label>
+              <textarea rows="5" class="form-control" id="new_note_text"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" id="save_note_button">Preview workset  note</button>
+          </form>
+          <div class="panel-group" id="workset_notes"></div>
+        </div>
+        </div>
+        <div id="modal_plate" class="modal fade" >
+            <div class="plate_modal modal-dialog"> 
+                 <div class="modal-content">
+                <input type="button" Onclick="updatePlate('rec_ctrl')" value=" Reception Control " />
+                <input type="button" Onclick="updatePlate('library')" value=" Library Validation " />
+                <input type="button" Onclick="updatePlate('seq')" value=" Sequencing" />
+                <canvas id="myCanvas" width="1278" height="860" style="border:1px solid #000000;">
+                </canvas>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+<!-- WORKSET NOTES PREVIEW -->
+<div id="workset_note_preview" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3 class="modal-title">Workset Note Preview</h3>
+      </div>
+      <br />
+      <div class="modal-body">
+        <div class="panel panel-default">
+          <div class="panel-heading"><a href="#">Your Name</a> - Date</div>
+          <div class="panel-body" id="workset_note_preview_body"></div>
+        </div>
+        <hr>
+        <h4>Troubleshooting</h4>
+        <p>Some tips that can fix broken markdown:</p>
+        <ul>
+          <li>Blank lines either side of things like lists</li>
+          <li>Delete spaces in <code>](</code>, <code>**bold**</code> <em>etc.</em></li>
+        </ul>
+        <p>Remember the <strong>Markdown Help</strong> button over on the right!</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        <button class="btn btn-primary" id="submit_workset_note_preview">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+</div>
+
+<script src="/static/js/workset_samples.js" id="workset-js" data-workset="{{ workset_name }}"></script>
+<script src="/static/js/markdown.min.js"></script>
+{% end %}

@@ -17,6 +17,7 @@ $(document).ready(function() {
     load_samples_table();
     load_running_notes();
     load_links();
+    load_charon_summary();
   });
 
   // Prevent traditional html submit function
@@ -231,15 +232,15 @@ $("#link_form").submit(function(e) {
       type: 'POST',
       url: '/api/v1/links/' + project,
       dataType: 'json',
-      data: {'type': type, 'title': title, 'url':url, 'desc':desc},
+      data: {'type': type, 'title': title, 'url':url, 'desc':desc}
     }).done(function(){
       //Clear form fields
       $('#new_link_type, #new_link_title, #new_link_url, #new_link_desc').val("");
       load_links();
     }).fail(function( jqxhr, textStatus, error ) {
         var err = textStatus + ", " + error;
-        console.log( "Couldn't insert running note: " + err );
-        alert( "Error - Couldn't insert running note..  Is there something weird about this project in the LIMS?" );
+        console.log( "Couldn't insert link: " + err );
+        alert( "Error - Couldn't insert link ..  Is there something weird about this project in the LIMS?" );
     });
     
   }
@@ -1231,4 +1232,28 @@ function old_project_warning(warndate_raw){
     $('#old_project_warning').show();
     $('#old_project_warning').attr('title', 'This project was created before '+warndate_raw+'.<br>Genomics Status may be inaccruate.');
   }
+}
+function load_charon_summary(){
+  $.getJSON("/api/v1/charon_summary/"+ project, function(data) {
+      if (data['tot']==0){
+          $('#tab_charon_data').html("This project has no data in Charon.");
+      }else{
+          $('#charon_tab_link').show();
+          table="<p>This data comes from <a href='http://charon.scilifelab.se'>Charon</a></p>"
+          table+="<dl class='dl-horizontal dl-wide'>"
+          table+="<dt>Total amount of samples</dt><dd><span class='badge'>"+data['tot']+"</span></dd>";
+          table+="<dt>Sequenced samples</dt><dd><span class='badge'>"+data['seq']+"</span></dd>";
+          table+="<dt>Analyzed samples</dt><dd><span class='badge'>"+data['ana']+"</span></dd>";
+          table+="<dt>Successful Analysis</dt><dd><span class='badge label-success'>"+data['passed']+"</span></dd>";
+          table+="<dt>Failed Analysis</dt><dd><span class='badge label-danger'>"+data['failed']+"</span></dd>";
+          table+="<dt>Running Analysis</dt><dd><span class='badge'>"+data['runn']+"</span></dd>";
+          table+="<dt>Number of Human Genomes covered</dt><dd><span class='badge'>"+data['hge']+"</span></dd>";
+          $('#tab_charon_data').html(table);
+
+      }
+
+
+  });
+
+
 }

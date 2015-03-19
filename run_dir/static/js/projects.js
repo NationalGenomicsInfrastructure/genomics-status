@@ -7,7 +7,27 @@ Powers /projects/[List type] - template is run_dir/design/projects.html
 // Get pseudo-argument for this js file. projects = 'pending' | 'ongoing' | ... 
 var projects_page_type = $('#projects-js').attr('data-projects');
 
+var begin = new Date(2012,0, 1); 
+var end = new Date();
+
+$('#projectFilterDate').on('shown.bs.modal', function () {
+ $("#OpenDateSlider").dateRangeSlider('resize');
+ $("#QueueDateSlider").dateRangeSlider('resize');
+ $("#CloseDateSlider").dateRangeSlider('resize');
+})
 $(document).ready(function() {
+    //load the sliders
+    $(".dateSlider").dateRangeSlider({
+    range: true,
+    bounds:{
+      min: begin,
+      max: end,
+    },
+    defaultValues:{
+        min: begin,
+        max: end,
+    }
+});
   
   // Load the presets first (to get the table headers)
   $.when(load_presets()).done(function(){
@@ -15,6 +35,7 @@ $(document).ready(function() {
     $('#loading_spinner').hide();
     $('#page_content').show();
     
+
     // Load the page content
     load_undefined_columns();
   });
@@ -32,9 +53,27 @@ function load_table() {
   
   // Display the loading spinner in the table
   $("#project_table_body").html('<tr><td colspan="'+columns.length+'" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
-  
-  
-  return $.getJSON("/api/v1/projects?list=" + projects_page_type, function(data) {
+
+    url="/api/v1/projects?list=" + projects_page_type;
+    if ($("#OpenDateSlider").dateRangeSlider("values").min !==$("#OpenDateSlider").dateRangeSlider("bounds").min ||
+       $("#OpenDateSlider").dateRangeSlider("values").max !==$("#OpenDateSlider").dateRangeSlider("bounds").max ){
+        old_open_date=$("#OpenDateSlider").dateRangeSlider("values").min.getFullYear()+'-'+('0'+($("#OpenDateSlider").dateRangeSlider("values").min.getMonth()+1)).slice(-2)+'-'+('0'+$("#OpenDateSlider").dateRangeSlider("values").min.getDate()).slice(-2);
+        new_open_date=$("#OpenDateSlider").dateRangeSlider("values").max.getFullYear()+'-'+('0'+($("#OpenDateSlider").dateRangeSlider("values").max.getMonth()+1)).slice(-2)+'-'+('0'+$("#OpenDateSlider").dateRangeSlider("values").max.getDate()).slice(-2);
+        url=url+"&oldest_open_date="+old_open_date+"&youngest_open_date="+new_open_date;
+       }
+    if ($("#QueueDateSlider").dateRangeSlider("values").min !==$("#QueueDateSlider").dateRangeSlider("bounds").min ||
+       $("#QueueDateSlider").dateRangeSlider("values").max !==$("#QueueDateSlider").dateRangeSlider("bounds").max ){
+        old_queue_date=$("#QueueDateSlider").dateRangeSlider("values").min.getFullYear()+'-'+('0'+($("#QueueDateSlider").dateRangeSlider("values").min.getMonth()+1)).slice(-2)+'-'+('0'+$("#QueueDateSlider").dateRangeSlider("values").min.getDate()).slice(-2);
+        new_queue_date=$("#QueueDateSlider").dateRangeSlider("values").max.getFullYear()+'-'+('0'+($("#QueueDateSlider").dateRangeSlider("values").max.getMonth()+1)).slice(-2)+'-'+('0'+$("#QueueDateSlider").dateRangeSlider("values").max.getDate()).slice(-2);
+        url=url+"&oldest_queue_date="+old_queue_date+"&youngest_queue_date="+new_queue_date;
+       }
+    if ($("#CloseDateSlider").dateRangeSlider("values").min !==$("#CloseDateSlider").dateRangeSlider("bounds").min ||
+       $("#CloseDateSlider").dateRangeSlider("values").max !==$("#CloseDateSlider").dateRangeSlider("bounds").max ){
+        old_close_date=$("#CloseDateSlider").dateRangeSlider("values").min.getFullYear()+'-'+('0'+($("#CloseDateSlider").dateRangeSlider("values").min.getMonth()+1)).slice(-2)+'-'+('0'+$("#CloseDateSlider").dateRangeSlider("values").min.getDate()).slice(-2);
+        new_close_date=$("#CloseDateSlider").dateRangeSlider("values").max.getFullYear()+'-'+('0'+($("#CloseDateSlider").dateRangeSlider("values").max.getMonth()+1)).slice(-2)+'-'+('0'+$("#CloseDateSlider").dateRangeSlider("values").max.getDate()).slice(-2);
+        url=url+"&oldest_close_date="+old_close_date+"&youngest_close_date="+new_close_date;
+       }
+  return $.getJSON(url, function(data) {
     $("#project_table_body").empty();
     var size = 0;
     $.each(data, function(project_id, summary_row) {
@@ -77,6 +116,7 @@ function load_table() {
 }
 
 function load_table_head(columns){
+  console.log(columns);
   var tbl_head = $('<tr>');
   $.each(columns, function(i, column_tuple) {
     tbl_head.append($('<th>')
@@ -120,6 +160,7 @@ function init_listjs(no_items, columns) {
   };
   var featureList = new List('page_content', options);
   featureList.search($('#search_field').val());
+  featureList.sort('project', { order: "desc" } );
 }
 
 
