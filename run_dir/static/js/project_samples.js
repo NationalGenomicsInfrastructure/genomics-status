@@ -1239,12 +1239,13 @@ function load_charon_summary(){
           $('#tab_charon_data').html("This project has no data in Charon.");
       }else{
           $('#charon_tab_link').show();
-          table="<dl class='dl-horizontal'>"
+          table="<p>This data comes from <a href='http://charon.scilifelab.se'>Charon</a></p>'"
+          table+="<dl class='dl-horizontal dl-wide'>"
           table+="<dt>Total amount of samples</dt><dd><span class='badge'>"+data['tot']+"</span></dd>";
           table+="<dt>Sequenced samples</dt><dd><span class='badge'>"+data['seq']+"</span></dd>";
           table+="<dt>Analyzed samples</dt><dd><span class='badge'>"+data['ana']+"</span></dd>";
-          table+="<dt>Successful Analysis</dt><dd><span class='badge'>"+data['passed']+"</span></dd>";
-          table+="<dt>Failed Analysis</dt><dd><span class='badge'>"+data['failed']+"</span></dd>";
+          table+="<dt>Successful Analysis</dt><dd><span class='badge label-success'>"+data['passed']+"</span></dd>";
+          table+="<dt>Failed Analysis</dt><dd><span class='badge label-danger'>"+data['failed']+"</span></dd>";
           table+="<dt>Running Analysis</dt><dd><span class='badge'>"+data['runn']+"</span></dd>";
           table+="<dt>Number of Human Genomes covered</dt><dd><span class='badge'>"+data['hge']+"</span></dd>";
           $('#tab_charon_data').html(table);
