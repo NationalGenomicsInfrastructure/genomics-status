@@ -631,7 +631,11 @@ class ProjectQCDataHandler(SafeHandler):
 class CharonProjectHandler(SafeHandler):
     """queries charon about the current project"""
     def get(self, projectid):
-        url="http://charon.scilifelab.se/api/summary?projectid={}".format(projectid)
+        try:
+            url="{}/api/summary?projectid={}".format(self.application.settings['charon']['url'], projectid)
+        except KeyError:
+            url="http://charon.scilifelab.se/api/summary?projectid={}".format(projectid)
+        print url
         r = requests.get(url)
         if r.status_code == requests.status_codes.codes.OK:
             self.write(r.json())
