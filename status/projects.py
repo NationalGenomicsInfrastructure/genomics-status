@@ -627,3 +627,18 @@ class ProjectQCDataHandler(SafeHandler):
                         print "cannot add {} to paths, one of these two keys does not exist: sample->{} run->{}".format(os.path.relpath(os.path.join(root,f), prefix), cursample, currun)
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(paths))
+
+class CharonProjectHandler(SafeHandler):
+    """queries charon about the current project"""
+    def get(self, projectid):
+        try:
+            url="{}/api/summary?projectid={}".format(self.application.settings['charon']['url'], projectid)
+        except KeyError:
+            url="http://charon.scilifelab.se/api/summary?projectid={}".format(projectid)
+        print url
+        r = requests.get(url)
+        if r.status_code == requests.status_codes.codes.OK:
+            self.write(r.json())
+        else:
+            self.set_status(400)
+            self.finish('<html><body>There was a problem connecting to charon, please try it again later.</body></html>')

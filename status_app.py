@@ -47,6 +47,7 @@ class Application(tornado.web.Application):
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
             ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
+            ("/api/v1/charon_summary/([^/]*)$",CharonProjectHandler ),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
@@ -221,16 +222,11 @@ class Application(tornado.web.Application):
         
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
-        settings = {"debug": True,
-                    "static_path": "static",
-                    "cookie_secret": cookie_secret,
-                    "login_url": "/login",
-                    "google_oauth": {
-                        "key": self.oauth_key,
-                        "secret": settings["google_oauth"]["secret"]},
-                    "contact_person": settings['contact_person'],
-                    "redirect_uri": settings['redirect_uri']
-                     }
+        settings["debug"]= True
+        settings["static_path"]= "static"
+        settings["cookie_secret"]= cookie_secret
+        settings["login_url"]= "/login"
+        
 
         if options['develop']:
             tornado.autoreload.watch("design/application.html")
