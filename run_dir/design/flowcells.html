@@ -26,6 +26,7 @@ Description: Shows a table with all flow cells.
             <th class="sort" data-sort="flowcell">Flowcell</th>
             <th class="sort" data-sort="pos">Pos</th>
             <th class="sort" data-sort="instrument">Instrument</th>
+            <th class="sort" data-sort="demultiplexing">Demultiplexing</th>
           </tr>
         </thead>
         <tbody class="list">
@@ -72,6 +73,7 @@ $( document ).ready(function() {
                 '<td class="flowcell">' + info['flowcell'] + '</td>',
                 '<td class="pos" class="text-center">' + info['pos'] + '</td>',
                 '<td class="instrument">' + info['instrument'] + '</td>',
+                '<td class="demultiplexing">' + info['demultiplexing'] + '</td>',
             '</tr>'].join('\n');
         })
 
@@ -84,7 +86,7 @@ $( document ).ready(function() {
 // Initialize sorting and searching javascript plugin
 function init_listjs (num_rows) {
     var options = {
-        valueNames: ['run_id', 'start_date', 'system', 'mode', 'chemistry', 'recipe', 'software_version', 'yield', 'flowcell', 'pos', 'instrument'],
+        valueNames: ['run_id', 'start_date', 'system', 'mode', 'chemistry', 'recipe', 'software_version', 'yield', 'flowcell', 'pos', 'instrument', 'demultiplexing'],
         page: num_rows  // Default is to show only 200 items at a time.
     };
     var featureList = new List('fc_table_div', options);

@@ -25,12 +25,15 @@ from status.projects import *
 from status.quotas import *
 from status.q30 import *
 from status.reads_per_lane import *
+from status.clusters_per_lane import *
 from status.reads_vs_qv import *
 from status.samples import *
 from status.sequencing import *
 from status.suggestion_box import *
 from status.testing import *
 from status.util import *
+
+import status.worksets
 
 class Application(tornado.web.Application):
     def __init__(self, settings):
@@ -44,6 +47,7 @@ class Application(tornado.web.Application):
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
             ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
+            ("/api/v1/charon_summary/([^/]*)$",CharonProjectHandler ),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
@@ -74,6 +78,7 @@ class Application(tornado.web.Application):
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
             ("/api/v1/plot/reads_per_lane.png", ReadsPerLanePlotHandler),
+            ("/api/v1/plot/clusters_per_lane.png", ClustersPerLanePlotHandler),
             ("/api/v1/plot/barcodes_vs_expected([^/]*)$", BarcodeVsExpectedPlotHandler),
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
@@ -110,9 +115,14 @@ class Application(tornado.web.Application):
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),
+            ("/api/v1/worksets", status.worksets.WorksetsDataHandler),
+            ("/api/v1/workset/([^/]*)$", status.worksets.WorksetDataHandler),
+            ("/api/v1/workset_search/([^/]*)$", status.worksets.WorksetSearchHandler),
+            ("/api/v1/workset_notes/([^/]*)$", status.worksets.WorksetNotesDataHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),
+            ("/clusters_per_lane", ClustersPerLaneHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
             ("/q30", Q30Handler),
@@ -131,6 +141,8 @@ class Application(tornado.web.Application):
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/sequencing", SequencingStatsHandler),
             ("/suggestion_box", SuggestionBoxHandler),
+            ("/worksets", status.worksets.WorksetsHandler),
+            ("/workset/([^/]*)$", status.worksets.WorksetHandler),
             (r'.*', BaseHandler)
         ]
 
@@ -149,6 +161,7 @@ class Application(tornado.web.Application):
             self.gs_users_db = couch["gs_users"]
             self.cronjobs_db = couch["cronjobs"]
             self.suggestions_db = couch["suggestion_box"]
+            self.worksets_db=couch["worksets"]
         else:
             print settings.get("couch_server", None)
             raise IOError("Cannot connect to couchdb");
@@ -209,16 +222,11 @@ class Application(tornado.web.Application):
         
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
-        settings = {"debug": True,
-                    "static_path": "static",
-                    "cookie_secret": cookie_secret,
-                    "login_url": "/login",
-                    "google_oauth": {
-                        "key": self.oauth_key,
-                        "secret": settings["google_oauth"]["secret"]},
-                    "contact_person": settings['contact_person'],
-                    "redirect_uri": settings['redirect_uri']
-                     }
+        settings["debug"]= True
+        settings["static_path"]= "static"
+        settings["cookie_secret"]= cookie_secret
+        settings["login_url"]= "/login"
+        
 
         if options['develop']:
             tornado.autoreload.watch("design/application.html")
