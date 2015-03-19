@@ -1239,7 +1239,7 @@ function load_charon_summary(){
           $('#tab_charon_data').html("This project has no data in Charon.");
       }else{
           $('#charon_tab_link').show();
-          table="<p>This data comes from <a href='http://charon.scilifelab.se'>Charon</a></p>'"
+          table="<p>This data comes from <a href='http://charon.scilifelab.se'>Charon</a></p>"
           table+="<dl class='dl-horizontal dl-wide'>"
           table+="<dt>Total amount of samples</dt><dd><span class='badge'>"+data['tot']+"</span></dd>";
           table+="<dt>Sequenced samples</dt><dd><span class='badge'>"+data['seq']+"</span></dd>";
