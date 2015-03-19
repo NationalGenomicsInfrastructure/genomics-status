@@ -17,6 +17,7 @@ $(document).ready(function() {
     load_samples_table();
     load_running_notes();
     load_links();
+    load_charon_summary();
   });
 
   // Prevent traditional html submit function
@@ -1231,4 +1232,27 @@ function old_project_warning(warndate_raw){
     $('#old_project_warning').show();
     $('#old_project_warning').attr('title', 'This project was created before '+warndate_raw+'.<br>Genomics Status may be inaccruate.');
   }
+}
+function load_charon_summary(){
+  $.getJSON("/api/v1/charon_summary/"+ project, function(data) {
+      if (data['tot']==0){
+          $('#tab_charon_data').html("This project has no data in Charon.");
+      }else{
+          table="<table class='table table-bordered table-striped'>";
+          table+="<tr><td>Total amount of samples</td><td>"+data['tot']+"</td></tr>";
+          table+="<tr><td>Sequenced samples</td><td>"+data['seq']+"</td></tr>";
+          table+="<tr><td>Analyzed samples</td><td>"+data['ana']+"</td></tr>";
+          table+="<tr><td>Successful Analysis</td><td>"+data['passed']+"</td></tr>";
+          table+="<tr><td>Failed Analysis</td><td>"+data['failed']+"</td></tr>";
+          table+="<tr><td>Running Analysis</td><td>"+data['runn']+"</td></tr>";
+          table+="<tr><td>Number of Human Genomes covered</td><td>"+data['hge']+"</td></tr>";
+          table+="<table>";
+          $('#tab_charon_data').html(table);
+
+      }
+
+
+  });
+
+
 }

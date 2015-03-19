@@ -47,6 +47,7 @@ class Application(tornado.web.Application):
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
             ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
+            ("/api/v1/charon_summary/([^/]*)$",CharonProjectHandler ),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
