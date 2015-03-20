@@ -30,7 +30,7 @@
 <body>
 <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container-fluid">
-        
+
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#genstat-main-nav-collapse">
                 <span class="sr-only">Toggle navigation</span>
@@ -40,8 +40,13 @@
             </button>
             <a class="navbar-brand" href="/">Genomics-Status</a>
         </div>
-        
+
         <div class="collapse navbar-collapse" id="genstat-main-nav-collapse">
+            <form class="navbar-form navbar-left" role="search">
+                <div class="form-group statusdb-search" id="navbar-searchbar">
+                    <input type="text" class="form-control typeahead" placeholder="Search">
+                </div>
+            </form>
             <ul class="nav navbar-nav navbar-right">
                 <li class="dropdown" id="production">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#production">Production <span class="caret"></span></a>
@@ -107,6 +112,7 @@
     <p><a href="/">Genomics Status</a></p>
     <p>Something broken or have an idea for an improvement? Please <a href="/suggestion_box">let us know</a>.</p>
 </div>
+<script src="/static/js/typeahead.bundle.min.js"></script>
 <script src="/static/js/base.js"></script>
 </body>
 </html>
