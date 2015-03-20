@@ -34,10 +34,6 @@ $(document).ready(function() {
     // Show the page   
     $('#loading_spinner').hide();
     $('#page_content').show();
-    
-
-    // Load the page content
-    load_undefined_columns();
   });
   
   // Prevent traditional html submit function
@@ -55,6 +51,7 @@ function load_table() {
   $("#project_table_body").html('<tr><td colspan="'+columns.length+'" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
 
     url="/api/v1/projects?list=" + projects_page_type;
+    // Date filtering
     if ($("#OpenDateSlider").dateRangeSlider("values").min !==$("#OpenDateSlider").dateRangeSlider("bounds").min ||
        $("#OpenDateSlider").dateRangeSlider("values").max !==$("#OpenDateSlider").dateRangeSlider("bounds").max ){
         old_open_date=$("#OpenDateSlider").dateRangeSlider("values").min.getFullYear()+'-'+('0'+($("#OpenDateSlider").dateRangeSlider("values").min.getMonth()+1)).slice(-2)+'-'+('0'+$("#OpenDateSlider").dateRangeSlider("values").min.getDate()).slice(-2);
@@ -73,10 +70,23 @@ function load_table() {
         new_close_date=$("#CloseDateSlider").dateRangeSlider("values").max.getFullYear()+'-'+('0'+($("#CloseDateSlider").dateRangeSlider("values").max.getMonth()+1)).slice(-2)+'-'+('0'+$("#CloseDateSlider").dateRangeSlider("values").max.getDate()).slice(-2);
         url=url+"&oldest_close_date="+old_close_date+"&youngest_close_date="+new_close_date;
        }
+    
+  //Current loaded fields :
+  var fields= [];
+  $("#Filter .filterCheckbox").each(function() {
+    fields.push($(this).attr('name'));
+  });
   return $.getJSON(url, function(data) {
     $("#project_table_body").empty();
     var size = 0;
+    undefined_fields=[];
     $.each(data, function(project_id, summary_row) {
+      $.each(summary_row, function(key,value){
+        //this tracks the fields existing in our projects objects, but not present in the filter tab yet.
+        if ($.inArray(key, undefined_fields) == -1 && $.inArray(key, fields) == -1 ){
+          undefined_fields.push(key);
+        }
+      });
       size++;
       var tbl_row = $('<tr>');
       $.each(columns, function(i, column_tuple){
@@ -109,6 +119,7 @@ function load_table() {
       }
       $("#project_table_body").append(tbl_row); 
     });
+    load_undefined_columns(undefined_fields) 
     
     // Initialise the Javascript sorting now that we know the number of rows
     init_listjs(size, columns);
@@ -129,13 +140,10 @@ function load_table_head(columns){
 }
 
 
-
-
-// Undefined columns handled here
-function load_undefined_columns() {
-  return $.getJSON("/api/v1/projects_fields?undefined=true&project_list=" + projects_page_type, function(data) {
+// Undefined columns handled here now
+function load_undefined_columns(cols) {
     var columns_html = "";
-    $.each(data, function(column_no, column) {
+    $.each(cols, function(col_id, column) {
       $("#undefined_columns").append('<div class="checkbox">'+
           '<label>'+
             '<input type="checkbox" class="filterCheckbox" data-columngroup="undefined-columns" data-displayname="'+column+'" name="'+column+'" id="undefined-columns-'+column+'">'+
@@ -143,9 +151,7 @@ function load_undefined_columns() {
           '</label>'+
         '</div>');
     });
-  });
 };
-
 
 
 // Initialize sorting and searching javascript plugin
