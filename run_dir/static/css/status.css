@@ -202,7 +202,7 @@ These styles are specific to a single page or element. Each page should
 have it's own subheading under this section.
  ######################################################################## */
 
-/* 
+/*
 === Homepage ===
 */
 .homepage-ctas .well { text-align:center; }
@@ -225,6 +225,7 @@ have it's own subheading under this section.
   vertical-align:top;
 }
 #homepage-searchbar .twitter-typeahead { width: 422px; }
+#navbar-searchbar .twitter-typeahead { background-color: #FFFFFF; }
 
 /* .tt = twitter typeahead styles. For homepage search box */
 .input-spinner { margin-left:-35px; }
@@ -274,12 +275,12 @@ have it's own subheading under this section.
 	position: relative;
 	overflow: hidden;
 }
-.fade-read-more { 
-	position: absolute; 
+.fade-read-more {
+	position: absolute;
 	bottom: 0; left: 0;
-	width: 100%; 
-	text-align: center; 
-	margin: 0; padding: 30px 0; 
+	width: 100%;
+	text-align: center;
+	margin: 0; padding: 30px 0;
 	background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, transparent),color-stop(1, white));
   background-image: -webkit-linear-gradient(top, transparent, white);
   background-image: -moz-linear-gradient(top, transparent, white);
@@ -610,7 +611,7 @@ These classes are cut and pasted wholesale into here from other packages.
   cursor:move;
   cursor:grab;
   cursor: -moz-grab;
-  
+
   -webkit-box-shadow: inset 0 2px 6px RGBA(0,0,0,0.5);
   -moz-box-shadow: inset 0 2px 6px RGBA(0,0,0,0.5);
   box-shadow: inset 0 2px 6px RGBA(0,0,0,0.5);;
@@ -646,7 +647,7 @@ These classes are cut and pasted wholesale into here from other packages.
 .ui-editRangeSlider .ui-rangeSlider-label{}
 
 .ui-rangeSlider-label-inner{
- 
+
   position: absolute;
   top: 100%;
   left: 50%;
@@ -674,8 +675,8 @@ These classes are cut and pasted wholesale into here from other packages.
   right:10px;
 }
 
-.ui-rangeSlider .ui-ruler-tick { 
-  float: left; 
+.ui-rangeSlider .ui-ruler-tick {
+  float: left;
 }
 
 .ui-rangeSlider .ui-ruler-scale0 .ui-ruler-tick-inner{
