@@ -140,10 +140,14 @@ class ProjectsBaseDataHandler(SafeHandler):
         if not filter_projects == 'all':
             prefiltered_projects= OrderedDict()
             for p_id, p_info in projects.iteritems():
+
                 if 'aborted' not in p_info:
                     prefiltered_projects[p_id] = p_info
+                else:
+                    if filter_projects == 'aborted':
+                        filtered_projects[p_id]=p_info
         else:
-            prefiltered_projects=projects
+            filtered_projects=projects
 
         if filter_projects == 'pending':
             for p_id, p_info in prefiltered_projects.iteritems():
