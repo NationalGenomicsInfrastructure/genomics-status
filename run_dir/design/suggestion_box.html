@@ -11,7 +11,7 @@ Dependent on /static/js/suggestion_box.js
 {% block stuff %}
 
 
-  
+
 <h1 id="page_title">Suggestion Box</h1>
 
 <div class="row">
@@ -107,7 +107,7 @@ Dependent on /static/js/suggestion_box.js
       </div>
     </form>
   </div>
-  
+
   <div class="col-md-6">
     <legend>List of existing suggestions</legend>
     <p>Click on a suggestion title to go to it's corresponding Trello card.
@@ -128,10 +128,15 @@ Dependent on /static/js/suggestion_box.js
 </div>
 
 
-
-<div class="modal hide fade" id="processingModal">
-    <div class="modal-body .text-center" id="modalBody"></div>
+<div class="modal fade" id="processingModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body" id="processingModalBody">
+      </div>
+    </div>
+  </div>
 </div>
+
 
 <script src="/static/js/jquery.validate.js"></script>
 <script src="/static/js/suggestion_box.js" id="suggestions_box-js"></script>
