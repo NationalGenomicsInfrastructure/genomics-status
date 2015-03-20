@@ -76,7 +76,7 @@ $("#suggestionForm").validate({
     .done(function() {
       $("#modalBody").html("Suggestion processed correctly! <i class='icon-ok'></i>");
       fill_suggestions_table();
-      document.getElementById('suggestionForm').reset();
+      $("#suggestionForm").trigger('reset');
     })
     .fail(function() {
       $("#modalBody").html("Ops... something went wrong, please try it again! <i class='icon-thumbs-down'></i>");
