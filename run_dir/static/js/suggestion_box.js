@@ -69,7 +69,7 @@ $.validator.setDefaults({
 //Generate alert when POSTing and refresh suggestions table
 $("#suggestionForm").validate({
   submitHandler: function(form) {
-    var spinnerText = "<div style=\"text-align:center; margin:20px 0;\"><span class=\"glyphicon glyphicon-refresh glyphicon-spin\"></span>  Processing your suggestion..</div>"
+    var spinnerText = '<div style="text-align:center; margin:20px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Processing your suggestion..</div>'
     $('#processingModalBody').html(spinnerText);
     $('#processingModal').modal('toggle');
     $.post('/suggestion_box', $('#suggestionForm').serialize())
