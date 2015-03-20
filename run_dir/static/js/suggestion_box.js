@@ -9,14 +9,14 @@ function fill_suggestions_table() {
     $("#suggestionsTableBody").empty();
     var activeCards = [];
     var archivedCards = [];
-    
+
     $.each(data, function(date, card_info) {
       // Get the information from the API call
       var card_name = card_info[0];
       var card_link = '<a target="_blank" href="' + card_info[1] + '">';
       var archived = card_info[2];
       var card_date = date.split('T')[0] + ' at ' + date.split('T')[1].split('.')[0];
-      
+
       // Swap out the brackets for a bootstrap label
       var label_class = 'default';
       if(card_name.indexOf('Information Management') > 0){ label_class = 'info'; }
@@ -25,7 +25,7 @@ function fill_suggestions_table() {
       if(card_name.indexOf('Bioinfo') > 0){ label_class = 'warning'; }
       if(card_name.indexOf('Meetings') > 0){ label_class = 'primary'; }
       card_name = card_name.replace(/\((.+)\)/g, '<span class="label label-'+label_class+'">$1</span>');
-      
+
       // Push the row HTML to the applicable arrays
       if(archived) {
           archivedCards.push('<tr class="success">'+
@@ -40,10 +40,13 @@ function fill_suggestions_table() {
                        '</tr>');
       }
     });
-    
+
     // append to the DOM
     $('#suggestionsTableBody').append(activeCards.join('\n'));
     $('#suggestionsTableBody').append(archivedCards.join('\n'));
+
+    // Hide processing modal
+    $('#processingModal').modal('hide');
   });
 };
 
@@ -66,20 +69,17 @@ $.validator.setDefaults({
 //Generate alert when POSTing and refresh suggestions table
 $("#suggestionForm").validate({
   submitHandler: function(form) {
-    var spinnerText = "<div class='test_padding'> \
-                        <span class='icon-refresh glyphicon-refresh-animate'></span>  Processing your suggestion... \
-                      </div>"
-    $('#modalBody').html(spinnerText);
+    var spinnerText = "<div style=\"text-align:center; margin:20px 0;\"><span class=\"glyphicon glyphicon-refresh glyphicon-spin\"></span>  Processing your suggestion..</div>"
+    $('#processingModalBody').html(spinnerText);
     $('#processingModal').modal('toggle');
     $.post('/suggestion_box', $('#suggestionForm').serialize())
     .done(function() {
       $("#modalBody").html("Suggestion processed correctly! <i class='icon-ok'></i>");
+      fill_suggestions_table();
+      document.getElementById('suggestionForm').reset();
     })
     .fail(function() {
       $("#modalBody").html("Ops... something went wrong, please try it again! <i class='icon-thumbs-down'></i>");
-    })
-    .always(function() {
-      fill_suggestions_table();
     })
   }
 });
