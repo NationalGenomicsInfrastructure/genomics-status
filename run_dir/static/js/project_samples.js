@@ -9,7 +9,7 @@ var project = $('#projects-js').attr('data-project');
 var ordered_reads = 0.0;
 
 $(document).ready(function() {
-  
+
   // Initialise everything - order is important :)
   $.when(load_presets()).done(function(){
     load_undefined_info();
@@ -24,7 +24,7 @@ $(document).ready(function() {
   $('#Search-form').submit(function(e){
     e.preventDefault();
   });
-  
+
   $('body').on('click', '.search-action', function(e) {
     // Stop the checkbox from firing if clicked, plus stop bubbling
     e.stopPropagation();
@@ -44,11 +44,11 @@ $(document).ready(function() {
     }
   });
 
-  //Show user communication tab. Loading 
+  //Show user communication tab. Loading
   $('#tab_communication').click(function (e) {
     load_tickets();
   });
-  
+
   // Caliper buttons click listener
   $("body").on('click', '.caliper-thumbnail',  function(e) {
       e.preventDefault();
@@ -161,19 +161,19 @@ function load_presets() {
     else {
       $('#user_presets_dropdown').append('No user presets');
     }
-    
+
     // Check default checkboxes
     if (!$("#Filter :checked").length) {
       reset_default_checkboxes();
     }
-    
+
   });
 }
 
 
 function select_from_preset(preset_type, preset) {
   $.getJSON('/api/v1/presets?presets_list=sv_presets', function (data) {
-    
+
     //First uncheck everything
     $('#default_preset_buttons button.active').removeClass('active');
     $('#Filter input:checkbox').removeAttr('checked');
@@ -186,11 +186,11 @@ function select_from_preset(preset_type, preset) {
         }
       }
       prettyobj(preset).addClass('active');
-      
+
     } else if (preset_type == "users_presets_dropdown") {
       // TODO - implement this
     }
-    
+
     // Apply the filter
     load_samples_table();
   });
@@ -242,7 +242,7 @@ $("#link_form").submit(function(e) {
         console.log( "Couldn't insert link: " + err );
         alert( "Error - Couldn't insert link ..  Is there something weird about this project in the LIMS?" );
     });
-    
+
   }
   else if(!$.browser.chrome) {
     //Non-chrome users might not get a useful html5 message
@@ -253,20 +253,20 @@ $("#link_form").submit(function(e) {
 
 function load_tickets() {
   if ($('#com_accordion').children().length == 0) {
-    
+
     //Get the project name from the header of the page
     var p_name = $("#project_name").attr('p_name');
 
     $.getJSON("/api/v1/project/" + project + "/tickets?p_name=" + p_name, function(data){
-      
+
       if ($.isEmptyObject(data)) {
         $('#tab_com_content').html('<div class="alert alert-info">No Zendesk tickets available for ' + p_name + '</div>');
       } else {
-        // Javascript Object order is not guaranteed, but we want to show the 
+        // Javascript Object order is not guaranteed, but we want to show the
         // most recent issued ticket first
         $.each(Object.keys(data).reverse(), function(_, k) {
           var v = data[k];
-          
+
           var label_class = 'default';
           if(v['status'] == 'open'){ label_class = 'danger'; v['status'] = 'Open'; }
           if(v['status'] == 'pending'){ label_class = 'info'; v['status'] = 'Pending'; }
@@ -275,16 +275,16 @@ function load_tickets() {
           if(v['status'] == 'closed'){ label_class = 'success'; v['status'] = 'Closed'; }
           var title = '<span class="pull-right">'+
                          '<a class="text-muted" data-toggle="collapse" data-parent="#accordion" href="#zendesk_ticket_'+k+'">'+
-                           v['created_at'].split('T')[0] + 
+                           v['created_at'].split('T')[0] +
                          '</a> &nbsp; <a href="https://ngisweden.zendesk.com/agent/#/tickets/'+k+'" target="_blank" class="btn btn-primary btn-xs">View ticket on ZenDesk</a>'+
                       '</span>' +
                       '<h4 class="panel-title">'+
                         '<span class="label label-' + label_class + '">' + v['status'] + '</span> ' +
                         '<a data-toggle="collapse" data-parent="#accordion" href="#zendesk_ticket_'+k+'">'+
-                          '#'+k + ' - ' + v['subject'] + 
+                          '#'+k + ' - ' + v['subject'] +
                         '</a>'+
                       '</h4>';
-          
+
           var ticket = '<div class="panel panel-default">' +
                         '<div class="panel-heading">'+title+'</div>'+
                         '<div id="zendesk_ticket_'+k+'" class="panel-collapse collapse"><div class="panel-body">';
@@ -302,16 +302,16 @@ function load_tickets() {
                         '<div class="panel-heading">'+updated_at.toGMTString() + panel_label + '</div>'+
                         '<div class="panel-body"><pre>'+c['body']+'</pre></div>'+
                       '</div>';
-            
+
           });
           $('#com_accordion').append(ticket);
         });
       }
-      
+
       // Hide the loading modal
       $('#zendesk_loading_spinner').hide();
       $('#com_accordion').show();
-      
+
     }).fail(function( jqxhr, textStatus, error ) {
         var err = textStatus + ", " + error;
         console.log( "ZenDesk tickets request failed: " + err );
@@ -413,30 +413,30 @@ function load_all_udfs(){
   $.getJSON("/api/v1/project_summary/" + project, function (data) {
     $('#loading_spinner').hide();
     $('#page_content').show();
-    
+
     // Project not found
     if(Object.getOwnPropertyNames(data).length == 0){
       $('#page_content').html('<h1>Error - Project Not Found</h1><div class="alert alert-danger">Oops! Sorry about that, we can\'t find the project <strong>'+project+'</strong></div>');
       return false;
     }
-    
+
     $.each(data, function(key, value) {
       // Rename a few fields to something more sane
       if(key == 'Aborted'){ key = 'aborted_samples'; }
       if(key == 'In Progress'){ key = 'in_progress_samples'; }
       if(key == 'Finished'){ key = 'finished_samples'; }
-      
-      
+
+
       // Set the project name and status
       if (prettify(key) == 'project_name'){
         if (!data['portal_id']) {
-          project_title = project + ", " + data['project_name'] + " (no order in NGI portal)"; 
+          project_title = project + ", " + data['project_name'] + " (no order in NGI portal)";
         } else {
-          project_title = project + ", " + data['project_name'] + ' &nbsp; <small>NGI Portal: <a href="https://portal.scilifelab.se/genomics/node/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>'; 
+          project_title = project + ", " + data['project_name'] + ' &nbsp; <small>NGI Portal: <a href="https://portal.scilifelab.se/genomics/node/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>';
         }
         prettyobj(key).html(project_title);
         prettyobj(key).attr('p_name', data['project_name']);
-        
+
         // Decide project status (and color) based on the project dates
         var open_date = data["open_date"];
         var queue_date = data["queued"];
@@ -468,12 +468,12 @@ function load_all_udfs(){
           $('.aborted-dates').hide();
         }
       }
-      
+
       // Make the project contact address clickable
       else if (prettify(key) == 'contact'){
          $('#contact').html('<a href="mailto:'+value+'">'+value+'</a>');
       }
-        
+
       // Colour code the project type
       else if (prettify(key) == 'type'){
         if(value == 'Production'){
@@ -484,13 +484,13 @@ function load_all_udfs(){
           $('#type').html('<span class="label label-default">'+value+'</span>');
         }
       }
-      
+
       // Hide the BP Date if no BP
       else if (prettify(key) == 'best_practice_bioinformatics' && value == 'No'){
         $('.bp-dates').hide();
         safeobj(key).html(auto_format(value));
       }
-      
+
       // Make the comments render Markdown and make project IDs into links
       else if (prettify(key) == 'project_comment'){
         value = value.replace(/\_/g, '\\_');
@@ -501,9 +501,9 @@ function load_all_udfs(){
       // Create the links for review and display the banner
       else if (prettify(key) == 'pending_reviews'){
         $("#review_ids").html(value);
-        $("#review_alert").show(); 
+        $("#review_alert").show();
       }
-      
+
       // Pass / Fail sample counts
       else if (prettify(key) == 'passed_initial_qc' || prettify(key) == 'passed_library_qc'){
         var parts = value.split('/');
@@ -517,7 +517,7 @@ function load_all_udfs(){
           safeobj(key).html('<span class="label label-default">'+value+'</span>');
         }
       }
-      
+
       // Everything else
       else {
 			  if(prettyobj(key).length > 0){
@@ -529,7 +529,7 @@ function load_all_udfs(){
 				}
       }
     });
-    
+
 		// Check that we haven't hidden any fields that have content
 		if($('#best_practice_analysis_completed').text() != '-'){
 			$('.bp-dates').show();
@@ -537,30 +537,30 @@ function load_all_udfs(){
 		if($('#aborted').text() != '-'){
 			$('.aborted-dates').show();
 		}
-		
+
     // Everything has loaded - fix the missing 'days in production' if we can
     if($('#days_in_production').text() == '-' &&
         $('#open_date').text() != '-' &&
         $('#close_date').text() != '-'){
-          
+
       var openDate = new Date($('#open_date').text());
       var closeDate = new Date($('#close_date').text());
       var timeDiff = Math.abs(closeDate.getTime() - openDate.getTime());
       var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
       $('#days_in_production').text(diffDays);
-      
+
     }
-    
+
     // Make the page title reflect the page contents
     // Long string of functions is to remove <small>NGI Portal</small> text..
     document.title = $("#project_name").attr('p_name') + ' : Genomics Status';
-    		
+
 		// Make the cool timescale bar if we can
 		make_timescale();
-    
+
     // Warn users about old projects
     old_project_warning('2010-07-1');
-    
+
     // Check the height of the user comment
     check_fade_height();
   }).fail(function( jqxhr, textStatus, error ) {
@@ -625,19 +625,19 @@ function load_table_head(columns){
   var tbl_head = '<tr>';
   $.each(columns, function(i, column_tuple) {
     tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">';
-    
+
     if(column_tuple[0] == 'SciLife Sample Name') {
       tbl_head += '<abbr data-toggle="tooltip" title="SciLifeLab Sample Name">Sample</abbr>';
     } else if(column_tuple[0] == 'Prep Finished Date') {
       tbl_head += 'Prep Finished';
     } else if(column_tuple[0] == 'Library Validation Caliper Image') {
       tbl_head += '<abbr data-toggle="tooltip" title="Latest Library Validation Caliper Image">Caliper Image</abbr>';
-    } else if(column_tuple[0] == 'Million Reads Sequenced') { 
+    } else if(column_tuple[0] == 'Million Reads Sequenced') {
       tbl_head += '<abbr data-toggle="tooltip" title="Reads passing application QC criteria. If paired end, this is read pairs.">Million Reads Sequenced</abbr>';
     } else {
       tbl_head += column_tuple[0];
     }
-    
+
     tbl_head += '</th>';
   });
   tbl_head += '</tr>';
@@ -651,19 +651,19 @@ function load_samples_table() {
 
   // Display the loading spinner in the table
   $("#samples_table_body").html('<tr><td colspan="'+cols.length+'" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
-  
+
   // Print each sample
   $.getJSON("/api/v1/project/" + project, function (samples_data) {
     columns = read_current_filtering(true);
     var tbl_body = "";
     var size = 0;
-    
+
     // No samples
     if(Object.getOwnPropertyNames(samples_data).length == 0){
       $('#tab_samples_content').html('<div class="alert alert-info">Project <strong>'+project+'</strong> does not yet have any samples..</div>');
       return false;
     }
-    
+
     $.each(samples_data, function (sample, info) {
       size++;
       tbl_row = '<tr>';
@@ -673,7 +673,7 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             info[column_id] = round_floats(info[column_id], 2);
-            
+
             // Scilife Sample Name
             if (column_id == "scilife_name") {
               if(info[column_id] == 'Unexpectedbarcode'){
@@ -686,7 +686,7 @@ function load_samples_table() {
                             info[column_id] + '</a></td>';
               }
             }
-            
+
             // Sample run metrics is an array of links - link to flowcells page
             else if (column_id == 'sample_run_metrics') {
               tbl_row += '<td class="' + column_id + '">';
@@ -695,12 +695,12 @@ function load_samples_table() {
                 // Remove the lane number and barcode - eg 6_FCID_GTGAAA
                 fc = fc.substring(2);
                 fc = fc.replace(/_[ACTG]+$/,'');
-                tbl_row += '<samp class="nowrap"><a href="/flowcells/' + fc + '">' + 
+                tbl_row += '<samp class="nowrap"><a href="/flowcells/' + fc + '">' +
                 info[column_id][i] + '</a></samp><br>';
               }
               tbl_row += '</td>';
             }
-            
+
             // Library prep is an array of *Objects*
             else if (column_id == 'library_prep') {
               tbl_row += '<td class="' + column_id + '">';
@@ -711,17 +711,17 @@ function load_samples_table() {
               }
               tbl_row += '</td>';
             }
-            
+
             // Make sure that 'million reads' has two decimal places
             else if (column_id == 'total_reads_(m)' && typeof info[column_id] !== 'undefined'){
               tbl_row += '<td class="' + column_id + ' text-right">' + Number(info[column_id]).toFixed(2) + '</td>';
             }
-            
-            // everything else 
+
+            // everything else
             else {
               tbl_row += auto_samples_cell(column_id, info[column_id]);
             }
-            
+
           });
         }
         else if (subset == "initial-qc-columns" && info['initial_qc'] !== undefined) {
@@ -729,7 +729,7 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
-            
+
             // Caliper image
             if (column_id == 'caliper_image'){
                 tbl_row += '<td class="' + column_id + '">'+
@@ -739,7 +739,7 @@ function load_samples_table() {
                             '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+info['initial_qc'][column_id]+'" data-imgtype="Initial QC Caliper Image" data-samplename="'+info['scilife_name']+'"></a>'+
                           '</td>';
             }
-            
+
             // Remove the X from initial QC initials
             else if(column_id == 'initials'){
               var sig = info['initial_qc'][column_id];
@@ -750,13 +750,13 @@ function load_samples_table() {
                           '<span class="label label-default" data-toggle="tooltip" title="Original signature: '+info['initial_qc'][column_id]+'">'+
                               sig+'</span></td>';
             }
-            
-            
-            // everything else 
+
+
+            // everything else
             else {
               tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
             }
-            
+
           });
         }
         else if (subset == "library-prep-columns" && info['library_prep'] !== undefined) {
@@ -766,18 +766,18 @@ function load_samples_table() {
             tbl_row += '<td class="' + column_id + '">';
             $.each(info['library_prep'], function(library, info_library) {
               info_library[column_id] = round_floats(info_library[column_id], 2);
-              
+
               // Special case for workset_setup, which is a link to the LIMS
               if (column_id == "workset_setup" && info_library[column_id]) {
                 tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a href="http://genologics.scilifelab.se:8080/clarity/work-complete/';
                 tbl_row += info_library[column_id].split('-')[1] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
               }
-              
+
               // Make the reagent label use a samp tag
               else if (column_id == "reagent_label" && info_library[column_id]) {
                 tbl_row += '<samp class="nowrap">' + info_library[column_id] + '</samp><br>';
               }
-              
+
               else {
                 tbl_row += auto_format(info_library[column_id], true);
               }
@@ -785,7 +785,7 @@ function load_samples_table() {
             tbl_row += '</td>';
           });
         }
-        
+
         else if (subset == "library-validation-columns" && info['library_prep'] !== undefined) {
           $.each(fields, function(idx, column_tuple){
             var column_name = column_tuple[0];
@@ -805,7 +805,7 @@ function load_samples_table() {
                                    '</span>'+
                                    '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
                   }
-                  
+
                   // Remove the X from initial QC initials
                   else if(column_id == 'initials'){
                     var sig = validation_data[column_id];
@@ -814,7 +814,7 @@ function load_samples_table() {
                     }
                     tbl_row += '<span class="label label-default" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
                   }
-                  
+
                   // Everything else
                   else {
                     tbl_row += auto_format(validation_data[column_id], true);
@@ -824,7 +824,7 @@ function load_samples_table() {
             });
             tbl_row += '</td>';
           });
-        } 
+        }
         else if (subset == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
           $.each(fields, function(idx, column_tuple){
             var column_name = column_tuple[0];
@@ -843,8 +843,8 @@ function load_samples_table() {
             });
             tbl_row += '</td>';
           });
-        } 
-        
+        }
+
         // Details columns
         else {
           $.each(fields, function(idx, column_tuple){
@@ -858,13 +858,13 @@ function load_samples_table() {
       tbl_row += '</tr>';
       tbl_body += tbl_row;
     });
-    
+
     $("#samples_table_body").html(tbl_body);
-    
+
     // Initialise the table sorting
     var columns = read_current_filtering(false);
     init_listjs(size, columns);
-    
+
     // last step, update caliper images
     update_caliper();
   }).fail(function( jqxhr, textStatus, error ) {
@@ -891,7 +891,7 @@ function update_caliper(){
                 el.prev('.caliper_loading_spinner').remove();
                 el.removeClass('loading');
             });
-       }                                    
+       }
    }
  });
 }
@@ -907,12 +907,12 @@ function loadCaliperImageModal(target){
   if(prevTarget === undefined){
     prevTarget = $('#samples_table_body').find('.caliper-thumbnail:last').attr('id');
   }
-  
+
   $('#caliperModal .modal-header h3').html(samplename+' <small>'+imgtype+'</small>');
   if(data === undefined){
     $('#caliper_modal_image_wrapper').html('<p class="help-block text-center">Data still loading. Please try again in a moment..</p>');
   } else {
-    $('#caliper_modal_image_wrapper').html('<img src="'+data+'" title="'+name+'" />');  
+    $('#caliper_modal_image_wrapper').html('<img src="'+data+'" title="'+name+'" />');
   }
   $('#caliperModal .right').attr('href', '#'+nextTarget);
   $('#caliperModal .left').attr('href', '#'+prevTarget);
@@ -922,50 +922,50 @@ function loadCaliperImageModal(target){
 function auto_format(value, samples_table){
   // Default value for function
   samples_table = (typeof samples_table === "undefined") ? false : samples_table;
-  
+
   var orig = value;
   var returnstring;
   if(typeof value == 'string'){
     value = value.toLowerCase().trim();
   }
-  
+
   // Put all False / Failed / Fail into labels
-  if(value === false || 
+  if(value === false ||
 				(typeof value == 'string' && (
-            value == 'false' || 
-            value == 'failed' || 
-            value == 'fail' || 
-            value == 'none' || 
+            value == 'false' ||
+            value == 'failed' ||
+            value == 'fail' ||
+            value == 'none' ||
             value == 'no' ||
             value == 'no' ||
-            value == 'n/a' || 
+            value == 'n/a' ||
             value == 'aborted' ))){
     returnstring = '<span class="label label-danger sentenceCase">'+value+'</span> ';
   }
 
   // Put all False / Failed / Fail into labels
-  else if(value === true || 
+  else if(value === true ||
 				(typeof value == 'string' && (
-            value == 'true' || 
-            value == 'passed' || 
-            value == 'pass' || 
-            value == 'yes' || 
+            value == 'true' ||
+            value == 'passed' ||
+            value == 'pass' ||
+            value == 'yes' ||
             value == 'finished' ||
             value == 'p'))){
     returnstring = '<span class="label label-success sentenceCase">'+value+'</span> ';
   }
-  
+
   // Warning labels
   else if(typeof value == 'string' && (
             value == 'in progress')){
     returnstring = '<span class="label label-warning sentenceCase">'+value+'</span> ';
   }
-  
+
   // Dates
   else if(samples_table && typeof value == 'string' && value.split('-').length == 3 && value.length == 10){
     returnstring = '<span class="label label-date sentenceCase">'+value+'</span> ';
   }
-  
+
   // Put all undefined into labels
   else if((typeof value == 'string' && value == 'undefined') ||
           (typeof value == 'string' && value == 'null') ||
@@ -973,11 +973,11 @@ function auto_format(value, samples_table){
           typeof value == 'undefined' || typeof value == 'null' || typeof value == 'NaN'){
     returnstring = '<span class="label label-undefined sentenceCase">'+value+'</span> ';
   }
-  
+
   else {
     returnstring = orig;
   }
-  
+
   if(samples_table){
     return returnstring + '<br>';
   } else {
@@ -994,14 +994,14 @@ function auto_samples_cell (id, val){
     });
     return cell + '</td>';
   }
-  
+
   // Numeric value - right align
   else if (!isNaN(parseFloat(val)) && isFinite(val)){
     // Give numbers spaces in thousands separator
     val = val.toLocaleString(['fr-FR', 'en-US']);
     return '<td class="' + id + ' text-right">' + auto_format(val, true) + '</td>';
   }
-  
+
   // Single value
   else {
     return '<td class="' + id + '">' + auto_format(val, true) + '</td>';
@@ -1109,7 +1109,7 @@ function make_timescale_bar(tsid, include_orderdates){
   } else {
     date_ids = production_date_ids;
   }
-  
+
 	var oldest = new Date();
   var opendate = new Date();
   var prodstart = new Date();
@@ -1150,7 +1150,7 @@ function make_timescale_bar(tsid, include_orderdates){
 			}
 		}
 	});
-	
+
   // Which colours and timestops are we using?
   var cols = ['#82BFFF', '#5785FF', '#FFC521', '#FA4C47'];
   var colstops = [
@@ -1175,18 +1175,18 @@ function make_timescale_bar(tsid, include_orderdates){
       gradcols.push(cols[j-1]+' '+lastpercent+'%, '+cols[j-1]+' '+percent+'%');
       lastpercent = percent;
     });
-    
+
     // Make the bar coloured
 		$(tsid).css('height', '2px');
 		$(tsid).css("background-image", "-webkit-linear-gradient(left, "+gradcols.join(',')+")");
 		$(tsid).css("background-image", "-moz-linear-gradient(right, "+gradcols.join(',')+")");
 		$(tsid).css("background-image", "-o-linear-gradient(right, "+gradcols.join(',')+")");
 		$(tsid).css("background-image", "linear-gradient(to right, "+gradcols.join(',')+")");
-	
+
 		// Put date objects onto the timeline
 		$.each(dates, function(rawdate, names){
 			var dateobj = new Date(rawdate);
-      
+
       // Find the colour for this date
       var thiscol = cols[0];
       $.each(colstops, function(j, thetime){
@@ -1198,7 +1198,7 @@ function make_timescale_bar(tsid, include_orderdates){
           }
         }
       });
-      
+
       // Write the hover text
       var timeDiff = dateobj.getTime() - prodstart.getTime();
       var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
@@ -1211,16 +1211,16 @@ function make_timescale_bar(tsid, include_orderdates){
          if(diffDays > 0){ diffdaystext += diffDays + 'd'; }
          diffdaystext += ' since queue date</em>';
       }
-      
+
       // Work out where to place the tick and plot it
 			var percent = ((dateobj.getTime() - oldest.getTime()) / range) * 100;
 			$(tsid).append('<div class="timelineTarget" style="left:'+percent+'%;" data-datestamp="'+rawdate+'" data-toggle="tooltip" data-placement="bottom" title="'+rawdate+'<br><strong>'+names.join('</strong><br><strong>')+'</strong>'+diffdaystext+'"><div class="timelineTick" style="background-color:'+thiscol+';"></div></div>');
-      
+
       // Coloured borders next to dates in table
       $(':contains('+rawdate+')').filter(function(){ return $(this).children().length === 0;}).css('border-right', '2px solid '+thiscol).css('padding-right','5px');
 		});
 	}
-	
+
 }
 
 
@@ -1235,24 +1235,14 @@ function old_project_warning(warndate_raw){
 }
 function load_charon_summary(){
   $.getJSON("/api/v1/charon_summary/"+ project, function(data) {
-      if (data['tot']==0){
-          $('#tab_charon_data').html("This project has no data in Charon.");
-      }else{
-          $('#charon_tab_link').show();
-          table="<p>This data comes from <a href='http://charon.scilifelab.se'>Charon</a></p>"
-          table+="<dl class='dl-horizontal dl-wide'>"
-          table+="<dt>Total amount of samples</dt><dd><span class='badge'>"+data['tot']+"</span></dd>";
-          table+="<dt>Sequenced samples</dt><dd><span class='badge'>"+data['seq']+"</span></dd>";
-          table+="<dt>Analyzed samples</dt><dd><span class='badge'>"+data['ana']+"</span></dd>";
-          table+="<dt>Successful Analysis</dt><dd><span class='badge label-success'>"+data['passed']+"</span></dd>";
-          table+="<dt>Failed Analysis</dt><dd><span class='badge label-danger'>"+data['failed']+"</span></dd>";
-          table+="<dt>Running Analysis</dt><dd><span class='badge'>"+data['runn']+"</span></dd>";
-          table+="<dt>Number of Human Genomes covered</dt><dd><span class='badge'>"+data['hge']+"</span></dd>";
-          $('#tab_charon_data').html(table);
-
-      }
-
-
+      $('#charon-status').show();
+      $('#charon-status-tot').text(data['tot']);
+      $('#charon-status-seq').text(data['seq']);
+      $('#charon-status-ana').text(data['ana']);
+      $('#charon-status-passed').text(data['passed']);
+      $('#charon-status-failed').text(data['failed']);
+      $('#charon-status-runn').text(data['runn']);
+      $('#charon-status-hge').text(data['hge']);
   });
 
 

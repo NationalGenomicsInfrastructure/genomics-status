@@ -14,9 +14,9 @@
 <p>Genomics status displays information from multiple data sources. <span id="updated-status"></span></p>
 
 <form class="form-horizontal" role="form">
-    <div id="homepage-searchbar" class="form-group form-group-lg">
+    <div class="form-group form-group-lg statusdb-search" id="homepage-searchbar">
         <label for="typeahead-input" class="control-label">Search for Project, Workset or Flow Cell:</label>
-        <input id="typeahead-input" class="typeahead form-control input-lg" type="text" placeholder="Project, Workset or Flowcell Name / ID">
+        <input autofocus class="typeahead form-control input-lg" type="text" placeholder="Project, Workset or Flowcell Name / ID">
         <span class="glyphicon glyphicon-refresh glyphicon-spin input-spinner subtle-spinner"></span>
     </div>
 </form>
@@ -40,7 +40,7 @@
 			<p><a class="btn btn-primary"  href="/projects/reception_control">Reception Control</a></p>
 		</div>
 	</div>
-  
+
 	<div class="col-lg-2 col-sm-4 col-xs-6">
 		<div class="well">
 			<h3><a href="/projects/ongoing"><i class="glyphicon glyphicon-road"></i></a></h3>
@@ -62,27 +62,27 @@
 </div>
 <div class="alert alert-info">
     <p style="text-align:center;">Want to see something different here? Let us know on the
-      <a href="/suggestion_box">suggestions page</a>! We're currently collecting feedback on 
+      <a href="/suggestion_box">suggestions page</a>! We're currently collecting feedback on
       how the homepage should look..</p>
 </div>
 
 <div class="row">
 	<div class="col-lg-4 justified">
 		<h3>Introduction</h3>
-		<p>In various stages of data production in the genomics platform metadata about this 
-		data is created, and stored in a database (known as StatusDB). This service provides 
-		an interface to commonly accessed data, and functionality to generate plots regarding 
+		<p>In various stages of data production in the genomics platform metadata about this
+		data is created, and stored in a database (known as StatusDB). This service provides
+		an interface to commonly accessed data, and functionality to generate plots regarding
 		the statistics of this data.</p>
 
 		<p>You can find the governing document describing Genomics Status in AM Systems,
       document number <strong>1316</strong>.</p>
 
 		<p>Much of the data comes from the LIMS via a script called PSUL. You can see when
-      this last run at the top of the homepage. For questions regarding this, contact 
+      this last run at the top of the homepage. For questions regarding this, contact
       <a href="mailto:maya.brandi@scilifelab.se">Maya Brandi</a> or
       <a href="mailto:denis.moreno@scilifelab.se">Denis Moreno</a>.</p>
 
-		<p>Data about current samples and flowcells are collected while generating statistics 
+		<p>Data about current samples and flowcells are collected while generating statistics
 		within the data processing pipeline. Most of the scripts which generate these
     statistics and put them in the database have been were created by Per Unneberg
     (as part of the <code>pm</code> package).</p>
@@ -90,12 +90,12 @@
 		<p>Due to changes in data structure, be wary of any projects or samples from
       before July 1<sup>st</sup> 2013.</p>
 
-		<p>For general information about Genomics Status, or feature requests, contact 
-		<a href="mailto:guillermo.carrasco@scilifelab.se">Guillermo Carrasco</a> or 
+		<p>For general information about Genomics Status, or feature requests, contact
+		<a href="mailto:guillermo.carrasco@scilifelab.se">Guillermo Carrasco</a> or
     <a href="mailto:remi-andre.olsen@scilifelab.se">Remi-André Olsen</a>.<p>
 
 		<p>You can find the code for Genomics Status on <a href="https://github.com/scilifelab/status">Github</a>.</p>
-		
+
 	</div>
 	<div class="col-lg-8">
 		<h3>Latest Updated Data</h3>
@@ -112,7 +112,6 @@
 	</div>
 </div>
 
-<script src="/static/js/typeahead.bundle.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
     // Get the most recent updates
@@ -141,69 +140,6 @@ $(document).ready(function(){
     });
 
 
-
-    // Plug in the typeahead search box
-    var projectSearch = new Bloodhound({
-        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-        queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '/api/v1/project_search/%QUERY'
-    });
-    projectSearch.initialize();
-
-    var flowcellSearch = new Bloodhound({
-        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-        queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '/api/v1/flowcell_search/%QUERY'
-    });
-    flowcellSearch.initialize();
-    var worksetSearch = new Bloodhound({
-        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-        queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '/api/v1/workset_search/%QUERY'
-    });
-    worksetSearch.initialize();
- 
-    $('#homepage-searchbar .typeahead').typeahead({
-        minLength: 3,
-        highlight: true,
-    }, {
-        name: 'project-search',
-        displayKey: 'name',
-        source: projectSearch.ttAdapter(),
-        templates: {
-            empty: '<div class="empty-message">No projects found</div>'
-        }
-    }, {
-        name: 'flowcell-search',
-        displayKey: 'name',
-        source: flowcellSearch.ttAdapter(),
-        templates: {
-            empty: '<div class="empty-message">No flow cells found</div>'
-        }
-    },{
-        name: 'workset-search',
-        displayKey: 'name',
-        source: worksetSearch.ttAdapter(),
-        templates: {
-            empty: '<div class="empty-message">No Worksets found</div>'
-        }
-    }).bind('typeahead:selected', function(obj, datum, name) {      
-        var url = datum.url;
-        window.location.href = url;
-    });
-    
-    // Show and hide a spinner on the ajax event
-    $('.input-spinner').hide();
-    $(document).ajaxSend(function(event, jqXHR, settings) {
-        $('.input-spinner').show();
-    });
-
-    $(document).ajaxComplete(function(event, jqXHR, settings) {
-        $('.input-spinner').hide();
-    });
-
-
-
     // Find out when the update scripts will next run
     $.getJSON('/api/v1/last_psul', function(data){
         var status = data['st']
@@ -226,7 +162,7 @@ $(document).ready(function(){
             console.log('Last PSUL update check failed. Returned "'+data['status']+'"');
         }
     });
-    
+
 });
 </script>
 
