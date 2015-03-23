@@ -637,12 +637,13 @@ class CharonProjectHandler(SafeHandler):
     def get(self, projectid):
         try:
             url="{}/api/summary?projectid={}".format(self.application.settings['charon']['url'], projectid)
+            headers = {'X-Charon-API-token': '{}'.format(self.application.settings['charon']['api_token'])}
         except KeyError:
             url="http://charon.scilifelab.se/api/summary?projectid={}".format(projectid)
-        print url
-        r = requests.get(url)
+            headers={}
+        r = requests.get(url, headers = headers )
         if r.status_code == requests.status_codes.codes.OK:
             self.write(r.json())
         else:
             self.set_status(400)
-            self.finish('<html><body>There was a problem connecting to charon, please try it again later.</body></html>')
+            self.finish('<html><body>There was a problem connecting to charon, please try it again later. {}</body></html>'.format(r.reason))
