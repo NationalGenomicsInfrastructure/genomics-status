@@ -20,13 +20,13 @@ class QuotaHandler(SafeHandler):
     """
     def get(self, project):
         t = self.application.loader.load("quota.html")
-        self.write(t.generate(project=project, 
+        self.write(t.generate(project=project,
                               user=self.get_current_user_name()))
 
 
 class QuotaDataHandler(SafeHandler):
     """ Serves a time series for storage quota usage of a given UPPNEX
-    project. 
+    project.
 
     Loaded through /api/v1/quotas/(\w+)?
     """
@@ -47,15 +47,20 @@ class QuotaDataHandler(SafeHandler):
         gb = 1073741824
         data = []
         for row in r_list:
-            if row.value:
-                y = row.value[0]
-                limit = row.value[1]
-            else:
-                y = 0
-                limit = 0
-            data.append({"x": int(time.mktime(parser.parse(date_getter(row)).timetuple())),
-                         "y": y * gb,
-                         "limit": limit * gb})
+            try:
+                if row.value:
+                    y = row.value[0]
+                    limit = row.value[1]
+                else:
+                    y = 0
+                    limit = 0
+                data.append({"x": int(time.mktime(parser.parse(date_getter(row)).timetuple())),
+                             "y": y * gb,
+                             "limit": limit * gb})
+            except TypeError:
+                # Some nobackup areas were not accessible in Uppmax at some point,
+                # and that caused the usage value to be None. Skip those.
+                pass
 
         d = dict()
         d["data"] = data
