@@ -1243,6 +1243,9 @@ function load_charon_summary(){
       $('#charon-status-failed').text(data['failed']);
       $('#charon-status-runn').text(data['runn']);
       $('#charon-status-hge').text(data['hge']);
+  }).fail(function( jqxhr, textStatus, error ) {
+      var err = textStatus + ", " + error;
+      console.log( "Couldn't load charon data: " + err );
   });
 
 
