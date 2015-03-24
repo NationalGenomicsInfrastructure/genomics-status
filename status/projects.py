@@ -138,40 +138,44 @@ class ProjectsBaseDataHandler(SafeHandler):
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
         if not filter_projects == 'all':
-            aborted_projects = OrderedDict()
+            prefiltered_projects= OrderedDict()
             for p_id, p_info in projects.iteritems():
+
                 if 'aborted' not in p_info:
-                    filtered_projects[p_id] = p_info
+                    prefiltered_projects[p_id] = p_info
+                else:
+                    if filter_projects == 'aborted':
+                        filtered_projects[p_id]=p_info
         else:
             filtered_projects=projects
 
         if filter_projects == 'pending':
-            for p_id, p_info in projects.iteritems():
+            for p_id, p_info in prefiltered_projects.iteritems():
                 if not 'open_date' in p_info:
                     filtered_projects[p_id] = p_info
 
         elif filter_projects == 'open':
-            for p_id, p_info in projects.iteritems():
+            for p_id, p_info in prefiltered_projects.iteritems():
                 if 'open_date' in p_info:
                     filtered_projects[p_id] = p_info
 
         elif filter_projects == 'reception_control':
-            for p_id, p_info in projects.iteritems():
+            for p_id, p_info in prefiltered_projects.iteritems():
                 if 'open_date' in p_info and not 'queued' in p_info:
                     filtered_projects[p_id] = p_info
 
         elif filter_projects == 'ongoing':
-            for p_id, p_info in projects.iteritems():
+            for p_id, p_info in prefiltered_projects.iteritems():
                 if 'queued' in p_info and not 'close_date' in p_info:
                     filtered_projects[p_id] = p_info
 
         elif filter_projects == 'closed':
-            for p_id, p_info in projects.iteritems():
+            for p_id, p_info in prefiltered_projects.iteritems():
                 if 'close_date' in p_info :
                     filtered_projects[p_id] = p_info
 
         elif filter_projects == "pending_review":
-            for p_id, p_info in projects.iteritems():
+            for p_id, p_info in prefiltered_projects.iteritems():
                 if 'pending_reviews' in p_info:
                     filtered_projects[p_id] = p_info
 
@@ -633,12 +637,13 @@ class CharonProjectHandler(SafeHandler):
     def get(self, projectid):
         try:
             url="{}/api/summary?projectid={}".format(self.application.settings['charon']['url'], projectid)
+            headers = {'X-Charon-API-token': '{}'.format(self.application.settings['charon']['api_token'])}
         except KeyError:
             url="http://charon.scilifelab.se/api/summary?projectid={}".format(projectid)
-        print url
-        r = requests.get(url)
+            headers={}
+        r = requests.get(url, headers = headers )
         if r.status_code == requests.status_codes.codes.OK:
             self.write(r.json())
         else:
             self.set_status(400)
-            self.finish('<html><body>There was a problem connecting to charon, please try it again later.</body></html>')
+            self.finish('<html><body>There was a problem connecting to charon, please try it again later. {}</body></html>'.format(r.reason))
