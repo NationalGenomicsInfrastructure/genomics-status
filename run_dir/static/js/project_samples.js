@@ -1235,14 +1235,16 @@ function old_project_warning(warndate_raw){
 }
 function load_charon_summary(){
   $.getJSON("/api/v1/charon_summary/"+ project, function(data) {
-      $('#charon-status').show();
-      $('#charon-status-tot').text(data['tot']);
-      $('#charon-status-seq').text(data['seq']);
-      $('#charon-status-ana').text(data['ana']);
-      $('#charon-status-passed').text(data['passed']);
-      $('#charon-status-failed').text(data['failed']);
-      $('#charon-status-runn').text(data['runn']);
-      $('#charon-status-hge').text(data['hge']);
+      if (data['tot'] != 0){
+          $('#charon-status').show();
+          $('#charon-status-tot').text(data['tot']);
+          $('#charon-status-seq').text(data['seq']);
+          $('#charon-status-ana').text(data['ana']);
+          $('#charon-status-passed').text(data['passed']);
+          $('#charon-status-failed').text(data['failed']);
+          $('#charon-status-runn').text(data['runn']);
+          $('#charon-status-hge').text(data['hge']);
+      }
   }).fail(function( jqxhr, textStatus, error ) {
       var err = textStatus + ", " + error;
       console.log( "Couldn't load charon data: " + err );
