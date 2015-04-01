@@ -343,24 +343,29 @@ function load_running_notes(wait) {
   });
 }
 
+// Preview running notes
+$('#preview_running_note_tab').click(function(){
+    var now = new Date();
+    $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
+    var text = $('#new_note_text').val().trim();
+    if (text.length > 0) {
+      $('#running_note_preview_body').html(make_markdown(text));
+      check_img_sources($('#running_note_preview_body img'));
+    } else {
+      $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
+    }
+});
+
 // Insert new running note and reload the running notes table
 $("#running_notes_form").submit( function(e) {
-  e.preventDefault();
-  var text = $('#new_note_text').val().trim();
-  if (text.length > 0) {
-    $('#running_note_preview_body').html(make_markdown(text));
-    check_img_sources($('#running_note_preview_body img'));
-    $('#running_note_preview').modal('show');
-  } else {
-    alert("The running note text cannot be empty. Please fill in the Running Note.")
-  }
-});
-$('#submit_running_note_preview').click(function(e){
-  e.preventDefault();
-  var text = $('#new_note_text').val().trim();
-  $('#running_note_preview_body').html('<div style="text-align:center; margin:20px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Submitting running note..</div>');
-  $('#running_note_preview .modal-header, #running_note_preview .modal-footer').hide();
-  if (text.length > 0) {
+    e.preventDefault();
+    var text = $('#new_note_text').val().trim();
+    if (text.length == 0) {
+    alert("Error: No running note entered.");
+    return false;
+    }
+
+    $('#save_note_button').addClass('disabled').text('Submitting..');
     $.ajax({
       async: false,
       type: 'POST',
@@ -369,17 +374,13 @@ $('#submit_running_note_preview').click(function(e){
       data: {"note": text},
       error: function(xhr, textStatus, errorThrown) {
         alert('There was an error inserting the Running Note: '+errorThrown);
+        $('#save_note_button').removeClass('disabled').text('Submit Running Note');
         console.log(xhr);
         console.log(textStatus);
         console.log(errorThrown);
-        // Hide the preview modal
-        $('#running_note_preview').modal('hide');
-        $('#running_note_preview .modal-header, #running_note_preview .modal-footer').show();
       },
       success: function(data, textStatus, xhr) {
-        // Hide the preview modal
-        $('#running_note_preview').modal('hide');
-        $('#running_note_preview .modal-header, #running_note_preview .modal-footer').show();
+        $('#save_note_button').removeClass('disabled').text('Submit Running Note');
         // Clear the text box
         $('#new_note_text').val('');
         // Create a new running note and slide it in..
@@ -392,9 +393,6 @@ $('#submit_running_note_preview').click(function(e){
         check_img_sources($('#running_notes_panels img'));
       }
     });
-  } else {
-    alert("The running note text cannot be empty. Please fill in the Running Note.")
-  }
 });
 
 
@@ -919,116 +917,7 @@ function loadCaliperImageModal(target){
   $('#caliperModal').modal();
 }
 
-function auto_format(value, samples_table){
-  // Default value for function
-  samples_table = (typeof samples_table === "undefined") ? false : samples_table;
-
-  var orig = value;
-  var returnstring;
-  if(typeof value == 'string'){
-    value = value.toLowerCase().trim();
-  }
-
-  // Put all False / Failed / Fail into labels
-  if(value === false ||
-				(typeof value == 'string' && (
-            value == 'false' ||
-            value == 'failed' ||
-            value == 'fail' ||
-            value == 'none' ||
-            value == 'no' ||
-            value == 'no' ||
-            value == 'n/a' ||
-            value == 'aborted' ))){
-    returnstring = '<span class="label label-danger sentenceCase">'+value+'</span> ';
-  }
-
-  // Put all False / Failed / Fail into labels
-  else if(value === true ||
-				(typeof value == 'string' && (
-            value == 'true' ||
-            value == 'passed' ||
-            value == 'pass' ||
-            value == 'yes' ||
-            value == 'finished' ||
-            value == 'p'))){
-    returnstring = '<span class="label label-success sentenceCase">'+value+'</span> ';
-  }
-
-  // Warning labels
-  else if(typeof value == 'string' && (
-            value == 'in progress')){
-    returnstring = '<span class="label label-warning sentenceCase">'+value+'</span> ';
-  }
-
-  // Dates
-  else if(samples_table && typeof value == 'string' && value.split('-').length == 3 && value.length == 10){
-    returnstring = '<span class="label label-date sentenceCase">'+value+'</span> ';
-  }
-
-  // Put all undefined into labels
-  else if((typeof value == 'string' && value == 'undefined') ||
-          (typeof value == 'string' && value == 'null') ||
-          (typeof value == 'string' && value == 'nan') ||
-          typeof value == 'undefined' || typeof value == 'null' || typeof value == 'NaN'){
-    returnstring = '<span class="label label-undefined sentenceCase">'+value+'</span> ';
-  }
-
-  else {
-    returnstring = orig;
-  }
-
-  if(samples_table){
-    return returnstring + '<br>';
-  } else {
-    return returnstring;
-  }
-}
-
-function auto_samples_cell (id, val){
-  // Column returns an array
-  if (val instanceof Array){
-    cell = '<td class="' + id + '">';
-    $.each(val, function(key, val){
-      cell += auto_format(val, true) + ' ';
-    });
-    return cell + '</td>';
-  }
-
-  // Numeric value - right align
-  else if (!isNaN(parseFloat(val)) && isFinite(val)){
-    // Give numbers spaces in thousands separator
-    val = val.toLocaleString(['fr-FR', 'en-US']);
-    return '<td class="' + id + ' text-right">' + auto_format(val, true) + '</td>';
-  }
-
-  // Single value
-  else {
-    return '<td class="' + id + '">' + auto_format(val, true) + '</td>';
-  }
-}
-
-//Is there any standar method to do this?
-var max_str = function(strs) {
-  var max = strs[0];
-  for (var i=0; i < strs.length; i++) {
-    if (parseInt(strs[i].split('-')[1]) > parseInt(max.split('-')[1])) {
-      max = strs[i];
-    }
-  }
-  return max
-}
-
-// Round number to the given number of decimals
-var round_floats = function(n, p) {
-  if (typeof(n) == 'number') {
-    // If it's a float...
-    if (Math.round(n) != n) {
-      n = n.toFixed(p);
-    }
-  }
-  return n;
-}
+// Bunch of functions here moved into base.js
 
 
 

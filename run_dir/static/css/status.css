@@ -316,6 +316,16 @@ td.progress {
 .running-note-panel pre {
   max-width:400px;
 }
+.panel.with-nav-tabs > .panel-heading{
+    padding: 5px 5px 0 5px;
+}
+.panel.with-nav-tabs > .panel-heading > .nav-tabs{
+	border-bottom: none;
+	margin-bottom: -1px;
+}
+.panel.with-nav-tabs > .panel-heading > ul.nav-tabs>li>a:hover {
+    border-bottom: none;
+}
 
 #markdown_help table td {
   width:50%;

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-<!-- 
+<!--
 Template file: projects.html
 URL: /projects/[optional filter]
-Title: Summary of all Projects 
+Title: Summary of all Projects
 Description: Shows a table with all projects.
 -->
 
@@ -75,7 +75,7 @@ Description: Shows a table with all projects.
             Click a heading to select / deselect all checkboxes in that group.</p>
 
           <div class="row">
-            
+
             <div class="col-sm-4" id="basic-columns">
               <h4 class="search-action" data-action="filterHeader">Basic <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
@@ -87,7 +87,7 @@ Description: Shows a table with all projects.
               </div>
               {% end %}
             </div>
-              
+
             <div class="col-sm-4" id="details-columns">
               <h4 class="search-action" data-action="filterHeader">Project Details <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
@@ -99,7 +99,7 @@ Description: Shows a table with all projects.
               </div>
               {% end %}
             </div>
-            
+
             <div class="col-sm-4" id="bioinfo-columns">
               <h4 class="search-action" data-action="filterHeader">Bioinformatics <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
@@ -111,10 +111,10 @@ Description: Shows a table with all projects.
               </div>
               {% end %}
             </div>
-              
+
           </div>
           <div class="row">
-              
+
             <div class="col-sm-4" id="sequencing-columns">
               <h4 class="search-action" data-action="filterHeader">Sequencing <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
@@ -126,7 +126,7 @@ Description: Shows a table with all projects.
               </div>
               {% end %}
             </div>
-            
+
             <div class="col-sm-4" id="library-prep-columns">
               <h4 class="search-action" data-action="filterHeader">Library Prep <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
@@ -138,7 +138,7 @@ Description: Shows a table with all projects.
               </div>
               {% end %}
             </div>
-            
+
             <div class="col-sm-4" id="setup-project-columns">
               <h4 class="search-action" data-action="filterHeader">Setup Project <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
@@ -150,10 +150,10 @@ Description: Shows a table with all projects.
               </div>
               {% end %}
             </div>
-            
+
           </div>
           <div class="row">
-              
+
             <div class="col-sm-4" id="extra-columns">
               <h4 class="search-action" data-action="filterHeader">Extra <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
@@ -165,7 +165,7 @@ Description: Shows a table with all projects.
               </div>
               {% end %}
             </div>
-            
+
             <div class="col-sm-4" id="accreditation-columns">
               <h4 class="search-action" data-action="filterHeader">Accreditation <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns['ACCREDITATION_COLUMNS'].iteritems() %}
@@ -177,7 +177,7 @@ Description: Shows a table with all projects.
               </div>
               {% end %}
             </div>
-            
+
             <div class="col-sm-4" id="undefined-columns">
               <h4 class="search-action" data-action="filterHeader">Undefined <input class="headingCheckbox" type="checkbox"></h4>
               <div id="undefined_columns"></div>
@@ -204,19 +204,19 @@ Description: Shows a table with all projects.
       </div>
       <div class="modal-body">
         <div class="panel panel-default">
-        <div class="panel-body">  
+        <div class="panel-body">
         <label>Open Date</label>
         <div id="OpenDateSlider" class="dateSlider" style="height: 80px;"> </div>
         </div>
         </div>
         <div class="panel panel-default">
-        <div class="panel-body">  
+        <div class="panel-body">
         <label>Queue Date</label>
         <div id="QueueDateSlider" class="dateSlider" style="height: 80px;"> </div>
         </div>
         </div>
         <div class="panel panel-default">
-        <div class="panel-body">  
+        <div class="panel-body">
         <label>Close Date</label>
         <div id="CloseDateSlider" class="dateSlider" style="height: 80px;"> </div>
         </div>
@@ -229,5 +229,5 @@ Description: Shows a table with all projects.
 <script src="/static/js/list.min.js"></script>
 <script src="/static/js/jquery-ui.min.js"></script>
 <script src="/static/js/jQDateRangeSlider-min.js"></script>
-<script src="/static/js/projects.js" id="projects-js" data-projects="{{projects}}"></script>
+<script src="/static/js/projects.js?v={{ gs_globals['git_commit'] }}" id="projects-js" data-projects="{{projects}}"></script>
 {% end %}

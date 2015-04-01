@@ -12,7 +12,7 @@ class FlowcellsHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("flowcells.html")
-        self.write(t.generate(user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name()))
 
 
 class FlowcellHandler(SafeHandler):
@@ -21,12 +21,12 @@ class FlowcellHandler(SafeHandler):
     """
     def get(self, flowcell):
         t = self.application.loader.load("flowcell_samples.html")
-        self.write(t.generate(flowcell=flowcell, user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, flowcell=flowcell, user=self.get_current_user_name()))
 
 
 class FlowcellsDataHandler(SafeHandler):
     """ Serves brief information for each flowcell in the database.
-    
+
     Loaded through /api/v1/flowcells url
     """
     def get(self):
@@ -45,7 +45,7 @@ class FlowcellsDataHandler(SafeHandler):
 
 class FlowcellsInfoDataHandler(SafeHandler):
     """ Serves brief information about a given flowcell.
-    
+
     Loaded through /api/v1/flowcell_info/([^/]*)$ url
     """
     def get(self, flowcell):
@@ -63,7 +63,7 @@ class FlowcellsInfoDataHandler(SafeHandler):
 
 class FlowcellSearchHandler(SafeHandler):
     """ Searches Flowcells for text string
-    
+
     Loaded through /api/v1/flowcell_search/([^/]*)$
     """
     def get(self, search_string):
@@ -90,7 +90,7 @@ class FlowcellSearchHandler(SafeHandler):
 
 class OldFlowcellsInfoDataHandler(SafeHandler):
     """ Serves brief information about a given flowcell.
-    
+
     Loaded through /api/v1/flowcell_info/([^/]*)$ url
     """
     def get(self, flowcell):

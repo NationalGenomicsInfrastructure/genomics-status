@@ -11,7 +11,7 @@ class QuotasHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("quota_grid.html")
-        self.write(t.generate(user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name()))
 
 
 class QuotaHandler(SafeHandler):
@@ -20,7 +20,7 @@ class QuotaHandler(SafeHandler):
     """
     def get(self, project):
         t = self.application.loader.load("quota.html")
-        self.write(t.generate(project=project,
+        self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
                               user=self.get_current_user_name()))
 
 
