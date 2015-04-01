@@ -1,6 +1,7 @@
 """ Main genomics-status web application.
 """
 import base64
+import subprocess
 import uuid
 import yaml
 
@@ -219,14 +220,23 @@ class Application(tornado.web.Application):
 
         # Location of the psul log
         self.psul_log=settings.get("psul_log")
-        
+
+        # Set up a set of globals to pass to every template
+        self.gs_globals = {}
+
+        # Get the latest git commit hash
+        try:
+            self.gs_globals['git_commit'] = subprocess.check_output(['git', 'rev-parse', '--short=7', 'HEAD'])
+        except:
+            self.gs_globals['git_commit'] = 'unknown'
+
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
         settings["debug"]= True
         settings["static_path"]= "static"
         settings["cookie_secret"]= cookie_secret
         settings["login_url"]= "/login"
-        
+
 
         if options['develop']:
             tornado.autoreload.watch("design/application.html")
@@ -293,7 +303,7 @@ if __name__ == '__main__':
                                                 ssl_options = ssl_options)
 
     http_server.listen(server_settings.get("port", 8888))
-    
+
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
 

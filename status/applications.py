@@ -14,7 +14,7 @@ class ApplicationsHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("applications.html")
-        self.write(t.generate(user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name()))
 
 
 class ApplicationHandler(SafeHandler):
@@ -23,7 +23,7 @@ class ApplicationHandler(SafeHandler):
     """
     def get(self, application):
         t = self.application.loader.load("application.html")
-        self.write(t.generate(application=application,
+        self.write(t.generate(gs_globals=self.application.gs_globals, application=application,
                               user=self.get_current_user_name()))
 
 
@@ -81,4 +81,3 @@ class ApplicationsDataHandler(SafeHandler):
             else:
                 samples[row.key[1]] += row.value
         return {'applications': applications, 'samples': samples}
-
