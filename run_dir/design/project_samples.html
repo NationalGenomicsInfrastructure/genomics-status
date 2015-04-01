@@ -297,29 +297,28 @@ Description: Details page for a single project
     <div class="tab-pane fade" id="tab_running_notes_content">
         <!-- add running note -->
         <form action="" method="POST" id="running_notes_form" role="form">
-            <div class="panel with-nav-tabs panel-info">
-                <div class="panel-heading">
-                    <ul class="nav nav-tabs">
-                        <li class="active"><a href="#running_note_write" data-toggle="tab">Write Running Note</a></li>
-                        <li><a href="#running_note_preview" data-toggle="tab" id="preview_running_note_tab">Preview</a></li>
-                        <li class="pull-right" data-toggle="modal" data-target="#markdown_help"><a href="#running_note_preview">Markdown Help</a></li>
-                    </ul>
-                </div>
+            <div class="panel panel-info">
+                <div class="panel-heading">Add New Running Note</div>
                 <div class="panel-body">
-                    <div class="tab-content">
-                        <div class="tab-pane fade in active" id="running_note_write">
-                            <textarea rows="5" class="form-control" id="new_note_text"></textarea>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Write Running Note</h4>
+                            <textarea rows="5" class="form-control" id="new_note_text" style="height:97px;"></textarea>
                         </div>
-                        <div class="tab-pane fade in" id="running_note_preview">
-                            <div class="panel-body">
-                                <div class="panel panel-default">
-                                  <div class="panel-heading"><a href="#">{{ user }}</a> - <span class="todays_date">Date</span></div>
-                                  <div class="panel-body" id="running_note_preview_body"></div>
+                        <div class="col-md-6">
+                            <h4>Preview</h4>
+                            <div class="panel panel-default" id="running_note_preview_panel">
+                                <div class="panel-heading"><a href="#">{{ user }}</a> - <span class="todays_date">Date</span></div>
+                                <div class="panel-body" id="running_note_preview_body">
+                                    <p class="text-muted"><em>Nothing to preview..</em></p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <button type="submit" style="margin-top:15px;" class="btn btn-primary pull-right" id="save_note_button">Submit Running Note</button>
+                    <div class="text-right" style="margin-top:15px;">
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help">Markdown Help</a>
+                        <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
+                    </div>
                 </div>
             </div>
         </form>
@@ -502,10 +501,6 @@ Description: Details page for a single project
             <th>Running Note Shows</th>
           </tr>
           <tr>
-            <td>Single line breaks<br>don't do anything.<br><br>A double line break does though!</td>
-            <td class="mkdown"><p>Single line breaks don't do anything.</p><p>A double line break does though!</p></td>
-          </tr>
-          <tr>
             <td>Some *italic* text</td>
             <td class="mkdown">Some <em>italic</em> text</td>
           </tr>
@@ -524,10 +519,6 @@ Description: Details page for a single project
           <tr>
             <td>1. Numbered list<br>1. Of items</td>
             <td class="mkdown"><ol><li>Numbered list</li><li>Of items</li></ol></td>
-          </tr>
-          <tr>
-            <td>Unlike normal markdown _underscores_ don't make text *italic*</td>
-            <td class="mkdown">Unlike normal markdown _underscores_ don't make text <em>italic</em></td>
           </tr>
           <tr>
             <td>Links [are easy](https://genomics-status.scilifelab.se/)!</td>
@@ -598,6 +589,5 @@ Description: Details page for a single project
 
 <!-- Javascript -->
 <script src="/static/js/list.min.js"></script>
-<script src="/static/js/markdown.min.js"></script>
 <script src="/static/js/project_samples.js?v={{ gs_globals['git_commit'] }}" id="projects-js" data-project="{{project}}"></script>
 {% end %}

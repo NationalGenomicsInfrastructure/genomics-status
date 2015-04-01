@@ -344,16 +344,18 @@ function load_running_notes(wait) {
 }
 
 // Preview running notes
-$('#preview_running_note_tab').click(function(){
+$('#new_note_text').keyup(function() {
     var now = new Date();
     $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
     var text = $('#new_note_text').val().trim();
     if (text.length > 0) {
-      $('#running_note_preview_body').html(make_markdown(text));
-      check_img_sources($('#running_note_preview_body img'));
+        $('#running_note_preview_body').html(make_markdown(text));
+        check_img_sources($('#running_note_preview_body img'));
     } else {
-      $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
+        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
     }
+    // update textarea height
+    $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
 });
 
 // Insert new running note and reload the running notes table
@@ -581,39 +583,6 @@ function prettyobj(s) {
 }
 function safeobj(s) {
   return $(document.getElementById(s));
-}
-
-function make_project_links(s){
-  // Searches for P[\d+] and replaces with a link to the project page
-  s = s.replace(/([ ,.:-])(P[\d]{3,5})([ ,.:-])/, '$1<a href="/project/$2">$2</a>$3');
-  // Searches for FlowCell IDs and replaces with a link
-  s = s.replace(/([ ,.:-])(\d{6})(_\w{5,10}_\d{3,4})(_\w{8,12}[\-\w{3,8}]?)([ ,.:-])/g, '$1<a href="/flowcells/$2$4">$2$3$4</a>$5');
-  return s;
-}
-
-function make_markdown(s){
-  // Switch out single line breaks with double line breaks
-  // TODO - harder than it looks without breaking markdown!
-  // Implement this later if *really* needed.
-  // s = s.replace(/([^`]\s*)\n(\s*[^\n`\*>])/g, "$1\n\n$2");
-  // Escape backslashes
-  s = s.replace(/\_/g, "\\_");
-  s = markdown.toHTML(s);
-  s = make_project_links(s);
-  return '<div class="mkdown">'+s+'</div>';
-}
-
-function check_img_sources(obj){
-  // Sort out any missing images
-  // pass some images, eg $('#running_note_preview_body img')
-  // Has to be called AFTER the code has been inserted into the DOM
-  pathArray = window.location.href.split( '/' );
-  var missing_img_src = pathArray[0]+'//'+pathArray[2]+'/static/img/missing_image.png';
-  $(obj).on('error', function () {
-    if($(this).is('img') && $(this).attr('src') !== missing_img_src){
-      $(this).attr('src', missing_img_src);
-    }
-  });
 }
 
 
