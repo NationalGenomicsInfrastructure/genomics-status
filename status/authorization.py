@@ -53,4 +53,4 @@ class UnAuthorizedHandler(UnsafeHandler):
         name = self.get_argument("name", '')
         contact = self.get_argument("contact", "contact@example.com")
         t = self.application.loader.load("unauthorized.html")
-        self.write(t.generate(user = name, email=email, contact=contact))
+        self.write(t.generate(gs_globals=self.application.gs_globals, user = name, email=email, contact=contact))
