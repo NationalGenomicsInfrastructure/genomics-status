@@ -246,7 +246,7 @@ function load_workset_notes(wait) {
           '<div class="panel-heading">'+
             '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
             date.toDateString() + ', ' + date.toLocaleTimeString(date)+
-          ' <span class="glyphicon glyphicon-remove-sign delete_note" id="'+date_str+'"></span></div><div class="panel-body">'+noteText+'</div></div>');
+          ' </div><div class="panel-body">'+noteText+'</div></div>');
             //check_img_sources($('#running_notes_panels img'));
     });
   }).fail(function( jqxhr, textStatus, error ) {
