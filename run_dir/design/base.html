@@ -18,7 +18,7 @@
 <link type="text/css" rel="stylesheet" href="/static/nvd3/src/nv.d3.css">
 <link rel="stylesheet" href="/static/css/jquery-ui.min.css" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/status.css" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/status.css?v={{ gs_globals['git_commit'] }}" rel="stylesheet">
 
 <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
 <!--[if lt IE 9]>
@@ -112,7 +112,8 @@
     <p><a href="/">Genomics Status</a></p>
     <p>Something broken or have an idea for an improvement? Please <a href="/suggestion_box">let us know</a>.</p>
 </div>
-<script src="/static/js/typeahead.bundle.min.js"></script>
-<script src="/static/js/base.js"></script>
+
+<script src="/static/js/typeahead.bundle.min.js?v={{ gs_globals['git_commit'] }}"></script>
+<script src="/static/js/base.js?v={{ gs_globals['git_commit'] }}"></script>
 </body>
 </html>

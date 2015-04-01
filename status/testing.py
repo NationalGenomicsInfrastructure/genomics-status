@@ -30,10 +30,10 @@ class TestDataHandler(UnsafeHandler):
 class TestGridHandler(UnsafeHandler):
     def get(self):
         t = self.application.loader.load("test_grid.html")
-        self.write(t.generate())
+        self.write(t.generate(gs_globals=self.application.gs_globals))
 
 
 class TestHandler(UnsafeHandler):
     def get(self):
         t = self.application.loader.load("test_grid.html")
-        self.write(t.generate())
+        self.write(t.generate(gs_globals=self.application.gs_globals))

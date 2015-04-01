@@ -98,6 +98,6 @@ Description: Shows information about a specific workset
 
 </div>
 
-<script src="/static/js/workset_samples.js" id="workset-js" data-workset="{{ workset_name }}"></script>
+<script src="/static/js/workset_samples.js?v={{ gs_globals['git_commit'] }}" id="workset-js" data-workset="{{ workset_name }}"></script>
 <script src="/static/js/markdown.min.js"></script>
 {% end %}
