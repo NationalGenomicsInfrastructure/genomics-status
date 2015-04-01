@@ -343,24 +343,29 @@ function load_running_notes(wait) {
   });
 }
 
+// Preview running notes
+$('#preview_running_note_tab').click(function(){
+    var now = new Date();
+    $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
+    var text = $('#new_note_text').val().trim();
+    if (text.length > 0) {
+      $('#running_note_preview_body').html(make_markdown(text));
+      check_img_sources($('#running_note_preview_body img'));
+    } else {
+      $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
+    }
+});
+
 // Insert new running note and reload the running notes table
 $("#running_notes_form").submit( function(e) {
-  e.preventDefault();
-  var text = $('#new_note_text').val().trim();
-  if (text.length > 0) {
-    $('#running_note_preview_body').html(make_markdown(text));
-    check_img_sources($('#running_note_preview_body img'));
-    $('#running_note_preview').modal('show');
-  } else {
-    alert("The running note text cannot be empty. Please fill in the Running Note.")
-  }
-});
-$('#submit_running_note_preview').click(function(e){
-  e.preventDefault();
-  var text = $('#new_note_text').val().trim();
-  $('#running_note_preview_body').html('<div style="text-align:center; margin:20px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Submitting running note..</div>');
-  $('#running_note_preview .modal-header, #running_note_preview .modal-footer').hide();
-  if (text.length > 0) {
+    e.preventDefault();
+    var text = $('#new_note_text').val().trim();
+    if (text.length == 0) {
+    alert("Error: No running note entered.");
+    return false;
+    }
+
+    $('#save_note_button').addClass('disabled').text('Submitting..');
     $.ajax({
       async: false,
       type: 'POST',
@@ -369,17 +374,13 @@ $('#submit_running_note_preview').click(function(e){
       data: {"note": text},
       error: function(xhr, textStatus, errorThrown) {
         alert('There was an error inserting the Running Note: '+errorThrown);
+        $('#save_note_button').removeClass('disabled').text('Submit Running Note');
         console.log(xhr);
         console.log(textStatus);
         console.log(errorThrown);
-        // Hide the preview modal
-        $('#running_note_preview').modal('hide');
-        $('#running_note_preview .modal-header, #running_note_preview .modal-footer').show();
       },
       success: function(data, textStatus, xhr) {
-        // Hide the preview modal
-        $('#running_note_preview').modal('hide');
-        $('#running_note_preview .modal-header, #running_note_preview .modal-footer').show();
+        $('#save_note_button').removeClass('disabled').text('Submit Running Note');
         // Clear the text box
         $('#new_note_text').val('');
         // Create a new running note and slide it in..
@@ -392,9 +393,6 @@ $('#submit_running_note_preview').click(function(e){
         check_img_sources($('#running_notes_panels img'));
       }
     });
-  } else {
-    alert("The running note text cannot be empty. Please fill in the Running Note.")
-  }
 });
 
 
