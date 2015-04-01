@@ -765,8 +765,14 @@ function load_samples_table() {
             $.each(info['library_prep'], function(library, info_library) {
               info_library[column_id] = round_floats(info_library[column_id], 2);
 
+              // Special case for workset_name, which is a link to Genstat workset page
+              if (column_id == "workset_name" && info_library[column_id]) {
+                tbl_row += '<samp class="nowrap" title="Open Workset" data-toggle="tooltip"><a href="/workset/';
+                tbl_row += info_library[column_id] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
+              }
+
               // Special case for workset_setup, which is a link to the LIMS
-              if (column_id == "workset_setup" && info_library[column_id]) {
+              else if (column_id == "workset_setup" && info_library[column_id]) {
                 tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a href="http://genologics.scilifelab.se:8080/clarity/work-complete/';
                 tbl_row += info_library[column_id].split('-')[1] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
               }
