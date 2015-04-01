@@ -24,14 +24,37 @@ Description: Shows information about a specific workset
         <div class="tab-content">
             <div class="tab-pane fade in active" id="workset_tables"></div>
             <div class="tab-pane fade" id="workset_notes_panel">
+                <!-- add running note -->
                 <form action="" method="POST" id="workset_notes_form" role="form">
-                    <div class="form-group">
-                        <label for="new_note_text">Insert new running note:</label>
-                        <textarea rows="5" class="form-control" id="new_note_text"></textarea>
+                    <div class="panel panel-info">
+                        <div class="panel-heading">Add New Workset Note</div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4>Write Workset Note</h4>
+                                    <textarea rows="5" class="form-control" id="new_note_text" style="height:97px;"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <h4>Preview</h4>
+                                    <div class="panel panel-default" id="running_note_preview_panel">
+                                        <div class="panel-heading"><a href="#">{{ user }}</a> - <span class="todays_date">Date</span></div>
+                                        <div class="panel-body" id="running_note_preview_body">
+                                            <p class="text-muted"><em>Nothing to preview..</em></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right" style="margin-top:15px;">
+                                <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help">Markdown Help</a>
+                                <button type="submit" class="btn btn-primary" id="save_note_button">Submit Workset Note</button>
+                            </div>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary" id="save_note_button">Preview workset note</button>
                 </form>
+
+                <!-- display running notes -->
                 <div class="panel-group" id="workset_notes"></div>
+
             </div>
         </div>
     </div>
@@ -64,32 +87,80 @@ Description: Shows information about a specific workset
     </div>
 </div>
 
-<!-- WORKSET NOTES PREVIEW -->
-<div id="workset_note_preview" class="modal fade">
-  <div class="modal-dialog">
+<!-- RUNNING NOTES HELP -->
+<div id="markdown_help" class="modal fade">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h3 class="modal-title">Workset Note Preview</h3>
+        <h3 class="modal-title">Running Notes - Markdown Help</h3>
       </div>
-      <br />
       <div class="modal-body">
-        <div class="panel panel-default">
-          <div class="panel-heading"><a href="#">Your Name</a> - Date</div>
-          <div class="panel-body" id="workset_note_preview_body"></div>
-        </div>
-        <hr>
-        <h4>Troubleshooting</h4>
-        <p>Some tips that can fix broken markdown:</p>
-        <ul>
-          <li>Blank lines either side of things like lists</li>
-          <li>Delete spaces in <code>](</code>, <code>**bold**</code> <em>etc.</em></li>
-        </ul>
-        <p>Remember the <strong>Markdown Help</strong> button over on the right!</p>
+        <p><strong>Remember:</strong> <u>Two</u> line breaks are required to split a line in two!</p>
+        <table class="table table-bordered">
+          <tr>
+            <th>You Write</th>
+            <th>Running Note Shows</th>
+          </tr>
+          <tr>
+            <td>Some *italic* text</td>
+            <td class="mkdown">Some <em>italic</em> text</td>
+          </tr>
+          <tr>
+            <td>Some **bold** text</td>
+            <td class="mkdown">Some <strong>bold</strong> text</td>
+          </tr>
+          <tr>
+            <td>Some ***bold italic*** text</td>
+            <td class="mkdown">Some <strong><em>bold italic</em></strong> text</td>
+          </tr>
+          <tr>
+            <td>* Bullet pointed<br>* List of items<br>&nbsp;* With nested<br>* Items</td>
+            <td class="mkdown"><ul><li>Bullet pointed</li><li>List of items<ul><li>With nested</li></ul></li><li>Items</li></ul></td>
+          </tr>
+          <tr>
+            <td>1. Numbered list<br>1. Of items</td>
+            <td class="mkdown"><ol><li>Numbered list</li><li>Of items</li></ol></td>
+          </tr>
+          <tr>
+            <td>Links [are easy](https://genomics-status.scilifelab.se/)!</td>
+            <td class="mkdown">Links <a href="https://genomics-status.scilifelab.se/">are easy</a>!</td>
+          </tr>
+          <tr>
+            <td>You can do e-mail addresses too: &lt;genomics_support@scilifelab.se&gt;</td>
+            <td>You can do e-mail addresses too: <a href="mailto:genomics_support@scilifelab.se">genomics_support@scilifelab.se</a></td>
+          </tr>
+          <tr>
+            <td>Markdown even has a logo: ![Awesome Logo](https://genomics-status.scilifelab.se/static/img/markdown.png)</td>
+            <td class="mkdown">Markdown even has a logo: <img src="/static/img/markdown.png" title="Awesome Logo"></td>
+          </tr>
+          <tr>
+            <td>You can put things like flow cell IDs in `back ticks`</td>
+            <td class="mkdown">You can put things like flow cell IDs in <code>back ticks</code></td>
+          </tr>
+          <tr>
+            <td>```<br>Larger chunks of code-like stuff<br>can go in 'code-fences' of<br>three back ticks<br>```</td>
+            <td class="mkdown"><pre>Larger chunks for code-like stuff<br>can go in 'code-fences' of<br>three back ticks</pre></td>
+          </tr>
+          <tr>
+            <td>&gt; You can quote someone<br>&gt; with greater than symbols</td>
+            <td class="mkdown"><blockquote>You can quote someone with greater than symbols</blockquote></td>
+          </tr>
+          <tr>
+            <td>Split up content<br>***<br>with three or more asterisks</td>
+            <td>Split up content<hr>with three or more asterisks</td>
+          </tr>
+          <tr>
+            <td># Headings<br>## Use these<br>### Symbols</td>
+            <td><h1>Headings</h1><h2>Use these</h2><h3>Symbols</h3></td>
+          </tr>
+        </table>
+        <p>For further reference, see the <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">syntax document</a>.
+          Live editing tools such as <a href="http://dillinger.io/" target="_blank">dillinger.io</a> or
+          <a href="http://25.io/mou/" target="_blank">Mou</a> may also be of use..</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
-        <button class="btn btn-primary" id="submit_workset_note_preview">Submit</button>
+        <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Close</button>
       </div>
     </div>
   </div>
@@ -99,5 +170,4 @@ Description: Shows information about a specific workset
 </div>
 
 <script src="/static/js/workset_samples.js?v={{ gs_globals['git_commit'] }}" id="workset-js" data-workset="{{ workset_name }}"></script>
-<script src="/static/js/markdown.min.js"></script>
 {% end %}

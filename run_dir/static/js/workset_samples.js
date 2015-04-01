@@ -20,44 +20,31 @@ var max_y=742;
 
 setupPlate();
 
-//setup running notes form action
-$("#workset_notes_form").submit( function(e) {
-  e.preventDefault();
-  var text = $('#new_note_text').val().trim();
-  if (text.length > 0) {
-    $('#workset_note_preview_body').html(make_markdown(text));
-    //check_img_sources($('#running_note_preview_body img'));
-    $('#workset_note_preview').modal('show');
-  } else {
-    alert("Error: Workset note text cannot be empty.")
-  }
+// Preview running notes
+$('#new_note_text').keyup(function() {
+    var now = new Date();
+    $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
+    var text = $('#new_note_text').val().trim();
+    if (text.length > 0) {
+        $('#running_note_preview_body').html(make_markdown(text));
+        check_img_sources($('#running_note_preview_body img'));
+    } else {
+        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
+    }
+    // update textarea height
+    $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
 });
 
-$('#workset_notes_panel').on('click', '.delete_note', function(){
-  var note_id=$(this).attr('id');
-  $.ajax({
-    async: false,
-    type: 'DELETE',
-    url: '/api/v1/workset_notes/' +lims_step+'?note_id='+note_id,
-    dataType: 'json',
-    data: {"note_id": note_id},
-    error: function(xhr, textStatus, errorThrown) {
-      alert('There was an error deleting the Workset Note: '+errorThrown);
-      console.log(xhr);
-      console.log(textStatus);
-      console.log(errorThrown);
-    },
-    success: function(data, textStatus, xhr) {
-        load_workset_notes();
+// Insert new running note and reload the running notes table
+$("#workset_notes_form").submit( function(e) {
+    e.preventDefault();
+    var text = $('#new_note_text').val().trim();
+    if (text.length == 0) {
+        alert("Error: No running note entered.");
+        return false;
     }
-  });
-});
-$('#submit_workset_note_preview').click(function(e){
-  e.preventDefault();
-  var text = $('#new_note_text').val().trim();
-  $('#workset_note_preview_body').html('<div style="text-align:center; margin:20px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Submitting workset note..</div>');
-  $('#workset_note_preview .modal-header, #workset_note_preview .modal-footer').hide();
-  if (text.length > 0) {
+
+    $('#save_note_button').addClass('disabled').text('Submitting..');
     $.ajax({
       async: false,
       type: 'POST',
@@ -65,27 +52,51 @@ $('#submit_workset_note_preview').click(function(e){
       dataType: 'json',
       data: {"note": text},
       error: function(xhr, textStatus, errorThrown) {
-        alert('There was an error inserting the Workset Note: '+errorThrown);
+        alert('There was an error inserting the Running Note: '+errorThrown);
+        $('#save_note_button').removeClass('disabled').text('Submit Workset Note');
         console.log(xhr);
         console.log(textStatus);
         console.log(errorThrown);
-        // Hide the preview modal
-        $('#workset_note_preview').modal('hide');
-        $('#workset_note_preview .modal-header, #workset_note_preview .modal-footer').show();
       },
       success: function(data, textStatus, xhr) {
-        // Hide the preview modal
-        $('#workset_note_preview').modal('hide');
-        $('#workset_note_preview .modal-header, #running_note_preview .modal-footer').show();
+        $('#save_note_button').removeClass('disabled').text('Submit Workset Note');
         // Clear the text box
         $('#new_note_text').val('');
-        load_workset_notes();
+        // Create a new running note and slide it in..
+        var now = new Date();
+        $('<div class="panel panel-success"><div class="panel-heading">'+
+              '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
+              now.toDateString() + ', ' + now.toLocaleTimeString(now)+
+            '</div><div class="panel-body">'+make_markdown(data['note'])+
+            '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
+        check_img_sources($('#running_notes_panels img'));
       }
     });
-  } else {
-    alert("The running note text cannot be empty. Please fill in the Running Note.")
-  }
 });
+
+function load_workset_notes(wait) {
+  // Clear previously loaded notes, if so
+  $("#workset_notes").empty();
+  $.getJSON("/api/v1/workset_notes/" + lims_step, function(data) {
+    $.each(data, function(date_str, note) {
+        noteText = make_markdown(note['note']);
+        var date = new Date(date_str);
+      $('#workset_notes').append('<div class="panel panel-default">' +
+          '<div class="panel-heading">'+
+            '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
+            date.toDateString() + ', ' + date.toLocaleTimeString(date)+
+          ' <span class="glyphicon glyphicon-remove-sign delete_note" id="'+date_str+'"></span></div><div class="panel-body">'+noteText+'</div></div>');
+            //check_img_sources($('#running_notes_panels img'));
+    });
+  }).fail(function( jqxhr, textStatus, error ) {
+      var err = textStatus + ", " + error;
+      console.log( "workset notes request failed: " + err );
+  });
+}
+
+
+
+
 $.getJSON("/api/v1/workset/"+workset_name, function(data) {
 
     // Fill in the main table with summary information
@@ -233,38 +244,4 @@ function updatePlate(level){
             });
         });
     }
-}
-
-function load_workset_notes(wait) {
-  // Clear previously loaded notes, if so
-  $("#workset_notes").empty();
-  $.getJSON("/api/v1/workset_notes/" + lims_step, function(data) {
-    $.each(data, function(date_str, note) {
-        noteText = make_markdown(note['note']);
-        var date = new Date(date_str);
-      $('#workset_notes').append('<div class="panel panel-default">' +
-          '<div class="panel-heading">'+
-            '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-            date.toDateString() + ', ' + date.toLocaleTimeString(date)+
-          ' <span class="glyphicon glyphicon-remove-sign delete_note" id="'+date_str+'"></span></div><div class="panel-body">'+noteText+'</div></div>');
-            //check_img_sources($('#running_notes_panels img'));
-    });
-  }).fail(function( jqxhr, textStatus, error ) {
-      var err = textStatus + ", " + error;
-      console.log( "workset notes request failed: " + err );
-  });
-}
-
-function make_markdown(s){
-  s = s.replace(/\_/g, "\\_");
-  s = markdown.toHTML(s);
-  s = make_project_links(s);
-  return '<div class="mkdown">'+s+'</div>';
-}
-function make_project_links(s){
-  // Searches for P[\d+] and replaces with a link to the project page
-  s = s.replace(/([ ,.:-])(P[\d]{3,5})([ ,.:-])/, '$1<a href="/project/$2">$2</a>$3');
-  // Searches for FlowCell IDs and replaces with a link
-  s = s.replace(/([ ,.:-])(\d{6})(_\w{5,10}_\d{3,4})(_\w{8,12}[\-\w{3,8}]?)([ ,.:-])/g, '$1<a href="/flowcells/$2$4">$2$3$4</a>$5');
-  return s;
 }
