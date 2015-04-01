@@ -45,7 +45,7 @@ class SampleRunHandler(SafeHandler):
     """
     def get(self, sample):
         t = self.application.loader.load("sample_runs.html")
-        self.write(t.generate(sample=sample, user= self.get_current_user_name(), 
+        self.write(t.generate(gs_globals=self.application.gs_globals, sample=sample, user= self.get_current_user_name(),
                               deprecated=True))
 
 
@@ -88,7 +88,7 @@ class SampleQCSummaryHandler(SafeHandler):
     """
     def get(self, sample):
         t = self.application.loader.load("sample_run_qc.html")
-        self.write(t.generate(sample=sample, user= self.get_current_user_name(),
+        self.write(t.generate(gs_globals=self.application.gs_globals, sample=sample, user= self.get_current_user_name(),
                               deprecated=True))
 
 
@@ -109,7 +109,7 @@ class SampleQCAlignmentDataHandler(SafeHandler):
 
 class SampleQCInsertSizesDataHandler(SafeHandler):
     """ Serves insert size distribution for a given sample run.
-    
+
     Loaded through /api/v1/sample_insert_sizes/([^/]*)$
     """
     def get(self, sample):
@@ -179,12 +179,12 @@ class SamplesPerLaneHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("samples_per_lane.html")
-        self.write(t.generate(user=self.get_current_user_name(), deprecated=True))
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(), deprecated=True))
 
 
 class SamplesPerLanePlotHandler(SamplesPerLaneDataHandler):
     """ Serves a plot for the number of samples loaded on a lane.
-    
+
     Loaded through /api/v1/plot/samples_per_lane.png
     """
     def get(self):

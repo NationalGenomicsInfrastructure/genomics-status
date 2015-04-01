@@ -295,24 +295,37 @@ Description: Details page for a single project
 
     <!-- RUNNING NOTES TAB -->
     <div class="tab-pane fade" id="tab_running_notes_content">
-      <!-- add running note -->
-      <div class="panel panel-info">
-        <div class="panel-heading">
-          <button class="pull-right btn btn-primary btn-xs" data-toggle="modal" data-target="#markdown_help">Markdown Help</button>
-          <h4 class="panel-title">Add a running note</h4>
-        </div>
-        <div class="panel-body">
-          <form action="" method="POST" id="running_notes_form" role="form">
-            <div class="form-group">
-              <label for="new_note_text">Insert new running note:</label>
-              <textarea rows="5" class="form-control" id="new_note_text"></textarea>
+        <!-- add running note -->
+        <form action="" method="POST" id="running_notes_form" role="form">
+            <div class="panel with-nav-tabs panel-info">
+                <div class="panel-heading">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#running_note_write" data-toggle="tab">Write Running Note</a></li>
+                        <li><a href="#running_note_preview" data-toggle="tab" id="preview_running_note_tab">Preview</a></li>
+                        <li class="pull-right" data-toggle="modal" data-target="#markdown_help"><a href="#running_note_preview">Markdown Help</a></li>
+                    </ul>
+                </div>
+                <div class="panel-body">
+                    <div class="tab-content">
+                        <div class="tab-pane fade in active" id="running_note_write">
+                            <textarea rows="5" class="form-control" id="new_note_text"></textarea>
+                        </div>
+                        <div class="tab-pane fade in" id="running_note_preview">
+                            <div class="panel-body">
+                                <div class="panel panel-default">
+                                  <div class="panel-heading"><a href="#">{{ user }}</a> - <span class="todays_date">Date</span></div>
+                                  <div class="panel-body" id="running_note_preview_body"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" style="margin-top:15px;" class="btn btn-primary pull-right" id="save_note_button">Submit Running Note</button>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary" id="save_note_button">Preview running note</button>
-          </form>
-        </div>
-      </div>
-      <!-- display running notes -->
-      <div class="panel-group" id="running_notes_panels"></div>
+        </form>
+
+        <!-- display running notes -->
+        <div class="panel-group" id="running_notes_panels"></div>
     </div>
 
     <!-- USER COMMUNICATION TAB -->
@@ -561,38 +574,6 @@ Description: Details page for a single project
 </div>
 
 
-<!-- RUNNING NOTES PREVIEW -->
-<div id="running_note_preview" class="modal fade">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h3 class="modal-title">Running Note Preview</h3>
-      </div>
-      <div class="modal-body">
-        <div class="panel panel-default">
-          <div class="panel-heading"><a href="#">Your Name</a> - Date</div>
-          <div class="panel-body" id="running_note_preview_body"></div>
-        </div>
-        <hr>
-        <h4>Troubleshooting</h4>
-        <p>Some tips that can fix broken markdown:</p>
-        <ul>
-          <li>Blank lines either side of things like lists</li>
-          <li>Delete spaces in <code>](</code>, <code>**bold**</code> <em>etc.</em></li>
-        </ul>
-        <p>Remember the <strong>Markdown Help</strong> button over on the right!</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
-        <button class="btn btn-primary" id="submit_running_note_preview">Submit</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
 <!-- CALIPER MODAL -->
 <div id="caliperModal" class="modal fade">
   <div class="modal-dialog">
@@ -618,5 +599,5 @@ Description: Details page for a single project
 <!-- Javascript -->
 <script src="/static/js/list.min.js"></script>
 <script src="/static/js/markdown.min.js"></script>
-<script src="/static/js/project_samples.js" id="projects-js" data-project="{{project}}"></script>
+<script src="/static/js/project_samples.js?v={{ gs_globals['git_commit'] }}" id="projects-js" data-project="{{project}}"></script>
 {% end %}

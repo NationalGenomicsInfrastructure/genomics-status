@@ -79,7 +79,7 @@ class BaseHandler(tornado.web.RequestHandler):
         except AttributeError:
             pass
         t = self.application.loader.load("error_page.html")
-        self.write(t.generate(status=status_code, reason=reason, user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, status=status_code, reason=reason, user=self.get_current_user_name()))
 
 
 class SafeHandler(BaseHandler):
@@ -106,7 +106,7 @@ class MainHandler(UnsafeHandler):
     """
     def get(self):
         t = self.application.loader.load("index.html")
-        self.write(t.generate(user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name()))
 
 
 
@@ -226,7 +226,7 @@ class LastPSULRunHandler(SafeHandler):
             response['hours'] = int(delta.seconds/3600)
             response['minutes'] = int((delta.seconds%3600)/60)
             response['seconds'] = int(delta.seconds%60)
-            
+
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(response))
 
@@ -264,4 +264,3 @@ class GoogleUser(object):
                 self.valid_email = email
                 authenticated = True
         return authenticated
-
