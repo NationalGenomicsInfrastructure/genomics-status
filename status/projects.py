@@ -226,7 +226,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             for column_category, column_dict in columns.iteritems():
                 field_items = field_items.difference(set(column_dict.values()))
         return field_items
-    
+
     def search_project_names(self, search_string=''):
         if len(search_string) == 0:
             return ''
@@ -277,7 +277,7 @@ class ProjectsSearchHandler(ProjectsBaseDataHandler):
     def get(self, search_string):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.search_project_names(search_string)))
-        
+
 
 class ProjectDataHandler(ProjectsBaseDataHandler):
     """ Serves brief information of a given project.
@@ -379,7 +379,7 @@ class CaliperImageHandler(SafeHandler):
         sample_view = self.application.projects_db.view("project/caliper_links")
         result = sample_view[project]
         try:
-            data = result.rows[0].value 
+            data = result.rows[0].value
         except TypeError:
             #can be triggered by the data.get().get() calls.
             self.write("no caliper image found")
@@ -417,7 +417,7 @@ class ProjectSamplesHandler(SafeHandler):
         """
         def get(self, project):
             t = self.application.loader.load("project_samples.html")
-            self.write(t.generate(project=project,
+            self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
                                       user=self.get_current_user_name(),
                                       columns = self.application.genstat_defaults.get('pv_columns'),
                                       columns_sample = self.application.genstat_defaults.get('sample_columns'),
@@ -432,7 +432,7 @@ class ProjectsHandler(SafeHandler):
     def get(self, projects='all'):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(columns=columns, projects=projects, user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, projects=projects, user=self.get_current_user_name()))
 
 
 class RunningNotesDataHandler(SafeHandler):

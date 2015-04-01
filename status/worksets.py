@@ -28,7 +28,7 @@ class WorksetsHandler(SafeHandler):
     def get(self, worksets='all'):
         t = self.application.loader.load("worksets.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(columns=columns, worksets=worksets, user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, worksets=worksets, user=self.get_current_user_name()))
 
 class WorksetDataHandler(SafeHandler):
     """Loaded through /api/v1/workset/[workset]"""
@@ -46,7 +46,7 @@ class WorksetHandler(SafeHandler):
     """Loaded through /workset/[workset]"""
     def get(self, workset):
         t = self.application.loader.load("workset_samples.html")
-        self.write(t.generate(workset_name=workset, user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, workset_name=workset, user=self.get_current_user_name()))
 
 class WorksetSearchHandler(SafeHandler):
     """ Searches Worksetsfor text string
@@ -122,6 +122,3 @@ class WorksetNotesDataHandler(SafeHandler):
         except:
             self.set_status(400)
             self.finish('<html><body>No note found</body></html>')
-
-
-

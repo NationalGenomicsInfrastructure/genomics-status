@@ -20,14 +20,14 @@ class ProductionHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("production.html")
-        self.write(t.generate(user=self.get_current_user_name(), deprecated=True))
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(), deprecated=True))
 
 class ProductionCronjobsHandler(SafeHandler):
     """ Serves a page with the information about all cronjobs in production servers.
     """
     def get(self):
         t = self.application.loader.load("cronjobs.html")
-        self.write(t.generate(user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name()))
 
 
 class ProductionCronjobsDataHandler(SafeHandler):
