@@ -62,6 +62,8 @@ $("#workset_notes_form").submit( function(e) {
         $('#save_note_button').removeClass('disabled').text('Submit Workset Note');
         // Clear the text box
         $('#new_note_text').val('');
+        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
+        $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
         // Create a new running note and slide it in..
         var now = new Date();
         $('<div class="panel panel-success"><div class="panel-heading">'+

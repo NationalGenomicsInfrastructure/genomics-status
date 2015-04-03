@@ -363,8 +363,8 @@ $("#running_notes_form").submit( function(e) {
     e.preventDefault();
     var text = $('#new_note_text').val().trim();
     if (text.length == 0) {
-    alert("Error: No running note entered.");
-    return false;
+        alert("Error: No running note entered.");
+        return false;
     }
 
     $('#save_note_button').addClass('disabled').text('Submitting..');
@@ -385,6 +385,8 @@ $("#running_notes_form").submit( function(e) {
         $('#save_note_button').removeClass('disabled').text('Submit Running Note');
         // Clear the text box
         $('#new_note_text').val('');
+        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
+        $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
         // Create a new running note and slide it in..
         var now = new Date();
         $('<div class="panel panel-success"><div class="panel-heading">'+
