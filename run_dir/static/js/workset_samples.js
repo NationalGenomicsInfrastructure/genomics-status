@@ -31,6 +31,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
     $('#date_run').html(date_run);
     $('#span_lims_step').html('<a href="http://genologics.scilifelab.se:8080/clarity/work-complete/'+lims_step.substr(3)+'">'+lims_step+'</a>');
     load_workset_notes();
+    load_links();
 
     if(wsdata && wsdata.hasOwnProperty("projects")){
         $.each(wsdata.projects, function(project_id, project_data){
