@@ -120,6 +120,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset/([^/]*)$", status.worksets.WorksetDataHandler),
             ("/api/v1/workset_search/([^/]*)$", status.worksets.WorksetSearchHandler),
             ("/api/v1/workset_notes/([^/]*)$", status.worksets.WorksetNotesDataHandler),
+            ("/api/v1/workset_links/([^/]*)$", status.worksets.WorksetLinksHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),
