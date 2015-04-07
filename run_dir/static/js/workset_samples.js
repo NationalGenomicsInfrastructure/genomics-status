@@ -20,85 +20,6 @@ var max_y=742;
 
 setupPlate();
 
-// Preview running notes
-$('#new_note_text').keyup(function() {
-    var now = new Date();
-    $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
-    var text = $('#new_note_text').val().trim();
-    if (text.length > 0) {
-        $('#running_note_preview_body').html(make_markdown(text));
-        check_img_sources($('#running_note_preview_body img'));
-    } else {
-        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
-    }
-    // update textarea height
-    $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
-});
-
-// Insert new running note and reload the running notes table
-$("#workset_notes_form").submit( function(e) {
-    e.preventDefault();
-    var text = $('#new_note_text').val().trim();
-    if (text.length == 0) {
-        alert("Error: No running note entered.");
-        return false;
-    }
-
-    $('#save_note_button').addClass('disabled').text('Submitting..');
-    $.ajax({
-      async: false,
-      type: 'POST',
-      url: '/api/v1/workset_notes/' +lims_step,
-      dataType: 'json',
-      data: {"note": text},
-      error: function(xhr, textStatus, errorThrown) {
-        alert('There was an error inserting the Running Note: '+errorThrown);
-        $('#save_note_button').removeClass('disabled').text('Submit Workset Note');
-        console.log(xhr);
-        console.log(textStatus);
-        console.log(errorThrown);
-      },
-      success: function(data, textStatus, xhr) {
-        $('#save_note_button').removeClass('disabled').text('Submit Workset Note');
-        // Clear the text box
-        $('#new_note_text').val('');
-        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
-        $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
-        // Create a new running note and slide it in..
-        var now = new Date();
-        $('<div class="panel panel-success"><div class="panel-heading">'+
-              '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
-              now.toDateString() + ', ' + now.toLocaleTimeString(now)+
-            '</div><div class="panel-body">'+make_markdown(data['note'])+
-            '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
-        check_img_sources($('#running_notes_panels img'));
-      }
-    });
-});
-
-function load_workset_notes(wait) {
-  // Clear previously loaded notes, if so
-  $("#workset_notes").empty();
-  $.getJSON("/api/v1/workset_notes/" + lims_step, function(data) {
-    $.each(data, function(date_str, note) {
-        noteText = make_markdown(note['note']);
-        var date = new Date(date_str);
-      $('#workset_notes').append('<div class="panel panel-default">' +
-          '<div class="panel-heading">'+
-            '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-            date.toDateString() + ', ' + date.toLocaleTimeString(date)+
-          ' <span class="glyphicon glyphicon-remove-sign delete_note" id="'+date_str+'"></span></div><div class="panel-body">'+noteText+'</div></div>');
-            //check_img_sources($('#running_notes_panels img'));
-    });
-  }).fail(function( jqxhr, textStatus, error ) {
-      var err = textStatus + ", " + error;
-      console.log( "workset notes request failed: " + err );
-  });
-}
-
-
-
-
 $.getJSON("/api/v1/workset/"+workset_name, function(data) {
 
     // Fill in the main table with summary information
@@ -110,6 +31,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
     $('#date_run').html(date_run);
     $('#span_lims_step').html('<a href="http://genologics.scilifelab.se:8080/clarity/work-complete/'+lims_step.substr(3)+'">'+lims_step+'</a>');
     load_workset_notes();
+    load_links();
 
     if(wsdata && wsdata.hasOwnProperty("projects")){
         $.each(wsdata.projects, function(project_id, project_data){
@@ -172,6 +94,138 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
     $('#loading_spinner').hide();
     $('#page_content').show();
 });
+
+// Preview running notes
+$('#new_note_text').keyup(function() {
+    var now = new Date();
+    $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
+    var text = $('#new_note_text').val().trim();
+    if (text.length > 0) {
+        $('#running_note_preview_body').html(make_markdown(text));
+        check_img_sources($('#running_note_preview_body img'));
+    } else {
+        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
+    }
+    // update textarea height
+    $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
+});
+
+// Insert new running note and reload the running notes table
+$("#workset_notes_form").submit( function(e) {
+    e.preventDefault();
+    var text = $('#new_note_text').val().trim();
+    if (text.length == 0) {
+        alert("Error: No running note entered.");
+        return false;
+    }
+
+    $('#save_note_button').addClass('disabled').text('Submitting..');
+    $.ajax({
+      async: false,
+      type: 'POST',
+      url: '/api/v1/workset_notes/' +lims_step,
+      dataType: 'json',
+      data: {"note": text},
+      error: function(xhr, textStatus, errorThrown) {
+        alert('There was an error inserting the Running Note: '+errorThrown);
+        $('#save_note_button').removeClass('disabled').text('Submit Workset Note');
+        console.log(xhr);
+        console.log(textStatus);
+        console.log(errorThrown);
+      },
+      success: function(data, textStatus, xhr) {
+        $('#save_note_button').removeClass('disabled').text('Submit Workset Note');
+        // Clear the text box
+        $('#new_note_text').val('');
+        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
+        $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
+        // Create a new running note and slide it in..
+        var now = new Date();
+        $('<div class="panel panel-success"><div class="panel-heading">'+
+              '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
+              now.toDateString() + ', ' + now.toLocaleTimeString(now)+
+            '</div><div class="panel-body">'+make_markdown(data['note'])+
+            '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
+        check_img_sources($('#running_notes_panels img'));
+      }
+    });
+});
+
+$("#link_form").submit(function(e) {
+  e.preventDefault();
+  var type = $('#new_link_type option:selected').val();
+  var title = $('#new_link_title').val();
+  var url = $('#new_link_url').val();
+  var desc = $('#new_link_desc').val();
+
+  if (title && type) {
+    $.ajax({
+      async: false,
+      type: 'POST',
+      url: '/api/v1/workset_links/' + lims_step,
+      dataType: 'json',
+      data: {'type': type, 'title': title, 'url':url, 'desc':desc}
+    }).done(function(){
+      //Clear form fields
+      $('#new_link_type, #new_link_title, #new_link_url, #new_link_desc').val("");
+      load_links();
+    }).fail(function( jqxhr, textStatus, error ) {
+        var err = textStatus + ", " + error;
+        console.log( "Couldn't insert link: " + err );
+        alert( "Error - Couldn't insert link ..  Is there something weird about this project in the LIMS?" );
+    });
+
+  }
+  else if(!$.browser.chrome) {
+    //Non-chrome users might not get a useful html5 message
+    alert('The link needs a title and a type needs to be selected');
+  }
+});
+function load_links() {
+  var link_icon = {'Deviation':'exclamation-sign text-danger', 'Other':'file text-primary'};
+  $("#existing_links").empty();
+  $.getJSON("/api/v1/workset_links/" + lims_step, function(data) {
+    $.each(data, function(key, link) {
+      var link_href = link['url'] === "" ? "" : (' href="' + link['url'] + '"');
+			var date = new Date(key);
+      $("#existing_links").append('<div class="link_wrapper"><div class="col-sm-8 col-sm-offset-2">'+
+						'<div class="media"><a class="media-left"'+link_href+'>'+
+							'<span style="font-size:18px;" class="glyphicon glyphicon-'+link_icon[link['type']]+'"></span>'+
+						'</a><div class="media-body">'+
+							'<h4 class="media-heading"><span class="media-left"><a "'+link_href+'>'+link['title']+'</a>'+
+								' &nbsp; <small><a href="mailto:'+link['email']+'">'+link['user']+'</a>'+
+								' - '+date.toDateString()+
+							'</span></h4>'+
+							link['desc']+
+						'</div></div>'+
+						'</div><div class="clearfix"></div></div>');
+    });
+  });
+}
+
+function load_workset_notes(wait) {
+  // Clear previously loaded notes, if so
+  $("#workset_notes").empty();
+  $.getJSON("/api/v1/workset_notes/" + lims_step, function(data) {
+    $.each(data, function(date_str, note) {
+        noteText = make_markdown(note['note']);
+        var date = new Date(date_str);
+      $('#workset_notes').append('<div class="panel panel-default">' +
+          '<div class="panel-heading">'+
+            '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
+            date.toDateString() + ', ' + date.toLocaleTimeString(date)+
+          ' <span class="glyphicon glyphicon-remove-sign delete_note" id="'+date_str+'"></span></div><div class="panel-body">'+noteText+'</div></div>');
+            //check_img_sources($('#running_notes_panels img'));
+    });
+  }).fail(function( jqxhr, textStatus, error ) {
+      var err = textStatus + ", " + error;
+      console.log( "workset notes request failed: " + err );
+  });
+}
+
+
+
+
 function setupPlate(){
     ctx.fillStyle = 'black';
     ctx.font = '12pt Calibri';
