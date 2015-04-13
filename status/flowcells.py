@@ -3,9 +3,14 @@
 
 import tornado.web
 import json
+import datetime
 
+from genologics.entities import Container
+from genologics import lims
+from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 from status.util import SafeHandler
+lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
 class FlowcellsHandler(SafeHandler):
     """ Serves a page which lists all flowcells with some brief info.
@@ -178,3 +183,101 @@ class FlowcellQ30Handler(SafeHandler):
             lane_q30[row.key[2]] = row.value["sum"] / row.value["count"]
 
         return lane_q30
+
+class FlowcellNotesDataHandler(SafeHandler):
+    """Serves all running notes from a given flowcell.
+    It connects to the genologics LIMS to fetch and update Running Notes information.
+    URL: /api/v1/flowcell_notes/([^/]*)
+    """
+    def get(self, flowcell):
+        self.set_header("Content-type", "application/json")
+        try:
+            p = lims.get_containers(name=flowcell[8:])[0]
+        except KeyError as e:
+            self.write('{}')
+        else:
+            # Sorted running notes, by date
+            running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
+            sorted_running_notes = OrderedDict()
+            for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0], reverse=True):
+                sorted_running_notes[k] = v
+            self.write(sorted_running_notes)
+
+    def post(self, flowcell):
+        note = self.get_argument('note', '')
+        user = self.get_secure_cookie('user')
+        email = self.get_secure_cookie('email')
+        if not note:
+            self.set_status(400)
+            self.finish('<html><body>No project id or note parameters found</body></html>')
+        else:
+            newNote = {'user': user, 'email': email, 'note': note}
+            try:
+                p = lims.get_containers(name=flowcell[8:])[0]
+            except:
+                self.status(400)
+                self.write('Flowcell not found')
+            else:
+                running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
+                running_notes[str(datetime.datetime.now())] = newNote
+                p.udf['Notes'] = json.dumps(running_notes)
+                p.put()
+                self.set_status(201)
+                self.write(json.dumps(newNote))
+
+
+class FlowcellLinksDataHandler(SafeHandler):
+    """ Serves external links for each project
+        Links are stored as JSON in genologics LIMS / project
+        URL: /api/v1/links/([^/]*)
+    """
+
+    def get(self, flowcell):
+        self.set_header("Content-type", "application/json")
+        try:
+            p = lims.get_containers(name=flowcell[8:])[0]
+        except KeyError as e:
+            self.write('{}')
+        else:
+            links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
+
+            #Sort by descending date, then hopefully have deviations on top
+            sorted_links = OrderedDict()
+            for k, v in sorted(links.iteritems(), key=lambda t: t[0], reverse=True):
+                sorted_links[k] = v
+            sorted_links = OrderedDict(sorted(sorted_links.iteritems(), key=lambda (k,v): v['type']))
+            self.write(sorted_links)
+
+    def post(self, flowcell):
+        user = self.get_secure_cookie('user')
+        email = self.get_secure_cookie('email')
+        a_type = self.get_argument('type', '')
+        title = self.get_argument('title', '')
+        url = self.get_argument('url', '')
+        desc = self.get_argument('desc','')
+
+        if not a_type or not title:
+            self.set_status(400)
+            self.finish('<html><body>Link title and type is required</body></html>')
+        else:
+            try:
+                p = lims.get_containers(name=flowcell[8:])[0]
+            except:
+                self.status(400)
+                self.write('Flowcell not found')
+            else:
+                links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
+                links[str(datetime.datetime.now())] = {'user': user,
+                                                   'email': email,
+                                                   'type': a_type,
+                                                   'title': title,
+                                                   'url': url,
+                                                   'desc': desc}
+                p.udf['Links'] = json.dumps(links)
+                p.put()
+                self.set_status(200)
+                #ajax cries if it does not get anything back
+                self.set_header("Content-type", "application/json")
+                self.finish(json.dumps(links))
+
+

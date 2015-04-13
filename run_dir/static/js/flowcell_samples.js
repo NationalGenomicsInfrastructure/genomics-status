@@ -13,6 +13,9 @@ for (var i = 1; i < 9; i++) {
 };
 
 $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
+
+    load_running_notes()
+    load_links()
     
     // Fill in the main table with summary information
     var tbody = '<tr> \
