@@ -11,22 +11,36 @@ Description: Shows information about a specific flow cell
 
 <div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading flowcell page..</div>
 <div id="page_content" style="display:none;">
-
-    <h1>Flow Cell <span id="page_title">{{ flowcell }}</span></h1>
-    <table class="table table-bordered narrow-headers" id="fc_info">
-        <tbody>
-            <tr>
-                <td class="text-muted"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span> <em>Loading..</em></td>
-            </tr>
-        </tbody>
-    </table>
-
-
-    <h3>Lane Information</h3>
-    <div id="lanes"></div>
-
+<div class="tabbable">
+  <ul class="nav nav-tabs">
+    <li class="active"><a href="#tab_details_content" role="tab" data-toggle="tab">Flowcell information</a></li>
+    <li><a href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
+    <li><a href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
+  </ul>
+  <div class="tab-content">
+    <div class="tab-pane fade in active" id="tab_details_content">
+        <h1>Flow Cell <span id="page_title">{{ flowcell }}</span></h1>
+        <table class="table table-bordered narrow-headers" id="fc_info">
+            <tbody>
+                <tr>
+                    <td class="text-muted"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span> <em>Loading..</em></td>
+                </tr>
+            </tbody>
+        </table>
+        <h3>Lane Information</h3>
+        <div id="lanes"></div>
+    </div>
+    <!-- FLOWCELL NOTES TAB -->
+    {% include "running_notes_tab.html" %}
+    <!-- LINK TAB -->
+    {% include "link_tab.html" %}
+    <!-- RUNNING NOTES HELP -->
+    {% include "running_notes_help.html" %}
+  </div>
 </div>
 
 <script src="/static/js/flowcell_samples.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell }}"></script>
+<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell}}"></script>
+<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell }}"></script>
 
 {% end %}
