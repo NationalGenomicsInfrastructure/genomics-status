@@ -125,7 +125,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         summary_view = self.application.projects_db.view("project/summary", descending=True)
         if filter_projects == 'closed':
             summary_view = summary_view[["closed",'Z']:["closed",'']]
-        elif filter_projects != 'all' :
+        elif filter_projects not in ['all', 'aborted'] :
             summary_view = summary_view[["open",'Z']:["open",'']]
 
 
