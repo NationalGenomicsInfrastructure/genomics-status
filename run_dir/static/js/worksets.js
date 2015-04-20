@@ -77,33 +77,49 @@ function load_table() {
 
 function load_table_head(columns){
   var tbl_head = $('<tr>');
+  var tbl_foot= $('<tr>');
   $.each(columns, function(i, column_tuple) {
     tbl_head.append($('<th>')
       .addClass('sort a')
       .attr('data-sort', column_tuple[1])
       .text(column_tuple[0])
     );
+    tbl_foot.append($('<th>')
+      .text(column_tuple[0])
+    );
   });
   $("#workset_table_head").html(tbl_head);
+  $("#workset_table_footer").html(tbl_foot);
 }
 
 
 
 // Initialize sorting and searching javascript plugin
 function init_listjs(no_items, columns) {
-  column_names = new Array();
-  $.each(columns, function(i, column_tuple){
-    column_names.push(column_tuple[1]);
-  });
-  var options = {
-    valueNames: column_names,
-    page: no_items /* Default is to show only 200 items at a time. */
-  };
-  var featureList = new List('page_content', options);
-  featureList.search($('#search_field').val());
-  featureList.sort('date_run', { order: "desc" })
-}
+    // Setup - add a text input to each footer cell
+    $('#workset_table tfoot th').each( function () {
+      var title = $('#workset_table thead th').eq( $(this).index() ).text();
+      $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+    } );
+                             
+    var table = $('#workset_table').DataTable({
+      "paging":false,
+      "info":false,
+      "order": [[ 0, "desc" ]]
+    });
 
+    //Add the bootstrap classes to the search thingy
+    $('div.dataTables_filter input').addClass('form-control search search-query');
+    // Apply the search
+    table.columns().every( function () {
+        var that = this;
+        $( 'input', this.footer() ).on( 'keyup change', function () {
+            that
+            .search( this.value )
+            .draw();
+        } );
+    } );
+}
 
 function load_workset_notes(wait) {
   // Clear previously loaded notes, if so
