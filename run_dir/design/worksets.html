@@ -17,18 +17,12 @@ Description: Shows a table with all worksets.
 <div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading worksets table..</div>
 <div id="page_content" style="display:none;">
 
-<form id="Search-form" class="form-inline marginBottom">
-  <div class="form-group">
-    <label for="search_field">Search Table:</label>
-    <input type="text" class="form-control search search-query" id="search_field" placeholder="Search...">
-    <span class="help-inline text-muted">Tip: Sort columns by clicking on the column headers.</span>
-  </div>
-</form>
-
 <div id="workset-list">
   <table class="table table-striped table-bordered sortable" id="workset_table">
     <thead id="workset_table_head">
     </thead>
+    <tfoot id="workset_table_footer">
+    </tfoot>
     <tbody class="list" id="workset_table_body">
     </tbody>
   </table>
@@ -36,6 +30,6 @@ Description: Shows a table with all worksets.
 
 </div> <!-- #page_content -->
 
-<script src="/static/js/list.min.js"></script>
+<script src="/static/js/jquery.dataTables.min.js?v={{ gs_globals['git_commit'] }}"></script>
 <script src="/static/js/worksets.js?v={{ gs_globals['git_commit'] }}" id="worksets-js" data-worksets="{{worksets}}"></script>
 {% end %}
