@@ -168,6 +168,7 @@ function init_listjs(no_items, columns) {
                              
     var table = $('#project_table').DataTable({
       "paging":false,
+      "retrieve": true,
       "info":false,
       "order": [[ 0, "desc" ]]
     });
