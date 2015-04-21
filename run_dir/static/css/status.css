@@ -75,6 +75,9 @@ th.link:hover {
   cursor: pointer;
   text-decoration: underline;
 }
+tfoot {
+  display: table-header-group;
+}
 /* Used on the Flow Cell Samples page */
 table.narrow-headers th { width: 20%; }
 
