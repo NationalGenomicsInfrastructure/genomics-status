@@ -115,7 +115,11 @@ function init_listjs(no_items, columns) {
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#fc_table_filter').addClass('form-inline');
+    $('#fc_table_filter').addClass('form-inline pull-right');
+    $("#fc_table_filter").appendTo("h1");
+    $('#fc_table_filter label input').appendTo($('#fc_table_filter'));
+    $('#fc_table_filter label').remove();
+    $("#fc_table_filter input").attr("placeholder", "Search..");
     // Apply the search
     table.columns().every( function () {
         var that = this;
