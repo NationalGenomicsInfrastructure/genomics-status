@@ -15,9 +15,18 @@ lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 class FlowcellsHandler(SafeHandler):
     """ Serves a page which lists all flowcells with some brief info.
     """
+    def list_flowcells(self):
+        flowcells = OrderedDict()
+        fc_view = self.application.flowcells_db.view("info/summary",
+                                                     descending=True)
+        for row in fc_view:
+            flowcells[row.key] = row.value
+
+        return flowcells
     def get(self):
         t = self.application.loader.load("flowcells.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name()))
+        fcs=self.list_flowcells()
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(), flowcells=fcs))
 
 
 class FlowcellHandler(SafeHandler):
