@@ -88,49 +88,7 @@ Description: Shows a table with all flow cells.
 $( document ).ready(function() {
 init_listjs();
 });
-    // Populate the page
-    /*$.getJSON("/api/v1/flowcells", function(data) {
-        var tbl_bdy = "";
-        var num_rows = 0;
-        $.each(data, function(flowcell, info) {
-            num_rows++;
-            var system="-";
-            if (info['type']){
-                system=info['type'].split(" ")[0];
-            }
-    
-            var chem="-";
-            if (info['fctype']){
-                var ar=info['fctype'].split(" ");
-                chem=ar[ar.length-1];
-            } else if (info['kitver']){
-                chem=info['kitver'].substr(info['kitver'].length-2);
-            }
-
-            tbl_bdy += ['<tr>',
-                '<td class="run_id"><a href="/flowcells/' + flowcell + '">' + info["run id"] + '</a></td>',
-                '<td class="start_date">20' + info['startdate'].substr(0,2) + '-' + info['startdate'].substr(2,2) + '-' + info['startdate'].substr(4) + '</td>',
-                '<td class="system">' + system+ '</td>',
-                '<td class="mode">' + (info['mode'] ? info['mode'] : '-') + '</td>',
-                '<td class="chemistry" class="text-center">' + chem + '</td>',
-                '<td class="recipe">' + (info['recipe'] ? info['recipe'] : '-') + '</td>',
-                '<td class="software_version">' + (info['appver'] ? info['appver'] : '-') + '</td>',
-                '<td class="yield" class="text-right">' + (info['yield'] ? info['yield'] : '-') + '</td>',
-                '<td class="flowcell">' + info['flowcell'] + '</td>',
-                '<td class="pos" class="text-center">' + info['pos'] + '</td>',
-                '<td class="instrument">' + info['instrument'] + '</td>',
-                '<td class="demultiplexing">' + info['demultiplexing'] + '</td>',
-            '</tr>'].join('\n');
-        })
-
-        $("#fc_table tbody").html(tbl_bdy);
-        
-        init_listjs(num_rows);
-    });
-});
-*/
 // Initialize sorting and searching javascript plugin
-<<<<<<< HEAD
 function init_listjs() {
     // Setup - add a text input to each footer cell
     $('#fc_table tfoot th').each( function () {
