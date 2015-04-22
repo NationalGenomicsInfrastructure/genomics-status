@@ -81,6 +81,7 @@ function load_table() {
     if ($.fn.dataTable.isDataTable( '#project_table' )){
         var dtbl= $('#project_table').DataTable();
         dtbl.destroy();
+        $("#project_table_filter").remove();
     }
     $("#project_table_body").empty();
     var size = 0;
