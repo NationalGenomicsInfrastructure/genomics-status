@@ -31,7 +31,6 @@ $(document).ready(function() {
   
   // Load the presets first (to get the table headers)
   $.when(load_presets()).done(function(){
-      console.log("check");
     // Show the page   
     $('#loading_spinner').hide();
     $('#page_content').show();
