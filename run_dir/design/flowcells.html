@@ -11,7 +11,7 @@ Description: Shows a table with all flow cells.
 
 <div class="container-fluid" id="flowcell_list">
   <div id="fc_table_div">
-      <h1><span id="page_title">Flowcells</span> <input class="form-control inline-textbox search search-query" type="text" placeholder="Search..." id="search_field"></h1>
+      <h1><span id="page_title">Flowcells</span> </h1>
       <table class="table table-striped table-bordered sortable" id="fc_table">
         <thead>
           <tr>
@@ -29,21 +29,67 @@ Description: Shows a table with all flow cells.
             <th class="sort" data-sort="demultiplexing">Demultiplexing</th>
           </tr>
         </thead>
+        <tfoot>
+          <tr>
+            <th class="sort" data-sort="run_id">Run id</th>
+            <th class="sort" data-sort="start_date">Start date</th>
+            <th class="sort" data-sort="system">System</th>
+            <th class="sort" data-sort="mode">Mode</th>
+            <th class="sort" data-sort="chemistry">Chemistry</th>
+            <th class="sort" data-sort="recipe">Recipe</th>
+            <th class="sort" data-sort="software_version">Software Version</th>
+            <th class="sort" data-sort="yield">Yield (<abbr title="Giga bases">Gb</abbr>)</th>
+            <th class="sort" data-sort="flowcell">Flowcell</th>
+            <th class="sort" data-sort="pos">Pos</th>
+            <th class="sort" data-sort="instrument">Instrument</th>
+            <th class="sort" data-sort="demultiplexing">Demultiplexing</th>
+          </tr>
+        </tfoot>
         <tbody class="list">
+
+         {% for onefc in flowcells %}
             <tr>
-                <td colspan="11" class="text-muted"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span> <em>Loading..</em></td>
+                <td class="run_id"><a href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a></td>
+                <td class="start_date">20{{ flowcells[onefc]["startdate"][0:2] }}{{ flowcells[onefc]["startdate"][2:4] }}{{ flowcells[onefc]["startdate"][4:] }}</td>
+                <td class="system">
+                {% if 'type' in flowcells[onefc]%}
+                    {{ flowcells[onefc]['type'].split(" ")[0] }}
+                {% else%}
+                    -
+                {% end %}
+                </td>
+                <td class="mode">{{ flowcells[onefc].get('mode', '-') }}</td>
+                <td class="chemistry" class="text-center">
+                {% if 'fctype' in flowcells[onefc] %}
+                    {{ flowcells[onefc]['fctype'].split(" ")[-1] }}
+                {% elif 'kitver' in flowcells[onefc] %}
+                    {{ flowcells[onefc]['kitver'][-2:] }}
+                {% else %}
+                -
+                {% end %}
+                </td>
+                <td class="recipe">{{ flowcells[onefc].get('recipe', '-') }}</td>
+                <td class="software_version">{{ flowcells[onefc].get('appver', '-') }}</td>
+                <td class="yield" class="text-right">{{ flowcells[onefc].get('yield', '-') }}</td>
+                <td class="flowcell">{{ flowcells[onefc]['flowcell'] }}</td>
+                <td class="pos" class="text-center">{{ flowcells[onefc]['pos'] }}</td>
+                <td class="instrument">{{ flowcells[onefc]['instrument'] }}</td>
+                <td class="demultiplexing">{{ flowcells[onefc]['demultiplexing'] }}</td>
             </tr>
+         {% end %}
         </tbody>
       </table>
     </div>
 </div>
 
+<script src="/static/js/jquery.dataTables.min.js"></script>
 <!-- Table Sorting -->
-<script src="/static/js/list.min.js"></script>
 <script type="text/javascript">
 $( document ).ready(function() {
+init_listjs();
+});
     // Populate the page
-    $.getJSON("/api/v1/flowcells", function(data) {
+    /*$.getJSON("/api/v1/flowcells", function(data) {
         var tbl_bdy = "";
         var num_rows = 0;
         $.each(data, function(flowcell, info) {
@@ -82,15 +128,37 @@ $( document ).ready(function() {
         init_listjs(num_rows);
     });
 });
-
+*/
 // Initialize sorting and searching javascript plugin
-function init_listjs (num_rows) {
-    var options = {
-        valueNames: ['run_id', 'start_date', 'system', 'mode', 'chemistry', 'recipe', 'software_version', 'yield', 'flowcell', 'pos', 'instrument', 'demultiplexing'],
-        page: num_rows  // Default is to show only 200 items at a time.
-    };
-    var featureList = new List('fc_table_div', options);
-    featureList.search($('#search_field').val());
+function init_listjs() {
+    // Setup - add a text input to each footer cell
+    $('#fc_table tfoot th').each( function () {
+      var title = $('#fc_table thead th').eq( $(this).index() ).text();
+      $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
+    } );
+                             
+    var table = $('#fc_table').DataTable({
+      "paging":false,
+      "info":false,
+      "order": [[ 0, "desc" ]]
+    });
+
+    //Add the bootstrap classes to the search thingy
+    $('div.dataTables_filter input').addClass('form-control search search-query');
+    $('#fc_table_filter').addClass('form-inline pull-right');
+    $("#fc_table_filter").appendTo("h1");
+    $('#fc_table_filter label input').appendTo($('#fc_table_filter'));
+    $('#fc_table_filter label').remove();
+    $("#fc_table_filter input").attr("placeholder", "Search..");
+    // Apply the search
+    table.columns().every( function () {
+        var that = this;
+        $( 'input', this.footer() ).on( 'keyup change', function () {
+            that
+            .search( this.value )
+            .draw();
+        } );
+    } );
 }
 </script>
 
