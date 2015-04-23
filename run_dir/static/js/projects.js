@@ -41,6 +41,7 @@ $(document).ready(function() {
   
 });
 
+
 // Load the Projects Table
 function load_table() {
   // Get the columns and write the table header
@@ -77,6 +78,11 @@ function load_table() {
     fields.push($(this).attr('name'));
   });
   return $.getJSON(url, function(data) {
+    if ($.fn.dataTable.isDataTable( '#project_table' )){
+        var dtbl= $('#project_table').DataTable();
+        dtbl.destroy();
+        $("#project_table_filter").remove();
+    }
     $("#project_table_body").empty();
     var size = 0;
     undefined_fields=[];
@@ -163,15 +169,19 @@ function init_listjs(no_items, columns) {
     // Setup - add a text input to each footer cell
     $('#project_table tfoot th').each( function () {
       var title = $('#project_table thead th').eq( $(this).index() ).text();
-      $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+      $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
     } );
                              
-    var table = $('#project_table').DataTable({
-      "paging":false,
-      "retrieve": true,
-      "info":false,
-      "order": [[ 0, "desc" ]]
-    });
+    if ($.fn.dataTable.isDataTable( '#project_table' )){
+        var table = $('#project_table').DataTable();
+    }else{
+        var table = $('#project_table').DataTable({
+          "paging":false,
+          "destroy": true,
+          "info":false,
+          "order": [[ 0, "desc" ]]
+        });
+    }
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
@@ -190,7 +200,6 @@ function init_listjs(no_items, columns) {
         } );
     } );
 }
-
 
 //Check or uncheck all fields from clicked category
 function choose_column(col){
@@ -218,6 +227,7 @@ function choose_column(col){
 ///////////////////////////////
 
 function load_presets() {
+    console.log('test');
   return $.getJSON('/api/v1/presets?presets_list=pv_presets', function (data) {
     var default_presets = data['default'];
     var user_presets = data['user'];
@@ -245,7 +255,6 @@ function load_presets() {
     else {
       load_table();
     }
-    
   });
 }
 

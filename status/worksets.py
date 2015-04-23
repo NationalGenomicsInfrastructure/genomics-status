@@ -25,10 +25,24 @@ class WorksetsDataHandler(SafeHandler):
 
 class WorksetsHandler(SafeHandler):
     """Loaded through /worksets"""
+    def worksets_data(self):
+        ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
+        result={}
+        for row in ws_view:
+            result[row.key]=row.value
+            result[row.key].pop("_id", None)
+            result[row.key].pop("_rev", None)
+        return result
+
     def get(self, worksets='all'):
         t = self.application.loader.load("worksets.html")
-        columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, worksets=worksets, user=self.get_current_user_name()))
+        ws_data=self.worksets_data()
+        headers= [['Date Run', 'date_run'],['Workset Name', 'workset_name'], \
+                 ['Projects (samples)','projects'], ['Operator', 'technician'],\
+                 ['Application', 'application'], ['Library','library_method'], \
+                 ['Samples Passed', 'passed'],['Samples Failed', 'failed'], \
+                 ['Pending Samples', 'unknown'], ['Total samples', 'total']];
+        self.write(t.generate(gs_globals=self.application.gs_globals, worksets=worksets, user=self.get_current_user_name(), ws_data=ws_data,headers=headers))
 
 class WorksetDataHandler(SafeHandler):
     """Loaded through /api/v1/workset/[workset]"""
