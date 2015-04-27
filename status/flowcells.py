@@ -201,14 +201,8 @@ class FlowcellNotesDataHandler(SafeHandler):
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         try:
-            if flowcell[7:].startswith('00000000'):
-                #Miseq
-                proc=lims.get_processes(type='MiSeq Run (MiSeq) 4.0',udf={'Flow Cell ID': flowcell[7:]})[0]
-                p = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
-            else:    
-                #Hiseq
-                p = lims.get_containers(name=flowcell[8:])[0]
-        except KeyError as e:
+            p=get_container_from_id(flowcell)
+        except (KeyError, IndexError) as e:
             self.write('{}')
         else:
             # Sorted running notes, by date
@@ -228,13 +222,8 @@ class FlowcellNotesDataHandler(SafeHandler):
         else:
             newNote = {'user': user, 'email': email, 'note': note}
             try:
-                if flowcell[7:].startswith('00000000'):
-                    #Miseq
-                    proc=lims.get_processes(type='MiSeq Run (MiSeq) 4.0',udf={'Flow Cell ID': flowcell[7:]})[0]
-                    p = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
-                else:    
-                    p = lims.get_containers(name=flowcell[8:])[0]
-            except:
+                p=get_container_from_id(flowcell)
+            except (KeyError, IndexError) as e:
                 self.set_status(400)
                 self.write('Flowcell not found')
             else:
@@ -255,14 +244,8 @@ class FlowcellLinksDataHandler(SafeHandler):
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         try:
-            if flowcell[8:].startswith('00000000'):
-                #Miseq
-                proc=lims.get_processes(type='MiSeq Run (MiSeq) 4.0',udf={'Flow Cell ID': flowcell[7:]})[0]
-                p = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
-            else:    
-                #Hiseq
-                p = lims.get_containers(name=flowcell[8:])[0]
-        except KeyError as e:
+            p=get_container_from_id(flowcell)
+        except (KeyError, IndexError) as e:
             self.write('{}')
         else:
             links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
@@ -287,14 +270,8 @@ class FlowcellLinksDataHandler(SafeHandler):
             self.finish('<html><body>Link title and type is required</body></html>')
         else:
             try:
-                if flowcell[7:].startswith('00000000'):
-                    #Miseq
-                    proc=lims.get_processes(type='MiSeq Run (MiSeq) 4.0',udf={'Flow Cell ID': flowcell[7:]})[0]
-                    p = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
-                else:    
-                    #Hiseq
-                    p = lims.get_containers(name=flowcell[8:])[0]
-            except:
+                p=get_container_from_id(flowcell)
+            except (KeyError, IndexError) as e:
                 self.status(400)
                 self.write('Flowcell not found')
             else:
@@ -311,5 +288,17 @@ class FlowcellLinksDataHandler(SafeHandler):
                 #ajax cries if it does not get anything back
                 self.set_header("Content-type", "application/json")
                 self.finish(json.dumps(links))
+
+#Functions
+def get_container_from_id(flowcell):
+    if flowcell[7:].startswith('00000000'):
+        #Miseq
+        proc=lims.get_processes(type='MiSeq Run (MiSeq) 4.0',udf={'Flow Cell ID': flowcell[7:]})[0]
+        c = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
+    else:    
+        #Hiseq
+        c = lims.get_containers(name=flowcell[8:])[0]
+    return c
+
 
 
