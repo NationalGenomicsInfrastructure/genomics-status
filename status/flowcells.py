@@ -201,7 +201,13 @@ class FlowcellNotesDataHandler(SafeHandler):
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         try:
-            p = lims.get_containers(name=flowcell[8:])[0]
+            if flowcell[7:].startswith('00000000'):
+                #Miseq
+                proc=lims.get_processes(type='MiSeq Run (MiSeq) 4.0',udf={'Flow Cell ID': flowcell[7:]})[0]
+                p = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
+            else:    
+                #Hiseq
+                p = lims.get_containers(name=flowcell[8:])[0]
         except KeyError as e:
             self.write('{}')
         else:
@@ -218,13 +224,18 @@ class FlowcellNotesDataHandler(SafeHandler):
         email = self.get_secure_cookie('email')
         if not note:
             self.set_status(400)
-            self.finish('<html><body>No project id or note parameters found</body></html>')
+            self.finish('<html><body>No note parameters found</body></html>')
         else:
             newNote = {'user': user, 'email': email, 'note': note}
             try:
-                p = lims.get_containers(name=flowcell[8:])[0]
+                if flowcell[7:].startswith('00000000'):
+                    #Miseq
+                    proc=lims.get_processes(type='MiSeq Run (MiSeq) 4.0',udf={'Flow Cell ID': flowcell[7:]})[0]
+                    p = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
+                else:    
+                    p = lims.get_containers(name=flowcell[8:])[0]
             except:
-                self.status(400)
+                self.set_status(400)
                 self.write('Flowcell not found')
             else:
                 running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
@@ -244,7 +255,13 @@ class FlowcellLinksDataHandler(SafeHandler):
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
         try:
-            p = lims.get_containers(name=flowcell[8:])[0]
+            if flowcell[8:].startswith('00000000'):
+                #Miseq
+                proc=lims.get_processes(type='MiSeq Run (MiSeq) 4.0',udf={'Flow Cell ID': flowcell[7:]})[0]
+                p = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
+            else:    
+                #Hiseq
+                p = lims.get_containers(name=flowcell[8:])[0]
         except KeyError as e:
             self.write('{}')
         else:
@@ -270,7 +287,13 @@ class FlowcellLinksDataHandler(SafeHandler):
             self.finish('<html><body>Link title and type is required</body></html>')
         else:
             try:
-                p = lims.get_containers(name=flowcell[8:])[0]
+                if flowcell[7:].startswith('00000000'):
+                    #Miseq
+                    proc=lims.get_processes(type='MiSeq Run (MiSeq) 4.0',udf={'Flow Cell ID': flowcell[7:]})[0]
+                    p = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
+                else:    
+                    #Hiseq
+                    p = lims.get_containers(name=flowcell[8:])[0]
             except:
                 self.status(400)
                 self.write('Flowcell not found')
