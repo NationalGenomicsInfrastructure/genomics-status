@@ -29,7 +29,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
     lims_step=wsdata['id'];
     date_run=wsdata['date_run'];
     $('#date_run').html(date_run);
-    $('#span_lims_step').html('<a href="http://genologics.scilifelab.se:8080/clarity/work-complete/'+lims_step.substr(3)+'">'+lims_step+'</a>');
+    $('#span_lims_step').html('<a href="http://genologics.scilifelab.se:8080/clarity/work-complete/'+lims_step.split("-")[1]+'">'+lims_step+'</a>');
     load_running_notes();
     load_links();
 
