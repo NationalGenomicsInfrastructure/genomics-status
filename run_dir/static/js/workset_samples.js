@@ -53,7 +53,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                      <th>Sample name</th> \
                      <th>Submitter Name</th> \
                      <th>Reception Control</th> \
-                     <th>Library</th> \
+                     <th><abbr title="AggregateQC date, QC status, sample concentration, insert size">Library</abbr></th> \
                      <th>Sequencing</th> \
                      <th>Location</th> \
                  </tr> ';
@@ -65,7 +65,12 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                 <td>";
             $.each(sample_data.library, function(lib_id, lib_data){
                 lims_id=lib_id.split("-")[1];
-                content+="<a href='https://genologics.scilifelab.se:8443/clarity/work-complete/"+lims_id+"'>"+lib_id+'</a> <span class="label label-date sentenceCase">'+lib_data['date']+"</span> "+auto_format(lib_data['status'])+"<br />";
+                content+="<a href='https://genologics.scilifelab.se:8443/clarity/work-complete/"+lims_id+"'>" ;
+                content+=lib_data['date']+"</a> "
+                content+=auto_format(lib_data['status']);
+                content+=" <span class='label label-date'>"+lib_data['concentration']+"</span>"
+                content+=" <span class='label label-date'>"+lib_data['size']+"bp</span>"
+                content+="<br />";
             });
                 content+="</td><td>";
             $.each(sample_data.sequencing, function(seq_id, seq_data){
