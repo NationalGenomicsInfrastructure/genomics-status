@@ -330,7 +330,7 @@ Description: Details page for a single project
           <p>Choose which columns you would like to see in the project's Samples table.
             Click a heading to select / deselect all checkboxes in that group.</p>
           <div class="row">
-            <div class="col-sm-3" id="basic-columns">
+            <div class="col-sm-4" id="basic-columns">
               <h4 class="search-action" data-action="filterHeader">Basic <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['BASIC_COLUMNS'].iteritems() %}
               <div class="checkbox">
@@ -341,7 +341,7 @@ Description: Details page for a single project
               </div>
               {% end %}
             </div>
-            <div class="col-sm-3" id="details-columns">
+            <div class="col-sm-4" id="details-columns">
               <h4 class="search-action" data-action="filterHeader">Sample Details <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['DETAILS_COLUMNS'].iteritems() %}
               <div class="checkbox">
@@ -352,7 +352,7 @@ Description: Details page for a single project
               </div>
               {% end %}
             </div>
-            <div class="col-sm-3" id="initial-qc-columns">
+            <div class="col-sm-4" id="initial-qc-columns">
               <h4 class="search-action" data-action="filterHeader">Initial QC <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['INITIAL_QC_COLUMNS'].iteritems() %}
               <div class="checkbox">
