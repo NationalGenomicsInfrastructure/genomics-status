@@ -12,6 +12,8 @@ import paramiko
 import base64
 import urllib
 import os
+import logging
+
 
 from itertools import ifilter
 from collections import OrderedDict
@@ -26,6 +28,7 @@ from genologics.config import BASEURI, USERNAME, PASSWORD
 from zendesk import Zendesk, ZendeskError, get_id_from_url
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
+application_log=logging.getLogger("tornado.application")
 
 class PresetsHandler(SafeHandler):
     """Handler to GET and POST/PUT personalized and default set of presets in
@@ -319,11 +322,13 @@ class ProjectSamplesDataHandler(SafeHandler):
         sample_data["sample_run_metrics"] = []
         sample_data["prep_status"] = []
         sample_data["prep_finished_date"] = []
+        sample_data["run_metrics_data"]={}
         if "library_prep" in sample_data:
             for lib_prep, content in sample_data["library_prep"].iteritems():
                 if "sample_run_metrics" in content:
                     for run, id in content["sample_run_metrics"].iteritems():
                         sample_data["sample_run_metrics"].append(run)
+                        sample_data["run_metrics_data"][run]=self.get_sample_run_metrics(run)
                 if "prep_status" in content:
                     if content["prep_status"] == "PASSED":
                         sample_data["prep_status"].append(content["prep_status"])
@@ -355,6 +360,17 @@ class ProjectSamplesDataHandler(SafeHandler):
             sample_data = self.sample_data(sample_data, project, sample)
             output[sample] = sample_data
         return output
+
+    def get_sample_run_metrics(self, metrics_id):
+        data={}
+        metrics_view=self.application.samples_db.view('sample/INS_metrics')
+        if len(metrics_view[metrics_id].rows)>1:
+            application_log.warn("More than one metrics doc found for id {0}".format(metrics_id))
+        
+        for row in metrics_view[metrics_id]:
+            data=row.value
+
+        return data
 
     def get(self, project):
         self.set_header("Content-type", "application/json")
