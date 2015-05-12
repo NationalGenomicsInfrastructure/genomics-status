@@ -683,6 +683,17 @@ function load_samples_table() {
             tbl_row += '</td>';
           });
         }
+        else if (subset == "bioinfo-columns" && info['run_metrics_data'] !== undefined) {
+          $.each(fields, function(idx, column_tuple){
+            var column_name = column_tuple[0];
+            var column_id = column_tuple[1];
+            tbl_row += '<td class="' + column_id + '">';
+            $.each(info['run_metrics_data'], function(rmd, rmid) {
+              tbl_row += auto_format(rmid[column_id]);
+            });
+            tbl_row += '</td>';
+          });
+        }
 
         // Details columns
         else {

@@ -365,7 +365,7 @@ Description: Details page for a single project
             </div>
           </div>
           <div class="row">
-            <div class="col-sm-4" id="library-prep-columns">
+            <div class="col-sm-3" id="library-prep-columns">
               <h4 class="search-action" data-action="filterHeader">Library Prep <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['LIBRARY_PREP_COLUMNS'].iteritems() %}
               <div class="checkbox">
@@ -376,7 +376,7 @@ Description: Details page for a single project
               </div>
               {% end %}
             </div>
-            <div class="col-sm-4" id="library-validation-columns">
+            <div class="col-sm-3" id="library-validation-columns">
               <h4 class="search-action" data-action="filterHeader">Library QC <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
               <div class="checkbox">
@@ -387,12 +387,23 @@ Description: Details page for a single project
               </div>
               {% end %}
             </div>
-            <div class="col-sm-4" id="pre-prep-library-validation-columns">
+            <div class="col-sm-3" id="pre-prep-library-validation-columns">
               <h4 class="search-action" data-action="filterHeader">Pre Prep Library QC <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['PRE_PREP_LIBRARY_VALIDATION_COLUMNS'].iteritems() %}
               <div class="checkbox">
                 <label>
                   <input type="checkbox" class="filterCheckbox" data-columngroup="pre-prep-library-validation-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="pre-prep-library-validation-columns-{{col_name}}">
+                  {{col_display_name}}
+                </label>
+              </div>
+              {% end %}
+            </div>
+            <div class="col-sm-3" id="bioinfo-columns">
+              <h4 class="search-action" data-action="filterHeader">Bioinfo <input class="headingCheckbox" type="checkbox"></h4>
+              {% for col_display_name, col_name in columns_sample['BIOINFO_COLUMNS'].iteritems() %}
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" class="filterCheckbox" data-columngroup="bioinfo-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="bioinfo-columns-{{col_name}}">
                   {{col_display_name}}
                 </label>
               </div>
