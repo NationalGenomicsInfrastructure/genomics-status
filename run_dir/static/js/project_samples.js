@@ -689,7 +689,17 @@ function load_samples_table() {
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">';
             $.each(info['run_metrics_data'], function(rmd, rmid) {
-              tbl_row += auto_format(rmid[column_id]);
+              val=parseFloat(rmid[column_id])
+              if (val === 'NaN'){
+                  tbl_row += auto_format(rmid[column_id]);
+              }else{
+               if(val % 1 === 0){
+                  tbl_row += auto_format(val);
+               }else{
+                  tbl_row += auto_format(val.toFixed(2));
+               }
+              }
+              tbl_row+='<br />';
             });
             tbl_row += '</td>';
           });
