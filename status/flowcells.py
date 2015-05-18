@@ -17,12 +17,20 @@ class FlowcellsHandler(SafeHandler):
     """
     def list_flowcells(self):
         flowcells = OrderedDict()
+        temp_flowcells={}
         fc_view = self.application.flowcells_db.view("info/summary",
                                                      descending=True)
         for row in fc_view:
-            flowcells[row.key] = row.value
+            temp_flowcells[row.key] = row.value
 
-        return flowcells
+        xfc_view = self.application.x_flowcells_db.view("info/summary",
+                                                     descending=True)
+        for row in xfc_view:
+            temp_flowcells[row.key] = row.value
+
+        return OrderedDict(sorted(temp_flowcells.items()))
+
+
     def get(self):
         t = self.application.loader.load("flowcells.html")
         fcs=self.list_flowcells()
@@ -48,13 +56,17 @@ class FlowcellsDataHandler(SafeHandler):
         self.write(json.dumps(self.list_flowcells()))
 
     def list_flowcells(self):
-        flowcells = OrderedDict()
+        flowcells = {}
         fc_view = self.application.flowcells_db.view("info/summary",
                                                      descending=True)
         for row in fc_view:
             flowcells[row.key] = row.value
+        xfc_view = self.application.x_flowcells_db.view("info/summary",
+                                                     descending=True)
+        for row in xfc_view:
+            flowcells[row.key] = row.value
 
-        return flowcells
+        return OrderedDict(sorted(flowcells.items))
 
 
 class FlowcellsInfoDataHandler(SafeHandler):
@@ -69,6 +81,11 @@ class FlowcellsInfoDataHandler(SafeHandler):
     def flowcell_info(self, flowcell):
         fc_view = self.application.flowcells_db.view("info/summary2",
                                                      descending=True)
+        xfc_view = self.application.x_flowcells_db.view("info/summary2",
+                                                     descending=True)
+        for row in xfc_view[flowcell]:
+            flowcell_info = row.value
+            break
         for row in fc_view[flowcell]:
             flowcell_info = row.value
             break
@@ -90,6 +107,17 @@ class FlowcellSearchHandler(SafeHandler):
         flowcells = []
         fc_view = self.application.flowcells_db.view("info/id")
         for row in fc_view:
+            try:
+                if search_string.lower() in row.key.lower():
+                    fc = {
+                        "url": '/flowcells/'+row.key,
+                        "name": row.key
+                    }
+                    flowcells.append(fc);
+            except AttributeError:
+                pass
+        xfc_view = self.application.x_flowcells_db.view("info/id")
+        for row in xfc_view:
             try:
                 if search_string.lower() in row.key.lower():
                     fc = {
