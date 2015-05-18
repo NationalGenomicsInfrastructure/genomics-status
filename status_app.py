@@ -162,6 +162,7 @@ class Application(tornado.web.Application):
             self.samples_db = couch["samples"]
             self.projects_db = couch["projects"]
             self.flowcells_db = couch["flowcells"]
+            self.x_flowcells_db = couch["x_flowcells"]
             self.gs_users_db = couch["gs_users"]
             self.cronjobs_db = couch["cronjobs"]
             self.suggestions_db = couch["suggestion_box"]

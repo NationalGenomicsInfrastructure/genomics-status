@@ -89,27 +89,54 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                             <tr> \
                                 <th>Project Name</th> \
                                 <th>Sample Name</th> \
-                                <th>Yield (<abbr title="Megabases">Mb</abbr>)</th> \
-                                <th># Reads</th> \
-                                <th>% &gt; Q30</th> \
-                                <th>Barcode</th> \
-                                <th>Index description</th> \
-                            </tr>';
+                                <th>Yield (<abbr title="Megabases">Mb</abbr>)</th>';
+
+            if (data['lane'][lid][0].hasOwnProperty('readsnb')){ 
+                lbody+='<th># Reads</th>';
+            }else if(data['lane'][lid][0].hasOwnProperty('clustersnb')){
+                lbody+='<th># Clusters</th>';
+            }
+
+            lbody+='<th>% &gt; Q30</th> \
+                    <th>Barcode</th>';
+            if (data['lane'][lid][0].hasOwnProperty('desc')){ 
+                lbody+='<th>Index description</th>';
+            }
+            if (data['lane'][lid][0].hasOwnProperty('lanepc')){ 
+                lbody+='<th>% of the lane</th>';
+            }
+            if (data['lane'][lid][0].hasOwnProperty('mqs')){ 
+                lbody+='<th>Mean QualityScore</th>';
+            }
+            lbody+='</tr>';
             for (samplerunid in data['lane'][lid]){
                 var q30 = parseFloat(data['lane'][lid][samplerunid]['overthirty']);
                 lbody += "<tr> \
                     <td>" + data['lane'][lid][samplerunid]['Project'] + "</td> \
                     <td>" + data['lane'][lid][samplerunid]['SampleName'] + '</td> \
-                    <td class="text-right">' + data['lane'][lid][samplerunid]['yield'] + '</td> \
-                    <td class="text-right">' + data['lane'][lid][samplerunid]['readsnb'] + '</td> \
-                    <td class="text-right ';
-                    if (q30 < 30) lbody += 'danger';
-                    else if(q30 < 80) lbody += 'warning';
-                    else if(q30 < 100) lbody += 'success';
+                    <td class="text-right">' + data['lane'][lid][samplerunid]['yield'] + '</td>'
+                    if (data['lane'][lid][0].hasOwnProperty('readsnb')){ 
+                        lbody+='<td class="text-right">' + data['lane'][lid][samplerunid]['readsnb'] + '</td>'
+                    }else if(data['lane'][lid][0].hasOwnProperty('clustersnb')){
+                        lbody+='<td class="text-right">' + data['lane'][lid][samplerunid]['clustersnb'] + '</td>'
+                    }
+
+                lbody+='<td class="text-right ';
+                if (q30 < 30) lbody += 'danger';
+                else if(q30 < 80) lbody += 'warning';
+                else if(q30 < 100) lbody += 'success';
                 lbody += '">' + data['lane'][lid][samplerunid]['overthirty'] + "</td>\
-                    <td>" + data['lane'][lid][samplerunid]['barcode'] + "</td> \
-                    <td>" + data['lane'][lid][samplerunid]['desc'] + "</td> \
-                </tr>";
+                    <td>" + data['lane'][lid][samplerunid]['barcode'] + "</td>";
+                if (data['lane'][lid][0].hasOwnProperty('desc')){ 
+                    lbody+="<td>" + data['lane'][lid][samplerunid]['desc'] + "</td>";
+                }
+                if (data['lane'][lid][0].hasOwnProperty('lanepc')){ 
+                    lbody+="<td>" + data['lane'][lid][samplerunid]['lanepc'] + "</td>";
+                }
+                if (data['lane'][lid][0].hasOwnProperty('mqs')){ 
+                    lbody+="<td>" + data['lane'][lid][samplerunid]['mqs'] + "</td>";
+                }
+                lbody += "</tr>";
             }
             lbody += '</tbody></table>';
             $('#lane_'+lid).removeClass('hidden').append(lbody);
