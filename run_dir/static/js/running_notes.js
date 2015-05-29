@@ -17,7 +17,9 @@ function load_running_notes(wait) {
   $("#running_notes_panels").empty();
   $.getJSON(note_url, function(data) {
     $.each(data, function(date, note) {
-      var date = new Date(date);
+      var date = date.replace(/-/g, '/');
+      date = date.replace(/\.\d{6}/, '');
+      date = new Date(date);
       if(date > new Date('2015-01-01')){
         noteText = make_markdown(note['note']);
       } else {

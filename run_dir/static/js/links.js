@@ -18,7 +18,9 @@ function load_links() {
   $.getJSON(link_url, function(data) {
     $.each(data, function(key, link) {
       var link_href = link['url'] === "" ? "" : (' href="' + link['url'] + '"');
-			var date = new Date(key);
+      var date = key.replace(/-/g, '/');
+      date = date.replace(/\.\d{6}/, '');
+      date = new Date(date);
       $("#existing_links").append('<div class="link_wrapper"><div class="col-sm-8 col-sm-offset-2">'+
 						'<div class="media"><a class="media-left"'+link_href+'>'+
 							'<span style="font-size:18px;" class="glyphicon glyphicon-'+link_icon[link['type']]+'"></span>'+
