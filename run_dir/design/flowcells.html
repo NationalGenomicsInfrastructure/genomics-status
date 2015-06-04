@@ -72,9 +72,9 @@ Description: Shows a table with all flow cells.
                 <td class="software_version">{{ flowcells[onefc].get('appver', '-') }}</td>
                 <td class="yield" class="text-right">{{ flowcells[onefc].get('yield', '-') }}</td>
                 <td class="flowcell">{{ flowcells[onefc]['flowcell'] }}</td>
-                <td class="pos" class="text-center">{{ flowcells[onefc]['pos'] }}</td>
-                <td class="instrument">{{ flowcells[onefc]['instrument'] }}</td>
-                <td class="demultiplexing">{{ flowcells[onefc]['demultiplexing'] }}</td>
+                <td class="pos" class="text-center">{{ flowcells[onefc].get('pos') }}</td>
+                <td class="instrument">{{ flowcells[onefc].get('instrument') }}</td>
+                <td class="demultiplexing">{{ flowcells[onefc].get('demultiplexing') }}</td>
             </tr>
          {% end %}
         </tbody>
