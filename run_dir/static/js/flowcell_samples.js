@@ -46,20 +46,20 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
             var sbody = '';
             if ('lanedata'in data && lid in data['lanedata']){
                 sbody = '<tr> \
-                    <th>Total Yield (<abbr title="Megabases">Mb</abbr>):</th> \
+                    <th class="text-right" >Total Yield (<abbr title="Megabases">Mb</abbr>):</th> \
                     <td class="text-right" >' + data['lanedata'][lid]['yield'] + '</td> \
-                    <th>Total clusters :</th> \
+                    <th class="text-right" >Total clusters :</th> \
                     <td class="text-right">' + data['lanedata'][lid]['clustersnb'] + '</td> \
-                    <th>% bases > Q30:</th> \
+                    <th class="text-right" >% bases > Q30:</th> \
                     <td class="text-right ';
                 q30=data['lanedata'][lid]['overthirty']
                 if (q30 < 30) sbody += 'danger';
                 else if(q30 < 80) sbody += 'warning';
                 else if(q30 < 100) sbody += 'success';
                 sbody+='">' + q30 + '</td> \
-                    <th>Mean Quality Score:</th> \
+                    <th class="text-right" >Mean Quality Score:</th> \
                     <td class="text-right">' + data['lanedata'][lid]['mqs'] + '</td> \
-                    <th>% perfect barcode :</th> \
+                    <th class="text-right" >% perfect barcode :</th> \
                     <td class="text-right">' + data['lanedata'][lid]['perf'] + '</td> \
                 </tr>';
             } else if (data['yields'][lid] != 0){
