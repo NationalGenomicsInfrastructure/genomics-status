@@ -44,11 +44,22 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
         // First table - Overall lane stats
         for (lid=1; lid<9; lid++){
             var sbody = '';
-            if (data['yields'][lid] !== 0){
+            if ('lanedata'in data && lid in data['lanedata']){
                 sbody = '<tr> \
                     <th>Total Yield (<abbr title="Megabases">Mb</abbr>):</th> \
-                    <td>' + data['yields'][lid] + "</td> \
-                </tr>";
+                    <td>' + data['lanedata'][lid]['yield'] + '</td> \
+                    <th>Total clusters :</th> \
+                    <td>' + data['lanedata'][lid]['clustersnb'] + '</td> \
+                    <th>% bases > Q30:</th> \
+                    <td>' + data['lanedata'][lid]['overthirty'] + '</td> \
+                    <th>Mean Quality Score:</th> \
+                    <td>' + data['lanedata'][lid]['mqs'] + '</td> \
+                    <th>% perfect barcode :</th> \
+                    <td>' + data['lanedata'][lid]['perf'] + '</td> \
+                </tr>';
+            } else if (data['yields'][lid] != 0){
+                    sbody='<tr><th>Total Yield (<abbr title="Megabases">Mb</abbr>):</th> \
+                    <td>' + data['yields'][lid]+ '</td></tr>';
             }
             status = data['seq_qc'][lid];
             if (status !== '0'){
@@ -75,7 +86,7 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                         <tbody> \
                             ' + sbody + ' \
                         </tbody> \
-                    </table>');
+                    </table>&nbsp;');
             }
         }
         
