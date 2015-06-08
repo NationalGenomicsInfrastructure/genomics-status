@@ -3,16 +3,38 @@
 
 import tornado.web
 import json
+import datetime
 
+from genologics.entities import Container
+from genologics import lims
+from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 from status.util import SafeHandler
+lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
 class FlowcellsHandler(SafeHandler):
     """ Serves a page which lists all flowcells with some brief info.
     """
+    def list_flowcells(self):
+        flowcells = OrderedDict()
+        temp_flowcells={}
+        fc_view = self.application.flowcells_db.view("info/summary",
+                                                     descending=True)
+        for row in fc_view:
+            temp_flowcells[row.key] = row.value
+
+        xfc_view = self.application.x_flowcells_db.view("info/summary",
+                                                     descending=True)
+        for row in xfc_view:
+            temp_flowcells[row.key] = row.value
+
+        return OrderedDict(sorted(temp_flowcells.items()))
+
+
     def get(self):
         t = self.application.loader.load("flowcells.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name()))
+        fcs=self.list_flowcells()
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(), flowcells=fcs))
 
 
 class FlowcellHandler(SafeHandler):
@@ -34,13 +56,17 @@ class FlowcellsDataHandler(SafeHandler):
         self.write(json.dumps(self.list_flowcells()))
 
     def list_flowcells(self):
-        flowcells = OrderedDict()
+        flowcells = {}
         fc_view = self.application.flowcells_db.view("info/summary",
                                                      descending=True)
         for row in fc_view:
             flowcells[row.key] = row.value
+        xfc_view = self.application.x_flowcells_db.view("info/summary",
+                                                     descending=True)
+        for row in xfc_view:
+            flowcells[row.key] = row.value
 
-        return flowcells
+        return OrderedDict(sorted(flowcells.items))
 
 
 class FlowcellsInfoDataHandler(SafeHandler):
@@ -55,6 +81,11 @@ class FlowcellsInfoDataHandler(SafeHandler):
     def flowcell_info(self, flowcell):
         fc_view = self.application.flowcells_db.view("info/summary2",
                                                      descending=True)
+        xfc_view = self.application.x_flowcells_db.view("info/summary2",
+                                                     descending=True)
+        for row in xfc_view[flowcell]:
+            flowcell_info = row.value
+            break
         for row in fc_view[flowcell]:
             flowcell_info = row.value
             break
@@ -76,6 +107,17 @@ class FlowcellSearchHandler(SafeHandler):
         flowcells = []
         fc_view = self.application.flowcells_db.view("info/id")
         for row in fc_view:
+            try:
+                if search_string.lower() in row.key.lower():
+                    fc = {
+                        "url": '/flowcells/'+row.key,
+                        "name": row.key
+                    }
+                    flowcells.append(fc);
+            except AttributeError:
+                pass
+        xfc_view = self.application.x_flowcells_db.view("info/id")
+        for row in xfc_view:
             try:
                 if search_string.lower() in row.key.lower():
                     fc = {
@@ -178,3 +220,113 @@ class FlowcellQ30Handler(SafeHandler):
             lane_q30[row.key[2]] = row.value["sum"] / row.value["count"]
 
         return lane_q30
+
+class FlowcellNotesDataHandler(SafeHandler):
+    """Serves all running notes from a given flowcell.
+    It connects to the genologics LIMS to fetch and update Running Notes information.
+    URL: /api/v1/flowcell_notes/([^/]*)
+    """
+    def get(self, flowcell):
+        self.set_header("Content-type", "application/json")
+        try:
+            p=get_container_from_id(flowcell)
+        except (KeyError, IndexError) as e:
+            self.write('{}')
+        else:
+            # Sorted running notes, by date
+            running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
+            sorted_running_notes = OrderedDict()
+            for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0], reverse=True):
+                sorted_running_notes[k] = v
+            self.write(sorted_running_notes)
+
+    def post(self, flowcell):
+        note = self.get_argument('note', '')
+        user = self.get_secure_cookie('user')
+        email = self.get_secure_cookie('email')
+        if not note:
+            self.set_status(400)
+            self.finish('<html><body>No note parameters found</body></html>')
+        else:
+            newNote = {'user': user, 'email': email, 'note': note}
+            try:
+                p=get_container_from_id(flowcell)
+            except (KeyError, IndexError) as e:
+                self.set_status(400)
+                self.write('Flowcell not found')
+            else:
+                running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
+                running_notes[str(datetime.datetime.now())] = newNote
+                p.udf['Notes'] = json.dumps(running_notes)
+                p.put()
+                self.set_status(201)
+                self.write(json.dumps(newNote))
+
+
+class FlowcellLinksDataHandler(SafeHandler):
+    """ Serves external links for each project
+        Links are stored as JSON in genologics LIMS / project
+        URL: /api/v1/links/([^/]*)
+    """
+
+    def get(self, flowcell):
+        self.set_header("Content-type", "application/json")
+        try:
+            p=get_container_from_id(flowcell)
+        except (KeyError, IndexError) as e:
+            self.write('{}')
+        else:
+            links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
+
+            #Sort by descending date, then hopefully have deviations on top
+            sorted_links = OrderedDict()
+            for k, v in sorted(links.iteritems(), key=lambda t: t[0], reverse=True):
+                sorted_links[k] = v
+            sorted_links = OrderedDict(sorted(sorted_links.iteritems(), key=lambda (k,v): v['type']))
+            self.write(sorted_links)
+
+    def post(self, flowcell):
+        user = self.get_secure_cookie('user')
+        email = self.get_secure_cookie('email')
+        a_type = self.get_argument('type', '')
+        title = self.get_argument('title', '')
+        url = self.get_argument('url', '')
+        desc = self.get_argument('desc','')
+
+        if not a_type or not title:
+            self.set_status(400)
+            self.finish('<html><body>Link title and type is required</body></html>')
+        else:
+            try:
+                p=get_container_from_id(flowcell)
+            except (KeyError, IndexError) as e:
+                self.status(400)
+                self.write('Flowcell not found')
+            else:
+                links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
+                links[str(datetime.datetime.now())] = {'user': user,
+                                                   'email': email,
+                                                   'type': a_type,
+                                                   'title': title,
+                                                   'url': url,
+                                                   'desc': desc}
+                p.udf['Links'] = json.dumps(links)
+                p.put()
+                self.set_status(200)
+                #ajax cries if it does not get anything back
+                self.set_header("Content-type", "application/json")
+                self.finish(json.dumps(links))
+
+#Functions
+def get_container_from_id(flowcell):
+    if flowcell[7:].startswith('00000000'):
+        #Miseq
+        proc=lims.get_processes(type='MiSeq Run (MiSeq) 4.0',udf={'Flow Cell ID': flowcell[7:]})[0]
+        c = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
+    else:    
+        #Hiseq
+        c = lims.get_containers(name=flowcell[8:])[0]
+    return c
+
+
+

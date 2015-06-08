@@ -14,28 +14,61 @@ Description: Shows a table with all worksets.
 {% end %}
 
 
-<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading worksets table..</div>
-<div id="page_content" style="display:none;">
-
-<form id="Search-form" class="form-inline marginBottom">
-  <div class="form-group">
-    <label for="search_field">Search Table:</label>
-    <input type="text" class="form-control search search-query" id="search_field" placeholder="Search...">
-    <span class="help-inline text-muted">Tip: Sort columns by clicking on the column headers.</span>
-  </div>
-</form>
+<div id="page_content" >
 
 <div id="workset-list">
   <table class="table table-striped table-bordered sortable" id="workset_table">
     <thead id="workset_table_head">
+        <tr>
+         {% for onekey in headers %}
+            <th>{{ onekey[0] }}</th>
+         {% end %}
+         </tr>
     </thead>
+    <tfoot id="workset_table_footer">
+        <tr>
+         {% for onekey in headers %}
+            <th>{{ onekey[0] }}</th>
+         {% end %}
+         </tr>
+    </tfoot>
     <tbody class="list" id="workset_table_body">
+         {% for onews in ws_data%}
+         <tr>
+         {% for onekey in headers %}
+             {% if onekey[1] == 'date_run' %}
+                 <td>
+                 <span class="label label-date sentenceCase">{{ ws_data[onews].get(onekey[1]) }}</span>
+                 </td>
+             {% elif onekey[1] == 'workset_name'%}
+                 <td>
+                 <a href="/workset/{{ onews }}">{{ onews }}</a>
+                 </td>
+             {% elif onekey[1] == 'projects'%}
+                 <td>
+                 {% for onepj in ws_data.get(onews).get(onekey[1]) %}
+                     <a href="/project/{{ onepj }}">{{ onepj }}</a>&nbsp;({{ ws_data.get(onews).get(onekey[1]).get(onepj).get('samples_nb') }})<br>
+                 {% end %}
+                 </td>
+             {% elif onekey[1] in ['application', 'library_method'] %}
+                 <td><samp style="max-width:50px;">
+                 {% raw '</samp><hr style="margin:0;"><samp>'.join(ws_data[onews].get(onekey[1])) %} 
+                 </samp></td>
+             {% elif onekey[1] in ['passed', 'failed', 'unknown', 'total'] %}
+                 <td>{{ ws_data[onews].get('samples', {}).get(onekey[1]) }}</td>
+             {% else %}
+                <td>{{ ws_data[onews].get(onekey[1]) }}</td>
+             {% end %}
+         {% end %}
+         </tr>
+         {% end %}
     </tbody>
   </table>
 </div>
 
 </div> <!-- #page_content -->
 
-<script src="/static/js/list.min.js"></script>
+<script src="/static/js/jquery.dataTables.min.js? }}"></script>
 <script src="/static/js/worksets.js?v={{ gs_globals['git_commit'] }}" id="worksets-js" data-worksets="{{worksets}}"></script>
+
 {% end %}
