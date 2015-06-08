@@ -20,85 +20,6 @@ var max_y=742;
 
 setupPlate();
 
-// Preview running notes
-$('#new_note_text').keyup(function() {
-    var now = new Date();
-    $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
-    var text = $('#new_note_text').val().trim();
-    if (text.length > 0) {
-        $('#running_note_preview_body').html(make_markdown(text));
-        check_img_sources($('#running_note_preview_body img'));
-    } else {
-        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
-    }
-    // update textarea height
-    $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
-});
-
-// Insert new running note and reload the running notes table
-$("#workset_notes_form").submit( function(e) {
-    e.preventDefault();
-    var text = $('#new_note_text').val().trim();
-    if (text.length == 0) {
-        alert("Error: No running note entered.");
-        return false;
-    }
-
-    $('#save_note_button').addClass('disabled').text('Submitting..');
-    $.ajax({
-      async: false,
-      type: 'POST',
-      url: '/api/v1/workset_notes/' +lims_step,
-      dataType: 'json',
-      data: {"note": text},
-      error: function(xhr, textStatus, errorThrown) {
-        alert('There was an error inserting the Running Note: '+errorThrown);
-        $('#save_note_button').removeClass('disabled').text('Submit Workset Note');
-        console.log(xhr);
-        console.log(textStatus);
-        console.log(errorThrown);
-      },
-      success: function(data, textStatus, xhr) {
-        $('#save_note_button').removeClass('disabled').text('Submit Workset Note');
-        // Clear the text box
-        $('#new_note_text').val('');
-        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
-        $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
-        // Create a new running note and slide it in..
-        var now = new Date();
-        $('<div class="panel panel-success"><div class="panel-heading">'+
-              '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
-              now.toDateString() + ', ' + now.toLocaleTimeString(now)+
-            '</div><div class="panel-body">'+make_markdown(data['note'])+
-            '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
-        check_img_sources($('#running_notes_panels img'));
-      }
-    });
-});
-
-function load_workset_notes(wait) {
-  // Clear previously loaded notes, if so
-  $("#workset_notes").empty();
-  $.getJSON("/api/v1/workset_notes/" + lims_step, function(data) {
-    $.each(data, function(date_str, note) {
-        noteText = make_markdown(note['note']);
-        var date = new Date(date_str);
-      $('#workset_notes').append('<div class="panel panel-default">' +
-          '<div class="panel-heading">'+
-            '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-            date.toDateString() + ', ' + date.toLocaleTimeString(date)+
-          ' <span class="glyphicon glyphicon-remove-sign delete_note" id="'+date_str+'"></span></div><div class="panel-body">'+noteText+'</div></div>');
-            //check_img_sources($('#running_notes_panels img'));
-    });
-  }).fail(function( jqxhr, textStatus, error ) {
-      var err = textStatus + ", " + error;
-      console.log( "workset notes request failed: " + err );
-  });
-}
-
-
-
-
 $.getJSON("/api/v1/workset/"+workset_name, function(data) {
 
     // Fill in the main table with summary information
@@ -108,8 +29,9 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
     lims_step=wsdata['id'];
     date_run=wsdata['date_run'];
     $('#date_run').html(date_run);
-    $('#span_lims_step').html('<a href="http://genologics.scilifelab.se:8080/clarity/work-complete/'+lims_step.substr(3)+'">'+lims_step+'</a>');
-    load_workset_notes();
+    $('#span_lims_step').html('<a href="http://genologics.scilifelab.se:8080/clarity/work-complete/'+lims_step.split("-")[1]+'">'+lims_step+'</a>');
+    load_running_notes();
+    load_links();
 
     if(wsdata && wsdata.hasOwnProperty("projects")){
         $.each(wsdata.projects, function(project_id, project_data){
@@ -131,7 +53,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                      <th>Sample name</th> \
                      <th>Submitter Name</th> \
                      <th>Reception Control</th> \
-                     <th>Library</th> \
+                     <th><abbr title="AggregateQC date, QC status, sample concentration, insert size">Library</abbr></th> \
                      <th>Sequencing</th> \
                      <th>Location</th> \
                  </tr> ';
@@ -143,7 +65,12 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                 <td>";
             $.each(sample_data.library, function(lib_id, lib_data){
                 lims_id=lib_id.split("-")[1];
-                content+="<a href='https://genologics.scilifelab.se:8443/clarity/work-complete/"+lims_id+"'>"+lib_id+'</a> <span class="label label-date sentenceCase">'+lib_data['date']+"</span> "+auto_format(lib_data['status'])+"<br />";
+                content+="<a href='https://genologics.scilifelab.se:8443/clarity/work-complete/"+lims_id+"'>" ;
+                content+=lib_data['date']+"</a> "
+                content+=auto_format(lib_data['status']);
+                content+=" <span class='label label-date'>"+lib_data['concentration']+"</span>"
+                content+=" <span class='label label-date'>"+lib_data['size']+"bp</span>"
+                content+="<br />";
             });
                 content+="</td><td>";
             $.each(sample_data.sequencing, function(seq_id, seq_data){
@@ -172,6 +99,9 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
     $('#loading_spinner').hide();
     $('#page_content').show();
 });
+
+
+
 function setupPlate(){
     ctx.fillStyle = 'black';
     ctx.font = '12pt Calibri';

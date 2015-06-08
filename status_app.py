@@ -61,6 +61,8 @@ class Application(tornado.web.Application):
                 FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
+            ("/api/v1/flowcell_notes/([^/]*)$", FlowcellNotesDataHandler),
+            ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
@@ -120,6 +122,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset/([^/]*)$", status.worksets.WorksetDataHandler),
             ("/api/v1/workset_search/([^/]*)$", status.worksets.WorksetSearchHandler),
             ("/api/v1/workset_notes/([^/]*)$", status.worksets.WorksetNotesDataHandler),
+            ("/api/v1/workset_links/([^/]*)$", status.worksets.WorksetLinksHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),
@@ -159,6 +162,7 @@ class Application(tornado.web.Application):
             self.samples_db = couch["samples"]
             self.projects_db = couch["projects"]
             self.flowcells_db = couch["flowcells"]
+            self.x_flowcells_db = couch["x_flowcells"]
             self.gs_users_db = couch["gs_users"]
             self.cronjobs_db = couch["cronjobs"]
             self.suggestions_db = couch["suggestion_box"]
