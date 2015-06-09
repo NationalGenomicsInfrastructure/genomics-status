@@ -972,6 +972,53 @@ function make_timescale_bar(tsid, include_orderdates){
 		});
 	}
 
+
+
+  ///////////////////
+  ////// BIOINFO ANALYSIS code
+  ///////////////////
+
+  // Run ID status - individual runs
+  var bioinfo_states = ['Waiting', 'Incoming', 'Ongoing', 'Delivered'];
+  var bioinfo_states_classes = ['label-default', 'label-warning', 'label-danger', 'label-success'];
+  $('.table-bioinfo-status th').click(function(e){
+    e.stopImmediatePropagation(); // fires twice otherwise.
+    var state = $(this).children('.bioinfo-status-runstate');
+    if(state.length > 0){
+      var i = bioinfo_states.indexOf(state.text());
+      if(i >= 0){
+        if(typeof bioinfo_states[i+1] !== 'undefined') {
+          state.text(bioinfo_states[i+1]);
+          state.removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[i+1]);
+        } else {
+          state.text(bioinfo_states[0]);
+          state.removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[0]);
+        }
+      }
+    }
+  });
+
+  // Passed / Warn / Fail / NA cells
+  var bioinfo_classes = ['unknown', 'success', 'warning', 'danger', 'active'];
+  var bioinfo_texts = ['?', 'Pass', 'Warning', 'Fail', 'N/A'];
+  $('.table-bioinfo-status td').click(function(e){
+    e.stopImmediatePropagation(); // fires twice otherwise.
+    var td = $(this);
+    $.each(bioinfo_classes, function(i, val){
+      if(td.hasClass(val)){
+        td.removeClass(val);
+        if(typeof bioinfo_classes[i+1] !== 'undefined') {
+          td.addClass(bioinfo_classes[i+1]);
+          td.text(bioinfo_texts[i+1]);
+        } else {
+          td.addClass(bioinfo_classes[0]);
+          td.text(bioinfo_texts[0]);
+        }
+        return false;
+      }
+    });
+  });
+
 }
 
 
