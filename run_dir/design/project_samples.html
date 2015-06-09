@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+python {% extends "base.html" %}
 
 <!--
 Template file: project_samples.html
@@ -111,6 +111,7 @@ Description: Details page for a single project
     <li class="active"><a href="#tab_details_content" role="tab" data-toggle="tab">Project information</a></li>
     <li><a href="#tab_samples_content" role="tab" data-toggle="tab">Samples</a></li>
     <li><a href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
+    <li><a href="#tab_analysis_content" role="tab" data-toggle="tab">Bioinfo Analysis</a></li>
     <li><a href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
     <li><a href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
   </ul>
@@ -297,11 +298,96 @@ Description: Details page for a single project
     <!-- RUNNING NOTES TAB -->
     {% include "running_notes_tab.html" %}
 
+    <div class="tab-pane" id="tab_analysis_content">
+      <form class="form-inline">
+        <div class="form-group">
+          <label for="bioinfo_status">Set Status</label>
+          <select id="bioinfo_status" class="form-control">
+            <option>Different Values</option>
+            <option>Waiting</option>
+            <option>Incoming</option>
+            <option>Ongoing</option>
+            <option>Delivered</option>
+          </select>
+        </div>
+        <button class="btn btn-default">Copy values from first row</button>
+        <button class="btn btn-primary pull-right">Save Changes</button></div>
+      </form>
+      <hr>
+      <table class="table table-colgroup table-bordered table-bioinfo-status">
+        <colgroup>
+        <colgroup span="3">
+        <colgroup span="2">
+        <colgroup span="2">
+        <colgroup span="2">
+        <tr>
+          <th rowspan="2" class="text-center border-bottom">Run ID</th>
+          <th colspan="3" class="text-center">Multiplex QC</th>
+          <th colspan="2" class="text-center">Yield</th>
+          <th colspan="2" class="text-center">Quality</th>
+          <th colspan="2" class="text-center">Contamination screen</th>
+        </tr>
+        <tr class="border-bottom">
+          <th>Undemultiplexed reads</th>
+          <th>Unexpected indexes</th>
+          <th>Low sample yield</th>
+          <th>Lane</th>
+          <th>Sample</th>
+          <th>PhiX error rate</th>
+          <th>%bases >= Q30</th>
+          <th>fastq_screen</th>
+          <th>blast_wrapper</th>
+        </tr>
+        <tr>
+          <th class="bioinfo-status-runid"><samp class="nowrap">150212_AC6L5YANXX</samp> <span class="label label-danger bioinfo-status-runstate">Ongoing</span></th>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+        </tr>
+        <tr>
+          <th class="bioinfo-status-runid"><samp class="nowrap">150303_AC6BFBANXX</samp> <span class="label label-danger bioinfo-status-runstate">Ongoing</span></th>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+        </tr>
+        <tr>
+          <th class="bioinfo-status-runid"><samp class="nowrap">150218_BC6L5HANXX</samp> <span class="label label-success bioinfo-status-runstate">Delivered</span></th>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+          <td class="unknown">?</td>
+        </tr>
+      </table>
+      <hr>
+      <p>Reference:
+            <a href="https://docs.google.com/a/scilifelab.se/spreadsheet/ccc?key=0Alyw54FEug2udEVMdVE5QTA5ZzRKLUhwRlZTSmFWLVE&usp=drive_web#gid=2">Spreadsheet 1</a>
+            <a href="https://docs.google.com/spreadsheets/d/1erukzLcqeG-LmUGwYTR_yMjaNjz-aY7dKLXini3JB_o/edit#gid=2112135547">Spreadsheet 2</a>
+        </p>
+    </div>
+
     <!-- USER COMMUNICATION TAB -->
     <div class="tab-pane" id="tab_com_content">
       <div id="zendesk_loading_spinner" style="text-align:center; margin:100px 0;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading ZenDesk tickets..</div>
       <div class="panel-group" id="com_accordion"></div>
     </div>
+
     <!-- LINK TAB -->
     {% include "link_tab.html" %}
 
