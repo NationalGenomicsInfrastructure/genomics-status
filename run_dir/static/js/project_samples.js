@@ -978,30 +978,59 @@ function make_timescale_bar(tsid, include_orderdates){
   ////// BIOINFO ANALYSIS code
   ///////////////////
 
+  // Hide the columns that we don't need
+  var app_classes = {
+    'rnaseq': ['RNA-seq (total RNA)', 'RNA-seq (RiboZero)', 'RNA-seq (mRNA)', 'stranded RNA-seq (total RNA)', 'cDNA', 'stranded RNA-seq (RiboZero)'],
+    'exome': ['Exome capture'],
+    'customCap': ['Custom capture'],
+    'WGreseq': ['WG re-seq', 'WG re-seq (IGN)'],
+    'denovo': ['de novo', 'Mate-pair', 'Mate-pair (short insert)', 'Mate-pair (long insert)']
+  };
+  $('[class^=bioinfo-app-]').hide();
+  if($('#type').text() == 'Application'){
+    $('.bioinfo-app-applications').show();
+  }
+  var thisapp = $('#application').text();
+  $.each(app_classes, function(key, arr){
+    if(arr.indexOf(thisapp) != -1){
+      $('.bioinfo-app-'+key).show();
+    }
+  });
+
+
+
   // Run ID status - individual runs
   var bioinfo_states = ['Waiting', 'Incoming', 'Ongoing', 'Delivered'];
   var bioinfo_states_classes = ['label-default', 'label-warning', 'label-danger', 'label-success'];
-  $('.table-bioinfo-status th').click(function(e){
+  $('.bioinfo-status-runstate').click(function(e){
     e.stopImmediatePropagation(); // fires twice otherwise.
-    var state = $(this).children('.bioinfo-status-runstate');
-    if(state.length > 0){
-      var i = bioinfo_states.indexOf(state.text());
-      if(i >= 0){
-        if(typeof bioinfo_states[i+1] !== 'undefined') {
-          state.text(bioinfo_states[i+1]);
-          state.removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[i+1]);
-        } else {
-          state.text(bioinfo_states[0]);
-          state.removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[0]);
-        }
+    var i = bioinfo_states.indexOf($(this).text());
+    if(i >= 0){
+      if(typeof bioinfo_states[i+1] !== 'undefined') {
+        $(this).children('span').text(bioinfo_states[i+1]);
+        $(this).children('span').removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[i+1]);
+      } else {
+        $(this).children('span').text(bioinfo_states[0]);
+        $(this).children('span').removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[0]);
       }
+    }
+    // Update the select box
+    var states = [];
+    $('.bioinfo-status-runstate').each(function(){
+      var s = $(this).text();
+      if(states.indexOf(s) == -1){ states.push(s); }
+    });
+    if(states.length == 1){
+      $('#bioinfo_set-status').val(states[0]);
+    } else {
+      $('#bioinfo_set-status').val('[ different values ]');
     }
   });
 
   // Passed / Warn / Fail / NA cells
   var bioinfo_classes = ['unknown', 'success', 'warning', 'danger', 'active'];
   var bioinfo_texts = ['?', 'Pass', 'Warning', 'Fail', 'N/A'];
-  $('.table-bioinfo-status td').click(function(e){
+  $('.table-bioinfo-status td.bioinfo-status-pfw').click(function(e){
     e.stopImmediatePropagation(); // fires twice otherwise.
     var td = $(this);
     $.each(bioinfo_classes, function(i, val){
@@ -1018,6 +1047,99 @@ function make_timescale_bar(tsid, include_orderdates){
       }
     });
   });
+
+  // Datepickers
+  $('.input-group.date input').datepicker({
+      format: "yyyy-mm-dd",
+      todayHighlight: true
+  });
+  $('.datepicker-today').click(function(e){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+    if(dd<10) { dd='0'+dd }
+    if(mm<10) { mm='0'+mm }
+    today = today.getFullYear()+'-'+mm+'-'+dd;
+    $(this).prevAll("input:first").val(today);
+  });
+
+  // Copy first row
+  $('#bioinfo-status-copyFirstRow').click(function(e){
+    e.preventDefault();
+    e.stopImmediatePropagation(); // fires twice otherwise.
+    var states = [];
+    var input_vals = [];
+    $('.table-bioinfo-status tr:has(td)').each(function(){
+      var tr = $(this);
+      if(states.length == 0){
+        tr.children('td').each(function(i){
+          if($(this).hasClass('bioinfo-status-pfw')){
+            states[i] = $(this).text();
+          } else {
+            if($(this).find('input').length > 0){
+              input_vals[i] = $(this).find('input').val();
+            }
+          }
+        });
+      } else {
+        tr.children('td').each(function(i){
+          if($(this).hasClass('bioinfo-status-pfw')){
+            $(this).text(states[i]);
+            $(this).removeClass().addClass('bioinfo-status-pfw');
+            $(this).addClass(bioinfo_classes[bioinfo_texts.indexOf(states[i])]);
+          } else if($(this).find('input').length > 0){
+            $(this).find('input').val(input_vals[i]);
+          }
+        });
+      }
+    });
+  });
+
+  // Set all states
+  $('#bioinfo_set-status').change(function(){
+    var state = $(this).val();
+    if(state !== '[ different values ]'){
+      $('.bioinfo-status-runstate span').text(state);
+      $('.bioinfo-status-runstate span').removeClass().addClass('label bioinfo-status-runstate');
+      $('.bioinfo-status-runstate span').addClass(bioinfo_states_classes[bioinfo_states.indexOf(state)]);
+    }
+  });
+
+  // Save changes button
+  $('#bioinfo-status-saveButton').click(function(e){
+    e.preventDefault();
+    e.stopImmediatePropagation(); // fires twice otherwise.
+    var runs = [];
+    var field_names = [];
+    $('.bioinfo-field-names th:visible').each(function(i){
+      // First cell in data rows is th not td, so i-1 to avoid offset
+      field_names[i-1] = $(this).text();
+    });
+    $('.table-bioinfo-status tr:has(td)').each(function(){
+      var runid = $(this).find('th.bioinfo-status-runid').text();
+      var status = $(this).find('.bioinfo-status-runstate span').text();
+      var vals = [];
+      $(this).children('td:visible').each(function(i){
+        if($(this).hasClass('bioinfo-status-pfw')){
+          vals[field_names[i]] = $(this).text();
+        } else {
+          if($(this).find('input').length > 0){
+            vals[field_names[i]] = $(this).find('input').val();
+          }
+        }
+      });
+      runs[runid] = {status: status, values: vals};
+    });
+    console.log(field_names);
+    console.log(runs);
+    alert('Not yet implemented, sorry.');
+  });
+
+  // TESTING
+  $('#bioinfo-noruns').hide();
+  $('#bioinfo-template-row').show();
 
 }
 

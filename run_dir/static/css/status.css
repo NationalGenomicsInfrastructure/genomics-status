@@ -730,17 +730,34 @@ These classes are cut and pasted wholesale into here from other packages.
 .table-bioinfo-status td {
   cursor: pointer;
 }
+.table-bioinfo-status {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -ms-user-select: none;
+}
+
 .table-bioinfo-status td, .table-bioinfo-status th {
   text-align: center;
+  vertical-align: middle;
 }
 .table-bioinfo-status td.unknown {
   color: #ccc;
 }
 
 .table-bioinfo-status th.bioinfo-status-runid {
-  cursor:pointer;
   text-align: left;
 }
 .bioinfo-status-runstate {
   text-transform: lowercase;
+}
+
+.input-group.date, .narrowinput {
+  max-width: 150px;
+}
+.datepicker table tr td, .datepicker table tr th {
+  -webkit-border-radius: 0px;
+     -moz-border-radius: 0px;
+          border-radius: 0px;
 }
