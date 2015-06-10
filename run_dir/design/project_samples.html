@@ -298,92 +298,132 @@ Description: Details page for a single project
     <!-- RUNNING NOTES TAB -->
     {% include "running_notes_tab.html" %}
 
-    <div class="tab-pane" id="tab_analysis_content">
+    <!-- BIOINFO ANALYSIS TAB -->
+    <div class="tab-pane fade" id="tab_analysis_content">
       <form class="form-inline">
         <div class="form-group">
-          <label for="bioinfo_status">Set Status</label>
-          <select id="bioinfo_status" class="form-control">
-            <option>Different Values</option>
+          <label for="bioinfo_set-status">All run statuses: </label>
+          <select id="bioinfo_set-status" class="form-control">
+            <option>[ different values ]</option>
             <option>Waiting</option>
             <option>Incoming</option>
             <option>Ongoing</option>
             <option>Delivered</option>
           </select>
         </div>
-        <button class="btn btn-default">Copy values from first row</button>
-        <button class="btn btn-primary pull-right">Save Changes</button></div>
+        &nbsp; &nbsp; &nbsp;
+        <button class="btn btn-default btn-sm" id="bioinfo-status-copyFirstRow">Copy first row to all</button>
+        <button class="btn btn-primary pull-right" id="bioinfo-status-saveButton">Save Changes</button>
       </form>
       <hr>
+      <form class="form-inline">
+        <div class="form-group">
+          <label>Project Level Checks:</label>
+        </div>
+        &nbsp; &nbsp; &nbsp;
+        <div class="form-group">
+          <div class="checkbox"><label><input type="checkbox" id="uppnex_id_confirmed"> Uppnex ID confirmed</label></div>
+        </div>
+      </form>
+      &nbsp;
       <table class="table table-colgroup table-bordered table-bioinfo-status">
-        <colgroup>
-        <colgroup span="3">
-        <colgroup span="2">
-        <colgroup span="2">
-        <colgroup span="2">
+        <colgroup span="2"> <!-- run -->
+        <colgroup span="3"> <!-- multiplex QC -->
+        <colgroup span="2"> <!-- Yield -->
+        <colgroup span="2"> <!-- Quality -->
+        <colgroup span="2"> <!-- Contamination -->
+        <colgroup span="2" class="bioinfo-app-rnaseq"> <!-- rnaseq -->
+        <colgroup span="2" class="bioinfo-app-exome"> <!-- exome -->
+        <colgroup class="bioinfo-app-customCap">          <!-- customCap -->
+        <colgroup span="2" class="bioinfo-app-WGreseq"> <!-- WGreseq -->
+        <colgroup span="2" class="bioinfo-app-denovo"> <!-- denovo -->
+        <colgroup span="2" class="bioinfo-app-applications"> <!-- applications -->
+        <colgroup span="2"> <!-- Reports -->
+        <colgroup span="2"> <!-- Delivery -->
         <tr>
-          <th rowspan="2" class="text-center border-bottom">Run ID</th>
-          <th colspan="3" class="text-center">Multiplex QC</th>
-          <th colspan="2" class="text-center">Yield</th>
-          <th colspan="2" class="text-center">Quality</th>
-          <th colspan="2" class="text-center">Contamination screen</th>
+          <th colspan="2">Run</th>
+          <th colspan="3">Multiplex QC</th>
+          <th colspan="2">Yield</th>
+          <th colspan="2">Quality</th>
+          <th colspan="2">Contamination screen</th>
+          <th colspan="2" class="bioinfo-app-rnaseq">RNA-Seq</th>
+          <th colspan="2" class="bioinfo-app-exome">Exome capture</th>
+          <th class="bioinfo-app-customCap">Custom capture</th>
+          <th colspan="2" class="bioinfo-app-WGreseq">WG Reseq</th>
+          <th colspan="2" class="bioinfo-app-denovo">De novo / Mate-Pair</th>
+          <th colspan="2" class="bioinfo-app-applications">Applications (if applicable)</th>
+          <th colspan="2">Reports Generated</th>
+          <th colspan="2">Delivery Details</th>
         </tr>
-        <tr class="border-bottom">
+        <tr class="bioinfo-field-names border-bottom">
+          <th>Flowcell</th>
+          <th>Status</th>
           <th>Undemultiplexed reads</th>
           <th>Unexpected indexes</th>
           <th>Low sample yield</th>
-          <th>Lane</th>
-          <th>Sample</th>
+          <th>Lane Yield</th>
+          <th>Sample Yield</th>
           <th>PhiX error rate</th>
           <th>%bases >= Q30</th>
           <th>fastq_screen</th>
           <th>blast_wrapper</th>
+          <th class="bioinfo-app-rnaseq">Sequence duplication</th>
+          <th class="bioinfo-app-rnaseq">Unique mapping rate</th>
+          <th class="bioinfo-app-exome">Sequence duplication</th>
+          <th class="bioinfo-app-exome">% Targets @10X coverage</th>
+          <th class="bioinfo-app-customCap">Enrichment</th>
+          <th class="bioinfo-app-WGreseq">Sequence duplication</th>
+          <th class="bioinfo-app-WGreseq">Mapping rate</th>
+          <th class="bioinfo-app-denovo">Adapter trimming</th>
+          <th class="bioinfo-app-denovo">K-mer profile</th>
+          <th class="bioinfo-app-applications">Data delivered</th>
+          <th class="bioinfo-app-applications">Data approved</th>
+          <th>Sample report</th>
+          <th>Project report</th>
+          <th>Data and reports transferred</th>
+          <th>Email sent to user</th>
         </tr>
-        <tr>
-          <th class="bioinfo-status-runid"><samp class="nowrap">150212_AC6L5YANXX</samp> <span class="label label-danger bioinfo-status-runstate">Ongoing</span></th>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
+        <tr id="bioinfo-noruns">
+          <td colspan="26">No flowcells found</td>
         </tr>
-        <tr>
-          <th class="bioinfo-status-runid"><samp class="nowrap">150303_AC6BFBANXX</samp> <span class="label label-danger bioinfo-status-runstate">Ongoing</span></th>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-        </tr>
-        <tr>
-          <th class="bioinfo-status-runid"><samp class="nowrap">150218_BC6L5HANXX</samp> <span class="label label-success bioinfo-status-runstate">Delivered</span></th>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
-          <td class="unknown">?</td>
+        <tr id="bioinfo-template-row" style="display:none;">
+          <th class="bioinfo-status-runid"><samp class="nowrap"><a href="http://localhost:9761/flowcells/150212_AC6L5YANXX">example flow cell id</a></samp></th>
+          <td class="bioinfo-status-runstate"><span class="label label-default">Waiting</span></td>
+          <td class="bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-app-rnaseq bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-app-rnaseq bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-app-exome bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-app-exome bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-app-customCap bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-app-WGreseq bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-app-WGreseq bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-app-denovo bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-app-denovo bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-app-applications bioinfo-status-pfw unknown">?</td>
+          <td class="bioinfo-app-applications bioinfo-status-pfw unknown">?</td>
+          <td><div class="input-group input-group-sm date"><input type="text" class="form-control"><span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
+          <td><div class="input-group input-group-sm date"><input type="text" class="form-control"><span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
+          <td><div class="input-group input-group-sm date"><input type="text" class="form-control"><span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
+          <td><div class="input-group input-group-sm date"><input type="text" class="form-control"><span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
         </tr>
       </table>
       <hr>
       <p>Reference:
-            <a href="https://docs.google.com/a/scilifelab.se/spreadsheet/ccc?key=0Alyw54FEug2udEVMdVE5QTA5ZzRKLUhwRlZTSmFWLVE&usp=drive_web#gid=2">Spreadsheet 1</a>
-            <a href="https://docs.google.com/spreadsheets/d/1erukzLcqeG-LmUGwYTR_yMjaNjz-aY7dKLXini3JB_o/edit#gid=2112135547">Spreadsheet 2</a>
-        </p>
+        <a target="_blank" href="https://docs.google.com/spreadsheets/d/1LcqKJzIm2zNfLApr4AOpOhDSAApYMh7roJySJtmr5gU/edit#gid=2">Spreadsheet 1</a>
+        <a target="_blank" href="https://docs.google.com/spreadsheets/d/1erukzLcqeG-LmUGwYTR_yMjaNjz-aY7dKLXini3JB_o/edit#gid=2112135547">Spreadsheet 2</a>
+      </p>
     </div>
 
     <!-- USER COMMUNICATION TAB -->
-    <div class="tab-pane" id="tab_com_content">
+    <div class="tab-pane fade" id="tab_com_content">
       <div id="zendesk_loading_spinner" style="text-align:center; margin:100px 0;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading ZenDesk tickets..</div>
       <div class="panel-group" id="com_accordion"></div>
     </div>
@@ -534,6 +574,7 @@ Description: Details page for a single project
 </div>
 
 <!-- Javascript -->
+<script src="/static/js/bootstrap-datepicker.min.js"></script>
 <script src="/static/js/list.min.js"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ project }}"></script>
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-project="{{project}}"></script>
