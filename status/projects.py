@@ -692,4 +692,7 @@ class BioinfoAnalysisHandler(SafeHandler):
             self.application.bioinfo_db.save(original_doc)
 
             
+        self.set_status(200)
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(original_doc))
             
