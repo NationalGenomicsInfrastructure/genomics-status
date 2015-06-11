@@ -311,7 +311,7 @@ Description: Details page for a single project
         </div>
         &nbsp; &nbsp; &nbsp;
         <button class="btn btn-default btn-sm" id="bioinfo-status-copyFirstRow">Copy first row to all</button>
-        <button class="btn btn-primary pull-right" id="bioinfo-status-saveButton">Save Changes</button>
+        <button class="btn btn-primary pull-right" id="bioinfo-status-saveButton" disabled>Save Changes</button>
       </form>
       <hr>
       <form class="form-inline">
@@ -382,10 +382,10 @@ Description: Details page for a single project
           <th>Email sent to user</th>
         </tr>
         <tr id="bioinfo-noruns">
-          <td colspan="26">No flowcells found</td>
+          <td colspan="26" class="text-muted">No flowcells found</td>
         </tr>
         <tr id="bioinfo-template-row" style="display:none;">
-          <th class="bioinfo-status-runid"><samp class="nowrap"><a href="flowcells/example">example flow cell id</a></samp></th>
+          <th class="bioinfo-status-runid nowrap"><samp><a href="flowcells/example">example flow cell id</a></samp></th>
           <td class="bioinfo-status-runstate"><span class="label label-default">Waiting</span></td>
           <td class="bioinfo-status-pfw unknown">?</td>
           <td class="bioinfo-status-pfw unknown">?</td>

@@ -1017,13 +1017,16 @@ function load_bioinfo_table() {
     });
 
     // Hide the loading row and build the real runs based on the template
-    $('#bioinfo-noruns').hide();
+    if(Object.keys(data).length > 0){
+      $('#bioinfo-noruns').hide();
+    }
     var templaterow = $('#bioinfo-template-row').attr('id', '').show().detach();
     var field_names = [];
     $('.bioinfo-field-names th').each(function(i){
       // First cell in data rows is th not td, so i-1 to avoid offset
       field_names[i-1] = prettify($(this).text(), true);
     });
+
     $.each(data, function(key, vals){
       // Start by copying the template row
       var tr = templaterow.clone();
@@ -1036,11 +1039,15 @@ function load_bioinfo_table() {
       if(bsi != -1){
         tr.find('td.bioinfo-status-runstate span').removeClass('label-default').addClass(bioinfo_states_classes[bsi]);
       }
+
+      // User and date
+      tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Last updated by '+vals.user+'<br>'+vals.timestamp+'"></span>')
+
       // Set the values for the row
       tr.children('td').each(function(i){
-        if(field_names[i] in vals.values){
+        if(field_names[i] in vals){
           if($(this).hasClass('bioinfo-status-pfw')){
-            var state = vals.values[field_names[i]];
+            var state = vals[field_names[i]];
             $(this).text(state);
             var si = bioinfo_texts.indexOf(state);
             if(si != -1){
@@ -1048,7 +1055,7 @@ function load_bioinfo_table() {
             }
           } else {
             if($(this).find('input').length > 0){
-              $(this).find('input').val(vals.values[field_names[i]]);
+              $(this).find('input').val(vals[field_names[i]]);
             }
           }
         }
@@ -1064,6 +1071,8 @@ function load_bioinfo_table() {
       if(enabled_statues.indexOf(status) == -1){
         $(this).addClass('bioinfo-status-disabled');
         $(this).find('input').attr('disabled', true);
+      } else {
+        $('#bioinfo-status-saveButton').attr('disabled', false);
       }
     });
 
@@ -1207,6 +1216,11 @@ $(document).ready(function() {
     e.preventDefault();
     e.stopImmediatePropagation(); // fires twice otherwise.
 
+    if($(this).is(':disabled')){
+      alert('disabled!');
+      return false;
+    }
+
     // Build the JSON object
     var runs = {};
     var field_names = [];
@@ -1234,7 +1248,6 @@ $(document).ready(function() {
 
     $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
     $.ajax({
-      async: false,
       type: 'POST',
       url: bioinfo_api_url,
       dataType: 'json',
