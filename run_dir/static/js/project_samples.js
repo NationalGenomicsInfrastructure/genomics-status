@@ -984,7 +984,7 @@ function make_timescale_bar(tsid, include_orderdates){
 ///////////////////
 
 // Static config vars
-var bioinfo_api_url = '/bioinfo_analysis/'+project;
+var bioinfo_api_url = '/api/v1/bioinfo_analysis/'+project;
 var bioinfo_states = ['Ongoing', 'Delivered'];
 var bioinfo_states_classes = ['label-danger', 'label-success'];
 
