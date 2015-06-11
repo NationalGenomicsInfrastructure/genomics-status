@@ -711,3 +711,61 @@ These classes are cut and pasted wholesale into here from other packages.
   margin-top: 25px;
   height: 5px;
 }
+
+
+
+/* BIOINFO ANALYSIS TAB ON PROJECT SAMPLES PAGE */
+.table-colgroup {
+  border-collapse:collapse;
+}
+.table-colgroup > tbody > tr > td, .table-colgroup > tbody > tr > th {
+  border: none;
+}
+.table-colgroup colgroup {
+  border: 1px solid #AAA;
+}
+.table-colgroup > tbody > tr.border-bottom > th, .table-colgroup > tbody > tr > th.border-bottom {
+  border-bottom: 1px solid #AAA;
+}
+.table-bioinfo-status td {
+  cursor: pointer;
+}
+.table-bioinfo-status {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -ms-user-select: none;
+}
+
+.table-bioinfo-status td, .table-bioinfo-status th {
+  text-align: center;
+  vertical-align: middle;
+}
+.table-bioinfo-status td.unknown {
+  color: #ccc;
+}
+
+.table-bioinfo-status th.bioinfo-status-runid {
+  text-align: left;
+}
+.bioinfo-status-runstate {
+  text-transform: lowercase;
+}
+.bioinfo-status-disabled td {
+  background-color: #ededed;
+}
+.bioinfo-status-disabled td, .bioinfo-status-disabled th,
+.bioinfo-status-disabled .input-group-addon.datepicker-today {
+  cursor: not-allowed;
+}
+
+
+.input-group.date, .narrowinput {
+  width: 120px;
+}
+.datepicker table tr td, .datepicker table tr th {
+  -webkit-border-radius: 0px;
+     -moz-border-radius: 0px;
+          border-radius: 0px;
+}
