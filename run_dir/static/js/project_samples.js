@@ -1043,6 +1043,13 @@ function load_bioinfo_table() {
       // User and date
       tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Last updated by '+vals.user+'<br>'+vals.timestamp+'"></span>')
 
+      // UPPNEX id confirmed
+      if(vals.uppnex_confirmed == 'true'){
+        $('#uppnex_id_confirmed').attr('checked', true);
+      } else if(vals.uppnex_confirmed == 'false'){
+        $('#uppnex_id_confirmed').attr('checked', false);
+      }
+
       // Set the values for the row
       tr.children('td').each(function(i){
         if(field_names[i] in vals){
