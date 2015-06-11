@@ -752,9 +752,17 @@ These classes are cut and pasted wholesale into here from other packages.
 .bioinfo-status-runstate {
   text-transform: lowercase;
 }
+.bioinfo-status-disabled td {
+  background-color: #ededed;
+}
+.bioinfo-status-disabled td, .bioinfo-status-disabled th,
+.bioinfo-status-disabled .input-group-addon.datepicker-today {
+  cursor: not-allowed;
+}
+
 
 .input-group.date, .narrowinput {
-  max-width: 150px;
+  width: 120px;
 }
 .datepicker table tr td, .datepicker table tr th {
   -webkit-border-radius: 0px;
