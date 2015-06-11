@@ -46,6 +46,7 @@ class Application(tornado.web.Application):
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
+            ("/api/v1/bioinfo_analysis/([^/]*)$", BioinfoAnalysisHandler),
             ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
             ("/api/v1/charon_summary/([^/]*)$",CharonProjectHandler ),
@@ -159,6 +160,7 @@ class Application(tornado.web.Application):
         couch = Server(settings.get("couch_server", None))
         if couch:
             self.uppmax_db = couch["uppmax"]
+            self.bioinfo_db = couch["bioinfo_analysis"]
             self.samples_db = couch["samples"]
             self.projects_db = couch["projects"]
             self.flowcells_db = couch["flowcells"]

@@ -53,9 +53,9 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                     <th>% bases > Q30:</th> \
                     <td class="text-left ';
                 q30=data['lanedata'][lid]['overthirty']
-                if (q30 < 30) sbody += 'danger';
-                else if(q30 < 80) sbody += 'warning';
-                else if(q30 < 100) sbody += 'success';
+                if(q30 >= 30 && q30 < 75) sbody += 'warning';
+                else if(q30 >= 75 && q30 <= 100) sbody += 'success';
+                else sbody += 'danger';
                 sbody+='">' + q30 + '</td> \
                     <th>Mean Quality Score:</th> \
                     <td class="text-left">' + data['lanedata'][lid]['mqs'] + '</td> \
