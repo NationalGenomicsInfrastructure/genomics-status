@@ -987,6 +987,8 @@ function make_timescale_bar(tsid, include_orderdates){
 var bioinfo_api_url = '/api/v1/bioinfo_analysis/'+project;
 var bioinfo_states = ['Ongoing', 'Delivered'];
 var bioinfo_states_classes = ['label-danger', 'label-success'];
+var bioinfo_classes = ['unknown', 'success', 'warning', 'danger', 'active'];
+var bioinfo_texts = ['?', 'Pass', 'Warning', 'Fail', 'N/A'];
 
 // Build bioinfo table - main loading spinner waits for this function
 function load_bioinfo_table() {
@@ -1016,7 +1018,7 @@ function load_bioinfo_table() {
 
     // Hide the loading row and build the real runs based on the template
     $('#bioinfo-noruns').hide();
-    var templaterow = $('#bioinfo-template-row').detatch();
+    var templaterow = $('#bioinfo-template-row').attr('id', '').show().detach();
     var field_names = [];
     $('.bioinfo-field-names th').each(function(i){
       // First cell in data rows is th not td, so i-1 to avoid offset
@@ -1027,19 +1029,23 @@ function load_bioinfo_table() {
       var tr = templaterow.clone();
 
       // Flowcell and status
-      tr.children('th.bioinfo-status-runid samp').html('<a href="flowcells/'+key+'">'+key+'</a>');
-      tr.children('td.bioinfo-status-runstate span').text(vals.status);
+      var url_key = key.replace(/_.+_/g, '_');
+      tr.find('th.bioinfo-status-runid samp').html('<a href="../flowcells/'+url_key+'">'+key+'</a>');
+      tr.find('td.bioinfo-status-runstate span').text(vals.status);
       var bsi = bioinfo_states.indexOf(vals.status);
-      if(bsi == -1){
-        tr.children('td.bioinfo-status-runstate span').addClass('label-default');
-      } else {
-        tr.children('td.bioinfo-status-runstate span').addClass(bioinfo_states_classes[bsi]);
+      if(bsi != -1){
+        tr.find('td.bioinfo-status-runstate span').removeClass('label-default').addClass(bioinfo_states_classes[bsi]);
       }
       // Set the values for the row
       tr.children('td').each(function(i){
         if(field_names[i] in vals.values){
           if($(this).hasClass('bioinfo-status-pfw')){
-            $(this).text() = vals.values[field_names[i]];
+            var state = vals.values[field_names[i]];
+            $(this).text(state);
+            var si = bioinfo_texts.indexOf(state);
+            if(si != -1){
+              $(this).removeClass('unknown').addClass(bioinfo_classes[si]);
+            }
           } else {
             if($(this).find('input').length > 0){
               $(this).find('input').val(vals.values[field_names[i]]);
@@ -1072,7 +1078,7 @@ function load_bioinfo_table() {
 $(document).ready(function() {
 
   // Run ID status - individual runs
-  $('.bioinfo-status-runstate').click(function(e){
+  $('.table-bioinfo-status').on('click', '.bioinfo-status-runstate', function(e) {
     e.stopImmediatePropagation(); // fires twice otherwise.
     var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
     if(!isdisabled){
@@ -1101,9 +1107,7 @@ $(document).ready(function() {
   });
 
   // Passed / Warn / Fail / NA cells
-  var bioinfo_classes = ['unknown', 'success', 'warning', 'danger', 'active'];
-  var bioinfo_texts = ['?', 'Pass', 'Warning', 'Fail', 'N/A'];
-  $('.table-bioinfo-status td.bioinfo-status-pfw').click(function(e){
+  $('.table-bioinfo-status').on('click', 'td.bioinfo-status-pfw', function(e) {
     e.stopImmediatePropagation(); // fires twice otherwise.
     var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
     $(this).closest('tr').hasClass('bioinfo-status-disabled');
@@ -1126,11 +1130,13 @@ $(document).ready(function() {
   });
 
   // Datepickers
-  $('.input-group.date input').datepicker({
-      format: "yyyy-mm-dd",
-      todayHighlight: true
+  $('.table-bioinfo-status').on('focus', '.input-group.date input', function() {
+    $(this).datepicker({
+        format: "yyyy-mm-dd",
+        todayHighlight: true
+    });
   });
-  $('.datepicker-today').click(function(e){
+  $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
     e.preventDefault();
     e.stopImmediatePropagation();
     var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
