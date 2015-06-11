@@ -680,17 +680,16 @@ class BioinfoAnalysisHandler(SafeHandler):
     def post(self, project_id):
         v=self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
         user = self.get_secure_cookie('user')
-        data=self.get_argument("data")
+        data=json.loads(self.request.body)
         for run_id in data:
             for row in v[[project_id, run_id]]:
                 #if theres more than one, that is a problem
                 original_doc=row.value
 
-            python_doc=json.loads(original_doc)
             timestamp=datetime.datetime.now().isoformat()
-            python_doc['values'][timestamp]=data[run_id]['values']
-            python_doc['values'][timestamp]['user']=user
-            json_doc=json.dumps(python_doc)
-            import pdb;pdb.set_trace()
+            original_doc['values'][timestamp]=data[run_id]['values']
+            original_doc['values'][timestamp]['user']=user
+            self.application.bioinfo_db.save(original_doc)
+
             
             
