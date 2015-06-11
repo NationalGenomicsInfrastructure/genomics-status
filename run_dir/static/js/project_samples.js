@@ -1229,17 +1229,17 @@ $(document).ready(function() {
       field_names[i-1] = prettify($(this).text(), true);
     });
     $('.table-bioinfo-status tr:visible:has(td)').each(function(){
-      var runid = $(this).find('th.bioinfo-status-runid').text();
-      var status = $(this).find('.bioinfo-status-runstate span').text();
+      var runid = $(this).find('th.bioinfo-status-runid').text().trim();
+      var status = $(this).find('.bioinfo-status-runstate span').text().trim();
       var vals = {
         uppnex_confirmed: $("#uppnex_id_confirmed").is(':checked') ? 'true' : 'false'
       };
       $(this).children('td:visible').each(function(i){
         if($(this).hasClass('bioinfo-status-pfw')){
-          vals[field_names[i]] = $(this).text();
+          vals[field_names[i]] = $(this).text().trim();
         } else {
           if($(this).find('input').length > 0){
-            vals[field_names[i]] = $(this).find('input').val();
+            vals[field_names[i]] = $(this).find('input').val().trim();
           }
         }
       });
@@ -1255,9 +1255,10 @@ $(document).ready(function() {
       error: function(xhr, textStatus, errorThrown) {
         alert('There was an error saving the bioinformatics statuses: '+errorThrown);
         $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
-        console.log(xhr); console.log(textStatus); console.log(errorThrown);
+        console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(runs));
       },
       success: function(data, textStatus, xhr) {
+        alert('Saved!');
         $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
       }
     });
