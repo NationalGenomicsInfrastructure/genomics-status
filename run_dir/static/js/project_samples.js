@@ -989,6 +989,8 @@ var bioinfo_states = ['Ongoing', 'Delivered'];
 var bioinfo_states_classes = ['label-danger', 'label-success'];
 var bioinfo_classes = ['unknown', 'success', 'warning', 'danger', 'active'];
 var bioinfo_texts = ['?', 'Pass', 'Warning', 'Fail', 'N/A'];
+var editable_statuses = ['Ongoing']; // This started off as a list - leaving it as a list to make it easy to extend
+var statusonly_statuses = ['Delivered'];
 
 // Build bioinfo table - main loading spinner waits for this function
 function load_bioinfo_table() {
@@ -1072,16 +1074,13 @@ function load_bioinfo_table() {
     });
 
     // Set rows as disabled if they're not ready yet
-    var enabled_statues = ['Ongoing', 'Delivered'];
+    var editable = 0;
     $('.table-bioinfo-status tr:has(td)').each(function(){
-      var status = $(this).find('.bioinfo-status-runstate span').text();
-      if(enabled_statues.indexOf(status) == -1){
-        $(this).addClass('bioinfo-status-disabled');
-        $(this).find('input').attr('disabled', true);
-      } else {
-        $('#bioinfo-status-saveButton').attr('disabled', false);
-      }
+      editable += reset_editable($(this));
     });
+    if(editable > 0){
+      $('#bioinfo-status-saveButton').attr('disabled', false);
+    }
 
   }).fail(function( jqxhr, textStatus, error ) {
     var numcols = 0; // I doubt that anyone will notice this. But I'm OCD.
@@ -1091,12 +1090,30 @@ function load_bioinfo_table() {
   });
 }
 
+// Set rows as disabled if they're not ready yet
+function reset_editable(row){
+  var status = row.find('.bioinfo-status-runstate span').text();
+  if(editable_statuses.indexOf(status) > -1) {
+    row.removeClass('bioinfo-status-disabled bioinfo-delivered');
+    row.find('input').attr('disabled', false);
+    return 1;
+  } else if(statusonly_statuses.indexOf(status) > -1) {
+    row.addClass('bioinfo-status-disabled bioinfo-delivered');
+    row.find('input').attr('disabled', true);
+    return 1;
+  } else {
+    row.addClass('bioinfo-status-disabled');
+    row.find('input').attr('disabled', true);
+    return 0;
+  }
+}
+
 $(document).ready(function() {
 
   // Run ID status - individual runs
   $('.table-bioinfo-status').on('click', '.bioinfo-status-runstate', function(e) {
     e.stopImmediatePropagation(); // fires twice otherwise.
-    var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
+    var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled') && !$(this).closest('tr').hasClass('bioinfo-delivered');
     if(!isdisabled){
       var i = bioinfo_states.indexOf($(this).text());
       if(i >= 0){
@@ -1108,6 +1125,7 @@ $(document).ready(function() {
           $(this).children('span').removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[0]);
         }
       }
+      reset_editable($(this).closest('tr'));
       // Update the select box
       var states = [];
       $('.bioinfo-status-runstate').each(function(){
