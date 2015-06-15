@@ -1043,7 +1043,7 @@ function load_bioinfo_table() {
       }
 
       // User and date
-      tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Last updated by '+vals.user+'<br>'+vals.timestamp+'"></span>')
+      tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Last updated by '+vals.user+'<br>'+formatDateTime(vals.timestamp, true)+'"></span>');
 
       // UPPNEX id confirmed
       if(vals.uppnex_confirmed == 'true'){
@@ -1175,12 +1175,7 @@ $(document).ready(function() {
     e.stopImmediatePropagation();
     var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
     if(!isdisabled){
-      var today = new Date();
-      var dd = today.getDate();
-      var mm = today.getMonth()+1; //January is 0!
-      if(dd<10) { dd='0'+dd }
-      if(mm<10) { mm='0'+mm }
-      today = today.getFullYear()+'-'+mm+'-'+dd;
+      var today = formatDateTime(new Date(), false);
       $(this).prevAll("input:first").val(today);
     }
   });
@@ -1272,6 +1267,7 @@ $(document).ready(function() {
     });
 
     $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
+    console.log(runs);
     $.ajax({
       type: 'POST',
       url: bioinfo_api_url,
@@ -1318,6 +1314,4 @@ function load_charon_summary(){
       var err = textStatus + ", " + error;
       console.log( "Couldn't load charon data: " + err );
   });
-
-
 }

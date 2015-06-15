@@ -234,6 +234,21 @@ function auto_samples_cell (id, val){
   }
 }
 
+function formatDateTime(d, printTime){
+  if(typeof d.getMonth !== 'function'){
+    d = new Date(d);
+  }
+  var dd = d.getDate();
+  var mm = d.getMonth()+1; //January is 0!
+  if(dd<10) { dd='0'+dd }
+  if(mm<10) { mm='0'+mm }
+  var returnstring = d.getFullYear()+'-'+mm+'-'+dd;
+  if(printTime){
+    returnstring += ', '+d.getHours()+':'+d.getMinutes();
+  }
+  return returnstring;
+}
+
 //Is there any standar method to do this?
 var max_str = function(strs) {
   var max = strs[0];

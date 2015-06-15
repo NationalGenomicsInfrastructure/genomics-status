@@ -46,6 +46,7 @@ class Application(tornado.web.Application):
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
+            ("/api/v1/bioinfo_analysis", BioinfoAnalysisHandler),
             ("/api/v1/bioinfo_analysis/([^/]*)$", BioinfoAnalysisHandler),
             ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),

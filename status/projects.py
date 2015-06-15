@@ -366,7 +366,7 @@ class ProjectSamplesDataHandler(SafeHandler):
         metrics_view=self.application.samples_db.view('sample/INS_metrics')
         if len(metrics_view[metrics_id].rows)>1:
             application_log.warn("More than one metrics doc found for id {0}".format(metrics_id))
-        
+
         for row in metrics_view[metrics_id]:
             data=row.value
 
@@ -667,13 +667,18 @@ class CharonProjectHandler(SafeHandler):
 
 class BioinfoAnalysisHandler(SafeHandler):
     """queries and posts about bioinfo analysis"""
-
     def get(self, project_id):
+        summary_page_statuses = ['Ongoing']
         return_obj={}
         v=self.application.bioinfo_db.view("latest_data/project_id")
-        for row in v[project_id]:
-            return_obj.update(row.value)
-            
+        if(len(project_id) > 0):
+            for row in v[project_id]:
+                return_obj.update(row.value)
+        else:
+            for row in v:
+                if row.value[row.value.keys()[0]]['status'] in summary_page_statuses:
+                    return_obj.update(row.value)
+
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(return_obj))
 
@@ -683,16 +688,15 @@ class BioinfoAnalysisHandler(SafeHandler):
         data=json.loads(self.request.body)
         for run_id in data:
             for row in v[[project_id, run_id]]:
-                #if theres more than one, that is a problem
-                original_doc=row.value
+                # if there's more than one, that is a problem
+                original_doc = row.value
 
-            timestamp=datetime.datetime.now().isoformat()
-            original_doc['values'][timestamp]=data[run_id]['values']
-            original_doc['values'][timestamp]['user']=user
+            timestamp = datetime.datetime.now().isoformat()
+            original_doc['values'][timestamp] = data[run_id]['values']
+            original_doc['values'][timestamp]['user'] = user
             self.application.bioinfo_db.save(original_doc)
 
-            
+
         self.set_status(200)
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(original_doc))
-            
