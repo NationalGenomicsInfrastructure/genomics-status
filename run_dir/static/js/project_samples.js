@@ -1267,7 +1267,6 @@ $(document).ready(function() {
     });
 
     $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
-    console.log(runs);
     $.ajax({
       type: 'POST',
       url: bioinfo_api_url,

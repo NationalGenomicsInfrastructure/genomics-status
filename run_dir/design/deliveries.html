@@ -11,12 +11,112 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 
 
 <div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading deliveries page..</div>
-<div id="page_content" style="display:none;">
+<div id="page_content" style="display:none;" class="deliveries-page">
+  <div class="row">
+    <div class="col-lg-8">
 
-  <h1>Ongoing Deliveries</h1>
+      <h1>Ongoing <span id="page_title">Deliveries</span></h1>
 
-  <h1>Incoming Deliveries</h1>
+      <div id="ongoing_deliveries">
+        <h3>
+          <a href="../project/P1399">P1399</a>: L.Gan_14_01<br>
+          <small>RNA-seq (total RNA)
+            &nbsp; <span class="label label-info">Production</span>
+            &nbsp; Senthil
+          </small>
+        </h3>
+        <dl class="dl-horizontal">
+          <dt>Project running note:</dt>
+          <dd>Delivered on harddrive -- to be shipped (waiting for another proj) <a href="#" class="btn btn-xs btn-default pull-right">See all</a></dd>
+        </dl>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Run ID</th>
+              <th>Status</th>
+              <th>Checklists</th>
+              <th>Latest running note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><samp><a href="../flowcells/">150505_D00450_0168_AC6H3RANXX</a></samp></td>
+              <td><span class="label label-success">Delivered</span></td>
+              <td>
+                <div class="progress">
+                  <div class="progress-bar progress-bar-success" style="width: 35%" title="6 Passes" data-toggle="tooltip"></div>
+                  <div class="progress-bar progress-bar-warning" style="width: 20%" title="3 Warnings" data-toggle="tooltip"></div>
+                  <div class="progress-bar progress-bar-danger" style="width: 10%" title="1 Fail" data-toggle="tooltip"></div>
+                </div>
+              </td>
+              <td>Delivered on harddrive -- to be shipped (waiting for another proj) <a href="#" class="btn btn-xs btn-default pull-right">See all</a></td>
+            </tr>
+            <tr>
+              <td><samp><a href="../flowcells/">150505_D00483_0089_AC6H49ANXX</a></samp></td>
+              <td><span class="label label-success">Delivered</span></td>
+              <td>
+                <div class="progress">
+                  <div class="progress-bar progress-bar-success" style="width: 35%" title="6 Passes" data-toggle="tooltip"></div>
+                  <div class="progress-bar progress-bar-danger" style="width: 50%" title="8 Fails" data-toggle="tooltip"></div>
+                </div>
+              </td>
+              <td>Delivered on harddrive -- to be shipped (waiting for another proj) <a href="#" class="btn btn-xs btn-default pull-right">See all</a></td>
+            </tr>
+            <tr>
+              <td><samp><a href="../flowcells/">150505_D00483_0090_BC6H02ANXX</a></samp></td>
+              <td><span class="label label-success">Delivered</span></td>
+              <td>
+                <div class="progress">
+                  <div class="progress-bar progress-bar-success" style="width: 20%" title="6 Passes" data-toggle="tooltip"></div>
+                  <div class="progress-bar progress-bar-warning" style="width: 0%" title="0 Warnings" data-toggle="tooltip"></div>
+                  <div class="progress-bar progress-bar-danger" style="width: 0%" title="0 Fail" data-toggle="tooltip"></div>
+                </div>
+              </td>
+              <td>Delivered on harddrive -- to be shipped (waiting for another proj) <a href="#" class="btn btn-xs btn-default pull-right">See all</a></td>
+            </tr>
+          </tbody>
+        </table>
 
+        <hr>
+      </div>
+
+    </div>
+    <div class="col-lg-4">
+      <h1>Incoming Deliveries</h1>
+
+      <div id="incoming_deliveries">
+        <h3>
+          <a href="../project/P1399">P1399</a>: L.Gan_14_01<br>
+          <small>RNA-seq (total RNA)
+            &nbsp; <span class="label label-info">Production</span>
+            &nbsp; Senthil
+          </small>
+        </h3>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Run ID</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><samp><a href="../flowcells/">150505_D00450_0168_AC6H3RANXX</a></samp></td>
+              <td><span class="label label-default">Demultiplexing</span></td>
+            </tr>
+            <tr>
+              <td><samp><a href="../flowcells/">150505_D00483_0089_AC6H49ANXX</a></samp></td>
+              <td><span class="label label-default">Sequencing R2</span></td>
+            </tr>
+            <tr>
+              <td><samp><a href="../flowcells/">150505_D00483_0090_BC6H02ANXX</a></samp></td>
+              <td><span class="label label-default">Sequencing R2</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Javascript -->
