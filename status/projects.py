@@ -666,7 +666,9 @@ class CharonProjectHandler(SafeHandler):
 
 
 class BioinfoAnalysisHandler(SafeHandler):
-    """queries and posts about bioinfo analysis"""
+    """queries and posts about bioinfo analysis
+    URL: /api/v1/bioinfo_analysis/
+    URL: /api/v1/bioinfo_analysis/([^/]*)"""
     def get(self, project_id):
         summary_page_statuses = ['Ongoing']
         return_obj={}
@@ -700,3 +702,15 @@ class BioinfoAnalysisHandler(SafeHandler):
         self.set_status(200)
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(original_doc))
+
+
+class DeliveriesPageHandler(SafeHandler):
+        """ Serves a page which lists the bioinformatics delivery statuses of active projects
+        URL: /deliveries/)
+        """
+        def get(self):
+            t = self.application.loader.load("deliveries.html")
+            self.write(t.generate(gs_globals=self.application.gs_globals,
+                                      user=self.get_current_user_name(),
+                                      prettify = prettify_css_names
+                                      ))

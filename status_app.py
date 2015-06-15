@@ -128,6 +128,7 @@ class Application(tornado.web.Application):
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),
+            ("/deliveries", DeliveriesPageHandler),
             ("/clusters_per_lane", ClustersPerLaneHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
