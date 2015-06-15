@@ -687,8 +687,13 @@ class BioinfoAnalysisHandler(SafeHandler):
                 original_doc=row.value
 
             timestamp=datetime.datetime.now().isoformat()
-            original_doc['values'][timestamp]=data[run_id]['values']
-            original_doc['values'][timestamp]['user']=user
+            try:
+                original_doc['values'][timestamp]=data[run_id]['values']
+                original_doc['values'][timestamp]['user']=user
+                original_doc['status']=data[run_id]['status']
+            except:
+                self.set_status(400)
+
             self.application.bioinfo_db.save(original_doc)
 
             
