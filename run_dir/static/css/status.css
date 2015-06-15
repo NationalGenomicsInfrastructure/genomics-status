@@ -773,3 +773,9 @@ These classes are cut and pasted wholesale into here from other packages.
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
+
+
+/* Deliveries page */
+.deliveries-page .progress {
+  margin-bottom: 0;
+}
