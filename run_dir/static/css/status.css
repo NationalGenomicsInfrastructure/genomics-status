@@ -754,10 +754,14 @@ These classes are cut and pasted wholesale into here from other packages.
 }
 .bioinfo-status-disabled td {
   background-color: #ededed;
+  color: #ccc;
 }
 .bioinfo-status-disabled td, .bioinfo-status-disabled th,
 .bioinfo-status-disabled .input-group-addon.datepicker-today {
   cursor: not-allowed;
+}
+.bioinfo-status-disabled.bioinfo-delivered td.bioinfo-status-runstate {
+  cursor: pointer;
 }
 
 
