@@ -9,13 +9,17 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 
 {% block stuff %}
 
-<div class="container-fluid" id="deliveries_list">
+
+<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading deliveries page..</div>
+<div id="page_content" style="display:none;">
+
   <h1>Ongoing Deliveries</h1>
 
   <h1>Incoming Deliveries</h1>
 
 </div>
 
-
+<!-- Javascript -->
+<script src="/static/js/deliveries.js?v={{ gs_globals['git_commit'] }}" id="deliveries-js"></script>
 
 {% end %}
