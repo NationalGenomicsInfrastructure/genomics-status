@@ -1021,6 +1021,8 @@ function load_bioinfo_table() {
     // Hide the loading row and build the real runs based on the template
     if(Object.keys(data).length > 0){
       $('#bioinfo-noruns').hide();
+    } else {
+      $('#bioinfo-download-history').hide();
     }
     var templaterow = $('#bioinfo-template-row').attr('id', '').show().detach();
     var field_names = [];
@@ -1073,10 +1075,16 @@ function load_bioinfo_table() {
       $('.table-bioinfo-status').append(tr);
     });
 
+    var forceDisabledState = false;
+    // Disable everything if the project is closed
+    if($('#project_status_alert').text() == 'Closed'){
+      forceDisabledState = true;
+      $('#bioinfo-status-saveButton').remove();
+    }
     // Set rows as disabled if they're not ready yet
     var editable = 0;
     $('.table-bioinfo-status tr:has(td)').each(function(){
-      editable += reset_editable($(this));
+      editable += reset_editable($(this), forceDisabledState);
     });
     if(editable > 0){
       $('#bioinfo-status-saveButton').attr('disabled', false);
@@ -1091,13 +1099,13 @@ function load_bioinfo_table() {
 }
 
 // Set rows as disabled if they're not ready yet
-function reset_editable(row){
+function reset_editable(row, forcedisabled){
   var status = row.find('.bioinfo-status-runstate span').text();
-  if(editable_statuses.indexOf(status) > -1) {
+  if(editable_statuses.indexOf(status) > -1 && !forcedisabled) {
     row.removeClass('bioinfo-status-disabled bioinfo-delivered');
     row.find('input').attr('disabled', false);
     return 1;
-  } else if(statusonly_statuses.indexOf(status) > -1) {
+  } else if(statusonly_statuses.indexOf(status) > -1 && !forcedisabled) {
     row.addClass('bioinfo-status-disabled bioinfo-delivered');
     row.find('input').attr('disabled', true);
     return 1;
@@ -1221,10 +1229,14 @@ $(document).ready(function() {
     if(state !== '[ different values ]'){
       $('.table-bioinfo-status tr:has(td)').each(function(){
         var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
-        if(!isdisabled){
+        var isdelivered = $(this).closest('tr').hasClass('bioinfo-delivered');
+        if(!isdisabled || isdelivered){
           $(this).find('.bioinfo-status-runstate span').text(state).
             removeClass().addClass('label '+bioinfo_states_classes[bioinfo_states.indexOf(state)]);
         }
+      });
+      $('.table-bioinfo-status tr:has(td)').each(function(){
+        reset_editable($(this));
       });
     }
   });
@@ -1283,6 +1295,11 @@ $(document).ready(function() {
       }
     });
 
+  });
+
+  // Download history
+  $('#bioinfo-download-history').click(function(){
+    alert('Not yet implemented, sorry.');
   });
 
 });
