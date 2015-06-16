@@ -13,10 +13,11 @@ $(document).ready(function() {
   // Initialise everything - order is important :)
   $.when(load_presets()).done(function(){
     load_undefined_info();
-    load_all_udfs();
+    $.when(load_all_udfs()).done(function(){
+      load_bioinfo_table();
+    });
     load_samples_table();
     load_running_notes();
-    load_bioinfo_table();
     load_links();
     load_charon_summary();
   });
@@ -985,12 +986,27 @@ function make_timescale_bar(tsid, include_orderdates){
 
 // Static config vars
 var bioinfo_api_url = '/api/v1/bioinfo_analysis/'+project;
-var bioinfo_states = ['Ongoing', 'Delivered'];
-var bioinfo_states_classes = ['label-danger', 'label-success'];
+var bioinfo_states = ['Ongoing', 'Delivered', 'Aborted'];
+var bioinfo_states_classes = ['label-warning', 'label-success', 'label-danger'];
 var bioinfo_classes = ['unknown', 'success', 'warning', 'danger', 'active'];
 var bioinfo_texts = ['?', 'Pass', 'Warning', 'Fail', 'N/A'];
 var editable_statuses = ['Ongoing']; // This started off as a list - leaving it as a list to make it easy to extend
-var statusonly_statuses = ['Delivered'];
+var statusonly_statuses = ['Delivered', 'Aborted'];
+
+var field_names = [];
+$('.bioinfo-field-names th').each(function(i){
+  var suffix = '';
+  var classes = $(this).attr('class');
+  if(typeof classes !== 'undefined'){
+    $.each(classes.split(" "), function(i, c){
+      if(c.substr(0, 12) == 'bioinfo-app-'){
+        suffix = c.substr(12)+'_';
+      }
+    });
+  }
+  // First cell in data rows is th not td, so i-1 to avoid offset
+  field_names[i-1] = suffix+prettify($(this).text(), true);
+});
 
 // Build bioinfo table - main loading spinner waits for this function
 function load_bioinfo_table() {
@@ -1008,15 +1024,18 @@ function load_bioinfo_table() {
   return $.getJSON(bioinfo_api_url, function (data) {
 
     // Show the columns that we need
-    if($('#type').text() == 'Application'){
-      $('.bioinfo-app-applications').show();
-    }
-    var thisapp = $('#application').text();
-    $.each(app_classes, function(key, arr){
-      if(arr.indexOf(thisapp) != -1){
-        $('.bioinfo-app-'+key).show();
+    // Hacky, sorry. Page doesn't update fast enough sometimes.
+    setTimeout(function(){
+      if($('#type').text() == 'Application'){
+        $('.bioinfo-app-applications').show();
       }
-    });
+      var thisapp = $('#application').text();
+      $.each(app_classes, function(key, arr){
+        if(arr.indexOf(thisapp) != -1){
+          $('.bioinfo-app-'+key).show();
+        }
+      });
+    }, 100);
 
     // Hide the loading row and build the real runs based on the template
     if(Object.keys(data).length > 0){
@@ -1025,11 +1044,6 @@ function load_bioinfo_table() {
       $('#bioinfo-download-history').hide();
     }
     var templaterow = $('#bioinfo-template-row').attr('id', '').show().detach();
-    var field_names = [];
-    $('.bioinfo-field-names th').each(function(i){
-      // First cell in data rows is th not td, so i-1 to avoid offset
-      field_names[i-1] = prettify($(this).text(), true);
-    });
 
     $.each(data, function(key, vals){
       // Start by copying the template row
@@ -1255,18 +1269,13 @@ $(document).ready(function() {
 
     // Build the JSON object
     var runs = {};
-    var field_names = [];
-    $('.bioinfo-field-names th:visible').each(function(i){
-      // First cell in data rows is th not td, so i-1 to avoid offset
-      field_names[i-1] = prettify($(this).text(), true);
-    });
     $('.table-bioinfo-status tr:visible:has(td)').each(function(){
       var runid = $(this).find('th.bioinfo-status-runid').text().trim();
       var status = $(this).find('.bioinfo-status-runstate span').text().trim();
       var vals = {
         uppnex_confirmed: $("#uppnex_id_confirmed").is(':checked') ? 'true' : 'false'
       };
-      $(this).children('td:visible').each(function(i){
+      $(this).children('td').each(function(i){
         if($(this).hasClass('bioinfo-status-pfw')){
           vals[field_names[i]] = $(this).text().trim();
         } else {
@@ -1291,6 +1300,7 @@ $(document).ready(function() {
       },
       success: function(data, textStatus, xhr) {
         alert('Saved!');
+        console.log(runs);
         $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
       }
     });

@@ -170,17 +170,18 @@ class Application(tornado.web.Application):
             self.gs_users_db = couch["gs_users"]
             self.cronjobs_db = couch["cronjobs"]
             self.suggestions_db = couch["suggestion_box"]
-            self.worksets_db=couch["worksets"]
+            self.worksets_db = couch["worksets"]
         else:
             print settings.get("couch_server", None)
             raise IOError("Cannot connect to couchdb");
-        #Load columns and presets from genstat-defaults user in StatusDB
+
+        # Load columns and presets from genstat-defaults user in StatusDB
         genstat_id = ''
         for u in self.gs_users_db.view('authorized/users'):
             if u.get('key') == 'genstat-defaults':
                 genstat_id = u.get('value')
 
-        #It's important to check that this user exists!
+        # It's important to check that this user exists!
         if not genstat_id:
             raise RuntimeError("genstat-defaults user not found on {}, please " \
                                "make sure that the user is abailable with the " \
