@@ -16,6 +16,7 @@ import logging
 
 
 from itertools import ifilter
+from collections import defaultdict
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
 
@@ -671,15 +672,16 @@ class BioinfoAnalysisHandler(SafeHandler):
     URL: /api/v1/bioinfo_analysis/([^/]*)"""
     def get(self, project_id):
         summary_page_statuses = ['Ongoing']
-        return_obj={}
-        v=self.application.bioinfo_db.view("latest_data/project_id")
+        v = self.application.bioinfo_db.view("latest_data/project_id")
         if(len(project_id) > 0):
+            return_obj = {}
             for row in v[project_id]:
                 return_obj.update(row.value)
         else:
+            return_obj = defaultdict(list)
             for row in v:
                 if row.value[row.value.keys()[0]]['status'] in summary_page_statuses:
-                    return_obj.update(row.value)
+                    return_obj[row.key].append(row.value)
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(return_obj))
@@ -695,9 +697,9 @@ class BioinfoAnalysisHandler(SafeHandler):
 
             timestamp=datetime.datetime.now().isoformat()
             try:
-                original_doc['values'][timestamp]=data[run_id]['values']
-                original_doc['values'][timestamp]['user']=user
-                original_doc['status']=data[run_id]['status']
+                original_doc['values'][timestamp] = data[run_id]['values']
+                original_doc['values'][timestamp]['user'] = user
+                original_doc['status'] = data[run_id]['status']
             except:
                 self.set_status(400)
 
