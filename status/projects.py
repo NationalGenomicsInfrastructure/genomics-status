@@ -117,7 +117,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         return row
 
-    def list_projects(self, filter_projects='all', oldest_date='2010-01-01', youngest_date=datetime.datetime.now().strftime("%Y-%m-%d")):
+    def list_projects(self, filter_projects='all', oldest_date='2012-01-01', youngest_date=datetime.datetime.now().strftime("%Y-%m-%d")):
         projects = OrderedDict()
 
         oldest_open_date=self.get_argument('oldest_open_date', oldest_date)
@@ -183,16 +183,23 @@ class ProjectsBaseDataHandler(SafeHandler):
                 if 'pending_reviews' in p_info:
                     filtered_projects[p_id] = p_info
 
+        elif filter_projects[:1] == 'P':
+            fprojs = filter_projects.split(',')
+            for p_id, p_info in prefiltered_projects.iteritems():
+                if p_id in fprojs:
+                    filtered_projects[p_id] = p_info
 
-        final_projects=self.filter_per_date(filtered_projects, youngest_open_date, oldest_open_date, youngest_queue_date, oldest_queue_date, youngest_close_date, oldest_close_date)
+        final_projects = self.filter_per_date(filtered_projects, youngest_open_date, oldest_open_date, youngest_queue_date, oldest_queue_date, youngest_close_date, oldest_close_date)
 
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
             if row.key[0] in final_projects:
                 for date_type, date in row.value.iteritems():
                     final_projects[row.key[0]][date_type] = date
+
         return final_projects
-    def filter_per_date(self,plist, yod, ood, yqd, oqd, ycd, ocd):
+
+    def filter_per_date(self, plist, yod, ood, yqd, oqd, ycd, ocd):
         default_open_date='2012-01-01'
         default_close_date=datetime.datetime.now().strftime("%Y-%m-%d")
         """ yod : youngest open date
@@ -201,16 +208,16 @@ class ProjectsBaseDataHandler(SafeHandler):
             oqd : oldest queue date
             ycd : youngest close date
             ocd : oldest close date"""
-        filtered_projects=OrderedDict()
+        filtered_projects = OrderedDict()
         for p_id, p_info in plist.iteritems():
             if ycd != default_close_date or ocd != default_open_date:
-                if 'close_date' not in p_info or (p_info['close_date']>ycd or p_info['close_date']<ocd):
+                if 'close_date' not in p_info or (p_info['close_date'] > ycd or p_info['close_date'] < ocd):
                     continue
             if yqd != default_close_date or oqd != default_open_date:
-                if 'queued' not in p_info or (p_info['queued']>yqd or p_info['queued']<oqd):
+                if 'queued' not in p_info or (p_info['queued'] > yqd or p_info['queued'] < oqd):
                     continue
             if yod != default_close_date or ood != default_open_date:
-                if 'open_date' not in p_info or (p_info['open_date']>yod or p_info['open_date']<ood):
+                if 'open_date' not in p_info or (p_info['open_date'] > yod or p_info['open_date'] < ood):
                     continue
             filtered_projects[p_id]=p_info
 
@@ -678,10 +685,18 @@ class BioinfoAnalysisHandler(SafeHandler):
             for row in v[project_id]:
                 return_obj.update(row.value)
         else:
-            return_obj = defaultdict(list)
+            # Find projects with active flow cells
+            ongoing_projects = set()
             for row in v:
                 if row.value[row.value.keys()[0]]['status'] in summary_page_statuses:
-                    return_obj[row.key].append(row.value)
+                    ongoing_projects.add(row.key)
+
+            # Now collect *all* flow cells from these projects
+            return_obj = defaultdict(dict)
+            for row in v:
+                if row.key in ongoing_projects:
+                    return_obj[row.key].update(row.value)
+
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(return_obj))
