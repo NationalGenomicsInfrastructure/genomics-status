@@ -33,37 +33,56 @@ $(document).ready(function() {
 
   $.getJSON(bioinfo_api_url, function (data) {
 
-    $('#loading_spinner').hide();
-    $('#page_content').show();
-
     // Hide the loading row and build the real runs based on the template
-    if(Object.keys(data).length == 0){
+    var pids = Object.keys(data);
+    if(pids.length == 0){
       $('#ongoing_deliveries, #incoming_deliveries').html('<div class="alert alert-info">No active deliveries found.</div>');
     } else {
+      // Get the template HTML
       var run_template = $('#ongoing_deliveries .ongoing-delivery table tbody tr').detach();
       var project_template = $('#ongoing_deliveries .ongoing-delivery').detach();
-      $.each(data, function(pid, runs){
-        var p = project_template.clone();
-        p.find('.bi-project-id').text(pid);
-        $.each(runs, function(i, runs){
-          for (runid in runs){ // should only be one, but just in case
-            var r = run_template.clone();
-            var run = runs[runid];
 
-            // Main fields
+      // Get the project data
+      $.getJSON('/api/v1/projects?list='+pids.join(','), function (pdata) {
+
+        $.each(data, function(pid, runs){
+          var p = project_template.clone();
+
+          // Main project fields
+          p.find('.bi-project-id').text(pid);
+          p.find('.bi-project-name').text(pdata[pid]['project_name']);
+          p.find('.bi-project-application').text(pdata[pid]['application']);
+          p.find('.bi-project-facility').text(pdata[pid]['type']);
+          if(pdata[pid]['type'] == 'Application'){
+            p.find('.bi-project-facility').removeClass('label-primary').addClass('label-success');
+          }
+          p.find('.bi-project-assigned').text(pdata[pid]['bioinfo_responsible']);
+          if (pdata[pid]['latest_running_note'] !== '') {
+            var noteobj = JSON.parse(pdata[pid]['latest_running_note']);
+            var ndate = Object.keys(noteobj)[0];
+            var note = $(make_markdown(noteobj[ndate]['note'])).find('div, p').contents().unwrap();
+            p.find('.bi-project-note').html(note);
+          }
+
+          $.each(runs, function(runid, run){
+            var r = run_template.clone();
+            var flowcell = runid.replace(/_.+_/g, '_');
+
+            // Main run fields
             r.find('.bi-runid samp a').text(runid);
-            r.find('.bi-runid samp a').attr('href', runid.replace(/_.+_/g, '_'));
+            r.find('.bi-runid samp a').attr('href', flowcell);
             r.find('.bi-run-status span').text(run['status']).
                   removeClass('label-default').
                   addClass(bioinfo_states_classes[bioinfo_states.indexOf(run['status'])]);
 
             // Progress bar
             var total = passed = warnings = fails = NAs = unsets = 0;
+            var dateregex = new RegExp(/\d{4}-\d{2}-\d{2}/);
             $.each(run, function(key, val){
               var ignore = true;
               if(app_fields['core'].indexOf(key) > -1){ ignore = false; }
               if(!ignore){
-                console.log(key);
+                // console.log(key);
                 total += 1;
                 switch(val){
                   case 'Pass': passed += 1; break;
@@ -71,23 +90,36 @@ $(document).ready(function() {
                   case 'Fail': fails += 1; break;
                   case 'N/A': NAs += 1; break;
                   case '?': unsets += 1; break;
-                  // TODO - BROKEN
-                  case /\d\d\d\d-\d\d-\d\d/.test(val): passed += 1; break;
-                  default: console.log('DEFAULT: "'+val+'"');
+                  default: if(dateregex.test(val)){ passed += 1; }
                 }
               }
             });
             total -= NAs;
-            r.find('.bi-run-pwf .progress .progress-bar-success').css('width', (passed / total) * 100).attr('title', passed+ ' Passes');
-            r.find('.bi-run-pwf .progress .progress-bar-warning').css('width', (warnings / total) * 100).attr('title', warnings+ ' Warnings');
-            r.find('.bi-run-pwf .progress .progress-bar-danger').css('width', (fails / total) * 100).attr('title', fails+ ' Fails');
+            r.find('.bi-run-pwf .progress .progress-bar-success').css('width', ((passed / total) * 100)+'%').attr('title', passed+ ' Passes');
+            r.find('.bi-run-pwf .progress .progress-bar-warning').css('width', ((warnings / total) * 100)+'%').attr('title', warnings+ ' Warnings');
+            r.find('.bi-run-pwf .progress .progress-bar-danger').css('width', ((fails / total) * 100)+'%').attr('title', fails+ ' Fails');
+
+            // Get the flow cell running notes
+            $.getJSON('/api/v1/flowcell_notes/'+flowcell, function (fcrn) {
+              if(Object.keys(fcrn).length == 0){
+                r.find('.bi-run-note > span').html('-');
+              } else {
+                console.log(fcrn);
+              }
+            });
 
             // Add to table
             p.find('table tbody').append(r);
-          }
-        });
-        $('#ongoing_deliveries').append(p);
-      });
+          });
+
+          // Add everything to the DOM and show
+          $('#ongoing_deliveries').append(p);
+          $('#loading_spinner').hide();
+          $('#page_content').show();
+
+        }); // loop through runs
+      }); // Get project data
+
     }
 
 
