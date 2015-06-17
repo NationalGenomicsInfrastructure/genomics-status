@@ -5,9 +5,15 @@ Powers /deliveries/ - template is run_dir/design/deliveries.html
 */
 
 // Static config vars
-var bioinfo_urls = {
-  'ongoing': '/api/v1/bioinfo_analysis/?status=Ongoing',
-  'incoming': '/api/v1/bioinfo_analysis/?status=Incoming'
+var deliveries = {
+  'ongoing': {
+    'url': '/api/v1/bioinfo_analysis/?status=Ongoing',
+    'container_id': '#ongoing_deliveries'
+  },
+  'incoming': {
+    'url': '/api/v1/bioinfo_analysis/?status=Incoming',
+    'container_id': '#incoming_deliveries'
+  }
 };
 var bioinfo_states = ['Ongoing', 'Delivered', 'Aborted'];
 var bioinfo_states_classes = ['label-warning', 'label-success', 'label-danger'];
@@ -40,18 +46,19 @@ $(document).ready(function() {
     });
   });
 
-  $.each(bioinfo_urls, function(delivery_type, bioinfo_api_url){
-    console.log(bioinfo_api_url);
-    $.getJSON(bioinfo_api_url, function (data) {
+  // Get the template HTML
+  var run_template = $('#ongoing_deliveries .delivery table tbody tr').detach();
+  var project_template = $('#ongoing_deliveries .delivery').detach();
+
+  $.each(deliveries, function(type, d){
+
+    $.getJSON(d['url'], function (data) {
 
       // Hide the loading row and build the real runs based on the template
       var pids = Object.keys(data);
       if(pids.length == 0){
-        $('#ongoing_deliveries, #incoming_deliveries').html('<div class="alert alert-info">No active deliveries found.</div>');
+        $(d['container_id']).html('<div class="alert alert-info">No active deliveries found.</div>');
       } else {
-        // Get the template HTML
-        var run_template = $('#ongoing_deliveries .ongoing-delivery table tbody tr').detach();
-        var project_template = $('#ongoing_deliveries .ongoing-delivery').detach();
 
         // Get the project data
         $.getJSON('/api/v1/projects?list='+pids.join(','), function (pdata) {
@@ -128,27 +135,34 @@ $(document).ready(function() {
               }
 
               // Get the flow cell running notes
-              $.getJSON('/api/v1/flowcell_notes/'+flowcell, function (fcrn) {
-                var printnote = '-';
-                if(Object.keys(fcrn).length > 0){
-                  $.each(fcrn, function(date, note){
-                    if(note['note'].indexOf(pid) > -1){
-                      note['note'] = note['note'].replace(pid+': ', '');
-                      printnote = $(make_markdown(note['note'])).find('div, p').contents().unwrap();
-                    }
-                  });
-                }
-                r.find('.bi-run-note > span').html(printnote);
-              });
+              if(type == 'ongoing'){
+                $.getJSON('/api/v1/flowcell_notes/'+flowcell, function (fcrn) {
+                  var printnote = '-';
+                  if(Object.keys(fcrn).length > 0){
+                    $.each(fcrn, function(date, note){
+                      if(note['note'].indexOf(pid) > -1){
+                        note['note'] = note['note'].replace(pid+': ', '');
+                        printnote = $(make_markdown(note['note'])).find('div, p').contents().unwrap();
+                      }
+                    });
+                  }
+                  r.find('.bi-run-note > span').html(printnote);
+                });
+              }
 
               // Add to table
               p.find('table tbody').append(r);
             });
 
+            // Remove stuff if we're incoming
+            if(type == 'incoming'){
+              p.find('.hide-incoming').remove();
+            }
+
             // Add everything to the DOM and show
-            $('#ongoing_deliveries').append(p);
-            $('#loading_spinner').hide();
-            $('#page_content').show();
+            $(d['container_id']).append(p);
+            $(d['container_id']+' .loading_spinner').hide();
+            $(d['container_id']+' .delivery-filters').show();
 
           }); // loop through runs
         }); // Get project data
