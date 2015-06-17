@@ -680,7 +680,7 @@ class BioinfoAnalysisHandler(SafeHandler):
     def get(self, project_id):
         summary_page_statuses = ['Ongoing']
         v = self.application.bioinfo_db.view("latest_data/project_id")
-        if(len(project_id) > 0):
+        if project_id:
             return_obj = {}
             for row in v[project_id]:
                 return_obj.update(row.value)
