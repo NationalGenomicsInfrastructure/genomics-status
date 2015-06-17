@@ -680,23 +680,22 @@ class BioinfoAnalysisHandler(SafeHandler):
     def get(self, project_id):
         summary_page_statuses = ['Ongoing']
         v = self.application.bioinfo_db.view("latest_data/project_id")
+        return_obj = {}
         if project_id:
-            return_obj = {}
             for row in v[project_id]:
                 return_obj.update(row.value)
         else:
-            # Find projects with active flow cells
+            ong_v = self.application.bioinfo_db.view("general/ongoing_projectids", group=True)
             ongoing_projects = set()
-            for row in v:
-                if row.value[row.value.keys()[0]]['status'] in summary_page_statuses:
-                    ongoing_projects.add(row.key)
+            for row in ong_v:
+                ongoing_projects.add(row.key)
 
-            # Now collect *all* flow cells from these projects
-            return_obj = defaultdict(dict)
             for row in v:
                 if row.key in ongoing_projects:
-                    return_obj[row.key].update(row.value)
-
+                    try:
+                        return_obj[row.key].update(row.value)
+                    except:
+                        return_obj[row.key]=row.value
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(return_obj))
