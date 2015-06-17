@@ -9,53 +9,56 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 
 {% block stuff %}
 
-
-<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading deliveries page..</div>
-<div id="page_content" style="display:none;" class="deliveries-page">
+<div id="page_content" class="deliveries-page">
   <div class="row">
     <div class="col-lg-8">
 
       <h1>Ongoing <span id="page_title">Deliveries</span></h1>
 
-      <hr>
-      <form class="form-inline deliveries-filters">
-        <div class="form-group">
-          <label for="bioinfo-filter-assigned" class="control-label">Assigned</label>
-          <select class="form-control input-sm" id="bioinfo-filter-assigned">
-            <option>[ choose ]</option>
-            <option>Francesco</option>
-            <option>Jun</option>
-            <option>Senthil</option>
-            <option>Pär</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="bioinfo-filter-completion" class="control-label">Completion</label>
-          <select class="form-control input-sm" id="bioinfo-filter-completion">
-            <option>[ choose ]</option>
-            <option>Not Started</option>
-            <option>>= 80% Complete</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="bioinfo-filter-application" class="control-label">Application</label>
-          <select class="form-control input-sm" id="bioinfo-filter-application">
-            <option>[ choose ]</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="bioinfo-filter-type" class="control-label">Type</label>
-          <select class="form-control input-sm" id="bioinfo-filter-type">
-            <option>[ choose ]</option>
-            <option>Production</option>
-            <option>Application</option>
-          </select>
-        </div>
-      </form>
-      <hr>
-
       <div id="ongoing_deliveries">
-        <div class="ongoing-delivery">
+
+        <div class="delivery-filters" style="display:none;">
+          <hr>
+          <form class="form-inline deliveries-filters">
+            <div class="form-group">
+              <label for="bioinfo-filter-assigned" class="control-label">Assigned</label>
+              <select class="form-control input-sm" id="bioinfo-filter-assigned">
+                <option>[ choose ]</option>
+                <option>Francesco</option>
+                <option>Jun</option>
+                <option>Senthil</option>
+                <option>Pär</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bioinfo-filter-completion" class="control-label">Completion</label>
+              <select class="form-control input-sm" id="bioinfo-filter-completion">
+                <option>[ choose ]</option>
+                <option>Not Started</option>
+                <option>>= 80% Complete</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bioinfo-filter-application" class="control-label">Application</label>
+              <select class="form-control input-sm" id="bioinfo-filter-application">
+                <option>[ choose ]</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bioinfo-filter-type" class="control-label">Type</label>
+              <select class="form-control input-sm" id="bioinfo-filter-type">
+                <option>[ choose ]</option>
+                <option>Production</option>
+                <option>Application</option>
+              </select>
+            </div>
+          </form>
+          <hr>
+        </div>
+
+        <div class="loading_spinner" style="text-align:center; margin:100px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading ongoing deliveries..</div>
+
+        <div class="delivery">
           <h3>
             <a href="../projects/" class="bi-project-id">??</a>: <span class="bi-project-name">??</span><br>
             <small><span class="bi-project-application">??</span>
@@ -63,31 +66,31 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               &nbsp; <span class="bi-project-assigned">??</span>
             </small>
           </h3>
-          <dl class="dl-horizontal">
+          <dl class="dl-horizontal hide-incoming">
             <dt>Project running note:</dt>
             <dd><span class="bi-project-note text-muted">??</span> <a href="#" class="btn btn-xs btn-default pull-right">See all</a></dd>
           </dl>
           <table class="table table-bordered">
             <thead>
               <tr>
-                <th style="width: 30%;">Run ID</th>
+                <th style="width: 25%;">Run ID</th>
                 <th style="width: 10%;">Status</th>
-                <th style="width: 10%;">Checklists</th>
-                <th style="width: 50%;">Latest running note</th>
+                <th style="width: 15%;" class="hide-incoming">Checklists</th>
+                <th style="width: 50%;" class="hide-incoming">Latest running note</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td class="bi-runid"><samp><a href="../flowcells/">??</a></samp></td>
                 <td class="bi-run-status"><span class="label label-default">??</span></td>
-                <td class="bi-run-pwf">
+                <td class="bi-run-pwf hide-incoming">
                   <div class="progress">
                     <div class="progress-bar progress-bar-success" style="width: 0%" title="0 Passes" data-toggle="tooltip"></div>
                     <div class="progress-bar progress-bar-warning" style="width: 0%" title="0 Warnings" data-toggle="tooltip"></div>
                     <div class="progress-bar progress-bar-danger" style="width: 0%" title="0 Fail" data-toggle="tooltip"></div>
                   </div>
                 </td>
-                <td class="bi-run-note"><span><span class="glyphicon glyphicon-refresh glyphicon-spin"></span></span> <a href="#" class="btn btn-xs btn-default pull-right">See all</a></td>
+                <td class="bi-run-note hide-incoming"><span><span class="glyphicon glyphicon-refresh glyphicon-spin"></span></span> <a href="#" class="btn btn-xs btn-default pull-right">See all</a></td>
               </tr>
             </tbody>
           </table>
@@ -102,35 +105,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
       <h1>Incoming Deliveries</h1>
 
       <div id="incoming_deliveries">
-        <h3>
-          <a href="../project/P1399">P1399</a>: L.Gan_14_01<br>
-          <small>RNA-seq (total RNA)
-            &nbsp; <span class="label label-info">Production</span>
-            &nbsp; Senthil
-          </small>
-        </h3>
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th>Run ID</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><samp><a href="../flowcells/">150505_D00450_0168_AC6H3RANXX</a></samp></td>
-              <td><span class="label label-default">Demultiplexing</span></td>
-            </tr>
-            <tr>
-              <td><samp><a href="../flowcells/">150505_D00483_0089_AC6H49ANXX</a></samp></td>
-              <td><span class="label label-default">Sequencing R2</span></td>
-            </tr>
-            <tr>
-              <td><samp><a href="../flowcells/">150505_D00483_0090_BC6H02ANXX</a></samp></td>
-              <td><span class="label label-default">Sequencing R2</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="loading_spinner" style="text-align:center; margin:100px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading incoming deliveries..</div>
       </div>
     </div>
   </div>
