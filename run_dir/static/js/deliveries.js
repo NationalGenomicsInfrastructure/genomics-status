@@ -31,6 +31,12 @@ var app_fields = {
 
 $(document).ready(function() {
 
+  $.each(app_classes, function(c, apps){
+    $.each(apps, function(i, app){
+      $('#bioinfo-filter-application').append('<option>'+app+'</option>');
+    });
+  });
+
   $.getJSON(bioinfo_api_url, function (data) {
 
     // Hide the loading row and build the real runs based on the template

@@ -17,7 +17,60 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 
       <h1>Ongoing <span id="page_title">Deliveries</span></h1>
 
-      <h3>Filters Here</h3>
+      <hr>
+      <form class="form-horizontal no-margin">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group no-margin">
+              <label for="bioinfo-filter-assigned" class="col-sm-4 control-label">Assigned</label>
+              <div class="col-sm-8">
+                <select class="form-control input-sm" id="bioinfo-filter-assigned">
+                  <option>[ choose ]</option>
+                  <option>Francesco</option>
+                  <option>Jun</option>
+                  <option>Senthil</option>
+                  <option>Pär</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group no-margin">
+              <label for="bioinfo-filter-completion" class="col-sm-4 control-label">Completion</label>
+              <div class="col-sm-8">
+                <select class="form-control input-sm" id="bioinfo-filter-completion">
+                  <option>[ choose ]</option>
+                  <option>Not Started</option>
+                  <option>>= 80% Complete</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group no-margin">
+              <label for="bioinfo-filter-application" class="col-sm-4 control-label">Application</label>
+              <div class="col-sm-8">
+                <select class="form-control input-sm" id="bioinfo-filter-application">
+                  <option>[ choose ]</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group no-margin">
+              <label for="bioinfo-filter-type" class="col-sm-4 control-label">Type</label>
+              <div class="col-sm-8">
+                <select class="form-control input-sm" id="bioinfo-filter-type">
+                  <option>[ choose ]</option>
+                  <option>Production</option>
+                  <option>Application</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+      <hr>
 
       <div id="ongoing_deliveries">
         <div class="ongoing-delivery">
