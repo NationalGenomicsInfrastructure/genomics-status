@@ -779,3 +779,6 @@ These classes are cut and pasted wholesale into here from other packages.
 .deliveries-page .progress {
   margin-bottom: 0;
 }
+.deliveries-filters .form-group {
+  margin-right: 20px;
+}
