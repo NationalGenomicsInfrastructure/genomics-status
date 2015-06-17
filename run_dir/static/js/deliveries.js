@@ -70,7 +70,7 @@ $(document).ready(function() {
 
             // Main run fields
             r.find('.bi-runid samp a').text(runid);
-            r.find('.bi-runid samp a').attr('href', flowcell);
+            r.find('.bi-runid samp a').attr('href', '/flowcells/'+flowcell);
             r.find('.bi-run-status span').text(run['status']).
                   removeClass('label-default').
                   addClass(bioinfo_states_classes[bioinfo_states.indexOf(run['status'])]);
@@ -79,8 +79,20 @@ $(document).ready(function() {
             var total = passed = warnings = fails = NAs = unsets = 0;
             var dateregex = new RegExp(/\d{4}-\d{2}-\d{2}/);
             $.each(run, function(key, val){
+
               var ignore = true;
               if(app_fields['core'].indexOf(key) > -1){ ignore = false; }
+              if(pdata[pid]['type'] == 'Application'){
+                if(app_fields['applications'].indexOf(key) > -1){ ignore = false; }
+              }
+              $.each(app_classes, function(appclass, apps){
+                if(apps.indexOf(pdata[pid]['application']) > -1){
+                  if(app_fields[appclass].indexOf(key) > -1){
+                    ignore = false;
+                  }
+                }
+              });
+
               if(!ignore){
                 // console.log(key);
                 total += 1;
@@ -98,14 +110,24 @@ $(document).ready(function() {
             r.find('.bi-run-pwf .progress .progress-bar-success').css('width', ((passed / total) * 100)+'%').attr('title', passed+ ' Passes');
             r.find('.bi-run-pwf .progress .progress-bar-warning').css('width', ((warnings / total) * 100)+'%').attr('title', warnings+ ' Warnings');
             r.find('.bi-run-pwf .progress .progress-bar-danger').css('width', ((fails / total) * 100)+'%').attr('title', fails+ ' Fails');
+            if(unsets > 0){
+              r.find('.bi-run-pwf').addClass('warning');
+            } else {
+              r.find('.bi-run-pwf').addClass('success');
+            }
 
             // Get the flow cell running notes
             $.getJSON('/api/v1/flowcell_notes/'+flowcell, function (fcrn) {
-              if(Object.keys(fcrn).length == 0){
-                r.find('.bi-run-note > span').html('-');
-              } else {
-                console.log(fcrn);
+              var printnote = '-';
+              if(Object.keys(fcrn).length > 0){
+                $.each(fcrn, function(date, note){
+                  if(note['note'].indexOf(pid) > -1){
+                    note['note'] = note['note'].replace(pid+': ', '');
+                    printnote = $(make_markdown(note['note'])).find('div, p').contents().unwrap();
+                  }
+                });
               }
+              r.find('.bi-run-note > span').html(printnote);
             });
 
             // Add to table
