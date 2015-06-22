@@ -37,6 +37,9 @@ var app_fields = {
   'denovo': ["denovo_adaptertrimming","denovo_kmerprofile"],
   'applications': ["applications_datadelivered","applications_dataapproved"]
 }
+var notetype = 'project';
+var project = '';
+var flowcell = '';
 
 $(document).ready(function() {
 
@@ -55,7 +58,7 @@ $(document).ready(function() {
     $.getJSON(d['url'], function (data) {
 
       // Hide the loading row and build the real runs based on the template
-      var pids = Object.keys(data);
+      var pids = Object.keys(data).sort();
       if(pids.length == 0){
         $(d['container_id']).html('<div class="alert alert-info">No active deliveries found.</div>');
       } else {
@@ -63,11 +66,12 @@ $(document).ready(function() {
         // Get the project data
         $.getJSON('/api/v1/projects?list='+pids.join(','), function (pdata) {
 
-          $.each(data, function(pid, runs){
+          $.each(pids, function(i, pid){
+            var runs = data[pid];
             var p = project_template.clone();
 
             // Main project fields
-            p.find('.bi-project-id').text(pid);
+            p.find('.bi-project-id').text(pid).attr('href', 'project/'+pid);
             p.find('.bi-project-name').text(pdata[pid]['project_name']);
             p.find('.bi-project-application').text(pdata[pid]['application']);
             p.find('.bi-project-facility').text(pdata[pid]['type']);
@@ -130,7 +134,7 @@ $(document).ready(function() {
               r.find('.bi-run-pwf .progress .progress-bar-success').css('width', ((passed / total) * 100)+'%').attr('title', passed+ ' Passes');
               r.find('.bi-run-pwf .progress .progress-bar-warning').css('width', ((warnings / total) * 100)+'%').attr('title', warnings+ ' Warnings');
               r.find('.bi-run-pwf .progress .progress-bar-danger').css('width', ((fails / total) * 100)+'%').attr('title', fails+ ' Fails');
-              if(unsets > 0){
+              if(total == 0 || unsets > 0){
                 r.find('.bi-run-pwf').addClass('warning');
               } else {
                 r.find('.bi-run-pwf').addClass('success');
@@ -177,6 +181,30 @@ $(document).ready(function() {
       $('#page_content').show().html('<h1>Error - Delivery Information Not Loaded</h1><div class="alert alert-danger">Oops! Sorry about that, we can\'t load the deliveries info. Please try again later or contact one of the genomics status team.</div>');
     });
 
+  });
+
+
+  // Running notes modals
+  $('#ongoing_deliveries').on('click', '.runningNotesModal_button', function(e){
+    // Set up our variables - make global
+    notetype = 'project';
+    project = $(this).closest('div').find('.bi-project-id').text();
+    $('#runningNotesModal_title').text('Project Running Notes: '+project);
+    if($(this).hasClass('fc_runningNotes')){
+      notetype = 'flowcell';
+      flowcell = $(this).closest('tr').find('.bi-runid samp a').text();
+      $('#runningNotesModal_title').html('Flow Cell Running Notes: <code>'+flowcell+'</code>');
+    }
+    // Prepare the modal
+    $('.runningNotesModal_loadingSpinner').show();
+    $('#running_notes_panels').hide();
+    $('#running_notes_form').hide();
+
+    $.when(load_running_notes()).done(function(){
+      $('.runningNotesModal_loadingSpinner').hide();
+      $('#running_notes_panels').show();
+      $('#running_notes_form').show();
+    });
   });
 
 });
