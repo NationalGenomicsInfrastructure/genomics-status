@@ -1,17 +1,17 @@
 
 function get_note_url() {
-    //URL for the notes
-    if ('lims_step' in window && lims_step !== null){
+    // URL for the notes
+    if ((typeof notetype !== 'undefined' && notetype == 'lims_step') || ('lims_step' in window && lims_step !== null)){
         note_url='/api/v1/workset_notes/' + lims_step;
-    }else if ('flowcell' in window && flowcell!== null){
+    } else if ((typeof notetype !== 'undefined' && notetype == 'flowcell') || ('flowcell' in window && flowcell!== null)){
         note_url='/api/v1/flowcell_notes/' + flowcell;
-    }else {
+    } else {
         note_url='/api/v1/running_notes/' + project;
     }
     return note_url;
 }
 
-function make_running_note(note){
+function make_running_note(date, note){
   try {
     var date = date.replace(/-/g, '/');
     date = date.replace(/\.\d{6}/, '');
@@ -34,13 +34,17 @@ function make_running_note(note){
 
 function load_running_notes(wait) {
   // Clear previously loaded notes, if so
-  note_url = get_note_url()
+  note_url = get_note_url();
   $("#running_notes_panels").empty();
-  $.getJSON(note_url, function(data) {
-    $.each(data, function(date, note) {
-      $('#running_notes_panels').append(make_running_note(note));
-    });
-    check_img_sources($('#running_notes_panels img'));
+  return $.getJSON(note_url, function(data) {
+    if(data.length == 0 || typeof data.length === 'undefined'){
+      $('#running_notes_panels').html('<div class="well">No running notes found.</div>');
+    } else {
+      $.each(data, function(date, note) {
+        $('#running_notes_panels').append(make_running_note(date, note));
+      });
+      check_img_sources($('#running_notes_panels img'));
+    }
   }).fail(function( jqxhr, textStatus, error ) {
       try {
         var response = JSON.parse(jqxhr.responseText);
@@ -106,7 +110,7 @@ $("#running_notes_form").submit( function(e) {
           var newNote = false;
           $.each(newdata, function(date, note) {
             if(data['note'] == note['note']){
-              newNote = make_running_note(note);
+              newNote = make_running_note(date, note);
             }
           });
           if(newNote){
