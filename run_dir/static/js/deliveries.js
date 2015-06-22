@@ -22,6 +22,7 @@ var bioinfo_texts = ['?', 'Pass', 'Warning', 'Fail', 'N/A'];
 var editable_statuses = ['Ongoing']; // This started off as a list - leaving it as a list to make it easy to extend
 var statusonly_statuses = ['Delivered'];
 var app_classes = {
+  'finished': ['Finished library'],
   'rnaseq': ['RNA-seq (total RNA)', 'RNA-seq (RiboZero)', 'RNA-seq (mRNA)', 'stranded RNA-seq (total RNA)', 'cDNA', 'stranded RNA-seq (RiboZero)'],
   'exome': ['Exome capture'],
   'customCap': ['Custom capture'],
@@ -30,6 +31,7 @@ var app_classes = {
 };
 var app_fields = {
   'core': ["undemultiplexedreads","unexpectedindexes","lowsampleyield","laneyield","sampleyield","phixerrorrate","basesq30","fastq_screen","blast_wrapper","samplereport","projectreport","dataandreportstransferred","emailsenttouser"],
+  'finished': [],
   'rnaseq': ["rnaseq_sequenceduplication","rnaseq_uniquemappingrate"],
   'exome': ["exome_sequenceduplication","exome_targets10xcoverage"],
   'customCap': ["customCap_enrichment"],
@@ -194,8 +196,9 @@ $(document).ready(function() {
 
   });
 
-
+  ///////////////////////////
   // Running notes modals
+  ///////////////////////////
   $('#ongoing_deliveries').on('click', '.runningNotesModal_button', function(e){
     // Set up our variables - make global
     notetype = 'project';
@@ -217,5 +220,49 @@ $(document).ready(function() {
       $('#running_notes_form').show();
     });
   });
+
+  ///////////////////////////
+  // Filters
+  ///////////////////////////
+  function update_deliveries_filters(){
+    var assigned = $('#bioinfo-filter-assigned').val();
+    var completed = $('#bioinfo-filter-completion').val();
+    var app = $('#bioinfo-filter-application').val();
+    var facility = $('#bioinfo-filter-facility').val();
+    var hidden = 0;
+    $('#ongoing_deliveries .delivery').show();
+    $('#bioinfo-filter-notification').hide();
+    $('#ongoing_deliveries .delivery').each(function(){
+      var hide = false;
+      if(assigned !== 'Anyone' && $(this).find('.bi-project-assigned').text() !== assigned){
+        hide = true;
+      }
+      if(app !== 'Any' && $(this).find('.bi-project-application').text() !== app){
+        hide = true;
+      }
+      if(facility !== 'Any' && $(this).find('.bi-project-facility').text() !== facility){
+        hide = true;
+      }
+      if(hide){
+        $(this).hide();
+        hidden += 1;
+      }
+    });
+    if(hidden > 0){
+      $('#bioinfo-filter-notification').show().find('span').text('Hiding '+hidden+' projects with filters..');
+    }
+  }
+  $('.deliveries-filters select').change(function(){
+    update_deliveries_filters();
+  });
+  $('#bioinfo-clear-filters').click(function(e){
+    e.preventDefault();
+    $('#bioinfo-filter-assigned').val($('#bioinfo-filter-assigned option:first').val());
+    $('#bioinfo-filter-completion').val($('#bioinfo-filter-completion option:first').val());
+    $('#bioinfo-filter-application').val($('#bioinfo-filter-application option:first').val());
+    $('#bioinfo-filter-facility').val($('#bioinfo-filter-facility option:first').val());
+    update_deliveries_filters();
+  });
+
 
 });
