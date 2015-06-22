@@ -1041,6 +1041,7 @@ function load_bioinfo_table() {
     if(Object.keys(data).length > 0){
       $('#bioinfo-noruns').hide();
     } else {
+      $('#bioinfo-noruns').html('No runs found');
       $('#bioinfo-download-history').hide();
     }
     var templaterow = $('#bioinfo-template-row').attr('id', '').show().detach();
@@ -1059,7 +1060,11 @@ function load_bioinfo_table() {
       }
 
       // User and date
-      tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Last updated by '+vals.user+'<br>'+formatDateTime(vals.timestamp, true)+'"></span>');
+      try {
+        tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Last updated by '+vals.user+'<br>'+formatDateTime(vals.timestamp, true)+'"></span>');
+      } catch(e){
+        tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="No last update information found"></span>');
+      }
 
       // UPPNEX id confirmed
       if(vals.uppnex_confirmed == 'true'){
