@@ -677,25 +677,48 @@ class BioinfoAnalysisHandler(SafeHandler):
     """queries and posts about bioinfo analysis
     URL: /api/v1/bioinfo_analysis/
     URL: /api/v1/bioinfo_analysis/([^/]*)"""
-    def get(self, project_id):
-        summary_page_statuses = ['Ongoing']
+
+
+
+
+    def get_singleproject(self, project_id):
+        return_obj = {}
         v = self.application.bioinfo_db.view("latest_data/project_id")
+        for row in v[project_id]:
+            return_obj.update(row.value)
+        return return_obj
+
+    def get_all_project_status(self, status="any"):
+        return_obj = {}
+        if status == "Ongoing":
+            v = self.application.bioinfo_db.view("general/ongoing_projectids", group = True)
+        elif status == "Incoming":
+            v = self.application.bioinfo_db.view("general/incoming_projectids", group = True)
+        else:
+            v = self.application.bioinfo_db.view("general/projectids", group = True)
+
+        status_projects = set()
+        for row in v:
+            status_projects.add(row.key)
+        v = self.application.bioinfo_db.view("latest_data/project_id")
+        for row in v:
+            if row.key in status_projects:
+                try:
+                    return_obj[row.key].update(row.value)
+                except:
+                    return_obj[row.key] = row.value
+        return return_obj
+
+
+    def get(self, project_id):
         return_obj = {}
         if project_id:
-            for row in v[project_id]:
-                return_obj.update(row.value)
+            return_obj=self.get_singleproject(project_id)
         else:
-            ong_v = self.application.bioinfo_db.view("general/ongoing_projectids", group=True)
-            ongoing_projects = set()
-            for row in ong_v:
-                ongoing_projects.add(row.key)
-
-            for row in v:
-                if row.key in ongoing_projects:
-                    try:
-                        return_obj[row.key].update(row.value)
-                    except:
-                        return_obj[row.key]=row.value
+            if self.get_argument('status', None):
+                return_obj=self.get_all_project_status(self.get_argument('status'))
+            else:
+                return_obj=self.get_all_project_status("Ongoing")
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(return_obj))
