@@ -3,6 +3,7 @@ import tornado.auth
 import json
 import requests
 import os
+import sys
 import time
 
 from datetime import datetime
@@ -69,17 +70,33 @@ class BaseHandler(tornado.web.RequestHandler):
         """
         reason = 'Unknown Error'
 
+        # Get information about the triggered exception
+        self.application.gs_globals['exception_fulltext'] = repr(sys.exc_info())
+
+        # Get the status code and error reason
         if status_code in ERROR_CODES.keys():
             reason = ERROR_CODES[status_code]
-
         try:
             if 'exc_info' in kwargs:
                 _, error, _ = kwargs['exc_info']
                 reason = error.reason
         except AttributeError:
             pass
-        t = self.application.loader.load("error_page.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, status=status_code, reason=reason, user=self.get_current_user_name()))
+
+        # Return JSON if this is an API call
+        if '/api/v1/' in self.request.uri:
+            jsondict = {
+                'page_title': "Error {}: {}".format(status_code, reason),
+                'error_status': status_code,
+                'error_reason': reason,
+                'error_exception': self.application.gs_globals['exception_fulltext']
+            }
+            self.write(json.dumps(jsondict))
+
+        # Render the error template
+        else:
+            t = self.application.loader.load("error_page.html")
+            self.write(t.generate(gs_globals=self.application.gs_globals, status=status_code, reason=reason, user=self.get_current_user_name()))
 
 
 class SafeHandler(BaseHandler):

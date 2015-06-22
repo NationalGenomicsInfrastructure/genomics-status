@@ -33,8 +33,21 @@ function load_running_notes(wait) {
       check_img_sources($('#running_notes_panels img'));
     });
   }).fail(function( jqxhr, textStatus, error ) {
-      var err = textStatus + ", " + error;
-      console.log( "Running notes request failed: " + err );
+      try {
+        var response = JSON.parse(jqxhr.responseText);
+        var err = response['page_title'];
+        var exception = $('<div/>').text(response['error_exception']).html(); // HTML encode string
+        var debugging = "<p>For debugging purposes, we've tried to grab the error that triggered this page for you:</p>"+
+                        '<p>&nbsp;</p><code class="well text-muted"><small>'+exception+'</small></code>';
+      } catch(e) {
+        var err = error+', '+textStatus;
+        var debugging = '';
+      }
+      $('#running_notes_panels').append('<div class="alert alert-danger">' +
+          '<h4>Error Loading Running Notes: '+err+'</h4>' +
+          '<p>Apologies, running notes could not be loaded.' +
+          'Running notes are retrieved from the LIMS, so these problems are usually ' +
+          'due to connection problems. Please try again later and report if the problem persists.</p></div>'+debugging);
   });
 }
 
