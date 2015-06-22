@@ -86,6 +86,17 @@ $(document).ready(function() {
               p.find('.bi-project-note').html(note);
             }
 
+            // Progress bar total count
+            var total = app_fields['core'].length;
+            $.each(app_classes, function(appclass, apps){
+              if(apps.indexOf(pdata[pid]['application']) > -1){
+                total += app_fields[appclass].length;
+              }
+            });
+            if(pdata[pid]['type'] == 'Application'){
+              total += app_fields['applications'].length;
+            }
+
             $.each(runs, function(runid, run){
               var r = run_template.clone();
               var flowcell = runid.replace(/_.+_/g, '_');
@@ -100,8 +111,9 @@ $(document).ready(function() {
               }
 
               // Progress bar
-              var total = passed = warnings = fails = NAs = unsets = 0;
+              var passed = warnings = fails = NAs = unsets = 0;
               var dateregex = new RegExp(/\d{4}-\d{2}-\d{2}/);
+
               $.each(run, function(key, val){
 
                 var ignore = true;
@@ -119,7 +131,6 @@ $(document).ready(function() {
 
                 if(!ignore){
                   // console.log(key);
-                  total += 1;
                   switch(val){
                     case 'Pass': passed += 1; break;
                     case 'Warning': warnings += 1; break;
@@ -134,7 +145,7 @@ $(document).ready(function() {
               r.find('.bi-run-pwf .progress .progress-bar-success').css('width', ((passed / total) * 100)+'%').attr('title', passed+ ' Passes');
               r.find('.bi-run-pwf .progress .progress-bar-warning').css('width', ((warnings / total) * 100)+'%').attr('title', warnings+ ' Warnings');
               r.find('.bi-run-pwf .progress .progress-bar-danger').css('width', ((fails / total) * 100)+'%').attr('title', fails+ ' Fails');
-              if(total == 0 || unsets > 0){
+              if((passed + warnings + fails) < total){
                 r.find('.bi-run-pwf').addClass('warning');
               } else {
                 r.find('.bi-run-pwf').addClass('success');
