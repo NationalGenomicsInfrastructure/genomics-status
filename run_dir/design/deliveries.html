@@ -23,17 +23,18 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
             <div class="form-group">
               <label for="bioinfo-filter-assigned" class="control-label">Assigned</label>
               <select class="form-control input-sm" id="bioinfo-filter-assigned">
-                <option>[ choose ]</option>
+                <option>Anyone</option>
                 <option>Francesco</option>
                 <option>Jun</option>
                 <option>Senthil</option>
                 <option>Pär</option>
+                <option>??</option>
               </select>
             </div>
             <div class="form-group">
               <label for="bioinfo-filter-completion" class="control-label">Completion</label>
               <select class="form-control input-sm" id="bioinfo-filter-completion">
-                <option>[ choose ]</option>
+                <option>Any</option>
                 <option>Not Started</option>
                 <option>>= 80% Complete</option>
               </select>
@@ -41,18 +42,19 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
             <div class="form-group">
               <label for="bioinfo-filter-application" class="control-label">Application</label>
               <select class="form-control input-sm" id="bioinfo-filter-application">
-                <option>[ choose ]</option>
+                <option>Any</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="bioinfo-filter-type" class="control-label">Type</label>
-              <select class="form-control input-sm" id="bioinfo-filter-type">
-                <option>[ choose ]</option>
+              <label for="bioinfo-filter-facility" class="control-label">Facility</label>
+              <select class="form-control input-sm" id="bioinfo-filter-facility">
+                <option>Any</option>
                 <option>Production</option>
                 <option>Application</option>
               </select>
             </div>
           </form>
+          <p class="text-muted" id="bioinfo-filter-notification" style="margin-top:15px; display:none; "><span></span> <a href="#" id="bioinfo-clear-filters">[ clear ]</a></p>
           <hr>
         </div>
 
@@ -61,9 +63,9 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
         <div class="delivery">
           <h3>
             <a href="../projects/" class="bi-project-id">??</a>: <span class="bi-project-name">??</span><br>
-            <small><span class="bi-project-application">??</span>
-              &nbsp; <span class="bi-project-facility label label-primary">??</span>
-              &nbsp; <span class="bi-project-assigned">??</span>
+            <small><span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">??</span>
+              &nbsp; <span class="bi-project-facility label label-primary" data-toggle="tooltip" data-delay="500" title="Project Facility">??</span>
+              &nbsp; <span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">??</span>
             </small>
           </h3>
           <dl class="dl-horizontal hide-incoming">
