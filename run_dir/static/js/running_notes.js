@@ -34,7 +34,7 @@ function make_running_note(note){
 
 function load_running_notes(wait) {
   // Clear previously loaded notes, if so
-  note_url=get_note_url()
+  note_url = get_note_url()
   $("#running_notes_panels").empty();
   $.getJSON(note_url, function(data) {
     $.each(data, function(date, note) {
