@@ -89,9 +89,11 @@ $(document).ready(function() {
               // Main run fields
               r.find('.bi-runid samp a').text(runid);
               r.find('.bi-runid samp a').attr('href', '/flowcells/'+flowcell);
-              r.find('.bi-run-status span').text(run['status']).
-                    removeClass('label-default').
-                    addClass(bioinfo_states_classes[bioinfo_states.indexOf(run['status'])]);
+              r.find('.bi-run-status span').text(run['status']);
+              var stat_index = bioinfo_states.indexOf(run['status']);
+              if(stat_index !== -1){
+                r.find('.bi-run-status span').removeClass('label-default').addClass(bioinfo_states_classes[stat_index]);
+              }
 
               // Progress bar
               var total = passed = warnings = fails = NAs = unsets = 0;

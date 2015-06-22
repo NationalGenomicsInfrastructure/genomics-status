@@ -91,6 +91,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 'error_reason': reason,
                 'error_exception': self.application.gs_globals['exception_fulltext']
             }
+            self.set_header("Content-type", "application/json")
             self.write(json.dumps(jsondict))
 
         # Render the error template
