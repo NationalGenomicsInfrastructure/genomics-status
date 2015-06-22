@@ -11,27 +11,36 @@ function get_note_url() {
     return note_url;
 }
 
+function make_running_note(note){
+  try {
+    var date = date.replace(/-/g, '/');
+    date = date.replace(/\.\d{6}/, '');
+    date = new Date(date);
+    if(date > new Date('2015-01-01')){
+      noteText = make_markdown(note['note']);
+    } else {
+      noteText = '<pre>'+make_project_links(note['note'])+'</pre>';
+    }
+    datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date)
+  } catch(e){
+    noteText = '<pre>'+make_project_links(note['note'])+'</pre>';
+    var datestring = '?';
+  }
+  return '<div class="panel panel-default">' +
+      '<div class="panel-heading">'+
+        '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
+       datestring + '</div><div class="panel-body">'+noteText+'</div></div>';
+}
+
 function load_running_notes(wait) {
   // Clear previously loaded notes, if so
   note_url=get_note_url()
   $("#running_notes_panels").empty();
   $.getJSON(note_url, function(data) {
     $.each(data, function(date, note) {
-      var date = date.replace(/-/g, '/');
-      date = date.replace(/\.\d{6}/, '');
-      date = new Date(date);
-      if(date > new Date('2015-01-01')){
-        noteText = make_markdown(note['note']);
-      } else {
-        noteText = '<pre>'+make_project_links(note['note'])+'</pre>';
-      }
-      $('#running_notes_panels').append('<div class="panel panel-default">' +
-          '<div class="panel-heading">'+
-            '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-            date.toDateString() + ', ' + date.toLocaleTimeString(date)+
-          '</div><div class="panel-body">'+noteText+'</div></div>');
-      check_img_sources($('#running_notes_panels img'));
+      $('#running_notes_panels').append(make_running_note(note));
     });
+    check_img_sources($('#running_notes_panels img'));
   }).fail(function( jqxhr, textStatus, error ) {
       try {
         var response = JSON.parse(jqxhr.responseText);
@@ -78,13 +87,12 @@ $("#running_notes_form").submit( function(e) {
     note_url=get_note_url()
     $('#save_note_button').addClass('disabled').text('Submitting..');
     $.ajax({
-      async: false,
       type: 'POST',
       url: note_url,
       dataType: 'json',
       data: {"note": text},
       error: function(xhr, textStatus, errorThrown) {
-        alert('There was an error inserting the Running Note: '+errorThrown);
+        alert('There was an error inserting the Running Note: '+xhr['responseText']+' ('+errorThrown+')');
         $('#save_note_button').removeClass('disabled').text('Submit Running Note');
         console.log(xhr);
         console.log(textStatus);
@@ -92,18 +100,32 @@ $("#running_notes_form").submit( function(e) {
       },
       success: function(data, textStatus, xhr) {
         $('#save_note_button').removeClass('disabled').text('Submit Running Note');
-        // Clear the text box
-        $('#new_note_text').val('');
-        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
-        $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
-        // Create a new running note and slide it in..
-        var now = new Date();
-        $('<div class="panel panel-success"><div class="panel-heading">'+
-              '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
-              now.toDateString() + ', ' + now.toLocaleTimeString(now)+
-            '</div><div class="panel-body">'+make_markdown(data['note'])+
-            '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
-        check_img_sources($('#running_notes_panels img'));
+        // Manually check whether the running note has saved - LIMS API always returns success
+        note_url=get_note_url()
+        $.getJSON(note_url, function(newdata) {
+          var newNote = false;
+          $.each(newdata, function(date, note) {
+            if(data['note'] == note['note']){
+              newNote = make_running_note(note);
+            }
+          });
+          if(newNote){
+            // Clear the text box
+            $('#new_note_text').val('');
+            $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
+            $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
+            // Create a new running note and slide it in..
+            var now = new Date();
+            $('<div class="panel panel-success"><div class="panel-heading">'+
+                  '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
+                  now.toDateString() + ', ' + now.toLocaleTimeString(now)+
+                '</div><div class="panel-body">'+make_markdown(data['note'])+
+                '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
+            check_img_sources($('#running_notes_panels img'));
+          } else {
+            alert('Error - LIMS did not save your running note.');
+          }
+        });
       }
     });
 });
