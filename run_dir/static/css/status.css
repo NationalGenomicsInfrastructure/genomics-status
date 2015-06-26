@@ -308,8 +308,8 @@ td.progress {
   max-height:400px;
 }
 #com_accordion pre,
-#running_notes_panels pre,
-.running-note-panel pre {
+#running_notes_panels pre.plaintext_running_note,
+.running-note-panel pre.plaintext_running_note {
   background-color:transparent;
   border:none;
   font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
