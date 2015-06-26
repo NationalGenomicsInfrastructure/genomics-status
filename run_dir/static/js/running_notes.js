@@ -19,7 +19,7 @@ function make_running_note(date, note){
     if(date > new Date('2015-01-01')){
       noteText = make_markdown(note['note']);
     } else {
-      noteText = '<pre>'+make_project_links(note['note'])+'</pre>';
+      noteText = '<pre class="plaintext_running_note">'+make_project_links(note['note'])+'</pre>';
     }
     datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date)
   } catch(e){
