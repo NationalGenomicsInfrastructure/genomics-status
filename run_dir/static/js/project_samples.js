@@ -13,7 +13,9 @@ $(document).ready(function() {
   // Initialise everything - order is important :)
   $.when(load_presets()).done(function(){
     load_undefined_info();
-    load_all_udfs();
+    $.when(load_all_udfs()).done(function(){
+      load_bioinfo_table();
+    });
     load_samples_table();
     load_running_notes();
     load_links();
@@ -436,10 +438,14 @@ function load_all_udfs(){
   });
 };
 
-function prettify(s) {
+function prettify(s, nospecialchars) {
   // Replaces whitespace with underscores. Replaces sequential _s with one
   // Removes trailing underscores
-  return s.toLowerCase().replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_/, "").replace(/_$/, "");
+  if(typeof nospecialchars !== 'undefined' && nospecialchars == true){
+    s = s.replace(/\W+/g, "");
+  }
+  s = s.toLowerCase().replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_/, "").replace(/_$/, "");
+  return s
 }
 
 // These functions avoid parsing errors due to jQuery not liking element
@@ -971,8 +977,342 @@ function make_timescale_bar(tsid, include_orderdates){
       $(':contains('+rawdate+')').filter(function(){ return $(this).children().length === 0;}).css('border-right', '2px solid '+thiscol).css('padding-right','5px');
 		});
 	}
-
 }
+
+
+///////////////////
+////// BIOINFO ANALYSIS code
+///////////////////
+
+// Static config vars
+var bioinfo_api_url = '/api/v1/bioinfo_analysis/'+project;
+var bioinfo_states = ['Ongoing', 'Delivered', 'Aborted'];
+var bioinfo_states_classes = ['label-warning', 'label-success', 'label-danger'];
+var bioinfo_classes = ['unknown', 'success', 'warning', 'danger', 'active'];
+var bioinfo_texts = ['?', 'Pass', 'Warning', 'Fail', 'N/A'];
+var editable_statuses = ['Ongoing']; // This started off as a list - leaving it as a list to make it easy to extend
+var statusonly_statuses = ['Delivered', 'Aborted'];
+
+var field_names = [];
+$('.bioinfo-field-names th').each(function(i){
+  var suffix = '';
+  var classes = $(this).attr('class');
+  if(typeof classes !== 'undefined'){
+    $.each(classes.split(" "), function(i, c){
+      if(c.substr(0, 12) == 'bioinfo-app-'){
+        suffix = c.substr(12)+'_';
+      }
+    });
+  }
+  // First cell in data rows is th not td, so i-1 to avoid offset
+  field_names[i-1] = suffix+prettify($(this).text(), true);
+});
+
+// Build bioinfo table - main loading spinner waits for this function
+function load_bioinfo_table() {
+
+  // Hide the application-specific columns
+  var app_classes = {
+    'rnaseq': ['RNA-seq (total RNA)', 'RNA-seq (RiboZero)', 'RNA-seq (mRNA)', 'stranded RNA-seq (total RNA)', 'cDNA', 'stranded RNA-seq (RiboZero)'],
+    'exome': ['Exome capture'],
+    'customCap': ['Custom capture'],
+    'WGreseq': ['WG re-seq', 'WG re-seq (IGN)'],
+    'denovo': ['de novo', 'Mate-pair', 'Mate-pair (short insert)', 'Mate-pair (long insert)']
+  };
+  $('[class^=bioinfo-app-]').hide();
+
+  return $.getJSON(bioinfo_api_url, function (data) {
+
+    // Show the columns that we need
+    // Hacky, sorry. Page doesn't update fast enough sometimes.
+    setTimeout(function(){
+      if($('#type').text() == 'Application'){
+        $('.bioinfo-app-applications').show();
+      }
+      var thisapp = $('#application').text();
+      $.each(app_classes, function(key, arr){
+        if(arr.indexOf(thisapp) != -1){
+          $('.bioinfo-app-'+key).show();
+        }
+      });
+    }, 100);
+
+    // Hide the loading row and build the real runs based on the template
+    if(Object.keys(data).length > 0){
+      $('#bioinfo-noruns').hide();
+    } else {
+      $('#bioinfo-download-history').hide();
+    }
+    var templaterow = $('#bioinfo-template-row').attr('id', '').show().detach();
+
+    $.each(data, function(key, vals){
+      // Start by copying the template row
+      var tr = templaterow.clone();
+
+      // Flowcell and status
+      var url_key = key.replace(/_.+_/g, '_');
+      tr.find('th.bioinfo-status-runid samp').html('<a href="../flowcells/'+url_key+'">'+key+'</a>');
+      tr.find('td.bioinfo-status-runstate span').text(vals.status);
+      var bsi = bioinfo_states.indexOf(vals.status);
+      if(bsi != -1){
+        tr.find('td.bioinfo-status-runstate span').removeClass('label-default').addClass(bioinfo_states_classes[bsi]);
+      }
+
+      // User and date
+      tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Last updated by '+vals.user+'<br>'+formatDateTime(vals.timestamp, true)+'"></span>');
+
+      // UPPNEX id confirmed
+      if(vals.uppnex_confirmed == 'true'){
+        $('#uppnex_id_confirmed').attr('checked', true);
+      } else if(vals.uppnex_confirmed == 'false'){
+        $('#uppnex_id_confirmed').attr('checked', false);
+      }
+
+      // Set the values for the row
+      tr.children('td').each(function(i){
+        if(field_names[i] in vals){
+          if($(this).hasClass('bioinfo-status-pfw')){
+            var state = vals[field_names[i]];
+            $(this).text(state);
+            var si = bioinfo_texts.indexOf(state);
+            if(si != -1){
+              $(this).removeClass('unknown').addClass(bioinfo_classes[si]);
+            }
+          } else {
+            if($(this).find('input').length > 0){
+              $(this).find('input').val(vals[field_names[i]]);
+            }
+          }
+        }
+      });
+      // Add to table
+      $('.table-bioinfo-status').append(tr);
+    });
+
+    var forceDisabledState = false;
+    // Disable everything if the project is closed
+    if($('#project_status_alert').text() == 'Closed'){
+      forceDisabledState = true;
+      $('#bioinfo-status-saveButton').remove();
+    }
+    // Set rows as disabled if they're not ready yet
+    var editable = 0;
+    $('.table-bioinfo-status tr:has(td)').each(function(){
+      editable += reset_editable($(this), forceDisabledState);
+    });
+    if(editable > 0){
+      $('#bioinfo-status-saveButton').attr('disabled', false);
+    }
+
+  }).fail(function( jqxhr, textStatus, error ) {
+    var numcols = 0; // I doubt that anyone will notice this. But I'm OCD.
+    $(".bioinfo-field-names th").each(function(){ numcols += $(this).css('display') != 'none' ? 1 : 0; });
+    $('#bioinfo-noruns').addClass('danger');
+    $('#bioinfo-noruns td').attr('colspan', numcols).html("Error loading bioinfo analysis data: <code>"+textStatus+"</code>, <code>"+error+'</code>');
+  });
+}
+
+// Set rows as disabled if they're not ready yet
+function reset_editable(row, forcedisabled){
+  var status = row.find('.bioinfo-status-runstate span').text();
+  if(editable_statuses.indexOf(status) > -1 && !forcedisabled) {
+    row.removeClass('bioinfo-status-disabled bioinfo-delivered');
+    row.find('input').attr('disabled', false);
+    return 1;
+  } else if(statusonly_statuses.indexOf(status) > -1 && !forcedisabled) {
+    row.addClass('bioinfo-status-disabled bioinfo-delivered');
+    row.find('input').attr('disabled', true);
+    return 1;
+  } else {
+    row.addClass('bioinfo-status-disabled');
+    row.find('input').attr('disabled', true);
+    return 0;
+  }
+}
+
+$(document).ready(function() {
+
+  // Run ID status - individual runs
+  $('.table-bioinfo-status').on('click', '.bioinfo-status-runstate', function(e) {
+    e.stopImmediatePropagation(); // fires twice otherwise.
+    var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled') && !$(this).closest('tr').hasClass('bioinfo-delivered');
+    if(!isdisabled){
+      var i = bioinfo_states.indexOf($(this).text());
+      if(i >= 0){
+        if(typeof bioinfo_states[i+1] !== 'undefined') {
+          $(this).children('span').text(bioinfo_states[i+1]);
+          $(this).children('span').removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[i+1]);
+        } else {
+          $(this).children('span').text(bioinfo_states[0]);
+          $(this).children('span').removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[0]);
+        }
+      }
+      reset_editable($(this).closest('tr'));
+      // Update the select box
+      var states = [];
+      $('.bioinfo-status-runstate').each(function(){
+        var s = $(this).text();
+        if(states.indexOf(s) == -1){ states.push(s); }
+      });
+      if(states.length == 1){
+        $('#bioinfo_set-status').val(states[0]);
+      } else {
+        $('#bioinfo_set-status').val('[ different values ]');
+      }
+    }
+  });
+
+  // Passed / Warn / Fail / NA cells
+  $('.table-bioinfo-status').on('click', 'td.bioinfo-status-pfw', function(e) {
+    e.stopImmediatePropagation(); // fires twice otherwise.
+    var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
+    $(this).closest('tr').hasClass('bioinfo-status-disabled');
+    if(!isdisabled){
+      var td = $(this);
+      $.each(bioinfo_classes, function(i, val){
+        if(td.hasClass(val)){
+          td.removeClass(val);
+          if(typeof bioinfo_classes[i+1] !== 'undefined') {
+            td.addClass(bioinfo_classes[i+1]);
+            td.text(bioinfo_texts[i+1]);
+          } else {
+            td.addClass(bioinfo_classes[0]);
+            td.text(bioinfo_texts[0]);
+          }
+          return false;
+        }
+      });
+    }
+  });
+
+  // Datepickers
+  $('.table-bioinfo-status').on('focus', '.input-group.date input', function() {
+    $(this).datepicker({
+        format: "yyyy-mm-dd",
+        todayHighlight: true
+    });
+  });
+  $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
+    if(!isdisabled){
+      var today = formatDateTime(new Date(), false);
+      $(this).prevAll("input:first").val(today);
+    }
+  });
+
+  // Copy first row
+  $('#bioinfo-status-copyFirstRow').click(function(e){
+    e.preventDefault();
+    e.stopImmediatePropagation(); // fires twice otherwise.
+    var states = [];
+    var input_vals = [];
+    $('.table-bioinfo-status tr:has(td)').each(function(){
+      var tr = $(this);
+      var isdisabled = tr.hasClass('bioinfo-status-disabled');
+      if(!isdisabled){
+        if(states.length == 0){
+          tr.children('td').each(function(i){
+            if($(this).hasClass('bioinfo-status-pfw')){
+              states[i] = $(this).text();
+            } else {
+              if($(this).find('input').length > 0){
+                input_vals[i] = $(this).find('input').val();
+              }
+            }
+          });
+        } else {
+          tr.children('td').each(function(i){
+            if($(this).hasClass('bioinfo-status-pfw')){
+              $(this).text(states[i]);
+              $(this).removeClass().addClass('bioinfo-status-pfw');
+              $(this).addClass(bioinfo_classes[bioinfo_texts.indexOf(states[i])]);
+            } else if($(this).find('input').length > 0){
+              $(this).find('input').val(input_vals[i]);
+            }
+          });
+        }
+      }
+    });
+  });
+
+  // Set all states dropdown box
+  $('#bioinfo_set-status').change(function(){
+    var state = $(this).val();
+    if(state !== '[ different values ]'){
+      $('.table-bioinfo-status tr:has(td)').each(function(){
+        var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
+        var isdelivered = $(this).closest('tr').hasClass('bioinfo-delivered');
+        if(!isdisabled || isdelivered){
+          $(this).find('.bioinfo-status-runstate span').text(state).
+            removeClass().addClass('label '+bioinfo_states_classes[bioinfo_states.indexOf(state)]);
+        }
+      });
+      $('.table-bioinfo-status tr:has(td)').each(function(){
+        reset_editable($(this));
+      });
+    }
+  });
+
+  //////
+  // SAVE CHANGES
+  //////
+  $('#bioinfo-status-saveButton').click(function(e){
+    e.preventDefault();
+    e.stopImmediatePropagation(); // fires twice otherwise.
+
+    if($(this).is(':disabled')){
+      alert('disabled!');
+      return false;
+    }
+
+    // Build the JSON object
+    var runs = {};
+    $('.table-bioinfo-status tr:visible:has(td)').each(function(){
+      var runid = $(this).find('th.bioinfo-status-runid').text().trim();
+      var status = $(this).find('.bioinfo-status-runstate span').text().trim();
+      var vals = {
+        uppnex_confirmed: $("#uppnex_id_confirmed").is(':checked') ? 'true' : 'false'
+      };
+      $(this).children('td').each(function(i){
+        if($(this).hasClass('bioinfo-status-pfw')){
+          vals[field_names[i]] = $(this).text().trim();
+        } else {
+          if($(this).find('input').length > 0){
+            vals[field_names[i]] = $(this).find('input').val().trim();
+          }
+        }
+      });
+      runs[runid] = {project_id: project, status: status, values: vals};
+    });
+
+    $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
+    $.ajax({
+      type: 'POST',
+      url: bioinfo_api_url,
+      dataType: 'json',
+      data: JSON.stringify(runs),
+      error: function(xhr, textStatus, errorThrown) {
+        alert('There was an error saving the bioinformatics statuses: '+errorThrown);
+        $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
+        console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(runs));
+      },
+      success: function(data, textStatus, xhr) {
+        alert('Saved!');
+        console.log(runs);
+        $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
+      }
+    });
+
+  });
+
+  // Download history
+  $('#bioinfo-download-history').click(function(){
+    alert('Not yet implemented, sorry.');
+  });
+
+});
 
 
 // Warn users about old projects
@@ -1000,6 +1340,4 @@ function load_charon_summary(){
       var err = textStatus + ", " + error;
       console.log( "Couldn't load charon data: " + err );
   });
-
-
 }

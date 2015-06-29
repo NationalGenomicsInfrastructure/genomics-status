@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+<!--
+Template file: deliveries.html
+URL: /deliveries
+Title: Summary of all Ongoing and Incoming deliveries
+Description: Shows a table with all ongoing and incoming bioinformatics projects.
+-->
+
+{% block stuff %}
+
+
+<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading deliveries page..</div>
+<div id="page_content" style="display:none;" class="deliveries-page">
+  <div class="row">
+    <div class="col-lg-8">
+
+      <h1>Ongoing <span id="page_title">Deliveries</span></h1>
+
+      <h3>Filters Here</h3>
+
+      <div id="ongoing_deliveries">
+        <div class="ongoing-delivery">
+          <h3>
+            <a href="../projects/" class="bi-project-id">??</a>: <span class="bi-project-name">??</span><br>
+            <small><span class="bi-project-application">??</span>
+              &nbsp; <span class="bi-project-facility label label-primary">??</span>
+              &nbsp; <span class="bi-project-assigned">??</span>
+            </small>
+          </h3>
+          <dl class="dl-horizontal">
+            <dt>Project running note:</dt>
+            <dd><span class="bi-project-note text-muted">??</span> <a href="#" class="btn btn-xs btn-default pull-right">See all</a></dd>
+          </dl>
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Run ID</th>
+                <th>Status</th>
+                <th>Checklists</th>
+                <th>Latest running note</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="bi-runid"><samp><a href="../flowcells/">??</a></samp></td>
+                <td class="bi-run-status"><span class="label label-default">??</span></td>
+                <td class="bi-run-pwf">
+                  <div class="progress">
+                    <div class="progress-bar progress-bar-success" style="width: 0%" title="0 Passes" data-toggle="tooltip"></div>
+                    <div class="progress-bar progress-bar-warning" style="width: 0%" title="0 Warnings" data-toggle="tooltip"></div>
+                    <div class="progress-bar progress-bar-danger" style="width: 0%" title="0 Fail" data-toggle="tooltip"></div>
+                  </div>
+                </td>
+                <td class="bi-run-note"><span><span class="glyphicon glyphicon-refresh glyphicon-spin"></span></span> <a href="#" class="btn btn-xs btn-default pull-right">See all</a></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr>
+        </div> <!-- .ongoing-delivery -->
+      </div> <!-- #ongoing_deliveries -->
+
+    </div> <!-- .col-lg-6 -->
+
+    <div class="col-lg-4">
+      <h1>Incoming Deliveries</h1>
+
+      <div id="incoming_deliveries">
+        <h3>
+          <a href="../project/P1399">P1399</a>: L.Gan_14_01<br>
+          <small>RNA-seq (total RNA)
+            &nbsp; <span class="label label-info">Production</span>
+            &nbsp; Senthil
+          </small>
+        </h3>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Run ID</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><samp><a href="../flowcells/">150505_D00450_0168_AC6H3RANXX</a></samp></td>
+              <td><span class="label label-default">Demultiplexing</span></td>
+            </tr>
+            <tr>
+              <td><samp><a href="../flowcells/">150505_D00483_0089_AC6H49ANXX</a></samp></td>
+              <td><span class="label label-default">Sequencing R2</span></td>
+            </tr>
+            <tr>
+              <td><samp><a href="../flowcells/">150505_D00483_0090_BC6H02ANXX</a></samp></td>
+              <td><span class="label label-default">Sequencing R2</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Javascript -->
+<script src="/static/js/deliveries.js?v={{ gs_globals['git_commit'] }}" id="deliveries-js"></script>
+
+{% end %}
