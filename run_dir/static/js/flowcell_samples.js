@@ -169,7 +169,10 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                 var ordered_keys=keys.sort(function(a,b){return data['undetermined'][lid][b]-data['undetermined'][lid][a]});
                 var total = -1;
                 for (ud in ordered_keys){
-                    // Try to look for barcode matches
+                    // Try to look for exact barcode matches with Ns in
+                    // eg. highlight ATTACNNN if ATTACTCG was a barcode for this lane
+                    // probably doesn't work with double barcodes and will highlight
+                    // potentially unuseful sequences such as NNNNNNNN. Sorry about that.
                     var unmatched = ordered_keys[ud];
                     var hl = '';
                     for (samplerunid in data['lane'][lid]){
