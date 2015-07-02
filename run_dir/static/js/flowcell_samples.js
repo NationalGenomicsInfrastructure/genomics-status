@@ -176,7 +176,6 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                         var bc = data['lane'][lid][samplerunid]['barcode'];
                         if (bc == 'unknown') { continue; }
                         bc = '^('+bc.split('').join('|N)(')+'|N)$';
-                        console.log(bc);
                         if(ordered_keys[ud].match(bc)){
                             hl = ' class="undetermined-highlight"';
                         }
