@@ -398,6 +398,23 @@ td.progress {
 }
 
 
+/*
+=== Flowcell_sample===
+*/
+.sublane {
+    margin-bottom:50px;
+}
+.undetermined-btn{
+    margin-top:-10px;
+    float:right;
+}
+dl.undetermined dt:first-child, dl.undetermined dd:first-child {
+      background-color: #ddd;
+  }
+  dl.undetermined dd {
+    width: 60px;
+      text-align: right;
+  }
 
 /*
 === Quota Page ===
