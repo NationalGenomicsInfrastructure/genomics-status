@@ -211,6 +211,19 @@ function make_markdown(s){
 // FORMATTING STUFF
 //
 
+function nice_numbers (count) {
+  var x = '<span class="thousand_group">';
+  var y = '</span>';
+  try {
+    count = count.replace(/,/g,'');
+  } catch(e) {}
+  count = (""+count).replace(/(\d+)(\d{3})(\d{3})(\d{3})(\d{3})$/ ,"$1"+x+"$2"+y+x+"$3"+y+x+"$4"+y+x+"$5"+y)
+                    .replace(/(\d+)(\d{3})(\d{3})(\d{3})$/        ,"$1"+x+"$2"+y+x+"$3"+y+x+"$4"+y)
+                    .replace(/(\d+)(\d{3})(\d{3})$/               ,"$1"+x+"$2"+y+x+"$3"+y)
+                    .replace(/(\d+)(\d{3})$/                      ,"$1"+x+"$2"+y);
+  return count;
+}
+
 function auto_samples_cell (id, val){
   // Column returns an array
   if (val instanceof Array){
@@ -224,7 +237,7 @@ function auto_samples_cell (id, val){
   // Numeric value - right align
   else if (!isNaN(parseFloat(val)) && isFinite(val)){
     // Give numbers spaces in thousands separator
-    val = val.toLocaleString(['fr-FR', 'en-US']);
+    val = nice_numbers(val);
     return '<td class="' + id + ' text-right">' + auto_format(val, true) + '</td>';
   }
 
