@@ -161,7 +161,7 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
             $('#lane_'+lid).append(lbody);
 
             if ('undetermined' in data){
-                var ludtable='<dl class="dl-horizontal undetermined" id="table_ud_lane_' + lid + '" style="display:none;">';
+                var ludtable='<table class="undetermined" id="table_ud_lane_' + lid + '" style="display:none;">';
                 var button='<button id="ud_button_lane_' +lid + '" class="undetermined-btn btn btn-info btn-sm" \
                            type="button" onclick="display_undetermined(' + lid + ')" >Show Undetermined</button>';
                 var keys = [];
@@ -182,10 +182,15 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                     }
                     // Make count nice and work out percentage
                     var count = parseInt(data['undetermined'][lid][ordered_keys[ud]]);
-                    if(total == -1) { total = count };
                     var percentage = ((count/total)*100).toFixed(2);
+                    if(total == -1) { percentage = '100.00' };
                     count = nice_numbers(count);
-                    ludtable += "<dt"+hl+">"+unmatched+"</dt><dd"+hl+">"+count+' <span class="undef-percentage">('+percentage+"%)</span></dd>";
+                    if(total == -1) {
+                        ludtable += "<tr><th>"+unmatched+"</th><th>"+count+'</th><th>('+percentage+"%)</span></th></tr>";
+                        total = parseInt(data['undetermined'][lid][ordered_keys[ud]]);
+                    } else {
+                        ludtable += "<tr"+hl+"><td><samp>"+unmatched+"</samp></td><td>"+count+'</td><td>('+percentage+"%)</span></td></tr>";
+                    }
                 }
                 ludtable+="</dl>";
                 $('#button_lane_'+lid).append(button);
