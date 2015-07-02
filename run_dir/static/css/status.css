@@ -407,30 +407,27 @@ td.progress {
 .undetermined-btn{
   margin-left: 15px;
 }
-dl.undetermined dt:first-of-type {
-  background-color: #ddd;
+.undetermined {
+  width: 300px;
+}
+.undetermined th, .undetermined td {
+  text-align: right;
   padding: 5px;
 }
-dl.undetermined dd:first-of-type {
-  background-color: #ddd;
-  padding: 5px 5px 0 5px;
-  font-weight:bold;
+.undetermined tr th:first-child, .undetermined tr td:first-child {
+  text-align:left;
 }
+.undetermined samp {
+  font-size: 1em;
+  letter-spacing: 1px;
+}
+
 .undetermined-highlight {
   color: #a94442;
   background-color: #f2dede;
   border: 1px solid #ebccd1;
 }
-dl.undetermined dd {
-  padding-right:5px;
-  width: 200px;
-  text-align: right;
-}
 
-.undef-percentage {
-  display: inline-block;
-  width: 100px;
-}
 .thousand_group {
   margin-left:4px;
 }
