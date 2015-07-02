@@ -135,7 +135,7 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                     <td>" + data['lane'][lid][samplerunid]['SampleName'] + '</td> \
                     <td class="text-right">' + nice_numbers(data['lane'][lid][samplerunid]['yield']) + '</td>'
                     if (data['lane'][lid][0].hasOwnProperty('readsnb')){
-                        lbody+='<td class="text-right">' + data['lane'][lid][samplerunid]['readsnb'] + '</td>'
+                        lbody+='<td class="text-right">' + nice_numbers(data['lane'][lid][samplerunid]['readsnb']) + '</td>'
                     }else if(data['lane'][lid][0].hasOwnProperty('clustersnb')){
                         lbody+='<td class="text-right">' + nice_numbers(data['lane'][lid][samplerunid]['clustersnb']) + '</td>'
                     }
