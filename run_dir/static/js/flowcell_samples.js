@@ -50,20 +50,20 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
             if ('lanedata'in data && lid in data['lanedata']){
                 sbody = '<tr> \
                     <th>Total Yield (<abbr title="Megabases">Mb</abbr>):</th> \
-                    <td class="text-left" >' + data['lanedata'][lid]['yield'] + '</td> \
+                    <td class="text-left" >' + nice_numbers(data['lanedata'][lid]['yield']) + '</td> \
                     <th>Total clusters :</th> \
-                    <td class="text-left">' + data['lanedata'][lid]['clustersnb'] + '</td> \
+                    <td class="text-left">' + nice_numbers(data['lanedata'][lid]['clustersnb']) + '</td> \
                     <th>% bases > Q30:</th> \
                     <td class="text-left ';
                 q30=data['lanedata'][lid]['overthirty']
                 if (q30 < 30) sbody += 'danger';
                 else if(q30 < 80) sbody += 'warning';
                 else if(q30 < 100) sbody += 'success';
-                sbody+='">' + q30 + '</td> \
+                sbody+='">' + q30 + '%</td> \
                     <th>Mean Quality Score:</th> \
                     <td class="text-left">' + data['lanedata'][lid]['mqs'] + '</td> \
                     <th>% perfect barcode :</th> \
-                    <td class="text-left">' + data['lanedata'][lid]['perf'] + '</td> \
+                    <td class="text-left">' + data['lanedata'][lid]['perf'] + '%</td> \
                 </tr>';
             } else if (data['yields'][lid] != 0){
                     sbody='<tr><th>Total Yield (<abbr title="Megabases">Mb</abbr>):</th> \
