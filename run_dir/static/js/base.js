@@ -216,9 +216,9 @@ function make_markdown(s){
 // Solution: wrap thousand groups in span elements that have margins
 function nice_numbers (count) {
   // Strip out the commas that are sometimes given server-side
-  count = count.toString().replace(/,/g,'');
+  var count = count.toString().replace(/,/g,'');
   // loop through thousands from the end, wrapping in the span
-  parsed = '';
+  var parsed = '';
   while(m = count.match((/\d{3}$/))){
     parsed = '<span class="thousand_group">' + m[0] + '</span>' + parsed;
     count = count.replace(/\d{3}$/, '');
