@@ -211,17 +211,21 @@ function make_markdown(s){
 // FORMATTING STUFF
 //
 
+// Give long numbers spacing between the 1000s, without adding anything
+// so that they can still be copied into excel easily
+// Solution: wrap thousand groups in span elements that have margins
 function nice_numbers (count) {
-  var x = '<span class="thousand_group">';
-  var y = '</span>';
-  try {
-    count = count.replace(/,/g,'');
-  } catch(e) {}
-  count = (""+count).replace(/(\d+)(\d{3})(\d{3})(\d{3})(\d{3})$/ ,"$1"+x+"$2"+y+x+"$3"+y+x+"$4"+y+x+"$5"+y)
-                    .replace(/(\d+)(\d{3})(\d{3})(\d{3})$/        ,"$1"+x+"$2"+y+x+"$3"+y+x+"$4"+y)
-                    .replace(/(\d+)(\d{3})(\d{3})$/               ,"$1"+x+"$2"+y+x+"$3"+y)
-                    .replace(/(\d+)(\d{3})$/                      ,"$1"+x+"$2"+y);
-  return count;
+  // Strip out the commas that are sometimes given server-side
+  count = count.toString().replace(/,/g,'');
+  // loop through thousands from the end, wrapping in the span
+  parsed = '';
+  while(m = count.match((/\d{3}$/))){
+    parsed = '<span class="thousand_group">' + m[0] + '</span>' + parsed;
+    count = count.replace(/\d{3}$/, '');
+  }
+  // Add on whatever is remaining in the string.
+  parsed = count + parsed;
+  return parsed;
 }
 
 function auto_samples_cell (id, val){
