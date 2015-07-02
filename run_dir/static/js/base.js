@@ -211,6 +211,23 @@ function make_markdown(s){
 // FORMATTING STUFF
 //
 
+// Give long numbers spacing between the 1000s, without adding anything
+// so that they can still be copied into excel easily
+// Solution: wrap thousand groups in span elements that have margins
+function nice_numbers (count) {
+  // Strip out the commas that are sometimes given server-side
+  var count = count.toString().replace(/,/g,'');
+  // loop through thousands from the end, wrapping in the span
+  var parsed = '';
+  while(m = count.match((/\d{3}$/))){
+    parsed = '<span class="thousand_group">' + m[0] + '</span>' + parsed;
+    count = count.replace(/\d{3}$/, '');
+  }
+  // Add on whatever is remaining in the string.
+  parsed = count + parsed;
+  return parsed;
+}
+
 function auto_samples_cell (id, val){
   // Column returns an array
   if (val instanceof Array){
@@ -224,7 +241,7 @@ function auto_samples_cell (id, val){
   // Numeric value - right align
   else if (!isNaN(parseFloat(val)) && isFinite(val)){
     // Give numbers spaces in thousands separator
-    val = val.toLocaleString(['fr-FR', 'en-US']);
+    val = nice_numbers(val);
     return '<td class="' + id + ' text-right">' + auto_format(val, true) + '</td>';
   }
 
