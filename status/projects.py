@@ -286,6 +286,12 @@ class ProjectsSearchHandler(ProjectsBaseDataHandler):
     Loaded through /api/v1/project_search/([^/]*)$
     """
     def get(self, search_string):
+        # Searching for P1234 doesn't work, but 1234 does.
+        # If I'm honest, I don't know why. But let's just strip the P
+        # and get on with enjoying life.
+        if search_string[0] == 'P' and search_string[1:].isdigit():
+            search_string = search_string[1:]
+        print ("SEARCH STRING: {}".format(search_string))
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.search_project_names(search_string)))
 

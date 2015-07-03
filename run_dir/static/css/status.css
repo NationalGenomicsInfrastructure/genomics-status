@@ -782,3 +782,16 @@ These classes are cut and pasted wholesale into here from other packages.
 .deliveries-filters .form-group {
   margin-right: 20px;
 }
+
+#ongoing_deliveries .bi-run-status {
+  cursor: pointer;
+}
+.delivery-saved-status {
+  font-size: 12px;
+  margin-right: 12px;
+  color: #94ba93;
+}
+button.btn:disabled {
+  pointer-events: all;
+  cursor: not-allowed ;
+}

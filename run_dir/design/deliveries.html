@@ -62,6 +62,11 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 
         <div class="delivery">
           <h3>
+            <span class="pull-right delivery-actions">
+              <button class="deliveries-project-delivered btn btn-sm btn-success" title="Set all samples as delivered" data-toggle="tooltip"><span class="glyphicon glyphicon-ok"></span></button>
+              <button class="deliveries-project-aborted btn btn-sm btn-danger" title="Set all samples as aborted" data-toggle="tooltip"><span class="glyphicon glyphicon-remove"></span></button>
+              <button class="deliveries-save-project btn btn-sm btn-primary" disabled>Save Changes</button>
+            </span>
             <a href="../projects/" class="bi-project-id">??</a>: <span class="bi-project-name">??</span><br>
             <small><span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">??</span>
               &nbsp; <span class="bi-project-facility label label-primary" data-toggle="tooltip" data-delay="500" title="Project Facility">??</span>
