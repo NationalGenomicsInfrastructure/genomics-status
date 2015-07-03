@@ -43,6 +43,10 @@ var notetype = 'project';
 var project = '';
 var flowcell = '';
 
+//
+// BUILD THE PAGE
+//
+
 $(document).ready(function() {
 
   $.each(app_classes, function(c, apps){
@@ -264,5 +268,91 @@ $(document).ready(function() {
     update_deliveries_filters();
   });
 
+});
 
+//
+// PAGE INTERACTION
+//
+
+// Click individual status label
+$('#ongoing_deliveries').on('click', '.bi-run-status', function(e){
+  e.stopImmediatePropagation(); // fires twice otherwise.
+  var i = bioinfo_states.indexOf($(this).text());
+  if(i >= 0){
+    if(typeof bioinfo_states[i+1] !== 'undefined') {
+      $(this).children('span').text(bioinfo_states[i+1]);
+      $(this).children('span').removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[i+1]);
+    } else {
+      $(this).children('span').text(bioinfo_states[0]);
+      $(this).children('span').removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[0]);
+    }
+    $(this).closest('.delivery').find('.deliveries-save-project').removeAttr('disabled');
+  }
+});
+
+// Set all delivered / aborted buttons
+$('#ongoing_deliveries').on('click', '.deliveries-project-delivered', function(e){
+  e.stopImmediatePropagation(); // fires twice otherwise.
+  $(this).closest('.delivery').find('.bi-run-status span').removeClass().addClass('label label-success').text('Delivered');
+  $(this).closest('.delivery').find('.deliveries-save-project').removeAttr('disabled');
+});
+$('#ongoing_deliveries').on('click', '.deliveries-project-aborted', function(e){
+  e.stopImmediatePropagation(); // fires twice otherwise.
+  $(this).closest('.delivery').find('.bi-run-status span').removeClass().addClass('label label-danger').text('Aborted');
+  $(this).closest('.delivery').find('.deliveries-save-project').removeAttr('disabled');
+});
+
+// Save project statuses
+$('#ongoing_deliveries').on('click', '.deliveries-save-project', function(e){
+  e.stopImmediatePropagation(); // fires twice otherwise.
+  // Shouldn't ever happen. Just in case..
+  if($(this).is(':disabled')){ alert('disabled!'); return false; }
+
+  // Collect elements for later
+  var save_button = $(this);
+  var delivery = $(this).closest('.delivery');
+  save_button.text('Saving..').attr('disabled', true);
+
+  // Get the current data for this project
+  var pid = delivery.find('.bi-project-id').text();
+  if(pid.length > 0){
+    $.getJSON('/api/v1/bioinfo_analysis/'+pid, function (data) {
+
+      // Loop through each run ID and update status
+      $.each(data, function(runid, run){
+        var runstatus = delivery.find('.bi-runid:contains('+runid+')').parent().find('.bi-run-status').text();
+        // Some data munging to get it into the expected format
+        data[runid] = {
+          'project_id': pid,
+          'status': runstatus,
+          'values': data[runid]
+        };
+        delete data[runid]['values']['project_id'];
+        delete data[runid]['values']['user'];
+        delete data[runid]['values']['timestamp'];
+        delete data[runid]['values']['status']; // this is the old status, don't worry
+      });
+
+      // Resubmit updated object back to the database
+      $.ajax({
+        type: 'POST',
+        url: '/api/v1/bioinfo_analysis/'+pid,
+        dataType: 'json',
+        data: JSON.stringify(data),
+        error: function(xhr, textStatus, errorThrown) {
+          alert('There was an error saving the delivery statuses for project '+pid+': '+errorThrown);
+          save_button.removeAttr('disabled').text('Save Changes');
+          console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(runs));
+        },
+        success: function(data, textStatus, xhr) {
+          save_button.text('Save Changes');
+          var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="glyphicon glyphicon-ok"></span></span>');
+          success_msg.prependTo(save_button.parent()).delay(1500).fadeOut(1500, function(){ $(this).remove(); });
+        }
+      });
+
+
+
+    }); // loading previous project data
+  } // PID check
 });

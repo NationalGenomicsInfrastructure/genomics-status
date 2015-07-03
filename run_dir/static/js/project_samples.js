@@ -1304,8 +1304,8 @@ $(document).ready(function() {
         console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(runs));
       },
       success: function(data, textStatus, xhr) {
-        alert('Saved!');
-        console.log(runs);
+        var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="glyphicon glyphicon-ok"></span></span>');
+        success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
         $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
       }
     });
