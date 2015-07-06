@@ -217,6 +217,8 @@ $(document).ready(function() {
     $('.runningNotesModal_loadingSpinner').show();
     $('#running_notes_panels').hide();
     $('#running_notes_form').hide();
+    $('#new_note_text').val('');
+    $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
 
     $.when(load_running_notes()).done(function(){
       $('.runningNotesModal_loadingSpinner').hide();
