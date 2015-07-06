@@ -88,7 +88,7 @@ $("#running_notes_form").submit( function(e) {
         return false;
     }
 
-    note_url=get_note_url()
+    note_url = get_note_url()
     $('#save_note_button').addClass('disabled').text('Submitting..');
     $.ajax({
       type: 'POST',
