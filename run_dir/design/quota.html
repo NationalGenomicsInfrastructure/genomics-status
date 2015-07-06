@@ -27,23 +27,24 @@ TODO: Not sure if this page is necessary on top of the quota_grid.html page?
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
-    
+
     // Load the data
     $.getJSON("/api/v1/quotas/{{ project }}", function(api_data) {
-        
+
         // Massage the data
         var raw_data = api_data[0]["data"];
         var plot_data = [];
-        var quota_limit = raw_data[0].limit / 1000000000000;
-            var max_value = quota_limit;
-            $.each(raw_data, function(i, d){
-                d.y /= 1000000000000;
-                plot_data.push([d.x * 1000, d.y]);
-                if(max_value < d.y) {
-                    max_value = d.y;
-                }
-            });
-        
+        var limit_data = []
+        var max_value = 0;
+        $.each(raw_data, function(i, d){
+            d.y /= 1000000000000;
+            d.limit /= 1000000000000;
+            plot_data.push([d.x * 1000, d.y]);
+            limit_data.push([d.x * 1000, d.limit]);
+            if(max_value < d.y) { max_value = d.y; }
+            if(max_value < d.limit) { max_value = d.limit; }
+        });
+
         // Plot the data
         $('#storage_plot').highcharts({
             chart: {
@@ -52,7 +53,7 @@ $(document).ready(function(){
             },
             title: { text: "Storage Usage Over Time: {{ project }}" },
             legend: { enabled: false },
-            xAxis: { 
+            xAxis: {
                 title: { text: 'Date' },
                 type: 'datetime'
             },
@@ -64,24 +65,29 @@ $(document).ready(function(){
                     formatter: function () {
                         return this.value + 'Tb';
                     }
-                },
-                plotLines: [{
-                    color: 'red',
-                    width: 2,
-                    value: quota_limit,
-                    dashStyle: 'Dash',
-                    zIndex: 5
-                }]
+                }
             },
             tooltip: {
                 pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} Tb',
             },
-            series: [{
+            series: [
+              {
                 name: '{{ project }}',
                 data: plot_data
-            }]
+              },
+              {
+                name: '{{ project }} Quota',
+                data: limit_data,
+                dashStyle: 'Dash',
+                color: 'red',
+                type: 'line',
+                marker: {
+                    enabled: false
+                }
+              }
+            ]
         });
-        
+
         // Hide the loading spinner
         $('#loading_spinner').slideUp();
     });
