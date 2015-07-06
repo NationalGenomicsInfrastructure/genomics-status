@@ -129,7 +129,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         summary_view = self.application.projects_db.view("project/summary", descending=True)
         if filter_projects == 'closed':
             summary_view = summary_view[["closed",'Z']:["closed",'']]
-        elif filter_projects not in ['all', 'aborted'] :
+        elif filter_projects not in ['all', 'aborted'] and filter_projects[:1] != 'P':
             summary_view = summary_view[["open",'Z']:["open",'']]
 
 
@@ -139,19 +139,25 @@ class ProjectsBaseDataHandler(SafeHandler):
 
 
         filtered_projects = OrderedDict()
+        # Specific list of projects given
+        if filter_projects[:1] == 'P':
+            fprojs = filter_projects.split(',')
+            for p_id, p_info in projects.iteritems():
+                if p_id in fprojs:
+                    filtered_projects[p_id] = p_info
+
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
-        if not filter_projects == 'all':
-            prefiltered_projects= OrderedDict()
+        elif not filter_projects == 'all':
+            prefiltered_projects = OrderedDict()
             for p_id, p_info in projects.iteritems():
-
                 if 'aborted' not in p_info:
                     prefiltered_projects[p_id] = p_info
                 else:
                     if filter_projects == 'aborted':
-                        filtered_projects[p_id]=p_info
+                        filtered_projects[p_id] = p_info
         else:
-            filtered_projects=projects
+            filtered_projects = projects
 
         if filter_projects == 'pending':
             for p_id, p_info in prefiltered_projects.iteritems():
@@ -181,12 +187,6 @@ class ProjectsBaseDataHandler(SafeHandler):
         elif filter_projects == "pending_review":
             for p_id, p_info in prefiltered_projects.iteritems():
                 if 'pending_reviews' in p_info:
-                    filtered_projects[p_id] = p_info
-
-        elif filter_projects[:1] == 'P':
-            fprojs = filter_projects.split(',')
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if p_id in fprojs:
                     filtered_projects[p_id] = p_info
 
         final_projects = self.filter_per_date(filtered_projects, youngest_open_date, oldest_open_date, youngest_queue_date, oldest_queue_date, youngest_close_date, oldest_close_date)

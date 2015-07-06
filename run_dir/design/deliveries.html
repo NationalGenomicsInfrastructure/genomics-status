@@ -24,19 +24,6 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               <label for="bioinfo-filter-assigned" class="control-label">Assigned</label>
               <select class="form-control input-sm" id="bioinfo-filter-assigned">
                 <option>Anyone</option>
-                <option>Francesco</option>
-                <option>Jun</option>
-                <option>Senthil</option>
-                <option>Pär</option>
-                <option>??</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="bioinfo-filter-completion" class="control-label">Completion</label>
-              <select class="form-control input-sm" id="bioinfo-filter-completion">
-                <option>Any</option>
-                <option>Not Started</option>
-                <option>>= 80% Complete</option>
               </select>
             </div>
             <div class="form-group">
@@ -62,10 +49,11 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 
         <div class="delivery">
           <h3>
-            <span class="pull-right delivery-actions">
+            <span class="pull-right delivery-actions hide-incoming">
+              <button class="deliveries-project-reset btn btn-sm btn-default" title="Reset" data-toggle="tooltip"><span class="glyphicon glyphicon-repeat"></span></button>
               <button class="deliveries-project-delivered btn btn-sm btn-success" title="Set all samples as delivered" data-toggle="tooltip"><span class="glyphicon glyphicon-ok"></span></button>
-              <button class="deliveries-project-aborted btn btn-sm btn-danger" title="Set all samples as aborted" data-toggle="tooltip"><span class="glyphicon glyphicon-remove"></span></button>
-              <button class="deliveries-save-project btn btn-sm btn-primary" disabled>Save Changes</button>
+              <button class="deliveries-project-aborted btn btn-sm btn-danger" title="Set all samples as aborted" data-toggle="tooltip"><span class="glyphicon glyphicon-trash"></span></button>
+              <button class="deliveries-save-project btn btn-sm btn-default" disabled>Save Changes</button>
             </span>
             <a href="../projects/" class="bi-project-id">??</a>: <span class="bi-project-name">??</span><br>
             <small><span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">??</span>
@@ -107,8 +95,6 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               </tr>
             </tbody>
           </table>
-
-          <hr>
         </div> <!-- .ongoing-delivery -->
       </div> <!-- #ongoing_deliveries -->
 

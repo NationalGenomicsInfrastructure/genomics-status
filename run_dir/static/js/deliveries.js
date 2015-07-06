@@ -43,17 +43,15 @@ var notetype = 'project';
 var project = '';
 var flowcell = '';
 
+var project_run_statuses = {};
+var bioinfo_responsibles = {};
+var application_types = {};
+
 //
 // BUILD THE PAGE
 //
 
 $(document).ready(function() {
-
-  $.each(app_classes, function(c, apps){
-    $.each(apps, function(i, app){
-      $('#bioinfo-filter-application').append('<option>'+app+'</option>');
-    });
-  });
 
   // Get the template HTML
   var run_template = $('#ongoing_deliveries .delivery table tbody tr').detach();
@@ -76,7 +74,13 @@ $(document).ready(function() {
             var runs = data[pid];
             var p = project_template.clone();
 
+            if(typeof pdata[pid] === 'undefined'){
+              $(d['container_id']).append('<h3><a href="project/'+pid+'" class="bi-project-id">'+pid+'</a></h3><div class="alert alert-danger"><strong>Error</strong> - could not find project information for '+pid+'</div>');
+              return true;
+            }
+
             // Main project fields
+            var responsible = pdata[pid]['bioinfo_responsible'] == undefined ? '??' : pdata[pid]['bioinfo_responsible'];
             p.find('.bi-project-id').text(pid).attr('href', 'project/'+pid);
             p.find('.bi-project-name').text(pdata[pid]['project_name']);
             p.find('.bi-project-application').text(pdata[pid]['application']);
@@ -84,12 +88,26 @@ $(document).ready(function() {
             if(pdata[pid]['type'] == 'Application'){
               p.find('.bi-project-facility').removeClass('label-primary').addClass('label-success');
             }
-            p.find('.bi-project-assigned').text(pdata[pid]['bioinfo_responsible']);
+            p.find('.bi-project-assigned').text(responsible);
             if (pdata[pid]['latest_running_note'] !== '') {
               var noteobj = JSON.parse(pdata[pid]['latest_running_note']);
               var ndate = Object.keys(noteobj)[0];
               var note = $(make_markdown(noteobj[ndate]['note'])).find('div, p').contents().unwrap();
               p.find('.bi-project-note').html(note);
+            }
+
+            // Update bioinfo-responsible list
+            if(responsible in bioinfo_responsibles){
+              bioinfo_responsibles[responsible] += 1;
+            } else {
+              bioinfo_responsibles[responsible] = 1;
+            }
+
+            // Update applications list
+            if(pdata[pid]['application'] in application_types){
+              application_types[pdata[pid]['application']] += 1;
+            } else {
+              application_types[pdata[pid]['application']] = 1;
             }
 
             // Progress bar total count
@@ -103,9 +121,11 @@ $(document).ready(function() {
               total += app_fields['applications'].length;
             }
 
+            project_run_statuses[pid] = [];
             $.each(runs, function(runid, run){
               var r = run_template.clone();
               var flowcell = runid.replace(/_.+_/g, '_');
+              project_run_statuses[pid].push(run['status']);
 
               // Main run fields
               r.find('.bi-runid samp a').text(runid);
@@ -188,6 +208,24 @@ $(document).ready(function() {
             $(d['container_id']+' .delivery-filters').show();
 
           }); // loop through runs
+
+          // Update the filter dropdowns
+          var res_arr = Object.keys(bioinfo_responsibles).sort();
+          if (res_arr[0] == '??'){ res_arr.push(res_arr.shift()); } // Move ?? to end
+          for (i = 0; i < res_arr.length; ++i) {
+            var type = res_arr[i];
+            var count = bioinfo_responsibles[type];
+            $('#bioinfo-filter-assigned').append($('<option>', {value: type, text: type+' ('+count+')'}));
+          }
+
+          var app_arr = Object.keys(application_types).sort();
+          if (app_arr[0] == '??'){ app_arr.push(app_arr.shift()); } // Move ?? to end
+          for (i = 0; i < app_arr.length; ++i) {
+            var type = app_arr[i];
+            var count = application_types[type];
+            $('#bioinfo-filter-application').append($('<option>', {value: type, text: type+' ('+count+')'}));
+          }
+
         }); // Get project data
 
       }
@@ -276,6 +314,26 @@ $(document).ready(function() {
 // PAGE INTERACTION
 //
 
+// Check if we need to save this project
+function check_delivery_save(delivery){
+  var pid = delivery.find('.bi-project-id').text();
+  var needs_saving = false;
+  if (pid in project_run_statuses) {
+    delivery.find('.bi-run-status').each(function(i){
+      if($(this).text() != project_run_statuses[pid][i]){
+        needs_saving = true;
+      }
+    });
+  }
+  if(needs_saving){
+    delivery.addClass('saveme');
+    delivery.find('.deliveries-save-project').removeClass('btn-default').addClass('btn-primary').removeAttr('disabled');
+  } else {
+    delivery.removeClass('saveme');
+    delivery.find('.deliveries-save-project').removeClass('btn-primary').addClass('btn-default').attr('disabled', true);
+  }
+}
+
 // Click individual status label
 $('#ongoing_deliveries').on('click', '.bi-run-status', function(e){
   e.stopImmediatePropagation(); // fires twice otherwise.
@@ -288,20 +346,30 @@ $('#ongoing_deliveries').on('click', '.bi-run-status', function(e){
       $(this).children('span').text(bioinfo_states[0]);
       $(this).children('span').removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[0]);
     }
-    $(this).closest('.delivery').find('.deliveries-save-project').removeAttr('disabled');
+    check_delivery_save($(this).closest('.delivery'));
   }
 });
 
-// Set all delivered / aborted buttons
+// Set all delivered / aborted / reset buttons
 $('#ongoing_deliveries').on('click', '.deliveries-project-delivered', function(e){
   e.stopImmediatePropagation(); // fires twice otherwise.
   $(this).closest('.delivery').find('.bi-run-status span').removeClass().addClass('label label-success').text('Delivered');
-  $(this).closest('.delivery').find('.deliveries-save-project').removeAttr('disabled');
+  check_delivery_save($(this).closest('.delivery'));
 });
 $('#ongoing_deliveries').on('click', '.deliveries-project-aborted', function(e){
   e.stopImmediatePropagation(); // fires twice otherwise.
   $(this).closest('.delivery').find('.bi-run-status span').removeClass().addClass('label label-danger').text('Aborted');
-  $(this).closest('.delivery').find('.deliveries-save-project').removeAttr('disabled');
+  check_delivery_save($(this).closest('.delivery'));
+});
+$('#ongoing_deliveries').on('click', '.deliveries-project-reset', function(e){
+  e.stopImmediatePropagation(); // fires twice otherwise.
+  var pid = $(this).closest('.delivery').find('.bi-project-id').text();
+  $(this).closest('.delivery').find('.bi-run-status span').each(function(i){
+    var s = project_run_statuses[pid][i];
+    var c = bioinfo_states_classes[bioinfo_states.indexOf(s)]
+    $(this).removeClass().addClass('label '+c).text(s);
+  });
+  check_delivery_save($(this).closest('.delivery'));
 });
 
 // Save project statuses
@@ -347,6 +415,12 @@ $('#ongoing_deliveries').on('click', '.deliveries-save-project', function(e){
           console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(runs));
         },
         success: function(data, textStatus, xhr) {
+          // Update the in-memory array
+          project_run_statuses[pid] = [];
+          delivery.find('.bi-run-status span').each(function(i){
+            project_run_statuses[pid].push($(this).text());
+          });
+          check_delivery_save(delivery);
           save_button.text('Save Changes');
           var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="glyphicon glyphicon-ok"></span></span>');
           success_msg.prependTo(save_button.parent()).delay(1500).fadeOut(1500, function(){ $(this).remove(); });

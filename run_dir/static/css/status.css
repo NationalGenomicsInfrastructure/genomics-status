@@ -786,6 +786,21 @@ These classes are cut and pasted wholesale into here from other packages.
 #ongoing_deliveries .bi-run-status {
   cursor: pointer;
 }
+.delivery {
+  border-top: 1px solid #fff;
+  border-right: 1px solid #fff;
+  border-left: 1px solid #fff;
+  border-bottom: 1px solid #dedede;
+  -webkit-border-radius: 5px 5px 0 0;
+     -moz-border-radius: 5px 5px 0 0;
+          border-radius: 5px 5px 0 0;
+  padding: 0 10px;
+  margin-bottom: 15px;
+}
+.delivery.saveme {
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+}
 .delivery-saved-status {
   font-size: 12px;
   margin-right: 12px;
