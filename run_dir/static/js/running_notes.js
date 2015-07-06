@@ -96,7 +96,7 @@ $("#running_notes_form").submit( function(e) {
       dataType: 'json',
       data: {"note": text},
       error: function(xhr, textStatus, errorThrown) {
-        alert('There was an error inserting the Running Note: '+xhr['responseText']+' ('+errorThrown+')');
+        alert('Error: '+xhr['responseText']+' ('+errorThrown+')');
         $('#save_note_button').removeClass('disabled').text('Submit Running Note');
         console.log(xhr);
         console.log(textStatus);
