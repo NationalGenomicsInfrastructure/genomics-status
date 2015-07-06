@@ -38,6 +38,24 @@ import status.worksets
 
 class Application(tornado.web.Application):
     def __init__(self, settings):
+
+        # Set up a set of globals to pass to every template
+        self.gs_globals = {}
+
+        # GENOMICS STATUS MAJOR VERSION NUMBER
+        # Bump this with any change that requires an update to documentation
+        self.gs_globals['gs_version'] = '1.0';
+
+        # Get the latest git commit hash
+        # This acts as a minor version number for small updates
+        # It also forces javascript / CSS updates and solves caching problems
+        try:
+            self.gs_globals['git_commit'] = subprocess.check_output(['git', 'rev-parse', '--short=7', 'HEAD'])
+            self.gs_globals['git_commit_full'] = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+        except:
+            self.gs_globals['git_commit'] = 'unknown'
+            self.gs_globals['git_commit_full'] = 'unknown'
+
         handlers = [
             ("/", MainHandler),
             ("/login", LoginHandler),
@@ -224,15 +242,6 @@ class Application(tornado.web.Application):
 
         # Location of the psul log
         self.psul_log=settings.get("psul_log")
-
-        # Set up a set of globals to pass to every template
-        self.gs_globals = {}
-
-        # Get the latest git commit hash
-        try:
-            self.gs_globals['git_commit'] = subprocess.check_output(['git', 'rev-parse', '--short=7', 'HEAD'])
-        except:
-            self.gs_globals['git_commit'] = 'unknown'
 
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
