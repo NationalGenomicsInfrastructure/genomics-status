@@ -57,7 +57,7 @@ $(document).ready(function() {
   var run_template = $('#ongoing_deliveries .delivery table tbody tr').detach();
   var project_template = $('#ongoing_deliveries .delivery').detach();
 
-  $.each(deliveries, function(type, d){
+  $.each(deliveries, function(d_type, d){
 
     $.getJSON(d['url'], function (data) {
 
@@ -178,7 +178,7 @@ $(document).ready(function() {
               }
 
               // Get the flow cell running notes
-              if(type == 'ongoing'){
+              if(d_type == 'ongoing'){
                 $.getJSON('/api/v1/flowcell_notes/'+flowcell, function (fcrn) {
                   var printnote = '-';
                   if(Object.keys(fcrn).length > 0){
@@ -198,7 +198,7 @@ $(document).ready(function() {
             });
 
             // Remove stuff if we're incoming
-            if(type == 'incoming'){
+            if(d_type == 'incoming'){
               p.find('.hide-incoming').remove();
             }
 
@@ -213,17 +213,17 @@ $(document).ready(function() {
           var res_arr = Object.keys(bioinfo_responsibles).sort();
           if (res_arr[0] == '??'){ res_arr.push(res_arr.shift()); } // Move ?? to end
           for (i = 0; i < res_arr.length; ++i) {
-            var type = res_arr[i];
-            var count = bioinfo_responsibles[type];
-            $('#bioinfo-filter-assigned').append($('<option>', {value: type, text: type+' ('+count+')'}));
+            var f_type = res_arr[i];
+            var count = bioinfo_responsibles[f_type];
+            $('#bioinfo-filter-assigned').append($('<option>', {value: f_type, text: f_type+' ('+count+')'}));
           }
 
           var app_arr = Object.keys(application_types).sort();
           if (app_arr[0] == '??'){ app_arr.push(app_arr.shift()); } // Move ?? to end
           for (i = 0; i < app_arr.length; ++i) {
-            var type = app_arr[i];
-            var count = application_types[type];
-            $('#bioinfo-filter-application').append($('<option>', {value: type, text: type+' ('+count+')'}));
+            var f_type = app_arr[i];
+            var count = application_types[f_type];
+            $('#bioinfo-filter-application').append($('<option>', {value: f_type, text: f_type+' ('+count+')'}));
           }
 
         }); // Get project data
