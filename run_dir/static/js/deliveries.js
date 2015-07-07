@@ -89,12 +89,23 @@ $(document).ready(function() {
               p.find('.bi-project-facility').removeClass('label-primary').addClass('label-success');
             }
             p.find('.bi-project-assigned').text(responsible);
-            if (pdata[pid]['latest_running_note'] !== '') {
-              var noteobj = JSON.parse(pdata[pid]['latest_running_note']);
-              var ndate = Object.keys(noteobj)[0];
-              var note = $(make_markdown(noteobj[ndate]['note'])).find('div, p').contents().unwrap();
-              p.find('.bi-project-note').html(note);
-            }
+
+            // Project running note
+            $.getJSON('/api/v1/running_notes/'+pid, function (prn) {
+              var printnote = '-';
+              if(Object.keys(prn).length > 0){
+                var latest_date = "January 01, 2010 00:00:00";
+                $.each(prn, function(date, note){
+                  if (new Date(date) - new Date(latest_date) > 0){
+                    latest_date = date;
+                    printnote = $(make_markdown(note['note'])).find('div, p').contents().unwrap();
+                  }
+                });
+              }
+              p.find('.bi-project-note').html(printnote);
+            }).fail(function( jqxhr, textStatus, error ) {
+              p.find('.bi-project-note').html('Error: '+error);
+            });
 
             // Update bioinfo-responsible list
             if(responsible in bioinfo_responsibles){
@@ -189,7 +200,7 @@ $(document).ready(function() {
                       }
                     });
                   }
-                  r.find('.bi-run-note > span').html(printnote);
+                  r.find('.bi-fc-runningnote').html(printnote);
                 });
               }
 
@@ -246,24 +257,46 @@ $(document).ready(function() {
     notetype = 'project';
     project = $(this).closest('div').find('.bi-project-id').text();
     $('#runningNotesModal_title').text('Project Running Notes: '+project);
+
+    // FLOW CELL RUNNING NOTES
     if($(this).hasClass('fc_runningNotes')){
       notetype = 'flowcell';
       flowcell = $(this).closest('tr').find('.bi-runid samp a').text();
       $('#runningNotesModal_title').html('Flow Cell Running Notes: <code>'+flowcell+'</code>');
+      // Prefix the new running note with the project ID
+      $('#new_note_text').val(project+': ');
+      $('#running_note_preview_body').html('<p><a href="/project/'+project+'">'+project+'</a>: </p>');
+
+    // PROJECT RUNNING NOTES
+    } else if($(this).hasClass('project_runningNotes')){
+      notetype = 'project';
+      flowcell = null;
+      $('#runningNotesModal_title').html('Project Running Notes: <code>'+project+'</code>');
+      // Clear the running note text
+      $('#new_note_text').val('');
+      $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
+    } else {
+      alert('Error: unrecognised modal type!');
+      return false;
     }
+
     // Prepare the modal
     $('.runningNotesModal_loadingSpinner').show();
     $('#running_notes_panels').hide();
     $('#running_notes_form').hide();
-    $('#new_note_text').val('');
-    $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
 
     $.when(load_running_notes()).done(function(){
       $('.runningNotesModal_loadingSpinner').hide();
       $('#running_notes_panels').show();
       $('#running_notes_form').show();
+      $('#new_note_text').focus(); // here as well, in case loading took longer than modal show
     });
   });
+  // Focus the text field for entering new running notes when modal shows
+  $('#runningNotesModal').on('shown.bs.modal', function (e) {
+    $('#new_note_text').focus();
+  })
+
 
   ///////////////////////////
   // Filters
