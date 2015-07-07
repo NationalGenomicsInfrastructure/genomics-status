@@ -37,7 +37,7 @@ function load_running_notes(wait) {
   note_url = get_note_url();
   $("#running_notes_panels").empty();
   return $.getJSON(note_url, function(data) {
-    if(data.length == 0 || typeof data.length === 'undefined'){
+    if(Object.keys(data).length == 0 || typeof data === 'undefined'){
       $('#running_notes_panels').html('<div class="well">No running notes found.</div>');
     } else {
       $.each(data, function(date, note) {
@@ -118,6 +118,10 @@ $("#running_notes_form").submit( function(e) {
             $('#new_note_text').val('');
             $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
             $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
+            // Cler the 'no running notes found' box if it's there
+            if($('#running_notes_panels').html() == '<div class="well">No running notes found.</div>'){
+              $('#running_notes_panels .well').slideUp(function(){ $(this).remove(); });
+            }
             // Create a new running note and slide it in..
             var now = new Date();
             $('<div class="panel panel-success"><div class="panel-heading">'+

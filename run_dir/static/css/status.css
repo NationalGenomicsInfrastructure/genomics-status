@@ -810,3 +810,10 @@ button.btn:disabled {
   pointer-events: all;
   cursor: not-allowed ;
 }
+
+.bi-fc-runningnote, .bi-project-note {
+  color: #777;
+  font-size: 11px;
+  line-height: 13px;
+  margin: 4px 0;
+}

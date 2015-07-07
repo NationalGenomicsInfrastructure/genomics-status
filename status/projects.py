@@ -473,7 +473,12 @@ class RunningNotesDataHandler(SafeHandler):
     def get(self, project):
         self.set_header("Content-type", "application/json")
         p = Project(lims, id=project)
-        p.get(force=True)
+        try:
+            p.get(force=True)
+        except: # Don't want to create dependency on urllib2 just to catch a HTTPError
+            raise tornado.web.HTTPError(404, reason='Project not found: {}'.format(project))
+            # self.set_status(404)
+            # self.write('{}')
         # Sorted running notes, by date
         running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
         sorted_running_notes = OrderedDict()

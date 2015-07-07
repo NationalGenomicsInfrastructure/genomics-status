@@ -51,8 +51,8 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           <h3>
             <span class="pull-right delivery-actions hide-incoming">
               <button class="deliveries-project-reset btn btn-sm btn-default" title="Reset" data-toggle="tooltip"><span class="glyphicon glyphicon-repeat"></span></button>
-              <button class="deliveries-project-delivered btn btn-sm btn-success" title="Set all samples as delivered" data-toggle="tooltip"><span class="glyphicon glyphicon-ok"></span></button>
-              <button class="deliveries-project-aborted btn btn-sm btn-danger" title="Set all samples as aborted" data-toggle="tooltip"><span class="glyphicon glyphicon-trash"></span></button>
+              <button class="deliveries-project-delivered btn btn-sm btn-default" title="Set all samples as delivered" data-toggle="tooltip"><span class="glyphicon glyphicon-ok"></span></button>
+              <button class="deliveries-project-aborted btn btn-sm btn-default" title="Set all samples as aborted" data-toggle="tooltip"><span class="glyphicon glyphicon-trash"></span></button>
               <button class="deliveries-save-project btn btn-sm btn-default" disabled>Save Changes</button>
             </span>
             <a href="../projects/" class="bi-project-id">??</a>: <span class="bi-project-name">??</span><br>
@@ -64,8 +64,8 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           <dl class="dl-horizontal hide-incoming">
             <dt>Project running note:</dt>
             <dd>
-              <span class="bi-project-note text-muted">??</span>
               <button data-toggle="modal" data-target="#runningNotesModal" class="btn btn-xs btn-default pull-right runningNotesModal_button project_runningNotes">See all</button>
+              <div class="bi-project-note">??</div>
             </dd>
           </dl>
           <table class="table table-bordered">
@@ -88,9 +88,9 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                     <div class="progress-bar progress-bar-danger" style="width: 0%" title="0 Fail" data-toggle="tooltip"></div>
                   </div>
                 </td>
-                <td class="bi-run-note hide-incoming">
-                  <span><span class="glyphicon glyphicon-refresh glyphicon-spin"></span></span>
+                <td class="hide-incoming">
                   <button data-toggle="modal" data-target="#runningNotesModal" class="btn btn-xs btn-default pull-right runningNotesModal_button fc_runningNotes">See all</button>
+                  <div class="bi-fc-runningnote"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span></div>
                 </td>
               </tr>
             </tbody>
@@ -164,6 +164,9 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
     </div>
   </div>
 </div>
+
+<!-- RUNNING NOTES HELP -->
+{% include "running_notes_help.html" %}
 
 
 <!-- Javascript -->
