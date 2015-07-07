@@ -8,6 +8,7 @@ from status.util import dthandler, SafeHandler
 
 class QuotasHandler(SafeHandler):
     """ Serves a grid of time series plots for UPPNEX storage quotas.
+    URL: /quotas
     """
     def get(self):
         t = self.application.loader.load("quota_grid.html")
@@ -17,6 +18,7 @@ class QuotasHandler(SafeHandler):
 class QuotaHandler(SafeHandler):
     """ Serves a page with a plot of a time series of used storage quota for
     a provided UPPNEX project.
+    URL: /quotas/<project_id>
     """
     def get(self, project):
         t = self.application.loader.load("quota.html")
@@ -49,14 +51,9 @@ class QuotaDataHandler(SafeHandler):
         for row in r_list:
             try:
                 if row.value:
-                    y = row.value[0]
-                    limit = row.value[1]
-                else:
-                    y = 0
-                    limit = 0
-                data.append({"x": int(time.mktime(parser.parse(date_getter(row)).timetuple())),
-                             "y": y * gb,
-                             "limit": limit * gb})
+                    data.append({"x": int(time.mktime(parser.parse(date_getter(row)).timetuple())),
+                                 "y": row.value[0] * gb,
+                                 "limit": row.value[1] * gb})
             except TypeError:
                 # Some nobackup areas were not accessible in Uppmax at some point,
                 # and that caused the usage value to be None. Skip those.
