@@ -398,6 +398,39 @@ td.progress {
 }
 
 
+/*
+=== Flowcell_sample===
+*/
+.sublane {
+  margin-bottom:50px;
+}
+.undetermined-btn{
+  margin-left: 15px;
+}
+.undetermined {
+  width: 300px;
+}
+.undetermined th, .undetermined td {
+  text-align: right;
+  padding: 5px;
+}
+.undetermined tr th:first-child, .undetermined tr td:first-child {
+  text-align:left;
+}
+.undetermined samp {
+  font-size: 1em;
+  letter-spacing: 1px;
+}
+
+.undetermined-highlight {
+  color: #a94442;
+  background-color: #f2dede;
+  border: 1px solid #ebccd1;
+}
+
+.thousand_group {
+  margin-left:4px;
+}
 
 /*
 === Quota Page ===
