@@ -50,8 +50,8 @@ class Application(tornado.web.Application):
         # This acts as a minor version number for small updates
         # It also forces javascript / CSS updates and solves caching problems
         try:
-            self.gs_globals['git_commit'] = subprocess.check_output(['git', 'rev-parse', '--short=7', 'HEAD'])
-            self.gs_globals['git_commit_full'] = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+            self.gs_globals['git_commit'] = subprocess.check_output(['git', 'rev-parse', '--short=7', 'HEAD']).strip()
+            self.gs_globals['git_commit_full'] = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
         except:
             self.gs_globals['git_commit'] = 'unknown'
             self.gs_globals['git_commit_full'] = 'unknown'
