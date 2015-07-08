@@ -182,9 +182,17 @@ marked.setOptions({
 });
 function make_project_links(s){
   // Searches for P[\d+] and replaces with a link to the project page
-  s = s.replace(/([ ,.:-])(P[\d]{3,5})([ ,.:-])/, '$1<a href="/project/$2">$2</a>$3');
-  // Searches for FlowCell IDs and replaces with a link
-  s = s.replace(/([ ,.:-])(\d{6})(_\w{5,10}_\d{3,4})(_\w{8,12}[\-\w{3,8}]?)([ ,.:-])/g, '$1<a href="/flowcells/$2$4">$2$3$4</a>$5');
+  s = s.replace(/([\W])(P[\d]{3,5})(?!\w)/g, '$1<a href="/project/$2">$2</a>');
+  
+  // Searches for FlowCell IDs and replaces with a link (Most complicated regex ever)
+  // - $1 = Captures a non-word character (javascript can't do lookbehind)
+  // - $2 = Matches flowcell date - eg 150505
+  // - $3 = Matches optional flowcell chunk - eg. _D00450_0168
+  // - $4 = Matches remaining flowcell ID - eg. _AC6H3RANXX or _AC6H3RANXX-SDVLKCH
+  // - Not capture lookahead to make sure that we're not followed by any more word characters
+  // Replaces with link to flowcell ID without internal chunk
+  // Example: 150505_D00450_0168_AC6H3RANXX links to 150505_AC6H3RANXX
+  s = s.replace(/([\W])(\d{6})(_\w{5,10}_\d{3,4})(_\w{8,12}(?:\-\w{3,8})?)(?!\w)/g, '$1<a href="/flowcells/$2$4">$2$3$4</a>');
   return s;
 }
 function check_img_sources(obj){
@@ -249,6 +257,21 @@ function auto_samples_cell (id, val){
   else {
     return '<td class="' + id + '">' + auto_format(val, true) + '</td>';
   }
+}
+
+function formatDateTime(d, printTime){
+  if(typeof d.getMonth !== 'function'){
+    d = new Date(d);
+  }
+  var dd = d.getDate();
+  var mm = d.getMonth()+1; //January is 0!
+  if(dd<10) { dd='0'+dd }
+  if(mm<10) { mm='0'+mm }
+  var returnstring = d.getFullYear()+'-'+mm+'-'+dd;
+  if(printTime){
+    returnstring += ', '+d.getHours()+':'+d.getMinutes();
+  }
+  return returnstring;
 }
 
 //Is there any standar method to do this?

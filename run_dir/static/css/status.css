@@ -308,8 +308,8 @@ td.progress {
   max-height:400px;
 }
 #com_accordion pre,
-#running_notes_panels pre,
-.running-note-panel pre {
+#running_notes_panels pre.plaintext_running_note,
+.running-note-panel pre.plaintext_running_note {
   background-color:transparent;
   border:none;
   font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
@@ -743,4 +743,110 @@ These classes are cut and pasted wholesale into here from other packages.
   border-left:1px solid white;
   margin-top: 25px;
   height: 5px;
+}
+
+
+
+/* BIOINFO ANALYSIS TAB ON PROJECT SAMPLES PAGE */
+.table-colgroup {
+  border-collapse:collapse;
+}
+.table-colgroup > tbody > tr > td, .table-colgroup > tbody > tr > th {
+  border: none;
+}
+.table-colgroup colgroup {
+  border: 1px solid #AAA;
+}
+.table-colgroup > tbody > tr.border-bottom > th, .table-colgroup > tbody > tr > th.border-bottom {
+  border-bottom: 1px solid #AAA;
+}
+.table-bioinfo-status td {
+  cursor: pointer;
+}
+.table-bioinfo-status {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -ms-user-select: none;
+}
+
+.table-bioinfo-status td, .table-bioinfo-status th {
+  text-align: center;
+  vertical-align: middle;
+}
+.table-bioinfo-status td.unknown {
+  color: #ccc;
+}
+
+.table-bioinfo-status th.bioinfo-status-runid {
+  text-align: left;
+}
+.bioinfo-status-runstate {
+  text-transform: lowercase;
+}
+.bioinfo-status-disabled td {
+  background-color: #ededed;
+  color: #ccc;
+}
+.bioinfo-status-disabled td, .bioinfo-status-disabled th,
+.bioinfo-status-disabled .input-group-addon.datepicker-today {
+  cursor: not-allowed;
+}
+.bioinfo-status-disabled.bioinfo-delivered td.bioinfo-status-runstate {
+  cursor: pointer;
+}
+
+
+.input-group.date, .narrowinput {
+  width: 120px;
+}
+.datepicker table tr td, .datepicker table tr th {
+  -webkit-border-radius: 0px;
+     -moz-border-radius: 0px;
+          border-radius: 0px;
+}
+
+
+/* Deliveries page */
+.deliveries-page .progress {
+  margin-bottom: 0;
+}
+.deliveries-filters .form-group {
+  margin-right: 20px;
+}
+
+#ongoing_deliveries .bi-run-status {
+  cursor: pointer;
+}
+.delivery {
+  border-top: 1px solid #fff;
+  border-right: 1px solid #fff;
+  border-left: 1px solid #fff;
+  border-bottom: 1px solid #dedede;
+  -webkit-border-radius: 5px 5px 0 0;
+     -moz-border-radius: 5px 5px 0 0;
+          border-radius: 5px 5px 0 0;
+  padding: 0 10px;
+  margin-bottom: 15px;
+}
+.delivery.saveme {
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+}
+.delivery-saved-status {
+  font-size: 12px;
+  margin-right: 12px;
+  color: #94ba93;
+}
+button.btn:disabled {
+  pointer-events: all;
+  cursor: not-allowed ;
+}
+
+.bi-fc-runningnote, .bi-project-note {
+  color: #777;
+  font-size: 11px;
+  line-height: 13px;
+  margin: 4px 0;
 }

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-<!-- 
+<!--
 Template file: applications.html
 URL: /applications
 Title: Application Statistics
@@ -16,7 +16,7 @@ Description: Displays pie charts with statistics for numbers of samples + projec
     <div id="date_slider"></div>
   </div>
 </div>
-<p>Projects that are not loaded from Clarity LIMS have no 'open_date' attribute in Status DB 
+<p>Projects that are not loaded from Clarity LIMS have no 'open_date' attribute in Status DB
   and will be treated as opened exactly on '2012-01-01'. Projects that do not have the
   application field filled in will be listed under 'null'.</p>
 
@@ -130,7 +130,7 @@ function load_data(start, stop) {
     for (k in s_keys) {
       trow = '<tr>';
       trow += '<td><a href="/application/'+s_keys[k]+'">'+s_keys[k]+'</a></td>';
-      trow += '<td class="text-right"><a href="/application/'+s_keys[k]+'">'+data[s_keys[k]]+'</a></td>';
+      trow += '<td class="text-right"><a href="/application/'+s_keys[k]+'">'+data.applications[s_keys[k]]+'</a></td>';
       trow += '</tr>';
       $("#application_table tbody").append(trow)
     };
@@ -144,7 +144,7 @@ function load_data(start, stop) {
     for (k in s_keys) {
       trow = '<tr>';
       trow += '<td><a href="/application/'+s_keys[k]+'">'+s_keys[k]+'</a></td>';
-      trow += '<td class="text-right"><a href="/application/'+s_keys[k]+'">'+data[s_keys[k]]+'</a></td>';
+      trow += '<td class="text-right"><a href="/application/'+s_keys[k]+'">'+data.samples[s_keys[k]]+'</a></td>';
       trow += '</tr>';
       $("#samples_table tbody").append(trow)
     };

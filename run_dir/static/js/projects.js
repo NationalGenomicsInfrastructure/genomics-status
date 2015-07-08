@@ -4,10 +4,10 @@ URL: /static/js/projects.js
 Powers /projects/[List type] - template is run_dir/design/projects.html
 */
 
-// Get pseudo-argument for this js file. projects = 'pending' | 'ongoing' | ... 
+// Get pseudo-argument for this js file. projects = 'pending' | 'ongoing' | ...
 var projects_page_type = $('#projects-js').attr('data-projects');
 
-var begin = new Date(2012,0, 1); 
+var begin = new Date(2012,0, 1);
 var end = new Date();
 
 $('#projectFilterDate').on('shown.bs.modal', function () {
@@ -28,17 +28,17 @@ $(document).ready(function() {
         max: end,
     }
 });
-  
+
   // Load the presets first (to get the table headers)
   $.when(load_presets()).done(function(){
-    // Show the page   
+    // Show the page
     $('#loading_spinner').hide();
     $('#page_content').show();
   });
-  
+
   // Prevent traditional html submit function
   $('#Search-form').submit(function(event){event.preventDefault();});
-  
+
 });
 
 
@@ -47,7 +47,7 @@ function load_table() {
   // Get the columns and write the table header
   columns = read_current_filtering();
   load_table_head(columns);
-  
+
   // Display the loading spinner in the table
   $("#project_table_body").html('<tr><td colspan="'+columns.length+'" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
 
@@ -71,7 +71,7 @@ function load_table() {
         new_close_date=$("#CloseDateSlider").dateRangeSlider("values").max.getFullYear()+'-'+('0'+($("#CloseDateSlider").dateRangeSlider("values").max.getMonth()+1)).slice(-2)+'-'+('0'+$("#CloseDateSlider").dateRangeSlider("values").max.getDate()).slice(-2);
         url=url+"&oldest_close_date="+old_close_date+"&youngest_close_date="+new_close_date;
        }
-    
+
   //Current loaded fields :
   var fields= [];
   $("#Filter .filterCheckbox").each(function() {
@@ -101,15 +101,15 @@ function load_table() {
           .html(summary_row[column_tuple[1]])
           );
       });
-      
+
       // Add links to projects
       tbl_row.find('td.project').html('<a href="/project/' + project_id + '">' + project_id + '</a>');
-        
+
       // Add links to Portal References
       var portal_name = summary_row['customer_project_reference'];
       var portal_id = summary_row['portal_id'];
       tbl_row.find('td.customer_project_reference').html('<a target="_blank" href="https://portal.scilifelab.se/genomics/node/'+portal_id + '">' + portal_name + '</a>');
-      
+
       //parse and display running notes
       var latest_note = tbl_row.find('td.latest_running_note');
       if (latest_note.text() !== '') {
@@ -120,13 +120,13 @@ function load_table() {
         latest_note.html('<div class="panel panel-default running-note-panel">' +
             '<div class="panel-heading">'+
               note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
-            '</div><div class="panel-body"><pre>'+note[ndate]['note']+'</pre></div></div>');
+            '</div><div class="panel-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
 
       }
-      $("#project_table_body").append(tbl_row); 
+      $("#project_table_body").append(tbl_row);
     });
-    load_undefined_columns(undefined_fields) 
-    
+    load_undefined_columns(undefined_fields)
+
     // Initialise the Javascript sorting now that we know the number of rows
     init_listjs(size, columns);
   });
@@ -140,7 +140,7 @@ function load_table_head(columns){
       .addClass('sort a')
       .attr('data-sort', column_tuple[1])
       .text(column_tuple[0])
-    );  
+    );
     tbl_foot.append($('<th>')
       .text(column_tuple[0])
     );
@@ -171,7 +171,7 @@ function init_listjs(no_items, columns) {
       var title = $('#project_table thead th').eq( $(this).index() ).text();
       $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
     } );
-                             
+
     if ($.fn.dataTable.isDataTable( '#project_table' )){
         var table = $('#project_table').DataTable();
     }else{
@@ -206,7 +206,7 @@ function choose_column(col){
   var column = document.getElementById(col);
   //Get all the children (checkboxes)
   var cbs = column.getElementsByTagName('input');
-  //If one of them is checked we uncheck it, if none of them are checked, 
+  //If one of them is checked we uncheck it, if none of them are checked,
   //we check them all
   var checked = false;
   for (var i = 0; i < cbs.length; i++) {
@@ -245,12 +245,12 @@ function load_presets() {
     else {
       $('#user_presets_dropdown').append('No user presets');
     }
-    
+
     // Check default checkboxes
     if (!$("#Filter :checked").length) {
       reset_default_checkboxes();
     }
-    
+
     // Otherwise, load the table
     else {
       load_table();
@@ -259,7 +259,7 @@ function load_presets() {
 }
 
 
-// Column filtering clicks 
+// Column filtering clicks
 $('body').on('click', '.search-action', function(event) {
   event.preventDefault();
   switch ($(this).data('action')) {
@@ -290,10 +290,10 @@ function reset_default_checkboxes(setdefault){
     // Sort out the button classes
     $('#default_preset_buttons button.active').removeClass('active');
     $('#resetProjectCols').addClass('active');
-    // Change the checkboxes  
+    // Change the checkboxes
     $('#Filter input').prop('checked', false); // uncheck everything
     $('#basic-columns input').prop('checked', true); // check the 'basic' columns
-  
+
     // Apply the filter
     load_table();
   }
@@ -309,7 +309,7 @@ function read_current_filtering(){
 
 function select_from_preset(preset_type, preset) {
   return $.getJSON('/api/v1/presets?presets_list=pv_presets', function (data) {
-    
+
     //First uncheck everything
     $('#default_preset_buttons button.active').removeClass('active');
     $('#Filter input:checkbox').removeAttr('checked');
@@ -322,11 +322,11 @@ function select_from_preset(preset_type, preset) {
         }
       }
       prettyobj(preset).addClass('active');
-      
+
     } else if (preset_type == "users_presets_dropdown") {
       // TODO - implement this
     }
-    
+
     // Apply the filter
     load_table();
   });
