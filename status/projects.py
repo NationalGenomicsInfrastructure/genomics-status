@@ -16,6 +16,7 @@ import logging
 
 
 from itertools import ifilter
+from collections import defaultdict
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
 
@@ -116,7 +117,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         return row
 
-    def list_projects(self, filter_projects='all', oldest_date='2010-01-01', youngest_date=datetime.datetime.now().strftime("%Y-%m-%d")):
+    def list_projects(self, filter_projects='all', oldest_date='2012-01-01', youngest_date=datetime.datetime.now().strftime("%Y-%m-%d")):
         projects = OrderedDict()
 
         oldest_open_date=self.get_argument('oldest_open_date', oldest_date)
@@ -128,7 +129,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         summary_view = self.application.projects_db.view("project/summary", descending=True)
         if filter_projects == 'closed':
             summary_view = summary_view[["closed",'Z']:["closed",'']]
-        elif filter_projects not in ['all', 'aborted'] :
+        elif filter_projects not in ['all', 'aborted'] and filter_projects[:1] != 'P':
             summary_view = summary_view[["open",'Z']:["open",'']]
 
 
@@ -138,19 +139,24 @@ class ProjectsBaseDataHandler(SafeHandler):
 
 
         filtered_projects = OrderedDict()
+        # Specific list of projects given
+        if filter_projects[:1] == 'P':
+            fprojs = filter_projects.split(',')
+            for p_id, p_info in projects.iteritems():
+                filtered_projects[p_id] = p_info
+
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
-        if not filter_projects == 'all':
-            prefiltered_projects= OrderedDict()
+        elif not filter_projects == 'all':
+            prefiltered_projects = OrderedDict()
             for p_id, p_info in projects.iteritems():
-
                 if 'aborted' not in p_info:
                     prefiltered_projects[p_id] = p_info
                 else:
                     if filter_projects == 'aborted':
-                        filtered_projects[p_id]=p_info
+                        filtered_projects[p_id] = p_info
         else:
-            filtered_projects=projects
+            filtered_projects = projects
 
         if filter_projects == 'pending':
             for p_id, p_info in prefiltered_projects.iteritems():
@@ -182,16 +188,17 @@ class ProjectsBaseDataHandler(SafeHandler):
                 if 'pending_reviews' in p_info:
                     filtered_projects[p_id] = p_info
 
-
-        final_projects=self.filter_per_date(filtered_projects, youngest_open_date, oldest_open_date, youngest_queue_date, oldest_queue_date, youngest_close_date, oldest_close_date)
+        final_projects = self.filter_per_date(filtered_projects, youngest_open_date, oldest_open_date, youngest_queue_date, oldest_queue_date, youngest_close_date, oldest_close_date)
 
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
             if row.key[0] in final_projects:
                 for date_type, date in row.value.iteritems():
                     final_projects[row.key[0]][date_type] = date
+
         return final_projects
-    def filter_per_date(self,plist, yod, ood, yqd, oqd, ycd, ocd):
+
+    def filter_per_date(self, plist, yod, ood, yqd, oqd, ycd, ocd):
         default_open_date='2012-01-01'
         default_close_date=datetime.datetime.now().strftime("%Y-%m-%d")
         """ yod : youngest open date
@@ -200,16 +207,16 @@ class ProjectsBaseDataHandler(SafeHandler):
             oqd : oldest queue date
             ycd : youngest close date
             ocd : oldest close date"""
-        filtered_projects=OrderedDict()
+        filtered_projects = OrderedDict()
         for p_id, p_info in plist.iteritems():
             if ycd != default_close_date or ocd != default_open_date:
-                if 'close_date' not in p_info or (p_info['close_date']>ycd or p_info['close_date']<ocd):
+                if 'close_date' not in p_info or (p_info['close_date'] > ycd or p_info['close_date'] < ocd):
                     continue
             if yqd != default_close_date or oqd != default_open_date:
-                if 'queued' not in p_info or (p_info['queued']>yqd or p_info['queued']<oqd):
+                if 'queued' not in p_info or (p_info['queued'] > yqd or p_info['queued'] < oqd):
                     continue
             if yod != default_close_date or ood != default_open_date:
-                if 'open_date' not in p_info or (p_info['open_date']>yod or p_info['open_date']<ood):
+                if 'open_date' not in p_info or (p_info['open_date'] > yod or p_info['open_date'] < ood):
                     continue
             filtered_projects[p_id]=p_info
 
@@ -236,7 +243,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         projects = []
         summary_view = self.application.projects_db.view("project/summary", descending=True)
         for row in summary_view:
-            if search_string.lower() in row.value['project_name'].lower() or search_string.lower() in row.key[1]:
+            if search_string.lower() in row.value['project_name'].lower() or search_string.lower() in row.key[1].lower():
                 project = {
                     "url": '/project/'+row.key[1],
                     "name": row.value['project_name']
@@ -366,7 +373,7 @@ class ProjectSamplesDataHandler(SafeHandler):
         metrics_view=self.application.samples_db.view('sample/INS_metrics')
         if len(metrics_view[metrics_id].rows)>1:
             application_log.warn("More than one metrics doc found for id {0}".format(metrics_id))
-        
+
         for row in metrics_view[metrics_id]:
             data=row.value
 
@@ -459,7 +466,12 @@ class RunningNotesDataHandler(SafeHandler):
     def get(self, project):
         self.set_header("Content-type", "application/json")
         p = Project(lims, id=project)
-        p.get(force=True)
+        try:
+            p.get(force=True)
+        except: # Don't want to create dependency on urllib2 just to catch a HTTPError
+            raise tornado.web.HTTPError(404, reason='Project not found: {}'.format(project))
+            # self.set_status(404)
+            # self.write('{}')
         # Sorted running notes, by date
         running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
         sorted_running_notes = OrderedDict()
@@ -663,3 +675,101 @@ class CharonProjectHandler(SafeHandler):
         else:
             self.set_status(400)
             self.finish('<html><body>There was a problem connecting to charon, please try it again later. {}</body></html>'.format(r.reason))
+
+
+class BioinfoAnalysisHandler(SafeHandler):
+    """queries and posts about bioinfo analysis
+    URL: /api/v1/bioinfo_analysis/
+    URL: /api/v1/bioinfo_analysis/([^/]*)
+    URL: /api/v1/bioinfo_analysis/<pid>?dump_all=true"""
+
+
+
+
+    def get_singleproject(self, project_id):
+        return_obj = {}
+        v = self.application.bioinfo_db.view("latest_data/project_id")
+        for row in v[project_id]:
+            return_obj.update(row.value)
+        return return_obj
+
+    def get_all_project_status(self, status="any"):
+        return_obj = {}
+        if status == "Ongoing":
+            v = self.application.bioinfo_db.view("general/ongoing_projectids", group = True)
+        elif status == "Incoming":
+            v = self.application.bioinfo_db.view("general/incoming_projectids", group = True)
+        else:
+            v = self.application.bioinfo_db.view("general/projectids", group = True)
+
+        status_projects = set()
+        for row in v:
+            status_projects.add(row.key)
+        v = self.application.bioinfo_db.view("latest_data/project_id")
+        for row in v:
+            if row.key in status_projects:
+                try:
+                    return_obj[row.key].update(row.value)
+                except:
+                    return_obj[row.key] = row.value
+        return return_obj
+
+    def get_singleproject_dump(self, project_id):
+        return_obj = {}
+        v = self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
+        for row in v[[project_id, '']:[project_id, 'ZZZ']]:
+            return_obj[row.key[1]] = row.value
+        return return_obj
+
+
+    def get(self, project_id):
+        return_obj = {}
+        if project_id:
+            if self.get_argument('history', None):
+                return_obj = self.get_singleproject_dump(project_id)
+            else:
+                return_obj = self.get_singleproject(project_id)
+        else:
+            if self.get_argument('status', None):
+                return_obj = self.get_all_project_status(self.get_argument('status'))
+            else:
+                return_obj = self.get_all_project_status("Ongoing")
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(return_obj))
+
+    def post(self, project_id):
+        v=self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
+        user = self.get_secure_cookie('user')
+        data=json.loads(self.request.body)
+        for run_id in data:
+            for row in v[[project_id, run_id]]:
+                # if there's more than one, that is a problem
+                original_doc = row.value
+
+            timestamp=datetime.datetime.now().isoformat()
+            try:
+                original_doc['values'][timestamp] = data[run_id]['values']
+                original_doc['values'][timestamp]['user'] = user
+                original_doc['status'] = data[run_id]['status']
+            except:
+                self.set_status(400)
+
+            self.application.bioinfo_db.save(original_doc)
+
+
+        self.set_status(200)
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(original_doc))
+
+
+class DeliveriesPageHandler(SafeHandler):
+        """ Serves a page which lists the bioinformatics delivery statuses of active projects
+        URL: /deliveries/)
+        """
+        def get(self):
+            t = self.application.loader.load("deliveries.html")
+            self.write(t.generate(gs_globals=self.application.gs_globals,
+                                      user=self.get_current_user_name(),
+                                      prettify = prettify_css_names
+                                      ))
