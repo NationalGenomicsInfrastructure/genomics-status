@@ -244,7 +244,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         projects = []
         summary_view = self.application.projects_db.view("project/summary", descending=True)
         for row in summary_view:
-            if search_string.lower() in row.value['project_name'].lower() or search_string.lower() in row.key[1]:
+            if search_string.lower() in row.value['project_name'].lower() or search_string.lower() in row.key[1].lower():
                 project = {
                     "url": '/project/'+row.key[1],
                     "name": row.value['project_name']
@@ -286,12 +286,6 @@ class ProjectsSearchHandler(ProjectsBaseDataHandler):
     Loaded through /api/v1/project_search/([^/]*)$
     """
     def get(self, search_string):
-        # Searching for P1234 doesn't work, but 1234 does.
-        # If I'm honest, I don't know why. But let's just strip the P
-        # and get on with enjoying life.
-        if search_string[0] == 'P' and search_string[1:].isdigit():
-            search_string = search_string[1:]
-        print ("SEARCH STRING: {}".format(search_string))
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.search_project_names(search_string)))
 
