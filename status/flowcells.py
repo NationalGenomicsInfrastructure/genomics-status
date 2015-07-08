@@ -234,7 +234,10 @@ class FlowcellNotesDataHandler(SafeHandler):
             self.write('{}')
         else:
             # Sorted running notes, by date
-            running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
+            try:
+                running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
+            except (KeyError) as e:
+                running_notes = {}
             sorted_running_notes = OrderedDict()
             for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0], reverse=True):
                 sorted_running_notes[k] = v
@@ -276,9 +279,12 @@ class FlowcellLinksDataHandler(SafeHandler):
         except (KeyError, IndexError) as e:
             self.write('{}')
         else:
-            links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
+            try:
+                links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
+            except (KeyError) as e:
+                links = {}
 
-            #Sort by descending date, then hopefully have deviations on top
+            # Sort by descending date, then hopefully have deviations on top
             sorted_links = OrderedDict()
             for k, v in sorted(links.iteritems(), key=lambda t: t[0], reverse=True):
                 sorted_links[k] = v
@@ -323,10 +329,7 @@ def get_container_from_id(flowcell):
         #Miseq
         proc=lims.get_processes(type='MiSeq Run (MiSeq) 4.0',udf={'Flow Cell ID': flowcell[7:]})[0]
         c = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
-    else:    
+    else:
         #Hiseq
         c = lims.get_containers(name=flowcell[8:])[0]
     return c
-
-
-

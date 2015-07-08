@@ -50,8 +50,8 @@ class Application(tornado.web.Application):
         # This acts as a minor version number for small updates
         # It also forces javascript / CSS updates and solves caching problems
         try:
-            self.gs_globals['git_commit'] = subprocess.check_output(['git', 'rev-parse', '--short=7', 'HEAD'])
-            self.gs_globals['git_commit_full'] = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+            self.gs_globals['git_commit'] = subprocess.check_output(['git', 'rev-parse', '--short=7', 'HEAD']).strip()
+            self.gs_globals['git_commit_full'] = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
         except:
             self.gs_globals['git_commit'] = 'unknown'
             self.gs_globals['git_commit_full'] = 'unknown'
@@ -64,6 +64,8 @@ class Application(tornado.web.Application):
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
+            ("/api/v1/bioinfo_analysis", BioinfoAnalysisHandler),
+            ("/api/v1/bioinfo_analysis/([^/]*)$", BioinfoAnalysisHandler),
             ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
             ("/api/v1/charon_summary/([^/]*)$",CharonProjectHandler ),
@@ -144,6 +146,7 @@ class Application(tornado.web.Application):
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),
+            ("/deliveries", DeliveriesPageHandler),
             ("/clusters_per_lane", ClustersPerLaneHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
@@ -177,6 +180,7 @@ class Application(tornado.web.Application):
         couch = Server(settings.get("couch_server", None))
         if couch:
             self.uppmax_db = couch["uppmax"]
+            self.bioinfo_db = couch["bioinfo_analysis"]
             self.samples_db = couch["samples"]
             self.projects_db = couch["projects"]
             self.flowcells_db = couch["flowcells"]
@@ -184,17 +188,18 @@ class Application(tornado.web.Application):
             self.gs_users_db = couch["gs_users"]
             self.cronjobs_db = couch["cronjobs"]
             self.suggestions_db = couch["suggestion_box"]
-            self.worksets_db=couch["worksets"]
+            self.worksets_db = couch["worksets"]
         else:
             print settings.get("couch_server", None)
             raise IOError("Cannot connect to couchdb");
-        #Load columns and presets from genstat-defaults user in StatusDB
+
+        # Load columns and presets from genstat-defaults user in StatusDB
         genstat_id = ''
         for u in self.gs_users_db.view('authorized/users'):
             if u.get('key') == 'genstat-defaults':
                 genstat_id = u.get('value')
 
-        #It's important to check that this user exists!
+        # It's important to check that this user exists!
         if not genstat_id:
             raise RuntimeError("genstat-defaults user not found on {}, please " \
                                "make sure that the user is abailable with the " \
@@ -258,6 +263,8 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/base.html")
             tornado.autoreload.watch("design/base_new.html")
             tornado.autoreload.watch("design/cronjobs.html")
+            tornado.autoreload.watch("design/deliveries.html")
+            tornado.autoreload.watch("design/error_page.html")
             tornado.autoreload.watch("design/expected.html")
             tornado.autoreload.watch("design/flowcell_samples.html")
             tornado.autoreload.watch("design/flowcells.html")
