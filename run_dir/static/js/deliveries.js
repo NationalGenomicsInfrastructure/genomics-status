@@ -74,8 +74,35 @@ $(document).ready(function() {
             var runs = data[pid];
             var p = project_template.clone();
 
+            // Check that we were able to get this project data
             if(typeof pdata[pid] === 'undefined'){
               $(d['container_id']).append('<h3><a href="project/'+pid+'" class="bi-project-id">'+pid+'</a></h3><div class="alert alert-danger"><strong>Error</strong> - could not find project information for '+pid+'</div>');
+              return true;
+            }
+
+            // Check the status of this project
+            var open_date = pdata[pid]["open_date"];
+            var queue_date = pdata[pid]["queued"];
+            var close_date = pdata[pid]["close_date"];
+            var project_status = undefined;
+            if (pdata[pid]["aborted"]){
+              project_status = "Aborted";
+            } else {
+              if (!open_date && pdata[pid]["source"] == 'lims'){  project_status = "Pending"; }
+              else if (open_date && !queue_date) {                project_status = "Reception Control"; }
+              else if (queue_date && !close_date) {               project_status = "Ongoing"; }
+              else {                                              project_status = "Closed"; }
+            }
+            // Only allow ongoing projects to continue
+            if(project_status != 'Ongoing'){
+              $(d['container_id']).append(
+                '<h3><a href="project/'+pid+'" class="bi-project-id">'+pid+'</a>: '+
+                '<span class="bi-project-name">'+pdata[pid]['project_name']+'</span><br>'+
+                '<small><span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">'+pdata[pid]['application']+'</span> &nbsp '+
+                '<span class="bi-project-facility label label-primary" data-toggle="tooltip" data-delay="500" title="Project Facility">'+pdata[pid]['type']+'</span> &nbsp; '+
+                '<span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">'+pdata[pid]['bioinfo_responsible']+'</span></small></h3>'+
+                '<div class="alert alert-danger"><strong>Error</strong> - Project is not ongoing. '+pid+' is '+project_status+'</div>'
+              );
               return true;
             }
 
@@ -285,11 +312,14 @@ $(document).ready(function() {
     $('#running_notes_panels').hide();
     $('#running_notes_form').hide();
 
-    $.when(load_running_notes()).done(function(){
+    $.when(load_running_notes()).then(function(){
       $('.runningNotesModal_loadingSpinner').hide();
       $('#running_notes_panels').show();
       $('#running_notes_form').show();
       $('#new_note_text').focus(); // here as well, in case loading took longer than modal show
+    }, function(){ // Failure
+      $('.runningNotesModal_loadingSpinner').hide();
+      $('#running_notes_panels').show();
     });
   });
   // Focus the text field for entering new running notes when modal shows

@@ -143,8 +143,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         if filter_projects[:1] == 'P':
             fprojs = filter_projects.split(',')
             for p_id, p_info in projects.iteritems():
-                if p_id in fprojs:
-                    filtered_projects[p_id] = p_info
+                filtered_projects[p_id] = p_info
 
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
@@ -681,7 +680,8 @@ class CharonProjectHandler(SafeHandler):
 class BioinfoAnalysisHandler(SafeHandler):
     """queries and posts about bioinfo analysis
     URL: /api/v1/bioinfo_analysis/
-    URL: /api/v1/bioinfo_analysis/([^/]*)"""
+    URL: /api/v1/bioinfo_analysis/([^/]*)
+    URL: /api/v1/bioinfo_analysis/<pid>?dump_all=true"""
 
 
 
@@ -714,16 +714,26 @@ class BioinfoAnalysisHandler(SafeHandler):
                     return_obj[row.key] = row.value
         return return_obj
 
+    def get_singleproject_dump(self, project_id):
+        return_obj = {}
+        v = self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
+        for row in v[[project_id, '']:[project_id, 'ZZZ']]:
+            return_obj[row.key[1]] = row.value
+        return return_obj
+
 
     def get(self, project_id):
         return_obj = {}
         if project_id:
-            return_obj=self.get_singleproject(project_id)
+            if self.get_argument('history', None):
+                return_obj = self.get_singleproject_dump(project_id)
+            else:
+                return_obj = self.get_singleproject(project_id)
         else:
             if self.get_argument('status', None):
-                return_obj=self.get_all_project_status(self.get_argument('status'))
+                return_obj = self.get_all_project_status(self.get_argument('status'))
             else:
-                return_obj=self.get_all_project_status("Ongoing")
+                return_obj = self.get_all_project_status("Ongoing")
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(return_obj))
