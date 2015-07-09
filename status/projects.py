@@ -143,7 +143,8 @@ class ProjectsBaseDataHandler(SafeHandler):
         if filter_projects[:1] == 'P':
             fprojs = filter_projects.split(',')
             for p_id, p_info in projects.iteritems():
-                filtered_projects[p_id] = p_info
+                if p_id in fprojs:
+                    filtered_projects[p_id] = p_info
 
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
