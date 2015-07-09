@@ -143,7 +143,8 @@ class ProjectsBaseDataHandler(SafeHandler):
         if filter_projects[:1] == 'P':
             fprojs = filter_projects.split(',')
             for p_id, p_info in projects.iteritems():
-                filtered_projects[p_id] = p_info
+                if p_id in fprojs:
+                    filtered_projects[p_id] = p_info
 
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
@@ -739,9 +740,10 @@ class BioinfoAnalysisHandler(SafeHandler):
         self.write(json.dumps(return_obj))
 
     def post(self, project_id):
-        v=self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
+        v = self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
         user = self.get_secure_cookie('user')
-        data=json.loads(self.request.body)
+        data = json.loads(self.request.body)
+        saved_data = {}
         for run_id in data:
             for row in v[[project_id, run_id]]:
                 # if there's more than one, that is a problem
@@ -752,15 +754,18 @@ class BioinfoAnalysisHandler(SafeHandler):
                 original_doc['values'][timestamp] = data[run_id]['values']
                 original_doc['values'][timestamp]['user'] = user
                 original_doc['status'] = data[run_id]['status']
+                # Add the status to the values array as well. This isn't used
+                # it's only for history tracking. Denis doesn't like it.
+                original_doc['values'][timestamp]['status'] = data[run_id]['status']
             except:
                 self.set_status(400)
 
             self.application.bioinfo_db.save(original_doc)
-
+            saved_data[run_id] = original_doc
 
         self.set_status(200)
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(original_doc))
+        self.write(json.dumps(saved_data))
 
 
 class DeliveriesPageHandler(SafeHandler):
