@@ -240,12 +240,14 @@ $(document).ready(function() {
               p.find('.hide-incoming').remove();
             }
 
-            // Add everything to the DOM and show
+            // Add everything to the DOM
             $(d['container_id']).append(p);
-            $(d['container_id']+' .loading_spinner').hide();
-            $(d['container_id']+' .delivery-filters').show();
 
           }); // loop through runs
+
+          // Show the page
+          $(d['container_id']+' .loading_spinner').hide();
+          $(d['container_id']+' .delivery-filters').show();
 
           // Update the filter dropdowns
           var res_arr = Object.keys(bioinfo_responsibles).sort();
