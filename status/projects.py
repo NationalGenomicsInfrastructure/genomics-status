@@ -751,14 +751,18 @@ class BioinfoAnalysisHandler(SafeHandler):
 
             timestamp=datetime.datetime.now().isoformat()
             try:
+                if 'values'	not in original_doc:
+                    original_doc['values'] = {}
                 original_doc['values'][timestamp] = data[run_id]['values']
                 original_doc['values'][timestamp]['user'] = user
                 original_doc['status'] = data[run_id]['status']
                 # Add the status to the values array as well. This isn't used
                 # it's only for history tracking. Denis doesn't like it.
                 original_doc['values'][timestamp]['status'] = data[run_id]['status']
-            except:
+            except Exception, err:
                 self.set_status(400)
+                self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
+                return None
 
             self.application.bioinfo_db.save(original_doc)
             saved_data[run_id] = original_doc
