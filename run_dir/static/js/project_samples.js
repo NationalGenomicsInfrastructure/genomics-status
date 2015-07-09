@@ -278,7 +278,7 @@ function load_undefined_info(){
 }
 
 function load_all_udfs(){
-  $.getJSON("/api/v1/project_summary/" + project, function (data) {
+  return $.getJSON("/api/v1/project_summary/" + project, function (data) {
     $('#loading_spinner').hide();
     $('#page_content').show();
 
@@ -312,25 +312,20 @@ function load_all_udfs(){
         var aborted = data["aborted"];
         var source = data["source"];
         if (aborted){
-          $("#project_status_alert").text("Aborted");
-          $("#project_status_alert").addClass("label-danger");
+          $("#project_status_alert").addClass("label-danger").text("Aborted");
         }
         else {
           if (!open_date && source == 'lims'){
-            $("#project_status_alert").text("Pending");
-            $("#project_status_alert").addClass("label-info");
+            $("#project_status_alert").addClass("label-info").text("Pending");
           }
           else if (open_date && !queue_date) {
-            $("#project_status_alert").text("Reception Control");
-            $("#project_status_alert").addClass("label-default");
+            $("#project_status_alert").addClass("label-default").text("Reception Control");
           }
           else if (queue_date && !close_date) {
-            $("#project_status_alert").text("Ongoing");
-            $("#project_status_alert").addClass("label-info");
+            $("#project_status_alert").addClass("label-info").text("Ongoing");
           }
           else {
-            $("#project_status_alert").text("Closed");
-            $("#project_status_alert").addClass("label-success");
+            $("#project_status_alert").addClass("label-success").text("Closed");
           }
           // Hide the aborted dates
           $('.aborted-dates').hide();
@@ -1041,10 +1036,17 @@ function load_bioinfo_table() {
     if(Object.keys(data).length > 0){
       $('#bioinfo-noruns').hide();
     } else {
-      $('#bioinfo-download-history').hide();
+      $('#bioinfo-noruns').html('<td colspan="26" class="text-muted">No runs found</td>');
+      $('#bioinfo-show-history').hide();
     }
-    var templaterow = $('#bioinfo-template-row').attr('id', '').show().detach();
 
+    // Build the history dump
+    $.getJSON(bioinfo_api_url+'?history=true', function (data_dump) {
+      $('#bioinfo-history-dump').text(JSON.stringify(data_dump, null, '  '));
+    });
+
+    // Build the table
+    var templaterow = $('#bioinfo-template-row').attr('id', '').show().detach();
     $.each(data, function(key, vals){
       // Start by copying the template row
       var tr = templaterow.clone();
@@ -1059,7 +1061,11 @@ function load_bioinfo_table() {
       }
 
       // User and date
-      tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Last updated by '+vals.user+'<br>'+formatDateTime(vals.timestamp, true)+'"></span>');
+      try {
+        tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Last updated by '+vals.user+'<br>'+formatDateTime(vals.timestamp, true)+'"></span>');
+      } catch(e){
+        tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="No last update information found"></span>');
+      }
 
       // UPPNEX id confirmed
       if(vals.uppnex_confirmed == 'true'){
@@ -1093,7 +1099,7 @@ function load_bioinfo_table() {
     // Disable everything if the project is closed
     if($('#project_status_alert').text() == 'Closed'){
       forceDisabledState = true;
-      $('#bioinfo-status-saveButton').remove();
+      $('.bioinfo-savespan').html('<p class="text-muted"><em>Project is closed - not editable</em></p>');
     }
     // Set rows as disabled if they're not ready yet
     var editable = 0;
@@ -1299,8 +1305,8 @@ $(document).ready(function() {
         console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(runs));
       },
       success: function(data, textStatus, xhr) {
-        alert('Saved!');
-        console.log(runs);
+        var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="glyphicon glyphicon-ok"></span></span>');
+        success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
         $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
       }
     });
@@ -1308,8 +1314,8 @@ $(document).ready(function() {
   });
 
   // Download history
-  $('#bioinfo-download-history').click(function(){
-    alert('Not yet implemented, sorry.');
+  $('#bioinfo-show-history').click(function(){
+    $('#bioinfo-history-dump').slideToggle();
   });
 
 });

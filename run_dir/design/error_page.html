@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-
 <!--
 Template file: error_page.html
-URL: /<any unrecognised path>
-Title: 404 Template
-Description: Defaut response page for an 404 Page Not Found error
+URL: /<any>
+Title: Error Template
+Description: Defaut response page for an error - usually 404 (page not found) or 500 (internal server error)
+NOTE: Returns JSON if an API call, this template if not.
 -->
 
 {% block stuff %}
@@ -17,5 +17,10 @@ Description: Defaut response page for an 404 Page Not Found error
   you were trying to access, using the <a href="/suggestion_box">Suggestion Box</a>
   page.
 </div>
+
+<p>For debugging purposes, we've tried to grab the error that triggered this page for you:</p>
+<pre class="well text-muted"><small>{{ gs_globals['exception_fulltext'] }}</small></pre>
+
+<h1></h1>
 
 {% end %}

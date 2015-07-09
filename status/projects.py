@@ -129,7 +129,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         summary_view = self.application.projects_db.view("project/summary", descending=True)
         if filter_projects == 'closed':
             summary_view = summary_view[["closed",'Z']:["closed",'']]
-        elif filter_projects not in ['all', 'aborted'] :
+        elif filter_projects not in ['all', 'aborted'] and filter_projects[:1] != 'P':
             summary_view = summary_view[["open",'Z']:["open",'']]
 
 
@@ -139,19 +139,24 @@ class ProjectsBaseDataHandler(SafeHandler):
 
 
         filtered_projects = OrderedDict()
+        # Specific list of projects given
+        if filter_projects[:1] == 'P':
+            fprojs = filter_projects.split(',')
+            for p_id, p_info in projects.iteritems():
+                filtered_projects[p_id] = p_info
+
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
-        if not filter_projects == 'all':
-            prefiltered_projects= OrderedDict()
+        elif not filter_projects == 'all':
+            prefiltered_projects = OrderedDict()
             for p_id, p_info in projects.iteritems():
-
                 if 'aborted' not in p_info:
                     prefiltered_projects[p_id] = p_info
                 else:
                     if filter_projects == 'aborted':
-                        filtered_projects[p_id]=p_info
+                        filtered_projects[p_id] = p_info
         else:
-            filtered_projects=projects
+            filtered_projects = projects
 
         if filter_projects == 'pending':
             for p_id, p_info in prefiltered_projects.iteritems():
@@ -181,12 +186,6 @@ class ProjectsBaseDataHandler(SafeHandler):
         elif filter_projects == "pending_review":
             for p_id, p_info in prefiltered_projects.iteritems():
                 if 'pending_reviews' in p_info:
-                    filtered_projects[p_id] = p_info
-
-        elif filter_projects[:1] == 'P':
-            fprojs = filter_projects.split(',')
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if p_id in fprojs:
                     filtered_projects[p_id] = p_info
 
         final_projects = self.filter_per_date(filtered_projects, youngest_open_date, oldest_open_date, youngest_queue_date, oldest_queue_date, youngest_close_date, oldest_close_date)
@@ -244,7 +243,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         projects = []
         summary_view = self.application.projects_db.view("project/summary", descending=True)
         for row in summary_view:
-            if search_string.lower() in row.value['project_name'].lower() or search_string.lower() in row.key[1]:
+            if search_string.lower() in row.value['project_name'].lower() or search_string.lower() in row.key[1].lower():
                 project = {
                     "url": '/project/'+row.key[1],
                     "name": row.value['project_name']
@@ -467,7 +466,12 @@ class RunningNotesDataHandler(SafeHandler):
     def get(self, project):
         self.set_header("Content-type", "application/json")
         p = Project(lims, id=project)
-        p.get(force=True)
+        try:
+            p.get(force=True)
+        except: # Don't want to create dependency on urllib2 just to catch a HTTPError
+            raise tornado.web.HTTPError(404, reason='Project not found: {}'.format(project))
+            # self.set_status(404)
+            # self.write('{}')
         # Sorted running notes, by date
         running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
         sorted_running_notes = OrderedDict()
@@ -676,7 +680,8 @@ class CharonProjectHandler(SafeHandler):
 class BioinfoAnalysisHandler(SafeHandler):
     """queries and posts about bioinfo analysis
     URL: /api/v1/bioinfo_analysis/
-    URL: /api/v1/bioinfo_analysis/([^/]*)"""
+    URL: /api/v1/bioinfo_analysis/([^/]*)
+    URL: /api/v1/bioinfo_analysis/<pid>?dump_all=true"""
 
 
 
@@ -709,16 +714,26 @@ class BioinfoAnalysisHandler(SafeHandler):
                     return_obj[row.key] = row.value
         return return_obj
 
+    def get_singleproject_dump(self, project_id):
+        return_obj = {}
+        v = self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
+        for row in v[[project_id, '']:[project_id, 'ZZZ']]:
+            return_obj[row.key[1]] = row.value
+        return return_obj
+
 
     def get(self, project_id):
         return_obj = {}
         if project_id:
-            return_obj=self.get_singleproject(project_id)
+            if self.get_argument('history', None):
+                return_obj = self.get_singleproject_dump(project_id)
+            else:
+                return_obj = self.get_singleproject(project_id)
         else:
             if self.get_argument('status', None):
-                return_obj=self.get_all_project_status(self.get_argument('status'))
+                return_obj = self.get_all_project_status(self.get_argument('status'))
             else:
-                return_obj=self.get_all_project_status("Ongoing")
+                return_obj = self.get_all_project_status("Ongoing")
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(return_obj))

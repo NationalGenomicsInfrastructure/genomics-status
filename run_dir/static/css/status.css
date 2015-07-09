@@ -308,8 +308,8 @@ td.progress {
   max-height:400px;
 }
 #com_accordion pre,
-#running_notes_panels pre,
-.running-note-panel pre {
+#running_notes_panels pre.plaintext_running_note,
+.running-note-panel pre.plaintext_running_note {
   background-color:transparent;
   border:none;
   font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
@@ -398,6 +398,39 @@ td.progress {
 }
 
 
+/*
+=== Flowcell_sample===
+*/
+.sublane {
+  margin-bottom:50px;
+}
+.undetermined-btn{
+  margin-left: 15px;
+}
+.undetermined {
+  width: 300px;
+}
+.undetermined th, .undetermined td {
+  text-align: right;
+  padding: 5px;
+}
+.undetermined tr th:first-child, .undetermined tr td:first-child {
+  text-align:left;
+}
+.undetermined samp {
+  font-size: 1em;
+  letter-spacing: 1px;
+}
+
+.undetermined-highlight {
+  color: #a94442;
+  background-color: #f2dede;
+  border: 1px solid #ebccd1;
+}
+
+.thousand_group {
+  margin-left:4px;
+}
 
 /*
 === Quota Page ===
@@ -778,4 +811,42 @@ These classes are cut and pasted wholesale into here from other packages.
 /* Deliveries page */
 .deliveries-page .progress {
   margin-bottom: 0;
+}
+.deliveries-filters .form-group {
+  margin-right: 20px;
+}
+
+#ongoing_deliveries .bi-run-status {
+  cursor: pointer;
+}
+.delivery {
+  border-top: 1px solid #fff;
+  border-right: 1px solid #fff;
+  border-left: 1px solid #fff;
+  border-bottom: 1px solid #dedede;
+  -webkit-border-radius: 5px 5px 0 0;
+     -moz-border-radius: 5px 5px 0 0;
+          border-radius: 5px 5px 0 0;
+  padding: 0 10px;
+  margin-bottom: 15px;
+}
+.delivery.saveme {
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+}
+.delivery-saved-status {
+  font-size: 12px;
+  margin-right: 12px;
+  color: #94ba93;
+}
+button.btn:disabled {
+  pointer-events: all;
+  cursor: not-allowed ;
+}
+
+.bi-fc-runningnote, .bi-project-note {
+  color: #777;
+  font-size: 11px;
+  line-height: 13px;
+  margin: 4px 0;
 }
