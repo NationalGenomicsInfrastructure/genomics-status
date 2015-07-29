@@ -20,7 +20,7 @@ function upload_sample_udfs(process_id, sample_list){
             }); 
         }); 
         clean_object(final_obj)
-        do_something('Sample', sl[s_id], final_obj)
+        update_lims_entity('Sample', sl[s_id], final_obj)
         
     }
 }
@@ -35,11 +35,11 @@ function upload_project_summary_udfs(process_id){
         }); 
     }); 
     clean_object(final_obj)
-    stat=do_something('Process', process_id, final_obj)
+    update_lims_entity('Process', process_id, final_obj)
 }
 
 
-function do_something(type, id, obj){
+function update_lims_entity(type, id, obj){
     $.ajax({
       type: 'POST',
       url: "/api/v1/project_summary_update/"+type+"/"+id,
