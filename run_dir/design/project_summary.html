@@ -9,7 +9,7 @@ Description: Shows a table with all project summaries.
 
 {% block stuff %}
 
-<h1 id="{{ project_id }}" class="project_page_heading"><span id="page_title">Project Summary</span> <small>project summary for {{ project_id }}</small></h1>
+<h1 id="{{ project_id }}" class="project_page_heading"><span id="page_title">Project Summary</span> <small>project summary for <a href="/project/{{ project_id }}">{{ project_id }}</a></small></h1>
 
 <div id="page_content" >
 <div id="summary-list">
