@@ -103,7 +103,6 @@ $("#running_notes_form").submit( function(e) {
         console.log(errorThrown);
       },
       success: function(data, textStatus, xhr) {
-        $('#save_note_button').removeClass('disabled').text('Submit Running Note');
         // Manually check whether the running note has saved - LIMS API always returns success
         note_url=get_note_url()
         $.getJSON(note_url, function(newdata) {
@@ -114,6 +113,8 @@ $("#running_notes_form").submit( function(e) {
             }
           });
           if(newNote){
+            // Enable the submit button again
+            $('#save_note_button').removeClass('disabled').text('Submit Running Note');
             // Clear the text box
             $('#new_note_text').val('');
             $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
@@ -132,6 +133,7 @@ $("#running_notes_form").submit( function(e) {
             check_img_sources($('#running_notes_panels img'));
           } else {
             alert('Error - LIMS did not save your running note.');
+            $('#save_note_button').removeClass('disabled').text('Submit Running Note');
           }
         });
       }
