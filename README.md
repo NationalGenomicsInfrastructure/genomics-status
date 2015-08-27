@@ -61,6 +61,15 @@ trello:
     api_key: <trello_api_key>
     api_secret: <trello_api_secret>
     token: <trello_token>
+
+# Uppmax projects ids to display storage usage on the main page
+uppmax_projects: 
+  - a2012043
+  - a2012043_nobackup
+  - a2015205
+  - a2015205_nobackup
+  - b2013064
+  - b2013064_nobackup
 ```
 
 `~/.genologicsrc`:

@@ -1,0 +1,24 @@
+/*/* width of the table
+#project_quotas {
+	width: 50%;
+}
+*/
+
+/* width of the column -> will be applied for sparkline plot */
+#project_quotas .plot-column {
+	height: 60px;
+	padding: 0;
+}
+
+tr td:first-child {
+	width: 150px;
+}
+
+.update_table {
+	overflow: hidden;
+}
+
+.quotas_table {
+	overflow: hidden;
+}
+

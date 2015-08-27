@@ -24,6 +24,9 @@ These classes are for general use across the website. They are used in
 multiple places and typically control typography, or other common elements.
  ######################################################################## */
 
+/* import css file for index.html page */
+@import url('/static/css/index.css');
+
 /*
 === Typography ===
 */
