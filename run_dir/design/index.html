@@ -60,111 +60,41 @@
 		</div>
 	</div>
 </div>
+
 <div class="alert alert-info">
     <p style="text-align:center;">Want to see something different here? Let us know on the
       <a href="/suggestion_box">suggestions page</a>! We're currently collecting feedback on
       how the homepage should look..</p>
 </div>
 
-<div class="row">
-	<div class="col-lg-4 justified">
-		<h3>Introduction</h3>
-		<p>In various stages of data production in the genomics platform metadata about this
-		data is created, and stored in a database (known as StatusDB). This service provides
-		an interface to commonly accessed data, and functionality to generate plots regarding
-		the statistics of this data.</p>
-
-		<p>You can find the governing document describing Genomics Status in AM Systems,
-      document number <strong>1316</strong>.</p>
-
-		<p>Much of the data comes from the LIMS via a script called PSUL. You can see when
-      this last run at the top of the homepage. For questions regarding this, contact
-      <a href="mailto:maya.brandi@scilifelab.se">Maya Brandi</a> or
-      <a href="mailto:denis.moreno@scilifelab.se">Denis Moreno</a>.</p>
-
-		<p>Data about current samples and flowcells are collected while generating statistics
-		within the data processing pipeline. Most of the scripts which generate these
-    statistics and put them in the database have been were created by Per Unneberg
-    (as part of the <code>pm</code> package).</p>
-
-		<p>Due to changes in data structure, be wary of any projects or samples from
-      before July 1<sup>st</sup> 2013.</p>
-
-		<p>For general information about Genomics Status, or feature requests, contact
-		<a href="mailto:guillermo.carrasco@scilifelab.se">Guillermo Carrasco</a> or
-    <a href="mailto:remi-andre.olsen@scilifelab.se">Remi-André Olsen</a>.<p>
-
-		<p>You can find the code for Genomics Status on <a href="https://github.com/scilifelab/status">Github</a>.</p>
-
+<!-- create a container for charts of each project_id  -->
+<!-- {% for project_id in uppmax_projects %}
+<!-- <div id="storage_plot">
+	<div class="single_chart_container" id="chart_container">
+	  <svg id="chart"></svg>
 	</div>
-	<div class="col-lg-8">
-		<h3>Latest Updated Data</h3>
-		<table class="table table-striped table-bordered" id="project_table">
-		<thead>
-		  <tr>
-		    <th>Type</th>
-		    <th>Data</th>
-		    <th>Update Time</th>
-		  </tr>
-		</thead>
-		<tbody></tbody>
-		</table>
+</div> 
+<div id="storage_plot_{{ project_id }}">
+	<div class="single_chart_container" id="chart_container_{{ project_id }}">
+	  <svg id="chart_{{ project_id }}"></svg>
 	</div>
 </div>
+{% end %} -->
 
-<script type="text/javascript">
-$(document).ready(function(){
-    // Get the most recent updates
-    $.getJSON("/api/v1/last_updated?items=15", function(data) {
-      var tbl_body = "";
-      $.each(data, function(k1, summary) {
-    		var link = '';
-    		var linkend = '';
-    		if(summary[2] == 'Project information'){
-    			link = '<a href="/project/'+summary[1]+'">';
-    			linkend = '</a>';
-    		} else if(summary[2] == 'Flowcell information'){
-    			link = '<a href="/flowcells/'+summary[1]+'">';
-    			linkend = '</a>';
-    		} else if(summary[2] == 'Sample information'){
-    			link = '<a href="/samples/'+summary[1]+'">';
-    			linkend = '</a>';
-    		}
-    		tbl_row = '<tr>';
-        tbl_row += '<td>' + link + summary[2] + linkend + '</td>';
-        tbl_row += '<td>' + link + summary[1] + linkend + '</td>';
-        tbl_row += '<td>' + link + moment(summary[0]).format('HH:mm, MMM Do YYYY') + linkend + '</td>';
-        tbl_row += '</tr>';
-        $("#project_table").append(tbl_row);
-      })
-    });
+<!-- sparkline plots table -->
+<table id="project_quotas">
+    <thead>
+        <tr>
+            <th>UPPMAX Project</th>
+            <th>Storage usage</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
 
-
-    // Find out when the update scripts will next run
-    $.getJSON('/api/v1/last_psul', function(data){
-        var status = data['st']
-        if(data['status'] == 'Success'){
-            var timestring = '';
-            if(data['hours'] == 0 && data['minutes'] <= 2){
-              timestring = 'The script to pull information from the LIMS is running now.';
-            } else {
-              if(data['hours'] > 0){
-                  timestring = data['hours']+' hours';
-              } else if(data['minutes'] > 0){
-                  timestring = data['minutes']+' minutes';
-              } else if(data['seconds'] > 0){
-                  timestring = data['seconds']+' seconds';
-              }
-              var text = 'The script to pull information from the LIMS last ran '+timestring+' ago.';
-            }
-            $('#updated-status').html(text);
-        } else {
-            console.log('Last PSUL update check failed. Returned "'+data['status']+'"');
-        }
-    });
-
-});
-</script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script type="text/javascript" src="/static/js/index.js" id="indexpage-js-import" data-uppmax_projects="{{ ','.join(uppmax_projects) }}" />
 
 {% end %}
 

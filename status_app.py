@@ -255,6 +255,8 @@ class Application(tornado.web.Application):
         settings["cookie_secret"]= cookie_secret
         settings["login_url"]= "/login"
 
+        # index page 
+        self.uppmax_projects = settings.get('uppmax_projects')
 
         if options['develop']:
             tornado.autoreload.watch("design/application.html")
