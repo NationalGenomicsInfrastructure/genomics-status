@@ -1,0 +1,57 @@
+couch_server: http://genomics_status:et8urph8eg@tools-dev.scilifelab.se:5984
+username: genomics_status
+password: et8urph8eg
+port: 9761
+redirect_uri: http://localhost:9761
+
+google_oauth:
+   key: 1062696796500-45tf749bmd9d7ogglvn432h58gvq0203.apps.googleusercontent.com
+   secret: Y2ayGJDtlvfNkS1roMXQ4_w4
+
+zendesk:
+   url: https://ngisweden.zendesk.com
+   username: per.kraulis@scilifelab.se
+   token: Scc2z54j2js0WI7gsjBZFJ6ssIYXHlB4OjVpL5c2
+
+contact_person: guillermo.carrasco@scilifelab.se
+
+instruments:
+   HiSeq:
+       SN1018: Gandalf
+       SN7001298: Deagol
+       SN1025: Smeagol
+       SN7001301: Eomer
+       SN7001362: Aragorn
+       D00134: Galadriel
+       D00415: Merida
+       D00456: Ishtar
+       D00483: Tiamat
+   MiSeq:
+       M00275: Gloin
+       M01320: Bombur
+       M01548: Nori
+
+password_seed: fl+d6KBjh2SHqQ==
+
+sftp:
+   login: glsftp
+   password: 9qsT4Q3thX
+
+trello:
+   api_key: 35c3947807caa06935842db61619a1c3
+   token: 14f8e61dc122ca436806ad3e52cbd9750665b729d6620d7f3218b253116f7310
+   api_secret: 64fafa5ca6fa0b190c7322b4166b199d0b734775ac6e8e2b9ca0077b3675dd33
+
+psul_log: /home/hiseq.bioinfo/lims2db_projects.log
+sb_log: /home/genomics.www/log/suggestion_box.log
+charon:
+   url: http://charon.scilifelab.se
+   api_token: 2fac7e4765f14d039db7b21d4605f268
+
+uppmax_projects: 
+  - a2012043
+  - a2012043_nobackup
+  - a2015205
+  - a2015205_nobackup
+  - b2013064
+  - b2013064_nobackup
