@@ -1,0 +1,13 @@
+#project_quotas .plot-column {
+	height: 60px;
+	padding: 0;
+	overflow: hidden;
+}
+
+#project_quotas tr td:first-child {
+	width: 150px;
+}
+
+.update_table {
+	overflow: hidden;
+}

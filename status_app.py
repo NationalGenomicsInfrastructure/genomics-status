@@ -247,6 +247,9 @@ class Application(tornado.web.Application):
 
         # Location of the psul log
         self.psul_log=settings.get("psul_log")
+	
+	# index page - to display quotas of uppmax projects
+	self.uppmax_projects = settings.get('uppmax_projects')
 
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)

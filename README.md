@@ -61,6 +61,10 @@ trello:
     api_key: <trello_api_key>
     api_secret: <trello_api_secret>
     token: <trello_token>
+
+uppmax_projects
+    - proj_id1
+    - proj_id2
 ```
 
 `~/.genologicsrc`:
