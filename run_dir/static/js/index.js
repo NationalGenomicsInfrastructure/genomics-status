@@ -2,7 +2,6 @@ fill_quotas_table = function() {
 
    var uppmax_projects_string = $('#indexpage-js-import').data('uppmax_projects');
     // make a normal array from string
-    // but there must be a better way
     var uppmax_projects = uppmax_projects_string.split(',');
     $.each(uppmax_projects, function(i, project_id){
         $('#project_quotas tbody').append('<tr><td>' + project_id + '</td><td id="sparkline_quota_' + project_id + '" class="plot-column"></td></tr>');
@@ -30,8 +29,6 @@ fill_quotas_table = function() {
             $('#sparkline_quota_'+project_id).highcharts({
                 chart: {
                     type: 'area',
-                    // width: plot_width,
-                    // height: plot_height,
                     margin: [0, 0, 0, 0],
                     backgroundColor: null
                 },
@@ -67,8 +64,7 @@ fill_quotas_table = function() {
                 }],
                 tooltip: {
                     pointFormatter: function(){
-                        var pcnt = (this.y / current_quota) * 100;
-                        return '<strong>Quota ' + project_id + '</strong>: '+this.y.toFixed(2)+' Tb ('+pcnt.toFixed(2)+'%)';
+                        return '<strong>Quota ' + project_id + '</strong>: '+this.y.toFixed(2)+' Tb ('+quota_percent+'%)';
                     },
                     hideDelay: 0
                 }

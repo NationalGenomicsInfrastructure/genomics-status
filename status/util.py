@@ -124,7 +124,9 @@ class MainHandler(UnsafeHandler):
     """
     def get(self):
         t = self.application.loader.load("index.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name()))
+        uppmax_projects = self.application.uppmax_projects
+        user = self.get_current_user_name()
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=user, uppmax_projects=uppmax_projects))
 
 
 
