@@ -26,6 +26,7 @@ fill_quotas_table = function() {
             } else if (quota_percent > 80.0) {
                 $('#sparkline_quota_'+project_id).parent().addClass('warning');
             }
+
             $('#sparkline_quota_'+project_id).highcharts({
                 chart: {
                     type: 'area',
