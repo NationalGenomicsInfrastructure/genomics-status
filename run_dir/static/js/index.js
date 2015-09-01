@@ -4,8 +4,9 @@ fill_quotas_table = function() {
     // make a normal array from string
     var uppmax_projects = uppmax_projects_string.split(',');
     $.each(uppmax_projects, function(i, project_id){
-        $('#project_quotas tbody').append('<tr><td>' + project_id + '</td><td id="sparkline_quota_' + project_id + '" class="plot-column"></td></tr>');
-         // Load the data
+        $('#project_quotas tbody').append('<tr><td>' + project_id +
+        '</td><td id="sparkline_quota_' + project_id + '" class="plot-column"><div></div></td></tr>');
+        // Load the data
         $.getJSON("/api/v1/quotas/" + project_id, function(api_data) {
             // Massage the data
             var raw_data = api_data[0]["data"];
@@ -18,7 +19,7 @@ fill_quotas_table = function() {
                 point.limit /= 1000000000000;
                 current_quota = point.limit
                 quota_percent = (100 * point.y / point.limit).toFixed(1); 
-                plot_data.push([point.x * 1000, point.y, point.percent]);
+                plot_data.push([point.x * 1000, point.y]);
                 if(max_value < point.y) { max_value = point.y; }
             });
             if (quota_percent > 90.0) {
@@ -26,11 +27,18 @@ fill_quotas_table = function() {
             } else if (quota_percent > 80.0) {
                 $('#sparkline_quota_'+project_id).parent().addClass('warning');
             }
+
+            var plot_height = $('.plot-column').height();
+            var plot_width = $('.plot-column').width();
+            console.log(plot_width);
+            console.log(plot_height);
             $('#sparkline_quota_'+project_id).highcharts({
                 chart: {
                     type: 'area',
                     margin: [0, 0, 0, 0],
-                    backgroundColor: null
+                    backgroundColor: null,
+                    width: plot_width,
+                    height: plot_height
                 },
                 title:{
                     text:''
