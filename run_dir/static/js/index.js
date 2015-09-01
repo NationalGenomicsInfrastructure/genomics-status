@@ -30,6 +30,8 @@ fill_quotas_table = function() {
             $('#sparkline_quota_'+project_id).highcharts({
                 chart: {
                     type: 'area',
+                    // width: plot_width,
+                    // height: plot_height,
                     margin: [0, 0, 0, 0],
                     backgroundColor: null
                 },
