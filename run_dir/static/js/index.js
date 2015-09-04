@@ -30,8 +30,6 @@ fill_quotas_table = function() {
 
             var plot_height = $('.plot-column').height();
             var plot_width = $('.plot-column').width();
-            console.log(plot_width);
-            console.log(plot_height);
             $('#sparkline_quota_'+project_id).highcharts({
                 chart: {
                     type: 'area',
