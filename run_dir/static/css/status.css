@@ -24,6 +24,23 @@ These classes are for general use across the website. They are used in
 multiple places and typically control typography, or other common elements.
  ######################################################################## */
 
+
+/* index.html page */
+#project_quotas .plot-column {
+	height: 60px;
+	padding: 0;
+	overflow: hidden;
+}
+
+#project_quotas tr td:first-child {
+	width: 150px;
+}
+
+.update_table {
+	overflow: hidden;
+}
+
+
 /*
 === Typography ===
 */
