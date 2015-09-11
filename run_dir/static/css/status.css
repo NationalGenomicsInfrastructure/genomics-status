@@ -454,6 +454,9 @@ td.progress {
 */
 .quota-nav { margin-bottom:0; }
 
+#plots h2{
+  margin-left: 15px;
+}
 
 
 /*

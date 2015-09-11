@@ -33,6 +33,7 @@ from status.sequencing import *
 from status.suggestion_box import *
 from status.testing import *
 from status.util import *
+from status.cpu_hours import CPUHoursDataHandler
 
 import status.worksets
 
@@ -143,6 +144,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_search/([^/]*)$", status.worksets.WorksetSearchHandler),
             ("/api/v1/workset_notes/([^/]*)$", status.worksets.WorksetNotesDataHandler),
             ("/api/v1/workset_links/([^/]*)$", status.worksets.WorksetLinksHandler),
+            ("/api/v1/cpu_hours/(\w+)?", CPUHoursDataHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),
