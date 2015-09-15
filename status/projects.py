@@ -497,6 +497,13 @@ class RunningNotesDataHandler(SafeHandler):
             running_notes[str(datetime.datetime.now())] = newNote
             p.udf['Running Notes'] = json.dumps(running_notes)
             p.put()
+            #saving running notes directly in genstat, because reasons.
+            v=self.application.projects_db.view("project/project_id")
+            for row in v[project]:
+                doc_id=row.value
+            doc=self.application.projects_db.get(doc_id)
+            doc['details']['running_notes']=json.dumps(running_notes)
+            self.application.projects_db.save(doc)
             self.set_status(201)
             self.write(json.dumps(newNote))
 
