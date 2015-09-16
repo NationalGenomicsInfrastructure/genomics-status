@@ -467,6 +467,19 @@ td.progress {
   overflow-y:scroll;
 }
 
+/*
+=== Project Summary ===
+*/
+#summary-list table td input, #summary-list table td textarea {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    font-size: 0.9em;
+    display: block;
+    height: 100%;
+    width: 100%;
+    background-color: transparent;
+}
 
 
 
