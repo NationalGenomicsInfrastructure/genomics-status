@@ -85,10 +85,10 @@
                 <li><a href="/worksets">Worksets</a></li>
                 <li><a href="/deliveries">Deliveries</a></li>
                 <li><a href="/suggestion_box">Suggestion Box</a></li>
-                {% if user %}
-                <li><a href="/logout">Log Out {{user}}</a></li>
-                {% else %}
-                <li><a href="/login">Login</a></li>
+                {% try %}
+                    <li><a href="/logout">Log Out {{user}}</a></li>
+                {% except %}
+                    <li><a href="/login">Login</a></li>
                 {% end %}
             </ul>
         </div>
