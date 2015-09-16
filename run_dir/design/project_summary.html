@@ -14,8 +14,10 @@ Description: Shows a table with all project summaries.
 <div id="page_content" >
 <div id="summary-list">
     {% for oneproc in processes%}
-    <h2>Project summary {{ oneproc.id }}</h2>
-    <input type="button" value="save process udf" class="save_pc_udf btn btn-primary btn-md pull-right" id="save_{{ oneproc.id }}" data-toggle="modal" data-target="#updateModal"/>
+    <h2>Project summary :  {{ oneproc.id }} 
+        <input type="button" value="save process udf" class="save_pc_udf btn btn-primary btn-md pull-right" id="save_{{ oneproc.id }}" data-toggle="modal" data-target="#updateModal"/>
+    </h2>
+    
     <table class="table table-striped table-bordered" id="summary_udfs_{{ oneproc.id}}">
     <tr>
     {% for udf in step_fields %}
@@ -27,7 +29,7 @@ Description: Shows a table with all project summaries.
         {% if isinstance(oneproc.udf.get(udf, '-'), basestring) and len(oneproc.udf.get(udf, '-')) <= 10 %}
             <td><input class='step_{{oneproc.id}}_value_{{ udf.replace(" ", "_") }} form-control' type='text' value="{{ oneproc.udf.get(udf, '-') }}" /></td>
         {% else %}
-            <td><textarea class='step_{{oneproc.id}}_value_{{ udf.replace(" ", "_") }} form-control' cols="12" > {{ oneproc.udf.get(udf, '-') }} </textarea></td>
+            <td><textarea class='step_{{oneproc.id}}_value_{{ udf.replace(" ", "_") }} form-control' cols="12" >{{ oneproc.udf.get(udf, '-') }}</textarea></td>
         {% end %}
     {% end %}
     </tr>
