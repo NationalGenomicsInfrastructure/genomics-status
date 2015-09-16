@@ -470,8 +470,11 @@ td.progress {
 /*
 === Project Summary ===
 */
+#summary-list table td {
+padding: 0;
+}
 #summary-list table td input, #summary-list table td textarea {
-    padding: 0;
+    padding: 8px;
     border: 0;
     box-shadow: none;
     font-size: 0.9em;
@@ -480,8 +483,6 @@ td.progress {
     width: 100%;
     background-color: transparent;
 }
-
-
 
 
 
