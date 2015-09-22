@@ -116,7 +116,10 @@ table.narrow-headers th { width: 20%; }
 }
 
 /* Make the bootstrap labels a little less over-saturated */
-.label { font-weight:normal; }
+.label {
+  font-weight:normal;
+  margin-right: 2px;
+}
 .label-default { background-color:#777; }
 .label-primary { background-color: #547C9E; } /* #428bca} */
 .label-success { background-color: #5D995D; } /* #5cb85c} */

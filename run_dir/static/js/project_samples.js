@@ -354,6 +354,13 @@ function load_all_udfs(){
         safeobj(key).html(auto_format(value));
       }
 
+      // highlight if project is shared
+      else if (prettify(key) == 'shared') {
+        if (value != 'No') {
+          $('#type').append('<span class="label label-warning">Shared</span>');
+        }
+      }
+
       // Make the comments render Markdown and make project IDs into links
       else if (prettify(key) == 'project_comment'){
         value = value.replace(/\_/g, '\\_');
