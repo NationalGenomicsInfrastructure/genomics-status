@@ -674,7 +674,7 @@ class CharonProjectHandler(SafeHandler):
     """queries charon about the current project"""
     def get(self, projectid):
         try:
-            url="{}/api/summary?projectid={}".format(self.application.settings['charon']['url'], projectid)
+            url="{}/api/v1/summary?projectid={}".format(self.application.settings['charon']['url'], projectid)
             headers = {'X-Charon-API-token': '{}'.format(self.application.settings['charon']['api_token'])}
         except KeyError:
             url="http://charon.scilifelab.se/api/v1/summary?projectid={}".format(projectid)
