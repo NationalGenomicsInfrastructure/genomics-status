@@ -196,6 +196,7 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                     if(total == -1) {
                         ludtable += "<tr><th>Total</th><th>"+nice_numbers(total_undetermined_claster_number)+"</th><th>(100%)</span></th></tr>";
                         total = parseInt(data['undetermined'][lid][ordered_keys[ud]]);
+                        $('#lane_'+lid).append(ludtable);
                     }
                     ludtable += "<tr"+hl+"><td><samp>"+unmatched+"</samp></td><td>"+count+'</td><td>('+percentage+"%)</span></td></tr>";
 
