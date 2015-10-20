@@ -167,12 +167,13 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
             $('#lane_'+lid).append(lbody);
             if ('undetermined' in data) {
                 var ludtable='<table class="undetermined" id="table_ud_lane_' + lid + '" style="display:none;">';
+                ludtable += "<tr><th>Total</th><th>"+nice_numbers(total_undetermined_claster_number)+"</th><th>(100%)</span></th></tr>";
+
                 var button='<button id="ud_button_lane_' +lid + '" class="undetermined-btn btn btn-info btn-sm" \
                            type="button" onclick="display_undetermined(' + lid + ')" >Show Undetermined</button>';
                 var keys = [];
                 for(var key in data['undetermined'][lid]) keys.push(key);
                 var ordered_keys=keys.sort(function(a,b){return data['undetermined'][lid][b]-data['undetermined'][lid][a]});
-                var total = -1;
                 for (ud in ordered_keys){
                     // Try to look for exact barcode matches with Ns in
                     // eg. highlight ATTACNNN if ATTACTCG was a barcode for this lane
@@ -193,13 +194,7 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                     var percentage = (100 * count/total_undetermined_claster_number).toFixed(2);
 
                     count = nice_numbers(count);
-                    if(total == -1) {
-                        ludtable += "<tr><th>Total</th><th>"+nice_numbers(total_undetermined_claster_number)+"</th><th>(100%)</span></th></tr>";
-                        total = parseInt(data['undetermined'][lid][ordered_keys[ud]]);
-                        $('#lane_'+lid).append(ludtable);
-                    }
                     ludtable += "<tr"+hl+"><td><samp>"+unmatched+"</samp></td><td>"+count+'</td><td>('+percentage+"%)</span></td></tr>";
-
                 }
                 ludtable+="</dl>";
                 $('#button_lane_'+lid).append(button);
