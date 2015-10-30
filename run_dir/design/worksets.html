@@ -47,7 +47,8 @@ Description: Shows a table with all worksets.
              {% elif onekey[1] == 'projects'%}
                  <td>
                  {% for onepj in ws_data.get(onews).get(onekey[1]) %}
-                     <a href="/project/{{ onepj }}">{{ onepj }}</a>&nbsp;({{ ws_data.get(onews).get(onekey[1]).get(onepj).get('samples_nb') }})<br>
+                 <abbr title="{{ ws_data.get(onews).get(onekey[1]).get(onepj).get('project_name')}}">
+                     <a href="/project/{{ onepj }}">{{ onepj }}</a></abbr>&nbsp;({{ ws_data.get(onews).get(onekey[1]).get(onepj).get('samples_nb') }})<br>
                  {% end %}
                  </td>
              {% elif onekey[1] in ['application', 'library_method'] %}

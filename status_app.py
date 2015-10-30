@@ -33,6 +33,7 @@ from status.sequencing import *
 from status.suggestion_box import *
 from status.testing import *
 from status.util import *
+from status.cpu_hours import CPUHoursDataHandler
 
 import status.worksets
 
@@ -114,6 +115,7 @@ class Application(tornado.web.Application):
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
+            ("/api/v1/project_summary_update/([^/]*)/([^/]*)$", ProjectSummaryUpdateHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
@@ -143,6 +145,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_search/([^/]*)$", status.worksets.WorksetSearchHandler),
             ("/api/v1/workset_notes/([^/]*)$", status.worksets.WorksetNotesDataHandler),
             ("/api/v1/workset_links/([^/]*)$", status.worksets.WorksetLinksHandler),
+            ("/api/v1/cpu_hours/(\w+)?", CPUHoursDataHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),
@@ -159,6 +162,7 @@ class Application(tornado.web.Application):
             ("/production", ProductionHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesHandler),
+            ("/project_summary/([^/]*)$", ProjectSummaryHandler),
             ("/projects/([^/]*)$", ProjectsHandler),
             ("/reads_vs_qv", ReadsVsQvhandler),
             ("/reads_per_lane", ReadsPerLaneHandler),
@@ -247,6 +251,10 @@ class Application(tornado.web.Application):
 
         # Location of the psul log
         self.psul_log=settings.get("psul_log")
+
+
+        # index page - to display quotas of uppmax projects
+    	self.uppmax_projects = settings.get('uppmax_projects')
 
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)

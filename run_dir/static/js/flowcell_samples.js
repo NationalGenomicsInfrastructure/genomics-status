@@ -128,8 +128,14 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                 lbody+='<th>Mean QualityScore</th>';
             }
             lbody+='</tr>';
+
+            var total_undetermined_claster_number = 0;
+
             for (samplerunid in data['lane'][lid]){
                 var q30 = parseFloat(data['lane'][lid][samplerunid]['overthirty']);
+                if (data['lane'][lid][samplerunid]['SampleName'] == 'Undetermined') {
+                    total_undetermined_claster_number = parseInt(data['lane'][lid][samplerunid]['clustersnb'].replace(/,/g, ''));
+                }
                 lbody += "<tr> \
                     <td>" + data['lane'][lid][samplerunid]['Project'] + "</td> \
                     <td>" + data['lane'][lid][samplerunid]['SampleName'] + '</td> \
@@ -159,15 +165,15 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
             }
             lbody += '</tbody></table>';
             $('#lane_'+lid).append(lbody);
-
-            if ('undetermined' in data){
+            if ('undetermined' in data) {
                 var ludtable='<table class="undetermined" id="table_ud_lane_' + lid + '" style="display:none;">';
+                ludtable += "<tr><th>Total</th><th>"+nice_numbers(total_undetermined_claster_number)+"</th><th>(100%)</span></th></tr>";
+
                 var button='<button id="ud_button_lane_' +lid + '" class="undetermined-btn btn btn-info btn-sm" \
                            type="button" onclick="display_undetermined(' + lid + ')" >Show Undetermined</button>';
                 var keys = [];
                 for(var key in data['undetermined'][lid]) keys.push(key);
                 var ordered_keys=keys.sort(function(a,b){return data['undetermined'][lid][b]-data['undetermined'][lid][a]});
-                var total = -1;
                 for (ud in ordered_keys){
                     // Try to look for exact barcode matches with Ns in
                     // eg. highlight ATTACNNN if ATTACTCG was a barcode for this lane
@@ -185,23 +191,14 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                     }
                     // Make count nice and work out percentage
                     var count = parseInt(data['undetermined'][lid][ordered_keys[ud]]);
-                    var percentage = ((count/total)*100).toFixed(2);
-                    if(total == -1) { percentage = '100.00' };
+                    var percentage = (100 * count/total_undetermined_claster_number).toFixed(2);
+
                     count = nice_numbers(count);
-                    if(total == -1) {
-                        ludtable += "<tr><th>"+unmatched+"</th><th>"+count+'</th><th>('+percentage+"%)</span></th></tr>";
-                        total = parseInt(data['undetermined'][lid][ordered_keys[ud]]);
-                    } else {
-                        ludtable += "<tr"+hl+"><td><samp>"+unmatched+"</samp></td><td>"+count+'</td><td>('+percentage+"%)</span></td></tr>";
-                    }
+                    ludtable += "<tr"+hl+"><td><samp>"+unmatched+"</samp></td><td>"+count+'</td><td>('+percentage+"%)</span></td></tr>";
                 }
                 ludtable+="</dl>";
                 $('#button_lane_'+lid).append(button);
                 $('#lane_'+lid).append(ludtable);
-                /*$(document).on('click', '.undetermined-btn', function(e){
-                      e.stopImmediatePropagation()
-                      $(this).parent().find('.dl-horizontal').slideToggle();
-                });*/
             }
             $('#lane_'+lid).removeClass('hidden');
         }
@@ -211,8 +208,6 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
     // Remove the loading text
     $('#loading_spinner').hide();
     $('#page_content').show();
-
-    // console.log(data)
 }).error(function(){
     // Flow cell not found - probably
     $('#page_content').html('<h1>Error - Flow Cell Not Found</h1><div class="alert alert-danger">Oops! Sorry about that, we can\'t find the flow cell <strong>'+flowcell+'</strong></div>');

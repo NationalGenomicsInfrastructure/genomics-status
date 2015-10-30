@@ -38,7 +38,7 @@ class WorksetsHandler(SafeHandler):
         t = self.application.loader.load("worksets.html")
         ws_data=self.worksets_data()
         headers= [['Date Run', 'date_run'],['Workset Name', 'workset_name'], \
-                 ['Projects (samples)','projects'], ['Operator', 'technician'],\
+                 ['Projects (samples)','projects'], ['Date finished', 'finish date'],['Operator', 'technician'],\
                  ['Application', 'application'], ['Library','library_method'], \
                  ['Samples Passed', 'passed'],['Samples Failed', 'failed'], \
                  ['Pending Samples', 'unknown'], ['Total samples', 'total']];

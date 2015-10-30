@@ -24,6 +24,23 @@ These classes are for general use across the website. They are used in
 multiple places and typically control typography, or other common elements.
  ######################################################################## */
 
+
+/* index.html page */
+#project_quotas .plot-column {
+	height: 60px;
+	padding: 0;
+	overflow: hidden;
+}
+
+#project_quotas tr td:first-child {
+	width: 150px;
+}
+
+.update_table {
+	overflow: hidden;
+}
+
+
 /*
 === Typography ===
 */
@@ -99,7 +116,10 @@ table.narrow-headers th { width: 20%; }
 }
 
 /* Make the bootstrap labels a little less over-saturated */
-.label { font-weight:normal; }
+.label {
+  font-weight:normal;
+  margin-right: 2px;
+}
 .label-default { background-color:#777; }
 .label-primary { background-color: #547C9E; } /* #428bca} */
 .label-success { background-color: #5D995D; } /* #5cb85c} */
@@ -437,6 +457,9 @@ td.progress {
 */
 .quota-nav { margin-bottom:0; }
 
+#plots h2{
+  margin-left: 15px;
+}
 
 
 /*
@@ -447,8 +470,22 @@ td.progress {
   overflow-y:scroll;
 }
 
-
-
+/*
+=== Project Summary ===
+*/
+#summary-list table td {
+padding: 0;
+}
+#summary-list table td input, #summary-list table td textarea {
+    padding: 8px;
+    border: 0;
+    box-shadow: none;
+    font-size: 0.9em;
+    display: block;
+    height: 100%;
+    width: 100%;
+    background-color: transparent;
+}
 
 
 

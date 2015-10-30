@@ -22,8 +22,10 @@ from status.util import dthandler, SafeHandler
 
 from genologics import lims
 from genologics.entities import Project
+from genologics.entities import Sample
 from genologics.entities import Process
 from genologics.entities import Artifact
+from genologics.entities import Protocol
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
 from zendesk import Zendesk, ZendeskError, get_id_from_url
@@ -495,6 +497,13 @@ class RunningNotesDataHandler(SafeHandler):
             running_notes[str(datetime.datetime.now())] = newNote
             p.udf['Running Notes'] = json.dumps(running_notes)
             p.put()
+            #saving running notes directly in genstat, because reasons.
+            v=self.application.projects_db.view("project/project_id")
+            for row in v[project]:
+                doc_id=row.value
+            doc=self.application.projects_db.get(doc_id)
+            doc['details']['running_notes']=json.dumps(running_notes)
+            self.application.projects_db.save(doc)
             self.set_status(201)
             self.write(json.dumps(newNote))
 
@@ -665,10 +674,10 @@ class CharonProjectHandler(SafeHandler):
     """queries charon about the current project"""
     def get(self, projectid):
         try:
-            url="{}/api/summary?projectid={}".format(self.application.settings['charon']['url'], projectid)
+            url="{}/api/v1/summary?projectid={}".format(self.application.settings['charon']['url'], projectid)
             headers = {'X-Charon-API-token': '{}'.format(self.application.settings['charon']['api_token'])}
         except KeyError:
-            url="http://charon.scilifelab.se/api/summary?projectid={}".format(projectid)
+            url="http://charon.scilifelab.se/api/v1/summary?projectid={}".format(projectid)
             headers={}
         r = requests.get(url, headers = headers )
         if r.status_code == requests.status_codes.codes.OK:
@@ -782,3 +791,94 @@ class DeliveriesPageHandler(SafeHandler):
                                       user=self.get_current_user_name(),
                                       prettify = prettify_css_names
                                       ))
+
+
+
+class ProjectSummaryHandler(SafeHandler):
+    """serves project summary information"""
+    def get(self, project_id):
+
+        project=Project(lims, id=project_id)
+        processes=lims.get_processes(projectname=project.name, type='Project Summary 1.3')
+        samples=lims.get_samples(projectname=project.name)
+        self.getProjectSummaryFields(lims)
+        
+
+        t = self.application.loader.load("project_summary.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                              project_id=project_id,
+                              processes=processes,
+                              samples=samples,
+                              step_fields=self.step_fields,
+                              sample_fields=self.sample_fields))
+
+    def getProjectSummaryFields(self, lims):
+        self.step_fields=[]
+        self.sample_fields=[]
+        p=Protocol(lims, id='101') #project summary configuration info
+        for step in p.steps:
+            if step.name  == 'Project Summary 1.3':
+                self.step_fields = [n['name'] for n in step.step_fields]
+                self.sample_fields = [n['name'] for n in step.sample_fields if n['attach-to'] == 'Sample']
+
+
+class ProjectSummaryUpdateHandler(SafeHandler):
+    def post(self, id_type, cl_id):
+        if id_type == "Process":
+            update_class=Process
+        elif id_type == "Sample":
+            update_class=Sample
+        else:
+            self.set_status(400)
+            self.finish('<html><body><p>{} not recognized as a valid class:</p></body></html>'.format(id_type))
+        try:
+            cl=update_class(lims, id=cl_id)
+        except Exception as e:
+            self.set_status(400)
+            self.finish('<html><body><p>Entity {} not found :</p><pre>{}</pre></body></html>'.format( cl_id, e))
+        else:
+            for udf in cl.udf:
+                try:
+                    client_value=self.get_argument(udf)
+                except:
+                    #the argument was _not_ provided by the client, do nothing
+                    #application_log.error("{} not provided".format(udf))
+                    pass
+                else:
+                    #update the lims value with the value provided by the client
+                    try:
+                        if udf == 'Instructions':
+                            #there is a space at the end of the value for this udf. this space is lost in the url parameter encoding
+                            #also, we can't change that value because there is only one preset
+                            pass
+
+                        else:
+                            #application_log.error("{} : {} -> {}".format(udf, cl.udf[udf], client_value))
+                            cl.udf[udf]=client_value
+                    except TypeError as e:
+                        #type mismatch handling
+                        if isinstance(cl.udf[udf], datetime.date):
+                            cl.udf[udf]=datetime.datetime.strptime(client_value, "%Y-%m-%d").date()
+                        elif isinstance(cl.udf[udf], float):
+                            cl.udf[udf]=float(client_value)
+                        elif isinstance(cl.udf[udf], int):
+                            cl.udf[udf]=int(client_value)
+                        else:
+                            raise e
+
+            try:
+                cl.put()
+            except Exception as e:
+                self.set_status(400)
+                self.finish('<html><body><p>could not update Entity {} :</p><pre>{}</pre></body></html>'.format( cl_id, e))
+            else:
+                self.set_status(200)
+                self.set_header("Content-type", "application/json")
+                returnobj={}
+                for key, value in cl.udf.items():
+                    if isinstance(value, datetime.date):
+                        returnobj[key]=value.isoformat()
+                    else:
+                        returnobj[key]=value
+
+                self.write(json.dumps(returnobj))

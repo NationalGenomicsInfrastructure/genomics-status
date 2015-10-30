@@ -1,5 +1,3 @@
-{% extends "base.html" %}
-
 <!--
 Template file: quota_grid.html
 URL: /quotas
@@ -7,111 +5,17 @@ Title: Historical UPPMAX storage quota for all UPPMAX projects
 Description: Shows a grid of graphs showing showing storage information
              for all UPPMAX projects
 -->
+{% extends "base.html" %}
 
 {% block stuff %}
 
-<h1 id="page_title">Storage quota used on UPPMAX projects</h1>
-<p>The storage quota limit is indicated with a dashed red line.</p>
+<h1 id="page_title">Storage and CPU quotas used on UPPMAX projects</h1>
+<p>The quota limit is indicated with a dashed red line.</p>
 <ul class="quota-nav pagination"></ul>
 <div id="plots"></div>
 
-
 <script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
-<script type="text/javascript">
-$(document).ready(function(){
-    // Highlight plots if clicked from the navigation
-    $('body').on('click', '.quota-nav li a', function(){
-       var target = $(this).attr('href');
-       $('.highlighted').removeClass('highlighted');
-       $(target).addClass('highlighted');
-    });
-
-
-    // Find the differe UPPMAX Projects
-    $.getJSON('/api/v1/uppmax_projects', function(uppmax_quotas) {
-        $.each(uppmax_quotas, function(i, up) {
-
-            if(i % 8 == 0 && i !== 0){
-                $('.quota-nav:last').after('<ul class="quota-nav pagination"></ul>');
-            }
-            $('.quota-nav:last').append('<li><a href="#container_'+up+'">'+up+'</a></li>');
-
-            $("#plots").append('\
-            <div id="container_'+up+'" style="float:left; width: 49%; min-height:400px;"> \
-                <h2><a href="/quotas/'+up+'">'+up+'</a></h2> \
-                <p id="loading_spinner_'+up+'"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading plot.. <em>(can take some time)</em></p> \
-                <div id="chart_'+up+'"></div> \
-            </div>');
-
-            // Load the data for this project
-            $.getJSON('/api/v1/quotas/'+up, function(api_data) {
-
-                // Massage the data
-                var raw_data = api_data[0]["data"];
-                var plot_data = [];
-                var limit_data = []
-                var max_value = 0;
-                $.each(raw_data, function(i, d){
-                    d.y /= 1000000000000;
-                    d.limit /= 1000000000000;
-                    plot_data.push([d.x * 1000, d.y]);
-                    limit_data.push([d.x * 1000, d.limit]);
-                    if(max_value < d.y) { max_value = d.y; }
-                    if(max_value < d.limit) { max_value = d.limit; }
-                });
-
-                // Plot the data
-                $('#chart_'+up).highcharts({
-                    chart: {
-                        zoomType: 'x',
-                        backgroundColor:'rgba(255, 255, 255, 0.1)'
-                    },
-                    title: { text: "Storage Usage Over Time: "+up },
-                    legend: { enabled: false },
-                    xAxis: {
-                        title: { text: 'Date' },
-                        type: 'datetime'
-                    },
-                    yAxis: {
-                        min: 0,
-                        max: max_value,
-                        title: { text: 'Storage' },
-                        labels: {
-                            formatter: function () {
-                                return this.value + 'Tb';
-                            }
-                        }
-                    },
-                    tooltip: {
-                        pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} Tb',
-                    },
-                    series: [
-                        {
-                            name: up,
-                            data: plot_data,
-                            type: 'area'
-                        },
-                        {
-                            name: up+' Quota',
-                            data: limit_data,
-                            dashStyle: 'Dash',
-                            color: 'red',
-                            type: 'line',
-                            marker: {
-                                enabled: false
-                            }
-                        }
-                    ]
-                });
-                // Hide the loading spinner
-                $('#loading_spinner_'+up).hide();
-
-            });
-
-        });
-    });
-});
-</script>
+<script type="text/javascript" src="/static/js/quota.js" ></script>
 
 {% end %}
+
