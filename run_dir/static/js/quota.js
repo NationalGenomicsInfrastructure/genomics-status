@@ -117,8 +117,9 @@ function get_cpu_hours(project_id) {
         $.each(raw_data, function(i, point){
             current_quota = point.limit
             quota_percent = (100 * point.y / point.limit).toFixed(0);
-            plot_data.push([point.x, point.y]);
-            limit_data.push([point.x, point.limit]);
+            // JS times work in milliseconds, multiply by 1000
+            plot_data.push([point.x * 1000, point.y]);
+            limit_data.push([point.x * 1000, point.limit]);
             if(max_value < point.y) { max_value = point.y; }
             if(max_value < point.limit) { max_value = point.limit; }
         });
