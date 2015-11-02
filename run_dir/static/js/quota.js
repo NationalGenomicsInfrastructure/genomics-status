@@ -5,6 +5,31 @@ $(document).ready(function(){
        $('.highlighted').removeClass('highlighted');
        $(target).addClass('highlighted');
     });
+    
+    // Reset x-min to show all data
+    $('#show_all_data').click(function(){
+        var d = null;
+        if($(this).text() == 'Show all data'){
+            $('#show_all_text').text('Showing all data.');
+            $(this).text('Show last two months');
+        } else {
+            // Get timestamp for 2 months ago
+            d = new Date();
+            d.setMonth(d.getMonth() - 2);
+            d.setHours(0,0,0);
+            d = d.getTime();
+            $('#show_all_text').text('Showing data from last two months.');
+            $(this).text('Show all data');
+        }
+        
+        $('.quota_plot, .cpu_plot').each(function(){
+            try {
+                $(this).highcharts().xAxis[0].update({min: d});
+            } catch(err) {
+                console.log('Setting limits for "'+$(this).attr('id')+'" didn\'t work - probably not yet loaded.');
+            }
+        });
+    });
 
 
 
@@ -27,9 +52,9 @@ $(document).ready(function(){
             $("#plots").append('\
             <div class="row" id=' + project_id + '> \
                 <h2>' + project_id + '</h2> \
-                <div class="col-md-4" id="quota_' + project_id + '"></div> \
-                <div class="col-md-4" id="quota_' + project_id + '_nobackup"></div> \
-                <div class="col-md-4" id="cpu_' + project_id + '"></div> \
+                <div class="col-md-4 quota_plot" id="quota_' + project_id + '"></div> \
+                <div class="col-md-4 quota_plot" id="quota_' + project_id + '_nobackup"></div> \
+                <div class="col-md-4 cpu_plot" id="cpu_' + project_id + '"></div> \
             </div>');
 
             // fill the data html
@@ -44,6 +69,12 @@ $(document).ready(function(){
 });
 
 function get_disk_quota(project_id) {
+    // Get timestamp for 2 months ago
+    var d = new Date();
+    d.setMonth(d.getMonth() - 2);
+    d.setHours(0,0,0);
+    d = d.getTime();
+    
     $.getJSON("/api/v1/quotas/" + project_id, function(api_data) {
         // Massage the data
         var raw_data = api_data[0]["data"];
@@ -73,7 +104,8 @@ function get_disk_quota(project_id) {
             legend: { enabled: false },
             xAxis: {
                 title: { text: 'Date' },
-                type: 'datetime'
+                type: 'datetime',
+                min: d
             },
             yAxis: {
                 min: 0,
@@ -101,11 +133,15 @@ function get_disk_quota(project_id) {
                 }
             ]
         });
-
-
     });
 }
 function get_cpu_hours(project_id) {
+    // Get timestamp for 2 months ago
+    var d = new Date();
+    d.setMonth(d.getMonth() - 2);
+    d.setHours(0,0,0);
+    d = d.getTime();
+    
     $.getJSON("/api/v1/cpu_hours/" + project_id, function(api_data) {
         // Massage the data
         var raw_data = api_data[0]["data"];
@@ -124,7 +160,6 @@ function get_cpu_hours(project_id) {
             if(max_value < point.limit) { max_value = point.limit; }
         });
         // Plot the data
-
         $('#cpu_'+project_id).highcharts({
             chart: {
                 zoomType: 'x',
@@ -134,7 +169,8 @@ function get_cpu_hours(project_id) {
             legend: { enabled: false },
             xAxis: {
                 title: { text: 'Date' },
-                type: 'datetime'
+                type: 'datetime',
+                min: d
             },
             yAxis: {
                 min: 0,
@@ -162,8 +198,6 @@ function get_cpu_hours(project_id) {
                 }
             ]
         });
-
-
     });
 
 }

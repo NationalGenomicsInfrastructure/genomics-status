@@ -40,6 +40,42 @@ multiple places and typically control typography, or other common elements.
 	overflow: hidden;
 }
 
+#project_quotas td {
+  padding: 0;
+}
+#project_quotas td:first-child {
+  padding: 8px;
+}
+#project_quotas .wrapper {
+  display: inline-block;
+  position: relative;
+  height:100%;
+  width:100%;
+  overflow: visible;
+  white-space: nowrap;
+}
+#project_quotas .val {
+  display: block;
+  position: absolute;
+  padding:0;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index:-1;
+  background-color: #ededed;
+}
+#project_quotas .val span {
+  position: absolute;
+  top: 8px; left: 8px;
+}
+#project_quotas .percent {
+  padding: 8px; 
+}
+#project_quotas .q-danger .val { background-color: #f2dede; }
+#project_quotas .q-danger span { color: #a94442; }
+#project_quotas .q-warning .val { background-color: #fcf8e3; }
+#project_quotas .q-warning span { color: #8a6d3b; }
+
 
 /*
 === Typography ===
