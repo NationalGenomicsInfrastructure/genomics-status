@@ -1,82 +1,54 @@
 fill_quotas_table = function() {
 
-   var uppmax_projects_string = $('#indexpage-js-import').data('uppmax_projects');
-    // make a normal array from string
-    var uppmax_projects = uppmax_projects_string.split(',');
-    $.each(uppmax_projects, function(i, project_id){
-        $('#project_quotas tbody').append('<tr><td>' + project_id +
-        '</td><td id="sparkline_quota_' + project_id + '" class="plot-column"><div></div></td></tr>');
-        // Load the data
-        $.getJSON("/api/v1/quotas/" + project_id, function(api_data) {
-            // Massage the data
-            var raw_data = api_data[0]["data"];
-            var plot_data = [];
-            var max_value = 0;
-            var quota_percent;
-            var current_quota;
-            $.each(raw_data, function(i, point){
-                point.y /= 1000000000000;
-                point.limit /= 1000000000000;
-                current_quota = point.limit
-                quota_percent = (100 * point.y / point.limit).toFixed(1); 
-                plot_data.push([point.x * 1000, point.y]);
-                if(max_value < point.y) { max_value = point.y; }
-            });
-            if (quota_percent > 90.0) {
-                $('#sparkline_quota_'+project_id).parent().addClass('danger');
-            } else if (quota_percent > 80.0) {
-                $('#sparkline_quota_'+project_id).parent().addClass('warning');
-            }
-
-            var plot_height = $('.plot-column').height();
-            var plot_width = $('.plot-column').width();
-            $('#sparkline_quota_'+project_id).highcharts({
-                chart: {
-                    type: 'area',
-                    margin: [0, 0, 0, 0],
-                    backgroundColor: null,
-                    width: plot_width,
-                    height: plot_height
-                },
-                title:{
-                    text:''
-                },
-                credits:{
-                    enabled: false
-                },
-                 xAxis:{
-                    labels:{
-                        enabled: false
-                    },
-                    type: 'datetime',
-                    minorGridLineWidth: 0
-                },
-                yAxis:{
-                    endOnTick:false,
-                    labels:{
-                        enabled:false
-                    },
-                    title: '',
-                    gridLineWidth: 1,
-                    max: current_quota
-
-                },
-                legend:{
-                    enabled:false
-                },
-                series: [{
-                    data: plot_data,
-                    pointStart: 1,
-                }],
-                tooltip: {
-                    pointFormatter: function(){
-                        return '<strong>Quota ' + project_id + '</strong>: '+this.y.toFixed(2)+' Tb ('+quota_percent+'%)';
-                    },
-                    hideDelay: 0
-                }
-            });
-        });
-    });
+   var uppmax_projects = $('#indexpage-js-import').data('uppmax_projects').split(',');
+   $.each(uppmax_projects, function(i, project_id){
+      var disk_usage, disk_usage_percent, disk_usage_class;
+      var nobackup_usage, nobackup_usage_percent, nobackup_usage_class;
+      var cpu_usage, cpu_usage_percent, cpu_usage_class;
+      var disk = $.getJSON('/api/v1/quotas/'+project_id, function(api_data) {
+         $.each(api_data[0]["data"], function(i, point){
+            disk_usage = (point.y / 1000000000000).toFixed(1);
+            disk_usage_percent = (100 * (point.y / point.limit)).toFixed(1); 
+         });
+         disk_usage_class = '';
+         if(disk_usage_percent > 80){ disk_usage_class = 'q-warning'; }
+         if(disk_usage_percent > 90){ disk_usage_class = 'q-danger'; }
+      });
+      
+      var nobackup_disk = $.getJSON('/api/v1/quotas/'+project_id+'_nobackup', function(api_data) {
+         var quota_percent;
+         var current_quota;
+         $.each(api_data[0]["data"], function(i, point){
+            nobackup_usage = (point.y / 1000000000000).toFixed(1);
+            nobackup_usage_percent = (100 * (point.y / point.limit)).toFixed(1); 
+         });
+         nobackup_usage_class = '';
+         if(nobackup_usage_percent > 80){ nobackup_usage_class = 'q-warning'; }
+         if(nobackup_usage_percent > 90){ nobackup_usage_class = 'q-danger'; }
+      });
+      
+      var cpu_hours = $.getJSON("/api/v1/cpu_hours/" + project_id, function(api_data) {
+         var quota_percent;
+         var current_quota;
+         $.each(api_data[0]["data"], function(i, point){
+            cpu_usage = (point.y / 1000).toFixed(1);
+            cpu_usage_percent = (100 * (point.y / point.limit)).toFixed(1); 
+         });
+         cpu_usage_class = '';
+         if(cpu_usage_percent > 80){ cpu_usage_class = 'q-warning'; }
+         if(cpu_usage_percent > 90){ cpu_usage_class = 'q-danger'; }
+      });
+      
+      $.when(disk, nobackup_disk, cpu_hours).done(function(){
+         var tr = '<tr>';
+         tr += '<td><a href="quotas#'+project_id+'">' + project_id + '</a></td>';
+         tr += '<td class="'+disk_usage_class+'"><div class="wrapper"><span class="val" style="width:'+disk_usage_percent+'%;"><span>'+disk_usage+' TB</span></span><span class="percent pull-right">'+disk_usage_percent+'%</span></div></td>';
+         tr += '<td class="'+nobackup_usage_class+'"><div class="wrapper"><span class="val" style="width:'+nobackup_usage_percent+'%;"><span>'+nobackup_usage+' TB</span></span><span class="percent pull-right">'+nobackup_usage_percent+'%</span></div></td>';
+         tr += '<td class="'+cpu_usage_class+'"><div class="wrapper"><span class="val" style="width:'+cpu_usage_percent+'%;"><span>'+cpu_usage+' K</span></span><span class="percent pull-right">'+cpu_usage_percent+'%</span></div></td>';
+         tr += '</tr>';
+         $('#project_quotas tbody').append(tr);
+      });
+   });
 }
 
 fill_updates_table = function(){
