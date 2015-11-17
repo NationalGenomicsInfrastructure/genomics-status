@@ -65,7 +65,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                 <td>";
             $.each(sample_data.library, function(lib_id, lib_data){
                 lims_id=lib_id.split("-")[1];
-                content+="<a href='https://genologics.scilifelab.se:8443/clarity/work-complete/"+lims_id+"'>" ;
+                content+="<a href='https://genologics.scilifelab.se/clarity/work-complete/"+lims_id+"'>" ;
                 content+=lib_data['date']+"</a> "
                 content+=auto_format(lib_data['status']);
                 content+=" <span class='label label-date'>"+lib_data['concentration']+"</span>"
