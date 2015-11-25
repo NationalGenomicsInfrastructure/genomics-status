@@ -164,6 +164,7 @@ class Application(tornado.web.Application):
             ("/project/([^/]*)$", ProjectSamplesHandler),
             ("/project_summary/([^/]*)$", ProjectSummaryHandler),
             ("/projects/([^/]*)$", ProjectsHandler),
+            ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/reads_vs_qv", ReadsVsQvhandler),
             ("/reads_per_lane", ReadsPerLaneHandler),
             ("/samples_per_lane", SamplesPerLaneHandler),
