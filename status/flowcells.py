@@ -323,6 +323,37 @@ class FlowcellLinksDataHandler(SafeHandler):
                 self.set_header("Content-type", "application/json")
                 self.finish(json.dumps(links))
 
+class ReadsTotalHandler(SafeHandler):
+    """ Serves external links for each project
+        Links are stored as JSON in genologics LIMS / project
+        URL: /reads_total/([^/]*)
+    """
+
+    def get(self, query):
+        data={}
+        ordereddata=OrderedDict()
+
+        self.set_header("Content-type", "text/html")
+        t = self.application.loader.load("reads_total.html")
+
+        if not query:
+            self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(), readsdata=ordereddata))
+        else:
+            xfc_view = self.application.x_flowcells_db.view("samples/lane_clusters", reduce=False)
+            fc_view = self.application.flowcells_db.view("samples/lane_clusters", reduce=False)
+            for row in xfc_view[query:"{}Z".format(query)]:
+                if not row.key in data:
+                    data[row.key]=[]
+                data[row.key].append(row.value)
+            fc_view = self.application.x_flowcells_db.view("samples/lane_clusters", reduce=False)
+            for row in fc_view[query:"{}Z".format(query)]:
+                if not row.key in data:
+                    data[row.key]=[]
+                if row.value not in data[row.key]:
+                    data[row.key].append(row.value)
+            for key in sorted(data.keys()):
+                ordereddata[key]=sorted(data[key], key=lambda d:d['fcp'])
+            self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(), readsdata=ordereddata))
 #Functions
 def get_container_from_id(flowcell):
     if flowcell[7:].startswith('00000000'):
