@@ -9,17 +9,18 @@ Description: Summing tool for the reads
 
 {% block stuff %}
 
-<h1 id="page_title">{{ project }}: Project Read Count Totals</h1>
+<h1 id="page_title">Read Count Totals: {{ query }}</h1>
 <div id="querybox">
     <form action="/reads_total/" id="reads_form">
         <div class="form-group">
-            <label for="reads_query">Enter new project ID here:</label>
-            <div class="input-group" style="max-width: 200px;">
+            <label for="reads_query">Enter new search term here:</label>
+            <div class="input-group" style="max-width: 400px;">
                 <input type="text" class="form-control" id="reads_query" placeholder="eg. P1234">
                 <span class="input-group-btn">
                     <button class="btn btn-default" type="submit">Search</button>
                 </span>
             </div>
+            <span class="help-block">Page finds any samples whose names begin with the search term.</span>
         </div>
     </form>
 </div>
@@ -63,8 +64,10 @@ Description: Summing tool for the reads
 <div id="summary_table"></div>
 {% else %}
 <div class="alert alert-danger">
-    <h4>Error - Project Not Found</h4>
-    <p>Sorry, we weren't able to find this project. Please try again with the box above.</p>
+    <h4>Error - No samples found</h4>
+    <p>Sorry, we weren't able to find any samples matching <code>{{ query }}</code>. Please try again with the box above.</p>
+    <p>The search works by matching any sample names that begin with your search term. So P123 will match samples <code>P123_001</code> and <code>P1234_003</code></p>
+    <p>Note that sample names do not have full project names such as <code>A.Project_15_03</code>, so these kinds of searches will not work.</p>
 </div>
 {% end %}
 

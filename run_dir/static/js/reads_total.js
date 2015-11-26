@@ -69,7 +69,11 @@ function update_all_totals(){
 // Top form submitted - go to new project
 $('#reads_form').submit(function(e){
     e.preventDefault();
-    location.href = "/reads_total/" + $('#reads_query').val();
+    if($('#reads_query').val() == ''){
+        alert('Error - search term cannot be empty');
+    } else {
+        location.href = "/reads_total/" + $('#reads_query').val();
+    }
 });
 
 // On page load
