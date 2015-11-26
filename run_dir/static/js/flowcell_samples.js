@@ -209,7 +209,7 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                             if(bc !== 'unknown'){
                                 var mm = 0;
                                 for (var i = 0, len = unmatched.length; i < len; i++) {
-                                    if(unmatched[i] != bc[i] || unmatched[i] != 'N' || unmatched[i] != 'N'){
+                                    if(unmatched[i] != bc[i] && unmatched[i] != 'N' && bc[i] != 'N'){
                                         mm += 1;
                                     }
                                 }
