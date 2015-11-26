@@ -9,71 +9,82 @@ Description: Summing tool for the reads
 
 {% block stuff %}
 
-<div id="querybox">
-    <h3>Enter sample here : </h3>
-    <form action="/reads_total/" id="reads_form">
-        <div class="form-group statusdb-search" id="reads_search">
-            <input type="text" class="form-control" id="reads_query" length=20 / >
-        </div>
-        <input type="submit" />
-    </form>
+<div {% if readsdata %}style="margin-left: 270px;"{% end %}>
+    <h1 id="page_title">Read Count Totals: <span id="rt_query">{{ query }}</span></h1>
+    <div id="querybox">
+        <form action="/reads_total/" id="reads_form">
+            <div class="form-group">
+                <label for="reads_query">Enter new search term here:</label>
+                <div class="input-group" style="max-width: 400px;">
+                    <input type="text" class="form-control" id="reads_query" placeholder="eg. P1234">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="submit">Search</button>
+                    </span>
+                </div>
+                <span class="help-block">Page finds any samples whose names begin with the search term.</span>
+            </div>
+        </form>
+    </div>
 </div>
 
-    {% if readsdata %}
-      <div id="sample_tables" class="container-fluid">
+{% if query == '' %}
+    <h3>Welcome to the read count totals page!</h3>
+    <p>To begin, enter a search term above and click <code>Search</code></p>
+    <p>The search works by matching any sample names that begin with your search term. So P123 will match samples <code>P123_001</code> and <code>P1234_003</code></p>
+    <p>Note that sample names do not have full project names such as <code>A.Project_15_03</code>, so these kinds of searches will not work.</p>
+{% elif readsdata %}
+<div style="width: 250px; position:fixed; left: 10px; top: 65px; height: 100%; overflow: auto;">
+    <h3 id="summary_table_section">Summary of Selected Cluster Counts</h3>
+    <p><button id="rt_summary_download" class="btn btn-default">Download as tab-delimited file</button></p>
+    <div id="summary_table"></div>
+</div>
+<div style="margin-left: 270px;">
+    <div id="reads_total_summary_chart"></div>
+    <p><a href="#summary_table_section">Click here to see the summary table</a>.</p>
+    <hr>
+    <div id="sample_tables" class="container-fluid">
         {% set counter = 0 %}
         <div class="row">
         {% for sample in readsdata %}
-        {% if counter%3==0 %}
-        </div>
-        <hr>
-        <div class="row">
-        {% end %}
-        <div id="{{ sample }}" class="col-md-4">
-            <table id="table_{{ sample }}"class="table reads_table">
-            <tr><td><a href="/project/{{ sample.split('_')[0] }}">{{ sample }}</a></td><td>Add</td><td>Clusters</td></tr>
-            {% for d in readsdata[sample] %}
-            <tr class="reads_data"><td class="flowcell"><a href="/flowcells/{{ d['fcp'].split('_')[0] }}_{{ d['fcp'].split('_')[-1].split(':')[0] }}">{{ d['fcp'] }}</a></td><td><input type='checkbox' class="reads_check" checked /></td><td class="clusters">{{ d['cl'] }}</td></tr>
-            {% end %}
-            <tr><th>Total</th><th class="sample_name">{{ sample }}</th><th id="{{ sample }}_total" class="reads_total"></th>
-        </table>
-        </div>
+            {% if counter%3==0 %}</div><hr><div class="row">{% end %}
+            <div id="{{ sample }}" class="col-md-4 sample_table" style="padding-top:15px;">
+                <table id="table_{{ sample }}"class="table reads_table">
+                    <tr>
+                        <th><a href="/project/{{ sample.split('_')[0] }}">{{ sample }}</a></th>
+                        <th>Add</th>
+                        <th>Clusters</th>
+                    </tr>
+                {% for d in readsdata[sample] %}
+                    <tr class="reads_data">
+                        <td class="flowcell"><a href="/flowcells/{{ d['fcp'].split('_')[0] }}_{{ d['fcp'].split('_')[-1].split(':')[0] }}">{{ d['fcp'] }}</a></td>
+                        <td><input type='checkbox' class="reads_check" checked /></td>
+                        <td class="clusters">{{ d['cl'] }}</td>
+                    </tr>
+                {% end %}
+                    <tr>
+                        <th>Total</th>
+                        <th class="sample_name">{{ sample }}</th>
+                        <th id="{{ sample }}_total" class="reads_total"></th>
+                    </tr>
+                </table>
+            </div>
         {% set counter = counter + 1 %}
         {% end %}
-      </div>
-      </div>
-      <div id='summary_table'></div>
-    {% end %}
-    <script type="text/javascript">
-        function create_summary_table(ar_s, ar_c){
-            var tbl="<table class='table'><tr><th>Sample</th><th>Clusters</th></tr>";
-            for (index in ar_s){
-                tbl+="<tr><td>"+ar_s[index]+"</td><td>"+ar_c[index]+"</td></tr>";
-            }
-            tbl+="<table>";
-            $('#summary_table').html(tbl);
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-danger">
+    <h4>Error - No samples found</h4>
+    <p>Sorry, we weren't able to find any samples matching <code>{{ query }}</code>. Please try again with the box above.</p>
+    <p>The search works by matching any sample names that begin with your search term. So P123 will match samples <code>P123_001</code> and <code>P1234_003</code></p>
+    <p>Note that sample names do not have full project names such as <code>A.Project_15_03</code>, so these kinds of searches will not work.</p>
+</div>
+{% end %}
 
-        }
-        function update_all_totals(){
-            var ar_samples=Array();
-            var ar_clusters=Array();
-            $(".reads_table").each(function(){
-                var total=0;
-                $(this).find(".reads_data").each(function(){
-                    if ($(this).find(".reads_check").prop("checked")==true){
-                        total=total + parseInt($(this).find(".clusters").text());
-                    }
-                });
-            ar_samples.push($(this).find(".sample_name").text());
-            ar_clusters.push(total);
-            $(this).find(".reads_total").text(total);
-            });
-        create_summary_table(ar_samples, ar_clusters);
-        }
-          $('#reads_form').submit(function(){
-                  $('#reads_form').attr("action", "/reads_total/" + $('#reads_query').val());
-        });
-          $('.reads_check').click(update_all_totals);
-          update_all_totals();
-      </script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript" src="/static/js/FileSaver.min.js"></script>
+<script type="text/javascript" src="/static/js/reads_total.js?v={{ gs_globals['git_commit'] }}" ></script>
+
 {% end %}

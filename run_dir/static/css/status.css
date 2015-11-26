@@ -95,6 +95,10 @@ samp { font-size:0.8em; }
 .well > h1, .well > h2, .well > h3, .well > h4, .well > h5, .well > h6 {
     margin-top:0;
 }
+.h3-label {
+	font-weight: bold;
+	font-size: 32px;
+}
 
 /*
 === Block elements ===
