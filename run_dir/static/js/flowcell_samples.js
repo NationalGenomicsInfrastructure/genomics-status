@@ -167,7 +167,13 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
             $('#lane_'+lid).append(lbody);
             if ('undetermined' in data) {
                 var ludtable='<table class="undetermined" id="table_ud_lane_' + lid + '" style="display:none;">';
-                ludtable += "<tr><th>Total</th><th>"+nice_numbers(total_undetermined_claster_number)+"</th><th>(100%)</span></th></tr>";
+                ludtable += "<tr><th>Total</th><th>"+nice_numbers(total_undetermined_claster_number)+"</th><th>(100%)</span></th>";
+                for (var s in data['lane'][lid]){
+                    if(data['lane'][lid][s]['barcode'] !== 'unknown'){
+                        ludtable += '<th>'+data['lane'][lid][s]['barcode']+' mismatches</th>';
+                    }
+                }
+                ludtable += "</tr>";
 
                 var button='<button id="ud_button_lane_' +lid + '" class="undetermined-btn btn btn-info btn-sm" \
                            type="button" onclick="display_undetermined(' + lid + ')" >Show Undetermined</button>';
@@ -194,7 +200,24 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                     var percentage = (100 * count/total_undetermined_claster_number).toFixed(2);
 
                     count = nice_numbers(count);
-                    ludtable += "<tr"+hl+"><td><samp>"+unmatched+"</samp></td><td>"+count+'</td><td>('+percentage+"%)</span></td></tr>";
+                    ludtable += "<tr"+hl+"><td><samp>"+unmatched+"</samp></td><td>"+count+'</td><td>('+percentage+"%)</span></td>";
+                    for (var s in data['lane'][lid]){
+                        var bc = data['lane'][lid][s]['barcode'];
+                        if(bc !== 'unknown'){
+                            var mm = 0;
+                            for (var i = 0, len = unmatched.length; i < len; i++) {
+                                if(unmatched[i] != bc[i] && unmatched[i] != 'N' && unmatched[i] != 'N'){
+                                    mm += 1;
+                                }
+                            }
+                            var fr_matched = (unmatched.length - mm)/unmatched.length;
+                            var tdclass = '';
+                            if(fr_matched > 0.6){ tdclass = ' class="undetermined-warning"'; }
+                            if(fr_matched > 0.8){ tdclass = ' class="undetermined-highlight"'; }
+                            ludtable += '<td'+tdclass+'>'+mm+'</td>';
+                        }
+                    }
+                    ludtable += "</tr>";
                 }
                 ludtable+="</dl>";
                 $('#button_lane_'+lid).append(button);
