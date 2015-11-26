@@ -487,6 +487,11 @@ td.progress {
   background-color: #f2dede;
   border: 1px solid #ebccd1;
 }
+.undetermined-warning {
+  color: #8a6d3b;
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+}
 
 .thousand_group {
   margin-left:4px;
