@@ -28,9 +28,9 @@ function plot_summary_chart(data, sample_names){
 }
 
 function create_summary_table(ar_s, ar_c){
-    var tbl="<table class='table table-nowidth'><tr><th>Sample</th><th>Clusters</th></tr>";
+    var tbl='<table class="table table-hover"><tr><th>Sample</th><th>Clusters</th></tr>';
     for (index in ar_s){
-        tbl+='<tr><td>'+ar_s[index]+'</td><td class="text-right thousands">'+ar_c[index]+'</td></tr>';
+        tbl+='<tr><td><a href="#'+ar_s[index]+'" class="plink">'+ar_s[index]+'</a></td><td class="text-right thousands">'+ar_c[index]+'</td></tr>';
     }
     tbl+="<table>";
     $('#summary_table').html(tbl);
@@ -79,6 +79,28 @@ $('#reads_form').submit(function(e){
 // On page load
 $(function(){
     update_all_totals();
+    
     // Update page when a checkbox changed
     $('.reads_check').click(update_all_totals);
+    
+    // Project link clicked
+    $('#summary_table').on('click', '.plink', function(){
+        $('.sample_table').removeClass('highlighted');
+        $($(this).attr('href')).addClass('highlighted');
+    });
+    
+    // Download table as a file
+    $('#rt_summary_download').click(function(e){
+        e.preventDefault();
+        var dl_text = '';
+        $('#summary_table table tr').each(function(){
+            var cells = [];
+            $(this).find('th, td').each(function(){
+                cells.push($(this).text());
+            });
+            dl_text += cells.join("\t") + "\n";
+        });
+        var fblob = new Blob([dl_text], {type: "text/plain;charset=utf-8"});
+        saveAs(fblob, $('#rt_query').text()+"_reads_total.txt");
+    });
 });
