@@ -443,11 +443,19 @@ class ProjectSamplesHandler(SafeHandler):
         """
         def get(self, project):
             t = self.application.loader.load("project_samples.html")
+            worksets_view = self.application.worksets_db.view("worksets/summary", descending=True)
+
+            worksets = []
+            for workset in worksets_view.rows:
+                if project in workset.value['projects'].keys():
+                    worksets.append(workset.key)
+
             self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
                                       user=self.get_current_user_name(),
                                       columns = self.application.genstat_defaults.get('pv_columns'),
                                       columns_sample = self.application.genstat_defaults.get('sample_columns'),
-                                      prettify = prettify_css_names
+                                      prettify = prettify_css_names,
+                                      worksets=worksets,
                                       ))
 
 
