@@ -3,6 +3,7 @@
 
 function plot_summary_chart(data, sample_names){
     $('#reads_total_summary_chart').highcharts({
+        credits:{enabled: false},
         chart: { type: 'column' },
         title: { text: 'Sample Read Counts' },
         subtitle: { text: 'Click a bar to see that sample' },
