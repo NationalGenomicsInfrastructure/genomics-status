@@ -52,7 +52,7 @@ Description: Summing tool for the reads
         <div class="row">
         {% for sample in readsdata %}
             {% if counter%2==0 %}</div><hr><div class="row">{% end %}
-            <div id="{{ sample }}" class="col-md-6 sample_table" style="padding-top:15px;">
+            <div id="{{ sample }}" class="col-lg-6 sample_table" style="padding-top:15px;">
                 <table id="table_{{ sample }}"class="table reads_table">
                     <tr>
                         <th><a href="/project/{{ sample.split('_')[0] }}">{{ sample }}</a></th>
