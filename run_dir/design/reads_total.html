@@ -33,36 +33,49 @@ Description: Summing tool for the reads
     <p>The search works by matching any sample names that begin with your search term. So P123 will match samples <code>P123_001</code> and <code>P1234_003</code></p>
     <p>Note that sample names do not have full project names such as <code>A.Project_15_03</code>, so these kinds of searches will not work.</p>
 {% elif readsdata %}
-<div style="width: 250px; position:fixed; left: 10px; top: 65px; height: 100%; overflow: auto;">
+<div style="width: 250px; position:fixed; left: 10px; top: 65px; height: 90%; overflow: auto;">
     <h3 id="summary_table_section">Summary of Selected Cluster Counts</h3>
     <p><button id="rt_summary_download" class="btn btn-default">Download as tab-delimited file</button></p>
     <div id="summary_table"></div>
 </div>
 <div style="margin-left: 270px;">
     <div id="reads_total_summary_chart"></div>
-    <p><a href="#summary_table_section">Click here to see the summary table</a>.</p>
-    <hr>
+    <div class="btn-group" role="group" >
+        <input type="button" id="check_all" class="btn btn-default" value="Check all"/>
+        <input type="button" id="uncheck_all" class="btn btn-default" value="Uncheck all"/>
+    </div>    
     <div id="sample_tables" class="container-fluid">
         {% set counter = 0 %}
         <div class="row">
         {% for sample in readsdata %}
-            {% if counter%3==0 %}</div><hr><div class="row">{% end %}
-            <div id="{{ sample }}" class="col-md-4 sample_table" style="padding-top:15px;">
+            {% if counter%2==0 %}</div><hr><div class="row">{% end %}
+            <div id="{{ sample }}" class="col-lg-6 sample_table" style="padding-top:15px;">
                 <table id="table_{{ sample }}"class="table reads_table">
                     <tr>
                         <th><a href="/project/{{ sample.split('_')[0] }}">{{ sample }}</a></th>
+                        <th>%&nbsp;&gt;&nbsp;q30</th>
                         <th>Add</th>
                         <th>Clusters</th>
                     </tr>
                 {% for d in readsdata[sample] %}
                     <tr class="reads_data">
                         <td class="flowcell"><a href="/flowcells/{{ d['fcp'].split('_')[0] }}_{{ d['fcp'].split('_')[-1].split(':')[0] }}">{{ d['fcp'] }}</a></td>
+                        {% if d['q30']>75 %}
+                            <td class="success">{{ d['q30'] }}</td>
                         <td><input type='checkbox' class="reads_check" checked /></td>
+                        {% elif d['q30']>30 %}
+                            <td class="warning">{{ d['q30'] }}</td>
+                        <td><input type='checkbox' class="reads_check"/></td>
+                        {% else %}
+                            <td class="danger">{{ d['q30'] }}</td>
+                        <td><input type='checkbox' class="reads_check"/></td>
+                        {% end %}
                         <td class="clusters">{{ d['cl'] }}</td>
                     </tr>
                 {% end %}
                     <tr>
                         <th>Total</th>
+                        <th></th>
                         <th class="sample_name">{{ sample }}</th>
                         <th id="{{ sample }}_total" class="reads_total"></th>
                     </tr>
