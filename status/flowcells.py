@@ -345,7 +345,6 @@ class ReadsTotalHandler(SafeHandler):
                 if not row.key in data:
                     data[row.key]=[]
                 data[row.key].append(row.value)
-            fc_view = self.application.x_flowcells_db.view("samples/lane_clusters", reduce=False)
             for row in fc_view[query:"{}Z".format(query)]:
                 if not row.key in data:
                     data[row.key]=[]
