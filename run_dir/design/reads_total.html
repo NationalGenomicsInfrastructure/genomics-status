@@ -40,8 +40,13 @@ Description: Summing tool for the reads
 </div>
 <div style="margin-left: 270px;">
     <div id="reads_total_summary_chart"></div>
-    <p><a href="#summary_table_section">Click here to see the summary table</a>. <input type="button" id="check_all" value="Check all"/><input type="button" id="uncheck_all" value="Uncheck all"/></p>
-    <hr>
+    <p>
+    <a href="#summary_table_section">Click here to see the summary table</a>. 
+    <div class="btn-group pull-right" role="group" >
+        <input type="button" id="check_all" class="btn btn-default" value="Check all"/>
+        <input type="button" id="uncheck_all" class="btn btn-default" value="Uncheck all"/>
+    </div>    
+    </p>
     <div id="sample_tables" class="container-fluid">
         {% set counter = 0 %}
         <div class="row">
@@ -51,7 +56,7 @@ Description: Summing tool for the reads
                 <table id="table_{{ sample }}"class="table reads_table">
                     <tr>
                         <th><a href="/project/{{ sample.split('_')[0] }}">{{ sample }}</a></th>
-                        <th>%%&nbsp;&gt;&nbsp;q30</th>
+                        <th>%&nbsp;&gt;&nbsp;q30</th>
                         <th>Add</th>
                         <th>Clusters</th>
                     </tr>
