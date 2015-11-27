@@ -33,14 +33,14 @@ Description: Summing tool for the reads
     <p>The search works by matching any sample names that begin with your search term. So P123 will match samples <code>P123_001</code> and <code>P1234_003</code></p>
     <p>Note that sample names do not have full project names such as <code>A.Project_15_03</code>, so these kinds of searches will not work.</p>
 {% elif readsdata %}
-<div style="width: 250px; position:fixed; left: 10px; top: 65px; height: 100%; overflow: auto;">
+<div style="width: 250px; position:fixed; left: 10px; top: 65px; height: 90%; overflow: auto;">
     <h3 id="summary_table_section">Summary of Selected Cluster Counts</h3>
     <p><button id="rt_summary_download" class="btn btn-default">Download as tab-delimited file</button></p>
     <div id="summary_table"></div>
 </div>
 <div style="margin-left: 270px;">
     <div id="reads_total_summary_chart"></div>
-    <p><a href="#summary_table_section">Click here to see the summary table</a>.</p>
+    <p><a href="#summary_table_section">Click here to see the summary table</a>. <input type="button" id="check_all" value="Check all"/><input type="button" id="uncheck_all" value="Uncheck all"/></p>
     <hr>
     <div id="sample_tables" class="container-fluid">
         {% set counter = 0 %}
@@ -51,7 +51,7 @@ Description: Summing tool for the reads
                 <table id="table_{{ sample }}"class="table reads_table">
                     <tr>
                         <th><a href="/project/{{ sample.split('_')[0] }}">{{ sample }}</a></th>
-                        <th>% > q30</th>
+                        <th>%%&nbsp;&gt;&nbsp;q30</th>
                         <th>Add</th>
                         <th>Clusters</th>
                     </tr>

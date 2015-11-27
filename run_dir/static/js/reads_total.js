@@ -29,9 +29,12 @@ function plot_summary_chart(data, sample_names){
 
 function create_summary_table(ar_s, ar_c){
     var tbl='<table class="table table-hover"><tr><th>Sample</th><th>Clusters</th></tr>';
+    var sum=0;
     for (index in ar_s){
+        sum+=ar_c[index];
         tbl+='<tr><td><a href="#'+ar_s[index]+'" class="plink">'+ar_s[index]+'</a></td><td class="text-right thousands">'+ar_c[index]+'</td></tr>';
     }
+    tbl+="<tr><th>Total</th><th class='text-right thousands'>"+ sum +"</th></tr>";
     tbl+="<table>";
     $('#summary_table').html(tbl);
 
@@ -76,6 +79,19 @@ $('#reads_form').submit(function(e){
     }
 });
 
+//check/uncheck all
+$("#check_all").click(function(){
+    $(".reads_check").each(function(){
+        $(this).prop('checked',true);
+    });
+    update_all_totals();
+});
+$("#uncheck_all").click(function(){
+    $(".reads_check").each(function(){
+        $(this).prop('checked',false);
+    });
+    update_all_totals();
+});
 // On page load
 $(function(){
     update_all_totals();
