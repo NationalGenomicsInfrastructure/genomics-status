@@ -278,6 +278,7 @@ Description: Details page for a single project
           <input class="form-control search search-query" type="text" placeholder="Search..." id="search_field">
         </div>
         &nbsp;
+
         <div class="form-group">
           <label>Column Presets:</label>
           <div class="btn-group" id="default_preset_buttons">
@@ -285,6 +286,23 @@ Description: Details page for a single project
           </div>
         </div>
       </form>
+      <hr>
+      <!-- Woksets -->
+      <label for="tab_samples_worksets">Worksets:</label>
+      <div id="tab_samples_worksets">
+      {% for workset in worksets %}
+        <div class="btn-group">
+          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            {{ workset }} <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a href="https://genologics.scilifelab.se/clarity/search?scope=Container&query={{ workset }}">Open in the LIMS</a></li>
+            <li><a href="/workset/{{ workset }}">Open in Genomics Status</a></li>
+          </ul>
+        </div>
+      {% end %}
+      </div>
+
       <hr>
       <div class="scrollable">
         <table class="table table-striped table-bordered" id="sample_table">
