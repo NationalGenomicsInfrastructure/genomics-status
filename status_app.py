@@ -4,6 +4,8 @@ import base64
 import subprocess
 import uuid
 import yaml
+import json
+import requests
 
 from collections import OrderedDict
 from couchdb import Server
@@ -31,7 +33,7 @@ from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotH
 from status.projects import BioinfoAnalysisHandler, CaliperImageHandler, CharonProjectHandler, DeliveriesPageHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
-    ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler,
+    ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler
 
 from status.quotas import QuotaDataHandler, QuotaHandler, QuotasHandler
 from status.q30 import Q30Handler, Q30PlotHandler
@@ -50,6 +52,9 @@ from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandle
     UpdatedDocumentsDatahandler
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
     WorksetsDataHandler, WorksetSearchHandler
+
+from zendesk import Zendesk
+
 
 class Application(tornado.web.Application):
     def __init__(self, settings):
