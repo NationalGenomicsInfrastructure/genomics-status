@@ -293,11 +293,11 @@ Description: Details page for a single project
       {% for workset in worksets %}
         <div class="btn-group">
           <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            {{ workset }} <span class="caret"></span>
+            {{ workset.value }} <span class="caret"></span>
           </button>
           <ul class="dropdown-menu">
-            <li><a href="https://genologics.scilifelab.se/clarity/search?scope=Container&query={{ workset }}">Open in the LIMS</a></li>
-            <li><a href="/workset/{{ workset }}">Open in Genomics Status</a></li>
+            <li><a href="https://genologics.scilifelab.se/clarity/search?scope=Container&query={{ workset.value }}">Open in the LIMS</a></li>
+            <li><a href="/workset/{{ workset.value }}">Open in Genomics Status</a></li>
           </ul>
         </div>
       {% end %}
