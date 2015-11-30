@@ -289,13 +289,19 @@ Description: Details page for a single project
       <hr>
       <!-- Woksets -->
       <label for="tab_samples_worksets">Worksets:</label>
+      <div id="tab_samples_worksets">
       {% for workset in worksets %}
-        <div id="tab_samples_worksets" class="btn-toolbar" role="toolbar">
-          <a href="/workset/{{ workset }}" type="button" class="btn btn-default">
-            {{ workset }}
-          </a>
+        <div class="btn-group">
+          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            {{ workset }} <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a href="http://genologics.scilifelab.se:8080/clarity/search?scope=Container&query={{ workset }}">Open in the LIMS</a></li>
+            <li><a href="/workset/{{ workset }}">Open in the GenStat</a></li>
+          </ul>
         </div>
       {% end %}
+      </div>
 
       <hr>
       <div class="scrollable">
