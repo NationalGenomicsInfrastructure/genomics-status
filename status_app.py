@@ -16,26 +16,40 @@ import tornado.web
 from tornado import template
 from tornado.options import define, options
 
-from status.applications import *
-from status.authorization import *
-from status.barcode_vs_expected import *
-from status.flowcells import *
-from status.phix_err_rate import *
-from status.production import *
-from status.projects import *
-from status.quotas import *
-from status.q30 import *
-from status.reads_per_lane import *
-from status.clusters_per_lane import *
-from status.reads_vs_qv import *
-from status.samples import *
-from status.sequencing import *
-from status.suggestion_box import *
-from status.testing import *
-from status.util import *
+from status.applications import ApplicationDataHandler, ApplicationHandler, ApplicationsDataHandler, ApplicationsHandler
+from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
+from status.barcode_vs_expected import BarcodeVsExpectedDataHandler, BarcodeVsExpectedPlotHandler, ExpectedHandler
+from status.clusters_per_lane import ClustersPerLaneHandler, ClustersPerLanePlotHandler
 from status.cpu_hours import CPUHoursDataHandler
+from status.flowcells import FlowcellDataHandler, FlowcellDemultiplexHandler, FlowcellHandler, FlowcellLinksDataHandler, \
+    FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
+    FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
+from status.phix_err_rate import PhixErrorRateDataHandler, PhixErrorRateHandler
+from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
+    DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
+    ProducedQuarterlyPlotHandler, ProductionCronjobsDataHandler, ProductionCronjobsHandler, ProductionHandler
+from status.projects import BioinfoAnalysisHandler, CaliperImageHandler, CharonProjectHandler, DeliveriesPageHandler, \
+    LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
+    ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
+    ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler,
 
-import status.worksets
+from status.quotas import QuotaDataHandler, QuotaHandler, QuotasHandler
+from status.q30 import Q30Handler, Q30PlotHandler
+from status.reads_per_lane import ReadsPerLaneHandler, ReadsPerLanePlotHandler
+from status.reads_vs_qv import ReadsVsQDataHandler, ReadsVsQvhandler
+from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
+    SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, SampleQCSummaryHandler, \
+    SampleReadCountDataHandler, SampleRunDataHandler, SampleRunHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
+    SamplesPerLaneHandler, SamplesPerLanePlotHandler
+from status.sequencing import InstrumentClusterDensityPlotHandler, InstrumentErrorratePlotHandler, InstrumentUnmatchedPlotHandler, \
+    InstrumentYieldPlotHandler, InstrumentClusterDensityDataHandler, InstrumentErrorrateDataHandler, InstrumentUnmatchedDataHandler, \
+    InstrumentYieldDataHandler, SequencingStatsHandler
+from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
+from status.testing import TestDataHandler
+from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, SafeStaticFileHandler, \
+    UpdatedDocumentsDatahandler
+from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
+    WorksetsDataHandler, WorksetSearchHandler
 
 class Application(tornado.web.Application):
     def __init__(self, settings):
@@ -140,11 +154,11 @@ class Application(tornado.web.Application):
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),
-            ("/api/v1/worksets", status.worksets.WorksetsDataHandler),
-            ("/api/v1/workset/([^/]*)$", status.worksets.WorksetDataHandler),
-            ("/api/v1/workset_search/([^/]*)$", status.worksets.WorksetSearchHandler),
-            ("/api/v1/workset_notes/([^/]*)$", status.worksets.WorksetNotesDataHandler),
-            ("/api/v1/workset_links/([^/]*)$", status.worksets.WorksetLinksHandler),
+            ("/api/v1/worksets", WorksetsDataHandler),
+            ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
+            ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
+            ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
+            ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/api/v1/cpu_hours/(\w+)?", CPUHoursDataHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
@@ -171,8 +185,8 @@ class Application(tornado.web.Application):
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/sequencing", SequencingStatsHandler),
             ("/suggestion_box", SuggestionBoxHandler),
-            ("/worksets", status.worksets.WorksetsHandler),
-            ("/workset/([^/]*)$", status.worksets.WorksetHandler),
+            ("/worksets", WorksetsHandler),
+            ("/workset/([^/]*)$", WorksetHandler),
             (r'.*', BaseHandler)
         ]
 
