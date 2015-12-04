@@ -94,17 +94,17 @@ $(document).ready(function() {
               else {                                              project_status = "Closed"; }
             }
             // Only allow ongoing projects to continue
-            if(project_status != 'Ongoing'){
-              $(d['container_id']).append(
-                '<h3><a href="project/'+pid+'" class="bi-project-id">'+pid+'</a>: '+
-                '<span class="bi-project-name">'+pdata[pid]['project_name']+'</span><br>'+
-                '<small><span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">'+pdata[pid]['application']+'</span> &nbsp '+
-                '<span class="bi-project-facility label label-primary" data-toggle="tooltip" data-delay="500" title="Project Facility">'+pdata[pid]['type']+'</span> &nbsp; '+
-                '<span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">'+pdata[pid]['bioinfo_responsible']+'</span></small></h3>'+
-                '<div class="alert alert-danger"><strong>Error</strong> - Project is not ongoing. '+pid+' is '+project_status+'</div>'
-              );
-              return true;
-            }
+            // if(project_status != 'Ongoing'){
+            //   $(d['container_id']).append(
+            //     '<h3><a href="project/'+pid+'" class="bi-project-id">'+pid+'</a>: '+
+            //     '<span class="bi-project-name">'+pdata[pid]['project_name']+'</span><br>'+
+            //     '<small><span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">'+pdata[pid]['application']+'</span> &nbsp '+
+            //     '<span class="bi-project-facility label label-primary" data-toggle="tooltip" data-delay="500" title="Project Facility">'+pdata[pid]['type']+'</span> &nbsp; '+
+            //     '<span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">'+pdata[pid]['bioinfo_responsible']+'</span></small></h3>'+
+            //     '<div class="alert alert-danger"><strong>Error</strong> - Project is not ongoing. '+pid+' is '+project_status+'</div>'
+            //   );
+            //   return true;
+            // }
 
             // Main project fields
             var responsible = pdata[pid]['bioinfo_responsible'] == undefined ? '??' : pdata[pid]['bioinfo_responsible'];
