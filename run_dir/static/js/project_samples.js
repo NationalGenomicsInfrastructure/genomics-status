@@ -546,7 +546,8 @@ function load_samples_table() {
             else if (column_id == 'library_prep') {
               tbl_row += '<td class="' + column_id + '">';
               if (info[column_id] !== undefined) {
-                $.each(info[column_id], function(prep, info_prep){
+                var libs = Object.keys(info[column_id]).sort();
+                $.each(libs, function(idx, prep){
                   tbl_row += auto_format(prep, true) + ' ';
                 });
               }
@@ -605,7 +606,9 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">';
-            $.each(info['library_prep'], function(library, info_library) {
+            var libs = Object.keys(info[column_id]).sort();
+            $.each(libs, function(idx, library){
+              info_library=info['library_prep'][library];
               info_library[column_id] = round_floats(info_library[column_id], 2);
 
               // Special case for workset_name, which is a link to Genstat workset page
