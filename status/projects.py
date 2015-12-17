@@ -334,7 +334,8 @@ class ProjectSamplesDataHandler(SafeHandler):
         sample_data["prep_finished_date"] = []
         sample_data["run_metrics_data"]={}
         if "library_prep" in sample_data:
-            for lib_prep, content in sample_data["library_prep"].iteritems():
+            for lib_prep in sorted(sample_data["library_prep"]):
+                content=sample_data["library_prep"][lib_prep]
                 if "sample_run_metrics" in content:
                     for run, id in content["sample_run_metrics"].iteritems():
                         sample_data["sample_run_metrics"].append(run)
