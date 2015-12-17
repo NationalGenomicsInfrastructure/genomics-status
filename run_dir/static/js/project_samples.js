@@ -606,7 +606,7 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">';
-            var libs = Object.keys(info[column_id]).sort();
+            var libs = Object.keys(info['library_prep']).sort();
             $.each(libs, function(idx, library){
               info_library=info['library_prep'][library];
               info_library[column_id] = round_floats(info_library[column_id], 2);
