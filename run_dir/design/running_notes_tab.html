@@ -20,14 +20,26 @@
                             </div>
                         </div>
                     </div>
-                    <div class="text-right" style="margin-top:15px;">
-                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help">Markdown Help</a>
-                        <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
+
+                    <div class="row" style="margin-top:15px;">
+                        <div class="col-md-6 form-inline">
+                            <label>Category :</label>
+                            <input type="text" class="form-control" id="rn_category" size=20 />
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help">Markdown Help</button>
+                            <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </form>
 
+        <!-- filter running notes -->
+        <div id="running_notes_filter" class="form-inline" style="margin-bottom:12px;">
+            <label>Search :</label>
+            <input type="text" class="form-control" id="rn_search" size=30 />
+        </div>
         <!-- display running notes -->
         <div class="panel-group" id="running_notes_panels"></div>
     </div>

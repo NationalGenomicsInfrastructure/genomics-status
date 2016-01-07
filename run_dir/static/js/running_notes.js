@@ -13,23 +13,30 @@ function get_note_url() {
 
 function make_running_note(date, note){
   try {
+    var category = '';
     var date = date.replace(/-/g, '/');
     date = date.replace(/\.\d{6}/, '');
     date = new Date(date);
-    if(date > new Date('2015-01-01')){
-      noteText = make_markdown(note['note']);
-    } else {
-      noteText = '<pre class="plaintext_running_note">'+make_project_links(note['note'])+'</pre>';
+    if (note['note'] != undefined){
+        if(date > new Date('2015-01-01')){
+          noteText = make_markdown(note['note']);
+        } else {
+          noteText = '<pre class="plaintext_running_note">'+make_project_links(note['note'])+'</pre>';
+        }
+        datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date)
+        if ('category' in note){
+            category=' - <span class="label label-info">'+note['category']+"</span>";
+        }
     }
-    datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date)
   } catch(e){
     noteText = '<pre>'+make_project_links(note['note'])+'</pre>';
     var datestring = '?';
   }
+  
   return '<div class="panel panel-default">' +
       '<div class="panel-heading">'+
         '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-       datestring + '</div><div class="panel-body">'+noteText+'</div></div>';
+       datestring + category +'</div><div class="panel-body">'+noteText+'</div></div>';
 }
 
 function load_running_notes(wait) {
@@ -63,7 +70,19 @@ function load_running_notes(wait) {
           'due to connection problems. Please try again later and report if the problem persists.</p></div>'+debugging);
   });
 }
-
+//Filter notes by Category
+$('#rn_search').keyup(function() {
+    var search=$('#rn_search').val();
+    $('#running_notes_panels').children().each(function(){
+        var category=$(this).children('.panel-heading').text().split('-')[2]; 
+        var note=$(this).children('.panel-body').children().text(); 
+        if ((category && category.indexOf(search) != -1) || note.indexOf(search) != -1){
+            $(this).show();
+        }else{
+            $(this).hide();
+        }
+    });
+});
 // Preview running notes
 $('#new_note_text').keyup(function() {
     var now = new Date();
@@ -83,6 +102,7 @@ $('#new_note_text').keyup(function() {
 $("#running_notes_form").submit( function(e) {
     e.preventDefault();
     var text = $('#new_note_text').val().trim();
+    var category = $('#rn_category').val().trim();
     if (text.length == 0) {
         alert("Error: No running note entered.");
         return false;
@@ -94,7 +114,7 @@ $("#running_notes_form").submit( function(e) {
       type: 'POST',
       url: note_url,
       dataType: 'json',
-      data: {"note": text},
+      data: {"note": text, "category": category},
       error: function(xhr, textStatus, errorThrown) {
         alert('Error: '+xhr['responseText']+' ('+errorThrown+')');
         $('#save_note_button').removeClass('disabled').text('Submit Running Note');
@@ -125,9 +145,12 @@ $("#running_notes_form").submit( function(e) {
             }
             // Create a new running note and slide it in..
             var now = new Date();
+            if (category != ''){
+                category=' - <span class="label label-info">'+note['category']+"</span>";
+            }
             $('<div class="panel panel-success"><div class="panel-heading">'+
                   '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
-                  now.toDateString() + ', ' + now.toLocaleTimeString(now)+
+                  now.toDateString() + ', ' + now.toLocaleTimeString(now)+ category + 
                 '</div><div class="panel-body">'+make_markdown(data['note'])+
                 '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
             check_img_sources($('#running_notes_panels img'));
