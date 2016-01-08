@@ -99,9 +99,7 @@ function preview_running_notes(){
     // update textarea height
     $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
 }
-//Filter notes by Category
-$('#rn_search').keyup(function() {
-    var search=$('#rn_search').val();
+function filter_running_notes(search){
     $('#running_notes_panels').children().each(function(){
         var category=$(this).children('.panel-heading').text().split('-')[2]; 
         var note=$(this).children('.panel-body').children().text(); 
@@ -111,6 +109,18 @@ $('#rn_search').keyup(function() {
             $(this).hide();
         }
     });
+}
+//Filter notes by Category
+$('#rn_search').keyup(function() {
+    var search=$('#rn_search').val();
+    filter_running_notes(search);
+});
+$('.btnCatFilter').click(function() {
+    var search=$(this).text();
+    if (search == 'All'){
+        search='';
+    }
+    filter_running_notes(search);
 });
 // Preview running notes
 $('#new_note_text').keyup(preview_running_notes);

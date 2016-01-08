@@ -46,6 +46,14 @@
         <div id="running_notes_filter" class="form-inline" style="margin-bottom:12px;">
             <label>Search :</label>
             <input type="text" class="form-control" id="rn_search" size=30 />
+            <label>Filter :</label>
+            <button id="rn_cat_all" type="button" class="btn btnCatFilter">All</button>
+            <button id="rn_cat_recctrl" type="button" class="btn btn-primary btnCatFilter">Reception Control</button>
+            <button id="rn_cat_libprep" type="button" class="btn btn-success btnCatFilter">Library Preparation</button>
+            <button id="rn_cat_seq" type="button" class="btn btn-info btnCatFilter">Sequencing</button>
+            <button id="rn_cat_bioinfo" type="button" class="btn btn-warning btnCatFilter">Bioinformatics</button>
+            <button id="rn_cat_uscom" type="button" class="btn btn-danger btnCatFilter">User Communication</button>
+            <button id="rn_cat_other" type="button" class="btn btn-default btnCatFilter">Other</button>
         </div>
         <!-- display running notes -->
         <div class="panel-group" id="running_notes_panels"></div>
