@@ -100,10 +100,11 @@ function preview_running_notes(){
     $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
 }
 function filter_running_notes(search){
+    search=search.toLowerCase();
     $('#running_notes_panels').children().each(function(){
-        var category=$(this).children('.panel-heading').text().split('-')[2]; 
+        var header=$(this).children('.panel-heading').text(); 
         var note=$(this).children('.panel-body').children().text(); 
-        if ((category && category.indexOf(search) != -1) || note.indexOf(search) != -1){
+        if (header.toLowerCase().indexOf(search) != -1 || note.toLowerCase().indexOf(search) != -1){
             $(this).show();
         }else{
             $(this).hide();
