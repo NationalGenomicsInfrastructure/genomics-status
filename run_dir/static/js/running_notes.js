@@ -116,12 +116,11 @@ $('#rn_search').keyup(function() {
     filter_running_notes(search);
 });
 $('.btnCatFilter').click(function() {
+    $('.btnCatFilter').each(function() {$(this).removeClass("glow")});
+    $(this).addClass("glow")
     var search=$(this).text();
     if (search == 'All'){
-        $(this).hide();
         search='';
-    }else{
-        $("#rn_cat_all").show();
     }
     filter_running_notes(search);
 });

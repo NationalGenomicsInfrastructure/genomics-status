@@ -901,6 +901,10 @@ These classes are cut and pasted wholesale into here from other packages.
 #ongoing_deliveries .bi-run-status {
   cursor: pointer;
 }
+.glow {
+  box-shadow: 0 0 20px rgba(81, 203, 238, 1);
+  margin-bottom:5px;
+}
 .delivery {
   border-top: 1px solid #fff;
   border-right: 1px solid #fff;
