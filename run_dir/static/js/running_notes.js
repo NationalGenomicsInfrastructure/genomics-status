@@ -1,4 +1,19 @@
-
+function generate_category_label(category){
+     if (category == 'Reception Control'){
+         category=' - <span class="label label-primary">'+ category +"</span>";
+     }else if (category == 'Library Preparation'){
+         category=' - <span class="label label-success">'+ category +"</span>";
+     }else if (category == 'Sequencing'){
+         category=' - <span class="label label-info">'+ category +"</span>";
+     }else if (category == 'User Communication'){
+         category=' - <span class="label label-danger">'+ category +"</span>";
+     }else if (category == 'Bioinformatics'){
+         category=' - <span class="label label-warning">'+ category +"</span>";
+     }else if (category != ''){
+         category=' - <span class="label label-default">'+ category +"</span>";
+     }
+     return category;
+}
 function get_note_url() {
     // URL for the notes
     if ((typeof notetype !== 'undefined' && notetype == 'lims_step') || ('lims_step' in window && lims_step !== null)){
@@ -25,7 +40,7 @@ function make_running_note(date, note){
         }
         datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date)
         if ('category' in note){
-            category=' - <span class="label label-info">'+note['category']+"</span>";
+            category=generate_category_label(note['category']);
         }
     }
   } catch(e){
@@ -70,6 +85,20 @@ function load_running_notes(wait) {
           'due to connection problems. Please try again later and report if the problem persists.</p></div>'+debugging);
   });
 }
+function preview_running_notes(){
+    var now = new Date();
+    $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
+    $('#preview_category').html(generate_category_label($('#rn_category option:selected').val()));
+    var text = $('#new_note_text').val().trim();
+    if (text.length > 0) {
+        $('#running_note_preview_body').html(make_markdown(text));
+        check_img_sources($('#running_note_preview_body img'));
+    } else {
+        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
+    }
+    // update textarea height
+    $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
+}
 //Filter notes by Category
 $('#rn_search').keyup(function() {
     var search=$('#rn_search').val();
@@ -84,25 +113,14 @@ $('#rn_search').keyup(function() {
     });
 });
 // Preview running notes
-$('#new_note_text').keyup(function() {
-    var now = new Date();
-    $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
-    var text = $('#new_note_text').val().trim();
-    if (text.length > 0) {
-        $('#running_note_preview_body').html(make_markdown(text));
-        check_img_sources($('#running_note_preview_body img'));
-    } else {
-        $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
-    }
-    // update textarea height
-    $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
-});
+$('#new_note_text').keyup(preview_running_notes);
+$('#rn_category').change(preview_running_notes);
 
 // Insert new running note and reload the running notes table
 $("#running_notes_form").submit( function(e) {
     e.preventDefault();
     var text = $('#new_note_text').val().trim();
-    var category = $('#rn_category').val().trim();
+    var category = $('#rn_category option:selected').val();
     if (text.length == 0) {
         alert("Error: No running note entered.");
         return false;
@@ -145,9 +163,7 @@ $("#running_notes_form").submit( function(e) {
             }
             // Create a new running note and slide it in..
             var now = new Date();
-            if (category != ''){
-                category=' - <span class="label label-info">'+note['category']+"</span>";
-            }
+            category=generate_category_label(category);
             $('<div class="panel panel-success"><div class="panel-heading">'+
                   '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
                   now.toDateString() + ', ' + now.toLocaleTimeString(now)+ category + 
