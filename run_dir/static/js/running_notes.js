@@ -118,7 +118,10 @@ $('#rn_search').keyup(function() {
 $('.btnCatFilter').click(function() {
     var search=$(this).text();
     if (search == 'All'){
+        $(this).hide();
         search='';
+    }else{
+        $("#rn_cat_all").show();
     }
     filter_running_notes(search);
 });
