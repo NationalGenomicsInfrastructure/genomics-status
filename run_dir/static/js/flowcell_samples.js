@@ -191,6 +191,9 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                     var hl = '';
                     for (samplerunid in data['lane'][lid]){
                         var bc = data['lane'][lid][samplerunid]['barcode'];
+                        // important replacement:
+                        // + was recognized as part of regex, which causes js syntax error
+                        bc = bc.replace(/\+/g, "-");
                         if (bc == 'unknown') { continue; }
                         bc = '^('+bc.split('').join('|N)(')+'|N)$';
                         if(ordered_keys[ud].match(bc)){
