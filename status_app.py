@@ -307,6 +307,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/reads_per_lane.html")
             tornado.autoreload.watch("design/reads_total.html")
             tornado.autoreload.watch("design/reads_vs_qv.html")
+            tornado.autoreload.watch("design/running_notes_tab.html")
             tornado.autoreload.watch("design/sample_run_qc.html")
             tornado.autoreload.watch("design/sample_runs.html")
             tornado.autoreload.watch("design/samples.html")

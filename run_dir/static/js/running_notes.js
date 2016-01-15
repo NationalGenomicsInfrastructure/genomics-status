@@ -1,4 +1,19 @@
-
+function generate_category_label(category){
+     if (category == 'Reception Control'){
+         category=' - <span class="label label-primary">'+ category +"</span>";
+     }else if (category == 'Library Preparation'){
+         category=' - <span class="label label-success">'+ category +"</span>";
+     }else if (category == 'Sequencing'){
+         category=' - <span class="label label-info">'+ category +"</span>";
+     }else if (category == 'User Communication'){
+         category=' - <span class="label label-danger">'+ category +"</span>";
+     }else if (category == 'Bioinformatics'){
+         category=' - <span class="label label-warning">'+ category +"</span>";
+     }else if (category != ''){
+         category=' - <span class="label label-default">'+ category +"</span>";
+     }
+     return category;
+}
 function get_note_url() {
     // URL for the notes
     if ((typeof notetype !== 'undefined' && notetype == 'lims_step') || ('lims_step' in window && lims_step !== null)){
@@ -13,23 +28,30 @@ function get_note_url() {
 
 function make_running_note(date, note){
   try {
+    var category = '';
     var date = date.replace(/-/g, '/');
     date = date.replace(/\.\d{6}/, '');
     date = new Date(date);
-    if(date > new Date('2015-01-01')){
-      noteText = make_markdown(note['note']);
-    } else {
-      noteText = '<pre class="plaintext_running_note">'+make_project_links(note['note'])+'</pre>';
+    if (note['note'] != undefined){
+        if(date > new Date('2015-01-01')){
+          noteText = make_markdown(note['note']);
+        } else {
+          noteText = '<pre class="plaintext_running_note">'+make_project_links(note['note'])+'</pre>';
+        }
+        datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date)
+        if ('category' in note){
+            category=generate_category_label(note['category']);
+        }
     }
-    datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date)
   } catch(e){
     noteText = '<pre>'+make_project_links(note['note'])+'</pre>';
     var datestring = '?';
   }
+  
   return '<div class="panel panel-default">' +
       '<div class="panel-heading">'+
         '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-       datestring + '</div><div class="panel-body">'+noteText+'</div></div>';
+       datestring + category +'</div><div class="panel-body">'+noteText+'</div></div>';
 }
 
 function load_running_notes(wait) {
@@ -63,11 +85,10 @@ function load_running_notes(wait) {
           'due to connection problems. Please try again later and report if the problem persists.</p></div>'+debugging);
   });
 }
-
-// Preview running notes
-$('#new_note_text').keyup(function() {
+function preview_running_notes(){
     var now = new Date();
     $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
+    $('#preview_category').html(generate_category_label($('#rn_category option:selected').val()));
     var text = $('#new_note_text').val().trim();
     if (text.length > 0) {
         $('#running_note_preview_body').html(make_markdown(text));
@@ -77,12 +98,42 @@ $('#new_note_text').keyup(function() {
     }
     // update textarea height
     $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
+}
+function filter_running_notes(search){
+    search=search.toLowerCase();
+    $('#running_notes_panels').children().each(function(){
+        var header=$(this).children('.panel-heading').text(); 
+        var note=$(this).children('.panel-body').children().text(); 
+        if (header.toLowerCase().indexOf(search) != -1 || note.toLowerCase().indexOf(search) != -1){
+            $(this).show();
+        }else{
+            $(this).hide();
+        }
+    });
+}
+//Filter notes by Category
+$('#rn_search').keyup(function() {
+    var search=$('#rn_search').val();
+    filter_running_notes(search);
 });
+$('.btnCatFilter').click(function() {
+    $('.btnCatFilter').each(function() {$(this).removeClass("glow")});
+    $(this).addClass("glow")
+    var search=$(this).text();
+    if (search == 'All'){
+        search='';
+    }
+    filter_running_notes(search);
+});
+// Preview running notes
+$('#new_note_text').keyup(preview_running_notes);
+$('#rn_category').change(preview_running_notes);
 
 // Insert new running note and reload the running notes table
 $("#running_notes_form").submit( function(e) {
     e.preventDefault();
     var text = $('#new_note_text').val().trim();
+    var category = $('#rn_category option:selected').val();
     if (text.length == 0) {
         alert("Error: No running note entered.");
         return false;
@@ -94,7 +145,7 @@ $("#running_notes_form").submit( function(e) {
       type: 'POST',
       url: note_url,
       dataType: 'json',
-      data: {"note": text},
+      data: {"note": text, "category": category},
       error: function(xhr, textStatus, errorThrown) {
         alert('Error: '+xhr['responseText']+' ('+errorThrown+')');
         $('#save_note_button').removeClass('disabled').text('Submit Running Note');
@@ -125,9 +176,10 @@ $("#running_notes_form").submit( function(e) {
             }
             // Create a new running note and slide it in..
             var now = new Date();
+            category=generate_category_label(category);
             $('<div class="panel panel-success"><div class="panel-heading">'+
                   '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
-                  now.toDateString() + ', ' + now.toLocaleTimeString(now)+
+                  now.toDateString() + ', ' + now.toLocaleTimeString(now)+ category + 
                 '</div><div class="panel-body">'+make_markdown(data['note'])+
                 '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
             check_img_sources($('#running_notes_panels img'));

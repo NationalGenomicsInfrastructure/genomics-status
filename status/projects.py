@@ -488,13 +488,14 @@ class RunningNotesDataHandler(SafeHandler):
 
     def post(self, project):
         note = self.get_argument('note', '')
+        category = self.get_argument('category', '')
         user = self.get_secure_cookie('user')
         email = self.get_secure_cookie('email')
         if not note:
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
-            newNote = {'user': user, 'email': email, 'note': note}
+            newNote = {'user': user, 'email': email, 'note': note, 'category' : category}
             p = Project(lims, id=project)
             p.get(force=True)
             running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
