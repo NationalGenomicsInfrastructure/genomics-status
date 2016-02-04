@@ -1,9 +1,9 @@
 function generate_category_label(category){
-     if (category == 'Reception Control'){
+     if (category == 'Workset'){
          category=' - <span class="label label-primary">'+ category +"</span>";
-     }else if (category == 'Library Preparation'){
+     }else if (category == 'Flowcell'){
          category=' - <span class="label label-success">'+ category +"</span>";
-     }else if (category == 'Sequencing'){
+     }else if (category == 'Meeting'){
          category=' - <span class="label label-info">'+ category +"</span>";
      }else if (category == 'User Communication'){
          category=' - <span class="label label-danger">'+ category +"</span>";

@@ -828,6 +828,7 @@ class ProjectSummaryHandler(SafeHandler):
 
 
 class ProjectSummaryUpdateHandler(SafeHandler):
+    """Handler for the Project Summary mockup"""
     def post(self, id_type, cl_id):
         if id_type == "Process":
             update_class=Process
@@ -887,3 +888,16 @@ class ProjectSummaryUpdateHandler(SafeHandler):
                         returnobj[key]=value
 
                 self.write(json.dumps(returnobj))
+
+class RecCtrlDataHandler(SafeHandler):
+    """Handler for the reception control view"""
+    def get(self, project_id):
+        sample_data={}
+        v = self.application.projects_db.view("samples/rec_crtl_view")
+        for row in v[project_id]:
+            sample_data.update(row.value)
+
+        t = self.application.loader.load("rec_ctrl_view.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                              project_id=project_id,
+                              sample_data=sample_data))
