@@ -33,7 +33,7 @@ from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotH
 from status.projects import BioinfoAnalysisHandler, CaliperImageHandler, CharonProjectHandler, DeliveriesPageHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
-    ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler
+    ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler, RecCtrlDataHandler
 
 from status.quotas import QuotaDataHandler, QuotaHandler, QuotasHandler
 from status.q30 import Q30Handler, Q30PlotHandler
@@ -186,6 +186,7 @@ class Application(tornado.web.Application):
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/reads_vs_qv", ReadsVsQvhandler),
             ("/reads_per_lane", ReadsPerLaneHandler),
+            ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
             ("/samples_per_lane", SamplesPerLaneHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/sequencing", SequencingStatsHandler),
@@ -307,6 +308,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/reads_per_lane.html")
             tornado.autoreload.watch("design/reads_total.html")
             tornado.autoreload.watch("design/reads_vs_qv.html")
+            tornado.autoreload.watch("design/rec_ctrl_view.html")
             tornado.autoreload.watch("design/running_notes_tab.html")
             tornado.autoreload.watch("design/sample_run_qc.html")
             tornado.autoreload.watch("design/sample_runs.html")

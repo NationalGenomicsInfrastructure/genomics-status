@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+<!-- 
+Template file: rec_ctrl_view.html
+URL: /rec_ctrl/<projectid>
+Title: Reception Control View
+Description: Quick view of reception control plates for a project
+-->
+
+{% block stuff %}
+
+<div>
+    <h1 id="page_title">Customer Plates for project : <span id="project_id">{{ project_id}}</span></h1>
+
+    <p>Please note that all the values here are what the user reported. They are NOT the values obtained by the lab</p>
+    <div id="selectors">
+        <button class="btn sid-button">Sample ID</button>
+        <button class="btn conc-button">Concentration</button>
+        <button class="btn rin-button">RIN</button>
+    </div>
+
+    {% for plate in sample_data%}
+    <h3>Container {{ plate }}</h3>
+    <table class="table table-bordered rcplate">
+        {% if len(sample_data[plate]['y_axis']) <= 8 %}
+          {% set rows="ABCDEFGH" %}
+        {% else %}
+          {% set rows=[" "] + sample_data[plate]['y_axis'] %}
+        {% end %}
+        {% if len(sample_data[plate]['x_axis']) <= 8 %}
+          {% set cols=xrange(1,9) %}
+        {% else %}
+          {% set cols=sample_data[plate]['x_axis'] %}
+        {% end %}
+
+        <thead>
+            <th>#</th>
+            {% for col in cols %}
+                <th  class="col-md-1">{{ col }}</th>
+            {% end %}
+        </thead>
+        <tbody>
+        {% for row in rows %}
+        <tr>
+            <th>{{ row }}</th>
+                {% for col in cols %}
+                <td
+                      {% if "{}:{}".format(row, col) in sample_data[plate] %}
+                          data-sid="{{ sample_data[plate]["{}:{}".format(row, col)]['sample_name'] }}"
+                          {% if "cust_conc_ng_ul" in sample_data[plate]["{}:{}".format(row, col)] %}
+                              data-conc="{{ sample_data[plate]["{}:{}".format(row, col)]['cust_conc_ng_ul'] }}"
+                          {% else %}
+                              data-conc=""
+                          {% end %}
+                          {% if "cust_rin" in sample_data[plate]["{}:{}".format(row, col)] %}
+                              data-rin="{{ sample_data[plate]["{}:{}".format(row, col)]['cust_rin'] }}" 
+                          {% else %}
+                              data-conc=""
+                          {% end %}
+                      {% else %}
+                          data-sid="" data-conc="" data-rin=""
+                      {% end %}
+                    >
+                      {% if "{}:{}".format(row, col) in sample_data[plate] %}
+                          {{ sample_data[plate]["{}:{}".format(row, col)]['sample_name'] }}
+                      {% end %}
+                        </td>
+                {% end %}
+        </tr>
+        {% end %}
+        </tbody>
+    </table>
+    {% end %}
+</div>
+
+<script type="text/javascript" src="/static/js/rec_ctrl_view.js?v={{ gs_globals['git_commit'] }}" ></script>
+{% end %}
+
