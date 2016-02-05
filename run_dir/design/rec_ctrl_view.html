@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+<!-- 
+Template file: rec_ctrl_view.html
+URL: /rec_ctrl/<projectid>
+Title: Reception Control View
+Description: Quick view of reception control plates for a project
+-->
+
+{% block stuff %}
+
+<div>
+    <h1 id="page_title">User Plates for project : <a href="/project/{{ project_id}}"><span id="project_id">{{ project_id}}</span></a></h1>
+
+    <div id="selectors">
+        <select id="display_select">
+          <option value="sid" selected>Sample ID</option>
+          <option value="conc">Concentration</option>
+          <option value="amount">Amount</option>
+          <option value="rin">RIN</option>
+          <option value="reads">Reads</option>
+          <option value="qc">QC</option>
+          <option value="cust_name">Customer Name</option>
+        </select>
+    </div>
+
+    {% for plate in sample_data%}
+    <h3>Container {{ plate }}</h3>
+    <table class="table table-bordered rcplate">
+        {% if len(sample_data[plate]['y_axis']) <= 8 %}
+          {% set rows="ABCDEFGH" %}
+        {% else %}
+          {% set rows=[" "] + sample_data[plate]['y_axis'] %}
+        {% end %}
+        {% if len(sample_data[plate]['x_axis']) <= 12 %}
+          {% set cols=xrange(1,13) %}
+        {% else %}
+          {% set cols=sample_data[plate]['x_axis'] %}
+        {% end %}
+
+        <thead>
+            <th>#</th>
+            {% for col in cols %}
+                <th>{{ col }}</th>
+            {% end %}
+        </thead>
+        <tbody>
+        {% for row in rows %}
+        <tr>
+            <th>{{ row }}</th>
+                {% for col in cols %}
+                <td data-plate="{{ plate }}" data-pos="{{ "{}:{}".format(row, col) }}">
+                      {% if "{}:{}".format(row, col) in sample_data[plate] %}
+                          {{ sample_data[plate]["{}:{}".format(row, col)]['sample_name'] }}
+                      {% end %}
+                        </td>
+                {% end %}
+        </tr>
+        {% end %}
+        </tbody>
+    </table>
+    {% end %}
+</div>
+
+<script type="text/javascript">
+var sdata={% raw json_data %};
+</script>
+<script type="text/javascript" src="/static/js/rec_ctrl_view.js?v={{ gs_globals['git_commit'] }}" ></script>
+{% end %}
+

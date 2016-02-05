@@ -332,7 +332,7 @@ class ReadsTotalHandler(SafeHandler):
     def get(self, query):
         data={}
         ordereddata=OrderedDict()
-
+        data["isHiseqX"]=False
         self.set_header("Content-type", "text/html")
         t = self.application.loader.load("reads_total.html")
 
@@ -342,6 +342,8 @@ class ReadsTotalHandler(SafeHandler):
             xfc_view = self.application.x_flowcells_db.view("samples/lane_clusters", reduce=False)
             fc_view = self.application.flowcells_db.view("samples/lane_clusters", reduce=False)
             for row in xfc_view[query:"{}Z".format(query)]:
+                if not data["isHiseqX"]:
+                    data["isHiseqX"]=True
                 if not row.key in data:
                     data[row.key]=[]
                 data[row.key].append(row.value)
