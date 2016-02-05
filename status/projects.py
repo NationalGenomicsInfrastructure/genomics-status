@@ -900,4 +900,5 @@ class RecCtrlDataHandler(SafeHandler):
         t = self.application.loader.load("rec_ctrl_view.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               project_id=project_id,
-                              sample_data=sample_data))
+                              sample_data=sample_data,
+                              json_data=json.dumps(sample_data)))

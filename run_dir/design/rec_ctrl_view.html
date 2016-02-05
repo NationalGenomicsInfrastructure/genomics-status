@@ -9,13 +9,18 @@ Description: Quick view of reception control plates for a project
 {% block stuff %}
 
 <div>
-    <h1 id="page_title">Customer Plates for project : <span id="project_id">{{ project_id}}</span></h1>
+    <h1 id="page_title">User Plates for project : <a href="/project/{{ project_id}}"><span id="project_id">{{ project_id}}</span></a></h1>
 
-    <p>Please note that all the values here are what the user reported. They are NOT the values obtained by the lab</p>
     <div id="selectors">
-        <button class="btn sid-button">Sample ID</button>
-        <button class="btn conc-button">Concentration</button>
-        <button class="btn rin-button">RIN</button>
+        <select id="display_select">
+          <option value="sid" selected>Sample ID</option>
+          <option value="conc">Concentration</option>
+          <option value="amount">Amount</option>
+          <option value="rin">RIN</option>
+          <option value="reads">Reads</option>
+          <option value="qc">QC</option>
+          <option value="cust_name">Customer Name</option>
+        </select>
     </div>
 
     {% for plate in sample_data%}
@@ -26,8 +31,8 @@ Description: Quick view of reception control plates for a project
         {% else %}
           {% set rows=[" "] + sample_data[plate]['y_axis'] %}
         {% end %}
-        {% if len(sample_data[plate]['x_axis']) <= 8 %}
-          {% set cols=xrange(1,9) %}
+        {% if len(sample_data[plate]['x_axis']) <= 12 %}
+          {% set cols=xrange(1,13) %}
         {% else %}
           {% set cols=sample_data[plate]['x_axis'] %}
         {% end %}
@@ -35,7 +40,7 @@ Description: Quick view of reception control plates for a project
         <thead>
             <th>#</th>
             {% for col in cols %}
-                <th  class="col-md-1">{{ col }}</th>
+                <th>{{ col }}</th>
             {% end %}
         </thead>
         <tbody>
@@ -43,23 +48,7 @@ Description: Quick view of reception control plates for a project
         <tr>
             <th>{{ row }}</th>
                 {% for col in cols %}
-                <td
-                      {% if "{}:{}".format(row, col) in sample_data[plate] %}
-                          data-sid="{{ sample_data[plate]["{}:{}".format(row, col)]['sample_name'] }}"
-                          {% if "cust_conc_ng_ul" in sample_data[plate]["{}:{}".format(row, col)] %}
-                              data-conc="{{ sample_data[plate]["{}:{}".format(row, col)]['cust_conc_ng_ul'] }}"
-                          {% else %}
-                              data-conc=""
-                          {% end %}
-                          {% if "cust_rin" in sample_data[plate]["{}:{}".format(row, col)] %}
-                              data-rin="{{ sample_data[plate]["{}:{}".format(row, col)]['cust_rin'] }}" 
-                          {% else %}
-                              data-conc=""
-                          {% end %}
-                      {% else %}
-                          data-sid="" data-conc="" data-rin=""
-                      {% end %}
-                    >
+                <td data-plate="{{ plate }}" data-pos="{{ "{}:{}".format(row, col) }}">
                       {% if "{}:{}".format(row, col) in sample_data[plate] %}
                           {{ sample_data[plate]["{}:{}".format(row, col)]['sample_name'] }}
                       {% end %}
@@ -72,6 +61,9 @@ Description: Quick view of reception control plates for a project
     {% end %}
 </div>
 
+<script type="text/javascript">
+var sdata={% raw json_data %};
+</script>
 <script type="text/javascript" src="/static/js/rec_ctrl_view.js?v={{ gs_globals['git_commit'] }}" ></script>
 {% end %}
 
