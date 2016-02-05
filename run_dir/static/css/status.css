@@ -532,7 +532,15 @@ padding: 0;
     background-color: transparent;
 }
 
-
+/*
+=== Rec Ctrl View ===
+*/
+.rcplate tr th, .rcplate tr td {
+      width: 8%;
+  }
+  .rcplate tr th:first-child {
+    width: 4%;
+}
 
 /* ########################################################################
 ---- UNIT STYLES ----
