@@ -1,6 +1,9 @@
 
 // Wait for page to load
 $(function(){
+    
+    // Colour the table on page load
+    colour_table_cells();
 
     // Select box is updated
     $("#display_select").change(function(){
@@ -91,6 +94,10 @@ $(function(){
         }
         
         
+        colour_table_cells();
+    }
+    
+    function colour_table_cells(){
         // Colour code table cells using chroma.js
         $('.rcplate').each(function(){
             var table = $(this);
@@ -109,12 +116,19 @@ $(function(){
             });
 
             // Go through table cells again, adding colour
-            var scale = chroma.scale('YlOrRd').domain([minval, maxval]);
+            var scale = chroma.scale('RdYlBu').domain([minval, maxval]);
             table.find('tr td').each(function(){
                 var tdval = parseFloat($(this).text().replace(/[^\d\.-]/g,''));
                 var col = '#ffffff';
                 if(maxval !== undefined && minval !== undefined){
-                    col = scale(tdval).css();
+                    // col = scale(tdval).luminance(0.7).css();
+                    var rgb = scale(tdval).rgb();
+                    for (i in rgb){
+                      rgb[i] = 255+(rgb[i]-255)*0.3;
+                      if(rgb[i] > 255){ rgb[i] = 255; }
+                      if(rgb[i] < 0){ rgb[i] = 0; }
+                    }
+                    col = chroma.rgb(rgb).hex();
                 }
                 if($(this).text() == 'PASSED'){ col = '#dff0d8'; }
                 if($(this).text() == 'FAILED'){ col = '#f2dede'; }
