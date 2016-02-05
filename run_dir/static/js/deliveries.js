@@ -70,12 +70,13 @@ $('.bioinfo-running-notes-save').click(function(e) {
             $(button).removeClass('disabled').text('Save');
             $(td).attr('data-running-note', data['note']);
             $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note').text(data['note']);
-            // todo: add to the project running_notes
+            // add to the project running_notes
             var new_note_html = '<div class="running-notes-panel panel panel-default" id="running-note-'+[project_id, run_id, lane_id, sample_id].join('-')+'" style="display:none;"> \
                   <div class="panel-heading"><a href="mailto:'+data['email']+'">'+ data['user'] + '</a> - '+ data["timestamp"]+'</div> \
                   <div class="panel-body"><div class="mkdown">'+data['note']+'</div></div></div>';
-            console.log(new_note_html);
-            $('#running_notes_panels').prepend(new_note_html);
+            // make_markdown is defined in base.js
+            var markdown = make_markdown(new_note_html);
+            $('#running_notes_panels').prepend(markdown);
         }
     });
 });
