@@ -244,7 +244,7 @@ var setParentStatus = function(td) {
 
 
     $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
-    // from here is copy&paste and i don't know what's happening
+    // from here it's copy&paste and i don't know what's happening
     var bioinfo_api_url = "/api/v1/bioinfo_analysis/"+project_id;
     $.ajax({
       type: 'POST',
@@ -264,7 +264,6 @@ var setParentStatus = function(td) {
         $('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
       }
     });
-
   });
 
 

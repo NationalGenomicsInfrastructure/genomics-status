@@ -7,9 +7,10 @@ Powers /project/[PID] - template is run_dir/design/project_samples.html
 // Get pseudo-argument for this js file. Ie, project = P1234
 var project = $('#projects-js').attr('data-project');
 var ordered_reads = 0.0;
+
+// change url when switching between tabs
 $('.nav-tabs a').click(function(){
     var tab_id = $(this).attr('href');
-
     if (tab_id.indexOf('details') != -1) {
         window.history.pushState("", "", "details");
     } else if (tab_id.indexOf('samples') != -1) {
@@ -23,8 +24,6 @@ $('.nav-tabs a').click(function(){
     } else if (tab_id.indexOf('links') != -1) {
             window.history.pushState("", "", "links");
     }
-
-//    window.history.pushState(“object or string”, “Title”, “/new-url”);
 })
 
 $(document).ready(function() {
