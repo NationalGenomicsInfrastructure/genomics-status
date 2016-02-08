@@ -208,7 +208,6 @@ function check_img_sources(obj){
   });
 }
 function make_markdown(s){
-  s = $('<div>').text(s).html();
   s = marked(s);
   s = make_project_links(s);
   return '<div class="mkdown">'+s+'</div>';
