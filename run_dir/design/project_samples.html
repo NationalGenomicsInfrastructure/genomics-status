@@ -286,12 +286,8 @@ Description: Details page for a single project
           </div>
         </div>
         <div class="form-group" style="margin-left:2em;">
-          <button type="button" class="btn btn-default" id="reads_aggre_button" onclick="location.href='/reads_total/{{ project }}'" >
-          Reads Aggregation
-          </button>
-          <button type="button" class="btn btn-default" id="rec_ctrl_button" onclick="location.href='/rec_ctrl_view/{{ project }}'" >
-         ReCtrl Plates 
-          </button>
+          <a class="btn btn-default" href='/reads_total/{{ project }}' role="button">Reads Aggregation</a>
+          <a class="btn btn-default" href='/rec_ctrl_view/{{ project }}' role="button">RecCtrl Plates</a>
         </div>
       </form>
       <hr>
