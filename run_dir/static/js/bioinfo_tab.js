@@ -27,32 +27,6 @@ function collapse(element) {
   });
 };
 
-//$(function(){
-//  $('.bioinfo-expand').click(function(e){
-//    console.log('click');
-//    e.preventDefault();
-//    var t = $(this).attr('href');
-//    $(this).find('span').toggleClass('glyphicon-chevron-right, glyphicon-chevron-down');
-//    if ($(this).hasClass('expanded')){
-//      $(this).removeClass('expanded');
-//      var parent_tr = $('tr[data-parent='+t+']');
-//      $(parent_tr).hide();
-//      var child_trs = getChildTrs(parent_tr);
-//      console.log($(child_trs));
-//      $.each(child_trs, function(i, tr) {
-//        $(tr).hide();
-//        $(tr).children('a').removeClass('expanded');
-////        $(this).find('span.glyphicon').toggleClass('glyphicon-chevron-right, glyphicon-chevron-down');
-//      });
-////      $('tr[data-parent='+t+']').hide();
-////      $(this).removeClass('expanded');
-//    } else {
-//      $('tr[data-parent='+t+']').show();
-//      $(this).addClass('expanded');
-//    }
-//  });
-//});
-
 var bioinfo_statuses = {'?': 'unknown', 'Pass': 'success', 'Warning': 'warning', 'Fail': 'danger'};
 
 $('.table-bioinfo-status').on('click', 'td.bioinfo-status-pfw', function(e) {
@@ -73,7 +47,6 @@ $('.table-bioinfo-status').on('click', 'td.bioinfo-status-pfw', function(e) {
     $.each($(td).attr('class').split(/\s+/), function(i, td_class) {
         var current_index = bioinfo_classes.indexOf(td_class);
           if (current_index != -1) {
-//            current_class = bioinfo_classes[current_index];
             current_class = td_class;
             var next_index = (current_index + 1) % bioinfo_classes.length;
             next_class = bioinfo_classes[next_index];
@@ -216,7 +189,7 @@ var setParentStatus = function(td) {
     var sample_run_lane_statuses = {};
     var project_id = window.location.href.split(/\//);
 
-    project_id = project_id[project_id.length-1];
+    project_id = project_id[project_id.length-2];
 
     $('.table-bioinfo-status tr.bioinfo-lane:has(td)').each(function(){
         var tr = $(this);
@@ -241,7 +214,6 @@ var setParentStatus = function(td) {
         sample_run_lane_statuses[row_key] = row;
 //        sample_run_lane_statuses[row_key]['sample_status'] = status;
     });
-
 
     $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
     // from here it's copy&paste and i don't know what's happening

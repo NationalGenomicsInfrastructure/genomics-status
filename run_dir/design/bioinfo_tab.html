@@ -187,20 +187,19 @@
             <td><samp>{{ lane_id }}</samp></td>
             <td class="bioinfo-status-runstate"><span class="label label-{{ status_css[lane['sample_status'].lower()] }}">{{ lane['sample_status'] }}</span></td>
             <td class="bioinfo-status-pfw undemultiplexedreads {{ qc_css[lane.get('undemultiplexedreads', '?')] }}">
-              {{ lane.get('undemultiplexedreads', 'undem') }}</td>
+              {{ lane.get('undemultiplexedreads', '?') }}</td>
             <td class="bioinfo-status-pfw unexpectedindexes {{ qc_css[lane.get('unexpectedindexes', '?')] }}">
-              {{ lane.get('unexpectedindexes', 'unexp') }}</td>
+              {{ lane.get('unexpectedindexes', '?') }}</td>
             <td class="bioinfo-status-pfw lowsampleyield {{ qc_css[lane.get('lowsampleyield', '?')] }}">
-              {{ lane.get('lowsampleyield', 'low yield') }}</td>
+              {{ lane.get('lowsampleyield', '?') }}</td>
             <td class="bioinfo-status-pfw phixerrorrate {{ qc_css[lane.get('phixerrorrate', '?')] }}">
-              {{ lane.get('phixerrorrate', 'phix') }}</td>
+              {{ lane.get('phixerrorrate', '?') }}</td>
             <td class="bioinfo-status-pfw basesq30 {{ qc_css[lane.get('basesq30', '?')] }}">
-              {{ lane.get('basesq30', 'q30') }}</td>
+              {{ lane.get('basesq30', '?') }}</td>
             <td class="bioinfo-status-pfw fastq_screen {{ qc_css[lane.get('fastq_screen', '?')] }}">
-              {{ lane.get('fastq_screen', 'fastq screen') }}</td>
+              {{ lane.get('fastq_screen', '?') }}</td>
             <td class="bioinfo-status-pfw blast_wrapper {{ qc_css[lane.get('blast_wrapper', '?')] }}">
-              {{ lane.get('blast_wrapper', 'blast') }}</td>
-
+              {{ lane.get('blast_wrapper', '?') }}</td>
             {% if application == 'rnaseq' %}
               <td class="bioinfo-status-pfw sequence_duplication unknown">?</td>
               <td class="bioinfo-status-pfw unique_mapping_rate unknown">?</td>

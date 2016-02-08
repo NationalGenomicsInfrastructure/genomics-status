@@ -437,25 +437,6 @@ class CaliperImageHandler(SafeHandler):
             print message
             return("Error fetching caliper images")
 
-#
-# class ProjectSamplesHandler(SafeHandler):
-#         """ Serves a page which lists the samples of a given project, with some
-#         brief information for each sample.
-#         URL: /project/([^/]*)
-#         """
-#         def get(self, project):
-#             t = self.application.loader.load("project_samples.html")
-#             worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
-#
-#             self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
-#                                       user=self.get_current_user_name(),
-#                                       columns = self.application.genstat_defaults.get('pv_columns'),
-#                                       columns_sample = self.application.genstat_defaults.get('sample_columns'),
-#                                       prettify = prettify_css_names,
-#                                       worksets=worksets_view[project],
-#                                       ))
-
-
 class ProjectSamplesHandler(SafeHandler):
     """ Serves a page which lists the samples of a given project, with some
     brief information for each sample.
@@ -765,10 +746,6 @@ class BioinfoAnalysisHandler(SafeHandler):
     URL: /api/v1/bioinfo_analysis/
     URL: /api/v1/bioinfo_analysis/([^/]*)
     URL: /api/v1/bioinfo_analysis/<pid>?dump_all=true"""
-
-
-
-
     def get_singleproject(self, project_id):
         return_obj = {}
         v = self.application.bioinfo_db.view("latest_data/project_id")
@@ -828,26 +805,23 @@ class BioinfoAnalysisHandler(SafeHandler):
         saved_data = {}
         for run_id in data:
             for row in v[[project_id, run_id]]:
-                # if there's more than one, that is a problem
                 original_doc = row.value
 
-            timestamp=datetime.datetime.now().isoformat()
-            try:
+                timestamp=datetime.datetime.now().isoformat()
                 if 'values'	not in original_doc:
                     original_doc['values'] = {}
                 original_doc['values'][timestamp] = data[run_id]['values']
                 original_doc['values'][timestamp]['user'] = user
                 original_doc['status'] = data[run_id]['status']
-                # Add the status to the values array as well. This isn't used
-                # it's only for history tracking. Denis doesn't like it.
                 original_doc['values'][timestamp]['status'] = data[run_id]['status']
-            except Exception, err:
-                self.set_status(400)
-                self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
-                return None
+                try:
+                    self.application.bioinfo_db.save(original_doc)
+                    saved_data[run_id] = original_doc
+                except Exception, err:
+                    self.set_status(400)
+                    self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
+                    return None
 
-            self.application.bioinfo_db.save(original_doc)
-            saved_data[run_id] = original_doc
 
         self.set_status(200)
         self.set_header("Content-type", "application/json")
