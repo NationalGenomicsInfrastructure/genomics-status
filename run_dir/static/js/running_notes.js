@@ -3,7 +3,7 @@ function generate_category_label(category){
          category=' - <span class="label label-primary">'+ category +"</span>";
      }else if (category == 'Flowcell'){
          category=' - <span class="label label-success">'+ category +"</span>";
-     }else if (category == 'Meeting'){
+     }else if (category == 'Meeting' || category == "Decision"){
          category=' - <span class="label label-info">'+ category +"</span>";
      }else if (category == 'User Communication'){
          category=' - <span class="label label-danger">'+ category +"</span>";
@@ -90,6 +90,7 @@ function preview_running_notes(){
     $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
     $('#preview_category').html(generate_category_label($('#rn_category option:selected').val()));
     var text = $('#new_note_text').val().trim();
+    text = $('<div>').text(text).html();
     if (text.length > 0) {
         $('#running_note_preview_body').html(make_markdown(text));
         check_img_sources($('#running_note_preview_body img'));
@@ -133,6 +134,7 @@ $('#rn_category').change(preview_running_notes);
 $("#running_notes_form").submit( function(e) {
     e.preventDefault();
     var text = $('#new_note_text').val().trim();
+    text = $('<div>').text(text).html();
     var category = $('#rn_category option:selected').val();
     if (text.length == 0) {
         alert("Error: No running note entered.");
