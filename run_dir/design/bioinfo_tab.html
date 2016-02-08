@@ -1,0 +1,239 @@
+{% set status_css= {'error': 'danger', 'new': 'primary', 'ongoing': 'warning', 'done': 'success', 'sequencing': 'primary'} %}
+{% set qc_css={ '?': 'unknown', 'Pass': 'success', 'Warning': 'warning', 'Fail': 'danger'} %}
+<form class="form-inline">
+  <div class="form-group">
+    <label for="bioinfo_set-status">All run statuses: </label>
+    <select id="bioinfo_set-status" class="form-control">
+      <option>[ different values ]</option>
+      <option>Ongoing</option>
+      <option>Delivered</option>
+      <option>Aborted</option>
+    </select>
+  </div>
+  &nbsp; &nbsp; &nbsp;
+  <button class="btn btn-default btn-sm" id="bioinfo-status-copyFirstRow">Copy first row to all</button>
+  <span class="pull-right bioinfo-savespan">
+    <button class="btn btn-primary" id="bioinfo-status-saveButton"
+            {% if qc_done %} disabled {% end %}> Save Changes</button>
+  </span>
+</form>
+<hr>
+<table class="table table-bioinfo-status">
+  <colgroup span="3"></colgroup>
+  <colgroup span="2"> </colgroup>
+  <colgroup span="3"> </colgroup>
+  <colgroup span="2"> </colgroup>
+  <colgroup span="2"> </colgroup>
+  <colgroup span="2"> </colgroup>
+  {% if application == 'rnaseq' %}
+    <colgroup class="bioinfo-app-rnaseq" span="2"></colgroup>
+  {% elif application == 'exome' %}
+    <colgroup class="bioinfo-app-exome" span="2"></colgroup>
+  {% elif application == 'customCap' %}
+    <colgroup class="bioinfo-app-customCap"></colgroup>
+  {% elif application == 'WGreseq' %}
+    <colgroup class="bioinfo-app-WGreseq" span="2"></colgroup>
+  {% elif application == 'denovo' %}
+    <colgroup class="bioinfo-app-denovo" span="2"></colgroup>
+  {% elif application == 'applications' %}
+    <colgroup class="bioinfo-app-applications" span="2"></colgroup>
+  {% end %}
+  <colgroup span="2"> </colgroup>
+  <colgroup span="2"> </colgroup>
+<tbody>
+  <tr class="border-bottom">
+    <th></th>
+    <th></th>
+    <th></th>
+    <th colspan="2">Sample</th>
+    <th colspan="3">Multiplex QC</th>
+    <th colspan="2">Quality</th>
+    <th colspan="2">Contamination screen</th>
+    {% if application == 'rnaseq' %}
+      <th class="bioinfo-app-rnaseq" colspan="2">RNA-Seq</th>
+    {% elif application == 'exome' %}
+      <th class="bioinfo-app-exome" colspan="2">Exome capture</th>
+    {% elif application == 'customCap' %}
+      <th class="bioinfo-app-customCap">Custom capture</th>
+    {% elif application == 'wgreseq' %}
+      <th class="bioinfo-app-WGreseq" colspan="2">WG Reseq</th>
+    {% elif application == 'denovo' %}
+      <th class="bioinfo-app-denovo" colspan="2">De novo / Mate-Pair</th>
+    {% elif application == 'applications' %}
+      <th class="bioinfo-app-applications" colspan="2">Applications (if applicable)</th>
+    {% end %}
+    <th colspan="2">Reports Generated</th>
+  </tr>
+  <tr class="bioinfo-field-names">
+    <th></th>
+    <th></th>
+    <th></th>
+    <th>Sample</th>
+    <th>Status</th>
+    <th class="undemultiplexedreads">Undemultiplexed reads</th>
+    <th class="unexpectedindexes">Unexpected indexes</th>
+    <th class="lowsampleyield">Low sample yield</th>
+    <th class="phixerrorrate">PhiX error rate</th>
+    <th class="basesq30">%bases >= Q30</th>
+    <th class="fastq_screen">fastq_screen</th>
+    <th class="blast_wrapper">blast_wrapper</th>
+    {% if application!='rnaseq' %}
+      <th class="bioinfo-app-rnaseq">Sequence duplication</th>
+      <th class="bioinfo-app-rnaseq">Unique mapping rate</th>
+    {% elif application == 'exome' %}
+      <th class="bioinfo-app-exome">Sequence duplication</th>
+      <th class="bioinfo-app-exome">% Targets @10X coverage</th>
+    {% elif application == 'customCap' %}
+      <th class="bioinfo-app-customCap">Enrichment</th>
+    {% elif application == 'WGreseq' %}
+      <th class="bioinfo-app-WGreseq">Sequence duplication</th>
+      <th class="bioinfo-app-WGreseq">Mapping rate</th>
+    {% elif application == 'denovo' %}
+      <th class="bioinfo-app-denovo">Adapter trimming</th>
+      <th class="bioinfo-app-denovo">K-mer profile</th>
+      <th class="bioinfo-app-denovo"></th>
+      <th class="bioinfo-app-denovo"></th>
+    {% elif application == 'applications' %}
+      <th class="bioinfo-app-applications">Data delivered</th>
+      <th class="bioinfo-app-applications">Data approved</th>
+    {% end %}
+    <th class="samplereport">Sample report</th>
+    <th class="projectreport">Project report</th>
+  </tr>
+    {% for project_id in bioinfo %}
+    {% for sample_id in bioinfo[project_id] %}
+      <tr class="bioinfo-sample" id="bioinfo-sample-{{ sample_id }}">
+        <td><a href="#bioinfo-sample-{{ sample_id }}" class="bioinfo-expand">
+          <span class="glyphicon glyphicon-chevron-right"></span></a></td>
+        <td></td>
+        <td></td>
+        <td><samp>{{ sample_id }}</samp></td>
+        <td><span class="label label-primary">New</span></td>
+        <td class="bioinfo-status-pfw undemultiplexedreads unknown">?</td>
+        <td class="bioinfo-status-pfw unexpectedindexes unknown">?</td>
+        <td class="bioinfo-status-pfw lowsampleyield unknown">?</td>
+        <td class="bioinfo-status-pfw phixerrorrate unknown">?</td>
+        <td class="bioinfo-status-pfw basesq30 unknown">?</td>
+        <td class="bioinfo-status-pfw fastq_screen unknown">?</td>
+        <td class="bioinfo-status-pfw blast_wrapper unknown">?</td>
+        {% if application == 'rnaseq' %}
+          <td class="bioinfo-status-pfw sequence_duplication unknown">?</td>
+          <td class="bioinfo-status-pfw unique_mapping_rate unknown">?</td>
+        {% elif application == 'exome' %}
+          <td class="bioinfo-status-pfw exome_capture unknown">?</td>
+        {% elif application == 'customCap' %}
+          <td class="bioinfo-status-pfw custom_capture unknown">?</td>
+        {% elif application == 'WGreseq' %}
+          <td class="bioinfo-status-pfw wg_reseq unknown">?</td>
+          <td class="bioinfo-status-pfw wg_reseq_ign unknown">?</td>
+        {% elif application == 'denovo' %}
+          <td class="bioinfo-status-pfw denovo unknown">?</td>
+          <td class="bioinfo-status-pfw mate_pair unknown">?</td>
+          <td class="bioinfo-status-pfw mate_pair_short_insert unknown">?</td>
+          <td class="bioinfo-status-pfw mate_pair_long_insert unknown">?</td>
+        {% elif application == 'applications' %}
+          <td class="bioinfo-status-pfw applications">Data delivered</td>
+          <td class="bioinfo-status-pfw applications">Data approved</td>
+        {% end %}
+        <td class="bioinfo-status-pfw samplereport unknown">?</td>
+        <td class="bioinfo-status-pfw projectreport unknown">?</td>
+        <td class="bioinfo-status-pfw dataandreportstransferred unknown">?</td>
+        <td class="bioinfo-status-pfw emailsenttouser unknown">?</td>
+      </tr>
+      {% for flowcell_id in bioinfo[project_id][sample_id] %}
+        <tr class="bioinfo-fc" id="bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}"
+            data-parent="#bioinfo-sample-{{ sample_id }}" style="display:none;">
+          <td></td>
+          <td><a href="#bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}" class="bioinfo-expand">
+            <span class="glyphicon glyphicon-chevron-right"></span></a></td>
+          <td></td>
+          <td><samp><a href="/flowcells/{{ flowcell_id.split('_')[0] }}_{{ flowcell_id.split('_')[-1] }}">{{ flowcell_id }}</a></samp></td>
+          <td><span class="label label-primary">New</span></td>
+          <td class="bioinfo-status-pfw undemultiplexedreads unknown">?</td>
+          <td class="bioinfo-status-pfw unexpectedindexes unknown">?</td>
+          <td class="bioinfo-status-pfw lowsampleyield unknown">?</td>
+          <td class="bioinfo-status-pfw phixerrorrate unknown">?</td>
+          <td class="bioinfo-status-pfw basesq30 unknown">?</td>
+          <td class="bioinfo-status-pfw fastq_screen unknown">?</td>
+          <td class="bioinfo-status-pfw blast_wrapper unknown">?</td>
+        {% if application == 'rnaseq' %}
+          <td class="bioinfo-status-pfw sequence_duplication unknown">?</td>
+          <td class="bioinfo-status-pfw unique_mapping_rate unknown">?</td>
+        {% elif application == 'exome' %}
+          <td class="bioinfo-status-pfw exome_capture unknown">?</td>
+        {% elif application == 'customCap' %}
+          <td class="bioinfo-status-pfw custom_capture unknown">?</td>
+        {% elif application == 'WGreseq' %}
+          <td class="bioinfo-status-pfw wg_reseq unknown">?</td>
+          <td class="bioinfo-status-pfw wg_reseq_ign unknown">?</td>
+        {% elif application == 'denovo' %}
+          <td class="bioinfo-status-pfw denovo unknown">?</td>
+          <td class="bioinfo-status-pfw mate_pair unknown">?</td>
+          <td class="bioinfo-status-pfw mate_pair_short_insert unknown">?</td>
+          <td class="bioinfo-status-pfw mate_pair_long_insert unknown">?</td>
+        {% elif application == 'applications' %}
+          <td class="bioinfo-status-pfw applications">Data delivered</td>
+          <td class="bioinfo-status-pfw applications">Data approved</td>
+        {% end %}
+          <td class="bioinfo-status-pfw samplereport unknown">?</td>
+          <td class="bioinfo-status-pfw projectreport unknown">?</td>
+          <td class="bioinfo-status-pfw dataandreportstransferred unknown">?</td>
+          <td class="bioinfo-status-pfw emailsenttouser unknown">?</td>
+        </tr>
+        {% for lane_id, lane in bioinfo[project_id][sample_id][flowcell_id].items() %}
+          <tr class="bioinfo-lane" id="bioinfo-lane-{{ sample_id }}-{{ flowcell_id }}-{{ lane_id }}"
+              data-parent="#bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}" style="display:none;">
+            <td></td>
+            <td></td>
+            <td><a href="#bioinfo-lane-{{ sample_id }}-{{ flowcell_id }}-{{ lane_id }}"></a></td>
+            <td><samp>{{ lane_id }}</samp></td>
+            <td class="bioinfo-status-runstate"><span class="label label-{{ status_css[lane['sample_status'].lower()] }}">{{ lane['sample_status'] }}</span></td>
+            <td class="bioinfo-status-pfw undemultiplexedreads {{ qc_css[lane.get('undemultiplexedreads', '?')] }}">
+              {{ lane.get('undemultiplexedreads', '?') }}</td>
+            <td class="bioinfo-status-pfw unexpectedindexes {{ qc_css[lane.get('unexpectedindexes', '?')] }}">
+              {{ lane.get('unexpectedindexes', '?') }}</td>
+            <td class="bioinfo-status-pfw lowsampleyield {{ qc_css[lane.get('lowsampleyield', '?')] }}">
+              {{ lane.get('lowsampleyield', '?') }}</td>
+            <td class="bioinfo-status-pfw phixerrorrate {{ qc_css[lane.get('phixerrorrate', '?')] }}">
+              {{ lane.get('phixerrorrate', '?') }}</td>
+            <td class="bioinfo-status-pfw basesq30 {{ qc_css[lane.get('basesq30', '?')] }}">
+              {{ lane.get('basesq30', '?') }}</td>
+            <td class="bioinfo-status-pfw fastq_screen {{ qc_css[lane.get('fastq_screen', '?')] }}">
+              {{ lane.get('fastq_screen', '?') }}</td>
+            <td class="bioinfo-status-pfw blast_wrapper {{ qc_css[lane.get('blast_wrapper', '?')] }}">
+              {{ lane.get('blast_wrapper', '?') }}</td>
+            <td class="bioinfo-status-pfw sequence_duplication {{ qc_css[lane.get('sequence_duplication', '?')] }}">
+              {{ lane.get('sequence_duplication', '?') }}</td>
+            <td class="bioinfo-status-pfw unique_mapping_rate {{ qc_css[lane.get('unique_mapping_rate', '?')] }}">
+              {{ lane.get('unique_mapping_rate', '?') }}</td>
+
+            {% if application == 'rnaseq' %}
+              <td class="bioinfo-status-pfw sequence_duplication unknown">?</td>
+              <td class="bioinfo-status-pfw unique_mapping_rate unknown">?</td>
+            {% elif application == 'exome' %}
+              <td class="bioinfo-status-pfw exome_capture unknown">?</td>
+            {% elif application == 'customCap' %}
+              <td class="bioinfo-status-pfw custom_capture unknown">?</td>
+            {% elif application == 'WGreseq' %}
+              <td class="bioinfo-status-pfw wg_reseq unknown">?</td>
+              <td class="bioinfo-status-pfw wg_reseq_ign unknown">?</td>
+            {% elif application == 'denovo' %}
+              <td class="bioinfo-status-pfw denovo unknown">?</td>
+              <td class="bioinfo-status-pfw mate_pair unknown">?</td>
+              <td class="bioinfo-status-pfw mate_pair_short_insert unknown">?</td>
+              <td class="bioinfo-status-pfw mate_pair_long_insert unknown">?</td>
+            {% elif application == 'applications' %}
+              <td class="bioinfo-status-pfw applications">Data delivered</td>
+              <td class="bioinfo-status-pfw applications">Data approved</td>
+            {% end %}
+            <td class="bioinfo-status-pfw samplereport unknown"></td>
+            <td class="bioinfo-status-pfw projectreport unknown"></td>
+            <td class="bioinfo-status-pfw dataandreportstransferred unknown"></td>
+            <td class="bioinfo-status-pfw emailsenttouser unknown"></td>
+          </tr>
+        {% end %}
+      {% end %}
+    {% end %}
+  {% end %} <!-- end sample -->
+</tbody></table>
+<script src="/static/js/bioinfo_tab.js"></script>

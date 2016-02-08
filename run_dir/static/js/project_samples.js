@@ -7,6 +7,25 @@ Powers /project/[PID] - template is run_dir/design/project_samples.html
 // Get pseudo-argument for this js file. Ie, project = P1234
 var project = $('#projects-js').attr('data-project');
 var ordered_reads = 0.0;
+$('.nav-tabs a').click(function(){
+    var tab_id = $(this).attr('href');
+
+    if (tab_id.indexOf('details') != -1) {
+        window.history.pushState("", "", "details");
+    } else if (tab_id.indexOf('samples') != -1) {
+            window.history.pushState("", "", "samples");
+    } else if (tab_id.indexOf('running_notes') != -1) {
+            window.history.pushState("", "", "running_notes");
+    } else if (tab_id.indexOf('bioinfo') != -1) {
+            window.history.pushState("", "", "bioinfo");
+    } else if (tab_id.indexOf('communication') != -1) {
+            window.history.pushState("", "", "communication");
+    } else if (tab_id.indexOf('links') != -1) {
+            window.history.pushState("", "", "links");
+    }
+
+//    window.history.pushState(“object or string”, “Title”, “/new-url”);
+})
 
 $(document).ready(function() {
 
@@ -14,7 +33,7 @@ $(document).ready(function() {
   $.when(load_presets()).done(function(){
     load_undefined_info();
     $.when(load_all_udfs()).done(function(){
-      load_bioinfo_table();
+//      load_bioinfo_table();
     });
     load_samples_table();
     load_running_notes();
@@ -523,7 +542,7 @@ function load_samples_table() {
               } else {
                 // TODO - Wire this up to the new QC page when it's ready
                 tbl_row += '<td class="'+column_id+'"><a target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
-                            'href="https://genologics.scilifelab.se/clarity/search?scope=Sample&query='+info[column_id]+'">'+
+                            'href="http://genologics.scilifelab.se:8080/clarity/search?scope=Sample&query='+info[column_id]+'">'+
                             info[column_id] + '</a></td>';
               }
             }
@@ -546,8 +565,7 @@ function load_samples_table() {
             else if (column_id == 'library_prep') {
               tbl_row += '<td class="' + column_id + '">';
               if (info[column_id] !== undefined) {
-                var libs = Object.keys(info[column_id]).sort();
-                $.each(libs, function(idx, prep){
+                $.each(info[column_id], function(prep, info_prep){
                   tbl_row += auto_format(prep, true) + ' ';
                 });
               }
@@ -606,9 +624,7 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">';
-            var libs = Object.keys(info['library_prep']).sort();
-            $.each(libs, function(idx, library){
-              info_library=info['library_prep'][library];
+            $.each(info['library_prep'], function(library, info_library) {
               info_library[column_id] = round_floats(info_library[column_id], 2);
 
               // Special case for workset_name, which is a link to Genstat workset page
@@ -619,7 +635,7 @@ function load_samples_table() {
 
               // Special case for workset_setup, which is a link to the LIMS
               else if (column_id == "workset_setup" && info_library[column_id]) {
-                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a href="https://genologics.scilifelab.se/clarity/work-complete/';
+                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a href="http://genologics.scilifelab.se:8080/clarity/work-complete/';
                 tbl_row += info_library[column_id].split('-')[1] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
               }
 
@@ -983,353 +999,7 @@ function make_timescale_bar(tsid, include_orderdates){
 		});
 	}
 }
-
-
-///////////////////
-////// BIOINFO ANALYSIS code
-///////////////////
-
-// Static config vars
-var bioinfo_api_url = '/api/v1/bioinfo_analysis/'+project;
-var bioinfo_states = ['Ongoing', 'Delivered', 'Aborted'];
-var bioinfo_states_classes = ['label-warning', 'label-success', 'label-danger'];
-var bioinfo_classes = ['unknown', 'success', 'warning', 'danger', 'active'];
-var bioinfo_texts = ['?', 'Pass', 'Warning', 'Fail', 'N/A'];
-var editable_statuses = ['Ongoing']; // This started off as a list - leaving it as a list to make it easy to extend
-var statusonly_statuses = ['Delivered', 'Aborted'];
-
-var field_names = [];
-$('.bioinfo-field-names th').each(function(i){
-  var suffix = '';
-  var classes = $(this).attr('class');
-  if(typeof classes !== 'undefined'){
-    $.each(classes.split(" "), function(i, c){
-      if(c.substr(0, 12) == 'bioinfo-app-'){
-        suffix = c.substr(12)+'_';
-      }
-    });
-  }
-  // First cell in data rows is th not td, so i-1 to avoid offset
-  field_names[i-1] = suffix+prettify($(this).text(), true);
-});
-
-// Build bioinfo table - main loading spinner waits for this function
-function load_bioinfo_table() {
-
-  // Hide the application-specific columns
-  var app_classes = {
-    'rnaseq': ['RNA-seq (total RNA)', 'RNA-seq (RiboZero)', 'RNA-seq (mRNA)', 'stranded RNA-seq (total RNA)', 'cDNA', 'stranded RNA-seq (RiboZero)'],
-    'exome': ['Exome capture'],
-    'customCap': ['Custom capture'],
-    'WGreseq': ['WG re-seq', 'WG re-seq (IGN)'],
-    'denovo': ['de novo', 'Mate-pair', 'Mate-pair (short insert)', 'Mate-pair (long insert)']
-  };
-  $('[class^=bioinfo-app-]').hide();
-
-  return $.getJSON(bioinfo_api_url, function (data) {
-
-    // Show the columns that we need
-    // Hacky, sorry. Page doesn't update fast enough sometimes.
-    setTimeout(function(){
-      if($('#type').text() == 'Application'){
-        $('.bioinfo-app-applications').show();
-      }
-      var thisapp = $('#application').text();
-      $.each(app_classes, function(key, arr){
-        if(arr.indexOf(thisapp) != -1){
-          $('.bioinfo-app-'+key).show();
-        }
-      });
-    }, 100);
-
-    // Hide the loading row and build the real runs based on the template
-    if(Object.keys(data).length > 0){
-      $('#bioinfo-noruns').hide();
-    } else {
-      $('#bioinfo-noruns').html('<td colspan="26" class="text-muted">No runs found</td>');
-      $('#bioinfo-show-history').hide();
-    }
-
-    // Build the history dump
-    $.getJSON(bioinfo_api_url+'?history=true', function (data_dump) {
-      $('#bioinfo-history-dump').text(JSON.stringify(data_dump, null, '  '));
-    });
-
-    // Build the table
-    var templaterow = $('#bioinfo-template-row').attr('id', '').show().detach();
-    $.each(data, function(key, vals){
-      // Start by copying the template row
-      var tr = templaterow.clone();
-
-      // Flowcell and status
-      var url_key = key.replace(/_.+_/g, '_');
-      tr.find('th.bioinfo-status-runid samp').html('<a href="../flowcells/'+url_key+'">'+key+'</a>');
-      tr.find('td.bioinfo-status-runstate span').text(vals.status);
-      var bsi = bioinfo_states.indexOf(vals.status);
-      if(bsi != -1){
-        tr.find('td.bioinfo-status-runstate span').removeClass('label-default').addClass(bioinfo_states_classes[bsi]);
-      }
-
-      // User and date
-      try {
-        tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Last updated by '+vals.user+'<br>'+formatDateTime(vals.timestamp, true)+'"></span>');
-      } catch(e){
-        tr.find('th.bioinfo-status-runid samp').after(' &nbsp; <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="No last update information found"></span>');
-      }
-
-      // UPPNEX id confirmed
-      if(vals.uppnex_confirmed == 'true'){
-        $('#uppnex_id_confirmed').attr('checked', true);
-      } else if(vals.uppnex_confirmed == 'false'){
-        $('#uppnex_id_confirmed').attr('checked', false);
-      }
-
-      // Set the values for the row
-      tr.children('td').each(function(i){
-        if(field_names[i] in vals){
-          if($(this).hasClass('bioinfo-status-pfw')){
-            var state = vals[field_names[i]];
-            $(this).text(state);
-            var si = bioinfo_texts.indexOf(state);
-            if(si != -1){
-              $(this).removeClass('unknown').addClass(bioinfo_classes[si]);
-            }
-          } else {
-            if($(this).find('input').length > 0){
-              $(this).find('input').val(vals[field_names[i]]);
-            }
-          }
-        }
-      });
-      // Add to table
-      $('.table-bioinfo-status').append(tr);
-    });
-
-    var forceDisabledState = false;
-    // Disable everything if the project is closed
-    if($('#project_status_alert').text() == 'Closed'){
-      forceDisabledState = true;
-      $('.bioinfo-savespan').html('<p class="text-muted"><em>Project is closed - not editable</em></p>');
-    }
-    // Set rows as disabled if they're not ready yet
-    var editable = 0;
-    $('.table-bioinfo-status tr:has(td)').each(function(){
-      editable += reset_editable($(this), forceDisabledState);
-    });
-    if(editable > 0){
-      $('#bioinfo-status-saveButton').attr('disabled', false);
-    }
-
-  }).fail(function( jqxhr, textStatus, error ) {
-    var numcols = 0; // I doubt that anyone will notice this. But I'm OCD.
-    $(".bioinfo-field-names th").each(function(){ numcols += $(this).css('display') != 'none' ? 1 : 0; });
-    $('#bioinfo-noruns').addClass('danger');
     $('#bioinfo-noruns td').attr('colspan', numcols).html("Error loading bioinfo analysis data: <code>"+textStatus+"</code>, <code>"+error+'</code>');
-  });
-}
-
-// Set rows as disabled if they're not ready yet
-function reset_editable(row, forcedisabled){
-  var status = row.find('.bioinfo-status-runstate span').text();
-  if(editable_statuses.indexOf(status) > -1 && !forcedisabled) {
-    row.removeClass('bioinfo-status-disabled bioinfo-delivered');
-    row.find('input').attr('disabled', false);
-    return 1;
-  } else if(statusonly_statuses.indexOf(status) > -1 && !forcedisabled) {
-    row.addClass('bioinfo-status-disabled bioinfo-delivered');
-    row.find('input').attr('disabled', true);
-    return 1;
-  } else {
-    row.addClass('bioinfo-status-disabled');
-    row.find('input').attr('disabled', true);
-    return 0;
-  }
-}
-
-$(document).ready(function() {
-
-  // Run ID status - individual runs
-  $('.table-bioinfo-status').on('click', '.bioinfo-status-runstate', function(e) {
-    e.stopImmediatePropagation(); // fires twice otherwise.
-    var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled') && !$(this).closest('tr').hasClass('bioinfo-delivered');
-    if(!isdisabled){
-      var i = bioinfo_states.indexOf($(this).text());
-      if(i >= 0){
-        if(typeof bioinfo_states[i+1] !== 'undefined') {
-          $(this).children('span').text(bioinfo_states[i+1]);
-          $(this).children('span').removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[i+1]);
-        } else {
-          $(this).children('span').text(bioinfo_states[0]);
-          $(this).children('span').removeClass(bioinfo_states_classes[i]).addClass(bioinfo_states_classes[0]);
-        }
-      }
-      reset_editable($(this).closest('tr'));
-      // Update the select box
-      var states = [];
-      $('.bioinfo-status-runstate').each(function(){
-        var s = $(this).text();
-        if(states.indexOf(s) == -1){ states.push(s); }
-      });
-      if(states.length == 1){
-        $('#bioinfo_set-status').val(states[0]);
-      } else {
-        $('#bioinfo_set-status').val('[ different values ]');
-      }
-    }
-  });
-
-  // Passed / Warn / Fail / NA cells
-  $('.table-bioinfo-status').on('click', 'td.bioinfo-status-pfw', function(e) {
-    e.stopImmediatePropagation(); // fires twice otherwise.
-    var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
-    $(this).closest('tr').hasClass('bioinfo-status-disabled');
-    if(!isdisabled){
-      var td = $(this);
-      $.each(bioinfo_classes, function(i, val){
-        if(td.hasClass(val)){
-          td.removeClass(val);
-          if(typeof bioinfo_classes[i+1] !== 'undefined') {
-            td.addClass(bioinfo_classes[i+1]);
-            td.text(bioinfo_texts[i+1]);
-          } else {
-            td.addClass(bioinfo_classes[0]);
-            td.text(bioinfo_texts[0]);
-          }
-          return false;
-        }
-      });
-    }
-  });
-
-  // Datepickers
-  $('.table-bioinfo-status').on('focus', '.input-group.date input', function() {
-    $(this).datepicker({
-        format: "yyyy-mm-dd",
-        todayHighlight: true
-    });
-  });
-  $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
-    if(!isdisabled){
-      var today = formatDateTime(new Date(), false);
-      $(this).prevAll("input:first").val(today);
-    }
-  });
-
-  // Copy first row
-  $('#bioinfo-status-copyFirstRow').click(function(e){
-    e.preventDefault();
-    e.stopImmediatePropagation(); // fires twice otherwise.
-    var states = [];
-    var input_vals = [];
-    $('.table-bioinfo-status tr:has(td)').each(function(){
-      var tr = $(this);
-      var isdisabled = tr.hasClass('bioinfo-status-disabled');
-      if(!isdisabled){
-        if(states.length == 0){
-          tr.children('td').each(function(i){
-            if($(this).hasClass('bioinfo-status-pfw')){
-              states[i] = $(this).text();
-            } else {
-              if($(this).find('input').length > 0){
-                input_vals[i] = $(this).find('input').val();
-              }
-            }
-          });
-        } else {
-          tr.children('td').each(function(i){
-            if($(this).hasClass('bioinfo-status-pfw')){
-              $(this).text(states[i]);
-              $(this).removeClass().addClass('bioinfo-status-pfw');
-              $(this).addClass(bioinfo_classes[bioinfo_texts.indexOf(states[i])]);
-            } else if($(this).find('input').length > 0){
-              $(this).find('input').val(input_vals[i]);
-            }
-          });
-        }
-      }
-    });
-  });
-
-  // Set all states dropdown box
-  $('#bioinfo_set-status').change(function(){
-    var state = $(this).val();
-    if(state !== '[ different values ]'){
-      $('.table-bioinfo-status tr:has(td)').each(function(){
-        var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
-        var isdelivered = $(this).closest('tr').hasClass('bioinfo-delivered');
-        if(!isdisabled || isdelivered){
-          $(this).find('.bioinfo-status-runstate span').text(state).
-            removeClass().addClass('label '+bioinfo_states_classes[bioinfo_states.indexOf(state)]);
-        }
-      });
-      $('.table-bioinfo-status tr:has(td)').each(function(){
-        reset_editable($(this));
-      });
-    }
-  });
-
-  //////
-  // SAVE CHANGES
-  //////
-  $('#bioinfo-status-saveButton').click(function(e){
-    e.preventDefault();
-    e.stopImmediatePropagation(); // fires twice otherwise.
-
-    if($(this).is(':disabled')){
-      alert('disabled!');
-      return false;
-    }
-
-    // Build the JSON object
-    var runs = {};
-    $('.table-bioinfo-status tr:visible:has(td)').each(function(){
-      var runid = $(this).find('th.bioinfo-status-runid').text().trim();
-      var status = $(this).find('.bioinfo-status-runstate span').text().trim();
-      var vals = {
-        uppnex_confirmed: $("#uppnex_id_confirmed").is(':checked') ? 'true' : 'false'
-      };
-      $(this).children('td').each(function(i){
-        if($(this).hasClass('bioinfo-status-pfw')){
-          vals[field_names[i]] = $(this).text().trim();
-        } else {
-          if($(this).find('input').length > 0){
-            vals[field_names[i]] = $(this).find('input').val().trim();
-          }
-        }
-      });
-      runs[runid] = {project_id: project, status: status, values: vals};
-    });
-
-    $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
-    $.ajax({
-      type: 'POST',
-      url: bioinfo_api_url,
-      dataType: 'json',
-      data: JSON.stringify(runs),
-      error: function(xhr, textStatus, errorThrown) {
-        alert('There was an error saving the bioinformatics statuses: '+errorThrown);
-        $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
-        console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(runs));
-      },
-      success: function(saved_data, textStatus, xhr) {
-        var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="glyphicon glyphicon-ok"></span></span>');
-        success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
-        $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
-        $('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
-      }
-    });
-
-  });
-
-  // Download history
-  $('#bioinfo-show-history').click(function(){
-    $('#bioinfo-history-dump').slideToggle();
-  });
-
-});
 
 
 // Warn users about old projects

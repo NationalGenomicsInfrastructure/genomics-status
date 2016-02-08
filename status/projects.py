@@ -2,6 +2,7 @@
 """
 import json
 import string
+import traceback
 
 import tornado.web
 import dateutil.parser
@@ -436,24 +437,91 @@ class CaliperImageHandler(SafeHandler):
             print message
             return("Error fetching caliper images")
 
+#
+# class ProjectSamplesHandler(SafeHandler):
+#         """ Serves a page which lists the samples of a given project, with some
+#         brief information for each sample.
+#         URL: /project/([^/]*)
+#         """
+#         def get(self, project):
+#             t = self.application.loader.load("project_samples.html")
+#             worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
+#
+#             self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
+#                                       user=self.get_current_user_name(),
+#                                       columns = self.application.genstat_defaults.get('pv_columns'),
+#                                       columns_sample = self.application.genstat_defaults.get('sample_columns'),
+#                                       prettify = prettify_css_names,
+#                                       worksets=worksets_view[project],
+#                                       ))
+
 
 class ProjectSamplesHandler(SafeHandler):
-        """ Serves a page which lists the samples of a given project, with some
-        brief information for each sample.
-        URL: /project/([^/]*)
-        """
-        def get(self, project):
-            t = self.application.loader.load("project_samples.html")
-            worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
+    """ Serves a page which lists the samples of a given project, with some
+    brief information for each sample.
+    URL: /project/([^/]*)
+    """
+    def get(self, project, active_tab=None):
+        tabs = ['details', 'samples', 'running_notes', 'bioinfo', 'communication', 'links']
+        if active_tab not in tabs:
+            active_tab = 'details'
 
-            self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
-                                      user=self.get_current_user_name(),
-                                      columns = self.application.genstat_defaults.get('pv_columns'),
-                                      columns_sample = self.application.genstat_defaults.get('sample_columns'),
-                                      prettify = prettify_css_names,
-                                      worksets=worksets_view[project],
-                                      ))
+        t = self.application.loader.load("project_samples.html")
+        sample_run_view = self.application.bioinfo_db.view('latest_data/sample_id')
+        bioinfo_data = {}
+        for row in sample_run_view.rows:
+            project_id = row.key[0]
+            if project_id == project:
+                flowcell_id = row.key[1]
+                lane_id = row.key[2]
+                sample_id = row.key[3]
+                if project_id not in bioinfo_data:
+                    bioinfo_data[project_id] = {sample_id: {flowcell_id: {lane_id: row.value}}}
+                elif sample_id not in bioinfo_data[project_id]:
+                    bioinfo_data[project_id][sample_id] = {flowcell_id: {lane_id: row.value}}
+                elif flowcell_id not in bioinfo_data[project_id][sample_id]:
+                    bioinfo_data[project_id][sample_id][flowcell_id] = {lane_id: row.value}
+                elif lane_id not in bioinfo_data[project_id][sample_id][flowcell_id]:
+                    bioinfo_data[project_id][sample_id][flowcell_id][lane_id] = row.value
+                else:
+                    bioinfo_data[project_id][sample_id][flowcell_id].update({lane_id: row.value})
 
+        project_view = self.application.projects_db.view('project/summary')
+        application = ""
+
+        for row in project_view.rows:
+            if row.key[1] == project:
+                application = row.value['application']
+                break
+
+        app_classes = {
+            'rnaseq': ['RNA-seq', 'RNA-seq (total RNA)', 'RNA-seq (RiboZero)', 'RNA-seq (mRNA)', 'stranded RNA-seq (total RNA)', 'cDNA', 'stranded RNA-seq (RiboZero)'],
+            'exome': ['Exome capture'],
+            'customCap': ['Custom capture'],
+            'WGreseq': ['WG re-seq', 'WG re-seq (IGN)'],
+            'denovo': ['de novo', 'Mate-pair', 'Mate-pair (short insert)', 'Mate-pair (long insert)']
+        }
+
+        for key in app_classes:
+            # for app_class in app_classes[key]:
+            if application in app_classes[key]:
+                application = key
+                break
+
+
+        worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
+        self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
+                                  user=self.get_current_user_name(),
+                                  columns=self.application.genstat_defaults.get('pv_columns'),
+                                  columns_sample=self.application.genstat_defaults.get('sample_columns'),
+                                  prettify=prettify_css_names,
+                                  worksets=worksets_view[project],
+                                  bioinfo=bioinfo_data,
+                                  app_classes=app_classes,
+                                  qc_done=False,
+                                  application=application,
+                                  active_tab=active_tab
+                                  ))
 
 class ProjectsHandler(SafeHandler):
     """ Serves a page with all projects listed, along with some brief info.

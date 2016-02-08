@@ -182,6 +182,7 @@ class Application(tornado.web.Application):
             ("/production", ProductionHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesHandler),
+            ("/project/(P[^/]*)/([^/]*)$", ProjectSamplesHandler),
             ("/project_summary/([^/]*)$", ProjectSummaryHandler),
             ("/projects/([^/]*)$", ProjectsHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
@@ -291,6 +292,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/applications.html")
             tornado.autoreload.watch("design/barcodes.html")
             tornado.autoreload.watch("design/base.html")
+            tornado.autoreload.watch("design/bioinfo_tab.html")
             tornado.autoreload.watch("design/base_new.html")
             tornado.autoreload.watch("design/cronjobs.html")
             tornado.autoreload.watch("design/deliveries.html")
