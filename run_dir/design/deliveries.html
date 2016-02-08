@@ -77,13 +77,13 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
             </thead>
             <tbody>
             <tr class="bioinfo-project" id="bioinfo-{{ project_id }}" style="display:none;"></tr>
-            {% for flowcell_id, flowcell in project['runs'].items() %}
+            {% for flowcell_id, flowcell in sorted(project['runs'].items()) %}
             <tr class="bioinfo-flowcell" id="bioinfo-{{ project_id }}-{{ flowcell_id }}"
               data-parent="#bioinfo-{{ project_id }}">
               <td><a href="#bioinfo-{{ project_id }}-{{ flowcell_id }}" class="bioinfo-expand">
                   <span class="glyphicon glyphicon-chevron-right"></span></a></td>
               <td></td>
-              <td class="bioinfo-granularity"><samp><a href="/flowcells/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
+              <td class="bioinfo-granularity"><samp><a href="/flowcells/{{ flowcell_id.split('_')[0] }}_{{ flowcell_id.split('_')[-1] }}">{{ flowcell_id }}</a></samp></td>
               <td><span class="bioinfo-status label label-primary">{{ flowcell['flowcell_status'] }}</span></td>
               <td></td>
               {% set default_note = {'note': '-'} %}
@@ -92,7 +92,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                 <button class="bioinfo-running-notes-cancel btn btn-sm btn-default">Cancel</button>
               </td>
             </tr>
-            {% for lane_id, lane in flowcell['lanes'].items() %}
+            {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
               <tr class="bioinfo-lane" id="bioinfo-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}"
                   data-parent="#bioinfo-{{ project_id }}-{{ flowcell_id }}" style="display:none;">
                 <td></td>
@@ -107,7 +107,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                   <button class="bioinfo-running-notes-cancel btn btn-sm btn-default">Cancel</button></td>
               </tr>
 
-              {% for sample_id, sample in lane['samples'].items() %}
+              {% for sample_id, sample in sorted(lane['samples'].items()) %}
                       {% set passed = len(sample['checklist']['passed']) %}
                       {% set warnings = len(sample['checklist']['warnings']) %}
                       {% set failed = len(sample['checklist']['failed']) %}
@@ -117,7 +117,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                   <td></td>
                   <td><a href="#bioinfo-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
                       class="bioinfo-expand"></a></td>
-                  <td class="bioinfo-granularity"><samp><a href="/sample/{{ sample_id }}">{{ sample_id }}</a></samp></td>
+                  <td class="bioinfo-granularity"><samp>{{ sample_id }}</samp></td>
 
                   <td><span class="bioinfo-status label {% if sample['status'] == 'Failed' %} label-error {% else %} label-primary {% end %}">{{ sample['status'] }}</span></td>
                   <td class="bi-run-pwf hide-incoming {% if passed + warnings + failed < total %} warning {% else %} success {% end %}">
