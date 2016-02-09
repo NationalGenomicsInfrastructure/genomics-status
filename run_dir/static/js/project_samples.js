@@ -998,8 +998,6 @@ function make_timescale_bar(tsid, include_orderdates){
 		});
 	}
 }
-    $('#bioinfo-noruns td').attr('colspan', numcols).html("Error loading bioinfo analysis data: <code>"+textStatus+"</code>, <code>"+error+'</code>');
-
 
 // Warn users about old projects
 function old_project_warning(warndate_raw){

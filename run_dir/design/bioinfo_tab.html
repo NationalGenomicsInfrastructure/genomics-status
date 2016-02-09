@@ -217,19 +217,28 @@
             <td class="bioinfo-status-pfw blast_wrapper {{ qc_css[lane.get('blast_wrapper', '?')] }}">
               {{ lane.get('blast_wrapper', '?') }}</td>
             {% if application == 'rnaseq' %}
-              <td class="bioinfo-status-pfw rnaseq_sequenceduplication unknown">?</td>
-              <td class="bioinfo-status-pfw rnaseq_uniquemappingrate unknown">?</td>
+              <td class="bioinfo-status-pfw rnaseq_sequenceduplication {{ qc_css[lane.get('rnaseq_sequenceduplication', '?')] }}">
+                {{ lane.get('rnaseq_sequenceduplication', '?') }}</td>
+              <td class="bioinfo-status-pfw rnaseq_uniquemappingrate {{ qc_css[lane.get('rnaseq_uniquemappingrate', '?')] }}">
+                {{ lane.get('rnaseq_uniquemappingrate', '?') }}</td>
             {% elif application == 'exome' %}
-              <td class="bioinfo-status-pfw exome_sequenceduplication unknown">?</td>
-              <td class="bioinfo-status-pfw exome_targets10xcoverage unknown">?</td>
+              <td class="bioinfo-status-pfw exome_sequenceduplication {{ qc_css[lane.get('exome_sequenceduplication', '?')] }}">
+                {{ lane.get('exome_sequenceduplication', '?') }}</td>
+              <td class="bioinfo-status-pfw exome_targets10xcoverage {{ qc_css[lane.get('exome_targets10xcoverage', '?')] }}">
+                {{ lane.get('exome_targets10xcoverage', '?') }}</td>
             {% elif application == 'customCap' %}
-              <td class="bioinfo-status-pfw customCap_enrichment unknown">?</td>
+              <td class="bioinfo-status-pfw customCap_enrichment {{ qc_css[lane.get('customCap_enrichment', '?')] }}">
+                {{ lane.get('customCap_enrichment', '?') }}</td>
             {% elif application == 'WGreseq' %}
-              <td class="bioinfo-status-pfw WGreseq_sequenceduplication unknown">?</td>
-              <td class="bioinfo-status-pfw WGreseq_mappingrate unknown">?</td>
+              <td class="bioinfo-status-pfw WGreseq_sequenceduplication {{ qc_css[lane.get('WGreseq_sequenceduplication', '?')] }}">
+                {{ lane.get('WGreseq_sequenceduplication', '?') }}</td>
+              <td class="bioinfo-status-pfw WGreseq_mappingrate {{ qc_css[lane.get('WGreseq_mappingrate', '?')] }}">
+                {{ lane.get('WGreseq_mappingrate', '?') }}</td>
             {% elif application == 'denovo' %}
-              <td class="bioinfo-status-pfw denovo_adaptertrimming unknown">?</td>
-              <td class="bioinfo-status-pfw denovo_kmerprofile unknown">?</td>
+              <td class="bioinfo-status-pfw denovo_adaptertrimming {{ qc_css[lane.get('denovo_adaptertrimming', '?')] }}">
+                {{ lane.get('denovo_adaptertrimming', '?') }}</td>
+              <td class="bioinfo-status-pfw denovo_kmerprofile {{ qc_css[lane.get('denovo_mkerprofile', '?')] }}">
+                {{ lane.get('denovo_kmerprofile', '?') }}</td>
             {% elif application == 'applications' %}
               <td class="bioinfo-status-pfw applications">?</td>
               <td class="bioinfo-status-pfw applications">?</td>
@@ -254,4 +263,5 @@
     {% end %}
   {% end %} <!-- end sample -->
 </tbody></table>
+<!--<script src="/static/js/bootstrap-datepicker.min.js"></script>-->
 <script src="/static/js/bioinfo_tab.js"></script>

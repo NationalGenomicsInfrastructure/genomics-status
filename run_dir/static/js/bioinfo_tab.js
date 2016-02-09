@@ -1,3 +1,26 @@
+
+// Datepickers
+$('.table-bioinfo-status').on('focus', '.input-group .date input', function() {
+    console.log($(this));
+    $(this).datepicker({
+        format: "yyyy-mm-dd",
+        todayHighlight: true
+    });
+
+});
+
+$('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
+    console.log($(this));
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
+    if(!isdisabled){
+      var today = formatDateTime(new Date(), false);
+      $(this).prevAll("input:first").val(today);
+    }
+});
+
+
 $(function(){
   $('.bioinfo-expand').click(function(e){
   // this = a[href=#$(tr).attr('id')];
@@ -123,9 +146,9 @@ var checkChildrenStatus = function(selector) {
             setParentStatus(td);
         });
     });
-//    if (selector == '.bioinfo-fc') {
-//        checkChildrenStatus('.bioinfo-sample');
-//    }
+    if (selector == '.bioinfo-fc') {
+        checkChildrenStatus('.bioinfo-sample');
+    }
 };
 
 var setParentStatus = function(td) {
@@ -172,7 +195,6 @@ var setParentStatus = function(td) {
     }
 };
 
-
   //////
   // SAVE CHANGES
   //////
@@ -187,8 +209,9 @@ var setParentStatus = function(td) {
 
     // Build the JSON object
     var sample_run_lane_statuses = {};
+    // get project_id from the url
     var project_id = window.location.href.split(/\//);
-
+    // remove /bioinfo/ from the end
     project_id = project_id[project_id.length-2];
 
     $('.table-bioinfo-status tr.bioinfo-lane:has(td)').each(function(){
@@ -201,12 +224,15 @@ var setParentStatus = function(td) {
         var flowcell = tr_id.replace('bioinfo-lane-'+sample+'-', '').replace('-'+lane,'');
 
         var status = $(this).find('.bioinfo-status-runstate span').text().trim();
-        var row = {'sample_status': status};
+        var row = {'status': status};
 
         $(tr).children('td').each(function(i, td) {
+            console.log($(td));
             if ($(td).attr('class') != undefined) {
                 var field_name = $(td).attr('class').split(/\s+/)[1];
+                console.log(field_name);
                 row[field_name] = $(td).text().trim();
+                console.log($(td).text());
             }
         });
 
@@ -239,23 +265,6 @@ var setParentStatus = function(td) {
   });
 
 
-// Datepickers
-$('.table-bioinfo-status').on('focus', '.input-group.date input', function() {
-    $(this).datepicker({
-        format: "yyyy-mm-dd",
-        todayHighlight: true
-    });
-});
-
-$('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
-    if(!isdisabled){
-      var today = formatDateTime(new Date(), false);
-      $(this).prevAll("input:first").val(today);
-    }
-});
 
 //  // Copy first row
 //  $('#bioinfo-status-copyFirstRow').click(function(e){
