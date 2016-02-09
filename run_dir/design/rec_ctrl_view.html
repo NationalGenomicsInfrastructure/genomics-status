@@ -59,7 +59,7 @@ Description: Quick view of reception control plates for a project
                 {% else %}
                     {% set pid = '' %}
                 {% end %}
-                <td data-plate="{{ plate }}" data-pos="{{ "{}:{}".format(row, col) }}" title="{{ "{}{}: {}".format(row, col, pid) }}" data-toggle="tooltip">{{ pid }}</td>
+                <td data-plate="{{ plate }}" data-pos="{{ "{}:{}".format(row, col) }}" title="{{ pid }}" data-toggle="tooltip">{{ pid }}</td>
             {% end %}
         </tr>
         {% end %}
