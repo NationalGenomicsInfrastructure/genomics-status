@@ -23,7 +23,8 @@ Description: Quick view of reception control plates for a project
               <option value="qc">QC</option>
               <option value="cust_name">Customer Name</option>
             </select>
-            <span style="margin-left: 15px;">You can use the left and right cursors to move through these.</span>
+            <span style="margin-left: 15px;"><strong>Tip:</strong> You can use the <kbd><span class="glyphicon glyphicon-arrow-left"></span></kbd>
+                and <kbd><span class="glyphicon glyphicon-arrow-right"></span></kbd> cursors to move through these.</span>
         </div>
     </form>
     
@@ -52,13 +53,14 @@ Description: Quick view of reception control plates for a project
         {% for row in rows %}
         <tr>
             <th>{{ row }}</th>
-                {% for col in cols %}
-                <td data-plate="{{ plate }}" data-pos="{{ "{}:{}".format(row, col) }}">
-                      {% if "{}:{}".format(row, col) in sample_data[plate] %}
-                          {{ sample_data[plate]["{}:{}".format(row, col)]['sample_name'] }}
-                      {% end %}
-                        </td>
+            {% for col in cols %}
+                {% if "{}:{}".format(row, col) in sample_data[plate] %}
+                    {% set pid = sample_data[plate]["{}:{}".format(row, col)]['sample_name'] %}
+                {% else %}
+                    {% set pid = '' %}
                 {% end %}
+                <td data-plate="{{ plate }}" data-pos="{{ "{}:{}".format(row, col) }}" title="{{ pid }}" data-toggle="tooltip">{{ pid }}</td>
+            {% end %}
         </tr>
         {% end %}
         </tbody>
