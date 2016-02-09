@@ -239,6 +239,23 @@ var setParentStatus = function(td) {
   });
 
 
+// Datepickers
+$('.table-bioinfo-status').on('focus', '.input-group.date input', function() {
+    $(this).datepicker({
+        format: "yyyy-mm-dd",
+        todayHighlight: true
+    });
+});
+
+$('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
+    if(!isdisabled){
+      var today = formatDateTime(new Date(), false);
+      $(this).prevAll("input:first").val(today);
+    }
+});
 
 //  // Copy first row
 //  $('#bioinfo-status-copyFirstRow').click(function(e){
