@@ -12,17 +12,19 @@ $(function(){
     
     // Cursor pressed
     $(document).keydown(function(e) {
-        // left or up
-        if(e.which == 37){
-            var next_el = $("#display_select option:selected").prev();
-        }
-        // right or down
-        if(e.which == 39){
-            var next_el = $("#display_select option:selected").next();
-        }
-        if(next_el.is('option')){
-            $("#display_select").val(next_el.val());
-            change_plate_data(next_el.val());
+        if(e.which == 37 || e.which == 39){
+            // left or up
+            if(e.which == 37){
+                var next_el = $("#display_select option:selected").prev();
+            }
+            // right or down
+            if(e.which == 39){
+                var next_el = $("#display_select option:selected").next();
+            }
+            if(next_el.is('option')){
+                $("#display_select").val(next_el.val());
+                change_plate_data(next_el.val());
+            }
         }
     });
 
@@ -129,6 +131,8 @@ $(function(){
                       if(rgb[i] < 0){ rgb[i] = 0; }
                     }
                     col = chroma.rgb(rgb).hex();
+                } else {
+                    col = '#efefef';
                 }
                 if($(this).text() == 'PASSED'){ col = '#dff0d8'; }
                 if($(this).text() == 'FAILED'){ col = '#f2dede'; }
