@@ -212,7 +212,7 @@ var setParentStatus = function(td) {
 
         var row_key = [project_id, sample, flowcell, lane];
         sample_run_lane_statuses[row_key] = row;
-//        sample_run_lane_statuses[row_key]['sample_status'] = status;
+        sample_run_lane_statuses[row_key]['status'] = status;
     });
 
     $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');

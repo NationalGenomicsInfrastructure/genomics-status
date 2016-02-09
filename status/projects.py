@@ -781,7 +781,6 @@ class BioinfoAnalysisHandler(SafeHandler):
             return_obj[row.key[1]] = row.value
         return return_obj
 
-
     def get(self, project_id):
         return_obj = {}
         if project_id:
@@ -802,15 +801,19 @@ class BioinfoAnalysisHandler(SafeHandler):
         v = self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
         user = self.get_secure_cookie('user')
         data = json.loads(self.request.body)
+        # import pdb
+        # pdb.set_trace()
         saved_data = {}
+        ## why run_id is a string??
         for run_id in data:
-            for row in v[[project_id, run_id]]:
+            project, sample, run, lane = run_id.split(',')
+            for row in v[[project, run, lane, sample]]:
                 original_doc = row.value
 
                 timestamp=datetime.datetime.now().isoformat()
                 if 'values'	not in original_doc:
                     original_doc['values'] = {}
-                original_doc['values'][timestamp] = data[run_id]['values']
+                original_doc['values'][timestamp] = data[run_id]
                 original_doc['values'][timestamp]['user'] = user
                 original_doc['status'] = data[run_id]['status']
                 original_doc['values'][timestamp]['status'] = data[run_id]['status']
@@ -821,8 +824,6 @@ class BioinfoAnalysisHandler(SafeHandler):
                     self.set_status(400)
                     self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
                     return None
-
-
         self.set_status(200)
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(saved_data))
