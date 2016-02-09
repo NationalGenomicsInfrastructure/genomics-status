@@ -44,22 +44,22 @@ Description: Quick view of reception control plates for a project
         {% end %}
 
         <thead>
-            <th>#</th>
+            <th class="text-center">#</th>
             {% for col in cols %}
-                <th>{{ col }}</th>
+                <th class="text-center">{{ col }}</th>
             {% end %}
         </thead>
         <tbody>
         {% for row in rows %}
         <tr>
-            <th>{{ row }}</th>
+            <th class="text-center">{{ row }}</th>
             {% for col in cols %}
                 {% if "{}:{}".format(row, col) in sample_data[plate] %}
                     {% set pid = sample_data[plate]["{}:{}".format(row, col)]['sample_name'] %}
                 {% else %}
                     {% set pid = '' %}
                 {% end %}
-                <td data-plate="{{ plate }}" data-pos="{{ "{}:{}".format(row, col) }}" title="{{ pid }}" data-toggle="tooltip">{{ pid }}</td>
+                <td data-plate="{{ plate }}" data-pos="{{ "{}:{}".format(row, col) }}" title="{{ "{}{}: {}".format(row, col, pid) }}" data-toggle="tooltip">{{ pid }}</td>
             {% end %}
         </tr>
         {% end %}
