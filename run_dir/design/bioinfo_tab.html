@@ -18,6 +18,7 @@
   </span>
 </form>
 <hr>
+{% for project_id in bioinfo %}
 <table class="table table-bioinfo-status">
   <colgroup span="2"></colgroup>
   <colgroup span="2"> </colgroup>
@@ -64,8 +65,9 @@
     <th colspan="2">Reports Generated</th>
     <th colspan="2">Delivery Details</th>
   </tr>
-  <tr class="bioinfo-field-names">
-    <th></th>
+  <tr class="bioinfo-field-names bioinfo-project" id="bioinfo-project-{{ project_id }}">
+    <th class="bioinfo-project"><a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
+      <span class="glyphicon glyphicon-chevron-right"></span></a></th>
     <th></th>
     <th>Sample</th>
     <th>Status</th>
@@ -94,14 +96,13 @@
       <th class="bioinfo-app-applications">Data delivered</th>
       <th class="bioinfo-app-applications">Data approved</th>
     {% end %}
-    <th class="samplereport">Sample report</th>
-    <th class="projectreport">Project report</th>
-    <th class="dataandreportstransferred">Data and report trasferred</th>
-    <th class="emailsenttouser">Email sent to user</th>
+    <th class="bioinfo-status-samplereport">Sample report</th>
+    <th class="bioinfo-status-projectreport">Project report</th>
+    <th class="bioinfo-status-dataandreportstransferred">Data and report trasferred</th>
+    <th class="bioinfo-status-emailsenttouser">Email sent to user</th>
   </tr>
-    {% for project_id in bioinfo %}
     {% for sample_id in bioinfo[project_id] %}
-      <tr class="bioinfo-sample" id="bioinfo-sample-{{ sample_id }}">
+      <tr class="bioinfo-sample" id="bioinfo-sample-{{ sample_id }}" data-parent="#bioinfo-project-{{ project_id }}">
         <td><a href="#bioinfo-sample-{{ sample_id }}" class="bioinfo-expand">
           <span class="glyphicon glyphicon-chevron-right"></span></a></td>
         <td></td>
@@ -132,20 +133,26 @@
           <td class="bioinfo-status-pfw applications">Data delivered</td>
           <td class="bioinfo-status-pfw applications">Data approved</td>
         {% end %}
-          <td class="bioinfo-status-pfw samplereport">
+          <td class="bioinfo-status-samplereport">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-            </div></td>
-          <td class="bioinfo-status-pfw projectreport">
-            <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
-          <td class="bioinfo-status-pfw dataandreportstransferred">
+            </div>
+          </td>
+          <td class="bioinfo-status-projectreport">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-            </div></td>
-          <td class="bioinfo-status-pfw emailsenttouser">
+            </div>
+          </td>
+          <td class="bioinfo-status-dataandreportstransferred">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
+              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
+            </div>
+          </td>
+          <td class="bioinfo-status-emailsenttouser">
+            <div class="input-group input-group-sm date"><input type="text" class="form-control">
+              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
+            </div>
+          </td>
       </tr>
       {% for flowcell_id in bioinfo[project_id][sample_id] %}
         <tr class="bioinfo-fc" id="bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}"
@@ -180,20 +187,24 @@
           <td class="bioinfo-status-pfw applications">Data delivered</td>
           <td class="bioinfo-status-pfw applications">Data approved</td>
         {% end %}
-          <td class="bioinfo-status-pfw samplereport">
+          <td class="bioinfo-status-samplereport">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-            </div></td>
-          <td class="bioinfo-status-pfw projectreport">
+            </div>
+          </td>
+          <td class="bioinfo-status-projectreport">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
-          <td class="bioinfo-status-pfw dataandreportstransferred">
+              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
+          </td>
+          <td class="bioinfo-status-dataandreportstransferred">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-            </div></td>
-          <td class="bioinfo-status-pfw emailsenttouser">
+            </div>
+          </td>
+          <td class="bioinfo-status-emailsenttouser">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
+              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
+          </td>
         </tr>
         {% for lane_id, lane in bioinfo[project_id][sample_id][flowcell_id].items() %}
           <tr class="bioinfo-lane" id="bioinfo-lane-{{ sample_id }}-{{ flowcell_id }}-{{ lane_id }}"
@@ -243,25 +254,26 @@
               <td class="bioinfo-status-pfw applications">?</td>
               <td class="bioinfo-status-pfw applications">?</td>
             {% end %}
-          <td class="bioinfo-status-pfw samplereport">
-            <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-            </div></td>
-          <td class="bioinfo-status-pfw projectreport">
-            <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
-          <td class="bioinfo-status-pfw dataandreportstransferred">
-            <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-            </div></td>
-          <td class="bioinfo-status-pfw emailsenttouser">
-            <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
+              <td class="bioinfo-status-samplereport">
+                <div class="input-group input-group-sm date"><input type="text" class="form-control">
+                  <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
+                </div></td>
+              <td class="bioinfo-status-projectreport">
+                <div class="input-group input-group-sm date"><input type="text" class="form-control">
+                  <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
+              <td class="bioinfo-status-dataandreportstransferred">
+                <div class="input-group input-group-sm date"><input type="text" class="form-control">
+                  <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
+                </div></td>
+              <td class="bioinfo-status-emailsenttouser">
+                <div class="input-group input-group-sm date"><input type="text" class="form-control">
+                  <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
+              </td>
           </tr>
         {% end %}
       {% end %}
     {% end %}
-  {% end %} <!-- end sample -->
 </tbody></table>
-<!--<script src="/static/js/bootstrap-datepicker.min.js"></script>-->
+{% end %} <!-- end project -->
+<script src="/static/js/bootstrap-datepicker.min.js"></script>
 <script src="/static/js/bioinfo_tab.js"></script>

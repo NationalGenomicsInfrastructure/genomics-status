@@ -1,16 +1,14 @@
-
 // Datepickers
-$('.table-bioinfo-status').on('focus', '.input-group .date input', function() {
-    console.log($(this));
+$('.table-bioinfo-status').on('focus', '.input-group.date input', function(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
     $(this).datepicker({
         format: "yyyy-mm-dd",
         todayHighlight: true
     });
-
 });
 
 $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
-    console.log($(this));
     e.preventDefault();
     e.stopImmediatePropagation();
     var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
@@ -21,33 +19,76 @@ $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
 });
 
 
-$(function(){
-  $('.bioinfo-expand').click(function(e){
-  // this = a[href=#$(tr).attr('id')];
+// expand or collapse table
+$('.bioinfo-expand').click(function(e){
+    // this = a[href=#$(tr).attr('id')];
     e.preventDefault();
+    e.stopImmediatePropagation();
     tr = $(this).parent().parent();
-
-    if($(this).hasClass('expanded')){
-      collapse(tr);
-    } else {
-      $(this).addClass('expanded');
-      tr_id = $(tr).attr('id');
-      $('tr[data-parent=#'+tr_id+']').show();
-      $(this).find('span').toggleClass('glyphicon-chevron-right, glyphicon-chevron-down');
+    if ($(tr).hasClass('bioinfo-project')) {
+        collapseAll(this);
+        return false;
     }
-  });
+    if ($(this).hasClass('expanded')){
+        collapse(tr);
+    } else {
+        expand(tr);
+    }
 });
 
 function collapse(element) {
   var element_id = $(element).attr('id');
   var expanded = $(element).find("a[href=#"+element_id+"]");
   $(expanded).removeClass('expanded');
-  $(element).find('span.glyphicon').toggleClass('glyphicon-chevron-right, glyphicon-chevron-down');
+  var span =$(element).find('span.glyphicon');
+  if ($(span).hasClass('glyphicon-chevron-down')) {
+    $(span).removeClass('glyphicon-chevron-down');
+    $(span).addClass('glyphicon-chevron-right');
+  }
   var children = $(element).parent().find('tr[data-parent=#'+element_id+']')
   $.each(children, function(index, child) {
     $(child).hide();
     collapse(child);
   });
+};
+
+function expand(element) {
+    var a = $(element).find('.bioinfo-expand');
+    $(a).addClass('expanded');
+    var tr_id = $(element).attr('id');
+    $('tr[data-parent=#'+tr_id+']').show();
+    var span = $(element).find('span.glyphicon')
+    if ($(span).hasClass('glyphicon-chevron-right')) {
+        $(span).removeClass('glyphicon-chevron-right')
+        $(span).addClass('glyphicon-chevron-down');
+    }
+};
+
+function collapseAll(a) {
+    console.log(a);
+    if ($(a).hasClass('expanded')) { // collapse recursively
+        var trs = $('.table-bioinfo-status tr.bioinfo-sample');
+        console.log($(trs));
+        $.each(trs, function(index, tr) {
+            if ($(tr).find('a.bioinfo-expand').hasClass('expanded')) {
+                collapse(tr);
+            }
+        });
+        $(a).removeClass('expanded');
+        $(a).find('span.glyphicon').removeClass('glyphicon-chevron-down');
+        $(a).find('span.glyphicon').addClass('glyphicon-chevron-right');
+    } else { // expand - not recursively
+        var trs = $.merge($('.table-bioinfo-status tr.bioinfo-sample'), $('.table-bioinfo-status tr.bioinfo-fc'));
+        console.log(trs);
+         $.each(trs, function(index, tr) {
+            if (!$(tr).find('a.bioinfo-expand').hasClass('expanded')) {
+                expand(tr);
+            }
+         });
+         $(a).addClass('expanded');
+         $(a).find('span.glyphicon').removeClass('glyphicon-chevron-right');
+         $(a).find('span.glyphicon').addClass('glyphicon-chevron-down');
+    }
 };
 
 var bioinfo_statuses = {'?': 'unknown', 'Pass': 'success', 'Warning': 'warning', 'Fail': 'danger'};
@@ -139,7 +180,7 @@ var checkChildrenStatus = function(selector) {
     $.each(flowcell_trs, function(i, tr) {
         var first_td = $(tr).children('.undemultiplexedreads');
         var first_index = $(tr).children().index(first_td);
-        var last_td = $(tr).children('.samplereport');
+        var last_td = $(tr).children('.bioinfo-status-samplereport');
         var last_index = $(tr).children().index(last_td);
         var all_tds = $(tr).children().slice(first_index, last_index);
         $.each(all_tds, function(i, td){
@@ -152,7 +193,7 @@ var checkChildrenStatus = function(selector) {
 };
 
 var setParentStatus = function(td) {
-    if (td == undefined) {return false;}
+    if (td == undefined || $(td).parent().hasClass('bioinfo-project')) {return false;}
     var parent_status = "";
     var child_tds = getChildTds(td);
     var statuses = [];

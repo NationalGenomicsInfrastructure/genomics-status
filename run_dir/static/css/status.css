@@ -850,7 +850,7 @@ These classes are cut and pasted wholesale into here from other packages.
 .table-colgroup > tbody > tr.border-bottom > th, .table-colgroup > tbody > tr > th.border-bottom {
   border-bottom: 1px solid #AAA;
 }
-.table-bioinfo-status td {
+.table-bioinfo-status td.bioinfo-status-pfw {
   cursor: pointer;
 }
 .table-bioinfo-status {
