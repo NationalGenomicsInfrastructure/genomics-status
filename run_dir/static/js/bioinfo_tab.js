@@ -65,7 +65,6 @@ function expand(element) {
 };
 
 function collapseAll(a) {
-    console.log(a);
     if ($(a).hasClass('expanded')) { // collapse recursively
         var trs = $('.table-bioinfo-status tr.bioinfo-sample');
         console.log($(trs));
@@ -94,8 +93,33 @@ var bioinfo_statuses = {'?': 'unknown', 'Pass': 'success', 'Warning': 'warning',
 var bioinfo_classes = ['unknown', 'success', 'warning', 'danger'];
 var bioinfo_texts = ['?', 'Pass', 'Warning', 'Fail'];
 
+// set the whole row
+$('.table-bioinfo-status').on('click', 'td.bioinfo-status-row', function(e) {
+    e.stopImmediatePropagation();
+    var tr = $(this).parent();
+    var tr_status = $(tr).attr('class').split(/\s+/)[1];
+    if (tr_status == undefined) {
+        tr_status = '?';
+    }
+    var tr_class = bioinfo_statuses[tr_status];
+    var new_status = bioinfo_texts[(bioinfo_texts.indexOf(tr_status)+1) % bioinfo_texts.length];
+    var new_class =  bioinfo_statuses[new_status];
+    var tds = $(tr).children('td.bioinfo-status-pfw');
+    $.each(tds, function(index, td) {
+        var td_class = $(td).attr('class').split(/\s+/)[2];
+        $(td).removeClass(td_class); // todo: remove any class of bioinfo_classes
+        $(td).addClass(tr_class);
+        $(td).text(tr_status);
+        setChildrenStatus(td);
+        setParentStatus(td);
+    });
+    $(this).removeClass(tr_status);
+    $(this).addClass(new_status);
+});
+
 // double click on header -> set all the values
 $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
+    e.stopImmediatePropagation();
     var th = $(this);
     var th_status = $(th).attr('class').split(/\s+/)[2];
     if (th_status == undefined) {
@@ -120,34 +144,9 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
 });
 
 $('.table-bioinfo-status').on('click', 'td.bioinfo-status-pfw', function(e) {
-  e.stopImmediatePropagation(); // fires twice otherwise.
-
+    e.stopImmediatePropagation(); // fires twice otherwise.
+    setChildrenStatus(this);
     var td = $(this);
-    var tds = getChildTds(td);
-    tds.push(td);
-
-    var current_class = "";
-    var next_class = "";
-    var next_label = "";
-
-    // get current class, it must be one of the bioinfo_classes
-    $.each($(td).attr('class').split(/\s+/), function(i, td_class) {
-        var current_index = bioinfo_classes.indexOf(td_class);
-          if (current_index != -1) {
-            current_class = td_class;
-            var next_index = (current_index + 1) % bioinfo_classes.length;
-            next_class = bioinfo_classes[next_index];
-            next_label = bioinfo_texts[next_index];
-            return false;
-          }
-    });
-
-    $.each($(tds), function(i, td_child) {
-        $(td_child).removeClass(current_class);
-        $(td_child).addClass(next_class);
-        $(td_child).text(next_label);
-    });
-
     var td_index = $(td).parent().children().index($(td));
     var parent_td = $($(td).parent().attr('data-parent')).children()[td_index];
     setParentStatus(parent_td);
@@ -249,6 +248,33 @@ var setParentStatus = function(td) {
         }
 
     }
+};
+
+function setChildrenStatus(td) {
+    var tds = getChildTds(td);
+    tds.push(td);
+
+    var current_class = "";
+    var next_class = "";
+    var next_label = "";
+
+    // get current class, it must be one of the bioinfo_classes
+    $.each($(td).attr('class').split(/\s+/), function(i, td_class) {
+        var current_index = bioinfo_classes.indexOf(td_class);
+          if (current_index != -1) {
+            current_class = td_class;
+            var next_index = (current_index + 1) % bioinfo_classes.length;
+            next_class = bioinfo_classes[next_index];
+            next_label = bioinfo_texts[next_index];
+            return false;
+          }
+    });
+
+    $.each($(tds), function(i, td_child) {
+        $(td_child).removeClass(current_class);
+        $(td_child).addClass(next_class);
+        $(td_child).text(next_label);
+    });
 };
 
   //////
