@@ -78,7 +78,7 @@ class DeliveriesPageHandler(SafeHandler):
                                 'total': [],
                             }
                             sample_data = flowcells[flowcell_id][lane_id][sample_id]
-                            lane_statuses.append(sample_data['sample_status'])
+                            lane_statuses.append(sample_data.get('sample_status', 'New'))
                             for key in sample_data.keys():
                                 if key in app_fields['core'] or key in app_fields['applications']:
                                     checklist['total'].append(key)
