@@ -801,8 +801,6 @@ class BioinfoAnalysisHandler(SafeHandler):
         v = self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
         user = self.get_secure_cookie('user')
         data = json.loads(self.request.body)
-        # import pdb
-        # pdb.set_trace()
         saved_data = {}
         ## why run_id is a string??
         for run_id in data:

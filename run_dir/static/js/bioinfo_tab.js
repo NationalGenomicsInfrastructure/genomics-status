@@ -79,7 +79,6 @@ function collapseAll(a) {
         $(a).find('span.glyphicon').addClass('glyphicon-chevron-right');
     } else { // expand - not recursively
         var trs = $.merge($('.table-bioinfo-status tr.bioinfo-sample'), $('.table-bioinfo-status tr.bioinfo-fc'));
-        console.log(trs);
          $.each(trs, function(index, tr) {
             if (!$(tr).find('a.bioinfo-expand').hasClass('expanded')) {
                 expand(tr);
@@ -92,12 +91,36 @@ function collapseAll(a) {
 };
 
 var bioinfo_statuses = {'?': 'unknown', 'Pass': 'success', 'Warning': 'warning', 'Fail': 'danger'};
+var bioinfo_classes = ['unknown', 'success', 'warning', 'danger'];
+var bioinfo_texts = ['?', 'Pass', 'Warning', 'Fail'];
+
+// double click on header -> set all the values
+$('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
+    var th = $(this);
+    var th_status = $(th).attr('class').split(/\s+/)[2];
+    if (th_status == undefined) {
+        th_status = '?';
+    }
+    var th_class = bioinfo_statuses[th_status];
+
+    // get next status
+    var new_status = bioinfo_texts[(bioinfo_texts.indexOf(th_status)+1) % bioinfo_texts.length];
+    var new_class = bioinfo_statuses[new_status];
+
+    // get tds with the same column name
+    var column_name = $(th).attr('class').split(/\s+/)[1]
+    var tds = $('.table-bioinfo-status td.'+column_name);
+    $.each(tds, function(index, td) {
+        $(td).removeClass(th_class);
+        $(td).addClass(new_class);
+        $(td).text(new_status);
+    });
+    $(th).removeClass(th_status);
+    $(th).addClass(new_status);
+});
 
 $('.table-bioinfo-status').on('click', 'td.bioinfo-status-pfw', function(e) {
   e.stopImmediatePropagation(); // fires twice otherwise.
-  var bioinfo_classes = ['unknown', 'success', 'warning', 'danger'];
-  var bioinfo_texts = ['?', 'Pass', 'Warning', 'Fail'];
-
 
     var td = $(this);
     var tds = getChildTds(td);
@@ -143,19 +166,12 @@ var getChildTds = function(td) {
 
 // it returns only the first child of children, wtf??
 var getChildTrs = function(tr) {
-//    console.log('tr');
-//    console.log(tr);
-
     var children = [];
-
     var tr_id = $(tr).attr('id');
     var child_trs = $('.table-bioinfo-status tr[data-parent="#'+tr_id+'"]');
     $.each(child_trs, function(i, child_tr){
         children.push(child_tr);
     });
-//    console.log('children');
-//    console.log(children);
-
     if (children.length != 0) {
         var result = [];
         $.each(children, function(i, child_tr) {
@@ -165,7 +181,6 @@ var getChildTrs = function(tr) {
     } else {
         return children;
     }
-
 };
 
 $( document ).ready(function() {
@@ -179,8 +194,8 @@ var checkChildrenStatus = function(selector) {
     var flowcell_trs = $(selector); // flowcells
     $.each(flowcell_trs, function(i, tr) {
         var first_td = $(tr).children('.undemultiplexedreads');
+        var last_td = $(tr).children('.samplereport');
         var first_index = $(tr).children().index(first_td);
-        var last_td = $(tr).children('.bioinfo-status-samplereport');
         var last_index = $(tr).children().index(last_td);
         var all_tds = $(tr).children().slice(first_index, last_index);
         $.each(all_tds, function(i, td){
@@ -268,12 +283,9 @@ var setParentStatus = function(td) {
         var row = {'status': status};
 
         $(tr).children('td').each(function(i, td) {
-            console.log($(td));
             if ($(td).attr('class') != undefined) {
                 var field_name = $(td).attr('class').split(/\s+/)[1];
-                console.log(field_name);
                 row[field_name] = $(td).text().trim();
-                console.log($(td).text());
             }
         });
 
@@ -281,7 +293,6 @@ var setParentStatus = function(td) {
         sample_run_lane_statuses[row_key] = row;
         sample_run_lane_statuses[row_key]['status'] = status;
     });
-
     $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
     // from here it's copy&paste and i don't know what's happening
     var bioinfo_api_url = "/api/v1/bioinfo_analysis/"+project_id;

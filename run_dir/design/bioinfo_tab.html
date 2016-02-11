@@ -71,35 +71,35 @@
     <th></th>
     <th>Sample</th>
     <th>Status</th>
-    <th class="undemultiplexedreads">Undemultiplexed reads</th>
-    <th class="unexpectedindexes">Unexpected indexes</th>
-    <th class="lowsampleyield">Low sample yield</th>
-    <th class="phixerrorrate">PhiX error rate</th>
-    <th class="basesq30">%bases >= Q30</th>
-    <th class="fastq_screen">fastq_screen</th>
-    <th class="blast_wrapper">blast_wrapper</th>
+    <th class="bioinfo-status-th undemultiplexedreads">Undemultiplexed reads</th>
+    <th class="bioinfo-status-th unexpectedindexes">Unexpected indexes</th>
+    <th class="bioinfo-status-th lowsampleyield">Low sample yield</th>
+    <th class="bioinfo-status-th phixerrorrate">PhiX error rate</th>
+    <th class="bioinfo-status-th basesq30">%bases >= Q30</th>
+    <th class="bioinfo-status-th fastq_screen">fastq_screen</th>
+    <th class="bioinfo-status-th blast_wrapper">blast_wrapper</th>
     {% if application!='rnaseq' %}
-      <th class="bioinfo-app-rnaseq">Sequence duplication</th>
-      <th class="bioinfo-app-rnaseq rnaseq_uniquemappingrate">Unique mapping rate</th>
+      <th class="bioinfo-status-th bioinfo-app-rnaseq">Sequence duplication</th>
+      <th class="bioinfo-status-th bioinfo-app-rnaseq rnaseq_uniquemappingrate">Unique mapping rate</th>
     {% elif application == 'exome' %}
-      <th class="bioinfo-app-exome exome_sequenceduplication">Sequence duplication</th>
-      <th class="bioinfo-app-exome exome_targets10xcoverage">% Targets @10X coverage</th>
+      <th class="bioinfo-status-th bioinfo-app-exome exome_sequenceduplication">Sequence duplication</th>
+      <th class="bioinfo-status-th bioinfo-app-exome exome_targets10xcoverage">% Targets @10X coverage</th>
     {% elif application == 'customCap' %}
-      <th class="bioinfo-app-customCap customCap_enrichment">Enrichment</th>
+      <th class="bioinfo-status-th bioinfo-app-customCap customCap_enrichment">Enrichment</th>
     {% elif application == 'WGreseq' %}
-      <th class="bioinfo-app-WGreseq">Sequence duplication</th>
-      <th class="bioinfo-app-WGreseq WGreseq_sequenceduplication">Mapping rate</th>
+      <th class="bioinfo-status-th bioinfo-app-WGreseq">Sequence duplication</th>
+      <th class="bioinfo-status-th bioinfo-app-WGreseq WGreseq_sequenceduplication">Mapping rate</th>
     {% elif application == 'denovo' %}
-      <th class="bioinfo-app-denovo denovo_adaptertrimming">Adapter trimming</th>
-      <th class="bioinfo-app-denovo denovo_kmerprofile">K-mer profile</th>
+      <th class="bioinfo-status-th bioinfo-app-denovo denovo_adaptertrimming">Adapter trimming</th>
+      <th class="bioinfo-status-th bioinfo-app-denovo denovo_kmerprofile">K-mer profile</th>
     {% elif application == 'applications' %}
-      <th class="bioinfo-app-applications">Data delivered</th>
-      <th class="bioinfo-app-applications">Data approved</th>
+      <th class="bioinfo-status-th bioinfo-app-applications">Data delivered</th>
+      <th class="bioinfo-status-th bioinfo-app-applications">Data approved</th>
     {% end %}
-    <th class="bioinfo-status-samplereport">Sample report</th>
-    <th class="bioinfo-status-projectreport">Project report</th>
-    <th class="bioinfo-status-dataandreportstransferred">Data and report trasferred</th>
-    <th class="bioinfo-status-emailsenttouser">Email sent to user</th>
+    <th class="bioinfo-status-th-date samplereport">Sample report</th>
+    <th class="bioinfo-status-th-date projectreport">Project report</th>
+    <th class="bioinfo-status-th-date dataandreportstransferred">Data and report trasferred</th>
+    <th class="bioinfo-status-th-date emailsenttouser">Email sent to user</th>
   </tr>
     {% for sample_id in bioinfo[project_id] %}
       <tr class="bioinfo-sample" id="bioinfo-sample-{{ sample_id }}" data-parent="#bioinfo-project-{{ project_id }}">
@@ -107,7 +107,7 @@
           <span class="glyphicon glyphicon-chevron-right"></span></a></td>
         <td></td>
         <td><samp>{{ sample_id }}</samp></td>
-        <td><span class="label label-primary">New</span></td>
+        <td class="bioinfo-status-runstate"><span class="label label-primary">New</span></td>
         <td class="bioinfo-status-pfw undemultiplexedreads unknown">?</td>
         <td class="bioinfo-status-pfw unexpectedindexes unknown">?</td>
         <td class="bioinfo-status-pfw lowsampleyield unknown">?</td>
@@ -133,22 +133,22 @@
           <td class="bioinfo-status-pfw applications">Data delivered</td>
           <td class="bioinfo-status-pfw applications">Data approved</td>
         {% end %}
-          <td class="bioinfo-status-samplereport">
+          <td class="bioinfo-status samplereport">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
             </div>
           </td>
-          <td class="bioinfo-status-projectreport">
+          <td class="bioinfo-status projectreport">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
             </div>
           </td>
-          <td class="bioinfo-status-dataandreportstransferred">
+          <td class="bioinfo-status dataandreportstransferred">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
             </div>
           </td>
-          <td class="bioinfo-status-emailsenttouser">
+          <td class="bioinfo-status emailsenttouser">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
             </div>
@@ -161,7 +161,7 @@
           <td><a href="#bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}" class="bioinfo-expand">
             <span class="glyphicon glyphicon-chevron-right"></span></a></td>
           <td><samp><a href="/flowcells/{{ flowcell_id.split('_')[0] }}_{{ flowcell_id.split('_')[-1] }}">{{ flowcell_id }}</a></samp></td>
-          <td><span class="label label-primary">New</span></td>
+          <td class="bioinfo-status-runstate"><span class="label label-primary">New</span></td>
           <td class="bioinfo-status-pfw undemultiplexedreads unknown">?</td>
           <td class="bioinfo-status-pfw unexpectedindexes unknown">?</td>
           <td class="bioinfo-status-pfw lowsampleyield unknown">?</td>
@@ -187,21 +187,21 @@
           <td class="bioinfo-status-pfw applications">Data delivered</td>
           <td class="bioinfo-status-pfw applications">Data approved</td>
         {% end %}
-          <td class="bioinfo-status-samplereport">
+          <td class="bioinfo-status samplereport">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
             </div>
           </td>
-          <td class="bioinfo-status-projectreport">
+          <td class="bioinfo-status projectreport">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
           </td>
-          <td class="bioinfo-status-dataandreportstransferred">
+          <td class="bioinfo-status dataandreportstransferred">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
             </div>
           </td>
-          <td class="bioinfo-status-emailsenttouser">
+          <td class="bioinfo-status emailsenttouser">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
           </td>
@@ -254,18 +254,18 @@
               <td class="bioinfo-status-pfw applications">?</td>
               <td class="bioinfo-status-pfw applications">?</td>
             {% end %}
-              <td class="bioinfo-status-samplereport">
+              <td class="bioinfo-status samplereport">
                 <div class="input-group input-group-sm date"><input type="text" class="form-control">
                   <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
                 </div></td>
-              <td class="bioinfo-status-projectreport">
+              <td class="bioinfo-status projectreport">
                 <div class="input-group input-group-sm date"><input type="text" class="form-control">
                   <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
-              <td class="bioinfo-status-dataandreportstransferred">
+              <td class="bioinfo-status dataandreportstransferred">
                 <div class="input-group input-group-sm date"><input type="text" class="form-control">
                   <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
                 </div></td>
-              <td class="bioinfo-status-emailsenttouser">
+              <td class="bioinfo-status emailsenttouser">
                 <div class="input-group input-group-sm date"><input type="text" class="form-control">
                   <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
               </td>
