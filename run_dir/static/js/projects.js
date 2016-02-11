@@ -175,8 +175,7 @@ function init_listjs(no_items, columns) {
     //initialize custom project sorting
     jQuery.extend(jQuery.fn.dataTableExt.oSort, {
             "pid-pre": function(a) {
-                        var pid = $('<div/>').html(a).find('a').first().text()
-                        return parseInt(pid.replace(/P/gi, ''));
+                        return parseInt($(a).text().replace(/P/gi, ''));
                             },
             "pid-asc": function(a,b) {
                         return a-b;
