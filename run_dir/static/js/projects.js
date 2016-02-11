@@ -102,6 +102,9 @@ function load_table() {
           );
       });
 
+      // Add dataorder to projects
+      tbl_row.find('td.project').data('order',parseInt(project_id.substr(1)));
+
       // Add links to projects
       tbl_row.find('td.project').html('<a href="/project/' + project_id + '">' + project_id + '</a>');
 
@@ -172,10 +175,26 @@ function init_listjs(no_items, columns) {
       $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
     } );
 
+    //initialize custom project sorting
+    jQuery.extend(jQuery.fn.dataTableExt.oSort, {
+            "pid-pre": function(a) {
+                        var pid = $('<div/>').html(a).find('a').first().text()
+                        return parseInt(pid.replace(/P/gi, ''));
+                            },
+            "pid-asc": function(a,b) {
+                        return a-b;
+                            },
+            "pid-desc": function(a,b) {
+                        return b-a;
+                            }
+    });
     if ($.fn.dataTable.isDataTable( '#project_table' )){
         var table = $('#project_table').DataTable();
     }else{
         var table = $('#project_table').DataTable({
+           "aoColumnDefs": [
+              {"sType": "pid", "aTargets": [0]}
+           ],
           "paging":false,
           "destroy": true,
           "info":false,
@@ -227,7 +246,6 @@ function choose_column(col){
 ///////////////////////////////
 
 function load_presets() {
-    console.log('test');
   return $.getJSON('/api/v1/presets?presets_list=pv_presets', function (data) {
     var default_presets = data['default'];
     var user_presets = data['user'];
