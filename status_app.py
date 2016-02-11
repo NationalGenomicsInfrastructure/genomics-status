@@ -23,6 +23,7 @@ from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandle
 from status.barcode_vs_expected import BarcodeVsExpectedDataHandler, BarcodeVsExpectedPlotHandler, ExpectedHandler
 from status.clusters_per_lane import ClustersPerLaneHandler, ClustersPerLanePlotHandler
 from status.cpu_hours import CPUHoursDataHandler
+from status.deliveries import DeliveriesPageHandler
 from status.flowcells import FlowcellDataHandler, FlowcellDemultiplexHandler, FlowcellHandler, FlowcellLinksDataHandler, \
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
@@ -30,7 +31,7 @@ from status.phix_err_rate import PhixErrorRateDataHandler, PhixErrorRateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsDataHandler, ProductionCronjobsHandler, ProductionHandler
-from status.projects import BioinfoAnalysisHandler, CaliperImageHandler, CharonProjectHandler, DeliveriesPageHandler, \
+from status.projects import BioinfoAnalysisHandler, CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler, RecCtrlDataHandler
