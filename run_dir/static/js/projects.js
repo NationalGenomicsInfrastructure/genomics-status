@@ -102,9 +102,6 @@ function load_table() {
           );
       });
 
-      // Add dataorder to projects
-      tbl_row.find('td.project').data('order',parseInt(project_id.substr(1)));
-
       // Add links to projects
       tbl_row.find('td.project').html('<a href="/project/' + project_id + '">' + project_id + '</a>');
 
