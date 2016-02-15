@@ -37,10 +37,11 @@ $('.bioinfo-expand').click(function(e){
 });
 
 function collapse(element) {
+    // element is tr
   var element_id = $(element).attr('id');
   var expanded = $(element).find("a[href=#"+element_id+"]");
   $(expanded).removeClass('expanded');
-  var span =$(element).find('span.glyphicon');
+  var span =$(element).find('td.bioinfo-status-expand span.glyphicon');
   if ($(span).hasClass('glyphicon-chevron-down')) {
     $(span).removeClass('glyphicon-chevron-down');
     $(span).addClass('glyphicon-chevron-right');
@@ -57,7 +58,7 @@ function expand(element) {
     $(a).addClass('expanded');
     var tr_id = $(element).attr('id');
     $('tr[data-parent=#'+tr_id+']').show();
-    var span = $(element).find('span.glyphicon')
+    var span = $(element).find('td.bioinfo-status-expand span.glyphicon')
     if ($(span).hasClass('glyphicon-chevron-right')) {
         $(span).removeClass('glyphicon-chevron-right')
         $(span).addClass('glyphicon-chevron-down');

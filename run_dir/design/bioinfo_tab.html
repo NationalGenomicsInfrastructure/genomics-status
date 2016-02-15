@@ -20,8 +20,8 @@
 <hr>
 {% for project_id in bioinfo %}
 <table class="table table-bioinfo-status">
-  <colgroup span="3"></colgroup>
-  <colgroup span="2"> </colgroup>
+  <colgroup span="2"></colgroup>
+  <colgroup span="3"> </colgroup>
   <colgroup span="3"> </colgroup>
   <colgroup span="2"> </colgroup>
   <colgroup span="2"> </colgroup>
@@ -45,8 +45,7 @@
   <tr class="border-bottom">
     <th></th>
     <th></th>
-    <th></th>
-    <th colspan="2">Sample</th>
+    <th colspan="3">Sample</th>
     <th colspan="3">Multiplex QC</th>
     <th colspan="2">Quality</th>
     <th colspan="2">Contamination screen</th>
@@ -67,12 +66,12 @@
     <th colspan="2">Delivery Details</th>
   </tr>
   <tr class="bioinfo-field-names bioinfo-project" id="bioinfo-project-{{ project_id }}">
-    <th>Fill row</th>
     <th class="bioinfo-project"><a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
       <span class="glyphicon glyphicon-chevron-right"></span></a></th>
     <th></th>
     <th>Sample</th>
     <th>Status</th>
+    <th>Fill row</th>
     <th class="bioinfo-status-th undemultiplexedreads">Undemultiplexed reads</th>
     <th class="bioinfo-status-th unexpectedindexes">Unexpected indexes</th>
     <th class="bioinfo-status-th lowsampleyield">Low sample yield</th>
@@ -105,12 +104,12 @@
   </tr>
     {% for sample_id in bioinfo[project_id] %}
       <tr class="bioinfo-sample" id="bioinfo-sample-{{ sample_id }}" data-parent="#bioinfo-project-{{ project_id }}">
-        <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
-        <td><a href="#bioinfo-sample-{{ sample_id }}" class="bioinfo-expand">
+        <td class="bioinfo-status-expand"><a href="#bioinfo-sample-{{ sample_id }}" class="bioinfo-expand">
           <span class="glyphicon glyphicon-chevron-right"></span></a></td>
         <td></td>
         <td><samp>{{ sample_id }}</samp></td>
         <td class="bioinfo-status-runstate"><span class="label label-primary">New</span></td>
+        <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
         <td class="bioinfo-status-pfw undemultiplexedreads unknown">?</td>
         <td class="bioinfo-status-pfw unexpectedindexes unknown">?</td>
         <td class="bioinfo-status-pfw lowsampleyield unknown">?</td>
@@ -160,12 +159,12 @@
       {% for flowcell_id in bioinfo[project_id][sample_id] %}
         <tr class="bioinfo-fc" id="bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}"
             data-parent="#bioinfo-sample-{{ sample_id }}" style="display:none;">
-          <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
           <td></td>
-          <td><a href="#bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}" class="bioinfo-expand">
+          <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}" class="bioinfo-expand">
             <span class="glyphicon glyphicon-chevron-right"></span></a></td>
           <td><samp><a href="/flowcells/{{ flowcell_id.split('_')[0] }}_{{ flowcell_id.split('_')[-1] }}">{{ flowcell_id }}</a></samp></td>
           <td class="bioinfo-status-runstate"><span class="label label-primary">New</span></td>
+          <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
           <td class="bioinfo-status-pfw undemultiplexedreads unknown">?</td>
           <td class="bioinfo-status-pfw unexpectedindexes unknown">?</td>
           <td class="bioinfo-status-pfw lowsampleyield unknown">?</td>
@@ -213,11 +212,11 @@
         {% for lane_id, lane in bioinfo[project_id][sample_id][flowcell_id].items() %}
           <tr class="bioinfo-lane" id="bioinfo-lane-{{ sample_id }}-{{ flowcell_id }}-{{ lane_id }}"
               data-parent="#bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}" style="display:none;">
-            <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
             <td></td>
             <td><a href="#bioinfo-lane-{{ sample_id }}-{{ flowcell_id }}-{{ lane_id }}"></a></td>
-            <td><samp>{{ lane_id }}</samp></td>
+            <td class="bioinfo-status-expand"><samp>{{ lane_id }}</samp></td>
             <td class="bioinfo-status-runstate"><span class="label label-{{ status_css[lane.get('sample_status', 'New').lower()] }}">{{ lane.get('sample_status') }}</span></td>
+            <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
             <td class="bioinfo-status-pfw undemultiplexedreads {{ qc_css[lane.get('undemultiplexedreads', '?')] }}">
               {{ lane.get('undemultiplexedreads', '?') }}</td>
             <td class="bioinfo-status-pfw unexpectedindexes {{ qc_css[lane.get('unexpectedindexes', '?')] }}">
