@@ -1,5 +1,5 @@
     <!-- RUNNING NOTES TAB -->
-    <div class="tab-pane fade" id="tab_running_notes_content">
+    <div class="tab-pane fade {% if active_tab=='running_notes' %}in active{% end %}" id="tab_running_notes_content">
         <!-- add running note -->
         <form action="" method="POST" id="running_notes_form" role="form">
             <div class="panel panel-info">

@@ -12,7 +12,7 @@ function get_link_url() {
 }
 
 function load_links() {
-  link_url=get_link_url();  
+  link_url=get_link_url();
   var link_icon = {'Deviation':'exclamation-sign text-danger', 'Other':'file text-primary'};
   $("#existing_links").empty();
   $.getJSON(link_url, function(data) {
