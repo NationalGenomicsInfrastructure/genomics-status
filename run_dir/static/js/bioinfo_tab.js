@@ -68,7 +68,6 @@ function expand(element) {
 function collapseAll(a) {
     if ($(a).hasClass('expanded')) { // collapse recursively
         var trs = $('.table-bioinfo-status tr.bioinfo-sample');
-        console.log($(trs));
         $.each(trs, function(index, tr) {
             if ($(tr).find('a.bioinfo-expand').hasClass('expanded')) {
                 collapse(tr);
@@ -213,7 +212,6 @@ var setParentStatus = function(td) {
     if (td == undefined || $(td).parent().hasClass('bioinfo-project')) {return false;}
     var parent_status = "";
     var child_tds = getChildTds(td);
-    console.log(child_tds);
     var statuses = [];
     $.each(child_tds, function(i, td){
         var td_text = $(td).text().replace(/\s/g, '');
