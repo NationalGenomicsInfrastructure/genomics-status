@@ -272,31 +272,35 @@ Description: Details page for a single project
     <!-- SAMPLES TAB -->
     <div class="tab-pane fade" id="tab_samples_content">
       <form class="form-inline" role="form" id="Search-form">
-        <button class="pull-right btn btn-primary" data-toggle="modal" data-target="#sampleFieldsModal">Filter Columns</button>
-        <div class="form-group">
+        <button class="pull-right btn btn-sm btn-primary" data-toggle="modal" data-target="#sampleFieldsModal">Filter Columns</button>
+        <div class="form-group form-group-sm">
           <label for="search_field">Search Samples:</label>
           <input class="form-control search search-query" type="text" placeholder="Search..." id="search_field">
         </div>
         &nbsp;
+        <button type="button" id="proj_samples_copy_table" class="btn btn-sm btn-default" data-clipboard-target="#sample_table"><span class="glyphicon glyphicon-copy"></span> Copy table</button>
+        &nbsp;
 
-        <div class="form-group">
+        <div class="form-group form-group-sm">
           <label>Column Presets:</label>
-          <div class="btn-group" id="default_preset_buttons">
+          <div class="btn-group btn-group-sm" id="default_preset_buttons">
             <!-- Load default presets (to be filled with JS) -->
           </div>
         </div>
-        <div class="form-group" style="margin-left:2em;">
-          <a class="btn btn-default" href='/reads_total/{{ project }}' role="button">Reads Aggregation</a>
-          <a class="btn btn-default" href='/rec_ctrl_view/{{ project }}' role="button">RecCtrl Plates</a>
+        <div class="form-group form-group-sm" style="margin-left:2em;">
+          <a class="btn btn-sm btn-default" href='/reads_total/{{ project }}' role="button">Reads Aggregation</a>
+          <a class="btn btn-sm btn-default" href='/rec_ctrl_view/{{ project }}' role="button">RecCtrl Plates</a>
         </div>
       </form>
+      
+      {% if len(worksets) > 0 %}
       <hr>
       <!-- Woksets -->
       <label for="tab_samples_worksets">Worksets:</label>
       <div id="tab_samples_worksets">
       {% for workset in worksets %}
-        <div class="btn-group">
-          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <div class="btn-group btn-group-sm">
+          <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             {{ workset.value }} <span class="caret"></span>
           </button>
           <ul class="dropdown-menu">
@@ -306,6 +310,7 @@ Description: Details page for a single project
         </div>
       {% end %}
       </div>
+      {% end %}
 
       <hr>
       <div class="scrollable">
@@ -598,6 +603,7 @@ Description: Details page for a single project
 <!-- Javascript -->
 <script src="/static/js/bootstrap-datepicker.min.js"></script>
 <script src="/static/js/list.min.js"></script>
+<script src="/static/js/clipboard.min.js"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ project }}"></script>
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-project="{{project}}"></script>
 <script src="/static/js/project_samples.js?v={{ gs_globals['git_commit'] }}" id="projects-js" data-project="{{project}}"></script>
