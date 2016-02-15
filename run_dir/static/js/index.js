@@ -14,7 +14,7 @@ fill_quotas_table = function() {
          disk_usage_class = '';
          if(disk_usage_percent > 80){ disk_usage_class = 'q-warning'; }
          if(disk_usage_percent > 90){ disk_usage_class = 'q-danger'; }
-         if(nobackup_usage_percent > 100){ nobackup_usage_percent = 100; }
+         if(disk_usage_percent > 100){ disk_usage_percent = 100; }
       });
       
       var nobackup_disk = $.getJSON('/api/v1/quotas/'+project_id+'_nobackup', function(api_data) {
