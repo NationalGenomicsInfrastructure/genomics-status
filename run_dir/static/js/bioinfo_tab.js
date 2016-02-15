@@ -112,7 +112,9 @@ $('.table-bioinfo-status').on('click', 'td.bioinfo-status-row', function(e) {
         $(td).addClass(tr_class);
         $(td).text(tr_status);
         setChildrenStatus(td);
-        setParentStatus(td);
+        var td_index = $(td).parent().children().index($(td));
+        var parent_td = $($(td).parent().attr('data-parent')).children()[td_index];
+        setParentStatus(parent_td);
     });
     $(this).removeClass(tr_status);
     $(this).addClass(new_status);
@@ -211,6 +213,7 @@ var setParentStatus = function(td) {
     if (td == undefined || $(td).parent().hasClass('bioinfo-project')) {return false;}
     var parent_status = "";
     var child_tds = getChildTds(td);
+    console.log(child_tds);
     var statuses = [];
     $.each(child_tds, function(i, td){
         var td_text = $(td).text().replace(/\s/g, '');
