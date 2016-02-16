@@ -81,6 +81,18 @@
 		        </tr>
 		    </thead>
 		    <tbody>
+        {% for project_id, project in uppmax_projects.items() %}
+          <tr>
+            <td><a href="quotas#{{ project_id }}">{{ project_id }}</a></td>
+            <td class="{{ project['disk_class'] }}"><div class="wrapper"><span class="val" style="width:{{ project['disk_percentage'] }}%;">
+              <span>{{ project['disk_usage'] }} TB</span></span>
+              <span class="percent pull-right">{{ project['disk_limit'] }} TB</span></div></td>
+            <td class="{{ project['nobackup_class'] }}"><div class="wrapper"><span class="val" style="width:{{ project['nobackup_percentage'] }}%;">
+              <span>{{ project['nobackup_usage'] }} TB</span></span><span class="percent pull-right">{{ project['nobackup_limit'] }} TB</span></div></td>
+            <td class="{{ project['cpu_class'] }}"><div class="wrapper"><span class="val" style="width:{{ project['cpu_percentage'] }}%;">
+              <span>{{ project['cpu_usage'] }} K</span></span><span class="percent pull-right">{{ project['cpu_limit'] }} K</span></div></td>
+         </tr>
+        {% end %}
 		    </tbody>
 		</table>
 	</div>
@@ -94,7 +106,8 @@
 					<th>Update Time</th>
 				</tr>
 			</thead>
-			<tbody></tbody>
+			<tbody>
+      </tbody>
 		</table>
 	</div>
 	<div class="col-sm-3">

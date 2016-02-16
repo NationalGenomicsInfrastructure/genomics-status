@@ -5,9 +5,10 @@ import requests
 import os
 import sys
 import time
-
+import copy
 from datetime import datetime, timedelta
 from dateutil import parser
+
 
 #########################
 #  Useful misc handlers #
@@ -124,20 +125,65 @@ class MainHandler(UnsafeHandler):
     """
     def get(self):
         t = self.application.loader.load("index.html")
-        uppmax_projects = self.application.uppmax_projects
         user = self.get_current_user_name()
 
         view = self.application.server_status_db.view('all_docs/by_timestamp')
         latest = max([parser.parse(row.key) for row in view.rows])
-        # assuming that status db is updated not more often than every 5 minutes
-        # maybe i just need to change taca script -> the data is saved in a very stupid way (yes, was my work)
+        # assuming that status db is not being updated more often than every 5 minutes
         reduced_rows = [row for row in view.rows if latest - parser.parse(row.key) <= timedelta(minutes=5)]
 
         server_status = {}
         for row in reduced_rows:
             server = row.value['name']
-            if row.value['name'] not in server_status:
+            if server not in server_status:
                 server_status[server] = row.value
+        # copy -> so that we don't change self.application.uppmax_projects
+        uppmax_ids = copy.copy(self.application.uppmax_projects)
+        # get all the documents, sorted by timestamp in descending order. Because I don't know how to use reduce functions
+        # limit = 30, get the last 30 entries. assuming that our projects are in this range
+        view = self.application.uppmax_db.view('time/last_updated_full_doc', descending=True, limit=30)
+        uppmax_projects = {}
+        for row in view.rows:
+            project_id = row.value['project'].replace('/', '_')
+            project_nobackup = copy.copy(row.value['project'].split('/')[0])
+            if project_id in uppmax_ids:
+                # if a new project, add cpu hours
+                if project_nobackup not in uppmax_projects:
+                    uppmax_projects[project_nobackup] = {'timestamp': row.key}
+
+                project = uppmax_projects[project_nobackup]
+                # add disk or nobackup usage depending on type of project
+                if project_id == project_nobackup:
+                    project['disk_usage'] = row.value['usage (GB)']
+                    project['disk_limit'] = row.value['quota limit (GB)']
+                    project['disk_percentage'] = min(100, 100 * (float(project['disk_usage']) / float(project['disk_limit'])))
+                    if project['disk_percentage'] > 90.0:
+                        project['disk_class'] = 'q-danger'
+                    elif project['disk_percentage'] > 80.0:
+                        project['disk_class'] = 'q-warning'
+                    else:
+                        project['disk_class'] = ''
+                    project['cpu_usage'] = row.value['cpu hours']
+                    project['cpu_limit'] = row.value['cpu limit']
+                    project['cpu_percentage'] = min(100, 100 * (float(project['cpu_usage']) / float(project['cpu_limit'])))
+                    if project['cpu_percentage'] > 90.0:
+                        project['cpu_class'] = 'q-danger'
+                    elif project['cpu_percentage'] > 80.0:
+                        project['cpu_class'] = 'q-warning'
+                    else:
+                        project['cpu_class'] = ''
+                else:
+                    project['nobackup_usage'] = row.value['usage (GB)']
+                    project['nobackup_limit'] = row.value['quota limit (GB)']
+                    project['nobackup_percentage'] = min(100, 100 * (float(project['nobackup_usage']) / float(project['nobackup_limit'])))
+                    if project['nobackup_percentage'] > 90.0:
+                        project['nobackup_class'] = 'q-danger'
+                    elif project['nobackup_percentage'] > 80.0:
+                        project['nobackup_class'] = 'q-warning'
+                    else:
+                        project['nobackup_class'] = ''
+
+                uppmax_ids.remove(project_id)
 
         self.write(t.generate(gs_globals=self.application.gs_globals, user=user, uppmax_projects=uppmax_projects, server_status=server_status))
 
