@@ -154,18 +154,19 @@ class MainHandler(UnsafeHandler):
                 project = uppmax_projects[project_nobackup]
                 # add disk or nobackup usage depending on type of project
                 if project_id == project_nobackup:
-                    project['disk_usage'] = row.value['usage (GB)']
-                    project['disk_limit'] = row.value['quota limit (GB)']
-                    project['disk_percentage'] = min(100, 100 * (float(project['disk_usage']) / float(project['disk_limit'])))
+                    # / 1024 - to convert GB to TB
+                    project['disk_usage'] = round(float(row.value['usage (GB)']) / 1024, 2)
+                    project['disk_limit'] = round(float(row.value['quota limit (GB)']) / 1024, 2)
+                    project['disk_percentage'] = min(100, 100 * (project['disk_usage'] / project['disk_limit']))
                     if project['disk_percentage'] > 90.0:
                         project['disk_class'] = 'q-danger'
                     elif project['disk_percentage'] > 80.0:
                         project['disk_class'] = 'q-warning'
                     else:
                         project['disk_class'] = ''
-                    project['cpu_usage'] = row.value['cpu hours']
-                    project['cpu_limit'] = row.value['cpu limit']
-                    project['cpu_percentage'] = min(100, 100 * (float(project['cpu_usage']) / float(project['cpu_limit'])))
+                    project['cpu_usage'] = round(float(row.value['cpu hours']) / 1000, 2)
+                    project['cpu_limit'] = round(float(row.value['cpu limit']) / 1000, 2)
+                    project['cpu_percentage'] = min(100, 100 * (project['cpu_usage'] / project['cpu_limit']))
                     if project['cpu_percentage'] > 90.0:
                         project['cpu_class'] = 'q-danger'
                     elif project['cpu_percentage'] > 80.0:
@@ -173,9 +174,9 @@ class MainHandler(UnsafeHandler):
                     else:
                         project['cpu_class'] = ''
                 else:
-                    project['nobackup_usage'] = row.value['usage (GB)']
-                    project['nobackup_limit'] = row.value['quota limit (GB)']
-                    project['nobackup_percentage'] = min(100, 100 * (float(project['nobackup_usage']) / float(project['nobackup_limit'])))
+                    project['nobackup_usage'] = round(float(row.value['usage (GB)']) / 1024, 2)
+                    project['nobackup_limit'] = round(float(row.value['quota limit (GB)']) / 1024, 2)
+                    project['nobackup_percentage'] = min(100, 100 * (project['nobackup_usage'] / project['nobackup_limit']))
                     if project['nobackup_percentage'] > 90.0:
                         project['nobackup_class'] = 'q-danger'
                     elif project['nobackup_percentage'] > 80.0:
