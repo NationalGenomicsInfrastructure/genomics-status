@@ -881,6 +881,11 @@ These classes are cut and pasted wholesale into here from other packages.
 .bioinfo-status-runstate {
   text-transform: lowercase;
 }
+
+.bioinfo-status-runstate span.label {
+    cursor: pointer;
+}
+
 .bioinfo-status-disabled td {
   background-color: #ededed;
   color: #ccc;

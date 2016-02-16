@@ -450,6 +450,7 @@ class ProjectSamplesHandler(SafeHandler):
         t = self.application.loader.load("project_samples.html")
         sample_run_view = self.application.bioinfo_db.view('latest_data/sample_id')
         bioinfo_data = {}
+        project_closed = False
         for row in sample_run_view.rows:
             project_id = row.key[0]
             if project_id == project:
@@ -466,6 +467,8 @@ class ProjectSamplesHandler(SafeHandler):
                     bioinfo_data[project_id][sample_id][flowcell_id][lane_id] = row.value
                 else:
                     bioinfo_data[project_id][sample_id][flowcell_id].update({lane_id: row.value})
+            if row.value.get('sample_status') == 'closed':
+                project_closed = True
 
         project_view = self.application.projects_db.view('project/summary')
         application = ""
@@ -501,7 +504,8 @@ class ProjectSamplesHandler(SafeHandler):
                                   app_classes=app_classes,
                                   qc_done=False,
                                   application=application,
-                                  active_tab=active_tab
+                                  active_tab=active_tab,
+                                  project_closed=project_closed
                                   ))
 
 class ProjectsHandler(SafeHandler):
