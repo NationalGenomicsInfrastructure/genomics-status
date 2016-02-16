@@ -84,7 +84,7 @@
 		    </tbody>
 		</table>
 	</div>
-	<div class="col-sm-6">
+	<div class="col-sm-3">
 		<h3>Latest Updated Data</h3>
 		<table class="table table-striped table-bordered" id="update_table">
 			<thead>
@@ -95,6 +95,29 @@
 				</tr>
 			</thead>
 			<tbody></tbody>
+		</table>
+	</div>
+	<div class="col-sm-3">
+		<h3>Server Status</h3>
+		<table class="table table-striped table-bordered" id="server-status-table">
+			<thead>
+				<tr>
+					<th>Server</th>
+					<th>Disk capacity, TB</th>
+					<th>Disk available, TB</th>
+					<th>Disk available, %</th>
+				</tr>
+			</thead>
+			<tbody>
+      {% for server, status in server_status.items() %}
+      <tr>
+        <td>{{ server }}</td>
+        <td>{{ status['disk_size'] }}</td>
+        <td>{{ status['space_available'] }}</td>
+        <td>{{ status['available_percentage'] }}</td>
+      </tr>
+      {% end %}
+      </tbody>
 		</table>
 	</div>
 </div>

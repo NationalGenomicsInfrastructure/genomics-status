@@ -214,6 +214,7 @@ class Application(tornado.web.Application):
             self.cronjobs_db = couch["cronjobs"]
             self.suggestions_db = couch["suggestion_box"]
             self.worksets_db = couch["worksets"]
+            self.server_status_db = couch['server_status']
         else:
             print settings.get("couch_server", None)
             raise IOError("Cannot connect to couchdb");

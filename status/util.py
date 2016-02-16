@@ -6,8 +6,8 @@ import os
 import sys
 import time
 
-from datetime import datetime
-
+from datetime import datetime, timedelta
+from dateutil import parser
 
 #########################
 #  Useful misc handlers #
@@ -126,7 +126,20 @@ class MainHandler(UnsafeHandler):
         t = self.application.loader.load("index.html")
         uppmax_projects = self.application.uppmax_projects
         user = self.get_current_user_name()
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=user, uppmax_projects=uppmax_projects))
+
+        view = self.application.server_status_db.view('all_docs/by_timestamp')
+        latest = max([parser.parse(row.key) for row in view.rows])
+        # assuming that status db is updated not more often than every 5 minutes
+        # maybe i just need to change taca script -> the data is saved in a very stupid way (yes, was my work)
+        reduced_rows = [row for row in view.rows if latest - parser.parse(row.key) <= timedelta(minutes=5)]
+
+        server_status = {}
+        for row in reduced_rows:
+            server = row.value['name']
+            if row.value['name'] not in server_status:
+                server_status[server] = row.value
+
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=user, uppmax_projects=uppmax_projects, server_status=server_status))
 
 
 
