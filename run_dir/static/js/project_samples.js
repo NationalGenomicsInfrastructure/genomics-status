@@ -7,7 +7,6 @@ Powers /project/[PID] - template is run_dir/design/project_samples.html
 // Get pseudo-argument for this js file. Ie, project = P1234
 var project = $('#projects-js').attr('data-project');
 var ordered_reads = 0.0;
-
 $(document).ready(function() {
 
   // Initialise everything - order is important :)
