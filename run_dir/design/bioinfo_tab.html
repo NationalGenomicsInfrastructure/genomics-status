@@ -39,8 +39,7 @@
   {% elif application == 'applications' %}
     <colgroup class="bioinfo-app-applications" span="2"></colgroup>
   {% end %}
-  <colgroup span="2"> </colgroup>
-  <colgroup span="2"> </colgroup>
+  <colgroup span="1"> </colgroup>
 <tbody>
   <tr class="border-bottom">
     <th></th>
@@ -62,8 +61,7 @@
     {% elif application == 'applications' %}
       <th class="bioinfo-app-applications" colspan="2">Applications (if applicable)</th>
     {% end %}
-    <th colspan="2">Reports Generated</th>
-    <th colspan="2">Delivery Details</th>
+    <th>Data Delivered</th>
   </tr>
   <tr class="bioinfo-field-names bioinfo-project" id="bioinfo-project-{{ project_id }}">
     <th class="bioinfo-project"><a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
@@ -97,10 +95,7 @@
       <th class="bioinfo-status-th bioinfo-app-applications">Data delivered</th>
       <th class="bioinfo-status-th bioinfo-app-applications">Data approved</th>
     {% end %}
-    <th class="bioinfo-status-th-date samplereport">Sample report</th>
-    <th class="bioinfo-status-th-date projectreport">Project report</th>
-    <th class="bioinfo-status-th-date dataandreportstransferred">Data and report trasferred</th>
-    <th class="bioinfo-status-th-date emailsenttouser">Email sent to user</th>
+    <th class="bioinfo-status-th-date datadelivered">Data Delivered</th>
   </tr>
     {% for sample_id in bioinfo[project_id] %}
       <tr class="bioinfo-sample" id="bioinfo-sample-{{ sample_id }}" data-parent="#bioinfo-project-{{ project_id }}">
@@ -135,22 +130,7 @@
           <td class="bioinfo-status-pfw applications">Data delivered</td>
           <td class="bioinfo-status-pfw applications">Data approved</td>
         {% end %}
-          <td class="bioinfo-status samplereport">
-            <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-            </div>
-          </td>
-          <td class="bioinfo-status projectreport">
-            <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-            </div>
-          </td>
-          <td class="bioinfo-status dataandreportstransferred">
-            <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-            </div>
-          </td>
-          <td class="bioinfo-status emailsenttouser">
+          <td class="bioinfo-status datadelivered">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
             </div>
@@ -190,21 +170,7 @@
           <td class="bioinfo-status-pfw applications">Data delivered</td>
           <td class="bioinfo-status-pfw applications">Data approved</td>
         {% end %}
-          <td class="bioinfo-status samplereport">
-            <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-            </div>
-          </td>
-          <td class="bioinfo-status projectreport">
-            <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
-          </td>
-          <td class="bioinfo-status dataandreportstransferred">
-            <div class="input-group input-group-sm date"><input type="text" class="form-control">
-              <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-            </div>
-          </td>
-          <td class="bioinfo-status emailsenttouser">
+          <td class="bioinfo-status datadelivered">
             <div class="input-group input-group-sm date"><input type="text" class="form-control">
               <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
           </td>
@@ -258,18 +224,7 @@
               <td class="bioinfo-status-pfw applications">?</td>
               <td class="bioinfo-status-pfw applications">?</td>
             {% end %}
-              <td class="bioinfo-status samplereport">
-                <div class="input-group input-group-sm date"><input type="text" class="form-control">
-                  <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-                </div></td>
-              <td class="bioinfo-status projectreport">
-                <div class="input-group input-group-sm date"><input type="text" class="form-control">
-                  <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div></td>
-              <td class="bioinfo-status dataandreportstransferred">
-                <div class="input-group input-group-sm date"><input type="text" class="form-control">
-                  <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
-                </div></td>
-              <td class="bioinfo-status emailsenttouser">
+              <td class="bioinfo-status datadelivered">
                 <div class="input-group input-group-sm date"><input type="text" class="form-control">
                   <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
               </td>

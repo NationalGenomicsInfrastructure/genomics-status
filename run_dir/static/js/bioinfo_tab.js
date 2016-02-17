@@ -195,7 +195,7 @@ var checkChildrenStatus = function(selector) {
     var flowcell_trs = $(selector); // flowcells
     $.each(flowcell_trs, function(i, tr) {
         var first_td = $(tr).children('.undemultiplexedreads');
-        var last_td = $(tr).children('.samplereport');
+        var last_td = $(tr).children('.datadelivered');
         var first_index = $(tr).children().index(first_td);
         var last_index = $(tr).children().index(last_td);
         var all_tds = $(tr).children().slice(first_index, last_index);
