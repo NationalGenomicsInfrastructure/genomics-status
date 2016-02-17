@@ -137,6 +137,12 @@ class MainHandler(UnsafeHandler):
             server = row.value['name']
             if server not in server_status:
                 server_status[server] = row.value
+                if float(row.value['used_percentage'].replace('%', '')) > 60:
+                    server_status[server]['css_class'] = 'q-warning'
+                elif float(row.value['used_percentage'].replace('%', '')) > 80:
+                    server_status[server]['css_class'] = 'q-danger'
+                else:
+                    server_status[server]['css_class'] = ''
         # copy -> so that we don't change self.application.uppmax_projects
         uppmax_ids = copy.copy(self.application.uppmax_projects)
         # get all the documents, sorted by timestamp in descending order. Because I don't know how to use reduce functions
