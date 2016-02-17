@@ -850,13 +850,9 @@ These classes are cut and pasted wholesale into here from other packages.
 .table-colgroup > tbody > tr.border-bottom > th, .table-colgroup > tbody > tr > th.border-bottom {
   border-bottom: 1px solid #AAA;
 }
-.table-bioinfo-status td.bioinfo-status-pfw {
-  cursor: pointer;
-}
-.table-bioinfo-status th.bioinfo-status-th {
-  cursor: pointer;
-}
-.table-bioinfo-status td.bioinfo-status-row {
+.table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-pfw,
+.table-bioinfo-status:not(.bioinfo-status-disabled) th.bioinfo-status-th,
+.table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-row {
   cursor: pointer;
 }
 .table-bioinfo-status {
@@ -898,7 +894,6 @@ These classes are cut and pasted wholesale into here from other packages.
   cursor: pointer;
 }
 
-
 .input-group.date, .narrowinput {
   width: 120px;
 }
@@ -907,7 +902,6 @@ These classes are cut and pasted wholesale into here from other packages.
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
-
 
 /* Deliveries page */
 .deliveries-page .progress {

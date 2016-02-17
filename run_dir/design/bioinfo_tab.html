@@ -19,7 +19,7 @@
 </form>
 <hr>
 {% for project_id in bioinfo %}
-<table class="table table-bioinfo-status">
+<table class="table table-bioinfo-status {% if project_closed %} bioinfo-status-disabled {% end %}">
   <colgroup span="2"></colgroup>
   <colgroup span="3"> </colgroup>
   <colgroup span="3"> </colgroup>

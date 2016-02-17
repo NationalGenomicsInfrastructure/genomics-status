@@ -467,14 +467,14 @@ class ProjectSamplesHandler(SafeHandler):
                     bioinfo_data[project_id][sample_id][flowcell_id][lane_id] = row.value
                 else:
                     bioinfo_data[project_id][sample_id][flowcell_id].update({lane_id: row.value})
-            if row.value.get('sample_status') == 'closed':
-                project_closed = True
 
         project_view = self.application.projects_db.view('project/summary')
         application = ""
 
         for row in project_view.rows:
             if row.key[1] == project:
+                if row.value.get('close_date'):
+                    project_closed = True
                 application = row.value['application']
                 break
 
