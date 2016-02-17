@@ -137,12 +137,15 @@ class MainHandler(UnsafeHandler):
             server = row.value['name']
             if server not in server_status:
                 server_status[server] = row.value
-                if float(row.value['used_percentage'].replace('%', '')) > 60:
+                row.value['used_percentage'] = float(row.value['used_percentage'].replace('%',''))
+                if row.value['used_percentage'] > 60:
                     server_status[server]['css_class'] = 'q-warning'
-                elif float(row.value['used_percentage'].replace('%', '')) > 80:
+                elif row.value['used_percentage'] > 80:
                     server_status[server]['css_class'] = 'q-danger'
                 else:
                     server_status[server]['css_class'] = ''
+        # sort by used space
+        server_status = sorted(server_status.items(), key = lambda item: item[1]['used_percentage'], reverse=True)
         # copy -> so that we don't change self.application.uppmax_projects
         uppmax_ids = copy.copy(self.application.uppmax_projects)
         # get all the documents, sorted by timestamp in descending order. Because I don't know how to use reduce functions
@@ -150,6 +153,9 @@ class MainHandler(UnsafeHandler):
         view = self.application.uppmax_db.view('time/last_updated_full_doc', descending=True, limit=30)
         uppmax_projects = {}
         for row in view.rows:
+            # if we found all projects, don't continue
+            if not uppmax_ids:
+                break
             project_id = row.value['project'].replace('/', '_')
             project_nobackup = copy.copy(row.value['project'].split('/')[0])
             if project_id in uppmax_ids:

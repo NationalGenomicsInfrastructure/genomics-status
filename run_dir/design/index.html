@@ -105,10 +105,10 @@
 				</tr>
 			</thead>
 			<tbody>
-      {% for server, status in sorted(server_status.items()) %}
+      {% for server, status in server_status %}
       <tr>
         <td><a href="http://{{ server }}">{{ server }}</a></td>
-        <td class="{{ status['css_class'] }}"><div class="wrapper"><span class="val" style="width:{{ status['used_percentage'] }};">
+        <td class="{{ status['css_class'] }}"><div class="wrapper"><span class="val" style="width:{{ status['used_percentage'] }}%  ;">
           <span>{{ status['space_used'] }}</span></span>
           <span class="percent pull-right">{{ status['disk_size'] }}</span></div>
         </td>

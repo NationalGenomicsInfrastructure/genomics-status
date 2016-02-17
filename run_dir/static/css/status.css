@@ -26,34 +26,18 @@ multiple places and typically control typography, or other common elements.
 
 
 /* index.html page */
-.table-disk-quotas .plot-column {
-	height: 60px;
-	padding: 0;
-	overflow: hidden;
-}
-
-.table-disk-quotas tr td:first-child {
-	width: 150px;
-}
-
-.update_table {
-	overflow: hidden;
-}
-
-.table-disk-quotas td {
+.table-disk-quotas > tbody > tr > td {
   padding: 0;
 }
-.table-disk-quotas td:first-child {
-  padding: 8px;
-}
+
 .table-disk-quotas .wrapper {
   display: inline-block;
   position: relative;
   height:100%;
   width:100%;
-  overflow: visible;
   white-space: nowrap;
 }
+
 .table-disk-quotas .val {
   display: block;
   position: absolute;
@@ -64,18 +48,18 @@ multiple places and typically control typography, or other common elements.
   z-index:-1;
   background-color: #ededed;
 }
+
 .table-disk-quotas .val span {
   position: absolute;
   top: 8px; left: 8px;
 }
 .table-disk-quotas .percent {
-  padding: 8px; 
+  padding: 8px;
 }
 .table-disk-quotas .q-danger .val { background-color: #f2dede; }
 .table-disk-quotas .q-danger span { color: #a94442; }
 .table-disk-quotas .q-warning .val { background-color: #fcf8e3; }
 .table-disk-quotas .q-warning span { color: #8a6d3b; }
-
 
 /*
 === Typography ===
