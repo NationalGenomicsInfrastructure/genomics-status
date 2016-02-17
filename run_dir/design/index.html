@@ -95,22 +95,7 @@
         {% end %}
 		    </tbody>
 		</table>
-	</div>
-	<div class="col-sm-3">
-		<h3>Latest Updated Data</h3>
-		<table class="table table-bordered" id="update_table">
-			<thead>
-				<tr>
-					<th>Type</th>
-					<th>Data</th>
-					<th>Update Time</th>
-				</tr>
-			</thead>
-			<tbody>
-      </tbody>
-		</table>
-	</div>
-	<div class="col-sm-3">
+
 		<h3>Server Status</h3>
 		<table class="table table-bordered table-disk-quotas">
 			<thead>
@@ -122,13 +107,28 @@
 			<tbody>
       {% for server, status in sorted(server_status.items()) %}
       <tr>
-        <td><a href="{{ server }}">{{ server }}</a></td>
+        <td><a href="http://{{ server }}">{{ server }}</a></td>
         <td class="{{ status['css_class'] }}"><div class="wrapper"><span class="val" style="width:{{ status['used_percentage'] }};">
           <span>{{ status['space_used'] }}</span></span>
           <span class="percent pull-right">{{ status['disk_size'] }}</span></div>
         </td>
       </tr>
       {% end %}
+      </tbody>
+		</table>
+
+	</div>
+	<div class="col-sm-6">
+		<h3>Latest Updated Data</h3>
+		<table class="table table-bordered" id="update_table">
+			<thead>
+				<tr>
+					<th>Type</th>
+					<th>Data</th>
+					<th>Update Time</th>
+				</tr>
+			</thead>
+			<tbody>
       </tbody>
 		</table>
 	</div>
