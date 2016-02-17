@@ -108,21 +108,15 @@ Description: Details page for a single project
 <!-- TABS -->
 <div class="tabbable">
   <ul class="nav nav-tabs">
-    <li {% if active_tab=="details" %}class="active"{% end %}>
-      <a href="#tab_details_content" role="tab" data-toggle="tab">Project information</a></li>
-    <li {% if active_tab=="samples" %}class="active"{% end %}>
-     <a href="#tab_samples_content" role="tab" data-toggle="tab">Samples</a></li>
-    <li {% if active_tab=="running_notes" %}class="active"{% end %}>
-      <a href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
-    <li {% if active_tab=="bioinfo" %}class="active"{% end %}>
-      <a href="#tab_bioinfo_content" role="tab" data-toggle="tab">Bioinfo Analysis</a></li>
-    <li {% if active_tab=="user_communication" %}class="active"{% end %}>
-      <a href="#tab_communication_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
-    <li {% if active_tab=="links" %}class="active"{% end %}>
-      <a href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
+    <li class="active"><a href="#tab_details_content" role="tab" data-toggle="tab">Project information</a></li>
+    <li><a href="#tab_samples_content" role="tab" data-toggle="tab">Samples</a></li>
+    <li><a href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
+    <li><a href="#tab_bioinfo_content" role="tab" data-toggle="tab">Bioinfo Analysis</a></li>
+    <li><a href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
+    <li><a href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
   </ul>
   <div class="tab-content">
-    <div class="tab-pane fade {% if active_tab=='details' %}in active{% end %}" id="tab_details_content">
+    <div class="tab-pane fade in active" id="tab_details_content">
       <div class="row">
         <div class="col-sm-4">
           <!--Order Info Table-->
@@ -276,7 +270,7 @@ Description: Details page for a single project
     </div>
 
     <!-- SAMPLES TAB -->
-    <div class="tab-pane fade {% if active_tab=='samples' %}in active{% end %}" id="tab_samples_content">
+    <div class="tab-pane fade" id="tab_samples_content">
       <form class="form-inline" role="form" id="Search-form">
         <button class="pull-right btn btn-primary" data-toggle="modal" data-target="#sampleFieldsModal">Filter Columns</button>
         <div class="form-group">
@@ -307,7 +301,7 @@ Description: Details page for a single project
     {% include "running_notes_tab.html" %}
 
     <!-- BIOINFO ANALYSIS TAB -->
-    <div class="tab-pane fade {% if active_tab=='bioinfo' %}in active{% end %}" id="tab_bioinfo_content">
+    <div class="tab-pane fade" id="tab_bioinfo_content">
 
     {% include "bioinfo_tab.html" %}
 
@@ -316,7 +310,7 @@ Description: Details page for a single project
     </div>
 
     <!-- USER COMMUNICATION TAB -->
-    <div class="tab-pane fade {% if active_tab=='user_communication' %}in active{% end %}" id="tab_communication_content">
+    <div class="tab-pane fade" id="tab_communication_content">
       <div id="zendesk_loading_spinner" style="text-align:center; margin:100px 0;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading ZenDesk tickets..</div>
       <div class="panel-group" id="com_accordion"></div>
     </div>
