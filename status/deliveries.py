@@ -16,16 +16,29 @@ app_fields = {
 
 class DeliveriesPageHandler(SafeHandler):
     def get(self):
+
+        # get project summary data
+        summary_view = self.application.projects_db.view('project/summary')
+        summary_data = {}
+        for project in summary_view:
+            # todo: check if this one works
+            if project.key[0] != 'closed':
+                project_id = project.key[1]
+                summary_data[project_id] = project.value
+
         # wtf don't they return json or anything normal
-        bioinfo_data_view = self.application.bioinfo_db.view("latest_data/sample_id")
+        bioinfo_data_view = self.application.bioinfo_db.view("latest_data/sample_id_not_closed")
         bioinfo_data = {}
 
+        all_deliveries = {}
         # make a normal dict from the view result
         for row in bioinfo_data_view.rows:
             project_id = row.key[0]
             flowcell_id = row.key[1]
             lane_id = row.key[2]
             sample_id = row.key[3]
+            if project_id not in all_deliveries and project_id in summary_data:
+                all_deliveries[project_id] = {}
             # project_id, lane_id, sample_id, flowcell_id = row.key
             if project_id not in bioinfo_data:
                 bioinfo_data[project_id] = {flowcell_id: {lane_id: {sample_id: row.value}}}
@@ -38,23 +51,20 @@ class DeliveriesPageHandler(SafeHandler):
             else:
                 bioinfo_data[project_id][flowcell_id][lane_id].update({sample_id: row.value})
 
-        # get project summary data
-        summary_view = self.application.projects_db.view('project/summary')
-        summary_data = {}
-        for project in summary_view:
-            project_id = project.key[1]
-            summary_data[project_id] = project.value
 
-        # get ongoing deliveries
-        ongoing_view = self.application.bioinfo_db.view("general/ongoing_projectids", group=True)
-        ongoing_ids = [row.key for row in ongoing_view]
 
-        # now the same thing again, but for incoming deliveries
-        incoming_view = self.application.bioinfo_db.view("general/incoming_projectids", group=True)
-        incoming_ids = [row.key for row in incoming_view]
-
-        # merge incoming and ongoing deliveries into one dict
-        all_deliveries = {project_id: {} for project_id in ongoing_ids + incoming_ids if project_id in summary_data and project_id in bioinfo_data}
+        #
+        #
+        # # get ongoing deliveries
+        # ongoing_view = self.application.bioinfo_db.view("general/ongoing_projectids", group=True)
+        # ongoing_ids = [row.key for row in ongoing_view]
+        #
+        # # now the same thing again, but for incoming deliveries
+        # incoming_view = self.application.bioinfo_db.view("general/incoming_projectids", group=True)
+        # incoming_ids = [row.key for row in incoming_view]
+        #
+        # # merge incoming and ongoing deliveries into one dict
+        # all_deliveries = {project_id: {} for project_id in ongoing_ids + incoming_ids if project_id in summary_data and project_id in bioinfo_data}
 
         all_running_notes = {}
         for project_id in all_deliveries:
@@ -182,7 +192,7 @@ class DeliveriesPageHandler(SafeHandler):
                     'project_name': summary_data[project_id]['project_name'],
                     'application': summary_data[project_id].get('application', 'unknown'),
                     'type': summary_data[project_id]['details'].get('type'),
-                    'bioinfo_responsible': summary_data[project_id]['project_summary'].get('bioinfo_responsible', 'unknown'),
+                    'bioinfo_responsible': summary_data[project_id].get('project_summary', {}).get('bioinfo_responsible', 'unknown'),
                     'runs': runs_bioinfo,
                     'latest_running_note': latest_running_note,
                 }

@@ -113,7 +113,7 @@ $('.table-bioinfo-status').on('click', 'td.bioinfo-status-row', function(e) {
     var tr_class = bioinfo_qc_statuses[tr_status];
     var new_status = bioinfo_qc_values[(bioinfo_qc_values.indexOf(tr_status)+1) % bioinfo_qc_values.length];
     var new_class =  bioinfo_qc_statuses[new_status];
-    var tds = $(tr).children('td.bioinfo-status-pfw');
+    var tds = $(tr).children('td.bioinfo-status-qc');
     $.each(tds, function(index, td) {
         var td_class = $(td).attr('class').split(/\s+/)[2];
         $(td).removeClass(td_class); // todo: remove any class of bioinfo_qc_classes
@@ -157,7 +157,7 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
     $(th).addClass(new_status);
 });
 
-$('.table-bioinfo-status').on('click', 'td.bioinfo-status-pfw', function(e) {
+$('.table-bioinfo-status').on('click', 'td.bioinfo-status-qc', function(e) {
     if ($('.table-bioinfo-status').hasClass('bioinfo-status-disabled')) {
         return false;
     }
@@ -325,7 +325,7 @@ function setChildrenStatus(td) {
         var status = $(this).find('.bioinfo-status-runstate span').text().trim();
         var row = {'status': status};
 
-        $(tr).children('td.bioinfo-status-pfw').each(function(i, td) {
+        $(tr).children('td.bioinfo-status-qc').each(function(i, td) {
             var field_name = $(td).attr('class').split(/\s+/)[1];
             if (field_name != undefined) {
                 row[field_name] = $(td).text().trim();

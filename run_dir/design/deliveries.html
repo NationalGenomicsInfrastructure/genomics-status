@@ -45,7 +45,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           <p class="text-muted" id="bioinfo-filter-notification" style="margin-top:15px; display:none; "><span></span> <a href="#" id="bioinfo-clear-filters">[ clear ]</a></p>
           <hr>
         </div>
-        {% for project_id, project in deliveries.items() %}
+        {% for project_id, project in sorted(deliveries.items()) %}
           <div class="delivery" id="bioinfo-delivery-project-{{ project_id }}">
             {% if 'error' in project %}
               <h3><a href="project/'+pid+'" class="bi-project-id">'+pid+'</a></h3><div class="alert alert-danger"><strong>Error</strong> - could not find project information for {{ project_id }}</div>
@@ -111,7 +111,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                       {% set passed = len(sample['checklist']['passed']) %}
                       {% set warnings = len(sample['checklist']['warnings']) %}
                       {% set failed = len(sample['checklist']['failed']) %}
-                      {% set total = max(len(sample['checklist']['total']) - len(sample['checklist']['NAs']), 1) %}
+                      {% set total = max(len(sample['checklist']['total']), 1) %}
                 <tr class="bioinfo-sample" id="bioinfo-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
                     data-parent="#bioinfo-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
                   <td></td>
