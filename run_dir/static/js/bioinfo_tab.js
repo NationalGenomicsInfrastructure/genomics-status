@@ -311,7 +311,7 @@ function setChildrenStatus(td) {
     // get project_id from the url
     var project_id = window.location.href.split(/\//);
     // remove /bioinfo/ from the end
-    project_id = project_id[project_id.length-2];
+    project_id = project_id[project_id.length-1];
 
     $('.table-bioinfo-status tr.bioinfo-lane:has(td)').each(function(){
         var tr = $(this);
@@ -325,9 +325,9 @@ function setChildrenStatus(td) {
         var status = $(this).find('.bioinfo-status-runstate span').text().trim();
         var row = {'status': status};
 
-        $(tr).children('td').each(function(i, td) {
-            if ($(td).attr('class') != undefined) {
-                var field_name = $(td).attr('class').split(/\s+/)[1];
+        $(tr).children('td.bioinfo-status-pfw').each(function(i, td) {
+            var field_name = $(td).attr('class').split(/\s+/)[1];
+            if (field_name != undefined) {
                 row[field_name] = $(td).text().trim();
             }
         });
@@ -337,6 +337,7 @@ function setChildrenStatus(td) {
         sample_run_lane_statuses[row_key]['status'] = status;
     });
     $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
+    console.log($(sample_run_lane_statuses));
     // from here it's copy&paste and i don't know what's happening
     var bioinfo_api_url = "/api/v1/bioinfo_analysis/"+project_id;
     $.ajax({

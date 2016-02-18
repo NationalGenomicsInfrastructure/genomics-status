@@ -802,12 +802,12 @@ class BioinfoAnalysisHandler(SafeHandler):
         self.write(json.dumps(return_obj))
 
     def post(self, project_id):
-        v = self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
+        v = self.application.bioinfo_db.view("full_doc/pj_run_lane_sample_to_doc")
         user = self.get_secure_cookie('user')
         data = json.loads(self.request.body)
         saved_data = {}
-        ## why run_id is a string??
         for run_id in data:
+            ## why run_id is a string??
             project, sample, run, lane = run_id.split(',')
             for row in v[[project, run, lane, sample]]:
                 original_doc = row.value
