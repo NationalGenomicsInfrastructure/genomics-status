@@ -33,7 +33,8 @@ from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotH
 from status.projects import BioinfoAnalysisHandler, CaliperImageHandler, CharonProjectHandler, DeliveriesPageHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
-    ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler, RecCtrlDataHandler
+    ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler, RecCtrlDataHandler, \
+    ProjMetaCompareHandler
 
 from status.quotas import QuotaDataHandler, QuotaHandler, QuotasHandler
 from status.q30 import Q30Handler, Q30PlotHandler
@@ -183,6 +184,7 @@ class Application(tornado.web.Application):
             ("/project/([^/]*)$", ProjectSamplesHandler),
             ("/project_summary/([^/]*)$", ProjectSummaryHandler),
             ("/projects/([^/]*)$", ProjectsHandler),
+            ("/proj_meta", ProjMetaCompareHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/reads_vs_qv", ReadsVsQvhandler),
             ("/reads_per_lane", ReadsPerLaneHandler),
@@ -300,6 +302,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/phix_err_rate.html")
             tornado.autoreload.watch("design/production.html")
+            tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/projects.html")
             tornado.autoreload.watch("design/project_samples.html")
             tornado.autoreload.watch("design/q30.html")

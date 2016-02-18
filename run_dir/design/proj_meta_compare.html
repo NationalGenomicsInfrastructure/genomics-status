@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+<!-- 
+Template file: proj_meta_compare.html
+URL: /proj_meta
+Title: Project Meta Comparison Tool
+Description: Compare any meta value between multiple projects
+-->
+
+{% block stuff %}
+
+<h1>Project Meta Comparison Tool</h1>
+
+<form class="form-horizontal" id="project_chooser">
+    <div class="form-group">
+        <label for="projects" class="col-sm-2 control-label">Choose Projects:</label>
+        <div class="col-sm-10">
+            <div class="input-group">
+                <input type="text" class="form-control" id="projects_meta_input" placeholder="Project IDs, eg. P1234 P2345 P3456">
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" type="submit">Load data</button>
+                </span>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="alert alert-success" id="status_box">
+    <strong>Status:</strong>
+    <span>Awaiting user input&hellip;</span>
+</div>
+
+<form class="form-horizontal" id="meta_key_selector">
+    <div class="form-group">
+        <label for="projects" class="col-sm-1 control-label">Y value:</label>
+        <div class="col-sm-3">
+            <select class="form-control" id="proj_meta_yvalue" disabled>
+                <option value="">[ select value ]</option>
+            </select>
+        </div>
+        <label for="projects" class="col-sm-1 control-label">X Value:</label>
+        <div class="col-sm-3">
+            <select class="form-control" id="proj_meta_xvalue" disabled>
+                <option value="">[ select value ]</option>
+            </select>
+        </div>
+        <label class="col-sm-1 control-label">Correlation:</label>
+        <div class="col-sm-3">
+            <p class="form-control-static" id="proj_meta_correlation">NA</p>
+        </div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-sm-8">
+        <div id="proj_meta_plot" style="max-width: 800px; margin: 0 auto;">
+            <p class="text-center text-muted">Please select two variables</p>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <p><strong>Tip:</strong> Click and drag on the plot to zoom in.</p>
+        <div id="skipped_status_tip"></div>
+    </div>
+</div>
+
+
+
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript" src="/static/js/proj_meta_compare.js?v={{ gs_globals['git_commit'] }}" ></script>
+{% end %}
+
