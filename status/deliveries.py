@@ -3,16 +3,6 @@ from dateutil import parser as datetime_parser
 
 from status.util import SafeHandler
 
-app_fields = {
-  'core': ["undemultiplexedreads","unexpectedindexes","lowsampleyield","laneyield","sampleyield","phixerrorrate",
-    "basesq30","fastq_screen","blast_wrapper","samplereport","projectreport","dataandreportstransferred","emailsenttouser"],
-  'finished': [],
-  'rnaseq': ["rnaseq_sequenceduplication","rnaseq_uniquemappingrate"],
-  'exome': ["exome_sequenceduplication","exome_targets10xcoverage"],
-  'customCap': ["customCap_enrichment"],
-  'WGreseq': ["WGreseq_sequenceduplication","WGreseq_mappingrate"],
-  'denovo': ["denovo_adaptertrimming","denovo_kmerprofile"],
-  'applications': ["applications_datadelivered","applications_dataapproved"]}
 
 class DeliveriesPageHandler(SafeHandler):
     def get(self):
@@ -30,15 +20,15 @@ class DeliveriesPageHandler(SafeHandler):
         bioinfo_data_view = self.application.bioinfo_db.view("latest_data/sample_id_not_closed")
         bioinfo_data = {}
 
-        all_deliveries = {}
+        ongoing_deliveries = {}
         # make a normal dict from the view result
         for row in bioinfo_data_view.rows:
             project_id = row.key[0]
             flowcell_id = row.key[1]
             lane_id = row.key[2]
             sample_id = row.key[3]
-            if project_id not in all_deliveries and project_id in summary_data:
-                all_deliveries[project_id] = {}
+            if project_id not in ongoing_deliveries and project_id in summary_data:
+                ongoing_deliveries[project_id] = {}
             # project_id, lane_id, sample_id, flowcell_id = row.key
             if project_id not in bioinfo_data:
                 bioinfo_data[project_id] = {flowcell_id: {lane_id: {sample_id: row.value}}}
@@ -52,22 +42,8 @@ class DeliveriesPageHandler(SafeHandler):
                 bioinfo_data[project_id][flowcell_id][lane_id].update({sample_id: row.value})
 
 
-
-        #
-        #
-        # # get ongoing deliveries
-        # ongoing_view = self.application.bioinfo_db.view("general/ongoing_projectids", group=True)
-        # ongoing_ids = [row.key for row in ongoing_view]
-        #
-        # # now the same thing again, but for incoming deliveries
-        # incoming_view = self.application.bioinfo_db.view("general/incoming_projectids", group=True)
-        # incoming_ids = [row.key for row in incoming_view]
-        #
-        # # merge incoming and ongoing deliveries into one dict
-        # all_deliveries = {project_id: {} for project_id in ongoing_ids + incoming_ids if project_id in summary_data and project_id in bioinfo_data}
-
         all_running_notes = {}
-        for project_id in all_deliveries:
+        for project_id in ongoing_deliveries:
             if project_id in summary_data and project_id in bioinfo_data:
                 project = summary_data[project_id]
                 running_notes = json.loads(project['details']['running_notes'])
@@ -76,6 +52,8 @@ class DeliveriesPageHandler(SafeHandler):
 
                 for flowcell_id in flowcells:
                     flowcell_statuses = []
+                    # import pdb
+                    # pdb.set_trace()
                     for lane_id in flowcells[flowcell_id]:
                         lane_statuses = []
                         for sample_id in flowcells[flowcell_id][lane_id]:
@@ -89,34 +67,31 @@ class DeliveriesPageHandler(SafeHandler):
                             }
                             sample_data = flowcells[flowcell_id][lane_id][sample_id]
                             lane_statuses.append(sample_data.get('sample_status', 'New'))
-                            for key in sample_data.keys():
-                                if key in app_fields['core'] or key in app_fields['applications']:
-                                    checklist['total'].append(key)
+                            if 'qc' in sample_data:
+                                checklist['total'] = [key for key in sample_data['qc'].keys()]
+                            if 'bp' in sample_data:
+                                checklist['total'] += [key for key in sample_data['bp'].keys()]
+                            qc_and_bp = sample_data.get('qc', {}).copy().update(sample_data.get('bp', {})) or {}
+                            for key in qc_and_bp.keys():
+                                if qc_and_bp[key] == 'Pass':
+                                    checklist['passed'].append(key)
+                                elif qc_and_bp[key] == 'Warning':
+                                    checklist['warnings'].append(key)
+                                elif qc_and_bp[key] == 'Fail':
+                                    checklist['failed'].append(key)
+                                else: #  sample_data['qc'][key] == '?':
+                                    checklist['NAs'].append(key)
+                                # todo: what about bp??
 
-                                    # parse() returns current date if string contains no date
-                                    # fuzzy=True: to ignore strange symbols.
-                                    timestamp = datetime_parser.parse(sample_data[key], fuzzy=True) != datetime_parser.parser('')
-                                    # if timestamp -> passed
-                                    if timestamp or sample_data[key] == 'Pass':
-                                        checklist['passed'].append(key)
-                                    elif sample_data[key] == 'Warning':
-                                        checklist['warnings'].append(key)
-                                    elif sample_data[key] == 'Fail':
-                                        checklist['failed'].append(key)
-                                    elif sample_data[key] == 'N/A' or '?':
-                                        checklist['NAs'].append(key)
-                                    else:
-                                        del checklist['total'][key]
-                                if flowcell_id not in runs_bioinfo:
-                                    runs_bioinfo[flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: {'checklist': checklist, 'status': sample_data.get('sample_status', '?')}}}}}
-                                elif lane_id not in runs_bioinfo[flowcell_id]['lanes']:
-                                    runs_bioinfo[flowcell_id]['lanes'][lane_id] = {'samples': {sample_id: {'checklist': checklist, 'status': sample_data.get('sample_status', '?')}}}
-                                elif sample_id not in runs_bioinfo[flowcell_id]['lanes'][lane_id]['samples']:
-                                    runs_bioinfo[flowcell_id]['lanes'][lane_id]['samples'][sample_id] = {'checklist': checklist, 'status': sample_data.get('sample_status', '?')}
-                                else:
-                                    runs_bioinfo[flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(
-                                        {'checklist': checklist, 'status': sample_data.get('sample_status', '?')})
-
+                            if flowcell_id not in runs_bioinfo:
+                                runs_bioinfo[flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: {'checklist': checklist, 'status': sample_data.get('sample_status', '?')}}}}}
+                            elif lane_id not in runs_bioinfo[flowcell_id]['lanes']:
+                                runs_bioinfo[flowcell_id]['lanes'][lane_id] = {'samples': {sample_id: {'checklist': checklist, 'status': sample_data.get('sample_status', '?')}}}
+                            elif sample_id not in runs_bioinfo[flowcell_id]['lanes'][lane_id]['samples']:
+                                runs_bioinfo[flowcell_id]['lanes'][lane_id]['samples'][sample_id] = {'checklist': checklist, 'status': sample_data.get('sample_status', '?')}
+                            else:
+                                runs_bioinfo[flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(
+                                    {'checklist': checklist, 'status': sample_data.get('sample_status', '?')})
                         if len(set(lane_statuses)) == 1:
                             lane_status = lane_statuses[0]
                         # todo: figure out which statuses can be
@@ -203,10 +178,10 @@ class DeliveriesPageHandler(SafeHandler):
                     'error': 'could not find project information for {}'.format(project_id)
                 }
 
-            all_deliveries[project_id].update(project_data)
+            ongoing_deliveries[project_id].update(project_data)
 
         template = self.application.loader.load("deliveries.html")
         self.write(template.generate(gs_globals=self.application.gs_globals,
-                                     deliveries=all_deliveries,
+                                     deliveries=ongoing_deliveries,
                                      running_notes=all_running_notes,
                                      ))

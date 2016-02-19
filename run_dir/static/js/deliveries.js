@@ -1,32 +1,3 @@
-$(function(){
-  $('.bioinfo-expand').click(function(e){
-  // this = a[href=#$(tr).attr('id')];
-    e.preventDefault();
-    tr = $(this).parent().parent();
-
-    if($(this).hasClass('expanded')){
-      collapse(tr);
-    } else {
-      $(this).addClass('expanded');
-      tr_id = $(tr).attr('id');
-      $('tr[data-parent=#'+tr_id+']').show();
-      $(this).find('span').toggleClass('glyphicon-chevron-right, glyphicon-chevron-down');
-    }
-  });
-});
-
-function collapse(element) {
-  var element_id = $(element).attr('id');
-  var expanded = $(element).find("a[href=#"+element_id+"]");
-  $(expanded).removeClass('expanded');
-  $(element).find('span.glyphicon').toggleClass('glyphicon-chevron-right, glyphicon-chevron-down');
-  var children = $(element).parent().find('tr[data-parent=#'+element_id+']')
-  $.each(children, function(index, child) {
-    $(child).hide();
-    collapse(child);
-  });
-};
-
 $('.bioinfo-running-notes-save').click(function(e) {
     var td = $(this).parent();
     var tr = $(td).parent();
@@ -107,3 +78,105 @@ $('#runningNotesModal').on('hidden.bs.modal', function (e) {
         $(running_note).hide();
     });
 })
+
+
+function topParent(tr) {
+    var parent_id = $(tr).attr('data-parent');
+    // tr = topParent = .bioinfo-project
+    if (parent_id == undefined){
+        console.log($('table.table-bioinfo-status').find('tr[data-parent="'+$(tr).attr('id')+'"]'));
+    }
+    console.log(parent_id);
+    var parent_tr = $(parent_id);
+    console.log($(parent_tr));
+//    if ($(parent_tr).hasClass('bioinfo-project')) {
+//        return $(tr);
+//    } else {
+//        return topParent(parent_tr);
+//    }
+};
+
+
+// expand or collapse table
+$('.bioinfo-expand').click(function(e){
+    // this = a[href=#$(tr).attr('id')];
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    tr = $(this).parent().parent();
+    if ($(tr).hasClass('bioinfo-project')) {
+        collapseAll(this);
+        return false;
+    }
+    if ($(this).hasClass('expanded')){
+        collapse(tr);
+    } else {
+        expand(tr);
+    }
+});
+
+function collapse(element) {
+    // element is tr
+  var element_id = $(element).attr('id');
+  var expanded = $(element).find("a[href=#"+element_id+"]");
+  $(expanded).removeClass('expanded');
+  var span =$(element).find('td.bioinfo-status-expand span.glyphicon');
+  if ($(span).hasClass('glyphicon-chevron-down')) {
+    $(span).removeClass('glyphicon-chevron-down');
+    $(span).addClass('glyphicon-chevron-right');
+  }
+  var children = $(element).parent().find('tr[data-parent=#'+element_id+']')
+  $.each(children, function(index, child) {
+    $(child).hide();
+    collapse(child);
+  });
+};
+
+function expand(element) {
+    var a = $(element).find('.bioinfo-expand');
+    $(a).addClass('expanded');
+    var tr_id = $(element).attr('id');
+    $('tr[data-parent=#'+tr_id+']').show();
+    var span = $(element).find('td.bioinfo-status-expand span.glyphicon')
+    if ($(span).hasClass('glyphicon-chevron-right')) {
+        $(span).removeClass('glyphicon-chevron-right')
+        $(span).addClass('glyphicon-chevron-down');
+    }
+};
+
+function collapseAll(a) {
+    var current_tr = $(a).parent().parent();
+    var top_parent_tr = topParent(current_tr);
+    var top_level_class = "";
+    var second_level_class = "";
+    if ($(top_parent_tr).hasClass('bioinfo-sample')) {
+        top_level_class = 'bioionfo_sample';
+        second_level_class = 'bioinfo-fc';
+    } else if ($(top_parent_tr).hasClass('bioinfo-fc')) {
+        top_level_class = 'bioinfo-fc';
+        second_level_class = 'bioinfo-lane';
+    } else {
+        alert('unknown data structure! Change deliveries.js or bioinfo_tab.js!');
+    }
+
+    if ($(a).hasClass('expanded')) { // collapse recursively
+        var trs = $('.table-bioinfo-status ' + top_level_class);
+        $.each(trs, function(index, tr) {
+            if ($(tr).find('a.bioinfo-expand').hasClass('expanded')) {
+                collapse(tr);
+            }
+        });
+        $(a).removeClass('expanded');
+        $(a).find('span.glyphicon').removeClass('glyphicon-chevron-down');
+        $(a).find('span.glyphicon').addClass('glyphicon-chevron-right');
+    } else { // expand - not recursively
+        var trs = $.merge($('.table-bioinfo-status tr.'+top_level_class), $('.table-bioinfo-status '+second_level_class));
+         $.each(trs, function(index, tr) {
+            if (!$(tr).find('a.bioinfo-expand').hasClass('expanded')) {
+                expand(tr);
+            }
+         });
+         $(a).addClass('expanded');
+         $(a).find('span.glyphicon').removeClass('glyphicon-chevron-right');
+         $(a).find('span.glyphicon').addClass('glyphicon-chevron-down');
+    }
+};

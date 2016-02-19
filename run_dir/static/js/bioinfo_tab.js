@@ -157,11 +157,39 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
     $(th).addClass(new_status);
 });
 
-$('.table-bioinfo-status').on('click', 'td.bioinfo-status-qc', function(e) {
+function topParent(tr) {
+    var parent_id = $(tr).attr('data-parent');
+    var parent_tr = $(parent_id);
+    if ($(parent_tr).hasClass('bioinfo-project')) {
+        return $(tr);
+    } else {
+        return topParent(parent_tr);
+    }
+};
+
+$('.table-bioinfo-status').on('click', 'td.bioinfo-status-bp', function(e) {
+    // whatever it means
+    e.stopImmediatePropagation(); // fires twice otherwise.
     if ($('.table-bioinfo-status').hasClass('bioinfo-status-disabled')) {
         return false;
     }
+    var td = $(this);
+    var top_parent = topParent($(td).parent());
+    var td_index = $(td).parent().children().index(td);
+    var top_td = $(top_parent).children()[td_index];
+    setChildrenStatus(top_td);
+
+    console.log($(top_parent));
+    console.log(td_index);
+    console.log($(top_td));
+});
+
+$('.table-bioinfo-status').on('click', 'td.bioinfo-status-qc', function(e) {
     e.stopImmediatePropagation(); // fires twice otherwise.
+    if ($('.table-bioinfo-status').hasClass('bioinfo-status-disabled')) {
+        return false;
+    }
+    console.log($(this));
     setChildrenStatus(this);
     var td = $(this);
     var td_index = $(td).parent().children().index($(td));
@@ -209,11 +237,7 @@ $( document ).ready(function() {
 var checkChildrenStatus = function(selector) {
     var flowcell_trs = $(selector); // flowcells
     $.each(flowcell_trs, function(i, tr) {
-        var first_td = $(tr).children('.undemultiplexedreads');
-        var last_td = $(tr).children('.datadelivered');
-        var first_index = $(tr).children().index(first_td);
-        var last_index = $(tr).children().index(last_td);
-        var all_tds = $(tr).children().slice(first_index, last_index);
+        var all_tds = $(tr).children('.bioinfo-status-qc');
         $.each(all_tds, function(i, td){
             setParentStatus(td);
         });
@@ -323,21 +347,35 @@ function setChildrenStatus(td) {
         var flowcell = tr_id.replace('bioinfo-lane-'+sample+'-', '').replace('-'+lane,'');
 
         var status = $(this).find('.bioinfo-status-runstate span').text().trim();
-        var row = {'status': status};
+        var row = {'sample_status': status, 'qc': {}, 'bp': {}};
 
+        // get qc values
         $(tr).children('td.bioinfo-status-qc').each(function(i, td) {
             var field_name = $(td).attr('class').split(/\s+/)[1];
             if (field_name != undefined) {
-                row[field_name] = $(td).text().trim();
+                row['qc'][field_name] = $(td).text().trim();
+            } else {
+                console.log('error:');
+                console.log($(td));
             }
+
         });
+        // get pb values
+        $(tr).children('td.bioinfo-status-bp').each(function(i, td) {
+            var field_name = $(td).attr('class').split(/\s+/)[1];
+            if (field_name != undefined) {
+                row['bp'][field_name] = $(td).text().trim();
+            } else {
+                console.log('error:');
+                console.log($(td));
+            }
+        })
 
         var row_key = [project_id, sample, flowcell, lane];
         sample_run_lane_statuses[row_key] = row;
-        sample_run_lane_statuses[row_key]['status'] = status;
+        sample_run_lane_statuses[row_key]['sample_status'] = status;
     });
     $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
-    console.log($(sample_run_lane_statuses));
     // from here it's copy&paste and i don't know what's happening
     var bioinfo_api_url = "/api/v1/bioinfo_analysis/"+project_id;
     $.ajax({

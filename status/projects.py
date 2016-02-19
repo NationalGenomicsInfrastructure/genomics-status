@@ -807,6 +807,8 @@ class BioinfoAnalysisHandler(SafeHandler):
         data = json.loads(self.request.body)
         saved_data = {}
         for run_id in data:
+            # import pdb
+            # pdb.set_trace()
             ## why run_id is a string??
             project, sample, run, lane = run_id.split(',')
             for row in v[[project, run, lane, sample]]:
@@ -817,8 +819,9 @@ class BioinfoAnalysisHandler(SafeHandler):
                     original_doc['values'] = {}
                 original_doc['values'][timestamp] = data[run_id]
                 original_doc['values'][timestamp]['user'] = user
-                original_doc['status'] = data[run_id]['status']
-                original_doc['values'][timestamp]['status'] = data[run_id]['status']
+                # it is not the same thing, or??
+                # original_doc['status'] = data[run_id]['sample_status']
+                original_doc['values'][timestamp]['sample_status'] = data[run_id]['sample_status']
                 try:
                     self.application.bioinfo_db.save(original_doc)
                     saved_data[run_id] = original_doc

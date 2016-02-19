@@ -64,10 +64,14 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               <div class="bi-project-note">{{ project['latest_running_note']['note'] }}</div>
             </dd>
           </dl>
-          <table class="table table-bordered">
+          <table class="table table-bordered table-bioinfo-status">
             <thead>
-              <tr>
-                <th></th>
+              <tr class="bioinfo-project" id="bioinfo-project-{{ project_id }}">
+                <th class="bioinfo-project">
+                  <a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                  </a>
+                </th>
                 <th></th>
                 <th style="width: 25%;">Run ID</th>
                 <th style="width: 10%;">Status</th>
@@ -76,11 +80,9 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               </tr>
             </thead>
             <tbody>
-            <tr class="bioinfo-project" id="bioinfo-{{ project_id }}" style="display:none;"></tr>
             {% for flowcell_id, flowcell in sorted(project['runs'].items()) %}
-            <tr class="bioinfo-flowcell" id="bioinfo-{{ project_id }}-{{ flowcell_id }}"
-              data-parent="#bioinfo-{{ project_id }}">
-              <td><a href="#bioinfo-{{ project_id }}-{{ flowcell_id }}" class="bioinfo-expand">
+            <tr class="bioinfo-fc" id="bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
+              <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" class="bioinfo-expand">
                   <span class="glyphicon glyphicon-chevron-right"></span></a></td>
               <td></td>
               <td class="bioinfo-granularity"><samp><a href="/flowcells/{{ flowcell_id.split('_')[0] }}_{{ flowcell_id.split('_')[-1] }}">{{ flowcell_id }}</a></samp></td>
@@ -93,10 +95,10 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               </td>
             </tr>
             {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
-              <tr class="bioinfo-lane" id="bioinfo-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}"
-                  data-parent="#bioinfo-{{ project_id }}-{{ flowcell_id }}" style="display:none;">
+              <tr class="bioinfo-lane" id="bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}"
+                  data-parent="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" style="display:none;">
                 <td></td>
-                <td><a href="#bioinfo-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" class="bioinfo-expand">
+                <td class="bioinfo-status-expand"><a href="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" class="bioinfo-expand">
                     <span class="glyphicon glyphicon-chevron-right"></span></a></td>
                 <td class="bioinfo-granularity"><samp>{{ lane_id }}</samp></td>
                 <td><span class="bioinfo-status label label-primary">{{ lane['lane_status'] }}</span></td>
@@ -106,16 +108,16 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                   <button class="bioinfo-running-notes-save btn btn-sm btn-default">Save</button>
                   <button class="bioinfo-running-notes-cancel btn btn-sm btn-default">Cancel</button></td>
               </tr>
-
               {% for sample_id, sample in sorted(lane['samples'].items()) %}
                       {% set passed = len(sample['checklist']['passed']) %}
                       {% set warnings = len(sample['checklist']['warnings']) %}
                       {% set failed = len(sample['checklist']['failed']) %}
                       {% set total = max(len(sample['checklist']['total']), 1) %}
-                <tr class="bioinfo-sample" id="bioinfo-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
-                    data-parent="#bioinfo-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
+
+                <tr class="bioinfo-sample" id="bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
+                    data-parent="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
                   <td></td>
-                  <td><a href="#bioinfo-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
+                  <td><a href="#bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
                       class="bioinfo-expand"></a></td>
                   <td class="bioinfo-granularity"><samp>{{ sample_id }}</samp></td>
 
