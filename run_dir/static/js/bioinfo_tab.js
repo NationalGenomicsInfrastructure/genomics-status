@@ -232,7 +232,7 @@ $( document ).ready(function() {
 var checkChildrenStatus = function(selector) {
     var flowcell_trs = $(selector); // flowcells
     $.each(flowcell_trs, function(i, tr) {
-        var all_tds = $(tr).children('.bioinfo-status-qc');
+        var all_tds = $(tr).children('.bioinfo-status-qc, .bioinfo-status-bp');
         $.each(all_tds, function(i, td){
             setParentStatus(td);
         });

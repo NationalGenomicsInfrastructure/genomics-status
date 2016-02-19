@@ -109,25 +109,23 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                   <button class="bioinfo-running-notes-cancel btn btn-sm btn-default">Cancel</button></td>
               </tr>
               {% for sample_id, sample in sorted(lane['samples'].items()) %}
-                      {% set passed = len(sample['checklist']['passed']) %}
-                      {% set warnings = len(sample['checklist']['warnings']) %}
-                      {% set failed = len(sample['checklist']['failed']) %}
-                      {% set total = max(len(sample['checklist']['total']), 1) %}
-
+                {% set passed = len(sample['checklist']['passed']) %}
+                {% set warnings = len(sample['checklist']['warnings']) %}
+                {% set failed = len(sample['checklist']['failed']) %}
+                <!--division by zero-->
+                {% set total = max(len(sample['checklist']['total']), 1) %}
                 <tr class="bioinfo-sample" id="bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
                     data-parent="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
                   <td></td>
                   <td><a href="#bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
                       class="bioinfo-expand"></a></td>
                   <td class="bioinfo-granularity"><samp>{{ sample_id }}</samp></td>
-
                   <td><span class="bioinfo-status label {% if sample['status'] == 'Failed' %} label-error {% else %} label-primary {% end %}">{{ sample['status'] }}</span></td>
                   <td class="bi-run-pwf hide-incoming {% if passed + warnings + failed < total %} warning {% else %} success {% end %}">
-
                   <div class="progress">
-                    <div class="progress-bar progress-bar-success" style="width: {{ passed / total * 100 }}%" title="0 Passes" data-toggle="tooltip">{{ passed }}</div>
-                    <div class="progress-bar progress-bar-warning" style="width: {{ warnings / total * 100 }}%" title="0 Warnings" data-toggle="tooltip">{{ warnings }}</div>
-                    <div class="progress-bar progress-bar-danger" style="width: {{ failed / total * 100 }}%" title="0 Fail" data-toggle="tooltip">{{ failed }}</div>
+                    <div class="progress-bar progress-bar-success" style="width:{{ float(passed) / float(total) * 100.0 }}%" title="{{ passed }} Passes" data-toggle="tooltip">{{ passed }}</div>
+                    <div class="progress-bar progress-bar-warning" style="width:{{ float(warnings) / float(total) * 100.0 }}%" title="{{ warnings }} Warnings" data-toggle="tooltip">{{ warnings }}</div>
+                    <div class="progress-bar progress-bar-danger" style="width:{{ float(failed) / float(total) * 100.0 }}%" title="{{ failed }} Fail" data-toggle="tooltip">{{ failed }}</div>
                   </div>
                 </td>
                 <td class="bioinfo-running-notes" data-running-note="{{ sample.get('latest_running_note', default_note)['note'] }}">
@@ -135,7 +133,6 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                   <button class="bioinfo-running-notes-save btn btn-sm btn-default">Save</button>
                   <button class="bioinfo-running-notes-cancel btn btn-sm btn-default">Cancel</button></td>
                 </tr>
-
               {% end %} <!-- end samples-->
             {% end %} <!--end lanes-->
           {% end %} <!--end flowcells-->

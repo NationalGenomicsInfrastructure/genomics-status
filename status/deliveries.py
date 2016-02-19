@@ -67,11 +67,13 @@ class DeliveriesPageHandler(SafeHandler):
                             }
                             sample_data = flowcells[flowcell_id][lane_id][sample_id]
                             lane_statuses.append(sample_data.get('sample_status', 'New'))
-                            if 'qc' in sample_data:
-                                checklist['total'] = [key for key in sample_data['qc'].keys()]
-                            if 'bp' in sample_data:
-                                checklist['total'] += [key for key in sample_data['bp'].keys()]
-                            qc_and_bp = sample_data.get('qc', {}).copy().update(sample_data.get('bp', {})) or {}
+                            qc_and_bp = {}
+                            for key in sample_data.get('qc', {}).keys():
+                                checklist['total'].append(key)
+                                qc_and_bp[key] = sample_data['qc'][key]
+                            for key in sample_data.get('bp', {}).keys():
+                                checklist['total'].append(key)
+                                qc_and_bp[key] = sample_data['bp'][key]
                             for key in qc_and_bp.keys():
                                 if qc_and_bp[key] == 'Pass':
                                     checklist['passed'].append(key)
