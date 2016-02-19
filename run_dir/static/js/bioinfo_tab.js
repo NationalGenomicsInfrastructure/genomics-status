@@ -290,9 +290,10 @@ function setChildrenStatus(td) {
     var tds = getChildTds(td);
     tds.push(td);
 
-    var current_class = "";
-    var next_class = "";
-    var next_label = "";
+    // default values
+    var current_class = "unknown";
+    var next_class = "success";
+    var next_label = "Pass";
 
     // get current class, it must be one of the bioinfo_qc_classes
     $.each($(td).attr('class').split(/\s+/), function(i, td_class) {

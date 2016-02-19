@@ -99,7 +99,7 @@
       {% end %}
       <th class="bioinfo-status-th-date datadelivered">Data Delivered</th>
     </tr>
-      {% for sample_id in bioinfo[project_id] %}
+      {% for sample_id in sorted(bioinfo[project_id]) %}
         <tr class="bioinfo-sample" id="bioinfo-sample-{{ sample_id }}" data-parent="#bioinfo-project-{{ project_id }}">
           <td class="bioinfo-status-expand"><a href="#bioinfo-sample-{{ sample_id }}" class="bioinfo-expand">
             <span class="glyphicon glyphicon-chevron-right"></span></a></td>
@@ -138,7 +138,7 @@
               </div>
             </td>
         </tr>
-        {% for flowcell_id in bioinfo[project_id][sample_id] %}
+        {% for flowcell_id in sorted(bioinfo[project_id][sample_id].keys()) %}
           <tr class="bioinfo-fc" id="bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}"
               data-parent="#bioinfo-sample-{{ sample_id }}" style="display:none;">
             <td></td>
@@ -177,7 +177,7 @@
                 <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
             </td>
           </tr>
-          {% for lane_id, lane in bioinfo[project_id][sample_id][flowcell_id].items() %}
+          {% for lane_id, lane in sorted(bioinfo[project_id][sample_id][flowcell_id].items()) %}
             <tr class="bioinfo-lane" id="bioinfo-lane-{{ sample_id }}-{{ flowcell_id }}-{{ lane_id }}"
                 data-parent="#bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}" style="display:none;">
               <td></td>
