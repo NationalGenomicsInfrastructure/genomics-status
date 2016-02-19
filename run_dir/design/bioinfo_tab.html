@@ -185,6 +185,7 @@
               <td class="bioinfo-status-expand"><samp>{{ lane_id }}</samp></td>
               <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(lane.get('sample_status', 'New'), 'label-default') }}">{{ lane.get('sample_status') }}</span></td>
               <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
+              <!--THE ORDER OF THE CLASSES IS IMPORTANT!-->
               <td class="bioinfo-status-qc undemultiplexedreads {{ qc_css.get(lane.get('qc', {}).get('undemultiplexedreads', '?'), 'unknown') }}">
                 {{ lane.get('qc', {}).get('undemultiplexedreads', '?') }}</td>
               <td class="bioinfo-status-qc unexpectedindexes {{ qc_css.get(lane.get('qc', {}).get('unexpectedindexes', '?'), 'unknown') }}">
