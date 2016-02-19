@@ -186,42 +186,42 @@
               <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(lane.get('sample_status', 'New'), 'label-default') }}">{{ lane.get('sample_status') }}</span></td>
               <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
               <td class="bioinfo-status-qc undemultiplexedreads {{ qc_css.get(lane.get('qc', {}).get('undemultiplexedreads', '?'), 'unknown') }}">
-                {{ lane.get('qc', {}).get('undemultiplexedreads', '') }}</td>
+                {{ lane.get('qc', {}).get('undemultiplexedreads', '?') }}</td>
               <td class="bioinfo-status-qc unexpectedindexes {{ qc_css.get(lane.get('qc', {}).get('unexpectedindexes', '?'), 'unknown') }}">
-                {{ lane.get('qc', {}).get('unexpectedindexes', '') }}</td>
+                {{ lane.get('qc', {}).get('unexpectedindexes', '?') }}</td>
               <td class="bioinfo-status-qc lowsampleyield {{ qc_css.get(lane.get('qc', {}).get('lowsampleyield', '?'), 'unknown') }}">
-                {{ lane.get('qc', {}).get('lowsampleyield', '') }}</td>
+                {{ lane.get('qc', {}).get('lowsampleyield', '?') }}</td>
               <td class="bioinfo-status-qc phixerrorrate {{ qc_css.get(lane.get('qc', {}).get('phixerrorrate', '?'), 'unknown') }}">
-                {{ lane.get('qc', {}).get('phixerrorrate', '') }}</td>
+                {{ lane.get('qc', {}).get('phixerrorrate', '?') }}</td>
               <td class="bioinfo-status-qc basesq30 {{ qc_css.get(lane.get('qc', {}).get('basesq30', '?'), 'unknown') }}">
-                {{ lane.get('qc', {}).get('basesq30', '') }}</td>
+                {{ lane.get('qc', {}).get('basesq30', '?') }}</td>
               <td class="bioinfo-status-qc fastq_screen {{ qc_css.get(lane.get('qc', {}).get('fastq_screen', '?'), 'unknown') }}">
-                {{ lane.get('qc', {}).get('fastq_screen', '') }}</td>
+                {{ lane.get('qc', {}).get('fastq_screen', '?') }}</td>
               <td class="bioinfo-status-qc blast_wrapper {{ qc_css.get(lane.get('qc', {}).get('blast_wrapper', '?'), 'unknown') }}">
-                {{ lane.get('qc', {}).get('blast_wrapper', '') }}</td>
+                {{ lane.get('qc', {}).get('blast_wrapper', '?') }}</td>
               {% if application == 'rnaseq' %}
                 <td class="bioinfo-status-bp rnaseq_sequenceduplication {{ qc_css.get(lane.get('bp', {}).get('rnaseq_sequenceduplication', '?'), 'unknown') }}">
-                  {{ lane.get('bp', {}).get('rnaseq_sequenceduplication', '') }}</td>
+                  {{ lane.get('bp', {}).get('rnaseq_sequenceduplication', '?') }}</td>
                 <td class="bioinfo-status-bp rnaseq_uniquemappingrate {{ qc_css.get(lane.get('bp', {}).get('rnaseq_uniquemappingrate', '?'), 'unknown') }}">
-                  {{ lane.get('bp', {}).get('rnaseq_uniquemappingrate', '') }}</td>
+                  {{ lane.get('bp', {}).get('rnaseq_uniquemappingrate', '?') }}</td>
               {% elif application == 'exome' %}
                 <td class="bioinfo-status-bp exome_sequenceduplication {{ qc_css.get(lane.get('bp', {}).get('exome_sequenceduplication', '?'), 'unknown') }}">
-                  {{ lane.get('bp', {}).get('exome_sequenceduplication', '') }}</td>
+                  {{ lane.get('bp', {}).get('exome_sequenceduplication', '?') }}</td>
                 <td class="bioinfo-status-bp exome_targets10xcoverage {{ qc_css.get(lane.get('bp', {}).get('exome_targets10xcoverage', '?'), 'unknown') }}">
-                  {{ lane.get('bp', {}).get('exome_targets10xcoverage', '') }}</td>
+                  {{ lane.get('bp', {}).get('exome_targets10xcoverage', '?') }}</td>
               {% elif application == 'customCap' %}
                 <td class="bioinfo-status-bp customCap_enrichment {{ qc_css.get(lane.get('customCap_enrichment', '?'), 'unknown') }}">
-                  {{ lane.get('bp', {}).get('customCap_enrichment', '') }}</td>
+                  {{ lane.get('bp', {}).get('customCap_enrichment', '?') }}</td>
               {% elif application == 'WGreseq' %}
                 <td class="bioinfo-status-bp WGreseq_sequenceduplication {{ qc_css.get(lane.get('bp', {}).get('WGreseq_sequenceduplication', '?'), 'unknown') }}">
-                  {{ lane.get('bp', {}).get('WGreseq_sequenceduplication', '') }}</td>
+                  {{ lane.get('bp', {}).get('WGreseq_sequenceduplication', '?') }}</td>
                 <td class="bioinfo-status-bp WGreseq_mappingrate {{ qc_css.get(lane.get('WGreseq_mappingrate', '?'), 'unknown') }}">
-                  {{ lane.get('bp', {}).get('WGreseq_mappingrate', '') }}</td>
+                  {{ lane.get('bp', {}).get('WGreseq_mappingrate', '?') }}</td>
               {% elif application == 'denovo' %}
                 <td class="bioinfo-status-bp denovo_adaptertrimming {{ qc_css.get(lane.get('bp', {}).get('denovo_adaptertrimming', '?'), 'unknown') }}">
-                  {{ lane.get('bp', {}).get('denovo_adaptertrimming', '') }}</td>
-                <td class="bioinfo-status-bp denovo_kmerprofile {{ qc_css.get(lane.get('bp', {}).get('denovo_mkerprofile', '?'), 'unknown') }}">
-                  {{ lane.get('bp', {}).get('denovo_kmerprofile', '') }}</td>
+                  {{ lane.get('bp', {}).get('denovo_adaptertrimming', '?') }}</td>
+                <td class="bioinfo-status-bp denovo_kmerprofile {{ qc_css.get(lane.get('bp', {}).get('denovo_kmerprofile', '?'), 'unknown') }}">
+                  {{ lane.get('bp', {}).get('denovo_kmerprofile', '?') }}</td>
               {% elif application == 'applications' %}
                 <td class="bioinfo-status-bp applications">?</td>
                 <td class="bioinfo-status-bp applications">?</td>

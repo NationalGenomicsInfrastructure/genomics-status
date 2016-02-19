@@ -101,10 +101,10 @@ var bioinfo_qc_values = ['?', 'Pass', 'Warning', 'Fail'];
 
 // set the whole row
 $('.table-bioinfo-status').on('click', 'td.bioinfo-status-row', function(e) {
+    e.stopImmediatePropagation();
     if ($('.table-bioinfo-status').hasClass('bioinfo-status-disabled')) {
         return false;
     }
-    e.stopImmediatePropagation();
     var tr = $(this).parent();
     var tr_status = $(tr).attr('class').split(/\s+/)[1];
     if (tr_status == undefined) {
@@ -117,15 +117,15 @@ $('.table-bioinfo-status').on('click', 'td.bioinfo-status-row', function(e) {
     $.each(tds, function(index, td) {
         var td_class = $(td).attr('class').split(/\s+/)[2];
         $(td).removeClass(td_class); // todo: remove any class of bioinfo_qc_classes
-        $(td).addClass(tr_class);
+        $(td).addClass(tr_class); // tr_class, not new_class!
         $(td).text(tr_status);
         setChildrenStatus(td);
         var td_index = $(td).parent().children().index($(td));
         var parent_td = $($(td).parent().attr('data-parent')).children()[td_index];
         setParentStatus(parent_td);
     });
-    $(this).removeClass(tr_status);
-    $(this).addClass(new_status);
+    $(tr).removeClass(tr_status);
+    $(tr).addClass(new_status);
 });
 
 // double click on header -> set all the values
