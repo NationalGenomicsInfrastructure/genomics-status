@@ -77,23 +77,24 @@ $('#runningNotesModal').on('hidden.bs.modal', function (e) {
     $.each(running_notes, function(i, running_note){
         $(running_note).hide();
     });
-})
+});
 
 
 function topParent(tr) {
     var parent_id = $(tr).attr('data-parent');
-    // tr = topParent = .bioinfo-project
-    if (parent_id == undefined){
-        console.log($('table.table-bioinfo-status').find('tr[data-parent="'+$(tr).attr('id')+'"]'));
+    // if tr = topParent = .bioinfo-project
+    if (parent_id == undefined) {
+        var table = $(tr).closest('table.table-bioinfo-status');
+        var top_parent = $(table).find('tr[data-parent="#'+$(tr).attr('id')+'"]');
+         return $(top_parent);
+    } else {
+        var parent_tr = $(parent_id);
+        if ($(parent_tr).hasClass('bioinfo-project')) {
+            return $(tr);
+        } else {
+            return topParent(parent_tr);
+        }
     }
-    console.log(parent_id);
-    var parent_tr = $(parent_id);
-    console.log($(parent_tr));
-//    if ($(parent_tr).hasClass('bioinfo-project')) {
-//        return $(tr);
-//    } else {
-//        return topParent(parent_tr);
-//    }
 };
 
 
@@ -124,7 +125,7 @@ function collapse(element) {
     $(span).removeClass('glyphicon-chevron-down');
     $(span).addClass('glyphicon-chevron-right');
   }
-  var children = $(element).parent().find('tr[data-parent=#'+element_id+']')
+  var children = $(element).parent().find('tr[data-parent="#'+element_id+'"]')
   $.each(children, function(index, child) {
     $(child).hide();
     collapse(child);
@@ -135,7 +136,7 @@ function expand(element) {
     var a = $(element).find('.bioinfo-expand');
     $(a).addClass('expanded');
     var tr_id = $(element).attr('id');
-    $('tr[data-parent=#'+tr_id+']').show();
+    $('tr[data-parent="#'+tr_id+'"]').show();
     var span = $(element).find('td.bioinfo-status-expand span.glyphicon')
     if ($(span).hasClass('glyphicon-chevron-right')) {
         $(span).removeClass('glyphicon-chevron-right')
@@ -155,11 +156,11 @@ function collapseAll(a) {
         top_level_class = 'bioinfo-fc';
         second_level_class = 'bioinfo-lane';
     } else {
-        alert('unknown data structure! Change deliveries.js or bioinfo_tab.js!');
+        console.error('unknown data structure! Change deliveries.js or bioinfo_tab.js!');
     }
-
+    var table = $(a).closest('.table-bioinfo-status');
     if ($(a).hasClass('expanded')) { // collapse recursively
-        var trs = $('.table-bioinfo-status ' + top_level_class);
+        var trs = $(table).find('tr.' + top_level_class);
         $.each(trs, function(index, tr) {
             if ($(tr).find('a.bioinfo-expand').hasClass('expanded')) {
                 collapse(tr);
@@ -169,7 +170,7 @@ function collapseAll(a) {
         $(a).find('span.glyphicon').removeClass('glyphicon-chevron-down');
         $(a).find('span.glyphicon').addClass('glyphicon-chevron-right');
     } else { // expand - not recursively
-        var trs = $.merge($('.table-bioinfo-status tr.'+top_level_class), $('.table-bioinfo-status '+second_level_class));
+        var trs = $.merge($(table).find('tr.'+top_level_class), $(table).find('tr.'+second_level_class));
          $.each(trs, function(index, tr) {
             if (!$(tr).find('a.bioinfo-expand').hasClass('expanded')) {
                 expand(tr);

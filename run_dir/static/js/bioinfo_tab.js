@@ -178,10 +178,6 @@ $('.table-bioinfo-status').on('click', 'td.bioinfo-status-bp', function(e) {
     var td_index = $(td).parent().children().index(td);
     var top_td = $(top_parent).children()[td_index];
     setChildrenStatus(top_td);
-
-    console.log($(top_parent));
-    console.log(td_index);
-    console.log($(top_td));
 });
 
 $('.table-bioinfo-status').on('click', 'td.bioinfo-status-qc', function(e) {
@@ -189,7 +185,6 @@ $('.table-bioinfo-status').on('click', 'td.bioinfo-status-qc', function(e) {
     if ($('.table-bioinfo-status').hasClass('bioinfo-status-disabled')) {
         return false;
     }
-    console.log($(this));
     setChildrenStatus(this);
     var td = $(this);
     var td_index = $(td).parent().children().index($(td));
@@ -355,8 +350,8 @@ function setChildrenStatus(td) {
             if (field_name != undefined) {
                 row['qc'][field_name] = $(td).text().trim();
             } else {
-                console.log('error:');
-                console.log($(td));
+                console.error('error: undefined field name');
+                console.error($(td));
             }
 
         });
@@ -366,8 +361,8 @@ function setChildrenStatus(td) {
             if (field_name != undefined) {
                 row['bp'][field_name] = $(td).text().trim();
             } else {
-                console.log('error:');
-                console.log($(td));
+                console.error('error: undefined field name');
+                console.error($(td));
             }
         })
 
