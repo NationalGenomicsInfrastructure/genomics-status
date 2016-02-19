@@ -26,6 +26,11 @@ multiple places and typically control typography, or other common elements.
 
 
 /* index.html page */
+.table-disk-quotas > tbody > tr > td:first-child {
+  padding: 8px;
+  width: 180px;
+}
+
 .table-disk-quotas > tbody > tr > td {
   padding: 0;
 }
