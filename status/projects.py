@@ -442,11 +442,7 @@ class ProjectSamplesHandler(SafeHandler):
     brief information for each sample.
     URL: /project/([^/]*)
     """
-    def get(self, project, active_tab=None):
-        tabs = ['details', 'samples', 'running_notes', 'bioinfo', 'communication', 'links']
-        if active_tab not in tabs:
-            active_tab = 'details'
-
+    def get(self, project):
         t = self.application.loader.load("project_samples.html")
         sample_run_view = self.application.bioinfo_db.view('latest_data/sample_id')
         bioinfo_data = {}
@@ -504,7 +500,6 @@ class ProjectSamplesHandler(SafeHandler):
                                   app_classes=app_classes,
                                   qc_done=False,
                                   application=application,
-                                  active_tab=active_tab,
                                   project_closed=project_closed
                                   ))
 
@@ -833,17 +828,17 @@ class BioinfoAnalysisHandler(SafeHandler):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(saved_data))
 
-
-class DeliveriesPageHandler(SafeHandler):
-        """ Serves a page which lists the bioinformatics delivery statuses of active projects
-        URL: /deliveries/)
-        """
-        def get(self):
-            t = self.application.loader.load("deliveries.html")
-            self.write(t.generate(gs_globals=self.application.gs_globals,
-                                      user=self.get_current_user_name(),
-                                      prettify = prettify_css_names
-                                      ))
+#
+# class DeliveriesPageHandler(SafeHandler):
+#         """ Serves a page which lists the bioinformatics delivery statuses of active projects
+#         URL: /deliveries/)
+#         """
+#         def get(self):
+#             t = self.application.loader.load("deliveries.html")
+#             self.write(t.generate(gs_globals=self.application.gs_globals,
+#                                       user=self.get_current_user_name(),
+#                                       prettify = prettify_css_names
+#                                       ))
 
 
 

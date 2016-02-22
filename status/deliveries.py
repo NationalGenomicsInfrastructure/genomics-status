@@ -17,7 +17,7 @@ class DeliveriesPageHandler(SafeHandler):
                 summary_data[project_id] = project.value
 
         # wtf don't they return json or anything normal
-        bioinfo_data_view = self.application.bioinfo_db.view("latest_data/sample_id_not_closed")
+        bioinfo_data_view = self.application.bioinfo_db.view("latest_data/sample_id_open")
         bioinfo_data = {}
 
         ongoing_deliveries = {}

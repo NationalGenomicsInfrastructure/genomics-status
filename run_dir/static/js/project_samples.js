@@ -46,7 +46,7 @@ $(document).ready(function() {
   });
 
   //Show user communication tab. Loading
-  $('#tab_communication').click(function (e) {
+  $('#tab_com_content').click(function (e) {
     load_tickets();
   });
 
