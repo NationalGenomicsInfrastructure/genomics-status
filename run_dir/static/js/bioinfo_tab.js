@@ -24,7 +24,6 @@ $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
     }
 });
 
-
 // expand or collapse table
 $('.bioinfo-expand').click(function(e){
     // this = a[href=#$(tr).attr('id')];
@@ -72,8 +71,21 @@ function expand(element) {
 };
 
 function collapseAll(a) {
+    var current_tr = $(a).parent().parent();
+    var top_level_class = "";
+    var second_level_class = "";
+    var table = $(a).closest('table.table-bioinfo-status');
+    if ($(table).hasClass('table-bioinfo-status-sampleview')) {
+        top_level_class = 'bioinfo-sample';
+        second_level_class = 'bioinfo-fc';
+    } else if ($(table).hasClass('table-bioinfo-status-runview')) {
+        top_level_class = 'bioinfo-fc';
+        second_level_class = 'bioinfo-lane';
+    } else {
+        console.error('unknown data structure! Change deliveries.js or bioinfo_tab.js!');
+    }
     if ($(a).hasClass('expanded')) { // collapse recursively
-        var trs = $('.table-bioinfo-status tr.bioinfo-sample');
+        var trs = $(table).find('tr.' + top_level_class);
         $.each(trs, function(index, tr) {
             if ($(tr).find('a.bioinfo-expand').hasClass('expanded')) {
                 collapse(tr);
@@ -83,15 +95,15 @@ function collapseAll(a) {
         $(a).find('span.glyphicon').removeClass('glyphicon-chevron-down');
         $(a).find('span.glyphicon').addClass('glyphicon-chevron-right');
     } else { // expand - not recursively
-        var trs = $.merge($('.table-bioinfo-status tr.bioinfo-sample'), $('.table-bioinfo-status tr.bioinfo-fc'));
-         $.each(trs, function(index, tr) {
+        var trs = $.merge($(table).find('tr.'+top_level_class), $(table).find('tr.'+second_level_class));
+        $.each(trs, function(index, tr) {
             if (!$(tr).find('a.bioinfo-expand').hasClass('expanded')) {
                 expand(tr);
             }
-         });
-         $(a).addClass('expanded');
-         $(a).find('span.glyphicon').removeClass('glyphicon-chevron-right');
-         $(a).find('span.glyphicon').addClass('glyphicon-chevron-down');
+        });
+        $(a).addClass('expanded');
+        $(a).find('span.glyphicon').removeClass('glyphicon-chevron-right');
+        $(a).find('span.glyphicon').addClass('glyphicon-chevron-down');
     }
 };
 
@@ -156,6 +168,27 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
     $(th).removeClass(th_status);
     $(th).addClass(new_status);
 });
+
+//
+//function topParent(tr) {
+//    var parent_id = $(tr).attr('data-parent');
+//    // if tr = topParent = .bioinfo-project
+//    if (parent_id == undefined) {
+//        var table = $(tr).closest('table.table-bioinfo-status');
+//        console.log($(table));
+//        var top_parent = $(table).find('tr[data-parent="#'+$(tr).attr('id')+'"]').first();
+//        console.log($(top_parent));
+//         return $(top_parent);
+//    } else {
+//        var parent_tr = $(parent_id);
+//        if ($(parent_tr).hasClass('bioinfo-project')) {
+//            return $(tr);
+//        } else {
+//            return topParent(parent_tr);
+//        }
+//    }
+//};
+
 
 function topParent(tr) {
     var parent_id = $(tr).attr('data-parent');
@@ -347,14 +380,43 @@ function setChildrenStatus(td) {
     // remove /bioinfo/ from the end
     project_id = project_id[project_id.length-1];
 
-    $('.table-bioinfo-status tr.bioinfo-lane:has(td)').each(function(){
+    var table = $('.table-bioinfo-status:visible');
+    var lowest_level = "bioinfo-lane";
+    if ($(table).hasClass('table-bioinfo-status-runview')){
+        lowest_level = 'bioinfo-sample';
+    }
+    var extract_sample_run_lane_id = function(tr_id) {
+        tr_id = tr_id.replace(lowest_level+'-', '');
+        var sample_run_lane = tr_id.split(/-/);
+        // because flowcell id can contain '-' as well
+        var sample = sample_run_lane[0];
+        var lane = sample_run_lane[sample_run_lane.length-1];
+        var flowcell = tr_id.replace(lowest_level+'-', '').replace('-'+lane,'').replace('-'+sample, '');
+        return [sample, flowcell, lane];
+    };
+    var extract_run_lane_sample_id = function(tr_id) {
+        var sample_run_lane = tr_id.split(/-/);
+        var sample = sample_run_lane[sample_run_lane.length-1];
+        var lane = sample_run_lane[sample_run_lane.length-2];
+        var flowcell = tr_id.replace(lowest_level+'-', '').replace(sample+'-', '').replace('-'+lane,'');
+        return [sample, flowcell, lane];
+    }
+
+    // assuming, there is only one view is active (=one table is visible)
+    $('.table-bioinfo-status:visible tr.'+lowest_level+':has(td)').each(function(){
         var tr = $(this);
         var tr_id = $(tr).attr('id');
-        var sample_run_lane = tr_id.replace('bioinfo-lane-', '');
-        var sample_run_lane = tr_id.split(/-/);
-        var sample = sample_run_lane[2];
-        var lane = sample_run_lane[sample_run_lane.length-1];
-        var flowcell = tr_id.replace('bioinfo-lane-'+sample+'-', '').replace('-'+lane,'');
+        console.log(tr_id);
+        var sample_run_lane;
+        if ($(table).hasClass('table-bioinfo-status-runview')) {
+            sample_run_lane = extract_run_lane_sample_id(tr_id);
+        } else {
+            sample_run_lane = extract_sample_run_lane_id(tr_id);
+        }
+        console.log(sample_run_lane);
+        var sample = sample_run_lane[0];
+        var flowcell = sample_run_lane[1];
+        var lane = sample_run_lane[2];
 
         var status = $(this).find('.bioinfo-status-runstate span').text().trim();
         var row = {'sample_status': status, 'qc': {}, 'bp': {}};
@@ -368,7 +430,6 @@ function setChildrenStatus(td) {
                 console.error('error: undefined field name');
                 console.error($(td));
             }
-
         });
         // get pb values
         $(tr).children('td.bioinfo-status-bp').each(function(i, td) {
@@ -385,6 +446,7 @@ function setChildrenStatus(td) {
         sample_run_lane_statuses[row_key] = row;
         sample_run_lane_statuses[row_key]['sample_status'] = status;
     });
+    console.log(sample_run_lane_statuses);
     $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
     // from here it's copy&paste and i don't know what's happening
     var bioinfo_api_url = "/api/v1/bioinfo_analysis/"+project_id;

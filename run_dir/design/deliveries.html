@@ -64,7 +64,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               <div class="bi-project-note">{{ project['latest_running_note']['note'] }}</div>
             </dd>
           </dl>
-          <table class="table table-bordered table-bioinfo-status">
+          <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
             <thead>
               <tr class="bioinfo-project" id="bioinfo-project-{{ project_id }}">
                 <th class="bioinfo-project">
@@ -140,59 +140,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           </table>
           {% end %} <!-- end if -->
           </div>
-
-          {% end %} <!--end ongoing-->
-        <div class="delivery">
-          <h3>
-            <span class="pull-right delivery-actions hide-incoming">
-              <button class="deliveries-project-reset btn btn-sm btn-default" title="Reset" data-toggle="tooltip"><span class="glyphicon glyphicon-repeat"></span></button>
-              <button class="deliveries-project-delivered btn btn-sm btn-default" title="Set all samples as delivered" data-toggle="tooltip"><span class="glyphicon glyphicon-ok"></span></button>
-              <button class="deliveries-project-aborted btn btn-sm btn-default" title="Set all samples as aborted" data-toggle="tooltip"><span class="glyphicon glyphicon-trash"></span></button>
-              <button class="deliveries-save-project btn btn-sm btn-default" disabled>Save Changes</button>
-            </span>
-            <a href="../projects/" class="bi-project-id">??</a>: <span class="bi-project-name">??</span><br>
-            <small><span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application"></span>
-              &nbsp; <span class="bi-project-facility label label-primary" data-toggle="tooltip" data-delay="500" title="Project Facility">??</span>
-              &nbsp; <span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">??</span>
-            </small>
-          </h3>
-          <dl class="dl-horizontal hide-incoming">
-            <dt>Project running note:</dt>
-            <dd>
-              <button data-toggle="modal" data-target="#runningNotesModal" class="btn btn-xs btn-default pull-right runningNotesModal_button project_runningNotes">See all</button>
-              <div class="bi-project-note">??</div>
-            </dd>
-          </dl>
-          <table class="table table-bordered">
-            <thead>
-              <tr>
-                <th style="width: 25%;">Run ID</th>
-                <th style="width: 10%;">Bioinfo Status</th>
-                <th style="width: 15%;" class="hide-incoming">Checklists</th>
-                <th style="width: 50%;" class="hide-incoming">Latest running note</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="bi-runid"><samp><a href="../flowcells/">??</a></samp></td>
-                <td class="bi-run-status"><span class="label label-default">??</span></td>
-                <td class="bi-run-pwf hide-incoming">
-                  <div class="progress">
-                    <div class="progress-bar progress-bar-success" style="width: 0%" title="0 Passes" data-toggle="tooltip"></div>
-                    <div class="progress-bar progress-bar-warning" style="width: 0%" title="0 Warnings" data-toggle="tooltip"></div>
-                    <div class="progress-bar progress-bar-danger" style="width: 0%" title="0 Fail" data-toggle="tooltip"></div>
-                  </div>
-                </td>
-                <td class="hide-incoming">
-                  <button data-toggle="modal" data-target="#runningNotesModal" class="btn btn-xs btn-default pull-right runningNotesModal_button fc_runningNotes">See all</button>
-                  <div class="bi-fc-runningnote"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span></div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div> <!-- .ongoing-delivery -->
-      </div> <!-- #ongoing_deliveries -->
-
+      {% end %} <!--end ongoing-->
     </div> <!-- .col-lg-6 -->
   </div>
 

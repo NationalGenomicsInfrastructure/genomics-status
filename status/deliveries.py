@@ -41,7 +41,6 @@ class DeliveriesPageHandler(SafeHandler):
             else:
                 bioinfo_data[project_id][flowcell_id][lane_id].update({sample_id: row.value})
 
-
         all_running_notes = {}
         for project_id in ongoing_deliveries:
             if project_id in summary_data and project_id in bioinfo_data:
@@ -52,8 +51,6 @@ class DeliveriesPageHandler(SafeHandler):
 
                 for flowcell_id in flowcells:
                     flowcell_statuses = []
-                    # import pdb
-                    # pdb.set_trace()
                     for lane_id in flowcells[flowcell_id]:
                         lane_statuses = []
                         for sample_id in flowcells[flowcell_id][lane_id]:
@@ -83,7 +80,6 @@ class DeliveriesPageHandler(SafeHandler):
                                     checklist['failed'].append(key)
                                 else: #  sample_data['qc'][key] == '?':
                                     checklist['NAs'].append(key)
-                                # todo: what about bp??
 
                             if flowcell_id not in runs_bioinfo:
                                 runs_bioinfo[flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: {'checklist': checklist, 'status': sample_data.get('sample_status', '?')}}}}}

@@ -445,7 +445,7 @@ class ProjectSamplesHandler(SafeHandler):
     def get(self, project):
         t = self.application.loader.load("project_samples.html")
         sample_run_view = self.application.bioinfo_db.view('latest_data/sample_id')
-        bioinfo_data = {}
+        bioinfo_data = {'sample_run_lane_view': {}, 'run_lane_sample_view': {}}
         project_closed = False
         for row in sample_run_view.rows:
             project_id = row.key[0]
@@ -453,16 +453,32 @@ class ProjectSamplesHandler(SafeHandler):
                 flowcell_id = row.key[1]
                 lane_id = row.key[2]
                 sample_id = row.key[3]
-                if project_id not in bioinfo_data:
-                    bioinfo_data[project_id] = {sample_id: {flowcell_id: {lane_id: row.value}}}
-                elif sample_id not in bioinfo_data[project_id]:
-                    bioinfo_data[project_id][sample_id] = {flowcell_id: {lane_id: row.value}}
-                elif flowcell_id not in bioinfo_data[project_id][sample_id]:
-                    bioinfo_data[project_id][sample_id][flowcell_id] = {lane_id: row.value}
-                elif lane_id not in bioinfo_data[project_id][sample_id][flowcell_id]:
-                    bioinfo_data[project_id][sample_id][flowcell_id][lane_id] = row.value
+                # building first view
+                bioinfo1 = bioinfo_data['sample_run_lane_view']
+                if project_id not in bioinfo1:
+                    bioinfo1[project_id] = {sample_id: {flowcell_id: {lane_id: row.value}}}
+                elif sample_id not in bioinfo1[project_id]:
+                    bioinfo1[project_id][sample_id] = {flowcell_id: {lane_id: row.value}}
+                elif flowcell_id not in bioinfo1[project_id][sample_id]:
+                    bioinfo1[project_id][sample_id][flowcell_id] = {lane_id: row.value}
+                elif lane_id not in bioinfo1[project_id][sample_id][flowcell_id]:
+                    bioinfo1[project_id][sample_id][flowcell_id][lane_id] = row.value
                 else:
-                    bioinfo_data[project_id][sample_id][flowcell_id].update({lane_id: row.value})
+                    bioinfo1[project_id][sample_id][flowcell_id].update({lane_id: row.value})
+
+                # building second view
+                bioinfo2 = bioinfo_data['run_lane_sample_view']
+                if project_id not in bioinfo2:
+                    bioinfo2[project_id] = {flowcell_id: {lane_id: {sample_id: row.value}}}
+                elif flowcell_id not in bioinfo2[project_id]:
+                    bioinfo2[project_id][flowcell_id] = {lane_id: {sample_id: row.value}}
+                elif lane_id not in bioinfo2[project_id][flowcell_id]:
+                    bioinfo2[project_id][flowcell_id][lane_id] = {sample_id: row.value}
+                elif sample_id not in bioinfo2[project_id][flowcell_id][lane_id]:
+                    bioinfo2[project_id][flowcell_id][lane_id][sample_id] = row.value
+                else: # here is an error
+                    bioinfo2[project_id][flowcell_id][lane_id][sample_id].update(row.value)
+
 
         project_view = self.application.projects_db.view('project/summary')
         application = ""
@@ -802,8 +818,6 @@ class BioinfoAnalysisHandler(SafeHandler):
         data = json.loads(self.request.body)
         saved_data = {}
         for run_id in data:
-            # import pdb
-            # pdb.set_trace()
             ## why run_id is a string??
             project, sample, run, lane = run_id.split(',')
             for row in v[[project, run, lane, sample]]:
@@ -827,19 +841,6 @@ class BioinfoAnalysisHandler(SafeHandler):
         self.set_status(200)
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(saved_data))
-
-#
-# class DeliveriesPageHandler(SafeHandler):
-#         """ Serves a page which lists the bioinformatics delivery statuses of active projects
-#         URL: /deliveries/)
-#         """
-#         def get(self):
-#             t = self.application.loader.load("deliveries.html")
-#             self.write(t.generate(gs_globals=self.application.gs_globals,
-#                                       user=self.get_current_user_name(),
-#                                       prettify = prettify_css_names
-#                                       ))
-
 
 
 class ProjectSummaryHandler(SafeHandler):
