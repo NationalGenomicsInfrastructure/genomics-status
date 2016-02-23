@@ -169,27 +169,6 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
     $(th).addClass(new_status);
 });
 
-//
-//function topParent(tr) {
-//    var parent_id = $(tr).attr('data-parent');
-//    // if tr = topParent = .bioinfo-project
-//    if (parent_id == undefined) {
-//        var table = $(tr).closest('table.table-bioinfo-status');
-//        console.log($(table));
-//        var top_parent = $(table).find('tr[data-parent="#'+$(tr).attr('id')+'"]').first();
-//        console.log($(top_parent));
-//         return $(top_parent);
-//    } else {
-//        var parent_tr = $(parent_id);
-//        if ($(parent_tr).hasClass('bioinfo-project')) {
-//            return $(tr);
-//        } else {
-//            return topParent(parent_tr);
-//        }
-//    }
-//};
-
-
 function topParent(tr) {
     var parent_id = $(tr).attr('data-parent');
     var parent_tr = $(parent_id);
@@ -391,7 +370,7 @@ function setChildrenStatus(td) {
         // because flowcell id can contain '-' as well
         var sample = sample_run_lane[0];
         var lane = sample_run_lane[sample_run_lane.length-1];
-        var flowcell = tr_id.replace(lowest_level+'-', '').replace('-'+lane,'').replace('-'+sample, '');
+        var flowcell = tr_id.replace(lowest_level+'-', '').replace('-'+lane,'').replace(sample+'-', '');
         return [sample, flowcell, lane];
     };
     var extract_run_lane_sample_id = function(tr_id) {
@@ -406,14 +385,12 @@ function setChildrenStatus(td) {
     $('.table-bioinfo-status:visible tr.'+lowest_level+':has(td)').each(function(){
         var tr = $(this);
         var tr_id = $(tr).attr('id');
-        console.log(tr_id);
         var sample_run_lane;
         if ($(table).hasClass('table-bioinfo-status-runview')) {
             sample_run_lane = extract_run_lane_sample_id(tr_id);
         } else {
             sample_run_lane = extract_sample_run_lane_id(tr_id);
         }
-        console.log(sample_run_lane);
         var sample = sample_run_lane[0];
         var flowcell = sample_run_lane[1];
         var lane = sample_run_lane[2];
@@ -446,9 +423,8 @@ function setChildrenStatus(td) {
         sample_run_lane_statuses[row_key] = row;
         sample_run_lane_statuses[row_key]['sample_status'] = status;
     });
-    console.log(sample_run_lane_statuses);
     $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
-    // from here it's copy&paste and i don't know what's happening
+
     var bioinfo_api_url = "/api/v1/bioinfo_analysis/"+project_id;
     $.ajax({
       type: 'POST',
