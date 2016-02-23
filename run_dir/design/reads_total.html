@@ -34,7 +34,7 @@ Description: Summing tool for the reads
     <p>Note that sample names do not have full project names such as <code>A.Project_15_03</code>, so these kinds of searches will not work.</p>
 {% elif readsdata %}
 <div style="width: 250px; position:fixed; left: 10px; top: 65px; height: 90%; overflow: auto;">
-    <h3 id="summary_table_section">Summary of Selected {% if readsdata["isHiseqX"] %}Cluster{% else %}Reads{% end %} Counts</h3>
+    <h3 id="summary_table_section">Summary of Selected {% if "isHiseqX" in readsdata %}Cluster{% else %}Reads{% end %} Counts</h3>
     <p><button id="rt_summary_download" class="btn btn-default">Download as tab-delimited file</button></p>
     <div id="summary_table"></div>
 </div>
@@ -55,7 +55,7 @@ Description: Summing tool for the reads
                         <th><a href="/project/{{ sample.split('_')[0] }}">{{ sample }}</a></th>
                         <th>%&nbsp;&gt;&nbsp;q30</th>
                         <th>Add</th>
-                        <th>{% if readsdata["isHiseqX"] %}Cluster{% else %}Reads{% end %}</th>
+                        <th>{% if "isHiseqX" in readsdata %}Cluster{% else %}Reads{% end %}</th>
                     </tr>
                 {% for d in readsdata[sample] %}
                     <tr class="reads_data">

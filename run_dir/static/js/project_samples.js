@@ -25,6 +25,16 @@ $(document).ready(function() {
   $('#Search-form').submit(function(e){
     e.preventDefault();
   });
+  
+  // Copy project samples table to clipboard
+  var clipboard = new Clipboard('#proj_samples_copy_table');
+  clipboard.on('success', function(e) {
+    e.clearSelection();
+    $('#proj_samples_copy_table').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+    setTimeout(function(){
+      $('#proj_samples_copy_table').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
+    }, 2000);
+  });
 
   $('body').on('click', '.search-action', function(e) {
     // Stop the checkbox from firing if clicked, plus stop bubbling
