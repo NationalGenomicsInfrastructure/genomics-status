@@ -31,15 +31,12 @@ Description: Shows a table with all projects.
 <div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading projects table..</div>
 <div id="page_content" style="display:none;">
 
-<form id="Search-form" class="form-inline marginBottom">
-  <div class="pull-right">
-    <div class="form-group" style="margin-right:15px;">
-      <div class="btn-group btn-group-sm" id="default_preset_buttons">
-        <button id="resetProjectCols" data-action="filterReset" type="button" class="search-action btn btn-default">Default</button>
-      </div>
-    </div>
-    <button class="pull-right btn btn-primary" data-toggle="modal" data-target="#projectFieldsModal">Filter Columns</button>
+<form id="Search-form" class="form-inline marginBottom text-right">
+  <button class="btn btn-sm btn-default" id="compare_projects_meta_btn">Compare meta (visible projects)</button>
+  <div class="btn-group btn-group-sm" id="default_preset_buttons">
+    <button id="resetProjectCols" data-action="filterReset" type="button" class="search-action btn btn-default">Default</button>
   </div>
+  <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#projectFieldsModal">Filter Columns</button>
 </form>
 
 <div id="project-list">

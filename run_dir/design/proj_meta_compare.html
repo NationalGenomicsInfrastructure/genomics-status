@@ -10,42 +10,42 @@ Description: Compare any meta value between multiple projects
 
 <h1>Project Meta Comparison Tool</h1>
 
-<form class="form-horizontal" id="project_chooser">
+<form id="project_chooser">
     <div class="form-group">
-        <label for="projects" class="col-sm-2 control-label">Choose Projects:</label>
-        <div class="col-sm-10">
-            <div class="input-group">
-                <input type="text" class="form-control" id="projects_meta_input" placeholder="Project IDs, eg. P1234 P2345 P3456">
-                <span class="input-group-btn">
-                    <button class="btn btn-primary" type="submit">Load data</button>
-                </span>
-            </div>
+        <label for="projects_meta_input" class="control-label">Choose Projects:</label>
+        <div class="input-group">
+            <input type="text" class="form-control" id="projects_meta_input" placeholder="Project IDs, eg. P1234 P2345 P3456" value="{{ ' '.join(pids) }}">
+            <span class="input-group-btn">
+                <button class="btn btn-primary" type="submit">Load data</button>
+            </span>
         </div>
     </div>
 </form>
 
-<div class="alert alert-success" id="status_box">
+<div class="alert alert-warning" id="status_box">
     <strong>Status:</strong>
-    <span>Awaiting user input&hellip;</span>
+    <span>Waiting for project IDs to be submitted&hellip;</span>
 </div>
 
 <form class="form-horizontal" id="meta_key_selector">
     <div class="form-group">
-        <label for="projects" class="col-sm-1 control-label">Y value:</label>
+        <label for="proj_meta_yvalue" class="col-sm-1 control-label">Y value:</label>
         <div class="col-sm-3">
             <select class="form-control" id="proj_meta_yvalue" disabled>
                 <option value="">[ select value ]</option>
             </select>
         </div>
-        <label for="projects" class="col-sm-1 control-label">X Value:</label>
+        <label for="proj_meta_xvalue" class="col-sm-1 control-label">X Value:</label>
         <div class="col-sm-3">
             <select class="form-control" id="proj_meta_xvalue" disabled>
                 <option value="">[ select value ]</option>
             </select>
         </div>
-        <label class="col-sm-1 control-label">Correlation:</label>
+        <label for="proj_meta_colvalue" class="col-sm-1 control-label">Colour by:</label>
         <div class="col-sm-3">
-            <p class="form-control-static" id="proj_meta_correlation">NA</p>
+            <select class="form-control" id="proj_meta_colvalue" disabled>
+                <option data-section="" value="">Project</option>
+            </select>
         </div>
     </div>
 </form>
@@ -58,6 +58,8 @@ Description: Compare any meta value between multiple projects
     </div>
     <div class="col-sm-4">
         <p><strong>Tip:</strong> Click and drag on the plot to zoom in.</p>
+        <p><strong>Warning:</strong> Values under <em>library_prep</em> are automatically chosen from the most recent prep and workflow. Treat data with caution.</p>
+        <p><strong>Correlation:</strong> <span id="proj_meta_correlation">NA</span></p>
         <div id="skipped_status_tip"></div>
     </div>
 </div>

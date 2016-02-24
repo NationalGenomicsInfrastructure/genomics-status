@@ -907,5 +907,6 @@ class RecCtrlDataHandler(SafeHandler):
 class ProjMetaCompareHandler(SafeHandler):
     """Handler for the project meta comparison page view"""
     def get(self):
+        pids = self.get_arguments("p")
         t = self.application.loader.load("proj_meta_compare.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals))
+        self.write(t.generate(gs_globals=self.application.gs_globals, pids=pids))
