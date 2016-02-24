@@ -839,6 +839,12 @@ These classes are cut and pasted wholesale into here from other packages.
 .table-colgroup > tbody > tr.border-bottom > th, .table-colgroup > tbody > tr > th.border-bottom {
   border-bottom: 1px solid #AAA;
 }
+.table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-qc,
+.table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-bp,
+.table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-row {
+    cursor: not-allowed;
+}
+
 .table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-qc,
 .table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-bp,
 .table-bioinfo-status:not(.bioinfo-status-disabled) th.bioinfo-status-th,
@@ -866,10 +872,6 @@ These classes are cut and pasted wholesale into here from other packages.
 }
 .bioinfo-status-runstate {
   text-transform: lowercase;
-}
-
-.bioinfo-status-runstate span.label {
-    cursor: pointer;
 }
 
 .bioinfo-status-disabled td {

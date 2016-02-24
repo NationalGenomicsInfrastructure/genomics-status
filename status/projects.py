@@ -442,52 +442,87 @@ class ProjectSamplesHandler(SafeHandler):
     brief information for each sample.
     URL: /project/([^/]*)
     """
-    def get(self, project):
+    def get(self, proj_id):
         t = self.application.loader.load("project_samples.html")
         sample_run_view = self.application.bioinfo_db.view('latest_data/sample_id')
         bioinfo_data = {'sample_run_lane_view': {}, 'run_lane_sample_view': {}}
         project_closed = False
         for row in sample_run_view.rows:
             project_id = row.key[0]
-            if project_id == project:
+            if project_id == proj_id:
                 flowcell_id = row.key[1]
                 lane_id = row.key[2]
                 sample_id = row.key[3]
                 # building first view
                 bioinfo1 = bioinfo_data['sample_run_lane_view']
                 if project_id not in bioinfo1:
-                    bioinfo1[project_id] = {sample_id: {flowcell_id: {lane_id: row.value}}}
-                elif sample_id not in bioinfo1[project_id]:
-                    bioinfo1[project_id][sample_id] = {flowcell_id: {lane_id: row.value}}
-                elif flowcell_id not in bioinfo1[project_id][sample_id]:
-                    bioinfo1[project_id][sample_id][flowcell_id] = {lane_id: row.value}
-                elif lane_id not in bioinfo1[project_id][sample_id][flowcell_id]:
-                    bioinfo1[project_id][sample_id][flowcell_id][lane_id] = row.value
+                    bioinfo1[project_id] = {'samples': {sample_id: {'flowcells': {flowcell_id: {'lanes': {lane_id: row.value}}}}}}
+                elif sample_id not in bioinfo1[project_id]['samples']:
+                    bioinfo1[project_id]['samples'][sample_id] = {'flowcells': {flowcell_id: {'lanes': {lane_id: row.value}}}}
+                elif flowcell_id not in bioinfo1[project_id]['samples'][sample_id]['flowcells']:
+                    bioinfo1[project_id]['samples'][sample_id]['flowcells'][flowcell_id] = {'lanes': {lane_id: row.value}}
+                elif lane_id not in bioinfo1[project_id]['samples'][sample_id]['flowcells'][flowcell_id]['lanes']:
+                    bioinfo1[project_id]['samples'][sample_id]['flowcells'][flowcell_id]['lanes'][lane_id] = row.value
                 else:
-                    bioinfo1[project_id][sample_id][flowcell_id].update({lane_id: row.value})
+                    bioinfo1[project_id]['samples'][sample_id]['flowcells'][flowcell_id]['lanes'][lane_id].update(row.value)
 
-                # building second view
+                # building the second view
                 bioinfo2 = bioinfo_data['run_lane_sample_view']
                 if project_id not in bioinfo2:
-                    bioinfo2[project_id] = {flowcell_id: {lane_id: {sample_id: row.value}}}
-                elif flowcell_id not in bioinfo2[project_id]:
-                    bioinfo2[project_id][flowcell_id] = {lane_id: {sample_id: row.value}}
-                elif lane_id not in bioinfo2[project_id][flowcell_id]:
-                    bioinfo2[project_id][flowcell_id][lane_id] = {sample_id: row.value}
-                elif sample_id not in bioinfo2[project_id][flowcell_id][lane_id]:
-                    bioinfo2[project_id][flowcell_id][lane_id][sample_id] = row.value
-                else: # here is an error
-                    bioinfo2[project_id][flowcell_id][lane_id][sample_id].update(row.value)
+                    bioinfo2[project_id] = {'flowcells': {flowcell_id: {'lanes': {lane_id: {'samples': {sample_id: row.value }}}}}}
+                elif flowcell_id not in bioinfo2[project_id]['flowcells']:
+                    bioinfo2[project_id]['flowcells'][flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: row.value }}}}
+                elif lane_id not in bioinfo2[project_id]['flowcells'][flowcell_id]['lanes']:
+                    bioinfo2[project_id]['flowcells'][flowcell_id]['lanes'][lane_id] = {'samples': {sample_id: row.value}}
+                elif sample_id not in bioinfo2[project_id]['flowcells'][flowcell_id]['lanes'][lane_id]['samples']:
+                    bioinfo2[project_id]['flowcells'][flowcell_id]['lanes'][lane_id]['samples'][sample_id] = row.value
+                else:
+                    bioinfo2[project_id]['flowcells'][flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(row.value)
 
+        for project_id, project in bioinfo_data['run_lane_sample_view'].items():
+            for flowcell_id, flowcell in project['flowcells'].items():
+                fc_statuses = []
+                for lane_id, lane in flowcell['lanes'].items():
+                    lane_statuses = []
+                    for sample_id, sample in lane['samples'].items():
+                        lane_statuses.append(sample['sample_status'])
+
+                    # my guess here agregation is already done from flowcell status
+                    # so this condition will most probably always be true
+                    if len(set(lane_statuses)) == 1:
+                        lane['lane_status'] = lane_statuses[0]
+                    else:
+                        lane['lane_status'] = lane_statuses[0]
+                    fc_statuses.append(lane['lane_status'])
+                if len(set(fc_statuses)) == 1:
+                    flowcell['flowcell_status'] = fc_statuses[0]
+                else:
+                    flowcell['flowcell_status'] = fc_statuses[0]
+
+        for project_id, project in bioinfo_data['sample_run_lane_view'].items():
+            for sample_id, sample in project['samples'].items():
+                sample_statuses = []
+                for flowcell_id, flowcell in sample['flowcells'].items():
+                    fc_statuses = []
+                    for lane_id, lane in flowcell['lanes'].items():
+                        fc_statuses.append(lane['sample_status'])
+                    if len(set(fc_statuses)) == 1:
+                        flowcell['flowcell_status'] = fc_statuses[0]
+                    else:
+                        flowcell['flowcell_status'] = fc_statuses[0]
+                    sample_statuses.append(flowcell['flowcell_status'])
+                # todo: define statuses for real
+                sample['sample_status'] = sample_statuses[0]
 
         project_view = self.application.projects_db.view('project/summary')
         application = ""
 
         for row in project_view.rows:
-            if row.key[1] == project:
+            if row.key[1] == proj_id:
                 if row.value.get('close_date'):
                     project_closed = True
-                application = row.value['application']
+                # sometimes
+                application = row.value.get('application')
                 break
 
         app_classes = {
@@ -504,20 +539,19 @@ class ProjectSamplesHandler(SafeHandler):
                 application = key
                 break
 
-
         worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
-        self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
-                                  user=self.get_current_user_name(),
-                                  columns=self.application.genstat_defaults.get('pv_columns'),
-                                  columns_sample=self.application.genstat_defaults.get('sample_columns'),
-                                  prettify=prettify_css_names,
-                                  worksets=worksets_view[project],
-                                  bioinfo=bioinfo_data,
-                                  app_classes=app_classes,
-                                  qc_done=False,
-                                  application=application,
-                                  project_closed=project_closed
-                                  ))
+        self.write(t.generate(gs_globals=self.application.gs_globals, project=proj_id,
+                              user=self.get_current_user_name(),
+                              columns=self.application.genstat_defaults.get('pv_columns'),
+                              columns_sample=self.application.genstat_defaults.get('sample_columns'),
+                              prettify=prettify_css_names,
+                              worksets=worksets_view[proj_id],
+                              bioinfo=bioinfo_data,
+                              app_classes=app_classes,
+                              qc_done=False,
+                              application=application,
+                              project_closed=project_closed
+                              ))
 
 class ProjectsHandler(SafeHandler):
     """ Serves a page with all projects listed, along with some brief info.
@@ -739,6 +773,7 @@ class ProjectQCDataHandler(SafeHandler):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(paths))
 
+
 class CharonProjectHandler(SafeHandler):
     """queries charon about the current project"""
     def get(self, projectid):
@@ -756,61 +791,11 @@ class CharonProjectHandler(SafeHandler):
             self.finish('<html><body>There was a problem connecting to charon, please try it again later. {}</body></html>'.format(r.reason))
 
 
+# not sure if this one is still used  somewhere
 class BioinfoAnalysisHandler(SafeHandler):
     """queries and posts about bioinfo analysis
-    URL: /api/v1/bioinfo_analysis/
-    URL: /api/v1/bioinfo_analysis/([^/]*)
-    URL: /api/v1/bioinfo_analysis/<pid>?dump_all=true"""
-    def get_singleproject(self, project_id):
-        return_obj = {}
-        v = self.application.bioinfo_db.view("latest_data/project_id")
-        for row in v[project_id]:
-            return_obj.update(row.value)
-        return return_obj
-
-    def get_all_project_status(self, status="any"):
-        return_obj = {}
-        if status == "Ongoing":
-            v = self.application.bioinfo_db.view("general/ongoing_projectids", group = True)
-        elif status == "Incoming":
-            v = self.application.bioinfo_db.view("general/incoming_projectids", group = True)
-        else:
-            v = self.application.bioinfo_db.view("general/projectids", group = True)
-
-        status_projects = set()
-        for row in v:
-            status_projects.add(row.key)
-        v = self.application.bioinfo_db.view("latest_data/project_id")
-        for row in v:
-            if row.key in status_projects:
-                try:
-                    return_obj[row.key].update(row.value)
-                except:
-                    return_obj[row.key] = row.value
-        return return_obj
-
-    def get_singleproject_dump(self, project_id):
-        return_obj = {}
-        v = self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
-        for row in v[[project_id, '']:[project_id, 'ZZZ']]:
-            return_obj[row.key[1]] = row.value
-        return return_obj
-
-    def get(self, project_id):
-        return_obj = {}
-        if project_id:
-            if self.get_argument('history', None):
-                return_obj = self.get_singleproject_dump(project_id)
-            else:
-                return_obj = self.get_singleproject(project_id)
-        else:
-            if self.get_argument('status', None):
-                return_obj = self.get_all_project_status(self.get_argument('status'))
-            else:
-                return_obj = self.get_all_project_status("Ongoing")
-
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(return_obj))
+    URL: /api/v1/bioinfo_analysis/ -> this one is not used anymore
+    URL: /api/v1/bioinfo_analysis/([^/]*)"""
 
     def post(self, project_id):
         v = self.application.bioinfo_db.view("full_doc/pj_run_lane_sample_to_doc")
@@ -822,22 +807,51 @@ class BioinfoAnalysisHandler(SafeHandler):
             project, sample, run, lane = run_id.split(',')
             for row in v[[project, run, lane, sample]]:
                 original_doc = row.value
-
                 timestamp=datetime.datetime.now().isoformat()
-                if 'values'	not in original_doc:
-                    original_doc['values'] = {}
-                original_doc['values'][timestamp] = data[run_id]
-                original_doc['values'][timestamp]['user'] = user
-                # it is not the same thing, or??
-                # original_doc['status'] = data[run_id]['sample_status']
-                original_doc['values'][timestamp]['sample_status'] = data[run_id]['sample_status']
-                try:
-                    self.application.bioinfo_db.save(original_doc)
-                    saved_data[run_id] = original_doc
-                except Exception, err:
-                    self.set_status(400)
-                    self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
-                    return None
+                # if the doc wasn't change, skip it
+                changed = False
+                if 'values' not in original_doc:
+                    for key, value in data[run_id]['qc'].items():
+                        if value != '?':
+                            changed = True
+                            original_doc['values'] = {}
+                else:
+                    last_timestamp = max(original_doc['values'].keys())
+                    last_change = original_doc['values'][last_timestamp]
+                    if last_change.get('qc') != data[run_id]['qc'] or last_change.get('bp') != data[run_id]['bp']:
+                        changed = True
+                if changed:
+                    original_doc['values'][timestamp] = data[run_id]
+                    original_doc['values'][timestamp]['user'] = user
+                    # calculate a new status
+                    ## if all bp values are set (!= '?')
+                    if all([value != '?' for value in data[run_id]['bp'].values()]):
+                        status = 'BP-done'
+                    ## if all qc values are set and none of bp values are set
+                    elif all([value != '?' for value in data[run_id]['qc'].values()]) \
+                            and not any([value != '?' for value in data[run_id]['bp'].values()]):
+                        status = 'QC-done'
+                    # if any of bp values are set
+                    elif any([value != '?' for value in data[run_id]['bp'].values()]):
+                        status = 'BP-ongoing'
+                    # if any of qc values are set
+                    elif any([value != '?' for value in data[run_id]['qc'].values()]):
+                        status = 'QC-ongoing'
+                    else:
+                        # This should never happen, unless we try to save entries which haven't been changed
+                        # (or another case which I haven't considered)
+                        pass
+                        # I could set some default value, but I'd better let it fail ->
+                        # otherwise it will display the wrong value and we may never figure out why
+
+                    original_doc['values'][timestamp]['sample_status'] = status # can fail here if something went wrong
+                    try:
+                        self.application.bioinfo_db.save(original_doc)
+                        saved_data[run_id] = original_doc
+                    except Exception, err:
+                        self.set_status(400)
+                        self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
+                        return None
         self.set_status(200)
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(saved_data))

@@ -59,11 +59,10 @@ class DeliveriesPageHandler(SafeHandler):
                                 'passed': [],
                                 'warnings': [],
                                 'failed': [],
-                                'NAs': [],
                                 'total': [],
                             }
                             sample_data = flowcells[flowcell_id][lane_id][sample_id]
-                            lane_statuses.append(sample_data.get('sample_status', 'New'))
+                            lane_statuses.append(sample_data['sample_status'])
                             qc_and_bp = {}
                             for key in sample_data.get('qc', {}).keys():
                                 checklist['total'].append(key)
@@ -78,8 +77,10 @@ class DeliveriesPageHandler(SafeHandler):
                                     checklist['warnings'].append(key)
                                 elif qc_and_bp[key] == 'Fail':
                                     checklist['failed'].append(key)
-                                else: #  sample_data['qc'][key] == '?':
-                                    checklist['NAs'].append(key)
+                                # don't count 'N/A'
+                                elif qc_and_bp[key] == 'N/A':
+                                    checklist['total'].remove(key)
+                                # else: do not do anything if '?' or anything else
 
                             if flowcell_id not in runs_bioinfo:
                                 runs_bioinfo[flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: {'checklist': checklist, 'status': sample_data.get('sample_status', '?')}}}}}

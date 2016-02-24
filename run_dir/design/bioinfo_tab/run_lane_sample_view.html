@@ -1,4 +1,4 @@
-{% for project_id in bioinfo['run_lane_sample_view'] %}
+{% for project_id, proj in bioinfo['run_lane_sample_view'].items() %}
   <table class="table table-bioinfo-status {% if project_closed %} bioinfo-status-disabled {% end %} table-bioinfo-status-runview"  style="display:none;">
     <colgroup span="2"></colgroup>
     <colgroup span="3"> </colgroup>
@@ -77,13 +77,14 @@
       {% end %}
       <th class="bioinfo-status-th-date datadelivered">Data Delivered</th>
     </tr>
-      {% for flowcell_id in sorted(bioinfo['run_lane_sample_view'][project_id]) %}
-        <tr class="bioinfo-fc" id="bioinfo-fc-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
+      {% for flowcell_id, flowcell in sorted(proj['flowcells'].items()) %}
+        <tr class="bioinfo-fc  {% if flowcell.get('flowcell_status') in ['Demultiplexing', 'Transferring', 'Sequencing'] %} bioinfo-status-disabled {% end %}"
+            id="bioinfo-fc-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
           <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ flowcell_id }}" class="bioinfo-expand">
             <span class="glyphicon glyphicon-chevron-right"></span></a></td>
           <td></td>
           <td><samp><a href="/flowcells/{{ flowcell_id.split('_')[0] }}_{{ flowcell_id.split('_')[-1] }}">{{ flowcell_id }}</a></samp></td>
-          <td class="bioinfo-status-runstate"><span class="label label-primary">New</span></td>
+          <td class="bioinfo-status-runstate"><span class="label label-primary">{{ flowcell['flowcell_status'] }}</span></td>
           <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
           <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
           <td class="bioinfo-status-qc unexpectedindexes unknown">?</td>
@@ -116,14 +117,15 @@
               </div>
             </td>
         </tr>
-        {% for lane_id in sorted(bioinfo['run_lane_sample_view'][project_id][flowcell_id].keys()) %}
-          <tr class="bioinfo-lane" id="bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}"
+        {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
+          <tr class="bioinfo-lane  {% if lane.get('lane_status') in ['Demultiplexing', 'Transferring', 'Sequencing'] %} bioinfo-status-disabled {% end %}"
+              id="bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}"
               data-parent="#bioinfo-fc-{{ flowcell_id }}" style="display:none;">
             <td></td>
             <td class="bioinfo-status-expand"><a href="#bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}" class="bioinfo-expand">
               <span class="glyphicon glyphicon-chevron-right"></span></a></td>
             <td><samp>{{ lane_id }}</samp></td>
-            <td class="bioinfo-status-runstate"><span class="label label-primary">New</span></td>
+            <td class="bioinfo-status-runstate"><span class="label label-primary">{{ lane['lane_status'] }}</span></td>
             <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
             <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
             <td class="bioinfo-status-qc unexpectedindexes unknown">?</td>
@@ -155,9 +157,11 @@
                 <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
             </td>
           </tr>
-          {% for sample_id, sample in sorted(bioinfo['run_lane_sample_view'][project_id][flowcell_id][lane_id].items()) %}
-            <tr class="bioinfo-sample" id="bioinfo-sample-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
-                data-parent="#bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
+          {% for sample_id, sample in sorted(lane['samples'].items()) %}
+            <tr class="bioinfo-sample  {% if sample.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing'] %} bioinfo-status-disabled {% end %}"
+                id="bioinfo-sample-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
+                data-parent="#bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}" style="display:none;"
+                {% if sample.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing'] %} disabled="disabled" {% end %}>
               <td></td>
               <td><a href="#bioinfo-sample-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"></a></td>
               <td class="bioinfo-status-expand"><samp>{{ sample_id }}</samp></td>
