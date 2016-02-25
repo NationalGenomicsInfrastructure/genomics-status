@@ -204,6 +204,7 @@
                   {{ lane.get('bp', {}).get('denovo_adaptertrimming', '?') }}</td>
                 <td class="bioinfo-status-bp denovo_kmerprofile {{ qc_css.get(lane.get('bp', {}).get('denovo_kmerprofile', '?'), 'unknown') }}">
                   {{ lane.get('bp', {}).get('denovo_kmerprofile', '?') }}</td>
+              {{ lane }}
               {% elif application == 'applications' %}
                 <td class="bioinfo-status-bp applications">?</td>
                 <td class="bioinfo-status-bp applications">?</td>

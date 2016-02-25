@@ -55,8 +55,9 @@ $(document).ready(function() {
     }
   });
 
+
   //Show user communication tab. Loading
-  $('#tab_com_content').click(function (e) {
+  $('#tab_communication').click(function (e) {
     load_tickets();
   });
 

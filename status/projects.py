@@ -847,7 +847,7 @@ class BioinfoAnalysisHandler(SafeHandler):
                     original_doc['values'][timestamp]['sample_status'] = status # can fail here if something went wrong
                     try:
                         self.application.bioinfo_db.save(original_doc)
-                        saved_data[run_id] = original_doc
+                        saved_data[run_id] = original_doc['values'][timestamp] # the last one
                     except Exception, err:
                         self.set_status(400)
                         self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
