@@ -131,12 +131,13 @@ class MainHandler(UnsafeHandler):
         latest = max([parser.parse(row.key) for row in view.rows])
         # assuming that status db is not being updated more often than every 5 minutes
         reduced_rows = [row for row in view.rows if latest - parser.parse(row.key) <= timedelta(minutes=5)]
-
+        instruments = self.application.server_status['instruments']
         server_status = {}
         for row in reduced_rows:
             server = row.value['name']
             if server not in server_status:
                 server_status[server] = row.value
+                server_status[server]['instrument'] = instruments[server] or '-'
                 row.value['used_percentage'] = float(row.value['used_percentage'].replace('%',''))
                 if row.value['used_percentage'] > 60:
                     server_status[server]['css_class'] = 'q-warning'

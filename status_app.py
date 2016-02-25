@@ -277,6 +277,9 @@ class Application(tornado.web.Application):
 
         # index page - to display quotas of uppmax projects
     	self.uppmax_projects = settings.get('uppmax_projects')
+        # to display instruments in the server status
+        self.server_status = settings.get('server_status')
+
 
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
