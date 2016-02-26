@@ -57,10 +57,27 @@ Description: Compare any meta value between multiple projects
         </div>
     </div>
     <div class="col-sm-4">
-        <p><strong>Tip:</strong> Click and drag on the plot to zoom in.</p>
-        <p><strong>Warning:</strong> Values under <em>library_prep</em> are automatically chosen from the most recent prep and workflow. Treat data with caution.</p>
-        <p><strong>Correlation:</strong> <span id="proj_meta_correlation">NA</span></p>
-        <div id="skipped_status_tip"></div>
+        <div class="well">
+            <p><strong>Tip:</strong> Click and drag on the plot to zoom in.</p>
+            <p><strong>Tip:</strong> Click a project name in the plot legend to toggle those samples.</p>
+            <p><strong>Warning:</strong> Values under <em>library_prep</em> are automatically chosen from the most recent prep and workflow. Treat data with caution.</p>
+        </div>
+        <div class="well">
+            <div class="form-group">
+                <strong>X axis:</strong>
+                <div class="btn-group meta_xLogLin_buttons">
+                    <button class="btn btn-sm btn-default active" value="linear">Linear</button>
+                    <button class="btn btn-sm btn-default" value="log">Log</button>
+                </div>
+                &nbsp; &nbsp; <strong>Y axis:</strong>
+                <div class="btn-group meta_yLogLin_buttons">
+                    <button class="btn btn-sm btn-default active" value="linear">Linear</button>
+                    <button class="btn btn-sm btn-default" value="log">Log</button>
+                </div>
+            </div>
+            <p><strong>Correlation:</strong> <span id="proj_meta_correlation">NA</span></p>
+            <div id="skipped_status_tip"></div>
+        </div>
     </div>
 </div>
 

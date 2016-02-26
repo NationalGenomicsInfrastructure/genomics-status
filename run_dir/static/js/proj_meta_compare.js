@@ -5,7 +5,6 @@
 // 1. Get data colouration to work
 // 2. Create a data export button
 // 3. Copy currently visible data to clipboard?
-// 4. Buttons for log axes
 
 
 
@@ -14,13 +13,15 @@
 project_data = [];
 key_min = {'base': {}, 'library_prep': {}};
 key_max = {'base': {}, 'library_prep': {}};
+xLogAxis = 'linear';
+yLogAxis = 'linear';
 
 // Wait for page to load
 $(function(){
     
     // Check to see if project ID box is filled on page load and submit if so.
     if($('#projects_meta_input').val() !== ''){
-      load_projects_meta();
+        load_projects_meta();
     }
     
     // Load data when form is submitted
@@ -29,6 +30,7 @@ $(function(){
         load_projects_meta();
     });
     
+    // Select dropdown box is changed
     $('#meta_key_selector select').change(function(){
         // Clear previous results
         if($('#proj_meta_plot').highcharts()) {
@@ -46,11 +48,29 @@ $(function(){
         
         if(key1 != '' && key2 != ''){
             plot_meta({
-              'y': [sect1, key1],
-              'x': [sect2, key2],
-              'color': [sect3, key3],
+                'y': [sect1, key1],
+                'x': [sect2, key2],
+                'color': [sect3, key3],
             });
         }
+    });
+    
+    // Change between log and linear axes
+    $('.meta_xLogLin_buttons button').click(function(e){
+        e.preventDefault();
+        $('.meta_xLogLin_buttons button').removeClass('active');
+        $(this).addClass('active');
+        if($(this).val() == 'log'){ xLogAxis = 'logarithmic'; }
+        else { xLogAxis = 'linear'; }
+        $('#proj_meta_plot').highcharts().xAxis[0].update({ type: xLogAxis});
+    });
+    $('.meta_yLogLin_buttons button').click(function(e){
+        e.preventDefault();
+        $('.meta_yLogLin_buttons button').removeClass('active');
+        $(this).addClass('active');
+        if($(this).val() == 'log'){ yLogAxis = 'logarithmic'; }
+        else { yLogAxis = 'linear'; }
+        $('#proj_meta_plot').highcharts().yAxis[0].update({ type: yLogAxis});
     });
     
 });
@@ -59,144 +79,144 @@ $(function(){
 // Main function that fires when project IDs are filled in and the form
 // is submitted. Loads page.
 function load_projects_meta(){
-  
-  // Destroy previous work
-  // Clear previous results
-  if($('#proj_meta_plot').highcharts()) {
-      $('#proj_meta_plot').highcharts().destroy();
-  }
-  $('#proj_meta_plot').html('<p class="text-center text-muted">Please select an X and a Y variable.</p>');
-  $('#proj_meta_correlation').text('?');
-  $('#proj_meta_yvalue, #proj_meta_xvalue').prop('disabled', true).html('<option value="">[ select value ]</option>');
-  $('#proj_meta_colvalue').prop('disabled', true).html('<option data-section="" value="">Project</option>');
-  
-  // Collect the user supplied project IDs
-  var projects_str = $('#projects_meta_input').val();
-  var projects_raw = projects_str.split(/[\s+,;]/);
-  
-  // Clean up the user input
-  var projects = [];
-  for (var i = 0; i < projects_raw.length; i++) {
-      var pid = projects_raw[i];
-      pid = pid.replace(/[^P\d]/, '');
-      if(/P\d{3,5}/.test(pid)){
-          projects.push(pid);
-      } else {
-          $('#status_box').removeClass().addClass('alert alert-danger');
-          $('#status_box span').html('Error - project <code>'+projects_raw[i]+"</code> (<code>"+pid+"</code>) doesn't look like a project ID.");
-          return;
-      }
-  }
-  
-  // Update the status box
-  var completed_ajax = 0;
-  var num_samples = 0;
-  $('#status_box').removeClass().addClass('alert alert-info');
-  $('#status_box span').html('Loading '+projects.length+' projects: <code>'+projects.join('</code>, <code>')+'</code>.'+
-       '<div class="progress" style="margin: 15px 0 0;"><div id="project_status_pbar" class="progress-bar" style="width: 0%;">'+
-       '<span id="project_status_counter">0</span> projects loaded (<span id="project_status_sample_counter">0</span> samples)</div></div>');
-  
-  // Ajax caller function
-  var ajax_caller = function(pid) {
-      var this_url = '/api/v1/project/'+pid;
-      return $.getJSON(this_url, function(data) {
-          project_data[pid] = data;
-          completed_ajax++;
-          num_samples += Object.keys(data).length;
-          $('#project_status_counter').text(completed_ajax);
-          $('#project_status_pbar').css('width', ((completed_ajax/projects.length)*100)+'%' )
-          $('#project_status_sample_counter').text(num_samples);
-      });
-  };
-  
-  // Kick off all of the JSON ajax calls
-  var ajax_calls = [];
-  for (var i = 0; i < projects.length; i++) {
-      ajax_calls.push( ajax_caller( projects[i] ) );
-  }
-  
-  // Fire when all of the data has been loaded
-  $.when.apply(this, ajax_calls).done(function() {
-      // Update the status box
-      $('#status_box').removeClass().addClass('alert alert-success');
-      $('#status_box span').html(completed_ajax+' projects loaded ('+num_samples+' samples). <strong id="second_level_stats">Next: choose X and Y values to plot</strong>');
-      
-      // Collect available shared keys
-      numeric_keys = {'base': [], 'library_prep': []};
-      for (var pid in project_data){
-          for (var s_name in project_data[pid]){
-              for (var attr in project_data[pid][s_name]){
-                  // Library prep fields
-                  if (attr == 'library_prep'){
-                      var lp = project_data[pid][s_name][attr];
-                      var lib_keys = Object.keys(lp);
-                      var ll = lib_keys.sort().pop();
-                      var validation = lp[ll]['library_validation'];
-                      var val_keys = Object.keys(validation);
-                      var lv = val_keys.sort().pop();
-                      for (var l_attr in validation[lv]){
-                          if(validation[lv][l_attr].constructor === Number){
-                              if(numeric_keys['library_prep'].indexOf(l_attr) == -1) {
-                                  numeric_keys['library_prep'].push(l_attr);
-                                  key_min['library_prep'][l_attr] = null;
-                                  key_max['library_prep'][l_attr] = null;
-                              }
-                              key_min['library_prep'][l_attr] = Math.min(validation[lv][l_attr], key_min['library_prep'][l_attr]);
-                              key_max['library_prep'][l_attr] = Math.max(validation[lv][l_attr], key_min['library_prep'][l_attr]);
-                          }    
-                      }
-                  }
-                  
-                  // 1D Nested arrays
-                  else if(project_data[pid][s_name][attr].constructor === Object){
-                      // Create array if we haven't seen this before
-                      if(!numeric_keys.hasOwnProperty(attr)){
-                          numeric_keys[attr] = [];
-                          key_min[attr] = {};
-                          key_max[attr] = {};
-                      }
-                      for (var s_attr in project_data[pid][s_name][attr]){
-                          if(project_data[pid][s_name][attr][s_attr].constructor === Number){
-                              if(numeric_keys[attr].indexOf(s_attr) == -1) {
-                                  numeric_keys[attr].push(s_attr);
-                                  key_min[attr][s_attr] = null;
-                                  key_max[attr][s_attr] = null;
-                              }
-                              key_min[attr][s_attr] = Math.min(project_data[pid][s_name][attr][s_attr], key_min[attr][s_attr]);
-                              key_max[attr][s_attr] = Math.max(project_data[pid][s_name][attr][s_attr], key_max[attr][s_attr]);
-                          }    
-                      }
-                      // Delete if no numeric keys found
-                      if(numeric_keys[attr].length == 0){
-                          delete numeric_keys[attr];
-                          delete key_min[attr];
-                          delete key_max[attr];
-                      }
-                  }
-                  // Base level keys
-                  else if(project_data[pid][s_name][attr].constructor === Number){
-                      if(numeric_keys['base'].indexOf(attr) == -1) {
-                          numeric_keys['base'].push(attr);
-                          key_min['base'][attr] = null;
-                          key_max['base'][attr] = null;
-                      }
-                      key_min['base'][attr] = Math.min(project_data[pid][s_name][attr], key_min['base'][attr]);
-                      key_max['base'][attr] = Math.max(project_data[pid][s_name][attr], key_min['base'][attr]);
-                  }
-              }
-          }
-      };
-      for (var sect in numeric_keys){
-          var group = $('<optgroup label="'+sect+'" />');
-          for (var key in numeric_keys[sect]){
-              group.append('<option data-section="'+sect+'" value="'+numeric_keys[sect][key]+'">'+numeric_keys[sect][key]+'</option>');
-          }
-          group.appendTo($('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue'));
-          $('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue').prop('disabled', false);
-      }
-      
-      console.log(project_data);
-  });
+    
+    // Destroy previous work
+    // Clear previous results
+    if($('#proj_meta_plot').highcharts()) {
+        $('#proj_meta_plot').highcharts().destroy();
+    }
+    $('#proj_meta_plot').html('<p class="text-center text-muted">Please select an X and a Y variable.</p>');
+    $('#proj_meta_correlation').text('?');
+    $('#proj_meta_yvalue, #proj_meta_xvalue').prop('disabled', true).html('<option value="">[ select value ]</option>');
+    $('#proj_meta_colvalue').prop('disabled', true).html('<option data-section="" value="">Project</option>');
+    
+    // Collect the user supplied project IDs
+    var projects_str = $('#projects_meta_input').val();
+    var projects_raw = projects_str.split(/[\s+,;]/);
+    
+    // Clean up the user input
+    var projects = [];
+    for (var i = 0; i < projects_raw.length; i++) {
+        var pid = projects_raw[i];
+        pid = pid.replace(/[^P\d]/, '');
+        if(/P\d{3,5}/.test(pid)){
+            projects.push(pid);
+        } else {
+            $('#status_box').removeClass().addClass('alert alert-danger');
+            $('#status_box span').html('Error - project <code>'+projects_raw[i]+"</code> (<code>"+pid+"</code>) doesn't look like a project ID.");
+            return;
+        }
+    }
+    
+    // Update the status box
+    var completed_ajax = 0;
+    var num_samples = 0;
+    $('#status_box').removeClass().addClass('alert alert-info');
+    $('#status_box span').html('Loading '+projects.length+' projects: <code>'+projects.join('</code>, <code>')+'</code>.'+
+         '<div class="progress" style="margin: 15px 0 0;"><div id="project_status_pbar" class="progress-bar" style="width: 0%;">'+
+         '<span id="project_status_counter">0</span> projects loaded (<span id="project_status_sample_counter">0</span> samples)</div></div>');
+    
+    // Ajax caller function
+    var ajax_caller = function(pid) {
+        var this_url = '/api/v1/project/'+pid;
+        return $.getJSON(this_url, function(data) {
+            project_data[pid] = data;
+            completed_ajax++;
+            num_samples += Object.keys(data).length;
+            $('#project_status_counter').text(completed_ajax);
+            $('#project_status_pbar').css('width', ((completed_ajax/projects.length)*100)+'%' )
+            $('#project_status_sample_counter').text(num_samples);
+        });
+    };
+    
+    // Kick off all of the JSON ajax calls
+    var ajax_calls = [];
+    for (var i = 0; i < projects.length; i++) {
+        ajax_calls.push( ajax_caller( projects[i] ) );
+    }
+    
+    // Fire when all of the data has been loaded
+    $.when.apply(this, ajax_calls).done(function() {
+        // Update the status box
+        $('#status_box').removeClass().addClass('alert alert-success');
+        $('#status_box span').html(completed_ajax+' projects loaded ('+num_samples+' samples). <strong id="second_level_stats">Next: choose X and Y values to plot</strong>');
+        
+        // Collect available shared keys
+        numeric_keys = {'base': [], 'library_prep': []};
+        for (var pid in project_data){
+            for (var s_name in project_data[pid]){
+                for (var attr in project_data[pid][s_name]){
+                    // Library prep fields
+                    if (attr == 'library_prep'){
+                        var lp = project_data[pid][s_name][attr];
+                        var lib_keys = Object.keys(lp);
+                        var ll = lib_keys.sort().pop();
+                        var validation = lp[ll]['library_validation'];
+                        var val_keys = Object.keys(validation);
+                        var lv = val_keys.sort().pop();
+                        for (var l_attr in validation[lv]){
+                            if(validation[lv][l_attr].constructor === Number){
+                                if(numeric_keys['library_prep'].indexOf(l_attr) == -1) {
+                                    numeric_keys['library_prep'].push(l_attr);
+                                    key_min['library_prep'][l_attr] = null;
+                                    key_max['library_prep'][l_attr] = null;
+                                }
+                                key_min['library_prep'][l_attr] = Math.min(validation[lv][l_attr], key_min['library_prep'][l_attr]);
+                                key_max['library_prep'][l_attr] = Math.max(validation[lv][l_attr], key_min['library_prep'][l_attr]);
+                            }    
+                        }
+                    }
+                    
+                    // 1D Nested arrays
+                    else if(project_data[pid][s_name][attr].constructor === Object){
+                        // Create array if we haven't seen this before
+                        if(!numeric_keys.hasOwnProperty(attr)){
+                            numeric_keys[attr] = [];
+                            key_min[attr] = {};
+                            key_max[attr] = {};
+                        }
+                        for (var s_attr in project_data[pid][s_name][attr]){
+                            if(project_data[pid][s_name][attr][s_attr].constructor === Number){
+                                if(numeric_keys[attr].indexOf(s_attr) == -1) {
+                                    numeric_keys[attr].push(s_attr);
+                                    key_min[attr][s_attr] = null;
+                                    key_max[attr][s_attr] = null;
+                                }
+                                key_min[attr][s_attr] = Math.min(project_data[pid][s_name][attr][s_attr], key_min[attr][s_attr]);
+                                key_max[attr][s_attr] = Math.max(project_data[pid][s_name][attr][s_attr], key_max[attr][s_attr]);
+                            }    
+                        }
+                        // Delete if no numeric keys found
+                        if(numeric_keys[attr].length == 0){
+                            delete numeric_keys[attr];
+                            delete key_min[attr];
+                            delete key_max[attr];
+                        }
+                    }
+                    // Base level keys
+                    else if(project_data[pid][s_name][attr].constructor === Number){
+                        if(numeric_keys['base'].indexOf(attr) == -1) {
+                            numeric_keys['base'].push(attr);
+                            key_min['base'][attr] = null;
+                            key_max['base'][attr] = null;
+                        }
+                        key_min['base'][attr] = Math.min(project_data[pid][s_name][attr], key_min['base'][attr]);
+                        key_max['base'][attr] = Math.max(project_data[pid][s_name][attr], key_min['base'][attr]);
+                    }
+                }
+            }
+        };
+        for (var sect in numeric_keys){
+            var group = $('<optgroup label="'+sect+'" />');
+            for (var key in numeric_keys[sect]){
+                group.append('<option data-section="'+sect+'" value="'+numeric_keys[sect][key]+'">'+numeric_keys[sect][key]+'</option>');
+            }
+            group.appendTo($('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue'));
+            $('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue').prop('disabled', false);
+        }
+        
+        console.log(project_data);
+    });
 }
 
 
@@ -265,7 +285,7 @@ function plot_meta(keys){
             stat_string += '<code>'+pid+'</code>: '+count+' out of ' + Object.keys(project_data[pid]).length + ' samples skipped<br>';
           }
         });
-        stat_string += ' <button class="btn btn-default btn-sm" onClick="$(\'#skipped_samples_list\').slideToggle();">show / hide all samples</button>'+
+        stat_string += ' <br><button class="btn btn-default btn-sm" onClick="$(\'#skipped_samples_list\').slideToggle();">show / hide hidden sample names</button>'+
         '<pre id="skipped_samples_list" style="display:none;">'+skipped_samples.join("\n")+'</pre>'
         $('#skipped_status_tip').html(stat_string);
     } else {
@@ -282,8 +302,13 @@ function plot_meta(keys){
             type: 'scatter',
             zoomType: 'xy',
             height: 800,
+            plotBorderWidth: 1,
+            plotBackgroundColor: '#FAFAFA',
             events: {
                 load: function(event) {
+                    calc_corr_score(this.series);
+                },
+                redraw: function(event) {
                     calc_corr_score(this.series);
                 }
             }
@@ -294,12 +319,16 @@ function plot_meta(keys){
         yAxis: {
             title: {
                 text: ytitle
-            }
+            },
+            type: xLogAxis,
+            lineWidth: 1,
+            gridLineWidth: 0
         },
         xAxis: {
             title: {
                 text: xtitle
             },
+            type: yLogAxis,
         },
         legend: {
             layout: 'vertical',
@@ -347,40 +376,44 @@ function plot_meta(keys){
 // series object
 function calc_corr_score(plot_data){
   
-  // Initialise variables
-  var y_sum = 0;
-  var x_sum = 0;
-  var y_sqsum = 0;
-  var x_sqsum = 0;
-  var p_sum = 0;
-  var num_samps = 0;
-  
-  // Loop through all of the data points
-  for (var s in plot_data){
-      for (var d in plot_data[s]['data']){
-          var xval = plot_data[s]['data'][d]['x'];
-          var yval = plot_data[s]['data'][d]['y'];
-          x_sum += xval;
-          y_sum += yval;
-          x_sqsum += Math.pow(xval, 2);
-          y_sqsum += Math.pow(yval, 2);
-          p_sum += parseFloat(yval) * parseFloat(xval);
-          num_samps += 1;
-      }
-  }
-  
-  // Calculate the correlation coefficient
-  var corr_co = 0;
-  var num = p_sum - (y_sum * x_sum / num_samps);
-  var den = Math.sqrt((y_sqsum - Math.pow(y_sum, 2) / num_samps) * (x_sqsum - Math.pow(x_sum, 2) / num_samps));
-  if (den !== 0){
-      corr_co = num / den;
-  }
-  var lclass = 'default';  
-  if(corr_co > 0.8 || corr_co < -0.8){ lclass = 'success'; }
-  else if(corr_co > 0.6 || corr_co < -0.6){ lclass = 'info'; }
-  else if(corr_co > 0.4 || corr_co < -0.4){ lclass = 'default'; }
-  else if(corr_co > 0.2 || corr_co < -0.2){ lclass = 'warning'; }
-  else if(corr_co.isNaN()){ lclass = 'danger'; }
-  $('#proj_meta_correlation').html('<span class="label label-'+lclass+'">'+corr_co.toFixed(3)+'</span>');
+    // Initialise variables
+    var y_sum = 0;
+    var x_sum = 0;
+    var y_sqsum = 0;
+    var x_sqsum = 0;
+    var p_sum = 0;
+    var num_samps = 0;
+    
+    // Loop through all of the data points
+    for (var s in plot_data){
+        if(plot_data[s]['visible'] == true){
+            for (var d in plot_data[s]['data']){
+                var xval = plot_data[s]['data'][d]['x'];
+                var yval = plot_data[s]['data'][d]['y'];
+                if(xval !== undefined && yval !== undefined){
+                    x_sum += xval;
+                    y_sum += yval;
+                    x_sqsum += Math.pow(xval, 2);
+                    y_sqsum += Math.pow(yval, 2);
+                    p_sum += parseFloat(yval) * parseFloat(xval);
+                    num_samps += 1;
+                }
+            }
+        }
+    }
+    
+    // Calculate the correlation coefficient
+    var corr_co = 0;
+    var num = p_sum - (y_sum * x_sum / num_samps);
+    var den = Math.sqrt((y_sqsum - Math.pow(y_sum, 2) / num_samps) * (x_sqsum - Math.pow(x_sum, 2) / num_samps));
+    if (den !== 0){
+        corr_co = num / den;
+    }
+    var lclass = 'default';  
+    if(corr_co > 0.8 || corr_co < -0.8){ lclass = 'success'; }
+    else if(corr_co > 0.6 || corr_co < -0.6){ lclass = 'info'; }
+    else if(corr_co > 0.4 || corr_co < -0.4){ lclass = 'default'; }
+    else if(corr_co > 0.2 || corr_co < -0.2){ lclass = 'warning'; }
+    else if(isNaN(corr_co)){ lclass = 'danger'; }
+    $('#proj_meta_correlation').html('<span class="label label-'+lclass+'">'+corr_co.toFixed(3)+'</span> ('+num_samps+' samples)');
 }
