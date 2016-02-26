@@ -823,27 +823,34 @@ class BioinfoAnalysisHandler(SafeHandler):
                 if changed:
                     original_doc['values'][timestamp] = data[run_id]
                     original_doc['values'][timestamp]['user'] = user
+                    import pdb
+                    pdb.set_trace()
                     # calculate a new status
-                    ## if all bp values are set (!= '?')
-                    if all([value != '?' for value in data[run_id]['bp'].values()]):
+                    ## if all qc and bp values are set (!= '?')
+                    if all([value != '?' for value in data[run_id]['bp'].values()]) and all([value != '?' for value in data[run_id]['qc'].values()]):
                         status = 'BP-done'
+                    ## if all qc values and any of bp values are set
+                    elif all([value != '?' for value in data[run_id]['qc'].values()]) and any([value != '?' for value in data[run_id]['bp'].values()]):
+                        status = 'BP-ongoing'
                     ## if all qc values are set and none of bp values are set
                     elif all([value != '?' for value in data[run_id]['qc'].values()]) \
                             and not any([value != '?' for value in data[run_id]['bp'].values()]):
                         status = 'QC-done'
-                    # if any of bp values are set
-                    elif any([value != '?' for value in data[run_id]['bp'].values()]):
-                        status = 'BP-ongoing'
-                    # if any of qc values are set
+                    # if any of qc values are set (doesn't matter if any or all bp set or not)
                     elif any([value != '?' for value in data[run_id]['qc'].values()]):
                         status = 'QC-ongoing'
+                    # if all qc are unset and any of bp is set
+                    elif all([value == '?' for value in data[run_id]['qc'].values()]) and any([value != '?' for value in data[run_id]['bp'].values()]):
+                        status = 'QC-ongoing'
+                    # if all qc and all bp are not set
+                    elif all([value == '?' for value in data[run_id]['qc'].values()]) and all([value == '?' for value in data[run_id]['bp'].values()]):
+                        status = 'New'
                     else:
                         # This should never happen, unless we try to save entries which haven't been changed
                         # (or another case which I haven't considered)
                         pass
                         # I could set some default value, but I'd better let it fail ->
                         # otherwise it will display the wrong value and we may never figure out why
-
                     original_doc['values'][timestamp]['sample_status'] = status # can fail here if something went wrong
                     try:
                         self.application.bioinfo_db.save(original_doc)

@@ -138,6 +138,29 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
     });
     $(tr).removeClass(tr_status);
     $(tr).addClass(new_status);
+    // todo: check sample_status
+    var bp_tds = $(tr).children('td.bioinfo-status-bp');
+    // if no bp set
+    var bp_statuses = [];
+    $.each(bp_tds, function(i, bp){
+        var bp_status = $(bp).text();
+        if (bp_statuses.indexOf(bp_status) == -1) {
+            bp_statuses.push(bp_status);
+        }
+    });
+    var new_sample_status;
+    if (bp_statuses.length == 1 && bp_statuses[0] == '?') {
+        new_sample_status = 'QC-done';
+    } else if (bp_statuses.indexOf('?') != -1) {
+        new_sample_status = 'BP-ongoing';
+    } else if (bp_statuses.indexOf('?') == -1) {
+        new_sample_status = 'BP-done';
+    }
+    console.log($(tr));
+    var span = $(tr).find('td.bioinfo-status-runstate span.label');
+    console.log($(span));
+    $(span).text(new_sample_status);
+    setChildrenSpanStatus(span);
 });
 
 // double click on header -> set all the values
@@ -525,17 +548,58 @@ function updateSecondTable(saved_data) {
 
 //
 //
-//var sample_statuses = {'New': 'label-primary', 'QC-ongoing': 'label-danger',
-//    'QC-done': 'label-warning', 'BP-ongoing': 'label-default', 'BP-done': 'label-success'};
-//var sample_classes = ['label-primary', 'label-danger', 'label-warning', 'label-default', 'label-success'];
-//var sample_values = ['New', 'QC-ongoing', 'QC-done', 'BP-ongoing', 'BP-done'];
+var sample_statuses = {
+    'Demultiplexing': 'label-default',
+    'Transferring': 'label-default',
+    'Sequencing': 'label-default',
+    'New': 'label-primary',
+    'QC-ongoing': 'label-warning',
+    'QC-done': 'label-success',
+    'BP-ongoing': 'label-danger',
+    'BP-done': 'label-success'
+    };
+var sample_classes = ['label-default', 'label-default', 'label-default', 'label-primary', 'label-warning', 'label-success', 'label-danger', 'label-success'];
+var sample_values = ['Demultiplexing', 'Transferring', 'Sequencing', 'New', 'QC-ongoing', 'QC-done', 'BP-ongoing', 'BP-done'];
 //
 //
 //$('td.bioinfo-status-runstate span.label').click(function(e) {
 //    setChildrenSpanStatus($(this));
 //    setParentSpanStatus($(this));
 //});
-//
+
+
+// assuming that the status has been just updated, but not the class
+function setChildrenSpanStatus(span) {
+    console.log($(span));
+    var new_status = $(span).text();
+    console.log(new_status);
+    var new_class = sample_statuses[new_status];
+    console.log(new_class);
+    var current_class = $(span).attr('class').split(/\s/)[1]; // label-primary
+
+//    var current_status = $(span).text();
+//    var next_status = sample_values[(sample_values.indexOf(current_status)+1) % sample_values.length];
+//    var current_class = sample_statuses[current_status];
+//    var next_class = sample_statuses[next_status];
+
+//    $(span).text(new_status);
+    $(span).removeClass(current_class);
+    $(span).addClass(new_class);
+
+    var tr = $(span).parent().parent();
+    // set the same status for all children
+    var child_trs = getChildTrs(tr);
+    // if tr is lane, child_trs = []
+    $.each(child_trs, function(index, child_tr) {
+        var child_span = $(child_tr).find('td.bioinfo-status-runstate span.label');
+        $(child_span).text(new_status);
+        var child_class = $(child_span).attr('class').split(/\s/)[1];
+        $(child_span).removeClass(child_class); // remove another class!!
+        $(child_span).addClass(new_class);
+    });
+};
+
+//// assuming that the status has been just updated
 //function setChildrenSpanStatus(span) {
 //    var current_status = $(span).text();
 //    var next_status = sample_values[(sample_values.indexOf(current_status)+1) % sample_values.length];
@@ -558,6 +622,7 @@ function updateSecondTable(saved_data) {
 //        $(child_span).addClass(next_class);
 //    });
 //};
+
 //
 //function setParentSpanStatus(span) {
 //    var tr = $(span).parent().parent();

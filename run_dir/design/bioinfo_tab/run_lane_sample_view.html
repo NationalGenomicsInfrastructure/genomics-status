@@ -84,7 +84,7 @@
             <span class="glyphicon glyphicon-chevron-right"></span></a></td>
           <td></td>
           <td><samp><a href="/flowcells/{{ flowcell_id.split('_')[0] }}_{{ flowcell_id.split('_')[-1] }}">{{ flowcell_id }}</a></samp></td>
-          <td class="bioinfo-status-runstate"><span class="label label-primary">{{ flowcell['flowcell_status'] }}</span></td>
+          <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(flowcell['flowcell_status'], 'label-default') }}">{{ flowcell['flowcell_status'] }}</span></td>
           <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
           <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
           <td class="bioinfo-status-qc unexpectedindexes unknown">?</td>
@@ -125,7 +125,7 @@
             <td class="bioinfo-status-expand"><a href="#bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}" class="bioinfo-expand">
               <span class="glyphicon glyphicon-chevron-right"></span></a></td>
             <td><samp>{{ lane_id }}</samp></td>
-            <td class="bioinfo-status-runstate"><span class="label label-primary">{{ lane['lane_status'] }}</span></td>
+            <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(lane['lane_status'], 'label-default') }}">{{ lane['lane_status'] }}</span></td>
             <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
             <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
             <td class="bioinfo-status-qc unexpectedindexes unknown">?</td>

@@ -1,6 +1,15 @@
 
 <div class="tab-pane fade" id="tab_bioinfo_content">
-  {% set status_css={'New': 'label-primary', 'QC-ongoing': 'label-danger', 'QC-done': 'label-warning', 'BP-ongoing': 'label-default', 'BP-done': 'label-success'} %}
+  {% set status_css={
+    'Demultiplexing': 'label-default',
+    'Transferring': 'label-default',
+    'Sequencing': 'label-default',
+    'New': 'label-primary',
+    'QC-ongoing': 'label-warning',
+    'QC-done': 'label-success',
+    'BP-ongoing': 'label-danger',
+    'BP-done': 'label-success'
+    }; %}
   {% set qc_css={ '?': 'unknown', 'Pass': 'success', 'Warning': 'warning', 'Fail': 'danger', 'N/A': 'active'} %}
   <form class="form-inline">
     <div class="form-group">
