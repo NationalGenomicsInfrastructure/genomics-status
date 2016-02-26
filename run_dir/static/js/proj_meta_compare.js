@@ -326,7 +326,7 @@ function plot_meta(keys){
     
     // List skipped samples
     if(skipped_samples.length > 0){
-        var stat_string = '<strong>Warning:</strong> '+skipped_samples.length+' samples out of ' + num_data + ' skipped:<br>';
+        var stat_string = '<strong>Warning:</strong> '+skipped_samples.length+' samples out of ' + (num_data + skipped_samples.length) + ' skipped:<br>';
         $.each(proj_skipped, function(pid, count){
           if(count > 0){
             stat_string += '<code>'+pid+'</code>: '+count+' out of ' + Object.keys(project_data[pid]).length + ' samples skipped<br>';
@@ -402,7 +402,7 @@ function plot_meta(keys){
         plotOptions: {
             scatter: {
                 marker: {
-                    radius: 3,
+                    radius: 4,
                     lineWidth: docol ? 1 : 0,
                     lineColor: '#999',
                     states: {
