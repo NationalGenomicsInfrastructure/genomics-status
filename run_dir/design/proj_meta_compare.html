@@ -61,6 +61,7 @@ Description: Compare any meta value between multiple projects
             <p><strong>Tip:</strong> Click and drag on the plot to zoom in.</p>
             <p><strong>Tip:</strong> Click a project name in the plot legend to toggle those samples.</p>
             <p><strong>Warning:</strong> Values under <em>library_prep</em> are automatically chosen from the most recent prep and workflow. Treat data with caution.</p>
+            <p><button class="btn btn-sm btn-default" id="projMeta_downloadAll">Download all data</button></p>
         </div>
         <div class="well">
             <div class="form-group">
@@ -86,6 +87,7 @@ Description: Compare any meta value between multiple projects
 
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript" src="/static/js/FileSaver.min.js"></script>
 <script type="text/javascript" src="/static/js/proj_meta_compare.js?v={{ gs_globals['git_commit'] }}" ></script>
 {% end %}
 

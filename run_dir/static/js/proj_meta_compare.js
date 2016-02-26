@@ -3,8 +3,6 @@
 // TODO
 //
 // 1. Get data colouration to work
-// 2. Create a data export button
-// 3. Copy currently visible data to clipboard?
 
 
 
@@ -53,6 +51,12 @@ $(function(){
                 'color': [sect3, key3],
             });
         }
+    });
+    
+    // Download all data button
+    $('#projMeta_downloadAll').click(function(e){
+        e.preventDefault();
+        pmeta_download();
     });
     
     // Change between log and linear axes
@@ -314,7 +318,11 @@ function plot_meta(keys){
             }
         },
         title: {
-            text: 'Comparing '+ytitle+' against '+xtitle
+            text: '<u>'+ytitle+'</u> compared to <u>'+xtitle+'</u>',
+            useHTML: true
+        },
+        credits: {
+            enabled: false
         },
         yAxis: {
             title: {
@@ -416,4 +424,66 @@ function calc_corr_score(plot_data){
     else if(corr_co > 0.2 || corr_co < -0.2){ lclass = 'warning'; }
     else if(isNaN(corr_co)){ lclass = 'danger'; }
     $('#proj_meta_correlation').html('<span class="label label-'+lclass+'">'+corr_co.toFixed(3)+'</span> ('+num_samps+' samples)');
+}
+
+
+
+/// Download all of the data
+function pmeta_download(){
+    
+    // Get the keys (headers)
+    var keys = [];
+    $('#proj_meta_yvalue option').each(function(){
+        var tval = $(this).val();
+        var tsect = $(this).data('section');
+        if(tval !== ''){ keys.push([tsect, tval]); }
+    });
+    
+    // Build the data structure
+    var data = [];
+    for (var pid in project_data){
+        for (var s_name in project_data[pid]){
+            var trow = [];
+            trow.push(s_name);
+            for (var k in keys){
+                var kt = keys[k][0];
+                var key = keys[k][1];
+                console.log(pid+' - '+s_name+' - '+kt+' - '+key);
+                try {
+                    // Base level values
+                    if(kt == 'base'){
+                        trow.push( project_data[pid][s_name][key] );
+                    }
+                    // Library Prep values - take latest
+                    else if (kt == 'library_prep'){
+                        var lp = project_data[pid][s_name]['library_prep'];
+                        var lib_keys = Object.keys(lp);
+                        var ll = lib_keys.sort().pop();
+                        var validation = lp[ll]['library_validation'];
+                        var val_keys = Object.keys(validation);
+                        var lv = val_keys.sort().pop();
+                        trow.push( validation[lv][key] );
+                    }
+                    // Single nested values
+                    else {
+                        trow.push( project_data[pid][s_name][kt][key] );
+                    }
+                } catch(e){
+                    trow.push('');
+                }
+            }
+            data.push(trow);
+        }
+    }
+    // Add the header row
+    keys.unshift('Sample_Name');
+    data.unshift(keys);
+    // Concat to a string
+    var dstring = '';
+    for (var i in data){
+        dstring += data[i].join("\t")+"\n";
+    }
+    // Save
+    var fblob = new Blob([dstring], {type: "text/plain;charset=utf-8"});
+    saveAs(fblob, "proj_meta_data.txt");
 }
