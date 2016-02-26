@@ -1,14 +1,26 @@
 
 //
-// TODO
+// PROJ META COMPARE
 //
-// 1. Get data colouration to work
-
+// This was a little side project that got a little out of hand. Hopefully
+// the code isn't too unclear. It's purely JS and HTML, no Python here.
+//
+// How it works:
+// - Either the page is prepopulated with project IDs, or the user types them in
+// - The data is retrieved for every project using the API using the
+//   load_projects_meta() function
+// - This is parsed. Numeric fields are listed in the select dropdowns
+//   if they're 1 or 2 deep, or in the `library_prep` section (special case)
+// - When an X and Y value is selected, it's plotted with HighCharts using
+//   the plot_meta() function
+// - A correlation score is calculated from the data in the plot using calc_corr_score()
+//   and recaculated when something changes
+// - Data can be downloaded through the pmeta_download() function
 
 
 
 // Globals
-project_data = [];
+project_data = {};
 key_min = {'base': {}, 'library_prep': {}};
 key_max = {'base': {}, 'library_prep': {}};
 xLogAxis = 'linear';
@@ -59,6 +71,13 @@ $(function(){
         pmeta_download();
     });
     
+    // Copy to clipboard button
+    new Clipboard('#projMeta_copyRaw', {
+        text: function(trigger) {
+            return JSON.stringify(project_data, null, "  ");
+        }
+    });
+    
     // Change between log and linear axes
     $('.meta_xLogLin_buttons button').click(function(e){
         e.preventDefault();
@@ -91,6 +110,7 @@ function load_projects_meta(){
     }
     $('#proj_meta_plot').html('<p class="text-center text-muted">Please select an X and a Y variable.</p>');
     $('#proj_meta_correlation').text('?');
+    $('#projMeta_downloadAll, #projMeta_copyRaw').prop('disabled', true);
     $('#proj_meta_yvalue, #proj_meta_xvalue').prop('disabled', true).html('<option value="">[ select value ]</option>');
     $('#proj_meta_colvalue').prop('disabled', true).html('<option data-section="" value="">Project</option>');
     
@@ -205,7 +225,7 @@ function load_projects_meta(){
                             key_max['base'][attr] = null;
                         }
                         key_min['base'][attr] = Math.min(project_data[pid][s_name][attr], key_min['base'][attr]);
-                        key_max['base'][attr] = Math.max(project_data[pid][s_name][attr], key_min['base'][attr]);
+                        key_max['base'][attr] = Math.max(project_data[pid][s_name][attr], key_max['base'][attr]);
                     }
                 }
             }
@@ -216,8 +236,10 @@ function load_projects_meta(){
                 group.append('<option data-section="'+sect+'" value="'+numeric_keys[sect][key]+'">'+numeric_keys[sect][key]+'</option>');
             }
             group.appendTo($('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue'));
-            $('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue').prop('disabled', false);
         }
+        
+        // Remove disabled states
+        $('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue, #projMeta_downloadAll, #projMeta_copyRaw').prop('disabled', false);
         
         console.log(project_data);
     });
@@ -232,6 +254,15 @@ function plot_meta(keys){
     var num_data = 0;
     var skipped_samples = [];
     var proj_skipped = {};
+    // Create chroma colour scale if we're using colour
+    var cscale;
+    var docol = false;
+    if(keys['color'][1] !== ''){
+        docol = true;
+        var cmin = key_min[ keys['color'][0] ][ keys['color'][1] ];
+        var cmax = key_max[ keys['color'][0] ][ keys['color'][1] ];
+        cscale = chroma.scale('RdYlBu').domain([cmin, cmax]);
+    }
     for (var pid in project_data){
         var ds = {
             name: pid,
@@ -240,11 +271,13 @@ function plot_meta(keys){
         proj_skipped[pid] = 0;
         for (var s_name in project_data[pid]){
             var dp = { name: s_name };
-            try {
-                for (var kt in keys){
+            var smissing = false;
+            for (var kt in keys){
+                try {
+                    var thisval;
                     // Base level values
                     if(keys[kt][0] == 'base'){
-                        dp[kt] = project_data[pid][s_name][keys[kt][1]];
+                        thisval = project_data[pid][s_name][keys[kt][1]];
                     }
                     // Library Prep values - take latest
                     else if (keys[kt][0] == 'library_prep'){
@@ -254,22 +287,32 @@ function plot_meta(keys){
                         var validation = lp[ll]['library_validation'];
                         var val_keys = Object.keys(validation);
                         var lv = val_keys.sort().pop();
-                        dp[kt] = validation[lv][keys[kt][1]];
-                    }
-                    // Colour - no value (projects)
-                    else if(kt == 'color' && keys[kt][1] == ''){
-                      // do nothing
+                        thisval = validation[lv][keys[kt][1]];
                     }
                     // Single nested values
                     else {
-                        dp[kt] = project_data[pid][s_name][ keys[kt][0] ][ keys[kt][1] ];
+                        thisval = project_data[pid][s_name][ keys[kt][0] ][ keys[kt][1] ];
+                    }
+                    // store xy values in object
+                    if(kt !== 'color'){
+                        dp[kt] = thisval;
+                    }
+                    // Convert colour keys into hex values
+                    else if(kt == 'color' && docol == true){
+                        dp[kt] = cscale(thisval).css();
+                    }
+                } catch(e) {
+                    if(kt == 'x' || kt == 'y' || docol == true){
+                        proj_skipped[pid] += 1;
+                        skipped_samples.push(s_name);
+                        smissing = true;
                     }
                 }
+            }
+            if(!smissing){
+                // console.log(dp);
                 ds.data.push(dp);
                 num_data += 1;
-            } catch(e) {
-                proj_skipped[pid] += 1;
-                skipped_samples.push(s_name);
             }
         }
         data.push(ds);
@@ -359,7 +402,9 @@ function plot_meta(keys){
         plotOptions: {
             scatter: {
                 marker: {
-                    radius: 4,
+                    radius: 3,
+                    lineWidth: docol ? 1 : 0,
+                    lineColor: '#999',
                     states: {
                         hover: {
                             enabled: true,
