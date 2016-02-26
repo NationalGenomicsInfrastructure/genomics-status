@@ -453,6 +453,7 @@ class ProjectSamplesHandler(SafeHandler):
                 flowcell_id = row.key[1]
                 lane_id = row.key[2]
                 sample_id = row.key[3]
+
                 # building first view
                 bioinfo1 = bioinfo_data['sample_run_lane_view']
                 if project_id not in bioinfo1:
@@ -479,6 +480,7 @@ class ProjectSamplesHandler(SafeHandler):
                 else:
                     bioinfo2[project_id]['flowcells'][flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(row.value)
 
+        # checking status
         for project_id, project in bioinfo_data['run_lane_sample_view'].items():
             for flowcell_id, flowcell in project['flowcells'].items():
                 fc_statuses = []
@@ -486,7 +488,6 @@ class ProjectSamplesHandler(SafeHandler):
                     lane_statuses = []
                     for sample_id, sample in lane['samples'].items():
                         lane_statuses.append(sample['sample_status'])
-
                     # my guess here agregation is already done from flowcell status
                     # so this condition will most probably always be true
                     if len(set(lane_statuses)) == 1:
@@ -499,6 +500,7 @@ class ProjectSamplesHandler(SafeHandler):
                 else:
                     flowcell['flowcell_status'] = fc_statuses[0]
 
+        # checking status
         for project_id, project in bioinfo_data['sample_run_lane_view'].items():
             for sample_id, sample in project['samples'].items():
                 sample_statuses = []

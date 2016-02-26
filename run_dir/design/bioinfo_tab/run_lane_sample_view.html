@@ -85,7 +85,7 @@
           <td></td>
           <td><samp><a href="/flowcells/{{ flowcell_id.split('_')[0] }}_{{ flowcell_id.split('_')[-1] }}">{{ flowcell_id }}</a></samp></td>
           <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(flowcell['flowcell_status'], 'label-default') }}">{{ flowcell['flowcell_status'] }}</span></td>
-          <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
+          <td class="bioinfo-status-row ?"><span class="glyphicon glyphicon-arrow-right"></span></td>
           <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
           <td class="bioinfo-status-qc unexpectedindexes unknown">?</td>
           <td class="bioinfo-status-qc lowsampleyield unknown">?</td>
@@ -126,7 +126,7 @@
               <span class="glyphicon glyphicon-chevron-right"></span></a></td>
             <td><samp>{{ lane_id }}</samp></td>
             <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(lane['lane_status'], 'label-default') }}">{{ lane['lane_status'] }}</span></td>
-            <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
+            <td class="bioinfo-status-row ?"><span class="glyphicon glyphicon-arrow-right"></span></td>
             <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
             <td class="bioinfo-status-qc unexpectedindexes unknown">?</td>
             <td class="bioinfo-status-qc lowsampleyield unknown">?</td>
@@ -166,7 +166,7 @@
               <td><a href="#bioinfo-sample-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"></a></td>
               <td class="bioinfo-status-expand"><samp>{{ sample_id }}</samp></td>
               <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(sample.get('sample_status', 'New'), 'label-default') }}">{{ sample.get('sample_status') }}</span></td>
-              <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
+              <td class="bioinfo-status-row ?"><span class="glyphicon glyphicon-arrow-right"></span></td>
               <!--THE ORDER OF THE CLASSES IS IMPORTANT!-->
               <td class="bioinfo-status-qc undemultiplexedreads {{ qc_css.get(sample.get('qc', {}).get('undemultiplexedreads', '?'), 'unknown') }}">
                 {{ sample.get('qc', {}).get('undemultiplexedreads', '?') }}</td>

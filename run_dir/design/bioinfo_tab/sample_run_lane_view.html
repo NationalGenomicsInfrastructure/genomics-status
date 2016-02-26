@@ -85,7 +85,7 @@
           <td></td>
           <td><samp>{{ sample_id }}</samp></td>
           <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(sample['sample_status'], 'label-default') }}">{{ sample['sample_status'] }}</span></td>
-          <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
+          <td class="bioinfo-status-row ?"><span class="glyphicon glyphicon-arrow-right"></span></td>
           <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
           <td class="bioinfo-status-qc unexpectedindexes unknown">?</td>
           <td class="bioinfo-status-qc lowsampleyield unknown">?</td>
@@ -126,7 +126,7 @@
               <span class="glyphicon glyphicon-chevron-right"></span></a></td>
             <td><samp><a href="/flowcells/{{ flowcell_id.split('_')[0] }}_{{ flowcell_id.split('_')[-1] }}">{{ flowcell_id }}</a></samp></td>
             <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(flowcell['flowcell_status'], 'label-default') }}">{{ flowcell['flowcell_status'] }}</span></td>
-            <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
+            <td class="bioinfo-status-row ?"><span class="glyphicon glyphicon-arrow-right"></span></td>
             <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
             <td class="bioinfo-status-qc unexpectedindexes unknown">?</td>
             <td class="bioinfo-status-qc lowsampleyield unknown">?</td>
@@ -165,7 +165,7 @@
               <td><a href="#bioinfo-lane-{{ sample_id }}-{{ flowcell_id }}-{{ lane_id }}"></a></td>
               <td class="bioinfo-status-expand"><samp>{{ lane_id }}</samp></td>
               <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(lane.get('sample_status', 'New'), 'label-default') }}">{{ lane.get('sample_status') }}</span></td>
-              <td class="bioinfo-status-row"><span class="glyphicon glyphicon-arrow-right"></span></td>
+              <td class="bioinfo-status-row ?"><span class="glyphicon glyphicon-arrow-right"></span></td>
               <!--THE ORDER OF THE CLASSES IS IMPORTANT!-->
               <td class="bioinfo-status-qc undemultiplexedreads {{ qc_css.get(lane.get('qc', {}).get('undemultiplexedreads', '?'), 'unknown') }}">
                 {{ lane.get('qc', {}).get('undemultiplexedreads', '?') }}</td>
@@ -204,7 +204,6 @@
                   {{ lane.get('bp', {}).get('denovo_adaptertrimming', '?') }}</td>
                 <td class="bioinfo-status-bp denovo_kmerprofile {{ qc_css.get(lane.get('bp', {}).get('denovo_kmerprofile', '?'), 'unknown') }}">
                   {{ lane.get('bp', {}).get('denovo_kmerprofile', '?') }}</td>
-              {{ lane }}
               {% elif application == 'applications' %}
                 <td class="bioinfo-status-bp applications">?</td>
                 <td class="bioinfo-status-bp applications">?</td>
