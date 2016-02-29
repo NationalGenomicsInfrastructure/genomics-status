@@ -492,13 +492,44 @@ class ProjectSamplesHandler(SafeHandler):
                     # so this condition will most probably always be true
                     if len(set(lane_statuses)) == 1:
                         lane['lane_status'] = lane_statuses[0]
+                    elif 'Sequencing' in lane_statuses:
+                        lane['lane_status'] = 'Sequencing'
+                    elif 'Demultiplexing' in lane_statuses:
+                        lane['lane_status'] = 'Demulitplexing'
+                    elif 'Transferring' in lane_statuses:
+                        lane['lane_status'] = 'Transferring'
+                    elif 'New' in lane_statuses:
+                        lane['lane_status'] = 'New'
+                    elif 'QC-ongoing' in lane_statuses:
+                        lane['lane_status'] = 'QC-ongoing'
+                    elif 'QC-done' in lane_statuses:
+                        lane['lane_status'] = 'QC-done'
+                    elif 'BP-ongoing' in lane_statuses:
+                        lane['lane_status'] = 'BP-ongoing'
+                    elif 'BP-done' in lane_statuses:
+                        lane['lane_status'] = 'BP-done'
                     else:
-                        lane['lane_status'] = lane_statuses[0]
-                    fc_statuses.append(lane['lane_status'])
+                        pass
+                        # unknown status, if happens it will fail
+                    fc_statuses.append(lane['lane_status']) # may fail here
                 if len(set(fc_statuses)) == 1:
                     flowcell['flowcell_status'] = fc_statuses[0]
-                else:
-                    flowcell['flowcell_status'] = fc_statuses[0]
+                elif 'Sequencing' in fc_statuses:
+                    flowcell['flowcell_status'] = 'Sequencing'
+                elif 'Demultiplexing' in fc_statuses:
+                    flowcell['flowcell_status'] = 'Demulitplexing'
+                elif 'Transferring' in fc_statuses:
+                    flowcell['flowcell_status'] = 'Transferring'
+                elif 'New' in fc_statuses:
+                    flowcell['flowcell_status'] = 'New'
+                elif 'QC-ongoing' in fc_statuses:
+                    flowcell['flowcell_status'] = 'QC-ongoing'
+                elif 'QC-done' in fc_statuses:
+                    flowcell['flowcell_status'] = 'QC-done'
+                elif 'BP-ongoing' in fc_statuses:
+                    flowcell['flowcell_status'] = 'BP-ongoing'
+                elif 'BP-done' in fc_statuses:
+                    flowcell['flowcell_status'] = 'BP-done'
 
         # checking status
         for project_id, project in bioinfo_data['sample_run_lane_view'].items():
@@ -825,8 +856,6 @@ class BioinfoAnalysisHandler(SafeHandler):
                 if changed:
                     original_doc['values'][timestamp] = data[run_id]
                     original_doc['values'][timestamp]['user'] = user
-                    import pdb
-                    pdb.set_trace()
                     # calculate a new status
                     ## if all qc and bp values are set (!= '?')
                     if all([value != '?' for value in data[run_id]['bp'].values()]) and all([value != '?' for value in data[run_id]['qc'].values()]):

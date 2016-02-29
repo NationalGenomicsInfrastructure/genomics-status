@@ -144,7 +144,7 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
     // if no bp set
     var bp_statuses = [];
     $.each(bp_tds, function(i, bp){
-        var bp_status = $(bp).text();
+        var bp_status = $(bp).text().trim();
         // ignore 'N/A' values
         if (bp_status != 'N/A' && bp_statuses.indexOf(bp_status) == -1) {
             bp_statuses.push(bp_status);
@@ -193,24 +193,15 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
     // get tds with the same column name
     var column_name = $(th).attr('class').split(/\s+/)[1]
     var tds = $(th).closest('.table-bioinfo-status').find('tr:not(.bioinfo-status-disabled) td.'+column_name);
-    var top_level_class = '';
-    if ($(th).closest('table').hasClass('table-bioinfo-status-sampleview')) {
-        top_level_class = 'bioinfo-sample';
-    } else if ($(th).closest('table').hasClass('table-bioinfo-status-runview')) {
-        top_level_class = 'bioinfo-fc';
-    }
     $.each(tds, function(index, td) {
         $(td).removeClass(th_class);
         $(td).addClass(new_class);
         $(td).text(new_status);
 
-        // sample_status_change -> only for top level tr
-        if ($(td).parent().hasClass(top_level_class)) {
-            if ($(td).hasClass('bioinfo-status-bp')) {
-                checkSampleStatusOnBPClick(td);
-            } else if ($(td).hasClass('bioinfo-status-qc')) {
-                checkSampleStatusOnQCClick(td);
-            }
+        if ($(td).hasClass('bioinfo-status-bp')) {
+            checkSampleStatusOnBPClick(td);
+        } else if ($(td).hasClass('bioinfo-status-qc')) {
+            checkSampleStatusOnQCClick(td);
         }
     });
     $(th).removeClass(th_status);
@@ -235,10 +226,12 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
         return false;
     }
     var td = $(this);
+    // why do we need this one?
     var top_parent = topParent($(td).parent());
     var td_index = $(td).parent().children().index(td);
+    // what is the difference
     var top_td = $(top_parent).children()[td_index];
-    var current_value = $(this).text();
+    var current_value = $(this).text().trim();
     if (bioinfo_qc_values.indexOf(current_value) == -1) {
         current_value = '?';
     }
@@ -253,20 +246,20 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
         $(child_td).addClass(bioinfo_qc_statuses[next_value]);
         $(child_td).text(next_value);
     });
-    checkSampleStatusOnBPClick(td, next_value);
+    checkSampleStatusOnBPClick(td);
 });
 
 function checkSampleStatusOnBPClick(td) {
-    var next_value = $(td).text()
+    var next_value = $(td).text().trim();
     // check the sample status
     var span = $(td).parent().find('td.bioinfo-status-runstate span');
-    var sample_status = $(span).text();
+    var sample_status = $(span).text().trim();
 
     // all bp boxes except the current one
     var bp_boxes = $(td).parent().children('td.bioinfo-status-bp:not(.'+$(td).attr('class').split(/\s+/)[1] + ')');
     var bp_statuses = [];
     $.each(bp_boxes, function(i, bp){
-         var bp_value = $(bp).text();
+         var bp_value = $(bp).text().trim();
          if (bp_statuses.indexOf(bp_value) == -1 && bp_value != 'N/A') {
             bp_statuses.push(bp_value);
          }
@@ -304,14 +297,14 @@ function checkSampleStatusOnQCClick(td) {
 
     // check the sample status
     var span = $(td).parent().find('td.bioinfo-status-runstate span');
-    var sample_status = $(span).text();
-    var next_value = $(td).text();
+    var sample_status = $(span).text().trim();
+    var next_value = $(td).text().trim();
 
     // check also bp status
     var bp_boxes = $(td).parent().children('td.bioinfo-status-bp');
     var bp_statuses = [];
     $.each(bp_boxes, function(i, bp){
-         var bp_value = $(bp).text();
+         var bp_value = $(bp).text().trim();
          if (bp_statuses.indexOf(bp_value) == -1 && bp_value != 'N/A') {
             bp_statuses.push(bp_value);
          }
@@ -327,30 +320,43 @@ function checkSampleStatusOnQCClick(td) {
     // check if the current qc box is the last to complete qc
     var qc_boxes = $(td).parent().children('td.bioinfo-status-qc:not(.'+$(td).attr('class').split(/\s+/)[1]+')');
     var last_value = true;
+    var qc_statuses = [];
     $.each(qc_boxes, function(i, qc){
-        var qc_value = $(qc).text();
+        var qc_value = $(qc).text().trim();
         if (qc_value == '?') {
             last_value = false;
             return false;
         }
+        qc_statuses.push(qc_value);
     });
     var new_sample_status = sample_status;
     if (sample_status == 'New') { // if we clicked for the first time
         new_sample_status = 'QC-ongoing';
     } else if ((sample_status == 'QC-done' || sample_status == 'BP-ongoing' || sample_status == 'BP-done') && next_value == '?') {
         new_sample_status = 'QC-ongoing';
-    } else if (sample_status == 'QC-ongoing' && last_value) {
-        // if bp ongoing or done
-        if (bp_done && next_value != '?') { // done
+    } else if (sample_status == 'QC-ongoing') {
+        if (last_value && bp_done && next_value != '?') {
             new_sample_status = 'BP-done';
-        } else if (bp_ongoing && next_value != '?') { // ongoing
-            new_sample_status = 'BP-ongoing'
-
-        // if bp has not started
-        } else if (next_value != '?') {
-            new_sample_status = 'QC-done';
-        } // else: doesn't change
+        } else if (last_value && bp_ongoing && next_value != '?') {
+            new_sample_status = 'BP-ongoing';
+        } else if (next_value == '?' && qc_statuses.indexOf('?') == -1) {
+            new_sample_status = 'New';
+        }
     } // if not the last value, also don't care
+
+//    } else if (sample_status == 'QC-ongoing' && last_value) {
+//        // if bp ongoing or done
+//        if (bp_done && next_value != '?') { // done
+//            new_sample_status = 'BP-done';
+//        } else if (bp_ongoing && next_value != '?') { // ongoing
+//            new_sample_status = 'BP-ongoing'
+//        // if bp has not started
+//        } else if (next_value != '?') {
+//            new_sample_status = 'QC-done';
+//        } else {// else: doesn't change
+//            new_sample_status = 'QC-ongoing';
+//        }
+//    } // if not the last value, also don't care
     $(span).text(new_sample_status);
     setChildrenSpanStatus(span);
     setParentSpanStatus(span);
@@ -443,7 +449,7 @@ var setParentStatus = function(td) {
     var child_tds = getChildTds(td);
     var statuses = [];
     $.each(child_tds, function(i, td){
-        var td_text = $(td).text().replace(/\s/g, '');
+        var td_text = $(td).text().trim().replace(/\s/g, '');
         // add text if it's not yet in array
         if (statuses.indexOf(td_text) == -1) {
             statuses.push(td_text);
@@ -466,7 +472,7 @@ var setParentStatus = function(td) {
     }
 
     var call_recursive_function = false;
-    if ($(td).text() != parent_status) {
+    if ($(td).text().trim() != parent_status) {
         call_recursive_function = true;
     }
 
@@ -696,7 +702,7 @@ var sample_values = ['Demultiplexing', 'Transferring', 'Sequencing', 'New', 'QC-
 
 // assuming that the status has been just updated, but not the class
 function setChildrenSpanStatus(span) {
-    var new_status = $(span).text();
+    var new_status = $(span).text().trim();
     var new_class = sample_statuses[new_status];
     var current_class = $(span).attr('class').split(/\s/)[1]; // label-primary
 
@@ -711,7 +717,7 @@ function setChildrenSpanStatus(span) {
         var child_span = $(child_tr).find('td.bioinfo-status-runstate span.label');
         $(child_span).text(new_status);
         var child_class = $(child_span).attr('class').split(/\s/)[1];
-        $(child_span).removeClass(child_class); // remove another class!!
+        $(child_span).removeClass(child_class);
         $(child_span).addClass(new_class);
     });
 };
@@ -729,21 +735,21 @@ function setParentSpanStatus(span) {
     var statuses = [];
     $.each(sibling_trs, function(index, sibling_tr) {
         var span = $(sibling_tr).find('td.bioinfo-status-runstate span.label');
-        if (statuses.indexOf($(span).text()) == -1) {
-            statuses.push($(span).text());
+        if (statuses.indexOf($(span).text().trim()) == -1) {
+            statuses.push($(span).text().trim());
         }
     });
     var parent_status = "";
     if (statuses.length == 1) {
         parent_status = statuses[0];
-    } else if (statuses.indexOf('QC-ongoing') != -1) {
-        parent_status = 'QC-ongoing';
     } else if (statuses.indexOf('Sequencing') != -1) {
         parent_status = 'Sequencing';
     } else if (statuses.indexOf('Demultiplexing') != -1) {
         parent_status = 'Demultiplexing';
     } else if (statuses.indexOf('Transferring') != -1) {
         parent_status = 'Transferring';
+    } else if (statuses.indexOf('QC-ongoing') != -1) {
+        parent_status = 'QC-ongoing';
     } else if (statuses.indexOf('QC-done') != -1) {
         parent_status = 'QC-done';
     } else if (statuses.indexOf('BP-ongoing') != -1) {
@@ -753,7 +759,7 @@ function setParentSpanStatus(span) {
     }
 
     var parent_span = $(parent_tr).find('td.bioinfo-status-runstate span.label');
-    var span_status = $(parent_span).text();
+    var span_status = $(parent_span).text().trim();
     $(parent_span).text(parent_status);
     $(parent_span).removeClass(sample_statuses[span_status]);
     $(parent_span).addClass(sample_statuses[parent_status]);
