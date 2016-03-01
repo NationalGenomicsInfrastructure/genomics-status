@@ -105,7 +105,6 @@ class DeliveriesPageHandler(SafeHandler):
                     else:
                         flowcell_status = 'Undefined'
                     runs_bioinfo[flowcell_id]['flowcell_status'] = flowcell_status
-
                 # parse running notes
                 for timestamp, running_note in running_notes.items():
                     # define the level of the running_note
@@ -117,8 +116,6 @@ class DeliveriesPageHandler(SafeHandler):
                     # ':::' is added in js, when saving running note
                     # ':::' separates run_id, lane_id and sample_id from running note
                     if '::: ' in running_note['note']:
-                        # import pdb
-                        # pdb.set_trace()
                         # in case if ':::' occurs more than 1 time (it must occur at least once, because of if)
                         note = ':::'.join([item for item in note.split(':::')[1:]])
 
@@ -154,11 +151,9 @@ class DeliveriesPageHandler(SafeHandler):
                             bioinfo_level['latest_running_note']['note'] = note
                             bioinfo_level['latest_running_note']['timestamp'] = timestamp
 
-                    # make a string because list is not hashable
-                    note_level = '-'.join([key for key in note_level])
-                    if note_level not in all_running_notes:
-                        all_running_notes[note_level] = {}
-                    all_running_notes[note_level][timestamp] = running_note
+                    if project_id not in all_running_notes:
+                        all_running_notes[project_id] = {}
+                    all_running_notes[project_id][timestamp] = running_note
 
                 latest_timestamp = max(running_notes.keys())
                 latest_running_note = running_notes[latest_timestamp]
@@ -178,7 +173,6 @@ class DeliveriesPageHandler(SafeHandler):
                 }
 
             ongoing_deliveries[project_id].update(project_data)
-
         template = self.application.loader.load("deliveries.html")
         self.write(template.generate(gs_globals=self.application.gs_globals,
                                      deliveries=ongoing_deliveries,

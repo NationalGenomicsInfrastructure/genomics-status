@@ -11,10 +11,10 @@ $('.bioinfo-running-notes-save').click(function(e) {
     var tr_class = $(tr).attr('class');
     var tr_id = $(tr).attr('id');
     tr_id = tr_id.replace('bioinfo-', '').split('-');
-    var project_id = tr_id[0];
-    var run_id = tr_id[1];
-    var lane_id = tr_id[2];
-    var sample_id = tr_id[3];
+    var project_id = tr_id[1];
+    var run_id = tr_id[2];
+    var lane_id = tr_id[3];
+    var sample_id = tr_id[4];
 
     // join not undefined values -> if undefined, will skip
     var prefix = [run_id, lane_id, sample_id].join(' ');
@@ -42,11 +42,12 @@ $('.bioinfo-running-notes-save').click(function(e) {
             $(td).attr('data-running-note', data['note']);
             $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note').text(data['note']);
             // add to the project running_notes
-            var new_note_html = '<div class="running-notes-panel panel panel-default" id="running-note-'+[project_id, run_id, lane_id, sample_id].join('-')+'" style="display:none;"> \
-                  <div class="panel-heading"><a href="mailto:'+data['email']+'">'+ data['user'] + '</a> - '+ data["timestamp"]+'</div> \
-                  <div class="panel-body"><div class="mkdown">'+data['note']+'</div></div></div>';
-            // make_markdown is defined in base.js
-            var markdown = make_markdown(new_note_html);
+            var running_note_id = [project_id, run_id, lane_id, sample_id].join(' ').trim().replace(/\s+/g, '-');
+            var new_note_html = '<div class="running-notes-panel panel panel-default" id="running-note-'+running_note_id+'" style="display:none;">' +
+                  '<div class="panel-heading"><a href="mailto:'+data['email']+'">'+ data['user'] + '</a> - '+ data["timestamp"]+'</div>' +
+                  '<div class="panel-body"><div class="mkdown">'+data['note']+'</div></div></div>';
+            // marked is defined in base.js. Do not use make_markdown - it breaks html!
+            var markdown = marked(new_note_html);
             $('#running_notes_panels').prepend(markdown);
         }
     });
@@ -163,44 +164,3 @@ function collapseAll(a) {
         $(a).find('span.glyphicon').addClass('glyphicon-chevron-down');
     }
 };
-//
-//
-//function collapseAll(a) {
-//    var current_tr = $(a).parent().parent();
-//    var top_parent_tr = topParent(current_tr);
-//    var top_level_class = "";
-//    var second_level_class = "";
-//    if ($(top_parent_tr).hasClass('bioinfo-sample')) {
-//        top_level_class = 'bioionfo_sample';
-//        second_level_class = 'bioinfo-fc';
-//    } else if ($(top_parent_tr).hasClass('bioinfo-fc')) {
-//        top_level_class = 'bioinfo-fc';
-//        second_level_class = 'bioinfo-lane';
-//    } else {
-//        console.error('unknown data structure! Change deliveries.js or bioinfo_tab.js!');
-//    }
-//    var table = $(a).closest('.table-bioinfo-status');
-//    if ($(a).hasClass('expanded')) { // collapse recursively
-//        var trs = $(table).find('tr.' + top_level_class);
-//        $.each(trs, function(index, tr) {
-//            if ($(tr).find('a.bioinfo-expand').hasClass('expanded')) {
-//                collapse(tr);
-//            }
-//        });
-//        $(a).removeClass('expanded');
-//        $(a).find('span.glyphicon').removeClass('glyphicon-chevron-down');
-//        $(a).find('span.glyphicon').addClass('glyphicon-chevron-right');
-//    } else { // expand - not recursively
-//        var trs = $.merge($(table).find('tr.'+top_level_class), $(table).find('tr.'+second_level_class));
-//         $.each(trs, function(index, tr) {
-//            if (!$(tr).find('a.bioinfo-expand').hasClass('expanded')) {
-//                expand(tr);
-//            }
-//         });
-//         $(a).addClass('expanded');
-//         $(a).find('span.glyphicon').removeClass('glyphicon-chevron-right');
-//         $(a).find('span.glyphicon').addClass('glyphicon-chevron-down');
-//    }
-//};
-
-// select view
