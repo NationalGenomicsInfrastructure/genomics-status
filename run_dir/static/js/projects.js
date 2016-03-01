@@ -15,9 +15,12 @@ $('#projectFilterDate').on('shown.bs.modal', function () {
  $("#QueueDateSlider").dateRangeSlider('resize');
  $("#CloseDateSlider").dateRangeSlider('resize');
 })
-$(document).ready(function() {
-    //load the sliders
-    $(".dateSlider").dateRangeSlider({
+
+// On page load
+$(function(){
+  
+  //load the sliders
+  $(".dateSlider").dateRangeSlider({
     range: true,
     bounds:{
       min: begin,
@@ -27,7 +30,7 @@ $(document).ready(function() {
         min: begin,
         max: end,
     }
-});
+  });
 
   // Load the presets first (to get the table headers)
   $.when(load_presets()).done(function(){
@@ -38,6 +41,29 @@ $(document).ready(function() {
 
   // Prevent traditional html submit function
   $('#Search-form').submit(function(event){event.preventDefault();});
+  
+  // Listen to project meta button
+  $('#compare_projects_meta_btn').click(function(e){
+    e.preventDefault();
+    var pids = Array();
+    $('#project_table tbody tr td.project').each(function(){
+      pids.push($(this).text());
+    });
+    var meta_go = true;
+    if(pids.length > 800){
+      meta_go = confirm('Are you sure? You have '+pids.length+' projects visible - comparing this many projects will almost certainly crash your browser and may cause the end of the known universe..');
+    } else if(pids.length > 400){
+      meta_go = confirm('Are you sure? You have '+pids.length+' projects visible - comparing this many projects will probably crash your browser..');
+    } else if(pids.length > 100){
+      meta_go = confirm('Are you sure? You have '+pids.length+' projects visible - this is going to take a long time...');
+    } else if(pids.length == 0){
+      alert('Error - no projects currently visible.');
+      meta_go = false;
+    }
+    if(meta_go){
+      window.location.href = '/proj_meta?p='+pids.join('&p=');
+    }
+  });
 
 });
 
