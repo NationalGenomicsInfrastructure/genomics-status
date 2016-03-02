@@ -48,11 +48,12 @@ class DeliveriesPageHandler(SafeHandler):
                 running_notes = json.loads(project['details']['running_notes'])
                 flowcells = bioinfo_data[project_id]
                 runs_bioinfo = {}
-
                 for flowcell_id in flowcells:
                     flowcell_statuses = []
+                    flowcell_checklists = {'total': 0, 'completed': 0}
                     for lane_id in flowcells[flowcell_id]:
                         lane_statuses = []
+                        lane_checklists = {'total': 0, 'completed': 0}
                         for sample_id in flowcells[flowcell_id][lane_id]:
                             # define bioinfo checklist
                             checklist = {
@@ -82,6 +83,10 @@ class DeliveriesPageHandler(SafeHandler):
                                     checklist['total'].remove(key)
                                 # else: do not do anything if '?' or anything else
 
+                            if checklist['total'] and len(checklist['total']) == len(checklist['passed']) + len(checklist['warnings']) + len(checklist['failed']):
+                                lane_checklists['completed'] += 1
+                            lane_checklists['total'] += 1
+
                             if flowcell_id not in runs_bioinfo:
                                 runs_bioinfo[flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: {'checklist': checklist, 'status': sample_data.get('sample_status', '?')}}}}}
                             elif lane_id not in runs_bioinfo[flowcell_id]['lanes']:
@@ -91,6 +96,10 @@ class DeliveriesPageHandler(SafeHandler):
                             else:
                                 runs_bioinfo[flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(
                                     {'checklist': checklist, 'status': sample_data.get('sample_status', '?')})
+                        if lane_checklists['total'] == lane_checklists['completed']:
+                            flowcell_checklists['completed'] += 1
+                        flowcell_checklists['total'] += 1
+
                         if len(set(lane_statuses)) == 1:
                             lane_status = lane_statuses[0]
                         elif 'Sequencing' in lane_statuses:
@@ -111,6 +120,7 @@ class DeliveriesPageHandler(SafeHandler):
                             lane_status = 'BP-done'
 
                         runs_bioinfo[flowcell_id]['lanes'][lane_id]['lane_status'] = lane_status
+                        runs_bioinfo[flowcell_id]['lanes'][lane_id]['checklist'] = lane_checklists
                         flowcell_statuses.append(lane_status)
 
                     # the same logic here -> agregate lane statuses
@@ -134,6 +144,7 @@ class DeliveriesPageHandler(SafeHandler):
                         flowcell_status = 'BP-done'
 
                     runs_bioinfo[flowcell_id]['flowcell_status'] = flowcell_status
+                    runs_bioinfo[flowcell_id]['checklist'] = flowcell_checklists
                 # parse running notes
                 for timestamp, running_note in running_notes.items():
                     # define the level of the running_note
