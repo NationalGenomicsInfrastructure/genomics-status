@@ -93,8 +93,22 @@ class DeliveriesPageHandler(SafeHandler):
                                     {'checklist': checklist, 'status': sample_data.get('sample_status', '?')})
                         if len(set(lane_statuses)) == 1:
                             lane_status = lane_statuses[0]
-                        # todo: figure out which statuses can be
-                        lane_status = lane_statuses[0]
+                        elif 'Sequencing' in lane_statuses:
+                            lane_status = 'Sequencing'
+                        elif 'Demultiplexing' in lane_statuses:
+                            lane_status = 'Demultiplexing'
+                        elif 'Transferring' in lane_statuses:
+                            lane_status = 'Transferring'
+                        elif 'New' in lane_statuses:
+                            lane_status = 'New'
+                        elif 'QC-ongoing' in lane_statuses:
+                            lane_status = 'QC-ongoing'
+                        elif 'QC-done' in lane_statuses:
+                            lane_status = 'QC-done'
+                        elif 'BP-ongoing' in lane_statuses:
+                            lane_status = 'BP-ongoing'
+                        elif 'BP-done' in lane_statuses:
+                            lane_status = 'BP-done'
 
                         runs_bioinfo[flowcell_id]['lanes'][lane_id]['lane_status'] = lane_status
                         flowcell_statuses.append(lane_status)
@@ -102,8 +116,23 @@ class DeliveriesPageHandler(SafeHandler):
                     # the same logic here -> agregate lane statuses
                     if len(set(flowcell_statuses)) == 1:
                         flowcell_status = flowcell_statuses[0]
-                    else:
-                        flowcell_status = 'Undefined'
+                    elif 'Sequencing' in flowcell_statuses:
+                        flowcell_status = 'Sequencing'
+                    elif 'Demultiplexing' in flowcell_statuses:
+                        flowcell_status = 'Demultiplexing'
+                    elif 'Transferring' in flowcell_statuses:
+                        flowcell_status = 'Transferring'
+                    elif 'New' in flowcell_statuses:
+                        flowcell_status = 'New'
+                    elif 'QC-ongoing' in flowcell_statuses:
+                        flowcell_status = 'QC-ongoing'
+                    elif 'QC-done' in flowcell_statuses:
+                        flowcell_status = 'QC-done'
+                    elif 'BP-ongoing' in flowcell_statuses:
+                        flowcell_status = 'BP-ongoing'
+                    elif 'BP-done' in flowcell_statuses:
+                        flowcell_status = 'BP-done'
+
                     runs_bioinfo[flowcell_id]['flowcell_status'] = flowcell_status
                 # parse running notes
                 for timestamp, running_note in running_notes.items():

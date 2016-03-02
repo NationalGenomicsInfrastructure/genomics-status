@@ -480,72 +480,57 @@ class ProjectSamplesHandler(SafeHandler):
                 else:
                     bioinfo2[project_id]['flowcells'][flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(row.value)
 
-        # checking status
+        # checking status for run-lane-sample view
         for project_id, project in bioinfo_data['run_lane_sample_view'].items():
             for flowcell_id, flowcell in project['flowcells'].items():
                 fc_statuses = []
+                fc_delivery_dates = []
                 for lane_id, lane in flowcell['lanes'].items():
                     lane_statuses = []
+                    lane_delivery_dates = []
                     for sample_id, sample in lane['samples'].items():
                         lane_statuses.append(sample['sample_status'])
-                    # my guess here agregation is already done from flowcell status
-                    # so this condition will most probably always be true
-                    if len(set(lane_statuses)) == 1:
-                        lane['lane_status'] = lane_statuses[0]
-                    elif 'Sequencing' in lane_statuses:
-                        lane['lane_status'] = 'Sequencing'
-                    elif 'Demultiplexing' in lane_statuses:
-                        lane['lane_status'] = 'Demulitplexing'
-                    elif 'Transferring' in lane_statuses:
-                        lane['lane_status'] = 'Transferring'
-                    elif 'New' in lane_statuses:
-                        lane['lane_status'] = 'New'
-                    elif 'QC-ongoing' in lane_statuses:
-                        lane['lane_status'] = 'QC-ongoing'
-                    elif 'QC-done' in lane_statuses:
-                        lane['lane_status'] = 'QC-done'
-                    elif 'BP-ongoing' in lane_statuses:
-                        lane['lane_status'] = 'BP-ongoing'
-                    elif 'BP-done' in lane_statuses:
-                        lane['lane_status'] = 'BP-done'
+                        lane_delivery_dates.append(sample.get('datadelivered', ''))
+                    if all(lane_delivery_dates):
+                        lane_delivery_date = min(lane_delivery_dates)
                     else:
-                        pass
-                        # unknown status, if happens it will fail
-                    fc_statuses.append(lane['lane_status']) # may fail here
-                if len(set(fc_statuses)) == 1:
-                    flowcell['flowcell_status'] = fc_statuses[0]
-                elif 'Sequencing' in fc_statuses:
-                    flowcell['flowcell_status'] = 'Sequencing'
-                elif 'Demultiplexing' in fc_statuses:
-                    flowcell['flowcell_status'] = 'Demulitplexing'
-                elif 'Transferring' in fc_statuses:
-                    flowcell['flowcell_status'] = 'Transferring'
-                elif 'New' in fc_statuses:
-                    flowcell['flowcell_status'] = 'New'
-                elif 'QC-ongoing' in fc_statuses:
-                    flowcell['flowcell_status'] = 'QC-ongoing'
-                elif 'QC-done' in fc_statuses:
-                    flowcell['flowcell_status'] = 'QC-done'
-                elif 'BP-ongoing' in fc_statuses:
-                    flowcell['flowcell_status'] = 'BP-ongoing'
-                elif 'BP-done' in fc_statuses:
-                    flowcell['flowcell_status'] = 'BP-done'
+                        lane_delivery_date = ''
+                    lane['datadelivered'] = lane_delivery_date
+                    fc_delivery_dates.append(lane_delivery_date)
+                    lane['lane_status'] = self._agregate_status(lane_statuses)
+                    fc_statuses.append(lane['lane_status'])
+                flowcell['flowcell_status'] = self._agregate_status(fc_statuses)
+                if all(fc_delivery_dates):
+                    fc_delivery_date= min(fc_delivery_dates)
+                else:
+                    fc_delivery_date = ''
+                flowcell['datadelivered'] = fc_delivery_date
 
-        # checking status
+        # checking status for sample-run-lane view
         for project_id, project in bioinfo_data['sample_run_lane_view'].items():
             for sample_id, sample in project['samples'].items():
                 sample_statuses = []
+                sample_delivery_dates = []
                 for flowcell_id, flowcell in sample['flowcells'].items():
                     fc_statuses = []
+                    fc_delivery_dates = []
                     for lane_id, lane in flowcell['lanes'].items():
                         fc_statuses.append(lane['sample_status'])
-                    if len(set(fc_statuses)) == 1:
-                        flowcell['flowcell_status'] = fc_statuses[0]
+                        fc_delivery_dates.append(lane.get('datadelivered', ''))
+                    if all(fc_delivery_dates):
+                        fc_delivery_date = min(fc_delivery_dates)
                     else:
-                        flowcell['flowcell_status'] = fc_statuses[0]
+                        fc_delivery_date = ''
+                    flowcell['datadelivered'] = fc_delivery_date
+                    sample_delivery_dates.append(fc_delivery_date)
+                    flowcell['flowcell_status'] = self._agregate_status(fc_statuses)
                     sample_statuses.append(flowcell['flowcell_status'])
-                # todo: define statuses for real
-                sample['sample_status'] = sample_statuses[0]
+                sample['sample_status'] = self._agregate_status(sample_statuses)
+                if all(sample_delivery_dates):
+                    sample_delivery_date = min(sample_delivery_dates)
+                else:
+                    sample_delivery_date = ''
+                sample['datadelivered'] = sample_delivery_date
 
         project_view = self.application.projects_db.view('project/summary')
         application = ""
@@ -554,7 +539,7 @@ class ProjectSamplesHandler(SafeHandler):
             if row.key[1] == proj_id:
                 if row.value.get('close_date'):
                     project_closed = True
-                # sometimes
+                # sometimes this value is not set
                 application = row.value.get('application')
                 break
 
@@ -585,6 +570,37 @@ class ProjectSamplesHandler(SafeHandler):
                               application=application,
                               project_closed=project_closed
                               ))
+
+    def _agregate_status(self, statuses):
+        """
+        Helper function, agregates status from the lower levels
+        """
+
+        # my guess here agregation is already done from flowcell status
+        # so this condition will most probably always be true
+        if len(set(statuses)) == 1:
+            status = statuses[0]
+        elif 'Sequencing' in statuses:
+            status = 'Sequencing'
+        elif 'Demultiplexing' in statuses:
+            status = 'Demulitplexing'
+        elif 'Transferring' in statuses:
+            status = 'Transferring'
+        elif 'New' in statuses:
+            status = 'New'
+        elif 'QC-ongoing' in statuses:
+            status = 'QC-ongoing'
+        elif 'QC-done' in statuses:
+            status = 'QC-done'
+        elif 'BP-ongoing' in statuses:
+            status = 'BP-ongoing'
+        elif 'BP-done' in statuses:
+            status = 'BP-done'
+        else:
+            pass
+            # unknown status, if happens it will fail
+        return status # may fail here, if somebody defined a new status without updating this function
+
 
 class ProjectsHandler(SafeHandler):
     """ Serves a page with all projects listed, along with some brief info.
@@ -851,38 +867,14 @@ class BioinfoAnalysisHandler(SafeHandler):
                 else:
                     last_timestamp = max(original_doc['values'].keys())
                     last_change = original_doc['values'][last_timestamp]
-                    if last_change.get('qc') != data[run_id]['qc'] or last_change.get('bp') != data[run_id]['bp']:
+                    if last_change.get('qc') != data[run_id]['qc'] or last_change.get('bp') != data[run_id]['bp'] \
+                            or last_change.get('datadelivered', '') != data[run_id]['datadelivered']:
                         changed = True
                 if changed:
                     original_doc['values'][timestamp] = data[run_id]
                     original_doc['values'][timestamp]['user'] = user
-                    # calculate a new status
-                    ## if all qc and bp values are set (!= '?')
-                    if all([value != '?' for value in data[run_id]['bp'].values()]) and all([value != '?' for value in data[run_id]['qc'].values()]):
-                        status = 'BP-done'
-                    ## if all qc values and any of bp values are set
-                    elif all([value != '?' for value in data[run_id]['qc'].values()]) and any([value != '?' for value in data[run_id]['bp'].values()]):
-                        status = 'BP-ongoing'
-                    ## if all qc values are set and none of bp values are set
-                    elif all([value != '?' for value in data[run_id]['qc'].values()]) \
-                            and not any([value != '?' for value in data[run_id]['bp'].values()]):
-                        status = 'QC-done'
-                    # if any of qc values are set (doesn't matter if any or all bp set or not)
-                    elif any([value != '?' for value in data[run_id]['qc'].values()]):
-                        status = 'QC-ongoing'
-                    # if all qc are unset and any of bp is set
-                    elif all([value == '?' for value in data[run_id]['qc'].values()]) and any([value != '?' for value in data[run_id]['bp'].values()]):
-                        status = 'QC-ongoing'
-                    # if all qc and all bp are not set
-                    elif all([value == '?' for value in data[run_id]['qc'].values()]) and all([value == '?' for value in data[run_id]['bp'].values()]):
-                        status = 'New'
-                    else:
-                        # This should never happen, unless we try to save entries which haven't been changed
-                        # (or another case which I haven't considered)
-                        pass
-                        # I could set some default value, but I'd better let it fail ->
-                        # otherwise it will display the wrong value and we may never figure out why
-                    original_doc['values'][timestamp]['sample_status'] = status # can fail here if something went wrong
+                    original_doc['values'][timestamp]['datadelivered'] = data[run_id]['datadelivered']
+                    original_doc['values'][timestamp]['sample_status'] = data[run_id]['sample_status']
                     try:
                         self.application.bioinfo_db.save(original_doc)
                         saved_data[run_id] = original_doc['values'][timestamp] # the last one

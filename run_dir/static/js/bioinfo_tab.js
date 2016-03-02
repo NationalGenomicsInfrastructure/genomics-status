@@ -315,7 +315,7 @@ function checkSampleStatusOnQCClick(td) {
         bp_done = true;
     } else if (bp_statuses.length != 1 && bp_statuses.indexOf('?') != -1) {
         bp_ongoing = true;
-    } // is correct
+    }
 
     // check if the current qc box is the last to complete qc
     var qc_boxes = $(td).parent().children('td.bioinfo-status-qc:not(.'+$(td).attr('class').split(/\s+/)[1]+')');
@@ -344,19 +344,6 @@ function checkSampleStatusOnQCClick(td) {
         }
     } // if not the last value, also don't care
 
-//    } else if (sample_status == 'QC-ongoing' && last_value) {
-//        // if bp ongoing or done
-//        if (bp_done && next_value != '?') { // done
-//            new_sample_status = 'BP-done';
-//        } else if (bp_ongoing && next_value != '?') { // ongoing
-//            new_sample_status = 'BP-ongoing'
-//        // if bp has not started
-//        } else if (next_value != '?') {
-//            new_sample_status = 'QC-done';
-//        } else {// else: doesn't change
-//            new_sample_status = 'QC-ongoing';
-//        }
-//    } // if not the last value, also don't care
     $(span).text(new_sample_status);
     setChildrenSpanStatus(span);
     setParentSpanStatus(span);
@@ -386,7 +373,6 @@ var getChildTds = function(td) {
     return childTds;
 };
 
-// it returns only the first child of children, wtf??
 var getChildTrs = function(tr) {
     var children = [];
     var tr_id = $(tr).attr('id');
@@ -525,8 +511,8 @@ function setChildrenStatus(td) {
   //////
   // SAVE CHANGES
   //////
-  $('#bioinfo-status-saveButton').click(function(e){
-    e.preventDefault();
+$('#bioinfo-status-saveButton').click(function(e){
+    e.preventDefault(); // reloads the page otherwise
     e.stopImmediatePropagation(); // fires twice otherwise.
 
     if($(this).is(':disabled')){
@@ -536,12 +522,8 @@ function setChildrenStatus(td) {
 
     // Build the JSON object
     var sample_run_lane_statuses = {};
-    // get project_id from the url
-    var project_id = window.location.href.split(/\//);
-    // remove /bioinfo/ from the end
-    project_id = project_id[project_id.length-1];
-
     var table = $('.table-bioinfo-status:visible');
+    var project_id = $(table).find('tr.bioinfo-project').attr('id').replace('bioinfo-project-', '');
 
     if ($(table).hasClass('table-bioinfo-status-runview')){
         lowest_level = 'bioinfo-sample';
@@ -573,7 +555,7 @@ function setChildrenStatus(td) {
         var flowcell = tr_id.replace('-'+lane, '').replace('-'+sample,'');
         return [sample, flowcell, lane];
     };
-
+    var show_warning = false;
     // assuming, there is only one view is active (=one table is visible)
     $('.table-bioinfo-status:visible tr.'+lowest_level+':has(td)').each(function(){
         var tr = $(this);
@@ -590,7 +572,6 @@ function setChildrenStatus(td) {
 
         var status = $(this).find('.bioinfo-status-runstate span').text().trim();
         var row = {'sample_status': status, 'qc': {}, 'bp': {}};
-
         // get qc values
         $(tr).children('td.bioinfo-status-qc').each(function(i, td) {
             var field_name = $(td).attr('class').split(/\s+/)[1];
@@ -610,35 +591,74 @@ function setChildrenStatus(td) {
                 console.error('error: undefined field name');
                 console.error($(td));
             }
-        })
-
+        });
         var row_key = [project_id, sample, flowcell, lane];
         sample_run_lane_statuses[row_key] = row;
         sample_run_lane_statuses[row_key]['sample_status'] = status;
-    });
-    $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
 
-    var bioinfo_api_url = "/api/v1/bioinfo_analysis/"+project_id;
-    $.ajax({
-      type: 'POST',
-      url: bioinfo_api_url,
-      dataType: 'json',
-      data: JSON.stringify(sample_run_lane_statuses),
-      error: function(xhr, textStatus, errorThrown) {
-        alert('There was an error saving the bioinformatics statuses: '+errorThrown);
-        $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
-        console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(sample_run_lane_statuses));
-      },
-      success: function(saved_data, textStatus, xhr) {
-        console.log('success');
-        var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="glyphicon glyphicon-ok"></span></span>');
-        success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
-        $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
-        $('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
-        updateSecondTable(saved_data);
-      }
+        // get data_delivered date
+        var data_delivered = $(this).find('td.datadelivered input:text').val();
+        if (data_delivered != '') {
+            show_warning = true;
+            sample_run_lane_statuses[row_key]['datadelivered'] = data_delivered;
+        }
     });
-  });
+
+    if (show_warning) {
+        $('#bioinfo-confirm-dialog').modal('show');
+        $('#bioinfo-confirm-save').click(function(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation(); // fires twice otherwise.
+            $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
+            var bioinfo_api_url = "/api/v1/bioinfo_analysis/"+project_id;
+            $.ajax({
+                type: 'POST',
+                url: bioinfo_api_url,
+                dataType: 'json',
+                data: JSON.stringify(sample_run_lane_statuses),
+                error: function(xhr, textStatus, errorThrown) {
+                    alert('There was an error saving the bioinformatics statuses: '+errorThrown);
+                    $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
+                    console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(sample_run_lane_statuses));
+                },
+                success: function(saved_data, textStatus, xhr) {
+                    console.log('success');
+                    var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="glyphicon glyphicon-ok"></span></span>');
+                    success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
+                    $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
+                    $('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
+                    updateSecondTable(saved_data);
+                }
+            });
+            $('#bioinfo-confirm-dialog').modal('hide');
+        });
+        $('#bioinfo-confirm-cancel').click(function(e) {
+            $('#bioinfo-confirm-dialog').modal('hide');
+        });
+    } else {
+        $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
+            var bioinfo_api_url = "/api/v1/bioinfo_analysis/"+project_id;
+            $.ajax({
+              type: 'POST',
+              url: bioinfo_api_url,
+              dataType: 'json',
+              data: JSON.stringify(sample_run_lane_statuses),
+              error: function(xhr, textStatus, errorThrown) {
+                alert('There was an error saving the bioinformatics statuses: '+errorThrown);
+                $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
+                console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(sample_run_lane_statuses));
+              },
+              success: function(saved_data, textStatus, xhr) {
+                console.log('success');
+                var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="glyphicon glyphicon-ok"></span></span>');
+                success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
+                $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
+                $('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
+                updateSecondTable(saved_data);
+            }
+        });
+    }
+});
 
 function updateSecondTable(saved_data) {
     var table = $('table.table-bioinfo-status:hidden');
@@ -776,3 +796,52 @@ $('select#bioinfo-view').on( "change", function(e) {
         $('table.table-bioinfo-status-sampleview').show();
     }
 });
+
+$('th.bioinfo-status-th-date').on('click', '.datepicker-today', function(e) {
+    var table = $(this).closest('table');
+    var today = formatDateTime(new Date(), false);
+    var date_inputs = $(table).find('td.datadelivered input:text');
+    $.each(date_inputs, function(i, input){
+        if($(input).val() == '') {
+            $(input).val(today);
+        }
+    });
+});
+
+// update date on all levels, when it changed
+$('td.datadelivered').on('change', 'input:text', function(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation(); // this doesn't help, it still fires a few times
+    var td = $(this).closest('td.datadelivered');
+    var delivery_date = $(this).val();
+    var child_tds = getChildTds(td);
+    $.each(child_tds, function(i, td){
+        // do not change if disabled
+        if (!$(td).parent().hasClass('bioinfo-status-disabled')) {
+            $(td).find('input:text').val(delivery_date);
+        }
+    });
+    setParentDate(td);
+});
+
+function setParentDate(td) {
+    var parent_tr = $($(td).parent().attr('data-parent'));
+    if (td == undefined || $(parent_tr).hasClass('bioinfo-project')) {return false;}
+    var parent_td = $(parent_tr).find('td.datadelivered');
+    var delivery_date = $(td).find('input:text').val();
+    var sibling_trs = getChildTrs(parent_tr);
+    // if parent has only one child
+    if (sibling_trs.length <= 1) {
+        $(parent_td).find('input:text').val(delivery_date);
+    } else {
+        // set on top the earliest date
+        $.each(sibling_trs, function(i, sibling_tr){
+            var date_input = $(sibling_tr).find('td.datadelivered input:text');
+            if ($(date_input).val() < delivery_date) {
+                delivery_date = $(date_input).val();
+            }
+        });
+        $(parent_td).find('input:text').val(delivery_date);
+    }
+    setParentDate(parent_td);
+};
