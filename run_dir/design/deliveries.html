@@ -23,9 +23,12 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 <div id="page_content" class="deliveries-page">
   <div class="row">
     <div>
-
       <h1>Ongoing <span id="page_title">Deliveries</span></h1>
-
+      <h3>Total number of:</h3>
+      <h5>projects: {{ number_of_projects }}</h5>
+      <h5>flowcells: {{ number_of_flowcells }}</h5>
+      <h5>lanes: {{ number_of_lanes }}</h5>
+      <h5>samples: {{ number_of_samples }}</h5>
       <div id="ongoing_deliveries">
 
         <div class="delivery-filters" style="display:none;">
@@ -62,10 +65,11 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
             {% else %}
           <h3>
             <a href="/project/{{ project_id }}" class="bi-project-id">{{ project_id }}</a>: <span class="bi-project-name">{{ project['project_name'] }}</span><br>
-            <small><span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">{{ project['application'] }}</span>
-              &nbsp; <span class="bi-project-facility label {% if project['type'] == 'Application' %} label-success {% else %} label-primary {% end %}"
+            <small>
+              &nbsp; <span class="bi-project-facility label {% if project['type'] == 'Application' %} label-success {% else %} label-primary {% end %}">{{ project.get('type') }}</span>
+              <span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">{{ project['application'] }}</span>
               &nbsp; <span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">{{ project['bioinfo_responsible'] }}</span>
-        </small>
+            </small>
           </h3>
           <dl class="dl-horizontal hide-incoming">
             <dt>Project running note:</dt>

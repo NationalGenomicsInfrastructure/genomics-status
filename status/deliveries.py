@@ -42,19 +42,27 @@ class DeliveriesPageHandler(SafeHandler):
                 bioinfo_data[project_id][flowcell_id][lane_id].update({sample_id: row.value})
 
         all_running_notes = {}
+        number_of_projects = 0
+        number_of_flowcells = 0
+        number_of_lanes = 0
+        number_of_samples = 0
         for project_id in ongoing_deliveries:
+            number_of_projects += 1
             if project_id in summary_data and project_id in bioinfo_data:
                 project = summary_data[project_id]
                 running_notes = json.loads(project['details']['running_notes'])
                 flowcells = bioinfo_data[project_id]
                 runs_bioinfo = {}
                 for flowcell_id in flowcells:
+                    number_of_flowcells += 1
                     flowcell_statuses = []
                     flowcell_checklists = {'total': 0, 'completed': 0}
                     for lane_id in flowcells[flowcell_id]:
+                        number_of_lanes += 1
                         lane_statuses = []
                         lane_checklists = {'total': 0, 'completed': 0}
                         for sample_id in flowcells[flowcell_id][lane_id]:
+                            number_of_samples += 1
                             # define bioinfo checklist
                             checklist = {
                                 'passed': [],
@@ -102,14 +110,14 @@ class DeliveriesPageHandler(SafeHandler):
 
                         if len(set(lane_statuses)) == 1:
                             lane_status = lane_statuses[0]
+                        elif 'New' in lane_statuses:
+                            lane_status = 'New'
                         elif 'Sequencing' in lane_statuses:
                             lane_status = 'Sequencing'
                         elif 'Demultiplexing' in lane_statuses:
                             lane_status = 'Demultiplexing'
                         elif 'Transferring' in lane_statuses:
                             lane_status = 'Transferring'
-                        elif 'New' in lane_statuses:
-                            lane_status = 'New'
                         elif 'QC-ongoing' in lane_statuses:
                             lane_status = 'QC-ongoing'
                         elif 'QC-done' in lane_statuses:
@@ -126,14 +134,14 @@ class DeliveriesPageHandler(SafeHandler):
                     # the same logic here -> agregate lane statuses
                     if len(set(flowcell_statuses)) == 1:
                         flowcell_status = flowcell_statuses[0]
+                    elif 'New' in flowcell_statuses:
+                        flowcell_status = 'New'
                     elif 'Sequencing' in flowcell_statuses:
                         flowcell_status = 'Sequencing'
                     elif 'Demultiplexing' in flowcell_statuses:
                         flowcell_status = 'Demultiplexing'
                     elif 'Transferring' in flowcell_statuses:
                         flowcell_status = 'Transferring'
-                    elif 'New' in flowcell_statuses:
-                        flowcell_status = 'New'
                     elif 'QC-ongoing' in flowcell_statuses:
                         flowcell_status = 'QC-ongoing'
                     elif 'QC-done' in flowcell_statuses:
@@ -217,4 +225,8 @@ class DeliveriesPageHandler(SafeHandler):
         self.write(template.generate(gs_globals=self.application.gs_globals,
                                      deliveries=ongoing_deliveries,
                                      running_notes=all_running_notes,
+                                     number_of_projects=number_of_projects,
+                                     number_of_flowcells=number_of_flowcells,
+                                     number_of_lanes=number_of_lanes,
+                                     number_of_samples=number_of_samples
                                      ))
