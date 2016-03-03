@@ -22,6 +22,16 @@ $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
       var today = formatDateTime(new Date(), false);
       $(this).prevAll("input:first").val(today);
     }
+    // set values to upper and lower levels
+    var date_td = $(this).closest('td.datadelivered');
+    var child_tds = getChildTds(date_td);
+    $.each(child_tds, function(i, td){
+        // do not change if disabled
+        if (!$(td).parent().hasClass('bioinfo-status-disabled')) {
+            $(td).find('input:text').val(today);
+        }
+    });
+    setParentDate(date_td);
 });
 
 // expand or collapse table
