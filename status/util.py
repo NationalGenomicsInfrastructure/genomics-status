@@ -147,6 +147,7 @@ class MainHandler(UnsafeHandler):
                     server_status[server]['css_class'] = ''
         # sort by used space
         server_status = sorted(server_status.items(), key = lambda item: item[1]['used_percentage'], reverse=True)
+
         # copy -> so that we don't change self.application.uppmax_projects
         uppmax_ids = copy.copy(self.application.uppmax_projects)
         # get all the documents, sorted by timestamp in descending order. Because I don't know how to use reduce functions
@@ -167,6 +168,10 @@ class MainHandler(UnsafeHandler):
                 project = uppmax_projects[project_nobackup]
                 # add disk or nobackup usage depending on type of project
                 if project_id == project_nobackup:
+                    # can happen if taca server_status updates the wrong database
+                    if 'usage (GB)' not in row.value or 'quota limit (GB)' not in row.value:
+                        del uppmax_projects[project_nobackup]
+                        continue
                     # / 1024 - to convert GB to TB
                     project['disk_usage'] = round(float(row.value['usage (GB)']) / 1024, 2)
                     project['disk_limit'] = round(float(row.value['quota limit (GB)']) / 1024, 2)

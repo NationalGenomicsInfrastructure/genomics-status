@@ -84,13 +84,13 @@
         {% for project_id, project in uppmax_projects.items() %}
           <tr>
             <td><a href="quotas#{{ project_id }}">{{ project_id }}</a></td>
-            <td class="disk-quotas-highcharts {{ project['disk_class'] }}"><div class="wrapper"><span class="val" style="width:{{ project['disk_percentage'] }}%;">
-              <span>{{ project['disk_usage'] }} TB</span></span>
-              <span class="percent pull-right">{{ project['disk_limit'] }} TB</span></div></td>
-            <td class="disk-quotas-highcharts {{ project['nobackup_class'] }}"><div class="wrapper"><span class="val" style="width:{{ project['nobackup_percentage'] }}%;">
-              <span>{{ project['nobackup_usage'] }} TB</span></span><span class="percent pull-right">{{ project['nobackup_limit'] }} TB</span></div></td>
-            <td class="disk-quotas-highcharts {{ project['cpu_class'] }}"><div class="wrapper"><span class="val" style="width:{{ project['cpu_percentage'] }}%;">
-              <span>{{ project['cpu_usage'] }} K</span></span><span class="percent pull-right">{{ project['cpu_limit'] }} K</span></div></td>
+            <td class="disk-quotas-highcharts {{ project.get('disk_class') }}"><div class="wrapper"><span class="val" style="width:{{ project.get('disk_percentage') }}%;">
+              <span>{{ project.get('disk_usage') }} TB</span></span>
+              <span class="percent pull-right">{{ project.get('disk_limit') }} TB</span></div></td>
+            <td class="disk-quotas-highcharts {{ project.get('nobackup_class') }}"><div class="wrapper"><span class="val" style="width:{{ project.get('nobackup_percentage') }}%;">
+              <span>{{ project.get('nobackup_usage') }} TB</span></span><span class="percent pull-right">{{ project.get('nobackup_limit') }} TB</span></div></td>
+            <td class="disk-quotas-highcharts {{ project.get('cpu_class') }}"><div class="wrapper"><span class="val" style="width:{{ project.get('cpu_percentage') }}%;">
+              <span>{{ project.get('cpu_usage') }} K</span></span><span class="percent pull-right">{{ project.get('cpu_limit') }} K</span></div></td>
          </tr>
         {% end %}
 		    </tbody>
