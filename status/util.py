@@ -167,6 +167,10 @@ class MainHandler(UnsafeHandler):
                 project = uppmax_projects[project_nobackup]
                 # add disk or nobackup usage depending on type of project
                 if project_id == project_nobackup:
+                    if 'usage (GB)' not in row.value or 'quota limit (GB)' not in row.value \
+                            or 'cpu hours' not in row.value or 'cpu limit' not in row.value \
+                            or 'nobackup_usage' not in row.value or 'nobackup_limit' in row.value:
+                        continue
                     # / 1024 - to convert GB to TB
                     project['disk_usage'] = round(float(row.value['usage (GB)']) / 1024, 2)
                     project['disk_limit'] = round(float(row.value['quota limit (GB)']) / 1024, 2)
