@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+<!--
+Template file: instrument_logs.html
+URL: /instrument_logs/[timestamp1]-[timestamp]2
+Title: Instrument Logs
+Description: Shows instrument logs for the given period.default is one week.
+-->
+
+{% block stuff %}
+
+<div id="page_content">
+<h1>Instrument Logs</h1>
+<div id="logs_date" style="margin_bottom:5px;">
+    <p>The default view shows 1 week worth of logs. You can customise the range here :</p>
+    <form class="form-inline">
+        Select logs from 
+        <div class='input-group input-group-sm date' id='datepick1'>
+            <input id="inp_date_1" type='text' class="form-control" /><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+        </div>
+    to
+    <div class='input-group input-group-sm date' id='datepick2'>
+        <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span> 
+    </div>
+    <button id="submit_interval" class="btn btn-primary">Search</button>
+    </form>
+</div>
+<div id="main_table">
+<table class="table table-bordered narrow-headers" id="instrument_logs_table">
+    <thead>
+        <th class="col-md-1">Date</th>
+        <th class="col-md-1">Instrument</th>
+        <th class="col-md-10">Message</th>
+    </thead>
+    <tfoot>
+        <th class="col-md-1">Date</th>
+        <th class="col-md-1">Instrument</th>
+        <th class="col-md-10">Message</th>
+    </tfoot>
+    <tbody>
+        {% for onedoc in docs %}
+        <tr>
+            <td class="col-md-1">{{ onedoc.get('timestamp') }}</td>
+            <td class="col-md-1">{{ onedoc.get('instrument_name') }}</td>
+            <td class="col-md-10">{{ onedoc.get('message') }}</td>
+        </tr>
+        {% end %}
+    </tbody>
+</table>
+</div>
+
+
+<script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/bootstrap-datepicker.min.js"></script>
+<script src="/static/js/instrument_logs.js"></script>
+{% end %}

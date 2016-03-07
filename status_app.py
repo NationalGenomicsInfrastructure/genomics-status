@@ -26,6 +26,7 @@ from status.cpu_hours import CPUHoursDataHandler
 from status.flowcells import FlowcellDataHandler, FlowcellDemultiplexHandler, FlowcellHandler, FlowcellLinksDataHandler, \
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
+from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler
 from status.phix_err_rate import PhixErrorRateDataHandler, PhixErrorRateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
@@ -112,6 +113,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
             ("/api/v1/instrument_error_rates.png",
                 InstrumentErrorratePlotHandler),
+            ("/api/v1/instrument_logs", DataInstrumentLogsHandler),
             ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
@@ -173,6 +175,8 @@ class Application(tornado.web.Application):
             ("/clusters_per_lane", ClustersPerLaneHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
+            ("/instrument_logs",InstrumentLogsHandler),
+            ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
             ("/q30", Q30Handler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
@@ -206,17 +210,18 @@ class Application(tornado.web.Application):
         # Global connection to the database
         couch = Server(settings.get("couch_server", None))
         if couch:
-            self.uppmax_db = couch["uppmax"]
             self.bioinfo_db = couch["bioinfo_analysis"]
-            self.samples_db = couch["samples"]
-            self.projects_db = couch["projects"]
-            self.flowcells_db = couch["flowcells"]
-            self.x_flowcells_db = couch["x_flowcells"]
-            self.gs_users_db = couch["gs_users"]
             self.cronjobs_db = couch["cronjobs"]
-            self.suggestions_db = couch["suggestion_box"]
-            self.worksets_db = couch["worksets"]
+            self.flowcells_db = couch["flowcells"]
+            self.gs_users_db = couch["gs_users"]
+            self.instrument_logs_db = couch["instrument_logs"]
+            self.projects_db = couch["projects"]
+            self.samples_db = couch["samples"]
             self.server_status_db = couch['server_status']
+            self.suggestions_db = couch["suggestion_box"]
+            self.uppmax_db = couch["uppmax"]
+            self.worksets_db = couch["worksets"]
+            self.x_flowcells_db = couch["x_flowcells"]
         else:
             print settings.get("couch_server", None)
             raise IOError("Cannot connect to couchdb");
@@ -304,6 +309,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcell_samples.html")
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/index.html")
+            tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/phix_err_rate.html")
             tornado.autoreload.watch("design/production.html")
             tornado.autoreload.watch("design/proj_meta_compare.html")
