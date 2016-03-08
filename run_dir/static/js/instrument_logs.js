@@ -14,9 +14,9 @@ function init_listjs() {
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#instrument_logs_table_filter').addClass('form-inline pull-right');
+    $('#instrument_logs_table_filter').addClass('form-inline pull-right input-group-sm');
     $("#instrument_logs_table_filter").appendTo("#logs_date_form");
-    $('#instrument_logs_table_filter label input').appendTo($('#instrument_logs_table_filter'));
+    $('#instrument_logs_table_filter label ').html($('#instrument_logs_table_filter input'));
     $("#instrument_logs_table_filter input").attr("placeholder", "Search..");
     // Apply the search
     table.columns().every( function () {
