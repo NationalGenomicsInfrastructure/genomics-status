@@ -14,8 +14,9 @@ function init_listjs() {
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#instrument_logs_table_filter').addClass('form-inline pull-left');
-    $('#instrument_logs_table_filter label input').appendTo($('#fc_table_filter'));
+    $('#instrument_logs_table_filter').addClass('form-inline pull-right');
+    $("#instrument_logs_table_filter").appendTo("#logs_date_form");
+    $('#instrument_logs_table_filter label input').appendTo($('#instrument_logs_table_filter'));
     $("#instrument_logs_table_filter input").attr("placeholder", "Search..");
     // Apply the search
     table.columns().every( function () {
@@ -40,7 +41,7 @@ function init_submit_button(){
      var second_date;
      var dp=$('#inp_date_1').val();
      if (dp != ''){
-         m_d_y=dp1.split('/');  
+         m_d_y=dp.split('/');  
          first_date=new Date(m_d_y[2], m_d_y[0]-1, m_d_y[1]);
      }else{
          first_date=new Date(2016, 01, 01);
@@ -52,7 +53,7 @@ function init_submit_button(){
      }else{
         second_date=new Date();
      }
-     var loc="/instrument_logs/"+first_date.getTime()/1000+"-"+second_date.getTime()/1000;
+     var loc="/instrument_logs/"+Math.round(first_date.getTime()/1000)+"-"+Math.round(second_date.getTime()/1000);
      window.location.href=loc;
 
     
