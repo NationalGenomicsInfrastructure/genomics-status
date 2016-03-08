@@ -40,7 +40,7 @@ Description: Shows instrument logs for the given period.default is one week.
     <tbody>
         {% for onedoc in docs %}
         <tr>
-            <td class="col-md-1">{{ onedoc.get('timestamp') }}</td>
+            <td class="col-md-1" data-sort="{{ (datetime.datetime.strptime(onedoc.get('timestamp'), "%Y-%m-%dT%H:%M:%S.%f") - datetime.datetime(1970, 1, 1)).total_seconds() }}">{{ datetime.datetime.strptime(onedoc.get('timestamp'), "%Y-%m-%dT%H:%M:%S.%f").strftime("%Y-%m-%d %H:%M:%S") }}</td>
             <td class="col-md-1">{{ onedoc.get('instrument_name') }}</td>
             <td class="col-md-10">{{ onedoc.get('message') }}</td>
         </tr>
