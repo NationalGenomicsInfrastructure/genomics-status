@@ -14,10 +14,8 @@ function init_listjs() {
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#instrument_logs_table_filter').addClass('form-inline pull-right');
-    $("#instrument_logs_table_filter").appendTo("h1");
+    $('#instrument_logs_table_filter').addClass('form-inline pull-left');
     $('#instrument_logs_table_filter label input').appendTo($('#fc_table_filter'));
-    $('#instrument_logs_table_filter label').remove();
     $("#instrument_logs_table_filter input").attr("placeholder", "Search..");
     // Apply the search
     table.columns().every( function () {
@@ -37,10 +35,23 @@ function init_datepickers(){
 function init_submit_button(){
     $('#submit_interval').click(function(e){
      e.preventDefault();
-     var m_d_y=$('#inp_date_1').val().split('/');  
-     var first_date=new Date(m_d_y[2], m_d_y[0]-1, m_d_y[1]);
-     m_d_y=$('#inp_date_2').val().split('/');  
-     var second_date=new Date(m_d_y[2], m_d_y[0]-1, m_d_y[1]);
+     var m_d_y;
+     var first_date;
+     var second_date;
+     var dp=$('#inp_date_1').val();
+     if (dp != ''){
+         m_d_y=dp1.split('/');  
+         first_date=new Date(m_d_y[2], m_d_y[0]-1, m_d_y[1]);
+     }else{
+         first_date=new Date(2016, 01, 01);
+     }
+     dp=$('#inp_date_2').val();
+     if (dp != ''){
+        m_d_y=dp.split('/');  
+        second_date=new Date(m_d_y[2], m_d_y[0]-1, m_d_y[1]);
+     }else{
+        second_date=new Date();
+     }
      var loc="/instrument_logs/"+first_date.getTime()/1000+"-"+second_date.getTime()/1000;
      window.location.href=loc;
 
