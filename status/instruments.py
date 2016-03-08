@@ -36,7 +36,7 @@ class DataInstrumentLogsHandler(SafeHandler):
     def get(self, search_string=None):
         docs=recover_logs(self, search_string)
         self.set_header("Content-type", "application/json")
-        self.write()
+        self.write(json.dumps(docs))
 
 class InstrumentLogsHandler(SafeHandler):
     """ Handles the instrument logs page

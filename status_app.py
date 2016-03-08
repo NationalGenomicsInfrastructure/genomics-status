@@ -114,6 +114,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_error_rates.png",
                 InstrumentErrorratePlotHandler),
             ("/api/v1/instrument_logs", DataInstrumentLogsHandler),
+            ("/api/v1/instrument_logs/([^/]*)$", DataInstrumentLogsHandler),
             ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
