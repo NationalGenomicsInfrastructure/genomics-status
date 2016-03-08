@@ -873,8 +873,9 @@ class BioinfoAnalysisHandler(SafeHandler):
                 if changed:
                     original_doc['values'][timestamp] = data[run_id]
                     original_doc['values'][timestamp]['user'] = user
-                    original_doc['values'][timestamp]['datadelivered'] = data[run_id]['datadelivered']
                     original_doc['values'][timestamp]['sample_status'] = data[run_id]['sample_status']
+                    if 'datadelivered' in data[run_id]:
+                        original_doc['values'][timestamp]['datadelivered'] = data[run_id]['datadelivered']
                     try:
                         self.application.bioinfo_db.save(original_doc)
                         saved_data[run_id] = original_doc['values'][timestamp] # the last one
