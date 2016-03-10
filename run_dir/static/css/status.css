@@ -26,35 +26,24 @@ multiple places and typically control typography, or other common elements.
 
 
 /* index.html page */
-#project_quotas .plot-column {
-	height: 60px;
-	padding: 0;
-	overflow: hidden;
+.table-disk-quotas > tbody > tr > td {
+  padding: 8px;
+  width: 180px;
 }
 
-#project_quotas tr td:first-child {
-	width: 150px;
-}
-
-.update_table {
-	overflow: hidden;
-}
-
-#project_quotas td {
+.table-disk-quotas > tbody > tr > td.disk-quotas-highcharts {
   padding: 0;
 }
-#project_quotas td:first-child {
-  padding: 8px;
-}
-#project_quotas .wrapper {
+
+.table-disk-quotas .wrapper {
   display: inline-block;
   position: relative;
   height:100%;
   width:100%;
-  overflow: visible;
   white-space: nowrap;
 }
-#project_quotas .val {
+
+.table-disk-quotas .val {
   display: block;
   position: absolute;
   padding:0;
@@ -64,18 +53,18 @@ multiple places and typically control typography, or other common elements.
   z-index:-1;
   background-color: #ededed;
 }
-#project_quotas .val span {
+
+.table-disk-quotas .val span {
   position: absolute;
   top: 8px; left: 8px;
 }
-#project_quotas .percent {
-  padding: 8px; 
+.table-disk-quotas .percent {
+  padding: 8px;
 }
-#project_quotas .q-danger .val { background-color: #f2dede; }
-#project_quotas .q-danger span { color: #a94442; }
-#project_quotas .q-warning .val { background-color: #fcf8e3; }
-#project_quotas .q-warning span { color: #8a6d3b; }
-
+.table-disk-quotas .q-danger .val { background-color: #f2dede; }
+.table-disk-quotas .q-danger span { color: #a94442; }
+.table-disk-quotas .q-warning .val { background-color: #fcf8e3; }
+.table-disk-quotas .q-warning span { color: #8a6d3b; }
 
 /*
 === Typography ===

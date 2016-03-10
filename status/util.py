@@ -5,8 +5,9 @@ import requests
 import os
 import sys
 import time
-
-from datetime import datetime
+import copy
+from datetime import datetime, timedelta
+from dateutil import parser
 
 
 #########################
@@ -124,9 +125,86 @@ class MainHandler(UnsafeHandler):
     """
     def get(self):
         t = self.application.loader.load("index.html")
-        uppmax_projects = self.application.uppmax_projects
         user = self.get_current_user_name()
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=user, uppmax_projects=uppmax_projects))
+
+        view = self.application.server_status_db.view('all_docs/by_timestamp')
+        latest = max([parser.parse(row.key) for row in view.rows])
+        # assuming that status db is not being updated more often than every 5 minutes
+        reduced_rows = [row for row in view.rows if latest - parser.parse(row.key) <= timedelta(minutes=5)]
+        instruments = self.application.server_status['instruments']
+        server_status = {}
+        for row in reduced_rows:
+            server = row.value['name']
+            if server not in server_status:
+                server_status[server] = row.value
+                server_status[server]['instrument'] = instruments[server] or '-'
+                row.value['used_percentage'] = float(row.value['used_percentage'].replace('%',''))
+                if row.value['used_percentage'] > 60:
+                    server_status[server]['css_class'] = 'q-warning'
+                elif row.value['used_percentage'] > 80:
+                    server_status[server]['css_class'] = 'q-danger'
+                else:
+                    server_status[server]['css_class'] = ''
+        # sort by used space
+        server_status = sorted(server_status.items(), key = lambda item: item[1]['used_percentage'], reverse=True)
+
+        # copy -> so that we don't change self.application.uppmax_projects
+        uppmax_ids = copy.copy(self.application.uppmax_projects)
+        # get all the documents, sorted by timestamp in descending order. Because I don't know how to use reduce functions
+        # limit = 30, get the last 30 entries. assuming that our projects are in this range
+        view = self.application.uppmax_db.view('time/last_updated_full_doc', descending=True, limit=30)
+        uppmax_projects = {}
+        for row in view.rows:
+            # if we found all projects, don't continue
+            if not uppmax_ids:
+                break
+            project_id = row.value['project'].replace('/', '_')
+            project_nobackup = copy.copy(row.value['project'].split('/')[0])
+            if project_id in uppmax_ids:
+                # if a new project, add cpu hours
+                if project_nobackup not in uppmax_projects:
+                    uppmax_projects[project_nobackup] = {'timestamp': row.key}
+
+                project = uppmax_projects[project_nobackup]
+                # add disk or nobackup usage depending on type of project
+                if project_id == project_nobackup:
+                    # can happen if taca server_status updates the wrong database
+                    if 'usage (GB)' not in row.value or 'quota limit (GB)' not in row.value:
+                        del uppmax_projects[project_nobackup]
+                        continue
+                    # / 1024 - to convert GB to TB
+                    project['disk_usage'] = round(float(row.value['usage (GB)']) / 1024, 2)
+                    project['disk_limit'] = round(float(row.value['quota limit (GB)']) / 1024, 2)
+                    project['disk_percentage'] = min(100, 100 * (project['disk_usage'] / project['disk_limit']))
+                    if project['disk_percentage'] > 90.0:
+                        project['disk_class'] = 'q-danger'
+                    elif project['disk_percentage'] > 80.0:
+                        project['disk_class'] = 'q-warning'
+                    else:
+                        project['disk_class'] = ''
+                    project['cpu_usage'] = round(float(row.value['cpu hours']) / 1000, 2)
+                    project['cpu_limit'] = round(float(row.value['cpu limit']) / 1000, 2)
+                    project['cpu_percentage'] = min(100, 100 * (project['cpu_usage'] / project['cpu_limit']))
+                    if project['cpu_percentage'] > 90.0:
+                        project['cpu_class'] = 'q-danger'
+                    elif project['cpu_percentage'] > 80.0:
+                        project['cpu_class'] = 'q-warning'
+                    else:
+                        project['cpu_class'] = ''
+                else:
+                    project['nobackup_usage'] = round(float(row.value['usage (GB)']) / 1024, 2)
+                    project['nobackup_limit'] = round(float(row.value['quota limit (GB)']) / 1024, 2)
+                    project['nobackup_percentage'] = min(100, 100 * (project['nobackup_usage'] / project['nobackup_limit']))
+                    if project['nobackup_percentage'] > 90.0:
+                        project['nobackup_class'] = 'q-danger'
+                    elif project['nobackup_percentage'] > 80.0:
+                        project['nobackup_class'] = 'q-warning'
+                    else:
+                        project['nobackup_class'] = ''
+
+                uppmax_ids.remove(project_id)
+
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=user, uppmax_projects=uppmax_projects, server_status=server_status))
 
 
 

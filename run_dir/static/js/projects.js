@@ -198,10 +198,25 @@ function init_listjs(no_items, columns) {
       $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
     } );
 
+    //initialize custom project sorting
+    jQuery.extend(jQuery.fn.dataTableExt.oSort, {
+            "pid-pre": function(a) {
+                        return parseInt($(a).text().replace(/P/gi, ''));
+                            },
+            "pid-asc": function(a,b) {
+                        return a-b;
+                            },
+            "pid-desc": function(a,b) {
+                        return b-a;
+                            }
+    });
     if ($.fn.dataTable.isDataTable( '#project_table' )){
         var table = $('#project_table').DataTable();
     }else{
         var table = $('#project_table').DataTable({
+           "aoColumnDefs": [
+              {"sType": "pid", "aTargets": [0]}
+           ],
           "paging":false,
           "destroy": true,
           "info":false,
