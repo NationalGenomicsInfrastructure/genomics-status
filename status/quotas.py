@@ -41,7 +41,7 @@ class QuotaDataHandler(SafeHandler):
         proj_getter = lambda row: row.key[0]
         proj_checker = lambda row: proj_getter(row) == project
         date_getter = lambda row: row.key[1]
-        view = self.application.uppmax_db.view("status/project_quota_usage_over_time")
+        view = self.application.server_status_db.view("uppmax/by_timestamp")
         r_list = filter(proj_checker, view)
         r_list = sorted(r_list, key=date_getter)
 

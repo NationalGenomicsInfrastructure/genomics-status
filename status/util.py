@@ -126,8 +126,7 @@ class MainHandler(UnsafeHandler):
     def get(self):
         t = self.application.loader.load("index.html")
         user = self.get_current_user_name()
-
-        view = self.application.server_status_db.view('all_docs/by_timestamp')
+        view = self.application.server_status_db.view('nases/by_timestamp')
         latest = max([parser.parse(row.key) for row in view.rows])
         # assuming that status db is not being updated more often than every 5 minutes
         reduced_rows = [row for row in view.rows if latest - parser.parse(row.key) <= timedelta(minutes=5)]
@@ -152,7 +151,7 @@ class MainHandler(UnsafeHandler):
         uppmax_ids = copy.copy(self.application.uppmax_projects)
         # get all the documents, sorted by timestamp in descending order. Because I don't know how to use reduce functions
         # limit = 30, get the last 30 entries. assuming that our projects are in this range
-        view = self.application.uppmax_db.view('time/last_updated_full_doc', descending=True, limit=30)
+        view = self.application.server_status_db.view('uppmax/by_timestamp', descending=True, limit=30)
         uppmax_projects = {}
         for row in view.rows:
             # if we found all projects, don't continue
