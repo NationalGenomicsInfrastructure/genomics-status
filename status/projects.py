@@ -910,3 +910,31 @@ class ProjMetaCompareHandler(SafeHandler):
         pids = self.get_arguments("p")
         t = self.application.loader.load("proj_meta_compare.html")
         self.write(t.generate(gs_globals=self.application.gs_globals, pids=pids))
+
+
+class ProjectLabStatusHandler(SafeHandler):
+    """Handler for the update of the project lab status"""
+    def post(self, project_id):
+        try:
+            data = json.loads(self.request.body)
+            text=data.get('text', '')
+            p=Project(lims, id=project_id)
+            p.udf['Lab Status']=text
+            p.put()
+            view=self.application.projects_db.view("project/project_id")
+            for row in view[project_id]:
+                doc=self.application.projects_db.get(row.id)
+                doc['details']['lab_status']=text
+                self.application.projects_db.save(doc)
+
+
+        except Exception as e:
+            self.set_status(400)
+            self.finish('<html><body><p>could not update Entity {} :</p><pre>{}</pre></body></html>'.format( cl_id, e))
+        else:
+            self.set_status(200)
+            self.set_header("Content-type", "application/json")
+            self.write(self.request.body)
+
+
+

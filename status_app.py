@@ -35,7 +35,7 @@ from status.projects import BioinfoAnalysisHandler, CaliperImageHandler, CharonP
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler, RecCtrlDataHandler, \
-    ProjMetaCompareHandler
+    ProjMetaCompareHandler, ProjectLabStatusHandler
 
 from status.quotas import QuotaDataHandler, QuotaHandler, QuotasHandler
 from status.q30 import Q30Handler, Q30PlotHandler
@@ -121,6 +121,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
+            ("/api/v1/lab_status/([^/]*)", ProjectLabStatusHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),

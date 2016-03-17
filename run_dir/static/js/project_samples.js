@@ -377,6 +377,12 @@ function load_all_udfs(){
         $('#project_comment').html(make_markdown(value));
         check_img_sources($('#project_comment img'));
       }
+      else if (prettify(key) == 'lab_status'){
+        value = value.replace(/\_/g, '\\_');
+        $('#lab_status').html(make_markdown(value));
+        $('#textarea_lab_status').html(value);
+      }
+
 
       // Create the links for review and display the banner
       else if (prettify(key) == 'pending_reviews'){
@@ -1157,6 +1163,44 @@ function reset_editable(row, forcedisabled){
 }
 
 $(document).ready(function() {
+
+  //Lab status setup
+  $('#lab_status').click(function(e){
+      e.preventDefault();
+      $('#edit_lab_status').show();
+      $(this).hide();
+      $(this).html($("#textarea_lab_status").val());
+  });
+  $('#submit_lab_status').click(function(e){
+    e.preventDefault();
+    var text=$("#textarea_lab_status").val();
+    var url="/api/v1/lab_status/" + project;
+    var object={'text' : text};
+    $.ajax({
+      type: 'POST',
+      url: url,
+      dataType: 'json',
+      data: JSON.stringify(object),
+      error: function(xhr, textStatus, errorThrown) {
+        alert('saving the lab status failed : '+errorThrown);
+        console.log(xhr); console.log(textStatus); console.log(errorThrown); 
+      },
+      success: function(saved_data, textStatus, xhr) {
+        $("#lab_status").html(make_markdown(text));
+        $('#edit_lab_status').hide();
+        $('#lab_status').show();
+      }
+    });
+
+  });
+  $('#cancel_lab_status').click(function(e){
+    e.preventDefault();
+    var text=$("#lab_status").html();
+    $("#textarea_lab_status").val(text);
+    $("#lab_status").html(make_markdown(text));
+    $('#edit_lab_status').hide();
+    $('#lab_status').show();
+  });
 
   // Run ID status - individual runs
   $('.table-bioinfo-status').on('click', '.bioinfo-status-runstate', function(e) {
