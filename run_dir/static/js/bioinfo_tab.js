@@ -33,6 +33,28 @@ $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
     });
     setParentDate(date_td);
 });
+$('.table-bioinfo-status').on('click', '.date-reset', function(e) {
+    if ($('.table-bioinfo-status').hasClass('bioinfo-status-disabled')) {
+        return false;
+    }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
+    if(!isdisabled){
+      var today = formatDateTime(new Date(), false);
+      $(this).prevAll("input:first").val("");
+    }
+    // set values to upper and lower levels
+    var date_td = $(this).closest('td.datadelivered');
+    var child_tds = getChildTds(date_td);
+    $.each(child_tds, function(i, td){
+        // do not change if disabled
+        if (!$(td).parent().hasClass('bioinfo-status-disabled')) {
+            $(td).find('input:text').val("");
+        }
+    });
+    setParentDate(date_td);
+});
 
 // expand or collapse table
 $('.bioinfo-expand').click(function(e){
@@ -815,6 +837,14 @@ $('th.bioinfo-status-th-date').on('click', '.datepicker-today', function(e) {
         if($(input).val() == '') {
             $(input).val(today);
         }
+    });
+});
+
+$('th.bioinfo-status-th-date').on('click', '.date-reset', function(e) {
+    var table = $(this).closest('table');
+    var date_inputs = $(table).find('td.datadelivered input:text');
+    $.each(date_inputs, function(i, input){
+        $(input).val("");
     });
 });
 

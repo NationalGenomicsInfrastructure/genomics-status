@@ -879,16 +879,21 @@ These classes are cut and pasted wholesale into here from other packages.
   color: #ccc;
 }
 .bioinfo-status-disabled td, .bioinfo-status-disabled th,
-.bioinfo-status-disabled .input-group-addon.datepicker-today {
+.bioinfo-status-disabled .input-group.date,
+.bioinfo-status-disabled .input-group.date .input-group-addon
+{
   cursor: not-allowed;
 }
 .bioinfo-status-disabled.bioinfo-delivered td.bioinfo-status-runstate {
   cursor: pointer;
 }
 
-.input-group.date, .narrowinput {
-  width: 120px;
+.input-group.date {
+    max-width: 190px;
+    margin-right: -30px;
 }
+
+
 .datepicker table tr td, .datepicker table tr th {
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;

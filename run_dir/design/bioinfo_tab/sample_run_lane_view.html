@@ -75,7 +75,10 @@
         <th class="bioinfo-status-th bioinfo-app-applications">Data delivered</th>
         <th class="bioinfo-status-th bioinfo-app-applications">Data approved</th>
       {% end %}
-      <th class="bioinfo-status-th-date datadelivered">Data Delivered <button class="btn btn-sm datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></button></th>
+      <th class="bioinfo-status-th-date datadelivered">Data Delivered
+        <button class="btn btn-sm date-reset"><i class="glyphicon glyphicon-remove"></i></button>
+        <button class="btn btn-sm datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></button>
+      </th>
     </tr>
       {% for sample_id, sample in sorted(proj['samples'].items()) %}
         <tr class="bioinfo-sample  {% if sample.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing'] or sample.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %}"
@@ -115,6 +118,7 @@
               <div class="input-group input-group-sm date"><input type="text" class="form-control"
                   {% if project_closed or sample.get('datadelivered','') != '' %} disabled="disabled" {% end %}
                   value="{{ sample.get('datadelivered', '') }}">
+                <span class="input-group-addon date-reset"><i class="glyphicon glyphicon-remove"></i></span>
                 <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
               </div>
             </td>
@@ -158,7 +162,9 @@
               <div class="input-group input-group-sm date"><input type="text" class="form-control"
                   {% if project_closed or flowcell.get('datadelivered','') != '' %} disabled="disabled" {% end %}
                 value="{{ flowcell.get('datadelivered', '') }}">
-                <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
+                <span class="input-group-addon date-reset"><i class="glyphicon glyphicon-remove"></i></span>
+                <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
+              </div>
             </td>
           </tr>
           {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
@@ -215,7 +221,9 @@
                 <td class="bioinfo-status datadelivered">
                   <div class="input-group input-group-sm date"><input type="text" class="form-control" {% if project_closed or lane.get('datadelivered','') != '' %} disabled="disabled" {% end %}
                     value="{{ lane.get('datadelivered', '') }}">
-                    <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span></div>
+                    <span class="input-group-addon date-reset"><i class="glyphicon glyphicon-remove"></i></span>
+                    <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
+                  </div>
                 </td>
             </tr>
           {% end %}
