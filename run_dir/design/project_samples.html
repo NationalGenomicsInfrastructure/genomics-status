@@ -93,7 +93,18 @@ Description: Details page for a single project
     <p id="project_comment">-</p><hr>
 
     <h4>Project Lab Status</h4>
-    <p id="comment">-</p><hr>
+    <p id="lab_status">-</p>
+    <form id="edit_lab_status" style="display:none;">
+    <div class="form-group">
+      <textarea id="textarea_lab_status" class="form-control" rows="4" cols="10">
+      </textarea>
+    </div>
+    <div class="form-group text-right">
+        <button id="cancel_lab_status" class="btn btn-default btn-sm">Cancel <span class="glyphicon glyphicon-remove"></span></button>
+        <button id="submit_lab_status" class="btn btn-primary btn-sm">Save <span class="glyphicon glyphicon-ok"></span></button>
+    </div>
+    </form>
+        <hr>
 
     <h4>User project description
       <small class="text-danger">Use with caution! <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="This is the original user description of the project and may not reflect the final order."></i></small>
