@@ -158,8 +158,13 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
 
     var tds = $(tr).children('td.bioinfo-status-qc');
     $.each(tds, function(index, td) {
-        var td_class = $(td).attr('class').split(/\s+/)[2];
-        $(td).removeClass(td_class); // todo: remove any class of bioinfo_qc_classes
+        var classes = $(td).attr('class').split(/\s+/);
+        // remove any of the bioinfo_qc_classes
+        $.each(classes, function(i, td_class){
+            if (bioinfo_qc_classes.indexOf(td_class) != -1) {
+                $(td).removeClass(td_class);
+            }
+        });
 //        why?
         $(td).addClass(row_class); // tr_class, not new_class!
         $(td).text(row_status);
@@ -192,6 +197,7 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
             new_sample_status = 'BP-done';
         }
     } else {
+        // if all qc (and bp?) are failed, status = Failed
         if (bp_statuses.length == 1 && bp_statuses[0] == '?') {
             new_sample_status = 'New';
         } else {
@@ -630,9 +636,9 @@ $('#bioinfo-status-saveButton').click(function(e){
 
         // get data_delivered date
         var data_delivered = $(this).find('td.datadelivered input:text').val();
+        sample_run_lane_statuses[row_key]['datadelivered'] = data_delivered;
         if (data_delivered != '') {
             show_warning = true;
-            sample_run_lane_statuses[row_key]['datadelivered'] = data_delivered;
         }
     });
 
@@ -774,6 +780,7 @@ function setChildrenSpanStatus(span) {
     });
 };
 
+// this one shouldn't be done like that
 function setParentSpanStatus(span) {
     if (span == undefined) {
         return false;
