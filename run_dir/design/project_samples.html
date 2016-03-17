@@ -94,12 +94,16 @@ Description: Details page for a single project
 
     <h4>Project Lab Status</h4>
     <p id="lab_status">-</p>
-    <div id="edit_lab_status" style="display:none;">
+    <form id="edit_lab_status" style="display:none;">
+    <div class="form-group">
       <textarea id="textarea_lab_status" class="form-control" rows="4" cols="10">
       </textarea>
-        <button id="cancel_lab_status" class="btn"><span class="glyphicon glyphicon-remove"></span></button>
-        <button id="submit_lab_status" class="btn btn-primary"><span class="glyphicon glyphicon-ok"></span></button>
-        </div>
+    </div>
+    <div class="form-group text-right">
+        <button id="cancel_lab_status" class="btn btn-default btn-sm">Cancel <span class="glyphicon glyphicon-remove"></span></button>
+        <button id="submit_lab_status" class="btn btn-primary btn-sm">Save <span class="glyphicon glyphicon-ok"></span></button>
+    </div>
+    </form>
         <hr>
 
     <h4>User project description

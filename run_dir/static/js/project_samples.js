@@ -1169,7 +1169,6 @@ $(document).ready(function() {
       e.preventDefault();
       $('#edit_lab_status').show();
       $(this).hide();
-      $(this).html($("#textarea_lab_status").val());
   });
   $('#submit_lab_status').click(function(e){
     e.preventDefault();
@@ -1195,9 +1194,6 @@ $(document).ready(function() {
   });
   $('#cancel_lab_status').click(function(e){
     e.preventDefault();
-    var text=$("#lab_status").html();
-    $("#textarea_lab_status").val(text);
-    $("#lab_status").html(make_markdown(text));
     $('#edit_lab_status').hide();
     $('#lab_status').show();
   });
