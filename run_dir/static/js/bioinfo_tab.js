@@ -189,7 +189,9 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
     });
     var new_sample_status;
     if (new_status != '?') {
-        if (bp_statuses.length == 1 && bp_statuses[0] == '?') {
+        if (new_status == 'Fail') {
+            new_sample_status = 'Failed';
+        } else if (bp_statuses.length == 1 && bp_statuses[0] == '?') {
             new_sample_status = 'QC-done';
         } else if (bp_statuses.indexOf('?') != -1) {
             new_sample_status = 'BP-ongoing';
@@ -235,12 +237,6 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
         $(td).removeClass(th_class);
         $(td).addClass(new_class);
         $(td).text(new_status);
-
-        if ($(td).hasClass('bioinfo-status-bp')) {
-            checkSampleStatusOnBPClick(td);
-        } else if ($(td).hasClass('bioinfo-status-qc')) {
-            checkSampleStatusOnQCClick(td);
-        }
     });
     $(th).removeClass(th_status);
     $(th).addClass(new_status);
@@ -359,14 +355,19 @@ function checkSampleStatusOnQCClick(td) {
     var qc_boxes = $(td).parent().children('td.bioinfo-status-qc:not(.'+$(td).attr('class').split(/\s+/)[1]+')');
     var last_value = true;
     var qc_statuses = [];
+    var unique_statuses = [];
     $.each(qc_boxes, function(i, qc){
         var qc_value = $(qc).text().trim();
         if (qc_value == '?') {
             last_value = false;
             return false;
         }
+        if (unique_statuses.indexOf(qc_value) == -1) {
+            unique_statuses.push(qc_value);
+        }
         qc_statuses.push(qc_value);
     });
+
     var new_sample_status = sample_status;
     if (sample_status == 'New') { // if we clicked for the first time
         new_sample_status = 'QC-ongoing';
@@ -381,6 +382,10 @@ function checkSampleStatusOnQCClick(td) {
             new_sample_status = 'New';
         }
     } // if not the last value, also don't care
+
+    if (unique_statuses.length == 1 && unique_statuses[0] == 'Fail') {
+        new_sample_status = 'Failed';
+    }
 
     $(span).text(new_sample_status);
     setChildrenSpanStatus(span);
@@ -433,7 +438,7 @@ $(document).ready(function() {
     var sample_view = $('table.table-bioinfo-status-sampleview');
     var run_view = $('table.table-bioinfo-status-runview');
     agregateStatus(sample_view);
-    agregateStatus(run_view);
+//    agregateStatus(run_view);
 });
 
 
@@ -451,11 +456,20 @@ var agregateStatus = function(view_table) {
         console.warning('Unknown data structure. Possible views: sample-run-lane or run-lane-sample. Change bioinfo_tab.js')
     }
     var second_level_trs = $(view_table).find('tr'+second_level_class);
+    var second_level_values = {};
     $.each(second_level_trs, function(i, tr) {
         var all_tds = $(tr).children('td.bioinfo-status-qc, td.bioinfo-status-bp');
         $.each(all_tds, function(i, td) {
-            setParentStatus(td);
+            var td_class = $(td).attr('class').split(/\+s/)[1];
+            if (!(td_class in second_level_values)) {
+                second_level_values[td_class] = [$(td).text()]
+            } else {
+                second_level_values[td_class].push($(td).text());
+            }
         });
+//        $.each(all_tds, function(i, td) {
+//            setParentStatus(td);
+//        });
     });
 
     var top_level_trs = $(view_table).find('tr'+top_level_class);
@@ -751,11 +765,13 @@ var sample_statuses = {
     'New': 'label-primary',
     'QC-ongoing': 'label-warning',
     'QC-done': 'label-success',
-    'BP-ongoing': 'label-danger',
-    'BP-done': 'label-success'
+    'BP-ongoing': 'label-warning',
+    'BP-done': 'label-success',
+    'Failed': 'label-danger',
+    'Delivered': 'label-success',
     };
-var sample_classes = ['label-default', 'label-default', 'label-default', 'label-primary', 'label-warning', 'label-success', 'label-danger', 'label-success'];
-var sample_values = ['Demultiplexing', 'Transferring', 'Sequencing', 'New', 'QC-ongoing', 'QC-done', 'BP-ongoing', 'BP-done'];
+var sample_classes = ['label-default', 'label-default', 'label-default', 'label-primary', 'label-warning', 'label-success', 'label-warning', 'label-success', 'label-danger', 'label-sucess'];
+var sample_values = ['Demultiplexing', 'Transferring', 'Sequencing', 'New', 'QC-ongoing', 'QC-done', 'BP-ongoing', 'BP-done', 'Failed', 'Delivered'];
 
 
 // assuming that the status has been just updated, but not the class
@@ -839,11 +855,21 @@ $('select#bioinfo-view').on( "change", function(e) {
 $('th.bioinfo-status-th-date').on('click', '.datepicker-today', function(e) {
     var table = $(this).closest('table');
     var today = formatDateTime(new Date(), false);
+    var tds = $(table).find('td.datadelivered')
+
     var date_inputs = $(table).find('td.datadelivered input:text');
     $.each(date_inputs, function(i, input){
         if($(input).val() == '') {
             $(input).val(today);
         }
+
+        var label = $(input).closest('tr').find('td.bioinfo-status-runstate span.label');
+        console.log($(label));
+        label.text('Delivered');
+        var label_class = $(label).attr('class').split(/\s+/)[1];
+        console.log(label_class);
+        label.removeClass(label_class);
+        label.addClass('label-danger');
     });
 });
 
