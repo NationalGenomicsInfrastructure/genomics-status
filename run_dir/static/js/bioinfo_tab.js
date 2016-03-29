@@ -256,7 +256,7 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
     var new_class = bioinfo_qc_statuses[new_status];
 
     // get tds with the same column name
-    var column_name = $(th).attr('class').split(/\s+/)[1]
+    var column_name = $(th).attr('class').split(/\s+/)[1];
     var tds = $(th).closest('.table-bioinfo-status').find('tr:not(.bioinfo-status-disabled) td.'+column_name);
     $.each(tds, function(index, td) {
         $(td).removeClass(th_class);
@@ -286,29 +286,31 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
     }
     var td = $(this);
 
+    var top_parent = topParent($(td).parent());
+    var td_index = $(td).parent().children().index(td);
+    var top_td = $(top_parent).children()[td_index];
 
-//    var child_tds = getChildTds(top_td);
-//    child_tds.push(top_td);
-//    $.each(child_tds, function(i, child_td) {
-//        var td_class = $(child_td).attr('class').split(/\s+/)[2];
-//        $(child_td).removeClass(td_class);
-//        $(child_td).addClass(bioinfo_qc_statuses[next_value]);
-//        $(child_td).text(next_value);
-//    });
-//
-//    // why do we need this one?
-//    var top_parent = topParent($(td).parent());
-//    var td_index = $(td).parent().children().index(td);
-//    // what is the difference
-//    var top_td = $(top_parent).children()[td_index];
-//    var current_value = $(this).text().trim();
-//    if (bioinfo_qc_values.indexOf(current_value) == -1) {
-//        current_value = '?';
-//    }
-//    var index = bioinfo_qc_values.indexOf(current_value);
-//    var next_value = bioinfo_qc_values[(index+1) % bioinfo_qc_values.length];
-//
+    var child_tds = getChildTds(top_td);
+    child_tds.push(top_td);
 
+    var current_value = $(this).text().trim();
+    if (bioinfo_qc_values.indexOf(current_value) == -1) {
+        current_value = '?';
+    }
+    var index = bioinfo_qc_values.indexOf(current_value);
+    var next_value = bioinfo_qc_values[(index+1) % bioinfo_qc_values.length];
+
+    $.each(child_tds, function(i, child_td) {
+        console.log(child_td);
+        var td_classes = $(child_td).attr('class').split(/\s+/);
+        $.each(td_classes, function(i, td_class) {
+            if (bioinfo_qc_classes.indexOf(td_class) != -1) {
+                $(child_td).removeClass(td_class);
+            }
+        });
+        $(child_td).addClass(bioinfo_qc_statuses[next_value]);
+        $(child_td).text(next_value);
+    });
 
     checkSampleStatusOnBPClick(td);
 });
@@ -330,7 +332,12 @@ function checkSampleStatusOnBPClick(td) {
     });
     var new_sample_status = sample_status;
     if (sample_status == 'QC-ongoing') {
-        // do nothing;
+        // all the rest values are also '?'
+        if (next_value == '?' && bp_statuses.length == 1 && bp_statuses.indexOf('?') != -1) {
+            new_sample_status = 'New';
+        } else {
+            // do nothing
+        }
     } else if (sample_status == 'New') { // if we clicked for the first time
         new_sample_status = 'QC-ongoing';
     } else if (sample_status == 'QC-done') {
