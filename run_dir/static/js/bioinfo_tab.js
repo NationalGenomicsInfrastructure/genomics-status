@@ -320,9 +320,9 @@ function checkSampleStatusOnBPClick(td) {
     // check the sample status
     var span = $(td).parent().find('td.bioinfo-status-runstate span');
     var sample_status = $(span).text().trim();
-
+    var bp_class = $(td).attr('class').split(/\s+/)[1];
     // all bp boxes except the current one
-    var bp_boxes = $(td).parent().children('td.bioinfo-status-bp:not(.'+$(td).attr('class').split(/\s+/)[1] + ')');
+    var bp_boxes = $(td).parent().children('td.bioinfo-status-bp:not(.' + bp_class + ')');
     var bp_statuses = [];
     $.each(bp_boxes, function(i, bp){
          var bp_value = $(bp).text().trim();
@@ -359,9 +359,10 @@ function checkSampleStatusOnBPClick(td) {
             new_sample_status = 'BP-ongoing';
         }
     }
-    $(span).text(new_sample_status);
-    setChildrenSpanStatus(span);
-    setParentSpanStatus(span);
+    var top_parent_tr = topParent(td.closest('tr'));
+    var top_span = $(top_parent_tr).find('td.bioinfo-status-runstate span');
+    $(top_span).text(new_sample_status);
+    setChildrenSpanStatus(top_span);
 };
 
 function checkSampleStatusOnQCClick(td) {
