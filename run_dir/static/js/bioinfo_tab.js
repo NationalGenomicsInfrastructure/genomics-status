@@ -333,7 +333,7 @@ function checkSampleStatusOnBPClick(td) {
     var new_sample_status = sample_status;
     if (sample_status == 'QC-ongoing') {
         // all the rest values are also '?'
-        if (next_value == '?' && bp_statuses.length == 1 && bp_statuses.indexOf('?') != -1) {
+        if (next_value == '?' && ((bp_statuses.length == 1 && bp_statuses.indexOf('?') != -1) || bp_statuses.length == 0)) {
             new_sample_status = 'New';
         } else {
             // do nothing

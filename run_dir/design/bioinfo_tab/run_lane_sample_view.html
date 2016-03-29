@@ -37,7 +37,7 @@
       {% elif application == 'WGreseq' %}
         <th class="bioinfo-app-WGreseq" colspan="2">WG Reseq</th>
       {% elif application == 'denovo' %}
-        <th class="bioinfo-app-denovo" colspan="2">De novo / Mate-Pair</th>
+        <th class="bioinfo-app-denovo" colspan="1">De novo / Mate-Pair</th>
       {% elif application == 'applications' %}
         <th class="bioinfo-app-applications" colspan="2">Applications (if applicable)</th>
       {% end %}
@@ -69,8 +69,7 @@
         <th class="bioinfo-status-th WGreseq_sequenceduplication">Sequence duplication</th>
         <th class="bioinfo-status-th WGreseq_mappingrate">Mapping rate</th>
       {% elif application == 'denovo' %}
-        <th class="bioinfo-status-th denovo_adaptertrimming">Adapter trimming</th>
-        <th class="bioinfo-status-th denovo_kmerprofile">K-mer profile</th>
+        <th class="bioinfo-status-th denovo">De Novo / Mait Pair</th>
       {% elif application == 'applications' %}
         <th class="bioinfo-status-th bioinfo-app-applications">Data delivered</th>
         <th class="bioinfo-status-th bioinfo-app-applications">Data approved</th>
@@ -108,8 +107,7 @@
             <td class="bioinfo-status-bp WGreseq_sequenceduplication unknown">?</td>
             <td class="bioinfo-status-bp WGreseq_mappingrate unknown">?</td>
           {% elif application == 'denovo' %}
-            <td class="bioinfo-status-bp denovo_adaptertrimming unknown">?</td>
-            <td class="bioinfo-status-bp denovo_kmerprofile unknown">?</td>
+            <td class="bioinfo-status-bp denovo unknown">?</td>
           {% elif application == 'applications' %}
             <td class="bioinfo-status-bp applications">Data delivered</td>
             <td class="bioinfo-status-bp applications">Data approved</td>
@@ -153,8 +151,7 @@
             <td class="bioinfo-status-bp WGreseq_sequenceduplication unknown">?</td>
             <td class="bioinfo-status-bp WGreseq_mappingrate unknown">?</td>
           {% elif application == 'denovo' %}
-            <td class="bioinfo-status-bp denovo_adaptertrimming unknown">?</td>
-            <td class="bioinfo-status-bp denovo_kmerprofile unknown">?</td>
+            <td class="bioinfo-status-bp denovo unknown">?</td>
           {% elif application == 'applications' %}
             <td class="bioinfo-status-bp applications">Data delivered</td>
             <td class="bioinfo-status-bp applications">Data approved</td>
@@ -212,10 +209,8 @@
                 <td class="bioinfo-status-bp WGreseq_mappingrate {{ qc_css.get(sample.get('WGreseq_mappingrate', '?'), 'unknown') }}">
                   {{ sample.get('bp', {}).get('WGreseq_mappingrate', '?') }}</td>
               {% elif application == 'denovo' %}
-                <td class="bioinfo-status-bp denovo_adaptertrimming {{ qc_css.get(sample.get('bp', {}).get('denovo_adaptertrimming', '?'), 'unknown') }}">
-                  {{ sample.get('bp', {}).get('denovo_adaptertrimming', '?') }}</td>
-                <td class="bioinfo-status-bp denovo_kmerprofile {{ qc_css.get(sample.get('bp', {}).get('denovo_kmerprofile', '?'), 'unknown') }}">
-                  {{ sample.get('bp', {}).get('denovo_kmerprofile', '?') }}</td>
+                <td class="bioinfo-status-bp denovo {{ qc_css.get(sample.get('bp', {}).get('denovo', '?'), 'unknown') }}">
+                  {{ sample.get('bp', {}).get('denovo', '?') }}</td>
               {% elif application == 'applications' %}
                 <td class="bioinfo-status-bp applications">?</td>
                 <td class="bioinfo-status-bp applications">?</td>
