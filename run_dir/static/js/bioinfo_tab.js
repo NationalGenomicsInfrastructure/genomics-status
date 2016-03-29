@@ -143,20 +143,38 @@ var bioinfo_qc_statuses = {'?': 'unknown', 'Pass': 'success', 'Warning': 'warnin
 var bioinfo_qc_classes = ['unknown', 'success', 'warning', 'danger', 'active'];
 var bioinfo_qc_values = ['?', 'Pass', 'Warning', 'Fail', 'N/A'];
 
+
+function setChildrenStatus_new(parent_td) {
+    var new_class = $(parent_td).attr('class').split(/\s+/)[2];
+    var new_value = $(parent_td).text();
+    // get all of them recursively
+    var tds = getChildTds(parent_td);
+    // if tds is empty, return
+    $.each(tds, function(i, td) {
+        $(td).text(new_value);
+        $.each($(td).attr('class').split(/\s+/), function(i, td_class) {
+            if(bioinfo_qc_classes.indexOf(td_class) != -1) {
+                $(td).removeClass(td_class);
+            }
+        });
+        $(td).addClass(new_class);
+        $(td).text(new_value);
+    });
+};
+
 // set the whole row
 $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioinfo-status-row', function(e) {
     e.stopImmediatePropagation();
     if ($('.table-bioinfo-status').hasClass('bioinfo-status-disabled')) {
         return false;
     }
-    var tr = $(this).parent();
     var td = $(this);
-    var row_status = $(this).attr('class').split(/\s+/)[1];
-    var row_class = bioinfo_qc_statuses[row_status];
-    var new_status = bioinfo_qc_values[(bioinfo_qc_values.indexOf(row_status)+1) % bioinfo_qc_values.length];
-    var new_class = bioinfo_qc_statuses[new_status];
-
-    var tds = $(tr).children('td.bioinfo-status-qc');
+    var tr = $(td).parent()[0];
+    var row_status = $(td).attr('class').split(/\s+/)[1];   // '?'
+    var row_class = bioinfo_qc_statuses[row_status];        // 'unknown'
+    var new_status = bioinfo_qc_values[(bioinfo_qc_values.indexOf(row_status)+1) % bioinfo_qc_values.length]; // 'Pass'
+    var new_class = bioinfo_qc_statuses[new_status];        // 'success'
+    var tds = $(tr).find('td.bioinfo-status-qc');
     $.each(tds, function(index, td) {
         var classes = $(td).attr('class').split(/\s+/);
         // remove any of the bioinfo_qc_classes
@@ -165,14 +183,21 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
                 $(td).removeClass(td_class);
             }
         });
-//        why?
-        $(td).addClass(row_class); // tr_class, not new_class!
-        $(td).text(row_status);
-        setChildrenStatus(td);
-        var td_index = $(td).parent().children().index($(td));
-        var parent_td = $($(td).parent().attr('data-parent')).children()[td_index];
-        setParentStatus(parent_td);
+
+        $(td).addClass(new_class);
+        $(td).text(new_status);
+        setChildrenStatus_new(td);
     });
+
+    var parent_tr = $($(tr).attr('data-parent'));
+    if (!$(parent_tr).hasClass('bioinfo-project')) {
+        agregateStatus(parent_tr); // it's not recursive function, call one more time
+        var top_parent = $(parent_tr).attr('data-parent');
+        if (!$(top_parent).hasClass('bioinfo-project')) {
+            agregateStatus(top_parent);
+        }
+    }
+
     $(td).removeClass(row_status);
     $(td).addClass(new_status);
 
@@ -260,26 +285,31 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
         return false;
     }
     var td = $(this);
-    // why do we need this one?
-    var top_parent = topParent($(td).parent());
-    var td_index = $(td).parent().children().index(td);
-    // what is the difference
-    var top_td = $(top_parent).children()[td_index];
-    var current_value = $(this).text().trim();
-    if (bioinfo_qc_values.indexOf(current_value) == -1) {
-        current_value = '?';
-    }
-    var index = bioinfo_qc_values.indexOf(current_value);
-    var next_value = bioinfo_qc_values[(index+1) % bioinfo_qc_values.length];
 
-    var child_tds = getChildTds(top_td);
-    child_tds.push(top_td);
-    $.each(child_tds, function(i, child_td) {
-        var td_class = $(child_td).attr('class').split(/\s+/)[2];
-        $(child_td).removeClass(td_class);
-        $(child_td).addClass(bioinfo_qc_statuses[next_value]);
-        $(child_td).text(next_value);
-    });
+
+//    var child_tds = getChildTds(top_td);
+//    child_tds.push(top_td);
+//    $.each(child_tds, function(i, child_td) {
+//        var td_class = $(child_td).attr('class').split(/\s+/)[2];
+//        $(child_td).removeClass(td_class);
+//        $(child_td).addClass(bioinfo_qc_statuses[next_value]);
+//        $(child_td).text(next_value);
+//    });
+//
+//    // why do we need this one?
+//    var top_parent = topParent($(td).parent());
+//    var td_index = $(td).parent().children().index(td);
+//    // what is the difference
+//    var top_td = $(top_parent).children()[td_index];
+//    var current_value = $(this).text().trim();
+//    if (bioinfo_qc_values.indexOf(current_value) == -1) {
+//        current_value = '?';
+//    }
+//    var index = bioinfo_qc_values.indexOf(current_value);
+//    var next_value = bioinfo_qc_values[(index+1) % bioinfo_qc_values.length];
+//
+
+
     checkSampleStatusOnBPClick(td);
 });
 
@@ -401,7 +431,8 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
     var td = $(this);
     var td_index = $(td).parent().children().index($(td));
     var parent_td = $($(td).parent().attr('data-parent')).children()[td_index];
-    setParentStatus(parent_td);
+    agreateTdStatus(parent_td);
+
     checkSampleStatusOnQCClick(td);
 });
 
@@ -435,53 +466,84 @@ var getChildTrs = function(tr) {
 };
 
 $(document).ready(function() {
+    var start_time = new Date().getTime()
+    console.log(start_time);
     var sample_view = $('table.table-bioinfo-status-sampleview');
     var run_view = $('table.table-bioinfo-status-runview');
-    agregateStatus(sample_view);
-//    agregateStatus(run_view);
+    setParentStatus(sample_view);
+    setParentStatus(run_view);
+    var end_time = new Date().getTime()
+    console.log(end_time);
+    console.log(end_time - start_time);
 });
 
 
 // sets the values to 'pass' and so on to all the tree up,
- // in the template we set only [sample, run, lane] level
-var agregateStatus = function(view_table) {
+// in the template we set only [sample, run, lane] level
+function setParentStatus(view_table) {
     if ($(view_table).hasClass('table-bioinfo-status-sampleview')) {
-        var top_level_class = '.bioinfo-sample';
         var second_level_class = '.bioinfo-fc';
+        var top_level_class = '.bioinfo-sample';
     } else if ($(view_table).hasClass('table-bioinfo-status-runview')) {
-        var top_level_class = '.bioinfo-fc';
         var second_level_class = '.bioinfo-lane';
-    } else {
-        // should not happen
-        console.warning('Unknown data structure. Possible views: sample-run-lane or run-lane-sample. Change bioinfo_tab.js')
+        var top_level_class = '.bioinfo-fc';
     }
     var second_level_trs = $(view_table).find('tr'+second_level_class);
-    var second_level_values = {};
     $.each(second_level_trs, function(i, tr) {
-        var all_tds = $(tr).children('td.bioinfo-status-qc, td.bioinfo-status-bp');
-        $.each(all_tds, function(i, td) {
-            var td_class = $(td).attr('class').split(/\+s/)[1];
-            if (!(td_class in second_level_values)) {
-                second_level_values[td_class] = [$(td).text()]
-            } else {
-                second_level_values[td_class].push($(td).text());
-            }
-        });
-//        $.each(all_tds, function(i, td) {
-//            setParentStatus(td);
-//        });
+        agregateStatus(tr);
     });
-
     var top_level_trs = $(view_table).find('tr'+top_level_class);
     $.each(top_level_trs, function(i, tr) {
-        var all_tds = $(tr).children('td.bioinfo-status-qc, td.bioinfo-status-bp');
-        $.each(all_tds, function(i, td) {
-            setParentStatus(td);
-        });
+        agregateStatus(tr);
     });
 };
 
-var setParentStatus = function(td) {
+function agregateStatus(tr) {
+    var first_level_children = $(tr).closest('table').find("tr[data-parent='#"+$(tr).attr('id')+"']");
+    var children_statuses = {};
+    $.each(first_level_children, function(i, child_tr){
+        var qc_and_bp_tds = $(child_tr).children('td.bioinfo-status-qc, td.bioinfo-status-bp');
+        $.each(qc_and_bp_tds, function(i, td) {
+            var qc_class = $(td).attr('class').split(/\s+/)[1];
+            if (qc_class in children_statuses) {
+                if (children_statuses[qc_class].indexOf(qc_class) == -1) {
+                    children_statuses[qc_class].push($(td).text().replace(/\s+/g, ''));
+                }
+            } else {
+                children_statuses[qc_class] = [$(td).text().replace(/\s+/g, '')];
+            }
+        });
+    });
+    $.each(children_statuses, function(qc_class, list_of_qc_values) {
+        var second_level_td = $(tr).children('td.' + qc_class);
+        var td_class = "";
+        var td_text = "";
+        if (list_of_qc_values.length == 1) {
+            td_text = list_of_qc_values[0];
+        } else if (list_of_qc_values.indexOf('?') != -1) {
+            td_text = '?';
+        } else if (list_of_qc_values.indexOf('Warning') != -1) {
+            td_text = 'Warning';
+        } else if (list_of_qc_values.indexOf('Fail') != -1 && list_of_qc_values.indexOf('Pass') != -1) {
+            td_text = 'Warning';
+        } else if (list_of_qc_values.indexOf('Pass') != -1 ){
+            td_text = 'Pass';
+        } else {
+            console.log(list_of_qc_values);
+            // should not happen
+        }
+        $(second_level_td).text(td_text);
+        var current_classes = $(second_level_td).attr('class').split(/\s+/);
+        $.each(current_classes, function(i, cur_class) {
+            if (bioinfo_qc_classes.indexOf(cur_class) != -1) {
+                $(second_level_td).removeClass(cur_class);
+            }
+        });
+        $(second_level_td).addClass(bioinfo_qc_statuses[td_text]);
+    });
+}
+
+var agreateTdStatus = function(td) {
     if (td == undefined || $(td).parent().hasClass('bioinfo-project')) {return false;}
     var parent_status = "";
     var child_tds = getChildTds(td);
@@ -526,7 +588,7 @@ var setParentStatus = function(td) {
         if (parent_id != undefined) {
             var td_index = $(td).parent().children().index($(td));
             var td_parent = $(parent_id).children()[td_index];
-            setParentStatus(td_parent);
+            agreateTdStatus(td_parent);
         }
 
     }
@@ -823,6 +885,10 @@ function setParentSpanStatus(span) {
         parent_status = 'Demultiplexing';
     } else if (statuses.indexOf('Transferring') != -1) {
         parent_status = 'Transferring';
+    } else if (statuses.indexOf('New') != -1) {
+        parent_status = 'New';
+    } else if (statuses.indexOf('Failed') != -1) {
+        parent_status = 'Failed';
     } else if (statuses.indexOf('QC-ongoing') != -1) {
         parent_status = 'QC-ongoing';
     } else if (statuses.indexOf('QC-done') != -1) {
@@ -831,6 +897,8 @@ function setParentSpanStatus(span) {
         parent_status = 'BP-ongoing';
     } else if (statuses.indexOf('BP-done') != -1) {
         parent_status = 'BP-done';
+    } else if (statuses.indexOf('Delivered') != -1) {
+        parent_status = 'Delivered';
     }
 
     var parent_span = $(parent_tr).find('td.bioinfo-status-runstate span.label');
@@ -864,10 +932,8 @@ $('th.bioinfo-status-th-date').on('click', '.datepicker-today', function(e) {
         }
 
         var label = $(input).closest('tr').find('td.bioinfo-status-runstate span.label');
-        console.log($(label));
         label.text('Delivered');
         var label_class = $(label).attr('class').split(/\s+/)[1];
-        console.log(label_class);
         label.removeClass(label_class);
         label.addClass('label-danger');
     });
