@@ -49,3 +49,12 @@ class InstrumentLogsHandler(SafeHandler):
         self.write(t.generate(docs=docs,gs_globals=self.application.gs_globals))
 
 
+class InstrumentNamesHandler(SafeHandler):
+   """ Handles the api call to know the names of the instruments
+
+   Loaded through /api/v1/instrument_names
+   """
+   def get(self):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.application.instruments_db.view("info/id_to_name").rows))
+       
