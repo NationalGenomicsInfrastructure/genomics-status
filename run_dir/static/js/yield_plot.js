@@ -1,9 +1,10 @@
 
 window.current_plot_data=null;
 window.current_plot_obj=null;
-window.current_color_scheme=null;
+window.current_color_schemes=null;
 window.current_instrument_list=null;
 window.current_chemistries_list=null;
+window.current_months_list=null;
 
 $(function(){
     init_page_js();
@@ -35,6 +36,12 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             title : {
               text : name
             }
+        },
+        plotOptions : {
+            series : {
+                turboThreshold: 0
+            }
+
         },
         credits: {
             enabled : false
@@ -72,6 +79,8 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             col_color=color_by_chemistry(data[d].instrument.substr(0,1)+data[d].cver);
         }else if (color_type == 'inst'){
             col_color=color_by_instrument(data[d].instrument);
+        }else if (color_type == 'month'){
+            col_color=color_by_month(data[d].id);
         }else{
             col_color=color_by_type(data[d].instrument);
         }
@@ -134,42 +143,41 @@ function get_plot_data(search_string="", key, name, display_by, filter_inst_type
             //update plot data
             window.current_plot_data=data;
             //update instrument list
-            window.current_instrument_list=[];
-            for (d in data){
-                if (window.current_instrument_list.indexOf(data[d].instrument) == -1){
-                    window.current_instrument_list.push(data[d].instrument);
-                }
-            }
-            //update color scheme
-            update_color_scheme();
-            //set the instrument filters
-            update_instrument_filters();
+            update_instrument_list();
             //update chemistry list
             update_chemistries_list();
+            //update months list
+            update_months_list();
+            //update color schemes
+            update_color_schemes(data);
+            //set the instrument filters
+            update_instrument_filters();
             //plot the damn data
             make_plot(key, name, display_by, filter_inst_type, color_type);
         });
 }
-
 function color_by_instrument(instrument){
-    return current_color_scheme(window.current_instrument_list.indexOf(instrument)).hex();
+    return current_color_schemes[1](window.current_instrument_list.indexOf(instrument)).hex();
 }
 
 function color_by_type(instrument){
     if (instrument.indexOf('E') != -1){
-        return current_color_scheme(0).hex();
+        return current_color_schemes[0](0).hex();
     } else if (instrument.indexOf('D') != -1){
-        return current_color_scheme(window.current_instrument_list.length).hex();
+        return current_color_schemes[0](1).hex();
     }else if (instrument.indexOf('M') != -1){
-        return current_color_scheme(window.current_instrument_list.length / 2).hex();
+        return current_color_schemes[0](2).hex();
     }else{
       return "#c3c3c3";
     }
 }
+function color_by_month(id){
+    return current_color_schemes[3](window.current_months_list.indexOf(id.substr(0,4))).hex()
+}
 
 function color_by_chemistry(chem){
     var id = Math.round(window.current_chemistries_list.indexOf(chem)*window.current_instrument_list.length/window.current_chemistries_list.length);
-    return current_color_scheme(id).hex();
+    return current_color_schemes[2](id).hex();
 }
 
 function get_parameters(){
@@ -182,17 +190,17 @@ function get_parameters(){
      var second_date;
      var dp=$('#inp_date_1').val();
      if (dp != ''){
-         m_d_y=dp.split('/');  
-         first_half=m_d_y[2].substr(2,2) + m_d_y[0] + m_d_y[1];
+         y_m_d=dp.split('-');  
+         first_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
      }else{
          first_date=new Date();
-         first_date.setMonth(first_date.getMonth()-1);
+         first_date.setYear(first_date.getYear()-1);
          first_half=first_date.toISOString().substr(2,2) + first_date.toISOString().substr(5,2) + first_date.toISOString().substr(8,2);
      }
      dp=$('#inp_date_2').val();
      if (dp != ''){
-        m_d_y=dp.split('/');  
-        second_half=m_d_y[2].substr(2,2) + m_d_y[0] +  m_d_y[1];
+        y_m_d=dp.split('-');  
+        second_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
      }else{
         second_date=new Date();
         second_half=second_date.toISOString().substr(2,2) + second_date.toISOString().substr(5,2) + second_date.toISOString().substr(8,2);
@@ -231,8 +239,22 @@ function get_parameters(){
 }
 
 function init_page_js(){
-    $('#datepick1').datepicker();
-    $('#datepick2').datepicker();
+    $('#datepick1').datepicker({autoclose: true,
+    format: 'yyyy-mm-dd',
+    todayBtn: true,
+    todayHighlight: true,
+    weekStart: 1,
+    daysOfWeekHighlighted: "0,6" });
+    $('#datepick2').datepicker({autoclose: true,
+    format: 'yyyy-mm-dd',
+    todayBtn: true,
+    todayHighlight: true,
+    weekStart: 1,
+    daysOfWeekHighlighted: "0,6" });
+     var my_date=new Date();
+     $('#inp_date_2').val(my_date.toISOString().substr(0,10));
+     my_date.setYear(my_date.getFullYear()-1);
+     $('#inp_date_1').val(my_date.toISOString().substr(0,10));
     $('#submit_interval').click(function(e){
      e.preventDefault();
      window.current_plot_data=null;
@@ -275,8 +297,20 @@ function init_page_js(){
     refresh_plot();
 }
 
-function update_color_scheme(){
-    window.current_color_scheme=chroma.scale('RdYlBu').domain([0, window.current_instrument_list.length-1]);
+function update_months_list(){
+    window.current_months_list=[];
+    for (d in window.current_plot_data){
+        if (window.current_months_list.indexOf(window.current_plot_data[d].id.substr(0,4)) == -1){
+            window.current_months_list.push(window.current_plot_data[d].id.substr(0,4));
+        }
+    }
+}
+function update_color_schemes(){
+    var inst_type_cs=chroma.scale(['008ae5', 'green','pink']).domain([0, 2]);
+    var chem_cs=chroma.scale(['pink', 'lightblue']).domain([0, 2]);
+    var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
+    var month_cs=chroma.scale(['yellow', 'lightblue', 'pink', 'orange']).domain([0,window.current_months_list.length-1]);
+    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs];
 }
 function update_chemistries_list(){
     window.current_chemistries_list=[];
@@ -289,8 +323,16 @@ function update_chemistries_list(){
     }
 }
 
+function update_instrument_list(){
+    window.current_instrument_list=[];
+    for (d in window.current_plot_data){
+        if (window.current_instrument_list.indexOf(window.current_plot_data[d].instrument) == -1){
+            window.current_instrument_list.push(window.current_plot_data[d].instrument);
+        }
+    }
+}
 function update_instrument_filters(){
-    var html='<ul class="list-inline">';
+    var html='<ul class="list-inline">Filter out ';
     var my_inst_id='';
     var my_inst_name='';
     $.getJSON("/api/v1/instrument_names", function(data){
