@@ -13,9 +13,9 @@ $(document).ready(function() {
   $.when(load_presets()).done(function(){
     load_undefined_info();
     $.when(load_all_udfs()).done(function(){
-//      load_bioinfo_table();
+      load_bioinfo_table();
     });
-//    load_samples_table();
+    load_samples_table();
     load_running_notes();
     load_links();
     load_charon_summary();

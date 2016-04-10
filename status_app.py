@@ -21,6 +21,7 @@ from tornado.options import define, options
 from status.applications import ApplicationDataHandler, ApplicationHandler, ApplicationsDataHandler, ApplicationsHandler
 from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
 from status.barcode_vs_expected import BarcodeVsExpectedDataHandler, BarcodeVsExpectedPlotHandler, ExpectedHandler
+from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.clusters_per_lane import ClustersPerLaneHandler, ClustersPerLanePlotHandler
 from status.cpu_hours import CPUHoursDataHandler
 from status.deliveries import DeliveriesPageHandler
@@ -31,7 +32,7 @@ from status.phix_err_rate import PhixErrorRateDataHandler, PhixErrorRateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsDataHandler, ProductionCronjobsHandler, ProductionHandler
-from status.projects import BioinfoAnalysisHandler, CaliperImageHandler, CharonProjectHandler, \
+from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler, RecCtrlDataHandler
@@ -169,6 +170,7 @@ class Application(tornado.web.Application):
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),
+            ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
             ("/deliveries", DeliveriesPageHandler),
             ("/clusters_per_lane", ClustersPerLaneHandler),
             ("/flowcells", FlowcellsHandler),
@@ -293,7 +295,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/applications.html")
             tornado.autoreload.watch("design/barcodes.html")
             tornado.autoreload.watch("design/base.html")
-            tornado.autoreload.watch("design/bioinfo_tab/bioinfo_tab.html")
+            tornado.autoreload.watch("design/bioinfo_tab.html")
             tornado.autoreload.watch("design/bioinfo_tab/sample_run_lane_view.html")
             tornado.autoreload.watch("design/bioinfo_tab/run_lane_sample_view.html")
             tornado.autoreload.watch("design/base_new.html")

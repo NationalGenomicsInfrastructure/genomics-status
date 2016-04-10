@@ -259,12 +259,23 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
     var column_name = $(th).attr('class').split(/\s+/)[1];
     var tds = $(th).closest('.table-bioinfo-status').find('tr:not(.bioinfo-status-disabled) td.'+column_name);
     $.each(tds, function(index, td) {
-        $(td).removeClass(th_class);
+        var td_classes = $(td).attr('class').split(/\s+/);
+        $.each(td_classes, function(i, td_class) {
+            if (bioinfo_qc_classes.indexOf(td_class) != -1) {
+                $(td).removeClass(td_class);
+            }
+        });
         $(td).addClass(new_class);
         $(td).text(new_status);
     });
     $(th).removeClass(th_status);
     $(th).addClass(new_status);
+
+    // TODO: change status
+//    var lowest_level_spans =
+//    $.each(lowest_level_spans, function(i, span) {
+//        setParentSpanStatus(span);
+//    });
 
 });
 
@@ -301,7 +312,6 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
     var next_value = bioinfo_qc_values[(index+1) % bioinfo_qc_values.length];
 
     $.each(child_tds, function(i, child_td) {
-        console.log(child_td);
         var td_classes = $(child_td).attr('class').split(/\s+/);
         $.each(td_classes, function(i, td_class) {
             if (bioinfo_qc_classes.indexOf(td_class) != -1) {
@@ -474,15 +484,10 @@ var getChildTrs = function(tr) {
 };
 
 $(document).ready(function() {
-    var start_time = new Date().getTime()
-    console.log(start_time);
     var sample_view = $('table.table-bioinfo-status-sampleview');
     var run_view = $('table.table-bioinfo-status-runview');
     setParentStatus(sample_view);
     setParentStatus(run_view);
-    var end_time = new Date().getTime()
-    console.log(end_time);
-    console.log(end_time - start_time);
 });
 
 
@@ -536,6 +541,10 @@ function agregateStatus(tr) {
             td_text = 'Warning';
         } else if (list_of_qc_values.indexOf('Pass') != -1 ){
             td_text = 'Pass';
+        } else if (list_of_qc_values.indexOf('N/A') != -1 ){
+            td_text = 'N/A'
+        } else if (list_of_qc_values.indexOf('Fail') != 1) {
+            td_text = 'Fail';
         } else {
             console.log(list_of_qc_values);
             // should not happen
@@ -821,9 +830,11 @@ function updateSecondTable(saved_data) {
                 var td_class = $(td).attr('class').split(/\s/)[2];
                 $(td).removeClass(td_class);
                 $(td).addClass(bioinfo_qc_statuses[qc_value]);
-                agregateStatus(table);
+                agregateStatus(table); // need to aggregate tr
             }
         });
+
+        agregateStatus(tr);
     });
 }
 //
