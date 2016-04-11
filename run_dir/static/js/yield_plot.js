@@ -40,6 +40,9 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         plotOptions : {
             series : {
                 turboThreshold: 0
+            },
+            column : {
+                groupPadding: 0.1
             }
 
         },
