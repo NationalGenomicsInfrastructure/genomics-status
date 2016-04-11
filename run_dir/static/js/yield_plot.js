@@ -43,6 +43,11 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             }
 
         },
+        tooltip: {
+            useHTML: true,
+            headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{point.key}</small><br />',
+            pointFormat: '{series.name} : <b>{point.y}</b>'
+        },
         credits: {
             enabled : false
         },
