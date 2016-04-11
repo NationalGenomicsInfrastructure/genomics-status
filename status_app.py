@@ -26,7 +26,7 @@ from status.cpu_hours import CPUHoursDataHandler
 from status.flowcells import FlowcellDataHandler, FlowcellDemultiplexHandler, FlowcellHandler, FlowcellLinksDataHandler, \
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
-from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler
+from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.phix_err_rate import PhixErrorRateDataHandler, PhixErrorRateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
@@ -39,6 +39,7 @@ from status.projects import BioinfoAnalysisHandler, CaliperImageHandler, CharonP
 
 from status.quotas import QuotaDataHandler, QuotaHandler, QuotasHandler
 from status.q30 import Q30Handler, Q30PlotHandler
+from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.reads_per_lane import ReadsPerLaneHandler, ReadsPerLanePlotHandler
 from status.reads_vs_qv import ReadsVsQDataHandler, ReadsVsQvhandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
@@ -106,6 +107,7 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_notes/([^/]*)$", FlowcellNotesDataHandler),
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
+            ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
             ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
             ("/api/v1/instrument_cluster_density.png",
@@ -115,6 +117,7 @@ class Application(tornado.web.Application):
                 InstrumentErrorratePlotHandler),
             ("/api/v1/instrument_logs", DataInstrumentLogsHandler),
             ("/api/v1/instrument_logs/([^/]*)$", DataInstrumentLogsHandler),
+            ("/api/v1/instrument_names",InstrumentNamesHandler ),
             ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
@@ -177,6 +180,7 @@ class Application(tornado.web.Application):
             ("/clusters_per_lane", ClustersPerLaneHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
+            ("/flowcells_plot", FlowcellPlotHandler),
             ("/instrument_logs",InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
             ("/q30", Q30Handler),
@@ -216,6 +220,7 @@ class Application(tornado.web.Application):
             self.cronjobs_db = couch["cronjobs"]
             self.flowcells_db = couch["flowcells"]
             self.gs_users_db = couch["gs_users"]
+            self.instruments_db= couch["instruments"]
             self.instrument_logs_db = couch["instrument_logs"]
             self.projects_db = couch["projects"]
             self.samples_db = couch["samples"]
@@ -312,6 +317,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
+            tornado.autoreload.watch("design/login.html")
             tornado.autoreload.watch("design/phix_err_rate.html")
             tornado.autoreload.watch("design/production.html")
             tornado.autoreload.watch("design/proj_meta_compare.html")
@@ -331,7 +337,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/sequencing_stats.html")
             tornado.autoreload.watch("design/suggestion_box.html")
             tornado.autoreload.watch("design/unauthorized.html")
-            tornado.autoreload.watch("design/login.html")
+            tornado.autoreload.watch("design/yield_plot.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
