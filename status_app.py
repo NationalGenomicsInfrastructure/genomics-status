@@ -37,7 +37,7 @@ from status.projects import BioinfoAnalysisHandler, CaliperImageHandler, CharonP
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler, RecCtrlDataHandler, \
     ProjMetaCompareHandler, ProjectLabStatusHandler
 
-from status.quotas import QuotaDataHandler, QuotaHandler, QuotasHandler
+from status.quotas import QuotasHandler
 from status.q30 import Q30Handler, Q30PlotHandler
 from status.reads_per_lane import ReadsPerLaneHandler, ReadsPerLanePlotHandler
 from status.reads_vs_qv import ReadsVsQDataHandler, ReadsVsQvhandler
@@ -144,7 +144,6 @@ class Application(tornado.web.Application):
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/projectqc/([^/]*)$", ProjectQCDataHandler),
-            ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
             ("/api/v1/links/([^/]*)$", LinksDataHandler),
@@ -183,7 +182,6 @@ class Application(tornado.web.Application):
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
             ("/quotas", QuotasHandler),
-            ("/quotas/(\w+)?", QuotaHandler),
             ("/phix_err_rate", PhixErrorRateHandler),
             ("/production", ProductionHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
@@ -318,8 +316,6 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/projects.html")
             tornado.autoreload.watch("design/project_samples.html")
             tornado.autoreload.watch("design/q30.html")
-            tornado.autoreload.watch("design/quota_grid.html")
-            tornado.autoreload.watch("design/quota.html")
             tornado.autoreload.watch("design/reads_per_lane.html")
             tornado.autoreload.watch("design/reads_total.html")
             tornado.autoreload.watch("design/reads_vs_qv.html")
@@ -331,6 +327,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/sequencing_stats.html")
             tornado.autoreload.watch("design/suggestion_box.html")
             tornado.autoreload.watch("design/unauthorized.html")
+            tornado.autoreload.watch("design/uppmax_quotas.html")
             tornado.autoreload.watch("design/login.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)

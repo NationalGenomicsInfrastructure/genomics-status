@@ -1,6 +1,7 @@
 import tornado.web
 import json
 import time
+import copy
 
 from dateutil import parser
 from status.util import dthandler, SafeHandler
@@ -11,55 +12,58 @@ class QuotasHandler(SafeHandler):
     URL: /quotas
     """
     def get(self):
-        t = self.application.loader.load("quota_grid.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name()))
-
-
-class QuotaHandler(SafeHandler):
-    """ Serves a page with a plot of a time series of used storage quota for
-    a provided UPPNEX project.
-    URL: /quotas/<project_id>
-    """
-    def get(self, project):
-        t = self.application.loader.load("quota.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
-                              user=self.get_current_user_name()))
-
-
-class QuotaDataHandler(SafeHandler):
-    """ Serves a time series for storage quota usage of a given UPPNEX
-    project.
-
-    Loaded through /api/v1/quotas/(\w+)?
-    """
-    def get(self, project):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.project_storage_quota(project),
-                              default=dthandler))
-
-    def project_storage_quota(self, project):
-        proj_getter = lambda row: row.key[0]
-        proj_checker = lambda row: proj_getter(row) == project
-        date_getter = lambda row: row.key[1]
         view = self.application.server_status_db.view("uppmax/by_timestamp")
-        r_list = filter(proj_checker, view)
-        r_list = sorted(r_list, key=date_getter)
+        uppmax_projects = {}
+        for row in view.rows:
+            project_nobackup = row.value['project'].replace('/', '_')
+            project_id = copy.copy(row.value['project'].split('/')[0])
+#          # in javascript it has to be multiplied by 1000, no idea why
+            timestamp = int(time.mktime(parser.parse(row.value.get('time')).timetuple())) * 1000
+            if project_id not in uppmax_projects:
+                uppmax_projects[project_id] = {'cpu_hours': {'plot_data': [], 'limit_data': [], 'max_x_value': 0, 'min_time': timestamp},
+                    'disk_usage': {'plot_data': [], 'limit_data': [], 'max_x_value': 0, 'min_time': timestamp},
+                    'nobackup_usage': {'plot_data': [], 'limit_data': [], 'max_x_value': 0, 'min_time': timestamp}}
+            if project_id == project_nobackup: # project_nobackup = 'a2010002_nobackup'
+                try:
+                    disk_usage = [timestamp, float(row.value['usage (GB)'])]
+                    disk_limit = [timestamp, float(row.value['quota limit (GB)'])]
+                except:
+                    # if we have only cpu hours values (or just nothing)
+                    continue
+                uppmax_projects[project_id]['disk_usage']['plot_data'].append(disk_usage)
+                uppmax_projects[project_id]['disk_usage']['limit_data'].append(disk_limit)
+                min_time = uppmax_projects[project_id]['disk_usage']['min_time']
+                uppmax_projects[project_id]['disk_usage']['min_time'] = min(min_time, timestamp)
+                max_x_value = uppmax_projects[project_id]['disk_usage']['max_x_value']
+                uppmax_projects[project_id]['disk_usage']['max_x_value'] = max(max_x_value, disk_limit[1], disk_usage[1])
 
-        # 1024 ** 3
-        gb = 1073741824
-        data = []
-        for row in r_list:
-            try:
-                if row.value:
-                    data.append({"x": int(time.mktime(parser.parse(date_getter(row)).timetuple())),
-                                 "y": row.value[0] * gb,
-                                 "limit": row.value[1] * gb})
-            except TypeError:
-                # Some nobackup areas were not accessible in Uppmax at some point,
-                # and that caused the usage value to be None. Skip those.
-                pass
+                try:
+                    cpu_usage = [timestamp, float(row.value['cpu hours'])]
+                    cpu_limit = [timestamp, float(row.value['cpu limit'])]
+                except:
+                    continue
+                uppmax_projects[project_id]['cpu_hours']['plot_data'].append(cpu_usage)
+                uppmax_projects[project_id]['cpu_hours']['limit_data'].append(cpu_limit)
+                min_time = uppmax_projects[project_id]['cpu_hours']['min_time']
+                uppmax_projects[project_id]['cpu_hours']['min_time'] = min(min_time, timestamp)
+                max_x_value = uppmax_projects[project_id]['cpu_hours']['max_x_value']
+                uppmax_projects[project_id]['cpu_hours']['max_x_value'] = max(max_x_value, cpu_limit[1], cpu_usage[1])
+            else:
+                try:
+                    nobackup_usage = [timestamp, float(row.value['usage (GB)'])]
+                    nobackup_limit = [timestamp, float(row.value['quota limit (GB)'])]
+                except:
+                    continue
+                uppmax_projects[project_id]['nobackup_usage']['plot_data'].append(nobackup_usage)
+                uppmax_projects[project_id]['nobackup_usage']['limit_data'].append(nobackup_limit)
+                min_time = uppmax_projects[project_id]['nobackup_usage']['min_time']
+                uppmax_projects[project_id]['nobackup_usage']['min_time'] = min(min_time, timestamp)
+                max_x_value = uppmax_projects[project_id]['nobackup_usage']['max_x_value']
+                uppmax_projects[project_id]['nobackup_usage']['max_x_value'] = max(max_x_value, nobackup_limit[1], nobackup_usage[1])
 
-        d = dict()
-        d["data"] = data
-        d["name"] = "series"
-        return [d]
+
+
+
+        t = self.application.loader.load("uppmax_quotas.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(),
+                              uppmax_projects=uppmax_projects))
