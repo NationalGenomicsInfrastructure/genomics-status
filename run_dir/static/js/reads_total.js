@@ -84,14 +84,20 @@ $('#reads_form').submit(function(e){
 
 //check/uncheck all
 $("#check_all").click(function(){
+    var search_string=$('#check_key').val();
     $(".reads_check").each(function(){
-        $(this).prop('checked',true);
+        if ($(this).data("sfc").indexOf(search_string) != -1){
+            $(this).prop('checked',true);
+        }
     });
     update_all_totals();
 });
 $("#uncheck_all").click(function(){
+    var search_string=$('#check_key').val();
     $(".reads_check").each(function(){
-        $(this).prop('checked',false);
+        if ($(this).data("sfc").indexOf(search_string) != -1){
+            $(this).prop('checked',false);
+        }
     });
     update_all_totals();
 });
