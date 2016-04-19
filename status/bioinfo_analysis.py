@@ -162,7 +162,6 @@ class BioinfoAnalysisHandler(SafeHandler):
             if application in app_classes[key]:
                 application = key
                 break
-        print bioinfo_data
         self.write(t.generate(gs_globals=self.application.gs_globals, project=proj_id,
                               user=self.get_current_user_name(),
                               # columns=self.application.genstat_defaults.get('pv_columns'),
