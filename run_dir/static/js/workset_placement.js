@@ -159,7 +159,7 @@ function submit_base_data(){
            var added_row='';
            added_row+="<tr><td>Pool&nbsp;"+window.pools_nb+"</td>";
            added_row+='<td><ul class="list-inline" id="content_pool_'+window.pools_nb+'"></ul></td>';
-           added_row+='<td><select id="type_pool_'+i+'"><option value="hiseq">Hiseq/Miseq</option><option value="hiseqx">HiseqX</option></select></td>';
+           added_row+='<td><select id="type_pool_'+window.pools_nb+'"><option value="hiseq">Hiseq/Miseq</option><option value="hiseqx">HiseqX</option></select></td>';
            added_row+='</tr>';
            $('#final_table tr:last').after(added_row);
 

@@ -65,7 +65,6 @@ class GenerateWorksetHandler(SafeHandler):
 class WorksetPlacementSavingHandler(SafeHandler):
     def post(self):
         data=json.loads(self.request.body)
-        print data
         mylims = lims.Lims(BASEURI, USERNAME, PASSWORD)
         lims_id="24-{}".format(data['lims_url'].split("/")[-1])
         st=Step(mylims, id=lims_id)
@@ -100,11 +99,9 @@ class Workset_Setup():
 
     def setup(self):
         self.place_rules()
-        self.pretty_print()
         self.place_X()
         self.place_hiseq()
         self.post_process()
-        self.pretty_print()
 
 
     def place_sample(self, sample, position):
@@ -155,7 +152,6 @@ class Workset_Setup():
                 success=self.fit_pool_in_row(pool, row)
                 if success:
                     break
-            self.pretty_print()
 
     def fit_pool_in_row(self, pool, row):
         fitted=False
