@@ -55,6 +55,7 @@ from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandle
     UpdatedDocumentsDatahandler
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
     WorksetsDataHandler, WorksetSearchHandler
+from status.workset_placement import WorksetPlacementHandler,WorksetSampleLoadHandler, GenerateWorksetHandler, WorksetPlacementSavingHandler
 
 from zendesk import Zendesk
 
@@ -108,6 +109,7 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
+            ("/api/v1/generate_workset", GenerateWorksetHandler),
             ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
             ("/api/v1/instrument_cluster_density.png",
@@ -125,6 +127,7 @@ class Application(tornado.web.Application):
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/lab_status/([^/]*)", ProjectLabStatusHandler),
+            ("/api/v1/load_workset_samples", WorksetSampleLoadHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
@@ -172,6 +175,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
             ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
+            ("/api/v1/ws_pl_to_lims", WorksetPlacementSavingHandler),
             ("/api/v1/cpu_hours/(\w+)?", CPUHoursDataHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
@@ -205,6 +209,7 @@ class Application(tornado.web.Application):
             ("/suggestion_box", SuggestionBoxHandler),
             ("/worksets", WorksetsHandler),
             ("/workset/([^/]*)$", WorksetHandler),
+            ("/workset_placement",WorksetPlacementHandler),
             (r'.*', BaseHandler)
         ]
 
@@ -337,6 +342,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/sequencing_stats.html")
             tornado.autoreload.watch("design/suggestion_box.html")
             tornado.autoreload.watch("design/unauthorized.html")
+            tornado.autoreload.watch("design/workset_placement.html")
             tornado.autoreload.watch("design/yield_plot.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
