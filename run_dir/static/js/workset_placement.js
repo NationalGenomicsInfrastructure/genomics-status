@@ -59,18 +59,22 @@ function submit_base_data(){
        $("#second_step").append(project_comments_div);
        //second div, search box for third div
        var sorted_samples=Object.keys(data['samples']).sort();
-       var sample_search_div='<div id="sample_search_div" style="margin-bottom:10px;"><form class="form-inline""><input id="sample_search_string" class="form-control" type="text" style="margin-right:10px;"/><select id="sample_pool_select" style="margin-right:10px;">';
+       var sample_search_div='<div id="sample_search_div" style="margin-bottom:10px;"><form class="form-inline""><input id="sample_search_string" class="form-control" type="text" style="margin-right:10px;"/>';
+       sample_search_div+='<button id="check_samples" class="btn btn-default">Check</button>';
+       sample_search_div+='<button id="uncheck_samples" class="btn btn-default" style="margin-right:5px;">Uncheck</button>';
+       sample_search_div+='<select id="sample_pool_select" style="margin-right:10px;">';
         for (i=1;i<=window.pools_nb;i++){
             sample_search_div+='<option value="'+i+'"> Pool '+i+'</option>';
             }
-       sample_search_div+='</select><button id="submit_set_pool" class="btn btn-submit">Set</button>';
+       sample_search_div+='</select>';
+       sample_search_div+='<button id="submit_set_pool" class="btn btn-primary">Set</button>';
        sample_search_div+='<button class="btn btn-default pull-right" id="add_pool_btn">Add pool</button></form></div>'
        $("#second_step").append(sample_search_div);
        var samples_div='<div id="samples_div"><table class="table table-striped table-bordered"><tr><th>Sample</th><th>Chooser</th><th>Amount</th><th>Previous Preps</th><th>Library info</th><th>Platform</th></tr>';
        //third div, table with sample information and pool select. 
        for (d in sorted_samples){
             samples_div+='<tr>';
-            samples_div+='<td>'+sorted_samples[d]+'</td>';
+            samples_div+='<td><input type="checkbox" class="sample_cbx", id="cbx_'+sorted_samples[d]+'" checked/>&nbsp;'+sorted_samples[d]+'</td>';
             samples_div+='<td><form><select data-sample="'+sorted_samples[d]+'" class="pool_select" id="pool_select_'+sorted_samples[d]+'">';
             for (i=1;i<=window.pools_nb;i++){
                 samples_div+='<option value="'+i+'"';
@@ -136,7 +140,7 @@ function submit_base_data(){
         var sample;
         $(".pool_select").each(function(){
             sample=$(this).data('sample');
-            if (sample.indexOf(search_string)!= -1){
+            if ($("#cbx_"+sample).prop('checked')){
                 $(this).val(pool);
                 pools_update(sample, pool);
             }
@@ -165,6 +169,26 @@ function submit_base_data(){
 
        });
 
+       $("#uncheck_samples").click(function(e){
+        e.preventDefault(); 
+        e.stopImmediatePropagation();
+        var search_string=$("#sample_search_string").val();
+        $(".sample_cbx").each(function(idx){
+          if ($(this).prop('id').indexOf(search_string)!= -1){
+              $(this).prop('checked', false);
+          }
+        });
+       });
+       $("#check_samples").click(function(e){
+        e.preventDefault(); 
+        e.stopImmediatePropagation();
+        var search_string=$("#sample_search_string").val();
+        $(".sample_cbx").each(function(){
+          if ($(this).prop('id').indexOf(search_string)!= -1){
+              $(this).prop('checked',true);
+          }
+        });
+       });
        //trigger for changing one sample's pool select
        $(".pool_select").change(function(){
            var sn=$(this).data('sample');
@@ -179,7 +203,11 @@ function submit_base_data(){
            }
        });
     $("#wait1").hide(); 
-    });
+    }).error(function(jqXHR, textStatus, errorThrown) {
+                alert("Error : " + textStatus + " " + jqXHR.responseText);
+                console.log("error " + textStatus);
+                console.log("incoming Text " + jqXHR.responseText);
+       });
 }
 function validate_pools(){
     if (Object.keys(wsdata.samples).length >96){
@@ -238,6 +266,7 @@ function start_main(){
         $("#wait2").hide(); 
         window.posdata=return_data;
         setupPlate(return_data);
+        $("#submit_lims").remove();
         var btn="<button class='btn btn-primary' id='submit_lims'>Submit to the LIMS</button>";
         $("#submit_lims_div").append(btn);
         $("#submit_lims").click(function(e){

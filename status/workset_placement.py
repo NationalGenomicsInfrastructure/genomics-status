@@ -20,7 +20,15 @@ class WorksetSampleLoadHandler(SafeHandler):
         lims_url=self.request.query
         lims_id="24-{}".format(lims_url.split("/")[-1])
         mylims = lims.Lims(BASEURI, USERNAME, PASSWORD)
-        p=Process(mylims, id=lims_id)
+        try:
+            p=Process(mylims, id=lims_id)
+            if p.type.name!='Setup Workset/Plate':
+                raise Exception("Wrong process type")
+        except:
+            self.set_status(400, reason="Wrong process type : use a Setup Workset/Plate")
+            self.finish()
+
+
         data['comments']={}
         data['samples']={}
         for i in p.all_inputs():
