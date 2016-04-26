@@ -269,7 +269,8 @@ function start_main(){
         $("#submit_lims").remove();
         var btn="<button class='btn btn-primary' id='submit_lims'>Submit to the LIMS</button>";
         $("#submit_lims_div").append(btn);
-        $("#submit_lims").click(function(e){
+        $("#submit_lims").attr("disabled", true);
+        /*$("#submit_lims").click(function(e){
             $("#submit_lims").attr("disabled", true);
             $("#submit_lims").text("Submitting...");
             var send_data={lims_url:$("#lims_url").val(), mat:window.posdata};
@@ -287,7 +288,7 @@ function start_main(){
              });
         
         });
-
+        */
     });
 }
 function setupPlate(data){
