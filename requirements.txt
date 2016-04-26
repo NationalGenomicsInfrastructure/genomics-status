@@ -15,7 +15,7 @@ python-dateutil==1.5
 pytz==2014.7
 requests==2.4.1
 simplejson==3.6.4
-six==1.8.0
+six>=1.8.0
 status==0.0.0
 tornado==4.0.2
 wsgiref==0.1.2

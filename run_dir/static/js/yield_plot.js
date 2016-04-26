@@ -115,12 +115,16 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             }
         }
         if (display_by == "lane"){
+            var value=0;
             for (l in data[d].lanes){
                 tmp=data[d].id.split('_');
                 col_name=tmp[0]+'_'+tmp[tmp.length-1]+":"+data[d].lanes[l].lane;
+                if (key in data[d].lanes[l]){
+                    value=data[d].lanes[l][key];
+                }
                 col={ 
                     name : col_name,
-                    y : data[d].lanes[l][key],
+                    y : value,
                     color : col_color,
                     events : {
                         click : function(){window.open(flowcell_link)}
