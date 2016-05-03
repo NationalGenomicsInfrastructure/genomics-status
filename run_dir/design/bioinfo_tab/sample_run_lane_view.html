@@ -50,29 +50,29 @@
       <th>Sample</th>
       <th>Status</th>
       <th>Fill row</th>
-      <th class="bioinfo-status-th undemultiplexedreads">Undemultiplexed reads</th>
-      <th class="bioinfo-status-th unexpectedindexes">Unexpected indexes</th>
-      <th class="bioinfo-status-th lowsampleyield">Low sample yield</th>
-      <th class="bioinfo-status-th phixerrorrate">PhiX error rate</th>
-      <th class="bioinfo-status-th basesq30">%bases >= Q30</th>
-      <th class="bioinfo-status-th fastq_screen">fastq_screen</th>
-      <th class="bioinfo-status-th blast_wrapper">blast_wrapper</th>
+     <th class="bioinfo-status-th bioinfo-status-qc undemultiplexedreads">Undemultiplexed reads</th>
+      <th class="bioinfo-status-th bioinfo-status-qc unexpectedindexes">Unexpected indexes</th>
+      <th class="bioinfo-status-th bioinfo-status-qc lowsampleyield">Low sample yield</th>
+      <th class="bioinfo-status-th bioinfo-status-qc phixerrorrate">PhiX error rate</th>
+      <th class="bioinfo-status-th bioinfo-status-qc basesq30">%bases >= Q30</th>
+      <th class="bioinfo-status-th bioinfo-status-qc fastq_screen">fastq_screen</th>
+      <th class="bioinfo-status-th bioinfo-status-qc blast_wrapper">blast_wrapper</th>
       {% if application =='rnaseq' %}
-        <th class="bioinfo-status-th rnaseq_sequenceduplication">Sequence duplication</th>
-        <th class="bioinfo-status-th rnaseq_uniquemappingrate">Unique mapping rate</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_sequenceduplication">Sequence duplication</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_uniquemappingrate">Unique mapping rate</th>
       {% elif application == 'exome' %}
-        <th class="bioinfo-status-th exome_sequenceduplication">Sequence duplication</th>
-        <th class="bioinfo-status-th exome_targets10xcoverage">% Targets @10X coverage</th>
+        <th class="bioinfo-status-th bioinfo-status-bp exome_sequenceduplication">Sequence duplication</th>
+        <th class="bioinfo-status-th bioinfo-status-bp exome_targets10xcoverage">% Targets @10X coverage</th>
       {% elif application == 'customCap' %}
-        <th class="bioinfo-status-th customCap_enrichment">Enrichment</th>
+        <th class="bioinfo-status-th bioinfo-status-bp customCap_enrichment">Enrichment</th>
       {% elif application == 'WGreseq' %}
-        <th class="bioinfo-status-th WGreseq_sequenceduplication">Sequence duplication</th>
-        <th class="bioinfo-status-th WGreseq_mappingrate">Mapping rate</th>
+        <th class="bioinfo-status-th bioinfo-status-bp WGreseq_sequenceduplication">Sequence duplication</th>
+        <th class="bioinfo-status-th bioinfo-status-bp WGreseq_mappingrate">Mapping rate</th>
       {% elif application == 'denovo' %}
-        <th class="bioinfo-status-th denovo">De Novo / Mait Pair</th>
+        <th class="bioinfo-status-th bioinfo-status-bp denovo">De Novo / Mait Pair</th>
       {% elif application == 'applications' %}
-        <th class="bioinfo-status-th bioinfo-app-applications">Data delivered</th>
-        <th class="bioinfo-status-th bioinfo-app-applications">Data approved</th>
+        <th class="bioinfo-status-th bioinfo-status-bp bioinfo-app-applications">Data delivered</th>
+        <th class="bioinfo-status-th bioinfo-status-bp bioinfo-app-applications">Data approved</th>
       {% end %}
       <th class="bioinfo-status-th-date datadelivered">Data Delivered
         <button class="btn btn-sm date-reset"><i class="glyphicon glyphicon-remove"></i></button>

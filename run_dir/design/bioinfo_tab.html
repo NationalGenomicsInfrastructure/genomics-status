@@ -8,8 +8,9 @@
       'New': 'label-primary',
       'QC-ongoing': 'label-warning',
       'QC-done': 'label-success',
-      'BP-ongoing': 'label-danger',
-      'BP-done': 'label-success'
+      'BP-ongoing': 'label-warning',
+      'BP-done': 'label-success',
+      'ERROR': 'label-danger',
       }; %}
     {% set qc_css={ '?': 'unknown', 'Pass': 'success', 'Warning': 'warning', 'Fail': 'danger', 'N/A': 'active'} %}
     <form class="form-inline">
@@ -20,18 +21,7 @@
           <option value="run-view">Run-lane-sample</option>
         </select>
       </div>
-      <div class="form-group">
-        <label for="bioinfo_set-status">All statuses: </label>
-        <select id="bioinfo_set-status" class="form-control" disabled>
-          <option value="all">All (default)</option>
-          <option value="incoming">Incoming</option>
-          <option value="new">New</option>
-          <option value="ongoing">Ongoing</option>
-          <option value="delivered">Delivered</option>
-        </select>
-      </div>
       &nbsp; &nbsp; &nbsp;
-      <button class="btn btn-default btn-sm" disabled id="bioinfo-status-copyFirstRow">Copy first row to all</button>
       <span class="pull-right bioinfo-savespan">
         <button class="btn btn-primary" id="bioinfo-status-saveButton"
             {% if project_closed %} disabled {% end %}> Save Changes</button>

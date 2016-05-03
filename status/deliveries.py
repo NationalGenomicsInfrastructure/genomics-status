@@ -126,6 +126,8 @@ class DeliveriesPageHandler(SafeHandler):
                             lane_status = 'BP-ongoing'
                         elif 'BP-done' in lane_statuses:
                             lane_status = 'BP-done'
+                        elif 'ERROR' in lane_statuses:
+                            lane_status = 'ERROR'
 
                         runs_bioinfo[flowcell_id]['lanes'][lane_id]['lane_status'] = lane_status
                         runs_bioinfo[flowcell_id]['lanes'][lane_id]['checklist'] = lane_checklists
@@ -150,6 +152,8 @@ class DeliveriesPageHandler(SafeHandler):
                         flowcell_status = 'BP-ongoing'
                     elif 'BP-done' in flowcell_statuses:
                         flowcell_status = 'BP-done'
+                    elif 'ERROR' in flowcell_statuses:
+                        flowcell_status = 'ERROR'
 
                     runs_bioinfo[flowcell_id]['flowcell_status'] = flowcell_status
                     runs_bioinfo[flowcell_id]['checklist'] = flowcell_checklists

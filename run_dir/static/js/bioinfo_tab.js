@@ -245,7 +245,7 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
     }
 
     var th = $(this);
-    var th_status = $(th).attr('class').split(/\s+/)[2];
+    var th_status = $(th).attr('class').split(/\s+/)[3];
     if (th_status == undefined) {
         th_status = '?';
     }
@@ -255,28 +255,43 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
     var new_status = bioinfo_qc_values[(bioinfo_qc_values.indexOf(th_status)+1) % bioinfo_qc_values.length];
     var new_class = bioinfo_qc_statuses[new_status];
 
+    // function to change span status
+    var th_type = $(th).attr('class').split(/\s+/)[1];
+    var sample_status_func;
+    if (th_type == 'bioinfo-status-bp') {
+        sample_status_func = checkSampleStatusOnBPClick;
+    } else if (th_type == 'bioinfo-status-qc') {
+        sample_status_func = checkSampleStatusOnQCClick;
+    }
+
     // get tds with the same column name
-    var column_name = $(th).attr('class').split(/\s+/)[1];
+    var column_name = $(th).attr('class').split(/\s+/)[2];
     var tds = $(th).closest('.table-bioinfo-status').find('tr:not(.bioinfo-status-disabled) td.'+column_name);
     $.each(tds, function(index, td) {
         var td_classes = $(td).attr('class').split(/\s+/);
+        $(td).text(new_status);
         $.each(td_classes, function(i, td_class) {
             if (bioinfo_qc_classes.indexOf(td_class) != -1) {
                 $(td).removeClass(td_class);
+                sample_status_func(td, 'no-recursion');
             }
         });
         $(td).addClass(new_class);
-        $(td).text(new_status);
     });
     $(th).removeClass(th_status);
     $(th).addClass(new_status);
 
-    // TODO: change status
-//    var lowest_level_spans =
-//    $.each(lowest_level_spans, function(i, span) {
-//        setParentSpanStatus(span);
-//    });
-
+    var view = $(this).closest('table');
+    var lowest_level = "";
+    if ($(view).hasClass('table-bioinfo-status-sampleview')) {
+        lowest_level = 'bioinfo-lane';
+    } else if ($(view).hasClass('table-bioinfo-status-runview')) {
+        lowest_level = 'bioinfo-sample';
+    }
+    var lowest_level_spans = $(view).find('tr.'+lowest_level + ' td.bioinfo-status-runstate span');
+    $.each(lowest_level_spans, function(i, span) {
+        setParentSpanStatus(span);
+    });
 });
 
 function topParent(tr) {
@@ -325,7 +340,7 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
     checkSampleStatusOnBPClick(td);
 });
 
-function checkSampleStatusOnBPClick(td) {
+function checkSampleStatusOnBPClick(td, norecursion) {
     var next_value = $(td).text().trim();
     // check the sample status
     var span = $(td).parent().find('td.bioinfo-status-runstate span');
@@ -369,13 +384,24 @@ function checkSampleStatusOnBPClick(td) {
             new_sample_status = 'BP-ongoing';
         }
     }
-    var top_parent_tr = topParent(td.closest('tr'));
-    var top_span = $(top_parent_tr).find('td.bioinfo-status-runstate span');
-    $(top_span).text(new_sample_status);
-    setChildrenSpanStatus(top_span);
+    $(span).text(new_sample_status);
+    $.each($(span).attr('class').split(/\s+/), function(i, span_class) {
+        if (span_class in sample_classes) {
+            $(span).removeClass(span_class);
+        }
+    });
+    var new_sample_class = sample_statuses[new_sample_status];
+    $(span).addClass(new_sample_class);
+
+    if (norecursion == undefined) {
+        var top_parent_tr = topParent(td.closest('tr'));
+        var top_span = $(top_parent_tr).find('td.bioinfo-status-runstate span');
+        $(top_span).text(new_sample_status);
+        setChildrenSpanStatus(top_span);
+    }
 };
 
-function checkSampleStatusOnQCClick(td) {
+function checkSampleStatusOnQCClick(td, norecursion) {
 
     // check the sample status
     var span = $(td).parent().find('td.bioinfo-status-runstate span');
@@ -415,18 +441,22 @@ function checkSampleStatusOnQCClick(td) {
         }
         qc_statuses.push(qc_value);
     });
-
     var new_sample_status = sample_status;
+    // if all the values are '?';
+    var all_values_unset = qc_statuses.every(function(item, index, array){return item == '?'});
+
     if (sample_status == 'New') { // if we clicked for the first time
         new_sample_status = 'QC-ongoing';
     } else if ((sample_status == 'QC-done' || sample_status == 'BP-ongoing' || sample_status == 'BP-done') && next_value == '?') {
         new_sample_status = 'QC-ongoing';
     } else if (sample_status == 'QC-ongoing') {
-        if (last_value && bp_done && next_value != '?') {
+        if  (last_value && !bp_done) {
+            new_sample_status = "QC-done";
+        } else if (last_value && bp_done && next_value != '?') {
             new_sample_status = 'BP-done';
         } else if (last_value && bp_ongoing && next_value != '?') {
             new_sample_status = 'BP-ongoing';
-        } else if (next_value == '?' && qc_statuses.indexOf('?') == -1) {
+        } else if (all_values_unset && next_value == '?') {
             new_sample_status = 'New';
         }
     } // if not the last value, also don't care
@@ -436,9 +466,22 @@ function checkSampleStatusOnQCClick(td) {
     }
 
     $(span).text(new_sample_status);
-    setChildrenSpanStatus(span);
-    setParentSpanStatus(span);
+    $.each($(span).attr('class').split(/\s+/), function(i, span_class) {
+        if (sample_classes.indexOf(span_class) != -1) {
+            $(span).removeClass(span_class);
+        }
+    });
+    var new_sample_class = sample_statuses[new_sample_status];
+    $(span).addClass(new_sample_class);
+
+    // this is needed on 'th-click', so that we don't call recursive function
+    // because all the rows will change anyway
+    if (norecursion == undefined) {
+        setChildrenSpanStatus(span);
+        setParentSpanStatus(span);
+    }
 };
+
 
 $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioinfo-status-qc', function(e) {
     e.stopImmediatePropagation(); // fires twice otherwise.
@@ -546,7 +589,6 @@ function agregateStatus(tr) {
         } else if (list_of_qc_values.indexOf('Fail') != 1) {
             td_text = 'Fail';
         } else {
-            console.log(list_of_qc_values);
             // should not happen
         }
         $(second_level_td).text(td_text);
