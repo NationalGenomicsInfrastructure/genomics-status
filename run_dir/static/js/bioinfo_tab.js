@@ -33,6 +33,7 @@ $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
     });
     setParentDate(date_td);
 });
+
 $('.table-bioinfo-status').on('click', '.date-reset', function(e) {
     if ($('.table-bioinfo-status').hasClass('bioinfo-status-disabled')) {
         return false;
@@ -212,20 +213,40 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
             bp_statuses.push(bp_status);
         }
     });
+    var all_qc_set = true;
+    $(tds).each(function(i, td){
+        if ($(td).text().trim() == '?' || $(td).text().trim() == 'N/A'){
+            all_qc_set = false;
+        }
+    });
+    var all_qc_unset = true;
+    $(tds).each(function(i, td){
+        if ($(td).text().trim() != '?'){
+            all_qc_unset = false;
+        }
+    });
     var new_sample_status;
     if (new_status != '?') {
         if (new_status == 'Fail') {
             new_sample_status = 'Failed';
+        } else if (bp_statuses.length == 0 && all_qc_set) {
+            // for finished libraries
+            new_sample_status = 'QC-done';
         } else if (bp_statuses.length == 1 && bp_statuses[0] == '?') {
             new_sample_status = 'QC-done';
+
         } else if (bp_statuses.indexOf('?') != -1) {
             new_sample_status = 'BP-ongoing';
         } else if (bp_statuses.indexOf('?') == -1) {
             new_sample_status = 'BP-done';
         }
-    } else {
+    } else { // new_status == '?'
+        // if finished library
+        if (bp_statuses.length == 0 && all_qc_unset) {
+            new_sample_status = 'New';
+        }
         // if all qc (and bp?) are failed, status = Failed
-        if (bp_statuses.length == 1 && bp_statuses[0] == '?') {
+        else if (bp_statuses.length == 1 && bp_statuses[0] == '?') {
             new_sample_status = 'New';
         } else {
             new_sample_status = 'QC-ongoing';
@@ -410,6 +431,10 @@ function checkSampleStatusOnQCClick(td, norecursion) {
 
     // check also bp status
     var bp_boxes = $(td).parent().children('td.bioinfo-status-bp');
+    var finished_library = false
+    if (bp_boxes.length == 0) {
+        finished_library = true;
+    }
     var bp_statuses = [];
     $.each(bp_boxes, function(i, bp){
          var bp_value = $(bp).text().trim();
@@ -425,7 +450,7 @@ function checkSampleStatusOnQCClick(td, norecursion) {
         bp_ongoing = true;
     }
 
-    // check if the current qc box is the last to complete qc
+    // check if the current qc box is the last to complete qc (qc & bp)
     var qc_boxes = $(td).parent().children('td.bioinfo-status-qc:not(.'+$(td).attr('class').split(/\s+/)[1]+')');
     var last_value = true;
     var qc_statuses = [];
@@ -444,13 +469,12 @@ function checkSampleStatusOnQCClick(td, norecursion) {
     var new_sample_status = sample_status;
     // if all the values are '?';
     var all_values_unset = qc_statuses.every(function(item, index, array){return item == '?'});
-
     if (sample_status == 'New') { // if we clicked for the first time
         new_sample_status = 'QC-ongoing';
     } else if ((sample_status == 'QC-done' || sample_status == 'BP-ongoing' || sample_status == 'BP-done') && next_value == '?') {
         new_sample_status = 'QC-ongoing';
     } else if (sample_status == 'QC-ongoing') {
-        if  (last_value && !bp_done) {
+        if  (last_value && (!bp_done || finished_library)) {
             new_sample_status = "QC-done";
         } else if (last_value && bp_done && next_value != '?') {
             new_sample_status = 'BP-done';
@@ -728,6 +752,7 @@ $('#bioinfo-status-saveButton').click(function(e){
         var flowcell = tr_id.replace('-'+lane, '').replace('-'+sample,'');
         return [sample, flowcell, lane];
     };
+    var disabled_rows = [];
     var show_warning = false;
     // assuming, there is only one view is active (=one table is visible)
     $('.table-bioinfo-status:visible tr.'+lowest_level+':has(td)').each(function(){
@@ -770,10 +795,12 @@ $('#bioinfo-status-saveButton').click(function(e){
         sample_run_lane_statuses[row_key]['sample_status'] = status;
 
         // get data_delivered date
-        var data_delivered = $(this).find('td.datadelivered input:text').val();
+        var date_input = $(this).find('td.datadelivered input:text');
+        var data_delivered = date_input.val();
         sample_run_lane_statuses[row_key]['datadelivered'] = data_delivered;
         if (data_delivered != '') {
             show_warning = true;
+            disabled_rows.push($(this));
         }
     });
 
@@ -800,6 +827,13 @@ $('#bioinfo-status-saveButton').click(function(e){
                     success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
                     $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
                     $('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
+                    $.each(disabled_rows, function(i, tr) {
+                        $(tr).addClass('bioinfo-status-disabled');
+                        $(tr).find('td.datadelivered input:text').prop('disabled', true);
+                        var date_td = $(tr).find('td.datadelivered');
+                        // disable parent rows
+                        disableParentDate(date_td);
+                    });
                     updateSecondTable(saved_data);
                 }
             });
@@ -862,7 +896,6 @@ function updateSecondTable(saved_data) {
         var lane = i[3];
         var tr_id = get_tr_id(run, lane, sample, view);
         var tr = $('#'+tr_id);
-
         var qc_boxes = $.extend(row['qc'], row['bp']);
         $.each(qc_boxes, function(qc_name, qc_value) {
             // wtf it doesn't exclude length property??
@@ -872,15 +905,20 @@ function updateSecondTable(saved_data) {
                 var td_class = $(td).attr('class').split(/\s/)[2];
                 $(td).removeClass(td_class);
                 $(td).addClass(bioinfo_qc_statuses[qc_value]);
-                agregateStatus(table); // need to aggregate tr
             }
         });
-
-        agregateStatus(tr);
+        if (row['datadelivered'] != '') {
+            var date_td = $(tr).find('td.datadelivered');
+            var date_input =  $(date_td).find('input:text');
+            $(date_input).val(row['datadelivered']);
+            $(date_input).prop('disabled', true);
+            $(tr).addClass('bioinfo-status-disabled');
+            disableParentDate(date_td);
+        }
     });
+    setParentStatus(table);
 }
-//
-//
+
 var sample_statuses = {
     'Demultiplexing': 'label-default',
     'Transferring': 'label-default',
@@ -1044,4 +1082,27 @@ function setParentDate(td) {
         $(parent_td).find('input:text').val(delivery_date);
     }
     setParentDate(parent_td);
+};
+
+function disableParentDate(td) {
+    var parent_tr = $($(td).parent().attr('data-parent'));
+    if (td == undefined || $(parent_tr).hasClass('bioinfo-project')) {return false;}
+    var parent_td = $(parent_tr).find('td.datadelivered');
+    var delivery_date = $(td).find('input:text').val();
+    var sibling_trs = getChildTrs(parent_tr);
+    // if parent has only one child
+    if (sibling_trs.length <= 1) {
+        $(parent_td).parent().addClass('bioinfo-status-disabled');
+        $(parent_td).find('input:text').prop('disabled', true);
+    } else {
+        // disable if all the others are also disabled
+        var all_children_disabled = sibling_trs.every(function(item, index, array) {
+            return $(item).hasClass('bioinfo-status-disabled');
+        });
+        if (all_children_disabled) {
+            $(parent_td).parent().addClass('bioinfo-status-disabled');
+            $(parent_td).find('input:text').prop('disabled', true);
+        }
+    }
+    disableParentDate(parent_td);
 };
