@@ -63,7 +63,7 @@ Description: Shows a table with all flow cells.
                 {% if 'fctype' in flowcells[onefc] %}
                     {{ flowcells[onefc]['fctype'].split(" ")[-1] }}
                 {% elif 'kitver' in flowcells[onefc] %}
-                    {{ flowcells[onefc]['kitver'][-2:] }}
+                    v{{ flowcells[onefc]['kitver'][-1:] }}
                 {% else %}
                 -
                 {% end %}
