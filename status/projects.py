@@ -911,6 +911,16 @@ class ProjMetaCompareHandler(SafeHandler):
         t = self.application.loader.load("proj_meta_compare.html")
         self.write(t.generate(gs_globals=self.application.gs_globals, pids=pids))
 
+class ProjectRNAMetaDataHandler(SafeHandler):
+    """Handler to serve RNA metadata from project"""
+    def get(self, project_id):
+        data=""
+        view=self.application.analysis_db.view("reports/RNA_report")
+        for row in view[project_id]:
+            data=json.dumps(row.value)
+
+        self.write(data)
+
 
 class ProjectLabStatusHandler(SafeHandler):
     """Handler for the update of the project lab status"""

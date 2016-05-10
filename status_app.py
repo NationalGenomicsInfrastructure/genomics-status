@@ -35,7 +35,7 @@ from status.projects import BioinfoAnalysisHandler, CaliperImageHandler, CharonP
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler, RecCtrlDataHandler, \
-    ProjMetaCompareHandler, ProjectLabStatusHandler
+    ProjMetaCompareHandler, ProjectLabStatusHandler, ProjectRNAMetaDataHandler
 
 from status.quotas import QuotaDataHandler, QuotaHandler, QuotasHandler
 from status.q30 import Q30Handler, Q30PlotHandler
@@ -152,6 +152,7 @@ class Application(tornado.web.Application):
             ("/api/v1/projectqc/([^/]*)$", ProjectQCDataHandler),
             ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
+            ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
             ("/api/v1/links/([^/]*)$", LinksDataHandler),
             ("/api/v1/sample_info/([^/]*)$", SampleInfoDataHandler),
@@ -234,6 +235,7 @@ class Application(tornado.web.Application):
             self.uppmax_db = couch["uppmax"]
             self.worksets_db = couch["worksets"]
             self.x_flowcells_db = couch["x_flowcells"]
+            self.analysis_db= couch["analysis"]
         else:
             print settings.get("couch_server", None)
             raise IOError("Cannot connect to couchdb");

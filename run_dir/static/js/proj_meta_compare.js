@@ -21,8 +21,8 @@
 
 // Globals
 project_data = {};
-key_min = {'base': {}, 'library_prep': {}};
-key_max = {'base': {}, 'library_prep': {}};
+key_min = {'base': {}, 'library_prep': {}, 'rna_meta' :{}};
+key_max = {'base': {}, 'library_prep': {}, 'rna_meta' :{}};
 xLogAxis = 'linear';
 yLogAxis = 'linear';
 
@@ -145,103 +145,133 @@ function load_projects_meta(){
         var this_url = '/api/v1/project/'+pid;
         return $.getJSON(this_url, function(data) {
             project_data[pid] = data;
-            completed_ajax++;
             num_samples += Object.keys(data).length;
+        });
+    };
+    
+    //RNA ajax caller function:
+    var RNA_caller = function(pid){
+        var rna_url = '/api/v1/rna_report/'+pid;
+        return $.getJSON(rna_url, function(rna_data){
+            if (rna_data.length != 0){
+                for (sample in rna_data){
+                    project_data[pid][sample]['rna_meta']=rna_data[sample];
+                }
+            }
+            completed_ajax++;
             $('#project_status_counter').text(completed_ajax);
             $('#project_status_pbar').css('width', ((completed_ajax/projects.length)*100)+'%' )
             $('#project_status_sample_counter').text(num_samples);
         });
-    };
-    
+    }
     // Kick off all of the JSON ajax calls
     var ajax_calls = [];
     for (var i = 0; i < projects.length; i++) {
         ajax_calls.push( ajax_caller( projects[i] ) );
     }
     
-    // Fire when all of the data has been loaded
+    //when they are done, start the second round of ajax calls
     $.when.apply(this, ajax_calls).done(function() {
-        // Update the status box
-        $('#status_box').removeClass().addClass('alert alert-success');
-        $('#status_box span').html(completed_ajax+' projects loaded ('+num_samples+' samples). <strong id="second_level_stats">Next: choose X and Y values to plot</strong>');
-        
-        // Collect available shared keys
-        numeric_keys = {'base': [], 'library_prep': []};
-        for (var pid in project_data){
-            for (var s_name in project_data[pid]){
-                for (var attr in project_data[pid][s_name]){
-                    // Library prep fields
-                    if (attr == 'library_prep'){
-                        var lp = project_data[pid][s_name][attr];
-                        var lib_keys = Object.keys(lp);
-                        var ll = lib_keys.sort().pop();
-                        var validation = lp[ll]['library_validation'];
-                        var val_keys = Object.keys(validation);
-                        var lv = val_keys.sort().pop();
-                        for (var l_attr in validation[lv]){
-                            if(validation[lv][l_attr].constructor === Number){
-                                if(numeric_keys['library_prep'].indexOf(l_attr) == -1) {
-                                    numeric_keys['library_prep'].push(l_attr);
-                                    key_min['library_prep'][l_attr] = null;
-                                    key_max['library_prep'][l_attr] = null;
+        rna_calls = [];
+        for (var i = 0; i < projects.length; i++) {
+            rna_calls.push( RNA_caller( projects[i] ) );
+        }
+        // Fire when all of the data has been loaded
+        $.when.apply(this, rna_calls).done(function() {
+            // Update the status box
+            $('#status_box').removeClass().addClass('alert alert-success');
+            $('#status_box span').html(completed_ajax+' projects loaded ('+num_samples+' samples). <strong id="second_level_stats">Next: choose X and Y values to plot</strong>');
+            
+            // Collect available shared keys
+            numeric_keys = {'base': [], 'library_prep': [], 'rna_meta' : []};
+            for (var pid in project_data){
+                for (var s_name in project_data[pid]){
+                    for (var attr in project_data[pid][s_name]){
+                        // Library prep fields
+                        if (attr == 'library_prep'){
+                            var lp = project_data[pid][s_name][attr];
+                            var lib_keys = Object.keys(lp);
+                            var ll = lib_keys.sort().pop();
+                            var validation = lp[ll]['library_validation'];
+                            var val_keys = Object.keys(validation);
+                            var lv = val_keys.sort().pop();
+                            for (var l_attr in validation[lv]){
+                                if(validation[lv][l_attr].constructor === Number){
+                                    if(numeric_keys['library_prep'].indexOf(l_attr) == -1) {
+                                        numeric_keys['library_prep'].push(l_attr);
+                                        key_min['library_prep'][l_attr] = null;
+                                        key_max['library_prep'][l_attr] = null;
+                                    }
+                                    key_min['library_prep'][l_attr] = Math.min(validation[lv][l_attr], key_min['library_prep'][l_attr]);
+                                    key_max['library_prep'][l_attr] = Math.max(validation[lv][l_attr], key_min['library_prep'][l_attr]);
+                                }    
+                            }
+                        }
+                        else if(attr == 'rna_meta'){
+                            for (var key in project_data[pid][s_name]['rna_meta']){
+                                if (numeric_keys['rna_meta'].indexOf(key) == -1){
+                                    numeric_keys['rna_meta'].push(key);
+                                    key_min['rna_meta'][key]=null;
+                                    key_max['rna_meta'][key]=null;
                                 }
-                                key_min['library_prep'][l_attr] = Math.min(validation[lv][l_attr], key_min['library_prep'][l_attr]);
-                                key_max['library_prep'][l_attr] = Math.max(validation[lv][l_attr], key_min['library_prep'][l_attr]);
-                            }    
+                                key_min['rna_meta'][key]=Math.min(key_min['rna_meta'][key], project_data[pid][s_name]['rna_meta'][key]);
+                                key_max['rna_meta'][key]=Math.max(key_min['rna_meta'][key], project_data[pid][s_name]['rna_meta'][key]);
+
+                            }
+
                         }
-                    }
-                    
-                    // 1D Nested arrays
-                    else if(project_data[pid][s_name][attr].constructor === Object){
-                        // Create array if we haven't seen this before
-                        if(!numeric_keys.hasOwnProperty(attr)){
-                            numeric_keys[attr] = [];
-                            key_min[attr] = {};
-                            key_max[attr] = {};
+                        // 1D Nested arrays
+                        else if(project_data[pid][s_name][attr].constructor === Object){
+                            // Create array if we haven't seen this before
+                            if(!numeric_keys.hasOwnProperty(attr)){
+                                numeric_keys[attr] = [];
+                                key_min[attr] = {};
+                                key_max[attr] = {};
+                            }
+                            for (var s_attr in project_data[pid][s_name][attr]){
+                                if(project_data[pid][s_name][attr][s_attr].constructor === Number){
+                                    if(numeric_keys[attr].indexOf(s_attr) == -1) {
+                                        numeric_keys[attr].push(s_attr);
+                                        key_min[attr][s_attr] = null;
+                                        key_max[attr][s_attr] = null;
+                                    }
+                                    key_min[attr][s_attr] = Math.min(project_data[pid][s_name][attr][s_attr], key_min[attr][s_attr]);
+                                    key_max[attr][s_attr] = Math.max(project_data[pid][s_name][attr][s_attr], key_max[attr][s_attr]);
+                                }    
+                            }
+                            // Delete if no numeric keys found
+                            if(numeric_keys[attr].length == 0){
+                                delete numeric_keys[attr];
+                                delete key_min[attr];
+                                delete key_max[attr];
+                            }
                         }
-                        for (var s_attr in project_data[pid][s_name][attr]){
-                            if(project_data[pid][s_name][attr][s_attr].constructor === Number){
-                                if(numeric_keys[attr].indexOf(s_attr) == -1) {
-                                    numeric_keys[attr].push(s_attr);
-                                    key_min[attr][s_attr] = null;
-                                    key_max[attr][s_attr] = null;
-                                }
-                                key_min[attr][s_attr] = Math.min(project_data[pid][s_name][attr][s_attr], key_min[attr][s_attr]);
-                                key_max[attr][s_attr] = Math.max(project_data[pid][s_name][attr][s_attr], key_max[attr][s_attr]);
-                            }    
+                        // Base level keys
+                        else if(project_data[pid][s_name][attr].constructor === Number){
+                            if(numeric_keys['base'].indexOf(attr) == -1) {
+                                numeric_keys['base'].push(attr);
+                                key_min['base'][attr] = null;
+                                key_max['base'][attr] = null;
+                            }
+                            key_min['base'][attr] = Math.min(project_data[pid][s_name][attr], key_min['base'][attr]);
+                            key_max['base'][attr] = Math.max(project_data[pid][s_name][attr], key_max['base'][attr]);
                         }
-                        // Delete if no numeric keys found
-                        if(numeric_keys[attr].length == 0){
-                            delete numeric_keys[attr];
-                            delete key_min[attr];
-                            delete key_max[attr];
-                        }
-                    }
-                    // Base level keys
-                    else if(project_data[pid][s_name][attr].constructor === Number){
-                        if(numeric_keys['base'].indexOf(attr) == -1) {
-                            numeric_keys['base'].push(attr);
-                            key_min['base'][attr] = null;
-                            key_max['base'][attr] = null;
-                        }
-                        key_min['base'][attr] = Math.min(project_data[pid][s_name][attr], key_min['base'][attr]);
-                        key_max['base'][attr] = Math.max(project_data[pid][s_name][attr], key_max['base'][attr]);
                     }
                 }
+            };
+            for (var sect in numeric_keys){
+                var group = $('<optgroup label="'+sect+'" />');
+                for (var key in numeric_keys[sect]){
+                    group.append('<option data-section="'+sect+'" value="'+numeric_keys[sect][key]+'">'+numeric_keys[sect][key]+'</option>');
+                }
+                group.appendTo($('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue'));
             }
-        };
-        for (var sect in numeric_keys){
-            var group = $('<optgroup label="'+sect+'" />');
-            for (var key in numeric_keys[sect]){
-                group.append('<option data-section="'+sect+'" value="'+numeric_keys[sect][key]+'">'+numeric_keys[sect][key]+'</option>');
-            }
-            group.appendTo($('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue'));
-        }
-        
-        // Remove disabled states
-        $('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue, #projMeta_downloadAll, #projMeta_copyRaw').prop('disabled', false);
-        
+            
+            // Remove disabled states
+            $('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue, #projMeta_downloadAll, #projMeta_copyRaw').prop('disabled', false);
+            
         console.log(project_data);
+        });
     });
 }
 
