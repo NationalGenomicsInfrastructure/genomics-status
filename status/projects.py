@@ -914,11 +914,13 @@ class ProjMetaCompareHandler(SafeHandler):
 class ProjectRNAMetaDataHandler(SafeHandler):
     """Handler to serve RNA metadata from project"""
     def get(self, project_id):
-        data=""
+        data="{}"
         view=self.application.analysis_db.view("reports/RNA_report")
         for row in view[project_id]:
             data=json.dumps(row.value)
 
+        self.set_status(200)
+        self.set_header("Content-type", "application/json")
         self.write(data)
 
 

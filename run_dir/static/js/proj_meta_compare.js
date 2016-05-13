@@ -153,7 +153,7 @@ function load_projects_meta(){
     var RNA_caller = function(pid){
         var rna_url = '/api/v1/rna_report/'+pid;
         return $.getJSON(rna_url, function(rna_data){
-            if (rna_data.length != 0){
+            if (! jQuery.isEmptyObject(rna_data)){
                 for (sample in rna_data){
                     project_data[pid][sample]['rna_meta']=rna_data[sample];
                 }
@@ -162,7 +162,7 @@ function load_projects_meta(){
             $('#project_status_counter').text(completed_ajax);
             $('#project_status_pbar').css('width', ((completed_ajax/projects.length)*100)+'%' )
             $('#project_status_sample_counter').text(num_samples);
-        });
+        }).fail(function( jqXHR, textStatus, errorThrown ) {console.log("failed "+textStatus);});
     }
     // Kick off all of the JSON ajax calls
     var ajax_calls = [];
