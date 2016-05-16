@@ -17,8 +17,8 @@
       <div class="form-group">
         <label for="bioinfo-view">Select view: </label>
         <select id="bioinfo-view" class="form-control">
-          <option selected="selected" value="sample-view">Sample-run-lane (default)</option>
-          <option value="run-view">Run-lane-sample</option>
+          <option selected="selected" value="run-view">Run-lane-sample (default)</option>
+          <option value="sample-view">Sample-run-lane</option>
         </select>
       </div>
       &nbsp; &nbsp; &nbsp;
@@ -29,8 +29,8 @@
     </form>
     <hr>
 
-    {% include "bioinfo_tab/sample_run_lane_view.html" %}
     {% include "bioinfo_tab/run_lane_sample_view.html" %}
+    {% include "bioinfo_tab/sample_run_lane_view.html" %}
 
     <button disabled class="btn btn-default" id="bioinfo-show-history">Show Edit History</button>
     <pre id="bioinfo-history-dump" style="display:none; margin-top:20px;"></pre>
