@@ -558,6 +558,7 @@ function setParentStatus(td) {
     var td_class = $(td).attr('class').split(/\s+/)[1];
     var parent_td = $($(td).parent().attr('data-parent')).children('.'+td_class);
     if ($(parent_td).text().trim() == $(td).text().trim()) {
+        console.log('parent == td');
         // do nothing;
     } else if ($(parent_td).text().trim() == 'Pass' && $(td).text().trim() == 'Warning')  {
         $(parent_td).text('Warning');
@@ -580,11 +581,15 @@ function setParentStatus(td) {
         var child_trs = $('.table-bioinfo-status tr[data-parent="#'+tr_id+'"]');
         // go through all the children and check if there is at least one with '?',
         // then don't check anything else and keep parent '?'
+        var do_nothing = false;
         $.each(child_trs, function(i, child_tr){
             var sibling = $(child_tr).children('.'+td_class);
+            if ($(sibling).attr('id') == $(td).attr('id')) { // if it's the same element, skip it
+                return true; // continue
+            }
             if ($(sibling).text().trim() == '?');
             do_nothing = true;
-            return false;
+            return false; // break
         });
         console.log('do nothing: '+do_nothing);
         if (!do_nothing) {
@@ -607,6 +612,52 @@ var getChildTds = function(td) {
     });
     return childTds;
 };
+
+function getChildTds_new(td) {
+    var tr = $(td).parent()
+    var childTrs = getAllChildTrs(tr);
+    var index = $(tr).children().index(td);
+
+    var childTds = [];
+    $.each(childTrs, function(i, child_tr){
+        var child_td = $(child_tr).children()[index];
+        childTds.push(child_td);
+    });
+    return childTds;
+}
+
+var getAllChildTrs = function(tr) {
+    var table = $(tr).closest('table');
+    var first_level_class = '';
+    var second_level_class = '';
+    var top_level_class = '';
+    if ($(table).hasClass('table-bioinfo-status-runview')) {
+        first_level_class = 'bioinfo-sample';
+        second_level_class = 'bioinfo-lane';
+        top_level_class = 'bioinfo-fc';
+    } else if ($(table).hasClass('table-bioinfo-status-sampleview')) {
+        first_level_class = 'bioinfo-fc';
+        second_level_class = 'bioinfo-lane';
+        top_level_class = 'bioinfo-sample';
+    }
+
+    if ($(tr).hasClass(first_level_class)) {
+        return [];
+    } else if ($(tr).hasClass(second_level_class)) {
+        var tr_id = $(tr).attr('id');
+        return $('.table-bioinfo-status tr[data-parent="#'+tr_id+'"]');
+    } else if ($(tr).hasClass(top_level_class)) {
+
+        // todo: find next tr of the same level
+        // return: everything between tr and next_tr
+        return children = $(tr).nextUntil('tr.'+top_level_class); // does not inlcude tr and next tr
+    }
+};
+
+function getChildTrs_new(parent_tr) {
+    var parent_id = $(parent_tr).attr('id');
+    return $(parent_tr).closest('table').find('tr[data-parent="#'+tr_id+'"]');
+}
 
 var getChildTrs = function(tr) {
     var children = [];
@@ -700,9 +751,60 @@ function aggregateStatus(tr) {
         });
         $(second_level_td).addClass(bioinfo_qc_statuses[td_text]);
     });
-}
+};
 
-var aggregateTdStatus = function(td) {
+function aggregateTdStatus(td) {
+    if (td == undefined || $(td).parent().hasClass('bioinfo-project')) {return false;}
+    var parent_status = "";
+    var child_tds = getChildTds_new(td);
+    var statuses = [];
+    $.each(child_tds, function(i, td){
+        var td_text = $(td).text().trim().replace(/\s/g, '');
+        // add text if it's not yet in array
+        if (statuses.indexOf(td_text) == -1) {
+            statuses.push(td_text);
+        }
+    });
+    // if 'N/A' in statuses -> ignore
+    // if all statuses are 'N/A' -> 'N/A'
+    if (statuses.length == 1 && statuses.indexOf('N/A') != -1) {
+        parent_status = 'N/A'
+    } else if (statuses.indexOf('N/A') != -1) {
+        // remove 'N/A' from statuses
+        statuses.splice(statuses.indexOf('N/A'),1);
+    }
+    if (statuses.length == 1) { // if all statuses were the same
+        parent_status = statuses[0];
+    } else if (statuses.indexOf('?') != -1) {
+        parent_status = '?';
+    } else if (statuses.indexOf('Warning') != -1 || statuses.indexOf('Fail') != -1) {
+        parent_status = 'Warning';
+    }
+
+    var call_recursive_function = false;
+    if ($(td).text().trim() != parent_status) {
+        call_recursive_function = true;
+    }
+
+    $(td).text(parent_status);
+    var current_class = $(td).attr('class').split(/\s+/)[2];
+    var parent_class = bioinfo_qc_statuses[parent_status];
+    $(td).removeClass(current_class);
+    $(td).addClass(parent_class);
+
+    if (call_recursive_function) {
+        var parent_id = $(td).parent().attr('data-parent');
+        // if td is not 'bioinfo-fc'
+        if (parent_id != undefined) {
+            var td_index = $(td).parent().children().index($(td));
+            var td_parent = $(parent_id).children()[td_index];
+            aggregateTdStatus(td_parent);
+        }
+
+    }
+};
+
+var aggregateTdStatus_old = function(td) {
     if (td == undefined || $(td).parent().hasClass('bioinfo-project')) {return false;}
     var parent_status = "";
     var child_tds = getChildTds(td);
