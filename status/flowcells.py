@@ -66,7 +66,7 @@ class FlowcellsDataHandler(SafeHandler):
         for row in xfc_view:
             flowcells[row.key] = row.value
 
-        return OrderedDict(sorted(flowcells.items))
+        return OrderedDict(sorted(flowcells.items()))
 
 
 class FlowcellsInfoDataHandler(SafeHandler):

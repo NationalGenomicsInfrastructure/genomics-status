@@ -126,17 +126,17 @@ class MainHandler(UnsafeHandler):
     def get(self):
         t = self.application.loader.load("index.html")
         user = self.get_current_user_name()
-
-        view = self.application.server_status_db.view('all_docs/by_timestamp')
+        view = self.application.server_status_db.view('nases/by_timestamp')
         latest = max([parser.parse(row.key) for row in view.rows])
         # assuming that status db is not being updated more often than every 5 minutes
         reduced_rows = [row for row in view.rows if latest - parser.parse(row.key) <= timedelta(minutes=5)]
-
+        instruments = self.application.server_status['instruments']
         server_status = {}
         for row in reduced_rows:
             server = row.value['name']
             if server not in server_status:
                 server_status[server] = row.value
+                server_status[server]['instrument'] = instruments[server] or '-'
                 row.value['used_percentage'] = float(row.value['used_percentage'].replace('%',''))
                 if row.value['used_percentage'] > 60:
                     server_status[server]['css_class'] = 'q-warning'
@@ -146,11 +146,12 @@ class MainHandler(UnsafeHandler):
                     server_status[server]['css_class'] = ''
         # sort by used space
         server_status = sorted(server_status.items(), key = lambda item: item[1]['used_percentage'], reverse=True)
+
         # copy -> so that we don't change self.application.uppmax_projects
         uppmax_ids = copy.copy(self.application.uppmax_projects)
         # get all the documents, sorted by timestamp in descending order. Because I don't know how to use reduce functions
         # limit = 30, get the last 30 entries. assuming that our projects are in this range
-        view = self.application.uppmax_db.view('time/last_updated_full_doc', descending=True, limit=30)
+        view = self.application.server_status_db.view('uppmax/by_timestamp', descending=True, limit=30)
         uppmax_projects = {}
         for row in view.rows:
             # if we found all projects, don't continue
@@ -166,6 +167,10 @@ class MainHandler(UnsafeHandler):
                 project = uppmax_projects[project_nobackup]
                 # add disk or nobackup usage depending on type of project
                 if project_id == project_nobackup:
+                    # can happen if taca server_status updates the wrong database
+                    if 'usage (GB)' not in row.value or 'quota limit (GB)' not in row.value:
+                        del uppmax_projects[project_nobackup]
+                        continue
                     # / 1024 - to convert GB to TB
                     project['disk_usage'] = round(float(row.value['usage (GB)']) / 1024, 2)
                     project['disk_limit'] = round(float(row.value['quota limit (GB)']) / 1024, 2)

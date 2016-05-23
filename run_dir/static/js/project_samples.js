@@ -12,9 +12,7 @@ $(document).ready(function() {
   // Initialise everything - order is important :)
   $.when(load_presets()).done(function(){
     load_undefined_info();
-    $.when(load_all_udfs()).done(function(){
-      load_bioinfo_table();
-    });
+    load_all_udfs();
     load_samples_table();
     load_running_notes();
     load_links();
@@ -377,6 +375,12 @@ function load_all_udfs(){
         $('#project_comment').html(make_markdown(value));
         check_img_sources($('#project_comment img'));
       }
+      else if (prettify(key) == 'lab_status'){
+        value = value.replace(/\_/g, '\\_');
+        $('#lab_status').html(make_markdown(value));
+        $('#textarea_lab_status').html(value);
+      }
+
 
       // Create the links for review and display the banner
       else if (prettify(key) == 'pending_reviews'){
