@@ -442,17 +442,15 @@ class ProjectSamplesHandler(SafeHandler):
     brief information for each sample.
     URL: /project/([^/]*)
     """
-    def get(self, proj_id):
+    def get(self, project):
         t = self.application.loader.load("project_samples.html")
-        project_view = self.application.projects_db.view('project/summary')
-
         worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
-        self.write(t.generate(gs_globals=self.application.gs_globals, project=proj_id,
+        self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
                               user=self.get_current_user_name(),
-                              columns=self.application.genstat_defaults.get('pv_columns'),
-                              columns_sample=self.application.genstat_defaults.get('sample_columns'),
-                              prettify=prettify_css_names,
-                              worksets=worksets_view[proj_id],
+                              columns = self.application.genstat_defaults.get('pv_columns'),
+                              columns_sample = self.application.genstat_defaults.get('sample_columns'),
+                              prettify = prettify_css_names,
+                              worksets=worksets_view[project],
                               ))
 
 
@@ -842,6 +840,3 @@ class ProjectLabStatusHandler(SafeHandler):
             self.set_status(200)
             self.set_header("Content-type", "application/json")
             self.write(self.request.body)
-
-
-
