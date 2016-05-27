@@ -2,6 +2,7 @@
 """
 import json
 import string
+import traceback
 
 import tornado.web
 import dateutil.parser
@@ -436,23 +437,21 @@ class CaliperImageHandler(SafeHandler):
             print message
             return("Error fetching caliper images")
 
-
 class ProjectSamplesHandler(SafeHandler):
-        """ Serves a page which lists the samples of a given project, with some
-        brief information for each sample.
-        URL: /project/([^/]*)
-        """
-        def get(self, project):
-            t = self.application.loader.load("project_samples.html")
-            worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
-
-            self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
-                                      user=self.get_current_user_name(),
-                                      columns = self.application.genstat_defaults.get('pv_columns'),
-                                      columns_sample = self.application.genstat_defaults.get('sample_columns'),
-                                      prettify = prettify_css_names,
-                                      worksets=worksets_view[project],
-                                      ))
+    """ Serves a page which lists the samples of a given project, with some
+    brief information for each sample.
+    URL: /project/([^/]*)
+    """
+    def get(self, project):
+        t = self.application.loader.load("project_samples.html")
+        worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
+        self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
+                              user=self.get_current_user_name(),
+                              columns = self.application.genstat_defaults.get('pv_columns'),
+                              columns_sample = self.application.genstat_defaults.get('sample_columns'),
+                              prettify = prettify_css_names,
+                              worksets=worksets_view[project],
+                              ))
 
 
 class ProjectsHandler(SafeHandler):
@@ -675,6 +674,7 @@ class ProjectQCDataHandler(SafeHandler):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(paths))
 
+
 class CharonProjectHandler(SafeHandler):
     """queries charon about the current project"""
     def get(self, projectid):
@@ -690,113 +690,6 @@ class CharonProjectHandler(SafeHandler):
         else:
             self.set_status(400)
             self.finish('<html><body>There was a problem connecting to charon, please try it again later. {}</body></html>'.format(r.reason))
-
-
-class BioinfoAnalysisHandler(SafeHandler):
-    """queries and posts about bioinfo analysis
-    URL: /api/v1/bioinfo_analysis/
-    URL: /api/v1/bioinfo_analysis/([^/]*)
-    URL: /api/v1/bioinfo_analysis/<pid>?dump_all=true"""
-
-
-
-
-    def get_singleproject(self, project_id):
-        return_obj = {}
-        v = self.application.bioinfo_db.view("latest_data/project_id")
-        for row in v[project_id]:
-            return_obj.update(row.value)
-        return return_obj
-
-    def get_all_project_status(self, status="any"):
-        return_obj = {}
-        if status == "Ongoing":
-            v = self.application.bioinfo_db.view("general/ongoing_projectids", group = True)
-        elif status == "Incoming":
-            v = self.application.bioinfo_db.view("general/incoming_projectids", group = True)
-        else:
-            v = self.application.bioinfo_db.view("general/projectids", group = True)
-
-        status_projects = set()
-        for row in v:
-            status_projects.add(row.key)
-        v = self.application.bioinfo_db.view("latest_data/project_id")
-        for row in v:
-            if row.key in status_projects:
-                try:
-                    return_obj[row.key].update(row.value)
-                except:
-                    return_obj[row.key] = row.value
-        return return_obj
-
-    def get_singleproject_dump(self, project_id):
-        return_obj = {}
-        v = self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
-        for row in v[[project_id, '']:[project_id, 'ZZZ']]:
-            return_obj[row.key[1]] = row.value
-        return return_obj
-
-
-    def get(self, project_id):
-        return_obj = {}
-        if project_id:
-            if self.get_argument('history', None):
-                return_obj = self.get_singleproject_dump(project_id)
-            else:
-                return_obj = self.get_singleproject(project_id)
-        else:
-            if self.get_argument('status', None):
-                return_obj = self.get_all_project_status(self.get_argument('status'))
-            else:
-                return_obj = self.get_all_project_status("Ongoing")
-
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(return_obj))
-
-    def post(self, project_id):
-        v = self.application.bioinfo_db.view("full_doc/pj_run_to_doc")
-        user = self.get_secure_cookie('user')
-        data = json.loads(self.request.body)
-        saved_data = {}
-        for run_id in data:
-            for row in v[[project_id, run_id]]:
-                # if there's more than one, that is a problem
-                original_doc = row.value
-
-            timestamp=datetime.datetime.now().isoformat()
-            try:
-                if 'values'	not in original_doc:
-                    original_doc['values'] = {}
-                original_doc['values'][timestamp] = data[run_id]['values']
-                original_doc['values'][timestamp]['user'] = user
-                original_doc['status'] = data[run_id]['status']
-                # Add the status to the values array as well. This isn't used
-                # it's only for history tracking. Denis doesn't like it.
-                original_doc['values'][timestamp]['status'] = data[run_id]['status']
-            except Exception, err:
-                self.set_status(400)
-                self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
-                return None
-
-            self.application.bioinfo_db.save(original_doc)
-            saved_data[run_id] = original_doc
-
-        self.set_status(200)
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(saved_data))
-
-
-class DeliveriesPageHandler(SafeHandler):
-        """ Serves a page which lists the bioinformatics delivery statuses of active projects
-        URL: /deliveries/)
-        """
-        def get(self):
-            t = self.application.loader.load("deliveries.html")
-            self.write(t.generate(gs_globals=self.application.gs_globals,
-                                      user=self.get_current_user_name(),
-                                      prettify = prettify_css_names
-                                      ))
-
 
 
 class ProjectSummaryHandler(SafeHandler):
@@ -947,6 +840,3 @@ class ProjectLabStatusHandler(SafeHandler):
             self.set_status(200)
             self.set_header("Content-type", "application/json")
             self.write(self.request.body)
-
-
-

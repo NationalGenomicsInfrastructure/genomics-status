@@ -839,15 +839,17 @@ These classes are cut and pasted wholesale into here from other packages.
 .table-colgroup > tbody > tr.border-bottom > th, .table-colgroup > tbody > tr > th.border-bottom {
   border-bottom: 1px solid #AAA;
 }
-.table-bioinfo-status td {
-  cursor: pointer;
+.table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-qc,
+.table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-bp,
+.table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-row {
+    cursor: not-allowed;
 }
-.table-bioinfo-status {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -khtml-user-select: none;
-  -ms-user-select: none;
+
+.table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-qc,
+.table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-bp,
+.table-bioinfo-status:not(.bioinfo-status-disabled) th.bioinfo-status-th,
+.table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-row {
+  cursor: pointer;
 }
 
 .table-bioinfo-status td, .table-bioinfo-status th {
@@ -864,28 +866,32 @@ These classes are cut and pasted wholesale into here from other packages.
 .bioinfo-status-runstate {
   text-transform: lowercase;
 }
+
 .bioinfo-status-disabled td {
   background-color: #ededed;
   color: #ccc;
 }
 .bioinfo-status-disabled td, .bioinfo-status-disabled th,
-.bioinfo-status-disabled .input-group-addon.datepicker-today {
+.bioinfo-status-disabled .input-group.date,
+.bioinfo-status-disabled .input-group.date .input-group-addon
+{
   cursor: not-allowed;
 }
 .bioinfo-status-disabled.bioinfo-delivered td.bioinfo-status-runstate {
   cursor: pointer;
 }
 
-
-.input-group.date, .narrowinput {
-  width: 120px;
+.input-group.date {
+    max-width: 190px;
+    margin-right: -30px;
 }
+
+
 .datepicker table tr td, .datepicker table tr th {
   -webkit-border-radius: 0px;
      -moz-border-radius: 0px;
           border-radius: 0px;
 }
-
 
 /* Deliveries page */
 .deliveries-page .progress {
