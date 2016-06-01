@@ -40,6 +40,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ProjMetaCompareHandler, ProjectLabStatusHandler, ProjectRNAMetaDataHandler
 
 from status.quotas import QuotasHandler
+from status.nas_quotas import NASQuotasHandler
 from status.q30 import Q30Handler, Q30PlotHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.reads_per_lane import ReadsPerLaneHandler, ReadsPerLanePlotHandler
@@ -190,6 +191,7 @@ class Application(tornado.web.Application):
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/instrument_logs",InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
+            ("/nas_quotas", NASQuotasHandler),
             ("/q30", Q30Handler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
@@ -330,6 +332,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/login.html")
+            tornado.autoreload.watch("design/nas_quotas.html")
             tornado.autoreload.watch("design/phix_err_rate.html")
             tornado.autoreload.watch("design/production.html")
             tornado.autoreload.watch("design/proj_meta_compare.html")
