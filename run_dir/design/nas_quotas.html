@@ -5,7 +5,7 @@
   <p><span id="show_all_text">Showing data from last two months.</span> &nbsp; <button id="show_all_data" class="btn btn-default btn-xs">Show all data</button></p>
   <div id="plots">
     {% for nas_url in nases.keys() %}
-    <div class="row" id='{{ nas_url }}'>
+    <div class="row" id='{{ nas_url.replace(".", "--") }}'>
         <h4>{{ nas_url }}</h4>
         <!--replace the '.', otherwise selector will not work-->
         <div class="quota_plot" id="quota_{{ nas_url.replace('.', '--') }}"></div>
