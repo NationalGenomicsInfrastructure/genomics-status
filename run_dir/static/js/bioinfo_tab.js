@@ -300,21 +300,6 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
     });
     $(th).removeClass(th_status);
     $(th).addClass(new_status);
-
-    var view = $(this).closest('table');
-    var lowest_level = "";
-    if ($(view).hasClass('table-bioinfo-status-sampleview')) {
-        lowest_level = 'bioinfo-lane';
-    } else if ($(view).hasClass('table-bioinfo-status-runview')) {
-        lowest_level = 'bioinfo-sample';
-    }
-    var lowest_level_spans = $(view).find('tr.'+lowest_level + ' td.bioinfo-status-runstate span');
-    // this one takes long
-    // it calculates status for each parent number of children times
-    // should calculate only once
-//    $.each(lowest_level_spans, function(i, span) {
-//        setParentSpanStatus(span);
-//    });
 });
 
 function topParent(tr) {
@@ -462,7 +447,8 @@ function checkSampleStatusOnQCClick(td, norecursion) {
     var new_sample_status = sample_status;
     // if all the values are '?';
     var all_values_unset = qc_statuses.every(function(item, index, array){return item == '?'});
-    if (sample_status == 'New') { // if we clicked for the first time
+    if (sample_status == 'New') {
+        // if we clicked for the first time
         new_sample_status = 'QC-ongoing';
     } else if ((sample_status == 'QC-done' || sample_status == 'BP-ongoing' || sample_status == 'BP-done') && next_value == '?') {
         new_sample_status = 'QC-ongoing';
@@ -492,11 +478,10 @@ function checkSampleStatusOnQCClick(td, norecursion) {
     // this is needed on 'th-click', so that we don't call recursive function
     // because all the rows will change anyway
     if (norecursion == undefined) {
-        setChildrenSpanStatus(span); // seems to be wrong?
+        setChildrenSpanStatus(span);
         setParentSpanStatus(span);
     }
 };
-
 
 
 function setChildrenStatus(parent_td) {
@@ -606,7 +591,7 @@ function setParentStatus(td) {
     }
 };
 
-var getChildTds = function(td) {
+function getChildTds(td) {
     var childTds = [];
     var tr = $(td).parent();
     var column_index = $(tr).children().index(td);
@@ -617,7 +602,7 @@ var getChildTds = function(td) {
     return childTds;
 };
 
-function getChildTds_new(td) {
+function getAllChildTds(td) {
     var tr = $(td).parent()
     var childTrs = getAllChildTrs(tr);
     var index = $(tr).children().index(td);
@@ -745,7 +730,7 @@ function loadTable(view_table) {
 function aggregateTdStatus(td) {
     if (td == undefined || $(td).parent().hasClass('bioinfo-project')) {return false;}
     var parent_status = "";
-    var child_tds = getChildTds_new(td);
+    var child_tds = getAllChildTds(td);
     var statuses = [];
     $.each(child_tds, function(i, td){
         var td_text = $(td).text().trim().replace(/\s/g, '');
@@ -792,58 +777,6 @@ function aggregateTdStatus(td) {
 
     }
 };
-
-var aggregateTdStatus_old = function(td) {
-    if (td == undefined || $(td).parent().hasClass('bioinfo-project')) {return false;}
-    var parent_status = "";
-    var child_tds = getChildTds(td);
-    var statuses = [];
-    $.each(child_tds, function(i, td){
-        var td_text = $(td).text().trim().replace(/\s/g, '');
-        // add text if it's not yet in array
-        if (statuses.indexOf(td_text) == -1) {
-            statuses.push(td_text);
-        }
-    });
-    // if 'N/A' in statuses -> ignore
-    // if all statuses are 'N/A' -> 'N/A'
-    if (statuses.length == 1 && statuses.indexOf('N/A') != -1) {
-        parent_status = 'N/A'
-    } else if (statuses.indexOf('N/A') != -1) {
-        // remove 'N/A' from statuses
-        statuses.splice(statuses.indexOf('N/A'),1);
-    }
-    if (statuses.length == 1) { // if all statuses were the same
-        parent_status = statuses[0];
-    } else if (statuses.indexOf('?') != -1) {
-        parent_status = '?';
-    } else if (statuses.indexOf('Warning') != -1 || statuses.indexOf('Fail') != -1) {
-        parent_status = 'Warning';
-    }
-
-    var call_recursive_function = false;
-    if ($(td).text().trim() != parent_status) {
-        call_recursive_function = true;
-    }
-
-    $(td).text(parent_status);
-    var current_class = $(td).attr('class').split(/\s+/)[2];
-    var parent_class = bioinfo_qc_statuses[parent_status];
-    $(td).removeClass(current_class);
-    $(td).addClass(parent_class);
-
-    if (call_recursive_function) {
-        var parent_id = $(td).parent().attr('data-parent');
-        // if td is not 'bioinfo-fc'
-        if (parent_id != undefined) {
-            var td_index = $(td).parent().children().index($(td));
-            var td_parent = $(parent_id).children()[td_index];
-            aggregateTdStatus(td_parent);
-        }
-
-    }
-};
-
 
   //////
   // SAVE CHANGES
