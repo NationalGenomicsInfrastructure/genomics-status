@@ -442,17 +442,15 @@ class ProjectSamplesHandler(SafeHandler):
     brief information for each sample.
     URL: /project/([^/]*)
     """
-    def get(self, proj_id):
+    def get(self, project):
         t = self.application.loader.load("project_samples.html")
-        project_view = self.application.projects_db.view('project/summary')
-
         worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
-        self.write(t.generate(gs_globals=self.application.gs_globals, project=proj_id,
+        self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
                               user=self.get_current_user_name(),
-                              columns=self.application.genstat_defaults.get('pv_columns'),
-                              columns_sample=self.application.genstat_defaults.get('sample_columns'),
-                              prettify=prettify_css_names,
-                              worksets=worksets_view[proj_id],
+                              columns = self.application.genstat_defaults.get('pv_columns'),
+                              columns_sample = self.application.genstat_defaults.get('sample_columns'),
+                              prettify = prettify_css_names,
+                              worksets=worksets_view[project],
                               ))
 
 
@@ -797,3 +795,48 @@ class RecCtrlDataHandler(SafeHandler):
                               project_id=project_id,
                               sample_data=sample_data,
                               json_data=json.dumps(sample_data)))
+
+
+class ProjMetaCompareHandler(SafeHandler):
+    """Handler for the project meta comparison page view"""
+    def get(self):
+        pids = self.get_arguments("p")
+        t = self.application.loader.load("proj_meta_compare.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals, pids=pids))
+
+class ProjectRNAMetaDataHandler(SafeHandler):
+    """Handler to serve RNA metadata from project"""
+    def get(self, project_id):
+        data="{}"
+        view=self.application.analysis_db.view("reports/RNA_report")
+        for row in view[project_id]:
+            data=json.dumps(row.value)
+
+        self.set_status(200)
+        self.set_header("Content-type", "application/json")
+        self.write(data)
+
+
+class ProjectLabStatusHandler(SafeHandler):
+    """Handler for the update of the project lab status"""
+    def post(self, project_id):
+        try:
+            data = json.loads(self.request.body)
+            text=data.get('text', '')
+            p=Project(lims, id=project_id)
+            p.udf['Lab Status']=text
+            p.put()
+            view=self.application.projects_db.view("project/project_id")
+            for row in view[project_id]:
+                doc=self.application.projects_db.get(row.id)
+                doc['details']['lab_status']=text
+                self.application.projects_db.save(doc)
+
+
+        except Exception as e:
+            self.set_status(400)
+            self.finish('<html><body><p>could not update Entity {} :</p><pre>{}</pre></body></html>'.format( cl_id, e))
+        else:
+            self.set_status(200)
+            self.set_header("Content-type", "application/json")
+            self.write(self.request.body)

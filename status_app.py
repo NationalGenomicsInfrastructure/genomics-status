@@ -28,6 +28,7 @@ from status.deliveries import DeliveriesPageHandler
 from status.flowcells import FlowcellDataHandler, FlowcellDemultiplexHandler, FlowcellHandler, FlowcellLinksDataHandler, \
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
+from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.phix_err_rate import PhixErrorRateDataHandler, PhixErrorRateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
@@ -35,10 +36,13 @@ from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotH
 from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
-    ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler, RecCtrlDataHandler
+    ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler, RecCtrlDataHandler, \
+    ProjMetaCompareHandler, ProjectLabStatusHandler, ProjectRNAMetaDataHandler
 
-from status.quotas import QuotaDataHandler, QuotaHandler, QuotasHandler
+from status.quotas import QuotasHandler
+from status.nas_quotas import NASQuotasHandler
 from status.q30 import Q30Handler, Q30PlotHandler
+from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.reads_per_lane import ReadsPerLaneHandler, ReadsPerLanePlotHandler
 from status.reads_vs_qv import ReadsVsQDataHandler, ReadsVsQvhandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
@@ -54,6 +58,7 @@ from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandle
     UpdatedDocumentsDatahandler
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
     WorksetsDataHandler, WorksetSearchHandler
+from status.workset_placement import WorksetPlacementHandler,WorksetSampleLoadHandler, GenerateWorksetHandler, WorksetPlacementSavingHandler
 
 from zendesk import Zendesk
 
@@ -106,6 +111,8 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_notes/([^/]*)$", FlowcellNotesDataHandler),
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
+            ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
+            ("/api/v1/generate_workset", GenerateWorksetHandler),
             ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
             ("/api/v1/instrument_cluster_density.png",
@@ -113,12 +120,17 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
             ("/api/v1/instrument_error_rates.png",
                 InstrumentErrorratePlotHandler),
+            ("/api/v1/instrument_logs", DataInstrumentLogsHandler),
+            ("/api/v1/instrument_logs/([^/]*)$", DataInstrumentLogsHandler),
+            ("/api/v1/instrument_names",InstrumentNamesHandler ),
             ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
+            ("/api/v1/lab_status/([^/]*)", ProjectLabStatusHandler),
+            ("/api/v1/load_workset_samples", WorksetSampleLoadHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
@@ -141,8 +153,8 @@ class Application(tornado.web.Application):
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/projectqc/([^/]*)$", ProjectQCDataHandler),
-            ("/api/v1/quotas/(\w+)?", QuotaDataHandler),
             ("/api/v1/reads_vs_quality", ReadsVsQDataHandler),
+            ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
             ("/api/v1/links/([^/]*)$", LinksDataHandler),
             ("/api/v1/sample_info/([^/]*)$", SampleInfoDataHandler),
@@ -166,6 +178,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
             ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
+            ("/api/v1/ws_pl_to_lims", WorksetPlacementSavingHandler),
             ("/api/v1/cpu_hours/(\w+)?", CPUHoursDataHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
@@ -175,11 +188,14 @@ class Application(tornado.web.Application):
             ("/clusters_per_lane", ClustersPerLaneHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
+            ("/flowcells_plot", FlowcellPlotHandler),
+            ("/instrument_logs",InstrumentLogsHandler),
+            ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
+            ("/nas_quotas", NASQuotasHandler),
             ("/q30", Q30Handler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
             ("/quotas", QuotasHandler),
-            ("/quotas/(\w+)?", QuotaHandler),
             ("/phix_err_rate", PhixErrorRateHandler),
             ("/production", ProductionHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
@@ -187,6 +203,7 @@ class Application(tornado.web.Application):
             ("/project/(P[^/]*)/([^/]*)$", ProjectSamplesHandler),
             ("/project_summary/([^/]*)$", ProjectSummaryHandler),
             ("/projects/([^/]*)$", ProjectsHandler),
+            ("/proj_meta", ProjMetaCompareHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/reads_vs_qv", ReadsVsQvhandler),
             ("/reads_per_lane", ReadsPerLaneHandler),
@@ -197,6 +214,7 @@ class Application(tornado.web.Application):
             ("/suggestion_box", SuggestionBoxHandler),
             ("/worksets", WorksetsHandler),
             ("/workset/([^/]*)$", WorksetHandler),
+            ("/workset_placement",WorksetPlacementHandler),
             (r'.*', BaseHandler)
         ]
 
@@ -208,17 +226,19 @@ class Application(tornado.web.Application):
         # Global connection to the database
         couch = Server(settings.get("couch_server", None))
         if couch:
-            self.uppmax_db = couch["uppmax"]
             self.bioinfo_db = couch["bioinfo_analysis"]
-            self.samples_db = couch["samples"]
-            self.projects_db = couch["projects"]
-            self.flowcells_db = couch["flowcells"]
-            self.x_flowcells_db = couch["x_flowcells"]
-            self.gs_users_db = couch["gs_users"]
             self.cronjobs_db = couch["cronjobs"]
+            self.flowcells_db = couch["flowcells"]
+            self.gs_users_db = couch["gs_users"]
+            self.instruments_db= couch["instruments"]
+            self.instrument_logs_db = couch["instrument_logs"]
+            self.projects_db = couch["projects"]
+            self.samples_db = couch["samples"]
+            self.server_status_db = couch['server_status']
             self.suggestions_db = couch["suggestion_box"]
             self.worksets_db = couch["worksets"]
-            self.server_status_db = couch['server_status']
+            self.x_flowcells_db = couch["x_flowcells"]
+            self.analysis_db= couch["analysis"]
         else:
             print settings.get("couch_server", None)
             raise IOError("Cannot connect to couchdb");
@@ -281,6 +301,9 @@ class Application(tornado.web.Application):
 
         # index page - to display quotas of uppmax projects
     	self.uppmax_projects = settings.get('uppmax_projects')
+        # to display instruments in the server status
+        self.server_status = settings.get('server_status')
+
 
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
@@ -306,13 +329,15 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcell_samples.html")
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/index.html")
+            tornado.autoreload.watch("design/instrument_logs.html")
+            tornado.autoreload.watch("design/login.html")
+            tornado.autoreload.watch("design/nas_quotas.html")
             tornado.autoreload.watch("design/phix_err_rate.html")
             tornado.autoreload.watch("design/production.html")
+            tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/projects.html")
             tornado.autoreload.watch("design/project_samples.html")
             tornado.autoreload.watch("design/q30.html")
-            tornado.autoreload.watch("design/quota_grid.html")
-            tornado.autoreload.watch("design/quota.html")
             tornado.autoreload.watch("design/reads_per_lane.html")
             tornado.autoreload.watch("design/reads_total.html")
             tornado.autoreload.watch("design/reads_vs_qv.html")
@@ -324,7 +349,9 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/sequencing_stats.html")
             tornado.autoreload.watch("design/suggestion_box.html")
             tornado.autoreload.watch("design/unauthorized.html")
-            tornado.autoreload.watch("design/login.html")
+            tornado.autoreload.watch("design/uppmax_quotas.html")
+            tornado.autoreload.watch("design/workset_placement.html")
+            tornado.autoreload.watch("design/yield_plot.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 

@@ -40,10 +40,13 @@ Description: Summing tool for the reads
 </div>
 <div style="margin-left: 270px;">
     <div id="reads_total_summary_chart"></div>
+    <form class="form-inline">
     <div class="btn-group" role="group" >
         <input type="button" id="check_all" class="btn btn-default" value="Check all"/>
         <input type="button" id="uncheck_all" class="btn btn-default" value="Uncheck all"/>
+        <input type="text" class="form-control" id="check_key" />
     </div>    
+    </form>
     <div id="sample_tables" class="container-fluid">
         {% set counter = 0 %}
         <div class="row">
@@ -62,13 +65,13 @@ Description: Summing tool for the reads
                         <td class="flowcell"><a href="/flowcells/{{ d['fcp'].split('_')[0] }}_{{ d['fcp'].split('_')[-1].split(':')[0] }}">{{ d['fcp'] }}</a></td>
                         {% if d['q30']>75 %}
                             <td class="success">{{ d['q30'] }}</td>
-                        <td><input type='checkbox' class="reads_check" checked /></td>
+                            <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}" checked /></td>
                         {% elif d['q30']>30 %}
                             <td class="warning">{{ d['q30'] }}</td>
-                        <td><input type='checkbox' class="reads_check"/></td>
+                            <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}"/></td>
                         {% else %}
                             <td class="danger">{{ d['q30'] }}</td>
-                        <td><input type='checkbox' class="reads_check"/></td>
+                            <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}"/></td>
                         {% end %}
                         <td class="clusters">{{ d['cl'] }}</td>
                     </tr>

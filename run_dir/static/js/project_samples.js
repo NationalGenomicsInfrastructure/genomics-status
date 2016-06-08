@@ -12,9 +12,7 @@ $(document).ready(function() {
   // Initialise everything - order is important :)
   $.when(load_presets()).done(function(){
     load_undefined_info();
-    $.when(load_all_udfs()).done(function(){
-      load_bioinfo_table();
-    });
+    load_all_udfs();
     load_samples_table();
     load_running_notes();
     load_links();
@@ -377,6 +375,12 @@ function load_all_udfs(){
         $('#project_comment').html(make_markdown(value));
         check_img_sources($('#project_comment img'));
       }
+      else if (prettify(key) == 'lab_status'){
+        value = value.replace(/\_/g, '\\_');
+        $('#lab_status').html(make_markdown(value));
+        $('#textarea_lab_status').html(value);
+      }
+
 
       // Create the links for review and display the banner
       else if (prettify(key) == 'pending_reviews'){
@@ -533,7 +537,7 @@ function load_samples_table() {
               } else {
                 // TODO - Wire this up to the new QC page when it's ready
                 tbl_row += '<td class="'+column_id+'"><a target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
-                            'href="https://genologics.scilifelab.se:8080/clarity/search?scope=Sample&query='+info[column_id]+'">'+
+                            'href="https://genologics.scilifelab.se/clarity/search?scope=Sample&query='+info[column_id]+'">'+
                             info[column_id] + '</a></td>';
               }
             }
@@ -557,7 +561,7 @@ function load_samples_table() {
               tbl_row += '<td class="' + column_id + '">';
               if (info[column_id] !== undefined) {
                 var libs = Object.keys(info[column_id]).sort();
-                $.each(libs, function(prep, info_prep){
+                $.each(libs, function(idx, prep){
                   tbl_row += auto_format(prep, true) + ' ';
                 });
               }
@@ -616,8 +620,10 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
 
-            var libs = Object.keys(info[column_id]).sort();
-            $.each(libs, function(library, info_library) {
+            tbl_row += '<td class="' + column_id + '">';
+            var libs = Object.keys(info['library_prep']).sort();
+            $.each(libs, function(idx, library){
+              info_library=info['library_prep'][library];
               info_library[column_id] = round_floats(info_library[column_id], 2);
 
               // Special case for workset_name, which is a link to Genstat workset page
@@ -628,7 +634,7 @@ function load_samples_table() {
 
               // Special case for workset_setup, which is a link to the LIMS
               else if (column_id == "workset_setup" && info_library[column_id]) {
-                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a href="https://genologics.scilifelab.se:8080/clarity/work-complete/';
+                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a href="https://genologics.scilifelab.se/clarity/work-complete/';
                 tbl_row += info_library[column_id].split('-')[1] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
               }
 

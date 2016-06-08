@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block stuff %}
+<h1 id="page_title">Storage and CPU quotas used on UPPMAX projects</h1>
+<p>The quota limit is indicated with a dashed red line.</p>
+<p><span id="show_all_text">Showing data from last two months.</span> &nbsp; <button id="show_all_data" class="btn btn-default btn-xs">Show all data</button></p>
+<ul class="quota-nav pagination">
+  {% for project_id in uppmax_projects.keys() %}
+  <li><a href="#{{ project_id }}">{{ project_id }}</a></li>
+  {% end %}
+</ul>
+<div id="plots">
+  {% for project_id in uppmax_projects.keys() %}
+  <div class="row" id='{{ project_id }}'>
+      <h2>{{ project_id }}</h2>
+      <div class="col-md-4 uppmax_plot" id="quota_{{ project_id }}"></div>
+      <div class="col-md-4 uppmax_plot" id="quota_{{ project_id }}_nobackup"></div>
+      <div class="col-md-4 uppmax_plot" id="cpu_{{ project_id }}"></div>
+  </div>
+  {% end %}
+</div>
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="/static/js/quota.js"></script>
+<script>
+  $(document).ready(function(){
+    {% for project, data in uppmax_projects.items() %}
+      var project = "{{ project }}";
+      var title = "Storage Usage Over Time";
+      // normalize is defined in nas_quotas.js
+      var plot_data = normalize_data("{{ data['disk_usage']['plot_data'] }}");
+      var limit_data = normalize_data("{{ data['disk_usage']['limit_data'] }}");
+      var max_value = "{{ data['disk_usage']['max_x_value'] }}";
+      var div_id = "quota_{{ project }}";
+      // plot_chart is defined in nas_quotas.js
+      plot_chart(title, plot_data, limit_data, max_value, div_id);
+
+
+      var title = "Nobackup Storage Usage Over Time";
+      // normalize is defined in nas_quotas.js
+      var plot_data = normalize_data("{{ data['disk_usage']['plot_data'] }}");
+      var limit_data = normalize_data("{{ data['disk_usage']['limit_data'] }}");
+      var max_value = "{{ data['disk_usage']['max_x_value'] }}";
+      var div_id = "quota_{{ project }}_nobackup";
+      // plot_chart is defined in nas_quotas.js
+      plot_chart(title, plot_data, limit_data, max_value, div_id);
+
+
+      var title = "CPU Usage Over Time";
+      // normalize is defined in nas_quotas.js
+      var plot_data = normalize_data("{{ data['disk_usage']['plot_data'] }}");
+      var limit_data = normalize_data("{{ data['disk_usage']['limit_data'] }}");
+      var max_value = "{{ data['disk_usage']['max_x_value'] }}";
+      var div_id = "cpu_{{ project }}";
+      // plot_chart is defined in nas_quotas.js
+      plot_chart(title, plot_data, limit_data, max_value, div_id);
+    {% end %}
+  });
+</script>
+{% end %}

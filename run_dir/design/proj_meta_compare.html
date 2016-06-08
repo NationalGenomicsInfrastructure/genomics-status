@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+<!-- 
+Template file: proj_meta_compare.html
+URL: /proj_meta
+Title: Project Meta Comparison Tool
+Description: Compare any meta value between multiple projects
+-->
+
+{% block stuff %}
+
+<h1>Project Meta Comparison Tool</h1>
+
+<form id="project_chooser">
+    <div class="form-group">
+        <label for="projects_meta_input" class="control-label">Choose Projects:</label>
+        <div class="input-group">
+            <input type="text" class="form-control" id="projects_meta_input" placeholder="Project IDs, eg. P1234 P2345 P3456" value="{{ ' '.join(pids) }}">
+            <span class="input-group-btn">
+                <button class="btn btn-primary" type="submit">Load data</button>
+            </span>
+        </div>
+    </div>
+</form>
+
+<div class="alert alert-warning" id="status_box">
+    <strong>Status:</strong>
+    <span>Waiting for project IDs to be submitted&hellip;</span>
+</div>
+
+<form class="form-horizontal" id="meta_key_selector">
+    <div class="form-group">
+        <label for="proj_meta_yvalue" class="col-sm-1 control-label">Y value:</label>
+        <div class="col-sm-3">
+            <select class="form-control" id="proj_meta_yvalue" disabled>
+                <option value="">[ select value ]</option>
+            </select>
+        </div>
+        <label for="proj_meta_xvalue" class="col-sm-1 control-label">X Value:</label>
+        <div class="col-sm-3">
+            <select class="form-control" id="proj_meta_xvalue" disabled>
+                <option value="">[ select value ]</option>
+            </select>
+        </div>
+        <label for="proj_meta_colvalue" class="col-sm-1 control-label">Colour by:</label>
+        <div class="col-sm-3">
+            <select class="form-control" id="proj_meta_colvalue" disabled>
+                <option data-section="" value="">Project</option>
+            </select>
+        </div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-sm-8">
+        <div id="proj_meta_plot" style="max-width: 800px; margin: 0 auto;">
+            <p class="text-center text-muted">Please select two variables</p>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="well">
+            <p><strong>Tip:</strong> Click and drag on the plot to zoom in.</p>
+            <p><strong>Tip:</strong> Click a project name in the plot legend to toggle those samples.</p>
+            <p><strong>Warning:</strong> Values under <em>library_prep</em> are automatically chosen from the most recent prep and workflow. Treat data with caution.</p>
+            <p>
+                <button class="btn btn-sm btn-default" disabled id="projMeta_downloadAll">Download simplified data</button>
+                <button class="btn btn-sm btn-default" disabled id="projMeta_copyRaw">Copy raw JSON</button>
+                <span class="help-block">JSON can be viewed using tools such as <a href="http://jsonviewer.stack.hu/" target="_blank">jsonviewer.stack.hu</a>.</span>
+            </p>
+        </div>
+        <div class="well">
+            <div class="form-group">
+                <strong>X axis:</strong>
+                <div class="btn-group meta_xLogLin_buttons">
+                    <button class="btn btn-sm btn-default active" value="linear">Linear</button>
+                    <button class="btn btn-sm btn-default" value="log">Log</button>
+                </div>
+                &nbsp; &nbsp; <strong>Y axis:</strong>
+                <div class="btn-group meta_yLogLin_buttons">
+                    <button class="btn btn-sm btn-default active" value="linear">Linear</button>
+                    <button class="btn btn-sm btn-default" value="log">Log</button>
+                </div>
+            </div>
+            <p><strong>Correlation:</strong> <span id="proj_meta_correlation">NA</span></p>
+            <div id="skipped_status_tip"></div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript" src="/static/js/FileSaver.min.js"></script>
+<script type="text/javascript" src="/static/js/chroma.min.js" ></script>
+<script src="/static/js/clipboard.min.js"></script>
+<script type="text/javascript" src="/static/js/proj_meta_compare.js?v={{ gs_globals['git_commit'] }}" ></script>
+{% end %}
+

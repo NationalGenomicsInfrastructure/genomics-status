@@ -66,7 +66,7 @@ class FlowcellsDataHandler(SafeHandler):
         for row in xfc_view:
             flowcells[row.key] = row.value
 
-        return OrderedDict(sorted(flowcells.items))
+        return OrderedDict(sorted(flowcells.items()))
 
 
 class FlowcellsInfoDataHandler(SafeHandler):
@@ -109,8 +109,9 @@ class FlowcellSearchHandler(SafeHandler):
         for row in fc_view:
             try:
                 if search_string.lower() in row.key.lower():
+                    splitted_fc = row.key.split('_')
                     fc = {
-                        "url": '/flowcells/'+row.key,
+                        "url": '/flowcells/{}_{}'.format(splitted_fc[0], splitted_fc[-1]),
                         "name": row.key
                     }
                     flowcells.append(fc);
@@ -120,8 +121,9 @@ class FlowcellSearchHandler(SafeHandler):
         for row in xfc_view:
             try:
                 if search_string.lower() in row.key.lower():
+                    splitted_fc = row.key.split('_')
                     fc = {
-                        "url": '/flowcells/'+row.key,
+                        "url": '/flowcells/{}_{}'.format(splitted_fc[0], splitted_fc[-1]),
                         "name": row.key
                     }
                     flowcells.append(fc);
