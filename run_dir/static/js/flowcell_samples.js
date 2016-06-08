@@ -68,8 +68,6 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                    sbody+='<th>% PhiX:</th> \
                     <td class="text-left">' + data['lanedata'][lid]['phix'] + '%</td>';
                 }
-                console.log(data['lanedata'][lid]);
-                console.log('er_rate' in data['lanedata'][lid]);
                 if ('er_rate' in data['lanedata'][lid]){
                    sbody+='<th>Err.&nbsp;Rate:</th> \
                     <td class="text-left">' + data['lanedata'][lid]['er_rate'] + '</td>';
