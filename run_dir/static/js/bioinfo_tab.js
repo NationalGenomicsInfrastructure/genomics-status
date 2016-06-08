@@ -671,7 +671,6 @@ function loadTable(view_table) {
     $.each(second_level_trs, function(i, tr) {
         // if status is 'New', no need to aggregate
         var span_status = $(tr).find('.bioinfo-status-runstate span').text().trim();
-        console.log(span_status);
         if (span_status == 'New') {
             // do nothing;
         } else {
