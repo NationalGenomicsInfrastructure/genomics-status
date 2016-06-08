@@ -82,19 +82,26 @@ $('.bioinfo-expand').click(function(e){
 
 function collapse(element) {
     // element is tr
-  var element_id = $(element).attr('id');
-  var expanded = $(element).find("a[href=#"+element_id+"]");
-  $(expanded).removeClass('expanded');
-  var span =$(element).find('td.bioinfo-status-expand span.glyphicon');
-  if ($(span).hasClass('glyphicon-chevron-down')) {
+    var element_id = $(element).attr('id');
+    var expanded = $(element).find("a[href=#"+element_id+"]");
+    $(expanded).removeClass('expanded');
+    var span =$(element).find('td.bioinfo-status-expand span.glyphicon');
+    if ($(span).hasClass('glyphicon-chevron-down')) {
     $(span).removeClass('glyphicon-chevron-down');
     $(span).addClass('glyphicon-chevron-right');
-  }
-  var children = $(element).parent().find('tr[data-parent=#'+element_id+']')
-  $.each(children, function(index, child) {
-    $(child).hide();
-    collapse(child);
-  });
+    }
+
+    var tr = $(element);
+    var tr_class = $(tr).attr('class').trim(); //e.g. bioinfo-fc
+    var children = $(element).nextUntil('tr.'+tr_class); // does not inlcude tr and next tr
+    $.each(children, function(index, child) {
+        $(child).hide();
+        var span =$(child).find('td.bioinfo-status-expand span.glyphicon');
+        if ($(span).hasClass('glyphicon-chevron-down')) {
+            $(span).removeClass('glyphicon-chevron-down');
+            $(span).addClass('glyphicon-chevron-right');
+        }
+    });
 };
 
 function expand(element) {
