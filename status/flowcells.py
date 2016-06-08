@@ -75,6 +75,7 @@ class FlowcellsInfoDataHandler(SafeHandler):
     Loaded through /api/v1/flowcell_info/([^/]*)$ url
     """
     def get(self, flowcell):
+        # flowcell = '{}_{}'.format(flowcell.split('_')[0], flowcell.split('_')[-1])
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.flowcell_info(flowcell)))
 
@@ -83,6 +84,9 @@ class FlowcellsInfoDataHandler(SafeHandler):
                                                      descending=True)
         xfc_view = self.application.x_flowcells_db.view("info/summary2",
                                                      descending=True)
+
+        # import pdb
+        # pdb.set_trace()
         for row in xfc_view[flowcell]:
             flowcell_info = row.value
             break
@@ -98,6 +102,8 @@ class FlowcellSearchHandler(SafeHandler):
     Loaded through /api/v1/flowcell_search/([^/]*)$
     """
     def get(self, search_string):
+        # import pdb
+        # pdb.set_trace()
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.search_flowcell_names(search_string)))
 
@@ -109,8 +115,9 @@ class FlowcellSearchHandler(SafeHandler):
         for row in fc_view:
             try:
                 if search_string.lower() in row.key.lower():
+                    splitted_fc = row.key.split('_')
                     fc = {
-                        "url": '/flowcells/'+row.key,
+                        "url": '/flowcells/{}_{}'.format(splitted_fc[0], splitted_fc[-1]),
                         "name": row.key
                     }
                     flowcells.append(fc);
@@ -120,8 +127,9 @@ class FlowcellSearchHandler(SafeHandler):
         for row in xfc_view:
             try:
                 if search_string.lower() in row.key.lower():
+                    splitted_fc = row.key.split('_')
                     fc = {
-                        "url": '/flowcells/'+row.key,
+                        "url": '/flowcells/{}_{}'.format(splitted_fc[0], splitted_fc[-1]),
                         "name": row.key
                     }
                     flowcells.append(fc);
