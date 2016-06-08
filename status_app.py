@@ -236,7 +236,6 @@ class Application(tornado.web.Application):
             self.samples_db = couch["samples"]
             self.server_status_db = couch['server_status']
             self.suggestions_db = couch["suggestion_box"]
-            self.uppmax_db = couch["uppmax"]
             self.worksets_db = couch["worksets"]
             self.x_flowcells_db = couch["x_flowcells"]
             self.analysis_db= couch["analysis"]
