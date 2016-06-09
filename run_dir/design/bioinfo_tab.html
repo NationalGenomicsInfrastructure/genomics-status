@@ -1,6 +1,8 @@
 {% extends base.html %}
 {% block stuff %}
 <div id="page_content">
+
+    <span id="page_title" style="display:none;">Bioinfo Analysis {{ project_id }}</span>
     {% set status_css={
       'Demultiplexing': 'label-default',
       'Transferring': 'label-default',
