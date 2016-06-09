@@ -13,6 +13,15 @@
       'ERROR': 'label-danger',
       }; %}
     {% set qc_css={ '?': 'unknown', 'Pass': 'success', 'Warning': 'warning', 'Fail': 'danger', 'N/A': 'active'} %}
+    <h3>
+      <a href="/project/{{ project_id }}">{{ project_id }}, {{ project_name }}</a><br>
+      <small>
+        &nbsp; <span class="bi-project-facility label {% if project_type == 'Application' %} label-success {% else %} label-primary {% end %}">{{ project_type }}</span>
+        <span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">{{ application }}</span>
+        &nbsp; <span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">{{ bioinfo_responsible }}</span>
+      </small>
+    </h3>
+    <hr>
     <form class="form-inline">
       <div class="form-group">
         <label for="bioinfo-view">Select view: </label>
@@ -24,10 +33,9 @@
       &nbsp; &nbsp; &nbsp;
       <span class="pull-right bioinfo-savespan">
         <button class="btn btn-primary" id="bioinfo-status-saveButton"
-            {% if project_closed %} disabled {% end %}> Save Changes</button>
+          {% if project_closed %} disabled {% end %}> Save Changes</button>
       </span>
     </form>
-    <hr>
 
     {% include "bioinfo_tab/run_lane_sample_view.html" %}
     {% include "bioinfo_tab/sample_run_lane_view.html" %}

@@ -53,6 +53,7 @@ class BioinfoAnalysisHandler(SafeHandler):
         sample_run_view = self.application.bioinfo_db.view('latest_data/sample_id')
         bioinfo_data = {'sample_run_lane_view': {}, 'run_lane_sample_view': {}}
         project_closed = False
+
         for row in sample_run_view.rows:
             project_id = row.key[0]
             if project_id == proj_id:
@@ -62,92 +63,89 @@ class BioinfoAnalysisHandler(SafeHandler):
 
                 # building first view
                 bioinfo1 = bioinfo_data['sample_run_lane_view']
-                if project_id not in bioinfo1:
-                    bioinfo1[project_id] = {'samples': {sample_id: {'flowcells': {flowcell_id: {'lanes': {lane_id: row.value}}}}}}
-                elif sample_id not in bioinfo1[project_id]['samples']:
-                    bioinfo1[project_id]['samples'][sample_id] = {'flowcells': {flowcell_id: {'lanes': {lane_id: row.value}}}}
-                elif flowcell_id not in bioinfo1[project_id]['samples'][sample_id]['flowcells']:
-                    bioinfo1[project_id]['samples'][sample_id]['flowcells'][flowcell_id] = {'lanes': {lane_id: row.value}}
-                elif lane_id not in bioinfo1[project_id]['samples'][sample_id]['flowcells'][flowcell_id]['lanes']:
-                    bioinfo1[project_id]['samples'][sample_id]['flowcells'][flowcell_id]['lanes'][lane_id] = row.value
+                if sample_id not in bioinfo1:
+                    bioinfo1[sample_id] = {'flowcells': {flowcell_id: {'lanes': {lane_id: row.value}}}}
+                elif flowcell_id not in bioinfo1[sample_id]['flowcells']:
+                    bioinfo1[sample_id]['flowcells'][flowcell_id] = {'lanes': {lane_id: row.value}}
+                elif lane_id not in bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes']:
+                    bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes'][lane_id] = row.value
                 else:
-                    bioinfo1[project_id]['samples'][sample_id]['flowcells'][flowcell_id]['lanes'][lane_id].update(row.value)
+                    bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes'][lane_id].update(row.value)
 
                 # building the second view
                 bioinfo2 = bioinfo_data['run_lane_sample_view']
-                if project_id not in bioinfo2:
-                    bioinfo2[project_id] = {'flowcells': {flowcell_id: {'lanes': {lane_id: {'samples': {sample_id: row.value }}}}}}
-                elif flowcell_id not in bioinfo2[project_id]['flowcells']:
-                    bioinfo2[project_id]['flowcells'][flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: row.value }}}}
-                elif lane_id not in bioinfo2[project_id]['flowcells'][flowcell_id]['lanes']:
-                    bioinfo2[project_id]['flowcells'][flowcell_id]['lanes'][lane_id] = {'samples': {sample_id: row.value}}
-                elif sample_id not in bioinfo2[project_id]['flowcells'][flowcell_id]['lanes'][lane_id]['samples']:
-                    bioinfo2[project_id]['flowcells'][flowcell_id]['lanes'][lane_id]['samples'][sample_id] = row.value
+                if flowcell_id not in bioinfo2:
+                    bioinfo2[flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: row.value }}}}
+                elif lane_id not in bioinfo2[flowcell_id]['lanes']:
+                    bioinfo2[flowcell_id]['lanes'][lane_id] = {'samples': {sample_id: row.value}}
+                elif sample_id not in bioinfo2[flowcell_id]['lanes'][lane_id]['samples']:
+                    bioinfo2[flowcell_id]['lanes'][lane_id]['samples'][sample_id] = row.value
                 else:
-                    bioinfo2[project_id]['flowcells'][flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(row.value)
+                    bioinfo2[flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(row.value)
+
+
 
         # checking status for run-lane-sample view
-        for project_id, project in bioinfo_data['run_lane_sample_view'].items():
-            for flowcell_id, flowcell in project['flowcells'].items():
+        for flowcell_id, flowcell in bioinfo_data['run_lane_sample_view'].items():
+            fc_statuses = []
+            fc_delivery_dates = []
+            for lane_id, lane in flowcell['lanes'].items():
+                lane_statuses = []
+                lane_delivery_dates = []
+                for sample_id, sample in lane['samples'].items():
+                    lane_statuses.append(sample['sample_status'])
+                    lane_delivery_dates.append(sample.get('datadelivered', ''))
+                if all(lane_delivery_dates):
+                    lane_delivery_date = min(lane_delivery_dates)
+                else:
+                    lane_delivery_date = ''
+                lane['datadelivered'] = lane_delivery_date
+                fc_delivery_dates.append(lane_delivery_date)
+                lane['lane_status'] = self._agregate_status(lane_statuses)
+                fc_statuses.append(lane['lane_status'])
+            flowcell['flowcell_status'] = self._agregate_status(fc_statuses)
+            if all(fc_delivery_dates):
+                fc_delivery_date= min(fc_delivery_dates)
+            else:
+                fc_delivery_date = ''
+            flowcell['datadelivered'] = fc_delivery_date
+
+        # checking status for sample-run-lane view
+        for sample_id, sample in bioinfo_data['sample_run_lane_view'].items():
+            sample_statuses = []
+            sample_delivery_dates = []
+            for flowcell_id, flowcell in sample['flowcells'].items():
                 fc_statuses = []
                 fc_delivery_dates = []
                 for lane_id, lane in flowcell['lanes'].items():
-                    lane_statuses = []
-                    lane_delivery_dates = []
-                    for sample_id, sample in lane['samples'].items():
-                        lane_statuses.append(sample['sample_status'])
-                        lane_delivery_dates.append(sample.get('datadelivered', ''))
-                    if all(lane_delivery_dates):
-                        lane_delivery_date = min(lane_delivery_dates)
-                    else:
-                        lane_delivery_date = ''
-                    lane['datadelivered'] = lane_delivery_date
-                    fc_delivery_dates.append(lane_delivery_date)
-                    lane['lane_status'] = self._agregate_status(lane_statuses)
-                    fc_statuses.append(lane['lane_status'])
-                flowcell['flowcell_status'] = self._agregate_status(fc_statuses)
+                    fc_statuses.append(lane['sample_status'])
+                    fc_delivery_dates.append(lane.get('datadelivered', ''))
                 if all(fc_delivery_dates):
-                    fc_delivery_date= min(fc_delivery_dates)
+                    fc_delivery_date = min(fc_delivery_dates)
                 else:
                     fc_delivery_date = ''
                 flowcell['datadelivered'] = fc_delivery_date
+                sample_delivery_dates.append(fc_delivery_date)
+                flowcell['flowcell_status'] = self._agregate_status(fc_statuses)
+                sample_statuses.append(flowcell['flowcell_status'])
+            sample['sample_status'] = self._agregate_status(sample_statuses)
+            if all(sample_delivery_dates):
+                sample_delivery_date = min(sample_delivery_dates)
+            else:
+                sample_delivery_date = ''
+            sample['datadelivered'] = sample_delivery_date
 
-        # checking status for sample-run-lane view
-        for project_id, project in bioinfo_data['sample_run_lane_view'].items():
-            for sample_id, sample in project['samples'].items():
-                sample_statuses = []
-                sample_delivery_dates = []
-                for flowcell_id, flowcell in sample['flowcells'].items():
-                    fc_statuses = []
-                    fc_delivery_dates = []
-                    for lane_id, lane in flowcell['lanes'].items():
-                        fc_statuses.append(lane['sample_status'])
-                        fc_delivery_dates.append(lane.get('datadelivered', ''))
-                    if all(fc_delivery_dates):
-                        fc_delivery_date = min(fc_delivery_dates)
-                    else:
-                        fc_delivery_date = ''
-                    flowcell['datadelivered'] = fc_delivery_date
-                    sample_delivery_dates.append(fc_delivery_date)
-                    flowcell['flowcell_status'] = self._agregate_status(fc_statuses)
-                    sample_statuses.append(flowcell['flowcell_status'])
-                sample['sample_status'] = self._agregate_status(sample_statuses)
-                if all(sample_delivery_dates):
-                    sample_delivery_date = min(sample_delivery_dates)
-                else:
-                    sample_delivery_date = ''
-                sample['datadelivered'] = sample_delivery_date
+        try:
+            project_info = self.application.projects_db.view('project/summary')['open', proj_id].rows[0].value
+            project_closed = False
+        except:
+            project_info = self.application.projects_db.view('project/summary')['closed', proj_id].rows[0].value
+            project_closed = True
 
-        project_view = self.application.projects_db.view('project/summary')
-        application = ""
-
-        for row in project_view.rows:
-            if row.key[1] == proj_id:
-                if row.value.get('close_date'):
-                    project_closed = True
-                # sometimes this value is not set
-                application = row.value.get('application')
-                break
+        project_name = project_info.get('project_name')
+        application = project_info.get('application')
+        bioinfo_responsible = project_info.get('project_summary', {}).get('bioinfo_responsible', 'unknown')
+        project_type = project_info.get('details', {}).get('type') # Production or Application
 
         app_classes = {
             'rnaseq': ['RNA-seq', 'RNA-seq (total RNA)', 'RNA-seq (RiboZero)', 'RNA-seq (mRNA)', 'stranded RNA-seq (total RNA)', 'cDNA', 'stranded RNA-seq (RiboZero)'],
@@ -158,21 +156,20 @@ class BioinfoAnalysisHandler(SafeHandler):
         }
 
         for key in app_classes:
-            # for app_class in app_classes[key]:
             if application in app_classes[key]:
                 application = key
                 break
-        self.write(t.generate(gs_globals=self.application.gs_globals, project=proj_id,
+
+        self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user_name(),
-                              # columns=self.application.genstat_defaults.get('pv_columns'),
-                              # columns_sample=self.application.genstat_defaults.get('sample_columns'),
-                              # prettify=prettify_css_names,
-                              # worksets=worksets_view[proj_id],
                               bioinfo=bioinfo_data,
                               app_classes=app_classes,
-                              # qc_done=False,
                               application=application,
-                              project_closed=project_closed
+                              project_closed=project_closed,
+                              project_name=project_name,
+                              project_id=proj_id,
+                              bioinfo_responsible=bioinfo_responsible,
+                              project_type=project_type,
                               ))
 
     def _agregate_status(self, statuses):

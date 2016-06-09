@@ -826,7 +826,7 @@ These classes are cut and pasted wholesale into here from other packages.
 
 
 
-/* BIOINFO ANALYSIS TAB ON PROJECT SAMPLES PAGE */
+/* BIOINFO ANALYSIS PAGE */
 .table-colgroup {
   border-collapse:collapse;
 }
@@ -838,6 +838,9 @@ These classes are cut and pasted wholesale into here from other packages.
 }
 .table-colgroup > tbody > tr.border-bottom > th, .table-colgroup > tbody > tr > th.border-bottom {
   border-bottom: 1px solid #AAA;
+}
+table.table-bioinfo-status {
+    margin-top: 20px;
 }
 .table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-qc,
 .table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-bp,
