@@ -23,7 +23,6 @@ from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandle
 from status.barcode_vs_expected import BarcodeVsExpectedDataHandler, BarcodeVsExpectedPlotHandler, ExpectedHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.clusters_per_lane import ClustersPerLaneHandler, ClustersPerLanePlotHandler
-from status.cpu_hours import CPUHoursDataHandler
 from status.deliveries import DeliveriesPageHandler
 from status.flowcells import FlowcellDataHandler, FlowcellDemultiplexHandler, FlowcellHandler, FlowcellLinksDataHandler, \
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
@@ -36,7 +35,7 @@ from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotH
 from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
-    ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, UppmaxProjectsDataHandler, RecCtrlDataHandler, \
+    ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
     ProjMetaCompareHandler, ProjectLabStatusHandler, ProjectRNAMetaDataHandler
 
 from status.quotas import QuotasHandler
@@ -171,7 +170,6 @@ class Application(tornado.web.Application):
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
-            ("/api/v1/uppmax_projects", UppmaxProjectsDataHandler),
             ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),
             ("/api/v1/worksets", WorksetsDataHandler),
             ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
@@ -179,7 +177,6 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/api/v1/ws_pl_to_lims", WorksetPlacementSavingHandler),
-            ("/api/v1/cpu_hours/(\w+)?", CPUHoursDataHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/barcode_vs_expected", ExpectedHandler),
