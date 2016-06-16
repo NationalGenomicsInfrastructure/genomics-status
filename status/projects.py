@@ -625,24 +625,6 @@ class ProjectTicketsDataHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>There was a problem with ZenDesk connection, please try it again later.</body></html>')
 
-class UppmaxProjectsDataHandler(SafeHandler):
-    """ Serves a list of UPPNEX projects where the storage quota have
-    been logged.
-
-    Loaded through /api/v1/uppmax_projects
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_projects()))
-
-    def list_projects(self):
-        project_list = []
-        view = self.application.uppmax_db.view("status/projects", group_level=1)
-        for row in view:
-            project_list.append(row.key)
-
-        return sorted(project_list , reverse=True)
-
 class ProjectQCDataHandler(SafeHandler):
     """Serves filenames in qc_reports
     URL: /api/v1/projectqc/([^/]*)

@@ -251,11 +251,6 @@ class UpdatedDocumentsDatahandler(SafeHandler):
     def list_updated(self, num_items=25):
         last = []
 
-        view = self.application.uppmax_db.view("time/last_updated",
-                                               limit=num_items, descending=True)
-        for doc in view:
-            last.append((doc.key, doc.value, 'UPPNEX Quota usage'))
-
         view = self.application.samples_db.view("time/last_updated",
                                                 limit=num_items, descending=True)
         for doc in view:
