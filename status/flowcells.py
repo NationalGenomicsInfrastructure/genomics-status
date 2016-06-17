@@ -83,10 +83,10 @@ class FlowcellsInfoDataHandler(SafeHandler):
                                                      descending=True)
         xfc_view = self.application.x_flowcells_db.view("info/summary2",
                                                      descending=True)
-        for row in xfc_view[flowcell]:
+        for row in fc_view[flowcell]:
             flowcell_info = row.value
             break
-        for row in fc_view[flowcell]:
+        for row in xfc_view[flowcell]:
             flowcell_info = row.value
             break
 

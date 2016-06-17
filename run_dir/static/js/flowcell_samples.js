@@ -63,8 +63,17 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
                     <th>Mean Quality Score:</th> \
                     <td class="text-left">' + data['lanedata'][lid]['mqs'] + '</td> \
                     <th>% perfect barcode :</th> \
-                    <td class="text-left">' + data['lanedata'][lid]['perf'] + '%</td> \
-                </tr>';
+                    <td class="text-left">' + data['lanedata'][lid]['perf'] + '%</td>';
+                if ('phix' in data['lanedata'][lid]){
+                   sbody+='<th>% PhiX:</th> \
+                    <td class="text-left">' + data['lanedata'][lid]['phix'] + '%</td>';
+                }
+                if ('er_rate' in data['lanedata'][lid]){
+                   sbody+='<th>Err.&nbsp;Rate:</th> \
+                    <td class="text-left">' + data['lanedata'][lid]['er_rate'] + '</td>';
+                }
+
+                sbody+='</tr>';
             } else if (data['yields'][lid] != 0){
                     sbody='<tr><th>Total Yield (<abbr title="Megabases">Mb</abbr>):</th> \
                     <td>' + data['yields'][lid]+ '</td></tr>';
