@@ -165,7 +165,7 @@
             </td>
           </tr>
           {% for sample_id, sample in sorted(lane['samples'].items()) %}
-            <tr class="bioinfo-sample  {% if sample.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing']  or sample.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %}"
+            <tr class="bioinfo-sample  {% if sample.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing']  or sample.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %} first-level"
                 id="bioinfo-sample-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
                 data-parent="#bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}" style="display:none;"
                 {% if sample.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing'] %} disabled="disabled" {% end %}>

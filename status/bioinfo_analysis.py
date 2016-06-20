@@ -17,32 +17,21 @@ class BioinfoAnalysisHandler(SafeHandler):
             for row in v[[project, run, lane, sample]]:
                 original_doc = row.value
                 timestamp=datetime.datetime.now().isoformat()
-                # if the doc wasn't change, skip it
-                changed = False
                 if 'values' not in original_doc:
-                    for key, value in data[run_id]['qc'].items():
-                        if value != '?':
-                            changed = True
-                            original_doc['values'] = {}
+                    original_doc['values'] = {timestamp: {}}
                 else:
                     last_timestamp = max(original_doc['values'].keys())
-                    last_change = original_doc['values'][last_timestamp]
-                    if last_change.get('qc') != data[run_id]['qc'] or last_change.get('bp') != data[run_id]['bp'] \
-                            or last_change.get('datadelivered', '') != data[run_id]['datadelivered']:
-                        changed = True
-                if changed:
-                    original_doc['values'][timestamp] = data[run_id]
-                    original_doc['values'][timestamp]['user'] = user
-                    original_doc['values'][timestamp]['sample_status'] = data[run_id]['sample_status']
-                    if 'datadelivered' in data[run_id]:
-                        original_doc['values'][timestamp]['datadelivered'] = data[run_id]['datadelivered']
-                    try:
-                        self.application.bioinfo_db.save(original_doc)
-                        saved_data[run_id] = original_doc['values'][timestamp] # the last one
-                    except Exception, err:
-                        self.set_status(400)
-                        self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
-                        return None
+                    original_doc['values'][timestamp] = original_doc['values'][last_timestamp]
+                for key, value in data[run_id].items():
+                    original_doc['values'][timestamp][key] = value
+                original_doc['values'][timestamp]['user'] = user
+                try:
+                    self.application.bioinfo_db.save(original_doc)
+                    saved_data[run_id] = original_doc['values'][timestamp] # the last one
+                except Exception, err:
+                    self.set_status(400)
+                    self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
+                    return None
         self.set_status(200)
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(saved_data))
@@ -52,8 +41,6 @@ class BioinfoAnalysisHandler(SafeHandler):
         t = self.application.loader.load("bioinfo_tab.html")
         sample_run_view = self.application.bioinfo_db.view('latest_data/sample_id')
         bioinfo_data = {'sample_run_lane_view': {}, 'run_lane_sample_view': {}}
-        project_closed = False
-
         for row in sample_run_view.rows:
             project_id = row.key[0]
             if project_id == proj_id:
@@ -82,8 +69,6 @@ class BioinfoAnalysisHandler(SafeHandler):
                     bioinfo2[flowcell_id]['lanes'][lane_id]['samples'][sample_id] = row.value
                 else:
                     bioinfo2[flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(row.value)
-
-
 
         # checking status for run-lane-sample view
         for flowcell_id, flowcell in bioinfo_data['run_lane_sample_view'].items():

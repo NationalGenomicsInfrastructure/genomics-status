@@ -1,4 +1,4 @@
-  <table class="table table-bioinfo-status {% if project_closed %} bioinfo-status-disabled {% end %} table-bioinfo-status-sampleview table-bordered"  style="display:none;">
+  <table class="table table-bioinfo-status {% if project_closed %} bioinfo-status-disabled {% end %} table-bioinfo-status-sampleview table-bordered" style="display:none;">
     <colgroup span="2"></colgroup>
     <colgroup span="3"> </colgroup>
     <colgroup span="3"> </colgroup>
@@ -164,7 +164,7 @@
             </td>
           </tr>
           {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
-            <tr class="bioinfo-lane {% if lane.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing'] or lane.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %}"
+            <tr class="bioinfo-lane {% if lane.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing'] or lane.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %} first-level"
                 id="bioinfo-lane-{{ sample_id }}-{{ flowcell_id }}-{{ lane_id }}"
                 data-parent="#bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}" style="display:none;">
               <td></td>
