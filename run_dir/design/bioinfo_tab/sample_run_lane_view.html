@@ -1,5 +1,4 @@
-{% for project_id, proj in bioinfo['sample_run_lane_view'].items() %}
-  <table class="table table-bioinfo-status {% if project_closed %} bioinfo-status-disabled {% end %} table-bioinfo-status-sampleview table-bordered">
+  <table class="table table-bioinfo-status {% if project_closed %} bioinfo-status-disabled {% end %} table-bioinfo-status-sampleview table-bordered"  style="display:none;">
     <colgroup span="2"></colgroup>
     <colgroup span="3"> </colgroup>
     <colgroup span="3"> </colgroup>
@@ -79,7 +78,7 @@
         <button class="btn btn-sm datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></button>
       </th>
     </tr>
-      {% for sample_id, sample in sorted(proj['samples'].items()) %}
+      {% for sample_id, sample in sorted(bioinfo['sample_run_lane_view'].items()) %}
         <tr class="bioinfo-sample  {% if sample.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing'] or sample.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %}"
             id="bioinfo-sample-{{ sample_id }}" data-parent="#bioinfo-project-{{ project_id }}">
           <td class="bioinfo-status-expand"><a href="#bioinfo-sample-{{ sample_id }}" class="bioinfo-expand">
@@ -225,4 +224,3 @@
         {% end %}
       {% end %}
   </tbody></table>
-  {% end %} <!-- end project -->

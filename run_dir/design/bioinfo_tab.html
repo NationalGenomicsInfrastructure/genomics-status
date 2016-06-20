@@ -1,6 +1,8 @@
 {% extends base.html %}
 {% block stuff %}
 <div id="page_content">
+
+    <span id="page_title" style="display:none;">Bioinfo Analysis {{ project_id }}</span>
     {% set status_css={
       'Demultiplexing': 'label-default',
       'Transferring': 'label-default',
@@ -13,24 +15,32 @@
       'ERROR': 'label-danger',
       }; %}
     {% set qc_css={ '?': 'unknown', 'Pass': 'success', 'Warning': 'warning', 'Fail': 'danger', 'N/A': 'active'} %}
+    <h3>
+      <a href="/project/{{ project_id }}">{{ project_id }}, {{ project_name }}</a><br>
+      <small>
+        &nbsp; <span class="bi-project-facility label {% if project_type == 'Application' %} label-success {% else %} label-primary {% end %}">{{ project_type }}</span>
+        <span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">{{ application }}</span>
+        &nbsp; <span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">{{ bioinfo_responsible }}</span>
+      </small>
+    </h3>
+    <hr>
     <form class="form-inline">
       <div class="form-group">
         <label for="bioinfo-view">Select view: </label>
         <select id="bioinfo-view" class="form-control">
-          <option selected="selected" value="sample-view">Sample-run-lane (default)</option>
-          <option value="run-view">Run-lane-sample</option>
+          <option selected="selected" value="run-view">Run-lane-sample (default)</option>
+          <option value="sample-view">Sample-run-lane</option>
         </select>
       </div>
       &nbsp; &nbsp; &nbsp;
       <span class="pull-right bioinfo-savespan">
         <button class="btn btn-primary" id="bioinfo-status-saveButton"
-            {% if project_closed %} disabled {% end %}> Save Changes</button>
+          {% if project_closed %} disabled {% end %}> Save Changes</button>
       </span>
     </form>
-    <hr>
 
-    {% include "bioinfo_tab/sample_run_lane_view.html" %}
     {% include "bioinfo_tab/run_lane_sample_view.html" %}
+    {% include "bioinfo_tab/sample_run_lane_view.html" %}
 
     <button disabled class="btn btn-default" id="bioinfo-show-history">Show Edit History</button>
     <pre id="bioinfo-history-dump" style="display:none; margin-top:20px;"></pre>
