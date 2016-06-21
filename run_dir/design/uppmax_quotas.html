@@ -37,9 +37,9 @@
 
       var title = "Nobackup Storage Usage Over Time";
       // normalize is defined in nas_quotas.js
-      var plot_data = normalize_data("{{ data['disk_usage']['plot_data'] }}");
-      var limit_data = normalize_data("{{ data['disk_usage']['limit_data'] }}");
-      var max_value = "{{ data['disk_usage']['max_x_value'] }}";
+      var plot_data = normalize_data("{{ data['nobackup_usage']['plot_data'] }}");
+      var limit_data = normalize_data("{{ data['nobackup_usage']['limit_data'] }}");
+      var max_value = "{{ data['nobackup_usage']['max_x_value'] }}";
       var div_id = "quota_{{ project }}_nobackup";
       // plot_chart is defined in nas_quotas.js
       plot_chart(title, plot_data, limit_data, max_value, div_id);
@@ -47,9 +47,9 @@
 
       var title = "CPU Usage Over Time";
       // normalize is defined in nas_quotas.js
-      var plot_data = normalize_data("{{ data['disk_usage']['plot_data'] }}");
-      var limit_data = normalize_data("{{ data['disk_usage']['limit_data'] }}");
-      var max_value = "{{ data['disk_usage']['max_x_value'] }}";
+      var plot_data = normalize_data("{{ data['cpu_hours']['plot_data'] }}");
+      var limit_data = normalize_data("{{ data['cpu_hours']['limit_data'] }}");
+      var max_value = "{{ data['cpu_hours']['max_x_value'] }}";
       var div_id = "cpu_{{ project }}";
       // plot_chart is defined in nas_quotas.js
       plot_chart(title, plot_data, limit_data, max_value, div_id);
