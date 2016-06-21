@@ -65,11 +65,18 @@ Description: Shows a table with all projects.
       </div>
       <div class="modal-body">
         <form id="Filter" class="form form-search" role="form">
-          <p>Choose which columns you would like to see in the Projects table.
-            Click a heading to select / deselect all checkboxes in that group.</p>
-
           <div class="row">
-
+            <div class="col-sm-8">
+            <p>Choose which columns you would like to see in the Projects table.
+              Click a heading to select / deselect all checkboxes in that group.</p>
+            </div>
+            <div class="col-sm-4 text-right">
+              <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
+              <button class="btn btn-default search-action" data-dismiss="modal" data-action="filterReset">Reset</button>
+              <button class="btn btn-primary search-action" data-dismiss="modal" data-action="filterApply" type="submit">Apply</button>
+            </div>
+          </div>
+          <div class="row">
             <div class="col-sm-4" id="basic-columns">
               <h4 class="search-action" data-action="filterHeader">Basic <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
@@ -93,7 +100,6 @@ Description: Shows a table with all projects.
               </div>
               {% end %}
             </div>
-
             <div class="col-sm-4" id="bioinfo-columns">
               <h4 class="search-action" data-action="filterHeader">Bioinformatics <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
@@ -105,10 +111,8 @@ Description: Shows a table with all projects.
               </div>
               {% end %}
             </div>
-
           </div>
           <div class="row">
-
             <div class="col-sm-4" id="sequencing-columns">
               <h4 class="search-action" data-action="filterHeader">Sequencing <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
