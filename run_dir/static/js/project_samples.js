@@ -306,7 +306,7 @@ function load_all_udfs(){
       // Set the project name and status
       if (prettify(key) == 'project_name'){
         if (!data['portal_id']) {
-          project_title = project + ", " + data['project_name'] + " (" + data['customer_project_reference'] + " - no order in NGI portal)";
+          project_title = project + ", " + data['project_name'] + " <small>(" + data['customer_project_reference'] + " - no order in NGI portal)</small>";
         } else {
           project_title = project + ", " + data['project_name'] + ' &nbsp; <small>NGI Portal: <a href="https://portal.scilifelab.se/genomics/node/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>';
         }
