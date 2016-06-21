@@ -9,12 +9,28 @@
   {% end %}
 </ul>
 <div id="plots">
-  {% for project_id in uppmax_projects.keys() %}
-  <div class="row" id='{{ project_id }}'>
+  {% for project_id, project in uppmax_projects.items() %}
+  <div id='{{ project_id }}'>
       <h2>{{ project_id }}</h2>
-      <div class="col-md-4 uppmax_plot" id="quota_{{ project_id }}"></div>
-      <div class="col-md-4 uppmax_plot" id="quota_{{ project_id }}_nobackup"></div>
-      <div class="col-md-4 uppmax_plot" id="cpu_{{ project_id }}"></div>
+      {% for date in project['quota_decrease'].keys() %}
+        {% set quota=project['quota_decrease'][date][0] %}
+        {% set days=project['quota_decrease'][date][1] %}
+        {% if days < 8 %}
+          <div class="quota_decrease alert alert-danger">Quota for project ​<b>{{ project_id }}</b>​ will be reduced
+            to ​<b>{{ quota }}Gb</b>​ in ​<b>{{ days }} days</b></div>
+        {% elif days < 30 %}
+          <div class="quota_decrease alert alert-warning">Quota for project ​<b>{{ project_id }}</b>​ will be reduced
+            to ​<b>{{ quota }}Gb</b>​ in ​<b>{{ days }} days</b></div>
+        {% else %}
+          <div class="quota_decrease alert alert-info">Quota for project ​<b>{{ project_id }}</b>​ will be reduced
+            to ​<b>{{ quota }}Gb</b>​ in ​<b>{{ days }} days</b></div>
+        {% end %}<br>
+      {% end %}
+      <div class="row">
+        <div class="col-md-4 uppmax_plot" id="quota_{{ project_id }}"></div>
+        <div class="col-md-4 uppmax_plot" id="quota_{{ project_id }}_nobackup"></div>
+        <div class="col-md-4 uppmax_plot" id="cpu_{{ project_id }}"></div>
+      </div>
   </div>
   {% end %}
 </div>

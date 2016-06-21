@@ -5,6 +5,7 @@ import copy
 
 from dateutil import parser
 from status.util import dthandler, SafeHandler
+import datetime
 
 
 class QuotasHandler(SafeHandler):
@@ -22,7 +23,8 @@ class QuotasHandler(SafeHandler):
             if project_id not in uppmax_projects:
                 uppmax_projects[project_id] = {'cpu_hours': {'plot_data': [], 'limit_data': [], 'max_x_value': 0, 'min_time': timestamp},
                     'disk_usage': {'plot_data': [], 'limit_data': [], 'max_x_value': 0, 'min_time': timestamp},
-                    'nobackup_usage': {'plot_data': [], 'limit_data': [], 'max_x_value': 0, 'min_time': timestamp}}
+                    'nobackup_usage': {'plot_data': [], 'limit_data': [], 'max_x_value': 0, 'min_time': timestamp},
+                    'quota_decrease': {}}
             if project_id == project_nobackup: # project_nobackup = 'a2010002_nobackup'
                 try:
                     disk_usage = [timestamp, float(row.value['usage (GB)'])]
@@ -36,6 +38,21 @@ class QuotasHandler(SafeHandler):
                 uppmax_projects[project_id]['disk_usage']['min_time'] = min(min_time, timestamp)
                 max_x_value = uppmax_projects[project_id]['disk_usage']['max_x_value']
                 uppmax_projects[project_id]['disk_usage']['max_x_value'] = max(max_x_value, disk_limit[1], disk_usage[1])
+
+                quota_decrease = row.value.get('quota_decrease')
+                if quota_decrease:
+                    quota_decrease = quota_decrease.split(',')
+                    for value in quota_decrease:
+                        if '@' not in value:
+                            # sometimes we have '*' instead of '512@2016-06-21'
+                            continue
+                        quota, date = value.strip().split('@')
+                        today = datetime.date.today()
+                        quota_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+                        if quota_date > today:
+                            diff = quota_date - today
+                            days = diff.days
+                            uppmax_projects[project_id]['quota_decrease'][date] = [quota, days]
 
                 try:
                     cpu_usage = [timestamp, float(row.value['cpu hours'])]
