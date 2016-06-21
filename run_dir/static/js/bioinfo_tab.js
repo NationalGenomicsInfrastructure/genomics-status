@@ -11,11 +11,31 @@ $('.table-bioinfo-status').on('focus', '.input-group.date input', function(e) {
     }
     e.preventDefault();
     e.stopImmediatePropagation();
+    var current_value = $(this).val();
     $(this).datepicker({
         format: "yyyy-mm-dd",
         todayHighlight: true
     });
+    // add markers that datadelivered has been changed
+    var td = $(this).closest('td');
+    var child_tds = [];
+    if ($(td).parent().hasClass('first-level')) {
+        child_tds.push(td);
+    } else {
+        child_tds = getChildTds(td);
+    }
+
+    $.each(child_tds, function(i, td){
+        var init_value = $(td).attr('data-init-value');
+        if (init_value == undefined){ // if we clicked the first time
+            $(td).attr('data-init-value', current_value);
+        } else if (init_value == current_value) {// if we came back to the initial value
+            // delete 'data-init-value'
+            $(td).removeAttr('data-init-value');
+        }
+    });
 });
+
 
 $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
     if ($('.table-bioinfo-status').hasClass('bioinfo-status-disabled')) {
@@ -23,6 +43,7 @@ $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
     }
     e.preventDefault();
     e.stopImmediatePropagation();
+    var current_value = $(this).val();
     var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
     if(!isdisabled){
       var today = formatDateTime(new Date(), false);
@@ -35,6 +56,14 @@ $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
         // do not change if disabled
         if (!$(td).parent().hasClass('bioinfo-status-disabled')) {
             $(td).find('input:text').val(today);
+        }
+
+        var init_value = $(td).attr('data-init-value');
+        if (init_value == undefined){ // if we clicked the first time
+            $(td).attr('data-init-value', current_value);
+        } else if (init_value == current_value) {// if we came back to the initial value
+            // delete 'data-init-value'
+            $(td).removeAttr('data-init-value');
         }
     });
     setParentDate(date_td);
@@ -58,6 +87,10 @@ $('.table-bioinfo-status').on('click', '.date-reset', function(e) {
         // do not change if disabled
         if (!$(td).parent().hasClass('bioinfo-status-disabled')) {
             $(td).find('input:text').val("");
+            $(td).parent().addClass('bioinfo-status-disabled');
+        }
+        if ($(td).hasClass('first-level')) {
+            $(td).removeAttr('data-init-value');
         }
     });
     setParentDate(date_td);
@@ -884,7 +917,6 @@ $('#bioinfo-status-saveButton').click(function(e){
     var show_warning = false;
 
     var tds_to_save = $('table.table-bioinfo-status:visible tr.first-level td[data-init-value]');
-    console.log(tds_to_save);
     var data_to_save = {};
     var sample_run_lane;
     $.each(tds_to_save, function(i, td){
@@ -899,7 +931,6 @@ $('#bioinfo-status-saveButton').click(function(e){
         var lane = sample_run_lane[2];
         var status = $(tr).find('.bioinfo-status-runstate span').text().trim();
         var qc_name = $(td).attr('class').split(/\s+/)[1];
-        console.log(qc_name);
         var row_key = [project_id, sample, flowcell, lane];
         if (!data_to_save.hasOwnProperty(row_key)) {
             data_to_save[row_key] = {};
@@ -910,7 +941,6 @@ $('#bioinfo-status-saveButton').click(function(e){
         // get data_delivered date
         var date_input = $(tr).find('td.datadelivered input:text');
         var data_delivered = date_input.val();
-        console.log(data_delivered);
         if (data_delivered != '') {
             data_to_save[row_key]['datadelivered'] = data_delivered;
             disabled_rows.push($(tr));
@@ -974,130 +1004,11 @@ $('#bioinfo-status-saveButton').click(function(e){
                     success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
                     $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
                     $('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
-                    updateSecondTable(saved_data);
+                    updateSecondTable(data_to_save);
                 }
             });
         }
     });
-
-//    "tr[data-parent='#"+parent_tr.attr('id')+"']"
-//    $('table.table-bioinfo-status:visible tr.first-level td[data-init-value]').each(function(){
-//        console.log($(this));
-//    });
-
-
-//    // assuming, there is only one view is active (=one table is visible)
-//    $('.table-bioinfo-status:visible tr.'+lowest_level+':has(td)').each(function(){
-//        var tr = $(this);
-//        var tr_id = $(tr).attr('id');
-//        var sample_run_lane;
-//        if ($(table).hasClass('table-bioinfo-status-runview')) {
-//            sample_run_lane = extract_run_lane_sample_id(tr_id);
-//        } else {
-//            sample_run_lane = extract_sample_run_lane_id(tr_id);
-//        }
-//        var sample = sample_run_lane[0];
-//        var flowcell = sample_run_lane[1];
-//        var lane = sample_run_lane[2];
-//
-//        var status = $(this).find('.bioinfo-status-runstate span').text().trim();
-//        var row = {'sample_status': status, 'qc': {}, 'bp': {}};
-//        // get qc values
-//        $(tr).children('td.bioinfo-status-qc').each(function(i, td) {
-//            var field_name = $(td).attr('class').split(/\s+/)[1];
-//            if (field_name != undefined) {
-//                row['qc'][field_name] = $(td).text().trim();
-//            } else {
-//                console.error('error: undefined field name');
-//                console.error($(td));
-//            }
-//        });
-//        // get pb values
-//        $(tr).children('td.bioinfo-status-bp').each(function(i, td) {
-//            var field_name = $(td).attr('class').split(/\s+/)[1];
-//            if (field_name != undefined) {
-//                row['bp'][field_name] = $(td).text().trim();
-//            } else {
-//                console.error('error: undefined field name');
-//                console.error($(td));
-//            }
-//        });
-//        var row_key = [project_id, sample, flowcell, lane];
-//        sample_run_lane_statuses[row_key] = row;
-//        sample_run_lane_statuses[row_key]['sample_status'] = status;
-//
-//        // get data_delivered date
-//        var date_input = $(this).find('td.datadelivered input:text');
-//        var data_delivered = date_input.val();
-//        sample_run_lane_statuses[row_key]['datadelivered'] = data_delivered;
-//        if (data_delivered != '') {
-//            show_warning = true;
-//            disabled_rows.push($(this));
-//        }
-//    });
-
-//    if (show_warning) {
-//        $('#bioinfo-confirm-dialog').modal('show');
-//        $('#bioinfo-confirm-save').click(function(e) {
-//            e.preventDefault();
-//            e.stopImmediatePropagation(); // fires twice otherwise.
-//            $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
-//            var bioinfo_api_url = "/api/v1/bioinfo_analysis/"+project_id;
-//            $.ajax({
-//                type: 'POST',
-//                url: bioinfo_api_url,
-//                dataType: 'json',
-//                data: JSON.stringify(sample_run_lane_statuses),
-//                error: function(xhr, textStatus, errorThrown) {
-//                    alert('There was an error saving the bioinformatics statuses: '+errorThrown);
-//                    $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
-//                    console.log(xhr); console.log(textStatus); console.log(errorThrown);
-//                },
-//                success: function(saved_data, textStatus, xhr) {
-//                    console.log('success');
-//                    var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="glyphicon glyphicon-ok"></span></span>');
-//                    success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
-//                    $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
-//                    $('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
-//                    $.each(disabled_rows, function(i, tr) {
-//                        $(tr).addClass('bioinfo-status-disabled');
-//                        $(tr).find('td.datadelivered input:text').prop('disabled', true);
-//                        var date_td = $(tr).find('td.datadelivered');
-//                        // disable parent rows
-//                        disableParentDate(date_td);
-//                    });
-//                    updateSecondTable(saved_data);
-//                }
-//            });
-//            $('#bioinfo-confirm-dialog').modal('hide');
-//        });
-//        $('#bioinfo-confirm-cancel').click(function(e) {
-//            $('#bioinfo-confirm-dialog').modal('hide');
-//        });
-//    } else {
-//        $('#bioinfo-status-saveButton').addClass('disabled').text('Saving..');
-//            var bioinfo_api_url = "/api/v1/bioinfo_analysis/"+project_id;
-//            $.ajax({
-//              type: 'POST',
-//              url: bioinfo_api_url,
-//              dataType: 'json',
-//              data: JSON.stringify(sample_run_lane_statuses),
-//              error: function(xhr, textStatus, errorThrown) {
-//                alert('There was an error saving the bioinformatics statuses: '+errorThrown);
-//                $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
-//                console.log(xhr); console.log(textStatus); console.log(errorThrown);
-//              },
-//              success: function(saved_data, textStatus, xhr) {
-//                console.log('success');
-//                var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="glyphicon glyphicon-ok"></span></span>');
-//                success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
-//                $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
-//                $('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
-//                updateSecondTable(saved_data);
-//            }
-//        });
-//    }
-});
 
 function updateSecondTable(saved_data) {
     var table = $('table.table-bioinfo-status:hidden');

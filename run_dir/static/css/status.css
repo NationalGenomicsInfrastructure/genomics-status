@@ -884,11 +884,9 @@ table.table-bioinfo-status {
   cursor: pointer;
 }
 
-.input-group.date {
-    max-width: 190px;
-    margin-right: -30px;
+table.table-bioinfo-status td.datadelivered {
+    min-width: 120px;
 }
-
 
 .datepicker table tr td, .datepicker table tr th {
   -webkit-border-radius: 0px;
