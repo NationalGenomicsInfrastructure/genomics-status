@@ -15,17 +15,31 @@
       {% for date in project['quota_decrease'].keys() %}
         {% set quota=project['quota_decrease'][date][0] %}
         {% set days=project['quota_decrease'][date][1] %}
-        {% if days < 8 %}
+        {% if days > 30 %}
+          <p class="quota_decrease">Quota for project ​<b>{{ project_id }}</b>​ will be reduced
+            to ​<b>{{ quota }}Gb</b>​ on ​<b>{{ date }}</b></p>
+        {% elif days < 8 %}
           <div class="quota_decrease alert alert-danger">Quota for project ​<b>{{ project_id }}</b>​ will be reduced
             to ​<b>{{ quota }}Gb</b>​ in ​<b>{{ days }} days</b></div>
         {% elif days < 30 %}
           <div class="quota_decrease alert alert-warning">Quota for project ​<b>{{ project_id }}</b>​ will be reduced
             to ​<b>{{ quota }}Gb</b>​ in ​<b>{{ days }} days</b></div>
-        {% else %}
-          <div class="quota_decrease alert alert-info">Quota for project ​<b>{{ project_id }}</b>​ will be reduced
-            to ​<b>{{ quota }}Gb</b>​ in ​<b>{{ days }} days</b></div>
         {% end %}<br>
       {% end %}
+      {% for date in project['nobackup_quota_decrease'].keys() %}
+          {% set quota=project['nobackup_quota_decrease'][date][0] %}
+          {% set days=project['nobackup_quota_decrease'][date][1] %}
+          {% if days > 30 %}
+            <p class="quota_decrease">Quota for project ​<b>{{ project_id }}_nobackup</b>​ will be reduced
+              to ​<b>{{ quota }}Gb</b>​ on ​<b>{{ date }}</b></p>
+          {% elif days < 8 %}
+            <div class="quota_decrease alert alert-danger">Quota for project ​<b>{{ project_id }}_nobackup</b>​ will be reduced
+              to ​<b>{{ quota }}Gb</b>​ in ​<b>{{ days }} days</b></div>
+          {% elif days < 30 %}
+            <div class="quota_decrease alert alert-warning">Quota for project ​<b>{{ project_id }}_nobackup</b>​ will be reduced
+              to ​<b>{{ quota }}Gb</b>​ in ​<b>{{ days }} days</b></div>
+          {% end %}<br>
+        {% end %}
       <div class="row">
         <div class="col-md-4 uppmax_plot" id="quota_{{ project_id }}"></div>
         <div class="col-md-4 uppmax_plot" id="quota_{{ project_id }}_nobackup"></div>
