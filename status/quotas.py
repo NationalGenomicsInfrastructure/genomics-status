@@ -7,6 +7,39 @@ from dateutil import parser
 from status.util import dthandler, SafeHandler
 import datetime
 
+#
+# class QuotasHandler(SafeHandler):
+#     """ Serves a grid of time series plots for UPPNEX storage quotas.
+#     URL: /quotas
+#     """
+#     def get(self):
+#         view = self.application.server_status_db.view("uppmax/by_timestamp")
+#         uppmax_projects = {}
+#         for row in view.rows:
+#             timestamp = int(time.mktime(parser.parse(row.value.get('time')).timetuple())) * 1000
+#             full_project_id = row.value.get('project')
+#             nobackup_usage = {}
+#             disk_usage = {}
+#             cpu_usage = {}
+#
+#             if 'nobackup' in full_project_id:
+#                 project_id = full_project_id.replace('/nobackup', '')
+#                 if project_id not in uppmax_projects:
+#                     uppmax_projects[project_id] =
+#             if 'usage (GB)' in row.value and 'quota limit (GB)' in row.value:
+#                 disk_usage = [timestamp, float(row.value['usage (GB)'])]
+#                 disk_limit = [timestamp, float(row.value['quota limit (GB)'])]
+#
+#
+#             if 'cpu hours' in row.value and 'cpu limit' in row.value:
+#                 cpu_usage = [timestamp, float(row.value['cpu hours'])]
+#                 cpu_limit = [timestamp, float(row.value['cpu limit'])]
+#
+#
+
+
+
+
 
 class QuotasHandler(SafeHandler):
     """ Serves a grid of time series plots for UPPNEX storage quotas.
@@ -15,9 +48,13 @@ class QuotasHandler(SafeHandler):
     def get(self):
         view = self.application.server_status_db.view("uppmax/by_timestamp")
         uppmax_projects = {}
+        quota_decrease_data = {}
+        nobackup = {}
         for row in view.rows:
             project_nobackup = row.value['project'].replace('/', '_')
             project_id = copy.copy(row.value['project'].split('/')[0])
+            print project_nobackup
+            print project_id
 #          # in javascript it has to be multiplied by 1000, no idea why
             timestamp = int(time.mktime(parser.parse(row.value.get('time')).timetuple())) * 1000
             if project_id not in uppmax_projects:
@@ -27,23 +64,25 @@ class QuotasHandler(SafeHandler):
                     'quota_decrease': {},
                     'nobackup_quota_decrease': {}}
 
-                quota_decrease = row.value.get('quota_decrease')
-                if quota_decrease:
-                    quota_decrease = quota_decrease.split(',')
-                    for value in quota_decrease:
-                        if '@' not in value:
-                            # sometimes we have '*' instead of '512@2016-06-21'
-                            continue
+            quota_decrease = row.value.get('quota_decrease')
+            if quota_decrease and '@' in quota_decrease:
+                quota_decrease = quota_decrease.split(',')
+                for value in quota_decrease:
+                    try:
                         quota, date = value.strip().split('@')
-                        today = datetime.date.today()
-                        quota_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-                        if quota_date < today:
-                            continue
-                        days = (quota_date - today).days
-                        if 'nobackup' in project_nobackup:
-                            uppmax_projects[project_id]['nobackup_quota_decrease'][date] = [quota, days]
-                        else:
-                            uppmax_projects[project_id]['quota_decrease'][date] = [quota, days]
+                    except:
+                        continue
+                    today = datetime.date.today()
+                    quota_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+                    if quota_date < today:
+                        continue
+                    days = (quota_date - today).days
+                    if 'nobackup' in project_nobackup:
+                        # uppmax_projects[project_id]['nobackup_quota_decrease'] = {'date': date, 'quota': quota, 'days': days }
+                        nobackup[project_nobackup] = {'date': date, 'quota': quota, 'days': days }
+                    else:
+                        # uppmax_projects[project_id]['quota_decrease'] = {'date': date, 'quota': quota, 'days': days }
+                        quota_decrease_data[project_nobackup] = {'date': date, 'quota': quota, 'days': days }
             if project_id == project_nobackup: # project_nobackup = 'a2010002_nobackup'
                 try:
                     disk_usage = [timestamp, float(row.value['usage (GB)'])]
@@ -81,8 +120,6 @@ class QuotasHandler(SafeHandler):
                 uppmax_projects[project_id]['nobackup_usage']['min_time'] = min(min_time, timestamp)
                 max_x_value = uppmax_projects[project_id]['nobackup_usage']['max_x_value']
                 uppmax_projects[project_id]['nobackup_usage']['max_x_value'] = max(max_x_value, nobackup_limit[1], nobackup_usage[1])
-
-
 
 
         t = self.application.loader.load("uppmax_quotas.html")
