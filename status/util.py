@@ -159,7 +159,6 @@ class MainHandler(UnsafeHandler):
             # if we found all projects, don't continue
             if not uppmax_ids:
                 break
-            project_id = row.value['project'].replace('/', '_')
             project_id = row.value.get('project', '').replace('/', '_')
             project_nobackup = copy.copy(project_id.split('/')[0])
             if project_id in uppmax_ids:
