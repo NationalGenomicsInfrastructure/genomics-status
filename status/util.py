@@ -153,14 +153,14 @@ class MainHandler(UnsafeHandler):
         uppmax_ids = copy.copy(self.application.uppmax_projects)
         # get all the documents, sorted by timestamp in descending order. Because I don't know how to use reduce functions
         # limit = 30, get the last 30 entries. assuming that our projects are in this range
-        view = self.application.server_status_db.view('uppmax/by_timestamp', descending=True, limit=30)
+        view = self.application.server_status_db.view('uppmax/by_timestamp', descending=True, limit=130)
         uppmax_projects = {}
         for row in view.rows:
             # if we found all projects, don't continue
             if not uppmax_ids:
                 break
             project_id = row.value.get('project', '').replace('/', '_')
-            project_nobackup = copy.copy(project_id.split('/')[0])
+            project_nobackup = copy.copy(project_id.split('_')[0])
             if project_id in uppmax_ids:
                 # if a new project, add cpu hours
                 if project_nobackup not in uppmax_projects:
@@ -205,7 +205,7 @@ class MainHandler(UnsafeHandler):
                         else:
                             project['nobackup_class'] = ''
 
-                uppmax_ids.remove(project_id)
+                    uppmax_ids.remove(project_id)
 
         self.write(t.generate(gs_globals=self.application.gs_globals, user=user, uppmax_projects=uppmax_projects, server_status=server_status))
 
