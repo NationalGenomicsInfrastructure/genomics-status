@@ -147,7 +147,7 @@ class MainHandler(UnsafeHandler):
                 else:
                     server_status[server]['css_class'] = ''
         # sort by used space
-        server_status = sorted(server_status.items(), key = lambda item: item[1]['used_percentage'], reverse=True)
+        server_status = sorted(server_status.items(), key = lambda item: item[1].get('used_percentage'), reverse=True)
 
         # copy -> so that we don't change self.application.uppmax_projects
         uppmax_ids = copy.copy(self.application.uppmax_projects)

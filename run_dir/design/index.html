@@ -108,10 +108,10 @@
       {% for server, status in server_status %}
       <tr>
         <td><a href="/nas_quotas#{{ server.replace('.', '--') }}">{{ server }}</a></td>
-        <td>{{ status['instrument'] }}</td>
-        <td class="disk-quotas-highcharts {{ status['css_class'] }}"><div class="wrapper"><span class="val" style="width:{{ status['used_percentage'] }}%;">
-          <span>{{ status['space_used'] }}</span></span>
-          <span class="percent pull-right">{{ status['disk_size'] }}</span></div>
+        <td>{{ status.get('instrument') }}</td>
+        <td class="disk-quotas-highcharts {{ status.get('css_class') }}"><div class="wrapper"><span class="val" style="width:{{ status.get('used_percentage') }};">
+          <span>{{ status.get('space_used') }}</span></span>
+          <span class="percent pull-right">{{ status.get('disk_size') }}</span></div>
         </td>
       </tr>
       {% end %}
