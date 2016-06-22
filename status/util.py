@@ -133,14 +133,16 @@ class MainHandler(UnsafeHandler):
         instruments = self.application.server_status['instruments']
         server_status = {}
         for row in reduced_rows:
-            server = row.value['name']
+            server = row.value.get('name')
+            if server is None:
+                continue
             if server not in server_status:
                 server_status[server] = row.value
                 server_status[server]['instrument'] = instruments[server] or '-'
-                row.value['used_percentage'] = float(row.value['used_percentage'].replace('%',''))
-                if row.value['used_percentage'] > 60:
+                used_percentage = float(row.value.get('used_percentage', '0').replace('%',''))
+                if used_percentage > 60:
                     server_status[server]['css_class'] = 'q-warning'
-                elif row.value['used_percentage'] > 80:
+                elif used_percentage > 80:
                     server_status[server]['css_class'] = 'q-danger'
                 else:
                     server_status[server]['css_class'] = ''
@@ -158,7 +160,8 @@ class MainHandler(UnsafeHandler):
             if not uppmax_ids:
                 break
             project_id = row.value['project'].replace('/', '_')
-            project_nobackup = copy.copy(row.value['project'].split('/')[0])
+            project_id = row.value.get('project', '').replace('/', '_')
+            project_nobackup = copy.copy(project_id.split('/')[0])
             if project_id in uppmax_ids:
                 # if a new project, add cpu hours
                 if project_nobackup not in uppmax_projects:
@@ -181,25 +184,27 @@ class MainHandler(UnsafeHandler):
                         project['disk_class'] = 'q-warning'
                     else:
                         project['disk_class'] = ''
-                    project['cpu_usage'] = round(float(row.value['cpu hours']) / 1000, 2)
-                    project['cpu_limit'] = round(float(row.value['cpu limit']) / 1000, 2)
-                    project['cpu_percentage'] = min(100, 100 * (project['cpu_usage'] / project['cpu_limit']))
-                    if project['cpu_percentage'] > 90.0:
-                        project['cpu_class'] = 'q-danger'
-                    elif project['cpu_percentage'] > 80.0:
-                        project['cpu_class'] = 'q-warning'
-                    else:
-                        project['cpu_class'] = ''
+                    if 'cpu hours' in row.value and 'cpu limit' in row.value:
+                        project['cpu_usage'] = round(float(row.value['cpu hours']) / 1000, 2)
+                        project['cpu_limit'] = round(float(row.value['cpu limit']) / 1000, 2)
+                        project['cpu_percentage'] = min(100, 100 * (project['cpu_usage'] / project['cpu_limit']))
+                        if project['cpu_percentage'] > 90.0:
+                            project['cpu_class'] = 'q-danger'
+                        elif project['cpu_percentage'] > 80.0:
+                            project['cpu_class'] = 'q-warning'
+                        else:
+                            project['cpu_class'] = ''
                 else:
-                    project['nobackup_usage'] = round(float(row.value['usage (GB)']) / 1024, 2)
-                    project['nobackup_limit'] = round(float(row.value['quota limit (GB)']) / 1024, 2)
-                    project['nobackup_percentage'] = min(100, 100 * (project['nobackup_usage'] / project['nobackup_limit']))
-                    if project['nobackup_percentage'] > 90.0:
-                        project['nobackup_class'] = 'q-danger'
-                    elif project['nobackup_percentage'] > 80.0:
-                        project['nobackup_class'] = 'q-warning'
-                    else:
-                        project['nobackup_class'] = ''
+                    if 'usage (GB)' in row.value and 'quota limit (GB)' in row.value:
+                        project['nobackup_usage'] = round(float(row.value['usage (GB)']) / 1024, 2)
+                        project['nobackup_limit'] = round(float(row.value['quota limit (GB)']) / 1024, 2)
+                        project['nobackup_percentage'] = min(100, 100 * (project['nobackup_usage'] / project['nobackup_limit']))
+                        if project['nobackup_percentage'] > 90.0:
+                            project['nobackup_class'] = 'q-danger'
+                        elif project['nobackup_percentage'] > 80.0:
+                            project['nobackup_class'] = 'q-warning'
+                        else:
+                            project['nobackup_class'] = ''
 
                 uppmax_ids.remove(project_id)
 
