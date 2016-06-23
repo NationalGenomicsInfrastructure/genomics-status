@@ -48,13 +48,9 @@ class QuotasHandler(SafeHandler):
     def get(self):
         view = self.application.server_status_db.view("uppmax/by_timestamp")
         uppmax_projects = {}
-        quota_decrease_data = {}
-        nobackup = {}
         for row in view.rows:
             project_nobackup = row.value['project'].replace('/', '_')
             project_id = copy.copy(row.value['project'].split('/')[0])
-            print project_nobackup
-            print project_id
 #          # in javascript it has to be multiplied by 1000, no idea why
             timestamp = int(time.mktime(parser.parse(row.value.get('time')).timetuple())) * 1000
             if project_id not in uppmax_projects:
