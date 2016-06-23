@@ -7,39 +7,6 @@ from dateutil import parser
 from status.util import dthandler, SafeHandler
 import datetime
 
-#
-# class QuotasHandler(SafeHandler):
-#     """ Serves a grid of time series plots for UPPNEX storage quotas.
-#     URL: /quotas
-#     """
-#     def get(self):
-#         view = self.application.server_status_db.view("uppmax/by_timestamp")
-#         uppmax_projects = {}
-#         for row in view.rows:
-#             timestamp = int(time.mktime(parser.parse(row.value.get('time')).timetuple())) * 1000
-#             full_project_id = row.value.get('project')
-#             nobackup_usage = {}
-#             disk_usage = {}
-#             cpu_usage = {}
-#
-#             if 'nobackup' in full_project_id:
-#                 project_id = full_project_id.replace('/nobackup', '')
-#                 if project_id not in uppmax_projects:
-#                     uppmax_projects[project_id] =
-#             if 'usage (GB)' in row.value and 'quota limit (GB)' in row.value:
-#                 disk_usage = [timestamp, float(row.value['usage (GB)'])]
-#                 disk_limit = [timestamp, float(row.value['quota limit (GB)'])]
-#
-#
-#             if 'cpu hours' in row.value and 'cpu limit' in row.value:
-#                 cpu_usage = [timestamp, float(row.value['cpu hours'])]
-#                 cpu_limit = [timestamp, float(row.value['cpu limit'])]
-#
-#
-
-
-
-
 
 class QuotasHandler(SafeHandler):
     """ Serves a grid of time series plots for UPPNEX storage quotas.
