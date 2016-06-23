@@ -6,7 +6,7 @@ import os
 import sys
 import time
 import copy
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil import parser
 
 
@@ -123,6 +123,26 @@ class UnsafeHandler(BaseHandler):
 class MainHandler(UnsafeHandler):
     """ Serves the html front page upon request.
     """
+    def __extract_quota_decrease(self, row):
+        """ helper function - extracts quota_decrease data from view row
+        and returns a dictionary
+        """
+        data = []
+        if 'quota_decrease' in row.value:
+            quota = row.value['quota_decrease'].split(',')
+            for value in quota:
+                try:
+                    quota, decrease_date = value.strip().split('@')
+                except:
+                    continue
+                today = date.today()
+                quota_date = datetime.strptime(decrease_date, "%Y-%m-%d").date()
+                if quota_date > today and quota_date < today + timedelta(days=30):
+                    days = (quota_date - today).days
+                    project_id = row.value.get('project', '').replace('/', '_')
+                    data.append({'quota': quota, 'days': days, 'project_id': project_id })
+        return data
+
     def get(self):
         t = self.application.loader.load("index.html")
         user = self.get_current_user_name()
@@ -155,6 +175,7 @@ class MainHandler(UnsafeHandler):
         # limit = 30, get the last 30 entries. assuming that our projects are in this range
         view = self.application.server_status_db.view('uppmax/by_timestamp', descending=True, limit=130)
         uppmax_projects = {}
+        quota_decrease = {}
         for row in view.rows:
             # if we found all projects, don't continue
             if not uppmax_ids:
@@ -162,6 +183,11 @@ class MainHandler(UnsafeHandler):
             project_id = row.value.get('project', '').replace('/', '_')
             project_nobackup = copy.copy(project_id.split('_')[0])
             if project_id in uppmax_ids:
+                # get quota_decrease data
+                decrease_data = self.__extract_quota_decrease(row)
+                if decrease_data and project_id not in quota_decrease:
+                    quota_decrease[project_id] = decrease_data
+
                 # if a new project, add cpu hours
                 if project_nobackup not in uppmax_projects:
                     uppmax_projects[project_nobackup] = {'timestamp': row.key}
@@ -207,7 +233,10 @@ class MainHandler(UnsafeHandler):
 
                     uppmax_ids.remove(project_id)
 
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=user, uppmax_projects=uppmax_projects, server_status=server_status))
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                              user=user, uppmax_projects=uppmax_projects,
+                              server_status=server_status,
+                              quota_decrease=quota_decrease))
 
 
 
