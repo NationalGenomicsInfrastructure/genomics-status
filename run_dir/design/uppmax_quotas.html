@@ -29,7 +29,7 @@
 
       {% if nobackup_decrease %}
         {% if nobackup_decrease.get('days') > 30 %}
-           <p class="quota_decrease">Quota for project ​<b>{{ project_id }}</b>​ will be reduced
+           <p class="quota_decrease">Quota for project ​<b>{{ project_id }}_nobackup</b>​ will be reduced
                   to ​<b>{{ nobackup_decrease.get('quota') }}Gb</b>​ on ​<b>{{ nobackup_decrease.get('date') }}</b></p>
         {% else %}
           <div class="quota_decrease alert {% if nobackup_decrease.get('days') < 8 %} alert-danger

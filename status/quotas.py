@@ -65,6 +65,7 @@ class QuotasHandler(SafeHandler):
                     'nobackup_quota_decrease': {}}
 
             quota_decrease = row.value.get('quota_decrease')
+            # sometimes it is  '*', skip it
             if quota_decrease and '@' in quota_decrease:
                 quota_decrease = quota_decrease.split(',')
                 for value in quota_decrease:
@@ -78,11 +79,9 @@ class QuotasHandler(SafeHandler):
                         continue
                     days = (quota_date - today).days
                     if 'nobackup' in project_nobackup:
-                        # uppmax_projects[project_id]['nobackup_quota_decrease'] = {'date': date, 'quota': quota, 'days': days }
-                        nobackup[project_nobackup] = {'date': date, 'quota': quota, 'days': days }
+                        uppmax_projects[project_id]['nobackup_quota_decrease'] = {'date': date, 'quota': quota, 'days': days }
                     else:
-                        # uppmax_projects[project_id]['quota_decrease'] = {'date': date, 'quota': quota, 'days': days }
-                        quota_decrease_data[project_nobackup] = {'date': date, 'quota': quota, 'days': days }
+                        uppmax_projects[project_id]['quota_decrease'] = {'date': date, 'quota': quota, 'days': days }
             if project_id == project_nobackup: # project_nobackup = 'a2010002_nobackup'
                 try:
                     disk_usage = [timestamp, float(row.value['usage (GB)'])]
@@ -120,7 +119,6 @@ class QuotasHandler(SafeHandler):
                 uppmax_projects[project_id]['nobackup_usage']['min_time'] = min(min_time, timestamp)
                 max_x_value = uppmax_projects[project_id]['nobackup_usage']['max_x_value']
                 uppmax_projects[project_id]['nobackup_usage']['max_x_value'] = max(max_x_value, nobackup_limit[1], nobackup_usage[1])
-
 
         t = self.application.loader.load("uppmax_quotas.html")
         self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(),
