@@ -71,6 +71,16 @@
 <div class="row">
 	<div class="col-lg-6">
 		<h3>Storage Usage</h3>
+    {% if quota_decrease %}
+      <div class="alert alert-warning">
+        {% for project_id, quotas in quota_decrease.items() %}
+          {% for quota in quotas %}
+            <p>Quota for project <b>{{ quota.get('project_id') }}</b> will be reduced to <b>{{ quota.get('quota') }}Gb</b>
+              in <b>{{ quota.get('days') }} days</b></p>
+          {% end %}
+        {% end %}
+      </div>
+    {% end %}
 		<table class="table table-bordered table-disk-quotas">
 		    <thead>
 		        <tr>

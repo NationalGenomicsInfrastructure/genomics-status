@@ -5,6 +5,7 @@ import copy
 
 from dateutil import parser
 from status.util import dthandler, SafeHandler
+import datetime
 
 
 class QuotasHandler(SafeHandler):
@@ -22,7 +23,28 @@ class QuotasHandler(SafeHandler):
             if project_id not in uppmax_projects:
                 uppmax_projects[project_id] = {'cpu_hours': {'plot_data': [], 'limit_data': [], 'max_x_value': 0, 'min_time': timestamp},
                     'disk_usage': {'plot_data': [], 'limit_data': [], 'max_x_value': 0, 'min_time': timestamp},
-                    'nobackup_usage': {'plot_data': [], 'limit_data': [], 'max_x_value': 0, 'min_time': timestamp}}
+                    'nobackup_usage': {'plot_data': [], 'limit_data': [], 'max_x_value': 0, 'min_time': timestamp},
+                    'quota_decrease': {},
+                    'nobackup_quota_decrease': {}}
+
+            quota_decrease = row.value.get('quota_decrease')
+            # sometimes it is  '*', skip it
+            if quota_decrease and '@' in quota_decrease:
+                quota_decrease = quota_decrease.split(',')
+                for value in quota_decrease:
+                    try:
+                        quota, date = value.strip().split('@')
+                    except:
+                        continue
+                    today = datetime.date.today()
+                    quota_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+                    if quota_date < today:
+                        continue
+                    days = (quota_date - today).days
+                    if 'nobackup' in project_nobackup:
+                        uppmax_projects[project_id]['nobackup_quota_decrease'] = {'date': date, 'quota': quota, 'days': days }
+                    else:
+                        uppmax_projects[project_id]['quota_decrease'] = {'date': date, 'quota': quota, 'days': days }
             if project_id == project_nobackup: # project_nobackup = 'a2010002_nobackup'
                 try:
                     disk_usage = [timestamp, float(row.value['usage (GB)'])]
@@ -60,9 +82,6 @@ class QuotasHandler(SafeHandler):
                 uppmax_projects[project_id]['nobackup_usage']['min_time'] = min(min_time, timestamp)
                 max_x_value = uppmax_projects[project_id]['nobackup_usage']['max_x_value']
                 uppmax_projects[project_id]['nobackup_usage']['max_x_value'] = max(max_x_value, nobackup_limit[1], nobackup_usage[1])
-
-
-
 
         t = self.application.loader.load("uppmax_quotas.html")
         self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(),

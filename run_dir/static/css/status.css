@@ -66,6 +66,10 @@ multiple places and typically control typography, or other common elements.
 .table-disk-quotas .q-warning .val { background-color: #fcf8e3; }
 .table-disk-quotas .q-warning span { color: #8a6d3b; }
 
+.quota_decrease {
+    display: inline-block;
+    margin-left: 30px;
+}
 /*
 === Typography ===
 */
