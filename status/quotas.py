@@ -83,6 +83,10 @@ class QuotasHandler(SafeHandler):
                 max_x_value = uppmax_projects[project_id]['nobackup_usage']['max_x_value']
                 uppmax_projects[project_id]['nobackup_usage']['max_x_value'] = max(max_x_value, nobackup_limit[1], nobackup_usage[1])
 
+        for project_id in uppmax_projects:
+            description = self.application.uppmax_projects.get(project_id, '')
+            uppmax_projects[project_id]['description'] = description
+
         t = self.application.loader.load("uppmax_quotas.html")
         self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(),
                               uppmax_projects=uppmax_projects))

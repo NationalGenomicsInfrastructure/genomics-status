@@ -11,35 +11,43 @@
 <div id="plots">
   {% for project_id, project in uppmax_projects.items() %}
   <div id='{{ project_id }}'>
-      <h2>{{ project_id }}</h2>
+    <h2>{{ project_id }}</h2>
+    <blockquote>
+      {{ project.get('description', '') }}
+    </blockquote>
       {% set quota_decrease = project.get('quota_decrease', {}) %}
       {% set nobackup_decrease = project.get('nobackup_quota_decrease', {}) %}
-      {% if quota_decrease %}
-        {% if quota_decrease.get('days') > 30 %}
-           <p class="quota_decrease">Quota for project ​<b>{{ project_id }}</b>​ will be reduced
-                  to ​<b>{{ quota_decrease.get('quota') }}Gb</b>​ on ​<b>{{ quota_decrease.get('date') }}</b></p>
-        {% else %}
-          <div class="quota_decrease alert {% if quota_decrease.get('days') < 8 %} alert-danger
-            {% elif quota_decrease.get('days') < 30 %} alert-warning {% end %}">
-            Quota for project ​<b>{{ project_id }}</b>​ will be reduced
-            to ​<b>{{ quota_decrease.get('quota') }}Gb</b>​ in ​<b>{{ quota_decrease.get('days') }} days</b>
-          </div>
-        {% end %}
-      {% end %}
-
-      {% if nobackup_decrease %}
-        {% if nobackup_decrease.get('days') > 30 %}
-           <p class="quota_decrease">Quota for project ​<b>{{ project_id }}_nobackup</b>​ will be reduced
-                  to ​<b>{{ nobackup_decrease.get('quota') }}Gb</b>​ on ​<b>{{ nobackup_decrease.get('date') }}</b></p>
-        {% else %}
-          <div class="quota_decrease alert {% if nobackup_decrease.get('days') < 8 %} alert-danger
-            {% elif nobackup_decrease.get('days') < 30 %} alert-warning{% end %}">
-            Quota for project ​<b>{{ project_id }}_nobackup</b>​ will be reduced
-            to ​<b>{{ nobackup_decrease.get('quota') }}Gb</b>​ in ​<b>{{ nobackup_decrease.get('days') }} days</b>
-          </div>
-        {% end %}
-      {% end %}
-
+      <div class="row">
+        <div class="col-md-4">
+          {% if quota_decrease %}
+            {% if quota_decrease.get('days') > 30 %}
+               <p class="quota_decrease">Quota​ will be reduced to ​<b>{{ quota_decrease.get('quota') }}Gb</b>​
+                 on ​<b>{{ quota_decrease.get('date') }}</b></p>
+            {% else %}
+              <div class="quota_decrease alert {% if quota_decrease.get('days') < 8 %} alert-danger
+                {% elif quota_decrease.get('days') < 30 %} alert-warning {% end %}">
+                Quota​ will be reduced to ​<b>{{ quota_decrease.get('quota') }}Gb</b>​
+                in ​<b>{{ quota_decrease.get('days') }} days</b>
+              </div>
+            {% end %}
+          {% end %}
+        </div>
+        <div class="col-md-4">
+          {% if nobackup_decrease %}
+            {% if nobackup_decrease.get('days') > 30 %}
+               <p class="quota_decrease">Quota​ will be reduced to ​<b>{{ nobackup_decrease.get('quota') }}Gb</b>​
+                 on ​<b>{{ nobackup_decrease.get('date') }}</b></p>
+            {% else %}
+              <div class="quota_decrease alert {% if nobackup_decrease.get('days') < 8 %} alert-danger
+                {% elif nobackup_decrease.get('days') < 30 %} alert-warning{% end %}">
+                Quota​ will be reduced to ​<b>{{ nobackup_decrease.get('quota') }}Gb</b>​
+                in ​<b>{{ nobackup_decrease.get('days') }} days</b>
+              </div>
+            {% end %}
+          {% end %}
+        </div>
+        <div class="col-md-4"></div>
+      </div>
       <div class="row">
         <div class="col-md-4 uppmax_plot" id="quota_{{ project_id }}"></div>
         <div class="col-md-4 uppmax_plot" id="quota_{{ project_id }}_nobackup"></div>

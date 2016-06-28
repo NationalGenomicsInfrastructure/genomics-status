@@ -170,7 +170,7 @@ class MainHandler(UnsafeHandler):
         server_status = sorted(server_status.items(), key = lambda item: item[1].get('used_percentage'), reverse=True)
 
         # copy -> so that we don't change self.application.uppmax_projects
-        uppmax_ids = copy.copy(self.application.uppmax_projects)
+        uppmax_ids = copy.copy(self.application.uppmax_projects.keys())
         # get all the documents, sorted by timestamp in descending order. Because I don't know how to use reduce functions
         # limit = 30, get the last 30 entries. assuming that our projects are in this range
         view = self.application.server_status_db.view('uppmax/by_timestamp', descending=True, limit=130)
