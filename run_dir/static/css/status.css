@@ -70,6 +70,9 @@ multiple places and typically control typography, or other common elements.
     display: inline-block;
     margin-left: 30px;
 }
+blockquote {
+    background-color: #f9f9f9;
+}
 /*
 === Typography ===
 */
