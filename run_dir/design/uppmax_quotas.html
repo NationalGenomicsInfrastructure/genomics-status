@@ -55,7 +55,7 @@
             {% else %}
               <div class="quota_decrease alert {% if cpu_decrease.get('days') < 8 %} alert-danger
                 {% elif cpu_decrease.get('days') < 30 %} alert-warning {% end %}">
-                Quota​ will be reduced to ​<b>{{ cpu_decrease.get('quota') }}Gb</b>​
+                Quota​ will be reduced to ​<b>{{ cpu_decrease.get('quota') }}h</b>​
                 in ​<b>{{ cpu_decrease.get('days') }} days</b>
               </div>
             {% end %}
