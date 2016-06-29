@@ -17,6 +17,7 @@
     </blockquote>
       {% set quota_decrease = project.get('quota_decrease', {}) %}
       {% set nobackup_decrease = project.get('nobackup_quota_decrease', {}) %}
+      {% set cpu_decrease = project.get('cpu_quota_decrease', {}) %}
       <div class="row">
         <div class="col-md-4">
           {% if quota_decrease %}
@@ -35,7 +36,7 @@
         <div class="col-md-4">
           {% if nobackup_decrease %}
             {% if nobackup_decrease.get('days') > 30 %}
-               <p class="quota_decrease">Quota​ will be reduced to ​<b>{{ nobackup_decrease.get('quota') }}Gb</b>​
+               <p class="quota_decrease">Nobackup quota​ will be reduced to ​<b>{{ nobackup_decrease.get('quota') }}Gb</b>​
                  on ​<b>{{ nobackup_decrease.get('date') }}</b></p>
             {% else %}
               <div class="quota_decrease alert {% if nobackup_decrease.get('days') < 8 %} alert-danger
@@ -46,7 +47,20 @@
             {% end %}
           {% end %}
         </div>
-        <div class="col-md-4"></div>
+        <div class="col-md-4">
+          {% if cpu_decrease %}
+            {% if cpu_decrease.get('days') > 30 %}
+               <p class="quota_decrease">CPU quota​ will be reduced to ​<b>{{ cpu_decrease.get('quota') }}h</b>​
+                 on ​<b>{{ cpu_decrease.get('date') }}</b></p>
+            {% else %}
+              <div class="quota_decrease alert {% if cpu_decrease.get('days') < 8 %} alert-danger
+                {% elif cpu_decrease.get('days') < 30 %} alert-warning {% end %}">
+                Quota​ will be reduced to ​<b>{{ cpu_decrease.get('quota') }}Gb</b>​
+                in ​<b>{{ cpu_decrease.get('days') }} days</b>
+              </div>
+            {% end %}
+          {% end %}
+        </div>
       </div>
       <div class="row">
         <div class="col-md-4 uppmax_plot" id="quota_{{ project_id }}"></div>
