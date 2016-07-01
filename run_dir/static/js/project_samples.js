@@ -255,7 +255,7 @@ function load_tickets() {
             var updated_at = new Date(c['created_at']);
             ticket += '<div class="panel panel-'+panel_class+'">'+
                         '<div class="panel-heading">'+updated_at.toGMTString() + panel_label + '</div>'+
-                        '<div class="panel-body"><pre>'+c['body']+'</pre></div>'+
+                        '<div class="panel-body"><pre style="white-space: pre-wrap; word-break: keep-all;">'+c['body']+'</pre></div>'+
                       '</div>';
 
           });
