@@ -110,7 +110,7 @@ function collapse(element) {
   }
   var children = $(element).parent().find('tr[data-parent="#'+element_id+'"]')
   $.each(children, function(index, child) {
-    $(child).hide();
+    $(child).hide().removeClass('expanded').addClass('collapsed');
     collapse(child);
   });
 };
@@ -119,7 +119,7 @@ function expand(element) {
     var a = $(element).find('.bioinfo-expand');
     $(a).addClass('expanded');
     var tr_id = $(element).attr('id');
-    $('tr[data-parent="#'+tr_id+'"]').show();
+    $('tr[data-parent="#'+tr_id+'"]').show().removeClass('collapsed').addClass('expanded');
     var span = $(element).find('td.bioinfo-status-expand span.glyphicon')
     if ($(span).hasClass('glyphicon-chevron-right')) {
         $(span).removeClass('glyphicon-chevron-right')
@@ -164,3 +164,45 @@ function collapseAll(a) {
         $(a).find('span.glyphicon').addClass('glyphicon-chevron-down');
     }
 };
+
+// filter projects by flowcell status
+$(".fc-status-checkbox").change(function() {
+    var sample_status = $(this).val();
+    var show = $(this).is(':checked');
+    if (show) {
+        $('div[class="delivery '+sample_status+' status-filtered"]').show().removeClass('status-filtered');
+        $(' tr.bioinfo-fc:hidden:has(td span.bioinfo-status:contains('+sample_status+'))').show()
+            .nextUntil('tr.bioinfo-fc', 'tr:hidden.expanded').show().closest('div.delivery:not(.bioinfo-filtered)').show();
+
+    } else {
+        $('div:visible[class="delivery '+sample_status+'"]').hide().addClass('status-filtered');
+        $('div.delivery:visible table tbody tr.bioinfo-fc:has(td span.bioinfo-status:contains('+sample_status+'))').hide()
+            .nextUntil('tr.bioinfo-fc', 'tr.expanded').hide();
+    }
+});
+
+// filter projects by bioinfo responsible
+$(".bi-responsible-checkbox").change(function() {
+    var bioinfo_responsible = $(this).val();
+    var show = $(this).is(':checked');
+
+    if (show) {
+        if (bioinfo_responsible == 'assigned') {
+            $('div.responsible-filters input[type="checkbox"]').nextUntil(this).attr('checked', true);
+            $('div.delivery:not(.status-filtered):hidden:has(h3 small span.bi-project-assigned:not(:contains(unassigned)))')
+                .show().removeClass('bioinfo-filtered');
+        } else {
+            $('div.delivery:not(.status-filtered):hidden:has(h3 small span.bi-project-assigned:contains('+bioinfo_responsible+'))')
+                .show().removeClass('bioinfo-filtered');
+        }
+    } else { // hide
+        if (bioinfo_responsible == 'assigned') {
+            $('div.responsible-filters input[type="checkbox"]').nextUntil(this).attr('checked', false);
+            $('div.delivery:visible:has(h3 small span.bi-project-assigned:not(:contains(unassigned)))').hide()
+                .addClass('bioinfo-filtered');
+        } else {
+            $('div.delivery:visible:has(h3 small span.bi-project-assigned:contains('+bioinfo_responsible+'))').hide()
+                .addClass('bioinfo-filtered');
+        }
+    }
+});
