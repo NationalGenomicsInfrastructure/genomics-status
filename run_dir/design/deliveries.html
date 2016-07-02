@@ -23,44 +23,34 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 
 <div id="page_content" class="deliveries-page">
   <div class="row">
-    <div>
-      <h1>Ongoing <span id="page_title">Deliveries</span></h1>
-      <h3>Total number of:</h3>
-      <h5>projects: {{ number_of_projects }}</h5>
-      <h5>flowcells: {{ number_of_flowcells }}</h5>
-      <h5>lanes: {{ number_of_lanes }}</h5>
-      <h5>samples: {{ number_of_samples }}</h5>
       <div id="ongoing_deliveries">
-
-        <div class="delivery-filters" style="display:none;">
+        <h1>Ongoing <span id="page_title">Deliveries</span></h1>
+        <h3>Total number of:</h3>
+        <h5>projects: {{ number_of_projects }}</h5>
+        <h5>flowcells: {{ number_of_flowcells }}</h5>
+        <h5>lanes: {{ number_of_lanes }}</h5>
+        <h5>samples: {{ number_of_samples }}</h5>
+        <div class="row delivery-filters"  style="margin-left:30px;">
           <hr>
-          <form class="form-inline deliveries-filters">
-            <div class="form-group">
-              <label for="bioinfo-filter-assigned" class="control-label">Assigned</label>
-              <select class="form-control input-sm" id="bioinfo-filter-assigned">
-                <option>Anyone</option>
-              </select>
+            <div class="status-filters">
+              <h4>Filter by flowcell status</h4>
+              {% for status, number in sorted(status_list.items()) %}
+                <label class="checkbox-inline">
+                  <input class="fc-status-checkbox" type="checkbox" value="{{ status }}" checked>{{ status }} ({{ number }})</label>
+              {% end %}
             </div>
-            <div class="form-group">
-              <label for="bioinfo-filter-application" class="control-label">Application</label>
-              <select class="form-control input-sm" id="bioinfo-filter-application">
-                <option>Any</option>
-              </select>
+          <hr>
+            <div class="responsible-filters">
+              <h4>Filter by bioinfo responsible</h4>
+              {% for responsible, number in sorted(responsible_list.items()) %}
+                <label class="checkbox-inline">
+                  <input class="bi-responsible-checkbox" type="checkbox" value="{{ responsible }}" checked>{{ responsible }} ({{ number }})</label>
+              {% end %}
             </div>
-            <div class="form-group">
-              <label for="bioinfo-filter-facility" class="control-label">Facility</label>
-              <select class="form-control input-sm" id="bioinfo-filter-facility">
-                <option>Any</option>
-                <option>Production</option>
-                <option>Application</option>
-              </select>
-            </div>
-          </form>
-          <p class="text-muted" id="bioinfo-filter-notification" style="margin-top:15px; display:none; "><span></span> <a href="#" id="bioinfo-clear-filters">[ clear ]</a></p>
           <hr>
         </div>
         {% for project_id, project in sorted(deliveries.items()) %}
-          <div class="delivery" id="bioinfo-delivery-project-{{ project_id }}">
+          <div class="delivery {{ ' '.join(project_status.get(project_id, [])) }}" id="bioinfo-delivery-project-{{ project_id }}">
             {% if 'error' in project %}
               <h3><a href="project/'+pid+'" class="bi-project-id">'+pid+'</a></h3><div class="alert alert-danger"><strong>Error</strong> - could not find project information for {{ project_id }}</div>
             {% else %}
@@ -97,7 +87,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
             </thead>
             <tbody>
             {% for flowcell_id, flowcell in sorted(project['runs'].items()) %}
-            <tr class="bioinfo-fc" id="bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
+            <tr class="bioinfo-fc expanded" id="bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
               <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" class="bioinfo-expand">
                   <span class="glyphicon glyphicon-chevron-right"></span></a></td>
               <td></td>
@@ -116,7 +106,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               </td>
             </tr>
             {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
-              <tr class="bioinfo-lane" id="bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}"
+              <tr class="bioinfo-lane collapsed" id="bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}"
                   data-parent="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" style="display:none;">
                 <td></td>
                 <td class="bioinfo-status-expand"><a href="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" class="bioinfo-expand">
@@ -140,7 +130,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                 {% set failed = len(sample['checklist']['failed']) %}
                 <!--division by zero-->
                 {% set total = max(len(sample['checklist']['total']), 1) %}
-                <tr class="bioinfo-sample" id="bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
+                <tr class="bioinfo-sample collapsed" id="bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
                     data-parent="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
                   <td></td>
                   <td><a href="#bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
