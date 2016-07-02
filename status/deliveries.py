@@ -46,6 +46,9 @@ class DeliveriesPageHandler(SafeHandler):
         number_of_flowcells = 0
         number_of_lanes = 0
         number_of_samples = 0
+        status_list = {}
+        project_status = {}
+        responsible_list = {}
         for project_id in ongoing_deliveries:
             number_of_projects += 1
             if project_id in summary_data and project_id in bioinfo_data:
@@ -63,37 +66,15 @@ class DeliveriesPageHandler(SafeHandler):
                         lane_checklists = {'total': 0, 'completed': 0}
                         for sample_id in flowcells[flowcell_id][lane_id]:
                             number_of_samples += 1
-                            # define bioinfo checklist
-                            checklist = {
-                                'passed': [],
-                                'warnings': [],
-                                'failed': [],
-                                'total': [],
-                            }
-                            sample_data = flowcells[flowcell_id][lane_id][sample_id]
-                            lane_statuses.append(sample_data['sample_status'])
-                            qc_and_bp = {}
-                            for key in sample_data.get('qc', {}).keys():
-                                checklist['total'].append(key)
-                                qc_and_bp[key] = sample_data['qc'][key]
-                            for key in sample_data.get('bp', {}).keys():
-                                checklist['total'].append(key)
-                                qc_and_bp[key] = sample_data['bp'][key]
-                            for key in qc_and_bp.keys():
-                                if qc_and_bp[key] == 'Pass':
-                                    checklist['passed'].append(key)
-                                elif qc_and_bp[key] == 'Warning':
-                                    checklist['warnings'].append(key)
-                                elif qc_and_bp[key] == 'Fail':
-                                    checklist['failed'].append(key)
-                                # don't count 'N/A'
-                                elif qc_and_bp[key] == 'N/A':
-                                    checklist['total'].remove(key)
-                                # else: do not do anything if '?' or anything else
 
+                            # define bioinfo checklist
+                            sample_data = flowcells[flowcell_id][lane_id][sample_id]
+                            checklist = self.__fill_checklist(sample_data)
                             if checklist['total'] and len(checklist['total']) == len(checklist['passed']) + len(checklist['warnings']) + len(checklist['failed']):
                                 lane_checklists['completed'] += 1
                             lane_checklists['total'] += 1
+
+                            lane_statuses.append(sample_data['sample_status'])
 
                             if flowcell_id not in runs_bioinfo:
                                 runs_bioinfo[flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: {'checklist': checklist, 'status': sample_data.get('sample_status', '?')}}}}}
@@ -108,55 +89,28 @@ class DeliveriesPageHandler(SafeHandler):
                             flowcell_checklists['completed'] += 1
                         flowcell_checklists['total'] += 1
 
-                        if len(set(lane_statuses)) == 1:
-                            lane_status = lane_statuses[0]
-                        elif 'New' in lane_statuses:
-                            lane_status = 'New'
-                        elif 'Sequencing' in lane_statuses:
-                            lane_status = 'Sequencing'
-                        elif 'Demultiplexing' in lane_statuses:
-                            lane_status = 'Demultiplexing'
-                        elif 'Transferring' in lane_statuses:
-                            lane_status = 'Transferring'
-                        elif 'QC-ongoing' in lane_statuses:
-                            lane_status = 'QC-ongoing'
-                        elif 'QC-done' in lane_statuses:
-                            lane_status = 'QC-done'
-                        elif 'BP-ongoing' in lane_statuses:
-                            lane_status = 'BP-ongoing'
-                        elif 'BP-done' in lane_statuses:
-                            lane_status = 'BP-done'
-                        elif 'ERROR' in lane_statuses:
-                            lane_status = 'ERROR'
+                        lane_status = self.__aggregate_status(lane_statuses)
 
                         runs_bioinfo[flowcell_id]['lanes'][lane_id]['lane_status'] = lane_status
                         runs_bioinfo[flowcell_id]['lanes'][lane_id]['checklist'] = lane_checklists
                         flowcell_statuses.append(lane_status)
 
-                    # the same logic here -> agregate lane statuses
-                    if len(set(flowcell_statuses)) == 1:
-                        flowcell_status = flowcell_statuses[0]
-                    elif 'New' in flowcell_statuses:
-                        flowcell_status = 'New'
-                    elif 'Sequencing' in flowcell_statuses:
-                        flowcell_status = 'Sequencing'
-                    elif 'Demultiplexing' in flowcell_statuses:
-                        flowcell_status = 'Demultiplexing'
-                    elif 'Transferring' in flowcell_statuses:
-                        flowcell_status = 'Transferring'
-                    elif 'QC-ongoing' in flowcell_statuses:
-                        flowcell_status = 'QC-ongoing'
-                    elif 'QC-done' in flowcell_statuses:
-                        flowcell_status = 'QC-done'
-                    elif 'BP-ongoing' in flowcell_statuses:
-                        flowcell_status = 'BP-ongoing'
-                    elif 'BP-done' in flowcell_statuses:
-                        flowcell_status = 'BP-done'
-                    elif 'ERROR' in flowcell_statuses:
-                        flowcell_status = 'ERROR'
-
+                    # the same logic here -> agregate flowcell statuses
+                    flowcell_status = self.__aggregate_status(flowcell_statuses)
                     runs_bioinfo[flowcell_id]['flowcell_status'] = flowcell_status
                     runs_bioinfo[flowcell_id]['checklist'] = flowcell_checklists
+
+                    # add flowcell_status to the status_list (needed for filtering)
+                    if flowcell_status not in status_list:
+                        status_list[flowcell_status] = 0
+                    else:
+                        status_list[flowcell_status] +=1
+
+                    if project_id not in project_status:
+                        project_status[project_id] = []
+                    if flowcell_status not in project_status[project_id]:
+                        project_status[project_id].append(flowcell_status)
+
                 # parse running notes
                 for timestamp, running_note in running_notes.items():
                     # define the level of the running_note
@@ -209,11 +163,22 @@ class DeliveriesPageHandler(SafeHandler):
 
                 latest_timestamp = max(running_notes.keys())
                 latest_running_note = running_notes[latest_timestamp]
+
+                # responsibles (needed for filters)
+                bioinfo_responsible = summary_data[project_id].get('project_summary', {}).get('bioinfo_responsible', 'unassigned')
+                if bioinfo_responsible not in responsible_list:
+                    responsible_list[bioinfo_responsible] = 0
+                responsible_list[bioinfo_responsible] += 1
+                if bioinfo_responsible != 'unassigned':
+                    if 'assigned' not in responsible_list:
+                        responsible_list['assigned'] = 0
+                    responsible_list['assigned'] += 1
+
                 project_data = {
                     'project_name': summary_data[project_id]['project_name'],
                     'application': summary_data[project_id].get('application', 'unknown'),
                     'type': summary_data[project_id]['details'].get('type'),
-                    'bioinfo_responsible': summary_data[project_id].get('project_summary', {}).get('bioinfo_responsible', 'unknown'),
+                    'bioinfo_responsible': bioinfo_responsible,
                     'runs': runs_bioinfo,
                     'latest_running_note': latest_running_note,
                 }
@@ -225,6 +190,7 @@ class DeliveriesPageHandler(SafeHandler):
                 }
 
             ongoing_deliveries[project_id].update(project_data)
+
         template = self.application.loader.load("deliveries.html")
         self.write(template.generate(gs_globals=self.application.gs_globals,
                                      deliveries=ongoing_deliveries,
@@ -232,5 +198,67 @@ class DeliveriesPageHandler(SafeHandler):
                                      number_of_projects=number_of_projects,
                                      number_of_flowcells=number_of_flowcells,
                                      number_of_lanes=number_of_lanes,
-                                     number_of_samples=number_of_samples
+                                     number_of_samples=number_of_samples,
+                                     status_list=status_list,
+                                     project_status=project_status,
+                                     responsible_list=responsible_list,
                                      ))
+
+    def __aggregate_status(self, list_of_statuses):
+        """
+            helper method. aggregates status of parent entry
+        """
+        if len(set(list_of_statuses)) == 1:
+            status = list_of_statuses[0]
+        elif 'New' in list_of_statuses:
+            status = 'New'
+        elif 'Sequencing' in list_of_statuses:
+            status = 'Sequencing'
+        elif 'Demultiplexing' in list_of_statuses:
+            status = 'Demultiplexing'
+        elif 'Transferring' in list_of_statuses:
+            status = 'Transferring'
+        elif 'QC-ongoing' in list_of_statuses:
+            status = 'QC-ongoing'
+        elif 'QC-done' in list_of_statuses:
+            status = 'QC-done'
+        elif 'BP-ongoing' in list_of_statuses:
+            status = 'BP-ongoing'
+        elif 'BP-done' in list_of_statuses:
+            status = 'BP-done'
+        elif 'ERROR' in list_of_statuses:
+            status = 'ERROR'
+        else:
+            # should not happen
+            status = ''
+        return status
+
+    def __fill_checklist(self, sample_data):
+        """
+        helper method to create a progress bar checklist
+        """
+        checklist = {
+            'passed': [],
+            'warnings': [],
+            'failed': [],
+            'total': [],
+        }
+        qc_and_bp = {}
+        for key in sample_data.get('qc', {}).keys():
+            checklist['total'].append(key)
+            qc_and_bp[key] = sample_data['qc'][key]
+        for key in sample_data.get('bp', {}).keys():
+            checklist['total'].append(key)
+            qc_and_bp[key] = sample_data['bp'][key]
+        for key in qc_and_bp.keys():
+            if qc_and_bp[key] == 'Pass':
+                checklist['passed'].append(key)
+            elif qc_and_bp[key] == 'Warning':
+                checklist['warnings'].append(key)
+            elif qc_and_bp[key] == 'Fail':
+                checklist['failed'].append(key)
+            # don't count 'N/A'
+            elif qc_and_bp[key] == 'N/A':
+                checklist['total'].remove(key)
+            # else: do not do anything if '?' or anything else
+        return checklist

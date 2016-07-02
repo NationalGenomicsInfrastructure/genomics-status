@@ -724,7 +724,7 @@ var getAllChildTrs = function(tr) {
         return $('.table-bioinfo-status tr[data-parent="#'+tr_id+'"]');
     } else if ($(tr).hasClass(top_level_class)) {
         // find next tr of the same level and return everything between tr and next_tr
-        return children = $(tr).nextUntil('tr.'+top_level_class); // does not inlcude tr and next tr
+        return $(tr).nextUntil('tr.'+top_level_class); // does not inlcude tr and next tr
     }
 };
 
