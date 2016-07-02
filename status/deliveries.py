@@ -103,8 +103,7 @@ class DeliveriesPageHandler(SafeHandler):
                     # add flowcell_status to the status_list (needed for filtering)
                     if flowcell_status not in status_list:
                         status_list[flowcell_status] = 0
-                    else:
-                        status_list[flowcell_status] +=1
+                    status_list[flowcell_status] +=1
 
                     if project_id not in project_status:
                         project_status[project_id] = []
