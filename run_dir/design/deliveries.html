@@ -89,7 +89,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
             </thead>
             <tbody>
             {% for flowcell_id, flowcell in sorted(project['runs'].items()) %}
-            <tr class="bioinfo-fc expanded" id="bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
+            <tr class="bioinfo-fc" id="bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
               <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" class="bioinfo-expand">
                   <span class="glyphicon glyphicon-chevron-right"></span></a></td>
               <td></td>
@@ -108,7 +108,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               </td>
             </tr>
             {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
-              <tr class="bioinfo-lane collapsed" id="bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}"
+              <tr class="bioinfo-lane" id="bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}"
                   data-parent="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" style="display:none;">
                 <td></td>
                 <td class="bioinfo-status-expand"><a href="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" class="bioinfo-expand">
@@ -132,7 +132,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                 {% set failed = len(sample['checklist']['failed']) %}
                 <!--division by zero-->
                 {% set total = max(len(sample['checklist']['total']), 1) %}
-                <tr class="bioinfo-sample collapsed" id="bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
+                <tr class="bioinfo-sample" id="bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
                     data-parent="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
                   <td></td>
                   <td><a href="#bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
