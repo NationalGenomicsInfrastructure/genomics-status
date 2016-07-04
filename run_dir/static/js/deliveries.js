@@ -203,6 +203,7 @@ $(".bi-responsible-checkbox").change(function() {
     var bioinfo_responsible = $(this).val();
     var show = $(this).is(':checked');
 
+
     if (show) {
         if (bioinfo_responsible == 'assigned') {
             $('div.responsible-filters input[type="checkbox"]').nextUntil(this).attr('checked', true);
@@ -223,3 +224,25 @@ $(".bi-responsible-checkbox").change(function() {
         }
     }
 });
+
+
+// display all statuses
+$('.all-statuses').click(function() {
+    $('.fc-status-checkbox:not(:checked)').prop('checked', true).trigger('change');
+});
+
+// display none statuses
+$('.none-statuses').click(function(){
+    $('.fc-status-checkbox:checked').prop('checked', false).trigger('change');
+});
+
+// display all responsibles
+$('.all-responsibles').click(function() {
+    $('.bi-responsible-checkbox:not(:checked)').prop('checked', true).trigger('change');
+});
+
+// display none responsibles
+$('.none-responsibles').click(function(){
+    $('.bi-responsible-checkbox:checked').prop('checked', false).trigger('change');
+});
+
