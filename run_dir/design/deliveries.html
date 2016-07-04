@@ -34,6 +34,8 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           <hr>
             <div class="status-filters">
               <h4>Filter by flowcell status</h4>
+              <div id="visible-classes" class="{{ ' '.join(status_list.keys()) }}"></div>
+              <div id="filtered-classes" class=""></div>
               {% for status, number in sorted(status_list.items()) %}
                 <label class="checkbox-inline">
                   <input class="fc-status-checkbox" type="checkbox" value="{{ status }}" checked>{{ status }} ({{ number }})</label>
