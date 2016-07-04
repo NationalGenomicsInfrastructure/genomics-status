@@ -202,26 +202,12 @@ $(".fc-status-checkbox").change(function() {
 $(".bi-responsible-checkbox").change(function() {
     var bioinfo_responsible = $(this).val();
     var show = $(this).is(':checked');
-
-
     if (show) {
-        if (bioinfo_responsible == 'assigned') {
-            $('div.responsible-filters input[type="checkbox"]').nextUntil(this).attr('checked', true);
-            $('div.delivery:not(.status-filtered):hidden:has(h3 small span.bi-project-assigned:not(:contains(unassigned)))')
-                .show().removeClass('bioinfo-filtered');
-        } else {
-            $('div.delivery:not(.status-filtered):hidden:has(h3 small span.bi-project-assigned:contains('+bioinfo_responsible+'))')
-                .show().removeClass('bioinfo-filtered');
-        }
+        $('div.delivery:not(.status-filtered):hidden:has(h3 small span.bi-project-assigned:contains('+bioinfo_responsible+'))')
+            .show().removeClass('bioinfo-filtered');
     } else { // hide
-        if (bioinfo_responsible == 'assigned') {
-            $('div.responsible-filters input[type="checkbox"]').nextUntil(this).attr('checked', false);
-            $('div.delivery:visible:has(h3 small span.bi-project-assigned:not(:contains(unassigned)))').hide()
-                .addClass('bioinfo-filtered');
-        } else {
-            $('div.delivery:visible:has(h3 small span.bi-project-assigned:contains('+bioinfo_responsible+'))').hide()
-                .addClass('bioinfo-filtered');
-        }
+        $('div.delivery:visible:has(h3 small span.bi-project-assigned:contains('+bioinfo_responsible+'))').hide()
+            .addClass('bioinfo-filtered');
     }
 });
 
@@ -245,4 +231,3 @@ $('.all-responsibles').click(function() {
 $('.none-responsibles').click(function(){
     $('.bi-responsible-checkbox:checked').prop('checked', false).trigger('change');
 });
-

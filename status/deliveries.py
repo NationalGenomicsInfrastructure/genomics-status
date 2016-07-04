@@ -168,10 +168,6 @@ class DeliveriesPageHandler(SafeHandler):
                 if bioinfo_responsible not in responsible_list:
                     responsible_list[bioinfo_responsible] = 0
                 responsible_list[bioinfo_responsible] += 1
-                if bioinfo_responsible != 'unassigned':
-                    if 'assigned' not in responsible_list:
-                        responsible_list['assigned'] = 0
-                    responsible_list['assigned'] += 1
 
                 project_data = {
                     'project_name': summary_data[project_id]['project_name'],
