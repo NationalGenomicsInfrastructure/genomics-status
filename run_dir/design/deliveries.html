@@ -26,36 +26,43 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
     <h1>Ongoing <span id="page_title">Deliveries</span></h1>
     <div class="row">
       <div class="form col-md-4">
-        <h5>projects: {{ number_of_projects }}</h5>
-        <h5>flowcells: {{ number_of_flowcells }}</h5>
-        <h5>lanes: {{ number_of_lanes }}</h5>
-        <h5>samples: {{ number_of_samples }}</h5>
+        <h4>Number of</h4>
+        <dl class="dl-horizontal">
+          <dt>Projects: </dt><dd><span class="badge badge-small">{{ number_of_projects }}</span></dd>
+          <dt>Flowcells: </dt><dd><span class="badge badge-small">{{ number_of_flowcells }}</span></dd>
+          <dt>Lanes: </dt><dd><span class="badge badge-small">{{ number_of_lanes }}</span></dd>
+          <dt>Samples: <dd><span class="badge badge-small">{{ number_of_samples }}</span></dd>
+        </dl>
       </div>
       <div class="form col-md-4 status-filters">
-        <h4>Filter by flowcell status</h4>
+        <h4>Flowcell status
+          <div class="btn-group">
+            <a href="#" class="btn btn-sm btn-default all-statuses">All</a>
+            <a href="#" class="btn btn-sm btn-default none-statuses">None</a>
+          </div>
+        </h4>
         <div id="visible-classes" class="{{ ' '.join(status_list.keys()) }}"></div>
         <div id="filtered-classes" class=""></div>
-        <div class="btn-group">
-          <a href="#" class="btn btn-default all-statuses">Display All</a>
-          <a href="#" class="btn btn-default none-statuses">Display None</a>
-        </div>
         {% for status, number in sorted(status_list.items()) %}
-          <div class="form-group">
-            <label class="checkbox-inline">
-              <input class="fc-status-checkbox" type="checkbox" value="{{ status }}" checked>{{ status }} ({{ number }})</label>
-          </div>
+        <div class="form-group">
+          <label class="checkbox-inline">
+            <input class="fc-status-checkbox" type="checkbox" value="{{ status }}" checked>{{ status }}
+              <span class="badge badge-small"> {{ number }}</span></label>
+        </div>
         {% end %}
       </div>
       <div class="form col-md-4 responsible-filters">
-        <h4>Filter by bioinfo responsible</h4>
-        <div class="btn-group">
-          <a href="#" class="btn btn-default all-responsibles">Display All</a>
-          <a href="#" class="btn btn-default none-responsibles">Display None</a>
-        </div>
+        <h4>Bioinfo responsible
+          <div class="btn-group">
+            <a href="#" class="btn btn-sm btn-default all-responsibles">All</a>
+            <a href="#" class="btn btn-sm btn-default none-responsibles">None</a>
+          </div>
+        </h4>
         {% for responsible, number in sorted(responsible_list.items()) %}
           <div class="form-group">
             <label class="checkbox-inline">
-              <input class="bi-responsible-checkbox" type="checkbox" value="{{ responsible }}" checked>{{ responsible }} ({{ number }})</label>
+              <input class="bi-responsible-checkbox" type="checkbox" value="{{ responsible }}" checked> {{ responsible }}
+                <span class="badge badge-small"> {{ number }}</span></label>
           </div>
         {% end %}
       </div>
