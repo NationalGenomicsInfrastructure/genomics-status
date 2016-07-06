@@ -34,6 +34,7 @@ class BioinfoAnalysisHandler(SafeHandler):
                     original_doc['values'][timestamp] = data[run_id]
                     original_doc['values'][timestamp]['user'] = user
                     original_doc['values'][timestamp]['sample_status'] = data[run_id]['sample_status']
+                    original_doc['status'] = data[run_id]['sample_status']
                     if 'datadelivered' in data[run_id]:
                         original_doc['values'][timestamp]['datadelivered'] = data[run_id]['datadelivered']
                     try:
