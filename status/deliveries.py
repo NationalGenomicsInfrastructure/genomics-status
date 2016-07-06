@@ -74,7 +74,7 @@ class DeliveriesPageHandler(SafeHandler):
                                 lane_checklists['completed'] += 1
                             lane_checklists['total'] += 1
 
-                            lane_statuses.append(sample_data['sample_status'])
+                            lane_statuses.append(sample_data.get('sample_status'))
 
                             if flowcell_id not in runs_bioinfo:
                                 runs_bioinfo[flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: {'checklist': checklist, 'status': sample_data.get('sample_status', '?')}}}}}
