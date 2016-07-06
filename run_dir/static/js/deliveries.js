@@ -110,7 +110,7 @@ function collapse(element) {
   }
   var children = $(element).parent().find('tr[data-parent="#'+element_id+'"]')
   $.each(children, function(index, child) {
-    $(child).hide();
+    $(child).hide().removeClass('expanded').addClass('collapsed');
     collapse(child);
   });
 };
@@ -119,8 +119,8 @@ function expand(element) {
     var a = $(element).find('.bioinfo-expand');
     $(a).addClass('expanded');
     var tr_id = $(element).attr('id');
-    $('tr[data-parent="#'+tr_id+'"]').show();
-    var span = $(element).find('td.bioinfo-status-expand span.glyphicon')
+    $('tr[data-parent="#'+tr_id+'"]').show().removeClass('collapsed').addClass('expanded');
+    var span = $(element).find('td.bioinfo-status-expand span.glyphicon');
     if ($(span).hasClass('glyphicon-chevron-right')) {
         $(span).removeClass('glyphicon-chevron-right')
         $(span).addClass('glyphicon-chevron-down');
@@ -143,24 +143,91 @@ function collapseAll(a) {
         console.error('unknown data structure! Change deliveries.js or bioinfo_tab.js!');
     }
     if ($(a).hasClass('expanded')) { // collapse recursively
-        var trs = $(table).find('tr.' + top_level_class);
+        var trs = $(table).find('tr:not(.filtered).' + top_level_class + ':has(td.bioinfo-status-expand a.expanded)');
         $.each(trs, function(index, tr) {
-            if ($(tr).find('a.bioinfo-expand').hasClass('expanded')) {
-                collapse(tr);
-            }
+            collapse(tr);
         });
         $(a).removeClass('expanded');
         $(a).find('span.glyphicon').removeClass('glyphicon-chevron-down');
         $(a).find('span.glyphicon').addClass('glyphicon-chevron-right');
     } else { // expand - not recursively
-        var trs = $.merge($(table).find('tr.'+top_level_class), $(table).find('tr.'+second_level_class));
+        var trs = $.merge($(table).find('tr:not(.filtered).'+top_level_class),
+            $(table).find('tr:not(.filtered).'+top_level_class).nextUntil('tr.'+top_level_class,
+            ':has(td.bioinfo-status-expand a:not(.expanded))'));
         $.each(trs, function(index, tr) {
-            if (!$(tr).find('a.bioinfo-expand').hasClass('expanded')) {
-                expand(tr);
-            }
+            expand(tr);
         });
         $(a).addClass('expanded');
         $(a).find('span.glyphicon').removeClass('glyphicon-chevron-right');
         $(a).find('span.glyphicon').addClass('glyphicon-chevron-down');
     }
 };
+
+// filter projects by flowcell status
+$(".fc-status-checkbox").change(function() {
+    var sample_status = $(this).val();
+    var show = $(this).is(':checked');
+    if (show) {
+        // add/remove markers
+        var filtered_classes = $('div#filtered-classes').removeClass(sample_status).attr('class').split(/\s+/);
+        $('div#visible-classes').addClass(sample_status);
+        // if '', it fails on :not('.')
+        if (filtered_classes == '') {
+            // show projects that have sample_status class and don't have any filtered classes
+            $('div.delivery.'+sample_status+':not(.bioinfo-filtered)').show();
+        } else {
+            $('div.delivery:not(.bioinfo-filtered).'+sample_status+':not(.'+filtered_classes+')').show();
+        }
+        $('tr.bioinfo-fc:hidden:has(td span.bioinfo-status:contains('+sample_status+'))').show().removeClass('filtered')
+            .nextUntil('tr.bioinfo-fc', 'tr:hidden.expanded').show().removeClass('filtered')
+            .closest('div.delivery:not(.bioinfo-filtered)').show();
+    } else {
+        // add/remove markers
+        $('div#filtered-classes').addClass(sample_status);
+        var visible_classes = $('div#visible-classes').removeClass(sample_status).attr('class').split(/\s+/);
+        // the same, when it's the last one, fails on :not('.')
+        if (visible_classes == '') {
+            // hide projects which have sample status class and don't have any visible classes
+            $('div.delivery.'+sample_status).hide().addClass('status-filtered');
+        } else {
+            $('div.delivery.'+sample_status+':not(.'+visible_classes.join(', .')+')').hide().addClass('status-filtered');
+        }
+        // hide rows that have sample_status
+        $('div.delivery  table tbody tr.bioinfo-fc:has(td span.bioinfo-status:contains('+sample_status+'))').hide().addClass('filtered')
+            .nextUntil('tr.bioinfo-fc', 'tr.expanded').hide().addClass('filtered');
+    }
+});
+
+// filter projects by bioinfo responsible
+$(".bi-responsible-checkbox").change(function() {
+    var bioinfo_responsible = $(this).val();
+    var show = $(this).is(':checked');
+    if (show) {
+        $('div.delivery:not(.status-filtered):hidden:has(h3 small span.bi-project-assigned:contains('+bioinfo_responsible+'))')
+            .show().removeClass('bioinfo-filtered');
+    } else { // hide
+        $('div.delivery:visible:has(h3 small span.bi-project-assigned:contains('+bioinfo_responsible+'))').hide()
+            .addClass('bioinfo-filtered');
+    }
+});
+
+
+// display all statuses
+$('.all-statuses').click(function() {
+    $('.fc-status-checkbox:not(:checked)').prop('checked', true).trigger('change');
+});
+
+// display none statuses
+$('.none-statuses').click(function(){
+    $('.fc-status-checkbox:checked').prop('checked', false).trigger('change');
+});
+
+// display all responsibles
+$('.all-responsibles').click(function() {
+    $('.bi-responsible-checkbox:not(:checked)').prop('checked', true).trigger('change');
+});
+
+// display none responsibles
+$('.none-responsibles').click(function(){
+    $('.bi-responsible-checkbox:checked').prop('checked', false).trigger('change');
+});

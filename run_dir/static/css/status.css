@@ -943,9 +943,23 @@ button.btn:disabled {
   cursor: not-allowed ;
 }
 
+div.status-filters div.form-group {
+    margin-bottom: 5px;
+}
+div.responsible-filters div.form-group {
+    margin-bottom: 5px;
+}
+
 .bi-fc-runningnote, .bi-project-note {
   color: #777;
   font-size: 11px;
   line-height: 13px;
   margin: 4px 0;
+}
+
+.badge-small {
+  font-size: 10px;
+  padding: 4px;
+  line-height: 0.9em;
+  min-width: 5px;
 }

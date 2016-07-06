@@ -22,80 +22,89 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
     }; %}
 
 <div id="page_content" class="deliveries-page">
-  <div class="row">
-    <div>
-      <h1>Ongoing <span id="page_title">Deliveries</span></h1>
-      <h3>Total number of:</h3>
-      <h5>projects: {{ number_of_projects }}</h5>
-      <h5>flowcells: {{ number_of_flowcells }}</h5>
-      <h5>lanes: {{ number_of_lanes }}</h5>
-      <h5>samples: {{ number_of_samples }}</h5>
-      <div id="ongoing_deliveries">
-
-        <div class="delivery-filters" style="display:none;">
-          <hr>
-          <form class="form-inline deliveries-filters">
-            <div class="form-group">
-              <label for="bioinfo-filter-assigned" class="control-label">Assigned</label>
-              <select class="form-control input-sm" id="bioinfo-filter-assigned">
-                <option>Anyone</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="bioinfo-filter-application" class="control-label">Application</label>
-              <select class="form-control input-sm" id="bioinfo-filter-application">
-                <option>Any</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="bioinfo-filter-facility" class="control-label">Facility</label>
-              <select class="form-control input-sm" id="bioinfo-filter-facility">
-                <option>Any</option>
-                <option>Production</option>
-                <option>Application</option>
-              </select>
-            </div>
-          </form>
-          <p class="text-muted" id="bioinfo-filter-notification" style="margin-top:15px; display:none; "><span></span> <a href="#" id="bioinfo-clear-filters">[ clear ]</a></p>
-          <hr>
+  <div id="ongoing_deliveries">
+    <h1>Ongoing <span id="page_title">Deliveries</span></h1>
+    <div class="row">
+      <div class="form col-md-4">
+        <h4>Number of</h4>
+        <dl class="dl-horizontal">
+          <dt>Projects: </dt><dd><span class="badge badge-small">{{ number_of_projects }}</span></dd>
+          <dt>Flowcells: </dt><dd><span class="badge badge-small">{{ number_of_flowcells }}</span></dd>
+          <dt>Lanes: </dt><dd><span class="badge badge-small">{{ number_of_lanes }}</span></dd>
+          <dt>Samples: <dd><span class="badge badge-small">{{ number_of_samples }}</span></dd>
+        </dl>
+      </div>
+      <div class="form col-md-4 status-filters">
+        <h4>Flowcell status
+          <div class="btn-group">
+            <a href="#" class="btn btn-sm btn-default all-statuses">All</a>
+            <a href="#" class="btn btn-sm btn-default none-statuses">None</a>
+          </div>
+        </h4>
+        <div id="visible-classes" class="{{ ' '.join(status_list.keys()) }}"></div>
+        <div id="filtered-classes" class=""></div>
+        {% for status, number in sorted(status_list.items()) %}
+        <div class="form-group">
+          <label class="checkbox-inline">
+            <input class="fc-status-checkbox" type="checkbox" value="{{ status }}" checked>{{ status }}
+              <span class="badge badge-small"> {{ number }}</span></label>
         </div>
-        {% for project_id, project in sorted(deliveries.items()) %}
-          <div class="delivery" id="bioinfo-delivery-project-{{ project_id }}">
-            {% if 'error' in project %}
-              <h3><a href="project/'+pid+'" class="bi-project-id">'+pid+'</a></h3><div class="alert alert-danger"><strong>Error</strong> - could not find project information for {{ project_id }}</div>
-            {% else %}
-          <h3>
-            <a href="/project/{{ project_id }}" class="bi-project-id">{{ project_id }}</a>:
-            <a href="/bioinfo/{{ project_id }}" class="bi-project-name">{{ project['project_name'] }}</a><br>
-            <small>
-              &nbsp; <span class="bi-project-facility label {% if project['type'] == 'Application' %} label-success {% else %} label-primary {% end %}">{{ project.get('type') }}</span>
-              <span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">{{ project['application'] }}</span>
-              &nbsp; <span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">{{ project['bioinfo_responsible'] }}</span>
-            </small>
-          </h3>
-          <dl class="dl-horizontal hide-incoming">
-            <dt>Project running note:</dt>
-            <dd>
-              <button data-toggle="modal" data-target="#runningNotesModal" class="btn btn-xs btn-default pull-right runningNotesModal_button project_runningNotes">See all</button>
-              <div class="bi-project-note">{{ project['latest_running_note']['note'] }}</div>
-            </dd>
-          </dl>
-          <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
-            <thead>
-              <tr class="bioinfo-project" id="bioinfo-project-{{ project_id }}">
-                <th class="bioinfo-project">
-                  <a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
-                    <span class="glyphicon glyphicon-chevron-right"></span>
-                  </a>
-                </th>
-                <th></th>
-                <th style="width: 25%;">Run ID</th>
-                <th style="width: 10%;">Status</th>
-                <th style="width: 15%;" class="hide-incoming">Checklists</th>
-                <th style="width: 50%;" class="hide-incoming">Latest running note</th>
-              </tr>
-            </thead>
-            <tbody>
+        {% end %}
+      </div>
+      <div class="form col-md-4 responsible-filters">
+        <h4>Bioinfo responsible
+          <div class="btn-group">
+            <a href="#" class="btn btn-sm btn-default all-responsibles">All</a>
+            <a href="#" class="btn btn-sm btn-default none-responsibles">None</a>
+          </div>
+        </h4>
+        {% for responsible, number in sorted(responsible_list.items()) %}
+          <div class="form-group">
+            <label class="checkbox-inline">
+              <input class="bi-responsible-checkbox" type="checkbox" value="{{ responsible }}" checked> {{ responsible }}
+                <span class="badge badge-small"> {{ number }}</span></label>
+          </div>
+        {% end %}
+      </div>
+    </div>
+
+    {% for project_id, project in sorted(deliveries.items()) %}
+      <div class="delivery {{ ' '.join(project_status.get(project_id, [])) }}" id="bioinfo-delivery-project-{{ project_id }}">
+        {% if 'error' in project %}
+          <h3><a href="project/'+pid+'" class="bi-project-id">'+pid+'</a></h3><div class="alert alert-danger"><strong>Error</strong> - could not find project information for {{ project_id }}</div>
+        {% else %}
+        <h3>
+          <a href="/project/{{ project_id }}" class="bi-project-id">{{ project_id }}</a>:
+          <a href="/bioinfo/{{ project_id }}" class="bi-project-name">{{ project['project_name'] }}</a><br>
+          <small>
+            &nbsp; <span class="bi-project-facility label {% if project['type'] == 'Application' %} label-success {% else %} label-primary {% end %}">{{ project.get('type') }}</span>
+            <span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">{{ project['application'] }}</span>
+            &nbsp; <span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">{{ project['bioinfo_responsible'] }}</span>
+          </small>
+        </h3>
+        <dl class="dl-horizontal hide-incoming">
+          <dt>Project running note:</dt>
+          <dd>
+            <button data-toggle="modal" data-target="#runningNotesModal" class="btn btn-xs btn-default pull-right runningNotesModal_button project_runningNotes">See all</button>
+            <div class="bi-project-note">{{ project['latest_running_note']['note'] }}</div>
+          </dd>
+        </dl>
+        <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
+          <thead>
+            <tr class="bioinfo-project" id="bioinfo-project-{{ project_id }}">
+              <th class="bioinfo-project">
+                <a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
+                  <span class="glyphicon glyphicon-chevron-right"></span>
+                </a>
+              </th>
+              <th></th>
+              <th style="width: 25%;">Run ID</th>
+              <th style="width: 10%;">Status</th>
+              <th style="width: 15%;" class="hide-incoming">Checklists</th>
+              <th style="width: 50%;" class="hide-incoming">Latest running note</th>
+            </tr>
+          </thead>
+          <tbody>
             {% for flowcell_id, flowcell in sorted(project['runs'].items()) %}
             <tr class="bioinfo-fc" id="bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
               <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" class="bioinfo-expand">
@@ -163,71 +172,70 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
             {% end %} <!--end lanes-->
           {% end %} <!--end flowcells-->
           </tbody>
-          </table>
-          {% end %} <!-- end if -->
-          </div>
-      {% end %} <!--end ongoing-->
-    </div> <!-- .col-lg-6 -->
-  </div>
+        </table>
+      {% end %} <!-- end if -->
+    </div>
+  {% end %} <!--end ongoing-->
+  </div> <!-- .col-lg-6 -->
+</div>
 
-  <!-- Running Notes Modal -->
-  <div class="modal fade" id="runningNotesModal" tabindex="-1" role="dialog" aria-labelledby="runningNotesModal_title">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h3 class="modal-title" id="runningNotesModal_title">Running Notes</h3>
-        </div>
-        <div class="modal-body">
+<!-- Running Notes Modal -->
+<div class="modal fade" id="runningNotesModal" tabindex="-1" role="dialog" aria-labelledby="runningNotesModal_title">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h3 class="modal-title" id="runningNotesModal_title">Running Notes</h3>
+      </div>
+      <div class="modal-body">
 
-          <!-- add running note -->
-          <form action="" method="POST" id="running_notes_form" role="form">
-              <div class="panel panel-info">
-                  <div class="panel-heading">Add New Running Note</div>
-                  <div class="panel-body">
-                      <div class="row">
-                          <div class="col-md-6">
-                              <h4>Write Running Note</h4>
-                              <textarea rows="5" class="form-control" id="new_note_text" style="height:97px;"></textarea>
-                          </div>
-                          <div class="col-md-6">
-                              <h4>Preview</h4>
-                              <div class="panel panel-default" id="running_note_preview_panel">
-                                  <div class="panel-heading"><a href="#"></a> - <span class="todays_date">Date</span></div>
-                                  <div class="panel-body" id="running_note_preview_body">
-                                      <p class="text-muted"><em>Nothing to preview..</em></p>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                      <div class="text-right" style="margin-top:15px;">
-                          <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help"><a>Markdown Help</a></button>
-                          <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
-                      </div>
-                  </div>
-              </div>
-          </form>
-
-          <!-- display running notes -->
-          <!--on click will show only running notes for the selected project, and hide all the rest-->
-          <div class="panel-group" id="running_notes_panels">
-            {% for project_run_lane_sample, list_of_notes in running_notes.items() %}
-              {% for timestamp, running_note in sorted(list_of_notes.items(), reverse=True) %}
-                <div class="running-notes-panel panel panel-default" id="running-note-{{ project_run_lane_sample }}" style="display:none;">
-                  <div class="panel-heading"><a href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ timestamp }}</div>
-                  <div class="panel-body">
-                    <div class="mkdown">
-                      {{ running_note['note'] }}
+        <!-- add running note -->
+        <form action="" method="POST" id="running_notes_form" role="form">
+            <div class="panel panel-info">
+                <div class="panel-heading">Add New Running Note</div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Write Running Note</h4>
+                            <textarea rows="5" class="form-control" id="new_note_text" style="height:97px;"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Preview</h4>
+                            <div class="panel panel-default" id="running_note_preview_panel">
+                                <div class="panel-heading"><a href="#"></a> - <span class="todays_date">Date</span></div>
+                                <div class="panel-body" id="running_note_preview_body">
+                                    <p class="text-muted"><em>Nothing to preview..</em></p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    <div class="text-right" style="margin-top:15px;">
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help"><a>Markdown Help</a></button>
+                        <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- display running notes -->
+        <!--on click will show only running notes for the selected project, and hide all the rest-->
+        <div class="panel-group" id="running_notes_panels">
+          {% for project_run_lane_sample, list_of_notes in running_notes.items() %}
+            {% for timestamp, running_note in sorted(list_of_notes.items(), reverse=True) %}
+              <div class="running-notes-panel panel panel-default" id="running-note-{{ project_run_lane_sample }}" style="display:none;">
+                <div class="panel-heading"><a href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ timestamp }}</div>
+                <div class="panel-body">
+                  <div class="mkdown">
+                    {{ running_note['note'] }}
                   </div>
                 </div>
-              {% end %}
+              </div>
             {% end %}
-          </div>
+          {% end %}
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
