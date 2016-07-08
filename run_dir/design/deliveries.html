@@ -74,8 +74,8 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           <h3><a href="project/'+pid+'" class="bi-project-id">'+pid+'</a></h3><div class="alert alert-danger"><strong>Error</strong> - could not find project information for {{ project_id }}</div>
         {% else %}
         <h3>
-          <a href="/project/{{ project_id }}" class="bi-project-id">{{ project_id }}</a>:
-          <a href="/bioinfo/{{ project_id }}" class="bi-project-name">{{ project['project_name'] }}</a><br>
+          <a href="/project/{{ project_id }}" data-toggle="tooltip" title="Project Page" class="bi-project-id">{{ project_id }}</a>:
+          <a href="/bioinfo/{{ project_id }}" data-toggle="tooltip" title="Bioinfo Tab" class="bi-project-name">{{ project['project_name'] }}</a><br>
           <small>
             &nbsp; <span class="bi-project-facility label {% if project['type'] == 'Application' %} label-success {% else %} label-primary {% end %}">{{ project.get('type') }}</span>
             <span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">{{ project['application'] }}</span>
