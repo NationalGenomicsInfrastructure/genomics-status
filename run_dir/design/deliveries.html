@@ -87,7 +87,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           <dd>
             <button data-toggle="modal" data-target="#runningNotesModalDeliveries"
                     class="btn btn-xs btn-default pull-right runningNotesModalDeliveries_button project_runningNotes">See all</button>
-            <div class="bi-project-note">{{ project['latest_running_note']['note'] }}</div>
+            <div class="bi-project-note">{{ project['latest_running_note']['timestamp'] }} - {{ project['latest_running_note']['note'] }}</div>
           </dd>
         </dl>
         <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
@@ -256,7 +256,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           {% for project_run_lane_sample, list_of_notes in running_notes.items() %}
             {% for timestamp, running_note in sorted(list_of_notes.items(), reverse=True) %}
               <div class="running-notes-panel panel panel-default" id="running-note-{{ project_run_lane_sample }}" style="display:none;">
-                <div class="panel-heading"><a href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ timestamp }}
+                <div class="panel-heading"><a href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ timestamp[:-7] }}
                 {% if running_note.get('category') %}
                   <span class="label {{ categories.get(running_note.get('category'), 'All') }}">{{ running_note.get('category') }}</span>
                 {% end %}

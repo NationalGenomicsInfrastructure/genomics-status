@@ -51,12 +51,14 @@ $('.bioinfo-running-notes-save').click(function(e) {
             $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note').text(data['note']);
             // add to the project running_notes
             var running_note_id = [project_id, run_id, lane_id, sample_id].join(' ').trim().replace(/\s+/g, '-');
-            var new_note_html = '<div class="running-notes-panel panel panel-default" id="running-note-'+running_note_id+'" style="display:none;">' +
+            // new notes are displayed in green
+            var new_note_html = '<div class="running-notes-panel panel panel-success" id="running-note-'+running_note_id+'" style="display:none;">' +
                   '<div class="panel-heading"><a href="mailto:'+data['email']+'">'+ data['user'] + '</a> - '+ data["timestamp"]+'</div>' +
                   '<div class="panel-body"><div class="mkdown">'+data['note']+'</div></div></div>';
             // marked is defined in base.js. Do not use make_markdown - it breaks html!
             var markdown = marked(new_note_html);
             $('#running_notes_panels').prepend(markdown);
+            $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note').text(data['timestamp']+' - ' +data['note']);
         }
     });
 
@@ -241,6 +243,9 @@ $('.none-responsibles').click(function(){
 // Insert new running note and reload the running notes table
 $("#running_notes_form").submit( function(e) {
     e.preventDefault();
+    // should be set when clicking the button 'See All'
+    var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
+
     var text = $('#new_note_text').val().trim();
     text = $('<div>').text(text).html();
     var category = $('#rn_category option:selected').val();
@@ -248,8 +253,8 @@ $("#running_notes_form").submit( function(e) {
         alert("Error: No running note entered.");
         return false;
     }
-
-    note_url = get_note_url()
+    // don't like to use this
+    note_url = '/api/v1/running_notes/' + project_id;
     $('#save_note_button').addClass('disabled').text('Submitting..');
     $.ajax({
       type: 'POST',
@@ -266,12 +271,11 @@ $("#running_notes_form").submit( function(e) {
       },
       success: function(data, textStatus, xhr) {
         // Manually check whether the running note has saved - LIMS API always returns success
-        note_url=get_note_url()
         $.getJSON(note_url, function(newdata) {
           var newNote = false;
           $.each(newdata, function(date, note) {
             if(data['note'] == note['note']){
-              newNote = make_running_note(date, note);
+              newNote = make_running_note(date, note); // defined in running_notes.js
             }
           });
           if(newNote){
@@ -284,19 +288,18 @@ $("#running_notes_form").submit( function(e) {
               $('#running_notes_panels .well').slideUp(function(){ $(this).remove(); });
             }
             // Create a new running note and slide it in..
-            var now = new Date();
+            var now = new Date().toISOString().slice(0, 19).replace('T', ' ');
             // defined in running_notes.js
             category=generate_category_label(category);
-            // should be set when clicking the button 'See All'
-            var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
             $('<div class="running-notes-panel panel panel-success" id="running-note-'+project_id+'"><div class="panel-heading">'+
                   '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
-                  now.toDateString() + ', ' + now.toLocaleTimeString(now)+ category +
+                  now + category +
                 '</div><div class="panel-body">'+make_markdown(data['note'])+
                 '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
-            check_img_sources($('#running_notes_panels img'));
             // Enable the submit button again
             $('#save_note_button').removeClass('disabled').text('Submit Running Note');
+            // add latest running note
+            $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note').text(now+' - ' +data['note']);
           } else {
             alert('Error - LIMS did not save your running note.');
             // Enable the submit button again
