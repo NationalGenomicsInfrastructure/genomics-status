@@ -474,10 +474,11 @@ class RunningNotesDataHandler(SafeHandler):
         p = Project(lims, id=project)
         try:
             p.get(force=True)
-        except: # Don't want to create dependency on urllib2 just to catch a HTTPError
-            raise tornado.web.HTTPError(404, reason='Project not found: {}'.format(project))
-            # self.set_status(404)
-            # self.write('{}')
+        except:
+            # raise will stop the script and function never goes till the end (the same for 404 status)
+            # Then, the button will stay disabled and etc
+            self.set_status(201)
+            self.write({})
         # Sorted running notes, by date
         running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
         sorted_running_notes = OrderedDict()

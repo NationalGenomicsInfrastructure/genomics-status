@@ -85,7 +85,8 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
         <dl class="dl-horizontal hide-incoming">
           <dt>Project running note:</dt>
           <dd>
-            <button data-toggle="modal" data-target="#runningNotesModal" class="btn btn-xs btn-default pull-right runningNotesModal_button project_runningNotes">See all</button>
+            <button data-toggle="modal" data-target="#runningNotesModalDeliveries"
+                    class="btn btn-xs btn-default pull-right runningNotesModalDeliveries_button project_runningNotes">See all</button>
             <div class="bi-project-note">{{ project['latest_running_note']['note'] }}</div>
           </dd>
         </dl>
@@ -180,12 +181,12 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 </div>
 
 <!-- Running Notes Modal -->
-<div class="modal fade" id="runningNotesModal" tabindex="-1" role="dialog" aria-labelledby="runningNotesModal_title">
+<div class="modal fade" id="runningNotesModalDeliveries" tabindex="-1" role="dialog" aria-labelledby="runningNotesModalDeliveries_title">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h3 class="modal-title" id="runningNotesModal_title">Running Notes</h3>
+        <h3 class="modal-title" id="runningNotesModalDeliveries_title" data-project-id="">Running Notes</h3>
       </div>
       <div class="modal-body">
 
@@ -198,6 +199,17 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                         <div class="col-md-6">
                             <h4>Write Running Note</h4>
                             <textarea rows="5" class="form-control" id="new_note_text" style="height:97px;"></textarea>
+
+                            <label>Category :</label>
+                            <select name="rn_cat" class="form-control" id="rn_category">
+                                <option value="Workset">Workset</option>
+                                <option value="Flowcell">Flowcell</option>
+                                <option value="Meeting">Meeting</option>
+                                <option value="Decision">Decision</option>
+                                <option value="Bioinformatics">Bioinformatics</option>
+                                <option value="User Communication">User Communication</option>
+                                <option value="" selected="selected">None</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <h4>Preview</h4>
@@ -217,13 +229,38 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
             </div>
         </form>
 
+        <!-- filter running notes -->
+        <div id="running_notes_filter" class="form-inline" style="margin-bottom:12px;">
+            <label>Search :</label>
+            <input type="text" class="form-control" id="rn_search" size=30 />
+            <label>Filter :</label>
+            <button id="rn_cat_all" type="button" class="btn btn-xs btnCatFilter glow">All</button>
+            <button id="rn_cat_workset" type="button" class="btn btn-xs btn-primary btnCatFilter">Workset</button>
+            <button id="rn_cat_flowcell" type="button" class="btn btn-xs btn-success btnCatFilter">Flowcell</button>
+            <button id="rn_cat_meeting" type="button" class="btn btn-xs btn-info btnCatFilter">Meeting</button>
+            <button id="rn_cat_decision" type="button" class="btn btn-xs btn-info btnCatFilter">Decision</button>
+            <button id="rn_cat_bioinfo" type="button" class="btn btn-xs btn-warning btnCatFilter">Bioinformatics</button>
+            <button id="rn_cat_uscom" type="button" class="btn btn-xs btn-danger btnCatFilter">User Communication</button>
+        </div>
+
+        {% set categories={ 'Workset': 'label-primary',
+                            'Flowcell': 'label-success',
+                            'Meeting': 'label-info',
+                            'Decision': 'label-info',
+                            'User Communication': 'label-danger',
+                            'Bioinformatics': 'label-warning',
+                            'All': 'label-default' } %}
         <!-- display running notes -->
         <!--on click will show only running notes for the selected project, and hide all the rest-->
         <div class="panel-group" id="running_notes_panels">
           {% for project_run_lane_sample, list_of_notes in running_notes.items() %}
             {% for timestamp, running_note in sorted(list_of_notes.items(), reverse=True) %}
               <div class="running-notes-panel panel panel-default" id="running-note-{{ project_run_lane_sample }}" style="display:none;">
-                <div class="panel-heading"><a href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ timestamp }}</div>
+                <div class="panel-heading"><a href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ timestamp }}
+                {% if running_note.get('category') %}
+                  <span class="label {{ categories.get(running_note.get('category'), 'All') }}">{{ running_note.get('category') }}</span>
+                {% end %}
+                </div>
                 <div class="panel-body">
                   <div class="mkdown">
                     {{ running_note['note'] }}
@@ -242,7 +279,6 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 </div>
 <!-- RUNNING NOTES HELP -->
 {% include "running_notes_help.html" %}
-
 
 <!-- Javascript -->
 <script src="../static/js/deliveries.js"></script>
