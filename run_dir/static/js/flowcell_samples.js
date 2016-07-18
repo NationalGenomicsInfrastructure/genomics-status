@@ -20,18 +20,8 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
     load_running_notes()
     load_links()
     // Fill in the main table with summary information
-    var tbody = '<tr> \
-                     <th>Sequencing done</th> \
-                     <td>' + data['seqdone'] + '</td> \
-                 </tr> \
-                 <tr> \
-                     <th>Demultiplex</th>';
-    if(data.hasOwnProperty("demuldone")){
-        tbody += '<td><span class="label label-success">Done</label></td>';
-    } else {
-        tbody += '<td><span class="label label-warning"">Pending</span></td></tr>';
-    }
-    tbody += "</tr>";
+    var tbody = '';
+
     if(data.hasOwnProperty("plist")){
         tbody += "<tr> \
             <th>Projects :</th>\
@@ -44,35 +34,40 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
     if(data.hasOwnProperty("demuldone")){
         // tresholds for the number of clusters: depending on the run mode
         var run_mode = data['run_mode'];
-        var treshold = '320';
+        var treshold = 0;
         if (run_mode == 'HiSeq X') {
-            treshold = '320';
+            treshold = 320;
         } else if (run_mode == 'RapidHighOutput') {
-            treshold = '188';
+            treshold = 188;
         } else if (run_mode == 'RapidRun') {
-            treshold = '114';
+            treshold = 114;
         } else if (run_mode == 'HighOutput') {
-            treshold = '143';
+            treshold = 143;
         }
         // First table - Overall lane stats
         for (lid=1; lid<9; lid++){
             var sbody = '';
-            var clusters_class = '';
-            if (data['lanedata'][lid]['clustersnb'] < treshold) {
-                clusters_class = 'warning';
-            } else {
-                clusters_class = 'success';
-            }
             if ('lanedata'in data && lid in data['lanedata']){
                 sbody = '<tr> \
                     <th>Total Yield (<abbr title="Megabases">Mb</abbr>):</th> \
                     <td class="text-left" >' + nice_numbers(data['lanedata'][lid]['yield']) + '</td> \
                     <th>Total clusters :</th> \
-                    <td class="text-left ' + clusters_class +
-                        '" data-toggle="tooltip" data-placement="bottom" title="Treshold: '+treshold+'million" >'
-                            + nice_numbers(data['lanedata'][lid]['clustersnb']) + '</td> \
+                    <td class="text-left ';
+                // parse millions from a string
+                var clusters_number = parseInt(data['lanedata'][lid]['clustersnb'].replace(/,/g, '')) / 1000000;
+                var clusters_class = '';
+                if (clusters_number < treshold) {
+                    clusters_class = 'warning';
+                } else {
+                    clusters_class = 'success';
+                }
+                if (treshold != 0) {
+                    sbody += clusters_class + '" data-toggle="tooltip" data-placement="bottom" title="Treshold: '+treshold+' million" >';
+                }
+                sbody += nice_numbers(data['lanedata'][lid]['clustersnb']) + '</td> \
                     <th>% bases > Q30:</th> \
                     <td class="text-left ';
+
                 q30=data['lanedata'][lid]['overthirty']
                 if (q30 < 30) sbody += 'danger';
                 else if(q30 < 80) sbody += 'warning';
