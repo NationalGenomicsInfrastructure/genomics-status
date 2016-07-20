@@ -315,7 +315,6 @@ $("#running_notes_form").submit( function(e) {
 //Filter notes by Category
 $('#running_notes_search').keyup(function() {
     var search=$('#running_notes_search').val();
-    console.log(search);
     search_running_notes(search);
 });
 
@@ -327,7 +326,6 @@ $('.btnCategoryFilter').click(function() {
         key='';
     }
     key = key.replace(/\s+/g, '');
-    console.log(key);
     filter_by_category(key);
 });
 
@@ -335,7 +333,6 @@ function filter_by_category(key){
     var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
     $('div#running_notes_panels div.running_notes_panel').hide();
     if (key == '') {
-        console.log($('#running_notes_panels #running-note-'+project_id));
         $('#running_notes_panels #running-note-'+project_id).show();
     } else {
         $('#running_notes_panels #running-note-'+project_id).hide();
