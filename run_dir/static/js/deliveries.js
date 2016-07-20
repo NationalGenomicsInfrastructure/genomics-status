@@ -283,7 +283,7 @@ $("#running_notes_form").submit( function(e) {
             $('#new_note_text').val('');
             $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
             $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
-            // Cler the 'no running notes found' box if it's there
+            // Clear the 'no running notes found' box if it's there
             if($('#running_notes_panels').html() == '<div class="well">No running notes found.</div>'){
               $('#running_notes_panels .well').slideUp(function(){ $(this).remove(); });
             }
@@ -309,3 +309,60 @@ $("#running_notes_form").submit( function(e) {
       }
     });
 });
+
+// filter by category
+
+//Filter notes by Category
+$('#running_notes_search').keyup(function() {
+    var search=$('#running_notes_search').val();
+    console.log(search);
+    search_running_notes(search);
+});
+
+$('.btnCategoryFilter').click(function() {
+    $('.btnCategoryFilter').each(function() {$(this).removeClass("glow")});
+    $(this).addClass("glow")
+    var key=$(this).text();
+    if (key == 'All'){
+        key='';
+    }
+    key = key.replace(/\s+/g, '');
+    console.log(key);
+    filter_by_category(key);
+});
+
+function filter_by_category(key){
+    var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
+    $('div#running_notes_panels div.running_notes_panel').hide();
+    if (key == '') {
+        console.log($('#running_notes_panels #running-note-'+project_id));
+        $('#running_notes_panels #running-note-'+project_id).show();
+    } else {
+        $('#running_notes_panels #running-note-'+project_id).hide();
+        $('#running_notes_panels #running-note-'+project_id + '.'+ key).show();
+    }
+};
+
+function search_running_notes(search) {
+    var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
+    $('div#running_notes_panels div.running-notes-panel').hide();
+
+     $('.btnCategoryFilter').each(function() {
+        if ($(this).text() == 'All') {
+            $(this).addClass('glow');
+        } else {
+            $(this).removeClass("glow")
+        }
+    });
+
+    if (search == "") {
+        $('#running_notes_panels #running-note-'+project_id).show();
+    } else {
+        $.each($('#running_notes_panels #running-note-'+project_id), function(index, panel){
+            var note = $(panel).children('.panel-body').children().text().toLowerCase();
+            if (note.indexOf(search) != -1) {
+                $(panel).show();
+            }
+        });
+    }
+};

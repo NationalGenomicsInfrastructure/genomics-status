@@ -232,15 +232,15 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
         <!-- filter running notes -->
         <div id="running_notes_filter" class="form-inline" style="margin-bottom:12px;">
             <label>Search :</label>
-            <input type="text" class="form-control" id="rn_search" size=30 />
+            <input type="text" class="form-control" id="running_notes_search" size=30 />
             <label>Filter :</label>
-            <button id="rn_cat_all" type="button" class="btn btn-xs btnCatFilter glow">All</button>
-            <button id="rn_cat_workset" type="button" class="btn btn-xs btn-primary btnCatFilter">Workset</button>
-            <button id="rn_cat_flowcell" type="button" class="btn btn-xs btn-success btnCatFilter">Flowcell</button>
-            <button id="rn_cat_meeting" type="button" class="btn btn-xs btn-info btnCatFilter">Meeting</button>
-            <button id="rn_cat_decision" type="button" class="btn btn-xs btn-info btnCatFilter">Decision</button>
-            <button id="rn_cat_bioinfo" type="button" class="btn btn-xs btn-warning btnCatFilter">Bioinformatics</button>
-            <button id="rn_cat_uscom" type="button" class="btn btn-xs btn-danger btnCatFilter">User Communication</button>
+            <button id="rn_cat_all" type="button" class="btn btn-xs btnCategoryFilter glow">All</button>
+            <button id="rn_cat_workset" type="button" class="btn btn-xs btn-primary btnCategoryFilter">Workset</button>
+            <button id="rn_cat_flowcell" type="button" class="btn btn-xs btn-success btnCategoryFilter">Flowcell</button>
+            <button id="rn_cat_meeting" type="button" class="btn btn-xs btn-info btnCategoryFilter">Meeting</button>
+            <button id="rn_cat_decision" type="button" class="btn btn-xs btn-info btnCategoryFilter">Decision</button>
+            <button id="rn_cat_bioinfo" type="button" class="btn btn-xs btn-warning btnCategoryFilter">Bioinformatics</button>
+            <button id="rn_cat_uscom" type="button" class="btn btn-xs btn-danger btnCategoryFilter">User Communication</button>
         </div>
 
         {% set categories={ 'Workset': 'label-primary',
@@ -255,7 +255,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
         <div class="panel-group" id="running_notes_panels">
           {% for project_run_lane_sample, list_of_notes in running_notes.items() %}
             {% for timestamp, running_note in sorted(list_of_notes.items(), reverse=True) %}
-              <div class="running-notes-panel panel panel-default" id="running-note-{{ project_run_lane_sample }}" style="display:none;">
+              <div class="running-notes-panel panel panel-default {{ running_note.get('category', '').replace(' ', '') }}" id="running-note-{{ project_run_lane_sample }}" style="display:none;">
                 <div class="panel-heading"><a href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ timestamp[:-7] }}
                 {% if running_note.get('category') %}
                   <span class="label {{ categories.get(running_note.get('category'), 'All') }}">{{ running_note.get('category') }}</span>
