@@ -91,6 +91,11 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             col_color=color_by_month(data[d].id);
         }else{
             col_color=color_by_type(data[d].instrument);
+            if (data[d].instrument.substr(0,1) == 'D' && data[d].mode == "Rapid"){
+                col_color=chroma(col_color).brighten();
+            }
+
+
         }
         if (filter_inst.length!=0){
             var skip=false;
