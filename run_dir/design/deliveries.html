@@ -191,7 +191,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
       <div class="modal-body">
 
         <!-- add running note -->
-        <form action="" method="POST" id="running_notes_form" role="form">
+        <form action="" method="POST" id="notes_form" role="form">
             <div class="panel panel-info">
                 <div class="panel-heading">Add New Running Note</div>
                 <div class="panel-body">
@@ -256,7 +256,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           {% for project_run_lane_sample, list_of_notes in running_notes.items() %}
             {% for timestamp, running_note in sorted(list_of_notes.items(), reverse=True) %}
               <div class="running-notes-panel panel panel-default {{ running_note.get('category', '').replace(' ', '') }}" id="running-note-{{ project_run_lane_sample }}" style="display:none;">
-                <div class="panel-heading"><a href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ timestamp[:-7] }}
+                <div class="panel-heading"><a href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ timestamp }}
                 {% if running_note.get('category') %}
                   <span class="label {{ categories.get(running_note.get('category'), 'All') }}">{{ running_note.get('category') }}</span>
                 {% end %}

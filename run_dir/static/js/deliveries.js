@@ -50,9 +50,8 @@ $('.bioinfo-running-notes-save').click(function(e) {
             $(td).attr('data-running-note', data['note']);
             $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note').text(data['note']);
             // add to the project running_notes
-            var running_note_id = [project_id, run_id, lane_id, sample_id].join(' ').trim().replace(/\s+/g, '-');
             // new notes are displayed in green
-            var new_note_html = '<div class="running-notes-panel panel panel-success" id="running-note-'+running_note_id+'" style="display:none;">' +
+            var new_note_html = '<div class="running-notes-panel panel panel-success" id="running-note-'+project_id+'" style="display:none;">' +
                   '<div class="panel-heading"><a href="mailto:'+data['email']+'">'+ data['user'] + '</a> - '+ data["timestamp"]+'</div>' +
                   '<div class="panel-body"><div class="mkdown">'+data['note']+'</div></div></div>';
             // marked is defined in base.js. Do not use make_markdown - it breaks html!
@@ -241,7 +240,7 @@ $('.none-responsibles').click(function(){
 
 // not using running_notes.js anymore
 // Insert new running note and reload the running notes table
-$("#running_notes_form").submit( function(e) {
+$("#notes_form").submit( function(e) {
     e.preventDefault();
     // should be set when clicking the button 'See All'
     var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
