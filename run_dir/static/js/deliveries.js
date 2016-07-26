@@ -237,6 +237,13 @@ $('.none-responsibles').click(function(){
     $('.bi-responsible-checkbox:checked').prop('checked', false).trigger('change');
 });
 
+var categories={ 'Workset': 'label-primary',
+                            'Flowcell': 'label-success',
+                            'Meeting': 'label-info',
+                            'Decision': 'label-info',
+                            'User Communication': 'label-danger',
+                            'Bioinformatics': 'label-warning',
+                            'All': 'label-default' }
 
 // not using running_notes.js anymore
 // Insert new running note and reload the running notes table
@@ -288,11 +295,11 @@ $("#notes_form").submit( function(e) {
             }
             // Create a new running note and slide it in..
             var now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-            // defined in running_notes.js
-            category=generate_category_label(category);
-            $('<div class="running-notes-panel panel panel-success" id="running-note-'+project_id+'"><div class="panel-heading">'+
+            var category_span = " <span class='label " + categories[category] + "'>"+category+"</span>";
+            $('<div class="running-notes-panel panel panel-success ' + category.replace(/\s+/, '') +
+                '" id="running-note-'+project_id+'"><div class="panel-heading">'+
                   '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
-                  now + category +
+                  now + category_span +
                 '</div><div class="panel-body">'+make_markdown(data['note'])+
                 '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
             // Enable the submit button again
