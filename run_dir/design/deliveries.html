@@ -79,7 +79,15 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           <small>
             &nbsp; <span class="bi-project-facility label {% if project['type'] == 'Application' %} label-success {% else %} label-primary {% end %}">{{ project.get('type') }}</span>
             <span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">{{ project['application'] }}</span>
-            &nbsp; <span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">{{ project['bioinfo_responsible'] }}</span>
+            &nbsp; <span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">{{ project['bioinfo_responsible'] }} </span>
+              <select class="input-small edit-bi-project-assigned" style="display:none;">
+                {% for responsible in lims_responsibles %}
+                  <option value="{{ responsible }}" {% if project['bioinfo_responsible'] == responsible %} selected {% end %}>{{ responsible }}</option>
+                {% end %}
+              </select>
+              <span class="button-edit-bioinfo-responsible glyphicon glyphicon-pencil"></span>
+              <span class="button-save-bioinfo-responsible glyphicon glyphicon-ok" style="display:none;"></span>
+              <span class="button-reset-bioinfo-responsible glyphicon glyphicon-remove" style="display:none;"></span>
           </small>
         </h3>
         <dl class="dl-horizontal hide-incoming">
