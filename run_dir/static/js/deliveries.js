@@ -272,11 +272,12 @@ $('.button-save-bioinfo-responsible').click(function() {
                 console.log(errorThrown);
             },
             success: function(data, textStatus, xhr) {
-                var success_msg = $('<span class="delivery-saved-status">    Updated<span class="glyphicon glyphicon-ok"></span></span>');
-                success_msg.appendTo($(parent).find('.button-edit-bioinfo-responsible')).delay(800).fadeOut(1800, function(){ $(this).remove(); });
+                var success_msg = $('<span id="bioinfo-resp-status" class="delivery-saved-status">    Updated<span class="glyphicon glyphicon-ok"></span></span>');
+                success_msg.appendTo($(parent).find('.button-edit-bioinfo-responsible')).fadeOut(1600, function(){ $(this).remove(); });
             }
         });
     }
+
     $(this).parent().find('.bi-project-assigned').text(responsible).show();
     $(this).parent().find('.edit-bi-project-assigned').hide();
     $(this).parent().find('.button-edit-bioinfo-responsible').show();

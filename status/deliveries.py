@@ -12,7 +12,7 @@ class DeliveriesPageHandler(SafeHandler):
 
     def post(self):
         project_id = self.get_argument('project_id', '')
-        responsible = self.get_argument('responsible', '').decode('ascii')
+        responsible = self.get_argument('responsible', '')
         if not project_id or not responsible:
             self.set_status(400)
             self.write('no project_id or bioinfo_responsible')
@@ -36,7 +36,7 @@ class DeliveriesPageHandler(SafeHandler):
             return
 
         process = process[0]
-        process.udf['Bioinfo responsible'] = unicode(responsible)
+        process.udf['Bioinfo responsible'] = responsible
         try:
             process.put()
         except Exception, e:
@@ -224,7 +224,8 @@ class DeliveriesPageHandler(SafeHandler):
                 latest_running_note = running_notes[latest_timestamp]
 
                 # responsibles (needed for filters)
-                bioinfo_responsible = summary_data[project_id].get('project_summary', {}).get('bioinfo_responsible', 'unassigned')
+                bioinfo_responsible = summary_data[project_id].get('project_summary', {}).get('bioinfo_responsible') or 'unassigned'
+
                 if bioinfo_responsible not in responsible_list:
                     responsible_list[bioinfo_responsible] = 0
                 responsible_list[bioinfo_responsible] += 1
@@ -245,7 +246,10 @@ class DeliveriesPageHandler(SafeHandler):
                 }
 
             ongoing_deliveries[project_id].update(project_data)
-        lims_responsibles = ['unassigned'] + sorted(Udfconfig(lims, id="1128").presets)
+        try:
+            lims_responsibles = ['unassigned'] + sorted(Udfconfig(lims, id="1128").presets)
+        except Exception, e:
+            lims_responsibles = ['unassigned'] + sorted(responsible_list)
         template = self.application.loader.load("deliveries.html")
         self.write(template.generate(gs_globals=self.application.gs_globals,
                                      deliveries=ongoing_deliveries,
