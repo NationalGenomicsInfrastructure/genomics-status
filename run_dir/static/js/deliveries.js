@@ -199,7 +199,8 @@ $(".fc-status-checkbox").change(function() {
 });
 
 // filter projects by bioinfo responsible
-$(".bi-responsible-checkbox").change(function() {
+// instead of '$(.bi-checkbox)'.change() because it doesn't work with dinamically added checkboxes
+$(document.body).on('change', '.bi-responsible-checkbox', function() {
     var bioinfo_responsible = $(this).val();
     var show = $(this).is(':checked');
     if (show) {
@@ -289,7 +290,7 @@ $('.button-save-bioinfo-responsible').click(function() {
                         '<input class="bi-responsible-checkbox" type="checkbox" value="'+responsible +'" checked> ' + responsible + ' ' +
                         '<span class="badge badge-small"> 1</span></label>' +
                         "</div>")
-                    new_checkbox.prependTo($('.responsible-filters div.form-group:first'));
+                    new_checkbox.insertBefore($('.responsible-filters div.form-group:first'));
                 }
                 // reduce number for previous responsible
                 checkbox = $('input.bi-responsible-checkbox[value="'+old_responsible+'"]');
