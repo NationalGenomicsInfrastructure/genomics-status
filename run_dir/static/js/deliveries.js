@@ -243,7 +243,7 @@ $('.button-edit-bioinfo-responsible').click(function() {
 
 // reset bioinfo responsible
 $('.button-reset-bioinfo-responsible').click(function() {
-    var responsible = $(this).parent().find('.bi-project-assigned').text().trim(); //.replace(/\s+/, '');
+    var responsible = $(this).parent().find('.bi-project-assigned').text().trim();
     $(this).parent().find('.bi-project-assigned').show();
     $(this).parent().find('.edit-bi-project-assigned').val(responsible).hide();
     $(this).parent().find('.button-edit-bioinfo-responsible').show();
@@ -274,13 +274,38 @@ $('.button-save-bioinfo-responsible').click(function() {
             success: function(data, textStatus, xhr) {
                 var success_msg = $('<span id="bioinfo-resp-status" class="delivery-saved-status">    Updated<span class="glyphicon glyphicon-ok"></span></span>');
                 success_msg.appendTo($(parent).find('.button-edit-bioinfo-responsible')).fadeOut(1600, function(){ $(this).remove(); });
+
+                // update filters
+                var checkbox = $('input.bi-responsible-checkbox[value="'+responsible+'"]');
+                // if checkbox exists
+                if ($(checkbox).length != 0) {
+                    // reduce number of projects
+                    var number = parseInt($(checkbox).parent().find('span.badge').text());
+                    $(checkbox).parent().find('span.badge').text(number + 1);
+                } else {
+                    // if doesn't exist - create a new one
+                    var new_checkbox = $('<div class="form-group">' +
+                        '<label class="checkbox-inline">' +
+                        '<input class="bi-responsible-checkbox" type="checkbox" value="'+responsible +'" checked> ' + responsible + ' ' +
+                        '<span class="badge badge-small"> 1</span></label>' +
+                        "</div>")
+                    new_checkbox.prependTo($('.responsible-filters div.form-group:first'));
+                }
+                // reduce number for previous responsible
+                checkbox = $('input.bi-responsible-checkbox[value="'+old_responsible+'"]');
+                number = parseInt($(checkbox).parent().find('span.badge').text());
+                // remove checkbox if there was only one project for the old responsible
+                if (number == 1) {
+                    $(checkbox).closest('div').remove();
+                } else {
+                    $(checkbox).parent().find('span.badge').text(number - 1);
+                }
             }
         });
     }
-
-    $(this).parent().find('.bi-project-assigned').text(responsible).show();
-    $(this).parent().find('.edit-bi-project-assigned').hide();
-    $(this).parent().find('.button-edit-bioinfo-responsible').show();
-    $(this).parent().find('.button-save-bioinfo-responsible').hide();
-    $(this).parent().find('.button-reset-bioinfo-responsible').hide();
+    $(parent).find('.bi-project-assigned').text(responsible).show();
+    $(parent).find('.edit-bi-project-assigned').hide();
+    $(parent).find('.button-edit-bioinfo-responsible').show();
+    $(parent).find('.button-save-bioinfo-responsible').hide();
+    $(parent).find('.button-reset-bioinfo-responsible').hide();
 });
