@@ -43,6 +43,10 @@ $.getJSON("/api/v1/flowcell_info2/"+flowcell, function(data) {
             treshold = 114;
         } else if (run_mode == 'HighOutput') {
             treshold = 143;
+        } else if (run_mode == 'MiSeq Version2') {
+            treshold = 10;
+        } else if (run_mode == 'MiSeq Version3') {
+            treshold = 18;
         }
         // First table - Overall lane stats
         for (lid=1; lid<9; lid++){
