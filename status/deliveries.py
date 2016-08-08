@@ -5,7 +5,7 @@ from status.util import SafeHandler
 
 from genologics.config import BASEURI, USERNAME, PASSWORD
 from genologics import lims
-from genologics.entities import Udfconfig
+from genologics.entities import Udfconfig, Project as LIMSProject
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
 class DeliveriesPageHandler(SafeHandler):
@@ -17,18 +17,14 @@ class DeliveriesPageHandler(SafeHandler):
             self.set_status(400)
             self.write('no project_id or bioinfo_responsible')
             return
-        lims_projects = lims.get_projects()
-        lims_project = None
-        for project in lims_projects:
-            if project.id == project_id:
-                lims_project = project.name
-                break
-        if lims_project is None:
+        lims_project = LIMSProject(lims, id=project_id)
+        if not lims_project:
             self.set_status(400)
             self.write('lims project not found: {}'.format(project_id))
             return
+        project_name = lims_project.name
         stepname=['Project Summary 1.3']
-        process=lims.get_processes(type=stepname, projectname=lims_project)
+        process=lims.get_processes(type=stepname, projectname=project_name)
         if process == []:
             error = "{} for {} is not available in LIMS.".format(stepname, limsproject)
             self.set_status(400)
