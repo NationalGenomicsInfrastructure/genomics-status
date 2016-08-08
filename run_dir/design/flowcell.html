@@ -125,6 +125,8 @@
                     <th>Total:</th><th>{{ total_undetermined }}</th><th>100%</th>
                     {% for sample in flowcell['lane'][lane_number] %}
                       {% if sample['barcode'] != 'unknown' %}
+                        {% if re.match(('N|)(').join(sample.get('barcode').split() + 'N)$'), undetermined)
+                            bc = '^('+bc.split('').join('|N)(')+'|N)$';
                         <th>{{ sample['barcode'] }} mismatches</th>
                       {% end %}
                     {% end %}
@@ -162,5 +164,6 @@
 
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell_id }}"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell_id }}"></script>
-<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell_id }}"></script>
+<!--<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell_id }}"></script>-->
+<script src="/static/js/flowcell_samples.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell_id }}"></script>
 {% end %}

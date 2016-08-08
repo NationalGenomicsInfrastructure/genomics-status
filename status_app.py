@@ -27,7 +27,7 @@ from status.deliveries import DeliveriesPageHandler
 from status.flowcell import FlowcellHandler
 from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandler, \
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
-    FlowcellsHandler, ReadsTotalHandler
+    FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.phix_err_rate import PhixErrorRateDataHandler, PhixErrorRateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
@@ -101,10 +101,13 @@ class Application(tornado.web.Application):
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
             ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
+            ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
+            ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
             ("/api/v1/flowcell_demultiplex/([^/]*)$",
                 FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
+            # ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
             ("/api/v1/flowcell_notes/([^/]*)$", FlowcellNotesDataHandler),
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
@@ -322,6 +325,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/error_page.html")
             tornado.autoreload.watch("design/expected.html")
             tornado.autoreload.watch("design/flowcell.html")
+            tornado.autoreload.watch("design/flowcell_samples.html")
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
