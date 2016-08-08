@@ -12,7 +12,7 @@
     {% elif application == 'customCap' %}
       <colgroup class="bioinfo-app-customCap"></colgroup>
     {% elif application == 'WGreseq' %}
-      <colgroup class="bioinfo-app-WGreseq" span="2"></colgroup>
+      <colgroup class="bioinfo-app-WGreseq" span="3"></colgroup>
     {% elif application == 'denovo' %}
       <colgroup class="bioinfo-app-denovo" span="1"></colgroup>
     {% elif application == 'applications' %}
@@ -26,7 +26,7 @@
       <th colspan="3">Sample</th>
       <th colspan="3">Multiplex QC</th>
       <th colspan="2">Quality</th>
-      <th colspan="2">Contamination screen</th>
+      <th colspan="2">Contamination</th>
       {% if application == 'rnaseq' %}
         <th class="bioinfo-app-rnaseq" colspan="2">RNA-Seq</th>
       {% elif application == 'exome' %}
@@ -34,7 +34,7 @@
       {% elif application == 'customCap' %}
         <th class="bioinfo-app-customCap">Custom capture</th>
       {% elif application == 'WGreseq' %}
-        <th class="bioinfo-app-WGreseq" colspan="2">WG Reseq</th>
+        <th class="bioinfo-app-WGreseq" colspan="3">WG Reseq</th>
       {% elif application == 'denovo' %}
         <th class="bioinfo-app-denovo" colspan="1">De novo / Mate-Pair</th>
       {% elif application == 'applications' %}
@@ -49,23 +49,24 @@
       <th>Sample</th>
       <th>Status</th>
       <th>Fill row</th>
-     <th class="bioinfo-status-th bioinfo-status-qc undemultiplexedreads">Undemultiplexed reads</th>
-      <th class="bioinfo-status-th bioinfo-status-qc unexpectedindexes">Unexpected indexes</th>
-      <th class="bioinfo-status-th bioinfo-status-qc lowsampleyield">Low sample yield</th>
+     <th class="bioinfo-status-th bioinfo-status-qc undemultiplexedreads">Undetermined<br>indexes</th>
+      <th class="bioinfo-status-th bioinfo-status-qc unexpectedindexes">Unexpected<br>indexes</th>
+      <th class="bioinfo-status-th bioinfo-status-qc lowsampleyield">Sample yield</th>
       <th class="bioinfo-status-th bioinfo-status-qc phixerrorrate">PhiX error rate</th>
       <th class="bioinfo-status-th bioinfo-status-qc basesq30">%bases >= Q30</th>
       <th class="bioinfo-status-th bioinfo-status-qc fastq_screen">fastq_screen</th>
       <th class="bioinfo-status-th bioinfo-status-qc blast_wrapper">blast_wrapper</th>
       {% if application =='rnaseq' %}
-        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_sequenceduplication">Sequence duplication</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_sequenceduplication">Sequence<br>duplication</th>
         <th class="bioinfo-status-th bioinfo-status-bp rnaseq_uniquemappingrate">Unique mapping rate</th>
       {% elif application == 'exome' %}
-        <th class="bioinfo-status-th bioinfo-status-bp exome_sequenceduplication">Sequence duplication</th>
+        <th class="bioinfo-status-th bioinfo-status-bp exome_sequenceduplication">Sequence<br>duplication</th>
         <th class="bioinfo-status-th bioinfo-status-bp exome_targets10xcoverage">% Targets @10X coverage</th>
       {% elif application == 'customCap' %}
         <th class="bioinfo-status-th bioinfo-status-bp customCap_enrichment">Enrichment</th>
       {% elif application == 'WGreseq' %}
-        <th class="bioinfo-status-th bioinfo-status-bp WGreseq_sequenceduplication">Sequence duplication</th>
+        <th class="bioinfo-status-th bioinfo-status-bp WGreseq_coverage">Coverage</th>
+        <th class="bioinfo-status-th bioinfo-status-bp WGreseq_sequenceduplication">Sequence<br>duplication</th>
         <th class="bioinfo-status-th bioinfo-status-bp WGreseq_mappingrate">Mapping rate</th>
       {% elif application == 'denovo' %}
         <th class="bioinfo-status-th bioinfo-status-bp denovo">De Novo / Mait Pair</th>
@@ -103,6 +104,7 @@
           {% elif application == 'customCap' %}
             <td class="bioinfo-status-bp customCap_enrichment unknown">?</td>
           {% elif application == 'WGreseq' %}
+            <td class="bioinfo-status-bp WGreseq_coverage unknown">?</td>
             <td class="bioinfo-status-bp WGreseq_sequenceduplication unknown">?</td>
             <td class="bioinfo-status-bp WGreseq_mappingrate unknown">?</td>
           {% elif application == 'denovo' %}
@@ -146,6 +148,7 @@
           {% elif application == 'customCap' %}
             <td class="bioinfo-status-bp customCap_enrichment unknown">?</td>
           {% elif application == 'WGreseq' %}
+            <td class="bioinfo-status-bp WGreseq_coverage unknown">?</td>
             <td class="bioinfo-status-bp WGreseq_sequenceduplication unknown">?</td>
             <td class="bioinfo-status-bp WGreseq_mappingrate unknown">?</td>
           {% elif application == 'denovo' %}
@@ -201,6 +204,7 @@
                 <td class="bioinfo-status-bp customCap_enrichment {{ qc_css.get(lane.get('customCap_enrichment', '?'), 'unknown') }}">
                   {{ lane.get('bp', {}).get('customCap_enrichment', '?') }}</td>
               {% elif application == 'WGreseq' %}
+                <td class="bioinfo-status-bp WGreseq_coverage {{ qc_css.get(sample.get('bp', {}).get('WGreseq_coverage', '?'), 'unknown') }}">?</td>
                 <td class="bioinfo-status-bp WGreseq_sequenceduplication {{ qc_css.get(lane.get('bp', {}).get('WGreseq_sequenceduplication', '?'), 'unknown') }}">
                   {{ lane.get('bp', {}).get('WGreseq_sequenceduplication', '?') }}</td>
                 <td class="bioinfo-status-bp WGreseq_mappingrate {{ qc_css.get(lane.get('WGreseq_mappingrate', '?'), 'unknown') }}">
