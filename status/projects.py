@@ -474,10 +474,11 @@ class RunningNotesDataHandler(SafeHandler):
         p = Project(lims, id=project)
         try:
             p.get(force=True)
-        except: # Don't want to create dependency on urllib2 just to catch a HTTPError
-            raise tornado.web.HTTPError(404, reason='Project not found: {}'.format(project))
-            # self.set_status(404)
-            # self.write('{}')
+        except:
+            # raise will stop the script and function never goes till the end (the same for 404 status)
+            # Then, the button will stay disabled and etc
+            self.set_status(201)
+            self.write({})
         # Sorted running notes, by date
         running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
         sorted_running_notes = OrderedDict()
@@ -490,15 +491,16 @@ class RunningNotesDataHandler(SafeHandler):
         category = self.get_argument('category', '')
         user = self.get_secure_cookie('user')
         email = self.get_secure_cookie('email')
+        timestamp = str(datetime.datetime.now())[:-7]
         if not note:
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
-            newNote = {'user': user, 'email': email, 'note': note, 'category' : category}
+            newNote = {'user': user, 'email': email, 'note': note, 'category' : category, 'timestamp': timestamp}
             p = Project(lims, id=project)
             p.get(force=True)
             running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
-            running_notes[str(datetime.datetime.now())] = newNote
+            running_notes[timestamp] = newNote
             p.udf['Running Notes'] = json.dumps(running_notes)
             p.put()
             #saving running notes directly in genstat, because reasons.

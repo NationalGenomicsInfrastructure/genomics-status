@@ -166,58 +166,10 @@ class DeliveriesPageHandler(SafeHandler):
                     if flowcell_status not in project_status[project_id]:
                         project_status[project_id].append(flowcell_status)
 
-                # parse running notes
-                for timestamp, running_note in running_notes.items():
-                    # define the level of the running_note
-                    note_level = [project_id]
-                    # to remove run, lane and sample id from the running note
-                    note = running_note['note']
-
-
-                    # ':::' is added in js, when saving running note
-                    # ':::' separates run_id, lane_id and sample_id from running note
-                    if '::: ' in running_note['note']:
-                        # in case if ':::' occurs more than 1 time (it must occur at least once, because of if)
-                        note = ':::'.join([item for item in note.split(':::')[1:]])
-
-                        run_lane_sample = running_note['note'].split(':::')[0]
-                        run_lane_sample = run_lane_sample.split()
-
-                        # the key becomes [project_id, run_id, lane, sample_id]
-                        note_level += run_lane_sample
-
-                    bioinfo_level = {}
-                    try:
-                        # can be ValueError -> if we are on the wrong level (too many values to unpack)
-                        project_id, run_id, lane_id, sample_id = note_level
-                        # or KeyError -> if we are trying to access a value which does not exist in runs_bioinfo
-                        bioinfo_level = runs_bioinfo[run_id]['lanes'][lane_id]['samples'][sample_id]
-                    except (KeyError, ValueError): # -> too many values
-                        try:
-                            project_id, run_id, lane_id = note_level
-                            bioinfo_level = runs_bioinfo[run_id]['lanes'][lane_id]
-                        except (KeyError, ValueError): # still too many values
-                            try:
-                                project_id, run_id = note_level
-                                bioinfo_level = runs_bioinfo[run_id]
-                            except (KeyError, ValueError): # again too many
-                                # now whatever happens, we put the running note on the project level
-                                pass
-
-                    if bioinfo_level:
-                        if not 'latest_running_note' in bioinfo_level or timestamp > bioinfo_level['latest_running_note']['timestamp']:
-                            # .copy() is needed in order to modify running note without changing it on the project level
-                            bioinfo_level['latest_running_note'] = running_note.copy()
-                            # remove run, lane and sample id from the running_note
-                            bioinfo_level['latest_running_note']['note'] = note
-                            bioinfo_level['latest_running_note']['timestamp'] = timestamp
-
-                    if project_id not in all_running_notes:
-                        all_running_notes[project_id] = {}
-                    all_running_notes[project_id][timestamp] = running_note
-
+                all_running_notes.update(self.__parse_running_notes(running_notes, project_id, runs_bioinfo))
                 latest_timestamp = max(running_notes.keys())
                 latest_running_note = running_notes[latest_timestamp]
+                latest_running_note['timestamp'] = latest_timestamp[:-7] # to get rid of milliseconds
 
                 # responsibles (needed for filters)
                 bioinfo_responsible = summary_data[project_id].get('project_summary', {}).get('bioinfo_responsible') or 'unassigned'
@@ -318,3 +270,55 @@ class DeliveriesPageHandler(SafeHandler):
                 checklist['total'].remove(key)
             # else: do not do anything if '?' or anything else
         return checklist
+
+    def __parse_running_notes(self, running_notes, project_id, runs_bioinfo):
+        # # parse running notes
+        all_running_notes = {}
+        for timestamp, running_note in running_notes.items():
+            # define the level of the running_note
+            note_level = [project_id]
+            # to remove run, lane and sample id from the running note
+            note = running_note['note']
+
+            # ':::' is added in js, when saving running note
+            # ':::' separates run_id, lane_id and sample_id from running note
+            if '::: ' in running_note['note']:
+                # in case if ':::' occurs more than 1 time (it must occur at least once, because of if)
+                note = ':::'.join([item for item in note.split(':::')[1:]])
+
+                run_lane_sample = running_note['note'].split(':::')[0]
+                run_lane_sample = run_lane_sample.split()
+
+                # the key becomes [project_id, run_id, lane, sample_id]
+                note_level += run_lane_sample
+
+            bioinfo_level = {}
+            try:
+                # can be ValueError -> if we are on the wrong level (too many values to unpack)
+                project_id, run_id, lane_id, sample_id = note_level
+                # or KeyError -> if we are trying to access a value which does not exist in runs_bioinfo
+                bioinfo_level = runs_bioinfo[run_id]['lanes'][lane_id]['samples'][sample_id]
+            except (KeyError, ValueError): # -> too many values
+                try:
+                    project_id, run_id, lane_id = note_level
+                    bioinfo_level = runs_bioinfo[run_id]['lanes'][lane_id]
+                except (KeyError, ValueError): # still too many values
+                    try:
+                        project_id, run_id = note_level
+                        bioinfo_level = runs_bioinfo[run_id]
+                    except (KeyError, ValueError): # again too many
+                        # now whatever happens, we put the running note on the project level
+                        pass
+
+            if bioinfo_level:
+                if not 'latest_running_note' in bioinfo_level or timestamp > bioinfo_level['latest_running_note']['timestamp']:
+                    # .copy() is needed in order to modify running note without changing it on the project level
+                    bioinfo_level['latest_running_note'] = running_note.copy()
+                    # remove run, lane and sample id from the running_note
+                    bioinfo_level['latest_running_note']['note'] = note
+                    bioinfo_level['latest_running_note']['timestamp'] = timestamp
+
+            if project_id not in all_running_notes:
+                all_running_notes[project_id] = {}
+            all_running_notes[project_id][timestamp] = running_note
+        return all_running_notes
