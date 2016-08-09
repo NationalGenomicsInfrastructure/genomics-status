@@ -29,7 +29,7 @@ class FlowcellHandler(SafeHandler):
                                   user=self.get_current_user_name(),
                                   error="Oops! Sorry about that, we can't find the flow cell {}".format(flowcell_id)))
             return
-        
+
         tresholds = {
             'HiSeq X': 320,
             'RapidHighOutput': 188,
