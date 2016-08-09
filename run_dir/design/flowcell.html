@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block stuff %}
+{% import re %}
 <div id="page_content">
   {% if locals().get('error', False) %}
     <h1>Error - Flow Cell Not Found</h1>
@@ -30,7 +31,7 @@
       <div class="tab-pane fade in active" id="tab_flowcell_information">
         <h3>Lane Information</h3>
         <div id="lanes">
-          {% for lane_number, lane in flowcell['lanedata'].items() %}
+          {% for lane_number, lane in sorted(flowcell['lanedata'].items(), key=lambda x:x[0]) %}
             <div id="lane_{{ lane_number }}" class="sublane">
               <h4>Lane {{ lane_number }}
                 <button id="ud_button_lane_' +lid + '" class="undetermined-btn btn btn-info btn-sm"
@@ -67,13 +68,7 @@
                     {% end %}
                   </tr>
                 </tbody>
-                <!--// here can be a problem -->
-                <!--} else if (data['yields'][lid] != 0){-->
-                        <!--sbody='<tr><th>Total Yield (<abbr title="Megabases">Mb</abbr>):</th> \-->
-                        <!--<td>' + data['yields'][lid]+ '</td></tr>';-->
-                <!--}-->
               </table>
-
               <br>
               <table class="table table-bordered" id="table_lane_{{ lane_number }}">
                 <tbody>
@@ -123,16 +118,16 @@
                 <table class="undetermined " id="table_ud_lane_{{ lane_number }}" style="display:none;">
                   <tr>
                     <th>Total:</th><th>{{ total_undetermined }}</th><th>100%</th>
-                    {% for sample in flowcell['lane'][lane_number] %}
-                      {% if sample['barcode'] != 'unknown' %}
-                        {% if re.match(('N|)(').join(sample.get('barcode').split() + 'N)$'), undetermined)
-                            bc = '^('+bc.split('').join('|N)(')+'|N)$';
-                        <th>{{ sample['barcode'] }} mismatches</th>
+                    {% set barcodes=[] %}
+                    {% for barcode in flowcell['lane'][lane_number] %}
+                      {% if barcode['barcode'] != 'unknown' %}
+                        <th>{{ barcode['barcode'] }} mismatches</th>
+                      {% set barcodes = barcodes + [barcode['barcode']] %}
                       {% end %}
                     {% end %}
-                    </tr>
-                  {% for undetermined, number in sorted(flowcell['undetermined'][lane_number].items(), key=lambda x: x[1], reverse=True) %}
-                    <tr class="">
+                  </tr>
+                  {% for undetermined, number in sorted(flowcell['undetermined'].get(lane_number, {}).items(), key=lambda x: x[1], reverse=True) %}
+                    <tr class="{% if barcodes and any([re.match( '^(' + '('.join(a.replace('+', '-')+'|N)' for a in barcode) + '$', undetermined) for barcode in barcodes ]) %}undetermined-highlight{% end %}">
                       <td><samp>{{ undetermined }}</samp></td>
                       <td>{{ number }}</td>
                       <td>{{ float("{0:.2f}".format(100 * float(number)/float(total_undetermined))) }}%</td>
@@ -164,6 +159,6 @@
 
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell_id }}"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell_id }}"></script>
-<!--<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell_id }}"></script>-->
-<script src="/static/js/flowcell_samples.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell_id }}"></script>
+<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell_id }}"></script>
+<!--<script src="/static/js/flowcell_samples.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell_id }}"></script>-->
 {% end %}
