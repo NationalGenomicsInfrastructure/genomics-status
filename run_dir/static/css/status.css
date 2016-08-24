@@ -963,3 +963,7 @@ div.responsible-filters div.form-group {
   line-height: 0.9em;
   min-width: 5px;
 }
+
+.button-edit-bioinfo-responsible, .button-save-bioinfo-responsible, .button-reset-bioinfo-responsible{
+    cursor: pointer;
+}

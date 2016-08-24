@@ -169,6 +169,7 @@ class Application(tornado.web.Application):
                 SampleQCInsertSizesDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
+            ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),

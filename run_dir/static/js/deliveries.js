@@ -231,3 +231,56 @@ $('.all-responsibles').click(function() {
 $('.none-responsibles').click(function(){
     $('.bi-responsible-checkbox:checked').prop('checked', false).trigger('change');
 });
+
+// edit bioinfo responsible
+$('.button-edit-bioinfo-responsible').click(function() {
+    $(this).parent().find('.bi-project-assigned').hide();
+    $(this).parent().find('.edit-bi-project-assigned').show();
+    $(this).parent().find('.button-edit-bioinfo-responsible').hide();
+    $(this).parent().find('.button-save-bioinfo-responsible').show();
+    $(this).parent().find('.button-reset-bioinfo-responsible').show();
+});
+
+// reset bioinfo responsible
+$('.button-reset-bioinfo-responsible').click(function() {
+    var responsible = $(this).parent().find('.bi-project-assigned').text().trim(); //.replace(/\s+/, '');
+    $(this).parent().find('.bi-project-assigned').show();
+    $(this).parent().find('.edit-bi-project-assigned').val(responsible).hide();
+    $(this).parent().find('.button-edit-bioinfo-responsible').show();
+    $(this).parent().find('.button-save-bioinfo-responsible').hide();
+    $(this).parent().find('.button-reset-bioinfo-responsible').hide();
+});
+
+// save bioinfo responsible
+$('.button-save-bioinfo-responsible').click(function() {
+    var parent = $(this).parent();
+    var responsible = $(this).parent().find('.edit-bi-project-assigned').val();
+    var old_responsible = $(this).parent().find('.bi-project-assigned').text().trim();
+    if (responsible != old_responsible) {
+        var project_id = $(this).closest('div.delivery').attr('id').replace('bioinfo-delivery-project-', '');
+        var url = "/api/v1/deliveries/set_bioinfo_responsible";
+        $.ajax({
+            type: 'POST',
+            method: 'POST',
+            url: url,
+            dataType: 'json',
+            data: {'responsible': responsible, 'project_id': project_id},
+            error: function(xhr, textStatus, errorThrown) {
+                alert('Error: '+xhr['responseText']+' ('+errorThrown+')');
+                console.log(xhr);
+                console.log(textStatus);
+                console.log(errorThrown);
+            },
+            success: function(data, textStatus, xhr) {
+                var success_msg = $('<span id="bioinfo-resp-status" class="delivery-saved-status">    Updated<span class="glyphicon glyphicon-ok"></span></span>');
+                success_msg.appendTo($(parent).find('.button-edit-bioinfo-responsible')).fadeOut(1600, function(){ $(this).remove(); });
+            }
+        });
+    }
+
+    $(this).parent().find('.bi-project-assigned').text(responsible).show();
+    $(this).parent().find('.edit-bi-project-assigned').hide();
+    $(this).parent().find('.button-edit-bioinfo-responsible').show();
+    $(this).parent().find('.button-save-bioinfo-responsible').hide();
+    $(this).parent().find('.button-reset-bioinfo-responsible').hide();
+});

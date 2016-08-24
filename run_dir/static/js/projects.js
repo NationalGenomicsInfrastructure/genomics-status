@@ -271,7 +271,6 @@ function load_presets() {
   return $.getJSON('/api/v1/presets?presets_list=pv_presets', function (data) {
     var default_presets = data['default'];
     var user_presets = data['user'];
-
     // Default presets
     for (var preset in default_presets) {
       $('#default_preset_buttons').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-default">'+preset+'</button>');
@@ -285,12 +284,10 @@ function load_presets() {
     else {
       $('#user_presets_dropdown').append('No user presets');
     }
-
     // Check default checkboxes
     if (!$("#Filter :checked").length) {
-      reset_default_checkboxes();
+      reset_default_checkboxes(false, data=data);
     }
-
     // Otherwise, load the table
     else {
       load_table();
@@ -317,17 +314,17 @@ $('body').on('click', '.search-action', function(event) {
   }
 });
 
-function reset_default_checkboxes(setdefault){
+function reset_default_checkboxes(setdefault, data=null){
   setdefault = typeof setdefault !== 'undefined' ? setdefault : false;
   // Are we on a filtered page?
   if(!setdefault && $('.projects_page_heading').attr('id') == 'ongoing'){
-    select_from_preset('default_preset_buttons', 'Lab personnel - Ongoing');
+    select_from_preset('default_preset_buttons', 'Lab personnel - Ongoing', data=data);
   } else if(!setdefault &&  $('.projects_page_heading').attr('id') == 'reception_control'){
-    select_from_preset('default_preset_buttons', 'Lab personnel - Reception control');
+    select_from_preset('default_preset_buttons', 'Lab personnel - Reception control', data=data);
   } else if(!setdefault &&  $('.projects_page_heading').attr('id') == 'pending'){
-    select_from_preset('default_preset_buttons', 'Order Status');
+    select_from_preset('default_preset_buttons', 'Order Status', data=data);
   } else if(!setdefault &&  $('.projects_page_heading').attr('id') == 'pending_review'){
-    select_from_preset('default_preset_buttons', 'Need Review');
+    select_from_preset('default_preset_buttons', 'Need Review', data=data);
   } else {
     // Sort out the button classes
     $('#default_preset_buttons button.active').removeClass('active');
@@ -335,7 +332,6 @@ function reset_default_checkboxes(setdefault){
     // Change the checkboxes
     $('#Filter input').prop('checked', false); // uncheck everything
     $('#basic-columns input').prop('checked', true); // check the 'basic' columns
-
     // Apply the filter
     load_table();
   }
@@ -349,9 +345,7 @@ function read_current_filtering(){
   return columns;
 }
 
-function select_from_preset(preset_type, preset) {
-  return $.getJSON('/api/v1/presets?presets_list=pv_presets', function (data) {
-
+function sel_from_ps(preset_type, preset, data){
     //First uncheck everything
     $('#default_preset_buttons button.active').removeClass('active');
     $('#Filter input:checkbox').removeAttr('checked');
@@ -371,7 +365,13 @@ function select_from_preset(preset_type, preset) {
 
     // Apply the filter
     load_table();
-  });
+}
+function select_from_preset(preset_type, preset, data=null) {
+    if (data == null){
+     $.getJSON('/api/v1/presets?presets_list=pv_presets').done(sel_from_ps(preset_type, preset, data)).fail(function(jqXHR, textStatus, errorThrown) { alert('getJSON request failed! ' + textStatus); });
+    }else{
+        sel_from_ps(preset_type, preset, data);
+    }
 }
 
 

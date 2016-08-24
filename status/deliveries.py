@@ -3,10 +3,66 @@ from dateutil import parser as datetime_parser
 
 from status.util import SafeHandler
 
+from genologics.config import BASEURI, USERNAME, PASSWORD
+from genologics import lims
+from genologics.entities import Udfconfig, Project as LIMSProject
+lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
 class DeliveriesPageHandler(SafeHandler):
-    def get(self):
 
+    def post(self):
+        project_id = self.get_argument('project_id', '')
+        responsible = self.get_argument('responsible', '')
+        if not project_id or not responsible:
+            self.set_status(400)
+            self.write('no project_id or bioinfo_responsible')
+            return
+        lims_project = LIMSProject(lims, id=project_id)
+        if not lims_project:
+            self.set_status(400)
+            self.write('lims project not found: {}'.format(project_id))
+            return
+        project_name = lims_project.name
+        stepname=['Project Summary 1.3']
+        process=lims.get_processes(type=stepname, projectname=project_name)
+        if process == []:
+            error = "{} for {} is not available in LIMS.".format(stepname, limsproject)
+            self.set_status(400)
+            self.write(error)
+            return
+
+        process = process[0]
+        process.udf['Bioinfo responsible'] = responsible
+        try:
+            process.put()
+        except Exception, e:
+            self.set_status(400)
+            self.write(e.message)
+            return
+
+        # update status db
+        doc_id = None
+        view = self.application.projects_db.view("project/project_id")
+        for row in view[project_id]:
+            doc_id = row.value
+            break
+        if doc_id == None:
+            self.set_status(400)
+            self.write('Lims updated, but not the status db: project not found')
+            return
+
+        doc=self.application.projects_db.get(doc_id)
+        doc['project_summary']['bioinfo_responsible'] = responsible if responsible != 'unassigned' else None
+        try:
+            self.application.projects_db.save(doc)
+        except Exception, e:
+            self.set_status(400)
+            self.write(e.message)
+
+        self.set_status(201)
+        self.write({'success': 'success!!'})
+
+    def get(self):
         # get project summary data
         summary_view = self.application.projects_db.view('project/summary')
         summary_data = {}
@@ -164,7 +220,8 @@ class DeliveriesPageHandler(SafeHandler):
                 latest_running_note = running_notes[latest_timestamp]
 
                 # responsibles (needed for filters)
-                bioinfo_responsible = summary_data[project_id].get('project_summary', {}).get('bioinfo_responsible', 'unassigned')
+                bioinfo_responsible = summary_data[project_id].get('project_summary', {}).get('bioinfo_responsible') or 'unassigned'
+
                 if bioinfo_responsible not in responsible_list:
                     responsible_list[bioinfo_responsible] = 0
                 responsible_list[bioinfo_responsible] += 1
@@ -185,7 +242,10 @@ class DeliveriesPageHandler(SafeHandler):
                 }
 
             ongoing_deliveries[project_id].update(project_data)
-
+        try:
+            lims_responsibles = ['unassigned'] + sorted(Udfconfig(lims, id="1128").presets)
+        except Exception, e:
+            lims_responsibles = ['unassigned'] + sorted(responsible_list)
         template = self.application.loader.load("deliveries.html")
         self.write(template.generate(gs_globals=self.application.gs_globals,
                                      deliveries=ongoing_deliveries,
@@ -197,6 +257,7 @@ class DeliveriesPageHandler(SafeHandler):
                                      status_list=status_list,
                                      project_status=project_status,
                                      responsible_list=responsible_list,
+                                     lims_responsibles=lims_responsibles,
                                      ))
 
     def __aggregate_status(self, list_of_statuses):
