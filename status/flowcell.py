@@ -1,5 +1,13 @@
 from status.util import SafeHandler
 
+tresholds = {
+    'HiSeq X': 320,
+    'RapidHighOutput': 188,
+    'HighOutput': 143,
+    'RapidRun': 114,
+    'MiSeq Version3': 18,
+    'MiSeq Version2': 10,
+}
 
 class FlowcellHandler(SafeHandler):
     """ Serves a page which shows information for a given flowcell.
@@ -8,6 +16,11 @@ class FlowcellHandler(SafeHandler):
         view = self.application.x_flowcells_db.view('info/summary2')
         flowcell = [row.value for row in view[flowcell_id].rows]
         flowcell = flowcell[0] if len(flowcell) >= 1 else {}
+        if not flowcell:
+            # get by long name
+            view = self.application.x_flowcells_db.view('info/summary2_full_id')
+            flowcell = [row.value for row in view[flowcell_id].rows]
+            flowcell = flowcell[0] if len(flowcell) >= 1 else {}
         # replace '__' in project name
         if 'plist' in flowcell:
             replaced_plist = []
@@ -22,27 +35,17 @@ class FlowcellHandler(SafeHandler):
 
         if not flowcell:
             self.set_status(200)
-            t = self.application.loader.load("flowcell.html")
+            t = self.application.loader.load("flowcell_error.html")
             self.write(t.generate(gs_globals=self.application.gs_globals,
                                   flowcell_id=flowcell_id,
-                                  flowcell=flowcell,
                                   user=self.get_current_user_name(),
-                                  error="Oops! Sorry about that, we can't find the flow cell {}".format(flowcell_id)))
+                                  ))
             return
-
-        tresholds = {
-            'HiSeq X': 320,
-            'RapidHighOutput': 188,
-            'HighOutput': 143,
-            'RapidRun': 114,
-            'MiSeq Version3': 18,
-            'MiSeq Version2': 10,
-        }
-
-        t = self.application.loader.load("flowcell.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals,
-                              flowcell=flowcell,
-                              flowcell_id=flowcell_id,
-                              tresholds=tresholds,
-                              user=self.get_current_user_name()))
+        else:
+            t = self.application.loader.load("flowcell.html")
+            self.write(t.generate(gs_globals=self.application.gs_globals,
+                                  flowcell=flowcell,
+                                  flowcell_id=flowcell_id,
+                                  tresholds=tresholds,
+                                  user=self.get_current_user_name()))
 

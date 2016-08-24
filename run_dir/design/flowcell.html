@@ -2,15 +2,31 @@
 {% block stuff %}
 {% import re %}
 <div id="page_content">
-  {% if locals().get('error', False) %}
-    <h1>Error - Flow Cell Not Found</h1>
-    <div class="alert alert-danger">{{ error }}</div>
-  {% else %}
     <h1>Flow Cell <span id="page_title">{{ flowcell_id }}</span></h1>
     <table class="table table-bordered narrow-headers" id="fc_info">
       <tr>
+        <th>Full Name:</th>
+        <td>{{ flowcell.get('full_name') }}</td>
+      </tr>
+      <tr>
+        <th>Flowcell ID:</th>
+        <td>{{ flowcell.get('short_name') }}</td>
+      </tr>
+      <tr>
+        <th>Position:</th>
+        <td>{{ flowcell.get('name', '').split('_')[-1].replace(flowcell.get('short_name', ''), '') }}</td>
+      </tr>
+      <tr>
+        <th>Instrument:</th>
+        <td>{{ flowcell.get('instrument') }}</td>
+      </tr>
+      <tr>
+        <th>Run Setup:</th>
+        <td>{{ flowcell.get('run_mode') }}, {{ flowcell.get('run_setup') }}</td>
+      </tr>
+      <tr>
         <th>Projects:</th>
-        <td>{{ ', '.join(sorted(flowcell['plist'])) }} </td>
+        <td>{{ ', '.join(sorted(flowcell.get('plist', []))) }} </td>
       </tr>
     </table>
     <div class="tabbable">
@@ -31,7 +47,7 @@
       <div class="tab-pane fade in active" id="tab_flowcell_information">
         <h3>Lane Information</h3>
         <div id="lanes">
-          {% for lane_number, lane in sorted(flowcell['lanedata'].items(), key=lambda x:x[0]) %}
+          {% for lane_number, lane in sorted(flowcell.get('lanedata', {}).items(), key=lambda x:x[0]) %}
             <div id="lane_{{ lane_number }}" class="sublane">
               <h4>Lane {{ lane_number }}
                 <button id="ud_button_lane_' +lid + '" class="undetermined-btn btn btn-info btn-sm"
@@ -99,8 +115,8 @@
                   <tr>
                     <td>{{ sample.get('Project', '').replace('__', '.') }}</td>
                     <td>{{ sample.get('SampleName') }}</td>
-                    <td>{% for thousand in sample.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                    <td>{% for thousand in sample.get('readsnb', sample.get('clustersnb', '')).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+                    <td class="text-right">{% for thousand in sample.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+                    <td class="text-right">{% for thousand in sample.get('readsnb', sample.get('clustersnb', '')).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
                     <td class="{% if sample.get('overthirty', 0) < 30 %} danger {% elif sample.get('overthirty', 0) < 80 %} danger {% else %} success {% end %}">
                       {{ sample.get('overthirty', 0) }}
                     </td>
@@ -154,7 +170,6 @@
       <!-- RUNNING NOTES HELP -->
       {% include "running_notes_help.html" %}
     </div>
-  {% end %}
 </div>
 
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell_id }}"></script>
