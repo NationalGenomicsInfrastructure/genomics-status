@@ -172,8 +172,7 @@
     </div>
 </div>
 
-<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell_id }}"></script>
-<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell_id }}"></script>
-<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell_id }}"></script>
-<!--<script src="/static/js/flowcell_samples.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell_id }}"></script>-->
+<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('name') }}"></script>
 {% end %}
