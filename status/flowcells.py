@@ -72,7 +72,7 @@ class FlowcellsDataHandler(SafeHandler):
 class FlowcellsInfoDataHandler(SafeHandler):
     """ Serves brief information about a given flowcell.
 
-    Loaded through /api/v1/flowcell_info/([^/]*)$ url
+    Loaded through /api/v1/flowcell_info2/([^/]*)$ url
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")

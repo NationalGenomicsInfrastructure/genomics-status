@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% block stuff %}
+{% import re %}
+<div id="page_content">
+    <h1>Flow Cell <span id="page_title">{{ flowcell_id }}</span></h1>
+    <table class="table table-bordered narrow-headers" id="fc_info">
+      <tr>
+        <th>Full Name:</th>
+        <td>{{ flowcell.get('full_name') }}</td>
+      </tr>
+      <tr>
+        <th>Flowcell ID:</th>
+        <td>{{ flowcell.get('short_name') }}</td>
+      </tr>
+      <tr>
+        <th>Position:</th>
+        <td>{{ flowcell.get('name', '').split('_')[-1].replace(flowcell.get('short_name', ''), '') }}</td>
+      </tr>
+      <tr>
+        <th>Instrument:</th>
+        <td>{{ flowcell.get('instrument') }}</td>
+      </tr>
+      <tr>
+        <th>Run Setup:</th>
+        <td>{{ flowcell.get('run_mode') }}, {{ flowcell.get('run_setup') }}</td>
+      </tr>
+      <tr>
+        <th>Projects:</th>
+        <td>{{ ', '.join(sorted(flowcell.get('plist', []))) }} </td>
+      </tr>
+    </table>
+    <div class="tabbable">
+      <ul class="nav nav-tabs">
+        <li class="active">
+          <!--href="tab_details_content"-->
+          <a href="#tab_flowcell_information" role="tab" data-toggle="tab">Flowcell Information</a>
+        </li>
+        <li>
+          <a href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a>
+        </li>
+        <li>
+          <a href="#tab_links_content" role="tab" data-toggle="tab">Links</a>
+        </li>
+      </ul>
+    </div>
+    <div class="tab-content">
+      <div class="tab-pane fade in active" id="tab_flowcell_information">
+        <h3>Lane Information</h3>
+        <div id="lanes">
+          {% for lane_number, lane in sorted(flowcell.get('lanedata', {}).items(), key=lambda x:x[0]) %}
+            <div id="lane_{{ lane_number }}" class="sublane">
+              <h4>Lane {{ lane_number }}
+                <button id="ud_button_lane_' +lid + '" class="undetermined-btn btn btn-info btn-sm"
+                           type="button" onclick="display_undetermined('{{ lane_number }}')" >Show Undetermined</button>
+              </h4>
+              <table class="table table-bordered narrow-headers no-margin" id="summary_lane_{{ lane_number }}">
+                <tbody>
+                  <tr>
+                    <th>Total&nbsp;yield (Mb):</th>
+                    <td>{% for thousand in lane['yield'].split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+                    <th>Total&nbsp;clusters:</th> {% set treshold = tresholds.get(flowcell.get('run_mode', ''), 0) %}
+                    <td class="text-left
+                    {% if flowcell.get('run_mode') %}
+                      {% if int(lane.get('clustersnb', '0').replace(',', '')) < treshold * 1000000 %} warning
+                      {% else %} success {% end %}
+                    {% end %}" data-toggle="tooltip" data-placement="bottom"
+                        title="Treshold: {{ treshold }} million">{% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
+                    </td>
+                    <th>%&nbsp;bases&nbsp;>&nbsp;Q30:</th>
+                    <td class="text-left {% if lane.get('overthirty', 0) < 30 %} danger {% elif lane.get('overthirty', 0) < 80 %}
+                      warning {% else %} success {% end %}">{{ lane.get('overthirty', 0) }}
+                    </td>
+                    <th>Mean&nbsp;Quality&nbsp;Score:</th>
+                    <td class="text-left">{{ lane.get('mqs', 0) }}</td>
+                    <th>%&nbsp;perfect&nbsp;barcode :</th>
+                    <td class="text-left">{{ lane.get('perf', 0) }}</td>
+                    {% if 'phix' in lane %}
+                      <th>%&nbsp;Phix:</th>
+                      <td class="text-left">{{ lane['phix'] }}</td>
+                    {% end %}
+                    {% if 'er_rate' in lane %}
+                      <th>Err.&nbsp;rate</th>
+                      <td class="text-left">{{ lane['er_rate'] }}</td>
+                    {% end %}
+                  </tr>
+                </tbody>
+              </table>
+              <br>
+              <table class="table table-bordered" id="table_lane_{{ lane_number }}">
+                <tbody>
+                  <tr>
+                    <th>Project&nbsp;Name</th>
+                    <th>Sample&nbsp;Name</th>
+                    <th>Yield&nbsp;(<abbr title="Megabases">Mb</abbr>)</th>
+                    {% if 'readsnb' in lane %}
+                      <th>Reads</th>
+                    {% elif 'clustersnb' in lane %}
+                      <th>Clusters</th>
+                    {% end %}
+                    <th>Q30</th>
+                    {% if 'desc' in lane %}
+                      <th>Index&nbsp;Description</th>
+                    {% end %}
+                    {% if 'lanepc' in lane %}
+                      <th>%&nbsp;of&nbsp;the&nbsp;lane</th>
+                    {% end %}
+                    <th>Barcode</th>
+                    <th>% of the lane</th>
+                    {% if 'mqs' in lane %}
+                      <th>Mean&nbsp;Quality&nbsp;Score</th>
+                    {% end %}
+                  </tr>
+                {% set total_undetermined = 0 %}
+                {% for sample in flowcell['lane'][lane_number] %}
+                  <tr>
+                    <td>{{ sample.get('Project', '').replace('__', '.') }}</td>
+                    <td>{{ sample.get('SampleName') }}</td>
+                    <td class="text-right">{% for thousand in sample.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+                    <td class="text-right">{% for thousand in sample.get('readsnb', sample.get('clustersnb', '')).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+                    <td class="{% if sample.get('overthirty', 0) < 30 %} danger {% elif sample.get('overthirty', 0) < 80 %} danger {% else %} success {% end %}">
+                      {{ sample.get('overthirty', 0) }}
+                    </td>
+                    <td>{{ sample.get('barcode') }}</td>
+                    {% if 'lanepc' in sample %} <td>{{ float("{0:.2f}".format(sample['lanepc'])) }}</td> {% end %}
+                    {% if 'mqs' in sample %}<td>{{ sample['mqs'] }}</td> {% end %}
+                  </tr>
+                  {% if sample.get('SampleName') == 'Undetermined' %}
+                    {% set total_undetermined = sample.get('clustersnb').replace(',', '') %}
+                  {% end %}
+                {% end %}
+                </tbody>
+              </table>
+              {% if 'undetermined' in flowcell %}
+                <table class="undetermined " id="table_ud_lane_{{ lane_number }}" style="display:none;">
+                  <tr>
+                    <th>Total:</th><th>{% for thousand in  "{:,}".format(int(total_undetermined)).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</th><th>100%</th>
+                    {% set barcodes=[] %}
+                    {% for barcode in flowcell['lane'][lane_number] %}
+                      {% if barcode['barcode'] != 'unknown' %}
+                        <th>{{ barcode['barcode'] }} mismatches</th>
+                      {% set barcodes = barcodes + [barcode['barcode']] %}
+                      {% end %}
+                    {% end %}
+                  </tr>
+                  {% for undetermined, number in sorted(flowcell['undetermined'].get(lane_number, {}).items(), key=lambda x: x[1], reverse=True) %}
+                    <tr class="{% if barcodes and any([re.match( '^(' + '('.join(a.replace('+', '-')+'|N)' for a in barcode) + '$', undetermined) for barcode in barcodes ]) %}undetermined-highlight{% end %}">
+                      <td><samp>{{ undetermined }}</samp></td>
+                      <td>{% for thousand in "{:,}".format(number).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+                      <td>{{ float("{0:.2f}".format(100 * float(number)/float(total_undetermined))) }}%</td>
+                      {% for sample in flowcell['lane'][lane_number] %}
+                        {% if sample['barcode'] != 'unknown' %}
+                          {% set mismatches=sum([sample['barcode'][i] != undetermined[i] and sample['barcode'][i] != 'N' and undetermined[i] != 'N' for i in range(len(undetermined)) ]) %}
+                          {% set fr_matched = float( "{0:.2f}".format( (float(len(undetermined)) - float(mismatches)) / float(len(undetermined))) ) %}
+                          <td class="{% if fr_matched > 0.8 %}undetermined-highlight{% elif fr_matched > 0.6 %}undetermined-warning{% end %}">{{ mismatches }}</td>
+                        {% end %}
+                      {% end %}
+                    </tr>
+                  {% end %}
+                </table>
+            {% end %}
+            </div>
+          {% end %}
+        </div>
+      </div>
+
+      <!-- FLOWCELL NOTES TAB -->
+      {% include "running_notes_tab.html" %}
+      <!-- LINK TAB -->
+      {% include "link_tab.html" %}
+      <!-- RUNNING NOTES HELP -->
+      {% include "running_notes_help.html" %}
+    </div>
+</div>
+
+<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('name') }}"></script>
+{% end %}
