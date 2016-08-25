@@ -1,6 +1,3 @@
-// this file is also used in deliveries.html, when submitting running notes.
-// If changing something here, make sure that it doesn't break running notes on the delivery page!
-
 function generate_category_label(category){
      if (category == 'Workset'){
          category=' - <span class="label label-primary">'+ category +"</span>";

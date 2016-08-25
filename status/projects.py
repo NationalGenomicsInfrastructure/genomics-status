@@ -475,23 +475,23 @@ class RunningNotesDataHandler(SafeHandler):
         try:
             p.get(force=True)
         except:
-            # raise will stop the script and function never goes till the end (the same for 404 status)
-            # Then, the button will stay disabled and etc
-            self.set_status(201)
-            self.write({})
-        # Sorted running notes, by date
-        running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
-        sorted_running_notes = OrderedDict()
-        for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0], reverse=True):
-            sorted_running_notes[k] = v
-        self.write(sorted_running_notes)
+            raise tornado.web.HTTPError(404, reason='Project not found: {}'.format(project))
+            # self.set_status(404)
+            # self.write({})
+        else:
+            # Sorted running notes, by date
+            running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
+            sorted_running_notes = OrderedDict()
+            for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0], reverse=True):
+                sorted_running_notes[k] = v
+            self.write(sorted_running_notes)
 
     def post(self, project):
         note = self.get_argument('note', '')
         category = self.get_argument('category', '')
         user = self.get_secure_cookie('user')
         email = self.get_secure_cookie('email')
-        timestamp = str(datetime.datetime.now())[:-7]
+        timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
         if not note:
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
