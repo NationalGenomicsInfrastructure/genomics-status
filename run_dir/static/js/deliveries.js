@@ -16,6 +16,14 @@ $('.bioinfo-running-notes-save').click(function(e) {
     var lane_id = tr_id[3];
     var sample_id = tr_id[4];
 
+    // if hiseqX: 160531_ST-E00198_0117_BHN5N3CCXX,
+    // then we get run_id=160531_ST and lane_id =E00198_0117_BHN5N3CCXX
+    if (run_id.indexOf('_ST') != -1) {
+        run_id = run_id + '-' + lane_id;
+        lane_id = sample_id;
+        sample_id = tr_id[5];
+    }
+
     // join not undefined values -> if undefined, will skip
     var prefix = [run_id, lane_id, sample_id].join(' ');
 
@@ -24,9 +32,9 @@ $('.bioinfo-running-notes-save').click(function(e) {
     var url='/api/v1/running_notes/' + project_id;
     var button = $(this);
     $(button).addClass('disabled').text('Submitting..');
-
     $.ajax({
         type: 'POST',
+        method: 'POST',
         url: url,
         dataType: 'json',
         data: {"note": running_note},
@@ -42,15 +50,17 @@ $('.bioinfo-running-notes-save').click(function(e) {
             $(td).attr('data-running-note', data['note']);
             $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note').text(data['note']);
             // add to the project running_notes
-            var running_note_id = [project_id, run_id, lane_id, sample_id].join(' ').trim().replace(/\s+/g, '-');
-            var new_note_html = '<div class="running-notes-panel panel panel-default" id="running-note-'+running_note_id+'" style="display:none;">' +
+            // new notes are displayed in green
+            var new_note_html = '<div class="running-notes-panel panel panel-success" id="running-note-'+project_id+'" style="display:none;">' +
                   '<div class="panel-heading"><a href="mailto:'+data['email']+'">'+ data['user'] + '</a> - '+ data["timestamp"]+'</div>' +
                   '<div class="panel-body"><div class="mkdown">'+data['note']+'</div></div></div>';
             // marked is defined in base.js. Do not use make_markdown - it breaks html!
             var markdown = marked(new_note_html);
             $('#running_notes_panels').prepend(markdown);
+            $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note').text(data['timestamp']+' - ' +data['note']);
         }
     });
+
 });
 
 $('.bioinfo-running-notes-cancel').click(function(e) {
@@ -60,24 +70,19 @@ $('.bioinfo-running-notes-cancel').click(function(e) {
     $(td).find('p').text(running_note);
 });
 
-$('.deliveries-page').on('click', '.runningNotesModal_button', function(e){
+$('.deliveries-page').on('click', '.runningNotesModalDeliveries_button', function(e){
     var button = $(this);
     var project_id = $(button).parents('div.delivery').attr('id');
     project_id = project_id.replace('bioinfo-delivery-project-', '');
     // hopefully this will replace the project value in the running_notes.js
     project = project_id;
-    var project_notes = $('.running-notes-panel[id^=running-note-'+project_id+']');
-    $.each(project_notes, function(i, running_note){
-        $(running_note).show();
-    });
-    $('#runningNotesModal_title').text('Running Notes for project '+project_id);
+    var project_notes = $('.running-notes-panel[id^=running-note-'+project_id+']').show();
+    $('#runningNotesModalDeliveries_title').text('Running Notes for project '+project_id)
+            .attr('data-project-id', project_id); // add project_id to hide/show projects on click 'See All'
 });
 
-$('#runningNotesModal').on('hidden.bs.modal', function (e) {
-  var running_notes = $('.running-notes-panel');
-    $.each(running_notes, function(i, running_note){
-        $(running_note).hide();
-    });
+$('#runningNotesModalDeliveries').on('hidden.bs.modal', function (e) {
+  var running_notes = $('.running-notes-panel').hide();
 });
 
 
@@ -284,3 +289,134 @@ $('.button-save-bioinfo-responsible').click(function() {
     $(this).parent().find('.button-save-bioinfo-responsible').hide();
     $(this).parent().find('.button-reset-bioinfo-responsible').hide();
 });
+
+var categories={ 'Workset': 'label-primary',
+                            'Flowcell': 'label-success',
+                            'Meeting': 'label-info',
+                            'Decision': 'label-info',
+                            'User Communication': 'label-danger',
+                            'Bioinformatics': 'label-warning',
+                            'All': 'label-default' }
+
+// not using running_notes.js anymore
+// Insert new running note and reload the running notes table
+$("#notes_form").submit( function(e) {
+    e.preventDefault();
+    // should be set when clicking the button 'See All'
+    var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
+
+    var text = $('#new_note_text').val().trim();
+    text = $('<div>').text(text).html();
+    var category = $('#rn_category option:selected').val();
+    if (text.length == 0) {
+        alert("Error: No running note entered.");
+        return false;
+    }
+    // don't like to use this
+    note_url = '/api/v1/running_notes/' + project_id;
+    $('#save_note_button').addClass('disabled').text('Submitting..');
+    $.ajax({
+      type: 'POST',
+      method: 'POST',
+      url: note_url,
+      dataType: 'json',
+      data: {"note": text, "category": category},
+      error: function(xhr, textStatus, errorThrown) {
+        alert('Error: '+xhr['responseText']+' ('+errorThrown+')');
+        $('#save_note_button').removeClass('disabled').text('Submit Running Note');
+        console.log(xhr);
+        console.log(textStatus);
+        console.log(errorThrown);
+      },
+      success: function(data, textStatus, xhr) {
+        // Manually check whether the running note has saved - LIMS API always returns success
+        $.getJSON(note_url, function(newdata) {
+          var newNote = false;
+          $.each(newdata, function(date, note) {
+            if(data['note'] == note['note']){
+              newNote = make_running_note(date, note); // defined in running_notes.js
+            }
+          });
+          if(newNote){
+            // Clear the text box
+            $('#new_note_text').val('');
+            $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
+            $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
+            // Clear the 'no running notes found' box if it's there
+            if($('#running_notes_panels').html() == '<div class="well">No running notes found.</div>'){
+              $('#running_notes_panels .well').slideUp(function(){ $(this).remove(); });
+            }
+            // Create a new running note and slide it in..
+            var now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+            var category_span = " <span class='label " + categories[category] + "'>"+category+"</span>";
+            $('<div class="running-notes-panel panel panel-success ' + category.replace(/\s+/, '') +
+                '" id="running-note-'+project_id+'"><div class="panel-heading">'+
+                  '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
+                  now + category_span +
+                '</div><div class="panel-body">'+make_markdown(data['note'])+
+                '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
+            // Enable the submit button again
+            $('#save_note_button').removeClass('disabled').text('Submit Running Note');
+            // add latest running note
+            $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note').text(now+' - ' +data['note']);
+          } else {
+            alert('Error - LIMS did not save your running note.');
+            // Enable the submit button again
+            $('#save_note_button').removeClass('disabled').text('Submit Running Note');
+          }
+        });
+      }
+    });
+});
+
+//Filter notes by Category
+$('#running_notes_search').keyup(function() {
+    var search=$('#running_notes_search').val();
+    search_running_notes(search);
+});
+
+$('.btnCategoryFilter').click(function() {
+    $('.btnCategoryFilter').each(function() {$(this).removeClass("glow")});
+    $(this).addClass("glow")
+    var key=$(this).text();
+    if (key == 'All'){
+        key='';
+    }
+    key = key.replace(/\s+/g, '');
+    filter_by_category(key);
+});
+
+function filter_by_category(key){
+    var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
+    $('div#running_notes_panels div.running_notes_panel').hide();
+    if (key == '') {
+        $('#running_notes_panels #running-note-'+project_id).show();
+    } else {
+        $('#running_notes_panels #running-note-'+project_id).hide();
+        $('#running_notes_panels #running-note-'+project_id + '.'+ key).show();
+    }
+};
+
+function search_running_notes(search) {
+    var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
+    $('div#running_notes_panels div.running-notes-panel').hide();
+
+     $('.btnCategoryFilter').each(function() {
+        if ($(this).text() == 'All') {
+            $(this).addClass('glow');
+        } else {
+            $(this).removeClass("glow")
+        }
+    });
+
+    if (search == "") {
+        $('#running_notes_panels #running-note-'+project_id).show();
+    } else {
+        $.each($('#running_notes_panels #running-note-'+project_id), function(index, panel){
+            var note = $(panel).children('.panel-body').children().text().toLowerCase();
+            if (note.indexOf(search) != -1) {
+                $(panel).show();
+            }
+        });
+    }
+};

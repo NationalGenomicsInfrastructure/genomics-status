@@ -474,31 +474,33 @@ class RunningNotesDataHandler(SafeHandler):
         p = Project(lims, id=project)
         try:
             p.get(force=True)
-        except: # Don't want to create dependency on urllib2 just to catch a HTTPError
+        except:
             raise tornado.web.HTTPError(404, reason='Project not found: {}'.format(project))
             # self.set_status(404)
-            # self.write('{}')
-        # Sorted running notes, by date
-        running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
-        sorted_running_notes = OrderedDict()
-        for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0], reverse=True):
-            sorted_running_notes[k] = v
-        self.write(sorted_running_notes)
+            # self.write({})
+        else:
+            # Sorted running notes, by date
+            running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
+            sorted_running_notes = OrderedDict()
+            for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0], reverse=True):
+                sorted_running_notes[k] = v
+            self.write(sorted_running_notes)
 
     def post(self, project):
         note = self.get_argument('note', '')
         category = self.get_argument('category', '')
         user = self.get_secure_cookie('user')
         email = self.get_secure_cookie('email')
+        timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
         if not note:
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
-            newNote = {'user': user, 'email': email, 'note': note, 'category' : category}
+            newNote = {'user': user, 'email': email, 'note': note, 'category' : category, 'timestamp': timestamp}
             p = Project(lims, id=project)
             p.get(force=True)
             running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
-            running_notes[str(datetime.datetime.now())] = newNote
+            running_notes[timestamp] = newNote
             p.udf['Running Notes'] = json.dumps(running_notes)
             p.put()
             #saving running notes directly in genstat, because reasons.
