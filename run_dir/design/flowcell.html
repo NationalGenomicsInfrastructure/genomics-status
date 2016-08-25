@@ -56,9 +56,9 @@
               <table class="table table-bordered narrow-headers no-margin" id="summary_lane_{{ lane_number }}">
                 <tbody>
                   <tr>
-                    <th>Total yield (Mb):</th>
+                    <th>Total&nbsp;yield (Mb):</th>
                     <td>{% for thousand in lane['yield'].split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                    <th>Total clusters:</th> {% set treshold = tresholds.get(flowcell.get('run_mode', ''), 0) %}
+                    <th>Total&nbsp;clusters:</th> {% set treshold = tresholds.get(flowcell.get('run_mode', ''), 0) %}
                     <td class="text-left
                     {% if flowcell.get('run_mode') %}
                       {% if int(lane.get('clustersnb', '0').replace(',', '')) < treshold * 1000000 %} warning
@@ -66,20 +66,20 @@
                     {% end %}" data-toggle="tooltip" data-placement="bottom"
                         title="Treshold: {{ treshold }} million">{% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
                     </td>
-                    <th>% bases > Q30:</th>
+                    <th>%&nbsp;bases&nbsp;>&nbsp;Q30:</th>
                     <td class="text-left {% if lane.get('overthirty', 0) < 30 %} danger {% elif lane.get('overthirty', 0) < 80 %}
                       warning {% else %} success {% end %}">{{ lane.get('overthirty', 0) }}
                     </td>
-                    <th>Mean Quality Score:</th>
+                    <th>Mean&nbsp;Quality&nbsp;Score:</th>
                     <td class="text-left">{{ lane.get('mqs', 0) }}</td>
-                    <th>% perfect barcode :</th>
+                    <th>%&nbsp;perfect&nbsp;barcode :</th>
                     <td class="text-left">{{ lane.get('perf', 0) }}</td>
                     {% if 'phix' in lane %}
-                      <th>% Phix:</th>
+                      <th>%&nbsp;Phix:</th>
                       <td class="text-left">{{ lane['phix'] }}</td>
                     {% end %}
                     {% if 'er_rate' in lane %}
-                      <th>Err. rate</th>
+                      <th>Err.&nbsp;rate</th>
                       <td class="text-left">{{ lane['er_rate'] }}</td>
                     {% end %}
                   </tr>
@@ -89,9 +89,9 @@
               <table class="table table-bordered" id="table_lane_{{ lane_number }}">
                 <tbody>
                   <tr>
-                    <th>Project Name</th>
-                    <th>Sample Name</th>
-                    <th>Yield (<abbr title="Megabases">Mb</abbr>)</th>
+                    <th>Project&nbsp;Name</th>
+                    <th>Sample&nbsp;Name</th>
+                    <th>Yield&nbsp;(<abbr title="Megabases">Mb</abbr>)</th>
                     {% if 'readsnb' in lane %}
                       <th>Reads</th>
                     {% elif 'clustersnb' in lane %}
@@ -99,15 +99,15 @@
                     {% end %}
                     <th>Q30</th>
                     {% if 'desc' in lane %}
-                      <th>Index Description</th>
+                      <th>Index&nbsp;Description</th>
                     {% end %}
                     {% if 'lanepc' in lane %}
-                      <th>% of the lane</th>
+                      <th>%&nbsp;of&nbsp;the&nbsp;lane</th>
                     {% end %}
                     <th>Barcode</th>
                     <th>% of the lane</th>
                     {% if 'mqs' in lane %}
-                      <th>Mean Quality Score</th>
+                      <th>Mean&nbsp;Quality&nbsp;Score</th>
                     {% end %}
                   </tr>
                 {% set total_undetermined = 0 %}
