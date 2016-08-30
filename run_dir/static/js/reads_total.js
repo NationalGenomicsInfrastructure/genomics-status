@@ -15,7 +15,8 @@ function plot_summary_chart(data, sample_names){
         },
         plotOptions: {
             column: { stacking: 'normal',
-                      borderWidth: 0
+                      borderWidth: 0,
+                      groupPadding: 0.1
                     },
             series: {
                 cursor: 'pointer',
