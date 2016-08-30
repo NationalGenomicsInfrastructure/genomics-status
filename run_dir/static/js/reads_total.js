@@ -14,7 +14,9 @@ function plot_summary_chart(data, sample_names){
             reversedStacks: false
         },
         plotOptions: {
-            column: { stacking: 'normal' },
+            column: { stacking: 'normal',
+                      borderWidth: 0
+                    },
             series: {
                 cursor: 'pointer',
                 point: { events: { click: function () {
@@ -46,8 +48,8 @@ function update_all_totals(){
     var ar_samples = Array();
     var ar_clusters = Array();
     var data = [
-        { name: 'q30>75', data: [], color: '#8ff088'},
-        { name: '75>q30>30', data: [], color: '#fcf8b3'},
+        { name: 'q30>75', data: [], color: '#78b560'},
+        { name: '75>q30>30', data: [], color: '#e8cd4c'},
         { name: '30>q30', data: [], color: '#f28e8e'},
         { name: 'Not Selected', data: [], color: '#dddddd' }
     ];
