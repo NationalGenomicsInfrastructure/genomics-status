@@ -46,25 +46,40 @@ function update_all_totals(){
     var ar_samples = Array();
     var ar_clusters = Array();
     var data = [
-        { name: 'Selected', data: [], color: '#5686cd'},
+        { name: 'q30>75', data: [], color: '#8ff088'},
+        { name: '75>q30>30', data: [], color: '#fcf893'},
+        { name: '30>q30', data: [], color: '#f28e8e'},
         { name: 'Not Selected', data: [], color: '#dddddd' }
     ];
     $(".reads_table").each(function(){
         var checked = 0;
         var unchecked = 0;
+        var w_q30 = 0;
         var s_name = $(this).find(".sample_name").text();
         $(this).find(".reads_data").each(function(){
             var count = parseInt($(this).find(".clusters").text());
+            w_q30 += parseFloat($(this).find(".myq30").text()) * count ;
             if ($(this).find(".reads_check").prop("checked") == true){
                 checked += count;
             } else {
                 unchecked += count;
             }
         });
+        if (checked > 0 ){
+            w_q30 = w_q30 / checked;
+        }else{
+            w_q30 = -1;
+        }
         ar_samples.push(s_name);
         ar_clusters.push(checked);
-        data[0].data.push(checked);
-        data[1].data.push(unchecked);
+        if (w_q30>75){
+            data[0].data.push(checked);
+        }else if (w_q30>30){
+            data[1].data.push(checked);
+        }else{
+            data[2].data.push(checked);
+        }
+        data[3].data.push(unchecked);
         $(this).find(".reads_total").text(checked);
     });
     create_summary_table(ar_samples, ar_clusters);
