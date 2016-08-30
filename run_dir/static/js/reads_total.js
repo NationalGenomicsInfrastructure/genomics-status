@@ -47,7 +47,7 @@ function update_all_totals(){
     var ar_clusters = Array();
     var data = [
         { name: 'q30>75', data: [], color: '#8ff088'},
-        { name: '75>q30>30', data: [], color: '#fcf893'},
+        { name: '75>q30>30', data: [], color: '#fcf8b3'},
         { name: '30>q30', data: [], color: '#f28e8e'},
         { name: 'Not Selected', data: [], color: '#dddddd' }
     ];
