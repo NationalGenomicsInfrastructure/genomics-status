@@ -52,6 +52,8 @@ from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, 
 from status.sequencing import InstrumentClusterDensityPlotHandler, InstrumentErrorratePlotHandler, InstrumentUnmatchedPlotHandler, \
     InstrumentYieldPlotHandler, InstrumentClusterDensityDataHandler, InstrumentErrorrateDataHandler, InstrumentUnmatchedDataHandler, \
     InstrumentYieldDataHandler, SequencingStatsHandler
+from status.statistics import YearApplicationsProjectHandler, YearApplicationsSamplesHandler, YearAffiliationProjectsHandler, YearDeliverytimeProjectsHandler, \
+    ApplicationOpenProjectsHandler, ApplicationOpenSamplesHandler, WeekInstrumentTypeYieldHandler, StatsAggregationHandler
 from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
 from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, SafeStaticFileHandler, \
@@ -169,6 +171,14 @@ class Application(tornado.web.Application):
                 SampleQCInsertSizesDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
+            ("/api/v1/stats",StatsAggregationHandler),
+            ("/api/v1/stats/application_open_projects",ApplicationOpenProjectsHandler),
+            ("/api/v1/stats/application_open_samples",ApplicationOpenSamplesHandler),
+            ("/api/v1/stats/week_instr_yield",WeekInstrumentTypeYieldHandler),
+            ("/api/v1/stats/year_application",YearApplicationsProjectHandler),
+            ("/api/v1/stats/year_application_samples",YearApplicationsSamplesHandler),
+            ("/api/v1/stats/year_affiliation_projects",YearAffiliationProjectsHandler),
+            ("/api/v1/stats/year_deliverytime_projects",YearDeliverytimeProjectsHandler),
             ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
