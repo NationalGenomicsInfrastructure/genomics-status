@@ -97,7 +97,7 @@ class StatsAggregationHandler(SafeHandler):
         for pa in self.project_aggregates:
             data[pa]=get_stats_data(self.application.projects_db, self.project_aggregates[pa][0], self.project_aggregates[pa][1])
         for fa in self.flowcell_aggregates:
-            data[pa]=get_stats_data(self.application.x_flowcells_db, self.flowcell_aggregates[fa][0], self.flowcell_aggregates[fa][1])
+            data[fa]=get_stats_data(self.application.x_flowcells_db, self.flowcell_aggregates[fa][0], self.flowcell_aggregates[fa][1])
         self.set_header('Content-Type', 'application/json')
         self.set_status(200)
         self.write(json.dumps(data))
