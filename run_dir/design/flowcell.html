@@ -26,7 +26,19 @@
       </tr>
       <tr>
         <th>Projects:</th>
-        <td>{{ ', '.join(sorted(flowcell.get('plist', []))) }} </td>
+        <td>
+          {% for project in sorted(flowcell.get('plist', [])) %}
+          <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-sm btn-default dropdown-toggle"
+                    data-toggle="dropdown"
+            >{{ project }}&nbsp;<span class="caret"></span></button>
+            <ul class="dropdown-menu">
+              <li><a href="/project/{{ project_names.get(project, '') }}">Project Page</a></li>
+              <li><a href="/bioinfo/{{ project_names.get(project, '') }}">Bioinfo Tab</a></li>
+            </ul>
+          </div>
+          {% end %}
+        </td>
       </tr>
     </table>
     <div class="tabbable">
@@ -67,8 +79,24 @@
                         title="Treshold: {{ treshold }} million">{% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
                     </td>
                     <th>%&nbsp;bases&nbsp;>&nbsp;Q30:</th>
-                    <td class="text-left {% if lane.get('overthirty', 0) < 30 %} danger {% elif lane.get('overthirty', 0) < 80 %}
-                      warning {% else %} success {% end %}">{{ lane.get('overthirty', 0) }}
+                    {% if flowcell.get('run_mode', '') == 'HiSeq X' %}
+                      {% set q30_treshold = '85.0' %}
+                    {% else %}
+                      {% set run_setup = flowcell.get('run_setup', '').split('x')[-1] %}
+                      {% if run_setup >= '250' %}
+                        {% set q30_treshold = '60.0' %}
+                      {% elif run_setup >= '150' %}
+                        {% set q30_treshold = '70.0' %}
+                      {% elif run_setup >=100 %}
+                        {% set q30_treshold = '75.0' %}
+                      {% elif run_setup < 100 %}
+                        {% set q30_treshold = '80.0' %}
+                      {% end %}
+                    {% end %}
+                    <td class="text-left {% if lane.get('overthirty', '0') < '40.0' %} danger
+                          {% elif lane.get('overthirty', '0') < q30_treshold %} warning
+                          {% else %} success {% end %}" data-toggle="tooltip" data-placement="bottom"
+                        title="Treshold: {{ q30_treshold }}">{{ lane.get('overthirty', '0') }}
                     </td>
                     <th>Mean&nbsp;Quality&nbsp;Score:</th>
                     <td class="text-left">{{ lane.get('mqs', 0) }}</td>
@@ -117,9 +145,10 @@
                     <td>{{ sample.get('SampleName') }}</td>
                     <td class="text-right">{% for thousand in sample.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
                     <td class="text-right">{% for thousand in sample.get('readsnb', sample.get('clustersnb', '')).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                    <td class="{% if sample.get('overthirty', 0) < 30 %} danger {% elif sample.get('overthirty', 0) < 80 %} danger {% else %} success {% end %}">
-                      {{ sample.get('overthirty', 0) }}
-                    </td>
+                    <td class="text-left {% if sample.get('overthirty', '0') < '40.0' %} danger
+                          {% elif sample.get('overthirty', '0') < q30_treshold %} warning
+                          {% else %} success {% end %}" data-toggle="tooltip" data-placement="bottom"
+                        title="Treshold: {{ q30_treshold }}">{{ sample.get('overthirty', 0) }}</td>
                     <td>{{ sample.get('barcode') }}</td>
                     {% if 'lanepc' in sample %} <td>{{ float("{0:.2f}".format(sample['lanepc'])) }}</td> {% end %}
                     {% if 'mqs' in sample %}<td>{{ sample['mqs'] }}</td> {% end %}
