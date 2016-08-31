@@ -83,20 +83,21 @@
                       {% set q30_treshold = '85.0' %}
                     {% else %}
                       {% set run_setup = flowcell.get('run_setup', '').split('x')[-1] %}
-                      {% if run_setup >= '250' %}
-                        {% set q30_treshold = '60.0' %}
-                      {% elif run_setup >= '150' %}
-                        {% set q30_treshold = '70.0' %}
-                      {% elif run_setup >=100 %}
-                        {% set q30_treshold = '75.0' %}
+                      {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
+                      {% if run_setup >= 250 %}
+                        {% set q30_treshold = 60.0 %}
+                      {% elif run_setup >= 150 %}
+                        {% set q30_treshold = 70.0 %}
+                      {% elif run_setup >= 100 %}
+                        {% set q30_treshold = 75.0 %}
                       {% elif run_setup < 100 %}
-                        {% set q30_treshold = '80.0' %}
+                        {% set q30_treshold = 80.0 %}
                       {% end %}
                     {% end %}
-                    <td class="text-left {% if lane.get('overthirty', '0') < '40.0' %} danger
-                          {% elif lane.get('overthirty', '0') < q30_treshold %} warning
+                    <td class="text-left {% if lane.get('overthirty', 0) < 40.0 %} danger
+                          {% elif lane.get('overthirty', 0) < q30_treshold %} warning
                           {% else %} success {% end %}" data-toggle="tooltip" data-placement="bottom"
-                        title="Treshold: {{ q30_treshold }}">{{ lane.get('overthirty', '0') }}
+                        title="Treshold: {{ q30_treshold }}">{{ lane.get('overthirty', 0) }}
                     </td>
                     <th>Mean&nbsp;Quality&nbsp;Score:</th>
                     <td class="text-left">{{ lane.get('mqs', 0) }}</td>
