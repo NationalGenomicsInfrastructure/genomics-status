@@ -61,8 +61,8 @@ function update_all_totals(){
         var s_name = $(this).find(".sample_name").text();
         $(this).find(".reads_data").each(function(){
             var count = parseInt($(this).find(".clusters").text());
-            w_q30 += parseFloat($(this).find(".myq30").text()) * count ;
             if ($(this).find(".reads_check").prop("checked") == true){
+                w_q30 += parseFloat($(this).find(".myq30").text()) * count ;
                 checked += count;
             } else {
                 unchecked += count;
@@ -77,10 +77,16 @@ function update_all_totals(){
         ar_clusters.push(checked);
         if (w_q30>75){
             data[0].data.push(checked);
+            data[1].data.push(0);
+            data[2].data.push(0);
         }else if (w_q30>30){
             data[1].data.push(checked);
+            data[0].data.push(0);
+            data[2].data.push(0);
         }else{
             data[2].data.push(checked);
+            data[0].data.push(0);
+            data[2].data.push(0);
         }
         data[3].data.push(unchecked);
         $(this).find(".reads_total").text(checked);
