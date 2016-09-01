@@ -1,5 +1,4 @@
 import json
-from dateutil import parser as datetime_parser
 
 from status.util import SafeHandler
 

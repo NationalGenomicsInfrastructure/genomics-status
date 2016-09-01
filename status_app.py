@@ -32,7 +32,7 @@ from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler,
 from status.phix_err_rate import PhixErrorRateDataHandler, PhixErrorRateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
-    ProducedQuarterlyPlotHandler, ProductionCronjobsDataHandler, ProductionCronjobsHandler, ProductionHandler
+    ProducedQuarterlyPlotHandler, ProductionCronjobsHandler, ProductionHandler
 from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
@@ -142,7 +142,6 @@ class Application(tornado.web.Application):
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
             ("/api/v1/produced_quarterly.png", ProducedQuarterlyPlotHandler),
-            ("/api/v1/production/cronjobs", ProductionCronjobsDataHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),

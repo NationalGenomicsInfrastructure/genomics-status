@@ -1,63 +1,49 @@
 {% extends "base.html" %}
-
-<!-- 
-Template file: cronjobs.html
-URL: /production/cronjobs
-Title: Production cronjobs
-Description: Diagnostic page showing all cron jobs on all servers
--->
-
 {% block stuff %}
-
+{% import datetime %}
 <div class="container-fluid" id="content">
 	<h1 id="page_title">Production cronjobs</h1>
-
 	<p>The tables below show information about all cronjobs running on production servers.</p>
 	<p><em>Deactivated (i.e commented) cronjobs will appear in red.</em></p>
+
+  <table class="table ">
+    <tbody>
+      {% for server, crontab in sorted(cronjobs.items(), key=lambda x:x[1].get('last_updated', ''), reverse=True) %}
+      {% set two_month_ago=str(datetime.datetime.now() - datetime.timedelta(30*2))%}
+      <tr class="server
+        {% if crontab.get('last_updated', '') < two_month_ago %} warning {% end %}">
+        <td><a class="cronjob-expand" href="#{{ server }}"><span class="glyphicon glyphicon-chevron-right"></span></a></td>
+        <td colspan="6"><h5>{{ server }}</h5></td>
+        <td colspan="1"><h5><i>Last Updated:</i> <b>{{ crontab.get('last_updated') }}</b></h5></td>
+      </tr>
+      <tr style="display:none;">
+        <td></td>
+        <th>User</th>
+        <th>Minute</th>
+        <th>Hour</th>
+        <th>Day of Month</th>
+        <th>Month</th>
+        <th>Day of Week</th>
+        <th>Command</th>
+      </tr>
+      {% for username, list_of_jobs in crontab['users'].items() %}
+      {% for job in list_of_jobs %}
+      <tr style="display:none;" data-parent="#{{ server }}">
+        <td></td>
+        <td class="text-right">{{ username }}</td>
+        <td>{{ job.get('Minute') }}</td>
+        <td>{{ job.get('Hour') }}</td>
+        <td>{{ job.get('Day of month') }}</td>
+        <td>{{ job.get('Month') }}</td>
+        <td>{{ job.get('Day of week') }}</td>
+        <td><pre class="{% if not job.get('Enabled', True) %}bg-danger{% end %}"><code>{% if job.get('Comment') %}# {{ job.get('Comment') }}<br>{% end %}{{ job.get('Command') }}</code></pre></td>
+      </tr>
+      {% end %}
+      {% end %}
+      {% end %}
+    </tbody>
+  </table>
 </div>
 
-<script>
-$(document).ready(function(){
-	$.getJSON('/api/v1/production/cronjobs', function(data){
-		$.each(data, function(server, cronjobs){
-			// Header with server name and last updated
-			$("#content").append('<h3>'+server+' (last updated '+cronjobs['last_updated'].split(' ')[0]+')</h3>');
-
-			// Table and Header
-			tbl = $('<table class="table"><thead><tr>'+
-			'<th>User</th>'+
-			'<th>Minute</th>'+
-			'<th>Hour</th>'+
-			'<th>Day of month</th>'+
-			'<th>Month</th>'+
-			'<th>Day of week</th>'+
-			'<th>Command</th>'+
-			'</tr></thead><tbody></tbody></table>');
-	  
-			// Create table body
-			users = cronjobs['users'];
-			$.each(users, function(user, cronjobs){
-				$.each(cronjobs, function(cronjob_id, cronjob_data){
-					var tbl_row = '<tr>';
-					tbl_row += '<td><samp>'+user+'</samp></td>';
-					tbl_row += '<td>'+cronjob_data['Minute']+'</td>';
-					tbl_row += '<td>'+cronjob_data['Hour']+'</td>';
-					tbl_row += '<td>'+cronjob_data['Day of month']+'</td>';
-					tbl_row += '<td>'+cronjob_data['Month']+'</td>';
-					tbl_row += '<td>'+cronjob_data['Day of week']+'</td>';
-					tbl_row += '<td><pre';
-					if (!cronjob_data['Enabled']) {
-						tbl_row += ' class="bg-danger"';
-					}
-					tbl_row += '><code>'+cronjob_data['Command']+'</code></pre></td>';
-					tbl_row += '</tr>';
-					$(tbl).find('tbody').append(tbl_row);
-				});
-			});
-			$("#content").append(tbl);
-		});
-	});
-});
-</script>
-
+<script src="/static/js/cronjobs.js"></script>
 {% end %}
