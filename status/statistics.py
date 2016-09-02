@@ -1,6 +1,6 @@
 import json
 
-from status.util import SafeHandler
+from status.util import SafeHandler, UnsafeHandler
 
 def get_default_stats_data(view):
     data={}
@@ -79,7 +79,7 @@ class WeekInstrumentTypeYieldHandler(SafeHandler):
         self.set_status(200)
         self.write(json.dumps(data))
 
-class StatsAggregationHandler(SafeHandler):
+class StatsAggregationHandler(UnsafeHandler):
     project_aggregates={
             "num_projects" : ("genomics-dashboard/year_application_count", 2),
             "num_samples" : ("genomics-dashboard/year_application_count_samples", 2),
