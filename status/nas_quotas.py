@@ -25,8 +25,11 @@ class NASQuotasHandler(SafeHandler):
             elif disk_limit.lower() == 'nan' or disk_usage.lower() == 'nan':
                 continue
             else:
-                disk_limit = float(disk_limit)
-                disk_usage = float(disk_usage)
+                try: # /1000 if Gb
+                    disk_usage = float(disk_usage.replace('G', '')) / 1000 if 'G' in disk_usage else float(disk_usage)
+                    disk_limit = float(disk_limit.replace('G', '')) / 1000 if 'G' in disk_limit else float(disk_limit)
+                except:
+                    continue
             if nas_url not in nases:
                 nases[nas_url] = {'min_time': timestamp, 'max_x_value': 0, 'plot_data': [], 'limit_data': []}
             nas = nases[nas_url]
