@@ -85,7 +85,7 @@
           <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ flowcell_id }}" class="bioinfo-expand">
             <span class="glyphicon glyphicon-chevron-right"></span></a></td>
           <td></td>
-          <td><samp><a href="/flowcells/{{ flowcell_id.split('_')[0] }}_{{ flowcell_id.split('_')[-1] }}">{{ flowcell_id }}</a></samp></td>
+          <td><samp><a href="/flowcells/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
           <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(flowcell['flowcell_status'], 'label-default') }}">{{ flowcell['flowcell_status'] }}</span></td>
           <td class="bioinfo-status-row ?"><span class="glyphicon glyphicon-arrow-right"></span></td>
           <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
