@@ -119,7 +119,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" class="bioinfo-expand">
                   <span class="glyphicon glyphicon-chevron-right"></span></a></td>
               <td></td>
-              <td class="bioinfo-granularity"><samp><a href="/flowcells/{{ flowcell_id.split('_')[0] }}_{{ flowcell_id.split('_')[-1] }}">{{ flowcell_id }}</a></samp></td>
+              <td class="bioinfo-granularity"><samp><a href="/flowcells/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
               <td><span class="bioinfo-status label {{ status_css.get(flowcell['flowcell_status'], 'label-primary') }}">{{ flowcell['flowcell_status'] }}</span></td>
                 <td class="bi-run-pwf hide-incoming {% if flowcell['checklist']['total'] == flowcell['checklist']['completed'] %} success {% else %} warning {% end %}">
                   <div class="progress">
