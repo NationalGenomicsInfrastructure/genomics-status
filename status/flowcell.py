@@ -1,6 +1,6 @@
 from status.util import SafeHandler
 
-tresholds = {
+thresholds = {
     'HiSeq X': 320,
     'RapidHighOutput': 188,
     'HighOutput': 143,
@@ -69,7 +69,7 @@ class FlowcellHandler(SafeHandler):
             self.write(t.generate(gs_globals=self.application.gs_globals,
                                   flowcell=flowcell,
                                   flowcell_id=flowcell_id,
-                                  tresholds=tresholds,
+                                  thresholds=thresholds,
                                   project_names=project_names,
                                   user=self.get_current_user_name()))
 

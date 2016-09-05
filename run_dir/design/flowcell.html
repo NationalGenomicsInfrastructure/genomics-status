@@ -29,9 +29,8 @@
         <td>
           {% for project in sorted(flowcell.get('plist', [])) %}
           <div class="btn-group btn-group-sm">
-            <button type="button" class="btn btn-sm btn-default dropdown-toggle"
-                    data-toggle="dropdown"
-            >{{ project }}&nbsp;<span class="caret"></span></button>
+            <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown">
+              {{ project }}&nbsp;<span class="caret"></span></button>
             <ul class="dropdown-menu">
               <li><a href="/project/{{ project_names.get(project, '') }}">Project Page</a></li>
               <li><a href="/bioinfo/{{ project_names.get(project, '') }}">Bioinfo Tab</a></li>
@@ -63,43 +62,43 @@
             <div id="lane_{{ lane_number }}" class="sublane">
               <h4>Lane {{ lane_number }}
                 <button id="ud_button_lane_' +lid + '" class="undetermined-btn btn btn-info btn-sm"
-                           type="button" onclick="display_undetermined('{{ lane_number }}')" >Show Undetermined</button>
+                           type="button" onclick="display_undetermined('{{ lane_number }}')">Show Undetermined</button>
               </h4>
               <table class="table table-bordered narrow-headers no-margin" id="summary_lane_{{ lane_number }}">
                 <tbody>
                   <tr>
                     <th>Total&nbsp;yield (Mb):</th>
                     <td>{% for thousand in lane['yield'].split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                    <th>Total&nbsp;clusters:</th> {% set treshold = tresholds.get(flowcell.get('run_mode', ''), 0) %}
+                    <th>Total&nbsp;clusters:</th> {% set threshold = thresholds.get(flowcell.get('run_mode', ''), 0) %}
                     <td class="text-left
                     {% if flowcell.get('run_mode') %}
-                      {% if int(lane.get('clustersnb', '0').replace(',', '')) < treshold * 1000000 %} warning
+                      {% if int(lane.get('clustersnb', '0').replace(',', '')) < threshold * 1000000 %} warning
                       {% else %} success {% end %}
                     {% end %}" data-toggle="tooltip" data-placement="bottom"
-                        title="Treshold: {{ treshold }} million">{% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
+                        title="Threshold: {{ threshold }} million">{% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
                     </td>
                     <th>%&nbsp;bases&nbsp;>&nbsp;Q30:</th>
                     {% if flowcell.get('run_mode', '') == 'HiSeq X' %}
-                      {% set q30_treshold = 85.0 %}
+                      {% set q30_threshold = 85.0 %}
                     {% else %}
                       {% set run_setup = flowcell.get('run_setup', '').split('x')[-1] %}
                       {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
                       {% if run_setup >= 250 %}
-                        {% set q30_treshold = 60.0 %}
+                        {% set q30_threshold = 60.0 %}
                       {% elif run_setup >= 150 %}
-                        {% set q30_treshold = 70.0 %}
+                        {% set q30_threshold = 70.0 %}
                       {% elif run_setup >= 100 %}
-                        {% set q30_treshold = 75.0 %}
+                        {% set q30_threshold = 75.0 %}
                       {% elif run_setup < 100 %}
-                        {% set q30_treshold = 80.0 %}
+                        {% set q30_threshold = 80.0 %}
                       {% end %}
                     {% end %}
                     {% set lane_q30 = lane.get('overthirty', 0.0) %}
                     {% try %}{% set lane_q30 = float(lane_q30) %}{% except %}{% end %}
                     <td class="text-left {% if lane_q30 < 40.0 %} danger
-                          {% elif lane_q30 < q30_treshold %} warning
+                          {% elif lane_q30 < q30_threshold %} warning
                           {% else %} success {% end %}" data-toggle="tooltip" data-placement="bottom"
-                        title="Treshold: {{ q30_treshold }}">{{ lane_q30 }}
+                        title="Threshold: {{ q30_threshold }}">{{ lane_q30 }}
                     </td>
                     <th>Mean&nbsp;Quality&nbsp;Score:</th>
                     <td class="text-left">{{ lane.get('mqs', 0) }}</td>
@@ -151,9 +150,9 @@
                     <td class="text-right">{% for thousand in sample.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
                     <td class="text-right">{% for thousand in sample.get('readsnb', sample.get('clustersnb', '')).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
                     <td class="text-left {% if sample_q30 < 40.0 %} danger
-                          {% elif sample_q30 < q30_treshold %} warning
+                          {% elif sample_q30 < q30_threshold %} warning
                           {% else %} success {% end %}" data-toggle="tooltip" data-placement="bottom"
-                        title="Treshold: {{ q30_treshold }}">{{ sample_q30 }}</td>
+                        title="Threshold: {{ q30_threshold }}">{{ sample_q30 }}</td>
                     <td>{{ sample.get('barcode') }}</td>
                     {% if 'lanepc' in sample %} <td>{{ float("{0:.2f}".format(sample['lanepc'])) }}</td> {% end %}
                     {% if 'mqs' in sample %}<td>{{ sample['mqs'] }}</td> {% end %}
