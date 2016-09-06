@@ -112,7 +112,6 @@ class QuotasHandler(SafeHandler):
         if quota_decrease:
             today = datetime.date.today()
             for date, quota in quota_decrease.items():
-                print date, quota
                 quota_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
                 if quota_date < today:
                     continue
