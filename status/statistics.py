@@ -43,25 +43,20 @@ def clean_application_keys(raw_data):
 
 class YearApplicationsProjectHandler(SafeHandler):
     def get(self):
-        raw_data={}
-        raw_data=get_stats_data(self.application.projects_db, "genomics-dashboard/year_application_count", 2)
-        data = clean_application_keys(raw_data)
+        data=clean_application_keys(get_stats_data(self.application.projects_db, "genomics-dashboard/year_application_count", 2))
         self.set_header('Content-Type', 'application/json')
         self.set_status(200)
         self.write(json.dumps(data))
 
 class YearApplicationsSamplesHandler(SafeHandler):
     def get(self):
-        raw_data={}
-        raw_data=get_stats_data(self.application.projects_db, "genomics-dashboard/year_application_count_samples", 2)
-        data = clean_application_keys(raw_data)
+        data=clean_application_keys(get_stats_data(self.application.projects_db, "genomics-dashboard/year_application_count_samples", 2))
         self.set_header('Content-Type', 'application/json')
         self.set_status(200)
         self.write(json.dumps(data))
 
 class YearAffiliationProjectsHandler(SafeHandler):
     def get(self):
-        data={}
         data=get_stats_data(self.application.projects_db, "genomics-dashboard/year_affiliation_count_projects", 2)
         self.set_header('Content-Type', 'application/json')
         self.set_status(200)
@@ -69,7 +64,6 @@ class YearAffiliationProjectsHandler(SafeHandler):
 
 class YearDeliverytimeProjectsHandler(SafeHandler):
     def get(self):
-        data={}
         data=get_stats_data(self.application.projects_db, "genomics-dashboard/year_deliverytime_count_projects", 2)
         self.set_header('Content-Type', 'application/json')
         self.set_status(200)
@@ -77,25 +71,20 @@ class YearDeliverytimeProjectsHandler(SafeHandler):
 
 class ApplicationOpenProjectsHandler(SafeHandler):
     def get(self):
-        raw_data={}
-        raw_data=get_stats_data(self.application.projects_db, "genomics-dashboard/open_application_count_projects", 1)
-        data = clean_application_keys(raw_data)
+        data=clean_application_keys(get_stats_data(self.application.projects_db, "genomics-dashboard/open_application_count_projects", 1))
         self.set_header('Content-Type', 'application/json')
         self.set_status(200)
         self.write(json.dumps(data))
 
 class ApplicationOpenSamplesHandler(SafeHandler):
     def get(self):
-        raw_data={}
-        raw_data=get_stats_data(self.application.projects_db, "genomics-dashboard/open_application_count_samples", 1)
-        data = clean_application_keys(raw_data)
+        data=clean_application_keys(get_stats_data(self.application.projects_db, "genomics-dashboard/open_application_count_samples", 1))
         self.set_header('Content-Type', 'application/json')
         self.set_status(200)
         self.write(json.dumps(data))
 
 class WeekInstrumentTypeYieldHandler(SafeHandler):
     def get(self):
-        data={}
         data=get_stats_data(self.application.x_flowcells_db, "dashboard/week_instr_bp", 2)
         self.set_header('Content-Type', 'application/json')
         self.set_status(200)
