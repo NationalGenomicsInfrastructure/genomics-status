@@ -32,13 +32,7 @@ def clean_application_keys_y(raw_data):
     for year in raw_data:
         data[year] = {}
         for c in raw_data[year]:
-            try:
-                data[year][app_cats[c]] += raw_data[year][c]
-            except KeyError:
-                try:
-                    data[year][app_cats[c]] = raw_data[year][c]
-                except KeyError:
-                    data[year][c] = raw_data[year][c]
+            data[year][app_cats.get(c, c)] = data[year].get(app_cats.get(c, c),0) + raw_data[year][c]
     return data
 
 def clean_application_keys(raw_data):
@@ -48,13 +42,7 @@ def clean_application_keys(raw_data):
         app_cats=yaml.load(f)
     data={}
     for c in raw_data:
-        try:
-            data[app_cats[c]] += raw_data[c]
-        except KeyError:
-            try:
-                data[app_cats[c]] = raw_data[c]
-            except KeyError:
-                data[c] = raw_data[c]
+        data[app_cats.get(c, c)] = data.get(app_cats.get(c, c),0) + raw_data[c]
     return data
 
 
