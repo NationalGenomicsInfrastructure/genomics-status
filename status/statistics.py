@@ -23,26 +23,21 @@ def get_stats_data(db,view,gl=None):
             data[row.key]=row.value
     return data
 
-def clean_application_keys_y(raw_data):
-    # Normalise Application names to approved list
-    # Don't let Denis see this, it will make him cry
-    with open('application_keys.yaml') as f:
-        app_cats=yaml.load(f)
-    data={}
-    for year in raw_data:
-        data[year] = {}
-        for c in raw_data[year]:
-            data[year][app_cats.get(c, c)] = data[year].get(app_cats.get(c, c),0) + raw_data[year][c]
-    return data
-
 def clean_application_keys(raw_data):
     # Normalise Application names to approved list
     # Don't let Denis see this, it will make him cry
     with open('application_keys.yaml') as f:
         app_cats=yaml.load(f)
     data={}
-    for c in raw_data:
-        data[app_cats.get(c, c)] = data.get(app_cats.get(c, c),0) + raw_data[c]
+    try:
+        for year in raw_data:
+            assert int(year) > 2000
+            data[year] = {}
+            for c in raw_data[year]:
+                data[year][app_cats.get(c, c)] = data[year].get(app_cats.get(c, c),0) + raw_data[year][c]
+    except (ValueError, AssertionError):
+        for c in raw_data:
+            data[app_cats.get(c, c)] = data.get(app_cats.get(c, c),0) + raw_data[c]
     return data
 
 
@@ -50,7 +45,7 @@ class YearApplicationsProjectHandler(SafeHandler):
     def get(self):
         raw_data={}
         raw_data=get_stats_data(self.application.projects_db, "genomics-dashboard/year_application_count", 2)
-        data = clean_application_keys_y(raw_data)
+        data = clean_application_keys(raw_data)
         self.set_header('Content-Type', 'application/json')
         self.set_status(200)
         self.write(json.dumps(data))
@@ -59,7 +54,7 @@ class YearApplicationsSamplesHandler(SafeHandler):
     def get(self):
         raw_data={}
         raw_data=get_stats_data(self.application.projects_db, "genomics-dashboard/year_application_count_samples", 2)
-        data = clean_application_keys_y(raw_data)
+        data = clean_application_keys(raw_data)
         self.set_header('Content-Type', 'application/json')
         self.set_status(200)
         self.write(json.dumps(data))
@@ -120,13 +115,10 @@ class StatsAggregationHandler(UnsafeHandler):
             }
 
     def get(self):
-        clean_appkeys_y=['num_projects','num_samples']
-        clean_appkeys=['open_projects','open_project_samples']
+        clean_appkeys=['num_projects','num_samples','open_projects','open_project_samples']
         data={}
         for pa in self.project_aggregates:
             data[pa]=get_stats_data(self.application.projects_db, self.project_aggregates[pa][0], self.project_aggregates[pa][1])
-            if pa in clean_appkeys_y:
-                data[pa] = clean_application_keys_y(data[pa])
             if pa in clean_appkeys:
                 data[pa] = clean_application_keys(data[pa])
         for fa in self.flowcell_aggregates:
