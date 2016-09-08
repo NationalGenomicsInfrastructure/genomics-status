@@ -1,0 +1,28 @@
+# Used for the stats API handler
+# api/v1/stats (and sub-pages)
+
+# Clean up Application type according to the approved list
+"rna-seq": "RNA-Seq"
+"rna-seq (mrna)": "RNA-Seq"
+"rna-seq (total rna)": "RNA-Seq"
+"rna-seq (ribozero)": "RNA-Seq"
+"rna-seq smallrna": "RNA-Seq"
+"mirna-seq": "RNA-Seq"
+"cdna": "RNA-Seq"
+"wg re-seq": "WG Re-Seq"
+"wg re-seq (ign)": "WG Re-Seq"
+"target re-seq": "Targeted Re-Seq"
+"exome capture": "Targeted Re-Seq"
+"amplicon": "Targeted Re-Seq"
+"mtDNA genomes": "Targeted Re-Seq"
+"custom capture": "Targeted Re-Seq"
+"de novo": "De-Novo"
+"mate-pair": "De-Novo"
+"chip-seq": "ChIP-Seq"
+"metagenomics": "Metagenomics"
+"metagenome": "Metagenomics"
+"epigenetics": "Epigenetics"
+"rad-seq": "RAD Seq"
+# Not meant to be present any more, but still there for old projects
+"finished library": "Finished Library / Special"
+"special": "Finished Library / Special"
