@@ -98,7 +98,8 @@ class DeliveriesPageHandler(SafeHandler):
                 bioinfo_data[project_id][flowcell_id][lane_id].update({sample_id: row.value})
 
         all_running_notes = {}
-        number_of_projects = 0
+        projects_to_be_closed = 0
+        ongoing_projects = 0
         number_of_flowcells = 0
         number_of_lanes = 0
         number_of_samples = 0
@@ -106,7 +107,6 @@ class DeliveriesPageHandler(SafeHandler):
         project_status = {}
         responsible_list = {}
         for project_id in ongoing_deliveries:
-            number_of_projects += 1
             if project_id in summary_data and project_id in bioinfo_data:
                 project = summary_data[project_id]
                 running_notes = json.loads(project['details']['running_notes'])
@@ -165,12 +165,14 @@ class DeliveriesPageHandler(SafeHandler):
                         project_status[project_id] = []
                     if flowcell_status not in project_status[project_id]:
                         project_status[project_id].append(flowcell_status)
-
+                if set(project_status[project_id]) == set(['Delivered']):
+                    projects_to_be_closed += 1
+                else:
+                    ongoing_projects += 1
                 all_running_notes.update(self.__parse_running_notes(running_notes, project_id, runs_bioinfo))
                 latest_timestamp = max(running_notes.keys())
                 latest_running_note = running_notes[latest_timestamp]
                 latest_running_note['timestamp'] = latest_timestamp[:-7] # to get rid of milliseconds
-
                 # responsibles (needed for filters)
                 bioinfo_responsible = summary_data[project_id].get('project_summary', {}).get('bioinfo_responsible') or 'unassigned'
 
@@ -202,7 +204,8 @@ class DeliveriesPageHandler(SafeHandler):
         self.write(template.generate(gs_globals=self.application.gs_globals,
                                      deliveries=ongoing_deliveries,
                                      running_notes=all_running_notes,
-                                     number_of_projects=number_of_projects,
+                                     ongoing_projects=ongoing_projects,
+                                     projects_to_be_closed=projects_to_be_closed,
                                      number_of_flowcells=number_of_flowcells,
                                      number_of_lanes=number_of_lanes,
                                      number_of_samples=number_of_samples,
