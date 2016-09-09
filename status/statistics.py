@@ -23,7 +23,7 @@ def get_stats_data(db,view,gl=None, cleaning=None):
                 meta_key1=cleaning[meta_key1]
             if row.key[0] not in data:
                 data[row.key[0]]={}
-            elif meta_key1 not in data[row.key[0]]:
+            if meta_key1 not in data[row.key[0]]:
                  data[row.key[0]][meta_key1]=row.value
             else:
                  data[row.key[0]][meta_key1]+=row.value
