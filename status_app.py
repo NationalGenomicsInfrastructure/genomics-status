@@ -235,6 +235,8 @@ class Application(tornado.web.Application):
         # Global connection to the database
         couch = Server(settings.get("couch_server", None))
         if couch:
+            self.analysis_db= couch["analysis"]
+            self.application_categories_db = couch["application_categories"]
             self.bioinfo_db = couch["bioinfo_analysis"]
             self.cronjobs_db = couch["cronjobs"]
             self.flowcells_db = couch["flowcells"]
@@ -247,7 +249,6 @@ class Application(tornado.web.Application):
             self.suggestions_db = couch["suggestion_box"]
             self.worksets_db = couch["worksets"]
             self.x_flowcells_db = couch["x_flowcells"]
-            self.analysis_db= couch["analysis"]
         else:
             print settings.get("couch_server", None)
             raise IOError("Cannot connect to couchdb");
