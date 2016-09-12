@@ -345,6 +345,7 @@ class ReadsTotalHandler(SafeHandler):
                 if not row.key in data:
                     data[row.key]=[]
                 data[row.key].append(row.value)
+            for key in sorted(data.keys()):
                 ordereddata[key]=sorted(data[key], key=lambda d:d['fcp'])
             self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(), readsdata=ordereddata, query=query))
 #Functions
