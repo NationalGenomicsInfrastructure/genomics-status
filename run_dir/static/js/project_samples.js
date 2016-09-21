@@ -1013,9 +1013,10 @@ function load_charon_summary(){
       if (data['tot'] != 0){
           $('#charon-status').show();
           $('#charon-status-tot').text(data['tot']);
+          $('#charon-status-ab').text(data['ab']);
           $('#charon-status-seq').text(data['seq']);
           $('#charon-status-ana').text(data['ana']);
-          $('#charon-status-passed').text(data['passed']);
+          $('#charon-status-passed').text(data['passed_unab']);
           $('#charon-status-failed').text(data['failed']);
           $('#charon-status-runn').text(data['runn']);
           $('#charon-status-hge').text(data['hge']);
