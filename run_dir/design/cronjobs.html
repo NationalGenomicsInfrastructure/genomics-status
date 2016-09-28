@@ -31,11 +31,15 @@
       <tr style="display:none;" data-parent="#{{ server }}">
         <td></td>
         <td class="text-right">{{ username }}</td>
-        <td>{{ job.get('Minute') }}</td>
-        <td>{{ job.get('Hour') }}</td>
-        <td>{{ job.get('Day of month') }}</td>
-        <td>{{ job.get('Month') }}</td>
-        <td>{{ job.get('Day of week') }}</td>
+        {% if job.get('Special syntax') %}
+          <td colspan="5">{{ job.get('Special syntax') }}</td>
+        {% else %}
+          <td>{{ job.get('Minute') }}</td>
+          <td>{{ job.get('Hour') }}</td>
+          <td>{{ job.get('Day of month') }}</td>
+          <td>{{ job.get('Month') }}</td>
+          <td>{{ job.get('Day of week') }}</td>
+        {% end %}
         <td><pre class="{% if not job.get('Enabled', True) %}bg-danger{% end %}"><code>{% if job.get('Comment') %}# {{ job.get('Comment') }}<br>{% end %}{{ job.get('Command') }}</code></pre></td>
       </tr>
       {% end %}
