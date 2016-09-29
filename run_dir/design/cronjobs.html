@@ -6,47 +6,57 @@
 	<p>The tables below show information about all cronjobs running on production servers.</p>
 	<p><em>Deactivated (i.e commented) cronjobs will appear in red.</em></p>
 
-  <table class="table ">
-    <tbody>
-      {% for server, crontab in sorted(cronjobs.items(), key=lambda x:x[1].get('last_updated', ''), reverse=True) %}
-      {% set two_month_ago=str(datetime.datetime.now() - datetime.timedelta(30*2))%}
-      <tr class="server
-        {% if crontab.get('last_updated', '') < two_month_ago %} warning {% end %}">
-        <td><a class="cronjob-expand" href="#{{ server }}"><span class="glyphicon glyphicon-chevron-right"></span></a></td>
-        <td colspan="6"><h5>{{ server }}</h5></td>
-        <td colspan="1"><h5><i>Last Updated:</i> <b>{{ crontab.get('last_updated') }}</b></h5></td>
-      </tr>
-      <tr style="display:none;">
-        <td></td>
-        <th>User</th>
-        <th>Minute</th>
-        <th>Hour</th>
-        <th>Day of Month</th>
-        <th>Month</th>
-        <th>Day of Week</th>
-        <th>Command</th>
-      </tr>
-      {% for username, list_of_jobs in crontab['users'].items() %}
-      {% for job in list_of_jobs %}
-      <tr style="display:none;" data-parent="#{{ server }}">
-        <td></td>
-        <td class="text-right">{{ username }}</td>
-        {% if job.get('Special syntax') %}
-          <td colspan="5">{{ job.get('Special syntax') }}</td>
-        {% else %}
-          <td>{{ job.get('Minute') }}</td>
-          <td>{{ job.get('Hour') }}</td>
-          <td>{{ job.get('Day of month') }}</td>
-          <td>{{ job.get('Month') }}</td>
-          <td>{{ job.get('Day of week') }}</td>
-        {% end %}
-        <td><pre class="{% if not job.get('Enabled', True) %}bg-danger{% end %}"><code>{% if job.get('Comment') %}# {{ job.get('Comment') }}<br>{% end %}{{ job.get('Command') }}</code></pre></td>
-      </tr>
-      {% end %}
-      {% end %}
-      {% end %}
-    </tbody>
-  </table>
+  <div class="panel-group" id="cronjobs_accordion">
+  {% for server, crontab in sorted(cronjobs.items(), key=lambda x:x[1].get('last_updated', ''), reverse=True) %}
+    {% set two_month_ago=str(datetime.datetime.now() - datetime.timedelta(30*2))%}
+    <div class="panel {% if crontab.get('last_updated', '') < two_month_ago %} panel-warning {% else %} panel-default {% end %}">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" data-parent="#cronjobs_accordion" href="#cronjobs_{{ server }}">
+            {{ server }}
+            <small><em>Last Updated:</em> <strong>{{ crontab.get('last_updated') }}</strong></small>
+          </a>
+        </h4>
+      </div>
+      <div id="cronjobs_{{ server }}" class="panel-collapse collapse">
+        <div class="panel-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Minute</th>
+                <th>Hour</th>
+                <th>Day of Month</th>
+                <th>Month</th>
+                <th>Day of Week</th>
+                <th>Command</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for username, list_of_jobs in crontab['users'].items() %}
+                {% for job in list_of_jobs %}
+                <tr>
+                  <td class="text-right">{{ username }}</td>
+                  {% if job.get('Special syntax') %}
+                    <td colspan="5">{{ job.get('Special syntax') }}</td>
+                  {% else %}
+                    <td>{{ job.get('Minute') }}</td>
+                    <td>{{ job.get('Hour') }}</td>
+                    <td>{{ job.get('Day of month') }}</td>
+                    <td>{{ job.get('Month') }}</td>
+                    <td>{{ job.get('Day of week') }}</td>
+                  {% end %}
+                  <td><pre class="{% if not job.get('Enabled', True) %}bg-danger{% end %}"><code>{% if job.get('Comment') %}# {{ job.get('Comment') }}<br>{% end %}{{ job.get('Command') }}</code></pre></td>
+                </tr>
+                {% end %}
+              {% end %}
+            </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% end %}
+  </div>
 </div>
 
 <script src="/static/js/cronjobs.js"></script>
