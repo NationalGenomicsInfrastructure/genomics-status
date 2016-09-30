@@ -12,6 +12,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 import tornado.web
 
 from status.util import dthandler, SafeHandler
+from dateutil import parser
 
 
 class ProductionHandler(SafeHandler):
@@ -23,29 +24,18 @@ class ProductionHandler(SafeHandler):
         self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(), deprecated=True))
 
 class ProductionCronjobsHandler(SafeHandler):
-    """ Serves a page with the information about all cronjobs in production servers.
-    """
-    def get(self):
-        t = self.application.loader.load("cronjobs.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name()))
-
-
-class ProductionCronjobsDataHandler(SafeHandler):
     """ Returns a JSON document with the Cronjobs database information
     """
     def get(self):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.get_cronjobs()))
-
-    def get_cronjobs(self):
         cronjobs = {}
-        # Get different servers
         servers = self.application.cronjobs_db.view('server/alias')
         for server in servers.rows:
             doc = self.application.cronjobs_db.get(server.value)
-            cronjobs[server.key] =  {"last_updated": doc['Last updated'], 'users': doc['users']}
-        return cronjobs
-
+            cronjobs[server.key] =  {"last_updated": datetime.strftime(parser.parse(doc['Last updated']), '%Y-%m-%d %H:%M'),
+                                     'users': doc['users'], 'server': server.key}
+        template = self.application.loader.load("cronjobs.html")
+        self.write(template.generate(gs_globals=self.application.gs_globals,
+                                     cronjobs=cronjobs))
 
 class DeliveredMonthlyDataHandler(SafeHandler):
     """ Gives the data for monthly delivered amount of basepairs.
