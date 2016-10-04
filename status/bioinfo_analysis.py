@@ -50,18 +50,16 @@ class BioinfoAnalysisHandler(SafeHandler):
         self.write(json.dumps(saved_data))
 
 
-    def get(self, proj_id):
+    def get(self, project_id):
         t = self.application.loader.load("bioinfo_tab.html")
-        view = self.application.bioinfo_db.view("full_doc/pj_run_lane_sample_to_doc")
+        view = self.application.bioinfo_db.view("full_doc/project_to_doc")
         bioinfo_data = {'sample_run_lane_view': {}, 'run_lane_sample_view': {}}
         project_closed = False
         edit_history = {}
-        for row in view.rows:
-            project_id = row.key[0]
-            if project_id == proj_id:
-                flowcell_id = row.key[1]
-                lane_id = row.key[2]
-                sample_id = row.key[3]
+        for row in view[project_id].rows:
+                flowcell_id = row.value.get('run_id')
+                lane_id = row.value.get('lane')
+                sample_id = row.value.get('sample')
                 changes = row.value.get('values', {})
                 last_timestamp = max(changes.keys())
                 bioinfo_qc = changes.get(last_timestamp, {})
@@ -152,10 +150,10 @@ class BioinfoAnalysisHandler(SafeHandler):
             sample['datadelivered'] = sample_delivery_date
 
         try:
-            project_info = self.application.projects_db.view('project/summary')['open', proj_id].rows[0].value
+            project_info = self.application.projects_db.view('project/summary')['open', project_id].rows[0].value
             project_closed = False
         except:
-            project_info = self.application.projects_db.view('project/summary')['closed', proj_id].rows[0].value
+            project_info = self.application.projects_db.view('project/summary')['closed', project_id].rows[0].value
             project_closed = True
 
         project_name = project_info.get('project_name')
@@ -183,7 +181,7 @@ class BioinfoAnalysisHandler(SafeHandler):
                               application=application,
                               project_closed=project_closed,
                               project_name=project_name,
-                              project_id=proj_id,
+                              project_id=project_id,
                               bioinfo_responsible=bioinfo_responsible,
                               project_type=project_type,
                               edit_history=edit_history,
