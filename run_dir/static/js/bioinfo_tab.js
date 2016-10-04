@@ -1179,3 +1179,8 @@ function disableParentDate(td) {
     }
     disableParentDate(parent_td);
 };
+
+// show edit history
+$('#bioinfo-show-history-button').on('click', function(e){
+    $('#bioinfo-show-history').modal();
+});

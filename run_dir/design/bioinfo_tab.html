@@ -42,9 +42,7 @@
     {% include "bioinfo_tab/run_lane_sample_view.html" %}
     {% include "bioinfo_tab/sample_run_lane_view.html" %}
 
-    <button disabled class="btn btn-default" id="bioinfo-show-history">Show Edit History</button>
-    <pre id="bioinfo-history-dump" style="display:none; margin-top:20px;"></pre>
-
+    <button id="bioinfo-show-history-button" class="btn btn-default" data-target="#bioinfo-show-history">Show Edit History</button>
     <script src="/static/js/bootstrap-datepicker.min.js"></script>
     <script src="/static/js/bioinfo_tab.js"></script>
   </div>
@@ -67,6 +65,71 @@
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
 
+<div id="bioinfo-show-history" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Edit history for project {{ project_id }}</h4>
+      </div>
+      <div class="modal-body">
+        <div class="panel-group" id="bioinfo_history_accordion">
+          {% for user_timestamp in sorted(edit_history.keys(), reverse=True) %}
+          {% set history=edit_history.get(user_timestamp, {}) %}
+          <div class="panel panel-default">
+            <div class="panel-heading">
+               <h4 class="panel-title">
+                 <a data-toggle="collapse" data-parent="#bioinfo_history_accordion"
+                    href="#history_{{ user_timestamp[1].replace(' ', '-') }}_{{ user_timestamp[0].replace(' ', '-').replace(':', '-') }}">
+                   {{ user_timestamp[0] }}
+                   <small class="pull-right"><em>User:</em> <strong>{{ user_timestamp[1] }}</strong></small>
+                 </a>
+               </h4>
+            </div>
+            <div id="history_{{ user_timestamp[1].replace(' ', '-') }}_{{ user_timestamp[0].replace(' ', '-').replace(':', '-') }}"
+                 class="panel-collapse collapse">
+              <div class="panel-body">
+                <table class="table table-bordered">
+                  <tbody>
+                    {% for flowcell_lane_sample in sorted(history.keys()) %}
+                      <tr>
+                        <th colspan="2">{{ flowcell_lane_sample[0] }}-{{ flowcell_lane_sample[1] }}-{{ flowcell_lane_sample[2] }}</th>
+                      </tr>
+                      <tr>
+                        <td>Sample Status</td>
+                        <td>{{ history[flowcell_lane_sample].get('sample_status') }}</td>
+                      </tr>
+                      <tr>
+                        <td>User</td>
+                        <td>{{ history[flowcell_lane_sample].get('user') }}</td>
+                      </tr>
+                      {% for qc, value in history[flowcell_lane_sample].get('qc', {}).items() %}
+                        <tr>
+                          <td>{{ qc }}</td>
+                          <td>{{ value }}</td>
+                        </tr>
+                      {% end %}
+                      {% for bp, value in history[flowcell_lane_sample].get('bp', {}).items() %}
+                        <tr>
+                          <td>{{ bp }}</td>
+                          <td>{{ value }}</td>
+                        </tr>
+                      {% end %}
+                    {% end %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          {% end %}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 
 <script src="/static/js/bioinfo_tab.js"></script>
 {% end %}

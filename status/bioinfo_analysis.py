@@ -1,5 +1,6 @@
 import json
 import datetime
+import dateutil
 from status.util import SafeHandler
 
 class BioinfoAnalysisHandler(SafeHandler):
@@ -51,40 +52,54 @@ class BioinfoAnalysisHandler(SafeHandler):
 
     def get(self, proj_id):
         t = self.application.loader.load("bioinfo_tab.html")
-        sample_run_view = self.application.bioinfo_db.view('latest_data/sample_id')
+        view = self.application.bioinfo_db.view("full_doc/pj_run_lane_sample_to_doc")
         bioinfo_data = {'sample_run_lane_view': {}, 'run_lane_sample_view': {}}
         project_closed = False
-
-        for row in sample_run_view.rows:
+        edit_history = {}
+        for row in view.rows:
             project_id = row.key[0]
             if project_id == proj_id:
                 flowcell_id = row.key[1]
                 lane_id = row.key[2]
                 sample_id = row.key[3]
+                changes = row.value.get('values', {})
+                last_timestamp = max(changes.keys())
+                bioinfo_qc = changes.get(last_timestamp, {})
 
                 # building first view
                 bioinfo1 = bioinfo_data['sample_run_lane_view']
                 if sample_id not in bioinfo1:
-                    bioinfo1[sample_id] = {'flowcells': {flowcell_id: {'lanes': {lane_id: row.value}}}}
+                    bioinfo1[sample_id] = {'flowcells': {flowcell_id: {'lanes': {lane_id: bioinfo_qc}}}}
                 elif flowcell_id not in bioinfo1[sample_id]['flowcells']:
-                    bioinfo1[sample_id]['flowcells'][flowcell_id] = {'lanes': {lane_id: row.value}}
+                    bioinfo1[sample_id]['flowcells'][flowcell_id] = {'lanes': {lane_id: bioinfo_qc}}
                 elif lane_id not in bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes']:
-                    bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes'][lane_id] = row.value
+                    bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes'][lane_id] = bioinfo_qc
                 else:
-                    bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes'][lane_id].update(row.value)
+                    bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes'][lane_id].update(bioinfo_qc)
 
                 # building the second view
                 bioinfo2 = bioinfo_data['run_lane_sample_view']
                 if flowcell_id not in bioinfo2:
-                    bioinfo2[flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: row.value }}}}
+                    bioinfo2[flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: bioinfo_qc }}}}
                 elif lane_id not in bioinfo2[flowcell_id]['lanes']:
-                    bioinfo2[flowcell_id]['lanes'][lane_id] = {'samples': {sample_id: row.value}}
+                    bioinfo2[flowcell_id]['lanes'][lane_id] = {'samples': {sample_id: bioinfo_qc}}
                 elif sample_id not in bioinfo2[flowcell_id]['lanes'][lane_id]['samples']:
-                    bioinfo2[flowcell_id]['lanes'][lane_id]['samples'][sample_id] = row.value
+                    bioinfo2[flowcell_id]['lanes'][lane_id]['samples'][sample_id] = bioinfo_qc
                 else:
-                    bioinfo2[flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(row.value)
+                    bioinfo2[flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(bioinfo_qc)
 
+                # add values to edit_history
+                for long_timestamp, history in changes.items():
+                    timestamp = datetime.datetime.strftime(dateutil.parser.parse(long_timestamp), '%Y-%m-%d %H:%M')
+                    user = history.get('user', '')
 
+                    if (timestamp, user) not in edit_history:
+                        edit_history[(timestamp, user)] = {(flowcell_id, lane_id, sample_id) : history}
+                    else:
+                        if (project_id, flowcell_id, lane_id, sample_id) not in edit_history[(timestamp, user)]:
+                            edit_history[(timestamp, user)][(flowcell_id, lane_id, sample_id)] = history
+                        else:
+                            edit_history[(timestamp, user)][(flowcell_id, lane_id, sample_id)].udpate(history)
 
         # checking status for run-lane-sample view
         for flowcell_id, flowcell in bioinfo_data['run_lane_sample_view'].items():
@@ -171,7 +186,9 @@ class BioinfoAnalysisHandler(SafeHandler):
                               project_id=proj_id,
                               bioinfo_responsible=bioinfo_responsible,
                               project_type=project_type,
+                              edit_history=edit_history,
                               ))
+
 
     def _agregate_status(self, statuses):
         """
