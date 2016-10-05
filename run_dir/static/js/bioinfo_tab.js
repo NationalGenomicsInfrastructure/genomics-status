@@ -87,12 +87,13 @@ function collapse(element) {
     $(expanded).removeClass('expanded');
     var span =$(element).find('td.bioinfo-status-expand span.glyphicon');
     if ($(span).hasClass('glyphicon-chevron-down')) {
-    $(span).removeClass('glyphicon-chevron-down');
-    $(span).addClass('glyphicon-chevron-right');
+        $(span).removeClass('glyphicon-chevron-down');
+        $(span).addClass('glyphicon-chevron-right');
     }
 
     var tr = $(element);
-    var tr_class = $(tr).attr('class').trim(); //e.g. bioinfo-fc
+    var tr_class = $(tr).attr('class').split(' ')[0].trim(); //e.g. bioinfo-fc
+    console.log(tr_class);
     var children = $(element).nextUntil('tr.'+tr_class); // does not inlcude tr and next tr
     $.each(children, function(index, child) {
         $(child).hide();
