@@ -80,7 +80,7 @@
       </th>
     </tr>
       {% for sample_id, sample in sorted(bioinfo['sample_run_lane_view'].items()) %}
-        <tr class="bioinfo-sample  {% if sample.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing'] or sample.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %}"
+        <tr class="bioinfo-sample  {% if sample.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing', 'ERROR', 'Failed'] or sample.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %}"
             id="bioinfo-sample-{{ sample_id }}" data-parent="#bioinfo-project-{{ project_id }}">
           <td class="bioinfo-status-expand"><a href="#bioinfo-sample-{{ sample_id }}" class="bioinfo-expand">
             <span class="glyphicon glyphicon-chevron-right"></span></a></td>
@@ -94,7 +94,7 @@
           <td class="bioinfo-status-qc phixerrorrate unknown">?</td>
           <td class="bioinfo-status-qc basesq30 unknown">?</td>
           <td class="bioinfo-status-qc fastq_screen unknown">?</td>
-          <td class="bioinfo-status-qc blast_wrapper unknown">?</td>
+          <td class="bioinfo-status-qc blast_wrapper active">N/A</td>
           {% if application == 'rnaseq' %}
             <td class="bioinfo-status-bp rnaseq_sequenceduplication unknown">?</td>
             <td class="bioinfo-status-bp rnaseq_uniquemappingrate unknown">?</td>
@@ -123,7 +123,7 @@
             </td>
         </tr>
         {% for flowcell_id, flowcell in sorted(sample['flowcells'].items()) %}
-          <tr class="bioinfo-fc  {% if flowcell.get('flowcell_status') in ['Demultiplexing', 'Transferring', 'Sequencing'] or flowcell.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %}"
+          <tr class="bioinfo-fc  {% if flowcell.get('flowcell_status') in ['Demultiplexing', 'Transferring', 'Sequencing', 'ERROR', 'Failed'] or flowcell.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %}"
               id="bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}"
               data-parent="#bioinfo-sample-{{ sample_id }}" style="display:none;">
             <td></td>
@@ -138,7 +138,7 @@
             <td class="bioinfo-status-qc phixerrorrate unknown">?</td>
             <td class="bioinfo-status-qc basesq30 unknown">?</td>
             <td class="bioinfo-status-qc fastq_screen unknown">?</td>
-            <td class="bioinfo-status-qc blast_wrapper unknown">?</td>
+            <td class="bioinfo-status-qc blast_wrapper active">N/A</td>
           {% if application == 'rnaseq' %}
             <td class="bioinfo-status-bp rnaseq_sequenceduplication unknown">?</td>
             <td class="bioinfo-status-bp rnaseq_uniquemappingrate unknown">?</td>
@@ -167,7 +167,7 @@
             </td>
           </tr>
           {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
-            <tr class="bioinfo-lane {% if lane.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing'] or lane.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %}"
+            <tr class="bioinfo-lane {% if lane.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing', 'ERROR', 'Failed'] or lane.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %}"
                 id="bioinfo-lane-{{ sample_id }}-{{ flowcell_id }}-{{ lane_id }}"
                 data-parent="#bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}" style="display:none;">
               <td></td>
@@ -188,8 +188,8 @@
                 {{ lane.get('qc', {}).get('basesq30', '?') }}</td>
               <td class="bioinfo-status-qc fastq_screen {{ qc_css.get(lane.get('qc', {}).get('fastq_screen', '?'), 'unknown') }}">
                 {{ lane.get('qc', {}).get('fastq_screen', '?') }}</td>
-              <td class="bioinfo-status-qc blast_wrapper {{ qc_css.get(lane.get('qc', {}).get('blast_wrapper', '?'), 'unknown') }}">
-                {{ lane.get('qc', {}).get('blast_wrapper', '?') }}</td>
+              <td class="bioinfo-status-qc blast_wrapper {{ qc_css.get(lane.get('qc', {}).get('blast_wrapper', 'N/A'), 'active') }}">
+                {{ lane.get('qc', {}).get('blast_wrapper', 'N/A') }}</td>
               {% if application == 'rnaseq' %}
                 <td class="bioinfo-status-bp rnaseq_sequenceduplication {{ qc_css.get(lane.get('bp', {}).get('rnaseq_sequenceduplication', '?'), 'unknown') }}">
                   {{ lane.get('bp', {}).get('rnaseq_sequenceduplication', '?') }}</td>

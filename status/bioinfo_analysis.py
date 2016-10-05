@@ -9,7 +9,7 @@ class BioinfoAnalysisHandler(SafeHandler):
 
     def post(self, project_id):
         v = self.application.bioinfo_db.view("full_doc/pj_run_lane_sample_to_doc")
-        user = self.get_secure_cookie('user')
+        user = self.get_secure_cookie('user') or ''
         data = json.loads(self.request.body)
         saved_data = {}
         for run_id in data:
