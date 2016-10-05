@@ -75,8 +75,10 @@
         <th class="bioinfo-status-th bioinfo-status-bp bioinfo-app-applications">Data approved</th>
       {% end %}
       <th class="bioinfo-status-th-date datadelivered">Data Delivered
-        <button class="btn btn-sm date-reset"><i class="glyphicon glyphicon-remove"></i></button>
-        <button class="btn btn-sm datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></button>
+        <button class="btn btn-sm date-reset" {% if project_closed %} disabled="disabled"{% end %}>
+          <i class="glyphicon glyphicon-remove"></i></button>
+        <button class="btn btn-sm datepicker-today" {% if project_closed %} disabled="disabled"{% end %}>
+          <i class="glyphicon glyphicon-arrow-down"></i></button>
       </th>
     </tr>
       {% for sample_id, sample in sorted(bioinfo['sample_run_lane_view'].items()) %}
