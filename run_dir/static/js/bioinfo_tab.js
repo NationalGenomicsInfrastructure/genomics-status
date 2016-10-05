@@ -6,11 +6,14 @@ var bioinfo_qc_values = ['?', 'Pass', 'Warning', 'Fail', 'N/A'];
 
 // Datepickers
 $('.table-bioinfo-status').on('focus', '.input-group.date input', function(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
     if ($('.table-bioinfo-status').hasClass('bioinfo-status-disabled')) {
         return false;
     }
-    e.preventDefault();
-    e.stopImmediatePropagation();
+    if ($(this).closest('tr').hasClass('bioinfo-status-disabled')) {
+        return false;
+    }
     $(this).datepicker({
         format: "yyyy-mm-dd",
         todayHighlight: true
@@ -18,49 +21,71 @@ $('.table-bioinfo-status').on('focus', '.input-group.date input', function(e) {
 });
 
 $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
     if ($('.table-bioinfo-status').hasClass('bioinfo-status-disabled')) {
         return false;
     }
-    e.preventDefault();
-    e.stopImmediatePropagation();
     var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
     if(!isdisabled){
       var today = formatDateTime(new Date(), false);
-      $(this).prevAll("input:first").val(today);
+      var input = $(this).prevAll("input:first");
+      // if undefined, means we are in header
+      if ($(input).val() != undefined) {
+        $(input).val(today);
+      }
     }
     // set values to upper and lower levels
     var date_td = $(this).closest('td.datadelivered');
-    var child_tds = getChildTds(date_td);
-    $.each(child_tds, function(i, td){
-        // do not change if disabled
-        if (!$(td).parent().hasClass('bioinfo-status-disabled')) {
-            $(td).find('input:text').val(today);
-        }
-    });
-    setParentDate(date_td);
+    /// if no date_td, we are in header -> set all rows
+    if (date_td.length == 0) {
+        // set all
+        var all_tds = $(this).closest('table.table-bioinfo-status').find('tr:not(.bioinfo-status-disabled) td.datadelivered');
+        $(all_tds).find('input:first').val(today);
+    } else {
+        var child_tds = getChildTds(date_td);
+        $.each(child_tds, function(i, td){
+            // do not change if disabled
+            if (!$(td).parent().hasClass('bioinfo-status-disabled')) {
+                $(td).find('input:text').val(today);
+            }
+        });
+        setParentDate(date_td);
+    }
 });
 
 $('.table-bioinfo-status').on('click', '.date-reset', function(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
     if ($('.table-bioinfo-status').hasClass('bioinfo-status-disabled')) {
         return false;
     }
-    e.preventDefault();
-    e.stopImmediatePropagation();
     var isdisabled = $(this).closest('tr').hasClass('bioinfo-status-disabled');
     if(!isdisabled){
       var today = formatDateTime(new Date(), false);
-      $(this).prevAll("input:first").val("");
+      var input = $(this).prevAll("input:first");
+      // if undefined, means we are in header
+      if ($(input).val() != undefined) {
+        $(input).val("");
+      }
     }
     // set values to upper and lower levels
     var date_td = $(this).closest('td.datadelivered');
-    var child_tds = getChildTds(date_td);
-    $.each(child_tds, function(i, td){
-        // do not change if disabled
-        if (!$(td).parent().hasClass('bioinfo-status-disabled')) {
-            $(td).find('input:text').val("");
-        }
-    });
-    setParentDate(date_td);
+    /// if no date_td, we are in header -> set all rows
+    if (date_td.length == 0) {
+        // set all
+        var all_tds = $(this).closest('table.table-bioinfo-status').find('tr:not(.bioinfo-status-disabled) td.datadelivered');
+        $(all_tds).find('input:first').val('');
+    } else {
+        var child_tds = getChildTds(date_td);
+        $.each(child_tds, function(i, td){
+            // do not change if disabled
+            if (!$(td).parent().hasClass('bioinfo-status-disabled')) {
+                $(td).find('input:text').val("");
+            }
+        });
+        setParentDate(date_td);
+    }
 });
 
 // expand or collapse table
@@ -87,12 +112,12 @@ function collapse(element) {
     $(expanded).removeClass('expanded');
     var span =$(element).find('td.bioinfo-status-expand span.glyphicon');
     if ($(span).hasClass('glyphicon-chevron-down')) {
-    $(span).removeClass('glyphicon-chevron-down');
-    $(span).addClass('glyphicon-chevron-right');
+        $(span).removeClass('glyphicon-chevron-down');
+        $(span).addClass('glyphicon-chevron-right');
     }
 
     var tr = $(element);
-    var tr_class = $(tr).attr('class').trim(); //e.g. bioinfo-fc
+    var tr_class = $(tr).attr('class').split(' ')[0].trim(); //e.g. bioinfo-fc
     var children = $(element).nextUntil('tr.'+tr_class); // does not inlcude tr and next tr
     $.each(children, function(index, child) {
         $(child).hide();
@@ -648,7 +673,6 @@ $(document).ready(function() {
     loadTable(sample_view);
 });
 
-
 // sets the values to 'pass' and so on to all the tree up,
 // in the template we set only [sample, run, lane] level
 function loadTable(view_table) {
@@ -1092,33 +1116,6 @@ $('select#bioinfo-view').on( "change", function(e) {
     }
 });
 
-$('th.bioinfo-status-th-date').on('click', '.datepicker-today', function(e) {
-    var table = $(this).closest('table');
-    var today = formatDateTime(new Date(), false);
-    var tds = $(table).find('td.datadelivered')
-
-    var date_inputs = $(table).find('td.datadelivered input:text');
-    $.each(date_inputs, function(i, input){
-        if($(input).val() == '') {
-            $(input).val(today);
-        }
-
-        var label = $(input).closest('tr').find('td.bioinfo-status-runstate span.label');
-        label.text('Delivered');
-        var label_class = $(label).attr('class').split(/\s+/)[1];
-        label.removeClass(label_class);
-        label.addClass('label-danger');
-    });
-});
-
-$('th.bioinfo-status-th-date').on('click', '.date-reset', function(e) {
-    var table = $(this).closest('table');
-    var date_inputs = $(table).find('td.datadelivered input:text');
-    $.each(date_inputs, function(i, input){
-        $(input).val("");
-    });
-});
-
 // update date on all levels, when it changed
 $('td.datadelivered').on('change', 'input:text', function(e) {
     e.preventDefault();
@@ -1179,3 +1176,8 @@ function disableParentDate(td) {
     }
     disableParentDate(parent_td);
 };
+
+// show edit history
+$('#bioinfo-show-history-button').on('click', function(e){
+    $('#bioinfo-show-history').modal();
+});
