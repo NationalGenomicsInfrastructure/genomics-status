@@ -870,6 +870,10 @@ table.table-bioinfo-status {
   color: #ccc;
 }
 
+.table-bioinfo-status td.datadelivered {
+    min-width: 140px;
+}
+
 .table-bioinfo-status th.bioinfo-status-runid {
   text-align: left;
 }
