@@ -78,11 +78,21 @@
                         title="Threshold: {{ threshold }} million">{% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
                     </td>
                     <th>%&nbsp;bases&nbsp;>&nbsp;Q30:</th>
+                    {% set run_setup = flowcell.get('run_setup', '').split('x')[-1] %}
+                    {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
                     {% if flowcell.get('run_mode', '') == 'HiSeq X' %}
                       {% set q30_threshold = 75.0 %}
+                    {% elif 'MiSeq' in flowcell.get('run_mode', '') %}
+                      {% if run_setup >= 250 %}
+                        {% set q30_threshold = 60.0 %}
+                      {% elif run_setup >= 150 %}
+                        {% set q30_threshold = 70.0 %}
+                      {% elif run_setup >= 100 %}
+                        {% set q30_threshold = 75.0 %}
+                      {% elif run_setup < 100 %}
+                        {% set q30_threshold = 80.0 %}
+                      {% end %}
                     {% else %}
-                      {% set run_setup = flowcell.get('run_setup', '').split('x')[-1] %}
-                      {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
                       {% if run_setup >= 250 %}
                         {% set q30_threshold = 60.0 %}
                       {% elif run_setup >= 150 %}
