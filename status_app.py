@@ -313,6 +313,8 @@ class Application(tornado.web.Application):
         # to display instruments in the server status
         self.server_status = settings.get('server_status')
 
+        # project summary - multiqc tab
+        self.multiqc_path = settings.get('multiqc_path')
 
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
@@ -341,6 +343,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/login.html")
+            tornado.autoreload.watch("design/multiqc_tab.html")
             tornado.autoreload.watch("design/nas_quotas.html")
             tornado.autoreload.watch("design/phix_err_rate.html")
             tornado.autoreload.watch("design/production.html")

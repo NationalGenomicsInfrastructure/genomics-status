@@ -124,6 +124,7 @@ Description: Details page for a single project
     <li><a href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
     <li><a href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
     <li><a href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
+    <li><a href="#tab_multiqc" role="tab" data-toggle="tab">MultiQC report</a></li>
   </ul>
   <div class="tab-content">
     <div class="tab-pane fade in active" id="tab_details_content">
@@ -184,6 +185,7 @@ Description: Details page for a single project
           </table>
         </div>
       </div>
+
       <div class="row">
         <!-- Samples table -->
         <div class="col-sm-4">
@@ -281,7 +283,6 @@ Description: Details page for a single project
             </div>
           </div>
         </div>
-
     </div>
 
     <!-- SAMPLES TAB -->
@@ -350,7 +351,11 @@ Description: Details page for a single project
 
     <!-- LINK TAB -->
     {% include "link_tab.html" %}
-    </div>
+
+
+    <!-- MULTI QC TAB -->
+    {% include "multiqc_tab.html" %}
+
   </div>
 
 </div> <!-- #page_content -->
@@ -463,7 +468,6 @@ Description: Details page for a single project
 <!-- RUNNING NOTES HELP -->
 {% include "running_notes_help.html" %}
 
-
 <!-- CALIPER MODAL -->
 <div id="caliperModal" class="modal fade">
   <div class="modal-dialog">
@@ -489,6 +493,7 @@ Description: Details page for a single project
 <!-- Javascript -->
 <script src="/static/js/list.min.js"></script>
 <script src="/static/js/clipboard.min.js"></script>
+<script src="/statis/js/multiqc.js" id="multiqc-js" data-project="{{ project }}"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ project }}"></script>
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-project="{{project}}"></script>
 <script src="/static/js/project_samples.js?v={{ gs_globals['git_commit'] }}" id="projects-js" data-project="{{project}}"></script>
