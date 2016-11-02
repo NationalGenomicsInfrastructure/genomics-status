@@ -345,7 +345,6 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/login.html")
-            tornado.autoreload.watch("design/multiqc_tab.html")
             tornado.autoreload.watch("design/nas_quotas.html")
             tornado.autoreload.watch("design/phix_err_rate.html")
             tornado.autoreload.watch("design/production.html")
