@@ -1,6 +1,8 @@
 import json
 import datetime
 import dateutil
+import os
+
 from status.util import SafeHandler
 
 class BioinfoAnalysisHandler(SafeHandler):
@@ -173,7 +175,8 @@ class BioinfoAnalysisHandler(SafeHandler):
             if application in app_classes[key]:
                 application = key
                 break
-
+        # check if multiqc report exists
+        multiqc = self._check_multiqc(project_id)
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user_name(),
                               bioinfo=bioinfo_data,
@@ -185,8 +188,26 @@ class BioinfoAnalysisHandler(SafeHandler):
                               bioinfo_responsible=bioinfo_responsible,
                               project_type=project_type,
                               edit_history=edit_history,
+                              multiqc=multiqc,
                               ))
 
+    def _check_multiqc(self, project):
+        view = self.application.projects_db.view('project/id_name_dates')
+        rows = view[project].rows
+        project_name = ''
+        # get only the first one
+        for row in rows:
+            project_name = row.value.get('project_name', '')
+            break
+
+        if project_name:
+            multiqc_name = '{}_multiqc_report.html'.format(project_name)
+            multiqc_path = self.application.multiqc_path or ''
+            multiqc_path = os.path.join(multiqc_path, multiqc_name)
+            print multiqc_path
+            if os.path.exists(multiqc_path):
+                return True
+        return False
 
     def _agregate_status(self, statuses):
         """

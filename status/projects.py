@@ -441,7 +441,8 @@ class ProjectSamplesHandler(SafeHandler):
     brief information for each sample.
     URL: /project/([^/]*)
     """
-    def _get_multiqc(self, project):
+
+    def _check_multiqc(self, project):
         view = self.application.projects_db.view('project/id_name_dates')
         rows = view[project].rows
         project_name = ''
@@ -455,21 +456,21 @@ class ProjectSamplesHandler(SafeHandler):
             multiqc_path = self.application.multiqc_path or ''
             multiqc_path = os.path.join(multiqc_path, multiqc_name)
             if os.path.exists(multiqc_path):
-                with open(multiqc_path, 'r') as multiqc_file:
-                    html = multiqc_file.read()
-                    return html
+                return True
+        return False
+
 
     def get(self, project):
         t = self.application.loader.load("project_samples.html")
         worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
-        multiqc = self._get_multiqc(project)
+        multiqc = self._check_multiqc(project)
         self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
                               user=self.get_current_user_name(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
                               columns_sample = self.application.genstat_defaults.get('sample_columns'),
                               prettify = prettify_css_names,
                               worksets=worksets_view[project],
-                              multiqc=tornado.escape.xhtml_unescape(multiqc),
+                              multiqc=multiqc,
                               ))
 
 

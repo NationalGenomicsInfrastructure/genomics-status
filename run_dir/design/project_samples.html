@@ -352,9 +352,17 @@ Description: Details page for a single project
     <!-- LINK TAB -->
     {% include "link_tab.html" %}
 
-
     <!-- MULTI QC TAB -->
-    {% include "multiqc_tab.html" %}
+    <div class="tab-pane fade" id="tab_multiqc">
+      {% if multiqc %}
+        <a href="/api/v1/multiqc_report/{{ project }}" target="_blank" type="submit" class="btn btn-default">Open in a new Tab</a><br><br>
+        <iframe src="/api/v1/multiqc_report/{{ project }}" style="width:100%;border:none;" scrolling="no" onload="resizeMultiqcIFrame(this)">
+        </iframe>
+      {% else %}
+        <div class="alert alert-warning">No MultiQC reports available</div>
+      {% end %}
+    </div>
+
 
   </div>
 
@@ -493,8 +501,12 @@ Description: Details page for a single project
 <!-- Javascript -->
 <script src="/static/js/list.min.js"></script>
 <script src="/static/js/clipboard.min.js"></script>
-<script src="/statis/js/multiqc.js" id="multiqc-js" data-project="{{ project }}"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ project }}"></script>
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-project="{{project}}"></script>
 <script src="/static/js/project_samples.js?v={{ gs_globals['git_commit'] }}" id="projects-js" data-project="{{project}}"></script>
+<script>
+  function resizeMultiqcIFrame(iFrame) {
+    iFrame.height = iFrame.contentWindow.document.body.scrollHeight;
+  }
+</script>
 {% end %}

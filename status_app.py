@@ -29,6 +29,7 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
+from status.multiqc_report import MultiQCReportHandler
 from status.phix_err_rate import PhixErrorRateDataHandler, PhixErrorRateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
@@ -133,6 +134,7 @@ class Application(tornado.web.Application):
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/lab_status/([^/]*)", ProjectLabStatusHandler),
             ("/api/v1/load_workset_samples", WorksetSampleLoadHandler),
+            ("/api/v1/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
