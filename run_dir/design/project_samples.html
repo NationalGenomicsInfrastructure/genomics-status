@@ -124,7 +124,9 @@ Description: Details page for a single project
     <li><a href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
     <li><a href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
     <li><a href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
-    <li><a href="#tab_multiqc" role="tab" data-toggle="tab">MultiQC report</a></li>
+    {% if multiqc %}
+      <li><a href="/multiqc_report/{{ project }}" target="_blank" type="submit" class="btn">Open MultiQC report</a></li>
+    {% end %}
   </ul>
   <div class="tab-content">
     <div class="tab-pane fade in active" id="tab_details_content">
@@ -351,18 +353,6 @@ Description: Details page for a single project
 
     <!-- LINK TAB -->
     {% include "link_tab.html" %}
-
-    <!-- MULTI QC TAB -->
-    <div class="tab-pane fade" id="tab_multiqc">
-      {% if multiqc %}
-        <a href="/api/v1/multiqc_report/{{ project }}" target="_blank" type="submit" class="btn btn-default">Open in a new Tab</a><br><br>
-        <iframe src="/api/v1/multiqc_report/{{ project }}" style="width:100%;border:none;" scrolling="no" onload="resizeMultiqcIFrame(this)">
-        </iframe>
-      {% else %}
-        <div class="alert alert-warning">No MultiQC reports available</div>
-      {% end %}
-    </div>
-
 
   </div>
 

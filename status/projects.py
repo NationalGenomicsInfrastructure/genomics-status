@@ -442,28 +442,11 @@ class ProjectSamplesHandler(SafeHandler):
     URL: /project/([^/]*)
     """
 
-    def _check_multiqc(self, project):
-        view = self.application.projects_db.view('project/id_name_dates')
-        rows = view[project].rows
-        project_name = ''
-        # get only the first one
-        for row in rows:
-            project_name = row.value.get('project_name', '')
-            break
-
-        if project_name:
-            multiqc_name = '{}_multiqc_report.html'.format(project_name)
-            multiqc_path = self.application.multiqc_path or ''
-            multiqc_path = os.path.join(multiqc_path, multiqc_name)
-            if os.path.exists(multiqc_path):
-                return True
-        return False
-
-
     def get(self, project):
         t = self.application.loader.load("project_samples.html")
         worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
-        multiqc = self._check_multiqc(project)
+        # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
+        multiqc = self.get_multiqc(project) or ''
         self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
                               user=self.get_current_user_name(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
