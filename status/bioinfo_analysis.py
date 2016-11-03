@@ -1,6 +1,8 @@
 import json
 import datetime
 import dateutil
+import os
+
 from status.util import SafeHandler
 
 class BioinfoAnalysisHandler(SafeHandler):
@@ -173,7 +175,8 @@ class BioinfoAnalysisHandler(SafeHandler):
             if application in app_classes[key]:
                 application = key
                 break
-
+        # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
+        multiqc = self.get_multiqc(project_id) or ''
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user_name(),
                               bioinfo=bioinfo_data,
@@ -185,6 +188,7 @@ class BioinfoAnalysisHandler(SafeHandler):
                               bioinfo_responsible=bioinfo_responsible,
                               project_type=project_type,
                               edit_history=edit_history,
+                              multiqc=multiqc,
                               ))
 
 

@@ -17,10 +17,10 @@ NOTE: Returns JSON if an API call, this template if not.
   you were trying to access, using the <a href="/suggestion_box">Suggestion Box</a>
   page.
 </div>
-
-<p>For debugging purposes, we've tried to grab the error that triggered this page for you:</p>
-<pre class="well text-muted"><small>{{ gs_globals['exception_fulltext'] }}</small></pre>
-
+{% if gs_globals.get('exception_fulltext') %}
+  <p>For debugging purposes, we've tried to grab the error that triggered this page for you:</p>
+  <pre class="well text-muted"><small>{{ gs_globals['exception_fulltext'] }}</small></pre>
+{% end %}
 <h1></h1>
 
 {% end %}

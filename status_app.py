@@ -29,6 +29,7 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
+from status.multiqc_report import MultiQCReportHandler
 from status.phix_err_rate import PhixErrorRateDataHandler, PhixErrorRateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
@@ -199,6 +200,7 @@ class Application(tornado.web.Application):
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/instrument_logs",InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
+            ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/nas_quotas", NASQuotasHandler),
             ("/q30", Q30Handler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
@@ -313,6 +315,8 @@ class Application(tornado.web.Application):
         # to display instruments in the server status
         self.server_status = settings.get('server_status')
 
+        # project summary - multiqc tab
+        self.multiqc_path = settings.get('multiqc_path')
 
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
