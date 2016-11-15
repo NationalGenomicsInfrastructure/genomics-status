@@ -599,7 +599,7 @@ function load_samples_table() {
             // Remove the X from initial QC initials
             else if(column_id == 'initials'){
               var sig = info['initial_qc'][column_id];
-              if(sig.length == 3 && sig[2] == 'X'){
+              if(sig && sig.length == 3 && sig[2] == 'X'){
                 sig = sig.substring(0,2);
               }
               tbl_row += '<td class="'+column_id+'">'+
