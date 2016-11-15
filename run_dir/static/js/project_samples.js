@@ -68,6 +68,10 @@ $(document).ready(function() {
     e.preventDefault();
     loadCaliperImageModal($(this).attr('href'));
   })
+    $('#charon_link_button').click(function(){
+          window.open(this.href);
+      return false;
+        });
 
 });
 
