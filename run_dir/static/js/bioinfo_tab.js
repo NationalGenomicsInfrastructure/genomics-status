@@ -375,28 +375,39 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
     }
     var td = $(this);
 
-    var top_parent = topParent($(td).parent());
-    var td_index = $(td).parent().children().index(td);
-    var top_td = $(top_parent).children()[td_index];
 
-    var child_tds = getChildTds(top_td);
-    child_tds.push(top_td);
+    var td_text = $(td).text().trim();   // '?'
+    var td_class = bioinfo_qc_statuses[td_text];        // 'unknown'
+    var next_text = bioinfo_qc_values[(bioinfo_qc_values.indexOf(td_text)+1) % bioinfo_qc_values.length]; // 'Pass'
+    var next_class = bioinfo_qc_statuses[next_text];        // 'success'
 
-    var current_value = $(this).text().trim();
-    if (bioinfo_qc_values.indexOf(current_value) == -1) {
-        current_value = '?';
+    var bp_class = $(td).attr('class').split(/\s+/)[1];
+
+    // this if for the run-lane-sample view
+    if ($(td).parent().hasClass('bioinfo-sample')) {
+        // get all bp boxes for clicked sample
+        var sample_id = $(td).parent().find('td samp').text().trim();
+        console.log(sample_id);
+        // get all rows that contain clicked sample
+        var samples = $(td).closest('table').find("tr:not(.bioinfo-status-disabled) td:contains('"+sample_id+"')");
+        var bp_boxes = $(samples).parent().find('td.'+bp_class);
+        console.log(samples);
+        $(bp_boxes).removeClass(bioinfo_qc_classes.join(' ')).addClass(next_class).text(next_text);
+        $.each(bp_boxes, function(i, td){
+            checkSampleStatusOnBPClick(td);
+        });
+    } else {
+        // bioinfo_lane or bioinfo_fc
+        var tr_class = $(td).parent().attr('class').split(/\s+/)[0].trim();
+        console.log(tr_class);
+        var trs = $(td).parent().nextUntil('tr.'+tr_class+':not(.bioinfo-status-disabled)');
+        var bp_boxes = $(td).parent().nextUntil('tr.'+tr_class+':not(.bioinfo-status-disabled)').find('td.'+bp_class);
+        $(bp_boxes).removeClass(bioinfo_qc_classes.join(' ')).addClass(next_class).text(next_text);
+        $(td).removeClass(bioinfo_qc_classes.join(' ')).addClass(next_class).text(next_text);
+        checkSampleStatusOnBPClick(td);
     }
-    var index = bioinfo_qc_values.indexOf(current_value);
-    var next_value = bioinfo_qc_values[(index+1) % bioinfo_qc_values.length];
-
-    $.each(child_tds, function(i, child_td) {
-        $(child_td).removeClass(bioinfo_qc_classes.join(' '));
-        $(child_td).addClass(bioinfo_qc_statuses[next_value]);
-        $(child_td).text(next_value);
-    });
-
-    checkSampleStatusOnBPClick(td);
 });
+
 
 function checkSampleStatusOnBPClick(td, norecursion) {
     var next_value = $(td).text().trim();
@@ -418,8 +429,8 @@ function checkSampleStatusOnBPClick(td, norecursion) {
         // all the rest values are also '?'
         if (next_value == '?' && ((bp_statuses.length == 1 && bp_statuses.indexOf('?') != -1) || bp_statuses.length == 0)) {
             new_sample_status = 'New';
-        } else {
-            // do nothing
+        } else { // bp-ongoing
+            new_sample_status = 'BP-ongoing';
         }
     } else if (sample_status == 'New') { // if we clicked for the first time
         new_sample_status = 'QC-ongoing';
@@ -442,16 +453,16 @@ function checkSampleStatusOnBPClick(td, norecursion) {
             new_sample_status = 'BP-ongoing';
         }
     }
-    $(span).text(new_sample_status);
-    $(span).removeClass(sample_classes.join(' '));
     var new_sample_class = sample_statuses[new_sample_status];
+    $(span).removeClass(sample_classes.join(' '));
     $(span).addClass(new_sample_class);
+    $(span).text(new_sample_status);
 
+    // this is needed on 'th-click', so that we don't call recursive function
+    // because all the rows will change anyway
     if (norecursion == undefined) {
-        var top_parent_tr = topParent(td.closest('tr'));
-        var top_span = $(top_parent_tr).find('td.bioinfo-status-runstate span');
-        $(top_span).text(new_sample_status);
-        setChildrenSpanStatus(top_span);
+        setParentSpanStatus(span);
+        setChildrenSpanStatus(span);
     }
 };
 
