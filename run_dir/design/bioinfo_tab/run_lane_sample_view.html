@@ -189,7 +189,7 @@
                 <td class="bioinfo-status-bp customCap_enrichment {{ qc_css.get(sample.get('customCap_enrichment', '?'), 'unknown') }}">
                   {{ sample.get('bp', {}).get('customCap_enrichment', '?') }}</td>
               {% elif application == 'WGreseq' %}
-                <td class="bioinfo-status-bp WGreseq_coverage {{ qc_css.get(sample.get('bp', {}).get('WGreseq_coverage', '?'), 'unknown') }}">?</td>
+<td class="bioinfo-status-bp WGreseq_coverage {{ qc_css.get(sample.get('bp', {}).get('WGreseq_coverage', '?'), 'unknown') }}">{{ sample.get('bp', {}).get('WGreseq_coverage', '?') }}</td>
                 <td class="bioinfo-status-bp WGreseq_sequenceduplication {{ qc_css.get(sample.get('bp', {}).get('WGreseq_sequenceduplication', '?'), 'unknown') }}">
                   {{ sample.get('bp', {}).get('WGreseq_sequenceduplication', '?') }}</td>
                 <td class="bioinfo-status-bp WGreseq_mappingrate {{ qc_css.get(sample.get('WGreseq_mappingrate', '?'), 'unknown') }}">
