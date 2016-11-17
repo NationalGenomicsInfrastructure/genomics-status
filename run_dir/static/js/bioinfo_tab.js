@@ -703,6 +703,7 @@ function loadTable(view_table) {
             aggregateStatus(tr);
         }
     });
+};
 
 
     function aggregateStatus(tr) {
@@ -749,7 +750,7 @@ function loadTable(view_table) {
             $(second_level_td).addClass(bioinfo_qc_statuses[td_text]);
         });
     };
-};
+
 
 function aggregateTdStatus(td) {
     if (td == undefined || $(td).parent().hasClass('bioinfo-project')) {return false;}
@@ -1180,4 +1181,33 @@ function disableParentDate(td) {
 // show edit history
 $('#bioinfo-show-history-button').on('click', function(e){
     $('#bioinfo-show-history').modal();
+});
+
+$('button.btn-delete-history-timestamp').on('click', function(e){
+    var table = $(this).closest('div.panel').find('table');
+    // headers - to extract fc-lane-sample id
+    var spans = $(table).find('tr.history-header th span');
+    // update the view
+    $.each(spans, function(i, span){
+        // get fc-lane-sample_id from the table header
+        var sample = $(span).text();
+        // extract values for each run-lane-sample
+        var trs = $(span).closest('tr.history-header').nextUntil('tr.history-header');
+        $.each(trs, function(i, tr){
+            var qc_key = $(tr).find('td.qc_key').text();
+            var qc_value = $(tr).find('td.qc_value').text();
+            // update qc boxes in the main table
+            var qc_box = $('#bioinfo-sample-' + sample + ' td.'+qc_key);
+            $(qc_box).text(qc_value);
+            $(qc_box).removeClass(bioinfo_qc_classes.join(' '));
+            $(qc_box).addClass(bioinfo_qc_statuses[qc_value.trim()]);
+        });
+    });
+    var view = $('table.table-bioinfo-status:visible');
+    loadTable(view); // todo: no need to load the whole table
+});
+
+$('button.btn-delete-history-sample').on('click', function(e){
+    var table = $(this).closest('table');
+    console.log(table);
 });
