@@ -190,16 +190,19 @@
                     {% end %}
                   </tr>
                   {% for undetermined, number in sorted(flowcell['undetermined'].get(lane_number, {}).items(), key=lambda x: x[1], reverse=True) %}
-                    <tr class="{% if barcodes and any([re.match( '^(' + '('.join(a.replace('+', '-')+'|N)' for a in barcode) + '$', undetermined) for barcode in barcodes ]) %}undetermined-highlight{% end %}">
+                    {% set mismatch_ar=[] %}
+                    {% for sample in flowcell['lane'][lane_number] %}
+                      {% if sample['barcode'] != 'unknown' %}
+                        {% set mismatch_ar.append(sum([sample['barcode'][i] != undetermined[i] and sample['barcode'][i] != 'N' and undetermined[i] != 'N' for i in range(len(undetermined)) ])) %}
+                      {% end %}
+                    {% end %}
+                    <tr class="{% if barcodes  and len(barcodes)<9 and 0 in mismatch_ar %}undetermined-highlight{% end %}">
                       <td><samp>{{ undetermined }}</samp></td>
                       <td>{% for thousand in "{:,}".format(number).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
                       <td>{{ float("{0:.2f}".format(100 * float(number) / float(total_undetermined))) if total_undetermined != 0 else '100.00'}}%</td>
-                      {% for sample in flowcell['lane'][lane_number] %}
-                        {% if sample['barcode'] != 'unknown' %}
-                          {% set mismatches=sum([sample['barcode'][i] != undetermined[i] and sample['barcode'][i] != 'N' and undetermined[i] != 'N' for i in range(len(undetermined)) ]) %}
-                          {% set fr_matched = float( "{0:.2f}".format( (float(len(undetermined)) - float(mismatches)) / float(len(undetermined))) ) if len(undetermined) != 0 else 0%}
-                          <td class="{% if fr_matched > 0.8 %}undetermined-highlight{% elif fr_matched > 0.6 %}undetermined-warning{% end %}">{{ mismatches }}</td>
-                        {% end %}
+                      {% for mismatches in mismatch_ar %}
+                        {% set fr_matched = float( "{0:.2f}".format( (float(len(undetermined)) - float(mismatches)) / float(len(undetermined))) ) if len(undetermined) != 0 else 0%}
+                        <td class="{% if fr_matched > 0.8 %}undetermined-highlight{% elif fr_matched > 0.6 %}undetermined-warning{% end %}">{{ mismatches }}</td>
                       {% end %}
                     </tr>
                   {% end %}
