@@ -1190,17 +1190,18 @@ $('button.btn-delete-history-timestamp').on('click', function(e){
     // update the view
     $.each(spans, function(i, span){
         // get fc-lane-sample_id from the table header
-        var sample = $(span).text();
+        var sample = $(span).text().trim();
+        // from header until next header, only .history-qc (skipping user and status)
+        var trs = $(span).closest('tr.history-header').nextUntil('tr.history-header', 'tr.history-qc');
         // extract values for each run-lane-sample
-        var trs = $(span).closest('tr.history-header').nextUntil('tr.history-header');
         $.each(trs, function(i, tr){
-            var qc_key = $(tr).find('td.qc_key').text();
-            var qc_value = $(tr).find('td.qc_value').text();
+            var qc_key = $(tr).find('td.qc_key').text().trim();
+            var qc_value = $(tr).find('td.qc_value').text().trim();
             // update qc boxes in the main table
             var qc_box = $('#bioinfo-sample-' + sample + ' td.'+qc_key);
             $(qc_box).text(qc_value);
             $(qc_box).removeClass(bioinfo_qc_classes.join(' '));
-            $(qc_box).addClass(bioinfo_qc_statuses[qc_value.trim()]);
+            $(qc_box).addClass(bioinfo_qc_statuses[qc_value]);
         });
     });
     var view = $('table.table-bioinfo-status:visible');
@@ -1208,6 +1209,17 @@ $('button.btn-delete-history-timestamp').on('click', function(e){
 });
 
 $('button.btn-delete-history-sample').on('click', function(e){
-    var table = $(this).closest('table');
-    console.log(table);
+    var header = $(this).closest('table tr.history-header');
+    var run_lane_sample = $(header).find('th span').text();
+    var trs = $(header).nextUntil('tr.history-header', 'tr.history-qc');
+    $.each(trs, function(i, tr){
+        var qc_key = $(tr).find('td.qc_key').text().trim();
+        var qc_value = $(tr).find('td.qc_value').text().trim();
+        var qc_box = $('#bioinfo-sample-'+run_lane_sample + ' td.'+qc_key);
+        $(qc_box).text(qc_value);
+        $(qc_box).removeClass(bioinfo_qc_classes.join(' '));
+        $(qc_box).addClass(bioinfo_qc_statuses[qc_value]);
+    });
+    var view = $('table.table-bioinfo-status:visible');
+    loadTable(view);
 });

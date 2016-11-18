@@ -85,7 +85,9 @@
                    <a data-toggle="collapse" data-parent="#bioinfo_history_accordion"
                       href="#history_{{ user_timestamp[1].replace(' ', '-') }}_{{ user_timestamp[0].replace(' ', '-').replace(':', '-') }}">
                      <small><em>User:</em> <strong>{{ user_timestamp[1] }}</strong></small></a>&nbsp;
-                   <button class="btn btn-default btn-xs pull-right btn-delete-history-timestamp"><span class="glyphicon glyphicon-copy"></span></button>
+                   <button class="btn btn-default btn-xs pull-right btn-delete-history-timestamp">
+                     <span class="glyphicon glyphicon-copy" data-toggle="tooltip" data-placement="bottom" title="This applies changes on top of the current changes. It does not update the DB. To update DB, close this window and press 'Save Changes'"></span>
+                   </button>
                  </span>
                </h4>
             </div>
@@ -97,8 +99,10 @@
                     {% for flowcell_lane_sample in sorted(history.keys()) %}
                       <tr class="history-header">
                         <th colspan="2"><span>{{ flowcell_lane_sample[0] }}-{{ flowcell_lane_sample[1] }}-{{ flowcell_lane_sample[2] }}</span>
-
-                          <button class="btn btn-default btn-xs pull-right btn-delete-history-sample"><span class="glyphicon glyphicon-copy"></span></button></th>
+                          <button class="btn btn-default btn-xs pull-right btn-delete-history-sample">
+                            <span class="glyphicon glyphicon-copy" data-toggle="tooltip" data-placement="bottom" title="This applies changes on top of the current changes. It does not update the DB. To update DB, close this window and press 'Save Changes'"></span>
+                          </button>
+                        </th>
                       </tr>
                       <tr>
                         <td>Sample Status</td>
@@ -137,5 +141,5 @@
 </div><!-- /.modal -->
 
 <script src="/static/js/bootstrap-datepicker.min.js"></script>
-<script src="/static/js/bioinfo_tab.js id='bioinfo-js' data-project='{{ project_id }}'"></script>
+<script src="/static/js/bioinfo_tab.js" id='bioinfo-js' data-project='{{ project_id }}'></script>
 {% end %}
