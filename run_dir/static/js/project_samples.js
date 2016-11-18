@@ -554,6 +554,7 @@ function load_samples_table() {
                 // Remove the lane number and barcode - eg 6_FCID_GTGAAA
                 fc = fc.substring(2);
                 fc = fc.replace(/_[ACTG\-]+$/,'');
+                fc = fc.replace('_NoIndex', '');
                 tbl_row += '<samp class="nowrap"><a href="/flowcells/' + fc + '">' +
                 info[column_id][i] + '</a></samp><br>';
               }
