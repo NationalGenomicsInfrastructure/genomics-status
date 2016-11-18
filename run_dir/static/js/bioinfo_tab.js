@@ -387,11 +387,9 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
     if ($(td).parent().hasClass('bioinfo-sample')) {
         // get all bp boxes for clicked sample
         var sample_id = $(td).parent().find('td samp').text().trim();
-        console.log(sample_id);
         // get all rows that contain clicked sample
         var samples = $(td).closest('table').find("tr:not(.bioinfo-status-disabled) td:contains('"+sample_id+"')");
         var bp_boxes = $(samples).parent().find('td.'+bp_class);
-        console.log(samples);
         $(bp_boxes).removeClass(bioinfo_qc_classes.join(' ')).addClass(next_class).text(next_text);
         $.each(bp_boxes, function(i, td){
             checkSampleStatusOnBPClick(td);
@@ -399,7 +397,6 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
     } else {
         // bioinfo_lane or bioinfo_fc
         var tr_class = $(td).parent().attr('class').split(/\s+/)[0].trim();
-        console.log(tr_class);
         var trs = $(td).parent().nextUntil('tr.'+tr_class+':not(.bioinfo-status-disabled)');
         var bp_boxes = $(td).parent().nextUntil('tr.'+tr_class+':not(.bioinfo-status-disabled)').find('td.'+bp_class);
         $(bp_boxes).removeClass(bioinfo_qc_classes.join(' ')).addClass(next_class).text(next_text);
