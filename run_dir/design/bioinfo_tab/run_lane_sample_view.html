@@ -21,6 +21,7 @@
         <th class="bioinfo-app-applications" colspan="2">Applications (if applicable)</th>
       {% end %}
       <th>Data Delivered</th>
+      <th></th>
     </tr>
     <tr class="bioinfo-field-names bioinfo-project" id="bioinfo-project-{{ project_id }}">
       <th class="bioinfo-project"><a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
@@ -28,7 +29,7 @@
       <th></th>
       <th>Sample</th>
       <th>Status</th>
-      <th>Fill row</th>
+      <th></th>
       <th class="bioinfo-status-th bioinfo-status-qc undemultiplexedreads">Undetermined<br>indexes</th>
       <th class="bioinfo-status-th bioinfo-status-qc unexpectedindexes">Unexpected<br>  indexes</th>
       <th class="bioinfo-status-th bioinfo-status-qc lowsampleyield">Sample Yield</th>
@@ -60,6 +61,7 @@
         <button class="btn btn-sm datepicker-today"{% if project_closed %} disabled="disabled"{% end %}>
           <i class="glyphicon glyphicon-arrow-down"></i></button>
       </th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
@@ -189,7 +191,7 @@
                 <td class="bioinfo-status-bp customCap_enrichment {{ qc_css.get(sample.get('customCap_enrichment', '?'), 'unknown') }}">
                   {{ sample.get('bp', {}).get('customCap_enrichment', '?') }}</td>
               {% elif application == 'WGreseq' %}
-<td class="bioinfo-status-bp WGreseq_coverage {{ qc_css.get(sample.get('bp', {}).get('WGreseq_coverage', '?'), 'unknown') }}">{{ sample.get('bp', {}).get('WGreseq_coverage', '?') }}</td>
+                <td class="bioinfo-status-bp WGreseq_coverage {{ qc_css.get(sample.get('bp', {}).get('WGreseq_coverage', '?'), 'unknown') }}">{{ sample.get('bp', {}).get('WGreseq_coverage', '?') }}</td>
                 <td class="bioinfo-status-bp WGreseq_sequenceduplication {{ qc_css.get(sample.get('bp', {}).get('WGreseq_sequenceduplication', '?'), 'unknown') }}">
                   {{ sample.get('bp', {}).get('WGreseq_sequenceduplication', '?') }}</td>
                 <td class="bioinfo-status-bp WGreseq_mappingrate {{ qc_css.get(sample.get('WGreseq_mappingrate', '?'), 'unknown') }}">
@@ -213,4 +215,5 @@
           {% end %}
         {% end %}
       {% end %}
-  </tbody></table>
+  </tbody>
+</table>

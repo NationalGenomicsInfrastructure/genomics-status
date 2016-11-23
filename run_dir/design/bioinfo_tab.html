@@ -81,11 +81,18 @@
           <div class="panel panel-default">
             <div class="panel-heading">
                <h4 class="panel-title">
-                 <a data-toggle="collapse" data-parent="#bioinfo_history_accordion"
+
+                 <a class="timestamp" data-toggle="collapse" data-parent="#bioinfo_history_accordion"
                     href="#history_{{ user_timestamp[1].replace(' ', '-') }}_{{ user_timestamp[0].replace(' ', '-').replace(':', '-') }}">
-                   {{ user_timestamp[0] }}
-                   <small class="pull-right"><em>User:</em> <strong>{{ user_timestamp[1] }}</strong></small>
-                 </a>
+                   {{ user_timestamp[0] }}</a>
+                 <span class="pull-right">
+                   <a data-toggle="collapse" data-parent="#bioinfo_history_accordion"
+                      href="#history_{{ user_timestamp[1].replace(' ', '-') }}_{{ user_timestamp[0].replace(' ', '-').replace(':', '-') }}">
+                     <small><em>User:</em> <strong>{{ user_timestamp[1] }}</strong></small></a>&nbsp;
+                   <button class="btn btn-default btn-xs pull-right btn-reset-history-timestamp">
+                     <span class="glyphicon glyphicon-copy" data-toggle="tooltip" data-placement="bottom" title="This applies changes on top of the current changes. It does not update the DB. To update DB, close this window and press 'Save Changes'"></span>
+                   </button>
+                 </span>
                </h4>
             </div>
             <div id="history_{{ user_timestamp[1].replace(' ', '-') }}_{{ user_timestamp[0].replace(' ', '-').replace(':', '-') }}"
@@ -94,29 +101,37 @@
                 <table class="table table-bordered">
                   <tbody>
                     {% for flowcell_lane_sample in sorted(history.keys()) %}
-                      <tr>
-                        <th colspan="2">{{ flowcell_lane_sample[0] }}-{{ flowcell_lane_sample[1] }}-{{ flowcell_lane_sample[2] }}</th>
+                      <tr class="history-header">
+                        <th colspan="2"><span>{{ flowcell_lane_sample[0] }}-{{ flowcell_lane_sample[1] }}-{{ flowcell_lane_sample[2] }}</span>
+                          <button class="btn btn-default btn-xs pull-right btn-reset-history-sample">
+                            <span class="glyphicon glyphicon-copy" data-toggle="tooltip" data-placement="bottom" title="This applies changes on top of the current changes. It does not update the DB. To update DB, close this window and press 'Save Changes'"></span>
+                          </button>
+                        </th>
                       </tr>
-                      <tr>
-                        <td>Sample Status</td>
-                        <td>{{ history[flowcell_lane_sample].get('sample_status') }}</td>
+                      <tr class="history-status">
+                        <td class="qc_key">Sample Status</td>
+                        <td class="qc_value">{{ history[flowcell_lane_sample].get('sample_status') }}</td>
                       </tr>
                       <tr>
                         <td>User</td>
                         <td>{{ history[flowcell_lane_sample].get('user') }}</td>
                       </tr>
                       {% for qc, value in history[flowcell_lane_sample].get('qc', {}).items() %}
-                        <tr>
-                          <td>{{ qc }}</td>
-                          <td>{{ value }}</td>
+                        <tr class="history-qc">
+                          <td class="qc_key">{{ qc }}</td>
+                          <td class="qc_value">{{ value }}</td>
                         </tr>
                       {% end %}
                       {% for bp, value in history[flowcell_lane_sample].get('bp', {}).items() %}
-                        <tr>
-                          <td>{{ bp }}</td>
-                          <td>{{ value }}</td>
+                        <tr class="history-qc">
+                          <td class="qc_key">{{ bp }}</td>
+                          <td class="qc_value">{{ value }}</td>
                         </tr>
                       {% end %}
+                      <tr class="history-datadelivered">
+                        <td class="qc_key">datadelivered</td>
+                        <td class="qc_value">{{ history[flowcell_lane_sample].get('datadelivered', '') }}</td>
+                      </tr>
                     {% end %}
                   </tbody>
                 </table>
@@ -134,5 +149,5 @@
 </div><!-- /.modal -->
 
 <script src="/static/js/bootstrap-datepicker.min.js"></script>
-<script src="/static/js/bioinfo_tab.js"></script>
+<script src="/static/js/bioinfo_tab.js" id='bioinfo-js' data-project='{{ project_id }}'></script>
 {% end %}
