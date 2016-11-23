@@ -200,11 +200,12 @@ class MainHandler(UnsafeHandler):
         uppmax_projects = {}
         quota_decrease = {}
         for row in view.rows:
+            timestamp = parser.parse(row.key).strftime("%Y-%m-%d %H:%M")
             # if we found all projects, don't continue
             if not uppmax_ids:
                 break
             project_id = row.value.get('project', '').replace('/', '_')
-            project_nobackup = copy.copy(project_id.split('_')[0])
+            project_nobackup = copy.copy(project_id.split('_')[0]) # without _nobackup suffix
             if project_id in uppmax_ids:
                 # get quota_decrease data
                 decrease_data = self.__extract_quota_decrease(row)
@@ -213,7 +214,7 @@ class MainHandler(UnsafeHandler):
 
                 # if a new project, add cpu hours
                 if project_nobackup not in uppmax_projects:
-                    uppmax_projects[project_nobackup] = {'timestamp': row.key}
+                    uppmax_projects[project_nobackup] = {'timestamp': timestamp}
 
                 project = uppmax_projects[project_nobackup]
                 # add disk or nobackup usage depending on type of project
@@ -232,6 +233,7 @@ class MainHandler(UnsafeHandler):
                         project['disk_class'] = 'q-warning'
                     else:
                         project['disk_class'] = ''
+                    project['disk_timestamp'] = timestamp
                     if 'cpu hours' in row.value and 'cpu limit' in row.value:
                         project['cpu_usage'] = round(float(row.value['cpu hours']) / 1000, 2)
                         project['cpu_limit'] = round(float(row.value['cpu limit']) / 1000, 2)
@@ -242,6 +244,7 @@ class MainHandler(UnsafeHandler):
                             project['cpu_class'] = 'q-warning'
                         else:
                             project['cpu_class'] = ''
+                        project['cpu_timestamp'] = timestamp
                 else:
                     if 'usage (GB)' in row.value and 'quota limit (GB)' in row.value:
                         project['nobackup_usage'] = round(float(row.value['usage (GB)']) / 1024, 2)
@@ -253,15 +256,15 @@ class MainHandler(UnsafeHandler):
                             project['nobackup_class'] = 'q-warning'
                         else:
                             project['nobackup_class'] = ''
-
+                        project['nobackup_timestamp'] = timestamp
+            if project.get('disk_usage') and project.get('cpu_usage') and project.get('nobackup_usage'):
+                if project_id in uppmax_ids:
                     uppmax_ids.remove(project_id)
 
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=user, uppmax_projects=uppmax_projects,
                               server_status=server_status,
                               quota_decrease=quota_decrease))
-
-
 
 def dthandler(obj):
     """ISO formatting for datetime to be used in JSON.
