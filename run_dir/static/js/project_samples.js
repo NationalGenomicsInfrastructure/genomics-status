@@ -661,7 +661,9 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">';
-            $.each(info['library_prep'], function(library, info_library) {
+            var libs = Object.keys(info['library_prep']).sort();
+            $.each(libs, function(idx, library){
+              info_library=info['library_prep'][library];
               if ('library_validation' in info_library) {
                 // We only want to show up the LIMS process ID with the higher number (the last one)
                 var process_id = max_str(Object.keys(info_library['library_validation']));
@@ -700,7 +702,9 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">';
-            $.each(info['library_prep'], function(library, info_library) {
+            var libs = Object.keys(info['library_prep']).sort();
+            $.each(libs, function(idx, library){
+              info_library=info['library_prep'][library];
               if ('pre_prep_library_validation' in info_library) {
                 // We only want to show up the LIMS process ID with the higher number (the last one)
                 var process_id = max_str(Object.keys(info_library['pre_prep_library_validation']));
