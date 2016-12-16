@@ -114,15 +114,20 @@ function collapse(element) {
 
     var tr = $(element);
     var tr_class = $(tr).attr('class').split(' ')[0].trim(); //e.g. bioinfo-fc
-    var children = $(element).nextUntil('tr.'+tr_class); // does not inlcude tr and next tr
-    $.each(children, function(index, child) {
-        $(child).hide();
-        var span =$(child).find('td.bioinfo-status-expand span.glyphicon');
-        if ($(span).hasClass('glyphicon-chevron-down')) {
-            $(span).removeClass('glyphicon-chevron-down');
-            $(span).addClass('glyphicon-chevron-right');
+
+    // excluding parent elements from selection
+    var parent_class = $(tr).attr('data-parent').split('-').splice(0, 2).join('-').replace('#', '');
+    if ($(tr).closest('table').hasClass('table-bioinfo-status-sampleview')) {
+        if (parent_class != 'bioinfo-sample') {
+            parent_class += ',.bioinfo-sample';
         }
-    });
+    } else {
+        if (parent_class != 'bioinfo-fc') {
+            parent_class += ',.bioinfo-fc';
+        }
+    }
+    var children = $(element).nextUntil('tr.'+tr_class, 'tr:not(.'+parent_class+')'); // does not inlcude tr and next tr
+    $(children).hide().children('td.bioinfo-status-expand span.gpyhicon').removeClass('glyphicon-chevron-down glyphicon-chevron-right').addClass('glyphicon-chevron-right');
 };
 
 function expand(element) {
