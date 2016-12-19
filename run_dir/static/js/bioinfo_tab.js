@@ -1273,26 +1273,53 @@ $('button.btn-reset-history-timestamp').on('click', function(e){
 
 $('button.btn-reset-history-sample').on('click', function(e){
     var header = $(this).closest('table tr.history-header');
+    var sample_status = $(this).closest('table').find('tr.history-status td.qc_value').first().text().trim();
+
     var run_lane_sample = $(header).find('th span').text();
-    var trs = $(header).nextUntil('tr.history-header', 'tr.history-qc');
-    $.each(trs, function(i, tr){
-        var qc_key = $(tr).find('td.qc_key').text().trim();
-        var qc_value = $(tr).find('td.qc_value').text().trim();
-        var qc_box = $('#bioinfo-sample-'+run_lane_sample + ' td.'+qc_key);
-        $(qc_box).text(qc_value);
-        $(qc_box).removeClass(bioinfo_qc_classes.join(' '));
-        $(qc_box).addClass(bioinfo_qc_statuses[qc_value]);
+    var table = $('table.table-bioinfo-status:visible');
+
+    // check the view, and get tr_id
+    var tr_id = '#bioinfo-sample-'+run_lane_sample;
+    if ($(table).hasClass('table-bioinfo-status-sampleview')) {
+        var sample_id = run_lane_sample.split('-');
+        var sample = sample_id[sample_id.length-1];
+        var lane = sample_id[sample_id.length-2];
+        var run = run_lane_sample.replace('-'+sample, '').replace('-'+lane, '');
+        var sample_run_lane = [sample, run, lane].join('-');
+        tr_id = tr_id = '#bioinfo-lane-' + sample_run_lane;
+    }
+
+    // reset all values to '?' -> in Status DB we store only the changed values. All the rest are assumed to be default
+    var qc_boxes = $(tr_id).find('td.bioinfo-status-qc');
+    var bp_boxes = $(tr_id).find('td.bioinfo-status-bp');
+    $(qc_boxes).removeClass(bioinfo_qc_classes.join(' ')).addClass(bioinfo_qc_statuses['?']).text('?');
+    $(bp_boxes).removeClass(bioinfo_qc_classes.join(' ')).addClass(bioinfo_qc_statuses['?']).text('?');
+
+    $.each(qc_boxes, function(i, qc_box){
+        setParentStatus(qc_box);
     });
+    $.each(bp_boxes, function(i, bp_box) {
+        setParentStatus(bp_box);
+    });
+    // don't forget about blast_wrapper (default = 'N/A')
+    var blast_wrapper = $(tr_id).find('td.blast_wrapper');
+    $(blast_wrapper).removeClass(bioinfo_qc_classes.join(' ')).addClass(bioinfo_qc_statuses['N/A']).text('N/A');
 
-    // update sample_status value as well
-    var status_tr = $(header).nextUntil('tr.history-header', 'tr.history-status');
-    var sample_status = $(status_tr).find('td.qc_value').text().trim();
-    var sample_span = $('#bioinfo-sample-' + sample + 'td.bioinfo-status-runstate span');
-    $(sample_span).text(sample_status);
-    $(sample_span).removeClass(sample_classes.join(' '));
-    $(sample_span).addClass(sample_statuses[sample_status]);
-
-    var view = $('table.table-bioinfo-status:visible');
-    loadTable(view);
-    $('#bioinfo-status-saveButton').prop('disabled', false);
+    // set values from the table
+    if (sample_status != 'New') {
+        var trs = $(header).nextUntil('tr.history-header', 'tr.history-qc');
+        $.each(trs, function(i, tr){
+            var qc_key = $(tr).find('td.qc_key').text().trim();
+            var qc_value = $(tr).find('td.qc_value').text().trim();
+            var qc_box = $(tr_id).find('td.'+qc_key);
+            $(qc_box).text(qc_value);
+            $(qc_box).removeClass(bioinfo_qc_classes.join(' '));
+            $(qc_box).addClass(bioinfo_qc_statuses[qc_value]);
+            setParentStatus(qc_box);
+        });
+    }
+    // update sample status
+    var span = $(tr_id).find('td.bioinfo-status-runstate span');
+    $(span).removeClass(sample_classes.join(' ')).text(sample_status).addClass(sample_statuses[sample_status]);
+    setParentSpanStatus(span);
 });
