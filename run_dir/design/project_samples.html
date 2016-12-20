@@ -124,6 +124,7 @@ Description: Details page for a single project
     <li><a href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
     <li><a href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
     <li><a href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
+    <li><a {% if not multiqc %} disabled data-toggle="tooltip" data-placement="bottom" title="No MultiQC report available"{% else %} href="/multiqc_report/{{ project }}" {% end %} target="_blank" type="submit" class="btn">Open MultiQC report</a></li>
   </ul>
   <div class="tab-content">
     <div class="tab-pane fade in active" id="tab_details_content">
@@ -184,6 +185,7 @@ Description: Details page for a single project
           </table>
         </div>
       </div>
+
       <div class="row">
         <!-- Samples table -->
         <div class="col-sm-4">
@@ -199,7 +201,7 @@ Description: Details page for a single project
           </table>
           <table class="table table-bordered table-striped" id="charon-status" style="display:none;">
             <thead>
-              <tr><th colspan="2">Charon Status</th></tr>
+                <tr><th>Charon Status</th><th><a href="https://charon.scilifelab.se/project/{{ project }}" id="charon_link_button" class="btn btn-default btn-xs pull-right">Charon</a></th></tr>
             </thead>
             <tbody>
                 <tr>
@@ -281,7 +283,6 @@ Description: Details page for a single project
             </div>
           </div>
         </div>
-
     </div>
 
     <!-- SAMPLES TAB -->
@@ -350,7 +351,7 @@ Description: Details page for a single project
 
     <!-- LINK TAB -->
     {% include "link_tab.html" %}
-    </div>
+
   </div>
 
 </div> <!-- #page_content -->
@@ -462,7 +463,6 @@ Description: Details page for a single project
 
 <!-- RUNNING NOTES HELP -->
 {% include "running_notes_help.html" %}
-
 
 <!-- CALIPER MODAL -->
 <div id="caliperModal" class="modal fade">

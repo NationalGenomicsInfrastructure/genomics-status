@@ -37,7 +37,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                         response_type='code',
                         extra_params={'approval_prompt': 'auto'})
 
-class LogoutHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
+class LogoutHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
     def get(self):
         self.clear_cookie("user")
         self.clear_cookie("email")

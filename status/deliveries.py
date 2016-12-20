@@ -31,6 +31,7 @@ class DeliveriesPageHandler(SafeHandler):
             return
 
         process = process[0]
+        process.get(force=True)
         process.udf['Bioinfo responsible'] = responsible
         try:
             process.put()

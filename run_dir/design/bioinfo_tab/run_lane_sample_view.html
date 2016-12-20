@@ -1,25 +1,5 @@
   <table class="table table-bioinfo-status {% if project_closed %} bioinfo-status-disabled {% end %} table-bioinfo-status-runview table-bordered">
-    <colgroup span="2"></colgroup>
-    <colgroup span="3"> </colgroup>
-    <colgroup span="3"> </colgroup>
-    <colgroup span="2"> </colgroup>
-    <colgroup span="2"> </colgroup>
-    <colgroup span="2"> </colgroup>
-    {% if application == 'rnaseq' %}
-      <colgroup class="bioinfo-app-rnaseq" span="2"></colgroup>
-    {% elif application == 'exome' %}
-      <colgroup class="bioinfo-app-exome" span="2"></colgroup>
-    {% elif application == 'customCap' %}
-      <colgroup class="bioinfo-app-customCap"></colgroup>
-    {% elif application == 'WGreseq' %}
-      <colgroup class="bioinfo-app-WGreseq" span="3"></colgroup>
-    {% elif application == 'denovo' %}
-      <colgroup class="bioinfo-app-denovo" span="2"></colgroup>
-    {% elif application == 'applications' %}
-      <colgroup class="bioinfo-app-applications" span="2"></colgroup>
-    {% end %}
-    <colgroup span="1"> </colgroup>
-  <tbody>
+    <thead>
     <tr class="border-bottom">
       <th></th>
       <th></th>
@@ -81,8 +61,10 @@
           <i class="glyphicon glyphicon-arrow-down"></i></button>
       </th>
     </tr>
+  </thead>
+  <tbody>
       {% for flowcell_id, flowcell in sorted(bioinfo['run_lane_sample_view'].items()) %}
-        {% set disabled = True if flowcell.get('flowcell_status') in ['Demultiplexing', 'Transferring', 'Sequencing', 'ERROR', 'Failed'] or flowcell.get('datadelivered', '') != '' else False %}
+        {% set disabled = True if flowcell.get('flowcell_status') in ['Demultiplexing', 'Transferring', 'Sequencing', 'ERROR', 'Failed', 'Delivered'] else False %}
         <tr class="bioinfo-fc  {% if disabled %} bioinfo-status-disabled {% end %}"
             id="bioinfo-fc-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
           <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ flowcell_id }}" class="bioinfo-expand">
@@ -126,7 +108,7 @@
             </td>
         </tr>
         {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
-          <tr class="bioinfo-lane  {% if lane.get('lane_status') in ['Demultiplexing', 'Transferring', 'Sequencing', 'ERROR', 'Failed']  or lane.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %}"
+          <tr class="bioinfo-lane  {% if lane.get('lane_status') in ['Demultiplexing', 'Transferring', 'Sequencing', 'ERROR', 'Failed', 'Delivered'] %} bioinfo-status-disabled {% end %}"
               id="bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}"
               data-parent="#bioinfo-fc-{{ flowcell_id }}" style="display:none;">
             <td></td>
@@ -170,7 +152,7 @@
             </td>
           </tr>
           {% for sample_id, sample in sorted(lane['samples'].items()) %}
-            <tr class="bioinfo-sample  {% if sample.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing','ERROR', 'Failed']  or sample.get('datadelivered', '') != '' %} bioinfo-status-disabled {% end %}"
+            <tr class="bioinfo-sample  {% if sample.get('sample_status') in ['Demultiplexing', 'Transferring', 'Sequencing','ERROR', 'Failed', 'Delivered' ] %} bioinfo-status-disabled {% end %}"
                 id="bioinfo-sample-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
                 data-parent="#bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
               <td></td>
@@ -207,7 +189,7 @@
                 <td class="bioinfo-status-bp customCap_enrichment {{ qc_css.get(sample.get('customCap_enrichment', '?'), 'unknown') }}">
                   {{ sample.get('bp', {}).get('customCap_enrichment', '?') }}</td>
               {% elif application == 'WGreseq' %}
-                <td class="bioinfo-status-bp WGreseq_coverage {{ qc_css.get(sample.get('bp', {}).get('WGreseq_coverage', '?'), 'unknown') }}">?</td>
+<td class="bioinfo-status-bp WGreseq_coverage {{ qc_css.get(sample.get('bp', {}).get('WGreseq_coverage', '?'), 'unknown') }}">{{ sample.get('bp', {}).get('WGreseq_coverage', '?') }}</td>
                 <td class="bioinfo-status-bp WGreseq_sequenceduplication {{ qc_css.get(sample.get('bp', {}).get('WGreseq_sequenceduplication', '?'), 'unknown') }}">
                   {{ sample.get('bp', {}).get('WGreseq_sequenceduplication', '?') }}</td>
                 <td class="bioinfo-status-bp WGreseq_mappingrate {{ qc_css.get(sample.get('WGreseq_mappingrate', '?'), 'unknown') }}">

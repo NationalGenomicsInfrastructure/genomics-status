@@ -420,7 +420,6 @@ class CaliperImageHandler(SafeHandler):
         host=pattern.search(url).group(1)
         uri=urllib.unquote(pattern.search(url).group(2))
 
-
         try:
             transport=paramiko.Transport(host)
 
@@ -442,15 +441,19 @@ class ProjectSamplesHandler(SafeHandler):
     brief information for each sample.
     URL: /project/([^/]*)
     """
+
     def get(self, project):
         t = self.application.loader.load("project_samples.html")
         worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
+        # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
+        multiqc = self.get_multiqc(project) or ''
         self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
                               user=self.get_current_user_name(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
                               columns_sample = self.application.genstat_defaults.get('sample_columns'),
                               prettify = prettify_css_names,
                               worksets=worksets_view[project],
+                              multiqc=multiqc,
                               ))
 
 
@@ -666,7 +669,7 @@ class CharonProjectHandler(SafeHandler):
             url="{}/api/v1/summary?projectid={}".format(self.application.settings['charon']['url'], projectid)
             headers = {'X-Charon-API-token': '{}'.format(self.application.settings['charon']['api_token'])}
         except KeyError:
-            url="http://charon.scilifelab.se/api/v1/summary?projectid={}".format(projectid)
+            url="https://charon.scilifelab.se/api/v1/summary?projectid={}".format(projectid)
             headers={}
         r = requests.get(url, headers = headers )
         if r.status_code == requests.status_codes.codes.OK:

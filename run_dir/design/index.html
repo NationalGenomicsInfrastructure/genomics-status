@@ -94,12 +94,15 @@
         {% for project_id, project in uppmax_projects.items() %}
           <tr>
             <td><a href="quotas#{{ project_id }}">{{ project_id }}</a></td>
-            <td class="disk-quotas-highcharts {{ project.get('disk_class') }}"><div class="wrapper"><span class="val" style="width:{{ project.get('disk_percentage') }}%;">
+            <td class="disk-quotas-highcharts {{ project.get('disk_class') }}" data-placement="bottom" data-toggle="tooltip" title="{{ project.get('disk_timestamp') }}">
+              <div class="wrapper"><span class="val" style="width:{{ project.get('disk_percentage') }}%;">
               <span>{{ project.get('disk_usage') }} TB</span></span>
               <span class="percent pull-right">{{ project.get('disk_limit') }} TB</span></div></td>
-            <td class="disk-quotas-highcharts {{ project.get('nobackup_class') }}"><div class="wrapper"><span class="val" style="width:{{ project.get('nobackup_percentage') }}%;">
+            <td data-toggle="tooltip" data-placement="bottom" title="{{ project.get('nobackup_timestamp') }}" class="disk-quotas-highcharts {{ project.get('nobackup_class') }}">
+              <div class="wrapper"><span class="val" style="width:{{ project.get('nobackup_percentage') }}%;">
               <span>{{ project.get('nobackup_usage') }} TB</span></span><span class="percent pull-right">{{ project.get('nobackup_limit') }} TB</span></div></td>
-            <td class="disk-quotas-highcharts {{ project.get('cpu_class') }}"><div class="wrapper"><span class="val" style="width:{{ project.get('cpu_percentage') }}%;">
+            <td data-toggle="tooltip" data-placement="bottom" title="{{ project.get('cpu_timestamp') }}" class="disk-quotas-highcharts {{ project.get('cpu_class') }}">
+              <div class="wrapper"><span class="val" style="width:{{ project.get('cpu_percentage') }}%;">
               <span>{{ project.get('cpu_usage') }} K</span></span><span class="percent pull-right">{{ project.get('cpu_limit') }} K</span></div></td>
          </tr>
         {% end %}
