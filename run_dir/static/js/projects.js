@@ -368,7 +368,7 @@ function sel_from_ps(preset_type, preset, data){
 }
 function select_from_preset(preset_type, preset, data=null) {
     if (data == null){
-     $.getJSON('/api/v1/presets?presets_list=pv_presets').done(sel_from_ps(preset_type, preset, data)).fail(function(jqXHR, textStatus, errorThrown) { alert('getJSON request failed! ' + textStatus); });
+     $.getJSON('/api/v1/presets?presets_list=pv_presets', function(data){sel_from_ps(preset_type, preset, data)}).fail(function(jqXHR, textStatus, errorThrown) { alert('getJSON request failed! ' + textStatus); });
     }else{
         sel_from_ps(preset_type, preset, data);
     }
