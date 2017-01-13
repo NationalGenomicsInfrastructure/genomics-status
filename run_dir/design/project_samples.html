@@ -125,6 +125,7 @@ Description: Details page for a single project
     <li><a href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
     <li><a href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
     <li><a {% if not multiqc %} disabled data-toggle="tooltip" data-placement="bottom" title="No MultiQC report available"{% else %} href="/multiqc_report/{{ project }}" {% end %} target="_blank" type="submit" class="btn">Open MultiQC report</a></li>
+    <li><a href="/bioinfo/{{ project }}" target="_blank">Open bioinfo tab</a></li>
   </ul>
   <div class="tab-content">
     <div class="tab-pane fade in active" id="tab_details_content">
