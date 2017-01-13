@@ -34,6 +34,9 @@ $('.table-bioinfo-status').on('focus', '.input-group.date input', function(e) {
         format: "yyyy-mm-dd",
         todayHighlight: true
     });
+    // update status
+    var td = $(this).closest('td');
+    checkSampleStatus(td);
 });
 
 $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
@@ -67,6 +70,8 @@ $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
         }
         setParentDate(date_td);
     }
+    // update status
+    checkSampleStatus(date_td);
 });
 
 
@@ -99,6 +104,8 @@ $('.table-bioinfo-status').on('click', '.date-reset', function(e) {
         }
         setParentDate(date_td);
     }
+    // update status
+    checkSampleStatus(date_td);
 });
 
 // expand or collapse table
@@ -377,33 +384,39 @@ function checkSampleStatus(td){
     var sample_status = $(span).text().trim();
     var new_status = '';
 
-    // qc_done when none of the qc boxes contain '?'
-    var qc_done = $(td).parent().children('td.bioinfo-status-qc:contains("?")').length == 0;
-    // same for bp
-    var bp_done = $(td).parent().children('td.bioinfo-status-bp:contains("?")').length == 0;
-
-    // qc_new when all the qc boxes contain '?'
-    var qc_new = $(td).parent().children('td.bioinfo-status-qc:contains("?")').length == 7;
-    // for bp length can be different depending on the application,
-    // so compare the length of all boxes with length of boxes containing '?'
-    var bp_new = $(td).parent().children('td.bioinfo-status-bp:contains("?")').length ==
-        $(td).parent().children('td.bioinfo-status-bp').length;
-
-    // failed if all qc boxes set to 'Fail'. Doesn't matter what is in BP
-    var qc_failed = $(td).parent().children('td.bioinfo-status-qc:contains("Fail")').length == 7;
-
-    if (qc_failed) {
-        new_status = 'Failed';
-    } else if (qc_new && bp_new) {
-        new_status = 'New';
-    } else if (qc_done && bp_done) {
-        new_status = 'BP-done';
-    } else if (qc_done && bp_new) {
-        new_status = 'QC-done';
-    } else if (qc_done && !bp_done) {
-        new_status = 'BP-ongoing';
+    // check if delivered
+    var delivered = $(td).parent().find('td.datadelivered').find('input:text').val().trim();
+    if (delivered != '') {
+        new_status = 'Delivered';
     } else {
-        new_status = 'QC-ongoing';
+        // qc_done when none of the qc boxes contain '?'
+        var qc_done = $(td).parent().children('td.bioinfo-status-qc:contains("?")').length == 0;
+        // same for bp
+        var bp_done = $(td).parent().children('td.bioinfo-status-bp:contains("?")').length == 0;
+
+        // qc_new when all the qc boxes contain '?'
+        var qc_new = $(td).parent().children('td.bioinfo-status-qc:contains("?")').length == 7;
+        // for bp length can be different depending on the application,
+        // so compare the length of all boxes with length of boxes containing '?'
+        var bp_new = $(td).parent().children('td.bioinfo-status-bp:contains("?")').length ==
+            $(td).parent().children('td.bioinfo-status-bp').length;
+
+        // failed if all qc boxes set to 'Fail'. Doesn't matter what is in BP
+        var qc_failed = $(td).parent().children('td.bioinfo-status-qc:contains("Fail")').length == 7;
+
+        if (qc_failed) {
+            new_status = 'Failed';
+        } else if (qc_new && bp_new) {
+            new_status = 'New';
+        } else if (qc_done && bp_done) {
+            new_status = 'BP-done';
+        } else if (qc_done && bp_new) {
+            new_status = 'QC-done';
+        } else if (qc_done && !bp_done) {
+            new_status = 'BP-ongoing';
+        } else {
+            new_status = 'QC-ongoing';
+        }
     }
 
     // update child statuses
@@ -495,7 +508,7 @@ function setParentStatus(td) {
     }
 };
 
-var getAllChildTrs = function(tr) {
+function getAllChildTrs(tr) {
     var table = $(tr).closest('table');
     var first_level_class = '';
     var second_level_class = '';
@@ -948,8 +961,10 @@ $('td.datadelivered').on('change', 'input:text', function(e) {
     if (child_trs.length != 0) {
         $(child_trs).children('td.datadelivered').find('input:text').val(delivery_date);
     }
-
     setParentDate(td);
+
+    // update status
+    checkSampleStatus(td);
 });
 
 function setParentDate(td) {
