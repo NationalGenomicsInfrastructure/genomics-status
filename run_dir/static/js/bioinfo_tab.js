@@ -63,15 +63,20 @@ $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
         if (all_tds.length != 0) {
             $(all_tds).find('input:first').val(today);
         }
+        // update status for all rows:
+        var all_rows = $(this).closest('.table-bioinfo-status').find('td.datadelivered');
+        $.each(all_rows, function(i, td) {
+            checkSampleStatus(td);
+        })
     } else {
         var child_tds = getAllChildTrs($(date_td).parent());
         if (child_tds.length != 0) {
             $(child_tds).children('td.datadelivered').find('input:text').val(today);
         }
         setParentDate(date_td);
+        // update status
+        checkSampleStatus(date_td);
     }
-    // update status
-    checkSampleStatus(date_td);
 });
 
 
@@ -97,15 +102,18 @@ $('.table-bioinfo-status').on('click', '.date-reset', function(e) {
         // set all
         var all_tds = $(this).closest('table.table-bioinfo-status').find('tr:not(.bioinfo-status-disabled) td.datadelivered');
         $(all_tds).find('input:first').val('');
+        $.each(all_tds, function(i, td) {
+            checkSampleStatus(td);
+        });
     } else {
         var child_trs = getAllChildTrs($(date_td).parent());
         if (child_trs.length != 0) {
             $(child_trs).children('td.datadelivered').find('input:text').val("");
         }
         setParentDate(date_td);
+        // update status
+        checkSampleStatus(date_td);
     }
-    // update status
-    checkSampleStatus(date_td);
 });
 
 // expand or collapse table
