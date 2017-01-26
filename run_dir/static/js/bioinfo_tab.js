@@ -284,6 +284,17 @@ $('.table-bioinfo-status').on('click', 'th.bioinfo-status-th', function(e) {
     $(th).removeClass(th_status).addClass(new_status);
 
     // update sample status
+    if ($(this).closest('table').hasClass('bioinfo-status-runview')) {
+        var top_level_class = 'bioinfo-fc';
+    } else {
+        var top_level_class = 'bioinfo-sample';
+    }
+
+    // get only top flowcells (for runview) or samples (for sampleview) -> then checkSampleStatus works faster
+    tds = $(this).closest('table.table-bioinfo-status-runview:visible').find('tr.bioinfo-fc td.'+column_name);
+    // merge results from both views, one of them will be empty
+    $.merge(tds, $(this).closest('table.table-bioinfo-status-sampleview:visible').find('tr.bioinfo-sample td.'+column_name));
+
     $.each(tds, function(i, td){
         checkSampleStatus(td);
     });
