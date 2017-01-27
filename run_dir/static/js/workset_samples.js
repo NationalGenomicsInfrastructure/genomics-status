@@ -51,10 +51,10 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
         content+='<table class="table table-bordered" id="ws-'+project_id+'"> \
                      <tr> \
                      <th class="col-md-1">Sample name</th> \
-                     <th class="col-md-1">Submitter</th> \
+                     <th class="col-md-2">Submitter Name</th> \
                      <th class="col-md-1">Reception Control</th> \
                      <th class="col-md-4"><abbr title="AggregateQC date, QC status, sample concentration, insert size, index">Library</abbr></th> \
-                     <th class="col-md-4">Sequencing</th> \
+                     <th class="col-md-3">Sequencing</th> \
                      <th class="col-md-1">Location</th> \
                  </tr> ';
         $.each(project_data.samples, function(sample_id, sample_data){
