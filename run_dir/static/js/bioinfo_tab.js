@@ -103,9 +103,9 @@ $('.table-bioinfo-status').on('click', '.date-reset', function(e) {
         var all_tds = $(this).closest('table.table-bioinfo-status').find('tr:not(.bioinfo-status-disabled) td.datadelivered');
         $(all_tds).find('input:first').val('');
         $.each(all_tds, function(i, td) {
-            checkSampleStatus(td);
+            checkSampleStatus(td, 'no_recursion');
         });
-    } else {
+    } else { // not in header
         var child_trs = getAllChildTrs($(date_td).parent());
         if (child_trs.length != 0) {
             $(child_trs).children('td.datadelivered').find('input:text').val("");
