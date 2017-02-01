@@ -48,14 +48,14 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                     <td>"+project_data['application']+"</td>\
                     <td>"+project_data['library']+"</td></tr></table>";
         content+="<h3>Samples</h3>";
-        content+='<table class="table table-bordered narrow-headers" id="ws-'+project_id+'"> \
+        content+='<table class="table table-bordered" id="ws-'+project_id+'"> \
                      <tr> \
-                     <th>Sample name</th> \
-                     <th>Submitter Name</th> \
-                     <th>Reception Control</th> \
-                     <th><abbr title="AggregateQC date, QC status, sample concentration, insert size">Library</abbr></th> \
-                     <th>Sequencing</th> \
-                     <th>Location</th> \
+                     <th class="col-md-1">Sample name</th> \
+                     <th class="col-md-2">Submitter Name</th> \
+                     <th class="col-md-1">Reception Control</th> \
+                     <th class="col-md-4"><abbr title="AggregateQC date, QC status, sample concentration, insert size, index">Library</abbr></th> \
+                     <th class="col-md-3">Sequencing</th> \
+                     <th class="col-md-1">Location</th> \
                  </tr> ';
         $.each(project_data.samples, function(sample_id, sample_data){
         updateSample(sample_id,sample_data)
@@ -70,6 +70,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                 content+=auto_format(lib_data['status']);
                 content+=" <span class='label label-date'>"+lib_data['concentration']+"</span>"
                 content+=" <span class='label label-date'>"+lib_data['size']+"bp</span>"
+                content+=" <span class='label label-date'>"+lib_data['index']+"</span>"
                 content+="<br />";
             });
                 content+="</td><td>";

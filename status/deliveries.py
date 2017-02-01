@@ -23,14 +23,28 @@ class DeliveriesPageHandler(SafeHandler):
             return
         project_name = lims_project.name
         stepname=['Project Summary 1.3']
-        process=lims.get_processes(type=stepname, projectname=project_name)
-        if process == []:
+        processes=lims.get_processes(type=stepname, projectname=project_name)
+        if processes == []:
             error = "{} for {} is not available in LIMS.".format(stepname, limsproject)
             self.set_status(400)
             self.write(error)
             return
 
-        process = process[0]
+        def process_date_cmp(pc1, pc2):
+            if not pc1.daterun:
+                if not pc2.daterun:
+                    return 0
+                else:
+                    return -1
+            elif not pc2.daterun:
+                return 1
+            else:
+                if pc1.daterun < pc2.daterun:
+                    return 1
+                else:
+                    return -1
+
+        process = sorted(processes, cmp=process_date_cmp)[0]
         process.get(force=True)
         process.udf['Bioinfo responsible'] = responsible
         try:
