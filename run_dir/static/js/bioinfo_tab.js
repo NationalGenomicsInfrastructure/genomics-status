@@ -66,9 +66,9 @@ $('.table-bioinfo-status').on('click', '.datepicker-today', function(e) {
         // update status for all rows:
         var all_rows = $(this).closest('.table-bioinfo-status').find('td.datadelivered');
         $.each(all_rows, function(i, td) {
-            checkSampleStatus(td);
+            checkSampleStatus(td, 'no_recursion');
         })
-    } else {
+    } else { // not in header
         var child_tds = getAllChildTrs($(date_td).parent());
         if (child_tds.length != 0) {
             $(child_tds).children('td.datadelivered').find('input:text').val(today);
