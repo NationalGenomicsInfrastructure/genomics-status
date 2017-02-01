@@ -30,31 +30,20 @@ class DeliveriesPageHandler(SafeHandler):
             self.write(error)
             return
 
-        def process_date_cmp(pc1, pc2):
-            if not pc1.daterun:
-                if not pc2.daterun:
-                    return 0
-                else:
-                    return -1
-            elif not pc2.daterun:
-                return 1
-            else:
-                if pc1.daterun < pc2.daterun:
-                    return 1
-                else:
-                    return -1
-
-        process = sorted(processes, cmp=process_date_cmp)[0]
-        process.get(force=True)
-        process.udf['Bioinfo responsible'] = responsible
-        try:
-            process.put()
-        except Exception, e:
-            self.set_status(400)
-            self.write(e.message)
-            return
+        for process in processes:
+            process.get(force=True)
+            process.udf['Bioinfo responsible'] = responsible
+            try:
+                process.put()
+            except Exception, e:
+                # still try to update everything
+                # but will print error anyway
+                self.set_status(400)
+                self.write(e.message)
+                continue
 
         # update status db
+        # if lims was not updated, after a while this change will be discarded
         doc_id = None
         view = self.application.projects_db.view("project/project_id")
         for row in view[project_id]:
@@ -62,7 +51,7 @@ class DeliveriesPageHandler(SafeHandler):
             break
         if doc_id == None:
             self.set_status(400)
-            self.write('Lims updated, but not the status db: project not found')
+            self.write('Status DB has not been updated: project not found')
             return
 
         doc=self.application.projects_db.get(doc_id)
