@@ -338,7 +338,7 @@ $('.table-bioinfo-status-runview').on('click', 'tr:not(.bioinfo-status-disabled)
     } else {
         child_trs = getAllChildTrs($(td).parent());
     }
-    
+
     var sample_ids = $.map($(child_trs).filter('tr.bioinfo-sample'), function(child_tr) {
         return $(child_tr).children('td').children('samp').text().trim();
     });
