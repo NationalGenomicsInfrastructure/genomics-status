@@ -67,15 +67,17 @@
               <table class="table table-bordered narrow-headers no-margin" id="summary_lane_{{ lane_number }}">
                 <tbody>
                   <tr>
-                    <th>Total&nbsp;yield (Mb):</th>
+                    <th>Total&nbsp;yield&nbsp;(Mb):</th>
                     <td>{% for thousand in lane.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
                     <th>Total&nbsp;clusters:</th> {% set threshold = thresholds.get(flowcell.get('run_mode', ''), 0) %}
+                    {% set thr_per_sp = "Per sample : {:.2f} million".format(float(threshold) /len([x for x in flowcell['lane'][lane_number] if x['SampleName'] not in ['Undetermined', 'default']])) %}
                     <td class="text-left
                     {% if flowcell.get('run_mode') %}
                       {% if int(lane.get('clustersnb', '0').replace(',', '')) < threshold * 1000000 %} warning
                       {% else %} success {% end %}
                     {% end %}" data-toggle="tooltip" data-placement="bottom"
-                        title="Threshold: {{ threshold }} million">{% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
+                      title="Threshold: {{ threshold }} million <br /> {{thr_per_sp }}">
+                    {% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
                     </td>
                     <th>%&nbsp;bases&nbsp;>&nbsp;Q30:</th>
                     {% set run_setup = flowcell.get('run_setup', '').split('x')[-1] %}
@@ -112,7 +114,7 @@
                     </td>
                     <th>Mean&nbsp;Quality&nbsp;Score:</th>
                     <td class="text-left">{{ lane.get('mqs', 0) }}</td>
-                    <th>%&nbsp;perfect&nbsp;barcode :</th>
+                    <th>%&nbsp;perfect&nbsp;barcode&nbsp;:</th>
                     <td class="text-left">{{ lane.get('perf', 0) }}</td>
                     {% if 'phix' in lane %}
                       <th>%&nbsp;Phix:</th>
