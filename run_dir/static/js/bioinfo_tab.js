@@ -595,7 +595,7 @@ function loadTable(view_table) {
     $.each(second_level_trs, function(i, tr) {
         // if status is 'New', no need to aggregate
         var span_status = $(tr).find('.bioinfo-status-runstate span').text().trim();
-        if (span_status == 'New') {
+        if (span_status == 'New' || span_status == 'ERROR') {
             // do nothing;
         } else {
             aggregateStatus(tr);
@@ -614,7 +614,13 @@ function loadTable(view_table) {
 };
 
 function aggregateStatus(tr) {
-    var first_level_children = $(tr).closest('table').find("tr:not(.bioinfo-status-disabled)[data-parent='#"+$(tr).attr('id')+"']");
+    // this one does not aggregate the rows if project is delivered (because it is .bioinfo-status-disabled)
+    // var first_level_children = $(tr).closest('table').find("tr:not(.bioinfo-status-disabled)[data-parent='#"+$(tr).attr('id')+"']");
+
+    // IMPORTANT!!!
+    // this one does aggregate the delivered rows, but the behavior is not tested completely.
+    // if the page is loading slow or something is breaking, use the previous line
+    var first_level_children = $(tr).closest('table').find("tr[data-parent='#"+$(tr).attr('id')+"']");
     var children_statuses = {};
     // get a dict of statuses for each column
     $.each(first_level_children, function(i, child_tr){
