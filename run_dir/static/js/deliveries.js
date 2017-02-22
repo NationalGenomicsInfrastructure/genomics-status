@@ -279,7 +279,34 @@ $('.button-save-bioinfo-responsible').click(function() {
             success: function(data, textStatus, xhr) {
                 var success_msg = $('<span id="bioinfo-resp-status" class="delivery-saved-status">    Updated<span class="glyphicon glyphicon-ok"></span></span>');
                 success_msg.appendTo($(parent).find('.button-edit-bioinfo-responsible')).fadeOut(1600, function(){ $(this).remove(); });
-            }
+
+                // updating bioinfo-responsible filter
+                // reducing the number of projects for old_responsible
+                var old_checkbox = $('div.responsible-filters').find('input.bi-responsible-checkbox[value="'+old_responsible+'"]');
+                var old_number_span = $(old_checkbox).parent().find('span.badge');
+                var old_number_of_projects = parseInt($(old_number_span).text().trim());
+                // hide if it was the last project
+                if (old_number_of_projects == 1) {
+                    $(old_checkbox).closest('div.form-group').hide();
+                // reduce otherwise
+                } else {
+                    $(old_number_span).text(old_number_of_projects - 1);
+                }
+                // increasing the number of projects for new_responsible
+                var new_checkbox = $('div.responsible-filters').find('input.bi-responsible-checkbox[value="'+responsible+'"]');
+                // create checkbox if not exist
+                if (new_checkbox.length == 0) {
+                    var html = '<div class="form-group"> <label class="checkbox-inline"> <input class="bi-responsible-checkbox" type="checkbox" value="'
+                        + responsible+'" checked>' + responsible + ' <span class="badge badge-small">1</span> </label> </div>'
+                    var new_element = $.parseHTML(html);
+                    $('div.responsible-filters').append(new_element);
+                // increase the number of projects
+                } else {
+                    var new_number_span = $(new_checkbox).parent().find('span.badge');
+                    var new_number_of_projects = parseInt($(new_number_span).text().trim());
+                    $(new_number_span).text(new_number_of_projects + 1);
+                }
+            },
         });
     }
 
