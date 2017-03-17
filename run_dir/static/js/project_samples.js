@@ -868,6 +868,13 @@ $('.rawdate').hover(
 );
 
 function make_timescale_bar(tsid, include_orderdates){
+    // special case for Niclas Öhman (NO)
+    // signature NO is replaced to 'No' label
+    var signature_queued = $('#signature_queued span').text();
+    if (signature_queued == 'no') {
+        $('#signature_queued span').remove();
+        $('#signature_queued').text('NO');
+    }
 	// Which elements are we looking at?
   var order_date_ids = [
       	'order_received',
