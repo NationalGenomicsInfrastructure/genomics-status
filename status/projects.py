@@ -804,25 +804,25 @@ class ProjectRNAMetaDataHandler(SafeHandler):
         self.write(data)
 
 
-class ProjectLabStatusHandler(SafeHandler):
-    """Handler for the update of the project lab status"""
+class ProjectInternalCostsHandler(SafeHandler):
+    """Handler for the update of the project internal costs"""
     def post(self, project_id):
         try:
             data = json.loads(self.request.body)
-            text=data.get('text', '')
-            p=Project(lims, id=project_id)
-            p.udf['Lab Status']=text
+            text = data.get('text', '')
+            p = Project(lims, id=project_id)
+            p.udf['Internal Costs'] = text
             p.put()
-            view=self.application.projects_db.view("project/project_id")
+            view = self.application.projects_db.view("project/project_id")
             for row in view[project_id]:
                 doc=self.application.projects_db.get(row.id)
-                doc['details']['lab_status']=text
+                doc['details']['internal_costs']=text
                 self.application.projects_db.save(doc)
 
 
         except Exception as e:
             self.set_status(400)
-            self.finish('<html><body><p>could not update Entity {} :</p><pre>{}</pre></body></html>'.format( cl_id, e))
+            self.finish('<html><body><p>could not update Entity {} :</p><pre>{}</pre></body></html>'.format( project_id, e))
         else:
             self.set_status(200)
             self.set_header("Content-type", "application/json")
