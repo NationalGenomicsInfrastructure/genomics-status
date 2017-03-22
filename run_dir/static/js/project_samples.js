@@ -17,6 +17,7 @@ $(document).ready(function() {
     load_running_notes();
     load_links();
     load_charon_summary();
+    setup_internal_costs_form();
   });
 
   // Prevent traditional html submit function
@@ -379,10 +380,10 @@ function load_all_udfs(){
         $('#project_comment').html(make_markdown(value));
         check_img_sources($('#project_comment img'));
       }
-      else if (prettify(key) == 'lab_status'){
+      else if (prettify(key) == 'internal_costs'){
         value = value.replace(/\_/g, '\\_');
-        $('#lab_status').html(make_markdown(value));
-        $('#textarea_lab_status').html(value);
+        $('#internal_costs').html(make_markdown(value));
+        $('#textarea_internal_costs').html(value);
       }
 
 
@@ -1033,5 +1034,43 @@ function load_charon_summary(){
   }).fail(function( jqxhr, textStatus, error ) {
       var err = textStatus + ", " + error;
       console.log( "Couldn't load charon data: " + err );
+  });
+}
+function setup_internal_costs_form(){
+  $('#internal_costs').click(function(e){
+      e.preventDefault();
+      $('#edit_internal_costs').show();
+      $(this).hide();
+      $(this).html($("#textarea_internal_costs").val());
+  });
+  $('#submit_internal_costs').click(function(e){
+    e.preventDefault();
+    var text=$("#textarea_internal_costs").val();
+    var url="/api/v1/internal_costs/" + project;
+    var object={'text' : text};
+    $.ajax({
+      type: 'POST',
+      url: url,
+      dataType: 'json',
+      data: JSON.stringify(object),
+      error: function(xhr, textStatus, errorThrown) {
+        alert('saving the internal costs failed : '+errorThrown);
+        console.log(xhr); console.log(textStatus); console.log(errorThrown); 
+      },
+      success: function(saved_data, textStatus, xhr) {
+        $("#internal_costs").html(make_markdown(text));
+        $('#edit_internal_costs').hide();
+        $('#internal_costs').show();
+      }
+    });
+
+  });
+  $('#cancel_internal_costs').click(function(e){
+    e.preventDefault();
+    var text=$("#internal_costs").html();
+    $("#textarea_internal_costs").val(text);
+    $("#internal_costs").html(make_markdown(text));
+    $('#edit_internal_costs').hide();
+    $('#internal_costs').show();
   });
 }
