@@ -60,4 +60,20 @@ if __name__=="__main__":
             doc = sb_database.get(cards_in_db[card.id])
             doc['archived'] = card.closed
             docs.append(doc)
+    # Checking if someone has been naughty and moved cards from the suggestion box
+    for dbcard_id in cards_in_db.keys():
+        if dbcard_id in [i.id for i in all_cards]:
+            continue
+        try:
+            tcard = t_client.get_card(dbcard_id)
+            closed = tcard.closed
+        except:
+            # Trello-py might not give any exceptions if the card is not found
+            log.warning("Card {} in DB was not found Trello, it was likely deleted".format(dbcard_id))
+            continue
+        log.info('Updating status of non-suggestion box card {}...'.format(tcard.name))
+        doc = sb_database.get(cards_in_db[tcard.id])
+        doc['archived'] = closed
+        docs.append(doc)
+
     sb_database.update(docs)

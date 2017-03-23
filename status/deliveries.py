@@ -1,5 +1,4 @@
 import json
-from dateutil import parser as datetime_parser
 
 from status.util import SafeHandler
 
@@ -24,23 +23,27 @@ class DeliveriesPageHandler(SafeHandler):
             return
         project_name = lims_project.name
         stepname=['Project Summary 1.3']
-        process=lims.get_processes(type=stepname, projectname=project_name)
-        if process == []:
+        processes=lims.get_processes(type=stepname, projectname=project_name)
+        if processes == []:
             error = "{} for {} is not available in LIMS.".format(stepname, limsproject)
             self.set_status(400)
             self.write(error)
             return
 
-        process = process[0]
-        process.udf['Bioinfo responsible'] = responsible
-        try:
-            process.put()
-        except Exception, e:
-            self.set_status(400)
-            self.write(e.message)
-            return
+        for process in processes:
+            process.get(force=True)
+            process.udf['Bioinfo responsible'] = responsible
+            try:
+                process.put()
+            except Exception, e:
+                # still try to update everything
+                # but will print error anyway
+                self.set_status(400)
+                self.write(e.message)
+                continue
 
         # update status db
+        # if lims was not updated, after a while this change will be discarded
         doc_id = None
         view = self.application.projects_db.view("project/project_id")
         for row in view[project_id]:
@@ -48,7 +51,7 @@ class DeliveriesPageHandler(SafeHandler):
             break
         if doc_id == None:
             self.set_status(400)
-            self.write('Lims updated, but not the status db: project not found')
+            self.write('Status DB has not been updated: project not found')
             return
 
         doc=self.application.projects_db.get(doc_id)
@@ -98,7 +101,8 @@ class DeliveriesPageHandler(SafeHandler):
                 bioinfo_data[project_id][flowcell_id][lane_id].update({sample_id: row.value})
 
         all_running_notes = {}
-        number_of_projects = 0
+        projects_to_be_closed = 0
+        ongoing_projects = 0
         number_of_flowcells = 0
         number_of_lanes = 0
         number_of_samples = 0
@@ -106,7 +110,6 @@ class DeliveriesPageHandler(SafeHandler):
         project_status = {}
         responsible_list = {}
         for project_id in ongoing_deliveries:
-            number_of_projects += 1
             if project_id in summary_data and project_id in bioinfo_data:
                 project = summary_data[project_id]
                 running_notes = json.loads(project['details']['running_notes'])
@@ -165,12 +168,14 @@ class DeliveriesPageHandler(SafeHandler):
                         project_status[project_id] = []
                     if flowcell_status not in project_status[project_id]:
                         project_status[project_id].append(flowcell_status)
-
+                if set(project_status[project_id]) == set(['Delivered']):
+                    projects_to_be_closed += 1
+                else:
+                    ongoing_projects += 1
                 all_running_notes.update(self.__parse_running_notes(running_notes, project_id, runs_bioinfo))
                 latest_timestamp = max(running_notes.keys())
                 latest_running_note = running_notes[latest_timestamp]
                 latest_running_note['timestamp'] = latest_timestamp[:-7] # to get rid of milliseconds
-
                 # responsibles (needed for filters)
                 bioinfo_responsible = summary_data[project_id].get('project_summary', {}).get('bioinfo_responsible') or 'unassigned'
 
@@ -202,7 +207,8 @@ class DeliveriesPageHandler(SafeHandler):
         self.write(template.generate(gs_globals=self.application.gs_globals,
                                      deliveries=ongoing_deliveries,
                                      running_notes=all_running_notes,
-                                     number_of_projects=number_of_projects,
+                                     ongoing_projects=ongoing_projects,
+                                     projects_to_be_closed=projects_to_be_closed,
                                      number_of_flowcells=number_of_flowcells,
                                      number_of_lanes=number_of_lanes,
                                      number_of_samples=number_of_samples,

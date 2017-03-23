@@ -92,16 +92,16 @@ Description: Details page for a single project
     <h4>Project Co-ordinator Comment</h4>
     <p id="project_comment">-</p><hr>
 
-    <h4>Project Lab Status</h4>
-    <p id="lab_status">-</p>
-    <form id="edit_lab_status" style="display:none;">
+    <h4>Internal Costs</h4>
+    <p id="internal_costs">-</p>
+    <form id="edit_internal_costs" style="display:none;">
     <div class="form-group">
-      <textarea id="textarea_lab_status" class="form-control" rows="4" cols="10">
+      <textarea id="textarea_internal_costs" class="form-control" rows="4" cols="10">
       </textarea>
     </div>
     <div class="form-group text-right">
-        <button id="cancel_lab_status" class="btn btn-default btn-sm">Cancel <span class="glyphicon glyphicon-remove"></span></button>
-        <button id="submit_lab_status" class="btn btn-primary btn-sm">Save <span class="glyphicon glyphicon-ok"></span></button>
+        <button id="cancel_internal_costs" class="btn btn-default btn-sm">Cancel <span class="glyphicon glyphicon-remove"></span></button>
+        <button id="submit_internal_costs" class="btn btn-primary btn-sm">Save <span class="glyphicon glyphicon-ok"></span></button>
     </div>
     </form>
         <hr>
@@ -124,6 +124,8 @@ Description: Details page for a single project
     <li><a href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
     <li><a href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
     <li><a href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
+    <li><a {% if not multiqc %} disabled data-toggle="tooltip" data-placement="bottom" title="No MultiQC report available"{% else %} href="/multiqc_report/{{ project }}" {% end %} target="_blank" type="submit" class="btn">Open MultiQC report</a></li>
+    <li><a href="/bioinfo/{{ project }}" target="_blank">Open bioinfo tab</a></li>
   </ul>
   <div class="tab-content">
     <div class="tab-pane fade in active" id="tab_details_content">
@@ -174,6 +176,7 @@ Description: Details page for a single project
             </thead>
             <tbody>
               <tr><td>Sample type</td><td id="sample_type"></td></tr>
+              <tr><td>Library type</td><td id="library_type_(ready-made_libraries)"></td></tr>
               <tr><td>Number of samples ordered</td><td id="sample_units_ordered"></td></tr>
               <tr><td>% phiX</td><td id="phix_spike-in_(percent)"></td></tr>
               <tr><td>Low Diversity</td><td id="low_diversity"></td></tr>
@@ -183,6 +186,7 @@ Description: Details page for a single project
           </table>
         </div>
       </div>
+
       <div class="row">
         <!-- Samples table -->
         <div class="col-sm-4">
@@ -198,12 +202,16 @@ Description: Details page for a single project
           </table>
           <table class="table table-bordered table-striped" id="charon-status" style="display:none;">
             <thead>
-              <tr><th colspan="2">Charon Status</th></tr>
+                <tr><th>Charon Status</th><th><a href="https://charon.scilifelab.se/project/{{ project }}" id="charon_link_button" class="btn btn-default btn-xs pull-right">Charon</a></th></tr>
             </thead>
             <tbody>
                 <tr>
                     <td>Total amount of samples</td>
                     <td><span class="badge" id="charon-status-tot"></span></td>
+                </tr>
+                <tr>
+                    <td>Aborted samples</td>
+                    <td><span class="badge label-warning" id="charon-status-ab"></span></td>
                 </tr>
                 <tr>
                     <td>Sequenced samples</td>
@@ -214,7 +222,7 @@ Description: Details page for a single project
                     <td><span class="badge" id="charon-status-ana"></span></td>
                 </tr>
                 <tr>
-                    <td>Successful Analysis</td>
+                    <td>Successful Analysis (non-aborted)</td>
                     <td><span class="badge label-success" id="charon-status-passed"></span></td>
                 </tr>
                 <tr>
@@ -276,7 +284,6 @@ Description: Details page for a single project
             </div>
           </div>
         </div>
-
     </div>
 
     <!-- SAMPLES TAB -->
@@ -345,7 +352,7 @@ Description: Details page for a single project
 
     <!-- LINK TAB -->
     {% include "link_tab.html" %}
-    </div>
+
   </div>
 
 </div> <!-- #page_content -->
@@ -457,7 +464,6 @@ Description: Details page for a single project
 
 <!-- RUNNING NOTES HELP -->
 {% include "running_notes_help.html" %}
-
 
 <!-- CALIPER MODAL -->
 <div id="caliperModal" class="modal fade">

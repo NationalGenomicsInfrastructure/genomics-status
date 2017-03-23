@@ -870,6 +870,10 @@ table.table-bioinfo-status {
   color: #ccc;
 }
 
+.table-bioinfo-status td.datadelivered {
+    min-width: 140px;
+}
+
 .table-bioinfo-status th.bioinfo-status-runid {
   text-align: left;
 }
@@ -889,11 +893,6 @@ table.table-bioinfo-status {
 }
 .bioinfo-status-disabled.bioinfo-delivered td.bioinfo-status-runstate {
   cursor: pointer;
-}
-
-.input-group.date {
-    max-width: 190px;
-    margin-right: -30px;
 }
 
 

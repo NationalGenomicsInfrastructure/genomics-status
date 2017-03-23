@@ -29,15 +29,16 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
+from status.multiqc_report import MultiQCReportHandler
 from status.phix_err_rate import PhixErrorRateDataHandler, PhixErrorRateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
-    ProducedQuarterlyPlotHandler, ProductionCronjobsDataHandler, ProductionCronjobsHandler, ProductionHandler
+    ProducedQuarterlyPlotHandler, ProductionCronjobsHandler, ProductionHandler
 from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
-    ProjMetaCompareHandler, ProjectLabStatusHandler, ProjectRNAMetaDataHandler
+    ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler
 
 from status.quotas import QuotasHandler
 from status.nas_quotas import NASQuotasHandler
@@ -129,9 +130,9 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
+            ("/api/v1/internal_costs/([^/]*)", ProjectInternalCostsHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
-            ("/api/v1/lab_status/([^/]*)", ProjectLabStatusHandler),
             ("/api/v1/load_workset_samples", WorksetSampleLoadHandler),
             ("/api/v1/plot/q30.png", Q30PlotHandler),
             ("/api/v1/plot/samples_per_lane.png",
@@ -144,7 +145,6 @@ class Application(tornado.web.Application):
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
             ("/api/v1/produced_quarterly.png", ProducedQuarterlyPlotHandler),
-            ("/api/v1/production/cronjobs", ProductionCronjobsDataHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
@@ -200,6 +200,7 @@ class Application(tornado.web.Application):
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/instrument_logs",InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
+            ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/nas_quotas", NASQuotasHandler),
             ("/q30", Q30Handler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
@@ -235,6 +236,8 @@ class Application(tornado.web.Application):
         # Global connection to the database
         couch = Server(settings.get("couch_server", None))
         if couch:
+            self.analysis_db= couch["analysis"]
+            self.application_categories_db = couch["application_categories"]
             self.bioinfo_db = couch["bioinfo_analysis"]
             self.cronjobs_db = couch["cronjobs"]
             self.flowcells_db = couch["flowcells"]
@@ -247,7 +250,6 @@ class Application(tornado.web.Application):
             self.suggestions_db = couch["suggestion_box"]
             self.worksets_db = couch["worksets"]
             self.x_flowcells_db = couch["x_flowcells"]
-            self.analysis_db= couch["analysis"]
         else:
             print settings.get("couch_server", None)
             raise IOError("Cannot connect to couchdb");
@@ -313,6 +315,8 @@ class Application(tornado.web.Application):
         # to display instruments in the server status
         self.server_status = settings.get('server_status')
 
+        # project summary - multiqc tab
+        self.multiqc_path = settings.get('multiqc_path')
 
         # Setup the Tornado Application
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)

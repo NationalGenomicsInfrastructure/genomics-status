@@ -17,6 +17,7 @@ $(document).ready(function() {
     load_running_notes();
     load_links();
     load_charon_summary();
+    setup_internal_costs_form();
   });
 
   // Prevent traditional html submit function
@@ -68,6 +69,10 @@ $(document).ready(function() {
     e.preventDefault();
     loadCaliperImageModal($(this).attr('href'));
   })
+    $('#charon_link_button').click(function(){
+          window.open(this.href);
+      return false;
+        });
 
 });
 
@@ -375,10 +380,10 @@ function load_all_udfs(){
         $('#project_comment').html(make_markdown(value));
         check_img_sources($('#project_comment img'));
       }
-      else if (prettify(key) == 'lab_status'){
+      else if (prettify(key) == 'internal_costs'){
         value = value.replace(/\_/g, '\\_');
-        $('#lab_status').html(make_markdown(value));
-        $('#textarea_lab_status').html(value);
+        $('#internal_costs').html(make_markdown(value));
+        $('#textarea_internal_costs').html(value);
       }
 
 
@@ -550,6 +555,7 @@ function load_samples_table() {
                 // Remove the lane number and barcode - eg 6_FCID_GTGAAA
                 fc = fc.substring(2);
                 fc = fc.replace(/_[ACTG\-]+$/,'');
+                fc = fc.replace('_NoIndex', '');
                 tbl_row += '<samp class="nowrap"><a href="/flowcells/' + fc + '">' +
                 info[column_id][i] + '</a></samp><br>';
               }
@@ -599,7 +605,7 @@ function load_samples_table() {
             // Remove the X from initial QC initials
             else if(column_id == 'initials'){
               var sig = info['initial_qc'][column_id];
-              if(sig.length == 3 && sig[2] == 'X'){
+              if(sig && sig.length == 3 && sig[2] == 'X'){
                 sig = sig.substring(0,2);
               }
               tbl_row += '<td class="'+column_id+'">'+
@@ -656,7 +662,9 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">';
-            $.each(info['library_prep'], function(library, info_library) {
+            var libs = Object.keys(info['library_prep']).sort();
+            $.each(libs, function(idx, library){
+              info_library=info['library_prep'][library];
               if ('library_validation' in info_library) {
                 // We only want to show up the LIMS process ID with the higher number (the last one)
                 var process_id = max_str(Object.keys(info_library['library_validation']));
@@ -695,7 +703,9 @@ function load_samples_table() {
             var column_name = column_tuple[0];
             var column_id = column_tuple[1];
             tbl_row += '<td class="' + column_id + '">';
-            $.each(info['library_prep'], function(library, info_library) {
+            var libs = Object.keys(info['library_prep']).sort();
+            $.each(libs, function(idx, library){
+              info_library=info['library_prep'][library];
               if ('pre_prep_library_validation' in info_library) {
                 // We only want to show up the LIMS process ID with the higher number (the last one)
                 var process_id = max_str(Object.keys(info_library['pre_prep_library_validation']));
@@ -1013,9 +1023,10 @@ function load_charon_summary(){
       if (data['tot'] != 0){
           $('#charon-status').show();
           $('#charon-status-tot').text(data['tot']);
+          $('#charon-status-ab').text(data['ab']);
           $('#charon-status-seq').text(data['seq']);
           $('#charon-status-ana').text(data['ana']);
-          $('#charon-status-passed').text(data['passed']);
+          $('#charon-status-passed').text(data['passed_unab']);
           $('#charon-status-failed').text(data['failed']);
           $('#charon-status-runn').text(data['runn']);
           $('#charon-status-hge').text(data['hge']);
@@ -1023,5 +1034,43 @@ function load_charon_summary(){
   }).fail(function( jqxhr, textStatus, error ) {
       var err = textStatus + ", " + error;
       console.log( "Couldn't load charon data: " + err );
+  });
+}
+function setup_internal_costs_form(){
+  $('#internal_costs').click(function(e){
+      e.preventDefault();
+      $('#edit_internal_costs').show();
+      $(this).hide();
+      $(this).html($("#textarea_internal_costs").val());
+  });
+  $('#submit_internal_costs').click(function(e){
+    e.preventDefault();
+    var text=$("#textarea_internal_costs").val();
+    var url="/api/v1/internal_costs/" + project;
+    var object={'text' : text};
+    $.ajax({
+      type: 'POST',
+      url: url,
+      dataType: 'json',
+      data: JSON.stringify(object),
+      error: function(xhr, textStatus, errorThrown) {
+        alert('saving the internal costs failed : '+errorThrown);
+        console.log(xhr); console.log(textStatus); console.log(errorThrown); 
+      },
+      success: function(saved_data, textStatus, xhr) {
+        $("#internal_costs").html(make_markdown(text));
+        $('#edit_internal_costs').hide();
+        $('#internal_costs').show();
+      }
+    });
+
+  });
+  $('#cancel_internal_costs').click(function(e){
+    e.preventDefault();
+    var text=$("#internal_costs").html();
+    $("#textarea_internal_costs").val(text);
+    $("#internal_costs").html(make_markdown(text));
+    $('#edit_internal_costs').hide();
+    $('#internal_costs').show();
   });
 }

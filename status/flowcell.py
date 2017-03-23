@@ -51,11 +51,6 @@ class FlowcellHandler(SafeHandler):
             view = self.application.x_flowcells_db.view('info/summary2_full_id')
             flowcell = [row.value for row in view[flowcell_id].rows]
             flowcell = flowcell[0] if len(flowcell) >= 1 else {}
-        # replace '__' in project name
-        flowcell['plist'] = self._get_project_list(flowcell)
-        # list of project_names -> to create links to project page and bioinfo tab
-        project_names = {project_name: self._get_project_id_by_name(project_name) for project_name in flowcell['plist']}
-
         if not flowcell:
             self.set_status(200)
             t = self.application.loader.load("flowcell_error.html")
@@ -65,6 +60,10 @@ class FlowcellHandler(SafeHandler):
                                   ))
             return
         else:
+            # replace '__' in project name
+            flowcell['plist'] = self._get_project_list(flowcell)
+            # list of project_names -> to create links to project page and bioinfo tab
+            project_names = {project_name: self._get_project_id_by_name(project_name) for project_name in flowcell['plist']}
             t = self.application.loader.load("flowcell.html")
             self.write(t.generate(gs_globals=self.application.gs_globals,
                                   flowcell=flowcell,

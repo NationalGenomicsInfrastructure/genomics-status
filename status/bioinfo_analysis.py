@@ -1,5 +1,8 @@
 import json
 import datetime
+import dateutil
+import os
+
 from status.util import SafeHandler
 
 class BioinfoAnalysisHandler(SafeHandler):
@@ -8,7 +11,7 @@ class BioinfoAnalysisHandler(SafeHandler):
 
     def post(self, project_id):
         v = self.application.bioinfo_db.view("full_doc/pj_run_lane_sample_to_doc")
-        user = self.get_secure_cookie('user')
+        user = self.get_secure_cookie('user') or ''
         data = json.loads(self.request.body)
         saved_data = {}
         for run_id in data:
@@ -49,42 +52,54 @@ class BioinfoAnalysisHandler(SafeHandler):
         self.write(json.dumps(saved_data))
 
 
-    def get(self, proj_id):
+    def get(self, project_id):
         t = self.application.loader.load("bioinfo_tab.html")
-        sample_run_view = self.application.bioinfo_db.view('latest_data/sample_id')
+        view = self.application.bioinfo_db.view("full_doc/project_to_doc")
         bioinfo_data = {'sample_run_lane_view': {}, 'run_lane_sample_view': {}}
         project_closed = False
-
-        for row in sample_run_view.rows:
-            project_id = row.key[0]
-            if project_id == proj_id:
-                flowcell_id = row.key[1]
-                lane_id = row.key[2]
-                sample_id = row.key[3]
+        edit_history = {}
+        for row in view[project_id].rows:
+                flowcell_id = row.value.get('run_id')
+                lane_id = row.value.get('lane')
+                sample_id = row.value.get('sample')
+                changes = row.value.get('values', {})
+                last_timestamp = max(changes.keys())
+                bioinfo_qc = changes.get(last_timestamp, {})
 
                 # building first view
                 bioinfo1 = bioinfo_data['sample_run_lane_view']
                 if sample_id not in bioinfo1:
-                    bioinfo1[sample_id] = {'flowcells': {flowcell_id: {'lanes': {lane_id: row.value}}}}
+                    bioinfo1[sample_id] = {'flowcells': {flowcell_id: {'lanes': {lane_id: bioinfo_qc}}}}
                 elif flowcell_id not in bioinfo1[sample_id]['flowcells']:
-                    bioinfo1[sample_id]['flowcells'][flowcell_id] = {'lanes': {lane_id: row.value}}
+                    bioinfo1[sample_id]['flowcells'][flowcell_id] = {'lanes': {lane_id: bioinfo_qc}}
                 elif lane_id not in bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes']:
-                    bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes'][lane_id] = row.value
+                    bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes'][lane_id] = bioinfo_qc
                 else:
-                    bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes'][lane_id].update(row.value)
+                    bioinfo1[sample_id]['flowcells'][flowcell_id]['lanes'][lane_id].update(bioinfo_qc)
 
                 # building the second view
                 bioinfo2 = bioinfo_data['run_lane_sample_view']
                 if flowcell_id not in bioinfo2:
-                    bioinfo2[flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: row.value }}}}
+                    bioinfo2[flowcell_id] = {'lanes': {lane_id: {'samples': {sample_id: bioinfo_qc }}}}
                 elif lane_id not in bioinfo2[flowcell_id]['lanes']:
-                    bioinfo2[flowcell_id]['lanes'][lane_id] = {'samples': {sample_id: row.value}}
+                    bioinfo2[flowcell_id]['lanes'][lane_id] = {'samples': {sample_id: bioinfo_qc}}
                 elif sample_id not in bioinfo2[flowcell_id]['lanes'][lane_id]['samples']:
-                    bioinfo2[flowcell_id]['lanes'][lane_id]['samples'][sample_id] = row.value
+                    bioinfo2[flowcell_id]['lanes'][lane_id]['samples'][sample_id] = bioinfo_qc
                 else:
-                    bioinfo2[flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(row.value)
+                    bioinfo2[flowcell_id]['lanes'][lane_id]['samples'][sample_id].update(bioinfo_qc)
 
+                # add values to edit_history
+                for long_timestamp, history in changes.items():
+                    timestamp = datetime.datetime.strftime(dateutil.parser.parse(long_timestamp), '%Y-%m-%d %H:%M')
+                    user = history.get('user', '')
 
+                    if (timestamp, user) not in edit_history:
+                        edit_history[(timestamp, user)] = {(flowcell_id, lane_id, sample_id) : history}
+                    else:
+                        if (project_id, flowcell_id, lane_id, sample_id) not in edit_history[(timestamp, user)]:
+                            edit_history[(timestamp, user)][(flowcell_id, lane_id, sample_id)] = history
+                        else:
+                            edit_history[(timestamp, user)][(flowcell_id, lane_id, sample_id)].udpate(history)
 
         # checking status for run-lane-sample view
         for flowcell_id, flowcell in bioinfo_data['run_lane_sample_view'].items():
@@ -137,10 +152,10 @@ class BioinfoAnalysisHandler(SafeHandler):
             sample['datadelivered'] = sample_delivery_date
 
         try:
-            project_info = self.application.projects_db.view('project/summary')['open', proj_id].rows[0].value
+            project_info = self.application.projects_db.view('project/summary')['open', project_id].rows[0].value
             project_closed = False
         except:
-            project_info = self.application.projects_db.view('project/summary')['closed', proj_id].rows[0].value
+            project_info = self.application.projects_db.view('project/summary')['closed', project_id].rows[0].value
             project_closed = True
 
         project_name = project_info.get('project_name')
@@ -160,7 +175,8 @@ class BioinfoAnalysisHandler(SafeHandler):
             if application in app_classes[key]:
                 application = key
                 break
-
+        # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
+        multiqc = self.get_multiqc(project_id) or ''
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user_name(),
                               bioinfo=bioinfo_data,
@@ -168,10 +184,13 @@ class BioinfoAnalysisHandler(SafeHandler):
                               application=application,
                               project_closed=project_closed,
                               project_name=project_name,
-                              project_id=proj_id,
+                              project_id=project_id,
                               bioinfo_responsible=bioinfo_responsible,
                               project_type=project_type,
+                              edit_history=edit_history,
+                              multiqc=multiqc,
                               ))
+
 
     def _agregate_status(self, statuses):
         """
