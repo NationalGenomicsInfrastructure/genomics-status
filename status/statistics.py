@@ -126,7 +126,7 @@ class StatsAggregationHandler(UnsafeHandler):
             "num_samples" : ("genomics-dashboard/year_application_count_samples", 2),
             "project_user_affiliations" : ("genomics-dashboard/year_affiliation_count_projects", 2),
             "delivery_times" : ("genomics-dashboard/year_deliverytime_count_projects", 2),
-            "delivery_times_finishedlib" :  ("genomics-dashboard/year_deliverytime_count_projects_finlib", 2),
+            "delivery_times_finishedlib" :  ("genomics-dashboard/year_deliverytime_median_finlib", 1),
             "open_projects" : ("genomics-dashboard/open_application_count_projects", 1),
             "open_project_samples" : ("genomics-dashboard/open_application_count_samples", 1)
             }
