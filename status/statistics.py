@@ -72,14 +72,6 @@ class YearAffiliationProjectsHandler(SafeHandler):
         self.set_status(200)
         self.write(json.dumps(data))
 
-class YearAffiliationProjectsFinishedLibHandler(SafeHandler):
-    def get(self):
-        data={}
-        data=get_stats_data(self.application.projects_db, "genomics-dashboard/year_affiliation_count_projects_finlib", 2)
-        self.set_header('Content-Type', 'application/json')
-        self.set_status(200)
-        self.write(json.dumps(data))
-
 class YearDeliverytimeProjectsHandler(SafeHandler):
     def get(self):
         data={}
