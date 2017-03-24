@@ -72,14 +72,6 @@ class YearAffiliationProjectsHandler(SafeHandler):
         self.set_status(200)
         self.write(json.dumps(data))
 
-class YearAffiliationProjectsFinishedLibHandler(SafeHandler):
-    def get(self):
-        data={}
-        data=get_stats_data(self.application.projects_db, "genomics-dashboard/year_affiliation_count_projects_finlib", 2)
-        self.set_header('Content-Type', 'application/json')
-        self.set_status(200)
-        self.write(json.dumps(data))
-
 class YearDeliverytimeProjectsHandler(SafeHandler):
     def get(self):
         data={}
@@ -126,7 +118,7 @@ class StatsAggregationHandler(UnsafeHandler):
             "num_samples" : ("genomics-dashboard/year_application_count_samples", 2),
             "project_user_affiliations" : ("genomics-dashboard/year_affiliation_count_projects", 2),
             "delivery_times" : ("genomics-dashboard/year_deliverytime_count_projects", 2),
-            "delivery_times_finishedlib" :  ("genomics-dashboard/year_deliverytime_count_projects_finlib", 2),
+            "delivery_times_finishedlib" :  ("genomics-dashboard/year_deliverytime_median_finlib", 1),
             "open_projects" : ("genomics-dashboard/open_application_count_projects", 1),
             "open_project_samples" : ("genomics-dashboard/open_application_count_samples", 1)
             }
