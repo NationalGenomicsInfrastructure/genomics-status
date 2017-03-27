@@ -38,10 +38,10 @@
       <th class="bioinfo-status-th bioinfo-status-qc fastq_screen">fastq_screen</th>
       <th class="bioinfo-status-th bioinfo-status-qc blast_wrapper">blast_wrapper</th>
       {% if application =='rnaseq' %}
-        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_alignment">Unique mapping rate</th>
-        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_rrna">Unique mapping rate</th>
-        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_strandspecificity">Unique mapping rate</th>
-        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_duplication">Unique mapping rate</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_alignment">Percent Aligned</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_rrna">rRNA contamination</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_strandspecificity">Strand specificity over exons</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_duplication">Library complexity</th>
       {% elif application == 'exome' %}
         <th class="bioinfo-status-th bioinfo-status-bp exome_sequenceduplication">Sequence<br>duplication</th>
         <th class="bioinfo-status-th bioinfo-status-bp exome_targets10xcoverage">% Targets @10X coverage</th>
