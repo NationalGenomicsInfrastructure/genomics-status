@@ -8,7 +8,7 @@
       <th colspan="2">Quality</th>
       <th colspan="2">Contamination</th>
       {% if application == 'rnaseq' %}
-        <th class="bioinfo-app-rnaseq" colspan="4">RNA-Seq</th>
+        <th class="bioinfo-app-rnaseq" colspan="5">RNA-Seq</th>
       {% elif application == 'exome' %}
         <th class="bioinfo-app-exome" colspan="2">Exome capture</th>
       {% elif application == 'customCap' %}
@@ -40,6 +40,7 @@
       {% if application =='rnaseq' %}
         <th class="bioinfo-status-th bioinfo-status-bp rnaseq_alignment">Percent Aligned</th>
         <th class="bioinfo-status-th bioinfo-status-bp rnaseq_rrna">rRNA contamination</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_mtrrna">MT rRNA contamination</th>
         <th class="bioinfo-status-th bioinfo-status-bp rnaseq_strandspecificity">Strand specificity over exons</th>
         <th class="bioinfo-status-th bioinfo-status-bp rnaseq_duplication">Library complexity</th>
       {% elif application == 'exome' %}
@@ -87,6 +88,7 @@
           {% if application == 'rnaseq' %}
             <td class="bioinfo-status-bp rnaseq_alignment unknown">?</td>
             <td class="bioinfo-status-bp rnaseq_rrna unknown">?</td>
+            <td class="bioinfo-status-bp rnaseq_mtrrna unknown">?</td>
             <td class="bioinfo-status-bp rnaseq_strandspecificity unknown">?</td>
             <td class="bioinfo-status-bp rnaseq_duplication unknown">?</td>
           {% elif application == 'exome' %}
@@ -133,6 +135,7 @@
           {% if application == 'rnaseq' %}
             <td class="bioinfo-status-bp rnaseq_alignment unknown">?</td>
             <td class="bioinfo-status-bp rnaseq_rrna unknown">?</td>
+            <td class="bioinfo-status-bp rnaseq_mtrrna unknown">?</td>
             <td class="bioinfo-status-bp rnaseq_strandspecificity unknown">?</td>
             <td class="bioinfo-status-bp rnaseq_duplication unknown">?</td>
           {% elif application == 'exome' %}
@@ -188,6 +191,8 @@
                   {{ sample.get('bp', {}).get('rnaseq_alignment', '?') }}</td>
                 <td class="bioinfo-status-bp rnaseq_rrna {{ qc_css.get(sample.get('bp', {}).get('rnaseq_rrna', '?'), 'unknown') }}">
                   {{ sample.get('bp', {}).get('rnaseq_rrna', '?') }}</td>
+                <td class="bioinfo-status-bp rnaseq_mtrrna {{ qc_css.get(sample.get('bp', {}).get('rnaseq_mtrrna', '?'), 'unknown') }}">
+                  {{ sample.get('bp', {}).get('rnaseq_mtrrna', '?') }}</td>
                 <td class="bioinfo-status-bp rnaseq_strandspecificity {{ qc_css.get(sample.get('bp', {}).get('rnaseq_strandspecificity', '?'), 'unknown') }}">
                   {{ sample.get('bp', {}).get('rnaseq_strandspecificity', '?') }}</td>
                 <td class="bioinfo-status-bp rnaseq_duplication {{ qc_css.get(sample.get('bp', {}).get('rnaseq_duplication', '?'), 'unknown') }}">
