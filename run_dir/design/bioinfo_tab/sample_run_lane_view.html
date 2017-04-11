@@ -8,7 +8,7 @@
         <th colspan="2">Quality</th>
         <th colspan="2">Contamination</th>
         {% if application == 'rnaseq' %}
-          <th class="bioinfo-app-rnaseq" colspan="2">RNA-Seq</th>
+          <th class="bioinfo-app-rnaseq" colspan="5">RNA-Seq</th>
         {% elif application == 'exome' %}
           <th class="bioinfo-app-exome" colspan="2">Exome capture</th>
         {% elif application == 'customCap' %}
@@ -37,8 +37,11 @@
         <th class="bioinfo-status-th bioinfo-status-qc fastq_screen">fastq_screen</th>
         <th class="bioinfo-status-th bioinfo-status-qc blast_wrapper">blast_wrapper</th>
         {% if application =='rnaseq' %}
-          <th class="bioinfo-status-th bioinfo-status-bp rnaseq_sequenceduplication">Sequence<br>duplication</th>
-          <th class="bioinfo-status-th bioinfo-status-bp rnaseq_uniquemappingrate">Unique mapping rate</th>
+          <th class="bioinfo-status-th bioinfo-status-bp rnaseq_alignment">Percent Aligned</th>
+          <th class="bioinfo-status-th bioinfo-status-bp rnaseq_rrna">rRNA contamination</th>
+          <th class="bioinfo-status-th bioinfo-status-bp rnaseq_mtrrna">MT rRNA contamination</th>
+          <th class="bioinfo-status-th bioinfo-status-bp rnaseq_strandspecificity">Strand specificity over exons</th>
+          <th class="bioinfo-status-th bioinfo-status-bp rnaseq_duplication">Library complexity</th>
         {% elif application == 'exome' %}
           <th class="bioinfo-status-th bioinfo-status-bp exome_sequenceduplication">Sequence<br>duplication</th>
           <th class="bioinfo-status-th bioinfo-status-bp exome_targets10xcoverage">% Targets @10X coverage</th>
@@ -80,8 +83,11 @@
           <td class="bioinfo-status-qc fastq_screen unknown">?</td>
           <td class="bioinfo-status-qc blast_wrapper active">N/A</td>
           {% if application == 'rnaseq' %}
-            <td class="bioinfo-status-bp rnaseq_sequenceduplication unknown">?</td>
-            <td class="bioinfo-status-bp rnaseq_uniquemappingrate unknown">?</td>
+            <td class="bioinfo-status-bp rnaseq_alignment unknown">?</td>
+            <td class="bioinfo-status-bp rnaseq_rrna unknown">?</td>
+            <td class="bioinfo-status-bp rnaseq_mtrrna unknown">?</td>
+            <td class="bioinfo-status-bp rnaseq_strandspecificity unknown">?</td>
+            <td class="bioinfo-status-bp rnaseq_duplication unknown">?</td>
           {% elif application == 'exome' %}
             <td class="bioinfo-status-bp exome_sequenceduplication unknown">?</td>
                 <td class="bioinfo-status-bp exome_targets10xcoverage unknown">?</td>
@@ -124,8 +130,11 @@
             <td class="bioinfo-status-qc fastq_screen unknown">?</td>
             <td class="bioinfo-status-qc blast_wrapper active">N/A</td>
           {% if application == 'rnaseq' %}
-            <td class="bioinfo-status-bp rnaseq_sequenceduplication unknown">?</td>
-            <td class="bioinfo-status-bp rnaseq_uniquemappingrate unknown">?</td>
+            <td class="bioinfo-status-bp rnaseq_alignment unknown">?</td>
+            <td class="bioinfo-status-bp rnaseq_rrna unknown">?</td>
+            <td class="bioinfo-status-bp rnaseq_mtrrna unknown">?</td>
+            <td class="bioinfo-status-bp rnaseq_strandspecificity unknown">?</td>
+            <td class="bioinfo-status-bp rnaseq_duplication unknown">?</td>
           {% elif application == 'exome' %}
             <td class="bioinfo-status-bp exome_sequenceduplication unknown">?</td>
                 <td class="bioinfo-status-bp exome_targets10xcoverage unknown">?</td>
@@ -175,10 +184,16 @@
               <td class="bioinfo-status-qc blast_wrapper {{ qc_css.get(lane.get('qc', {}).get('blast_wrapper', 'N/A'), 'active') }}">
                 {{ lane.get('qc', {}).get('blast_wrapper', 'N/A') }}</td>
               {% if application == 'rnaseq' %}
-                <td class="bioinfo-status-bp rnaseq_sequenceduplication {{ qc_css.get(lane.get('bp', {}).get('rnaseq_sequenceduplication', '?'), 'unknown') }}">
-                  {{ lane.get('bp', {}).get('rnaseq_sequenceduplication', '?') }}</td>
-                <td class="bioinfo-status-bp rnaseq_uniquemappingrate {{ qc_css.get(lane.get('bp', {}).get('rnaseq_uniquemappingrate', '?'), 'unknown') }}">
-                  {{ lane.get('bp', {}).get('rnaseq_uniquemappingrate', '?') }}</td>
+                <td class="bioinfo-status-bp rnaseq_alignment {{ qc_css.get(lane.get('bp', {}).get('rnaseq_alignment', '?'), 'unknown') }}">
+                  {{ lane.get('bp', {}).get('rnaseq_alignment', '?') }}</td>
+                <td class="bioinfo-status-bp rnaseq_rrna {{ qc_css.get(lane.get('bp', {}).get('rnaseq_rrna', '?'), 'unknown') }}">
+                  {{ lane.get('bp', {}).get('rnaseq_rrna', '?') }}</td>
+                <td class="bioinfo-status-bp rnaseq_mtrrna {{ qc_css.get(lane.get('bp', {}).get('rnaseq_mtrrna', '?'), 'unknown') }}">
+                  {{ lane.get('bp', {}).get('rnaseq_mtrrna', '?') }}</td>
+                <td class="bioinfo-status-bp rnaseq_strandspecificity {{ qc_css.get(lane.get('bp', {}).get('rnaseq_strandspecificity', '?'), 'unknown') }}">
+                  {{ lane.get('bp', {}).get('rnaseq_strandspecificity', '?') }}</td>
+                <td class="bioinfo-status-bp rnaseq_duplication {{ qc_css.get(lane.get('bp', {}).get('rnaseq_duplication', '?'), 'unknown') }}">
+                  {{ lane.get('bp', {}).get('rnaseq_duplication', '?') }}</td>
               {% elif application == 'exome' %}
                 <td class="bioinfo-status-bp exome_sequenceduplication {{ qc_css.get(lane.get('bp', {}).get('exome_sequenceduplication', '?'), 'unknown') }}">
                   {{ lane.get('bp', {}).get('exome_sequenceduplication', '?') }}</td>
