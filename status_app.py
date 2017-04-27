@@ -54,7 +54,7 @@ from status.sequencing import InstrumentClusterDensityPlotHandler, InstrumentErr
     InstrumentYieldPlotHandler, InstrumentClusterDensityDataHandler, InstrumentErrorrateDataHandler, InstrumentUnmatchedDataHandler, \
     InstrumentYieldDataHandler, SequencingStatsHandler
 from status.statistics import YearApplicationsProjectHandler, YearApplicationsSamplesHandler, YearAffiliationProjectsHandler, YearDeliverytimeProjectsHandler, \
-    ApplicationOpenProjectsHandler, ApplicationOpenSamplesHandler, WeekInstrumentTypeYieldHandler, StatsAggregationHandler
+    ApplicationOpenProjectsHandler, ApplicationOpenSamplesHandler, WeekInstrumentTypeYieldHandler, StatsAggregationHandler, YearDeliverytimeApplicationHandler
 from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
 from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, SafeStaticFileHandler, \
@@ -179,6 +179,7 @@ class Application(tornado.web.Application):
             ("/api/v1/stats/year_application_samples",YearApplicationsSamplesHandler),
             ("/api/v1/stats/year_affiliation_projects",YearAffiliationProjectsHandler),
             ("/api/v1/stats/year_deliverytime_projects",YearDeliverytimeProjectsHandler),
+            ("/api/v1/stats/year_deliverytime_application",YearDeliverytimeApplicationHandler),
             ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
