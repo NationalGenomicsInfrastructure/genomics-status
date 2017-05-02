@@ -124,7 +124,7 @@ class WeekInstrumentTypeYieldHandler(SafeHandler):
         self.set_status(200)
         self.write(json.dumps(data))
 
-class YearDeliverytimeApplicationHandler(SafeHandler):
+class YearDeliverytimeApplicationHandler(UnsafeHandler):
     def __init__(self, *args, **kwargs):
         super(YearDeliverytimeApplicationHandler, self).__init__(*args, **kwargs)
         self.cleaning=get_clean_application_keys(self)
