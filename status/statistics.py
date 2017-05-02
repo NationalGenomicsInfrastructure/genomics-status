@@ -11,11 +11,17 @@ def get_clean_application_keys(handler):
 
     return clean_keys
 
-def get_stats_data(db,view,gl=None, cleaning=None):
+def get_stats_data(db,view, gl=0, cleaning=None, doreduce=True):
     if not cleaning:
         cleaning={} 
     data={}
-    db_view=db.view(view, group_level=gl)
+    def general_cleaning(meta_key):
+        if meta_key in cleaning:
+            return cleaning[meta_key]
+        else:
+            return meta_key
+
+    db_view=db.view(view, group_level=gl, reduce=doreduce)
     if gl==2:
         for row in db_view:
             meta_key1 = row.key[1] 
@@ -38,9 +44,17 @@ def get_stats_data(db,view,gl=None, cleaning=None):
                 data[meta_key1]=row.value
             else:
                 data[meta_key1]+=row.value
+    elif gl==0:
+        for row in db_view:
+            new_key = map(general_cleaning, row.key)
+            if new_key[0] not in data:
+                data[new_key[0]] = {}
+            if new_key[1] not in data[new_key[0]]:
+                data[new_key[0]][new_key[1]] = [row.value]
+            else:
+                data[new_key[0]][new_key[1]].append(row.value)
 
     return data
-
 
 class YearApplicationsProjectHandler(SafeHandler):
     def __init__(self, *args, **kwargs):
@@ -110,6 +124,18 @@ class WeekInstrumentTypeYieldHandler(SafeHandler):
         self.set_status(200)
         self.write(json.dumps(data))
 
+class YearDeliverytimeApplicationHandler(SafeHandler):
+    def __init__(self, *args, **kwargs):
+        super(YearDeliverytimeApplicationHandler, self).__init__(*args, **kwargs)
+        self.cleaning=get_clean_application_keys(self)
+    def get(self):
+        data={}
+        data=get_stats_data(self.application.projects_db, "genomics-dashboard/year_deliverytime_median_by_application", cleaning=self.cleaning, doreduce=False)
+        self.set_header('Content-Type', 'application/json')
+        self.set_status(200)
+        self.write(json.dumps(data))
+
+
 class StatsAggregationHandler(UnsafeHandler):
     def __init__(self, *args, **kwargs):
         super(StatsAggregationHandler, self).__init__(*args, **kwargs)
@@ -118,7 +144,7 @@ class StatsAggregationHandler(UnsafeHandler):
             "num_samples" : ("genomics-dashboard/year_application_count_samples", 2),
             "project_user_affiliations" : ("genomics-dashboard/year_affiliation_count_projects", 2),
             "delivery_times" : ("genomics-dashboard/year_deliverytime_count_projects", 2),
-            "delivery_times_finishedlib" :  ("genomics-dashboard/year_deliverytime_median_finlib", 1),
+            "delivery_times_median" : ("genomics-dashboard/year_deliverytime_median_by_application", 2),
             "open_projects" : ("genomics-dashboard/open_application_count_projects", 1),
             "open_project_samples" : ("genomics-dashboard/open_application_count_samples", 1)
             }
