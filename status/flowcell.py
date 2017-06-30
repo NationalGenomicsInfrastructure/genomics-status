@@ -41,17 +41,30 @@ class FlowcellHandler(SafeHandler):
                 if project != 'default':
                     replaced_plist.append(project)
         return replaced_plist
-
+    
+    def find_DB_entry(self, flowcell_id):
+        #Returns Runid (key), contents (complex)
+        found = False
+        view = self.application.x_flowcells_db.view('info/summary2_full_id')
+        for entry in view:
+            if entry.key == flowcell_id:
+                found = True
+            #Check for short name
+            elif self.application.x_flowcells_db.get(entry.id)['name'] == flowcell_id:
+                found = True
+                
+            if found:
+                if 'Json_Stats' in self.application.x_flowcells_db.get(entry.id):
+                    #Same entry from summary2_stats
+                    return self.application.x_flowcells_db.view('info/summary2_stats')[entry.key].rows[0]
+                return entry
+                
+        return False
+    
     def get(self, flowcell_id):
-        view = self.application.x_flowcells_db.view('info/summary2')
-        flowcell = [row.value for row in view[flowcell_id].rows]
-        flowcell = flowcell[0] if len(flowcell) >= 1 else {}
-        if not flowcell:
-            # get by long name
-            view = self.application.x_flowcells_db.view('info/summary2_full_id')
-            flowcell = [row.value for row in view[flowcell_id].rows]
-            flowcell = flowcell[0] if len(flowcell) >= 1 else {}
-        if not flowcell:
+        entry = self.find_DB_entry(flowcell_id)
+
+        if not entry:
             self.set_status(200)
             t = self.application.loader.load("flowcell_error.html")
             self.write(t.generate(gs_globals=self.application.gs_globals,
@@ -61,12 +74,12 @@ class FlowcellHandler(SafeHandler):
             return
         else:
             # replace '__' in project name
-            flowcell['plist'] = self._get_project_list(flowcell)
+            entry.value['plist'] = self._get_project_list(entry.value)
             # list of project_names -> to create links to project page and bioinfo tab
-            project_names = {project_name: self._get_project_id_by_name(project_name) for project_name in flowcell['plist']}
+            project_names = {project_name: self._get_project_id_by_name(project_name) for project_name in entry.value['plist']}
             t = self.application.loader.load("flowcell.html")
             self.write(t.generate(gs_globals=self.application.gs_globals,
-                                  flowcell=flowcell,
+                                  flowcell=entry.value,
                                   flowcell_id=flowcell_id,
                                   thresholds=thresholds,
                                   project_names=project_names,

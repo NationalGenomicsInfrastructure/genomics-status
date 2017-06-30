@@ -2,7 +2,7 @@
 {% block stuff %}
 {% import re %}
 <div id="page_content">
-    <h1>Flow Cell <span id="page_title">{{ flowcell_id }}</span></h1>
+    <h1>Flow Cell <span id="page_title">{{ flowcell.get('name') }}</span></h1>
     <table class="table table-bordered narrow-headers" id="fc_info">
       <tr>
         <th>Full Name:</th>
@@ -128,6 +128,7 @@
                 </tbody>
               </table>
               <br>
+              <!-- Lanewise header -->
               <table class="table table-bordered" id="table_lane_{{ lane_number }}">
                 <tbody>
                   <tr>
@@ -139,7 +140,13 @@
                     {% elif 'clustersnb' in lane %}
                       <th>Clusters</th>
                     {% end %}
-                    <th>Q30</th>
+                    
+                    {% if flowcell.get('two_reads') %}
+                      <th>% Read 1 BP > Q30</th>
+                      <th>% Read 2 BP > Q30</th>
+                    {% else %}
+                      <th>% BP > Q30</th>
+                    {% end %}
                     {% if 'desc' in lane %}
                       <th>Index&nbsp;Description</th>
                     {% end %}
@@ -152,19 +159,22 @@
                       <th>Mean&nbsp;Quality&nbsp;Score</th>
                     {% end %}
                   </tr>
+                
+                <!--noindex issue-->
                 {% set total_undetermined = 0 %}
-                   <!--noindex issue-->
-                 {% if len(flowcell['lane'][lane_number]) == 1 and flowcell['lane'][lane_number][0]['barcode'] == 'unknown' %}
-                   {% set total_undetermined = flowcell['lane'][lane_number][0]['clustersnb'] %}
-                 {% end %}
+                {% if len(flowcell['lane'][lane_number]) == 1 and flowcell['lane'][lane_number][0]['barcode'] == 'unknown' %}
+                  {% set total_undetermined = flowcell['lane'][lane_number][0]['clustersnb'] %}
+                {% end %}
+                
+                <!--Primary sample table -->
                 {% for sample in flowcell['lane'][lane_number] %}
                   {% set sample_q30 = sample.get('overthirty', 0.0) %}
                   {% try %}{% set sample_q30 = float(sample_q30) %}{% except %}{% end %}
                   <tr>
                     <td>{{ sample.get('Project', '').replace('__', '.') }}</td>
                     <td>{{ sample.get('SampleName') }}</td>
-                    <td class="text-right">{% for thousand in sample.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                    <td class="text-right 
+                    <td class="text-left">{% for thousand in sample.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+                    <td class="text-left 
                         {% if not thr_per_sp or sample.get('SampleName') == 'Undetermined' %}
                         {% elif float(sample.get('readsnb', sample.get('clustersnb', 0)).replace(',','')) > thr_per_sp *1000000 %}
                         success
@@ -172,13 +182,32 @@
                         warning
                         {% end %}
                     ">{% for thousand in sample.get('readsnb', sample.get('clustersnb', '')).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                    <td class="text-left {% if sample_q30 < 40.0 %} danger
+                    
+                    {% if flowcell.get('two_reads') %}
+                      {% set overthirty_r1 = float(sample.get('overthirty_r1')) %}
+
+                      <td class="text-center {% if sample.get('overthirty_r1') < 40.0 %} danger
+                          {% elif overthirty_r1 < q30_threshold %} warning
+                          {% else %} success {% end %}" data-toggle="tooltip" data-placement="bottom"
+                        title="Threshold: {{ q30_threshold }}">{{ overthirty_r1 }}</td>
+                        
+                      {% set overthirty_r2 = float(sample.get('overthirty_r2')) %}
+                      <td class="text-center {% if overthirty_r2 < 40.0 %} danger
+                          {% elif overthirty_r2 < q30_threshold %} warning
+                          {% else %} success {% end %}" data-toggle="tooltip" data-placement="bottom"
+                        title="Threshold: {{ q30_threshold }}">{{ overthirty_r2 }}</td>
+                    {% else %}
+                      <td class="text-left {% if sample_q30 < 40.0 %} danger
                           {% elif sample_q30 < q30_threshold %} warning
                           {% else %} success {% end %}" data-toggle="tooltip" data-placement="bottom"
                         title="Threshold: {{ q30_threshold }}">{{ sample_q30 }}</td>
+                    {% end %}
+                    
                     <td>{{ sample.get('barcode') }}</td>
                     {% if 'lanepc' in sample %} <td>{{ float("{0:.2f}".format(sample['lanepc'])) }}</td> {% end %}
-                    {% if 'mqs' in sample %}<td>{{ sample['mqs'] }}</td> {% end %}
+                    {% if 'mqs' in sample %}
+                      <td>{{ sample['mqs'] }}</td>
+                    {% end %}
                   </tr>
                   {% if sample.get('SampleName') == 'Undetermined' %}
                     {% set total_undetermined = sample.get('clustersnb', '0').replace(',', '') %}
@@ -186,13 +215,19 @@
                 {% end %}
                 </tbody>
               </table>
+              
+              <!-- Undetermined table block -->
+              <!-- Injected stats.json -->
+              {% if lane.get('undetermined_count') %}
+                  {% set total_undetermined = flowcell['lanedata'][lane_number]['undetermined_count'] %}
+              {% end %}
               {% if 'undetermined' in flowcell %}
                 <table class="undetermined " id="table_ud_lane_{{ lane_number }}" style="display:none;">
                   <tr>
                     <th>Total:</th><th>{% for thousand in  "{:,}".format(int(total_undetermined)).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</th><th>100%</th>
                     {% set barcodes=[] %}
                     {% for sample in flowcell['lane'][lane_number] %}
-                      {% if sample['barcode'] != 'unknown' %}
+                      {% if sample['barcode'] != "unknown" %}
                         <th>{{ sample['barcode'] }} mismatches</th>
                       {% set barcodes = barcodes + [sample['barcode']] %}
                       {% end %}
