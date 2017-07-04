@@ -59,6 +59,7 @@ function make_plot(start_date, end_date, group_level,display_type){
         },
         yAxis: {
             min : 0, 
+            title: "Number of flowcells"
         },
         plotOptions : {
             series : {
