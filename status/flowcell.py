@@ -1,4 +1,5 @@
 from status.util import SafeHandler
+from datetime import datetime
 
 thresholds = {
     'HiSeq X': 320,
@@ -62,14 +63,22 @@ class FlowcellHandler(SafeHandler):
         return False
     
     def get(self, flowcell_id):
+        
         entry = self.find_DB_entry(flowcell_id)
 
         if not entry:
+            extra_message=""
+            flowcell_date = datetime.strptime(flowcell_id[0:6], "%y%m%d")
+            first_xflowcell_record = datetime(2015,03,13)
+            if first_xflowcell_record>flowcell_date:
+                extra_message = "Your flowcell is in an older database. It can still be accessed, contact your administrator."
+            
             self.set_status(200)
             t = self.application.loader.load("flowcell_error.html")
             self.write(t.generate(gs_globals=self.application.gs_globals,
                                   flowcell_id=flowcell_id,
                                   user=self.get_current_user_name(),
+                                  extra_message=extra_message
                                   ))
             return
         else:
