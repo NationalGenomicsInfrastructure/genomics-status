@@ -1,6 +1,6 @@
 // Translates fetched text from markdown to HTML
 $(document).ready(function(){
-    $('.running-note-body').each(function(){
+    $('.running-note-body, .bi-project-note').each(function(){
         var raw_html = $(this).html();
         $(this).html( marked(raw_html) );
     });
