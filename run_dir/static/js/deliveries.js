@@ -1,3 +1,11 @@
+// Translates fetched text from markdown to HTML
+$(document).ready(function(){
+    $('.running-note-body, .bi-project-note').each(function(){
+        var raw_html = $(this).html();
+        $(this).html( marked(raw_html) );
+    });
+});
+
 $('.bioinfo-running-notes-save').click(function(e) {
     var td = $(this).parent();
     var tr = $(td).parent();
