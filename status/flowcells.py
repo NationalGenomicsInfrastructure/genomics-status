@@ -81,7 +81,7 @@ class FlowcellsInfoDataHandler(SafeHandler):
     def flowcell_info(self, flowcell):
         fc_view = self.application.flowcells_db.view("info/summary2",
                                                      descending=True)
-        xfc_view = self.application.x_flowcells_db.view("info/summary2",
+        xfc_view = self.application.x_flowcells_db.view("info/summary2_full_id",
                                                      descending=True)
         for row in fc_view[flowcell]:
             flowcell_info = row.value
