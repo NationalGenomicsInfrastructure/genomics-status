@@ -96,7 +96,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           <dd>
             <button data-toggle="modal" data-target="#runningNotesModalDeliveries"
                     class="btn btn-xs btn-default pull-right runningNotesModalDeliveries_button project_runningNotes">See all</button>
-            <div class="bi-project-note">{{ project['latest_running_note']['timestamp'] }} - {{ project['latest_running_note']['note'] }}</div>
+            <div class="running-note-body">{{ project['latest_running_note']['timestamp'] }} - {{ project['latest_running_note']['note'] }}</div>
           </dd>
         </dl>
         <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
@@ -271,7 +271,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                 {% end %}
                 </div>
                 <div class="panel-body">
-                  <div class="mkdown">
+                  <div class="running-note-body">
                     {{ running_note['note'] }}
                   </div>
                 </div>
@@ -280,6 +280,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           {% end %}
         </div>
       </div>
+
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
@@ -290,6 +291,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 {% include "running_notes_help.html" %}
 
 <!-- Javascript -->
+
 <script src="../static/js/deliveries.js"></script>
 <script src="../static/js/running_notes.js"></script>
 {% end %}
