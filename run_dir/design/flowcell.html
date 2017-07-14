@@ -134,29 +134,29 @@
                   <tr>
                     <th>Project&nbsp;Name</th>
                     <th>Sample&nbsp;Name</th>
-                    <th>Yield&nbsp;(<abbr title="Megabases">Mb</abbr>)</th>
+                    <th class="text-right">Yield&nbsp;(<abbr title="Megabases">Mb</abbr>)</th>
                     {% if 'readsnb' in lane %}
-                      <th>Reads</th>
+                      <th class="text-right">Reads</th>
                     {% elif 'clustersnb' in lane %}
-                      <th>Clusters</th>
+                      <th class="text-right">Clusters</th>
                     {% end %}
                     
                     {% if flowcell.get('two_reads') %}
-                      <th>% Read 1 BP > Q30</th>
-                      <th>% Read 2 BP > Q30</th>
+                      <th class="text-center">% <abbr title="Read 1 BasePairs">R1 BP</abbr> > Q30</th>
+                      <th class="text-center">% <abbr title="Read 2 BasePairs">R2 BP</abbr> > Q30</th>
                     {% else %}
-                      <th>% BP > Q30</th>
+                      <th class="text-center">% <abbr title="BasePairs">BP</abbr> > Q30</th>
                     {% end %}
                     {% if 'desc' in lane %}
                       <th>Index&nbsp;Description</th>
                     {% end %}
                     {% if 'lanepc' in lane %}
-                      <th>%&nbsp;of&nbsp;the&nbsp;lane</th>
+                      <th class="text-center">%&nbsp;of&nbsp;the&nbsp;lane</th>
                     {% end %}
                     <th>Barcode</th>
-                    <th>% of the lane</th>
+                    <th class="text-center">% of the lane</th>
                     {% if 'mqs' in lane %}
-                      <th>Mean&nbsp;Quality&nbsp;Score</th>
+                      <th class="text-center"><abbr title="Mean Quality Score">MQS</abbr></th>
                     {% end %}
                   </tr>
                 
@@ -173,8 +173,8 @@
                   <tr>
                     <td>{{ sample.get('Project', '').replace('__', '.') }}</td>
                     <td>{{ sample.get('SampleName') }}</td>
-                    <td class="text-left">{% for thousand in sample.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                    <td class="text-left 
+                    <td class="text-right">{% for thousand in sample.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+                    <td class="text-right 
                         {% if not thr_per_sp or sample.get('SampleName') == 'Undetermined' %}
                         {% elif float(sample.get('readsnb', sample.get('clustersnb', 0)).replace(',','')) > thr_per_sp *1000000 %}
                         success
@@ -188,25 +188,22 @@
 
                       <td class="text-center {% if sample.get('overthirty_r1') < 40.0 %} danger
                           {% elif overthirty_r1 < q30_threshold %} warning
-                          {% else %} success {% end %}" data-toggle="tooltip" data-placement="bottom"
-                        title="Threshold: {{ q30_threshold }}">{{ overthirty_r1 }}</td>
+                          {% else %} success {% end %}">{{ sample.get('overthirty_r1') }}</td>
                         
                       {% set overthirty_r2 = float(sample.get('overthirty_r2')) %}
                       <td class="text-center {% if overthirty_r2 < 40.0 %} danger
                           {% elif overthirty_r2 < q30_threshold %} warning
-                          {% else %} success {% end %}" data-toggle="tooltip" data-placement="bottom"
-                        title="Threshold: {{ q30_threshold }}">{{ overthirty_r2 }}</td>
+                          {% else %} success {% end %}">{{ sample.get('overthirty_r1') }}</td>
                     {% else %}
-                      <td class="text-left {% if sample_q30 < 40.0 %} danger
+                      <td class="text-center {% if sample_q30 < 40.0 %} danger
                           {% elif sample_q30 < q30_threshold %} warning
-                          {% else %} success {% end %}" data-toggle="tooltip" data-placement="bottom"
-                        title="Threshold: {{ q30_threshold }}">{{ sample_q30 }}</td>
+                          {% else %} success {% end %}">{{ sample_q30 }}</td>
                     {% end %}
                     
-                    <td>{{ sample.get('barcode') }}</td>
-                    {% if 'lanepc' in sample %} <td>{{ float("{0:.2f}".format(sample['lanepc'])) }}</td> {% end %}
+                    <td><code>{{ sample.get('barcode') }}</code></td>
+                    {% if 'lanepc' in sample %} <td class="text-center">{{ float("{0:.2f}".format(sample['lanepc'])) }}</td> {% end %}
                     {% if 'mqs' in sample %}
-                      <td>{{ sample['mqs'] }}</td>
+                      <td class="text-center">{{ sample['mqs'] }}</td>
                     {% end %}
                   </tr>
                   {% if sample.get('SampleName') == 'Undetermined' %}
