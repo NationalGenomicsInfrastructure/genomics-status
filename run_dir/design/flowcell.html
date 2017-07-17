@@ -201,7 +201,7 @@
                     {% end %}
                     
                     <td><code>{{ sample.get('barcode') }}</code></td>
-                    {% if 'lanepc' in sample %} <td class="text-center">{{ float("{0:.2f}".format(sample['lanepc'])) }}</td> {% end %}
+                    {% if 'lanepc' in sample %} <td class="text-center">{{ float("{0:.2f}".format(float(sample['lanepc']))) }}</td> {% end %}
                     {% if 'mqs' in sample %}
                       <td class="text-center">{{ sample['mqs'] }}</td>
                     {% end %}
