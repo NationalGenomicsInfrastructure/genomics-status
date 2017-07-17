@@ -193,7 +193,7 @@
                       {% set overthirty_r2 = float(sample.get('overthirty_r2')) %}
                       <td class="text-center {% if overthirty_r2 < 40.0 %} danger
                           {% elif overthirty_r2 < q30_threshold %} warning
-                          {% else %} success {% end %}">{{ sample.get('overthirty_r1') }}</td>
+                          {% else %} success {% end %}">{{ sample.get('overthirty_r2') }}</td>
                     {% else %}
                       <td class="text-center {% if sample_q30 < 40.0 %} danger
                           {% elif sample_q30 < q30_threshold %} warning
