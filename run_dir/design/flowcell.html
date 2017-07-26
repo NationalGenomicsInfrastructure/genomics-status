@@ -154,7 +154,7 @@
                       <th class="text-center">%&nbsp;of&nbsp;the&nbsp;lane</th>
                     {% end %}
                     <th>Barcode</th>
-                    <th class="text-center">% of the lane</th>
+                    <th class="text-center">Lane %</th>
                     {% if 'mqs' in lane %}
                       <th class="text-center"><abbr title="Mean Quality Score">MQS</abbr></th>
                     {% end %}
@@ -200,7 +200,7 @@
                           {% else %} success {% end %}">{{ sample_q30 }}</td>
                     {% end %}
                     
-                    <td><code>{{ sample.get('barcode') }}</code></td>
+                    <td>{{ sample.get('barcode') }}</td>
                     {% if 'lanepc' in sample %} <td class="text-center">{{ float("{0:.2f}".format(float(sample['lanepc']))) }}</td> {% end %}
                     {% if 'mqs' in sample %}
                       <td class="text-center">{{ sample['mqs'] }}</td>
@@ -214,39 +214,47 @@
               </table>
               
               <!-- Undetermined table block -->
-              <!-- Injected stats.json -->
-              {% if lane.get('undetermined_count') %}
-                  {% set total_undetermined = flowcell['lanedata'][lane_number]['undetermined_count'] %}
-              {% end %}
               {% if 'undetermined' in flowcell %}
+              <!-- wonky test structure -->
+              {% set shown_reads = 0 %}
+              {% set subset_undet = (sorted(flowcell['undetermined'].get(lane_number, {}).items(), key=lambda x: x[1], reverse=True))[:20] %}
+                {% for undetermined, number in subset_undet %}
+                  {% set shown_reads = shown_reads + number %}
+                {% end %}               
+                <!-- end bc -->
+              
                 <table class="undetermined " id="table_ud_lane_{{ lane_number }}" style="display:none;">
                   <tr>
-                    <th>Total:</th><th>{% for thousand in  "{:,}".format(int(total_undetermined)).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</th><th>100%</th>
+                    <th>Total:</th><th>{% for thousand in  "{:,}".format(int(shown_reads)).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</th>
+                    <th>{{ round(100*shown_reads/float(total_undetermined), 2) }}%</th>
                     {% set barcodes=[] %}
                     {% for sample in flowcell['lane'][lane_number] %}
                       {% if sample['barcode'] != "unknown" %}
                         <th>{{ sample['barcode'] }} mismatches</th>
-                      {% set barcodes = barcodes + [sample['barcode']] %}
+                        {% set barcodes = barcodes + [sample['barcode']] %}
                       {% end %}
                     {% end %}
                   </tr>
-                  {% for undetermined, number in sorted(flowcell['undetermined'].get(lane_number, {}).items(), key=lambda x: x[1], reverse=True) %}
-                    {% set mismatch_ar=[] %}
-                    {% for sample in flowcell['lane'][lane_number] %}
-                      {% if sample['barcode'] != 'unknown' %}
-                        {% set mismatch_ar.append(sum([sample['barcode'][i] != undetermined[i] and sample['barcode'][i] != 'N' and undetermined[i] != 'N' for i in range(len(undetermined)) ])) %}
-                      {% end %}
-                    {% end %}
-                    <tr class="{% if barcodes  and len(barcodes)<9 and 0 in mismatch_ar %}undetermined-highlight{% end %}">
-                      <td><samp>{{ undetermined }}</samp></td>
-                      <td>{% for thousand in "{:,}".format(number).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                      <td>{{ float("{0:.2f}".format(100 * float(number) / float(total_undetermined))) if total_undetermined != 0 else '100.00'}}%</td>
-                      {% for mismatches in mismatch_ar %}
-                        {% set fr_matched = float( "{0:.2f}".format( (float(len(undetermined)) - float(mismatches)) / float(len(undetermined))) ) if len(undetermined) != 0 else 0%}
-                        <td class="{% if fr_matched > 0.8 %}undetermined-highlight{% elif fr_matched > 0.6 %}undetermined-warning{% end %}">{{ mismatches }}</td>
-                      {% end %}
-                    </tr>
-                  {% end %}
+                    {% for undetermined, number in subset_undet %}
+                        {% set mismatch_ar=[] %}
+                        {% for sample in flowcell['lane'][lane_number] %}
+                          {% if sample['barcode'] != 'unknown' %}
+                            {% set mismatch_ar.append(sum([sample['barcode'][i] != undetermined[i] 
+                            and sample['barcode'][i] != 'N' and undetermined[i] != 'N' for i in range(len(undetermined)) ])) %}
+                          {% end %}
+                        {% end %}
+                        
+                      <!-- Individual undet rows -->
+                      <tr class="{% if barcodes  and len(barcodes)<9 and 0 in mismatch_ar %}undetermined-highlight{% end %}">
+                        <td><samp>{{ undetermined }}</samp></td>
+                        <td>{% for thousand in "{:,}".format(number).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+                        <td>{{ float("{0:.2f}".format(100 * float(number) / float(total_undetermined))) if total_undetermined != 0 else '100.00'}}%</td>
+                        {% for mismatches in mismatch_ar %}
+                          {% set fr_matched = float( "{0:.2f}".format( (float(len(undetermined)) - float(mismatches)) / float(len(undetermined))) ) if len(undetermined) != 0 else 0%}
+                          <td class="{% if fr_matched > 0.8 %}undetermined-highlight{% elif fr_matched > 0.6 %}undetermined-warning{% end %}">{{ mismatches }}</td>
+                        {% end %}
+                      </tr>
+                    {% end %} 
                 </table>
             {% end %}
             </div>
