@@ -47,7 +47,7 @@ function make_plot(start_date, end_date, group_level,display_type){
     }
     var toplot={
         chart: {
-            type : 'line'
+            type : 'bar'
         },
         title: { 
             text : ' Number of the flowcells per '+display_type
@@ -63,6 +63,7 @@ function make_plot(start_date, end_date, group_level,display_type){
         },
         plotOptions : {
             series : {
+                stacking:'normal',
                 turboThreshold: 0
             },
 
