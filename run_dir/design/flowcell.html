@@ -153,7 +153,7 @@
                     {% if 'lanepc' in lane %}
                       <th class="text-center">%&nbsp;of&nbsp;the&nbsp;lane</th>
                     {% end %}
-                    <th>Barcode</th>
+                    <th>Barcode(s)</th>
                     <th class="text-center">Lane %</th>
                     {% if 'mqs' in lane %}
                       <th class="text-center"><abbr title="Mean Quality Score">MQS</abbr></th>
@@ -200,7 +200,12 @@
                           {% else %} success {% end %}">{{ sample_q30 }}</td>
                     {% end %}
                     
-                    <td>{{ sample.get('barcode') }}</td>
+                    {% if sample.get('multi_barcode') %}
+                      <td>{% for code in sample.get('multi_barcode')  %}{{ code }} {% end %}</td>
+                    {% else %}
+                      <td>{{ sample.get('barcode') }}</td>
+                    {% end %}
+                    
                     {% if 'lanepc' in sample %} <td class="text-center">{{ float("{0:.2f}".format(float(sample['lanepc']))) }}</td> {% end %}
                     {% if 'mqs' in sample %}
                       <td class="text-center">{{ sample['mqs'] }}</td>
@@ -223,14 +228,16 @@
               
                 <table class="undetermined " id="table_ud_lane_{{ lane_number }}" style="display:none;">
                   <tr>
-                    <th>Total:</th><th>{% for thousand in  "{:,}".format(int(shown_reads)).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</th>
-                    <!-- percent of undetermined shown in table -->
-                    {% if float(total_undetermined) == 0 %} <th>100.00</th>
-                    {% else %}<th>{{ round(100*shown_reads/float(total_undetermined), 2) }}%</th>{% end %}
+                    <th>Index</th><th>Count</th><th class="text-center">Total %</th>
                     
                     {% set barcodes=[] %}
                     {% for sample in flowcell['lane'][lane_number] %}
-                      {% if sample['barcode'] != "unknown" %}
+                      {% if sample.get('multi_barcode') %}
+                        {% for code in sample.get('multi_barcode')  %}
+                          <th>{{ code }} mismatches</th>
+                          {% set barcodes = barcodes + [code] %}
+                        {% end %}
+                      {% elif sample['barcode'] != "unknown" %}
                         <th>{{ sample['barcode'] }} mismatches</th>
                         {% set barcodes = barcodes + [sample['barcode']] %}
                       {% end %}
@@ -239,9 +246,12 @@
                     {% for undetermined, number in subset_undet %}
                         {% set mismatch_ar=[] %}
                         {% for sample in flowcell['lane'][lane_number] %}
-                          {% if sample['barcode'] != 'unknown' and undetermined != "unknown" %}
-                                                    
-<!-- i gets out of range  
+                          {% if sample.get('multi_barcode') %}
+                            {% for code in sample.get('multi_barcode')  %}
+                              {% set mismatch_ar.append(sum([code[i] != undetermined[i] 
+                              and code[i] != 'N' and undetermined[i] != 'N' for i in range(len(undetermined)) ])) %}
+                            {% end %}
+                          {% elif sample['barcode'] != 'unknown' and undetermined != "unknown" %}                    
                             {% set mismatch_ar.append(sum([sample['barcode'][i] != undetermined[i] 
                             and sample['barcode'][i] != 'N' and undetermined[i] != 'N' for i in range(len(undetermined)) ])) %} 
                           {% end %}
@@ -250,8 +260,12 @@
                       <!-- Individual undet rows -->
                       <tr class="{% if barcodes  and len(barcodes)<9 and 0 in mismatch_ar %}undetermined-highlight{% end %}">
                         <td><samp>{{ undetermined }}</samp></td>
-                        <td>{% for thousand in "{:,}".format(number).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                        <td>{{ float("{0:.2f}".format(100 * float(number) / float(total_undetermined))) if float(total_undetermined) !=0 else '100.00%'}}%</td>
+                        {% if number != 1 %}
+                          <td>{% for thousand in "{:,}".format(number).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+                        {% else %}
+                          <td>0</td>
+                        {% end %}
+                        <td class="text-center">{{ float("{0:.2f}".format(100 * float(number) / float(total_undetermined))) if float(total_undetermined) !=0 else '100.00'}}%</td>
                         {% for mismatches in mismatch_ar %}
                           {% set fr_matched = float( "{0:.2f}".format( (float(len(undetermined)) - float(mismatches)) / float(len(undetermined))) ) if len(undetermined) != 0 else 0%}
                           <td class="{% if fr_matched > 0.8 %}undetermined-highlight{% elif fr_matched > 0.6 %}undetermined-warning{% end %}">{{ mismatches }}</td>
