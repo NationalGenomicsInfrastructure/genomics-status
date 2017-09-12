@@ -186,18 +186,18 @@
                     {% if flowcell.get('two_reads') %}
                       {% set overthirty_r1 = float(sample.get('overthirty_r1')) %}
 
-                      <td class="text-center {% if overthirty_r1 < 40.0 -%} danger
-                          {%- elif overthirty_r1 < q30_threshold -%} warning
-                          {%- else %} success {% end %}">{{ sample.get('overthirty_r1') }}</td>
+                      <td class="text-center {% if overthirty_r1 < 40.0 %} danger
+                          {% elif overthirty_r1 < q30_threshold %} warning
+                          {% else %} success {% end %}">{{ sample.get('overthirty_r1') }}</td>
                         
                       {% set overthirty_r2 = float(sample.get('overthirty_r2')) %}
-                      <td class="text-center {% if overthirty_r2 < 40.0 -%} danger
-                          {%- elif overthirty_r2 < q30_threshold -%} warning
-                          {%- else %} success {% end %}">{{ sample.get('overthirty_r2') }}</td>
+                      <td class="text-center {% if overthirty_r2 < 40.0 %} danger
+                          {% elif overthirty_r2 < q30_threshold %} warning
+                          {% else %} success {% end %}">{{ sample.get('overthirty_r2') }}</td>
                     {% else %}
-                      <td class="text-center {% if sample_q30 < 40.0 -%} danger
-                          {%- elif sample_q30 < q30_threshold -%} warning
-                          {%- else %} success {% end %}">{{ sample_q30 }}</td>
+                      <td class="text-center {% if sample_q30 < 40.0 %} danger
+                          {% elif sample_q30 < q30_threshold %} warning
+                          {% else %} success {% end %}">{{ sample_q30 }}</td>
                     {% end %}
                     
                     {% if sample.get('multi_barcode') %}
