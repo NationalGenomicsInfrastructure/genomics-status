@@ -1,4 +1,5 @@
 import json
+from collections import OrderedDict
 
 from status.util import SafeHandler
 
@@ -106,9 +107,15 @@ class DeliveriesPageHandler(SafeHandler):
         number_of_flowcells = 0
         number_of_lanes = 0
         number_of_samples = 0
-        status_list = {}
+        status_list = OrderedDict()
         project_status = {}
         responsible_list = {}
+        #Predefined statuses and order
+        flowcell_statuses=['Sequencing', 'Demultiplexing', 'New', 'QC-ongoing','QC-done','BP-ongoing','BP-done', 'Delivered','ERROR']
+        for status in flowcell_statuses:
+            status_list[status]=0;
+            
+            
         for project_id in ongoing_deliveries:
             if project_id in summary_data and project_id in bioinfo_data:
                 project = summary_data[project_id]
@@ -160,8 +167,6 @@ class DeliveriesPageHandler(SafeHandler):
                     runs_bioinfo[flowcell_id]['checklist'] = flowcell_checklists
 
                     # add flowcell_status to the status_list (needed for filtering)
-                    if flowcell_status not in status_list:
-                        status_list[flowcell_status] = 0
                     status_list[flowcell_status] +=1
 
                     if project_id not in project_status:
