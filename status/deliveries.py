@@ -114,8 +114,7 @@ class DeliveriesPageHandler(SafeHandler):
         flowcell_statuses=['Sequencing', 'Demultiplexing', 'New', 'QC-ongoing','QC-done','BP-ongoing','BP-done', 'Delivered','ERROR']
         for status in flowcell_statuses:
             status_list[status]=0;
-            
-            
+                  
         for project_id in ongoing_deliveries:
             if project_id in summary_data and project_id in bioinfo_data:
                 project = summary_data[project_id]
@@ -196,7 +195,6 @@ class DeliveriesPageHandler(SafeHandler):
                     'runs': runs_bioinfo,
                     'latest_running_note': latest_running_note,
                 }
-
 
             else:
                 project_data = {

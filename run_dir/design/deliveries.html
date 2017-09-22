@@ -45,11 +45,13 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
         <div id="visible-classes" class="{{ ' '.join(status_list.keys()) }}"></div>
         <div id="filtered-classes" class=""></div>
         {% for status, number in status_list.items() %}
-        <div class="form-group">
-          <label class="checkbox-inline">
-            <input class="fc-status-checkbox" type="checkbox" value="{{ status }}" checked>{{ status }}
-              <span class="badge badge-small"> {{ number }}</span></label>
-        </div>
+	        {% if number != 0 %}
+	        <div class="form-group">
+	          <label class="checkbox-inline">
+	            <input class="fc-status-checkbox" type="checkbox" value="{{ status }}" checked>{{ status }}
+	              <span class="badge badge-small"> {{ number }}</span></label>
+	        </div>
+	        {% end %}
         {% end %}
       </div>
       <div class="form col-md-4 responsible-filters">
