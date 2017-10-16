@@ -10,10 +10,10 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 {% block stuff %}
 
 {% set status_css={
-    'Demultiplexing': 'label-default',
-    'Transferring': 'label-default',
     'Sequencing': 'label-default',
+    'Demultiplexing': 'label-default',
     'New': 'label-primary',
+    'Transferring': 'label-default',
     'QC-ongoing': 'label-warning',
     'QC-done': 'label-success',
     'BP-ongoing': 'label-warning',
@@ -44,12 +44,14 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
         </h4>
         <div id="visible-classes" class="{{ ' '.join(status_list.keys()) }}"></div>
         <div id="filtered-classes" class=""></div>
-        {% for status, number in sorted(status_list.items()) %}
-        <div class="form-group">
-          <label class="checkbox-inline">
-            <input class="fc-status-checkbox" type="checkbox" value="{{ status }}" checked>{{ status }}
-              <span class="badge badge-small"> {{ number }}</span></label>
-        </div>
+        {% for status, number in status_list.items() %}
+	        {% if number != 0 %}
+	        <div class="form-group">
+	          <label class="checkbox-inline">
+	            <input class="fc-status-checkbox" type="checkbox" value="{{ status }}" checked>{{ status }}
+	              <span class="badge badge-small"> {{ number }}</span></label>
+	        </div>
+	        {% end %}
         {% end %}
       </div>
       <div class="form col-md-4 responsible-filters">
