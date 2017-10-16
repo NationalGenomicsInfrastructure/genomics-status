@@ -592,8 +592,18 @@ function load_samples_table() {
             var column_id = column_tuple[1];
             info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
 
+            // Fragment Analyzer Image
+            if (column_id == 'frag_an_image'){
+                tbl_row += '<td class="' + column_id + '">'+
+                            '<span class="caliper_loading_spinner">'+
+                              '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading image..</span>'+
+                            '</span>'+
+                            '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+info['initial_qc'][column_id]+'" data-imgtype="Initial QC Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>'+
+                          '</td>';
+            }
+
             // Caliper image
-            if (column_id == 'caliper_image'){
+            else if (column_id == 'caliper_image'){
                 tbl_row += '<td class="' + column_id + '">'+
                             '<span class="caliper_loading_spinner">'+
                               '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading image..</span>'+

@@ -330,7 +330,6 @@ class ReadsTotalHandler(SafeHandler):
         Links are stored as JSON in genologics LIMS / project
         URL: /reads_total/([^/]*)
     """
-
     def get(self, query):
         data={}
         ordereddata=OrderedDict()

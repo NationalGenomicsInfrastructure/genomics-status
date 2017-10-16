@@ -356,9 +356,13 @@ class ProjectSamplesDataHandler(SafeHandler):
         if "details" in sample_data:
             for detail_key, detail_value in sample_data["details"].iteritems():
                 sample_data[detail_key] = detail_value
-        if 'initial_qc' in sample_data and "caliper_image" in sample_data['initial_qc']:
-            #Go grab the image from the sftp server
-            sample_data['initial_qc']['caliper_image'] = self.reverse_url('CaliperImageHandler', project, sample, 'initial_qc')
+        if 'initial_qc' in sample_data:
+            if "caliper_image" in sample_data['initial_qc']:
+                #Go grab the image from the sftp server
+                sample_data['initial_qc']['caliper_image'] = self.reverse_url('CaliperImageHandler', project, sample, 'initial_qc')
+            if "frag_an_image" in sample_data['initial_qc']:
+                #Go grab the image from the sftp server
+                sample_data['initial_qc']['frag_an_image'] = self.reverse_url('FragAnImageHandler', project, sample, 'initial_qc')
         return sample_data
 
     def list_samples(self, project):
@@ -395,6 +399,28 @@ class ProjectSamplesDataHandler(SafeHandler):
         samples = result.rows[0].value
         samples = OrderedDict(sorted(samples.iteritems(), key=lambda x: x[0]))
         return samples
+
+
+class FragAnImageHandler(SafeHandler):
+    """serves fragment_analyzer images based on their API uri"""
+
+    def get(self, project, sample, step):
+        self.set_header("Content-type", "application/json")
+        sample_view = self.application.projects_db.view("project/frag_an_links")
+        result = sample_view[project]
+        try:
+            data = result.rows[0].value
+        except TypeError:
+            #can be triggered by the data.get().get() calls.
+            self.write("no Fragment Analyzer image found")
+        else:
+            self.write(self.get_frag_an_image(data.get(sample).get(step)))
+
+    def get_frag_an_image(self,url):
+        data = lims.get_file_contents(uri=url)
+        encoded_string = base64.b64encode(data.read())
+        returnHTML=json.dumps(encoded_string)
+        return returnHTML
 
 
 class CaliperImageHandler(SafeHandler):
@@ -668,8 +694,10 @@ class CharonProjectHandler(SafeHandler):
         try:
             url="{}/api/v1/summary?projectid={}".format(self.application.settings['charon']['url'], projectid)
             headers = {'X-Charon-API-token': '{}'.format(self.application.settings['charon']['api_token'])}
+            project_url="{}/api/v1/project/{}".format(self.application.settings['charon']['url'], projectid)
         except KeyError:
             url="https://charon.scilifelab.se/api/v1/summary?projectid={}".format(projectid)
+            project_url="https://charon.scilifelab.se/api/v1/project/{}".format(projectid)
             headers={}
         r = requests.get(url, headers = headers )
         if r.status_code == requests.status_codes.codes.OK:
