@@ -102,14 +102,19 @@ function build_type_series(start_date, end_date, group_level){
     var series=[];
     var holder={'Hiseq':{}, 'Miseq':{}, 'HiseqX':{}, 'NovaSeq':{}}
     var key = null;
-    for (d in data){
-        key = get_date_key(data[d], group_level);
-        holder_object = holder[window.current_instrument_types[data[d][0]]];
-        if (key in holder_object){
-            holder_object[key]= holder_object[key] + data[d][group_level];
-        }else{
-            holder_object[key]= data[d][group_level];
-        }
+  for (d in data){
+      try {
+          key = get_date_key(data[d], group_level);
+          holder_object = holder[window.current_instrument_types[data[d][0]]];
+          if (key in holder_object){
+              holder_object[key]= holder_object[key] + data[d][group_level];
+          }else{
+              holder_object[key]= data[d][group_level];
+          }
+      }
+      catch(err) {
+          console.log(err);
+      }
     }
     var series = [];
     if (Object.keys(holder.Hiseq).length !== 0 && holder.Hiseq.constructor === Object){
