@@ -14,16 +14,16 @@ $(function(){
 function refresh_plot(){
     var params=get_parameters();
     if (window.current_plot_data==null){
-        get_plot_data(search_string=params[0], key=params[2], name=params[3], display_by=params[1], inst_type_filter=params[4], inst_filter=params[5], color_type=params[6]);
+        get_plot_data(search_string=params[0], key=params[2], name=params[3], display_by=params[1], inst_type_filter=params[4], inst_filter=params[5], color_type=params[6], plot_type=params[7]);
     }else{
-        make_plot(key=params[2], name=params[3], display_by=params[1], inst_type_filter=params[4], inst_filter=params[5],  color_type=params[6]);
+        make_plot(key=params[2], name=params[3], display_by=params[1], inst_type_filter=params[4], inst_filter=params[5],  color_type=params[6], plot_type=params[7]);
     }
 
 }
-function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type){
+function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type, plot_type){
     var toplot={
         chart: {
-            type : 'column'
+            type: plot_type
         },
         title: { 
             text : name+' of the recent flowcells'
@@ -39,12 +39,15 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         },
         plotOptions : {
             series : {
-                turboThreshold: 0
-            },
-            column : {
-                groupPadding: 0.1
+                turboThreshold: 0,
+                point: {
+                  events: {
+                    click: function() {
+                      window.open(this.options.ownURL)
+                    }
+                  }
+                }
             }
-
         },
         tooltip: {
             useHTML: true,
@@ -62,97 +65,109 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                         fontSize: '9px',
                         fontFamily: 'Verdana, sans-serif'
                     }
-            }
+            },
+            categories: []
         },
+
         series: [{
             name : name,
             data:[]
         }],
     };
     serie=build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst,  color_type);
-    toplot.series[0].data=serie;
+    toplot.series=serie[1];
+    toplot.xAxis.categories = serie[0];
     $("#main_plot").highcharts(toplot);
     window.current_plot_obj=toplot;
 }
 
+
 function build_series(data, key, name, display_by, filter_inst_type, filter_inst,  color_type){
-    var serie=[];
-    var tmp=[];
-    var col_color="";
-    var flowcell_link="/flowcells"
+
+    var series = [];
+    var flowcell_link="/flowcells";
+    var categories = [];
     for (d in data){
-        tmp=data[d].id.split('_');
-        flowcell_link="/flowcells/"+tmp[0]+'_'+tmp[tmp.length-1];
+        var tmp=data[d].id.split('_');
+        var fcid=tmp[0]+'_'+tmp[tmp.length-1];
+        var col_color = "";
+        var series_name = "";
+        var flowcell_link="/flowcells/"+fcid;
+
+        //Seq platform filter
+        if (data[d].instrument.indexOf('E') != -1 && filter_inst_type.includes('E')){
+            continue;
+        }else if (data[d].instrument.indexOf('D') != -1 && filter_inst_type.includes('D')){
+            continue;
+        }else if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
+            continue;
+        }
+
+        // Set colours and the name of data series
         if (color_type=='chemver'){
-            col_color=color_by_chemistry(data[d].instrument.substr(0,1)+data[d].cver);
-        }else if (color_type == 'inst'){
-            col_color=color_by_instrument(data[d].instrument);
+            series_name = data[d].instrument.substr(0,1)+data[d].cver
+            col_color=color_by_chemistry(series_name);
         }else if (color_type == 'month'){
+            series_name = data[d].id.substr(0,4);
             col_color=color_by_month(data[d].id);
+        }else if (color_type == 'inst'){
+            series_name = data[d].instrument;
+            col_color=color_by_instrument(series_name);
+            if (filter_inst.includes(data[d].instrument)) {
+                continue;
+            }
         }else{
             col_color=color_by_type(data[d].instrument);
-            if (data[d].instrument.substr(0,1) == 'D' && data[d].mode == "Rapid"){
-                col_color=chroma(col_color).brighten();
-            }
-
-
-        }
-        if (filter_inst.length!=0){
-            var skip=false;
-            for (i in filter_inst){
-                if (data[d].instrument.indexOf(filter_inst[i]) != -1){
-                    skip=true;
-                }
-            }
-            if (skip){
-                continue;
+            if (data[d].instrument.indexOf('E') != -1){
+                series_name = "HiSeq X";
+            }else if (data[d].instrument.indexOf('D') != -1){
+                series_name = "HiSeq";
+            }else if (data[d].instrument.indexOf('M') != -1){
+                series_name = "MiSeq";
+            }else{
+              continue;
             }
         }
-        if (filter_inst_type.length!=0){
-            var skip=false;
-            for (i in filter_inst_type){
-                if (data[d].instrument.indexOf(filter_inst_type[i]) != -1){
-                    skip=true;
-                }
-            }
-            if (skip){
-                continue;
-            }
+        // Create series
+        if (!series.hasOwnProperty(series_name)) {
+            series[series_name] = {
+                step: true,
+                name: series_name,
+                color: col_color,
+                data: [],
+            };
+            series.length += 1;
         }
-        if (display_by == "lane"){
-            var value=0;
+        if (display_by == "lane"){ //Lane display
             for (l in data[d].lanes){
-                tmp=data[d].id.split('_');
-                col_name=tmp[0]+'_'+tmp[tmp.length-1]+":"+data[d].lanes[l].lane;
+                fcid_lane = fcid +":"+ data[d].lanes[l].lane;
                 if (key in data[d].lanes[l]){
                     value=data[d].lanes[l][key];
                 }
-                col={ 
-                    name : col_name,
-                    y : value,
-                    color : col_color,
-                    events : {
-                        click : function(){window.open(flowcell_link)}
-                    }
+                dp = {
+                    y: value,
+                    name: fcid_lane,
+                    ownURL: flowcell_link
                 };
-                serie.push(col);
+                series[series_name].data.push(dp);
+                categories.push(fcid_lane);
             }
-        }else {
-            //Default : by flowcell
-            tmp=data[d].id.split('_');
-            col_name=tmp[0]+'_'+tmp[tmp.length-1];
-            col={ 
-                name : col_name,
-                y : data[d][key],
-                color : col_color,
-                events : {
-                    click : function(){window.open(flowcell_link)}
-                }
+        }else{ // Flowcell display
+            dp = {
+                y: data[d][key],
+                name: fcid,
+                ownURL: flowcell_link
             };
-            serie.push(col);
+            series[series_name].data.push(dp);
+            categories.push(fcid);
+        }
+        // Stupid hackery to get a proper JS array for HCharts
+        var proper_series = []
+        for (s in series) {
+            proper_series.push(series[s]);
         }
     }
-    return serie;
+    return [categories, proper_series];
 }
 
 function get_plot_data(search_string="", key, name, display_by, filter_inst_type, filter_inst,  color_type){
@@ -194,7 +209,7 @@ function color_by_month(id){
 
 function color_by_chemistry(chem){
     var id = Math.round(window.current_chemistries_list.indexOf(chem)*window.current_instrument_list.length/window.current_chemistries_list.length);
-    return current_color_schemes[2](id).hex();
+    return current_color_schemes[3](id).hex();
 }
 
 function get_parameters(){
@@ -231,6 +246,13 @@ function get_parameters(){
      }else if($("#display_by_lane").hasClass('active')){
          display_type='lane'
      }
+
+     var plot_type;
+     if ($("#plot_lines").hasClass('active')){
+         plot_type='line'
+     }else if($("#plot_scatter").hasClass('active')){
+         plot_type='scatter'
+     }
      //then, they key and name to display
      var key = $( "#key_select_form option:selected" ).val();
      var name= $( "#key_select_form option:selected" ).text();
@@ -250,7 +272,7 @@ function get_parameters(){
      });
      //color type
      var color_by=$("#color_select option:selected").val();
-     var ret=[search_string, display_type, key, name, inst_type_filter, inst_filter, color_by];
+     var ret=[search_string, display_type, key, name, inst_type_filter, inst_filter, color_by, plot_type];
 
      return ret;
 }
@@ -279,7 +301,7 @@ function init_page_js(){
     });
     $("#display_type_buttons .btn").click(function(e){
         e.preventDefault();
-        //datepicker messes up by adding eventlisteners to all buttons. 
+        //datepicker messes up by adding eventlisteners to all buttons.
         e.stopImmediatePropagation()
         $("#display_type_buttons .btn").removeClass('active');
         $(this).addClass("active");
@@ -294,6 +316,15 @@ function init_page_js(){
         }
         refresh_plot();
     });
+    $("#plot_type_buttons .btn").click(function(e){
+        e.preventDefault();
+        //datepicker messes up by adding eventlisteners to all buttons.
+        e.stopImmediatePropagation()
+        $("#plot_type_buttons .btn").removeClass('active');
+        $(this).addClass("active");
+        refresh_plot();
+    });
+
     $("#key_select_form").change(function(e){
         e.preventDefault();
         e.stopImmediatePropagation()
