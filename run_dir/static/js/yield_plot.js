@@ -14,14 +14,17 @@ $(function(){
 function refresh_plot(){
     var params=get_parameters();
     if (window.current_plot_data==null){
-        get_plot_data(search_string=params[0], key=params[2], name=params[3], display_by=params[1], inst_type_filter=params[4], inst_filter=params[5], color_type=params[6]);
+        get_plot_data(search_string=params[0], key=params[2], name=params[3], display_by=params[1], inst_type_filter=params[4], inst_filter=params[5], color_type=params[6], plot_type=params[7]);
     }else{
-        make_plot(key=params[2], name=params[3], display_by=params[1], inst_type_filter=params[4], inst_filter=params[5],  color_type=params[6]);
+        make_plot(key=params[2], name=params[3], display_by=params[1], inst_type_filter=params[4], inst_filter=params[5],  color_type=params[6], plot_type=params[7]);
     }
 
 }
-function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type){
+function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type, plot_type){
     var toplot={
+        chart: {
+            type: plot_type
+        },
         title: { 
             text : name+' of the recent flowcells'
         },
@@ -243,6 +246,13 @@ function get_parameters(){
      }else if($("#display_by_lane").hasClass('active')){
          display_type='lane'
      }
+
+     var plot_type;
+     if ($("#plot_lines").hasClass('active')){
+         plot_type='line'
+     }else if($("#plot_scatter").hasClass('active')){
+         plot_type='scatter'
+     }
      //then, they key and name to display
      var key = $( "#key_select_form option:selected" ).val();
      var name= $( "#key_select_form option:selected" ).text();
@@ -262,7 +272,7 @@ function get_parameters(){
      });
      //color type
      var color_by=$("#color_select option:selected").val();
-     var ret=[search_string, display_type, key, name, inst_type_filter, inst_filter, color_by];
+     var ret=[search_string, display_type, key, name, inst_type_filter, inst_filter, color_by, plot_type];
 
      return ret;
 }
@@ -291,7 +301,7 @@ function init_page_js(){
     });
     $("#display_type_buttons .btn").click(function(e){
         e.preventDefault();
-        //datepicker messes up by adding eventlisteners to all buttons. 
+        //datepicker messes up by adding eventlisteners to all buttons.
         e.stopImmediatePropagation()
         $("#display_type_buttons .btn").removeClass('active');
         $(this).addClass("active");
@@ -306,6 +316,15 @@ function init_page_js(){
         }
         refresh_plot();
     });
+    $("#plot_type_buttons .btn").click(function(e){
+        e.preventDefault();
+        //datepicker messes up by adding eventlisteners to all buttons.
+        e.stopImmediatePropagation()
+        $("#plot_type_buttons .btn").removeClass('active');
+        $(this).addClass("active");
+        refresh_plot();
+    });
+
     $("#key_select_form").change(function(e){
         e.preventDefault();
         e.stopImmediatePropagation()
