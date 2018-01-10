@@ -26,7 +26,13 @@ class FlowcellsHandler(SafeHandler):
         xfc_view = self.application.x_flowcells_db.view("info/summary",
                                                      descending=True)
         for row in xfc_view:
-            temp_flowcells[row.key] = row.value
+            if len(row.value['startdate']) < 7:
+                temp_flowcells[row.key] = row.value
+            else:
+                # Malformed date from Novaseq. Replace it with the expected format.
+                mm,dd,yy = row.value['startdate'].split(" ")[0].split("/")
+                row.value['startdate'] = "{}{}{}".format(yy[2:],mm,dd)
+                temp_flowcells[row.key] = row.value
 
         return OrderedDict(sorted(temp_flowcells.items()))
 
