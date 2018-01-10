@@ -26,7 +26,7 @@ class FlowcellsHandler(SafeHandler):
         xfc_view = self.application.x_flowcells_db.view("info/summary",
                                                      descending=True)
         for row in xfc_view:
-            row.value['startdate'] = "20{}-{}-{}".format(row.value['startdate'][0:2],row.value['startdate'][2:4],row.value['startdate'][4:6])
+            row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'], "%y%m%d").strftime("%Y-%m-%d")
             temp_flowcells[row.key] = row.value
 
         return OrderedDict(sorted(temp_flowcells.items()))
