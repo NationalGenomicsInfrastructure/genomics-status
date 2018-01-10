@@ -48,7 +48,7 @@ Description: Shows a table with all flow cells.
          {% for onefc in flowcells %}
             <tr>
                 <td class="run_id"><a href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a></td>
-                <td class="start_date">20{{ flowcells[onefc]["startdate"][0:2] }}-{{ flowcells[onefc]["startdate"][2:4] }}-{{ flowcells[onefc]["startdate"][4:] }}</td>
+                <td class="start_date">{{ flowcells[onefc]["startdate"]}}</td>
                 <td class="system">
                 {% if 'type' in flowcells[onefc]%}
                     {{ flowcells[onefc]['type'].replace(" Control Software", "") }}
