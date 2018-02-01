@@ -38,7 +38,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
-    ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler
+    ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler
 
 from status.quotas import QuotasHandler
 from status.nas_quotas import NASQuotasHandler
@@ -116,6 +116,7 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
+            tornado.web.URLSpec("/api/v1/frag_an_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", FragAnImageHandler, name="FragAnImageHandler"),
             ("/api/v1/generate_workset", GenerateWorksetHandler),
             ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
