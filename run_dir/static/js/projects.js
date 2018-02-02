@@ -18,7 +18,7 @@ $('#projectFilterDate').on('shown.bs.modal', function () {
 
 // On page load
 $(function(){
-  
+
   //load the sliders
   $(".dateSlider").dateRangeSlider({
     range: true,
@@ -41,7 +41,7 @@ $(function(){
 
   // Prevent traditional html submit function
   $('#Search-form').submit(function(event){event.preventDefault();});
-  
+
   // Listen to project meta button
   $('#compare_projects_meta_btn').click(function(e){
     e.preventDefault();
@@ -134,7 +134,7 @@ function load_table() {
       // Add links to Portal References
       var portal_name = summary_row['customer_project_reference'];
       var portal_id = summary_row['portal_id'];
-      tbl_row.find('td.customer_project_reference').html('<a target="_blank" href="https://portal.scilifelab.se/genomics/node/'+portal_id + '">' + portal_name + '</a>');
+      tbl_row.find('td.customer_project_reference').html('<a target="_blank" href="https://ngisweden.scilifelab.se/order/'+portal_id + '">' + portal_name + '</a>');
 
       //parse and display running notes
       var latest_note = tbl_row.find('td.latest_running_note');

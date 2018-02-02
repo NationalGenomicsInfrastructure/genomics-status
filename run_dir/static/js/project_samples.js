@@ -24,7 +24,7 @@ $(document).ready(function() {
   $('#Search-form').submit(function(e){
     e.preventDefault();
   });
-  
+
   // Copy project samples table to clipboard
   var clipboard = new Clipboard('#proj_samples_copy_table');
   clipboard.on('success', function(e) {
@@ -313,7 +313,7 @@ function load_all_udfs(){
         if (!data['portal_id']) {
           project_title = project + ", " + data['project_name'] + " <small>(" + data['customer_project_reference'] + " - no order in NGI portal)</small>";
         } else {
-          project_title = project + ", " + data['project_name'] + ' &nbsp; <small>NGI Portal: <a href="https://portal.scilifelab.se/genomics/node/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>';
+          project_title = project + ", " + data['project_name'] + ' &nbsp; <small>NGI Portal: <a href="https://ngisweden.scilifelab.se/order/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>';
         }
         prettyobj(key).html(project_title);
         prettyobj(key).attr('p_name', data['project_name']);
@@ -1065,7 +1065,7 @@ function setup_internal_costs_form(){
       data: JSON.stringify(object),
       error: function(xhr, textStatus, errorThrown) {
         alert('saving the internal costs failed : '+errorThrown);
-        console.log(xhr); console.log(textStatus); console.log(errorThrown); 
+        console.log(xhr); console.log(textStatus); console.log(errorThrown);
       },
       success: function(saved_data, textStatus, xhr) {
         $("#internal_costs").html(make_markdown(text));
