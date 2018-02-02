@@ -1,11 +1,11 @@
 backports.ssl-match-hostname==3.5.0.1
 CouchDB==1.1
 ecdsa==0.13
-genologics
+genologics>=0.3.16
 httplib2==0.10.3
 logbook
-matplotlib==2.0.0
-numpy==1.12.1
+matplotlib>=2.0.0
+numpy>=1.12.1
 oauth2==1.9.0.post1
 paramiko==2.1.2
 py-trello==0.9.0
