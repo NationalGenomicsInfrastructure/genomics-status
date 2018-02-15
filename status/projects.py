@@ -102,10 +102,15 @@ class ProjectsBaseDataHandler(SafeHandler):
                 pass
 
         if row.key[0] == 'open' and 'queued' in row.value:
-            #Add days in production field
+            #Add days ongoing in production field
             now = datetime.datetime.now()
             queued = row.value['queued']
             diff = now - dateutil.parser.parse(queued)
+            row.value['days_in_production'] = diff.days
+        elif row.key[0] == 'closed' and 'close_date' and 'queued' in row.value:
+            #Days project was in production
+            close = dateutil.parser.parse(row.value['close_date'])
+            diff = close - dateutil.parser.parse(row.value['queued'])
             row.value['days_in_production'] = diff.days
 
         if row.key[0] == 'open' and 'open_date' in row.value:
