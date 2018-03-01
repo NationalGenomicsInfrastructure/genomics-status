@@ -26,7 +26,11 @@ class FlowcellsHandler(SafeHandler):
         xfc_view = self.application.x_flowcells_db.view("info/summary",
                                                      descending=True)
         for row in xfc_view:
-            row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'], "%y%m%d").strftime("%Y-%m-%d")
+            try:
+                row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'], "%y%m%d").strftime("%Y-%m-%d")
+            
+            except ValueError:
+                row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'].split()[0], "%m/%d/%Y").strftime("%Y-%m-%d")
             temp_flowcells[row.key] = row.value
 
         return OrderedDict(sorted(temp_flowcells.items()))
