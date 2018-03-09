@@ -371,7 +371,7 @@ function load_all_udfs(){
           $('#contact').html(email_html);
         }
         else {
-          $('#contact').html('<span class="label label-info>contact</span><a href="mailto:'+value+'">'+value+'</a>');
+          $('#contact').html('<span class="label label-info">Contact</span><a href="mailto:'+value+'">'+value+'</a>');
         }
       }
 
