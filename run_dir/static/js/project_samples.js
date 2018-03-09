@@ -345,9 +345,34 @@ function load_all_udfs(){
         }
       }
 
-      // Make the project contact address clickable
+      // Make the project emails clickable, and add labels.
       else if (prettify(key) == 'contact'){
-         $('#contact').html('<a href="mailto:'+value+'">'+value+'</a>');
+        function elabel(text, label) {
+          return '<span class="label label-'+label+'">'+text+'</span>'
+        }
+        if(data['order_details']) {
+          var emails = {}
+          var contact = data['order_details']['owner']['email'];
+          emails[contact] = [elabel('Contact', 'info')];
+          var lab = data['order_details']['fields']['project_lab_email'];
+          if(!emails[lab]){emails[lab]=[elabel('Lab', 'default')]} else{emails[lab].push(elabel('Lab', 'default'))};
+          var bx = data['order_details']['fields']['project_bx_email'];
+          if(!emails[bx]){emails[bx]=[elabel('Bioinfo', 'default')]} else {emails[bx].push(elabel('Bioinfo', 'default'))};
+          var pi = data['order_details']['fields']['project_pi_email'];
+          if(!emails[pi]){emails[pi]=[elabel('PI', 'default')]} else {emails[pi].push(elabel('PI', 'default'))};
+
+          email_html = "";
+          Object.keys(emails).forEach(function(k, i) {
+            if (k != 'null'){ // A bit ugly ¯\_(ツ)_/¯
+              email_html += emails[k].join("");
+              email_html += '<a href="mailto:'+k+'">'+k+'</a><br>';
+            }
+          })
+          $('#contact').html(email_html);
+        }
+        else {
+          $('#contact').html('<span class="label label-info>contact</span><a href="mailto:'+value+'">'+value+'</a>');
+        }
       }
 
       // Colour code the project type
