@@ -452,7 +452,32 @@ td.progress {
     margin-left:-650px;
     left: 50%;
 }
-
+/* Email list */
+.email_list {
+    display: flex;
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    flex-flow: row wrap;
+    margin: 0;
+    padding: 0;
+}
+.email_link {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    flex: 3;
+    margin: 0;
+    padding: 0;
+}
+.email_labels {
+    vertical-align: middle;
+    text-align: right;
+    flex: 1;
+    margin: 0;
+    padding: 0;
+}
 
 /*
 === Flowcell_sample===

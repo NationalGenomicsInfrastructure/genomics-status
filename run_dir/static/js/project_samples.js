@@ -34,6 +34,13 @@ $(document).ready(function() {
       $('#proj_samples_copy_table').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
     }, 2000);
   });
+  // Copy email address to clipboard and change the tooltip
+  var email_clipboard = new Clipboard('.email_link a');
+  email_clipboard.on('success', function(e) {
+    $('.email_link').attr('title', 'Copy to clipboard').tooltip('fixTitle');
+    $(e.trigger).parent().attr('title', 'Copied!').tooltip('fixTitle').tooltip('show');
+  });
+
 
   $('body').on('click', '.search-action', function(e) {
     // Stop the checkbox from firing if clicked, plus stop bubbling
@@ -345,9 +352,36 @@ function load_all_udfs(){
         }
       }
 
-      // Make the project contact address clickable
+      // Make the project emails clickable, and add labels.
       else if (prettify(key) == 'contact'){
-         $('#contact').html('<a href="mailto:'+value+'">'+value+'</a>');
+        function elabel(text, label) {
+          return '<span class="label label-'+label+'">'+text+'</span>'
+        }
+        if(data['order_details']) {
+          var emails = {}
+          var contact = data['order_details']['owner']['email'];
+          emails[contact] = [elabel('Contact', 'info')];
+          var lab = data['order_details']['fields']['project_lab_email'];
+          if(!emails[lab]){emails[lab]=[elabel('Lab', 'default')]} else{emails[lab].push(elabel('Lab', 'default'))};
+          var bx = data['order_details']['fields']['project_bx_email'];
+          if(!emails[bx]){emails[bx]=[elabel('Bioinfo', 'default')]} else {emails[bx].push(elabel('Bioinfo', 'default'))};
+          var pi = data['order_details']['fields']['project_pi_email'];
+          if(!emails[pi]){emails[pi]=[elabel('PI', 'default')]} else {emails[pi].push(elabel('PI', 'default'))};
+
+          email_html = '';
+          Object.keys(emails).forEach(function(k, i) {
+            if (k != 'null'){ // A bit ugly ¯\_(ツ)_/¯
+              email_html += '<ul class="list-inline email_list">';
+              email_html += '<li class="email_link" data-toggle="tooltip" data-placement="left" title="Copy to clipboard">';
+              email_html += '<a href="javascript:void(0);" data-clipboard-text="'+k+'">'+k+'</a></li>';
+              email_html += '<li class="email_labels">'+emails[k].join("") + '</li></ul>';
+            }
+          })
+          $('#contact').html(email_html);
+        }
+        else {
+          $('#contact').html('<a href="mailto:'+value+'">'+value+'</a> '+elabel('Contact', 'info'));
+        }
       }
 
       // Colour code the project type
