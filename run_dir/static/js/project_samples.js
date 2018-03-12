@@ -361,17 +361,17 @@ function load_all_udfs(){
           var pi = data['order_details']['fields']['project_pi_email'];
           if(!emails[pi]){emails[pi]=[elabel('PI', 'default')]} else {emails[pi].push(elabel('PI', 'default'))};
 
-          email_html = "";
+          email_html = '';
           Object.keys(emails).forEach(function(k, i) {
             if (k != 'null'){ // A bit ugly ¯\_(ツ)_/¯
-              email_html += emails[k].join("");
-              email_html += '<a href="mailto:'+k+'">'+k+'</a><br>';
+              email_html += '<ul class="list-inline email_list"><li class="email_link"><a href="mailto:'+k+'">'+k+'</a></li>';
+              email_html += '<li class="email_labels">'+emails[k].join("") + '</li></ul>';
             }
           })
           $('#contact').html(email_html);
         }
         else {
-          $('#contact').html('<span class="label label-info">Contact</span><a href="mailto:'+value+'">'+value+'</a>');
+          $('#contact').html('<a href="mailto:'+value+'">'+value+'</a> '+elabel('Contact', 'info'));
         }
       }
 
