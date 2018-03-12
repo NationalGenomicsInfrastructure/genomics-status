@@ -452,6 +452,7 @@ td.progress {
     margin-left:-650px;
     left: 50%;
 }
+/* Email list */
 .email_list {
     display: flex;
     display: -webkit-box;

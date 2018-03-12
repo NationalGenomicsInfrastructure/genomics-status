@@ -34,6 +34,13 @@ $(document).ready(function() {
       $('#proj_samples_copy_table').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
     }, 2000);
   });
+  // Copy email address to clipboard and change the tooltip
+  var email_clipboard = new Clipboard('.email_link a');
+  email_clipboard.on('success', function(e) {
+    $('.email_link').attr('title', 'Copy to clipboard').tooltip('fixTitle');
+    $(e.trigger).parent().attr('title', 'Copied!').tooltip('fixTitle').tooltip('show');
+  });
+
 
   $('body').on('click', '.search-action', function(e) {
     // Stop the checkbox from firing if clicked, plus stop bubbling
@@ -364,7 +371,9 @@ function load_all_udfs(){
           email_html = '';
           Object.keys(emails).forEach(function(k, i) {
             if (k != 'null'){ // A bit ugly ¯\_(ツ)_/¯
-              email_html += '<ul class="list-inline email_list"><li class="email_link"><a href="mailto:'+k+'">'+k+'</a></li>';
+              email_html += '<ul class="list-inline email_list">';
+              email_html += '<li class="email_link" data-toggle="tooltip" data-placement="left" title="Copy to clipboard">';
+              email_html += '<a href="javascript:void(0);" data-clipboard-text="'+k+'">'+k+'</a></li>';
               email_html += '<li class="email_labels">'+emails[k].join("") + '</li></ul>';
             }
           })
