@@ -420,7 +420,6 @@ function load_all_udfs(){
           email_html += '<a href="javascript:void(0);" data-clipboard-text="'+value+'">'+value+'</a></li>';
           email_html += '<li class="email_labels">'+elabel('Contact', 'info')+'</li></ul>';
         }
-        //email_html += '</ul>'
         $('#contact').html(email_html);
       }
 
