@@ -11,7 +11,6 @@ $(document).ready(function() {
 
   // Initialise everything - order is important :)
   $.when(load_presets()).done(function(){
-//    load_undefined_info();
     load_all_udfs();
     load_samples_table();
     load_running_notes();
