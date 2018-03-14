@@ -376,12 +376,19 @@ function load_all_udfs(){
         }
       }
 
-      // Make the project emails clickable, and add labels.
+      // Make the project emails clickable and add labels.
       else if (prettify(key) == 'contact'){
         function elabel(text, label) {
           return '<span class="label label-'+label+'">'+text+'</span>'
         }
-        if(data['order_details']) {
+        // Stolen, without shame, from https://stackoverflow.com/a/46181
+        function validateEmail(email) {
+          var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+          return re.test(String(email).toLowerCase());
+        }
+
+        var email_html = '';
+        try {
           var emails = {}
           var contact = data['order_details']['owner']['email'];
           emails[contact] = [elabel('Contact', 'info')];
@@ -392,20 +399,30 @@ function load_all_udfs(){
           var pi = data['order_details']['fields']['project_pi_email'];
           if(!emails[pi]){emails[pi]=[elabel('PI', 'default')]} else {emails[pi].push(elabel('PI', 'default'))};
 
-          email_html = '';
           Object.keys(emails).forEach(function(k, i) {
-            if (k != 'null'){ // A bit ugly ¯\_(ツ)_/¯
+            if (!validateEmail(k)) {
+              console.log('Found a strange email address, falling back to old method, '+k);
+              throw 'TypeError';
+            }
+          });
+          Object.keys(emails).forEach(function(k, i) {
+            if (k != 'null'){ // A bit ugly ¯\_(ツ)_/¯ #TODO: Find some sort of templating engine, perhaps
               email_html += '<ul class="list-inline email_list">';
               email_html += '<li class="email_link" data-toggle="tooltip" data-placement="left" title="Copy to clipboard">';
               email_html += '<a href="javascript:void(0);" data-clipboard-text="'+k+'">'+k+'</a></li>';
-              email_html += '<li class="email_labels">'+emails[k].join("") + '</li></ul>';
+              email_html += '<li class="email_labels">'+emails[k].join("")+'</li></ul>';
             }
-          })
-          $('#contact').html(email_html);
+          });
         }
-        else {
-          $('#contact').html('<a href="mailto:'+value+'">'+value+'</a> '+elabel('Contact', 'info'));
+        // Fallback the old 'contact' field
+        catch(error) {
+          email_html += '<ul class="list-inline email_list">';
+          email_html += '<li class="email_link" data-toggle="tooltip" data-placement="left" title="Copy to clipboard">';
+          email_html += '<a href="javascript:void(0);" data-clipboard-text="'+value+'">'+value+'</a></li>';
+          email_html += '<li class="email_labels">'+elabel('Contact', 'info')+'</li></ul>';
         }
+        //email_html += '</ul>'
+        $('#contact').html(email_html);
       }
 
       // Colour code the project type
