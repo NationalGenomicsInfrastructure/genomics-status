@@ -11,7 +11,7 @@ $(document).ready(function() {
 
   // Initialise everything - order is important :)
   $.when(load_presets()).done(function(){
-    load_undefined_info();
+//    load_undefined_info();
     load_all_udfs();
     load_samples_table();
     load_running_notes();
@@ -61,6 +61,11 @@ $(document).ready(function() {
     }
   });
 
+  //Make this whole undefined fields non-sense optional
+  $('#undefined_fields_accordion').click(function(e) {
+    load_undefined_info();
+    $('#undefined_fields_accordion').off('click');
+  });
 
   //Show user communication tab. Loading
   $('#tab_communication').click(function (e) {
@@ -287,13 +292,32 @@ function load_tickets() {
 }
 
 function load_undefined_info(){
-  $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
-    $.each(data, function(column_no, column) {
+  $('#undefined_fields .panel-body').append('<div id="undefined_spinner" class="text-center"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading undefined fields</em></div>');
+
+  $.getJSON("/api/v1/projects_fields?undefined=true", function(u_data) {
+    var found_undefs = [];
+    $.each(u_data, function(column_no, column) {
       $("#undefined_project_info").append('<dt>' + column + '</dt><dd id="' + column + '"></dd>');
+      found_undefs.push(column);
     });
+    // At this point we don't care about having to fetch project_summary for a second time
+    $.getJSON("/api/v1/project_summary/" + project, function (data) {
+      $.each(data, function(key, value) {
+        if(found_undefs.includes(key)) {
+          if(prettyobj(key).length > 0){
+            prettyobj(key).html(auto_format(value));
+          } else if(safeobj(key).length > 0){
+            safeobj(key).html(auto_format(value));
+          } else {
+          }
+        }
+      });
+    });
+    $('#undefined_spinner').hide();
   }).fail(function( jqxhr, textStatus, error ) {
-      var err = textStatus + ", " + error;
-      console.log( "Couldn't load undefined fields: " + err );
+    var err = textStatus + ", " + error;
+    console.log( "Couldn't load undefined fields: " + err );
+    $('#undefined_spinner').hide();
   });
 }
 
