@@ -394,9 +394,10 @@ function load_all_udfs(){
         }
 
         var email_html = '';
+        var emails = {}
         try {
-          var emails = {}
           var contact = validateEmail(data['order_details']['owner']['email']);
+          if(!contact) {throw 'TypeError';}
           emails[contact] = [elabel('Contact', 'info')];
           var lab = validateEmail(data['order_details']['fields']['project_lab_email']);
           if(!emails[lab]){emails[lab]=[elabel('Lab', 'default')]} else{emails[lab].push(elabel('Lab', 'default'))};
@@ -404,29 +405,19 @@ function load_all_udfs(){
           if(!emails[bx]){emails[bx]=[elabel('Bioinfo', 'default')]} else {emails[bx].push(elabel('Bioinfo', 'default'))};
           var pi = validateEmail(data['order_details']['fields']['project_pi_email']);
           if(!emails[pi]){emails[pi]=[elabel('PI', 'default')]} else {emails[pi].push(elabel('PI', 'default'))};
-
-          Object.keys(emails).forEach(function(k, i) {
-            if (k != 'null' && !validateEmail(k)) {
-              console.log('Found a strange email address, falling back to old method, '+k);
-              throw 'TypeError';
-            }
-          });
-          Object.keys(emails).forEach(function(k, i) {
-            if (k != 'null'){ // A bit ugly ¯\_(ツ)_/¯ #TODO: Find some sort of templating engine, perhaps
-              email_html += '<ul class="list-inline email_list">';
-              email_html += '<li class="email_link" data-toggle="tooltip" data-placement="left" title="Copy to clipboard">';
-              email_html += '<a href="javascript:void(0);" data-clipboard-text="'+validateEmail(k)+'">'+validateEmail(k)+'</a></li>';
-              email_html += '<li class="email_labels">'+emails[k].join("")+'</li></ul>';
-            }
-          });
         }
-        // Fallback the old 'contact' field
         catch(error) {
-          email_html += '<ul class="list-inline email_list">';
-          email_html += '<li class="email_link" data-toggle="tooltip" data-placement="left" title="Copy to clipboard">';
-          email_html += '<a href="javascript:void(0);" data-clipboard-text="'+value+'">'+value+'</a></li>';
-          email_html += '<li class="email_labels">'+elabel('Contact', 'info')+'</li></ul>';
+          console.log('Falling back to using doc["contact"]');
+          emails[value] = [elabel('Contact', 'info')];
         }
+        Object.keys(emails).forEach(function(k, i) {
+          if (k != 'null') {
+            email_html += '<ul class="list-inline email_list">';
+            email_html += '<li class="email_link" data-toggle="tooltip" data-placement="left" title="Copy to clipboard">';
+            email_html += '<a href="javascript:void(0);" data-clipboard-text="'+k+'">'+k+'</a></li>';
+            email_html += '<li class="email_labels">'+emails[k].join("")+'</li></ul>';
+          }
+        });
         $('#contact').html(email_html);
       }
 
