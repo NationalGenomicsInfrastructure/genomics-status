@@ -380,26 +380,33 @@ function load_all_udfs(){
         function elabel(text, label) {
           return '<span class="label label-'+label+'">'+text+'</span>'
         }
-        // Stolen, without shame, from https://stackoverflow.com/a/46181
         function validateEmail(email) {
-          var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-          return re.test(String(email).toLowerCase());
+          var cap_email = null;
+          // Stolen, without shame, from https://stackoverflow.com/a/46181
+          var re = /(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
+          if (email){
+               matches = email.match(re);
+               if (matches){
+                  cap_email = matches[0].toLowerCase();
+               }
+          }
+          return cap_email;
         }
 
         var email_html = '';
         try {
           var emails = {}
-          var contact = data['order_details']['owner']['email'];
+          var contact = validateEmail(data['order_details']['owner']['email']);
           emails[contact] = [elabel('Contact', 'info')];
-          var lab = data['order_details']['fields']['project_lab_email'];
+          var lab = validateEmail(data['order_details']['fields']['project_lab_email']);
           if(!emails[lab]){emails[lab]=[elabel('Lab', 'default')]} else{emails[lab].push(elabel('Lab', 'default'))};
-          var bx = data['order_details']['fields']['project_bx_email'];
+          var bx = validateEmail(data['order_details']['fields']['project_bx_email']);
           if(!emails[bx]){emails[bx]=[elabel('Bioinfo', 'default')]} else {emails[bx].push(elabel('Bioinfo', 'default'))};
-          var pi = data['order_details']['fields']['project_pi_email'];
+          var pi = validateEmail(data['order_details']['fields']['project_pi_email']);
           if(!emails[pi]){emails[pi]=[elabel('PI', 'default')]} else {emails[pi].push(elabel('PI', 'default'))};
 
           Object.keys(emails).forEach(function(k, i) {
-            if (!validateEmail(k)) {
+            if (k != 'null' && !validateEmail(k)) {
               console.log('Found a strange email address, falling back to old method, '+k);
               throw 'TypeError';
             }
@@ -408,7 +415,7 @@ function load_all_udfs(){
             if (k != 'null'){ // A bit ugly ¯\_(ツ)_/¯ #TODO: Find some sort of templating engine, perhaps
               email_html += '<ul class="list-inline email_list">';
               email_html += '<li class="email_link" data-toggle="tooltip" data-placement="left" title="Copy to clipboard">';
-              email_html += '<a href="javascript:void(0);" data-clipboard-text="'+k+'">'+k+'</a></li>';
+              email_html += '<a href="javascript:void(0);" data-clipboard-text="'+validateEmail(k)+'">'+validateEmail(k)+'</a></li>';
               email_html += '<li class="email_labels">'+emails[k].join("")+'</li></ul>';
             }
           });
