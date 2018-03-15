@@ -11,7 +11,6 @@ $(document).ready(function() {
 
   // Initialise everything - order is important :)
   $.when(load_presets()).done(function(){
-    load_undefined_info();
     load_all_udfs();
     load_samples_table();
     load_running_notes();
@@ -61,6 +60,11 @@ $(document).ready(function() {
     }
   });
 
+  //Make this whole undefined fields non-sense optional
+  $('#undefined_fields_accordion').click(function(e) {
+    load_undefined_info();
+    $('#undefined_fields_accordion').off('click');
+  });
 
   //Show user communication tab. Loading
   $('#tab_communication').click(function (e) {
@@ -287,13 +291,32 @@ function load_tickets() {
 }
 
 function load_undefined_info(){
-  $.getJSON("/api/v1/projects_fields?undefined=true", function(data) {
-    $.each(data, function(column_no, column) {
+  $('#undefined_fields .panel-body').append('<div id="undefined_spinner" class="text-center"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading undefined fields</em></div>');
+
+  $.getJSON("/api/v1/projects_fields?undefined=true", function(u_data) {
+    var found_undefs = [];
+    $.each(u_data, function(column_no, column) {
       $("#undefined_project_info").append('<dt>' + column + '</dt><dd id="' + column + '"></dd>');
+      found_undefs.push(column);
     });
+    // At this point we don't care about having to fetch project_summary for a second time
+    $.getJSON("/api/v1/project_summary/" + project, function (data) {
+      $.each(data, function(key, value) {
+        if(found_undefs.includes(key)) {
+          if(prettyobj(key).length > 0){
+            prettyobj(key).html(auto_format(value));
+          } else if(safeobj(key).length > 0){
+            safeobj(key).html(auto_format(value));
+          } else {
+          }
+        }
+      });
+    });
+    $('#undefined_spinner').hide();
   }).fail(function( jqxhr, textStatus, error ) {
-      var err = textStatus + ", " + error;
-      console.log( "Couldn't load undefined fields: " + err );
+    var err = textStatus + ", " + error;
+    console.log( "Couldn't load undefined fields: " + err );
+    $('#undefined_spinner').hide();
   });
 }
 
@@ -352,36 +375,50 @@ function load_all_udfs(){
         }
       }
 
-      // Make the project emails clickable, and add labels.
+      // Make the project emails clickable and add labels.
       else if (prettify(key) == 'contact'){
         function elabel(text, label) {
           return '<span class="label label-'+label+'">'+text+'</span>'
         }
-        if(data['order_details']) {
-          var emails = {}
-          var contact = data['order_details']['owner']['email'];
-          emails[contact] = [elabel('Contact', 'info')];
-          var lab = data['order_details']['fields']['project_lab_email'];
-          if(!emails[lab]){emails[lab]=[elabel('Lab', 'default')]} else{emails[lab].push(elabel('Lab', 'default'))};
-          var bx = data['order_details']['fields']['project_bx_email'];
-          if(!emails[bx]){emails[bx]=[elabel('Bioinfo', 'default')]} else {emails[bx].push(elabel('Bioinfo', 'default'))};
-          var pi = data['order_details']['fields']['project_pi_email'];
-          if(!emails[pi]){emails[pi]=[elabel('PI', 'default')]} else {emails[pi].push(elabel('PI', 'default'))};
+        function validateEmail(email) {
+          var cap_email = null;
+          // Stolen, without shame, from https://stackoverflow.com/a/46181
+          var re = /(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
+          if (email){
+               matches = email.match(re);
+               if (matches){
+                  cap_email = matches[0].toLowerCase();
+               }
+          }
+          return cap_email;
+        }
 
-          email_html = '';
-          Object.keys(emails).forEach(function(k, i) {
-            if (k != 'null'){ // A bit ugly ¯\_(ツ)_/¯
-              email_html += '<ul class="list-inline email_list">';
-              email_html += '<li class="email_link" data-toggle="tooltip" data-placement="left" title="Copy to clipboard">';
-              email_html += '<a href="javascript:void(0);" data-clipboard-text="'+k+'">'+k+'</a></li>';
-              email_html += '<li class="email_labels">'+emails[k].join("") + '</li></ul>';
-            }
-          })
-          $('#contact').html(email_html);
+        var email_html = '';
+        var emails = {}
+        try {
+          var contact = validateEmail(data['order_details']['owner']['email']);
+          if(!contact) {throw 'TypeError';}
+          emails[contact] = [elabel('Contact', 'info')];
+          var lab = validateEmail(data['order_details']['fields']['project_lab_email']);
+          if(!emails[lab]){emails[lab]=[elabel('Lab', 'default')]} else{emails[lab].push(elabel('Lab', 'default'))};
+          var bx = validateEmail(data['order_details']['fields']['project_bx_email']);
+          if(!emails[bx]){emails[bx]=[elabel('Bioinfo', 'default')]} else {emails[bx].push(elabel('Bioinfo', 'default'))};
+          var pi = validateEmail(data['order_details']['fields']['project_pi_email']);
+          if(!emails[pi]){emails[pi]=[elabel('PI', 'default')]} else {emails[pi].push(elabel('PI', 'default'))};
         }
-        else {
-          $('#contact').html('<a href="mailto:'+value+'">'+value+'</a> '+elabel('Contact', 'info'));
+        catch(error) {
+          console.log('Falling back to using doc["contact"]');
+          emails[value] = [elabel('Contact', 'info')];
         }
+        Object.keys(emails).forEach(function(k, i) {
+          if (k != 'null') {
+            email_html += '<ul class="list-inline email_list">';
+            email_html += '<li class="email_link" data-toggle="tooltip" data-placement="left" title="Copy to clipboard">';
+            email_html += '<a href="javascript:void(0);" data-clipboard-text="'+k+'">'+k+'</a></li>';
+            email_html += '<li class="email_labels">'+emails[k].join("")+'</li></ul>';
+          }
+        });
+        $('#contact').html(email_html);
       }
 
       // Colour code the project type
