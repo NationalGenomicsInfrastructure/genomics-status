@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
 <!--
-Template file: yield_plot.html
-URL: /yield_plot/[timestamp1]-[timestamp]2
-Title: Yield Plot
+Template file: flowcell_trend_plot.html
+URL: /flowcells_plot/[timestamp1]-[timestamp]2
+Title: Flowcells trend plot
 Description: Plots the yield of recent flowcells.
 -->
 
 {% block stuff %}
 
 <div id="page_content">
-<h1>Yield Plot</h1>
+<h1>Flowcells Trend Plot</h1>
 <p>The default view shows 1 year worth of flowcells. </p>
 <div id="main_plot" style="height: 700px;">
 </div>
@@ -81,6 +81,7 @@ Description: Plots the yield of recent flowcells.
                 <input id="filter_hiseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="D" /> HiSeq
                 <input id="filter_hiseqX" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="E" /> HiSeq X
                 <input id="filter_miseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="M" /> MiSeq
+                <input id="filter_novaseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="A" /> NovaSeq
             </form>
 
         </div>
@@ -91,5 +92,5 @@ Description: Plots the yield of recent flowcells.
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="/static/js/bootstrap-datepicker.min.js"></script>
 <script type="text/javascript" src="/static/js/chroma.min.js" ></script>
-<script src="/static/js/yield_plot.js"></script>
+<script src="/static/js/fc_trend_plot.js?v={{ gs_globals['git_commit'] }}"></script>
 {% end %}
