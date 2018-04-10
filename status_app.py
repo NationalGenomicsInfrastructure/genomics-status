@@ -365,7 +365,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/workset_placement.html")
             tornado.autoreload.watch("design/workset_samples.html")
             tornado.autoreload.watch("design/worksets.html")
-            tornado.autoreload.watch("design/yield_plot.html")
+            tornado.autoreload.watch("design/flowcell_trend_plot.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
