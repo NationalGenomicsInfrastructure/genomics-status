@@ -29,47 +29,51 @@ Description: Plots the yield of recent flowcells.
             <button id="submit_interval" class="btn btn-primary btn-sm">Search</button>
             </form>
         </div>
-        <div id="display_type" class="col-md-2">
-            <form class='form-inline' id="display_type_form">
-                Display type :
-                <div class='btn-group btn-group-sm' data-toggle="button" id='display_type_buttons'>
-                    <button id="display_by_flowcell" aria-pressed="true" class="btn btn-default btn-sm active">Flowcell</button>
-                    <button id="display_by_lane" class="btn btn-default btn-sm">Lane</button>
-                </div>
-            </form>
-        </div>
-        <div id="key_select_div" class="col-md-2">
-            <form class='form-inline' id="key_select_form">
-                Display : 
-                <select class="form-control input-sm" id="key_select">
-                    <option class="key_select_all" value='total_yield' selected>Yield</option>
-                    <option class="key_select_all" value='total_clusters'>Clusters</option>
-                    <option class="key_select_lane" value='overeq_q30_pc' disabled>% >= Q30</option>
-                    <option class="key_select_lane" value='mqs' disabled>Mean Quality Score</option>
-                    <option class="key_select_lane" value='perfect_match_pc' disabled>% perfect match</option>
-                    <option class="key_select_lane" value='one_mismatch_pc' disabled>% 1 mismatch</option>
-                </select>
-            </form>
-        </div>
-        <div id="color_select_div" class="col-md-4">
-            <form class='form-inline' id="color_select_form">
-                Color by :
-                <select class="form-control input-sm" id="color_select">
-                    <option class="color_option" value='inst_type' selected>Instrument Type</option>
-                    <option class="color_option" value='inst'>Instrument</option>
-                    <option class="color_option" value='chemver'>Chemistry version</option>
-                    <option class="color_option" value='month'>Month</option>
-                </select>
-            </form>
-        </div>
-        <div id="plot_type" class="col-md-2">
-            <form class='form-inline' id="plot_type_form">
-                Plot type:
-                    <div class='btn-group btn-group-sm' data-toggle="button" id='plot_type_buttons'>
-                        <button id="plot_lines" aria-pressed="true" class="btn btn-default btn-sm active">Lines</button>
-                        <button id="plot_scatter" class="btn btn-default btn-sm">Scatter</button>
+        <div class="col-md-4">
+            <div id="display_type">
+                <form class='form-inline' id="display_type_form">
+                    Display type :
+                    <div class='btn-group btn-group-sm' data-toggle="button" id='display_type_buttons'>
+                        <button id="display_by_flowcell" aria-pressed="true" class="btn btn-default btn-sm active">Flowcell</button>
+                        <button id="display_by_lane" class="btn btn-default btn-sm">Lane</button>
                     </div>
-            </form>
+                </form>
+            </div>
+            <div id="plot_type">
+                <form class='form-inline' id="plot_type_form">
+                    Plot type:
+                        <div class='btn-group btn-group-sm' data-toggle="button" id='plot_type_buttons'>
+                            <button id="plot_lines" aria-pressed="true" class="btn btn-default btn-sm active">Lines</button>
+                            <button id="plot_scatter" class="btn btn-default btn-sm">Scatter</button>
+                        </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div id="key_select_div">
+                <form class='form-inline' id="key_select_form">
+                    Display : 
+                    <select class="form-control input-sm" id="key_select">
+                        <option class="key_select_all" value='total_yield' selected>Yield</option>
+                        <option class="key_select_all" value='total_clusters'>Clusters</option>
+                        <option class="key_select_lane" value='overeq_q30_pc' disabled>% >= Q30</option>
+                        <option class="key_select_lane" value='mqs' disabled>Mean Quality Score</option>
+                        <option class="key_select_lane" value='perfect_match_pc' disabled>% perfect match</option>
+                        <option class="key_select_lane" value='one_mismatch_pc' disabled>% 1 mismatch</option>
+                    </select>
+                </form>
+            </div>
+            <div id="color_select_div">
+                <form class='form-inline' id="color_select_form">
+                    Color by :
+                    <select class="form-control input-sm" id="color_select">
+                        <option class="color_option" value='inst_type' selected>Instrument Type</option>
+                        <option class="color_option" value='inst'>Instrument</option>
+                        <option class="color_option" value='chemver'>Chemistry version</option>
+                        <option class="color_option" value='month'>Month</option>
+                    </select>
+                </form>
+            </div>
         </div>
     </div>
     <div class="row" style="margin-top:10px;">

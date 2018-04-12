@@ -360,7 +360,6 @@ function update_months_list(){
     }
 }
 function update_color_schemes(){
-  //var inst_type_cs=chroma.scale(['008ae5', 'green','pink']).domain([0, 2]);
     var inst_type_cs=chroma.scale(['#90ee90','#7866df','#ad00af','#ff0000']).domain([0, 3]);
     var chem_cs=chroma.scale(['pink', 'lightblue']).domain([0, 2]);
     var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
