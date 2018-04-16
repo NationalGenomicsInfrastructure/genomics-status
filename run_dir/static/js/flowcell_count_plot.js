@@ -70,9 +70,17 @@ function make_plot(start_date, end_date, group_level,display_type){
         },
         tooltip: {
             useHTML: true,
-            headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{series.name}</small><br />{point.key}',
-            pointFormat: ': <b>{point.y}</b>',
-            xDateFormat: x_date_format
+            xDateFormat: x_date_format,
+            shared: true,
+            formatter: function () {
+              var points = this.points;
+              var pointsLength = points.length;
+              var tooltipMarkup = '';
+              for(var i = 0; i < pointsLength; i += 1) {
+                tooltipMarkup += '<span style="color:'+points[i].color+'">\u25CF</span><small>'+points[i].series.name+'</small>: <b>'+points[i].y+'</b><br />';
+              }
+              return tooltipMarkup;
+            }
         },
         credits: {
             enabled : false
