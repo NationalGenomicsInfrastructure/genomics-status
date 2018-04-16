@@ -72,14 +72,15 @@ function make_plot(start_date, end_date, group_level,display_type){
             useHTML: true,
             xDateFormat: x_date_format,
             shared: true,
+            followPointer: true,
             formatter: function () {
               var points = this.points;
               var pointsLength = points.length;
-              var tooltipMarkup = '';
+              var tooltipMarkup = '<table>';
               for(var i = 0; i < pointsLength; i += 1) {
-                tooltipMarkup += '<span style="color:'+points[i].color+'">\u25CF</span><small>'+points[i].series.name+'</small>: <b>'+points[i].y+'</b><br />';
+                tooltipMarkup += '<tr><td><span style="color:'+points[i].color+'">\u25CF </span><small>'+points[i].series.name+'</small>: </td><td><b>'+points[i].y+'</b></td></tr>';
               }
-              return tooltipMarkup;
+              return tooltipMarkup+"</table>";
             }
         },
         credits: {
