@@ -76,9 +76,11 @@ function make_plot(start_date, end_date, group_level,display_type){
             formatter: function () {
               var points = this.points;
               var pointsLength = points.length;
-              var tooltipMarkup = '<table>';
+              var tooltipMarkup = '<b style="font-size: 10px; text-decoration: underline">'+moment(points[0].key).format("YYYY-MM")
+                    + ' (week '+moment(points[0].key).week()+')</b><table style="width: 100%">';
               for(var i = 0; i < pointsLength; i += 1) {
-                tooltipMarkup += '<tr><td><span style="color:'+points[i].color+'">\u25CF </span><small>'+points[i].series.name+'</small>: </td><td><b>'+points[i].y+'</b></td></tr>';
+                tooltipMarkup += '<tr><td><span style="color:'+points[i].color+'">\u25CF </span><small>'
+                  + points[i].series.name+'</small>: </td><td style="text-align: right"><b>'+points[i].y+'</b></td></tr>';
               }
               return tooltipMarkup+"</table>";
             }
