@@ -31,7 +31,7 @@ class  FlowcellPlotHandler(SafeHandler):
     Loaded through /flowcell_plot/([^/]*)$
     """
     def get(self):
-        t = self.application.loader.load("yield_plot.html")
+        t = self.application.loader.load("flowcell_trend_plot.html")
         self.write(t.generate(gs_globals=self.application.gs_globals))
 
 

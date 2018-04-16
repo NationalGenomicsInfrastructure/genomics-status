@@ -295,7 +295,7 @@ function get_instrument_lists(plot_data){
                 else if (plot_data[d][0].indexOf("E") != -1){
                     current_instrument_types[plot_data[d][0]] = 'HiseqX';
                 }
-                else if (plot_data[d][0].indexOf("E") != -1){
+                else if (plot_data[d][0].indexOf("A") != -1){
                     current_instrument_types[plot_data[d][0]] = 'NovaSeq';
                 }
             }
