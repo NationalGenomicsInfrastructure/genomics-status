@@ -101,6 +101,8 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             continue;
         }else if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
             continue;
+        }else if (data[d].instrument.indexOf('A') != -1 && filter_inst_type.includes('A')){
+            continue;
         }
 
         // Set colours and the name of data series
@@ -124,6 +126,8 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 series_name = "HiSeq";
             }else if (data[d].instrument.indexOf('M') != -1){
                 series_name = "MiSeq";
+            }else if (data[d].instrument.indexOf('A') != -1){
+                series_name = "NovaSeq";
             }else{
               continue;
             }
@@ -199,6 +203,8 @@ function color_by_type(instrument){
         return current_color_schemes[0](1).hex();
     }else if (instrument.indexOf('M') != -1){
         return current_color_schemes[0](2).hex();
+    }else if (instrument.indexOf('A') != -1){
+        return current_color_schemes[0](3).hex();
     }else{
       return "#c3c3c3";
     }
@@ -354,7 +360,7 @@ function update_months_list(){
     }
 }
 function update_color_schemes(){
-    var inst_type_cs=chroma.scale(['008ae5', 'green','pink']).domain([0, 2]);
+    var inst_type_cs=chroma.scale(['#90ee90','#7866df','#ad00af','#ff0000']).domain([0, 3]);
     var chem_cs=chroma.scale(['pink', 'lightblue']).domain([0, 2]);
     var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
     var month_cs=chroma.scale(['yellow', 'lightblue', 'pink', 'orange']).domain([0,window.current_months_list.length-1]);

@@ -146,25 +146,6 @@ class UnsafeHandler(BaseHandler):
 class MainHandler(UnsafeHandler):
     """ Serves the html front page upon request.
     """
-    def __extract_quota_decrease(self, row):
-        """ helper function - extracts quota_decrease data from view row
-        and returns a dictionary
-        """
-        data = []
-        if 'quota_decrease' in row.value:
-            quota = row.value['quota_decrease'].split(',')
-            for value in quota:
-                try:
-                    quota, decrease_date = value.strip().split('@')
-                except:
-                    continue
-                today = date.today()
-                quota_date = datetime.strptime(decrease_date, "%Y-%m-%d").date()
-                if quota_date > today and quota_date < today + timedelta(days=30):
-                    days = (quota_date - today).days
-                    project_id = row.value.get('project', '').replace('/', '_')
-                    data.append({'quota': quota, 'days': days, 'project_id': project_id })
-        return data
 
     def get(self):
         t = self.application.loader.load("index.html")
@@ -192,79 +173,8 @@ class MainHandler(UnsafeHandler):
         # sort by used space
         server_status = sorted(server_status.items(), key = lambda item: item[1].get('used_percentage'), reverse=True)
 
-        # copy -> so that we don't change self.application.uppmax_projects
-        uppmax_ids = copy.copy(self.application.uppmax_projects.keys())
-        # get all the documents, sorted by timestamp in descending order. Because I don't know how to use reduce functions
-        # limit = 30, get the last 30 entries. assuming that our projects are in this range
-        view = self.application.server_status_db.view('uppmax/by_timestamp', descending=True, limit=130)
-        uppmax_projects = {}
-        quota_decrease = {}
-        for row in view.rows:
-            timestamp = parser.parse(row.key).strftime("%Y-%m-%d %H:%M")
-            # if we found all projects, don't continue
-            if not uppmax_ids:
-                break
-            project_id = row.value.get('project', '').replace('/', '_')
-            project_nobackup = copy.copy(project_id.split('_')[0]) # without _nobackup suffix
-            if project_id in uppmax_ids:
-                # get quota_decrease data
-                decrease_data = self.__extract_quota_decrease(row)
-                if decrease_data and project_id not in quota_decrease:
-                    quota_decrease[project_id] = decrease_data
-
-                # if a new project, add cpu hours
-                if project_nobackup not in uppmax_projects:
-                    uppmax_projects[project_nobackup] = {'timestamp': timestamp}
-
-                project = uppmax_projects[project_nobackup]
-                # add disk or nobackup usage depending on type of project
-                if project_id == project_nobackup:
-                    # can happen if taca server_status updates the wrong database
-                    if 'usage (GB)' not in row.value or 'quota limit (GB)' not in row.value:
-                        del uppmax_projects[project_nobackup]
-                        continue
-                    # / 1024 - to convert GB to TB
-                    project['disk_usage'] = round(float(row.value['usage (GB)']) / 1024, 2)
-                    project['disk_limit'] = round(float(row.value['quota limit (GB)']) / 1024, 2)
-                    project['disk_percentage'] = min(100, 100 * (project['disk_usage'] / project['disk_limit']))
-                    if project['disk_percentage'] > 90.0:
-                        project['disk_class'] = 'q-danger'
-                    elif project['disk_percentage'] > 80.0:
-                        project['disk_class'] = 'q-warning'
-                    else:
-                        project['disk_class'] = ''
-                    project['disk_timestamp'] = timestamp
-                    if 'cpu hours' in row.value and 'cpu limit' in row.value:
-                        project['cpu_usage'] = round(float(row.value['cpu hours']) / 1000, 2)
-                        project['cpu_limit'] = round(float(row.value['cpu limit']) / 1000, 2)
-                        project['cpu_percentage'] = min(100, 100 * (project['cpu_usage'] / project['cpu_limit']))
-                        if project['cpu_percentage'] > 90.0:
-                            project['cpu_class'] = 'q-danger'
-                        elif project['cpu_percentage'] > 80.0:
-                            project['cpu_class'] = 'q-warning'
-                        else:
-                            project['cpu_class'] = ''
-                        project['cpu_timestamp'] = timestamp
-                else:
-                    if 'usage (GB)' in row.value and 'quota limit (GB)' in row.value:
-                        project['nobackup_usage'] = round(float(row.value['usage (GB)']) / 1024, 2)
-                        project['nobackup_limit'] = round(float(row.value['quota limit (GB)']) / 1024, 2)
-                        project['nobackup_percentage'] = min(100, 100 * (project['nobackup_usage'] / project['nobackup_limit']))
-                        if project['nobackup_percentage'] > 90.0:
-                            project['nobackup_class'] = 'q-danger'
-                        elif project['nobackup_percentage'] > 80.0:
-                            project['nobackup_class'] = 'q-warning'
-                        else:
-                            project['nobackup_class'] = ''
-                        project['nobackup_timestamp'] = timestamp
-            if project.get('disk_usage') and project.get('cpu_usage') and project.get('nobackup_usage'):
-                if project_id in uppmax_ids:
-                    uppmax_ids.remove(project_id)
-
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                              user=user, uppmax_projects=uppmax_projects,
-                              server_status=server_status,
-                              quota_decrease=quota_decrease))
+                              user=user, server_status=server_status))
 
 def dthandler(obj):
     """ISO formatting for datetime to be used in JSON.

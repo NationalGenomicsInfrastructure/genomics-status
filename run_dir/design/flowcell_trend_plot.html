@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+<!--
+Template file: flowcell_trend_plot.html
+URL: /flowcells_plot/[timestamp1]-[timestamp]2
+Title: Flowcells trend plot
+Description: Plots the yield of recent flowcells.
+-->
+
+{% block stuff %}
+
+<div id="page_content">
+<h1>Flowcells Trend Plot</h1>
+<p>The default view shows 1 year worth of flowcells. </p>
+<div id="main_plot" style="height: 700px;">
+</div>
+<div id="control_container">
+    <div class="row">
+        <div id="logs_date" class="col-md-4">
+            <form class="form-inline" id="logs_date_form">
+                Select flowcells from 
+                <div class='input-group input-group-sm date' id='datepick1'>
+                    <input id="inp_date_1" type='text' class="form-control" /><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                </div>
+            to
+            <div class='input-group input-group-sm date' id='datepick2'>
+                <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span> 
+            </div>
+            <button id="submit_interval" class="btn btn-primary btn-sm">Search</button>
+            </form>
+        </div>
+        <div class="col-md-4">
+            <div id="display_type">
+                <form class='form-inline' id="display_type_form">
+                    Display type :
+                    <div class='btn-group btn-group-sm' data-toggle="button" id='display_type_buttons'>
+                        <button id="display_by_flowcell" aria-pressed="true" class="btn btn-default btn-sm active">Flowcell</button>
+                        <button id="display_by_lane" class="btn btn-default btn-sm">Lane</button>
+                    </div>
+                </form>
+            </div>
+            <div id="plot_type">
+                <form class='form-inline' id="plot_type_form">
+                    Plot type:
+                        <div class='btn-group btn-group-sm' data-toggle="button" id='plot_type_buttons'>
+                            <button id="plot_lines" aria-pressed="true" class="btn btn-default btn-sm active">Lines</button>
+                            <button id="plot_scatter" class="btn btn-default btn-sm">Scatter</button>
+                        </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div id="key_select_div">
+                <form class='form-inline' id="key_select_form">
+                    Display : 
+                    <select class="form-control input-sm" id="key_select">
+                        <option class="key_select_all" value='total_yield' selected>Yield</option>
+                        <option class="key_select_all" value='total_clusters'>Clusters</option>
+                        <option class="key_select_lane" value='overeq_q30_pc' disabled>% >= Q30</option>
+                        <option class="key_select_lane" value='mqs' disabled>Mean Quality Score</option>
+                        <option class="key_select_lane" value='perfect_match_pc' disabled>% perfect match</option>
+                        <option class="key_select_lane" value='one_mismatch_pc' disabled>% 1 mismatch</option>
+                    </select>
+                </form>
+            </div>
+            <div id="color_select_div">
+                <form class='form-inline' id="color_select_form">
+                    Color by :
+                    <select class="form-control input-sm" id="color_select">
+                        <option class="color_option" value='inst_type' selected>Instrument Type</option>
+                        <option class="color_option" value='inst'>Instrument</option>
+                        <option class="color_option" value='chemver'>Chemistry version</option>
+                        <option class="color_option" value='month'>Month</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+        <div id="inst_filter_div", class="col-md-8"> 
+        </div>
+        <div id="inst_type_filter_div" class="col-md-4">
+            <form class='form-inline' id="inst_type_filter_form">
+                See :
+                <input id="filter_hiseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="D" /> HiSeq
+                <input id="filter_hiseqX" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="E" /> HiSeq X
+                <input id="filter_miseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="M" /> MiSeq
+                <input id="filter_novaseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="A" /> NovaSeq
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="/static/js/bootstrap-datepicker.min.js"></script>
+<script type="text/javascript" src="/static/js/chroma.min.js" ></script>
+<script src="/static/js/fc_trend_plot.js?v={{ gs_globals['git_commit'] }}"></script>
+{% end %}

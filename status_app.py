@@ -40,7 +40,6 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
     ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler
 
-from status.quotas import QuotasHandler
 from status.nas_quotas import NASQuotasHandler
 from status.q30 import Q30Handler, Q30PlotHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler, FlowcellCountPlotHandler, FlowcellCountApiHandler
@@ -209,7 +208,6 @@ class Application(tornado.web.Application):
             ("/q30", Q30Handler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
-            ("/quotas", QuotasHandler),
             ("/phix_err_rate", PhixErrorRateHandler),
             ("/production", ProductionHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
@@ -313,9 +311,6 @@ class Application(tornado.web.Application):
         # Location of the psul log
         self.psul_log=settings.get("psul_log")
 
-
-        # index page - to display quotas of uppmax projects
-    	self.uppmax_projects = settings.get('uppmax_projects')
         # to display instruments in the server status
         self.server_status = settings.get('server_status')
 
@@ -367,11 +362,10 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/sequencing_stats.html")
             tornado.autoreload.watch("design/suggestion_box.html")
             tornado.autoreload.watch("design/unauthorized.html")
-            tornado.autoreload.watch("design/uppmax_quotas.html")
             tornado.autoreload.watch("design/workset_placement.html")
             tornado.autoreload.watch("design/workset_samples.html")
             tornado.autoreload.watch("design/worksets.html")
-            tornado.autoreload.watch("design/yield_plot.html")
+            tornado.autoreload.watch("design/flowcell_trend_plot.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 

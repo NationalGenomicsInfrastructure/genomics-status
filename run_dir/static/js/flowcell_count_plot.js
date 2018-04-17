@@ -70,9 +70,20 @@ function make_plot(start_date, end_date, group_level,display_type){
         },
         tooltip: {
             useHTML: true,
-            headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{series.name}</small><br />{point.key}',
-            pointFormat: ': <b>{point.y}</b>',
-            xDateFormat: x_date_format
+            xDateFormat: x_date_format,
+            shared: true,
+            followPointer: true,
+            formatter: function () {
+              var points = this.points;
+              var pointsLength = points.length;
+              var tooltipMarkup = '<b style="font-size: 10px; text-decoration: underline">'+moment(points[0].key).format("YYYY-MM")
+                    + ' (week '+moment(points[0].key).week()+')</b><table style="width: 100%">';
+              for(var i = 0; i < pointsLength; i += 1) {
+                tooltipMarkup += '<tr><td><span style="color:'+points[i].color+'">\u25CF </span><small>'
+                  + points[i].series.name+'</small>: </td><td style="text-align: right"><b>'+points[i].y+'</b></td></tr>';
+              }
+              return tooltipMarkup+"</table>";
+            }
         },
         credits: {
             enabled : false
@@ -295,7 +306,7 @@ function get_instrument_lists(plot_data){
                 else if (plot_data[d][0].indexOf("E") != -1){
                     current_instrument_types[plot_data[d][0]] = 'HiseqX';
                 }
-                else if (plot_data[d][0].indexOf("E") != -1){
+                else if (plot_data[d][0].indexOf("A") != -1){
                     current_instrument_types[plot_data[d][0]] = 'NovaSeq';
                 }
             }
