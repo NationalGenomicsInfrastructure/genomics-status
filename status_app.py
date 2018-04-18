@@ -20,7 +20,6 @@ from tornado.options import define, options
 
 from status.applications import ApplicationDataHandler, ApplicationHandler, ApplicationsDataHandler, ApplicationsHandler
 from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
-from status.barcode_vs_expected import BarcodeVsExpectedDataHandler, BarcodeVsExpectedPlotHandler, ExpectedHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.clusters_per_lane import ClustersPerLaneHandler, ClustersPerLanePlotHandler
 from status.deliveries import DeliveriesPageHandler
@@ -30,7 +29,6 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
-from status.phix_err_rate import PhixErrorRateDataHandler, PhixErrorRateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler, ProductionHandler
@@ -43,7 +41,6 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
 from status.nas_quotas import NASQuotasHandler
 from status.q30 import Q30Handler, Q30PlotHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler, FlowcellCountPlotHandler, FlowcellCountApiHandler
-from status.reads_per_lane import ReadsPerLaneHandler, ReadsPerLanePlotHandler
 from status.reads_vs_qv import ReadsVsQDataHandler, ReadsVsQvhandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
     SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, SampleQCSummaryHandler, \
@@ -95,7 +92,6 @@ class Application(tornado.web.Application):
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
             ("/api/v1/bioinfo_analysis", BioinfoAnalysisHandler),
             ("/api/v1/bioinfo_analysis/([^/]*)$", BioinfoAnalysisHandler),
-            ("/api/v1/expected", BarcodeVsExpectedDataHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
             ("/api/v1/charon_summary/([^/]*)$",CharonProjectHandler ),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
@@ -138,9 +134,7 @@ class Application(tornado.web.Application):
             ("/api/v1/plot/q30.png", Q30PlotHandler),
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
-            ("/api/v1/plot/reads_per_lane.png", ReadsPerLanePlotHandler),
             ("/api/v1/plot/clusters_per_lane.png", ClustersPerLanePlotHandler),
-            ("/api/v1/plot/barcodes_vs_expected([^/]*)$", BarcodeVsExpectedPlotHandler),
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
@@ -184,7 +178,6 @@ class Application(tornado.web.Application):
             ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
-            ("/api/v1/phix_err_rate", PhixErrorRateDataHandler),
             ("/api/v1/worksets", WorksetsDataHandler),
             ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
             ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
@@ -193,7 +186,6 @@ class Application(tornado.web.Application):
             ("/api/v1/ws_pl_to_lims", WorksetPlacementSavingHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
-            ("/barcode_vs_expected", ExpectedHandler),
             ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
             ("/deliveries", DeliveriesPageHandler),
             ("/clusters_per_lane", ClustersPerLaneHandler),
@@ -208,8 +200,6 @@ class Application(tornado.web.Application):
             ("/q30", Q30Handler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
-            ("/phix_err_rate", PhixErrorRateHandler),
-            ("/production", ProductionHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesHandler),
             ("/project/(P[^/]*)/([^/]*)$", ProjectSamplesHandler),
@@ -218,11 +208,8 @@ class Application(tornado.web.Application):
             ("/proj_meta", ProjMetaCompareHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/reads_vs_qv", ReadsVsQvhandler),
-            ("/reads_per_lane", ReadsPerLaneHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
-            ("/samples_per_lane", SamplesPerLaneHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
-            ("/sequencing", SequencingStatsHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/worksets", WorksetsHandler),
             ("/workset/([^/]*)$", WorksetHandler),
@@ -328,7 +315,6 @@ class Application(tornado.web.Application):
         if options['develop']:
             tornado.autoreload.watch("design/application.html")
             tornado.autoreload.watch("design/applications.html")
-            tornado.autoreload.watch("design/barcode_vs_expected.html")
             tornado.autoreload.watch("design/base.html")
             tornado.autoreload.watch("design/bioinfo_tab.html")
             tornado.autoreload.watch("design/bioinfo_tab/run_lane_sample_view.html")
@@ -345,21 +331,16 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/nas_quotas.html")
-            tornado.autoreload.watch("design/phix_err_rate.html")
-            tornado.autoreload.watch("design/production.html")
             tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/project_samples.html")
             tornado.autoreload.watch("design/project_summary.html")
             tornado.autoreload.watch("design/projects.html")
             tornado.autoreload.watch("design/q30.html")
-            tornado.autoreload.watch("design/reads_per_lane.html")
             tornado.autoreload.watch("design/reads_total.html")
             tornado.autoreload.watch("design/reads_vs_qv.html")
             tornado.autoreload.watch("design/rec_ctrl_view.html")
             tornado.autoreload.watch("design/running_notes_help.html")
             tornado.autoreload.watch("design/running_notes_tab.html")
-            tornado.autoreload.watch("design/samples_per_lane.html")
-            tornado.autoreload.watch("design/sequencing_stats.html")
             tornado.autoreload.watch("design/suggestion_box.html")
             tornado.autoreload.watch("design/unauthorized.html")
             tornado.autoreload.watch("design/workset_placement.html")
