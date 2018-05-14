@@ -30,7 +30,7 @@ from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler,
 from status.multiqc_report import MultiQCReportHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
-    ProducedQuarterlyPlotHandler, ProductionCronjobsHandler, ProductionHandler
+    ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
 from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
