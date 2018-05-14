@@ -45,7 +45,7 @@ from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, 
     SamplesPerLaneHandler, SamplesPerLanePlotHandler
 from status.sequencing import InstrumentClusterDensityPlotHandler, InstrumentErrorratePlotHandler, InstrumentUnmatchedPlotHandler, \
     InstrumentYieldPlotHandler, InstrumentClusterDensityDataHandler, InstrumentErrorrateDataHandler, InstrumentUnmatchedDataHandler, \
-    InstrumentYieldDataHandler, SequencingStatsHandler
+    InstrumentYieldDataHandler
 from status.statistics import YearApplicationsProjectHandler, YearApplicationsSamplesHandler, YearAffiliationProjectsHandler, YearDeliverytimeProjectsHandler, \
     ApplicationOpenProjectsHandler, ApplicationOpenSamplesHandler, WeekInstrumentTypeYieldHandler, StatsAggregationHandler, YearDeliverytimeApplicationHandler
 from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
