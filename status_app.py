@@ -52,9 +52,7 @@ from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
 from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, SafeStaticFileHandler, \
     UpdatedDocumentsDatahandler
-from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
-    WorksetsDataHandler, WorksetSearchHandler
-from status.workset_placement import WorksetPlacementHandler,WorksetSampleLoadHandler, GenerateWorksetHandler, WorksetPlacementSavingHandler
+
 
 from zendesk import Zendesk
 
@@ -109,7 +107,6 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
             tornado.web.URLSpec("/api/v1/frag_an_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", FragAnImageHandler, name="FragAnImageHandler"),
-            ("/api/v1/generate_workset", GenerateWorksetHandler),
             ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
             ("/api/v1/instrument_cluster_density.png",
@@ -127,7 +124,6 @@ class Application(tornado.web.Application):
             ("/api/v1/internal_costs/([^/]*)", ProjectInternalCostsHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
-            ("/api/v1/load_workset_samples", WorksetSampleLoadHandler),
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
@@ -172,12 +168,6 @@ class Application(tornado.web.Application):
             ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
-            ("/api/v1/worksets", WorksetsDataHandler),
-            ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
-            ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
-            ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
-            ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
-            ("/api/v1/ws_pl_to_lims", WorksetPlacementSavingHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
@@ -202,9 +192,6 @@ class Application(tornado.web.Application):
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/suggestion_box", SuggestionBoxHandler),
-            ("/worksets", WorksetsHandler),
-            ("/workset/([^/]*)$", WorksetHandler),
-            ("/workset_placement",WorksetPlacementHandler),
             (r'.*', BaseHandler)
         ]
 
