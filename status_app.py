@@ -192,6 +192,8 @@ class Application(tornado.web.Application):
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/suggestion_box", SuggestionBoxHandler),
+            ("/worksets", WorksetsHandler),
+            ("/workset/([^/]*)$", WorksetHandler),
             (r'.*', BaseHandler)
         ]
 
