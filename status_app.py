@@ -52,6 +52,8 @@ from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
 from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, SafeStaticFileHandler, \
     UpdatedDocumentsDatahandler
+from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
+    WorksetsDataHandler, WorksetSearchHandle
 
 
 from zendesk import Zendesk
