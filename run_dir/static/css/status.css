@@ -988,6 +988,10 @@ div.responsible-filters div.form-group {
   min-width: 5px;
 }
 
+.badge {
+    font-weight: 400;
+}
+
 .button-edit-bioinfo-responsible, .button-save-bioinfo-responsible, .button-reset-bioinfo-responsible{
     cursor: pointer;
 }
