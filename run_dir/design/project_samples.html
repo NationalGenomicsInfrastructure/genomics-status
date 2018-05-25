@@ -154,7 +154,7 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped">
             <thead>
-              <tr><th colspan="2">Bioinformatics <a id="statusdb_link" target="_blank">&#x1f517;</a>
+              <tr><th colspan="2">Bioinformatics <a id="statusdb_link" data-toggle="tooltip" title="Opens project page in StatusDB" target="_blank">&#x1f517;</a>
               </th></tr>
             </thead>
             <tbody>
@@ -314,7 +314,7 @@ Description: Details page for a single project
           <a class="btn btn-sm btn-default" href='/rec_ctrl_view/{{ project }}' role="button">RecCtrl Plates</a>
         </div>
       </form>
-      
+
       {% if len(worksets) > 0 %}
       <hr>
       <!-- Woksets -->
