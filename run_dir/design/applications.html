@@ -17,7 +17,7 @@ Description: Displays pie charts with statistics for numbers of samples + projec
   </div>
 </div>
 <p>Projects that are not loaded from Clarity LIMS have no 'open_date' attribute in Status DB
-  and will be treated as opened exactly on '2012-01-01'. Projects that do not have the
+  and will be treated as opened exactly on the specified date. Projects that do not have the
   application field filled in will be listed under 'null'.</p>
 
   <h2>Project Applications</h2>
@@ -65,8 +65,10 @@ Description: Displays pie charts with statistics for numbers of samples + projec
 <script src="/static/nvd3/lib/d3.v2.js"></script>
 <script src="/static/nvd3/nv.d3.js"></script>
 <script type="text/javascript">
-var start = new Date(2012,0,1);
+
 var stop = new Date();
+var start = new Date(stop.getFullYear() - 1, stop.getMonth(), stop.getDate());
+
 $("#date_slider").dateRangeSlider({
     bounds: {
       min: start,
@@ -119,8 +121,8 @@ function draw_chart(data, obj) {
 
 function load_data(start, stop) {
   $("#dates").text("Opening Date range: " + start + " - " + stop)
-  var start_param = (start == "2012-01-01" ? "" : ("start=" + start))
-  $.getJSON("/api/v1/applications?" + start_param + "&end=" + stop, function (data){
+
+  $.getJSON("/api/v1/applications?start=" + start + "&end=" + stop, function (data){
     applications = data['applications']
     // Plot the pie chart
     draw_chart(applications, "#main_chart svg");
