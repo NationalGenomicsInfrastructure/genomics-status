@@ -336,7 +336,10 @@ function load_all_udfs(){
       if(key == 'Aborted'){ key = 'aborted_samples'; }
       if(key == 'In Progress'){ key = 'in_progress_samples'; }
       if(key == 'Finished'){ key = 'finished_samples'; }
+      if(key == 'uppnex_id'){ key = 'delivery_type'; }
 
+      //fill in link to statusdb
+      $("#statusdb_link").attr('href', "http://tools.scilifelab.se:5984/_utils/document.html?projects/" + data['_doc_id']);
 
       // Set the project name and status
       if (prettify(key) == 'project_name'){
@@ -1111,6 +1114,7 @@ function load_charon_summary(){
           $('#charon-status-failed').text(data['failed']);
           $('#charon-status-runn').text(data['runn']);
           $('#charon-status-hge').text(data['hge']);
+          $('#charon-status-gdp').text(data['gdp'].toString().replace(/\'/," "));
       }
   }).fail(function( jqxhr, textStatus, error ) {
       var err = textStatus + ", " + error;
