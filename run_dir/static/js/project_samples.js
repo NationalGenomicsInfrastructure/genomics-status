@@ -336,6 +336,7 @@ function load_all_udfs(){
       if(key == 'Aborted'){ key = 'aborted_samples'; }
       if(key == 'In Progress'){ key = 'in_progress_samples'; }
       if(key == 'Finished'){ key = 'finished_samples'; }
+      if(key == 'uppnex_id'){ key = 'delivery_type'; }
 
       //fill in link to statusdb
       $("#statusdb_link").attr('href', "http://tools.scilifelab.se:5984/_utils/document.html?projects/" + data['_doc_id']);
