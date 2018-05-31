@@ -154,13 +154,13 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped">
             <thead>
-              <tr><th colspan="2">Bioinformatics</th></tr>
+              <tr><th colspan="2">Bioinformatics <a id="statusdb_link" data-toggle="tooltip" title="Opens project page in StatusDB" target="_blank">&#x1f517;</a>
+              </th></tr>
             </thead>
             <tbody>
-              <tr><td>Uppnex ID</td><td><code id="uppnex_id"></code></td></tr>
+              <tr><td>Delivery Type</td><td><code id="delivery_type"></code></td></tr>
               <tr><td>Source</td><td id="source"></td></tr>
               <tr><td>Custom capture design</td><td id="custom_capture_design_id"></td></tr>
-              <tr><td>UPPMAX project owner</td><td id="uppmax_project_owner"></td></tr>
               <tr><td>Best Practice Bioinformatics</td><td id="best_practice_bioinformatics"></td></tr>
               <tr><td>Bioinfo Analysis</td><td id="bioinformatic_qc"></td></tr>
               <tr><td>Organism</td><td id="organism"></td></tr>
@@ -237,6 +237,10 @@ Description: Details page for a single project
                     <td>30X Human Genomes Equivalents</td>
                     <td><span class="badge" id="charon-status-hge"></span></td>
                 </tr>
+                <tr>
+                    <td>Delivery Project(s)</td>
+                    <td><span class="badge" id="charon-status-gdp"></span></td>
+                </tr>
             </tbody>
           </table>
         </div>
@@ -310,7 +314,7 @@ Description: Details page for a single project
           <a class="btn btn-sm btn-default" href='/rec_ctrl_view/{{ project }}' role="button">RecCtrl Plates</a>
         </div>
       </form>
-      
+
       {% if len(worksets) > 0 %}
       <hr>
       <!-- Woksets -->

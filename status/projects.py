@@ -321,6 +321,9 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
                                                       descending=True,
                                                       group_level=1)
         date_result = date_view[[project + 'ZZZZ']:[project]]
+
+        summary_row.value['_doc_id'] = summary_row.id
+
         if date_result.rows:
             for date_row in date_result.rows:
                 for date_type, date in date_row.value.iteritems():
@@ -720,7 +723,7 @@ class ProjectSummaryHandler(SafeHandler):
         processes=lims.get_processes(projectname=project.name, type='Project Summary 1.3')
         samples=lims.get_samples(projectname=project.name)
         self.getProjectSummaryFields(lims)
-        
+
 
         t = self.application.loader.load("project_summary.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
