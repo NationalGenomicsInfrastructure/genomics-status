@@ -195,6 +195,10 @@ class Application(tornado.web.Application):
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/worksets", WorksetsHandler),
+            ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
+            ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
+            ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
+            ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/workset/([^/]*)$", WorksetHandler),
             (r'.*', BaseHandler)
         ]
