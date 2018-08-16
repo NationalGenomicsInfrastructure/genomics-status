@@ -2,13 +2,14 @@
 
 Genomics Status is a Tornado web app for visualizing information and statistics regarding SciLifeLab Genomics platform operations.
 
-Status interfaces with StatusDB; the CouchDB database instance we're using at SciLifeLab to store metadata in 
+Status interfaces with StatusDB; the CouchDB database instance we're using at SciLifeLab to store metadata in
 various forms. Document specifications for StatusDB are available in the internal wiki. Documentation about CouchDB can be found [here](http://guide.couchdb.org/).
 
 ## Installing and running genomics status
 
 **NOTE**: These steps assume that:
 * you're either running a python virtualenv or you do have root permissions.
+* you're running python version 2.X
 * you have access to both StatusDB and Genologics LIMS
 
 1 - Clone the repository with the `--recursive` option (this will also download [nvd3](http://nvd3.org/) library):
@@ -36,15 +37,25 @@ serve the web app to. You will also need a .genologicsrc file with the API crede
 `<status_dir>/run_dir/settings.yaml`:
 ```yaml
 couch_server: http://<username>:<password>@tools-dev.scilifelab.se:5984
-username: <tools_username>
-password: <tools_password>
+username: <tools_username> # same as input above
+password: <tools_password> # same as input above
 port: 9761
 redirect_uri: http://localhost:9761/login
 
+# This can be left like this as long as --testing_mode is used
 google_oauth:
     key_old: write
     key: anything
     secret: here
+
+zendesk:
+    url: any
+    username: thing
+    token: goes
+
+sftp:
+    login: will
+    password: code
 
 contact_person: someone@domain.com
 
@@ -54,7 +65,7 @@ instruments:
     MiSeq:
         INSTRUMENT_ID: INSTRUMENT_NAME
 
-password_seed: dont_needed
+password_seed: not_needed_for_development
 
 # You Trello API credentials, you need a board named "Suggestion Box"
 trello:
@@ -85,7 +96,7 @@ python ../status_app.py --testing_mode
 The status web app both provides the HTML web interface, and a RESTful api for accessing the data being
 visualized on the various pages.
 
-If you've used the `settings.yaml` template above, you should now be able to access the site at `http://localhost:9761/login`
+If you've used the `settings.yaml` template above, you should now be able to access the site at `http://localhost:9761/` or `http://localhost:9761/login`
 
 ## Genomics Status architecture
 
@@ -103,14 +114,14 @@ This pictures illustrates the architecture of how Genomics Status is built with 
 5. A JSON document is returned to the web browser
 6. Which uses it to build the project list client-side.
 
-This design aims to decouple design and backend, as well as avoid making calls to the database from the web browser. 
+This design aims to decouple design and backend, as well as avoid making calls to the database from the web browser.
 
 It also facilitates the reusability of the API for other possible applications.
 
 ### Tornado
-[Tornado](http://www.tornadoweb.org/en/stable/) is a Python web framework and asynchronous networking library. Genomics Status is based on Tornado. 
+[Tornado](http://www.tornadoweb.org/en/stable/) is a Python web framework and asynchronous networking library. Genomics Status is based on Tornado.
 
-A very basic tornado web app, but enough to get the idea, would be something like this: 
+A very basic tornado web app, but enough to get the idea, would be something like this:
 
 ```python
 import tornado.ioloop
@@ -131,7 +142,7 @@ if __name__ == "__main__":
 
 Basically, you have to define a handlaer for each URL you want your application to serve. In this case, we define just one handler for the URI `'/'`. This will just print a `"Hello, World"` page.
 
-Handlers that inherit from ```tornado.web.RequestHandler``` should implement at least one of the HTTP basic operations, i.e GET, POST or PUT. 
+Handlers that inherit from ```tornado.web.RequestHandler``` should implement at least one of the HTTP basic operations, i.e GET, POST or PUT.
 
 ### Tornado templating
 Tornado templates are a good way to generate dynamic pages server side. The advantage of templates is that you can embeed python code in them. [The official documentation](http://www.tornadoweb.org/en/stable/template.html) is good enough to learn how they work.
