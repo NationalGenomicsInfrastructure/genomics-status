@@ -9,7 +9,7 @@ various forms. Document specifications for StatusDB are available in the interna
 
 **NOTE**: These steps assume that:
 * you're either running a python virtualenv or you do have root permissions.
-* you're running python version 2.X
+* you're running python version 2.7
 * you have access to both StatusDB and Genologics LIMS
 
 1 - Clone the repository with the `--recursive` option (this will also download [nvd3](http://nvd3.org/) library):
