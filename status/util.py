@@ -150,8 +150,8 @@ class MainHandler(UnsafeHandler):
     def get(self):
         t = self.application.loader.load("index.html")
         user = self.get_current_user_name()
-        # Avoids pulling all historic data by assuming we have less than 200 NAS:es
-        view = self.application.server_status_db.view('nases/by_timestamp', descending=True, limit=200)
+        # Avoids pulling all historic data by assuming we have less than 30 NAS:es
+        view = self.application.server_status_db.view('nases/by_timestamp', descending=True, limit=30)
         latest = max([parser.parse(row.key) for row in view.rows])
         # assuming that status db is not being updated more often than every 5 minutes
         reduced_rows = [row for row in view.rows if latest - parser.parse(row.key) <= timedelta(minutes=5)]
