@@ -13,7 +13,7 @@ def get_clean_application_keys(handler):
 
 def get_stats_data(db,view, gl=0, cleaning=None, doreduce=True):
     if not cleaning:
-        cleaning={} 
+        cleaning={}
     data={}
     def general_cleaning(meta_key):
         if meta_key in cleaning:
@@ -24,7 +24,7 @@ def get_stats_data(db,view, gl=0, cleaning=None, doreduce=True):
     db_view=db.view(view, group_level=gl, reduce=doreduce)
     if gl==2:
         for row in db_view:
-            meta_key1 = row.key[1] 
+            meta_key1 = row.key[1]
             if meta_key1 in cleaning:
                 meta_key1=cleaning[meta_key1]
             if row.key[0] not in data:
@@ -36,7 +36,7 @@ def get_stats_data(db,view, gl=0, cleaning=None, doreduce=True):
 
     elif gl==1:
         for row in db_view:
-            meta_key1 = row.key 
+            meta_key1 = row.key
             if meta_key1 in cleaning:
                 meta_key1=cleaning[meta_key1]
 
@@ -142,10 +142,13 @@ class StatsAggregationHandler(UnsafeHandler):
         self.project_aggregates={
             "num_projects" : ("genomics-dashboard/year_application_count", 2),
             "num_samples" : ("genomics-dashboard/year_application_count_samples", 2),
+            "num_seq_projects" : ("genomics-dashboard/year_seq_application_count", 2),
+            "num_seq_samples" : ("genomics-dashboard/year_seq_application_count_samples", 2),
             "project_user_affiliations" : ("genomics-dashboard/year_affiliation_count_projects", 2),
             "delivery_times" : ("genomics-dashboard/year_deliverytime_count_projects", 2),
             "delivery_times_median" : ("genomics-dashboard/year_deliverytime_median_by_application", 2),
             "open_projects" : ("genomics-dashboard/open_application_count_projects", 1),
+            "open_seq_projects" : ("genomics-dashboard/open_application_count_seq_projects", 1),
             "open_project_samples" : ("genomics-dashboard/open_application_count_samples", 1)
             }
         self.flowcell_aggregates={
@@ -162,6 +165,3 @@ class StatsAggregationHandler(UnsafeHandler):
         self.set_header('Content-Type', 'application/json')
         self.set_status(200)
         self.write(json.dumps(data))
-
-
-
