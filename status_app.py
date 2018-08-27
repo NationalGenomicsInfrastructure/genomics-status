@@ -35,7 +35,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
-    ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler
+    ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler
 
 from status.nas_quotas import NASQuotasHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler, FlowcellCountPlotHandler, FlowcellCountApiHandler
@@ -141,6 +141,7 @@ class Application(tornado.web.Application):
             ("/api/v1/project_summary_update/([^/]*)/([^/]*)$", ProjectSummaryUpdateHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
             ("/api/v1/presets", PresetsHandler),
+            ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/projectqc/([^/]*)$", ProjectQCDataHandler),
             ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
@@ -188,7 +189,7 @@ class Application(tornado.web.Application):
             ("/project/([^/]*)$", ProjectSamplesHandler),
             ("/project/(P[^/]*)/([^/]*)$", ProjectSamplesHandler),
             ("/project_summary/([^/]*)$", ProjectSummaryHandler),
-            ("/projects/([^/]*)$", ProjectsHandler),
+            ("/projects", ProjectsHandler),
             ("/proj_meta", ProjMetaCompareHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
@@ -231,9 +232,13 @@ class Application(tornado.web.Application):
 
         # Load columns and presets from genstat-defaults user in StatusDB
         genstat_id = ''
+        user = settings.get("username", None)
         for u in self.gs_users_db.view('authorized/users'):
             if u.get('key') == 'genstat-defaults':
                 genstat_id = u.get('value')
+            elif u.get('key') ==user+'@scilifelab.se':
+                user_id = u.get('value')
+
 
         # It's important to check that this user exists!
         if not genstat_id:
@@ -243,15 +248,16 @@ class Application(tornado.web.Application):
 
         # We need to get this database as OrderedDict, so the pv_columns doesn't
         # mess up
-        user = settings.get("username", None)
         password = settings.get("password", None)
         headers = {"Accept": "application/json",
                    "Authorization": "Basic " + "{}:{}".format(user, password).encode('base64')[:-1]}
         decoder = json.JSONDecoder(object_pairs_hook=OrderedDict)
         user_url = "{}/gs_users/{}".format(settings.get("couch_server"), genstat_id)
         json_user = requests.get(user_url, headers=headers).content.rstrip()
-
         self.genstat_defaults = decoder.decode(json_user)
+        user_url = "{}/gs_users/{}".format(settings.get("couch_server"), user_id)
+        json_user = requests.get(user_url, headers=headers).content.rstrip()
+        self.user_details = decoder.decode(json_user)
 
         # Load private instrument listing
         self.instrument_list = settings.get("instruments")
@@ -319,7 +325,8 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/project_samples.html")
             tornado.autoreload.watch("design/project_summary.html")
-            tornado.autoreload.watch("design/projects.html")
+            #tornado.autoreload.watch("design/projects.html")
+            tornado.autoreload.watch("design/project.html")
             tornado.autoreload.watch("design/reads_total.html")
             tornado.autoreload.watch("design/rec_ctrl_view.html")
             tornado.autoreload.watch("design/running_notes_help.html")

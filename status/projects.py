@@ -49,17 +49,63 @@ class PresetsHandler(SafeHandler):
         self.set_header("Content-type", "application/json")
         presets = {
             "default": self.application.genstat_defaults.get(presets_list),
-            "user": {}
+            "user": self.application.user_details.get('userpreset')
         }
-        #Get user presets
-        user_id = ''
-        user = self.get_secure_cookie('email')
-        for u in self.application.gs_users_db.view('authorized/users'):
-            if u.get('key') == user:
-                user_id = u.get('value')
-                break
-        presets['user'] = self.application.gs_users_db.get(user_id).get(presets_list, {})
         self.write(json.dumps(presets))
+
+    def post(self):
+        """Save/Delete preset choices of columns into StatusDB
+        """
+        doc=self.application.user_details
+        if self.get_arguments('save'):
+            preset_name = self.get_argument('save')
+            data = json.loads(self.request.body)
+            if 'userpreset' in doc:
+                doc['userpreset'][preset_name]=data
+            else:
+                doc['userpreset']={ preset_name:data }
+
+        if self.get_arguments('delete'):
+            preset_name = self.get_argument('delete')
+            del doc['userpreset'][preset_name]
+
+        try:
+            self.application.gs_users_db.save(doc)
+        except Exception, e:
+            self.set_status(400)
+            self.write(e.message)
+
+        self.set_status(201)
+        self.write({'success': 'success!!'})
+        self.application.user_details=doc
+
+
+class PresetsOnLoadHandler(SafeHandler):
+    """Handler to GET and POST/PUT personalized and default set of presets on loading
+
+    project view.
+    """
+    def get(self):
+        action = self.get_argument('action', '')
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.application.user_details.get('onload')))
+
+    def post(self):
+        doc=self.application.user_details
+        data = json.loads(self.request.body)
+        application_log.warn(self.get_argument('action'))
+        action=self.get_argument('action')
+        doc['onload']=data
+
+        try:
+            self.application.gs_users_db.save(doc)
+        except Exception, e:
+            self.set_status(400)
+            self.write(e.message)
+
+        self.set_status(201)
+        self.write({'success': 'success!!'})
+        self.application.user_details=doc
 
 
 class ProjectsBaseDataHandler(SafeHandler):
@@ -127,18 +173,43 @@ class ProjectsBaseDataHandler(SafeHandler):
 
     def list_projects(self, filter_projects='all', oldest_date='2012-01-01', youngest_date=datetime.datetime.now().strftime("%Y-%m-%d")):
         projects = OrderedDict()
-
-        oldest_open_date=self.get_argument('oldest_open_date', oldest_date)
-        youngest_open_date=self.get_argument('youngest_open_date', youngest_date)
-        oldest_close_date=self.get_argument('oldest_close_date', oldest_date)
-        youngest_close_date=self.get_argument('youngest_close_date', youngest_date)
-        oldest_queue_date=self.get_argument('oldest_queue_date', oldest_date)
-        youngest_queue_date=self.get_argument('youngest_queue_date', youngest_date)
+        application_log.warn(self.get_argument('oldest_open_date', oldest_date))
+        if self.get_argument('oldest_open_date', oldest_date) is not 'none':
+            oldest_open_date=datetime.datetime.strptime(self.get_argument('oldest_open_date', oldest_date), "%Y-%m-%d")
+        else:
+            oldest_open_date='none'
+        if self.get_argument('youngest_open_date', youngest_date) is not 'none':
+            youngest_open_date=datetime.datetime.strptime(self.get_argument('youngest_open_date', youngest_date), "%Y-%m-%d")
+        else:
+            youngest_open_date='none'
+        if self.get_argument('oldest_close_date', oldest_date) is not 'none':
+            oldest_close_date=datetime.datetime.strptime(self.get_argument('oldest_close_date', oldest_date), "%Y-%m-%d")
+        else:
+            oldest_close_date='none'
+        if self.get_argument('youngest_close_date', youngest_date) is not 'none':
+            youngest_close_date=datetime.datetime.strptime(self.get_argument('youngest_close_date', youngest_date), "%Y-%m-%d")
+        else:
+            youngest_close_date='none'
+        if self.get_argument('oldest_queue_date', oldest_date) is not 'none':
+            oldest_queue_date=datetime.datetime.strptime(self.get_argument('oldest_queue_date', oldest_date), "%Y-%m-%d")
+        else:
+            oldest_queue_date='none'
+        if self.get_argument('youngest_queue_date', youngest_date) is not 'none':
+            youngest_queue_date=datetime.datetime.strptime(self.get_argument('youngest_queue_date', youngest_date), "%Y-%m-%d")
+        else:
+            youngest_queue_date='none'
+        #youngest_open_date=datetime.datetime.strptime(, "%Y-%m-%d")
+        #oldest_close_date=datetime.datetime.strptime(), "%Y-%m-%d")
+        #youngest_close_date=datetime.datetime.strptime(self.get_argument('youngest_close_date', youngest_date), "%Y-%m-%d")
+        #oldest_queue_date=datetime.datetime.strptime(self.get_argument('oldest_queue_date', oldest_date), "%Y-%m-%d")
+        #youngest_queue_date=datetime.datetime.strptime(self.get_argument('youngest_queue_date', youngest_date), "%Y-%m-%d")
         summary_view = self.application.projects_db.view("project/summary", descending=True)
-        if filter_projects == 'closed':
-            summary_view = summary_view[["closed",'Z']:["closed",'']]
-        elif filter_projects not in ['all', 'aborted'] and filter_projects[:1] != 'P':
-            summary_view = summary_view[["open",'Z']:["open",'']]
+        application_log.warn(filter_projects)
+        if filter_projects[:1] != 'P':
+            if  filter_projects == 'closed':
+                summary_view = summary_view[["closed",'Z']:["closed",'']]
+            elif 'all' not in filter_projects and 'aborted' not in filter_projects and 'closed' not in filter_projects:
+                summary_view = summary_view[["open",'Z']:["open",'']]
 
 
         for row in summary_view:
@@ -156,48 +227,30 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
-        elif not filter_projects == 'all':
-            prefiltered_projects = OrderedDict()
-            for p_id, p_info in projects.iteritems():
-                if 'aborted' not in p_info:
-                    prefiltered_projects[p_id] = p_info
-                else:
-                    if filter_projects == 'aborted':
-                        filtered_projects[p_id] = p_info
-        else:
+        elif filter_projects == 'all':
             filtered_projects = projects
-
-        if filter_projects == 'pending':
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if not 'open_date' in p_info:
+        else:
+            for p_id, p_info in projects.iteritems():
+                if 'aborted' in filter_projects and 'aborted' in p_info:
+                    filtered_projects[p_id] = p_info
+                elif 'closed' in filter_projects and 'close_date' in p_info :
+                    filtered_projects[p_id] = p_info
+                elif 'pending' in filter_projects and not 'open_date' in p_info:
+                    filtered_projects[p_id] = p_info
+                elif 'open' in filter_projects and 'open_date' in p_info:
+                    filtered_projects[p_id] = p_info
+                elif 'pending_review' in filter_projects and 'pending_reviews' in p_info:
+                    filtered_projects[p_id] = p_info
+                elif 'reception_control' in filter_projects and 'open_date' in p_info and not 'queued' in p_info:
+                    filtered_projects[p_id] = p_info
+                elif 'ongoing' in filter_projects and 'queued' in p_info and not 'close_date' in p_info:
                     filtered_projects[p_id] = p_info
 
-        elif filter_projects == 'open':
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if 'open_date' in p_info:
-                    filtered_projects[p_id] = p_info
-
-        elif filter_projects == 'reception_control':
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if 'open_date' in p_info and not 'queued' in p_info:
-                    filtered_projects[p_id] = p_info
-
-        elif filter_projects == 'ongoing':
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if 'queued' in p_info and not 'close_date' in p_info:
-                    filtered_projects[p_id] = p_info
-
-        elif filter_projects == 'closed':
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if 'close_date' in p_info :
-                    filtered_projects[p_id] = p_info
-
-        elif filter_projects == "pending_review":
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if 'pending_reviews' in p_info:
-                    filtered_projects[p_id] = p_info
-
-        final_projects = self.filter_per_date(filtered_projects, youngest_open_date, oldest_open_date, youngest_queue_date, oldest_queue_date, youngest_close_date, oldest_close_date)
+        application_log.warn(len(filtered_projects))
+        application_log.warn(youngest_open_date)
+        #final_projects = self.filter_per_date(filtered_projects, youngest_open_date, oldest_open_date, youngest_queue_date, oldest_queue_date, youngest_close_date, oldest_close_date)
+        final_projects=filtered_projects
+        application_log.warn(len(final_projects))
 
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
@@ -208,7 +261,8 @@ class ProjectsBaseDataHandler(SafeHandler):
         return final_projects
 
     def filter_per_date(self, plist, yod, ood, yqd, oqd, ycd, ocd):
-        default_open_date='2012-01-01'
+        #default_open_date='2012-01-01'
+        default_open_date=datetime.datetime.strptime('2012-01-01', "%Y-%m-%d")
         default_close_date=datetime.datetime.now().strftime("%Y-%m-%d")
         """ yod : youngest open date
             ood : oldest open date
@@ -219,13 +273,13 @@ class ProjectsBaseDataHandler(SafeHandler):
         filtered_projects = OrderedDict()
         for p_id, p_info in plist.iteritems():
             if ycd != default_close_date or ocd != default_open_date:
-                if 'close_date' not in p_info or (p_info['close_date'] > ycd or p_info['close_date'] < ocd):
+                if 'close_date' not in p_info or (datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") > ycd or datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") < ocd):
                     continue
             if yqd != default_close_date or oqd != default_open_date:
-                if 'queued' not in p_info or (p_info['queued'] > yqd or p_info['queued'] < oqd):
+                if 'queued' not in p_info or (datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") > yqd or datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") < oqd):
                     continue
             if yod != default_close_date or ood != default_open_date:
-                if 'open_date' not in p_info or (p_info['open_date'] > yod or p_info['open_date'] < ood):
+                if 'open_date' not in p_info or ( datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d") > yod or datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d")  < ood):
                     continue
             filtered_projects[p_id]=p_info
 
@@ -491,14 +545,18 @@ class ProjectSamplesHandler(SafeHandler):
                               ))
 
 
+
 class ProjectsHandler(SafeHandler):
-    """ Serves a page with all projects listed, along with some brief info.
-    URL: /projects/([^/]*)
+    """ Serves a page with project presets listed, along with some brief info.
+    URL: /projects
     """
     def get(self, projects='all'):
+    #def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
         self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, projects=projects, user=self.get_current_user_name()))
+
+
 
 
 class RunningNotesDataHandler(SafeHandler):
