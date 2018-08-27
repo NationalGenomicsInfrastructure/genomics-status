@@ -48,16 +48,17 @@ class PresetsHandler(SafeHandler):
         """
         presets_list = self.get_argument('presets_list', 'pv_presets')
         self.set_header("Content-type", "application/json")
+        user_details=self.get_user_details()
         presets = {
             "default": self.application.genstat_defaults.get(presets_list),
-            "user": self.application.user_details.get('userpreset')
+            "user": user_details.get('userpreset')
         }
         self.write(json.dumps(presets))
 
     def post(self):
         """Save/Delete preset choices of columns into StatusDB
         """
-        doc=self.application.user_details
+        doc=self.get_user_details()
         if self.get_arguments('save'):
             preset_name = self.get_argument('save')
             data = json.loads(self.request.body)
@@ -78,10 +79,22 @@ class PresetsHandler(SafeHandler):
 
         self.set_status(201)
         self.write({'success': 'success!!'})
-        self.application.user_details=doc
 
+    def get_user_details(self):
+        user_email = self.get_current_user_email()
+        if user_email == 'Testing User!':
+            user_email=self.application.settings.get("username", None)+'@scilifelab.se'
+        user_details={}
+        headers = {"Accept": "application/json",
+                   "Authorization": "Basic " + "{}:{}".format(self.application.settings.get("username", None), self.application.settings.get("password", None)).encode('base64')[:-1]}
+        for row in self.application.gs_users_db.view('authorized/users'):
+            if row.get('key') == user_email:
+                user_url = "{}/gs_users/{}".format(self.application.settings.get("couch_server"), row.get('value'))
+                r = requests.get(user_url, headers=headers).content.rstrip()
+                user_details=json.loads(r);
+        return user_details
 
-class PresetsOnLoadHandler(SafeHandler):
+class PresetsOnLoadHandler(PresetsHandler):
     """Handler to GET and POST/PUT personalized and default set of presets on loading
 
     project view.
@@ -89,10 +102,10 @@ class PresetsOnLoadHandler(SafeHandler):
     def get(self):
         action = self.get_argument('action', '')
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.application.user_details.get('onload')))
+        self.write(json.dumps(self.get_user_details().get('onload')))
 
     def post(self):
-        doc=self.application.user_details
+        doc=self.get_user_details()
         data = json.loads(self.request.body)
         application_log.warn(self.get_argument('action'))
         action=self.get_argument('action')
@@ -106,7 +119,6 @@ class PresetsOnLoadHandler(SafeHandler):
 
         self.set_status(201)
         self.write({'success': 'success!!'})
-        self.application.user_details=doc
 
 
 class ProjectsBaseDataHandler(SafeHandler):

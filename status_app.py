@@ -237,9 +237,6 @@ class Application(tornado.web.Application):
         for u in self.gs_users_db.view('authorized/users'):
             if u.get('key') == 'genstat-defaults':
                 genstat_id = u.get('value')
-            elif u.get('key') == user+'@scilifelab.se':
-                user_id = u.get('value')
-
 
         # It's important to check that this user exists!
         if not genstat_id:
@@ -256,9 +253,6 @@ class Application(tornado.web.Application):
         user_url = "{}/gs_users/{}".format(settings.get("couch_server"), genstat_id)
         json_user = requests.get(user_url, headers=headers).content.rstrip()
         self.genstat_defaults = decoder.decode(json_user)
-        user_url = "{}/gs_users/{}".format(settings.get("couch_server"), user_id)
-        json_user = requests.get(user_url, headers=headers).content.rstrip()
-        self.user_details = decoder.decode(json_user)
 
         # Load private instrument listing
         self.instrument_list = settings.get("instruments")
