@@ -20,6 +20,7 @@ from itertools import ifilter
 from collections import defaultdict
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
+from dateutil.relativedelta import relativedelta
 
 from genologics import lims
 from genologics.entities import Project
@@ -171,40 +172,16 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         return row
 
-    def list_projects(self, filter_projects='all', oldest_date='2012-01-01', youngest_date=datetime.datetime.now().strftime("%Y-%m-%d")):
+    def list_projects(self, filter_projects='all', start_date=(datetime.datetime.now() - relativedelta(years=2)), end_date=datetime.datetime.now().strftime("%Y-%m-%d")):
         projects = OrderedDict()
-        application_log.warn(self.get_argument('oldest_open_date', oldest_date))
-        if self.get_argument('oldest_open_date', oldest_date) is not 'none':
-            oldest_open_date=datetime.datetime.strptime(self.get_argument('oldest_open_date', oldest_date), "%Y-%m-%d")
-        else:
-            oldest_open_date='none'
-        if self.get_argument('youngest_open_date', youngest_date) is not 'none':
-            youngest_open_date=datetime.datetime.strptime(self.get_argument('youngest_open_date', youngest_date), "%Y-%m-%d")
-        else:
-            youngest_open_date='none'
-        if self.get_argument('oldest_close_date', oldest_date) is not 'none':
-            oldest_close_date=datetime.datetime.strptime(self.get_argument('oldest_close_date', oldest_date), "%Y-%m-%d")
-        else:
-            oldest_close_date='none'
-        if self.get_argument('youngest_close_date', youngest_date) is not 'none':
-            youngest_close_date=datetime.datetime.strptime(self.get_argument('youngest_close_date', youngest_date), "%Y-%m-%d")
-        else:
-            youngest_close_date='none'
-        if self.get_argument('oldest_queue_date', oldest_date) is not 'none':
-            oldest_queue_date=datetime.datetime.strptime(self.get_argument('oldest_queue_date', oldest_date), "%Y-%m-%d")
-        else:
-            oldest_queue_date='none'
-        if self.get_argument('youngest_queue_date', youngest_date) is not 'none':
-            youngest_queue_date=datetime.datetime.strptime(self.get_argument('youngest_queue_date', youngest_date), "%Y-%m-%d")
-        else:
-            youngest_queue_date='none'
-        #youngest_open_date=datetime.datetime.strptime(, "%Y-%m-%d")
-        #oldest_close_date=datetime.datetime.strptime(), "%Y-%m-%d")
-        #youngest_close_date=datetime.datetime.strptime(self.get_argument('youngest_close_date', youngest_date), "%Y-%m-%d")
-        #oldest_queue_date=datetime.datetime.strptime(self.get_argument('oldest_queue_date', oldest_date), "%Y-%m-%d")
-        #youngest_queue_date=datetime.datetime.strptime(self.get_argument('youngest_queue_date', youngest_date), "%Y-%m-%d")
+        start_date=start_date.strftime("%Y-%m-%d")
+        start_open_date=datetime.datetime.strptime(self.get_argument('oldest_open_date', start_date), "%Y-%m-%d")
+        end_open_date=datetime.datetime.strptime(self.get_argument('youngest_open_date', end_date), "%Y-%m-%d")
+        start_close_date=datetime.datetime.strptime(self.get_argument('oldest_close_date', start_date), "%Y-%m-%d")
+        end_close_date=datetime.datetime.strptime(self.get_argument('youngest_close_date', end_date), "%Y-%m-%d")
+        start_queue_date=datetime.datetime.strptime(self.get_argument('oldest_queue_date', start_date), "%Y-%m-%d")
+        end_queue_date=datetime.datetime.strptime(self.get_argument('youngest_queue_date', end_date), "%Y-%m-%d")
         summary_view = self.application.projects_db.view("project/summary", descending=True)
-        application_log.warn(filter_projects)
         if filter_projects[:1] != 'P':
             if  filter_projects == 'closed':
                 summary_view = summary_view[["closed",'Z']:["closed",'']]
@@ -246,11 +223,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 elif 'ongoing' in filter_projects and 'queued' in p_info and not 'close_date' in p_info:
                     filtered_projects[p_id] = p_info
 
-        application_log.warn(len(filtered_projects))
-        application_log.warn(youngest_open_date)
-        #final_projects = self.filter_per_date(filtered_projects, youngest_open_date, oldest_open_date, youngest_queue_date, oldest_queue_date, youngest_close_date, oldest_close_date)
-        final_projects=filtered_projects
-        application_log.warn(len(final_projects))
+        final_projects = self.filter_per_date(filtered_projects, start_open_date, end_open_date, start_queue_date, end_queue_date, start_close_date, end_close_date)
 
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
@@ -260,27 +233,24 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         return final_projects
 
-    def filter_per_date(self, plist, yod, ood, yqd, oqd, ycd, ocd):
-        #default_open_date='2012-01-01'
-        default_open_date=datetime.datetime.strptime('2012-01-01', "%Y-%m-%d")
-        default_close_date=datetime.datetime.now().strftime("%Y-%m-%d")
-        """ yod : youngest open date
-            ood : oldest open date
-            yqd : youngest queue date
-            oqd : oldest queue date
-            ycd : youngest close date
-            ocd : oldest close date"""
+    def filter_per_date(self, plist, sod, eod, sqd, eqd, scd, ecd):
+        default_start_date=datetime.datetime.now() - relativedelta(years=2)
+        default_start_date=default_start_date.strftime("%Y-%m-%d")
+        default_end_date=datetime.datetime.now().strftime("%Y-%m-%d")
+        """ sod : start open date
+            eod : end open date
+            sqd : start queue date
+            eqd : end queue date
+            scd : start close date
+            ecd : end close date"""
         filtered_projects = OrderedDict()
         for p_id, p_info in plist.iteritems():
-            if ycd != default_close_date or ocd != default_open_date:
-                if 'close_date' not in p_info or (datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") > ycd or datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") < ocd):
-                    continue
-            if yqd != default_close_date or oqd != default_open_date:
-                if 'queued' not in p_info or (datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") > yqd or datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") < oqd):
-                    continue
-            if yod != default_close_date or ood != default_open_date:
-                if 'open_date' not in p_info or ( datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d") > yod or datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d")  < ood):
-                    continue
+            if 'close_date' in p_info and not ((datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") > scd or datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") < ecd)):
+                continue
+            if 'queued' in p_info and not ((datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") > sqd or datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") < eqd)):
+                continue
+            if 'open_date' in p_info and not (( datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d") > sod or datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d")  < eod)):
+                continue
             filtered_projects[p_id]=p_info
 
         return filtered_projects

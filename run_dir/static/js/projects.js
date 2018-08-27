@@ -27,7 +27,7 @@ $(function(){
         }
         else{
           $("#default_preset_buttons").find('input[data-value="'+data['preset']+'"]').parent('.btn').addClass('active');
-          updateStatusBar1('preset', $('#statusbtnBar1 :input[data-projects=all]'));
+          updateStatusBar1($('#statusbtnBar1 :input[data-projects=all]'));
           $('#formDeletePresetName').val('');
           select_from_preset("default_preset_buttons", data['preset']);
         }
@@ -88,9 +88,18 @@ function load_table(status, type, columns, dates) {
     }
   })
   // Date filtering
-  url=url+"&oldest_open_date="+dates['old_open_date']+"&youngest_open_date="+dates['new_open_date'];
-  url=url+"&oldest_queue_date="+dates['old_queue_date']+"&youngest_queue_date="+dates['new_queue_date'];
-  url=url+"&oldest_close_date="+dates['old_close_date']+"&youngest_close_date="+dates['new_close_date'];
+  if(dates['old_open_date']!='none')
+    url=url+"&oldest_open_date="+dates['old_open_date'];
+  if(dates['new_open_date']!='none')
+    url=url+"&youngest_open_date="+dates['new_open_date'];
+  if(dates['old_queue_date']!='none')
+    url=url+"&oldest_queue_date="+dates['old_queue_date'];
+  if(dates['new_queue_date']!='none')
+    url=url+"&youngest_queue_date="+dates['new_queue_date'];
+  if(dates['old_close_date']!='none')
+    url=url+"&oldest_close_date="+dates['old_close_date'];
+  if(dates['new_close_date']!='none')
+    url=url+"&youngest_close_date="+dates['new_close_date'];
 
   //Current loaded fields :
   var fields= [];
@@ -439,7 +448,7 @@ function sel_from_ps(preset_type, preset, data){
           $('.statusOptions').find('input').prop('checked', false);
           $.each( choices[column].split(', '), function(i, val) {
             $('#statusbtnBar1 :input[data-projects='+val+']').prop('checked', true);
-            updateStatusBar1('preset', $('#statusbtnBar1 :input[data-projects="'+val+'"]'));
+            updateStatusBar1($('#statusbtnBar1 :input[data-projects="'+val+'"]'));
           })
         }
         if(column.indexOf('TYPE')!=-1){
@@ -490,11 +499,10 @@ $('#deletePresetBtnModal').click(function(e){
 })
 
 $('body').on('change', '.statusOptions', function(event) {
-  updateStatusBar1('onclick', $(this).find('input'));
+  updateStatusBar1($(this).find('input'));
 });
 
-//// TODO: remove trigger?
-function updateStatusBar1(trigger, source){
+function updateStatusBar1(source){
   var currChoice=source.attr('id');
   var prevChoices=[];
   var chosenStatusStr="";
@@ -682,10 +690,8 @@ function get_current_selection(source){
     }
   }
   $.each( dates, function( i, val ) {
-    console.log(val);
     if(val=='')
       dates[i]='none';
-
   })
 
   $('#allFields').find('input:checked').each(function(e){
