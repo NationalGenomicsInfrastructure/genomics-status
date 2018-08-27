@@ -238,6 +238,7 @@ class Application(tornado.web.Application):
                 genstat_id = u.get('value')
             elif u.get('key') ==user+'@scilifelab.se':
                 user_id = u.get('value')
+                user_url = "{}/gs_users/{}".format(settings.get("couch_server"), user_id)
 
 
         # It's important to check that this user exists!
@@ -255,7 +256,6 @@ class Application(tornado.web.Application):
         user_url = "{}/gs_users/{}".format(settings.get("couch_server"), genstat_id)
         json_user = requests.get(user_url, headers=headers).content.rstrip()
         self.genstat_defaults = decoder.decode(json_user)
-        user_url = "{}/gs_users/{}".format(settings.get("couch_server"), user_id)
         json_user = requests.get(user_url, headers=headers).content.rstrip()
         self.user_details = decoder.decode(json_user)
 
