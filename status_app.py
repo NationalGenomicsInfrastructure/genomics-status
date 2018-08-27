@@ -232,13 +232,13 @@ class Application(tornado.web.Application):
 
         # Load columns and presets from genstat-defaults user in StatusDB
         genstat_id = ''
+        user_id = ''
         user = settings.get("username", None)
         for u in self.gs_users_db.view('authorized/users'):
             if u.get('key') == 'genstat-defaults':
                 genstat_id = u.get('value')
-            elif u.get('key') ==user+'@scilifelab.se':
+            elif u.get('key') == user+'@scilifelab.se':
                 user_id = u.get('value')
-                user_url = "{}/gs_users/{}".format(settings.get("couch_server"), user_id)
 
 
         # It's important to check that this user exists!
@@ -256,6 +256,7 @@ class Application(tornado.web.Application):
         user_url = "{}/gs_users/{}".format(settings.get("couch_server"), genstat_id)
         json_user = requests.get(user_url, headers=headers).content.rstrip()
         self.genstat_defaults = decoder.decode(json_user)
+        user_url = "{}/gs_users/{}".format(settings.get("couch_server"), user_id)
         json_user = requests.get(user_url, headers=headers).content.rstrip()
         self.user_details = decoder.decode(json_user)
 

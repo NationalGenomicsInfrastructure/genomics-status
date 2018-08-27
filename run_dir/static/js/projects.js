@@ -287,21 +287,17 @@ function load_presets() {
 
       allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue" data-value="'+preset+'" data-origin="default">'+preset+'</a></li>';
     }
+
+    var userDefPresetsDropdown='<button id="inputPreset" class="btn btn-default dropdown-toggle wrapStyle" data-toggle="dropdown"> <i class="glyphicon glyphicon-user"></i> User defined Presets <span class="caret"></span></button><ul id="inputPresetul" class="dropdown-menu dropdown-menu-wide" role="menu" aria-labelledby="inputPresetul">';
     // User presets, if there are any
     if (!jQuery.isEmptyObject(user_presets)) {
-      var uDropdownBtn='<button id="inputPreset"';
-      var userDefPresetsDropdown='class="btn btn-default dropdown-toggle wrapStyle" data-toggle="dropdown"> <i class="glyphicon glyphicon-user"></i> User defined Presets <span class="caret"></span></button><ul id="inputPresetul" class="dropdown-menu dropdown-menu-wide" role="menu" aria-labelledby="inputPresetul">';
       for (var preset in user_presets) {
         userDefPresetsDropdown+='<li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="'+preset+'"> '+preset+'</a></li>';
         allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="'+preset+'" data-origin="userdefined"">'+preset+'</a></li>';
       }
-      userDefPresetsDropdown+='</ul>';
-      $('#user_presets_dropdown').append(uDropdownBtn+userDefPresetsDropdown);
     }
-    else {
-      $('#user_presets_dropdown').append('No user presets');
-    }
-
+    userDefPresetsDropdown+='</ul>';
+    $('#user_presets_dropdown').append(userDefPresetsDropdown);
     allPresetsDropdownMod+='</ul>';
     $('#all_presets_dropdown').append(allPresetsDropdownMod);
 
