@@ -6,10 +6,19 @@ Powers /projects/ - template is run_dir/design/projects.html
 
 // On page load
 
-var presetData;
-
 $(function(){
   // Load the presets first (to get the table headers)
+  var filterInfoContent="The Project status/Dates relationships are as follows: <br />\
+    <b>Open</b>: Have Open Date.<br />\
+    <b>Closed</b>: Have Close Date. May have Open and Queue dates.<br /> \
+    <b>Aborted</b>: May have Close Date, but not Open or Queue Dates.<br />\
+    <b>Pending</b>: Do not have Open, Queue or Close Dates.<br />\
+    <b>Ongoing</b>: Have Open and Queue Date, but not Close Date.<br />\
+    <b>Reception Control</b>: Have Open Date, but not Queue or Close Dates.<br />\
+    <b>Needs Review</b>: May have Open and Queue Dates, but not Close Date.<br />\
+  ";
+
+  $('#filterInfo').popover({'content':filterInfoContent, container:'body', html: true});
   $.when(load_presets()).done(function(){
     // Show the page
     $('#loading_spinner').hide();
@@ -23,17 +32,24 @@ $(function(){
           $('#user_presets_dropdown').find(".btn").addClass('active');
           setChangingDropdownValue($('#user_presets_dropdown'), data['origin'], data['preset']);
           $('#formDeletePresetName').val(data['preset']);
+          appendDeleteBtn(data['preset']);
           select_from_preset("users_presets_dropdown", data['preset']);
         }
         else{
-          $("#default_preset_buttons").find('input[data-value="'+data['preset']+'"]').parent('.btn').addClass('active');
-          updateStatusBar1($('#statusbtnBar1 :input[data-projects=all]'));
           $('#formDeletePresetName').val('');
-          select_from_preset("default_preset_buttons", data['preset']);
+          if(data['preset']!='Choose Presets'){
+            $("#default_preset_buttons").find('input[data-value="'+data['preset']+'"]').parent('.btn').addClass('active');
+            select_from_preset("default_preset_buttons", data['preset']);
+          }
+          else {
+            $("#presetOpt-lab_ongoing").trigger("click");
+            select_from_preset("default_preset_buttons", 'Lab Ongoing');
+          }
+          updateStatusBar1($('#statusbtnBar1 :input[data-projects=all]'));
         }
         if(data['loadtable']==true){
           $("#onLoadTableOn").trigger("click");
-          setTimeout(getTableParamsandLoad,250);
+          setTimeout(getTableParamsandLoad,300);
         }
         else {
           $("#onLoadTableOff").trigger("click");
@@ -41,6 +57,9 @@ $(function(){
       }
       else{
         $("#onLoadTableOff").trigger("click");
+        $("#presetOpt-lab_ongoing").trigger("click");
+        select_from_preset("default_preset_buttons", 'Lab Ongoing');
+        $("#statusOptAll").trigger("click");
       }
     })
   });
@@ -88,17 +107,17 @@ function load_table(status, type, columns, dates) {
     }
   })
   // Date filtering
-  if(dates['old_open_date']!='none')
+  if(dates['old_open_date']!='')
     url=url+"&oldest_open_date="+dates['old_open_date'];
-  if(dates['new_open_date']!='none')
+  if(dates['new_open_date']!='')
     url=url+"&youngest_open_date="+dates['new_open_date'];
-  if(dates['old_queue_date']!='none')
+  if(dates['old_queue_date']!='')
     url=url+"&oldest_queue_date="+dates['old_queue_date'];
-  if(dates['new_queue_date']!='none')
+  if(dates['new_queue_date']!='')
     url=url+"&youngest_queue_date="+dates['new_queue_date'];
-  if(dates['old_close_date']!='none')
+  if(dates['old_close_date']!='')
     url=url+"&oldest_close_date="+dates['old_close_date'];
-  if(dates['new_close_date']!='none')
+  if(dates['new_close_date']!='')
     url=url+"&youngest_close_date="+dates['new_close_date'];
 
   //Current loaded fields :
@@ -186,7 +205,7 @@ function load_undefined_columns(cols) {
     $.each(cols, function(col_id, column) {
       $("#undefined_columns").append('<div class="checkbox">'+
           '<label>'+
-            '<input type="checkbox" class="filterCheckbox" data-columngroup="undefined-columns" data-displayname="'+column+'" name="'+column+'" id="undefined-columns-'+column+'">'+
+            '<input type="checkbox" class="filterCheckbox" data-columngroup="UNDEFINED_COLUMNS" data-displayname="'+column+'" name="'+column+'" id="undefined-columns-'+column+'">'+
             column+
           '</label>'+
         '</div>');
@@ -250,7 +269,7 @@ function init_listjs(no_items, columns) {
 function choose_column(col, colid){
   var column = document.getElementById(col);
   //Get all the children (checkboxes)
-  var cbs=$( "#"+col+"" ).find('input[data-columngroup="'+colid+'-columns"]');
+  var cbs=$( "#"+col+"" ).find('input[data-columngroup="'+colid.toUpperCase().replace('-', '_')+'_COLUMNS"]');
   //If one of them is checked we uncheck it, if none of them are checked,
   //we check them all
   var checked = false;
@@ -402,16 +421,24 @@ $('body').on('click', '.rBtngp2', function(event){
 function read_current_filtering(){
   var columns = new Array();
   var preset;
-  if($("#presetbtnBar2 .active").prop("id")=="inputPreset"){
-    preset=$.trim($("#presetbtnBar2 .active").text());
+  if($("#presetButtons .active").prop("id")=="inputPreset"){
+    preset=$.trim($("#presetButtons .active").text());
     $('#formDeletePresetName').val(preset);
+    if (preset!='User defined Presets') {
+        appendDeleteBtn(preset);
+    }
     select_from_preset("users_presets_dropdown", preset);
   }
   else{
-    preset=$("#presetbtnBar2 .active").children('input').data('value');
+    preset=$("#presetButtons .active").children('input').data('value');
     $('#formDeletePresetName').val('');
     select_from_preset("default_preset_buttons", preset);
   }
+}
+
+function appendDeleteBtn(preset){
+  $('#deletePresetBtn').remove();
+  $("#savePresetBtn").after("<button type='submit' class='btn btn-default' id='deletePresetBtn' data-toggle='modal' data-target='#deleteModal' style='margin:5px;'>Delete "+preset+"</button>");
 }
 
 function sel_from_ps(preset_type, preset, data){
@@ -508,13 +535,34 @@ function updateStatusBar1(source){
   })
   $('.statusOptions').removeClass('active');
   $('.statusOptions').find('input').prop('checked', false);
-  if(currChoice=='statusOptAll' || prevChoices.length==7){
+  if(currChoice=='statusOptAll' || prevChoices.length==7 || prevChoices.length==0){
     $('#statusOptAll').parent().addClass('active');
     $('#statusOptAll').prop('checked', true);
     chosenStatusStr="All";
+    dealWithDatepickers('datepick1', 'add');
+    dealWithDatepickers('datepick2', 'add');
+    dealWithDatepickers('datepick3', 'add');
   }
   else{
     var j=prevChoices.length;
+    var checklist=prevChoices;
+    dealWithDatepickers('datepick1', 'remove');
+    dealWithDatepickers('datepick2', 'remove');
+    dealWithDatepickers('datepick3', 'remove');
+    if(jQuery.inArray('statusOptAll', checklist) !== -1){
+        checklist.splice(checklist.indexOf('statusOptAll'),1);
+    }
+    if(jQuery.inArray('statusOptClosed', checklist) !== -1){
+      dealWithDatepickers('datepick1', 'add');
+      dealWithDatepickers('datepick3', 'add');
+      dealWithDatepickers('datepick2', 'add');
+    }
+    if(jQuery.inArray('statusOptOngoing', checklist) !== -1 || jQuery.inArray('statusOptOpen', checklist) !== -1 || jQuery.inArray('statusOptNeedsReview', checklist) !== -1 || jQuery.inArray('statusOptRecCtrl', checklist) !== -1 ){
+      dealWithDatepickers('datepick1', 'add');
+    }
+    if(jQuery.inArray('statusOptOngoing', checklist) !== -1 || jQuery.inArray('statusOptOpen', checklist) !== -1 || jQuery.inArray('statusOptNeedsReview', checklist) !== -1 ){
+      dealWithDatepickers('datepick2', 'add');
+    }
     $.each( prevChoices, function(i, val) {
       if(val!='statusOptAll'){
         $('#'+val).parent().addClass('active');
@@ -530,49 +578,31 @@ function updateStatusBar1(source){
   }
   $('#formStatus').val(chosenStatusStr);
 }
-
-function init_datepickers(){
-    var currDate=new Date();
-    $('#datepick1').datepicker({autoclose: true,
-    format: 'yyyy-mm-dd',
-    todayBtn: true,
-    todayHighlight: true,
-    weekStart: 1,
-    daysOfWeekHighlighted: "0,6"});
-    $('#datepick2').datepicker({autoclose: true,
+function dealWithDatepickers(datepick, option){
+  if(option=='add'){
+    $('#'+datepick+'_start > .form-control').prop('disabled', false);
+    $('#'+datepick+'_start').datepicker({autoclose: true,
     format: 'yyyy-mm-dd',
     todayBtn: true,
     todayHighlight: true,
     weekStart: 1,
     daysOfWeekHighlighted: "0,6" });
 
-    $('#datepick3').datepicker({autoclose: true,
+    $('#'+datepick+'_end > .form-control').prop('disabled', false);
+    $('#'+datepick+'_end').datepicker({autoclose: true,
     format: 'yyyy-mm-dd',
     todayBtn: true,
     todayHighlight: true,
     weekStart: 1,
     daysOfWeekHighlighted: "0,6" });
-    $('#datepick4').datepicker({autoclose: true,
-    format: 'yyyy-mm-dd',
-    todayBtn: true,
-    todayHighlight: true,
-    weekStart: 1,
-    daysOfWeekHighlighted: "0,6" });
-
-    $('#datepick5').datepicker({autoclose: true,
-    format: 'yyyy-mm-dd',
-    todayBtn: true,
-    todayHighlight: true,
-    weekStart: 1,
-    daysOfWeekHighlighted: "0,6" });
-    $('#datepick6').datepicker({autoclose: true,
-    format: 'yyyy-mm-dd',
-    todayBtn: true,
-    todayHighlight: true,
-    weekStart: 1,
-    daysOfWeekHighlighted: "0,6" });
+  }
+  if(option=='remove'){
+    $('#'+datepick+'_start > .form-control').prop('disabled', true);
+    $('#'+datepick+'_start').datepicker('remove');
+    $('#'+datepick+'_end > .form-control').prop('disabled', true);
+    $('#'+datepick+'_end').datepicker('remove');
+  }
 }
-
 $('#loadTablebtn').click(function(e){
   getTableParamsandLoad();
 });
@@ -638,6 +668,7 @@ $('#submitPresetNameBtn').click(function(e){
         $('#user_presets_dropdown').find(".btn").addClass('active');
         setChangingDropdownValue($('#user_presets_dropdown'),'userdefined', presetName);
         $('#formDeletePresetName').val(presetName);
+        appendDeleteBtn(presetName);
         select_from_preset("users_presets_dropdown", presetName);
       }, 100);
     }
@@ -661,35 +692,32 @@ function get_current_selection(source){
   dates['old_close_date']= $('#inp_date_5').val();
   dates['new_close_date']= $('#inp_date_6').val();
   currDate=new Date();
-  if(status.includes('closed')){
-    if(dates['old_close_date']==''){
-      dates['old_close_date']=currDate.getFullYear() - 2+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
-    }
-    if(dates['new_close_date']==''){
-      dates['new_close_date']=currDate.getFullYear()+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
-    }
-  }
-  if(status.includes('open') || status.includes('ongoing') || status.includes('reception_control')){
-    if(dates['old_open_date']==''){
-      dates['old_open_date']=currDate.getFullYear() - 2+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
-    }
-    if(dates['new_open_date']==''){
-      dates['new_open_date']=currDate.getFullYear()+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
-    }
-    if(status.includes('ongoing')){
-      if(dates['old_queue_date']==''){
-        dates['old_queue_date']=currDate.getFullYear() - 2+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+  if(source!='save'){
+    if(status.includes('closed')){
+      if(dates['old_close_date']==''){
+        dates['old_close_date']=currDate.getFullYear() - 2+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
       }
-      if(dates['new_queue_date']==''){
-        dates['new_queue_date']=currDate.getFullYear()+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+      if(dates['new_close_date']==''){
+        dates['new_close_date']=currDate.getFullYear()+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
       }
     }
+    if(status.includes('open') || status.includes('ongoing') || status.includes('reception_control')){
+      if(dates['old_open_date']==''){
+        dates['old_open_date']=currDate.getFullYear() - 2+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+      }
+      if(dates['new_open_date']==''){
+        dates['new_open_date']=currDate.getFullYear()+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+      }
+      if(status.includes('ongoing')){
+        if(dates['old_queue_date']==''){
+          dates['old_queue_date']=currDate.getFullYear() - 2+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+        }
+        if(dates['new_queue_date']==''){
+          dates['new_queue_date']=currDate.getFullYear()+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+        }
+      }
+    }
   }
-  $.each( dates, function( i, val ) {
-    if(val=='')
-      dates[i]='none';
-  })
-
   $('#allFields').find('input:checked').each(function(e){
     columns[$(this).data('displayname')]=[$(this).attr('name'),$(this).data('columngroup')];
   });
@@ -700,11 +728,28 @@ function get_current_selection(source){
         dates: dates
     };
 }
-
+$("#uncheckAll").change(function(e){
+  var notDisplayed=$("#allColFields").find("label[style='display: none;']");
+  $("#allColFields").find("input[class='filterCheckbox']").closest('label').each(function(i, elem) {
+      if(jQuery.inArray(elem, notDisplayed) == -1){
+        if($("#uncheckAll").find("input").prop('checked')){
+          $(elem).find('input').prop('checked', true);
+        }
+        else {
+          $(elem).find('input').prop('checked', false);
+        }
+      }
+  })
+})
 //
 // HELPER FUNCTIONS
 //
-
+$('#collapseOne').on('shown.bs.collapse', function () {
+  $('.panel-title a .glyphicon').removeClass('glyphicon-triangle-bottom').addClass('glyphicon-triangle-top');
+});
+$('#collapseOne').on('hidden.bs.collapse', function () {
+  $('.panel-title a .glyphicon').removeClass('glyphicon-triangle-top').addClass('glyphicon-triangle-bottom');
+});
 function prettify(s) {
   // Replaces whitespace with underscores. Replaces sequential _s with one
   // Removes trailing underscores
@@ -719,5 +764,3 @@ function prettyobj(s) {
 function safeobj(s) {
   return $(document.getElementById(s));
 }
-
-init_datepickers();

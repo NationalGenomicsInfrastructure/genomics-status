@@ -1004,7 +1004,7 @@ div.responsible-filters div.form-group {
 
 div.setOverflow {
     width: 100%;
-    height: 236px;
+    height: 254px;
     overflow: scroll;
     -webkit-overflow-scrolling: touch;
     overflow-y: scroll;
@@ -1027,8 +1027,8 @@ div.setOverflow {
 .panel-heading.row {
   margin: 0
 }
-.space {
-    margin-right: 8px;
+.space-left {
+    margin-left: 5px;
 }
 .wrapStyle {
     white-space: normal;
@@ -1047,4 +1047,23 @@ div.setOverflow {
   font-size: 12px;
   margin-right: 12px;
   color: green;
+}
+.panel-title {
+  font-size: 2rem;
+}
+.panel-title a:hover, .panel-title a:focus, .panel-title a:active {
+  text-decoration: none;
+}
+.panel-title a .glyphicon {
+  transition:all 0.3s;
+  top: 5px;
+}
+.panel-title a:hover .glyphicon-triangle-bottom {
+  transform: translateY(10%);
+}
+.panel-title a:hover .glyphicon-triangle-top {
+  transform: translateY(-10%);
+}
+#presetButtons {
+  margin-left: 3rem;
 }
