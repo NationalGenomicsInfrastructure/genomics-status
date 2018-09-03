@@ -503,6 +503,27 @@ function select_from_preset(preset_type, preset, data=null) {
 $('#deletePresetBtnModal').click(function(e){
   var presetToDel=$.trim($('#formDeletePresetName').val());
   $('#deletePresetBtnModal').addClass('disabled').text('Deleting...');
+  $.getJSON('/api/v1/presets/onloadcheck?action=load', function (data) {
+    if(data['origin']=='userdefined' && data['preset']==presetToDel){
+      data['origin']='default';
+      data['preset']='Choose Presets';
+      data['loadtable']=false;
+      $("#onLoadTableOff").trigger("click");
+      $.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: '/api/v1/presets/onloadcheck?action=save',
+        data: JSON.stringify(data),
+        error: function(xhr, textStatus, errorThrown) {
+          alert('There was an error in saving the settings: '+errorThrown);
+          console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(preset, origin);
+        },
+        success: function(saved_data, textStatus, xhr) {
+          console.log('onloadcheck updated!');
+        }
+      });
+    }
+  })
   var userPage_api_url = "/api/v1/presets?delete="+presetToDel;
   $.ajax({
     type: 'POST',
@@ -517,6 +538,10 @@ $('#deletePresetBtnModal').click(function(e){
     success: function(saved_data, textStatus, xhr) {
       $('#deletePresetBtnModal').addClass('disabled').text('Deleted!').delay(1500).queue(function(){ $('#deleteModal').modal('toggle'); $(this).removeClass('disabled').text('Delete'); $(this).dequeue()});
       update_presets_onChange();
+      $("#deletePresetBtn").remove();
+      setTimeout(function() {
+        $("#presetOpt-lab_ongoing").trigger("click");
+      }, 100);
     }
   });
 })
