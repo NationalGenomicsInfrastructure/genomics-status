@@ -28,7 +28,8 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
-from status.pricing import PricingComponentsHandler, PricingProductsHandler
+from status.pricing import PricingComponentsHandler, PricingProductsHandler, \
+    PricingDateToVersionHandler, PricingExchangeRatesHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -130,8 +131,10 @@ class Application(tornado.web.Application):
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
+            ("/api/v1/pricing_date_to_version", PricingDateToVersionHandler),
             ("/api/v1/pricing_components", PricingComponentsHandler),
             ("/api/v1/pricing_components/([^/]*)$", PricingComponentsHandler),
+            ("/api/v1/pricing_exchange_rates", PricingExchangeRatesHandler),
             ("/api/v1/pricing_products", PricingProductsHandler),
             ("/api/v1/pricing_products/([^/]*)$", PricingProductsHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
@@ -225,6 +228,7 @@ class Application(tornado.web.Application):
             self.instruments_db= couch["instruments"]
             self.instrument_logs_db = couch["instrument_logs"]
             self.pricing_components_db = couch["pricing_components"]
+            self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
             self.pricing_products_db = couch["pricing_products"]
             self.projects_db = couch["projects"]
             self.samples_db = couch["samples"]
