@@ -1020,8 +1020,8 @@ div.setOverflow {
   border: 1px solid hsl(120, 0%, 85%);
   padding: 15px;
   border-radius: 15px;
-  margin-right: 3px;
-  margin-left: 3px;
+  margin-right: 2px;
+  margin-left: 2px;
 }
 
 .panel-heading.row {
@@ -1066,4 +1066,13 @@ div.setOverflow {
 }
 #presetButtons {
   margin-left: 3rem;
+}
+.row-eq-height {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+}
+.close{
+  margin-top:-10px;
 }

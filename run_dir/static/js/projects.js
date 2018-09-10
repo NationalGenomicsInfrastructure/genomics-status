@@ -18,7 +18,32 @@ $(function(){
     <b>Needs Review</b>: May have Open and Queue Dates, but not Close Date.<br />\
   ";
 
-  $('#filterInfo').popover({'content':filterInfoContent, container:'body', html: true});
+  $('#filterInfo').on('click', function(){
+    $('#displayInfo').append('<div class="alert alert-info alert-dismissable" role="alert"> \
+    <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></span> \
+    <div class="text-left">\
+    The Project status/Dates relationships are as follows: \
+      <ul>\
+      <li><b>Open</b>: Have Open Date.</li>\
+      <li><b>Closed</b>: Have Close Date. May have Open and Queue dates.</li>\
+      <li><b>Aborted</b>: May have Close Date, but not Open or Queue Dates.</li>\
+      <li><b>Pending</b>: Do not have Open, Queue or Close Dates.</li>\
+      <li><b>Ongoing</b>: Have Open and Queue Date, but not Close Date.</li>\
+      <li><b>Reception Control</b>: Have Open Date, but not Queue or Close Dates.</li>\
+      <li><b>Needs Review</b>: May have Open and Queue Dates, but not Close Date.</li>\
+      </ul>\
+      </div>\
+  </div>'
+)});
+/*
+The Project status/Dates relationships are as follows: \
+  <b>Open</b>: Have Open Date.\
+  <b>Closed</b>: Have Close Date. May have Open and Queue dates.\
+  <b>Aborted</b>: May have Close Date, but not Open or Queue Dates.\
+  <b>Pending</b>: Do not have Open, Queue or Close Dates.\
+  <b>Ongoing</b>: Have Open and Queue Date, but not Close Date.\
+  <b>Reception Control</b>: Have Open Date, but not Queue or Close Dates.\
+  <b>Needs Review</b>: May have Open and Queue Dates, but not Close Date.\ */
   $.when(load_presets()).done(function(){
     // Show the page
     $('#loading_spinner').hide();
@@ -120,6 +145,7 @@ function load_table(status, type, columns, dates) {
   if(dates['new_close_date']!='')
     url=url+"&youngest_close_date="+dates['new_close_date'];
 
+  url=url+"&type="+type;
   //Current loaded fields :
   var fields= [];
   $("#Filter .filterCheckbox").each(function() {
@@ -299,7 +325,7 @@ function load_presets() {
     var user_presets = data['user'];
 
 
-    var allPresetsDropdownMod='<button class="btn btn-default btn-sm dropdown-toggle wrapStyle" type="button" id="inputStateAll" data-toggle="dropdown"><i class="glyphicon glyphicon-list-alt"></i> Choose Preset <span class="caret"></span></button><ul id="inputStateAllul" class="dropdown-menu dropdown-menu-right dropdown-menu-wide" role="menu" aria-labelledby="inputStateAll">';
+    var allPresetsDropdownMod='<button class="btn btn-default btn-sm dropdown-toggle wrapStyle" type="button" id="inputStateAll" data-toggle="dropdown"><i class="glyphicon glyphicon-list-alt"></i> Choose Preset <span class="caret"></span></button><ul id="inputStateAllul" class="dropdown-menu dropdown-menu-right dropdown-menu-wide" role="menu" aria-labelledby="inputStateAll"  style="z-index: 200;">';
     allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="Choose Preset" data-origin="default"> Choose Presets</a></li>';
     for (var preset in default_presets) {
       $('#default_preset_buttons').append('<label class="btn btn-default rBtngp2"><input type="radio" name="presetOptions" id="presetOpt-'+prettify(preset)+'" data-value="'+preset+'" autocomplete="off"><i class="glyphicon '+default_presets[preset].ICON.glyphicon+'"></i> '+preset+'</label>');
@@ -307,7 +333,7 @@ function load_presets() {
       allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue" data-value="'+preset+'" data-origin="default">'+preset+'</a></li>';
     }
 
-    var userDefPresetsDropdown='<button id="inputPreset" class="btn btn-default dropdown-toggle wrapStyle" data-toggle="dropdown"> <i class="glyphicon glyphicon-user"></i> User defined Presets <span class="caret"></span></button><ul id="inputPresetul" class="dropdown-menu dropdown-menu-wide" role="menu" aria-labelledby="inputPresetul">';
+    var userDefPresetsDropdown='<button id="inputPreset" class="btn btn-default dropdown-toggle wrapStyle" data-toggle="dropdown" type="button"> <i class="glyphicon glyphicon-user"></i> User defined Presets <span class="caret"></span></button><ul id="inputPresetul" class="dropdown-menu dropdown-menu-wide" role="menu" aria-labelledby="inputPresetul">';
     // User presets, if there are any
     if (!jQuery.isEmptyObject(user_presets)) {
       for (var preset in user_presets) {
@@ -450,7 +476,7 @@ function sel_from_ps(preset_type, preset, data){
     for (column in choices) {
       if(column.indexOf('COLUMNS')!=-1){
         for (choice in choices[column]) {
-          var column_id = 'allFields-'+column.toLowerCase().replace(/_/g, '-') + '-' + choice;
+          var column_id = 'allFields-'+column.toLowerCase().replace(/_/g, '-') + '-' + choice.replace(/\(|\)/g, '');
           $("#"+column_id).prop('checked', true);
         }
       }
@@ -461,7 +487,7 @@ function sel_from_ps(preset_type, preset, data){
     for (column in choices) {
       if(column.indexOf('COLUMNS')!=-1){
         for (choice in choices[column]) {
-          var column_id = 'allFields-'+column.toLowerCase().replace(/_/g, '-') + '-' + choice;
+          var column_id = 'allFields-'+column.toLowerCase().replace(/_/g, '-') + '-' + choice.replace(/\(|\)/g, '');
           $("#"+column_id).prop('checked', true);
         }
       }
@@ -706,8 +732,6 @@ function get_current_selection(source){
     status.push($(this).data('projects'));
   })
   var type=$.trim($('#formType').text());
-  if(type=='Choose Project Type')
-    type='All';
   var dates= {};
   var columns = {};
   dates['old_open_date']= $('#inp_date_1').val();
@@ -766,6 +790,19 @@ $("#uncheckAll").change(function(e){
       }
   })
 })
+
+$(document).keypress(function(e) {
+  if ($("#settingsModal").hasClass('in') && (e.keycode == 13 || e.which == 13)) {
+    $("#applySettingsModal").trigger('click');
+  }
+  if ($("#projectFieldsModal").hasClass('in') && (e.keycode == 13 || e.which == 13)) {
+    $("#submitPresetNameBtn").trigger('click');
+  }
+  if ($("#deleteModal").hasClass('in') && (e.keycode == 13 || e.which == 13)) {
+    $("#deletePresetBtnModal").trigger('click');
+  }
+});
+
 //
 // HELPER FUNCTIONS
 //
