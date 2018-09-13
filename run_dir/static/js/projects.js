@@ -19,22 +19,27 @@ $(function(){
   ";
 
   $('#filterInfo').on('click', function(){
-    $('#displayInfo').append('<div class="alert alert-info alert-dismissable" role="alert"> \
-    <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></span> \
-    <div class="text-left">\
-    The Project status/Dates relationships are as follows: \
-      <ul>\
-      <li><b>Open</b>: Have Open Date.</li>\
-      <li><b>Closed</b>: Have Close Date. May have Open and Queue dates.</li>\
-      <li><b>Aborted</b>: May have Close Date, but not Open or Queue Dates.</li>\
-      <li><b>Pending</b>: Do not have Open, Queue or Close Dates.</li>\
-      <li><b>Ongoing</b>: Have Open and Queue Date, but not Close Date.</li>\
-      <li><b>Reception Control</b>: Have Open Date, but not Queue or Close Dates.</li>\
-      <li><b>Needs Review</b>: May have Open and Queue Dates, but not Close Date.</li>\
-      </ul>\
-      </div>\
-  </div>'
-)});
+    if($('#displayInfo').find('#displayedAlert').length)
+      $('#displayedAlert').remove();
+    else{
+      $('#displayInfo').append('<div id="displayedAlert" class="alert alert-info alert-dismissable" role="alert"> \
+      <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></span> \
+      <div class="text-left">\
+      The Project status/Dates relationships are as follows: \
+        <ul>\
+        <li><b>Open</b>: Have Open Date.</li>\
+        <li><b>Closed</b>: Have Close Date. May have Open and Queue dates.</li>\
+        <li><b>Aborted</b>: May have Close Date, but not Open or Queue Dates.</li>\
+        <li><b>Pending</b>: Do not have Open, Queue or Close Dates.</li>\
+        <li><b>Ongoing</b>: Have Open and Queue Date, but not Close Date.</li>\
+        <li><b>Reception Control</b>: Have Open Date, but not Queue or Close Dates.</li>\
+        <li><b>Needs Review</b>: May have Open and Queue Dates, but not Close Date.</li>\
+        </ul>\
+        </div>\
+      </div>'
+    )
+  }
+});
 /*
 The Project status/Dates relationships are as follows: \
   <b>Open</b>: Have Open Date.\
