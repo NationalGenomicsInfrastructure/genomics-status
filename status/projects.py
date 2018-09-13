@@ -189,64 +189,63 @@ class ProjectsBaseDataHandler(SafeHandler):
         queuedflag=False
         openflag=False
         projtype=self.get_argument('type', 'all')
-        start_date=(datetime.datetime.now() - relativedelta(years=2))
-        start_date=start_date.strftime("%Y-%m-%d")
-        end_date=datetime.datetime.now().strftime("%Y-%m-%d")
+        if 'closed' in filter_projects or 'all' in filter_projects:
+            closedflag=True
+        if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'all' in filter_projects:
+            queuedflag=True
+        if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'reception_control' in filter_projects or 'all' in filter_projects:
+            openflag=True
+
+        start_date=datetime.datetime.strptime((datetime.datetime.now() - relativedelta(years=2)).strftime("%Y-%m-%d"), "%Y-%m-%d")
+        end_date=datetime.datetime.strptime(datetime.datetime.now().strftime("%Y-%m-%d"), "%Y-%m-%d")
         start_open_date=self.get_argument('oldest_open_date', 'none')
         end_open_date=self.get_argument('youngest_open_date', 'none')
         start_close_date=self.get_argument('oldest_close_date', 'none')
         end_close_date=self.get_argument('youngest_close_date', 'none')
         start_queue_date=self.get_argument('oldest_queue_date', 'none')
         end_queue_date=self.get_argument('youngest_queue_date', 'none')
-        dates=[start_open_date, end_open_date, start_queue_date, end_queue_date, start_close_date, end_close_date]
-        summary_view = self.application.projects_db.view("project/summary", descending=True)
-        if dates.count('none')== len(dates):
-            if 'closed' in filter_projects or 'all' in filter_projects:
-                start_close_date=start_date
+
+        if closedflag:
+            if end_close_date is not 'none':
+                end_close_date=datetime.datetime.strptime(end_close_date, "%Y-%m-%d")
+                if start_close_date is 'none':
+                    start_close_date=(datetime.datetime.strptime(end_close_date, "%Y-%m-%d") -relativedelta(years=2))
+                else:
+                    start_close_date=datetime.datetime.strptime(start_close_date, "%Y-%m-%d")
+            else:
                 end_close_date=end_date
-                closed=True
-            if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'reception_control' in filter_projects:
-                start_open_date=start_date
-                end_open_date=end_date
-                openflag=True
-            if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects:
-                start_queue_date=start_date
+                if start_close_date is 'none':
+                    start_close_date=start_date
+                else:
+                    start_close_date=datetime.datetime.strptime(start_close_date, "%Y-%m-%d")
+        if queuedflag:
+            if end_queue_date is not 'none':
+                end_queue_date=datetime.datetime.strptime(end_queue_date, "%Y-%m-%d")
+                if start_queue_date is 'none':
+                    start_queue_date=(datetime.datetime.strptime(end_queue_date, "%Y-%m-%d") -relativedelta(years=2))
+                else:
+                    start_queue_date=datetime.datetime.strptime(start_queue_date, "%Y-%m-%d")
+            else:
                 end_queue_date=end_date
-                queuedflag=True
-        else:
-            for i, date in enumerate(dates):
-                if date != 'none':
-                    if i == 5 and 'closed' in filter_projects:
-                        end_close_date=datetime.datetime.strptime(end_close_date, "%Y-%m-%d")
-                        closedflag=True
-                        if dates[4] is 'none':
-                             start_close_date=(datetime.datetime.strptime(end_close_date, "%Y-%m-%d") -relativedelta(years=2))
-                    if i == 4 and 'closed' in filter_projects:
-                        closedflag=True
-                        start_close_date=datetime.datetime.strptime(start_close_date, "%Y-%m-%d")
-                        if dates[5] is 'none':
-                             end_close_date=(datetime.datetime.strptime(start_close_date, "%Y-%m-%d") +relativedelta(years=2))
-                             break
-                    if i == 3 and ('ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects):
-                        queuedflag=True
-                        end_queue_date=datetime.datetime.strptime(end_queue_date, "%Y-%m-%d")
-                        if dates[2] is 'none':
-                             start_queue_date=(datetime.datetime.strptime(end_queue_date, "%Y-%m-%d") -relativedelta(years=2))
-                    if i == 2 and ('ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects):
-                        queuedflag=True
-                        start_queue_date=datetime.datetime.strptime(start_queue_date, "%Y-%m-%d")
-                        if dates[3] is 'none':
-                             end_queue_date=(datetime.datetime.strptime(start_queue_date, "%Y-%m-%d") +relativedelta(years=2))
-                    if i == 1 and ('ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'reception_control' in filter_projects):
-                        openflag=True
-                        end_start_date=datetime.datetime.strptime(end_start_date, "%Y-%m-%d")
-                        if dates[0] is 'none':
-                             start_start_date=(datetime.datetime.strptime(end_start_date, "%Y-%m-%d") -relativedelta(years=2))
-                    if i == 0 and ('ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'reception_control' in filter_projects):
-                        openflag=True
-                        start_start_date=datetime.datetime.strptime(start_start_date, "%Y-%m-%d")
-                        if dates[1] is 'none':
-                             end_start_date=(datetime.datetime.strptime(start_start_date, "%Y-%m-%d") +relativedelta(years=2))
+                if start_queue_date is 'none':
+                    start_queue_date=start_date
+                else:
+                    start_queue_date=datetime.datetime.strptime(start_queue_date, "%Y-%m-%d")
+        if openflag:
+            if end_open_date is not 'none':
+                end_open_date=datetime.datetime.strptime(end_open_date, "%Y-%m-%d")
+                if start_open_date is 'none':
+                    start_open_date=(datetime.datetime.strptime(end_open_date, "%Y-%m-%d") -relativedelta(years=2))
+                else:
+                    start_open_date=datetime.datetime.strptime(start_open_date, "%Y-%m-%d")
+            else:
+                end_open_date=end_date
+                if start_open_date is 'none':
+                    start_open_date=start_date
+                else:
+                    start_open_date=datetime.datetime.strptime(start_open_date, "%Y-%m-%d")
+
+        summary_view = self.application.projects_db.view("project/summary", descending=True)
 
         if filter_projects[:1] != 'P':
             if  filter_projects == 'closed':
@@ -267,43 +266,67 @@ class ProjectsBaseDataHandler(SafeHandler):
         # priority over everything else.
         else:
             for row in summary_view:
-                p_id=row.key[1]
                 p_info=row.value
                 flag = False
                 ptype=p_info.get('type', '')
-                if (projtype != 'All' and  ptype == projtype) or projtype=='All':
+                if (projtype != 'All' and  ptype == projtype) or \
+                    projtype=='All':
                     flag=True
                 if filter_projects == 'all' and flag:
-                    if start_close_date is not 'none' and end_close_date is not 'none' and 'close_date' in p_info:
-                        if ((datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") > datetime.datetime.strptime(start_close_date, "%Y-%m-%d") and datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") < datetime.datetime.strptime(end_close_date, "%Y-%m-%d"))):
+                    if start_close_date is not 'none' and \
+                        end_close_date is not 'none' and \
+                        'close_date' in p_info:
+                        if ((datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") > start_close_date and \
+                             datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") < end_close_date)):
                             filtered_projects.append(row)
-                    if start_queue_date is not 'none' and end_queue_date is not 'none' and 'queued' in p_info:
-                        if ((datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") > datetime.datetime.strptime(start_queue_date, "%Y-%m-%d") and datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") < datetime.datetime.strptime(end_queue_date, "%Y-%m-%d"))):
+                    if start_queue_date is not 'none' and \
+                        end_queue_date is not 'none' and \
+                        'queued' in p_info:
+                        if ((datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") > start_queue_date and \
+                             datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") < end_queue_date)):
                             filtered_projects.append(row)
-                    if start_open_date is not 'none' and end_open_date is not 'none' and 'open_date' in p_info:
-                        if (( datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d") > datetime.datetime.strptime(start_open_date, "%Y-%m-%d") and datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d")  < datetime.datetime.strptime(end_open_date, "%Y-%m-%d"))):
+                    if start_open_date is not 'none' and \
+                        end_open_date is not 'none' and \
+                        'open_date' in p_info:
+                        if (( datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d") > start_open_date and \
+                              datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d")  < end_open_date)):
                             filtered_projects.append(row)
-                elif 'aborted' in filter_projects and 'aborted' in p_info and flag:
+                elif 'aborted' in filter_projects and \
+                      'aborted' in p_info and flag:
                     filtered_projects.append(row)
-                elif 'closed' in filter_projects and 'close_date' in p_info and flag:
-                    if start_close_date is not 'none' and end_close_date is not 'none':
-                        if ((datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") > datetime.datetime.strptime(start_close_date, "%Y-%m-%d") and datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") < datetime.datetime.strptime(end_close_date, "%Y-%m-%d"))):
+                elif 'closed' in filter_projects and \
+                     'close_date' in p_info and flag:
+                    if start_close_date is not 'none' and \
+                        end_close_date is not 'none':
+                        if ((datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") > start_close_date and \
+                             datetime.datetime.strptime(p_info['close_date'], "%Y-%m-%d") < end_close_date)):
                             filtered_projects.append(row)
-                elif 'pending' in filter_projects and not 'open_date' in p_info and flag:
+                elif 'pending' in filter_projects and \
+                    not 'open_date' in p_info and flag:
                     filtered_projects.append(row)
-                elif 'open' in filter_projects and 'open_date' in p_info and flag:
-                    if start_open_date is not 'none' and end_open_date is not 'none':
-                        if (( datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d") > datetime.datetime.strptime(start_open_date, "%Y-%m-%d") and datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d")  < datetime.datetime.strptime(end_open_date, "%Y-%m-%d"))):
+                elif 'open' in filter_projects and \
+                     'open_date' in p_info and flag:
+                    if start_open_date is not 'none' and \
+                        end_open_date is not 'none':
+                        if (( datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d") > start_open_date and \
+                            datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d")  < end_open_dat)):
                             filtered_projects.append(row)
-                elif 'pending_review' in filter_projects and 'pending_reviews' in p_info and flag:
+                elif 'pending_review' in filter_projects and \
+                     'pending_reviews' in p_info and flag:
                     filtered_projects.append(row)
-                elif 'reception_control' in filter_projects and 'open_date' in p_info and not 'queued' in p_info and flag:
-                    if start_open_date is not 'none' and end_open_date is not 'none':
-                        if (( datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d") > datetime.datetime.strptime(start_open_date, "%Y-%m-%d") and datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d")  < datetime.datetime.strptime(end_open_date, "%Y-%m-%d"))):
+                elif 'reception_control' in filter_projects and \
+                     'open_date' in p_info and not 'queued' in p_info and flag:
+                    if start_open_date is not 'none' and \
+                        end_open_date is not 'none':
+                        if (( datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d") > start_open_date and \
+                            datetime.datetime.strptime(p_info['open_date'], "%Y-%m-%d")  < end_open_date)):
                             filtered_projects.append(row)
-                elif 'ongoing' in filter_projects and 'queued' in p_info and not 'close_date' in p_info and flag:
-                    if start_queue_date is not 'none' and end_queue_date is not 'none':
-                        if ((datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") > datetime.datetime.strptime(start_queue_date, "%Y-%m-%d") and datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") < datetime.datetime.strptime(end_queue_date, "%Y-%m-%d"))):
+                elif 'ongoing' in filter_projects and \
+                     'queued' in p_info and not 'close_date' in p_info and flag:
+                    if start_queue_date is not 'none' and \
+                        end_queue_date is not 'none':
+                        if ((datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") > start_queue_date and \
+                            datetime.datetime.strptime(p_info['queued'], "%Y-%m-%d") < end_queue_date)):
                             filtered_projects.append(row)
 
         final_projects = OrderedDict()
