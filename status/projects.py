@@ -255,20 +255,17 @@ class ProjectsBaseDataHandler(SafeHandler):
                     projtype=='All':
                     flag=True
                 if filter_projects == 'all' and flag:
-                    if start_close_date is not 'none' and \
-                        end_close_date is not 'none' and \
+                    if closedflag and \
                         'close_date' in p_info:
                         if (p_info['close_date']> start_close_date and \
                              p_info['close_date'] < end_close_date):
                             filtered_projects.append(row)
-                    if start_queue_date is not 'none' and \
-                        end_queue_date is not 'none' and \
+                    if queuedflag and \
                         'queued' in p_info:
                         if (p_info['queued'] > start_queue_date and \
                              p_info['queued'] < end_queue_date):
                             filtered_projects.append(row)
-                    if start_open_date is not 'none' and \
-                        end_open_date is not 'none' and \
+                    if openflag and \
                         'open_date' in p_info:
                         if ( p_info['open_date'] > start_open_date and \
                               p_info['open_date'] < end_open_date):
@@ -276,40 +273,32 @@ class ProjectsBaseDataHandler(SafeHandler):
                 elif 'aborted' in filter_projects and \
                       'aborted' in p_info and flag:
                     filtered_projects.append(row)
-                elif 'closed' in filter_projects and \
+                elif closedflag and \
                      'close_date' in p_info and flag:
-                    if start_close_date is not 'none' and \
-                        end_close_date is not 'none':
-                        if (p_info['close_date'] > start_close_date and \
-                             p_info['close_date'] < end_close_date):
-                            filtered_projects.append(row)
+                    if (p_info['close_date'] > start_close_date and \
+                        p_info['close_date'] < end_close_date):
+                        filtered_projects.append(row)
                 elif 'pending' in filter_projects and \
                     not 'open_date' in p_info and flag:
                     filtered_projects.append(row)
-                elif 'open' in filter_projects and \
+                elif openflag and \
                      'open_date' in p_info and flag:
-                    if start_open_date is not 'none' and \
-                        end_open_date is not 'none':
-                        if ( p_info['open_date'] > start_open_date and \
-                            p_info['open_date']  < end_open_dat):
-                            filtered_projects.append(row)
+                    if ( p_info['open_date'] > start_open_date and \
+                        p_info['open_date']  < end_open_dat):
+                        filtered_projects.append(row)
                 elif 'pending_review' in filter_projects and \
                      'pending_reviews' in p_info and flag:
                     filtered_projects.append(row)
-                elif 'reception_control' in filter_projects and \
+                elif openflag and not queuedflag and \
                      'open_date' in p_info and not 'queued' in p_info and flag:
-                    if start_open_date is not 'none' and \
-                        end_open_date is not 'none':
-                        if ( p_info['open_date'] > start_open_date and \
-                            p_info['open_date']  < end_open_date):
-                            filtered_projects.append(row)
-                elif 'ongoing' in filter_projects and \
+                    if ( p_info['open_date'] > start_open_date and \
+                        p_info['open_date']  < end_open_date):
+                        filtered_projects.append(row)
+                elif queuedflag and \
                      'queued' in p_info and not 'close_date' in p_info and flag:
-                    if start_queue_date is not 'none' and \
-                        end_queue_date is not 'none':
-                        if (p_info['queued'] > start_queue_date and \
-                            p_info['queued'] < end_queue_date):
-                            filtered_projects.append(row)
+                    if (p_info['queued'] > start_queue_date and \
+                        p_info['queued'] < end_queue_date):
+                        filtered_projects.append(row)
 
         final_projects = OrderedDict()
         for row in filtered_projects:
