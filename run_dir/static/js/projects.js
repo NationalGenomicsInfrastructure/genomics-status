@@ -29,7 +29,7 @@ $(function(){
         <ul>\
         <li><b>Open</b>: Have Open Date.</li>\
         <li><b>Closed</b>: Have Close Date. May have Open and Queue dates.</li>\
-        <li><b>Aborted</b>: May have Close Date, but not Open or Queue Dates.</li>\
+        <li><b>Aborted</b>: Have Aborted date.</li>\
         <li><b>Pending</b>: Do not have Open, Queue or Close Dates.</li>\
         <li><b>Ongoing</b>: Have Open and Queue Date, but not Close Date.</li>\
         <li><b>Reception Control</b>: Have Open Date, but not Queue or Close Dates.</li>\
@@ -88,8 +88,8 @@ The Project status/Dates relationships are as follows: \
       else{
         $("#onLoadTableOff").trigger("click");
         $("#presetOpt-lab_ongoing").trigger("click");
-        select_from_preset("default_preset_buttons", 'Lab Ongoing');
         $("#statusOptAll").trigger("click");
+        select_from_preset("default_preset_buttons", 'Lab Ongoing');
       }
     })
   });
@@ -477,6 +477,19 @@ function sel_from_ps(preset_type, preset, data){
   $('#default_preset_buttons button.active').removeClass('active');
   $('.filterCheckbox').prop('checked', false);
   if (preset_type == "default_preset_buttons") {
+    if(preset=='Lab Ongoing'){
+      $('.statusOptions').removeClass('active');
+      updateStatusBar1($('#statusOptOngoing'), 'defaultClick');
+    }
+    if(preset=='Rec Ctrl'){
+      $('.statusOptions').removeClass('active');
+      updateStatusBar1($('#statusOptRecCtrl'), 'defaultClick');
+    }
+    if(preset=='Need Review'){
+      $('.statusOptions').removeClass('active');
+      updateStatusBar1($('#statusOptNeedReview'), 'defaultClick');
+
+    }
     var choices = data['default'][preset];
     for (column in choices) {
       if(column.indexOf('COLUMNS')!=-1){
@@ -578,17 +591,22 @@ $('#deletePresetBtnModal').click(function(e){
 })
 
 $('body').on('change', '.statusOptions', function(event) {
-  updateStatusBar1($(this).find('input'));
+  updateStatusBar1($(this).find('input'), 'add');
 });
 
-function updateStatusBar1(source){
+function updateStatusBar1(source, type){
   var currChoice=source.attr('id');
   var prevChoices=[];
   var chosenStatusStr="";
-  $('.statusOptions').find('input').each(function(e){
-    if(this.checked)
-      prevChoices.push($(this).attr('id'));
-  })
+  if(type!='defaultClick'){
+    $('.statusOptions').find('input').each(function(e){
+      if(this.checked)
+        prevChoices.push($(this).attr('id'));
+    })
+  }
+  else{
+    prevChoices.push(currChoice);
+  }
   $('.statusOptions').removeClass('active');
   $('.statusOptions').find('input').prop('checked', false);
   if(currChoice=='statusOptAll' || prevChoices.length==7 || prevChoices.length==0){
