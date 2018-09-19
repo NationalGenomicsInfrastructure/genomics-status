@@ -38,7 +38,8 @@ class WorksetsHandler(SafeHandler):
         t = self.application.loader.load("worksets.html")
         ws_data=self.worksets_data()
         headers= [['Date Run', 'date_run'],['Workset Name', 'workset_name'], \
-                 ['Projects (samples)','projects'], ['Date finished', 'finish date'],['Operator', 'technician'],\
+                 ['Projects (samples)','projects'], ['Sequencing Setup', 'sequencing_setup'], \
+                 ['Date finished', 'finish date'],['Operator', 'technician'],\
                  ['Application', 'application'], ['Library','library_method'], \
                  ['Samples Passed', 'passed'],['Samples Failed', 'failed'], \
                  ['Pending Samples', 'unknown'], ['Total samples', 'total']];
@@ -185,4 +186,3 @@ class WorksetLinksHandler(SafeHandler):
             #ajax cries if it does not get anything back
             self.set_header("Content-type", "application/json")
             self.finish(json.dumps(links))
-

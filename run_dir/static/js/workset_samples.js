@@ -39,12 +39,14 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
             content+='<table class="table table-bordered narrow-headers" id="ws-'+project_id+'"> \
                      <tr> \
                      <th>Project name</th> \
+                     <th>Sequencing setup</th> \
                      <th>Application</th> \
                      <th>Library method</th> \
                  </tr> ';
             var samplesnb=Object.keys(project_data['samples']).length;
             content+="<tr> \
                     <td>"+project_data['name']+"</td>\
+                    <td>"+project_data['sequencing_setup']+"</td>\
                     <td>"+project_data['application']+"</td>\
                     <td>"+project_data['library']+"</td></tr></table>";
         content+="<h3>Samples</h3>";
