@@ -8,6 +8,10 @@ thresholds = {
     'RapidRun': 114,
     'MiSeq Version3': 18,
     'MiSeq Version2': 10,
+    'NovaSeq SP': 325,
+    'NovaSeq S1': 650,
+    'NovaSeq S2': 1650,
+    'NovaSeq S4': 4000,
 }
 
 class FlowcellHandler(SafeHandler):
@@ -42,7 +46,7 @@ class FlowcellHandler(SafeHandler):
                 if project != 'default':
                     replaced_plist.append(project)
         return replaced_plist
-    
+
     def find_DB_entry(self, flowcell_id):
         #Returns Runid (key), contents (complex)
         found = False
@@ -53,17 +57,17 @@ class FlowcellHandler(SafeHandler):
             #Check for short name
             elif self.application.x_flowcells_db.get(entry.id)['name'] == flowcell_id:
                 found = True
-                
+
             if found:
                 if 'Json_Stats' in self.application.x_flowcells_db.get(entry.id):
                     #Same entry from summary2_stats
                     return self.application.x_flowcells_db.view('info/summary2_stats')[entry.key].rows[0]
                 return entry
-                
+
         return False
-    
+
     def get(self, flowcell_id):
-        
+
         entry = self.find_DB_entry(flowcell_id)
 
         if not entry:
@@ -72,7 +76,7 @@ class FlowcellHandler(SafeHandler):
             first_xflowcell_record = datetime(2015,03,13)
             if first_xflowcell_record>flowcell_date:
                 extra_message = "Your flowcell is in an older database. It can still be accessed, contact your administrator."
-            
+
             self.set_status(200)
             t = self.application.loader.load("flowcell_error.html")
             self.write(t.generate(gs_globals=self.application.gs_globals,
@@ -93,4 +97,3 @@ class FlowcellHandler(SafeHandler):
                                   thresholds=thresholds,
                                   project_names=project_names,
                                   user=self.get_current_user_name()))
-
