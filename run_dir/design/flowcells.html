@@ -21,11 +21,11 @@ Description: Shows a table with all flow cells.
             <th class="sort" data-sort="mode">Mode</th>
             <th class="sort" data-sort="chemistry">Chemistry</th>
             <th class="sort" data-sort="recipe">Recipe</th>
-            <th class="sort" data-sort="software_version">Software Version</th>
-            <th class="sort" data-sort="yield">Yield (<abbr title="Giga bases">Gb</abbr>)</th>
-            <th class="sort" data-sort="flowcell">Flowcell</th>
-            <th class="sort" data-sort="pos">Pos</th>
-            <th class="sort" data-sort="instrument">Instrument</th>
+            <th class="sort" data-sort="lane">Lane</th>
+            <th class="sort" data-sort="project">Project</th>
+            <th class="sort" data-sort="pf_clusters">PF Clusters (M)</th>
+            <th class="sort" data-sort="q30_bases">% bases > Q30</th>
+            <th class="sort" data-sort="er_rate">PhiX error rate</th>
           </tr>
         </thead>
         <tfoot>
@@ -36,18 +36,23 @@ Description: Shows a table with all flow cells.
             <th class="sort" data-sort="mode">Mode</th>
             <th class="sort" data-sort="chemistry">Chemistry</th>
             <th class="sort" data-sort="recipe">Recipe</th>
-            <th class="sort" data-sort="software_version">Software Version</th>
-            <th class="sort" data-sort="yield">Yield (<abbr title="Giga bases">Gb</abbr>)</th>
-            <th class="sort" data-sort="flowcell">Flowcell</th>
-            <th class="sort" data-sort="pos">Pos</th>
-            <th class="sort" data-sort="instrument">Instrument</th>
+            <th class="sort" data-sort="lane">Lane</th>
+            <th class="sort" data-sort="project">Project</th>
+            <th class="sort" data-sort="pf_clusters">PF Clusters (M)</th>
+            <th class="sort" data-sort="q30_bases">% bases > Q30</th>
+            <th class="sort" data-sort="er_rate">PhiX error rate</th>
           </tr>
         </tfoot>
         <tbody class="list">
 
          {% for onefc in flowcells %}
             <tr>
-                <td class="run_id"><a href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a></td>
+                <td class="run_id">
+                    <a href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a>
+                    {% if flowcells.get(onefc).get('demultiplexing') == 'Done' %}
+                        <abbr title="Demultiplexing completed">&nbsp;<span class="glyphicon glyphicon-ok-sign"></span></abbr>
+                    {% end %}
+                </td>
                 <td class="start_date">{{ flowcells[onefc]["startdate"]}}</td>
                 <td class="system">
                 {% if 'type' in flowcells[onefc]%}
@@ -69,11 +74,55 @@ Description: Shows a table with all flow cells.
                 {% end %}
                 </td>
                 <td class="recipe">{{ flowcells[onefc].get('recipe', '-') }}</td>
-                <td class="software_version">{{ flowcells[onefc].get('appver', '-') }}</td>
-                <td class="yield" class="text-right">{{ flowcells[onefc].get('yield', '-') }}</td>
-                <td class="flowcell">{{ flowcells[onefc]['flowcell'] }}</td>
-                <td class="pos" class="text-center">{{ flowcells[onefc].get('pos') }}</td>
-                <td class="instrument">{{ flowcells[onefc].get('instrument') }}</td>
+                <td class="lane" class="text-center">
+                     {% if 'lane_info' in flowcells[onefc] > 0 %}
+                         {% for onelane in flowcells[onefc]['lane_info'] %}
+                             <samp style="max-width:50px;">{{ onelane }}</samp><br>
+                         {% end %}
+                    {% end %}
+                </td>
+                <td class="project" class="text-center">
+                     {% if 'lane_info' in flowcells[onefc] > 0 %}
+                         {% for onelane in flowcells[onefc]['lane_info'] %}
+                             <samp style="max-width:50px;">
+                             {% for oneproj in flowcells[onefc]['lane_info'][onelane]['project_name'] %}
+                                 <abbr title="{{ oneproj }}">
+                                     <a href="/project/{{ flowcells[onefc]['lane_info'][onelane]['project_id'][flowcells[onefc]['lane_info'][onelane]['project_name'].index(oneproj)] }}">{{ oneproj }}</a>
+                                 </abbr>
+                             {% end %}
+                             </samp><br>
+                         {% end %}
+                    {% end %}
+                </td>
+                <td class="pf_clusters" class="text-center">
+                     {% if 'lane_info' in flowcells[onefc] > 0 %}
+                         {% for onelane in flowcells[onefc]['lane_info'] %}
+                             {% if flowcells[onefc]['lane_info'][onelane].get('pf_clusters') %}
+                                 <samp style="max-width:50px;">{{ int(flowcells[onefc]['lane_info'][onelane].get('pf_clusters').replace(',',''))/1000000 }}</samp><br>
+                             {% else %}
+                                 <samp style="max-width:50px;">{{ 'NA' }}</samp><br>
+                             {% end %}
+                         {% end %}
+                    {% end %}
+                </td>
+                <td class="q30_bases" class="text-center">
+                     {% if 'lane_info' in flowcells[onefc] > 0 %}
+                         {% for onelane in flowcells[onefc]['lane_info'] %}
+                             <samp style="max-width:50px;">{{ flowcells[onefc]['lane_info'][onelane].get('q30_bases', 'NA') }}</samp><br>
+                         {% end %}
+                    {% end %}
+                </td>
+                <td class="er_rate" class="text-center">
+                     {% if 'lane_info' in flowcells[onefc] > 0 %}
+                         {% for onelane in flowcells[onefc]['lane_info'] %}
+                             {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') %}
+                                 <samp style="max-width:50px;">{{ round(flowcells[onefc]['lane_info'][onelane].get('er_rate'),2) }}</samp><br>
+                             {% else %}
+                                 <samp style="max-width:50px;">{{ 'NA' }}</samp><br>
+                             {% end %}
+                         {% end %}
+                    {% end %}
+                </td>
             </tr>
          {% end %}
         </tbody>
