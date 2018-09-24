@@ -28,8 +28,8 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
-from status.pricing import PricingComponentsHandler, PricingProductsHandler, \
-    PricingDateToVersionHandler, PricingExchangeRatesHandler
+from status.pricing import PricingComponentsDataHandler, PricingProductsDataHandler, \
+    PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -131,12 +131,12 @@ class Application(tornado.web.Application):
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
-            ("/api/v1/pricing_date_to_version", PricingDateToVersionHandler),
-            ("/api/v1/pricing_components", PricingComponentsHandler),
-            ("/api/v1/pricing_components/([^/]*)$", PricingComponentsHandler),
-            ("/api/v1/pricing_exchange_rates", PricingExchangeRatesHandler),
-            ("/api/v1/pricing_products", PricingProductsHandler),
-            ("/api/v1/pricing_products/([^/]*)$", PricingProductsHandler),
+            ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
+            ("/api/v1/pricing_components", PricingComponentsDataHandler),
+            ("/api/v1/pricing_components/([^/]*)$", PricingComponentsDataHandler),
+            ("/api/v1/pricing_exchange_rates", PricingExchangeRatesDataHandler),
+            ("/api/v1/pricing_products", PricingProductsDataHandler),
+            ("/api/v1/pricing_products/([^/]*)$", PricingProductsDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
