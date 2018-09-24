@@ -50,7 +50,7 @@ Description: Shows a table with all flow cells.
                 <td class="run_id">
                     <a href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a>
                     {% if flowcells.get(onefc).get('demultiplexing') == 'Done' %}
-                        <abbr title="Demultiplexing completed">&nbsp;<span class="glyphicon glyphicon-ok-sign"></span></abbr>
+                        <span class="glyphicon glyphicon-ok-sign"></span>
                     {% end %}
                 </td>
                 <td class="start_date">{{ flowcells[onefc]["startdate"]}}</td>
@@ -86,9 +86,7 @@ Description: Shows a table with all flow cells.
                          {% for onelane in flowcells[onefc]['lane_info'] %}
                              <samp style="max-width:50px;">
                              {% for oneproj in flowcells[onefc]['lane_info'][onelane]['project_name'] %}
-                                 <abbr title="{{ oneproj }}">
-                                     <a href="/project/{{ flowcells[onefc]['lane_info'][onelane]['project_id'][flowcells[onefc]['lane_info'][onelane]['project_name'].index(oneproj)] }}">{{ oneproj }}</a>
-                                 </abbr>
+                                 <a href="/project/{{ flowcells[onefc]['lane_info'][onelane]['project_id'][flowcells[onefc]['lane_info'][onelane]['project_name'].index(oneproj)] }}">{{ oneproj }}</a>
                              {% end %}
                              </samp><br>
                          {% end %}
