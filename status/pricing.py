@@ -111,60 +111,56 @@ class PricingBaseHandler(SafeHandler):
         else:
             return {component_id: view.rows[0].value}
 
-    def fetch_products_raw(self, product_id, version=None):
-        """Fetch individual pricing products from StatusDB.
+    def fetch_products(self, product_id, version=None):
+        """Fetch pricing products raw data from StatusDB.
 
-        :param product_id: integer id of product to fetch
-        :param version: optional integer specifying version to fetch
-        :return: The row fetched from the database
+        :param product_id: integer id of product to fetch. If None, all
+                    products are fetched.
+        :param version: optional integer specifying version to fetch,
+                        if None, the latest is fetched
+        :return: The rows fetched from the database
         """
-        int_key = self._validate_object_id(product_id, "product")
+        if product_id is not None:
+            int_key = self._validate_object_id(product_id, "product")
 
-        if version is not None:
+        if version is not None:  # Specified version
             int_version = self._validate_version_param(version)
 
-            view = self.application.pricing_products_db.view(
+            if product_id is None:  # All products
+                view = self.application.pricing_products_db.view(
+                        "entire_document/by_version",
+                        key=int_version,
+                        limit=1,
+                        descending=True
+                    )
+            else:  # Individual product
+                view = self.application.pricing_products_db.view(
                         "individual_products/by_id_and_version",
                         key=[int_key, int_version],
-                        limit=1
+                        limit=1,
+                        descending=True
                     )
-        else:
-            view = self.application.pricing_products_db.view(
+        else:  # No specified version
+            if product_id is None:  # All products
+                view = self.application.pricing_products_db.view(
+                        "entire_document/by_version",
+                        limit=1,
+                        descending=True
+                    )
+            else:
+                view = self.application.pricing_products_db.view(
                         "individual_products/by_id_and_version",
                         startkey=[int_key, {}],
                         endkey=[int_key],
                         limit=1,
                         descending=True
                     )
-
         self._validate_single_row_result(view, "product")
 
-        return view.rows[0]
-
-    def fetch_all_products(self, version=None):
-        """Fetch all pricing product from StatusDB.
-
-        :param version: optional integer specifying version to fetch
-        :return: The row fetched from the database
-        """
-        if version is not None:
-            int_version = self._validate_version_param(version)
-            view = self.application.pricing_products_db.view(
-                        "entire_document/by_version",
-                        key=int_version,
-                        limit=1,
-                        descending=True
-                    )
+        if product_id is None:  # All products
+            return view.rows[0].value['products']
         else:
-            view = self.application.pricing_products_db.view(
-                        "entire_document/by_version",
-                        limit=1,
-                        descending=True
-                    )
-
-        self._validate_single_row_result(view, "product")
-
-        return view.rows[0]
+            return {product_id: view.rows[0].value}
 
     def fetch_exchange_rates(self, date=None):
         """Internal method to fetch exchange rates from StatusDB
@@ -209,24 +205,31 @@ class PricingBaseHandler(SafeHandler):
 
         return sek_price, sek_price_per_unit
 
-    def _calculate_product_price(self, product_row, all_components, exch_rates):
+    def _calculate_product_price(self, product, all_component_prices):
         price = 0
-        for component_id in product_row.value['components']:
-            component = all_components.value['components'][str(component_id)]
+        # Fixed price trumps all component and reagent prices
+        if 'fixed_price' in product:
+            price = product['fixed_price']['price_in_sek']
+            external_price = product['fixed_price']['external_price_in_sek']
+            return price, external_price
 
-            price += self._calculate_component_price(component,
-                                                     exch_rates)[1]
+        for component_id, info in product['Components'].items():
+            component_price_d = all_component_prices[str(component_id)]
+            quantity = int(info['quantity'])
+            price += quantity * component_price_d['price_per_unit_in_sek']
 
         # Reagents are added to a special field, but are components as well.
-        for reagent in product_row.value['Reagent fee']:
-            component = all_components.value['components'][str(component_id)]
+        reagent = product['Reagent fee']
+        if reagent:
+            component_price_d = all_component_prices[str(reagent)]
+            price += component_price_d['price_per_unit_in_sek']
 
-            price += self._calculate_component_price(component,
-                                                     exch_rates)[1]
+        external_price = price + price * product['Re-run fee']
+        return price, external_price
 
-        return price
-
-    def get_component_prices(self, component_id=None, version=None, date=None):
+    # _______________________________ GET METHODS _____________________________
+    def get_component_prices(self, component_id=None, version=None, date=None,
+                             pretty_strings=False):
         """Calculate prices for individual or all pricing components.
 
         :param component_id: The id of the component to calculate price for.
@@ -236,6 +239,8 @@ class PricingBaseHandler(SafeHandler):
         :param date: The date for which the exchange rate will be fetched.
                         When not specified, the latest exchange rates will be
                         used.
+        :param pretty_strings: Output prices as formatted strings instead
+                        of float numbers.
 
         """
         exch_rates = self.fetch_exchange_rates(date)
@@ -247,39 +252,48 @@ class PricingBaseHandler(SafeHandler):
 
             price, price_per_unit = self._calculate_component_price(component,
                                                                     exch_rates)
+            if pretty_strings:
+                price = "{:.2f}".format(price)
+                price_per_unit = "{:.2f}".format(price_per_unit)
+
             return_d[component_id]['price_in_sek'] = price
             return_d[component_id]['price_per_unit_in_sek'] = price_per_unit
 
         return return_d
 
-    def get_product_price(self, product_ids, version=None, date=None):
-        """Calculate the price for an individual product
+    def get_product_prices(self, product_id, version=None, date=None,
+                           pretty_strings=False):
+        """Calculate the price for an individual or all products
 
-        :param product_id: The id of the product to calculate price of
+        :param product_id: The id of the product to calculate price for.
+                        If None, all product prices will be calculated.
         :param version: The version of product and components to use.
                         When not specified, the latest version will be used.
         :param date: The date for which the exchange rate will be fetched.
                         When not specified, the latest exchange rates will be
                         used.
+        :param pretty_strings: Output prices as formatted strings instead
+                        of float numbers.
 
-        In fact, specifying exchange rates date is quite an exotic use case
-        and should be used with care.
         """
 
         exch_rates = self.fetch_exchange_rates(date)
-        all_components = self.fetch_all_components(version)
-        for product_id in product_ids:
-            product_row = self.fetch_individual_product(product_id, version)
+        all_component_prices = self.get_component_prices(version=version, date=date)
+        products = self.fetch_products(product_id, version)
 
-            self._calculate_product_price(product_row, all_components, exch_rates)
+        return_d = products.copy()
 
-    def get_all_product_prices(self, version=None):
-        # Pick up exchange rates
-        # Pick up component prices
-        # Pick up product prices
+        for product_id, product in products.iteritems():
+            price_int, price_ext = self._calculate_product_price(product, all_component_prices)
 
-        # Calculate the price for each product
-        pass
+            if pretty_strings:
+                price_int = "{:.2f}".format(price_int)
+                price_ext = "{:.2f}".format(price_ext)
+
+            return_d[product_id]['price_internal'] = price_int
+            return_d[product_id]['price_external'] = price_ext
+
+        return return_d
 
 
 class PricingComponentsDataHandler(PricingBaseHandler):
@@ -305,7 +319,8 @@ class PricingComponentsDataHandler(PricingBaseHandler):
 
         row = self.get_component_prices(component_id=search_string,
                                         version=version,
-                                        date=date)
+                                        date=date,
+                                        pretty_strings=True)
 
         self.write(json.dumps(row))
 
@@ -328,12 +343,10 @@ class PricingProductsDataHandler(PricingBaseHandler):
 
         version = self.get_argument('version', None)
 
-        if search_string is not None:
-            row = self.fetch_individual_product(search_string, version)
-        else:
-            row = self.fetch_all_products(version)
+        rows = self.get_product_prices(search_string, version=version,
+                                       pretty_strings=True)
 
-        self.write(json.dumps(row))
+        self.write(json.dumps(rows))
 
 
 class PricingDateToVersionDataHandler(PricingBaseHandler):
