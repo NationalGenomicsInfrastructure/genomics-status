@@ -236,7 +236,6 @@ class ProjectsBaseDataHandler(SafeHandler):
         else:
             for row in summary_view:
                 p_info=row.value
-                flag = False
                 ptype=p_info['details'].get('type')
 
                 if not (projtype == 'All' or  ptype == projtype):
@@ -258,40 +257,22 @@ class ProjectsBaseDataHandler(SafeHandler):
                 if 'open_date' in p_info:
                     open_condition = p_info['open_date'] > start_open_date and p_info['open_date'] < end_open_date
 
-                if filter_projects == 'all':
-                    #aborted projects
+                #Filtering projects
+                #aborted projects
+                if 'aborted' in filter_projects or filter_projects == 'all':
                     if 'aborted' in p_info['details'] or ('project_summary' in p_info and 'aborted' in p_info['project_summary']):
                         filtered_projects.append(row)
-                        continue
-                    #closed projects
-                    if closedflag and closed_condition:
-                        filtered_projects.append(row)
-                        continue
-                    # (Open, pending_review), ongoing projects
-                    if queuedflag and queued_condition and open_condition:
-                        filtered_projects.append(row)
-                        continue
-                    #(Open, pending_review), reception control projects
-                    if openflag and open_condition and not queuedflag:
-                        filtered_projects.append(row)
-                        continue
-                    #pending projects
-                    if not 'open_date' in p_info:
-                        filtered_projects.append(row)
-
-                #aborted projects
-                elif 'aborted' in p_info['details'] or ('project_summary' in p_info and 'aborted' in p_info['project_summary']):
-                    if 'aborted' in filter_projects:
-                        filtered_projects.append(row)
                 #pending reviews projects
-                elif 'review' in filter_projects and 'pending_reviews' in p_info:
+                elif ('review' in filter_projects or filter_projects == 'all') and 'pending_reviews' in p_info:
                     filtered_projects.append(row)
                 #closed projects
-                elif closedflag and closed_condition:
+                elif (closedflag or filter_projects == 'all') and closed_condition:
                     filtered_projects.append(row)
                 #open projects
-                elif openflag and open_condition :
-                    if 'open' in filter_projects:
+                elif (openflag or filter_projects == 'all') and open_condition :
+                    if filter_projects == 'all':
+                        filtered_projects.append(row)
+                    elif 'open' in filter_projects:
                         filtered_projects.append(row)
                     #ongoing projects
                     elif queuedflag and queued_condition and not 'close_date' in p_info:
@@ -300,7 +281,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                     elif not queuedflag and not queued_proj:
                         filtered_projects.append(row)
                 #pending projects
-                elif 'pending' in filter_projects and not 'open_date' in p_info:
+                elif ('pending' in filter_projects or filter_projects == 'all') and not 'open_date' in p_info:
                     filtered_projects.append(row)
 
         final_projects = OrderedDict()
