@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-<!-- 
+<!--
 Template file: flowcells.html
 URL: /flowcells
-Title: Summary of all Flowcells 
+Title: Summary of all Flowcells
 Description: Shows a table with all flow cells.
 -->
 
@@ -62,6 +62,8 @@ Description: Shows a table with all flow cells.
                     {{ flowcells[onefc]['fctype'].split(" ")[-1] }}
                 {% elif 'kitver' in flowcells[onefc] %}
                     v{{ flowcells[onefc]['kitver'][-1:] }}
+                {% elif 'workflow' in flowcells[onefc] %}
+                    {{ flowcells[onefc]['workflow'].replace("NovaSeq", "") }}
                 {% else %}
                 -
                 {% end %}
@@ -92,7 +94,7 @@ function init_listjs() {
       var title = $('#fc_table thead th').eq( $(this).index() ).text();
       $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
     } );
-                             
+
     var table = $('#fc_table').DataTable({
       "paging":false,
       "info":false,

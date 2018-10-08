@@ -48,16 +48,22 @@ Description: Shows a table with all worksets.
                  <td>
                  {% for onepj in ws_data.get(onews).get(onekey[1]) %}
                  <abbr title="{{ ws_data.get(onews).get(onekey[1]).get(onepj).get('project_name')}}">
-                     <a href="/project/{{ onepj }}">{{ onepj }}</a></abbr>
+                     <a href="/project/{{ onepj }}">{{ ", ".join([ws_data.get(onews, {}).get(onekey[1], {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}</a></abbr>
                  {% if  ws_data.get(onews).get(onekey[1]).get(onepj).get('status') == 'Closed' %}
                  <abbr title="Project closed">&nbsp;<span class="glyphicon glyphicon-ok-sign"></span></abbr>
                  {% end %}
                  &nbsp;({{ ws_data.get(onews).get(onekey[1]).get(onepj).get('samples_nb') }})<br>
                  {% end %}
                  </td>
+             {% elif onekey[1] == 'sequencing_setup'%}
+                 <td>
+                 {% for onepj in ws_data.get(onews, {}).get('projects', {}) %}
+                     <samp style="max-width:50px;">{{ ws_data.get(onews).get('projects').get(onepj).get('sequencing_setup') }}</samp><br>
+                 {% end %}
+                 </td>
              {% elif onekey[1] in ['application', 'library_method'] %}
                  <td><samp style="max-width:50px;">
-                 {% raw '</samp><hr style="margin:0;"><samp>'.join(ws_data[onews].get(onekey[1])) %} 
+                 {% raw '</samp><hr style="margin:0;"><samp>'.join(ws_data[onews].get(onekey[1])) %}
                  </samp></td>
              {% elif onekey[1] in ['passed', 'failed', 'unknown', 'total'] %}
                  <td>{{ ws_data[onews].get('samples', {}).get(onekey[1]) }}</td>
