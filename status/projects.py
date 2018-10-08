@@ -269,7 +269,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 elif (closedflag or filter_projects == 'all') and closed_condition:
                     filtered_projects.append(row)
                 #open projects
-                elif (openflag or filter_projects == 'all') and open_condition :
+                elif openflag and open_condition :
                     if filter_projects == 'all':
                         filtered_projects.append(row)
                     elif 'open' in filter_projects:
