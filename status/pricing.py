@@ -310,6 +310,7 @@ class PricingComponentsDataHandler(PricingBaseHandler):
     Use the optional parameter `date` to specify an exact date for which the
     exchange rate will be fetched. When not specified, the latest exchange
     rates will be used.
+    Any information available for the component(s) will be returned.
     """
 
     def get(self, search_string=None):
@@ -336,6 +337,7 @@ class PricingProductsDataHandler(PricingBaseHandler):
     Use the optional parameter `version` to specify an exact version
     from the database. If omitted, the latest (highest number) version
     will be used.
+    Any information available for the product(s) will be returned.
     """
 
     def get(self, search_string=None):
