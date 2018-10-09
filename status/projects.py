@@ -20,6 +20,7 @@ from itertools import ifilter
 from collections import defaultdict
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
+from dateutil.relativedelta import relativedelta
 
 from genologics import lims
 from genologics.entities import Project
@@ -47,19 +48,76 @@ class PresetsHandler(SafeHandler):
         """
         presets_list = self.get_argument('presets_list', 'pv_presets')
         self.set_header("Content-type", "application/json")
+        user_details=self.get_user_details()
         presets = {
             "default": self.application.genstat_defaults.get(presets_list),
-            "user": {}
+            "user": user_details.get('userpreset')
         }
-        #Get user presets
-        user_id = ''
-        user = self.get_secure_cookie('email')
-        for u in self.application.gs_users_db.view('authorized/users'):
-            if u.get('key') == user:
-                user_id = u.get('value')
-                break
-        presets['user'] = self.application.gs_users_db.get(user_id).get(presets_list, {})
         self.write(json.dumps(presets))
+
+    def post(self):
+        """Save/Delete preset choices of columns into StatusDB
+        """
+        doc=self.get_user_details()
+        if self.get_arguments('save'):
+            preset_name = self.get_argument('save')
+            data = json.loads(self.request.body)
+            if 'userpreset' in doc:
+                doc['userpreset'][preset_name]=data
+            else:
+                doc['userpreset']={ preset_name:data }
+
+        if self.get_arguments('delete'):
+            preset_name = self.get_argument('delete')
+            del doc['userpreset'][preset_name]
+
+        try:
+            self.application.gs_users_db.save(doc)
+        except Exception, e:
+            self.set_status(400)
+            self.write(e.message)
+
+        self.set_status(201)
+        self.write({'success': 'success!!'})
+
+    def get_user_details(self):
+        user_email = self.get_current_user_email()
+        if user_email == 'Testing User!':
+            user_email=self.application.settings.get("username", None)+'@scilifelab.se'
+        user_details={}
+        headers = {"Accept": "application/json",
+                   "Authorization": "Basic " + "{}:{}".format(self.application.settings.get("username", None), self.application.settings.get("password", None)).encode('base64')[:-1]}
+        for row in self.application.gs_users_db.view('authorized/users'):
+            if row.get('key') == user_email:
+                user_url = "{}/gs_users/{}".format(self.application.settings.get("couch_server"), row.get('value'))
+                r = requests.get(user_url, headers=headers).content.rstrip()
+                user_details=json.loads(r);
+        return user_details
+
+class PresetsOnLoadHandler(PresetsHandler):
+    """Handler to GET and POST/PUT personalized and default set of presets on loading
+
+    project view.
+    """
+    def get(self):
+        action = self.get_argument('action', '')
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.get_user_details().get('onload')))
+
+    def post(self):
+        doc=self.get_user_details()
+        data = json.loads(self.request.body)
+        action=self.get_argument('action')
+        doc['onload']=data
+
+        try:
+            self.application.gs_users_db.save(doc)
+        except Exception, e:
+            self.set_status(400)
+            self.write(e.message)
+
+        self.set_status(201)
+        self.write({'success': 'success!!'})
 
 
 class ProjectsBaseDataHandler(SafeHandler):
@@ -125,28 +183,47 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         return row
 
-    def list_projects(self, filter_projects='all', oldest_date='2012-01-01', youngest_date=datetime.datetime.now().strftime("%Y-%m-%d")):
+    def _get_two_year_from(self, from_date):
+        return (datetime.datetime.strptime(from_date, "%Y-%m-%d") - relativedelta(years=2)).strftime("%Y-%m-%d")
+
+    def list_projects(self, filter_projects='all'):
         projects = OrderedDict()
+        closedflag=False
+        queuedflag=False
+        openflag=False
+        projtype=self.get_argument('type', 'all')
 
-        oldest_open_date=self.get_argument('oldest_open_date', oldest_date)
-        youngest_open_date=self.get_argument('youngest_open_date', youngest_date)
-        oldest_close_date=self.get_argument('oldest_close_date', oldest_date)
-        youngest_close_date=self.get_argument('youngest_close_date', youngest_date)
-        oldest_queue_date=self.get_argument('oldest_queue_date', oldest_date)
-        youngest_queue_date=self.get_argument('youngest_queue_date', youngest_date)
+        if 'closed' in filter_projects or 'all' in filter_projects:
+            closedflag=True
+        if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'all' in filter_projects:
+            queuedflag=True
+        if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'reception_control' in filter_projects or 'all' in filter_projects:
+            openflag=True
+
+        default_start_date=(datetime.datetime.now() - relativedelta(years=2)).strftime("%Y-%m-%d")
+        default_end_date=datetime.datetime.now().strftime("%Y-%m-%d")
+        start_open_date, end_open_date, start_queue_date, end_queue_date, start_close_date, end_close_date = [None] * 6
+
+        if closedflag:
+            end_close_date = self.get_argument('youngest_close_date', default_end_date)
+            start_close_date = self.get_argument('oldest_close_date', self._get_two_year_from(end_close_date))
+        if queuedflag:
+            end_queue_date = self.get_argument('youngest_queue_date', default_end_date)
+            start_queue_date = self.get_argument('oldest_queue_date', self._get_two_year_from(end_queue_date))
+        if openflag:
+            end_open_date = self.get_argument('youngest_open_date', default_end_date)
+            start_open_date = self.get_argument('oldest_open_date', self._get_two_year_from(end_open_date))
+
         summary_view = self.application.projects_db.view("project/summary", descending=True)
-        if filter_projects == 'closed':
-            summary_view = summary_view[["closed",'Z']:["closed",'']]
-        elif filter_projects not in ['all', 'aborted'] and filter_projects[:1] != 'P':
-            summary_view = summary_view[["open",'Z']:["open",'']]
 
+        if filter_projects[:1] != 'P':
+            if  filter_projects == 'closed':
+                summary_view = summary_view[["closed",'Z']:["closed",'']]
+            elif 'all' not in filter_projects and 'aborted' not in filter_projects and 'closed' not in filter_projects:
+                summary_view = summary_view[["open",'Z']:["open",'']]
 
-        for row in summary_view:
-            row = self.project_summary_data(row)
-            projects[row.key[1]] = row.value
+        filtered_projects = []
 
-
-        filtered_projects = OrderedDict()
         # Specific list of projects given
         if filter_projects[:1] == 'P':
             fprojs = filter_projects.split(',')
@@ -156,81 +233,69 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
-        elif not filter_projects == 'all':
-            prefiltered_projects = OrderedDict()
-            for p_id, p_info in projects.iteritems():
-                if 'aborted' not in p_info:
-                    prefiltered_projects[p_id] = p_info
-                else:
-                    if filter_projects == 'aborted':
-                        filtered_projects[p_id] = p_info
         else:
-            filtered_projects = projects
+            for row in summary_view:
+                p_info=row.value
+                ptype=p_info['details'].get('type')
 
-        if filter_projects == 'pending':
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if not 'open_date' in p_info:
-                    filtered_projects[p_id] = p_info
+                if not (projtype == 'All' or  ptype == projtype):
+                    continue
 
-        elif filter_projects == 'open':
-            for p_id, p_info in prefiltered_projects.iteritems():
+                closed_condition, queued_condition, open_condition, queued_proj = [False] * 4
+
+                if 'close_date' in p_info:
+                    closed_condition = p_info['close_date']> start_close_date and p_info['close_date'] < end_close_date
+
+                if 'queued' in p_info['details']:
+                    queued_proj = True
+                    queued_condition = p_info['details'].get('queued') > start_queue_date and p_info['details'].get('queued') < end_queue_date
+
+                elif 'project_summary' in p_info and 'queued' in p_info['project_summary']:
+                    queued_proj =True
+                    queued_condition = p_info['project_summary'].get('queued') > start_queue_date and p_info['project_summary'].get('queued') < end_queue_date
+
                 if 'open_date' in p_info:
-                    filtered_projects[p_id] = p_info
+                    open_condition = p_info['open_date'] > start_open_date and p_info['open_date'] < end_open_date
 
-        elif filter_projects == 'reception_control':
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if 'open_date' in p_info and not 'queued' in p_info:
-                    filtered_projects[p_id] = p_info
+                #Filtering projects
+                #aborted projects
+                if 'aborted' in filter_projects or filter_projects == 'all':
+                    if 'aborted' in p_info['details'] or ('project_summary' in p_info and 'aborted' in p_info['project_summary']):
+                        filtered_projects.append(row)
+                #pending reviews projects
+                elif ('review' in filter_projects or filter_projects == 'all') and 'pending_reviews' in p_info:
+                    filtered_projects.append(row)
+                #closed projects
+                elif (closedflag or filter_projects == 'all') and closed_condition:
+                    filtered_projects.append(row)
+                #open projects
+                elif openflag and open_condition :
+                    if filter_projects == 'all':
+                        filtered_projects.append(row)
+                    elif 'open' in filter_projects:
+                        filtered_projects.append(row)
+                    #ongoing projects
+                    elif queuedflag and queued_condition and not 'close_date' in p_info:
+                        filtered_projects.append(row)
+                    #reception control projects
+                    elif not queuedflag and not queued_proj:
+                        filtered_projects.append(row)
+                #pending projects
+                elif ('pending' in filter_projects or filter_projects == 'all') and not 'open_date' in p_info:
+                    filtered_projects.append(row)
 
-        elif filter_projects == 'ongoing':
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if 'queued' in p_info and not 'close_date' in p_info:
-                    filtered_projects[p_id] = p_info
-
-        elif filter_projects == 'closed':
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if 'close_date' in p_info :
-                    filtered_projects[p_id] = p_info
-
-        elif filter_projects == "pending_review":
-            for p_id, p_info in prefiltered_projects.iteritems():
-                if 'pending_reviews' in p_info:
-                    filtered_projects[p_id] = p_info
-
-        final_projects = self.filter_per_date(filtered_projects, youngest_open_date, oldest_open_date, youngest_queue_date, oldest_queue_date, youngest_close_date, oldest_close_date)
+        final_projects = OrderedDict()
+        for row in filtered_projects:
+            a=type(row)
+            row = self.project_summary_data(row)
+            final_projects[row.key[1]] = row.value
 
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
             if row.key[0] in final_projects:
                 for date_type, date in row.value.iteritems():
                     final_projects[row.key[0]][date_type] = date
-
         return final_projects
-
-    def filter_per_date(self, plist, yod, ood, yqd, oqd, ycd, ocd):
-        default_open_date='2012-01-01'
-        default_close_date=datetime.datetime.now().strftime("%Y-%m-%d")
-        """ yod : youngest open date
-            ood : oldest open date
-            yqd : youngest queue date
-            oqd : oldest queue date
-            ycd : youngest close date
-            ocd : oldest close date"""
-        filtered_projects = OrderedDict()
-        for p_id, p_info in plist.iteritems():
-            if ycd != default_close_date or ocd != default_open_date:
-                if 'close_date' not in p_info or (p_info['close_date'] > ycd or p_info['close_date'] < ocd):
-                    continue
-            if yqd != default_close_date or oqd != default_open_date:
-                if 'queued' not in p_info or (p_info['queued'] > yqd or p_info['queued'] < oqd):
-                    continue
-            if yod != default_close_date or ood != default_open_date:
-                if 'open_date' not in p_info or (p_info['open_date'] > yod or p_info['open_date'] < ood):
-                    continue
-            filtered_projects[p_id]=p_info
-
-        return filtered_projects
-
 
     def list_project_fields(self, undefined=False, project_list='all'):
         # If undefined=True is given, only return fields not in columns defined
@@ -491,14 +556,18 @@ class ProjectSamplesHandler(SafeHandler):
                               ))
 
 
+
 class ProjectsHandler(SafeHandler):
-    """ Serves a page with all projects listed, along with some brief info.
-    URL: /projects/([^/]*)
+    """ Serves a page with project presets listed, along with some brief info.
+    URL: /projects
     """
     def get(self, projects='all'):
+    #def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
         self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, projects=projects, user=self.get_current_user_name()))
+
+
 
 
 class RunningNotesDataHandler(SafeHandler):
