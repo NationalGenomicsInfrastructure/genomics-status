@@ -45,7 +45,21 @@ Description: Shows all presets configured for user and enables their selection.
                     <div class="text-center">
                     <label for="statusbtnBar1" class="control-label">Choose Status <button type="button" class="btn btn-xs btn-default" id="filterInfo">
                       <span class="glyphicon glyphicon-info-sign"></span></button></label>
-                      <div id='displayInfo'></div>
+                      <div id='displayInfo' style="display:hidden;" class="alert alert-info" role="alert">
+                        <span type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></span>
+                        <div class="text-left">
+                            The Project status/Dates relationships are as follows:
+                            <ul>
+                              <li><b>Pending</b>: Do not have Open, Queue or Close Dates.</li>
+                              <li><b>Reception Control</b>: Have Open Date, but not Queue or Close Dates.</li>
+                              <li><b>Needs Review</b>: May have Open and Queue Dates, but not Close Date.</li>
+                              <li><b>Ongoing</b>: Have Open and Queue Date, but not Close Date.</li>
+                              <li><b>Open</b>: Have Open Date.</li>
+                              <li><b>Closed</b>: Have Close Date. May have Open and Queue dates.</li>
+                              <li><b>Aborted</b>: Have Aborted date.</li>
+                            </ul>
+                        </div>
+                      </div>
                     <div class="btn-toolbar" role="toolbar" id="statusbtnBar1" aria-label="..." style="margin-right: -3px;">
                       <div class="btn-group" data-toggle="buttons" role="group" aria-label="..." id="statusbtnBar1All">
                         <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptAll" data-projects="all" autocomplete="off"><i class="glyphicon glyphicon-globe"></i> All</label>
@@ -235,7 +249,7 @@ Description: Shows all presets configured for user and enables their selection.
                               {% end %}
                             </div>
 
-                            <div class="colHeader" id="undefined-columns">
+                            <div class="colHeader" id="undefined_columns">
                               <h4 class="search-action" data-action="filterHeader" id="undefined">Undefined <input class="headingCheckbox" type="checkbox"></h4>
                               <div id="undefined_columns"></div>
                             </div>

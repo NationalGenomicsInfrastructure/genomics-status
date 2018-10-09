@@ -5,50 +5,19 @@ Powers /projects/ - template is run_dir/design/projects.html
 */
 
 // On page load
-
 $(function(){
-  // Load the presets first (to get the table headers)
-  var filterInfoContent="The Project status/Dates relationships are as follows: <br />\
-    <b>Open</b>: Have Open Date.<br />\
-    <b>Closed</b>: Have Close Date. May have Open and Queue dates.<br /> \
-    <b>Aborted</b>: May have Close Date, but not Open or Queue Dates.<br />\
-    <b>Pending</b>: Do not have Open, Queue or Close Dates.<br />\
-    <b>Ongoing</b>: Have Open and Queue Date, but not Close Date.<br />\
-    <b>Reception Control</b>: Have Open Date, but not Queue or Close Dates.<br />\
-    <b>Needs Review</b>: May have Open and Queue Dates, but not Close Date.<br />\
-  ";
+
+  $('#displayInfo').hide();
 
   $('#filterInfo').on('click', function(){
-    if($('#displayInfo').find('#displayedAlert').length)
-      $('#displayedAlert').remove();
-    else{
-      $('#displayInfo').append('<div id="displayedAlert" class="alert alert-info alert-dismissable" role="alert"> \
-      <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></span> \
-      <div class="text-left">\
-      The Project status/Dates relationships are as follows: \
-        <ul>\
-        <li><b>Open</b>: Have Open Date.</li>\
-        <li><b>Closed</b>: Have Close Date. May have Open and Queue dates.</li>\
-        <li><b>Aborted</b>: Have Aborted date.</li>\
-        <li><b>Pending</b>: Do not have Open, Queue or Close Dates.</li>\
-        <li><b>Ongoing</b>: Have Open and Queue Date, but not Close Date.</li>\
-        <li><b>Reception Control</b>: Have Open Date, but not Queue or Close Dates.</li>\
-        <li><b>Needs Review</b>: May have Open and Queue Dates, but not Close Date.</li>\
-        </ul>\
-        </div>\
-      </div>'
-    )
-  }
-});
-/*
-The Project status/Dates relationships are as follows: \
-  <b>Open</b>: Have Open Date.\
-  <b>Closed</b>: Have Close Date. May have Open and Queue dates.\
-  <b>Aborted</b>: May have Close Date, but not Open or Queue Dates.\
-  <b>Pending</b>: Do not have Open, Queue or Close Dates.\
-  <b>Ongoing</b>: Have Open and Queue Date, but not Close Date.\
-  <b>Reception Control</b>: Have Open Date, but not Queue or Close Dates.\
-  <b>Needs Review</b>: May have Open and Queue Dates, but not Close Date.\ */
+     $('#displayInfo').slideToggle();
+  });
+
+  $('#displayInfo').find('span[type="button"]').click(function(){
+     $('#displayInfo').slideToggle();
+  });
+
+  // Load the presets first (to get the table headers)
   $.when(load_presets()).done(function(){
     // Show the page
     $('#loading_spinner').hide();
@@ -236,13 +205,12 @@ function load_undefined_columns(cols) {
     $.each(cols, function(col_id, column) {
       $("#undefined_columns").append('<div class="checkbox">'+
           '<label>'+
-            '<input type="checkbox" class="filterCheckbox" data-columngroup="UNDEFINED_COLUMNS" data-displayname="'+column+'" name="'+column+'" id="undefined-columns-'+column+'">'+
+            '<input type="checkbox" class="filterCheckbox" data-columngroup="UNDEFINED_COLUMNS" data-displayname="'+column+'" name="'+column+'" id="allFields-undefined-columns-'+column+'">'+
             column+
           '</label>'+
         '</div>');
     });
 };
-
 
 // Initialize sorting and searching javascript plugin
 function init_listjs(no_items, columns) {
