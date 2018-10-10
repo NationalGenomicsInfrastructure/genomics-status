@@ -60,12 +60,12 @@ Description: Shows a table with all flow cells.
                     {% end %}
                 </td>
                 <td class="project" class="text-center">
-                     {% if 'lane_info' in flowcells[onefc] > 0 %}
-                         {% for onelane in flowcells[onefc]['lane_info'] %}
+                     {% if 'lane_info' in flowcells[onefc] %}
+                         {% for lane_id, lane in flowcells[onefc]['lane_info'].items() %}
                              <samp style="max-width:50px;">
-                             {% for oneproj in flowcells[onefc]['lane_info'][onelane]['project_name'] %}
-                                 <a href="/project/{{ flowcells[onefc]['lane_info'][onelane]['project_id'][flowcells[onefc]['lane_info'][onelane]['project_name'].index(oneproj)] }}">{{ oneproj }}</a>
-                                 {% if flowcells[onefc]['lane_info'][onelane]['project_name'].index(oneproj) < len(flowcells[onefc]['lane_info'][onelane]['project_name'])-1 %}
+                             {% for i, proj_name in enumerate(lane['project_name']) %}
+                                 <a href="/project/{{ lane['project_id'][i] }}">{{ proj_name }}</a>
+                                 {% if i < len(lane['project_name'])-1 %}
                                      {{ ";" }}
                                  {% end %}
                              {% end %}
@@ -75,11 +75,11 @@ Description: Shows a table with all flow cells.
                 </td>
                 <td class="pf_clusters" class="text-center">
                      {% if 'lane_info' in flowcells[onefc] > 0 %}
-                         {% for onelane in flowcells[onefc]['lane_info'] %}
-                             {% if flowcells[onefc]['lane_info'][onelane].get('pf_clusters') %}
-                                 <samp style="max-width:50px;">{{ int(flowcells[onefc]['lane_info'][onelane].get('pf_clusters').replace(',',''))/1000000 }}</samp>
+                         {% for lane_id, lane in flowcells[onefc]['lane_info'].items() %}
+                             {% if lane.get('pf_clusters') %}
+                                 <samp style="max-width:50px;">{{ int(lane.get('pf_clusters').replace(',',''))/1000000 }}</samp>
                                  {% set threshold = thresholds.get(flowcells[onefc].get('run_mode', ''), 0) %}
-                                 {% if int(flowcells[onefc]['lane_info'][onelane].get('pf_clusters').replace(',',''))/1000000 >= threshold %}
+                                 {% if int(lane.get('pf_clusters').replace(',',''))/1000000 >= threshold %}
                                      <span class="glyphicon glyphicon-ok-sign" style="color:green"></span><br>
                                  {% else %}
                                      <span class="glyphicon glyphicon-warning-sign" style="color:orange"></span><br>
