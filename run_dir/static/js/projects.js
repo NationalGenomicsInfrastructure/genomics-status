@@ -7,7 +7,13 @@ Powers /projects/ - template is run_dir/design/projects.html
 // On page load
 $(function(){
 
-  $('#displayInfo').hide();
+  $('#pageInfo').on('click', function(){
+     $('#displayPageInfo').slideToggle();
+  });
+
+  $('#displayPageInfo').find('span[type="button"]').click(function(){
+     $('#displayPageInfo').slideToggle();
+  });
 
   $('#filterInfo').on('click', function(){
      $('#displayInfo').slideToggle();
