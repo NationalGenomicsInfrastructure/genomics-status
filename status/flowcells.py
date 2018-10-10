@@ -46,7 +46,7 @@ class FlowcellsHandler(SafeHandler):
                 row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'].split()[0], "%m/%d/%Y").strftime("%Y-%m-%d")
             temp_flowcells[row.key] = row.value
 
-        return OrderedDict(sorted(temp_flowcells.items()))
+        return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
 
     def get(self):
