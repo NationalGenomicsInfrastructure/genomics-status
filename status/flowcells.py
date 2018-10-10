@@ -12,6 +12,19 @@ from collections import OrderedDict
 from status.util import SafeHandler
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
+thresholds = {
+    'HiSeq X': 320,
+    'RapidHighOutput': 188,
+    'HighOutput': 143,
+    'RapidRun': 114,
+    'MiSeq Version3': 18,
+    'MiSeq Version2': 10,
+    'NovaSeq SP': 325,
+    'NovaSeq S1': 650,
+    'NovaSeq S2': 1650,
+    'NovaSeq S4': 4000,
+}
+
 class FlowcellsHandler(SafeHandler):
     """ Serves a page which lists all flowcells with some brief info.
     """
@@ -28,18 +41,18 @@ class FlowcellsHandler(SafeHandler):
         for row in xfc_view:
             try:
                 row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'], "%y%m%d").strftime("%Y-%m-%d")
-            
+
             except ValueError:
                 row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'].split()[0], "%m/%d/%Y").strftime("%Y-%m-%d")
             temp_flowcells[row.key] = row.value
 
-        return OrderedDict(sorted(temp_flowcells.items()))
+        return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
 
     def get(self):
         t = self.application.loader.load("flowcells.html")
         fcs=self.list_flowcells()
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(), flowcells=fcs))
+        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user_name(), flowcells=fcs))
 
 
 class FlowcellHandler(SafeHandler):
