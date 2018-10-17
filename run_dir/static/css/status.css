@@ -995,3 +995,83 @@ div.responsible-filters div.form-group {
 .button-edit-bioinfo-responsible, .button-save-bioinfo-responsible, .button-reset-bioinfo-responsible{
     cursor: pointer;
 }
+
+/* Collapse panel */
+.gray {
+    color: gray;
+    font-size: 20px;
+}
+
+div.setOverflow {
+    width: 100%;
+    height: 254px;
+    overflow: scroll;
+    -webkit-overflow-scrolling: touch;
+    overflow-y: scroll;
+}
+
+.project_page_border_style {
+  border: 1px solid hsl(120, 0%, 85%);
+  padding: 15px;
+  border-radius: 15px;
+  margin: 5px;
+}
+.project_page_panels_border_style {
+  border: 1px solid hsl(120, 0%, 85%);
+  padding: 15px;
+  border-radius: 15px;
+  margin-right: 2px;
+  margin-left: 2px;
+}
+.panel-heading.row {
+  margin: 0
+}
+.space-left {
+    margin-left: 5px;
+}
+.wrapStyle {
+    white-space: normal;
+}
+.container .flex {
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-error-msg {
+  font-size: 12px;
+  margin-right: 12px;
+  color: red;
+}
+.modal-success-msg {
+  font-size: 12px;
+  margin-right: 12px;
+  color: green;
+}
+.panel-title {
+  font-size: 2rem;
+}
+.panel-title a:hover, .panel-title a:focus, .panel-title a:active {
+  text-decoration: none;
+}
+.panel-title a .glyphicon {
+  transition:all 0.3s;
+  top: 5px;
+}
+.panel-title a:hover .glyphicon-triangle-bottom {
+  transform: translateY(10%);
+}
+.panel-title a:hover .glyphicon-triangle-top {
+  transform: translateY(-10%);
+}
+#presetButtons {
+  margin-left: 3rem;
+}
+.row-eq-height {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+}
+.close{
+  margin-top:-10px;
+}

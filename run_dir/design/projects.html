@@ -2,42 +2,303 @@
 
 <!--
 Template file: projects.html
-URL: /projects/[optional filter]
-Title: Summary of all Projects
-Description: Shows a table with all projects.
+URL: /project
+Title: Projects Presets Selection page
+Description: Shows all presets configured for user and enables their selection.
 -->
+
 
 {% block stuff %}
 
-{% if projects == 'all' %}
-  <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">All Projects</span> <small>All projects found in statusdb</small></h1>
-{% elif projects == 'aborted' %}
-  <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Aborted Projects</span> <small>All projects with an aborted date</small></h1>
-{% elif projects == 'pending' %}
-  <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Pending Projects</span> <small>All projects with an order date and without open date</small></h1>
-{% elif projects == 'open' %}
-  <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Open Projects</span> <small>All projects without an explicit close date and loaded from the Lims</small></h1>
-{% elif projects == 'pending_review' %}
-  <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Needs Review</span> <small>All projects with an open review in the lims on any step</small></h1>
-{% elif projects == 'reception_control' %}
-  <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Reception Control Projects</span> <small>All projects with open date but without queue date</small></h1>
-{% elif projects == 'ongoing' %}
-  <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Ongoing Projects</span> <small>All projects with a queue date but without a close date</small></h1>
-{% elif projects == 'closed' %}
-  <h1 id="{{ projects }}" class="projects_page_heading"><span id="page_title">Closed Projects</span> <small>All projects with a close date. Or old closed projects from Google Docs</small></h1>
-{% end %}
-
-
-<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading projects table..</div>
-<div id="page_content" style="display:none;">
-
-<form id="Search-form" class="form-inline marginBottom text-right">
-  <button class="btn btn-sm btn-default" id="compare_projects_meta_btn">Compare meta (visible projects)</button>
-  <div class="btn-group btn-group-sm" id="default_preset_buttons">
-    <button id="resetProjectCols" data-action="filterReset" type="button" class="search-action btn btn-default">Default</button>
+<h1 id="{{ projects }}" class="projects_page_heading">
+  <span id="page_title">Projects</span>
+  <button type="button" class="btn btn-xs btn-default" id="pageInfo">
+  <font class="glyphicon glyphicon-question-sign" size="-1"></font></button>
+  <button type="submit" class="btn pull-right btn-lg space-left btn-primary" id="loadTablebtn">Load Table</button>
+</h1>
+<div id='displayPageInfo' style="display:none;" class="alert alert-info" role="alert">
+  <span type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></span>
+  <div class="text-left">
+    The Projects page offers you a single Preset bar with default presets and the option of making your own presets to help you view the projects you want.  The presets can be customised through the ‘Customise’ dropdown where you can choose to change the following
+    <ul>
+      <li>Project status</li>
+      <li>Project type (Application/Production)</li>
+      <li>Project dates (Open date, Queue date, Close date)</li>
+      <li>Column fields to be displayed in the result table.</li>
+    </ul>
+    <p>
+    The new settings chosen can be named and saved as a new preset using the ‘Save as Preset’ button whereupon it will appear in the 'User defined Presets' dropdown in the Presets bar. Once a preset is chosen on the Presets bar, clicking the ‘Load Table button will display the results table. If you feel that the preset you just created needs to be customised a bit more, you can overwrite the old settings with the new with the ‘Save as Preset’ button or even delete the preset if you feel it has served its purpose.
+    </p>
+    <p>
+    If you have already created your custom preset and want it to be just loaded every time you load the page, the ‘Load Table’ option in the ‘Settings’ menu is your answer. Setting this option to ‘On’ will load the result table with the preset chosen in the adjacent ‘Load Preset’ setting. If no preset was chosen, ‘Lab Ongoing’ will be used as the default preset.
+    </p>
   </div>
-  <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#projectFieldsModal">Filter Columns</button>
+</div>
+<form id="Search-form" class="horizontal">
+
+<!---->
+  <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="headingOne">
+      <div id="loading_spinner" style="text-align:center;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading presets...</div>
+  	  <button class="btn btn-default pull-right" data-toggle="modal" type="button" data-target="#settingsModal">
+          <i class="glyphicon glyphicon-cog"></i> Settings
+        </button>
+        <h6 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            Customise <i class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></i>
+          </a>
+  		    <div class="btn-group mr-2" data-toggle="buttons" role="group" id="presetButtons">
+  		        <div class="btn-group" id="default_preset_buttons"></div>
+              <div id="user_presets_dropdown" class="btn-group changingDropdown rBtngp2"></div>
+  		    </div>
+        </h6>
+      </div>
+      <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+        <div class="panel-body">
+          <div class="form-group row row-eq-height">
+            <div class="col-md-6 panel-group">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h4 class="panel-title">
+                    Filters
+                  </h4>
+                </div>
+                <div class="panel-body">
+                  <div class="form-group">
+                    <div class="text-center">
+                    <label for="statusbtnBar1" class="control-label">Choose Status <button type="button" class="btn btn-xs btn-default" id="filterInfo">
+                      <span class="glyphicon glyphicon-info-sign"></span></button></label>
+                      <div id='displayInfo' style="display:none;" class="alert alert-info" role="alert">
+                        <span type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></span>
+                        <div class="text-left">
+                            The Project status/Dates relationships are as follows:
+                            <ul>
+                              <li><b>Pending</b>: Do not have Open, Queue or Close Dates.</li>
+                              <li><b>Reception Control</b>: Have Open Date, but not Queue or Close Dates.</li>
+                              <li><b>Needs Review</b>: May have Open and Queue Dates, but not Close Date.</li>
+                              <li><b>Ongoing</b>: Have Open and Queue Date, but not Close Date.</li>
+                              <li><b>Open</b>: Have Open Date.</li>
+                              <li><b>Closed</b>: Have Close Date. May have Open and Queue dates.</li>
+                              <li><b>Aborted</b>: Have Aborted date.</li>
+                            </ul>
+                        </div>
+                      </div>
+                    <div class="btn-toolbar" role="toolbar" id="statusbtnBar1" aria-label="..." style="margin-right: -3px;">
+                      <div class="btn-group" data-toggle="buttons" role="group" aria-label="..." id="statusbtnBar1All">
+                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptAll" data-projects="all" autocomplete="off"><i class="glyphicon glyphicon-globe"></i> All</label>
+                      </div>
+                      <div class="btn-group" data-toggle="buttons" role="group" aria-label="..." id="statusbtnBar1Granular">
+                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptPending" data-projects="pending" autocomplete="off"><i class="glyphicon glyphicon-time"></i> Pending</label>
+                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptRecCtrl" data-projects="reception_control" autocomplete="off"><i class="glyphicon glyphicon-tags"></i> Rec Ctrl</label>
+                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptNeedReview" data-projects="review" autocomplete="off"><i class="glyphicon glyphicon-exclamation-sign"></i> Need Review</label>
+                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptOngoing" data-projects="ongoing" autocomplete="off"><i class="glyphicon glyphicon-road"></i> Ongoing</label>
+                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptOpen" data-projects="open" autocomplete="off"><i class="glyphicon glyphicon-folder-open"></i>&nbsp; Open</label>
+                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptClosed" data-projects="closed" autocomplete="off"><i class="glyphicon glyphicon-folder-close"></i> Closed</label>
+                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptAborted" data-projects="aborted" autocomplete="off"><i class="glyphicon glyphicon-thumbs-down"></i> Aborted</label>
+                      </div>
+                      <input class="hidden" type="text" id="formStatus">
+                    </div>
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label for="formType" class="col-sm-1">Type</label>
+                    <div id="formTypedropdown" class="col-sm-4 col-form-label changingDropdown">
+                      <button class="btn btn-default dropdown-toggle" type="button" id="formType" data-toggle="dropdown">
+                        <i class="glyphicon glyphicon-tag"></i> All <span class="caret"></span>
+                      </button>
+                      <ul id="formTypeul" class="dropdown-menu" role="menu" aria-labelledby="formTypeul">
+                        <li><a class="clickDropdownGetValue" href="#">All</a></li>
+                        <li><a class="clickDropdownGetValue" href="#">Production</a></li>
+                        <li><a class="clickDropdownGetValue" href="#">Application</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label for="OpenDate" class="col-sm-1 col-form-label">Open Date</label>
+                    <div id="OpenDate" class="col-md-4">
+                      <div class='input-group input-group-sm date' id='datepick1_start'>
+                        <input id="inp_date_1" type='text' class="form-control" /><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                      </div>
+                    </div>
+                    <div class="col-md-1"><p class="form-control-static" align="center">to</p></div>
+                    <div id="OpenDate2" class="col-md-4">
+                      <div class='input-group input-group-sm date' id='datepick1_end'>
+                        <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label for="QueueDate" class="col-sm-1 col-form-label">Queue Date</label>
+                    <div id="QueueDate" class="col-md-4">
+                      <div class='input-group input-group-sm date' id='datepick2_start'>
+                        <input id="inp_date_3" type='text' class="form-control col-md-3" /><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                      </div>
+                    </div>
+                    <div class="col-md-1"><p class="form-control-static" align="center">to</p></div>
+                    <div id="QueueDate2" class="col-md-4">
+                      <div class='input-group input-group-sm date' id='datepick2_end'>
+                        <input id="inp_date_4" type='text' class="form-control col-md-3"/><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label for="CloseDate" class="col-sm-1 col-form-label">Close Date</label>
+                    <div id="CloseDate" class="col-md-4">
+                      <div class='input-group input-group-sm date' id='datepick3_start' disabled>
+                        <input id="inp_date_5" type='text' class="form-control col-md-3" /><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                      </div>
+                    </div>
+                    <div class="col-md-1"><p class="form-control-static" align="center">to</p></div>
+                    <div id="CloseDate2" class="col-md-4">
+                      <div class='input-group input-group-sm date' id='datepick3_end' disabled>
+                        <input id="inp_date_6" type='text' class="form-control col-md-3"/><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 panel-group">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h4 class="panel-title">
+                    Fields
+                  </h4>
+                </div>
+                <div id="collapse2" class="panel-collapse collapse in">
+                  <div class="panel-body">
+                    <div class="form-group">
+                      <div class="col-sm-12">
+                        <input type="text" class="form-control form-control-sm" id="formSearchfields" placeholder="Search">
+                        <div id="allFields" class="setOverflow">
+                          <div class="row">
+                            <div class="col-sm-11 col-offset-sm-1">
+                            <label id="uncheckAll" style="margin-top:10px;">
+                              <input type="checkbox" > Check/Uncheck Visible
+                            </label>
+                            </div>
+                          </div>
+                          <div class="row" id="allColFields">
+                            <div class="col-lg-6 col-md-12 col-sm-12 col-xs-12" >
+                            <div class="colHeader" id="basic_columns">
+                              <h4 class="search-action" data-action="filterHeader" id="basic">Basic <input class="headingCheckbox" type="checkbox"></h4>
+                              {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
+                              <div class="checkbox">
+                                <label>
+                                  <input type="checkbox" class="filterCheckbox" data-columngroup="BASIC_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-basic-columns-{{col_name.replace("(", "").replace(")", "")}}">
+                                  {{col_display_name}}
+                                </label>
+                              </div>
+                              {% end %}
+                            </div>
+                            <div class="colHeader" id="setup_project_columns">
+                              <h4 class="search-action" data-action="filterHeader" id="setup-project">Setup Project <input class="headingCheckbox" type="checkbox"></h4>
+                              {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
+                              <div class="checkbox">
+                                <label>
+                                  <input type="checkbox" class="filterCheckbox" data-columngroup="SETUP_PROJECT_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-setup-project-columns-{{col_name.replace("(", "").replace(")", "")}}">
+                                  {{col_display_name}}
+                                </label>
+                              </div>
+                              {% end %}
+                            </div>
+                            <div class="colHeader" id="bioinfo_columns">
+                              <h4 class="search-action" data-action="filterHeader" id="bioinfo">Bioinformatics <input class="headingCheckbox" type="checkbox"></h4>
+                              {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
+                              <div class="checkbox">
+                                <label>
+                                  <input type="checkbox" class="filterCheckbox" data-columngroup="BIOINFO_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-bioinfo-columns-{{col_name.replace("(", "").replace(")", "")}}">
+                                  {{col_display_name}}
+                                </label>
+                              </div>
+                              {% end %}
+                            </div>
+                            <div class="colHeader" id="sequencing_columns">
+                              <h4 class="search-action" data-action="filterHeader" id="sequencing">Sequencing <input class="headingCheckbox" type="checkbox"></h4>
+                              {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
+                              <div class="checkbox">
+                                <label>
+                                  <input type="checkbox" class="filterCheckbox" data-columngroup="SEQUENCING_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-sequencing-columns-{{col_name.replace("(", "").replace(")", "")}}">
+                                  {{col_display_name}}
+                                </label>
+                              </div>
+                              {% end %}
+                            </div>
+                            <div class="colHeader" id="accreditation_columns">
+                              <h4 class="search-action" data-action="filterHeader" id="accreditation">Accreditation <input class="headingCheckbox" type="checkbox"></h4>
+                              {% for col_display_name, col_name in columns['ACCREDITATION_COLUMNS'].iteritems() %}
+                              <div class="checkbox">
+                                <label>
+                                  <input type="checkbox" class="filterCheckbox" data-columngroup="ACCREDITATION_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-accreditation-columns-{{col_name.replace("(", "").replace(")", "")}}">
+                                  {{col_display_name}}
+                                </label>
+                              </div>
+                              {% end %}
+                            </div>
+                          </div>
+                          <div class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
+                            <div class="colHeader" id="details_columns">
+                              <h4 class="search-action" data-action="filterHeader" id="details">Project Details <input class="headingCheckbox" type="checkbox"></h4>
+                              {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
+                              <div class="checkbox">
+                                <label>
+                                  <input type="checkbox" class="filterCheckbox" data-columngroup="DETAILS_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-details-columns-{{col_name.replace("(", "").replace(")", "")}}">
+                                  {{col_display_name}}
+                                </label>
+                              </div>
+                              {% end %}
+                            </div>
+                            <div class="colHeader" id="library_prep_columns">
+                              <h4 class="search-action" data-action="filterHeader" id="library-prep">Library Prep <input class="headingCheckbox" type="checkbox"></h4>
+                              {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
+                              <div class="checkbox">
+                                <label>
+                                  <input type="checkbox" class="filterCheckbox" data-columngroup="LIBRARY_PREP_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-library-prep-columns-{{col_name.replace("(", "").replace(")", "")}}">
+                                  {{col_display_name}}
+                                </label>
+                              </div>
+                              {% end %}
+                            </div>
+
+                            <div class="colHeader" id="extra_columns">
+                              <h4 class="search-action" data-action="filterHeader" id="extra">Extra <input class="headingCheckbox" type="checkbox"></h4>
+                              {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
+                              <div class="checkbox">
+                                <label>
+                                  <input type="checkbox" class="filterCheckbox" data-columngroup="EXTRA_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-extra-columns-{{col_name.replace("(", "").replace(")", "")}}">
+                                  {{col_display_name}}
+                                </label>
+                              </div>
+                              {% end %}
+                            </div>
+
+                            <div class="colHeader" id="undefined_columns">
+                              <h4 class="search-action" data-action="filterHeader" id="undefined">Undefined <input class="headingCheckbox" type="checkbox"></h4>
+                              <div id="undefined_columns"></div>
+                            </div>
+                          </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group row">
+            <div class="col text-center">
+                <button type="button" class="btn btn-primary" id="savePresetBtn" data-toggle="modal" data-target="#projectFieldsModal">Save as Preset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+<!---->
 </form>
+
+
+<div id="page_content" style="display:none;">
 
 <div id="project-list">
   <table class="table table-striped table-bordered sortable" id="project_table">
@@ -48,146 +309,127 @@ Description: Shows a table with all projects.
     <tbody class="list" id="project_table_body">
     </tbody>
   </table>
-
 </div>
 
 </div> <!-- #page_content -->
 
 
 
-<!-- SAMPLE FIELD MODAL -->
-<div id="projectFieldsModal" class="modal fade">
-  <div class="modal-dialog modal-lg">
+<!-- Settings FIELD MODAL -->
+<div id="settingsModal" class="modal fade">
+  <div class="modal-dialog modal-md">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h3>Filter Project Table Columns</h3>
+        <h4>Projects page Settings</h4>
       </div>
       <div class="modal-body">
         <form id="Filter" class="form form-search" role="form">
           <div class="row">
-            <div class="col-sm-8">
-            <p>Choose which columns you would like to see in the Projects table.
-              Click a heading to select / deselect all checkboxes in that group.</p>
-            </div>
-            <div class="col-sm-4 text-right">
-              <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
-              <button class="btn btn-default search-action" data-dismiss="modal" data-action="filterReset">Reset</button>
-              <button class="btn btn-primary search-action" data-dismiss="modal" data-action="filterApply" type="submit">Apply</button>
+            <div class="col-sm-11">
+            <p><b>Default on-load settings for the Projects page.</b></p>
             </div>
           </div>
-          <div class="row">
-            <div class="col-sm-4" id="basic-columns">
-              <h4 class="search-action" data-action="filterHeader">Basic <input class="headingCheckbox" type="checkbox"></h4>
-              {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="basic-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="basic-columns-{{col_name}}">
-                  {{col_display_name}}
-                </label>
+          <div class="project_page_border_style">
+            <div class="form-group row">
+              <div class="form-group col-sm-6 mx-auto">
+                <div class="text-center">
+                <label for="onLoadRadio" class="control-label">Load Table</label>
+                <div id="onLoadRadio">
+                  <div class="btn-group" data-toggle="buttons">
+                    <label class="btn btn-default btn-sm rBtngp1" id="onLoadTableOn">
+                      <input type="radio" name="onLoadTable" autocomplete="off"> On
+                    </label>
+                    <label class="btn btn-default btn-sm rBtngp1" id="onLoadTableOff">
+                      <input type="radio" name="onLoadTable" autocomplete="off"> Off
+                    </label>
+                  </div>
+                </div>
+                </div>
               </div>
-              {% end %}
-            </div>
-
-            <div class="col-sm-4" id="details-columns">
-              <h4 class="search-action" data-action="filterHeader">Project Details <input class="headingCheckbox" type="checkbox"></h4>
-              {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="details-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="details-columns-{{col_name}}">
-                  {{col_display_name}}
-                </label>
+              <div class="form-group col-sm-6 mx-auto">
+                <div class="text-center">
+                  <label for="all_presets_dropdown" class="control-label">Load Preset</label>
+                  <div id="all_presets_dropdown" class="changingDropdown"></div>
+                </div>
               </div>
-              {% end %}
             </div>
-            <div class="col-sm-4" id="bioinfo-columns">
-              <h4 class="search-action" data-action="filterHeader">Bioinformatics <input class="headingCheckbox" type="checkbox"></h4>
-              {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="bioinfo-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="bioinfo-columns-{{col_name}}">
-                  {{col_display_name}}
-                </label>
+            <div class="form-group row">
+              <div class="form-group col-sm-6 mx-auto">
+                <div class="text-center">
+                <p style="margin-top:-10px;">Load result table on Project page load</p>
+                </div>
               </div>
-              {% end %}
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-sm-4" id="sequencing-columns">
-              <h4 class="search-action" data-action="filterHeader">Sequencing <input class="headingCheckbox" type="checkbox"></h4>
-              {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="sequencing-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="sequencing-columns-{{col_name}}">
-                  {{col_display_name}}
-                </label>
+              <div class="form-group col-sm-6 mx-auto">
+                <div class="text-center">
+                <p style="margin-top:-10px;"> Project page loaded with above selected preset</p>
+                </div>
               </div>
-              {% end %}
             </div>
-
-            <div class="col-sm-4" id="library-prep-columns">
-              <h4 class="search-action" data-action="filterHeader">Library Prep <input class="headingCheckbox" type="checkbox"></h4>
-              {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="library-prep-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="library-prep-columns-{{col_name}}">
-                  {{col_display_name}}
-                </label>
-              </div>
-              {% end %}
-            </div>
-
-            <div class="col-sm-4" id="setup-project-columns">
-              <h4 class="search-action" data-action="filterHeader">Setup Project <input class="headingCheckbox" type="checkbox"></h4>
-              {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="setup-project-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="setup-project-columns-{{col_name}}">
-                  {{col_display_name}}
-                </label>
-              </div>
-              {% end %}
-            </div>
-
-          </div>
-          <div class="row">
-
-            <div class="col-sm-4" id="extra-columns">
-              <h4 class="search-action" data-action="filterHeader">Extra <input class="headingCheckbox" type="checkbox"></h4>
-              {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="extra-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="extra-columns-{{col_name}}">
-                  {{col_display_name}}
-                </label>
-              </div>
-              {% end %}
-            </div>
-
-            <div class="col-sm-4" id="accreditation-columns">
-              <h4 class="search-action" data-action="filterHeader">Accreditation <input class="headingCheckbox" type="checkbox"></h4>
-              {% for col_display_name, col_name in columns['ACCREDITATION_COLUMNS'].iteritems() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="accreditation-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="accreditation-columns-{{col_name}}">
-                  {{col_display_name}}
-                </label>
-              </div>
-              {% end %}
-            </div>
-
-            <div class="col-sm-4" id="undefined-columns">
-              <h4 class="search-action" data-action="filterHeader">Undefined <input class="headingCheckbox" type="checkbox"></h4>
-              <div id="undefined_columns"></div>
-            </div>
-
           </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
-        <button class="btn btn-default search-action" data-dismiss="modal" data-action="filterReset">Reset</button>
-        <button class="btn btn-primary search-action" data-dismiss="modal" data-action="filterApply" type="submit">Apply</button>
+        <button class="btn btn-default btn-sm" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn btn-primary btn-sm search-action" data-action="filterApply" type="button" id="applySettingsModal">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="projectFieldsModal" class="modal fade">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4>Save Preset</h4>
+      </div>
+      <div class="modal-body">
+        <form id="SavePreset" class="form form-search" role="form">
+          <div class=" form-horizontal">
+            <div class="form-group row">
+              <div class="col">
+                <label for="presetName" class="col-xs-2">Name</label>
+                <div id="presetName" class="col-xs-10">
+                  <input class="form-control" id="formPresetName" placeholder="Name..." type="text">
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button id="submitPresetNameBtn" class="btn btn-sm btn-primary search-action" type="button">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="deleteModal" class="modal fade">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4>Delete Preset</h4>
+      </div>
+      <div class="modal-body">
+        <form id="DeletePreset" class="form form-search" role="form">
+          <div class=" form-horizontal">
+            <p>Are you sure you want to delete this preset?</p>
+            <div class="form-group row">
+              <div class="col">
+                <div id="deletePresetName" class="col-xs-10">
+                  <input class="form-control" id="formDeletePresetName" placeholder="" disabled type="text">
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn btn-sm btn-primary" id="deletePresetBtnModal" type="button">Delete</button>
       </div>
     </div>
   </div>
@@ -225,7 +467,8 @@ Description: Shows a table with all projects.
   </div>
 </div>
 <script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/js/bootstrap-datepicker.min.js"></script>
 <script src="/static/js/jquery.dataTables.min.js"></script>
 <script src="/static/js/jQDateRangeSlider-min.js"></script>
-<script src="/static/js/projects.js?v={{ gs_globals['git_commit'] }}" id="projects-js" data-projects="{{projects}}"></script>
+<script src="/static/js/projects.js?v={{ gs_globals['git_commit'] }}" id="projects-js"></script>
 {% end %}

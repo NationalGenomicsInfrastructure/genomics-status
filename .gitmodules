@@ -1,3 +1,0 @@
-[submodule "run_dir/static/nvd3"]
-	path = run_dir/static/nvd3
-	url = https://github.com/novus/nvd3.git

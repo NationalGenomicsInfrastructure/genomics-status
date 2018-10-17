@@ -64,6 +64,13 @@ class BaseHandler(tornado.web.RequestHandler):
                 return user
         return user
 
+    def get_current_user_email(self):
+        # Disables authentication if test mode to ease integration testing
+        if self.application.test_mode:
+            return 'Testing User!'
+        else:
+            return self.get_secure_cookie("email")
+
     def write_error(self, status_code, **kwargs):
         """ Overwrites write_error method to have custom error pages.
 
