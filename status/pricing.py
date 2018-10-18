@@ -20,7 +20,7 @@ class PricingBaseHandler(SafeHandler):
                 400, reason='Bad request, version is not an integer')
         return int_version
 
-    def _validate_object_id(self, id, object_type):
+    def _validate_object_id(self, id):
         try:
             int_key = int(id)
         except ValueError:
