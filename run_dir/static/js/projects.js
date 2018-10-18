@@ -427,7 +427,9 @@ function read_current_filtering(){
   var columns = new Array();
   var preset;
   if($("#presetButtons .active").prop("id")=="inputPreset"){
+    $('#formPresetName').val('');
     preset=$.trim($("#presetButtons .active").text());
+    $('#formPresetName').val(preset);
     $('#formDeletePresetName').val(preset);
     if (preset!='User defined Presets') {
         appendDeleteBtn(preset);
@@ -435,6 +437,9 @@ function read_current_filtering(){
     select_from_preset("users_presets_dropdown", preset);
   }
   else{
+    if($('#deletePresetBtn').closest("html").length>0)
+      $('#deletePresetBtn').remove();
+    $('#formPresetName').val('');
     preset=$("#presetButtons .active").children('input').data('value');
     $('#formDeletePresetName').val('');
     select_from_preset("default_preset_buttons", preset);
@@ -786,6 +791,29 @@ $("#uncheckAll").change(function(e){
         }
       }
   })
+})
+
+$("#displaySelected").change(function(e){
+  var toBeDisplayed=$("#allColFields input[class='filterCheckbox']:checked ");
+  $("#allColFields input[class='filterCheckbox']").each(function(i, elem){
+    if(jQuery.inArray(elem, toBeDisplayed) == -1){
+      if($("#displaySelected").find("input").prop('checked')){
+        $(elem).closest('label').hide();
+      }
+      else{
+        $(elem).closest('label').show();
+      }
+    }
+  })
+  if($("#displaySelected").find("input").prop('checked')){
+    $('.colHeader').find('h4').hide();
+    $.each(toBeDisplayed, function(i, elem) {
+      $(elem).closest('.colHeader').find('h4').show();
+    })
+  }
+  else{
+    $('.colHeader').find('h4').show();
+  }
 })
 
 $(document).keypress(function(e) {
