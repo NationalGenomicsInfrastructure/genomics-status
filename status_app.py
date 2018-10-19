@@ -28,6 +28,8 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
+from status.pricing import PricingComponentsDataHandler, PricingProductsDataHandler, \
+    PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -129,6 +131,12 @@ class Application(tornado.web.Application):
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
+            ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
+            ("/api/v1/pricing_components", PricingComponentsDataHandler),
+            ("/api/v1/pricing_components/([^/]*)$", PricingComponentsDataHandler),
+            ("/api/v1/pricing_exchange_rates", PricingExchangeRatesDataHandler),
+            ("/api/v1/pricing_products", PricingProductsDataHandler),
+            ("/api/v1/pricing_products/([^/]*)$", PricingProductsDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
@@ -220,6 +228,9 @@ class Application(tornado.web.Application):
             self.gs_users_db = couch["gs_users"]
             self.instruments_db= couch["instruments"]
             self.instrument_logs_db = couch["instrument_logs"]
+            self.pricing_components_db = couch["pricing_components"]
+            self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
+            self.pricing_products_db = couch["pricing_products"]
             self.projects_db = couch["projects"]
             self.samples_db = couch["samples"]
             self.server_status_db = couch['server_status']
