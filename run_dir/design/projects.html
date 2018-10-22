@@ -12,37 +12,14 @@ Description: Shows all presets configured for user and enables their selection.
 
 <h1 id="{{ projects }}" class="projects_page_heading">
   <span id="page_title">Projects</span>
-  <button type="button" class="btn btn-xs btn-default" id="pageInfo">
-  <font class="glyphicon glyphicon-question-sign" size="-1"></font></button>
   <button type="submit" class="btn pull-right btn-lg space-left btn-primary" id="loadTablebtn">Load Table</button>
 </h1>
-<div id='displayPageInfo' style="display:none;" class="alert alert-info" role="alert">
-  <span type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></span>
-  <div class="text-left">
-    The Projects page offers you a single Preset bar with default presets and the option of making your own presets to help you view the projects you want.  The presets can be customised through the ‘Customise’ dropdown where you can choose to change the following
-    <ul>
-      <li>Project status</li>
-      <li>Project type (Application/Production)</li>
-      <li>Project dates (Open date, Queue date, Close date)</li>
-      <li>Column fields to be displayed in the result table.</li>
-    </ul>
-    <p>
-    The new settings chosen can be named and saved as a new preset using the ‘Save as Preset’ button whereupon it will appear in the 'User defined Presets' dropdown in the Presets bar. Once a preset is chosen on the Presets bar, clicking the ‘Load Table button will display the results table. If you feel that the preset you just created needs to be customised a bit more, you can overwrite the old settings with the new with the ‘Save as Preset’ button or even delete the preset if you feel it has served its purpose.
-    </p>
-    <p>
-    If you have already created your custom preset and want it to be just loaded every time you load the page, the ‘Load Table’ option in the ‘Settings’ menu is your answer. Setting this option to ‘On’ will load the result table with the preset chosen in the adjacent ‘Load Preset’ setting. If no preset was chosen, ‘Lab Ongoing’ will be used as the default preset.
-    </p>
-  </div>
-</div>
 <form id="Search-form" class="horizontal">
 
 <!---->
   <div class="panel panel-default">
       <div class="panel-heading" role="tab" id="headingOne">
       <div id="loading_spinner" style="text-align:center;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading presets...</div>
-  	  <button class="btn btn-default pull-right" data-toggle="modal" type="button" data-target="#settingsModal">
-          <i class="glyphicon glyphicon-cog"></i> Settings
-        </button>
         <h6 class="panel-title">
           <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
             Customise <i class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></i>
@@ -51,6 +28,11 @@ Description: Shows all presets configured for user and enables their selection.
   		        <div class="btn-group" id="default_preset_buttons"></div>
               <div id="user_presets_dropdown" class="btn-group changingDropdown rBtngp2"></div>
   		    </div>
+          <button type="button" class="btn btn-default pull-right space-left" id="pageInfo">
+          <font class="glyphicon glyphicon-question-sign"></font></button>
+          <button class="btn btn-default pull-right" data-toggle="modal" type="button" data-target="#settingsModal">
+              <i class="glyphicon glyphicon-cog"></i> Settings
+            </button>
         </h6>
       </div>
       <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
@@ -172,9 +154,14 @@ Description: Shows all presets configured for user and enables their selection.
                         <input type="text" class="form-control form-control-sm" id="formSearchfields" placeholder="Search">
                         <div id="allFields" class="setOverflow">
                           <div class="row">
-                            <div class="col-sm-11 col-offset-sm-1">
+                            <div class="col-sm-4 col-offset-sm-1">
                             <label id="uncheckAll" style="margin-top:10px;">
-                              <input type="checkbox" > Check/Uncheck Visible
+                              <input type="checkbox" > Check/Uncheck All
+                            </label>
+                            </div>
+                            <div class="col-sm-6">
+                            <label id="displaySelected" style="margin-top:10px;">
+                              <input type="checkbox" > Only display selected
                             </label>
                             </div>
                           </div>
@@ -292,6 +279,24 @@ Description: Shows all presets configured for user and enables their selection.
             </div>
           </div>
         </div>
+      </div>
+    </div>
+    <div id='displayPageInfo' style="display:none;" class="alert alert-info" role="alert">
+      <span type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></span>
+      <div class="text-left">
+        The Projects page offers you a single Preset bar with default presets and the option of making your own presets to help you view the projects you want.  The presets can be customised through the ‘Customise’ dropdown where you can choose to change the following
+        <ul>
+          <li>Project status</li>
+          <li>Project type (Application/Production)</li>
+          <li>Project dates (Open date, Queue date, Close date)</li>
+          <li>Column fields to be displayed in the result table.</li>
+        </ul>
+        <p>
+        The new settings chosen can be named and saved as a new preset using the ‘Save as Preset’ button whereupon it will appear in the 'User defined Presets' dropdown in the Presets bar. Once a preset is chosen on the Presets bar, clicking the ‘Load Table button will display the results table. If you feel that the preset you just created needs to be customised a bit more, you can overwrite the old settings with the new with the ‘Save as Preset’ button or even delete the preset if you feel it has served its purpose.
+        </p>
+        <p>
+        If you have already created your custom preset and want it to be just loaded every time you load the page, the ‘Load Table’ option in the ‘Settings’ menu is your answer. Setting this option to ‘On’ will load the result table with the preset chosen in the adjacent ‘Load Preset’ setting. If no preset was chosen, ‘Lab Ongoing’ will be used as the default preset.
+        </p>
       </div>
     </div>
 <!---->
