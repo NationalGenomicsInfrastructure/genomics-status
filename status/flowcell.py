@@ -49,20 +49,26 @@ class FlowcellHandler(SafeHandler):
 
     def find_DB_entry(self, flowcell_id):
         #Returns Runid (key), contents (complex)
-        found = False
-        view = self.application.x_flowcells_db.view('info/summary2_full_id')
-        for entry in view:
-            if entry.key == flowcell_id:
-                found = True
-            #Check for short name
-            elif self.application.x_flowcells_db.get(entry.id)['name'] == flowcell_id:
-                found = True
+        view = self.application.x_flowcells_db.view('info/summary2_full_id', key=flowcell_id)
 
-            if found:
-                if 'Json_Stats' in self.application.x_flowcells_db.get(entry.id):
-                    #Same entry from summary2_stats
-                    return self.application.x_flowcells_db.view('info/summary2_stats')[entry.key].rows[0]
-                return entry
+        if view.rows:
+            return view.rows[0]
+
+        # No hit for a full name, check if the short name is found:
+        complete_flowcell_rows = self.application.x_flowcells_db.view(
+                                    'info/short_name_to_full_name',
+                                    key=flowcell_id
+                                ).rows
+
+        if complete_flowcell_rows:
+            complete_flowcell_id = complete_flowcell_rows[0].value
+            view = self.application.x_flowcells_db.view(
+                        'info/summary2_full_id',
+                        key=complete_flowcell_id,
+                        )
+
+            if view.rows:
+                return view.rows[0]
 
         return False
 
