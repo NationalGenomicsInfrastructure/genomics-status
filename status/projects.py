@@ -244,18 +244,18 @@ class ProjectsBaseDataHandler(SafeHandler):
                 closed_condition, queued_condition, open_condition, queued_proj = [False] * 4
 
                 if 'close_date' in p_info:
-                    closed_condition = p_info['close_date']> start_close_date and p_info['close_date'] < end_close_date
+                    closed_condition = p_info['close_date'] >= start_close_date and p_info['close_date'] <= end_close_date
 
                 if 'queued' in p_info['details']:
                     queued_proj = True
-                    queued_condition = p_info['details'].get('queued') > start_queue_date and p_info['details'].get('queued') < end_queue_date
+                    queued_condition = p_info['details'].get('queued') >= start_queue_date and p_info['details'].get('queued') <= end_queue_date
 
                 elif 'project_summary' in p_info and 'queued' in p_info['project_summary']:
                     queued_proj =True
-                    queued_condition = p_info['project_summary'].get('queued') > start_queue_date and p_info['project_summary'].get('queued') < end_queue_date
+                    queued_condition = p_info['project_summary'].get('queued') >= start_queue_date and p_info['project_summary'].get('queued') <= end_queue_date
 
                 if 'open_date' in p_info:
-                    open_condition = p_info['open_date'] > start_open_date and p_info['open_date'] < end_open_date
+                    open_condition = p_info['open_date'] >= start_open_date and p_info['open_date'] <= end_open_date
 
                 #Filtering projects
                 #aborted projects

@@ -769,7 +769,7 @@ function get_current_selection(source){
       }
     }
   }
-  $('#allFields').find('input:checked').each(function(e){
+  $('#allColFields').find("input[class='filterCheckbox']:checked").each(function(e){
     columns[$(this).data('displayname')]=[$(this).attr('name'),$(this).data('columngroup')];
   });
   return {
