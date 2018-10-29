@@ -44,6 +44,10 @@ class FlowcellsHandler(SafeHandler):
 
             except ValueError:
                 row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'].split()[0], "%m/%d/%Y").strftime("%Y-%m-%d")
+
+            # Lanes were previously in the wrong order
+            row.value['lane_info'] = OrderedDict(sorted(row.value['lane_info'].items()))
+
             temp_flowcells[row.key] = row.value
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
