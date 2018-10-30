@@ -95,6 +95,17 @@ $(function(){
       }
     })
   });
+
+  $(".source").sortable({
+      connectWith: ".source"
+    });
+
+  tHList="";
+  $('#allColFields').find("input[class='filterCheckbox']:checked").each(function(e){
+    tHList+='<li>'+$(this).prop('name')+'</li>';
+  });
+  $('#tHeaderListul').append(tHList);
+
 });
 // Load the Projects Table
 function load_table(status, type, columns, dates) {
@@ -292,6 +303,7 @@ function choose_column(col, colid){
     }
     $( "#"+colid+"" ).find('input').prop('checked',true);
   }
+  updateTableFields("");
 }
 
 ////////////////////////////////
@@ -478,6 +490,7 @@ function sel_from_ps(preset_type, preset, data){
         }
       }
     }
+    updateTableFields("");
   }
   else if (preset_type == "users_presets_dropdown") {
     var choices = data['user'][preset];
@@ -487,6 +500,11 @@ function sel_from_ps(preset_type, preset, data){
           var column_id = 'allFields-'+column.toLowerCase().replace(/_/g, '-') + '-' + choice.replace(/\(|\)/g, '');
           $("#"+column_id).prop('checked', true);
         }
+        order="";
+        if(choices['COLUMNORDER'])
+          order=choices['COLUMNORDER'];
+
+        updateTableFields(order);
       }
       else {
         if(column.indexOf('STATUS')!=-1){
@@ -701,6 +719,7 @@ $('#submitPresetNameBtn').click(function(e){
   })
   presetObj['STATUS']=status;
   presetObj['TYPE']=select.type;
+  presetObj['COLUMNORDER']=select.columnorder;
   presetObj['DATES']=select.dates;
   $('#submitPresetNameBtn').addClass('disabled').text('Saving...');
   var userPage_api_url = "/api/v1/presets?save="+presetName;
@@ -769,13 +788,17 @@ function get_current_selection(source){
       }
     }
   }
-  $('#allColFields').find("input[class='filterCheckbox']:checked").each(function(e){
-    columns[$(this).data('displayname')]=[$(this).attr('name'),$(this).data('columngroup')];
+  columnorder=$("#tHeaderListul").sortable("toArray", {attribute: 'data-name'});
+  $.each(columnorder, function (i, elem){
+    getElem=$('#allColFields').find("input[name='"+elem+"']");
+    columns[$(getElem).data('displayname')]=[$(getElem).attr('name'),$(getElem).data('columngroup')];
   });
+
   return {
         status: status,
         type: type,
         columns: columns,
+        columnorder:columnorder,
         dates: dates
     };
 }
@@ -815,6 +838,27 @@ $("#displaySelected").change(function(e){
     $('.colHeader').find('h4').show();
   }
 })
+$("#allFields").change(function(e){
+  updateTableFields("");
+})
+
+function updateTableFields(order){
+  $("#tHeaderListul").empty();
+  tHList="";
+  if(order==""){
+    $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
+      tHList+='<li data-name="'+$(this).prop('name')+'">'+$(this).data('displayname')+'</li>';
+    })
+  }
+  else{
+    $.each(order, function (i, elem){
+      getElem=$('#allColFields').find("input[name='"+elem+"']");
+      tHList+='<li data-name="'+$(getElem).prop('name')+'">'+$(getElem).data('displayname')+'</li>';
+    })
+  }
+
+  $('#tHeaderListul').append(tHList);
+}
 
 $(document).keypress(function(e) {
   if ($("#settingsModal").hasClass('in') && (e.keycode == 13 || e.which == 13)) {
