@@ -1076,7 +1076,7 @@ div.setOverflow {
   margin-top:-10px;
 }
 
-.source li {
+.sortableListSource li {
   margin: 5px;
   padding: 5px;
   -webkit-border-radius: 4px;
@@ -1086,4 +1086,5 @@ div.setOverflow {
   background-color: #ddd;
   border: 1px solid #ddd;
   color: black;
+  cursor: pointer;
 }

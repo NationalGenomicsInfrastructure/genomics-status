@@ -96,8 +96,8 @@ $(function(){
     })
   });
 
-  $(".source").sortable({
-      connectWith: ".source"
+  $(".sortableListSource").sortable({
+      connectWith: ".sortableListSource"
     });
 
   tHList="";
