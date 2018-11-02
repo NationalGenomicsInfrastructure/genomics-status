@@ -861,7 +861,7 @@ function updateTableFields(order){
   $('#tHeaderListul').append(tHList);
 }
 
-// Copy project samples table to clipboard
+// Copy project table to clipboard
 var clipboard = new Clipboard('#proj_table_copy_results');
 clipboard.on('success', function(e) {
   e.clearSelection();
