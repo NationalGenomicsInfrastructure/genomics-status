@@ -273,6 +273,23 @@ Description: Shows all presets configured for user and enables their selection.
               </div>
             </div>
           </div>
+          <div class="form-group row row-eq-height">
+            <div class="col-md-12 panel-group">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h4 class="panel-title">
+                    Reorder Table Fields
+                  </h4>
+                </div>
+                <div class="panel-body">
+                  <div class="sortableList" id="tHeaderList">
+                      <ul class="sortableListSource list-inline" id="tHeaderListul">
+                      </ul>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="form-group row">
             <div class="col text-center">
                 <button type="button" class="btn btn-primary" id="savePresetBtn" data-toggle="modal" data-target="#projectFieldsModal">Save as Preset</button>
@@ -290,9 +307,11 @@ Description: Shows all presets configured for user and enables their selection.
           <li>Project type (Application/Production)</li>
           <li>Project dates (Open date, Queue date, Close date)</li>
           <li>Column fields to be displayed in the result table.</li>
+          <li>The order in which the above fields are to be displayed in the result table.</li>
         </ul>
         <p>
-        The new settings chosen can be named and saved as a new preset using the ‘Save as Preset’ button whereupon it will appear in the 'User defined Presets' dropdown in the Presets bar. Once a preset is chosen on the Presets bar, clicking the ‘Load Table button will display the results table. If you feel that the preset you just created needs to be customised a bit more, you can overwrite the old settings with the new with the ‘Save as Preset’ button or even delete the preset if you feel it has served its purpose.
+        Click on the Statuses you want to see, enter the relevant dates and project type you want to see from the Filters section. Choose the fields you want to see from the Fields section and rearrange them in the order you want to see them in the table by dragging and dropping them in the Reorder Table Fields section.
+        The new settings chosen can then be named and saved as a new preset using the ‘Save as Preset’ button whereupon it will appear in the 'User defined Presets' dropdown in the Presets bar. Once a preset is chosen on the Presets bar, clicking the ‘Load Table button will display the results table. If you feel that the preset you just created needs to be customised a bit more, you can overwrite the old settings with the new with the ‘Save as Preset’ button or even delete the preset if you feel it has served its purpose.
         </p>
         <p>
         If you have already created your custom preset and want it to be just loaded every time you load the page, the ‘Load Table’ option in the ‘Settings’ menu is your answer. Setting this option to ‘On’ will load the result table with the preset chosen in the adjacent ‘Load Preset’ setting. If no preset was chosen, ‘Lab Ongoing’ will be used as the default preset.
@@ -472,6 +491,7 @@ Description: Shows all presets configured for user and enables their selection.
   </div>
 </div>
 <script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/js/clipboard.min.js"></script>
 <script src="/static/js/bootstrap-datepicker.min.js"></script>
 <script src="/static/js/jquery.dataTables.min.js"></script>
 <script src="/static/js/jQDateRangeSlider-min.js"></script>
