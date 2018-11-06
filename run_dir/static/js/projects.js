@@ -151,6 +151,7 @@ function load_table(status, type, columns, dates) {
     $("#project_table_body").empty();
     var size = 0;
     undefined_fields=[];
+    $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-default" data-clipboard-target="#project_table"><span class="glyphicon glyphicon-copy"></span> Copy table to clipboard</button>');
 
     $.each(data, function(project_id, summary_row) {
       $.each(summary_row, function(key,value){
@@ -859,6 +860,16 @@ function updateTableFields(order){
 
   $('#tHeaderListul').append(tHList);
 }
+
+// Copy project table to clipboard
+var clipboard = new Clipboard('#proj_table_copy_results');
+clipboard.on('success', function(e) {
+  e.clearSelection();
+  $('#proj_table_copy_results').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+  setTimeout(function(){
+    $('#proj_table_copy_results').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table to clipboard');
+  }, 2000);
+});
 
 $(document).keypress(function(e) {
   if ($("#settingsModal").hasClass('in') && (e.keycode == 13 || e.which == 13)) {
