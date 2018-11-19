@@ -843,13 +843,45 @@ $("#allFields").change(function(e){
   updateTableFields("");
 })
 
+$('#reorganiseReorderbtn').on("click", function() {
+  console.log('hi');
+  $("#tHeaderListul").empty();
+  tHList="";
+  $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
+     tHList+='<li data-name="'+$(this).prop('name')+'">'+$(this).data('displayname')+'</li>';
+   })
+  $('#tHeaderListul').append(tHList);
+});
+
 function updateTableFields(order){
+  var currOrder=new Array();
+  $("#tHeaderListul").find('li').each(function(i,elem){
+    if($(this).data('name'))
+      currOrder.push($(this).data('name'));
+  })
   $("#tHeaderListul").empty();
   tHList="";
   if(order==""){
-    $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
-      tHList+='<li data-name="'+$(this).prop('name')+'">'+$(this).data('displayname')+'</li>';
-    })
+    var checkedItems = $("#allColFields input[class='filterCheckbox']:checked").toArray();
+    var toInclude = new Array();
+    if(currOrder.length!=0){
+      $.each(currOrder, function(i, elem){
+        var get = checkedItems.findIndex(function(element) {return $(element).prop('name')==elem;})
+        if(get>-1){
+          toInclude.push($("#allColFields input[name='"+elem+"']"));
+          checkedItems.splice(get, 1);
+        }
+      })
+      $.each(checkedItems, function(i, elem){
+        toInclude.push(elem);
+      })
+    }
+    else {
+      toInclude=checkedItems;
+    }
+    $.each(toInclude, function(i, elem){
+        tHList+='<li data-name="'+$(this).prop('name')+'">'+$(this).data('displayname')+'</li>';
+    });
   }
   else{
     $.each(order, function (i, elem){
@@ -857,7 +889,6 @@ function updateTableFields(order){
       tHList+='<li data-name="'+$(getElem).prop('name')+'">'+$(getElem).data('displayname')+'</li>';
     })
   }
-
   $('#tHeaderListul').append(tHList);
 }
 
