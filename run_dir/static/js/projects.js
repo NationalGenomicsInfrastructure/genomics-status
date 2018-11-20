@@ -99,13 +99,6 @@ $(function(){
   $(".sortableListSource").sortable({
       connectWith: ".sortableListSource"
     });
-
-  tHList="";
-  $('#allColFields').find("input[class='filterCheckbox']:checked").each(function(e){
-    tHList+='<li>'+$(this).prop('name')+'</li>';
-  });
-  $('#tHeaderListul').append(tHList);
-
 });
 // Load the Projects Table
 function load_table(status, type, columns, dates) {
@@ -491,9 +484,10 @@ function sel_from_ps(preset_type, preset, data){
         }
       }
     }
-    updateTableFields("");
+    resetReorderFields();
   }
   else if (preset_type == "users_presets_dropdown") {
+    resetReorderFields();
     var choices = data['user'][preset];
     for (column in choices) {
       if(column.indexOf('COLUMNS')!=-1){
@@ -504,8 +498,6 @@ function sel_from_ps(preset_type, preset, data){
         order="";
         if(choices['COLUMNORDER'])
           order=choices['COLUMNORDER'];
-
-        updateTableFields(order);
       }
       else {
         if(column.indexOf('STATUS')!=-1){
@@ -530,6 +522,7 @@ function sel_from_ps(preset_type, preset, data){
         }
       }
     }
+    updateTableFields(order);
   }
 }
 
@@ -839,57 +832,52 @@ $("#displaySelected").change(function(e){
     $('.colHeader').find('h4').show();
   }
 })
+
 $("#allFields").change(function(e){
   updateTableFields("");
 })
 
-$('#reorganiseReorderbtn').on("click", function() {
-  console.log('hi');
+$('#resetReorderingbtn').on("click", function() {
+  resetReorderFields();
+});
+
+function resetReorderFields(){
   $("#tHeaderListul").empty();
   tHList="";
   $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
      tHList+='<li data-name="'+$(this).prop('name')+'">'+$(this).data('displayname')+'</li>';
    })
   $('#tHeaderListul').append(tHList);
-});
+}
 
 function updateTableFields(order){
-  var currOrder=new Array();
-  $("#tHeaderListul").find('li').each(function(i,elem){
-    if($(this).data('name'))
-      currOrder.push($(this).data('name'));
-  })
-  $("#tHeaderListul").empty();
-  tHList="";
+  var selectedFields=$("#allColFields input[class='filterCheckbox']:checked");
   if(order==""){
-    var checkedItems = $("#allColFields input[class='filterCheckbox']:checked").toArray();
-    var toInclude = new Array();
-    if(currOrder.length!=0){
-      $.each(currOrder, function(i, elem){
-        var get = checkedItems.findIndex(function(element) {return $(element).prop('name')==elem;})
-        if(get>-1){
-          toInclude.push($("#allColFields input[name='"+elem+"']"));
-          checkedItems.splice(get, 1);
+    if(selectedFields.size()>$('#tHeaderListul li').size()){
+      $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
+        if($('#tHeaderListul li[data-name="'+$(elem).prop('name')+'"]').length==0){
+          $("#tHeaderListul").append('<li data-name="'+$(this).prop('name')+'">'+$(this).data('displayname')+'</li>');
         }
       })
-      $.each(checkedItems, function(i, elem){
-        toInclude.push(elem);
+    }
+    else if(selectedFields.size()<$('#tHeaderListul li').size()){
+      $("#tHeaderListul li").each(function(i, elem){
+        var get = selectedFields.toArray().findIndex(function(element) {return $(element).prop('name')==$(elem).data('name');})
+        if(get==-1){
+          $(elem).remove();
+        }
       })
     }
-    else {
-      toInclude=checkedItems;
-    }
-    $.each(toInclude, function(i, elem){
-        tHList+='<li data-name="'+$(this).prop('name')+'">'+$(this).data('displayname')+'</li>';
-    });
   }
   else{
+    $("#tHeaderListul").empty();
+    tHList="";
     $.each(order, function (i, elem){
       getElem=$('#allColFields').find("input[name='"+elem+"']");
       tHList+='<li data-name="'+$(getElem).prop('name')+'">'+$(getElem).data('displayname')+'</li>';
     })
+    $('#tHeaderListul').append(tHList);
   }
-  $('#tHeaderListul').append(tHList);
 }
 
 // Copy project table to clipboard
