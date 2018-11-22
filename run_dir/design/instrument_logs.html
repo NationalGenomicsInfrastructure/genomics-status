@@ -28,14 +28,18 @@ Description: Shows instrument logs for the given period.default is one week.
 <div id="main_table">
 <table class="table table-bordered narrow-headers" id="instrument_logs_table">
     <thead>
-        <th class="col-md-1 sticky">Date</th>
-        <th class="col-md-1 sticky">Instrument</th>
-        <th class="col-md-10 sticky">Message</th>
-    </thead>
-    <tfoot>
+      <tr class="sticky">
         <th class="col-md-1">Date</th>
         <th class="col-md-1">Instrument</th>
         <th class="col-md-10">Message</th>
+      </tr>
+    </thead>
+    <tfoot>
+      <tr>
+        <th class="col-md-1">Date</th>
+        <th class="col-md-1">Instrument</th>
+        <th class="col-md-10">Message</th>
+      </tr>
     </tfoot>
     <tbody>
         {% for onedoc in docs %}

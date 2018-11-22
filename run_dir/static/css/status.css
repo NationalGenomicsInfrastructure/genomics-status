@@ -1086,7 +1086,7 @@ div.setOverflow {
   cursor: pointer;
 }
 
-.sticky {
+.sticky th{
   position: sticky;
   position: -webkit-sticky;
   position: -moz-sticky;
