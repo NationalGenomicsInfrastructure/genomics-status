@@ -193,11 +193,11 @@ function load_table(status, type, columns, dates) {
 }
 
 function load_table_head(columns){
-  var tbl_head = $('<tr>');
+  var tbl_head = $('<tr class="sticky">');
   var tbl_foot = $('<tr>');
   $.each(columns, function(i, column_tuple) {
     tbl_head.append($('<th>')
-      .addClass('sort a sticky')
+      .addClass('sort a')
       .attr('data-sort', column_tuple[1])
       .text(column_tuple[0])
     );

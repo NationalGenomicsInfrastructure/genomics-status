@@ -23,42 +23,42 @@
       <th>Data Delivered</th>
       <th></th>
     </tr>
-    <tr class="bioinfo-field-names bioinfo-project" id="bioinfo-project-{{ project_id }}">
-      <th class="bioinfo-project sticky"><a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
+    <tr class="bioinfo-field-names bioinfo-project sticky" id="bioinfo-project-{{ project_id }}">
+      <th class="bioinfo-project"><a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
         <span class="glyphicon glyphicon-chevron-right"></span></a></th>
-      <th class="sticky"></th>
-      <th class="sticky">Sample</th>
-      <th class="sticky">Status</th>
-      <th class="sticky"></th>
-      <th class="bioinfo-status-th bioinfo-status-qc undemultiplexedreads sticky">Undetermined<br>indexes</th>
-      <th class="bioinfo-status-th bioinfo-status-qc unexpectedindexes sticky">Unexpected<br>  indexes</th>
-      <th class="bioinfo-status-th bioinfo-status-qc lowsampleyield sticky">Sample Yield</th>
-      <th class="bioinfo-status-th bioinfo-status-qc phixerrorrate sticky">PhiX error rate</th>
-      <th class="bioinfo-status-th bioinfo-status-qc basesq30 sticky">%bases >= Q30</th>
-      <th class="bioinfo-status-th bioinfo-status-qc fastq_screen sticky">fastq_screen</th>
-      <th class="bioinfo-status-th bioinfo-status-qc blast_wrapper sticky">blast_wrapper</th>
+      <th></th>
+      <th>Sample</th>
+      <th>Status</th>
+      <th></th>
+      <th class="bioinfo-status-th bioinfo-status-qc undemultiplexedreads">Undetermined<br>indexes</th>
+      <th class="bioinfo-status-th bioinfo-status-qc unexpectedindexes">Unexpected<br>  indexes</th>
+      <th class="bioinfo-status-th bioinfo-status-qc lowsampleyield">Sample Yield</th>
+      <th class="bioinfo-status-th bioinfo-status-qc phixerrorrate">PhiX error rate</th>
+      <th class="bioinfo-status-th bioinfo-status-qc basesq30">%bases >= Q30</th>
+      <th class="bioinfo-status-th bioinfo-status-qc fastq_screen">fastq_screen</th>
+      <th class="bioinfo-status-th bioinfo-status-qc blast_wrapper">blast_wrapper</th>
       {% if application =='rnaseq' %}
-        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_alignment sticky">Percent Aligned</th>
-        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_rrna sticky">rRNA contamination</th>
-        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_mtrrna sticky">MT rRNA contamination</th>
-        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_strandspecificity sticky">Strand specificity over exons</th>
-        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_duplication sticky">Library complexity</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_alignment">Percent Aligned</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_rrna">rRNA contamination</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_mtrrna">MT rRNA contamination</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_strandspecificity">Strand specificity over exons</th>
+        <th class="bioinfo-status-th bioinfo-status-bp rnaseq_duplication">Library complexity</th>
       {% elif application == 'exome' %}
-        <th class="bioinfo-status-th bioinfo-status-bp exome_sequenceduplication sticky">Sequence<br>duplication</th>
-        <th class="bioinfo-status-th bioinfo-status-bp exome_targets10xcoverage sticky">% Targets @10X coverage</th>
+        <th class="bioinfo-status-th bioinfo-status-bp exome_sequenceduplication">Sequence<br>duplication</th>
+        <th class="bioinfo-status-th bioinfo-status-bp exome_targets10xcoverage">% Targets @10X coverage</th>
       {% elif application == 'customCap' %}
-        <th class="bioinfo-status-th bioinfo-status-bp customCap_enrichment sticky">Enrichment</th>
+        <th class="bioinfo-status-th bioinfo-status-bp customCap_enrichment">Enrichment</th>
       {% elif application == 'WGreseq' %}
-        <th class="bioinfo-status-th bioinfo-status-bp WGreseq_coverage sticky">Coverage</th>
-        <th class="bioinfo-status-th bioinfo-status-bp WGreseq_sequenceduplication sticky">Sequence<br>duplication</th>
-        <th class="bioinfo-status-th bioinfo-status-bp WGreseq_mappingrate sticky">Mapping rate</th>
+        <th class="bioinfo-status-th bioinfo-status-bp WGreseq_coverage">Coverage</th>
+        <th class="bioinfo-status-th bioinfo-status-bp WGreseq_sequenceduplication">Sequence<br>duplication</th>
+        <th class="bioinfo-status-th bioinfo-status-bp WGreseq_mappingrate">Mapping rate</th>
       {% elif application == 'denovo' %}
-        <th class="bioinfo-status-th bioinfo-status-bp denovo sticky">De Novo / Mait Pair</th>
+        <th class="bioinfo-status-th bioinfo-status-bp denovo">De Novo / Mait Pair</th>
       {% elif application == 'applications' %}
-        <th class="bioinfo-status-th bioinfo-status-bp bioinfo-app-applications sticky">Data delivered</th>
-        <th class="bioinfo-status-th bioinfo-status-bp bioinfo-app-applications sticky">Data approved</th>
+        <th class="bioinfo-status-th bioinfo-status-bp bioinfo-app-applications">Data delivered</th>
+        <th class="bioinfo-status-th bioinfo-status-bp bioinfo-app-applications">Data approved</th>
       {% end %}
-      <th class="bioinfo-status-th-date datadelivered sticky">Data Delivered
+      <th class="bioinfo-status-th-date datadelivered">Data Delivered
         <button class="btn btn-sm date-reset" {% if project_closed %} disabled="disabled"{% end %}>
           <i class="glyphicon glyphicon-remove"></i></button>
         <button class="btn btn-sm datepicker-today"{% if project_closed %} disabled="disabled"{% end %}>

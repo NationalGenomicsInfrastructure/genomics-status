@@ -19,9 +19,9 @@ Description: Shows a table with all worksets.
 <div id="workset-list">
   <table class="table table-striped table-bordered sortable" id="workset_table">
     <thead id="workset_table_head">
-        <tr>
+        <tr class="sticky">
          {% for onekey in headers %}
-            <th class="sticky">{{ onekey[0] }}</th>
+            <th>{{ onekey[0] }}</th>
          {% end %}
          </tr>
     </thead>
