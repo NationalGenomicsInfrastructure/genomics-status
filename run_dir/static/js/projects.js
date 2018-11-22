@@ -197,7 +197,7 @@ function load_table_head(columns){
   var tbl_foot = $('<tr>');
   $.each(columns, function(i, column_tuple) {
     tbl_head.append($('<th>')
-      .addClass('sort a')
+      .addClass('sort a sticky')
       .attr('data-sort', column_tuple[1])
       .text(column_tuple[0])
     );

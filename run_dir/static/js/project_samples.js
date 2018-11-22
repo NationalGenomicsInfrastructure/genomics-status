@@ -558,7 +558,7 @@ function safeobj(s) {
 function load_table_head(columns){
   var tbl_head = '<tr>';
   $.each(columns, function(i, column_tuple) {
-    tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">';
+    tbl_head += '<th class="sort a sticky" data-sort="' + column_tuple[1] + '">';
 
     if(column_tuple[0] == 'SciLife Sample Name') {
       tbl_head += '<abbr data-toggle="tooltip" title="SciLifeLab Sample Name">Sample</abbr>';

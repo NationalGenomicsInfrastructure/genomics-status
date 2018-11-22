@@ -14,13 +14,13 @@ Description: Shows instrument logs for the given period.default is one week.
 <div id="logs_date" style="margin-bottom:15px;">
     <p>The default view shows 1 week worth of logs. You can customise the range here :</p>
     <form class="form-inline" id="logs_date_form">
-        Select logs from 
+        Select logs from
         <div class='input-group input-group-sm date' id='datepick1'>
             <input id="inp_date_1" type='text' class="form-control" /><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
         </div>
     to
     <div class='input-group input-group-sm date' id='datepick2'>
-        <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span> 
+        <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
     </div>
     <button id="submit_interval" class="btn btn-primary btn-sm">Search</button>
     </form>
@@ -28,9 +28,9 @@ Description: Shows instrument logs for the given period.default is one week.
 <div id="main_table">
 <table class="table table-bordered narrow-headers" id="instrument_logs_table">
     <thead>
-        <th class="col-md-1">Date</th>
-        <th class="col-md-1">Instrument</th>
-        <th class="col-md-10">Message</th>
+        <th class="col-md-1 sticky">Date</th>
+        <th class="col-md-1 sticky">Instrument</th>
+        <th class="col-md-10 sticky">Message</th>
     </thead>
     <tfoot>
         <th class="col-md-1">Date</th>
