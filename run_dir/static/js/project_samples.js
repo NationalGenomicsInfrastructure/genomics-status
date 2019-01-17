@@ -401,13 +401,13 @@ function load_all_udfs(){
         try {
           var contact = validateEmail(data['order_details']['owner']['email']);
           if(!contact) {throw 'TypeError';}
-          emails[contact] = [elabel('Contact', 'info')];
+          emails[contact] = [elabel('Requester', 'default')];
           var lab = validateEmail(data['order_details']['fields']['project_lab_email']);
           if(!emails[lab]){emails[lab]=[elabel('Lab', 'default')]} else{emails[lab].push(elabel('Lab', 'default'))};
           var bx = validateEmail(data['order_details']['fields']['project_bx_email']);
           if(!emails[bx]){emails[bx]=[elabel('Bioinfo', 'default')]} else {emails[bx].push(elabel('Bioinfo', 'default'))};
           var pi = validateEmail(data['order_details']['fields']['project_pi_email']);
-          if(!emails[pi]){emails[pi]=[elabel('PI', 'default')]} else {emails[pi].push(elabel('PI', 'default'))};
+          if(!emails[pi]){emails[pi]=[elabel('PI', 'info')]} else {emails[pi].push(elabel('PI', 'info'))};
         }
         catch(error) {
           console.log('Falling back to using doc["contact"]');
@@ -556,7 +556,7 @@ function safeobj(s) {
 
 
 function load_table_head(columns){
-  var tbl_head = '<tr>';
+  var tbl_head = '<tr class="sticky">';
   $.each(columns, function(i, column_tuple) {
     tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">';
 

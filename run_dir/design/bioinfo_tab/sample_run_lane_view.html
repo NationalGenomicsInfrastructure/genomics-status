@@ -22,14 +22,14 @@
         {% end %}
         <th>Data Delivered</th>
       </tr>
-      <tr class="bioinfo-field-names bioinfo-project" id="bioinfo-project-{{ project_id }}">
+      <tr class="bioinfo-field-names bioinfo-project sticky" id="bioinfo-project-{{ project_id }}">
         <th class="bioinfo-project"><a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
           <span class="glyphicon glyphicon-chevron-right"></span></a></th>
         <th></th>
         <th>Sample</th>
         <th>Status</th>
         <th>Fill row</th>
-       <th class="bioinfo-status-th bioinfo-status-qc undemultiplexedreads">Undetermined<br>indexes</th>
+        <th class="bioinfo-status-th bioinfo-status-qc undemultiplexedreads">Undetermined<br>indexes</th>
         <th class="bioinfo-status-th bioinfo-status-qc unexpectedindexes">Unexpected<br>indexes</th>
         <th class="bioinfo-status-th bioinfo-status-qc lowsampleyield">Sample yield</th>
         <th class="bioinfo-status-th bioinfo-status-qc phixerrorrate">PhiX error rate</th>
@@ -52,7 +52,7 @@
           <th class="bioinfo-status-th bioinfo-status-bp WGreseq_sequenceduplication">Sequence<br>duplication</th>
           <th class="bioinfo-status-th bioinfo-status-bp WGreseq_mappingrate">Mapping rate</th>
         {% elif application == 'denovo' %}
-          <th class="bioinfo-status-th bioinfo-status-bp denovo">De Novo / Mait Pair</th>
+          <th class="bioinfo-status-th bioinfo-status-bp denovo">De Novo / Mate Pair</th>
         {% elif application == 'applications' %}
           <th class="bioinfo-status-th bioinfo-status-bp bioinfo-app-applications">Data delivered</th>
           <th class="bioinfo-status-th bioinfo-status-bp bioinfo-app-applications">Data approved</th>

@@ -95,6 +95,10 @@ $(function(){
       }
     })
   });
+
+  $(".sortableListSource").sortable({
+      connectWith: ".sortableListSource"
+    });
 });
 // Load the Projects Table
 function load_table(status, type, columns, dates) {
@@ -140,6 +144,7 @@ function load_table(status, type, columns, dates) {
     $("#project_table_body").empty();
     var size = 0;
     undefined_fields=[];
+    $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-default" data-clipboard-target="#project_table"><span class="glyphicon glyphicon-copy"></span> Copy table to clipboard</button>');
 
     $.each(data, function(project_id, summary_row) {
       $.each(summary_row, function(key,value){
@@ -188,7 +193,7 @@ function load_table(status, type, columns, dates) {
 }
 
 function load_table_head(columns){
-  var tbl_head = $('<tr>');
+  var tbl_head = $('<tr class="sticky">');
   var tbl_foot = $('<tr>');
   $.each(columns, function(i, column_tuple) {
     tbl_head.append($('<th>')
@@ -292,6 +297,7 @@ function choose_column(col, colid){
     }
     $( "#"+colid+"" ).find('input').prop('checked',true);
   }
+  updateTableFields("");
 }
 
 ////////////////////////////////
@@ -427,7 +433,9 @@ function read_current_filtering(){
   var columns = new Array();
   var preset;
   if($("#presetButtons .active").prop("id")=="inputPreset"){
+    $('#formPresetName').val('');
     preset=$.trim($("#presetButtons .active").text());
+    $('#formPresetName').val(preset);
     $('#formDeletePresetName').val(preset);
     if (preset!='User defined Presets') {
         appendDeleteBtn(preset);
@@ -435,6 +443,9 @@ function read_current_filtering(){
     select_from_preset("users_presets_dropdown", preset);
   }
   else{
+    if($('#deletePresetBtn').closest("html").length>0)
+      $('#deletePresetBtn').remove();
+    $('#formPresetName').val('');
     preset=$("#presetButtons .active").children('input').data('value');
     $('#formDeletePresetName').val('');
     select_from_preset("default_preset_buttons", preset);
@@ -473,8 +484,10 @@ function sel_from_ps(preset_type, preset, data){
         }
       }
     }
+    resetReorderFields();
   }
   else if (preset_type == "users_presets_dropdown") {
+    resetReorderFields();
     var choices = data['user'][preset];
     for (column in choices) {
       if(column.indexOf('COLUMNS')!=-1){
@@ -482,6 +495,9 @@ function sel_from_ps(preset_type, preset, data){
           var column_id = 'allFields-'+column.toLowerCase().replace(/_/g, '-') + '-' + choice.replace(/\(|\)/g, '');
           $("#"+column_id).prop('checked', true);
         }
+        order="";
+        if(choices['COLUMNORDER'])
+          order=choices['COLUMNORDER'];
       }
       else {
         if(column.indexOf('STATUS')!=-1){
@@ -506,6 +522,7 @@ function sel_from_ps(preset_type, preset, data){
         }
       }
     }
+    updateTableFields(order);
   }
 }
 
@@ -696,6 +713,7 @@ $('#submitPresetNameBtn').click(function(e){
   })
   presetObj['STATUS']=status;
   presetObj['TYPE']=select.type;
+  presetObj['COLUMNORDER']=select.columnorder;
   presetObj['DATES']=select.dates;
   $('#submitPresetNameBtn').addClass('disabled').text('Saving...');
   var userPage_api_url = "/api/v1/presets?save="+presetName;
@@ -764,13 +782,17 @@ function get_current_selection(source){
       }
     }
   }
-  $('#allFields').find('input:checked').each(function(e){
-    columns[$(this).data('displayname')]=[$(this).attr('name'),$(this).data('columngroup')];
+  columnorder=$("#tHeaderListul").sortable("toArray", {attribute: 'data-name'});
+  $.each(columnorder, function (i, elem){
+    getElem=$('#allColFields').find("input[name='"+elem+"']");
+    columns[$(getElem).data('displayname')]=[$(getElem).attr('name'),$(getElem).data('columngroup')];
   });
+
   return {
         status: status,
         type: type,
         columns: columns,
+        columnorder:columnorder,
         dates: dates
     };
 }
@@ -787,6 +809,86 @@ $("#uncheckAll").change(function(e){
       }
   })
 })
+
+$("#displaySelected").change(function(e){
+  var toBeDisplayed=$("#allColFields input[class='filterCheckbox']:checked ");
+  $("#allColFields input[class='filterCheckbox']").each(function(i, elem){
+    if(jQuery.inArray(elem, toBeDisplayed) == -1){
+      if($("#displaySelected").find("input").prop('checked')){
+        $(elem).closest('label').hide();
+      }
+      else{
+        $(elem).closest('label').show();
+      }
+    }
+  })
+  if($("#displaySelected").find("input").prop('checked')){
+    $('.colHeader').find('h4').hide();
+    $.each(toBeDisplayed, function(i, elem) {
+      $(elem).closest('.colHeader').find('h4').show();
+    })
+  }
+  else{
+    $('.colHeader').find('h4').show();
+  }
+})
+
+$("#allFields").change(function(e){
+  updateTableFields("");
+})
+
+$('#resetReorderingbtn').on("click", function() {
+  resetReorderFields();
+});
+
+function resetReorderFields(){
+  $("#tHeaderListul").empty();
+  tHList="";
+  $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
+     tHList+='<li data-name="'+$(this).prop('name')+'">'+$(this).data('displayname')+'</li>';
+   })
+  $('#tHeaderListul').append(tHList);
+}
+
+function updateTableFields(order){
+  var selectedFields=$("#allColFields input[class='filterCheckbox']:checked");
+  if(order==""){
+    if(selectedFields.size()>$('#tHeaderListul li').size()){
+      $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
+        if($('#tHeaderListul li[data-name="'+$(elem).prop('name')+'"]').length==0){
+          $("#tHeaderListul").append('<li data-name="'+$(this).prop('name')+'">'+$(this).data('displayname')+'</li>');
+        }
+      })
+    }
+    else if(selectedFields.size()<$('#tHeaderListul li').size()){
+      $("#tHeaderListul li").each(function(i, elem){
+        var get = selectedFields.toArray().findIndex(function(element) {return $(element).prop('name')==$(elem).data('name');})
+        if(get==-1){
+          $(elem).remove();
+        }
+      })
+    }
+  }
+  else{
+    $("#tHeaderListul").empty();
+    tHList="";
+    $.each(order, function (i, elem){
+      getElem=$('#allColFields').find("input[name='"+elem+"']");
+      tHList+='<li data-name="'+$(getElem).prop('name')+'">'+$(getElem).data('displayname')+'</li>';
+    })
+    $('#tHeaderListul').append(tHList);
+  }
+}
+
+// Copy project table to clipboard
+var clipboard = new Clipboard('#proj_table_copy_results');
+clipboard.on('success', function(e) {
+  e.clearSelection();
+  $('#proj_table_copy_results').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+  setTimeout(function(){
+    $('#proj_table_copy_results').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table to clipboard');
+  }, 2000);
+});
 
 $(document).keypress(function(e) {
   if ($("#settingsModal").hasClass('in') && (e.keycode == 13 || e.which == 13)) {
