@@ -9,6 +9,9 @@ Description: Shows a table with all flow cells.
 
 {% block stuff %}
 
+<script type="text/javascript" src="/static/js/base.js"></script>
+<script src="/static/js/marked.min.js"></script>
+
 <div class="container-fluid" id="flowcell_list">
   <div id="fc_table_div">
       <h1><span id="page_title">Flowcells</span> </h1>
@@ -155,7 +158,9 @@ Description: Shows a table with all flow cells.
                         {% set latest_running_note_key = max(k for k, v in running_notes.iteritems() if v != '') %}
                         <div class="panel panel-default running-note-panel">
                         <div class="panel-heading"><b>{{ running_notes[latest_running_note_key]['user'].encode('ascii','ignore'),latest_running_note_key.split('.')[0].encode('ascii','ignore') }}</b></div>
-                        <div class="panel-body" style="white-space: pre-line">{{ running_notes[latest_running_note_key]['note'] }}</pre></div>
+                        <div class="panel-body" style="white-space: pre-line">
+                           <script>document.write(make_markdown(`{{ running_notes[latest_running_note_key]['note'] }}`));</script></pre>
+                         </div>
                         </div>
                     {% end %}
                 </td>
