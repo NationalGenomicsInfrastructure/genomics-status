@@ -52,6 +52,8 @@ Description: Shows a table with all flow cells.
                     <a href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a>
                     {% if flowcells.get(onefc).get('demultiplexing') == 'Done' %}
                         <abbr title="Demultiplexing completed">&nbsp;<span class="glyphicon glyphicon-ok-sign"></span></abbr>
+                    {% else %}
+                        <abbr title="Ongoing">&nbsp;<span class="glyphicon glyphicon-hourglass"></span></abbr>
                     {% end %}
                 </td>
                 <td class="start_date">{{ flowcells[onefc]["startdate"]}}</td>
