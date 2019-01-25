@@ -24,6 +24,7 @@ Description: Shows a table with all flow cells.
             <th class="sort" data-sort="pf_clusters">PF Clusters (M)</th>
             <th class="sort" data-sort="q30_bases">% bases > Q30</th>
             <th class="sort" data-sort="er_rate">PhiX error rate</th>
+            <th class="sort" data-sort="latest_running_note">Latest running note</th>
           </tr>
         </thead>
         <tfoot>
@@ -37,6 +38,7 @@ Description: Shows a table with all flow cells.
             <th class="sort" data-sort="pf_clusters">PF Clusters (M)</th>
             <th class="sort" data-sort="q30_bases">% bases > Q30</th>
             <th class="sort" data-sort="er_rate">PhiX error rate</th>
+            <th class="sort" data-sort="latest_running_note">Latest running note</th>
           </tr>
         </tfoot>
         <tbody class="list">
@@ -47,6 +49,8 @@ Description: Shows a table with all flow cells.
                     <a href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a>
                     {% if flowcells.get(onefc).get('demultiplexing') == 'Done' %}
                         <abbr title="Demultiplexing completed">&nbsp;<span class="glyphicon glyphicon-ok-sign"></span></abbr>
+                    {% else %}
+                        <abbr title="Ongoing">&nbsp;<span class="glyphicon glyphicon-hourglass"></span></abbr>
                     {% end %}
                 </td>
                 <td class="start_date">{{ flowcells[onefc]["startdate"]}}</td>
@@ -147,6 +151,15 @@ Description: Shows a table with all flow cells.
                          {% end %}
                     {% end %}
                 </td>
+                <td class="latest_running_note" class="text-center">
+                    {% if flowcells[onefc].get('running_notes') %}
+                        {% set running_notes = flowcells[onefc].get('running_notes') %}
+                        {% set latest_running_note_key = max(k for k, v in running_notes.iteritems() if v != '') %}
+                        <div class="panel panel-default running-note-panel">
+                            {{latest_running_note_key}} +=+ {{json_encode(running_notes[latest_running_note_key])}}
+                        </div>
+                    {% end %}
+                </td>
             </tr>
          {% end %}
         </tbody>
@@ -155,6 +168,10 @@ Description: Shows a table with all flow cells.
 </div>
 
 <script src="/static/js/jquery.dataTables.min.js"></script>
+<!-- The below two scripts which are loaded through base.html are reloaded here. The ones from base.html will be
+loaded only after block stuff has finished loading which will not work in the case of rendering running notes here.-->
+<script type="text/javascript" src="/static/js/base.js"></script>
+<script src="/static/js/marked.min.js"></script>
 <!-- Table Sorting -->
 <script type="text/javascript">
 $( document ).ready(function() {
@@ -191,6 +208,18 @@ function init_listjs() {
         } );
     } );
 }
+$(".running-note-panel").each(function(i){
+  var data=$(this).text().split('+=+');
+  notedate = new Date($.trim(data[0]));
+  run_note=JSON.parse(data[1]);
+  $(this).replaceWith(
+    "<div class='panel-heading'> \
+    <a href='mailto:"+run_note['email']+"'>"+run_note['user']+"</a> - "+ notedate.toDateString()+", " + notedate.toLocaleTimeString(notedate)+" \
+    </div> \
+    <div class='panel-body' style='white-space: pre-line'> "+make_markdown(run_note['note'])+ "\
+    </pre> \
+    </div>");
+});
 </script>
 
 
