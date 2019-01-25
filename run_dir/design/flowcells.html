@@ -156,7 +156,13 @@ Description: Shows a table with all flow cells.
                         {% set running_notes = flowcells[onefc].get('running_notes') %}
                         {% set latest_running_note_key = max(k for k, v in running_notes.iteritems() if v != '') %}
                         <div class="panel panel-default running-note-panel">
-                            {{latest_running_note_key}} +=+ {{json_encode(running_notes[latest_running_note_key])}}
+                          <div class='panel-heading'>
+                          <a href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"].encode("ascii","ignore")}}</a>  -  {{form_date(latest_running_note_key)}}
+                          </div>
+                          <div class='panel-body' style='white-space: pre-line'>
+                            {{json_encode(running_notes[latest_running_note_key])}}
+                          </pre>
+                          </div>
                         </div>
                     {% end %}
                 </td>
@@ -170,8 +176,8 @@ Description: Shows a table with all flow cells.
 <script src="/static/js/jquery.dataTables.min.js"></script>
 <!-- The below two scripts which are loaded through base.html are reloaded here. The ones from base.html will be
 loaded only after block stuff has finished loading which will not work in the case of rendering running notes here.-->
-<script type="text/javascript" src="/static/js/base.js"></script>
 <script src="/static/js/marked.min.js"></script>
+<script type="text/javascript" src="/static/js/base.js"></script>
 <!-- Table Sorting -->
 <script type="text/javascript">
 $( document ).ready(function() {
@@ -208,17 +214,10 @@ function init_listjs() {
         } );
     } );
 }
-$(".running-note-panel").each(function(i){
-  var data=$(this).text().split('+=+');
-  notedate = new Date($.trim(data[0]));
-  run_note=JSON.parse(data[1]);
-  $(this).replaceWith(
-    "<div class='panel-heading'> \
-    <a href='mailto:"+run_note['email']+"'>"+run_note['user']+"</a> - "+ notedate.toDateString()+", " + notedate.toLocaleTimeString(notedate)+" \
-    </div> \
-    <div class='panel-body' style='white-space: pre-line'> "+make_markdown(run_note['note'])+ "\
-    </pre> \
-    </div>");
+$(".running-note-panel > .panel-body").each(function(i){
+  var data=$(this).text();
+  run_note=JSON.parse(data);
+  $(this).html(make_markdown(run_note['note']));
 });
 </script>
 
