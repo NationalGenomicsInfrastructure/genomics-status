@@ -160,7 +160,7 @@ Description: Shows a table with all flow cells.
                           <a href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"].encode("ascii","ignore")}}</a>  -  {{form_date(latest_running_note_key)}}
                           </div>
                           <div class='panel-body' style='white-space: pre-line'>
-                            {{json_encode(running_notes[latest_running_note_key])}}
+                            {{running_notes[latest_running_note_key]['note']}}
                           </pre>
                           </div>
                         </div>
@@ -217,9 +217,7 @@ function init_listjs() {
 
 //Formatting for Running note panel body
 $(".running-note-panel > .panel-body").each(function(i){
-  var data=$(this).text();
-  run_note=JSON.parse(data);
-  $(this).html(make_markdown(run_note['note']));
+  $(this).html(make_markdown($(this).text()));
 });
 </script>
 
