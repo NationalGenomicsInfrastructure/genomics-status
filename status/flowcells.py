@@ -25,6 +25,10 @@ thresholds = {
     'NovaSeq S4': 2000,
 }
 
+def formatDate(date):
+    datestr=datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f")
+    return datestr.strftime("%a %b %d %Y, %I:%M:%S %p")
+
 class FlowcellsHandler(SafeHandler):
     """ Serves a page which lists all flowcells with some brief info.
     """
@@ -52,11 +56,10 @@ class FlowcellsHandler(SafeHandler):
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
-
     def get(self):
         t = self.application.loader.load("flowcells.html")
         fcs=self.list_flowcells()
-        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user_name(), flowcells=fcs))
+        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user_name(), flowcells=fcs, form_date=formatDate))
 
 
 class FlowcellHandler(SafeHandler):
