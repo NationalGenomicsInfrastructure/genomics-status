@@ -259,7 +259,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
                 #Filtering projects
                 #aborted projects
-                if 'aborted' in filter_projects or filter_projects == 'all' and ('aborted' in p_info['details'] or ('project_summary' in p_info and 'aborted' in p_info['project_summary'])):
+                if ('aborted' in filter_projects or filter_projects == 'all') and ('aborted' in p_info['details'] or ('project_summary' in p_info and 'aborted' in p_info['project_summary'])):
                         filtered_projects.append(row)
                 #pending reviews projects
                 elif ('review' in filter_projects or filter_projects == 'all') and 'pending_reviews' in p_info:
