@@ -37,17 +37,17 @@ class FlowcellsHandler(SafeHandler):
     """
     def list_flowcells(self, all=False):
         flowcells = OrderedDict()
-        temp_flowcells={}
-        if all: # fc_view are from 2016 and older
+        temp_flowcells = {}
+        if all:
             fc_view = self.application.flowcells_db.view("info/summary",
                                                         descending=True)
             for row in fc_view:
                 temp_flowcells[row.key] = row.value
 
-        if all:
             xfc_view = self.application.x_flowcells_db.view("info/summary",
                                                             descending=True)
         else:
+            # fc_view are from 2016 and older so only include xfc_view here
             half_a_year_ago = (datetime.datetime.now() - relativedelta(months=6)).strftime("%y%m%d")
             xfc_view = self.application.x_flowcells_db.view("info/summary",
                                                             descending=True,
