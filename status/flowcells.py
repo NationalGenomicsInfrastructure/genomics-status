@@ -4,6 +4,7 @@
 import tornado.web
 import json
 import datetime
+from dateutil.relativedelta import relativedelta
 
 from genologics.entities import Container
 from genologics import lims
@@ -31,17 +32,26 @@ def formatDate(date):
 
 class FlowcellsHandler(SafeHandler):
     """ Serves a page which lists all flowcells with some brief info.
+    By default shows only flowcells form the last 6 months, use the parameter
+    'all' to show all flowcells.
     """
-    def list_flowcells(self):
+    def list_flowcells(self, all=False):
         flowcells = OrderedDict()
-        temp_flowcells={}
-        fc_view = self.application.flowcells_db.view("info/summary",
-                                                     descending=True)
-        for row in fc_view:
-            temp_flowcells[row.key] = row.value
+        temp_flowcells = {}
+        if all:
+            fc_view = self.application.flowcells_db.view("info/summary",
+                                                        descending=True)
+            for row in fc_view:
+                temp_flowcells[row.key] = row.value
 
-        xfc_view = self.application.x_flowcells_db.view("info/summary",
-                                                     descending=True)
+            xfc_view = self.application.x_flowcells_db.view("info/summary",
+                                                            descending=True)
+        else:
+            # fc_view are from 2016 and older so only include xfc_view here
+            half_a_year_ago = (datetime.datetime.now() - relativedelta(months=6)).strftime("%y%m%d")
+            xfc_view = self.application.x_flowcells_db.view("info/summary",
+                                                            descending=True,
+                                                            endkey=half_a_year_ago)
         for row in xfc_view:
             try:
                 row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'], "%y%m%d").strftime("%Y-%m-%d")
@@ -57,9 +67,11 @@ class FlowcellsHandler(SafeHandler):
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
     def get(self):
+        # Default is to NOT show all flowcells
+        all=self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
-        fcs=self.list_flowcells()
-        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user_name(), flowcells=fcs, form_date=formatDate))
+        fcs=self.list_flowcells(all=all)
+        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user_name(), flowcells=fcs, form_date=formatDate, all=all))
 
 
 class FlowcellHandler(SafeHandler):

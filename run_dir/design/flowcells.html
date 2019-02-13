@@ -11,7 +11,15 @@ Description: Shows a table with all flow cells.
 
 <div class="container-fluid" id="flowcell_list">
   <div id="fc_table_div">
-      <h1><span id="page_title">Flowcells</span> </h1>
+      <h1><span id="page_title">Flowcells</span>
+          {% if all %}
+            <small>Showing all flowcells</small>
+            <a class="btn btn-default" href="/flowcells">Show last 6 months only</a>
+          {% else %}
+            <small>Showing flowcells from the last 6 months.</small>
+            <a class="btn btn-default" href="/flowcells?all=True">Show all</a>
+          {% end %}
+      </h1>
       <table class="table table-striped table-bordered sortable" id="fc_table">
         <thead>
           <tr class="sticky">
