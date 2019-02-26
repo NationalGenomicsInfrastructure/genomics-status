@@ -158,8 +158,17 @@ function load_table(status, type, columns, dates) {
       $.each(columns, function(i, column_tuple){
         tbl_row.append($('<td>')
           .addClass(column_tuple[1])
-          .html(summary_row[column_tuple[1]])
-          );
+          .html(function(){
+            if(column_tuple[1]=='delivery_projects' && !(typeof summary_row[column_tuple[1]] === "undefined")){
+              var txt='';
+              $.each(summary_row[column_tuple[1]], function(i, item){
+                txt+=item+'<br/>';
+              })
+              return txt;
+            }
+            return summary_row[column_tuple[1]];
+          })
+        );
       });
 
       // Add links to projects
