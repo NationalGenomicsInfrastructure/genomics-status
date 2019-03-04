@@ -8,7 +8,7 @@ from genologics.entities import Process
 from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 import datetime
-
+from status.projects import make_project_running_note
 
 class WorksetsDataHandler(SafeHandler):
     """returns basic worksets json
@@ -49,13 +49,27 @@ class WorksetDataHandler(SafeHandler):
     """Loaded through /api/v1/workset/[workset]"""
     def get(self, workset):
         self.set_header("Content-type", "application/json")
-        ws_view= self.application.worksets_db.view("worksets/name", descending=True)
-        result={}
+        result = self.__class__.get_workset_data(self.application, workset)
+        self.write(json.dumps(result))
+
+    @classmethod
+    def get_workset_data(cls, application, workset):
+        ws_view = application.worksets_db.view("worksets/name", descending=True)
+        result = {}
         for row in ws_view[workset]:
-            result[row.key]=row.value
+            result[row.key] = row.value
             result[row.key].pop("_id", None)
             result[row.key].pop("_rev", None)
-        self.write(json.dumps(result))
+        if result:
+            return result
+
+        # Check if the lims id was used
+        ws_view = application.worksets_db.view("worksets/lims_id")
+        for row in ws_view[workset]:
+            result[row.key] = row.value
+            result[row.key].pop("_id", None)
+            result[row.key].pop("_rev", None)
+        return result
 
 class WorksetHandler(SafeHandler):
     """Loaded through /workset/[workset]"""
@@ -109,6 +123,13 @@ class WorksetNotesDataHandler(SafeHandler):
         note = self.get_argument('note', '')
         user = self.get_secure_cookie('user')
         email = self.get_secure_cookie('email')
+        category = self.get_argument('category', '')
+
+        workset_data = WorksetDataHandler.get_workset_data(self.application, workset)
+
+        projects = workset_data[workset]['projects'].keys()
+        workset_name = workset_data[workset]['name']
+
         if not note:
             self.set_status(400)
             self.finish('<html><body>No workset id or note parameters found</body></html>')
@@ -120,8 +141,16 @@ class WorksetNotesDataHandler(SafeHandler):
             workset_notes[str(datetime.datetime.now())] = newNote
             p.udf['Workset Notes'] = json.dumps(workset_notes)
             p.put()
+
+            workset_link = "<a href='/workset/{0}'>{0}</a>".format(workset_name)
+            project_note = "#####*Running note posted on workset {}:*\n".format(workset_link)
+            project_note += note
+            for project_id in projects:
+                make_project_running_note(self.application, project_id, project_note, category, user, email)
+
             self.set_status(201)
             self.write(json.dumps(newNote))
+
     def delete(self, workset):
         note_id=self.get_argument('note_id')
         p = Process(self.lims, id=workset)
