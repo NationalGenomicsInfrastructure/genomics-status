@@ -10,6 +10,8 @@ from genologics import lims
 from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 from status.util import SafeHandler
+from status.projects import make_project_running_note
+
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
 thresholds = {
@@ -42,6 +44,7 @@ class FlowcellsHandler(SafeHandler):
 
         xfc_view = self.application.x_flowcells_db.view("info/summary",
                                                      descending=True)
+
         for row in xfc_view:
             try:
                 row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'], "%y%m%d").strftime("%Y-%m-%d")
@@ -101,20 +104,39 @@ class FlowcellsInfoDataHandler(SafeHandler):
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.flowcell_info(flowcell)))
+        flowcell_info = self.__class__.get_flowcell_info(self.application, flowcell)
+        self.write(json.dumps(flowcell_info))
 
-    def flowcell_info(self, flowcell):
-        fc_view = self.application.flowcells_db.view("info/summary2",
+    @classmethod
+    def get_flowcell_info(cls, application, flowcell):
+        fc_view = application.flowcells_db.view("info/summary2",
                                                      descending=True)
-        xfc_view = self.application.x_flowcells_db.view("info/summary2_full_id",
+        xfc_view = application.x_flowcells_db.view("info/summary2_full_id",
                                                      descending=True)
+        flowcell_info = None
         for row in fc_view[flowcell]:
             flowcell_info = row.value
             break
         for row in xfc_view[flowcell]:
             flowcell_info = row.value
             break
+        if flowcell_info is not None:
+            return flowcell_info
+        else:
+            # No hit for a full name, check if the short name is found:
+            complete_flowcell_rows = application.x_flowcells_db.view(
+                                        'info/short_name_to_full_name',
+                                        key=flowcell
+                                    ).rows
 
+            if complete_flowcell_rows:
+                complete_flowcell_id = complete_flowcell_rows[0].value
+                view = application.x_flowcells_db.view(
+                            'info/summary2_full_id',
+                            key=complete_flowcell_id,
+                            )
+                if view.rows:
+                    return view.rows[0].value
         return flowcell_info
 
 class FlowcellSearchHandler(SafeHandler):
@@ -272,8 +294,11 @@ class FlowcellNotesDataHandler(SafeHandler):
 
     def post(self, flowcell):
         note = self.get_argument('note', '')
+        category = self.get_argument('category', '')
         user = self.get_secure_cookie('user')
         email = self.get_secure_cookie('email')
+        flowcell_info = FlowcellsInfoDataHandler.get_flowcell_info(self.application, flowcell)
+        projects = flowcell_info['pid_list']
         if not note:
             self.set_status(400)
             self.finish('<html><body>No note parameters found</body></html>')
@@ -287,11 +312,17 @@ class FlowcellNotesDataHandler(SafeHandler):
             else:
                 running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
                 running_notes[str(datetime.datetime.now())] = newNote
+
+                flowcell_link = "<a href='/flowcells/{0}'>{0}</a>".format(flowcell)
+                project_note = "#####*Running note posted on flowcell {}:*\n".format(flowcell_link)
+                project_note += note
+                for project in projects:
+                    make_project_running_note(self.application, project, project_note, category, user, email)
+
                 p.udf['Notes'] = json.dumps(running_notes)
                 p.put()
                 self.set_status(201)
                 self.write(json.dumps(newNote))
-
 
 class FlowcellLinksDataHandler(SafeHandler):
     """ Serves external links for each project
