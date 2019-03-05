@@ -305,7 +305,11 @@ class FlowcellNotesDataHandler(SafeHandler):
 
     def post(self, flowcell):
         note = self.get_argument('note', '')
-        category = self.get_argument('category', '')
+        category = self.get_argument('category', 'Flowcell')
+
+        if category == '':
+            category = 'Flowcell'
+
         user = self.get_secure_cookie('user')
         email = self.get_secure_cookie('email')
         flowcell_info = FlowcellsInfoDataHandler.get_flowcell_info(self.application, flowcell)
@@ -314,7 +318,7 @@ class FlowcellNotesDataHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>No note parameters found</body></html>')
         else:
-            newNote = {'user': user, 'email': email, 'note': note}
+            newNote = {'user': user, 'email': email, 'note': note, 'category': category}
             try:
                 p=get_container_from_id(flowcell)
             except (KeyError, IndexError) as e:

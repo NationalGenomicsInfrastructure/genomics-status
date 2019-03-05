@@ -123,7 +123,10 @@ class WorksetNotesDataHandler(SafeHandler):
         note = self.get_argument('note', '')
         user = self.get_secure_cookie('user')
         email = self.get_secure_cookie('email')
-        category = self.get_argument('category', '')
+        category = self.get_argument('category', 'Workset')
+
+        if category == '':
+            category = 'Workset'
 
         workset_data = WorksetDataHandler.get_workset_data(self.application, workset)
 
@@ -134,7 +137,7 @@ class WorksetNotesDataHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>No workset id or note parameters found</body></html>')
         else:
-            newNote = {'user': user, 'email': email, 'note': note}
+            newNote = {'user': user, 'email': email, 'note': note, 'category': category}
             p = Process(self.lims, id=workset)
             p.get(force=True)
             workset_notes = json.loads(p.udf['Workset Notes']) if 'Workset Notes' in p.udf else {}
