@@ -11,7 +11,7 @@ from genologics import lims
 from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 from status.util import SafeHandler
-from status.projects import make_project_running_note
+from status.projects import RunningNotesDataHandler
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
@@ -118,8 +118,8 @@ class FlowcellsInfoDataHandler(SafeHandler):
         flowcell_info = self.__class__.get_flowcell_info(self.application, flowcell)
         self.write(json.dumps(flowcell_info))
 
-    @classmethod
-    def get_flowcell_info(cls, application, flowcell):
+    @staticmethod
+    def get_flowcell_info(application, flowcell):
         fc_view = application.flowcells_db.view("info/summary2",
                                                      descending=True)
         xfc_view = application.x_flowcells_db.view("info/summary2_full_id",
@@ -328,7 +328,11 @@ class FlowcellNotesDataHandler(SafeHandler):
                 project_note = "#####*Running note posted on flowcell {}:*\n".format(flowcell_link)
                 project_note += note
                 for project in projects:
-                    make_project_running_note(self.application, project, project_note, category, user, email)
+                    RunningNotesDataHandler.make_project_running_note(
+                        self.application, project,
+                        project_note, category,
+                        user, email
+                    )
 
                 p.udf['Notes'] = json.dumps(running_notes)
                 p.put()

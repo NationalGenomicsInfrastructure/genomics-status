@@ -8,7 +8,7 @@ from genologics.entities import Process
 from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 import datetime
-from status.projects import make_project_running_note
+from status.projects import RunningNotesDataHandler
 
 class WorksetsDataHandler(SafeHandler):
     """returns basic worksets json
@@ -52,8 +52,8 @@ class WorksetDataHandler(SafeHandler):
         result = self.__class__.get_workset_data(self.application, workset)
         self.write(json.dumps(result))
 
-    @classmethod
-    def get_workset_data(cls, application, workset):
+    @staticmethod
+    def get_workset_data(application, workset):
         ws_view = application.worksets_db.view("worksets/name", descending=True)
         result = {}
         for row in ws_view[workset]:
@@ -146,7 +146,11 @@ class WorksetNotesDataHandler(SafeHandler):
             project_note = "#####*Running note posted on workset {}:*\n".format(workset_link)
             project_note += note
             for project_id in projects:
-                make_project_running_note(self.application, project_id, project_note, category, user, email)
+                RunningNotesDataHandler.make_project_running_note(
+                    self.application, project_id,
+                    project_note, category,
+                    user, email
+                )
 
             self.set_status(201)
             self.write(json.dumps(newNote))

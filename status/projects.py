@@ -604,25 +604,26 @@ class RunningNotesDataHandler(SafeHandler):
             self.set_status(201)
             self.write(json.dumps(newNote))
 
-def make_project_running_note(application, project, note, category, user, email):
-    timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
-    newNote = {'user': user, 'email': email, 'note': note, 'category' : category, 'timestamp': timestamp}
-    p = Project(lims, id=project)
-    p.get(force=True)
-    running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
-    running_notes[timestamp] = newNote
-    # Saving running note in LIMS
-    p.udf['Running Notes'] = json.dumps(running_notes)
-    p.put()
+    @staticmethod
+    def make_project_running_note(application, project, note, category, user, email):
+        timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
+        newNote = {'user': user, 'email': email, 'note': note, 'category' : category, 'timestamp': timestamp}
+        p = Project(lims, id=project)
+        p.get(force=True)
+        running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
+        running_notes[timestamp] = newNote
+        # Saving running note in LIMS
+        p.udf['Running Notes'] = json.dumps(running_notes)
+        p.put()
 
-    #saving running notes directly in genstat, because reasons.
-    v=application.projects_db.view("project/project_id")
-    for row in v[project]:
-        doc_id=row.value
-    doc=application.projects_db.get(doc_id)
-    doc['details']['running_notes']=json.dumps(running_notes)
-    application.projects_db.save(doc)
-    return newNote
+        #saving running notes directly in genstat, because reasons.
+        v=application.projects_db.view("project/project_id")
+        for row in v[project]:
+            doc_id=row.value
+        doc=application.projects_db.get(doc_id)
+        doc['details']['running_notes']=json.dumps(running_notes)
+        application.projects_db.save(doc)
+        return newNote
 
 
 class LinksDataHandler(SafeHandler):
