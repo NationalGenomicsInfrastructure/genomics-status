@@ -600,7 +600,7 @@ class RunningNotesDataHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
-            newNote = make_project_running_note(self.application, project, note, category, user, email)
+            newNote = RunningNotesDataHandler.make_project_running_note(self.application, project, note, category, user, email)
             self.set_status(201)
             self.write(json.dumps(newNote))
 
