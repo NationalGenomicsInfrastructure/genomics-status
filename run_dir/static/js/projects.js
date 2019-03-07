@@ -765,28 +765,31 @@ function get_current_selection(source){
   dates['old_close_date']= $('#inp_date_5').val();
   dates['new_close_date']= $('#inp_date_6').val();
   currDate=new Date();
+  monthNday=((''+currDate.getMonth()).length<2 ? '0' : '')+(currDate.getMonth()+1)+'-'+((''+currDate.getDate()).length<2 ? '0' : '')+(currDate.getDate());
+  today=currDate.getFullYear()+'-'+monthNday;
+  twoYearsAgo=currDate.getFullYear() - 2+'-'+monthNday;
   if(source!='save'){
     if(status.includes('closed')){
       if(dates['old_close_date']==''){
-        dates['old_close_date']=currDate.getFullYear() - 2+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+        dates['old_close_date']=twoYearsAgo;
       }
       if(dates['new_close_date']==''){
-        dates['new_close_date']=currDate.getFullYear()+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+        dates['new_close_date']=today;
       }
     }
     if(status.includes('open') || status.includes('ongoing') || status.includes('reception_control')){
       if(dates['old_open_date']==''){
-        dates['old_open_date']=currDate.getFullYear() - 2+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+        dates['old_open_date']=twoYearsAgo;
       }
       if(dates['new_open_date']==''){
-        dates['new_open_date']=currDate.getFullYear()+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+        dates['new_open_date']=today;
       }
       if(status.includes('ongoing')){
         if(dates['old_queue_date']==''){
-          dates['old_queue_date']=currDate.getFullYear() - 2+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+          dates['old_queue_date']=twoYearsAgo;
         }
         if(dates['new_queue_date']==''){
-          dates['new_queue_date']=currDate.getFullYear()+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+          dates['new_queue_date']=today;
         }
       }
     }
