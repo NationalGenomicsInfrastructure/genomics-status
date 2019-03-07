@@ -186,6 +186,12 @@ class ProjectsBaseDataHandler(SafeHandler):
     def _get_two_year_from(self, from_date):
         return (datetime.datetime.strptime(from_date, "%Y-%m-%d") - relativedelta(years=2)).strftime("%Y-%m-%d")
 
+    def _date_isEarlierOrEqual(self, date1, date2):
+        if datetime.datetime.strptime(date1, '%Y-%m-%d')<=datetime.datetime.strptime(date2, '%Y-%m-%d'):
+            return True
+        else:
+            return False
+
     def list_projects(self, filter_projects='all'):
         projects = OrderedDict()
         closedflag=False
@@ -244,18 +250,18 @@ class ProjectsBaseDataHandler(SafeHandler):
                 closed_condition, queued_condition, open_condition, queued_proj = [False] * 4
 
                 if 'close_date' in p_info:
-                    closed_condition = p_info['close_date'] >= start_close_date and p_info['close_date'] <= end_close_date
+                    closed_condition = self._date_isEarlierOrEqual(start_close_date, p_info['close_date']) and self._date_isEarlierOrEqual(p_info['close_date'], end_close_date)
 
                 if 'queued' in p_info['details']:
                     queued_proj = True
-                    queued_condition = p_info['details'].get('queued') >= start_queue_date and p_info['details'].get('queued') <= end_queue_date
+                    queued_condition = self._date_isEarlierOrEqual(start_queue_date, p_info['details'].get('queued')) and self._date_isEarlierOrEqual(p_info['details'].get('queued'), end_queue_date)
 
                 elif 'project_summary' in p_info and 'queued' in p_info['project_summary']:
                     queued_proj =True
-                    queued_condition = p_info['project_summary'].get('queued') >= start_queue_date and p_info['project_summary'].get('queued') <= end_queue_date
+                    queued_condition = self._date_isEarlierOrEqual(start_queue_date, p_info['project_summary'].get('queued')) and self._date_isEarlierOrEqual(p_info['project_summary'].get('queued'), end_queue_date)
 
                 if 'open_date' in p_info:
-                    open_condition = p_info['open_date'] >= start_open_date and p_info['open_date'] <= end_open_date
+                    open_condition = self._date_isEarlierOrEqual(start_open_date, p_info['open_date']) and self._date_isEarlierOrEqual(p_info['open_date'], end_open_date)
 
                 #Filtering projects
                 #aborted projects
