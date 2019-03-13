@@ -42,7 +42,7 @@ $(function(){
         }
         else{
           $('#formDeletePresetName').val('');
-          if(data['preset']!='Choose Presets'){
+          if(data['preset']!='Choose Preset'){
             $("#default_preset_buttons").find('input[data-value="'+data['preset']+'"]').parent('.btn').addClass('active');
             select_from_preset("default_preset_buttons", data['preset']);
           }
@@ -320,7 +320,7 @@ function load_presets() {
 
 
     var allPresetsDropdownMod='<button class="btn btn-default btn-sm dropdown-toggle wrapStyle" type="button" id="inputStateAll" data-toggle="dropdown"><i class="glyphicon glyphicon-list-alt"></i> Choose Preset <span class="caret"></span></button><ul id="inputStateAllul" class="dropdown-menu dropdown-menu-right dropdown-menu-wide" role="menu" aria-labelledby="inputStateAll"  style="z-index: 200;">';
-    allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="Choose Preset" data-origin="default"> Choose Presets</a></li>';
+    allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="Choose Preset" data-origin="default"> Choose Preset</a></li>';
     for (var preset in default_presets) {
       $('#default_preset_buttons').append('<label class="btn btn-default rBtngp2"><input type="radio" name="presetOptions" id="presetOpt-'+prettify(preset)+'" data-value="'+preset+'" autocomplete="off"><i class="glyphicon '+default_presets[preset].ICON.glyphicon+'"></i> '+preset+'</label>');
 
@@ -550,7 +550,7 @@ $('#deletePresetBtnModal').click(function(e){
   $.getJSON('/api/v1/presets/onloadcheck?action=load', function (data) {
     if(data['origin']=='userdefined' && data['preset']==presetToDel){
       data['origin']='default';
-      data['preset']='Choose Presets';
+      data['preset']='Choose Preset';
       data['loadtable']=false;
       $("#onLoadTableOff").trigger("click");
       $.ajax({
