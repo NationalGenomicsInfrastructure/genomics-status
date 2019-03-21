@@ -61,8 +61,6 @@
           {% for lane_number, lane in sorted(flowcell.get('lanedata', {}).items(), key=lambda x:x[0]) %}
             <div id="lane_{{ lane_number }}" class="sublane">
               <h4>Lane {{ lane_number }}
-                <button id="ud_button_lane_' +lid + '" class="undetermined-btn btn btn-info btn-sm"
-                           type="button" onclick="display_undetermined('{{ lane_number }}')">Show Undetermined</button>
               </h4>
               <table class="table table-bordered narrow-headers no-margin" id="summary_lane_{{ lane_number }}">
                 <tbody>
@@ -140,7 +138,7 @@
                     {% elif 'clustersnb' in lane %}
                       <th class="text-right">Clusters</th>
                     {% end %}
-                    
+
                     {% if flowcell.get('two_reads') %}
                       <th class="text-center">% <abbr title="Read 1 BasePairs">R1 BP</abbr> > Q30</th>
                       <th class="text-center">% <abbr title="Read 2 BasePairs">R2 BP</abbr> > Q30</th>
@@ -159,13 +157,13 @@
                       <th class="text-center"><abbr title="Mean Quality Score">MQS</abbr></th>
                     {% end %}
                   </tr>
-                
+
                 <!--noindex issue-->
                 {% set total_undetermined = 0 %}
                 {% if len(flowcell['lane'][lane_number]) == 1 and flowcell['lane'][lane_number][0]['barcode'] == 'unknown' %}
                   {% set total_undetermined = flowcell['lane'][lane_number][0]['clustersnb'].replace(',', '') %}
                 {% end %}
-                
+
                 <!--Primary sample table -->
                 {% for sample in flowcell['lane'][lane_number] %}
                   {% set sample_q30 = sample.get('overthirty', 0.0) %}
@@ -174,7 +172,7 @@
                     <td>{{ sample.get('Project', '').replace('__', '.') }}</td>
                     <td>{{ sample.get('SampleName') }}</td>
                     <td class="text-right">{% for thousand in sample.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                    <td class="text-right 
+                    <td class="text-right
                         {% if not thr_per_sp or sample.get('SampleName') == 'Undetermined' %}
                         {% elif float(sample.get('readsnb', sample.get('clustersnb', 0)).replace(',','')) > thr_per_sp *1000000 %}
                         success
@@ -182,14 +180,14 @@
                         warning
                         {% end %}
                     ">{% for thousand in sample.get('readsnb', sample.get('clustersnb', '')).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                    
+
                     {% if flowcell.get('two_reads') %}
                       {% set overthirty_r1 = float(sample.get('overthirty_r1')) %}
 
                       <td class="text-center {% if overthirty_r1 < 40.0 %} danger
                           {% elif overthirty_r1 < q30_threshold %} warning
                           {% else %} success {% end %}">{{ sample.get('overthirty_r1') }}</td>
-                        
+
                       {% set overthirty_r2 = float(sample.get('overthirty_r2')) %}
                       <td class="text-center {% if overthirty_r2 < 40.0 %} danger
                           {% elif overthirty_r2 < q30_threshold %} warning
@@ -199,13 +197,13 @@
                           {% elif sample_q30 < q30_threshold %} warning
                           {% else %} success {% end %}">{{ sample_q30 }}</td>
                     {% end %}
-                    
+
                     {% if sample.get('multi_barcode') %}
                       <td>{% for code in sample.get('multi_barcode')  %}{{ code }} {% end %}</td>
                     {% else %}
                       <td>{{ sample.get('barcode') }}</td>
                     {% end %}
-                    
+
                     {% if 'lanepc' in sample %} <td class="text-center">{{ float("{0:.2f}".format(float(sample['lanepc']))) }}</td> {% end %}
                     {% if 'mqs' in sample %}
                       <td class="text-center">{{ sample['mqs'] }}</td>
@@ -217,19 +215,21 @@
                 {% end %}
                 </tbody>
               </table>
-              
+
+              <button id="ud_button_lane_' +lid + '" class="undetermined-btn btn btn-info btn-sm"
+                         type="button" onclick="display_undetermined('{{ lane_number }}')">Show Undetermined</button>
               <!-- Undetermined table block -->
               {% if 'undetermined' in flowcell %}
               {% set shown_reads = 0 %}
               {% set subset_undet = (sorted(flowcell['undetermined'].get(lane_number, {}).items(), key=lambda x: x[1], reverse=True))[:20] %}
                 {% for undetermined, number in subset_undet %}
                   {% set shown_reads = shown_reads + number %}
-                {% end %}               
-              
+                {% end %}
+
                 <table class="undetermined " id="table_ud_lane_{{ lane_number }}" style="display:none;">
                   <tr>
                     <th>Index</th><th>Count</th><th class="text-center">Total %</th>
-                    
+
                     {% set barcodes=[] %}
                     {% for sample in flowcell['lane'][lane_number] %}
                       {% if sample.get('multi_barcode') %}
@@ -248,15 +248,15 @@
                         {% for sample in flowcell['lane'][lane_number] %}
                           {% if sample.get('multi_barcode') %}
                             {% for code in sample.get('multi_barcode')  %}
-                              {% set mismatch_ar.append(sum([code[i] != undetermined[i] 
+                              {% set mismatch_ar.append(sum([code[i] != undetermined[i]
                               and code[i] != 'N' and undetermined[i] != 'N' for i in range(len(undetermined)) ])) %}
                             {% end %}
-                          {% elif sample['barcode'] != 'unknown' and undetermined != "unknown" %}                    
-                            {% set mismatch_ar.append(sum([sample['barcode'][i] != undetermined[i] 
-                            and sample['barcode'][i] != 'N' and undetermined[i] != 'N' for i in range(len(undetermined)) ])) %} 
+                          {% elif sample['barcode'] != 'unknown' and undetermined != "unknown" %}
+                            {% set mismatch_ar.append(sum([sample['barcode'][i] != undetermined[i]
+                            and sample['barcode'][i] != 'N' and undetermined[i] != 'N' for i in range(len(undetermined)) ])) %}
                           {% end %}
-                        {% end %} 
-                        
+                        {% end %}
+
                       <!-- Individual undet rows -->
                       <tr class="{% if barcodes  and len(barcodes)<9 and 0 in mismatch_ar %}undetermined-highlight{% end %}">
                         <td><samp>{{ undetermined }}</samp></td>
@@ -271,7 +271,7 @@
                           <td class="{% if fr_matched > 0.8 %}undetermined-highlight{% elif fr_matched > 0.6 %}undetermined-warning{% end %}">{{ mismatches }}</td>
                         {% end %}
                       </tr>
-                    {% end %} 
+                    {% end %}
                 </table>
             {% end %}
             </div>
