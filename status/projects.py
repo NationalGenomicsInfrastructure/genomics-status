@@ -30,7 +30,7 @@ from genologics.entities import Artifact
 from genologics.entities import Protocol
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
-from zenpy import Zenpy, ZenpyException, APIException
+from zenpy import Zenpy, ZenpyException
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 application_log=logging.getLogger("tornado.application")
