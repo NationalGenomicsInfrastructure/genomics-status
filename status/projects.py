@@ -698,7 +698,7 @@ class ProjectTicketsDataHandler(SafeHandler):
                         total_tickets[ticket.id]['comments'].extend([comment.to_dict()])
             # Return the most recent ticket first
             self.write(total_tickets)
-        except (ZenpyException, APIException):
+        except ZenpyException:
             self.set_status(400)
             self.finish('<html><body>There was a problem with ZenDesk connection, please try it again later.</body></html>')
 
