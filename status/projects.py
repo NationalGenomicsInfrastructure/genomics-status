@@ -31,6 +31,7 @@ from genologics.entities import Protocol
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
 from zendesk import Zendesk, ZendeskError, get_id_from_url
+from zenpy import Zenpy
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 application_log=logging.getLogger("tornado.application")
@@ -679,22 +680,6 @@ class ProjectTicketsDataHandler(SafeHandler):
     """ Return a JSON file containing all the tickets in ZenDesk related to this project
     URL: /api/v1/project/([^/]*)/tickets
     """
-    def list_ticket_comments(self, ticket_id, page=1):
-        """ Returns comments related to ticket_id
-
-        This is a temporal method until the Python Zendesk module supports this
-        functionality.
-        """
-        auth = (self.application.zendesk_user + '/token', self.application.zendesk_token)
-        url = "{}/api/v2/tickets/{}/comments.json?page={}".format(self.application.zendesk_url, ticket_id, str(page))
-        r = requests.get(url, auth=auth)
-        if r.status_code == requests.status_codes.codes.OK:
-            return r.json()
-        else:
-            self.set_status(400)
-            self.finish('<html><body>There was a problem with ZenDesk connection, please try it again later.</body></html>')
-
-
     def get(self, p_id):
         self.set_header("Content-type", "application/json")
         p_name = self.get_argument('p_name', False)
@@ -704,35 +689,14 @@ class ProjectTicketsDataHandler(SafeHandler):
 
         try:
             #Search for all tickets with the given project name
-            tickets = self.application.zendesk.search(query="fieldvalue:{}".format(p_name))
             total_tickets = OrderedDict()
-            if tickets['results']:
-                for ticket in tickets['results']:
-                    t_id = ticket['id']
-                    total_tickets[t_id] = ticket
-                    # Comments on the ticket (the actual thread) are on a different API call
-                    request = self.list_ticket_comments(t_id)
-                    total_tickets[t_id]['comments'] = request['comments']
-                    page = 2
-                    while request['next_page']:
-                        request = self.list_ticket_comments(t_id, page=page)
-                        total_tickets[t_id]['comments'].extend(request['comments'])
-                        page += 1
-
-            page = 2
-            while tickets['next_page']:
-                tickets = self.application.zendesk.search(query="fieldvalue:{}".format(p_name), page=page)
-                for ticket in tickets['results']:
-                    t_id = ticket['id']
-                    total_tickets[t_id] = ticket
-                    request = self.list_ticket_comments(t_id)
-                    total_tickets[t_id]['comments'] = request['comments']
-                    page_r = 2
-                    while request['next_page']:
-                        request = self.list_ticket_comments(t_id, page=page_r)
-                        total_tickets[t_id]['comments'].extend(request['comments'])
-                        page_r += 1
-                page += 1
+            for ticket in self.application.zendesk.search(query="fieldvalue:{}".format(p_name)):
+                total_tickets[ticket.id] = ticket.to_dict()
+                for comment in self.application.zendesk.tickets.comments(ticket=ticket.id):
+                    if 'comments' not in total_tickets[ticket.id]:
+                        total_tickets[ticket.id]['comments']=[comment.to_dict()]
+                    else:
+                        total_tickets[ticket.id]['comments'].extend([comment.to_dict()])
             # Return the most recent ticket first
             self.write(total_tickets)
         except ZendeskError:
