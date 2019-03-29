@@ -30,8 +30,7 @@ from genologics.entities import Artifact
 from genologics.entities import Protocol
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
-from zendesk import Zendesk, ZendeskError, get_id_from_url
-from zenpy import Zenpy
+from zenpy import Zenpy, ZenpyException, APIException
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 application_log=logging.getLogger("tornado.application")
@@ -699,7 +698,7 @@ class ProjectTicketsDataHandler(SafeHandler):
                         total_tickets[ticket.id]['comments'].extend([comment.to_dict()])
             # Return the most recent ticket first
             self.write(total_tickets)
-        except ZendeskError:
+        except (ZenpyException, APIException):
             self.set_status(400)
             self.finish('<html><body>There was a problem with ZenDesk connection, please try it again later.</body></html>')
 
