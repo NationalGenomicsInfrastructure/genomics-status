@@ -248,7 +248,7 @@ class PricingBaseHandler(SafeHandler):
 
         return_d = all_components.copy()
 
-        for component_id, component in all_components.iteritems():
+        for component_id, component in all_components.items():
 
             price, price_per_unit = self._calculate_component_price(component,
                                                                     exch_rates)
@@ -283,7 +283,7 @@ class PricingBaseHandler(SafeHandler):
 
         return_d = products.copy()
 
-        for product_id, product in products.iteritems():
+        for product_id, product in productsself.items():
             price_int, price_ext = self._calculate_product_price(product, all_component_prices)
 
             if pretty_strings:

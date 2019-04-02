@@ -631,10 +631,10 @@ function updateStatusBar1(source, type){
       dealWithDatepickers('datepick3', 'add');
       dealWithDatepickers('datepick2', 'add');
     }
-    if(jQuery.inArray('statusOptOngoing', checklist) !== -1 || jQuery.inArray('statusOptOpen', checklist) !== -1 || jQuery.inArray('statusOptNeedsReview', checklist) !== -1 || jQuery.inArray('statusOptRecCtrl', checklist) !== -1 ){
+    if(jQuery.inArray('statusOptOngoing', checklist) !== -1 || jQuery.inArray('statusOptOpen', checklist) !== -1 || jQuery.inArray('statusOptNeedReview', checklist) !== -1 || jQuery.inArray('statusOptRecCtrl', checklist) !== -1 ){
       dealWithDatepickers('datepick1', 'add');
     }
-    if(jQuery.inArray('statusOptOngoing', checklist) !== -1 || jQuery.inArray('statusOptOpen', checklist) !== -1 || jQuery.inArray('statusOptNeedsReview', checklist) !== -1 ){
+    if(jQuery.inArray('statusOptOngoing', checklist) !== -1 || jQuery.inArray('statusOptOpen', checklist) !== -1 || jQuery.inArray('statusOptNeedReview', checklist) !== -1 ){
       dealWithDatepickers('datepick2', 'add');
     }
     $.each( prevChoices, function(i, val) {

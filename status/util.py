@@ -82,7 +82,7 @@ class BaseHandler(tornado.web.RequestHandler):
         self.application.gs_globals['exception_fulltext'] = repr(sys.exc_info())
 
         # Get the status code and error reason
-        if status_code in ERROR_CODES.keys():
+        if status_code in list(ERROR_CODES):
             reason = ERROR_CODES[status_code]
         try:
             if 'exc_info' in kwargs:
@@ -190,7 +190,7 @@ def dthandler(obj):
     if hasattr(obj, 'isoformat'):
         return obj.isoformat()
     else:
-        raise TypeError, "Object can not be isoformatted."
+        raise TypeError("Object can not be isoformatted.")
 
 
 ################################

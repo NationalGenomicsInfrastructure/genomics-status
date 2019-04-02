@@ -3,7 +3,7 @@
 
 import tornado.web
 import json
-import cStringIO
+from io import BytesIO
 
 import matplotlib.gridspec as gridspec
 from matplotlib.figure import Figure
@@ -201,7 +201,7 @@ class SamplesPerLanePlotHandler(SamplesPerLaneDataHandler):
 
         FigureCanvasAgg(fig)
 
-        buf = cStringIO.StringIO()
+        buf = BytesIO()
         fig.savefig(buf, format="png")
         data = buf.getvalue()
 

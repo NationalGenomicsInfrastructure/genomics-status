@@ -59,7 +59,7 @@ from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler,
 
 
 from zenpy import Zenpy
-from urlparse import urlsplit
+from urllib.parse import urlsplit
 
 class Application(tornado.web.Application):
     def __init__(self, settings):
@@ -238,7 +238,7 @@ class Application(tornado.web.Application):
             self.worksets_db = couch["worksets"]
             self.x_flowcells_db = couch["x_flowcells"]
         else:
-            print settings.get("couch_server", None)
+            print(settings.get("couch_server", None))
             raise IOError("Cannot connect to couchdb");
 
         # Load columns and presets from genstat-defaults user in StatusDB
@@ -259,10 +259,11 @@ class Application(tornado.web.Application):
         # mess up
         password = settings.get("password", None)
         headers = {"Accept": "application/json",
-                   "Authorization": "Basic " + "{}:{}".format(user, password).encode('base64')[:-1]}
+                   "Authorization": "Basic " + "{}:{}".format(base64.b64encode(bytes(user, 'ascii')),
+                   base64.b64encode(bytes(password, 'ascii')))}
         decoder = json.JSONDecoder(object_pairs_hook=OrderedDict)
         user_url = "{}/gs_users/{}".format(settings.get("couch_server"), genstat_id)
-        json_user = requests.get(user_url, headers=headers).content.rstrip()
+        json_user = requests.get(user_url, headers=headers).content.rstrip().decode('ascii')
         self.genstat_defaults = decoder.decode(json_user)
 
         # Load private instrument listing
@@ -358,7 +359,7 @@ if __name__ == '__main__':
 
     # Load configuration file
     with open("settings.yaml") as settings_file:
-        server_settings = yaml.load(settings_file)
+        server_settings = yaml.full_load(settings_file)
 
     server_settings["Testing mode"] = options['testing_mode']
 

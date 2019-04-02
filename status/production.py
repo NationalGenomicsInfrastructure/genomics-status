@@ -1,7 +1,7 @@
 """ Handlers related to data production.
 """
 from collections import OrderedDict
-import cStringIO
+from io import BytesIO
 from datetime import datetime
 import json
 
@@ -88,7 +88,7 @@ class DeliveredMonthlyPlotHandler(DeliveredMonthlyDataHandler):
         ax = fig.add_subplot(111)
 
         dates = [parser.parse(d) for d in delivered.keys()]
-        values = delivered.values()
+        values = list(delivered.values())
 
         ax.bar(dates, values, width=10)
 
@@ -99,7 +99,7 @@ class DeliveredMonthlyPlotHandler(DeliveredMonthlyDataHandler):
 
         FigureCanvasAgg(fig)
 
-        buf = cStringIO.StringIO()
+        buf = BytesIO()
         fig.savefig(buf, format="png")
         delivered = buf.getvalue()
 
@@ -167,7 +167,7 @@ class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
         ax = fig.add_subplot(111)
 
         dates = [parser.parse(d) for d in delivered.keys()]
-        values = delivered.values()
+        values = list(delivered.values())
 
         ax.bar(dates, values)
 
@@ -182,7 +182,7 @@ class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
 
         FigureCanvasAgg(fig)
 
-        buf = cStringIO.StringIO()
+        buf = BytesIO()
         fig.savefig(buf, format="png")
         delivered = buf.getvalue()
 
@@ -250,7 +250,7 @@ class ProducedMonthlyPlotHandler(ProducedMonthlyDataHandler):
         ax = fig.add_subplot(111)
 
         dates = [parser.parse(d) for d in produced.keys()]
-        values = produced.values()
+        values = list(produced.values())
 
         ax.bar(dates, values, width=10)
 
@@ -261,7 +261,7 @@ class ProducedMonthlyPlotHandler(ProducedMonthlyDataHandler):
 
         FigureCanvasAgg(fig)
 
-        buf = cStringIO.StringIO()
+        buf = BytesIO()
         fig.savefig(buf, format="png")
         produced = buf.getvalue()
 
@@ -329,7 +329,7 @@ class ProducedQuarterlyPlotHandler(ProducedQuarterlyDataHandler):
         ax = fig.add_subplot(111)
 
         dates = [parser.parse(d) for d in produced.keys()]
-        values = produced.values()
+        values = list(produced.values())
         quarters = [(d.month - 1) // 3 + 1 for d in dates]
         years = [d.year for d in dates]
 
@@ -342,7 +342,7 @@ class ProducedQuarterlyPlotHandler(ProducedQuarterlyDataHandler):
 
         FigureCanvasAgg(fig)
 
-        buf = cStringIO.StringIO()
+        buf = BytesIO()
         fig.savefig(buf, format="png")
         produced = buf.getvalue()
 

@@ -36,7 +36,7 @@ class DeliveriesPageHandler(SafeHandler):
             process.udf['Bioinfo responsible'] = responsible
             try:
                 process.put()
-            except Exception, e:
+            except Exception as e:
                 # still try to update everything
                 # but will print error anyway
                 self.set_status(400)
@@ -59,7 +59,7 @@ class DeliveriesPageHandler(SafeHandler):
         doc['project_summary']['bioinfo_responsible'] = responsible if responsible != 'unassigned' else None
         try:
             self.application.projects_db.save(doc)
-        except Exception, e:
+        except Exception as e:
             self.set_status(400)
             self.write(e.message)
 
@@ -190,7 +190,7 @@ class DeliveriesPageHandler(SafeHandler):
                 else:
                     ongoing_projects += 1
                 all_running_notes.update(self.__parse_running_notes(running_notes, project_id, runs_bioinfo))
-                latest_timestamp = max(running_notes.keys())
+                latest_timestamp = max(list(running_notes))
                 latest_running_note = running_notes[latest_timestamp]
                 latest_running_note['timestamp'] = latest_timestamp[:-7] # to get rid of milliseconds
                 # responsibles (needed for filters)
@@ -217,7 +217,7 @@ class DeliveriesPageHandler(SafeHandler):
             ongoing_deliveries[project_id].update(project_data)
         try:
             lims_responsibles = ['unassigned'] + sorted(Udfconfig(lims, id="1128").presets)
-        except Exception, e:
+        except Exception as e:
             lims_responsibles = ['unassigned'] + sorted(responsible_list)
         template = self.application.loader.load("deliveries.html")
         self.write(template.generate(gs_globals=self.application.gs_globals,
