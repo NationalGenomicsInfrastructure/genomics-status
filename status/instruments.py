@@ -23,10 +23,10 @@ def recover_logs(handler, search_string=None):
             row_date=datetime.datetime.strptime(row.key, "%Y-%m-%dT%H:%M:%S.%f")
             if row_date >= d1 and row_date <= d2:
                 valid_rows.append(row.value)
-    
+
         return valid_rows
-        
-        
+
+
 
 class DataInstrumentLogsHandler(SafeHandler):
     """ Handles the instrument logs page
@@ -46,7 +46,8 @@ class InstrumentLogsHandler(SafeHandler):
     def get(self, search_string=None):
         docs=recover_logs(self, search_string)
         t = self.application.loader.load("instrument_logs.html")
-        self.write(t.generate(docs=docs,gs_globals=self.application.gs_globals))
+        self.write(t.generate(docs=docs,gs_globals=self.application.gs_globals,
+                              user=self.get_current_user_name()))
 
 
 class InstrumentNamesHandler(SafeHandler):
@@ -57,4 +58,3 @@ class InstrumentNamesHandler(SafeHandler):
    def get(self):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.application.instruments_db.view("info/id_to_name").rows))
-       
