@@ -339,7 +339,6 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/running_notes_tab.html")
             tornado.autoreload.watch("design/suggestion_box.html")
             tornado.autoreload.watch("design/unauthorized.html")
-            tornado.autoreload.watch("design/workset_placement.html")
             tornado.autoreload.watch("design/workset_samples.html")
             tornado.autoreload.watch("design/worksets.html")
             tornado.autoreload.watch("design/flowcell_trend_plot.html")

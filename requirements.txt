@@ -4,8 +4,7 @@ ecdsa>=0.13
 genologics>=0.3.16
 httplib2>=0.10.3
 logbook
-freetype>= 2.3
-libpng>= 1.2
+cffi
 matplotlib>=2.0.0
 numpy>=1.12.1
 oauth2>=1.9.0.post1
