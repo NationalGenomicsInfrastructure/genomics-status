@@ -182,14 +182,14 @@ Description: Shows a table with all flow cells.
 </div>
 
 <script src="/static/js/jquery.dataTables.min.js"></script>
-<!-- The below two scripts which are loaded through base.html are reloaded here. The ones from base.html will be
-loaded only after block stuff has finished loading which will not work in the case of rendering running notes here.-->
-<script src="/static/js/marked.min.js"></script>
-<script type="text/javascript" src="/static/js/base.js"></script>
 <!-- Table Sorting -->
 <script type="text/javascript">
 $( document ).ready(function() {
-init_listjs();
+  init_listjs();
+  //Formatting for Running note panel body
+  $(".running-note-panel > .panel-body").each(function(i){
+    $(this).html(make_markdown($(this).text()));
+  });
 });
 // Initialize sorting and searching javascript plugin
 function init_listjs() {
@@ -222,11 +222,6 @@ function init_listjs() {
         } );
     } );
 }
-
-//Formatting for Running note panel body
-$(".running-note-panel > .panel-body").each(function(i){
-  $(this).html(make_markdown($(this).text()));
-});
 </script>
 
 

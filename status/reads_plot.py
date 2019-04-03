@@ -16,7 +16,7 @@ def filter_data(data, search=None):
     return [d for d in data if d['id'][:6] >= searches[0] and d['id'][:6] <= searches[1]]
 
 class DataFlowcellYieldHandler(SafeHandler):
-    """ Handles the api call to reads_plot data 
+    """ Handles the api call to reads_plot data
 
     Loaded through /api/v1/reads_plot/([^/]*)$
     """
@@ -32,7 +32,8 @@ class  FlowcellPlotHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("flowcell_trend_plot.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals))
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                              user=self.get_current_user_name()))
 
 
 class FlowcellCountPlotHandler(SafeHandler):
@@ -42,7 +43,8 @@ class FlowcellCountPlotHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("flowcell_count_plot.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals))
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                              user=self.get_current_user_name()))
 
 
 def filter_count_data(app, group_level, start_date, end_date, display_type):
@@ -77,4 +79,3 @@ class FlowcellCountApiHandler(SafeHandler):
         data = filter_count_data(self, group_level, start_date, end_date, display_type)
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(data))
-

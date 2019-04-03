@@ -27,7 +27,8 @@ class ProductionCronjobsHandler(SafeHandler):
                                      'users': doc['users'], 'server': server.key}
         template = self.application.loader.load("cronjobs.html")
         self.write(template.generate(gs_globals=self.application.gs_globals,
-                                     cronjobs=cronjobs))
+                                     cronjobs=cronjobs,
+                                     user=self.get_current_user_name()))
 
 class DeliveredMonthlyDataHandler(SafeHandler):
     """ Gives the data for monthly delivered amount of basepairs.
