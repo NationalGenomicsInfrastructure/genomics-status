@@ -392,6 +392,12 @@ td.progress {
   font-size: 1em;
   font-style:italic;
 }
+.mkdown ul{
+  display:inline-grid;
+}
+.mkdown p{
+  margin: 0px;
+}
 
 /* Links Tab */
 .link_wrapper {
