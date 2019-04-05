@@ -79,7 +79,7 @@ class FlowcellHandler(SafeHandler):
         if not entry:
             extra_message=""
             flowcell_date = datetime.strptime(flowcell_id[0:6], "%y%m%d")
-            first_xflowcell_record = datetime(2015,03,13)
+            first_xflowcell_record = datetime(2015,3,13)
             if first_xflowcell_record>flowcell_date:
                 extra_message = "Your flowcell is in an older database. It can still be accessed, contact your administrator."
 

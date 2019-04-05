@@ -82,7 +82,7 @@ class BaseHandler(tornado.web.RequestHandler):
         self.application.gs_globals['exception_fulltext'] = repr(sys.exc_info())
 
         # Get the status code and error reason
-        if status_code in ERROR_CODES.keys():
+        if status_code in list(ERROR_CODES):
             reason = ERROR_CODES[status_code]
         try:
             if 'exc_info' in kwargs:
@@ -190,7 +190,7 @@ def dthandler(obj):
     if hasattr(obj, 'isoformat'):
         return obj.isoformat()
     else:
-        raise TypeError, "Object can not be isoformatted."
+        raise TypeError("Object can not be isoformatted.")
 
 
 ################################
@@ -308,7 +308,7 @@ class GoogleUser(object):
     """Stores the information that google returns from a user throuhgh its secured API.
     """
     def __init__(self, user_token):
-        assert user_token.has_key('access_token')
+        assert 'access_token' in user_token
 
         self.user_token = user_token
         self._google_plus_api = "https://www.googleapis.com/plus/v1/people/me"

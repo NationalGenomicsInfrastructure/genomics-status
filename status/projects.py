@@ -16,7 +16,7 @@ import os
 import logging
 
 
-from itertools import ifilter
+#from itertools import ifilter
 from collections import defaultdict
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
@@ -73,7 +73,7 @@ class PresetsHandler(SafeHandler):
 
         try:
             self.application.gs_users_db.save(doc)
-        except Exception, e:
+        except Exception as e:
             self.set_status(400)
             self.write(e.message)
 
@@ -86,7 +86,8 @@ class PresetsHandler(SafeHandler):
             user_email=self.application.settings.get("username", None)+'@scilifelab.se'
         user_details={}
         headers = {"Accept": "application/json",
-                   "Authorization": "Basic " + "{}:{}".format(self.application.settings.get("username", None), self.application.settings.get("password", None)).encode('base64')[:-1]}
+                   "Authorization": "Basic " + "{}:{}".format(base64.b64encode(bytes(self.application.settings.get("username", None), 'ascii')),
+                   base64.b64encode(bytes(self.application.settings.get("password", None), 'ascii')))}
         for row in self.application.gs_users_db.view('authorized/users'):
             if row.get('key') == user_email:
                 user_url = "{}/gs_users/{}".format(self.application.settings.get("couch_server"), row.get('value'))
@@ -112,7 +113,7 @@ class PresetsOnLoadHandler(PresetsHandler):
 
         try:
             self.application.gs_users_db.save(doc)
-        except Exception, e:
+        except Exception as e:
             self.set_status(400)
             self.write(e.message)
 
@@ -123,8 +124,8 @@ class PresetsOnLoadHandler(PresetsHandler):
 class ProjectsBaseDataHandler(SafeHandler):
     def keys_to_names(self, columns):
         d = {}
-        for column_category, column_tuples in columns.iteritems():
-            for key, value in column_tuples.iteritems():
+        for column_category, column_tuples in columns.items():
+            for key, value in column_tuples.items():
                 d[value] = key
         return d
 
@@ -133,13 +134,13 @@ class ProjectsBaseDataHandler(SafeHandler):
         # and project_summary key gives 'temporary' udfs that will move to 'details'.
         # Include these as normal key:value pairs
         if 'project_summary' in row.value:
-            for summary_key, summary_value in row.value['project_summary'].iteritems():
+            for summary_key, summary_value in row.value['project_summary'].items():
                 row.value[summary_key] = summary_value
             row.value.pop("project_summary", None)
 
         # If key is in both project_summary and details, details has precedence
         if 'details' in row.value:
-            for detail_key, detail_value in row.value['details'].iteritems():
+            for detail_key, detail_value in row.value['details'].items():
                 row.value[detail_key] = detail_value
             row.value.pop("details", None)
 
@@ -154,7 +155,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 notes = json.loads(row.value['running_notes'])
                 # note_dates = {datetime obj: time string, ...}
                 note_dates = dict(zip(map(dateutil.parser.parse, notes.keys()), notes.keys()))
-                latest_date = note_dates[max(note_dates.keys())]
+                latest_date = note_dates[max(list(note_dates))]
                 row.value['latest_running_note'] = json.dumps({latest_date: notes[latest_date]})
             except ValueError:
                 pass
@@ -227,7 +228,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         # Specific list of projects given
         if filter_projects[:1] == 'P':
             fprojs = filter_projects.split(',')
-            for p_id, p_info in projects.iteritems():
+            for p_id, p_info in projects.items():
                 if p_id in fprojs:
                     filtered_projects[p_id] = p_info
 
@@ -244,18 +245,18 @@ class ProjectsBaseDataHandler(SafeHandler):
                 closed_condition, queued_condition, open_condition, queued_proj = [False] * 4
 
                 if 'close_date' in p_info:
-                    closed_condition = p_info['close_date'] >= start_close_date and p_info['close_date'] <= end_close_date
+                    closed_condition = p_info['close_date'] >= str(start_close_date) and p_info['close_date'] <= str(end_close_date)
 
                 if 'queued' in p_info['details']:
                     queued_proj = True
-                    queued_condition = p_info['details'].get('queued') >= start_queue_date and p_info['details'].get('queued') <= end_queue_date
+                    queued_condition = p_info['details'].get('queued') >= str(start_queue_date) and p_info['details'].get('queued') <= str(end_queue_date)
 
                 elif 'project_summary' in p_info and 'queued' in p_info['project_summary']:
                     queued_proj =True
                     queued_condition = p_info['project_summary'].get('queued') >= start_queue_date and p_info['project_summary'].get('queued') <= end_queue_date
 
                 if 'open_date' in p_info:
-                    open_condition = p_info['open_date'] >= start_open_date and p_info['open_date'] <= end_open_date
+                    open_condition = p_info['open_date'] >= str(start_open_date) and p_info['open_date'] <= str(end_open_date)
 
                 #Filtering projects
                 #aborted projects
@@ -292,7 +293,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
             if row.key[0] in final_projects:
-                for date_type, date in row.value.iteritems():
+                for date_type, date in row.value.items():
                     final_projects[row.key[0]][date_type] = date
         return final_projects
 
@@ -302,11 +303,11 @@ class ProjectsBaseDataHandler(SafeHandler):
         columns = self.application.genstat_defaults.get('pv_columns')
         project_list = self.list_projects(filter_projects=project_list)
         field_items = set()
-        for project_id, value in project_list.iteritems():
-            for key, _ in value.iteritems():
+        for project_id, value in project_list.items():
+            for key, _ in value.items():
                 field_items.add(key)
         if undefined:
-            for column_category, column_dict in columns.iteritems():
+            for column_category, column_dict in columns.items():
                 field_items = field_items.difference(set(column_dict.values()))
         return field_items
 
@@ -390,7 +391,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
         if date_result.rows:
             for date_row in date_result.rows:
-                for date_type, date in date_row.value.iteritems():
+                for date_type, date in date_row.value.items():
                     summary_row.value[date_type] = date
 
         return summary_row.value
@@ -410,7 +411,7 @@ class ProjectSamplesDataHandler(SafeHandler):
             for lib_prep in sorted(sample_data["library_prep"]):
                 content=sample_data["library_prep"][lib_prep]
                 if "sample_run_metrics" in content:
-                    for run, id in content["sample_run_metrics"].iteritems():
+                    for run, id in content["sample_run_metrics"].items():
                         sample_data["sample_run_metrics"].append(run)
                         sample_data["run_metrics_data"][run]=self.get_sample_run_metrics(run)
                 if "prep_status" in content:
@@ -421,12 +422,12 @@ class ProjectSamplesDataHandler(SafeHandler):
                 if "prep_finished_date" in content:
                     sample_data["prep_finished_date"].append(content["prep_finished_date"])
                 if "library_validation" in content:
-                    for agrId, libval in content["library_validation"].iteritems():
+                    for agrId, libval in content["library_validation"].items():
                         if "caliper_image" in libval:
                             sample_data['library_prep'][lib_prep]['library_validation'][agrId]['caliper_image'] = self.reverse_url('CaliperImageHandler', project, sample, 'libval{0}'.format(lib_prep))
 
         if "details" in sample_data:
-            for detail_key, detail_value in sample_data["details"].iteritems():
+            for detail_key, detail_value in sample_data["details"].items():
                 sample_data[detail_key] = detail_value
         if 'initial_qc' in sample_data:
             if "caliper_image" in sample_data['initial_qc']:
@@ -444,7 +445,7 @@ class ProjectSamplesDataHandler(SafeHandler):
         # Not all projects (i.e Pending projects) have samples!
         samples = result.rows[0].value if result.rows[0].value else {}
         output = OrderedDict()
-        for sample, sample_data in sorted(samples.iteritems(), key=lambda x: x[0]):
+        for sample, sample_data in sorted(samples.items(), key=lambda x: x[0]):
             sample_data = self.sample_data(sample_data, project, sample)
             output[sample] = sample_data
         return output
@@ -469,7 +470,7 @@ class ProjectSamplesDataHandler(SafeHandler):
         result = sample_view[project]
 
         samples = result.rows[0].value
-        samples = OrderedDict(sorted(samples.iteritems(), key=lambda x: x[0]))
+        samples = OrderedDict(sorted(samples.items(), key=lambda x: x[0]))
         return samples
 
 
@@ -530,8 +531,8 @@ class CaliperImageHandler(SafeHandler):
             transport.close()
             returnHTML=json.dumps(encoded_string)
             return returnHTML
-        except Exception, message:
-            print message
+        except Exception as message:
+            print(message)
             return("Error fetching caliper images")
 
 class ProjectSamplesHandler(SafeHandler):
@@ -587,7 +588,7 @@ class RunningNotesDataHandler(SafeHandler):
             # Sorted running notes, by date
             running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
             sorted_running_notes = OrderedDict()
-            for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0], reverse=True):
+            for k, v in sorted(running_notes.items(), key=lambda t: t[0], reverse=True):
                 sorted_running_notes[k] = v
             self.write(sorted_running_notes)
 
@@ -641,9 +642,9 @@ class LinksDataHandler(SafeHandler):
 
         #Sort by descending date, then hopefully have deviations on top
         sorted_links = OrderedDict()
-        for k, v in sorted(links.iteritems(), key=lambda t: t[0], reverse=True):
+        for k, v in sorted(links.items(), key=lambda t: t[0], reverse=True):
             sorted_links[k] = v
-        sorted_links = OrderedDict(sorted(sorted_links.iteritems(), key=lambda (k,v): v['type']))
+        sorted_links = OrderedDict(sorted(sorted_links.items(), key=lambda k: k[1]['type']))
         self.write(sorted_links)
 
     def post(self, project):
@@ -729,7 +730,7 @@ class ProjectQCDataHandler(SafeHandler):
                     try:
                         paths[cursample][currun].append(os.path.relpath(os.path.join(root,f), prefix))
                     except KeyError:
-                        print "cannot add {} to paths, one of these two keys does not exist: sample->{} run->{}".format(os.path.relpath(os.path.join(root,f), prefix), cursample, currun)
+                        print("cannot add {} to paths, one of these two keys does not exist: sample->{} run->{}".format(os.path.relpath(os.path.join(root,f), prefix), cursample, currun))
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(paths))
 
