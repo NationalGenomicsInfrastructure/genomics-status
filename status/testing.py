@@ -20,7 +20,7 @@ class TestDataHandler(UnsafeHandler):
         self.write(json.dumps(self.random_series(int(n)), default=dthandler))
 
     def random_series(self, n):
-        s = [{"y":random.randint(10, 99), "x":i} for i in xrange(int(n))]
+        s = [{"y":random.randint(10, 99), "x":i} for i in range(int(n))]
         d = dict()
         d["data"] = s
         d["name"] = "series"

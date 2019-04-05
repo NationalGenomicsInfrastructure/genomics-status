@@ -11,7 +11,7 @@ import requests
 import re
 import paramiko
 import base64
-import urllib
+import urllib.parse
 import os
 import logging
 
@@ -517,7 +517,7 @@ class CaliperImageHandler(SafeHandler):
         """returns a base64 string of the caliper image aksed"""
         pattern=re.compile("^sftp://([a-z\.]+)(.+)")
         host=pattern.search(url).group(1)
-        uri=urllib.unquote(pattern.search(url).group(2))
+        uri=urllib.parse.unquote(pattern.search(url).group(2))
 
         try:
             transport=paramiko.Transport(host)
