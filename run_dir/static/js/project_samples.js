@@ -269,9 +269,9 @@ function load_tickets() {
 			  panel_label = '';
             }
             var updated_at = new Date(c['created_at']);
-            ticket += '<div class="panel panel-'+panel_class+'">'+
+            ticket += '<div class="panel panel-'+panel_class+' zendesk-ticket">'+
                         '<div class="panel-heading">'+updated_at.toGMTString() + panel_label + '</div>'+
-                        '<div class="panel-body"><pre style="white-space: pre-wrap; word-break: keep-all;">'+c['body']+'</pre></div>'+
+                        '<div class="panel-body"><pre style="white-space: pre-wrap; word-break: keep-all;">'+make_markdown(c['body'])+'</pre></div>'+
                       '</div>';
 
           });

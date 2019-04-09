@@ -42,7 +42,7 @@ $(function(){
         }
         else{
           $('#formDeletePresetName').val('');
-          if(data['preset']!='Choose Presets'){
+          if(data['preset']!='Choose Preset'){
             $("#default_preset_buttons").find('input[data-value="'+data['preset']+'"]').parent('.btn').addClass('active');
             select_from_preset("default_preset_buttons", data['preset']);
           }
@@ -158,8 +158,17 @@ function load_table(status, type, columns, dates) {
       $.each(columns, function(i, column_tuple){
         tbl_row.append($('<td>')
           .addClass(column_tuple[1])
-          .html(summary_row[column_tuple[1]])
-          );
+          .html(function(){
+            if(column_tuple[1]=='delivery_projects' && !(typeof summary_row[column_tuple[1]] === "undefined")){
+              var txt='';
+              $.each(summary_row[column_tuple[1]], function(i, item){
+                txt+=item+'<br/>';
+              })
+              return txt;
+            }
+            return summary_row[column_tuple[1]];
+          })
+        );
       });
 
       // Add links to projects
@@ -311,7 +320,7 @@ function load_presets() {
 
 
     var allPresetsDropdownMod='<button class="btn btn-default btn-sm dropdown-toggle wrapStyle" type="button" id="inputStateAll" data-toggle="dropdown"><i class="glyphicon glyphicon-list-alt"></i> Choose Preset <span class="caret"></span></button><ul id="inputStateAllul" class="dropdown-menu dropdown-menu-right dropdown-menu-wide" role="menu" aria-labelledby="inputStateAll"  style="z-index: 200;">';
-    allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="Choose Preset" data-origin="default"> Choose Presets</a></li>';
+    allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="Choose Preset" data-origin="default"> Choose Preset</a></li>';
     for (var preset in default_presets) {
       $('#default_preset_buttons').append('<label class="btn btn-default rBtngp2"><input type="radio" name="presetOptions" id="presetOpt-'+prettify(preset)+'" data-value="'+preset+'" autocomplete="off"><i class="glyphicon '+default_presets[preset].ICON.glyphicon+'"></i> '+preset+'</label>');
 
@@ -541,7 +550,7 @@ $('#deletePresetBtnModal').click(function(e){
   $.getJSON('/api/v1/presets/onloadcheck?action=load', function (data) {
     if(data['origin']=='userdefined' && data['preset']==presetToDel){
       data['origin']='default';
-      data['preset']='Choose Presets';
+      data['preset']='Choose Preset';
       data['loadtable']=false;
       $("#onLoadTableOff").trigger("click");
       $.ajax({
@@ -756,28 +765,31 @@ function get_current_selection(source){
   dates['old_close_date']= $('#inp_date_5').val();
   dates['new_close_date']= $('#inp_date_6').val();
   currDate=new Date();
+  monthNday=((''+currDate.getMonth()).length<2 ? '0' : '')+(currDate.getMonth()+1)+'-'+((''+currDate.getDate()).length<2 ? '0' : '')+(currDate.getDate());
+  today=currDate.getFullYear()+'-'+monthNday;
+  twoYearsAgo=currDate.getFullYear() - 2+'-'+monthNday;
   if(source!='save'){
     if(status.includes('closed')){
       if(dates['old_close_date']==''){
-        dates['old_close_date']=currDate.getFullYear() - 2+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+        dates['old_close_date']=twoYearsAgo;
       }
       if(dates['new_close_date']==''){
-        dates['new_close_date']=currDate.getFullYear()+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+        dates['new_close_date']=today;
       }
     }
     if(status.includes('open') || status.includes('ongoing') || status.includes('reception_control')){
       if(dates['old_open_date']==''){
-        dates['old_open_date']=currDate.getFullYear() - 2+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+        dates['old_open_date']=twoYearsAgo;
       }
       if(dates['new_open_date']==''){
-        dates['new_open_date']=currDate.getFullYear()+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+        dates['new_open_date']=today;
       }
       if(status.includes('ongoing')){
         if(dates['old_queue_date']==''){
-          dates['old_queue_date']=currDate.getFullYear() - 2+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+          dates['old_queue_date']=twoYearsAgo;
         }
         if(dates['new_queue_date']==''){
-          dates['new_queue_date']=currDate.getFullYear()+'-'+(currDate.getMonth()+1)+'-'+currDate.getDate();
+          dates['new_queue_date']=today;
         }
       }
     }

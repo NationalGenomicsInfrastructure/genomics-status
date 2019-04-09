@@ -58,8 +58,8 @@ from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler,
     WorksetsDataHandler, WorksetSearchHandler
 
 
-from zendesk import Zendesk
-
+from zenpy import Zenpy
+from urlparse import urlsplit
 
 class Application(tornado.web.Application):
     def __init__(self, settings):
@@ -278,8 +278,8 @@ class Application(tornado.web.Application):
         self.zendesk_url = settings["zendesk"]["url"]
         self.zendesk_user = settings["zendesk"]["username"]
         self.zendesk_token = settings["zendesk"]["token"]
-        self.zendesk = Zendesk(self.zendesk_url, use_api_token=True, zendesk_username=self.zendesk_user,
-                                zendesk_password=self.zendesk_token, api_version=2)
+        self.zendesk = Zenpy(email=self.zendesk_user, token=self.zendesk_token,
+                                subdomain=urlsplit(self.zendesk_url).hostname.split('.')[0])
 
         # Trello
         self.trello_api_key = settings['trello']['api_key']

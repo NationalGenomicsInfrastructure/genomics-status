@@ -4,12 +4,15 @@
 import tornado.web
 import json
 import datetime
+from dateutil.relativedelta import relativedelta
 
 from genologics.entities import Container
 from genologics import lims
 from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 from status.util import SafeHandler
+from status.projects import RunningNotesDataHandler
+
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
 thresholds = {
@@ -25,19 +28,32 @@ thresholds = {
     'NovaSeq S4': 2000,
 }
 
+def formatDate(date):
+    datestr=datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f")
+    return datestr.strftime("%a %b %d %Y, %I:%M:%S %p")
+
 class FlowcellsHandler(SafeHandler):
     """ Serves a page which lists all flowcells with some brief info.
+    By default shows only flowcells form the last 6 months, use the parameter
+    'all' to show all flowcells.
     """
-    def list_flowcells(self):
+    def list_flowcells(self, all=False):
         flowcells = OrderedDict()
-        temp_flowcells={}
-        fc_view = self.application.flowcells_db.view("info/summary",
-                                                     descending=True)
-        for row in fc_view:
-            temp_flowcells[row.key] = row.value
+        temp_flowcells = {}
+        if all:
+            fc_view = self.application.flowcells_db.view("info/summary",
+                                                        descending=True)
+            for row in fc_view:
+                temp_flowcells[row.key] = row.value
 
-        xfc_view = self.application.x_flowcells_db.view("info/summary",
-                                                     descending=True)
+            xfc_view = self.application.x_flowcells_db.view("info/summary",
+                                                            descending=True)
+        else:
+            # fc_view are from 2016 and older so only include xfc_view here
+            half_a_year_ago = (datetime.datetime.now() - relativedelta(months=6)).strftime("%y%m%d")
+            xfc_view = self.application.x_flowcells_db.view("info/summary",
+                                                            descending=True,
+                                                            endkey=half_a_year_ago)
         for row in xfc_view:
             try:
                 row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'], "%y%m%d").strftime("%Y-%m-%d")
@@ -52,11 +68,12 @@ class FlowcellsHandler(SafeHandler):
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
-
     def get(self):
+        # Default is to NOT show all flowcells
+        all=self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
-        fcs=self.list_flowcells()
-        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user_name(), flowcells=fcs))
+        fcs=self.list_flowcells(all=all)
+        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user_name(), flowcells=fcs, form_date=formatDate, all=all))
 
 
 class FlowcellHandler(SafeHandler):
@@ -98,20 +115,39 @@ class FlowcellsInfoDataHandler(SafeHandler):
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.flowcell_info(flowcell)))
+        flowcell_info = self.__class__.get_flowcell_info(self.application, flowcell)
+        self.write(json.dumps(flowcell_info))
 
-    def flowcell_info(self, flowcell):
-        fc_view = self.application.flowcells_db.view("info/summary2",
+    @staticmethod
+    def get_flowcell_info(application, flowcell):
+        fc_view = application.flowcells_db.view("info/summary2",
                                                      descending=True)
-        xfc_view = self.application.x_flowcells_db.view("info/summary2_full_id",
+        xfc_view = application.x_flowcells_db.view("info/summary2_full_id",
                                                      descending=True)
+        flowcell_info = None
         for row in fc_view[flowcell]:
             flowcell_info = row.value
             break
         for row in xfc_view[flowcell]:
             flowcell_info = row.value
             break
+        if flowcell_info is not None:
+            return flowcell_info
+        else:
+            # No hit for a full name, check if the short name is found:
+            complete_flowcell_rows = application.x_flowcells_db.view(
+                                        'info/short_name_to_full_name',
+                                        key=flowcell
+                                    ).rows
 
+            if complete_flowcell_rows:
+                complete_flowcell_id = complete_flowcell_rows[0].value
+                view = application.x_flowcells_db.view(
+                            'info/summary2_full_id',
+                            key=complete_flowcell_id,
+                            )
+                if view.rows:
+                    return view.rows[0].value
         return flowcell_info
 
 class FlowcellSearchHandler(SafeHandler):
@@ -269,13 +305,20 @@ class FlowcellNotesDataHandler(SafeHandler):
 
     def post(self, flowcell):
         note = self.get_argument('note', '')
+        category = self.get_argument('category', 'Flowcell')
+
+        if category == '':
+            category = 'Flowcell'
+
         user = self.get_secure_cookie('user')
         email = self.get_secure_cookie('email')
+        flowcell_info = FlowcellsInfoDataHandler.get_flowcell_info(self.application, flowcell)
+        projects = flowcell_info['pid_list']
         if not note:
             self.set_status(400)
             self.finish('<html><body>No note parameters found</body></html>')
         else:
-            newNote = {'user': user, 'email': email, 'note': note}
+            newNote = {'user': user, 'email': email, 'note': note, 'category': category}
             try:
                 p=get_container_from_id(flowcell)
             except (KeyError, IndexError) as e:
@@ -284,11 +327,21 @@ class FlowcellNotesDataHandler(SafeHandler):
             else:
                 running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
                 running_notes[str(datetime.datetime.now())] = newNote
+
+                flowcell_link = "<a href='/flowcells/{0}'>{0}</a>".format(flowcell)
+                project_note = "#####*Running note posted on flowcell {}:*\n".format(flowcell_link)
+                project_note += note
+                for project in projects:
+                    RunningNotesDataHandler.make_project_running_note(
+                        self.application, project,
+                        project_note, category,
+                        user, email
+                    )
+
                 p.udf['Notes'] = json.dumps(running_notes)
                 p.put()
                 self.set_status(201)
                 self.write(json.dumps(newNote))
-
 
 class FlowcellLinksDataHandler(SafeHandler):
     """ Serves external links for each project

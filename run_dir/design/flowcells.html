@@ -11,7 +11,15 @@ Description: Shows a table with all flow cells.
 
 <div class="container-fluid" id="flowcell_list">
   <div id="fc_table_div">
-      <h1><span id="page_title">Flowcells</span> </h1>
+      <h1><span id="page_title">Flowcells</span>
+          {% if all %}
+            <small>Showing all flowcells</small>
+            <a class="btn btn-default" href="/flowcells">Show last 6 months only</a>
+          {% else %}
+            <small>Showing flowcells from the last 6 months.</small>
+            <a class="btn btn-default" href="/flowcells?all=True">Show all</a>
+          {% end %}
+      </h1>
       <table class="table table-striped table-bordered sortable" id="fc_table">
         <thead>
           <tr class="sticky">
@@ -156,7 +164,13 @@ Description: Shows a table with all flow cells.
                         {% set running_notes = flowcells[onefc].get('running_notes') %}
                         {% set latest_running_note_key = max(k for k, v in running_notes.iteritems() if v != '') %}
                         <div class="panel panel-default running-note-panel">
-                            {{latest_running_note_key}} +=+ {{json_encode(running_notes[latest_running_note_key])}}
+                          <div class='panel-heading'>
+                          <a href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"].encode("ascii","ignore")}}</a>  -  {{form_date(latest_running_note_key)}}
+                          </div>
+                          <div class='panel-body' style='white-space: pre-line'>
+                            {{running_notes[latest_running_note_key]['note']}}
+                          </pre>
+                          </div>
                         </div>
                     {% end %}
                 </td>
@@ -168,14 +182,14 @@ Description: Shows a table with all flow cells.
 </div>
 
 <script src="/static/js/jquery.dataTables.min.js"></script>
-<!-- The below two scripts which are loaded through base.html are reloaded here. The ones from base.html will be
-loaded only after block stuff has finished loading which will not work in the case of rendering running notes here.-->
-<script type="text/javascript" src="/static/js/base.js"></script>
-<script src="/static/js/marked.min.js"></script>
 <!-- Table Sorting -->
 <script type="text/javascript">
 $( document ).ready(function() {
-init_listjs();
+  init_listjs();
+  //Formatting for Running note panel body
+  $(".running-note-panel > .panel-body").each(function(i){
+    $(this).html(make_markdown($(this).text()));
+  });
 });
 // Initialize sorting and searching javascript plugin
 function init_listjs() {
@@ -208,18 +222,6 @@ function init_listjs() {
         } );
     } );
 }
-$(".running-note-panel").each(function(i){
-  var data=$(this).text().split('+=+');
-  notedate = new Date($.trim(data[0]));
-  run_note=JSON.parse(data[1]);
-  $(this).replaceWith(
-    "<div class='panel-heading'> \
-    <a href='mailto:"+run_note['email']+"'>"+run_note['user']+"</a> - "+ notedate.toDateString()+", " + notedate.toLocaleTimeString(notedate)+" \
-    </div> \
-    <div class='panel-body' style='white-space: pre-line'> "+make_markdown(run_note['note'])+ "\
-    </pre> \
-    </div>");
-});
 </script>
 
 

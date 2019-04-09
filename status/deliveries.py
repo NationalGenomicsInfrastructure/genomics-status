@@ -232,6 +232,7 @@ class DeliveriesPageHandler(SafeHandler):
                                      project_status=project_status,
                                      responsible_list=responsible_list,
                                      lims_responsibles=lims_responsibles,
+                                     user=self.get_current_user_name()
                                      ))
 
     def __aggregate_status(self, list_of_statuses):

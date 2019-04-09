@@ -30,7 +30,7 @@ from genologics.entities import Artifact
 from genologics.entities import Protocol
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
-from zendesk import Zendesk, ZendeskError, get_id_from_url
+from zenpy import Zenpy, ZenpyException
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 application_log=logging.getLogger("tornado.application")
@@ -259,7 +259,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
                 #Filtering projects
                 #aborted projects
-                if 'aborted' in filter_projects or filter_projects == 'all' and ('aborted' in p_info['details'] or ('project_summary' in p_info and 'aborted' in p_info['project_summary'])):
+                if ('aborted' in filter_projects or filter_projects == 'all') and ('aborted' in p_info['details'] or ('project_summary' in p_info and 'aborted' in p_info['project_summary'])):
                         filtered_projects.append(row)
                 #pending reviews projects
                 elif ('review' in filter_projects or filter_projects == 'all') and 'pending_reviews' in p_info:
@@ -596,27 +596,34 @@ class RunningNotesDataHandler(SafeHandler):
         category = self.get_argument('category', '')
         user = self.get_secure_cookie('user')
         email = self.get_secure_cookie('email')
-        timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
         if not note:
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
-            newNote = {'user': user, 'email': email, 'note': note, 'category' : category, 'timestamp': timestamp}
-            p = Project(lims, id=project)
-            p.get(force=True)
-            running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
-            running_notes[timestamp] = newNote
-            p.udf['Running Notes'] = json.dumps(running_notes)
-            p.put()
-            #saving running notes directly in genstat, because reasons.
-            v=self.application.projects_db.view("project/project_id")
-            for row in v[project]:
-                doc_id=row.value
-            doc=self.application.projects_db.get(doc_id)
-            doc['details']['running_notes']=json.dumps(running_notes)
-            self.application.projects_db.save(doc)
+            newNote = RunningNotesDataHandler.make_project_running_note(self.application, project, note, category, user, email)
             self.set_status(201)
             self.write(json.dumps(newNote))
+
+    @staticmethod
+    def make_project_running_note(application, project, note, category, user, email):
+        timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
+        newNote = {'user': user, 'email': email, 'note': note, 'category' : category, 'timestamp': timestamp}
+        p = Project(lims, id=project)
+        p.get(force=True)
+        running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
+        running_notes[timestamp] = newNote
+        # Saving running note in LIMS
+        p.udf['Running Notes'] = json.dumps(running_notes)
+        p.put()
+
+        #saving running notes directly in genstat, because reasons.
+        v=application.projects_db.view("project/project_id")
+        for row in v[project]:
+            doc_id=row.value
+        doc=application.projects_db.get(doc_id)
+        doc['details']['running_notes']=json.dumps(running_notes)
+        application.projects_db.save(doc)
+        return newNote
 
 
 class LinksDataHandler(SafeHandler):
@@ -672,22 +679,6 @@ class ProjectTicketsDataHandler(SafeHandler):
     """ Return a JSON file containing all the tickets in ZenDesk related to this project
     URL: /api/v1/project/([^/]*)/tickets
     """
-    def list_ticket_comments(self, ticket_id, page=1):
-        """ Returns comments related to ticket_id
-
-        This is a temporal method until the Python Zendesk module supports this
-        functionality.
-        """
-        auth = (self.application.zendesk_user + '/token', self.application.zendesk_token)
-        url = "{}/api/v2/tickets/{}/comments.json?page={}".format(self.application.zendesk_url, ticket_id, str(page))
-        r = requests.get(url, auth=auth)
-        if r.status_code == requests.status_codes.codes.OK:
-            return r.json()
-        else:
-            self.set_status(400)
-            self.finish('<html><body>There was a problem with ZenDesk connection, please try it again later.</body></html>')
-
-
     def get(self, p_id):
         self.set_header("Content-type", "application/json")
         p_name = self.get_argument('p_name', False)
@@ -697,38 +688,17 @@ class ProjectTicketsDataHandler(SafeHandler):
 
         try:
             #Search for all tickets with the given project name
-            tickets = self.application.zendesk.search(query="fieldvalue:{}".format(p_name))
             total_tickets = OrderedDict()
-            if tickets['results']:
-                for ticket in tickets['results']:
-                    t_id = ticket['id']
-                    total_tickets[t_id] = ticket
-                    # Comments on the ticket (the actual thread) are on a different API call
-                    request = self.list_ticket_comments(t_id)
-                    total_tickets[t_id]['comments'] = request['comments']
-                    page = 2
-                    while request['next_page']:
-                        request = self.list_ticket_comments(t_id, page=page)
-                        total_tickets[t_id]['comments'].extend(request['comments'])
-                        page += 1
-
-            page = 2
-            while tickets['next_page']:
-                tickets = self.application.zendesk.search(query="fieldvalue:{}".format(p_name), page=page)
-                for ticket in tickets['results']:
-                    t_id = ticket['id']
-                    total_tickets[t_id] = ticket
-                    request = self.list_ticket_comments(t_id)
-                    total_tickets[t_id]['comments'] = request['comments']
-                    page_r = 2
-                    while request['next_page']:
-                        request = self.list_ticket_comments(t_id, page=page_r)
-                        total_tickets[t_id]['comments'].extend(request['comments'])
-                        page_r += 1
-                page += 1
+            for ticket in self.application.zendesk.search(query="fieldvalue:{}".format(p_name)):
+                total_tickets[ticket.id] = ticket.to_dict()
+                for comment in self.application.zendesk.tickets.comments(ticket=ticket.id):
+                    if 'comments' not in total_tickets[ticket.id]:
+                        total_tickets[ticket.id]['comments']=[comment.to_dict()]
+                    else:
+                        total_tickets[ticket.id]['comments'].extend([comment.to_dict()])
             # Return the most recent ticket first
             self.write(total_tickets)
-        except ZendeskError:
+        except ZenpyException:
             self.set_status(400)
             self.finish('<html><body>There was a problem with ZenDesk connection, please try it again later.</body></html>')
 
@@ -893,7 +863,8 @@ class ProjMetaCompareHandler(SafeHandler):
     def get(self):
         pids = self.get_arguments("p")
         t = self.application.loader.load("proj_meta_compare.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, pids=pids))
+        self.write(t.generate(gs_globals=self.application.gs_globals, pids=pids,
+                              user=self.get_current_user_name()))
 
 class ProjectRNAMetaDataHandler(SafeHandler):
     """Handler to serve RNA metadata from project"""
