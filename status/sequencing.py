@@ -51,7 +51,7 @@ class InstrumentClusterDensityPlotHandler(InstrumentClusterDensityDataHandler):
     """
     def get(self):
         data = self.data()
-        data = filter(lambda n: n[0] != "NA", data.items())
+        data = [n for n in list(data.items()) if n[0] != "NA"]
 
         fig, ax = plt.subplots(len(data), 1,
                                sharex=True,
@@ -64,7 +64,7 @@ class InstrumentClusterDensityPlotHandler(InstrumentClusterDensityDataHandler):
             upper = []
             lower = []
 
-            instrument = filter(lambda n: len(n[1]), instrument.items())
+            instrument = [n for n in list(instrument.items()) if None not in n[1]]
 
             for date, errors in sorted(instrument):
                 try:
@@ -111,7 +111,7 @@ class InstrumentErrorratePlotHandler(InstrumentErrorrateDataHandler):
     """
     def get(self):
         data = self.data()
-        data = filter(lambda n: n[0] != "NA", data.items())
+        data = [n for n in list(data.items()) if n[0] != "NA"]
 
         fig, ax = plt.subplots(len(data), 1,
                                sharex=True,
@@ -169,7 +169,7 @@ class InstrumentUnmatchedPlotHandler(InstrumentUnmatchedDataHandler):
     """
     def get(self):
         data = self.data()
-        data = filter(lambda n: n[0] != "NA", data.items())
+        data = [n for n in list(data.items()) if n[0] != "NA"]
 
         fig, ax = plt.subplots(len(data), 1,
                                sharex=True,
@@ -182,7 +182,7 @@ class InstrumentUnmatchedPlotHandler(InstrumentUnmatchedDataHandler):
             upper = []
             lower = []
 
-            instrument = filter(lambda n: None not in n[1], instrument.items())
+            instrument = [n for n in list(instrument.items()) if None not in n[1]]
 
             for date, unmatched in sorted(instrument):
                 if len(unmatched) > 0:
@@ -223,7 +223,7 @@ class InstrumentYieldPlotHandler(InstrumentYieldDataHandler):
     """
     def get(self):
         data = self.data()
-        data = filter(lambda n: n[0] != "NA", data.iteritems())
+        data = [n for n in list(data.items()) if n[0] != "NA"]
 
         fig, ax = plt.subplots(len(data), 1,
                                sharex=True,
@@ -236,7 +236,7 @@ class InstrumentYieldPlotHandler(InstrumentYieldDataHandler):
             upper = []
             lower = []
 
-            instrument = filter(lambda n: None not in n[1], instrument.items())
+            instrument = [n for n in list(instrument.items()) if None not in n[1]]
 
             for date, errors in sorted(instrument):
                 dts.append(parser.parse(date))
