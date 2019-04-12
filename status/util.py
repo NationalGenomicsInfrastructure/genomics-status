@@ -125,7 +125,7 @@ class BaseHandler(tornado.web.RequestHandler):
             multiqc_path = self.application.multiqc_path or ''
             multiqc_path = os.path.join(multiqc_path, multiqc_name)
             if os.path.exists(multiqc_path):
-                with open(multiqc_path, 'r') as multiqc_file:
+                with open(multiqc_path, 'r', encoding='utf-8') as multiqc_file:
                     html = multiqc_file.read()
                     return html
         return None
