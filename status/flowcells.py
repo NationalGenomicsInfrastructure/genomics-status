@@ -311,7 +311,11 @@ class FlowcellNotesDataHandler(SafeHandler):
             category = 'Flowcell'
 
         user = self.get_secure_cookie('user')
+        if user is not None:
+            user = str(user, 'utf-8')
         email = self.get_secure_cookie('email')
+        if email is not None:
+            email = str(email, 'utf-8')
         flowcell_info = FlowcellsInfoDataHandler.get_flowcell_info(self.application, flowcell)
         projects = flowcell_info['pid_list']
         if not note:
@@ -370,7 +374,11 @@ class FlowcellLinksDataHandler(SafeHandler):
 
     def post(self, flowcell):
         user = self.get_secure_cookie('user')
+        if user is not None:
+            user = str(user, 'utf-8')
         email = self.get_secure_cookie('email')
+        if email is not None:
+            email = str(email, 'utf-8')
         a_type = self.get_argument('type', '')
         title = self.get_argument('title', '')
         url = self.get_argument('url', '')
