@@ -65,7 +65,7 @@ Description: Shows a table with all flow cells.
                 <td class="run_mode">{{ flowcells[onefc].get('run_mode', '-') }}</td>
                 <td class="recipe">{{ flowcells[onefc].get('recipe', '-') }}</td>
                 <td class="lane" class="text-center">
-                     {% if 'lane_info' in flowcells[onefc] > 0 %}
+                     {% if 'lane_info' in flowcells[onefc] %}
                          {% for onelane in flowcells[onefc]['lane_info'] %}
                              <samp style="max-width:50px;">{{ onelane }}</samp><br>
                          {% end %}
@@ -86,7 +86,7 @@ Description: Shows a table with all flow cells.
                     {% end %}
                 </td>
                 <td class="pf_clusters" class="text-center">
-                     {% if 'lane_info' in flowcells[onefc] > 0 %}
+                     {% if 'lane_info' in flowcells[onefc] %}
                          {% for lane_id, lane in flowcells[onefc]['lane_info'].items() %}
                              {% if lane.get('pf_clusters') %}
                                  <samp style="max-width:50px;">{{ int(lane.get('pf_clusters').replace(',',''))/1000000 }}</samp>
@@ -103,7 +103,7 @@ Description: Shows a table with all flow cells.
                     {% end %}
                 </td>
                 <td class="q30_bases" class="text-center">
-                     {% if 'lane_info' in flowcells[onefc] > 0 %}
+                     {% if 'lane_info' in flowcells[onefc] %}
                          {% for onelane in flowcells[onefc]['lane_info'] %}
                              <samp style="max-width:50px;">{{ flowcells[onefc]['lane_info'][onelane].get('q30_bases', 'NA') }}</samp>
                              {% set run_setup = flowcells[onefc].get('recipe', '').split('x')[-1] %}
@@ -144,7 +144,7 @@ Description: Shows a table with all flow cells.
                     {% end %}
                 </td>
                 <td class="er_rate" class="text-center">
-                     {% if 'lane_info' in flowcells[onefc] > 0 %}
+                     {% if 'lane_info' in flowcells[onefc] %}
                          {% for onelane in flowcells[onefc]['lane_info'] %}
                              {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') %}
                                  <samp style="max-width:50px;">{{ round(flowcells[onefc]['lane_info'][onelane].get('er_rate'),2) }}</samp>
@@ -162,7 +162,7 @@ Description: Shows a table with all flow cells.
                 <td class="latest_running_note" class="text-center">
                     {% if flowcells[onefc].get('running_notes') %}
                         {% set running_notes = flowcells[onefc].get('running_notes') %}
-                        {% set latest_running_note_key = max(k for k, v in running_notes.iteritems() if v != '') %}
+                        {% set latest_running_note_key = max(k for k, v in running_notes.items() if v != '') %}
                         <div class="panel panel-default running-note-panel">
                           <div class='panel-heading'>
                           <a href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"].encode("ascii","ignore")}}</a>  -  {{form_date(latest_running_note_key)}}

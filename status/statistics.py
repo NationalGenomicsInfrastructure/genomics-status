@@ -46,7 +46,7 @@ def get_stats_data(db,view, gl=0, cleaning=None, doreduce=True):
                 data[meta_key1]+=row.value
     elif gl==0:
         for row in db_view:
-            new_key = map(general_cleaning, row.key)
+            new_key = list(map(general_cleaning, row.key))
             if new_key[0] not in data:
                 data[new_key[0]] = {}
             if new_key[1] not in data[new_key[0]]:

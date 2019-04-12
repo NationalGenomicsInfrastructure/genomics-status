@@ -2,7 +2,6 @@
 """
 import tornado.web
 import json
-import cStringIO
 from datetime import datetime
 from dateutil import parser
 from collections import Counter

@@ -299,7 +299,7 @@ class FlowcellNotesDataHandler(SafeHandler):
             except (KeyError) as e:
                 running_notes = {}
             sorted_running_notes = OrderedDict()
-            for k, v in sorted(running_notes.iteritems(), key=lambda t: t[0], reverse=True):
+            for k, v in sorted(running_notes.items(), key=lambda t: t[0], reverse=True):
                 sorted_running_notes[k] = v
             self.write(sorted_running_notes)
 
@@ -363,9 +363,9 @@ class FlowcellLinksDataHandler(SafeHandler):
 
             # Sort by descending date, then hopefully have deviations on top
             sorted_links = OrderedDict()
-            for k, v in sorted(links.iteritems(), key=lambda t: t[0], reverse=True):
+            for k, v in sorted(links.items(), key=lambda t: t[0], reverse=True):
                 sorted_links[k] = v
-            sorted_links = OrderedDict(sorted(sorted_links.iteritems(), key=lambda (k,v): v['type']))
+            sorted_links = OrderedDict(sorted(sorted_links.items(), key=lambda k: k[1]['type']))
             self.write(sorted_links)
 
     def post(self, flowcell):

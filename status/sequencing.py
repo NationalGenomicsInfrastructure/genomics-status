@@ -1,7 +1,7 @@
 """ Handlers related to data sequencing statistics.
 """
 from collections import defaultdict
-import cStringIO
+from io import BytesIO
 from datetime import datetime
 import json
 
@@ -51,7 +51,7 @@ class InstrumentClusterDensityPlotHandler(InstrumentClusterDensityDataHandler):
     """
     def get(self):
         data = self.data()
-        data = filter(lambda n: n[0] != "NA", data.iteritems())
+        data = [n for n in list(data.items()) if n[0] != "NA"]
 
         fig, ax = plt.subplots(len(data), 1,
                                sharex=True,
@@ -64,7 +64,7 @@ class InstrumentClusterDensityPlotHandler(InstrumentClusterDensityDataHandler):
             upper = []
             lower = []
 
-            instrument = filter(lambda n: len(n[1]), instrument.items())
+            instrument = [n for n in list(instrument.items()) if None not in n[1]]
 
             for date, errors in sorted(instrument):
                 try:
@@ -93,7 +93,7 @@ class InstrumentClusterDensityPlotHandler(InstrumentClusterDensityDataHandler):
         fig.tight_layout()
 
         FigureCanvasAgg(fig)
-        buf = cStringIO.StringIO()
+        buf = BytesIO()
         fig.savefig(buf, format="png")
         image_data = buf.getvalue()
         self.set_header("Content-Type", "image/png")
@@ -111,7 +111,7 @@ class InstrumentErrorratePlotHandler(InstrumentErrorrateDataHandler):
     """
     def get(self):
         data = self.data()
-        data = filter(lambda n: n[0] != "NA", data.iteritems())
+        data = [n for n in list(data.items()) if n[0] != "NA"]
 
         fig, ax = plt.subplots(len(data), 1,
                                sharex=True,
@@ -151,7 +151,7 @@ class InstrumentErrorratePlotHandler(InstrumentErrorrateDataHandler):
         fig.tight_layout()
 
         FigureCanvasAgg(fig)
-        buf = cStringIO.StringIO()
+        buf = BytesIO()
         fig.savefig(buf, format="png")
         image_data = buf.getvalue()
         self.set_header("Content-Type", "image/png")
@@ -169,7 +169,7 @@ class InstrumentUnmatchedPlotHandler(InstrumentUnmatchedDataHandler):
     """
     def get(self):
         data = self.data()
-        data = filter(lambda n: n[0] != "NA", data.iteritems())
+        data = [n for n in list(data.items()) if n[0] != "NA"]
 
         fig, ax = plt.subplots(len(data), 1,
                                sharex=True,
@@ -182,7 +182,7 @@ class InstrumentUnmatchedPlotHandler(InstrumentUnmatchedDataHandler):
             upper = []
             lower = []
 
-            instrument = filter(lambda n: None not in n[1], instrument.items())
+            instrument = [n for n in list(instrument.items()) if None not in n[1]]
 
             for date, unmatched in sorted(instrument):
                 if len(unmatched) > 0:
@@ -205,7 +205,7 @@ class InstrumentUnmatchedPlotHandler(InstrumentUnmatchedDataHandler):
         fig.tight_layout()
 
         FigureCanvasAgg(fig)
-        buf = cStringIO.StringIO()
+        buf = BytesIO()
         fig.savefig(buf, format="png")
         image_data = buf.getvalue()
         self.set_header("Content-Type", "image/png")
@@ -223,7 +223,7 @@ class InstrumentYieldPlotHandler(InstrumentYieldDataHandler):
     """
     def get(self):
         data = self.data()
-        data = filter(lambda n: n[0] != "NA", data.iteritems())
+        data = [n for n in list(data.items()) if n[0] != "NA"]
 
         fig, ax = plt.subplots(len(data), 1,
                                sharex=True,
@@ -236,7 +236,7 @@ class InstrumentYieldPlotHandler(InstrumentYieldDataHandler):
             upper = []
             lower = []
 
-            instrument = filter(lambda n: None not in n[1], instrument.items())
+            instrument = [n for n in list(instrument.items()) if None not in n[1]]
 
             for date, errors in sorted(instrument):
                 dts.append(parser.parse(date))
@@ -258,7 +258,7 @@ class InstrumentYieldPlotHandler(InstrumentYieldDataHandler):
         fig.tight_layout()
 
         FigureCanvasAgg(fig)
-        buf = cStringIO.StringIO()
+        buf = BytesIO()
         fig.savefig(buf, format="png")
         image_data = buf.getvalue()
         self.set_header("Content-Type", "image/png")
