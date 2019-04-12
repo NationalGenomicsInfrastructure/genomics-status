@@ -52,7 +52,7 @@ class BaseHandler(tornado.web.RequestHandler):
         if self.application.test_mode:
             return 'Testing User!'
         else:
-            return str(self.get_secure_cookie("user"), 'utf-8')
+            return self.get_secure_cookie("user")
 
     def get_current_user_name(self):
         # Fix ridiculous bug with quotation marks showing on the web
@@ -69,7 +69,7 @@ class BaseHandler(tornado.web.RequestHandler):
         if self.application.test_mode:
             return 'Testing User!'
         else:
-            return str(self.get_secure_cookie("email"), 'utf-8')
+            return self.get_secure_cookie("email")
 
     def write_error(self, status_code, **kwargs):
         """ Overwrites write_error method to have custom error pages.
