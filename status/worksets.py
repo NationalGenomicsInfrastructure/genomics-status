@@ -122,7 +122,11 @@ class WorksetNotesDataHandler(SafeHandler):
     def post(self, workset):
         note = self.get_argument('note', '')
         user = self.get_secure_cookie('user')
+        if user is not None:
+            user = str(user, 'utf-8')
         email = self.get_secure_cookie('email')
+        if email is not None:
+            email = str(email, 'utf-8')
         category = self.get_argument('category', 'Workset')
 
         if category == '':
@@ -197,7 +201,11 @@ class WorksetLinksHandler(SafeHandler):
 
     def post(self, lims_step):
         user = self.get_secure_cookie('user')
+        if user is not None:
+            user = str(user, 'utf-8')
         email = self.get_secure_cookie('email')
+        if email is not None:
+            email = str(email, 'utf-8')
         a_type = self.get_argument('type', '')
         title = self.get_argument('title', '')
         url = self.get_argument('url', '')

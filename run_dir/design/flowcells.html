@@ -89,7 +89,7 @@ Description: Shows a table with all flow cells.
                      {% if 'lane_info' in flowcells[onefc] %}
                          {% for lane_id, lane in flowcells[onefc]['lane_info'].items() %}
                              {% if lane.get('pf_clusters') %}
-                                 <samp style="max-width:50px;">{{ int(lane.get('pf_clusters').replace(',',''))/1000000 }}</samp>
+                                 <samp style="max-width:50px;">{{ int(int(lane.get('pf_clusters').replace(',',''))/1000000) }}</samp>
                                  {% set threshold = thresholds.get(flowcells[onefc].get('run_mode', ''), 0) %}
                                  {% if int(lane.get('pf_clusters').replace(',',''))/1000000 >= threshold %}
                                      <span class="glyphicon glyphicon-ok-sign" style="color:green"></span><br>
