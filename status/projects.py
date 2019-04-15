@@ -81,7 +81,7 @@ class PresetsHandler(SafeHandler):
         self.write({'success': 'success!!'})
 
     def get_user_details(self):
-        user_email = self.get_current_user_email()
+        user_email = str(self.get_current_user_email(), 'utf-8')
         if user_email == 'Testing User!':
             user_email=self.application.settings.get("username", None)+'@scilifelab.se'
         user_details={}
