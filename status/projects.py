@@ -81,7 +81,7 @@ class PresetsHandler(SafeHandler):
         self.write({'success': 'success!!'})
 
     def get_user_details(self):
-        user_email = str(self.get_current_user_email(), 'utf-8')
+        user_email = self.get_current_user_email()
         if user_email == 'Testing User!':
             user_email=self.application.settings.get("username", None)+'@scilifelab.se'
         user_details={}
@@ -595,12 +595,8 @@ class RunningNotesDataHandler(SafeHandler):
     def post(self, project):
         note = self.get_argument('note', '')
         category = self.get_argument('category', '')
-        user = self.get_secure_cookie('user')
-        if user is not None:
-            user = str(user, 'utf-8')
-        email = self.get_secure_cookie('email')
-        if email is not None:
-            email = str(email, 'utf-8')
+        user = self.get_current_user()
+        email = self.get_current_user_email()
         if not note:
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
@@ -652,12 +648,8 @@ class LinksDataHandler(SafeHandler):
         self.write(sorted_links)
 
     def post(self, project):
-        user = self.get_secure_cookie('user')
-        if user is not None:
-            user = str(user, 'utf-8')
-        email = self.get_secure_cookie('email')
-        if email is not None:
-            email = str(email, 'utf-8')
+        user = self.get_current_user()
+        email = self.get_current_user_email()
         a_type = self.get_argument('type', '')
         title = self.get_argument('title', '')
         url = self.get_argument('url', '')
