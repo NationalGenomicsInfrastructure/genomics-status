@@ -310,8 +310,8 @@ class FlowcellNotesDataHandler(SafeHandler):
         if category == '':
             category = 'Flowcell'
 
-        user = self.get_secure_cookie('user')
-        email = self.get_secure_cookie('email')
+        user = self.get_current_user()
+        email = self.get_current_user_email()
         flowcell_info = FlowcellsInfoDataHandler.get_flowcell_info(self.application, flowcell)
         projects = flowcell_info['pid_list']
         if not note:
@@ -369,8 +369,8 @@ class FlowcellLinksDataHandler(SafeHandler):
             self.write(sorted_links)
 
     def post(self, flowcell):
-        user = self.get_secure_cookie('user')
-        email = self.get_secure_cookie('email')
+        user = self.get_current_user()
+        email = self.get_current_user_email()
         a_type = self.get_argument('type', '')
         title = self.get_argument('title', '')
         url = self.get_argument('url', '')

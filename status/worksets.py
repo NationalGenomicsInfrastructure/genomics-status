@@ -121,8 +121,8 @@ class WorksetNotesDataHandler(SafeHandler):
 
     def post(self, workset):
         note = self.get_argument('note', '')
-        user = self.get_secure_cookie('user')
-        email = self.get_secure_cookie('email')
+        user = self.get_current_user()
+        email = self.get_current_user_email()
         category = self.get_argument('category', 'Workset')
 
         if category == '':
@@ -196,8 +196,8 @@ class WorksetLinksHandler(SafeHandler):
         self.write(sorted_links)
 
     def post(self, lims_step):
-        user = self.get_secure_cookie('user')
-        email = self.get_secure_cookie('email')
+        user = self.get_current_user()
+        email = self.get_current_user_email()
         a_type = self.get_argument('type', '')
         title = self.get_argument('title', '')
         url = self.get_argument('url', '')
