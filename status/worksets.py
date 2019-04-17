@@ -8,11 +8,14 @@ from genologics.entities import Process
 from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 import datetime
+from dateutil.relativedelta import relativedelta
+from dateutil.parser import parse
 from status.projects import RunningNotesDataHandler
 
 class WorksetsDataHandler(SafeHandler):
     """returns basic worksets json
-       Loaded through /api/v1/worksets """
+       Loaded through /api/v1/worksets
+    """
     def get(self):
         self.set_header("Content-type", "application/json")
         ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
@@ -24,26 +27,43 @@ class WorksetsDataHandler(SafeHandler):
         self.write(json.dumps(result))
 
 class WorksetsHandler(SafeHandler):
-    """Loaded through /worksets"""
-    def worksets_data(self):
-        ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
+    """Loaded through /worksets
+       By default shows only worksets form the last 6 months, use the parameter 'all' to show all worksets.
+    """
+    def worksets_data(self, all=False):
         result={}
+        half_a_year_ago = datetime.datetime.now() - relativedelta(months=6)
+        ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
+
         for row in ws_view:
-            result[row.key]=row.value
-            result[row.key].pop("_id", None)
-            result[row.key].pop("_rev", None)
+            if all:
+                result[row.key]=row.value
+                result[row.key].pop("_id", None)
+                result[row.key].pop("_rev", None)
+            else:
+                try:
+                    if parse(row.value['date_run']) >= half_a_year_ago:
+                        result[row.key]=row.value
+                        result[row.key].pop("_id", None)
+                        result[row.key].pop("_rev", None)
+                # Exception that date_run is not available
+                except TypeError:
+                    continue
+
         return result
 
-    def get(self, worksets='all'):
+    def get(self):
+        # Default is to NOT show all worksets
+        all=self.get_argument("all", False)
         t = self.application.loader.load("worksets.html")
-        ws_data=self.worksets_data()
+        ws_data=self.worksets_data(all=all)
         headers= [['Date Run', 'date_run'],['Workset Name', 'workset_name'], \
                  ['Projects (samples)','projects'], ['Sequencing Setup', 'sequencing_setup'], \
                  ['Date finished', 'finish date'],['Operator', 'technician'],\
                  ['Application', 'application'], ['Library','library_method'], \
                  ['Samples Passed', 'passed'],['Samples Failed', 'failed'], \
                  ['Pending Samples', 'unknown'], ['Total samples', 'total']];
-        self.write(t.generate(gs_globals=self.application.gs_globals, worksets=worksets, user=self.get_current_user_name(), ws_data=ws_data,headers=headers))
+        self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user_name(), ws_data=ws_data, headers=headers, all=all))
 
 class WorksetDataHandler(SafeHandler):
     """Loaded through /api/v1/workset/[workset]"""
