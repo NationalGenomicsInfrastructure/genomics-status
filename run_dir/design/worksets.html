@@ -10,9 +10,9 @@ Description: Shows a table with all worksets.
 {% block stuff %}
 
 {% if all %}
-  <h1 id="{{ worksets }}" class="worksets_page_heading"><span id="page_title">Worksets</span> <small>All worksets found in statusdb</small><a class="btn btn-default" href="/worksets">Show last 6 months only</a></h1>
+  <h1 id="{{ worksets }}" class="worksets_page_heading"><span id="page_title">Worksets</span> <small>All worksets found in statusdb. </small><a class="btn btn-default" href="/worksets">Show last 6 months only</a></h1>
 {% else %}
-  <h1 id="{{ worksets }}" class="worksets_page_heading"><span id="page_title">Worksets</span> <small>Worksets from the last 6 months</small><a class="btn btn-default" href="/worksets?all=True">Show all</a></h1>
+  <h1 id="{{ worksets }}" class="worksets_page_heading"><span id="page_title">Worksets</span> <small>Worksets from the last 6 months. </small><a class="btn btn-default" href="/worksets?all=True">Show all</a></h1>
 {% end %}
 
 
