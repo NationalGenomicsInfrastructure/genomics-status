@@ -9,7 +9,7 @@ various forms. Document specifications for StatusDB are available in the interna
 
 **NOTE**: These steps assume that:
 * you're either running a python virtualenv or you do have root permissions.
-* you're running python version 2.7
+* you're running python version 3.6 or later (dicts are ordered by default)
 * you have access to both StatusDB and Genologics LIMS
 
 1 - Clone the repository with the `--recursive` option (this will also download [nvd3](http://nvd3.org/) library):
@@ -22,6 +22,7 @@ git clone --recursive https://github.com/SciLifeLab/status.git
 
 ```
 cd status
+pip install -r requirements.txt
 python setup.py install
 ```
 
