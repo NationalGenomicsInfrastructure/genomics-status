@@ -135,14 +135,14 @@ class WorksetNotesDataHandler(SafeHandler):
         # Sorted running notes, by date
         workset_notes = json.loads(p.udf['Workset Notes']) if 'Workset Notes' in p.udf else {}
         sorted_workset_notes = OrderedDict()
-        for k, v in sorted(workset_notes.iteritems(), key=lambda t: t[0], reverse=True):
+        for k, v in sorted(workset_notes.items(), key=lambda t: t[0], reverse=True):
             sorted_workset_notes[k] = v
         self.write(sorted_workset_notes)
 
     def post(self, workset):
         note = self.get_argument('note', '')
-        user = self.get_secure_cookie('user')
-        email = self.get_secure_cookie('email')
+        user = self.get_current_user()
+        email = self.get_current_user_email()
         category = self.get_argument('category', 'Workset')
 
         if category == '':
@@ -150,7 +150,7 @@ class WorksetNotesDataHandler(SafeHandler):
 
         workset_data = WorksetDataHandler.get_workset_data(self.application, workset)
 
-        projects = workset_data[workset]['projects'].keys()
+        projects = list(workset_data[workset]['projects'])
         workset_name = workset_data[workset]['name']
 
         if not note:
@@ -210,14 +210,14 @@ class WorksetLinksHandler(SafeHandler):
 
         #Sort by descending date, then hopefully have deviations on top
         sorted_links = OrderedDict()
-        for k, v in sorted(links.iteritems(), key=lambda t: t[0], reverse=True):
+        for k, v in sorted(links.items(), key=lambda t: t[0], reverse=True):
             sorted_links[k] = v
-        sorted_links = OrderedDict(sorted(sorted_links.iteritems(), key=lambda (k,v): v['type']))
+        sorted_links = OrderedDict(sorted(sorted_links.items(), key=lambda k : k[1]['type']))
         self.write(sorted_links)
 
     def post(self, lims_step):
-        user = self.get_secure_cookie('user')
-        email = self.get_secure_cookie('email')
+        user = self.get_current_user()
+        email = self.get_current_user_email()
         a_type = self.get_argument('type', '')
         title = self.get_argument('title', '')
         url = self.get_argument('url', '')

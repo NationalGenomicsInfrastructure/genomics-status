@@ -11,7 +11,7 @@ class BioinfoAnalysisHandler(SafeHandler):
 
     def post(self, project_id):
         v = self.application.bioinfo_db.view("full_doc/pj_run_lane_sample_to_doc")
-        user = self.get_secure_cookie('user') or ''
+        user = self.get_current_user()
         data = json.loads(self.request.body)
         saved_data = {}
         for run_id in data:
@@ -28,7 +28,7 @@ class BioinfoAnalysisHandler(SafeHandler):
                             changed = True
                             original_doc['values'] = {}
                 else:
-                    last_timestamp = max(original_doc['values'].keys())
+                    last_timestamp = max(list(original_doc['values']))
                     last_change = original_doc['values'][last_timestamp]
                     if last_change.get('qc') != data[run_id]['qc'] or last_change.get('bp') != data[run_id]['bp'] \
                             or last_change.get('datadelivered', '') != data[run_id]['datadelivered']:
@@ -43,7 +43,7 @@ class BioinfoAnalysisHandler(SafeHandler):
                     try:
                         self.application.bioinfo_db.save(original_doc)
                         saved_data[run_id] = original_doc['values'][timestamp] # the last one
-                    except Exception, err:
+                    except Exception as err:
                         self.set_status(400)
                         self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
                         return None
@@ -63,7 +63,7 @@ class BioinfoAnalysisHandler(SafeHandler):
                 lane_id = row.value.get('lane')
                 sample_id = row.value.get('sample')
                 changes = row.value.get('values', {})
-                last_timestamp = max(changes.keys())
+                last_timestamp = max(list(changes))
                 bioinfo_qc = changes.get(last_timestamp, {})
 
                 # building first view
@@ -225,4 +225,3 @@ class BioinfoAnalysisHandler(SafeHandler):
             pass
             # unknown status, if happens it will fail
         return status # may fail here, if somebody defined a new status without updating this function
-

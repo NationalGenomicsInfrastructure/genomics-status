@@ -169,7 +169,7 @@ Description: Shows all presets configured for user and enables their selection.
                             <div class="col-lg-6 col-md-12 col-sm-12 col-xs-12" >
                             <div class="colHeader" id="basic_columns">
                               <h4 class="search-action" data-action="filterHeader" id="basic">Basic <input class="headingCheckbox" type="checkbox"></h4>
-                              {% for col_display_name, col_name in columns['BASIC_COLUMNS'].iteritems() %}
+                              {% for col_display_name, col_name in columns['BASIC_COLUMNS'].items() %}
                               <div class="checkbox">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="BASIC_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-basic-columns-{{col_name.replace("(", "").replace(")", "")}}">
@@ -180,7 +180,7 @@ Description: Shows all presets configured for user and enables their selection.
                             </div>
                             <div class="colHeader" id="setup_project_columns">
                               <h4 class="search-action" data-action="filterHeader" id="setup-project">Setup Project <input class="headingCheckbox" type="checkbox"></h4>
-                              {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].iteritems() %}
+                              {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].items() %}
                               <div class="checkbox">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="SETUP_PROJECT_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-setup-project-columns-{{col_name.replace("(", "").replace(")", "")}}">
@@ -191,7 +191,7 @@ Description: Shows all presets configured for user and enables their selection.
                             </div>
                             <div class="colHeader" id="bioinfo_columns">
                               <h4 class="search-action" data-action="filterHeader" id="bioinfo">Bioinformatics <input class="headingCheckbox" type="checkbox"></h4>
-                              {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].iteritems() %}
+                              {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].items() %}
                               <div class="checkbox">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="BIOINFO_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-bioinfo-columns-{{col_name.replace("(", "").replace(")", "")}}">
@@ -202,7 +202,7 @@ Description: Shows all presets configured for user and enables their selection.
                             </div>
                             <div class="colHeader" id="sequencing_columns">
                               <h4 class="search-action" data-action="filterHeader" id="sequencing">Sequencing <input class="headingCheckbox" type="checkbox"></h4>
-                              {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].iteritems() %}
+                              {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].items() %}
                               <div class="checkbox">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="SEQUENCING_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-sequencing-columns-{{col_name.replace("(", "").replace(")", "")}}">
@@ -213,7 +213,7 @@ Description: Shows all presets configured for user and enables their selection.
                             </div>
                             <div class="colHeader" id="accreditation_columns">
                               <h4 class="search-action" data-action="filterHeader" id="accreditation">Accreditation <input class="headingCheckbox" type="checkbox"></h4>
-                              {% for col_display_name, col_name in columns['ACCREDITATION_COLUMNS'].iteritems() %}
+                              {% for col_display_name, col_name in columns['ACCREDITATION_COLUMNS'].items() %}
                               <div class="checkbox">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="ACCREDITATION_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-accreditation-columns-{{col_name.replace("(", "").replace(")", "")}}">
@@ -226,7 +226,7 @@ Description: Shows all presets configured for user and enables their selection.
                           <div class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
                             <div class="colHeader" id="details_columns">
                               <h4 class="search-action" data-action="filterHeader" id="details">Project Details <input class="headingCheckbox" type="checkbox"></h4>
-                              {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].iteritems() %}
+                              {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].items() %}
                               <div class="checkbox">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="DETAILS_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-details-columns-{{col_name.replace("(", "").replace(")", "")}}">
@@ -237,7 +237,7 @@ Description: Shows all presets configured for user and enables their selection.
                             </div>
                             <div class="colHeader" id="library_prep_columns">
                               <h4 class="search-action" data-action="filterHeader" id="library-prep">Library Prep <input class="headingCheckbox" type="checkbox"></h4>
-                              {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].iteritems() %}
+                              {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].items() %}
                               <div class="checkbox">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="LIBRARY_PREP_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-library-prep-columns-{{col_name.replace("(", "").replace(")", "")}}">
@@ -249,7 +249,7 @@ Description: Shows all presets configured for user and enables their selection.
 
                             <div class="colHeader" id="extra_columns">
                               <h4 class="search-action" data-action="filterHeader" id="extra">Extra <input class="headingCheckbox" type="checkbox"></h4>
-                              {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].iteritems() %}
+                              {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].items() %}
                               <div class="checkbox">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="EXTRA_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-extra-columns-{{col_name.replace("(", "").replace(")", "")}}">
