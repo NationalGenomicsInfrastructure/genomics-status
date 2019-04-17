@@ -89,17 +89,15 @@ class WorksetSearchHandler(SafeHandler):
         if len(search_string) == 0:
             return ''
         worksets = []
-        ws_view = self.application.worksets_db.view("worksets/name")
+        ws_view = self.application.worksets_db.view("worksets/only_name")
         for row in ws_view:
-            try:
-                if search_string.lower() in row.key.lower():
-                    fc = {
-                        "url": '/workset/'+row.key,
-                        "name": row.key
-                    }
-                    worksets.append(fc);
-            except AttributeError:
-                pass
+            if search_string.lower() in row.key.lower():
+                fc = {
+                    "url": '/workset/'+row.key,
+                    "name": row.key
+                }
+                worksets.append(fc)
+
         return worksets
 
 class WorksetNotesDataHandler(SafeHandler):
