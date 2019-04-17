@@ -164,27 +164,28 @@ class FlowcellSearchHandler(SafeHandler):
             return ''
         flowcells = []
         fc_view = self.application.flowcells_db.view("info/id")
+        search_string = search_string.lower()
         for row in fc_view:
             try:
-                if search_string.lower() in row.key.lower():
+                if search_string in row.key.lower():
                     splitted_fc = row.key.split('_')
                     fc = {
                         "url": '/flowcells/{}_{}'.format(splitted_fc[0], splitted_fc[-1]),
                         "name": row.key
                     }
-                    flowcells.append(fc);
+                    flowcells.append(fc)
             except AttributeError:
                 pass
         xfc_view = self.application.x_flowcells_db.view("info/id")
         for row in xfc_view:
             try:
-                if search_string.lower() in row.key.lower():
+                if search_string in row.key.lower():
                     splitted_fc = row.key.split('_')
                     fc = {
                         "url": '/flowcells/{}_{}'.format(splitted_fc[0], splitted_fc[-1]),
                         "name": row.key
                     }
-                    flowcells.append(fc);
+                    flowcells.append(fc)
             except AttributeError:
                 pass
         return flowcells

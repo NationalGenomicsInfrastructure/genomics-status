@@ -315,14 +315,16 @@ class ProjectsBaseDataHandler(SafeHandler):
         if len(search_string) == 0:
             return ''
         projects = []
+        search_string = search_string.lower()
         summary_view = self.application.projects_db.view("projects/name_to_id", descending=True)
         for row in summary_view:
-            if search_string.lower() in row.key.lower() or search_string.lower() in row.value.lower():
+            if search_string.lower() in row.key.lower() or search_string in row.value.lower():
                 project = {
                     "url": '/project/'+row.value,
                     "name": row.key
                 }
-                projects.append(project);
+                projects.append(project)
+
         return projects
 
 
