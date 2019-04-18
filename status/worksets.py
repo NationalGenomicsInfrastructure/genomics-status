@@ -114,14 +114,16 @@ class WorksetSearchHandler(SafeHandler):
             return ''
         worksets = []
 
+        # The list of worksets is cached for speed improvement
         t_threshold = datetime.datetime.now() - relativedelta(minutes=30)
-        if self.cached_list is None or self.last_updated < t_threshold:
+        if WorksetSearchHandler.cached_list is None or \
+                WorksetSearchHandler.last_fetched < t_threshold:
             ws_view = self.application.worksets_db.view("worksets/only_name")
-            self.cached_list = [row.key.lower() for row in ws_view]
-            self.last_updated = datetime.datetime.now()
+            WorksetSearchHandler.cached_list = [row.key.lower() for row in ws_view]
+            WorksetSearchHandler.last_fetched = datetime.datetime.now()
 
         search_string=search_string.lower()
-        for row_key in self.cached_list:
+        for row_key in WorksetSearchHandler.cached_list:
             if search_string in row_key:
                 fc = {
                     "url": '/workset/'+row_key,
