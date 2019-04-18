@@ -321,7 +321,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         projects = []
 
         # The list of projects is cached for speed improvement
-        t_threshold = datetime.datetime.now() - relativedelta(minutes=30)
+        t_threshold = datetime.datetime.now() - relativedelta(minutes=3)
         if ProjectsBaseDataHandler.cached_search_list is None or \
                 ProjectsBaseDataHandler.search_list_last_fetched < t_threshold:
             projects_view = self.application.projects_db.view("projects/name_to_id", descending=True)
@@ -335,7 +335,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             if search_string in row_key.lower() or search_string in row_value.lower():
                 project = {
                     "url": '/project/'+row_value,
-                    "name": row_key
+                    "name": "{} ({})".format(row_key, row_value)
                 }
                 projects.append(project)
 

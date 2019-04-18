@@ -115,7 +115,7 @@ class WorksetSearchHandler(SafeHandler):
         worksets = []
 
         # The list of worksets is cached for speed improvement
-        t_threshold = datetime.datetime.now() - relativedelta(minutes=30)
+        t_threshold = datetime.datetime.now() - relativedelta(minutes=3)
         if WorksetSearchHandler.cached_list is None or \
                 WorksetSearchHandler.last_fetched < t_threshold:
             ws_view = self.application.worksets_db.view("worksets/only_name", descending=True)

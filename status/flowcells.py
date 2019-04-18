@@ -169,7 +169,7 @@ class FlowcellSearchHandler(SafeHandler):
         flowcells = []
 
         # The list of flowcells is cached for speed improvement
-        t_threshold = datetime.datetime.now() - relativedelta(minutes=30)
+        t_threshold = datetime.datetime.now() - relativedelta(minutes=3)
         if FlowcellSearchHandler.cached_fc_list is None or \
             FlowcellSearchHandler.last_fetched < t_threshold:
             fc_view = self.application.flowcells_db.view("info/id", descending=True)
