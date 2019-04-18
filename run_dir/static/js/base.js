@@ -32,7 +32,8 @@ $(document).ready(function(){
   var projectSearch = new Bloodhound({
       datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
       queryTokenizer: Bloodhound.tokenizers.whitespace,
-      remote: '/api/v1/project_search/%QUERY'
+      remote: '/api/v1/project_search/%QUERY',
+      limit: 10
   });
   projectSearch.initialize();
 
@@ -183,7 +184,7 @@ marked.setOptions({
 function make_project_links(s){
   // Searches for P[\d+] and replaces with a link to the project page
   s = s.replace(/([\W])(P[\d]{3,5})(?!\w)/g, '$1<a href="/project/$2">$2</a>');
-  
+
   // Searches for FlowCell IDs and replaces with a link (Most complicated regex ever)
   // - $1 = Captures a non-word character (javascript can't do lookbehind)
   // - $2 = Matches flowcell date - eg 150505

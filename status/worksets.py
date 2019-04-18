@@ -101,6 +101,10 @@ class WorksetSearchHandler(SafeHandler):
     """ Searches Worksetsfor text string
     Loaded through /api/v1/workset_search/([^/]*)$
     """
+
+    last_fetched = None
+    cached_list = None
+
     def get(self, search_string):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.search_workset_names(search_string)))
@@ -109,17 +113,24 @@ class WorksetSearchHandler(SafeHandler):
         if len(search_string) == 0:
             return ''
         worksets = []
-        ws_view = self.application.worksets_db.view("worksets/name")
-        for row in ws_view:
-            try:
-                if search_string.lower() in row.key.lower():
-                    fc = {
-                        "url": '/workset/'+row.key,
-                        "name": row.key
-                    }
-                    worksets.append(fc);
-            except AttributeError:
-                pass
+
+        # The list of worksets is cached for speed improvement
+        t_threshold = datetime.datetime.now() - relativedelta(minutes=3)
+        if WorksetSearchHandler.cached_list is None or \
+                WorksetSearchHandler.last_fetched < t_threshold:
+            ws_view = self.application.worksets_db.view("worksets/only_name", descending=True)
+            WorksetSearchHandler.cached_list = [row.key for row in ws_view]
+            WorksetSearchHandler.last_fetched = datetime.datetime.now()
+
+        search_string=search_string.lower()
+        for row_key in WorksetSearchHandler.cached_list:
+            if search_string in row_key.lower():
+                fc = {
+                    "url": '/workset/'+row_key,
+                    "name": row_key
+                }
+                worksets.append(fc)
+
         return worksets
 
 class WorksetNotesDataHandler(SafeHandler):
