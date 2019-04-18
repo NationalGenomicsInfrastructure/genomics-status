@@ -118,13 +118,13 @@ class WorksetSearchHandler(SafeHandler):
         t_threshold = datetime.datetime.now() - relativedelta(minutes=30)
         if WorksetSearchHandler.cached_list is None or \
                 WorksetSearchHandler.last_fetched < t_threshold:
-            ws_view = self.application.worksets_db.view("worksets/only_name")
-            WorksetSearchHandler.cached_list = [row.key.lower() for row in ws_view]
+            ws_view = self.application.worksets_db.view("worksets/only_name", descending=True)
+            WorksetSearchHandler.cached_list = [row.key for row in ws_view]
             WorksetSearchHandler.last_fetched = datetime.datetime.now()
 
         search_string=search_string.lower()
         for row_key in WorksetSearchHandler.cached_list:
-            if search_string in row_key:
+            if search_string in row_key.lower():
                 fc = {
                     "url": '/workset/'+row_key,
                     "name": row_key
