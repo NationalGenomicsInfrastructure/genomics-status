@@ -155,6 +155,10 @@ class FlowcellSearchHandler(SafeHandler):
 
     Loaded through /api/v1/flowcell_search/([^/]*)$
     """
+    cached_fc_list = None
+    cached_xfc_list = None
+    last_fetched = None
+
     def get(self, search_string):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.search_flowcell_names(search_string)))
@@ -163,31 +167,45 @@ class FlowcellSearchHandler(SafeHandler):
         if len(search_string) == 0:
             return ''
         flowcells = []
-        fc_view = self.application.flowcells_db.view("info/id")
+
+        # The list of flowcells is cached for speed improvement
+        t_threshold = datetime.datetime.now() - relativedelta(minutes=30)
+        if FlowcellSearchHandler.cached_fc_list is None or \
+            FlowcellSearchHandler.last_fetched < t_threshold:
+            fc_view = self.application.flowcells_db.view("info/id", descending=True)
+            FlowcellSearchHandler.cached_fc_list = [row.key for row in fc_view]
+
+            xfc_view = self.application.x_flowcells_db.view("info/id", descending=True)
+            FlowcellSearchHandler.cached_xfc_list = [row.key for row in xfc_view]
+
+            FlowcellSearchHandler.last_fetched = datetime.datetime.now()
+
         search_string = search_string.lower()
-        for row in fc_view:
+
+        for row_key in FlowcellSearchHandler.cached_xfc_list:
             try:
-                if search_string in row.key.lower():
-                    splitted_fc = row.key.split('_')
+                if search_string in row_key.lower():
+                    splitted_fc = row_key.split('_')
                     fc = {
                         "url": '/flowcells/{}_{}'.format(splitted_fc[0], splitted_fc[-1]),
-                        "name": row.key
+                        "name": row_key
                     }
                     flowcells.append(fc)
             except AttributeError:
                 pass
-        xfc_view = self.application.x_flowcells_db.view("info/id")
-        for row in xfc_view:
+
+        for row_key in FlowcellSearchHandler.cached_fc_list:
             try:
-                if search_string in row.key.lower():
-                    splitted_fc = row.key.split('_')
+                if search_string in row_key.lower():
+                    splitted_fc = row_key.split('_')
                     fc = {
                         "url": '/flowcells/{}_{}'.format(splitted_fc[0], splitted_fc[-1]),
-                        "name": row.key
+                        "name": row_key
                     }
                     flowcells.append(fc)
             except AttributeError:
                 pass
+
         return flowcells
 
 
