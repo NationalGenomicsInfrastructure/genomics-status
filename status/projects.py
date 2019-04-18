@@ -122,6 +122,10 @@ class PresetsOnLoadHandler(PresetsHandler):
 
 
 class ProjectsBaseDataHandler(SafeHandler):
+
+    cached_search_list = None
+    search_list_last_fetched = None
+
     def keys_to_names(self, columns):
         d = {}
         for column_category, column_tuples in columns.items():
@@ -315,13 +319,23 @@ class ProjectsBaseDataHandler(SafeHandler):
         if len(search_string) == 0:
             return ''
         projects = []
+
+        # The list of projects is cached for speed improvement
+        t_threshold = datetime.datetime.now() - relativedelta(minutes=30)
+        if ProjectsBaseDataHandler.cached_search_list is None or \
+                ProjectsBaseDataHandler.search_list_last_fetched < t_threshold:
+            projects_view = self.application.projects_db.view("projects/name_to_id", descending=True)
+
+            ProjectsBaseDataHandler.cached_search_list = [(row.key, row.value) for row in projects_view]
+            ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
+
         search_string = search_string.lower()
-        summary_view = self.application.projects_db.view("projects/name_to_id", descending=True)
-        for row in summary_view:
-            if search_string.lower() in row.key.lower() or search_string in row.value.lower():
+
+        for row_key, row_value in ProjectsBaseDataHandler.cached_search_list:
+            if search_string in row_key.lower() or search_string in row_value.lower():
                 project = {
-                    "url": '/project/'+row.value,
-                    "name": row.key
+                    "url": '/project/'+row_value,
+                    "name": row_key
                 }
                 projects.append(project)
 
