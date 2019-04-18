@@ -21,17 +21,12 @@ function load_links() {
       var date = key.replace(/-/g, '/');
       date = date.replace(/\.\d{6}/, '');
       date = new Date(date);
-      $("#existing_links").append('<div class="link_wrapper"><div class="col-sm-8 col-sm-offset-2">'+
-						'<div class="media"><a class="media-left"'+link_href+'>'+
-							'<span style="font-size:18px;" class="glyphicon glyphicon-'+link_icon[link['type']]+'"></span>'+
-						'</a><div class="media-body">'+
-							'<h4 class="media-heading"><span class="media-left"><a "'+link_href+'>'+link['title']+'</a>'+
-								' &nbsp; <small><a href="mailto:'+link['email']+'">'+link['user']+'</a>'+
-								' - '+date.toDateString()+
-							'</span></h4>'+
-							link['desc']+
-						'</div></div>'+
-						'</div><div class="clearfix"></div></div>');
+      $("#existing_links").append('<tr><td>'+
+      '<div class="media"><a class="media-left"'+link_href+'>'+
+        '<span style="font-size:18px;" class="glyphicon glyphicon-'+link_icon[link['type']]+'"></span></a>'+
+        '<span class="media-left"><a "'+link_href+'>'+link['title']+'</a>'
+        +'</td><td>'+link['desc']+'<small> &nbsp;<a href="mailto:'+link['email']+'">'+link['user']+'</a>'+
+        ' - '+date.toDateString()+'</span></td></tr>');
     });
   });
 }
@@ -42,7 +37,7 @@ $("#link_form").submit(function(e) {
   var title = $('#new_link_title').val();
   var url = $('#new_link_url').val();
   var desc = $('#new_link_desc').val();
-  link_url=get_link_url();  
+  link_url=get_link_url();
 
   if (title && type) {
     $.ajax({

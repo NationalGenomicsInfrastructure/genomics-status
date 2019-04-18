@@ -200,49 +200,6 @@ Description: Details page for a single project
               <tr><td>Pools</td><td><span class="badge" id='number_of_pools'></span></td></tr>
             </tbody>
           </table>
-          <table class="table table-bordered table-striped" id="charon-status" style="display:none;">
-            <thead>
-                <tr><th>Charon Status</th><th><a href="https://charon.scilifelab.se/project/{{ project }}" id="charon_link_button" class="btn btn-default btn-xs pull-right">Charon</a></th></tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Total amount of samples</td>
-                    <td><span class="badge" id="charon-status-tot"></span></td>
-                </tr>
-                <tr>
-                    <td>Aborted samples</td>
-                    <td><span class="badge label-warning" id="charon-status-ab"></span></td>
-                </tr>
-                <tr>
-                    <td>Sequenced samples</td>
-                    <td><span class="badge" id="charon-status-seq"></span></td>
-                </tr>
-                <tr>
-                    <td>Analyzed samples</td>
-                    <td><span class="badge" id="charon-status-ana"></span></td>
-                </tr>
-                <tr>
-                    <td>Successful Analysis (non-aborted)</td>
-                    <td><span class="badge label-success" id="charon-status-passed"></span></td>
-                </tr>
-                <tr>
-                    <td>Failed Analysis</td>
-                    <td><span class="badge label-danger" id="charon-status-failed"></span></td>
-                </tr>
-                <tr>
-                    <td>Running Analysis</td>
-                    <td><span class="badge label-info" id="charon-status-runn"></span></td>
-                </tr>
-                <tr>
-                    <td>30X Human Genomes Equivalents</td>
-                    <td><span class="badge" id="charon-status-hge"></span></td>
-                </tr>
-                <tr>
-                    <td>Delivery Project(s)</td>
-                    <td><span class="badge" id="charon-status-gdp"></span></td>
-                </tr>
-            </tbody>
-          </table>
         </div>
         <!-- Sample status table -->
         <div class="col-sm-4">
@@ -274,7 +231,65 @@ Description: Details page for a single project
           </table>
         </div>
       </div>
-
+      <div class="row">
+        <!-- Charon Status table -->
+        <div class="col-sm-4">
+          <table class="table table-bordered table-striped" id="charon-status" style="display:none;">
+            <thead>
+              <tr><th>Charon Status</th><th><a href="https://charon.scilifelab.se/project/{{ project }}" id="charon_link_button" class="btn btn-default btn-xs pull-right">Charon</a></th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                  <td>Total amount of samples</td>
+                  <td><span class="badge" id="charon-status-tot"></span></td>
+              </tr>
+              <tr>
+                  <td>Aborted samples</td>
+                  <td><span class="badge label-warning" id="charon-status-ab"></span></td>
+              </tr>
+              <tr>
+                  <td>Sequenced samples</td>
+                  <td><span class="badge" id="charon-status-seq"></span></td>
+              </tr>
+              <tr>
+                  <td>Analyzed samples</td>
+                  <td><span class="badge" id="charon-status-ana"></span></td>
+              </tr>
+              <tr>
+                  <td>Successful Analysis (non-aborted)</td>
+                  <td><span class="badge label-success" id="charon-status-passed"></span></td>
+              </tr>
+              <tr>
+                  <td>Failed Analysis</td>
+                  <td><span class="badge label-danger" id="charon-status-failed"></span></td>
+              </tr>
+              <tr>
+                  <td>Running Analysis</td>
+                  <td><span class="badge label-info" id="charon-status-runn"></span></td>
+              </tr>
+              <tr>
+                  <td>30X Human Genomes Equivalents</td>
+                  <td><span class="badge" id="charon-status-hge"></span></td>
+              </tr>
+              <tr>
+                  <td>Delivery Project(s)</td>
+                  <td><span class="badge" id="charon-status-gdp"></span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Links table -->
+        <div class="col-sm-4">
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr><th colspan="2">Links</th></tr>
+            </thead>
+            <tbody id="existing_links">
+              <div ></div>
+            </tbody>
+          </table>
+        </div>
+      </div>
       <!-- Undefined Fields Table -->
       <div class="panel-group" id="undefined_fields_accordion" role="tablist" aria-multiselectable="true">
         <div class="panel panel-default">
@@ -354,9 +369,7 @@ Description: Details page for a single project
 
     <!-- LINK TAB -->
     {% include "link_tab.html" %}
-
   </div>
-
 </div> <!-- #page_content -->
 
 
