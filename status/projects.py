@@ -200,9 +200,9 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         if 'closed' in filter_projects or 'all' in filter_projects:
             closedflag=True
-        if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'all' in filter_projects:
+        if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'all' in filter_projects or 'closed' in filter_projects:
             queuedflag=True
-        if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'reception_control' in filter_projects or 'all' in filter_projects:
+        if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'reception_control' in filter_projects or 'all' in filter_projects or 'closed' in filter_projects:
             openflag=True
 
         default_start_date=(datetime.datetime.now() - relativedelta(years=2)).strftime("%Y-%m-%d")
