@@ -17,7 +17,7 @@ function load_links() {
   $("#existing_links").empty();
   $("#Links_tab").hide();
   $.getJSON(link_url, function(data) {
-    $("#Links_tab").show();
+    $("#links_tab").show();
     $.each(data, function(key, link) {
       var link_href = link['url'] === "" ? "" : (' href="' + link['url'] + '"');
       var date = key.replace(/-/g, '/');
