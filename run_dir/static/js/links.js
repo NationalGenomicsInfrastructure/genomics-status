@@ -15,7 +15,7 @@ function load_links() {
   link_url=get_link_url();
   var link_icon = {'Deviation':'exclamation-sign text-danger', 'Other':'file text-primary'};
   $("#existing_links").empty();
-  $("#Links_tab").hide();
+  $("#links_tab").hide();
   $.getJSON(link_url, function(data) {
     $("#links_tab").show();
     $.each(data, function(key, link) {
