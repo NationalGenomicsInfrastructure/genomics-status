@@ -15,7 +15,9 @@ function load_links() {
   link_url=get_link_url();
   var link_icon = {'Deviation':'exclamation-sign text-danger', 'Other':'file text-primary'};
   $("#existing_links").empty();
+  $("#Links_tab").hide();
   $.getJSON(link_url, function(data) {
+    $("#Links_tab").show();
     $.each(data, function(key, link) {
       var link_href = link['url'] === "" ? "" : (' href="' + link['url'] + '"');
       var date = key.replace(/-/g, '/');
