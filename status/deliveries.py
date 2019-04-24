@@ -26,7 +26,7 @@ class DeliveriesPageHandler(SafeHandler):
         stepname=['Project Summary 1.3']
         processes=lims.get_processes(type=stepname, projectname=project_name)
         if processes == []:
-            error = "{} for {} is not available in LIMS.".format(stepname, limsproject)
+            error = "{} for {} is not available in LIMS.".format(stepname, project_name)
             self.set_status(400)
             self.write(error)
             return
