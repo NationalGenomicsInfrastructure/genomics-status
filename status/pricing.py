@@ -20,7 +20,7 @@ class PricingBaseHandler(SafeHandler):
                 400, reason='Bad request, version is not an integer')
         return int_version
 
-    def _validate_object_id(self, id):
+    def _validate_object_id(self, id, object_type):
         try:
             int_key = int(id)
         except ValueError:
@@ -249,12 +249,17 @@ class PricingBaseHandler(SafeHandler):
         return_d = all_components.copy()
 
         for component_id, component in all_components.items():
-
-            price, price_per_unit = self._calculate_component_price(component,
-                                                                    exch_rates)
-            if pretty_strings:
-                price = "{:.2f}".format(price)
-                price_per_unit = "{:.2f}".format(price_per_unit)
+            if component['List price']:
+                price, price_per_unit = self._calculate_component_price(component,
+                                                                        exch_rates)
+                if pretty_strings:
+                    price = "{:.2f}".format(price)
+                    price_per_unit = "{:.2f}".format(price_per_unit)
+            elif component['Status'] != 'Discontinued':
+                raise ValueError("Empty list price for non-discontinued component")
+            else:
+                price = ''
+                price_per_unit = ''
 
             return_d[component_id]['price_in_sek'] = price
             return_d[component_id]['price_per_unit_in_sek'] = price_per_unit
@@ -283,7 +288,7 @@ class PricingBaseHandler(SafeHandler):
 
         return_d = products.copy()
 
-        for product_id, product in productsself.items():
+        for product_id, product in products.items():
             price_int, price_ext = self._calculate_product_price(product, all_component_prices)
 
             if pretty_strings:
@@ -396,3 +401,60 @@ class PricingExchangeRatesDataHandler(PricingBaseHandler):
             result = self.fetch_exchange_rates(None)
 
         self.write(json.dumps(result))
+
+
+class PricingProductListHandler(PricingBaseHandler):
+    """ Serves a list view of all product prices
+
+    Loaded through:
+        /pricing_products
+
+    """
+
+    def get(self):
+        version = self.get_argument('version', None)
+        date = self.get_argument('date', None)
+
+        products = self.get_product_prices(None, version=version,
+                                       pretty_strings=True)
+        products = [product for id,product in products.items()]
+
+        components = self.get_component_prices(component_id=None,
+                                        version=version,
+                                        date=date,
+                                        pretty_strings=True)
+
+        t = self.application.loader.load("pricing_products.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                user=self.get_current_user_name(),
+                products=products,
+                components=components,
+                version=version))
+
+class PricingQuoteHandler(PricingBaseHandler):
+    """ Serves a view from where a project quote can be built
+
+    Loaded through:
+        /pricing_quote
+
+    """
+
+    def get(self):
+        version = self.get_argument('version', None)
+        date = self.get_argument('date', None)
+
+        products = self.get_product_prices(None, version=version,
+                                       pretty_strings=True)
+        products = [product for id,product in products.items()]
+
+        components = self.get_component_prices(component_id=None,
+                                        version=version,
+                                        date=date,
+                                        pretty_strings=True)
+
+        t = self.application.loader.load("pricing_quote.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                user=self.get_current_user_name(),
+                products=products,
+                components=components,
+                version=version))

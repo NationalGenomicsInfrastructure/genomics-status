@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+<!--
+Template file: pricing_quote.html
+URL: /pricing_quote
+Title: Creation of a quote for a project
+-->
+
+{% block stuff %}
+
+<div class="container-fluid" id="product_list">
+  <div id="pricing_quote_div">
+      <h1><span id="page_title">Project Quote</span>
+      </h1>
+      <div id="added_products_div">
+        <h2>Added Products</h2>
+        <ul class="quote-product-list">
+        </ul>
+        <table>
+          <thead>
+            <tr>
+              <th>Quantity</th>
+              <th>Name</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      <div class="products_chooseable_div">
+        <h2>Available Products</h2>
+        <table class="table table-striped table-bordered sortable" id="pricing_products_table">
+          <thead>
+            <tr class="sticky">
+              <th>Quoting</th>
+              <th class="sort" data-sort="category">Category</th>
+              <th class="sort" data-sort="type">Type</th>
+              <th class="sort" data-sort="name">Name</th>
+              <th class="sort" data-sort="components">Components</th>
+              <th class="sort" data-sort="alternative_components">Alternative Components</th>
+              <th class="sort" data-sort="reagent_fee">Reagent Fee</th>
+              <th class="sort" data-sort="re_run_fee">Re-run fee</th>
+              <th class="sort" data-sort="minimum_quantity">Minimum Quantity</th>
+              <th class="sort" data-sort="price_internal">Internal Price</th>
+              <th class="sort" data-sort="price_external">External Price</th>
+              <th class="sort" data-sort="comment">Comment</th>
+            </tr>
+          </thead>
+          <tfoot>
+            <tr>
+              <th>Quoting</th>
+              <th class="sort" data-sort="category">Category</th>
+              <th class="sort" data-sort="type">Type</th>
+              <th class="sort" data-sort="name">Name</th>
+              <th class="sort" data-sort="alternatcomponents">Components</th>
+              <th class="sort" data-sort="alternative_components">Alternative Components</th>
+              <th class="sort" data-sort="reagent_fee">Reagent Fee</th>
+              <th class="sort" data-sort="re_run_fee">Re-run fee</th>
+              <th class="sort" data-sort="minimum_quantity">Minimum Quantity</th>
+              <th class="sort" data-sort="price_internal">Internal Price (SEK)</th>
+              <th class="sort" data-sort="price_external">External Price</th>
+              <th class="sort" data-sort="comment">Comment</th>
+            </tr>
+          </tfoot>
+          <tbody class="list">
+              {% for product in products %}
+                  <tr class="status_{{product['Status'].lower()}}">
+                      <td>
+                          <a href="#0" class="button add-to-cart" data-product-id="{{product['REF_ID']}}">Add to Cart</a>
+                      </td>
+                      <td class="category">
+                          {{product['Category']}}
+                      </td>
+                      <td class="type">
+                          {{product['Type']}}
+                      </td>
+                      <td class="name">
+                          {{product["Name"]}}
+                      </td>
+                      <td class=components">
+                          {% if product['Components'] != "" %}
+                            {% for component_id, quant_d in product["Components"].items() %}
+                              <p>
+                              {% if quant_d["quantity"] != 1 %}
+                                  {{quant_d["quantity"]}}:
+                              {% end %}
+                              {{ components[component_id]['Product name'] }}</p>
+                            {% end %}
+                          {% end %}
+                      </td>
+                      <td class="alternative_components">
+                          {% if product['Alternative Components'] != "" %}
+                            {% for component_id, quant_d in product["Alternative Components"].items() %}
+                              <p>
+                              {% if quant_d["quantity"] != 1 %}
+                                  {{quant_d["quantity"]}}:
+                              {% end %}
+                              {{ components[component_id]['Product name'] }}</p>
+                            {% end %}
+                          {% end %}
+                      </td>
+                      <td class="reagent_fee">
+                          {{product["Reagent fee"]}}
+                      </td>
+                      <td class="re_run_fee">
+                          {{product["Re-run fee"]}}
+                      </td>
+                      <td class="minimum_quantity">
+                          {{product["Minimum Quantity"]}}
+                      </td>
+                      <td class="price_internal">
+                          {{product["price_internal"]}}
+                      </td>
+                      <td class="price_external">
+                          {{product["price_external"]}}
+                      </td>
+                      <td class="comment">
+                          {{product["Comment"]}}
+                      </td>
+                  </tr>
+              {% end %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+</div>
+
+<script src="/static/js/jquery.dataTables.min.js"></script>
+<!-- Table Sorting -->
+<script type="text/javascript">
+// Globals
+var productsInQuote = [];
+var allProducts;
+var quoteEl = $('.quote-product-list');
+
+$.getJSON('/api/v1/pricing_products', function(data){
+    allProducts = data;
+});
+
+$( document ).ready(function() {
+  init_listjs();
+  $('#added_products_div').hide();
+
+  // Adds new items or updates existing one in productsInCart array
+  $('.add-to-cart').on('click', function(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      product_id = $(this).attr('data-product-id')
+      addToQuote(product_id);
+      $('#added_products_div').show();
+  });
+});
+
+// Adds new items or updates existing one in productsInCart array
+function addToQuote(id) {
+  var obj = allProducts[id];
+  if(productsInQuote.length === 0 || productFound(obj.REF_ID) === undefined) {
+    productsInQuote.push({product: obj, quantity: 1});
+  } else {
+    productsInQuote.forEach(function(item) {
+      if(item.product.REF_ID === obj.REF_ID) {
+        item.quantity++;
+      }
+    });
+  }
+  generateQuoteList();
+}
+
+
+function generateQuoteList() {
+  quoteEl.html('');
+
+  productsInQuote.forEach(function(item) {
+    var li = document.createElement("li");
+    li.innerHTML = `${item.quantity} ${item.product.Name} - $${item.product.price_external * item.quantity}`;
+    quoteEl.append(li);
+  });
+  // generateCartButtons()
+}
+
+
+// This function checks if product is already in productsInQuote array
+function productFound(productId) {
+  return productsInQuote.find(function(item) {
+    return item.product.REF_ID === productId;
+  });
+}
+
+// Initialize sorting and searching javascript plugin
+function init_listjs() {
+    // Setup - add a text input to each footer cell
+    $('#pricing_products_table tfoot th').each( function () {
+      var title = $('#pricing_products_table thead th').eq( $(this).index() ).text();
+      $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
+    } );
+
+    var table = $('#pricing_products_table').DataTable({
+      "paging":false,
+      "info":false,
+      "order": [[ 0, "desc" ]]
+    });
+
+    //Add the bootstrap classes to the search thingy
+    $('div.dataTables_filter input').addClass('form-control search search-query');
+    $('#pricing_products_table_filter').addClass('form-inline pull-right');
+    $("#pricing_products_table_filter").appendTo("h1");
+    $('#pricing_products_table_filter label input').appendTo($('#pricing_products_table_filter'));
+    $('#pricing_products_table_filter label').remove();
+    $("#pricing_products_table_filter input").attr("placeholder", "Search..");
+    // Apply the search
+    table.columns().every( function () {
+        var that = this;
+        $( 'input', this.footer() ).on( 'keyup change', function () {
+            that
+            .search( this.value )
+            .draw();
+        } );
+    } );
+}
+
+
+
+
+</script>
+
+
+{% end %}
+pricing_products_table_filter
