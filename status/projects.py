@@ -200,9 +200,9 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         if 'closed' in filter_projects or 'all' in filter_projects:
             closedflag=True
-        if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'all' in filter_projects:
+        if 'ongoing' in filter_projects or 'open' in filter_projects or 'review' in filter_projects or 'all' in filter_projects or 'closed' in filter_projects:
             queuedflag=True
-        if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'reception_control' in filter_projects or 'all' in filter_projects:
+        if 'ongoing' in filter_projects or 'open' in filter_projects or 'review' in filter_projects or 'reception_control' in filter_projects or 'all' in filter_projects or 'closed' in filter_projects:
             openflag=True
 
         default_start_date=(datetime.datetime.now() - relativedelta(years=2)).strftime("%Y-%m-%d")
@@ -273,16 +273,16 @@ class ProjectsBaseDataHandler(SafeHandler):
                 elif (closedflag or filter_projects == 'all') and closed_condition:
                     filtered_projects.append(row)
                 #open projects
-                elif openflag and open_condition :
+                elif openflag and open_condition:
                     if filter_projects == 'all':
                         filtered_projects.append(row)
                     elif 'open' in filter_projects:
                         filtered_projects.append(row)
                     #ongoing projects
-                    elif queuedflag and queued_condition and not 'close_date' in p_info:
+                    elif 'ongoing' in filter_projects and queuedflag and queued_condition and not 'close_date' in p_info:
                         filtered_projects.append(row)
-                    #reception control projects
-                    elif not queuedflag and not queued_proj:
+                    elif 'reception_control' in filter_projects and not queuedflag and not queued_proj:
+                        #reception control projects
                         filtered_projects.append(row)
                 #pending projects
                 elif ('pending' in filter_projects or filter_projects == 'all') and not 'open_date' in p_info:
