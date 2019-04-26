@@ -1104,3 +1104,7 @@ div.setOverflow {
   top: 50px;
   z-index: 100;
 }
+
+.right_align_headers th{
+  text-align: right;
+}
