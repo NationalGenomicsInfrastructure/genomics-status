@@ -192,7 +192,7 @@ class DeliveriesPageHandler(SafeHandler):
                 all_running_notes.update(self.__parse_running_notes(running_notes, project_id, runs_bioinfo))
                 latest_timestamp = max(list(running_notes))
                 latest_running_note = running_notes[latest_timestamp]
-                latest_running_note['timestamp'] = latest_timestamp[:-7] # to get rid of milliseconds
+                latest_running_note['timestamp'] = latest_timestamp[:-3] # to get rid of milliseconds
                 # responsibles (needed for filters)
                 bioinfo_responsible = summary_data[project_id].get('project_summary', {}).get('bioinfo_responsible') or 'unassigned'
 
