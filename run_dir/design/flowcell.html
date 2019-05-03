@@ -167,7 +167,7 @@
                 <!--Primary sample table -->
                 {% for sample in flowcell['lane'][lane_number] %}
                   {% set sample_q30 = sample.get('overthirty', 0.0) %}
-                  {% try %}{% set sample_q30 = float(sample_q30) %}{% except %}{% end %}
+                  {% try %}{% set sample_q30 = float(sample_q30) %}{% except set sample_q30 = 0.0 %}{% end %}
                   <tr>
                     <td>{{ sample.get('Project', '').replace('__', '.') }}</td>
                     <td>{{ sample.get('SampleName') }}</td>
@@ -182,13 +182,13 @@
                     ">{% for thousand in sample.get('readsnb', sample.get('clustersnb', '')).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
 
                     {% if flowcell.get('two_reads') %}
-                      {% set overthirty_r1 = float(sample.get('overthirty_r1')) %}
+                      {% try %}{% set overthirty_r1 = float(sample.get('overthirty_r1', 0.0)) %}{% except set overthirty_r1 = 0.0 %}{% end %}
 
                       <td class="text-center {% if overthirty_r1 < 40.0 %} danger
                           {% elif overthirty_r1 < q30_threshold %} warning
                           {% else %} success {% end %}">{{ sample.get('overthirty_r1') }}</td>
 
-                      {% set overthirty_r2 = float(sample.get('overthirty_r2')) %}
+                      {% try %}{% set overthirty_r2 = float(sample.get('overthirty_r2', 0.0)) %}{% except set overthirty_r2 = 0.0 %}{% end %}
                       <td class="text-center {% if overthirty_r2 < 40.0 %} danger
                           {% elif overthirty_r2 < q30_threshold %} warning
                           {% else %} success {% end %}">{{ sample.get('overthirty_r2') }}</td>
