@@ -122,6 +122,10 @@ class PresetsOnLoadHandler(PresetsHandler):
 
 
 class ProjectsBaseDataHandler(SafeHandler):
+
+    cached_search_list = None
+    search_list_last_fetched = None
+
     def keys_to_names(self, columns):
         d = {}
         for column_category, column_tuples in columns.items():
@@ -196,9 +200,9 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         if 'closed' in filter_projects or 'all' in filter_projects:
             closedflag=True
-        if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'all' in filter_projects:
+        if 'ongoing' in filter_projects or 'open' in filter_projects or 'review' in filter_projects or 'all' in filter_projects or 'closed' in filter_projects:
             queuedflag=True
-        if 'ongoing' in filter_projects or 'open' in filter_projects or 'pending_review' in filter_projects or 'reception_control' in filter_projects or 'all' in filter_projects:
+        if 'ongoing' in filter_projects or 'open' in filter_projects or 'review' in filter_projects or 'reception_control' in filter_projects or 'all' in filter_projects or 'closed' in filter_projects:
             openflag=True
 
         default_start_date=(datetime.datetime.now() - relativedelta(years=2)).strftime("%Y-%m-%d")
@@ -269,16 +273,16 @@ class ProjectsBaseDataHandler(SafeHandler):
                 elif (closedflag or filter_projects == 'all') and closed_condition:
                     filtered_projects.append(row)
                 #open projects
-                elif openflag and open_condition :
+                elif openflag and open_condition:
                     if filter_projects == 'all':
                         filtered_projects.append(row)
                     elif 'open' in filter_projects:
                         filtered_projects.append(row)
                     #ongoing projects
-                    elif queuedflag and queued_condition and not 'close_date' in p_info:
+                    elif 'ongoing' in filter_projects and queuedflag and queued_condition and not 'close_date' in p_info:
                         filtered_projects.append(row)
-                    #reception control projects
-                    elif not queuedflag and not queued_proj:
+                    elif 'reception_control' in filter_projects and not queuedflag and not queued_proj:
+                        #reception control projects
                         filtered_projects.append(row)
                 #pending projects
                 elif ('pending' in filter_projects or filter_projects == 'all') and not 'open_date' in p_info:
@@ -315,14 +319,26 @@ class ProjectsBaseDataHandler(SafeHandler):
         if len(search_string) == 0:
             return ''
         projects = []
-        summary_view = self.application.projects_db.view("project/summary", descending=True)
-        for row in summary_view:
-            if search_string.lower() in row.value['project_name'].lower() or search_string.lower() in row.key[1].lower():
+
+        # The list of projects is cached for speed improvement
+        t_threshold = datetime.datetime.now() - relativedelta(minutes=3)
+        if ProjectsBaseDataHandler.cached_search_list is None or \
+                ProjectsBaseDataHandler.search_list_last_fetched < t_threshold:
+            projects_view = self.application.projects_db.view("projects/name_to_id", descending=True)
+
+            ProjectsBaseDataHandler.cached_search_list = [(row.key, row.value) for row in projects_view]
+            ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
+
+        search_string = search_string.lower()
+
+        for row_key, row_value in ProjectsBaseDataHandler.cached_search_list:
+            if search_string in row_key.lower() or search_string in row_value.lower():
                 project = {
-                    "url": '/project/'+row.key[1],
-                    "name": row.value['project_name']
+                    "url": '/project/'+row_value,
+                    "name": "{} ({})".format(row_key, row_value)
                 }
-                projects.append(project);
+                projects.append(project)
+
         return projects
 
 

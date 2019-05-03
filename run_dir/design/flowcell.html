@@ -62,7 +62,7 @@
             <div id="lane_{{ lane_number }}" class="sublane">
               <h4>Lane {{ lane_number }}
               </h4>
-              <table class="table table-bordered narrow-headers no-margin" id="summary_lane_{{ lane_number }}">
+              <table class="table table-bordered narrow-headers no-margin right_align_headers" id="summary_lane_{{ lane_number }}">
                 <tbody>
                   <tr>
                     <th>Total&nbsp;yield&nbsp;(Mb):</th>
@@ -193,7 +193,7 @@
                           {% elif overthirty_r2 < q30_threshold %} warning
                           {% else %} success {% end %}">{{ sample.get('overthirty_r2') }}</td>
                     {% else %}
-                      <td class="text-center {% if sample_q30 < 40.0 %} danger
+                      <td class="text-center {% if float(sample_q30) < 40.0 %} danger
                           {% elif sample_q30 < q30_threshold %} warning
                           {% else %} success {% end %}">{{ sample_q30 }}</td>
                     {% end %}
