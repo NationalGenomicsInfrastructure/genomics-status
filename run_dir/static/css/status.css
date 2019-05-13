@@ -1122,3 +1122,7 @@ input.quantity_updateable {
 #current_quote{
     font-size:14px;
 }
+
+.right_align_headers th{
+  text-align: right;
+}

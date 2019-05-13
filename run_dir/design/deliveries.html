@@ -98,7 +98,8 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           <dd>
             <button data-toggle="modal" data-target="#runningNotesModalDeliveries"
                     class="btn btn-xs btn-default pull-right runningNotesModalDeliveries_button project_runningNotes">See all</button>
-            <div class="bi-project-note">{{ project['latest_running_note']['timestamp'] }} - {{ project['latest_running_note']['note'] }}</div>
+            <div class="bi-project-note">{{ project['latest_running_note']['timestamp'] }} - {{ project['latest_running_note']['user'] }}</div>
+            <div class="bi-project-note">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>
           </dd>
         </dl>
         <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
