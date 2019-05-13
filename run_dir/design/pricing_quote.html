@@ -10,22 +10,30 @@ Title: Creation of a quote for a project
 
 <div class="container-fluid" id="product_list">
   <div id="pricing_quote_div">
-      <h1><span id="page_title">Project Quote</span>
-      </h1>
-      <div id="added_products_div">
-        <h2>Added Products</h2>
-        <ul class="quote-product-list">
-        </ul>
-        <table>
-          <thead>
-            <tr>
-              <th>Quantity</th>
-              <th>Name</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
+      <h1><span id="page_title">Project Quote</span></h1>
+      <p>Overhead for non-Swedish academia and industry: <span id='overhead_value'>1</span></p>
+      <div class="radio" id="price_type_selector">
+        <label>
+          <input type="radio" name="price_type" value="sweac" checked>Swedish academia
+        </label>
+        <label>
+          <input type="radio" name="price_type" value="nonswe">Industry and non-Swedish academia
+        </label>
+        <label>
+          <input type="radio" name="price_type" value="internal">Internal
+        </label>
+      </div>
+      <div class="row" id="current_quote">
+        <div class="col-md-5">
+          <h2>Products</h2>
+          <ul class="quote-product-list list-unstyled">
+          </ul>
+        </div>
+        <div class="col-md-4 borderLeft">
+          <h2>Totals</h2>
+          <ul class="quote-totals-list list-unstyled">
+          </ul>
+        </div>
       </div>
       <div class="products_chooseable_div">
         <h2>Available Products</h2>
@@ -33,6 +41,7 @@ Title: Creation of a quote for a project
           <thead>
             <tr class="sticky">
               <th>Quoting</th>
+              <th class="sort" data-sort="id">ID</th>
               <th class="sort" data-sort="category">Category</th>
               <th class="sort" data-sort="type">Type</th>
               <th class="sort" data-sort="name">Name</th>
@@ -49,6 +58,7 @@ Title: Creation of a quote for a project
           <tfoot>
             <tr>
               <th>Quoting</th>
+              <th class="sort" data-sort="id">ID</th>
               <th class="sort" data-sort="category">Category</th>
               <th class="sort" data-sort="type">Type</th>
               <th class="sort" data-sort="name">Name</th>
@@ -66,7 +76,11 @@ Title: Creation of a quote for a project
               {% for product in products %}
                   <tr class="status_{{product['Status'].lower()}}">
                       <td>
-                          <a href="#0" class="button add-to-cart" data-product-id="{{product['REF_ID']}}">Add to Cart</a>
+                          <a href="#0" class="button add-to-quote" data-product-id="{{product['REF_ID']}}"><i class="glyphicon glyphicon-plus"></i></a>
+                          <span>(<span id="count_in_table_{{product['REF_ID']}}">0</span>)</span>
+                      </td>
+                      <td class="id">
+                          {{product['REF_ID']}}
                       </td>
                       <td class="category">
                           {{product['Category']}}
@@ -131,53 +145,151 @@ Title: Creation of a quote for a project
 // Globals
 var productsInQuote = [];
 var allProducts;
-var quoteEl = $('.quote-product-list');
+var quoteProdEl = $('.quote-product-list');
+var quoteTotEl = $('.quote-totals-list');
 
-$.getJSON('/api/v1/pricing_products', function(data){
-    allProducts = data;
-});
+alert("todo: Checks for e.g. correct number of units. Possibility to save. Warning for non-saved changes.");
 
 $( document ).ready(function() {
-  init_listjs();
-  $('#added_products_div').hide();
+  $.getJSON('/api/v1/pricing_products', function(data){
+    allProducts = data;
+    // Initialize all quantities as 0
+    for (var key in allProducts) {
+        allProducts[key].quantity = 0;
+    };
+  });
 
-  // Adds new items or updates existing one in productsInCart array
-  $('.add-to-cart').on('click', function(e) {
+  init_listjs();
+  resetCurrentQuote();
+  // Activate the add-to-quote buttons
+
+  $('.add-to-quote').on('click', function(e) {
       e.preventDefault();
       e.stopImmediatePropagation();
       product_id = $(this).attr('data-product-id')
       addToQuote(product_id);
-      $('#added_products_div').show();
+      $('#current_quote').show();
+  });
+
+  $('#price_type_selector input').change(function(e) {
+      /* Regenerate the quote list to show the new prices */
+      generateQuoteList();
   });
 });
 
-// Adds new items or updates existing one in productsInCart array
+function resetCurrentQuote(){
+  $('#current_quote').hide();
+  quoteProdEl.html('');
+  quoteTotEl.html('');
+}
+
+// Add one item of the product to the quote
 function addToQuote(id) {
   var obj = allProducts[id];
-  if(productsInQuote.length === 0 || productFound(obj.REF_ID) === undefined) {
-    productsInQuote.push({product: obj, quantity: 1});
-  } else {
-    productsInQuote.forEach(function(item) {
-      if(item.product.REF_ID === obj.REF_ID) {
-        item.quantity++;
-      }
-    });
-  }
+  obj.quantity++;
+  updateTableCounts(obj)
   generateQuoteList();
 }
 
-
 function generateQuoteList() {
-  quoteEl.html('');
+  /* Everytime the list changes, it is regenerated */
+  resetCurrentQuote();
+  var empty = true;
+  price_type = $("input[name='price_type']:checked").val();
+  var totalCostSweAc = 0;
+  var totalCostInternal = 0;
+  var overhead = parseInt($('#overhead_value').first().html());
+  for (var product_id in allProducts) {
+    var product = allProducts[product_id];
+    if (product.quantity > 0) {
+      empty = false;
+      var li = `<li data-quantity=${product.quantity} data-product-id=${product_id}>` +
+        `<a href='#' class='remove_product' data-product-id=${product.REF_ID}><i class="glyphicon glyphicon-remove text-danger"></i></a> ` +
+        `<input class='quantity_updateable' data-product-id=${product.REF_ID} min=0 value=${product.quantity}> ` +
+        `<span class='quote_product_name'>${product.Name}</span>` +
+        `<span class='quote_product_prices_line'><span class='quote_product_price'>`
+      switch(price_type) {
+          case "internal":
+            li += `${(product.price_internal * product.quantity).toFixed(0)}`;
+            break;
+          case "sweac":
+            li += `${(product.price_external * product.quantity).toFixed(0)}`;
+            break;
+          case "nonswe":
+            li += `${(product.price_external * product.quantity * (1+overhead)).toFixed(0)}`;
+      }
+      li += ` SEK</span></span></li>`;
+      totalCostSweAc += product.price_external * product.quantity;
+      totalCostInternal += product.price_internal * product.quantity;
+      quoteProdEl.append(li);
+    }
+  }
 
-  productsInQuote.forEach(function(item) {
-    var li = document.createElement("li");
-    li.innerHTML = `${item.quantity} ${item.product.Name} - $${item.product.price_external * item.quantity}`;
-    quoteEl.append(li);
+  totalCostNonSwe = totalCostSweAc * (1+overhead);
+  /* Only show quote if non-empty */
+  if (!empty){
+    $('#current_quote').show();
+    var totals_div = document.createElement("dl");
+    totals_div.setAttribute("class", "quote_totals");
+    var p = document.createElement("p");
+    if (price_type !== 'sweac'){
+      p.setAttribute('class', 'text-muted')
+    }
+    p.innerHTML = `<dt class='quote_totals_def quote_sweac'>Swedish academia:</dt><dd class='quote_totals_val quote_sweac'>${totalCostSweAc.toFixed(2)} SEK</dd>`;
+    totals_div.append(p);
+
+    var p = document.createElement("p");
+    if (price_type !== 'nonswe'){
+      p.setAttribute('class', 'text-muted')
+    }
+    p.innerHTML = `<dt class='quote_totals_def quote_nonswe'>Industry and non-Swedish academia:</dt><dd class='quote_totals_val quote_nonswe'>${totalCostNonSwe.toFixed(2)} SEK</dd>`;
+    totals_div.append(p);
+
+    var p = document.createElement("p");
+    if (price_type !== 'internal'){
+      p.setAttribute('class', 'text-muted')
+    }
+    p.innerHTML = `<dt class='quote_totals_def quote_internal'>Internal projects:</dt><dd class='quote_totals_val quote_internal'>${totalCostInternal.toFixed(2)} SEK</dd>`;
+    totals_div.append(p);
+
+    quoteTotEl.append(totals_div);
+  }
+
+  function updateQuantity(product, new_quantity){
+    console.log(`change triggered with ${new_quantity}`)
+    if ((new_quantity.length === 0) || (new_quantity < 0)) {
+      // Invalid value given
+      console.log(`invalid value ${new_quantity} given`);
+      $("ul").find(`li[data-product-id='${product.REF_ID}']`).addClass("text-danger");
+      return;
+    }
+    product.quantity = new_quantity;
+
+    updateTableCounts(product);
+    generateQuoteList();
+  }
+
+  $('.quantity_updateable').change(function(e) {
+    var product_id = $(this).data('product-id');
+    var new_quantity = parseFloat($(this).val());
+    // Check that the number makes sense
+    if (! isNaN(new_quantity)) {
+        updateQuantity(allProducts[product_id], new_quantity);
+    }
   });
+
+  $('.remove_product').on('click', function(e) {
+    $(this).parent('li').remove();
+    var product_id = $(this).data('product-id');
+    updateQuantity(allProducts[product_id], 0)
+  });
+
   // generateCartButtons()
 }
 
+function updateTableCounts(product) {
+  $(`#count_in_table_${product.REF_ID}`).html(product.quantity);
+}
 
 // This function checks if product is already in productsInQuote array
 function productFound(productId) {
