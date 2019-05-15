@@ -257,7 +257,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
                 elif 'project_summary' in p_info and 'queued' in p_info['project_summary']:
                     queued_proj =True
-                    queued_condition = p_info['project_summary'].get('queued') >= start_queue_date and p_info['project_summary'].get('queued') <= end_queue_date
+                    queued_condition = p_info['project_summary'].get('queued') >= str(start_queue_date) and p_info['project_summary'].get('queued') <= str(end_queue_date)
 
                 if 'open_date' in p_info:
                     open_condition = p_info['open_date'] >= str(start_open_date) and p_info['open_date'] <= str(end_open_date)
