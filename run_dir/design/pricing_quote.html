@@ -26,6 +26,7 @@ Title: Creation of a quote for a project
       <div class="row" id="current_quote">
         <div class="col-md-5">
           <h2>Products</h2>
+          <div id='product_warnings'></div>
           <ul class="quote-product-list list-unstyled">
           </ul>
         </div>
@@ -148,7 +149,6 @@ var allProducts;
 var quoteProdEl = $('.quote-product-list');
 var quoteTotEl = $('.quote-totals-list');
 
-alert("todo: Checks for e.g. correct number of units. Possibility to save. Warning for non-saved changes.");
 
 $( document ).ready(function() {
   $.getJSON('/api/v1/pricing_products', function(data){
@@ -181,6 +181,7 @@ function resetCurrentQuote(){
   $('#current_quote').hide();
   quoteProdEl.html('');
   quoteTotEl.html('');
+  $('#product_warnings').html('');
 }
 
 // Add one item of the product to the quote
@@ -195,6 +196,7 @@ function generateQuoteList() {
   /* Everytime the list changes, it is regenerated */
   resetCurrentQuote();
   var empty = true;
+  var warning_txt = '';
   price_type = $("input[name='price_type']:checked").val();
   var totalCostSweAc = 0;
   var totalCostInternal = 0;
@@ -202,8 +204,16 @@ function generateQuoteList() {
   for (var product_id in allProducts) {
     var product = allProducts[product_id];
     if (product.quantity > 0) {
+      /* check correct number of units */
+      class_string = ''
+      if (product["Minimum Quantity"] !== ''){
+          if (product.quantity % parseInt(product["Minimum Quantity"]) !== 0) {
+              class_string = ' class="text-danger"'
+              warning_txt = `Quantity for ` + product.Name + ` is not a multiple of its minimum quantity: ` + product["Minimum Quantity"]
+          }
+      }
       empty = false;
-      var li = `<li data-quantity=${product.quantity} data-product-id=${product_id}>` +
+      var li = `<li data-quantity=${product.quantity}` + class_string + ` data-product-id=${product_id}>` +
         `<a href='#' class='remove_product' data-product-id=${product.REF_ID}><i class="glyphicon glyphicon-remove text-danger"></i></a> ` +
         `<input class='quantity_updateable' data-product-id=${product.REF_ID} min=0 value=${product.quantity}> ` +
         `<span class='quote_product_name'>${product.Name}</span>` +
@@ -221,7 +231,9 @@ function generateQuoteList() {
       li += ` SEK</span></span></li>`;
       totalCostSweAc += product.price_external * product.quantity;
       totalCostInternal += product.price_internal * product.quantity;
+
       quoteProdEl.append(li);
+      applyWarning(warning_txt);
     }
   }
 
@@ -261,6 +273,8 @@ function generateQuoteList() {
       // Invalid value given
       console.log(`invalid value ${new_quantity} given`);
       $("ul").find(`li[data-product-id='${product.REF_ID}']`).addClass("text-danger");
+      var warning_txt=`Incorrectly entered value for ` + product.Name
+      applyWarning(warning_txt);
       return;
     }
     product.quantity = new_quantity;
@@ -285,6 +299,20 @@ function generateQuoteList() {
   });
 
   // generateCartButtons()
+}
+
+function applyWarning(warning_txt){
+  if (warning_txt !== '') {
+    var warning_html = ``+
+      `<div class="alert alert-warning alert-dismissable" role="alert">`+
+        `<button type="button" class="close" data-dismiss="alert" aria-label="Close">`+
+          `<span aria-hidden="false">&times;</span>`+
+        `</button>`+
+        `<h4>Warning</h4>`+
+        `<p>`+warning_txt+`</p>`+
+      `</div>`;
+    $('#product_warnings').append(warning_html);
+  };
 }
 
 function updateTableCounts(product) {
