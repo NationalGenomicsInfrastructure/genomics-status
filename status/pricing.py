@@ -166,7 +166,8 @@ class PricingBaseHandler(SafeHandler):
         """Internal method to fetch exchange rates from StatusDB
 
         :param date: string in format 'YYYY-MM-DD'
-        :return: dictionary with keys 'USD_in_SEK' and 'EUR_in_SEK'.
+        :return: dictionary with keys 'USD_in_SEK', 'EUR_in_SEK' and
+        'Issued at'.
 
         Returns the most recent rates prior to date given by parameter `date`
         If parameter `date` is not supplied, the current timestamp is used.
@@ -188,6 +189,7 @@ class PricingBaseHandler(SafeHandler):
         result = {}
         result['USD_in_SEK'] = view.rows[0].value['USD_in_SEK']
         result['EUR_in_SEK'] = view.rows[0].value['EUR_in_SEK']
+        result['Issued at'] = view.rows[0].value['Issued at']
         return result
 
     # _____________________________ CALCULATION METHODS _______________________
@@ -452,7 +454,40 @@ class PricingQuoteHandler(PricingBaseHandler):
                                         date=date,
                                         pretty_strings=True)
 
+        exch_rates = self.fetch_exchange_rates(None)
+
+        exch_rates['Issued at'] = exch_rates['Issued at'][0:10]
+
         t = self.application.loader.load("pricing_quote.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                user=self.get_current_user_name(),
+                products=products,
+                components=components,
+                version=version,
+                exch_rates=exch_rates))
+
+class PricingQuoteTbodyHandler(PricingBaseHandler):
+    """ Serves a tbody specificly for /pricing_quote to be generated dynamically.
+
+    Loaded through e.g.:
+        /pricing_quote_tbody?date=2019-03-23
+
+    """
+
+    def get(self):
+        version = self.get_argument('version', None)
+        date = self.get_argument('date', None)
+
+        products = self.get_product_prices(None, version=version,
+                                       pretty_strings=True)
+        products = [product for id,product in products.items()]
+
+        components = self.get_component_prices(component_id=None,
+                                        version=version,
+                                        date=date,
+                                        pretty_strings=True)
+
+        t = self.application.loader.load("pricing_quote_tbody.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
                 user=self.get_current_user_name(),
                 products=products,
