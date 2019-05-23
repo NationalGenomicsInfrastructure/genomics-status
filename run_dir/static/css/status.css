@@ -1126,3 +1126,7 @@ input.quantity_updateable {
 .right_align_headers th{
   text-align: right;
 }
+
+#discount_container{
+    padding-left: 20px;
+}

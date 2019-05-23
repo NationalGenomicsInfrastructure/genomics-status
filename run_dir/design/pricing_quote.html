@@ -11,27 +11,56 @@ Title: Creation of a quote for a project
 <div class="container-fluid" id="product_list">
   <div id="pricing_quote_div">
       <h1><span id="page_title">Project Quote</span></h1>
-      <p>Overhead for non-Swedish academia and industry: <span id='overhead_value'>1</span></p>
-      <div class="radio" id="price_type_selector">
-        <label>
-          <input type="radio" name="price_type" value="sweac" checked>Swedish academia
-        </label>
-        <label>
-          <input type="radio" name="price_type" value="nonswe">Industry and non-Swedish academia
-        </label>
-        <label>
-          <input type="radio" name="price_type" value="internal">Internal
-        </label>
+      <div class="row">
+        <div class="col-md-5">
+          <p>Overhead for non-Swedish academia and industry: <span id='overhead_value'>1</span></p>
+          <div class="radio" id="price_type_selector">
+            <label class="radio-inline">
+              <input type="radio" name="price_type" value="sweac" checked> Swedish academia
+            </label>
+            <label class="radio-inline">
+              <input type="radio" name="price_type" value="nonswe"> Industry and non-Swedish academia
+            </label>
+            <label class="radio-inline">
+              <input type="radio" name="price_type" value="internal"> Internal
+            </label>
+          </div>
+          <span id='other_cost_container' class='other_updateable'>
+              <label for='other_cost_input'>Other cost</label>
+              <input id='other_cost_input' placeholder='SEK'>
+          </span>
+          <span id='discount_container' class='other_updateable'>
+              <label for='discount_input'>Discount</label>
+              <input id='discount_input' placeholder='%'>
+          </span>
+          <span class="help-block">
+              Other cost is applied directly to all three price types. Discount is applied last.
+          </span>
+        </div>
+        <div class="col-md-7">
+          <h4>Exchange rates</h4>
+          <dl class="dl-horizontal">
+            <dt>1 US $</dt>
+            <dd>{{ exch_rates['USD_in_SEK'] }} SEK</dd>
+            <dt>1 EUR €</dt>
+            <dd>{{ exch_rates['EUR_in_SEK'] }} SEK</dd>
+            <dt>Issued at</dt>
+            <dd>{{ exch_rates['Issued at'] }}</dd>
+          </dl>
+        </div>
       </div>
       <div class="row" id="current_quote">
         <div class="col-md-5">
-          <h2>Products</h2>
+          <h3>Products</h3>
+          <span class="help-block">
+            To use fractions of units, please use full stop and decimal comma.
+          </span>
           <div id='product_warnings'></div>
           <ul class="quote-product-list list-unstyled">
           </ul>
         </div>
         <div class="col-md-4 borderLeft">
-          <h2>Totals</h2>
+          <h3>Totals</h3>
           <ul class="quote-totals-list list-unstyled">
           </ul>
         </div>
@@ -73,67 +102,7 @@ Title: Creation of a quote for a project
               <th class="sort" data-sort="comment">Comment</th>
             </tr>
           </tfoot>
-          <tbody class="list">
-              {% for product in products %}
-                  <tr class="status_{{product['Status'].lower()}}">
-                      <td>
-                          <a href="#0" class="button add-to-quote" data-product-id="{{product['REF_ID']}}"><i class="glyphicon glyphicon-plus"></i></a>
-                          <span>(<span id="count_in_table_{{product['REF_ID']}}">0</span>)</span>
-                      </td>
-                      <td class="id">
-                          {{product['REF_ID']}}
-                      </td>
-                      <td class="category">
-                          {{product['Category']}}
-                      </td>
-                      <td class="type">
-                          {{product['Type']}}
-                      </td>
-                      <td class="name">
-                          {{product["Name"]}}
-                      </td>
-                      <td class=components">
-                          {% if product['Components'] != "" %}
-                            {% for component_id, quant_d in product["Components"].items() %}
-                              <p>
-                              {% if quant_d["quantity"] != 1 %}
-                                  {{quant_d["quantity"]}}:
-                              {% end %}
-                              {{ components[component_id]['Product name'] }}</p>
-                            {% end %}
-                          {% end %}
-                      </td>
-                      <td class="alternative_components">
-                          {% if product['Alternative Components'] != "" %}
-                            {% for component_id, quant_d in product["Alternative Components"].items() %}
-                              <p>
-                              {% if quant_d["quantity"] != 1 %}
-                                  {{quant_d["quantity"]}}:
-                              {% end %}
-                              {{ components[component_id]['Product name'] }}</p>
-                            {% end %}
-                          {% end %}
-                      </td>
-                      <td class="reagent_fee">
-                          {{product["Reagent fee"]}}
-                      </td>
-                      <td class="re_run_fee">
-                          {{product["Re-run fee"]}}
-                      </td>
-                      <td class="minimum_quantity">
-                          {{product["Minimum Quantity"]}}
-                      </td>
-                      <td class="price_internal">
-                          {{product["price_internal"]}}
-                      </td>
-                      <td class="price_external">
-                          {{product["price_external"]}}
-                      </td>
-                      <td class="comment">
-                          {{product["Comment"]}}
-                      </td>
-                  </tr>
-              {% end %}
+          <tbody class="list" id='pricing_products_tbody'>
           </tbody>
         </table>
       </div>
@@ -151,31 +120,39 @@ var quoteTotEl = $('.quote-totals-list');
 
 
 $( document ).ready(function() {
-  $.getJSON('/api/v1/pricing_products', function(data){
-    allProducts = data;
-    // Initialize all quantities as 0
-    for (var key in allProducts) {
-        allProducts[key].quantity = 0;
-    };
-  });
-
-  init_listjs();
-  resetCurrentQuote();
-  // Activate the add-to-quote buttons
-
-  $('.add-to-quote').on('click', function(e) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      product_id = $(this).attr('data-product-id')
-      addToQuote(product_id);
-      $('#current_quote').show();
-  });
-
-  $('#price_type_selector input').change(function(e) {
-      /* Regenerate the quote list to show the new prices */
-      generateQuoteList();
-  });
+  tableLoad()
 });
+
+function tableLoad() {
+  // Table is loaded dynamically to enable switching of exchange rate date
+  $('#pricing_products_tbody').load('/pricing_quote_tbody', function(){
+
+    $.getJSON('/api/v1/pricing_products', function(data){
+      allProducts = data;
+      // Initialize all quantities as 0
+      for (var key in allProducts) {
+          allProducts[key].quantity = 0;
+      };
+    });
+
+    init_listjs();
+    resetCurrentQuote();
+    // Activate the add-to-quote buttons
+
+    $('.add-to-quote').on('click', function(e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        product_id = $(this).attr('data-product-id')
+        addToQuote(product_id);
+        $('#current_quote').show();
+    });
+
+    $('#price_type_selector input').change(function(e) {
+        /* Regenerate the quote list to show the new prices */
+        generateQuoteList();
+    });
+  });
+}
 
 function resetCurrentQuote(){
   $('#current_quote').hide();
@@ -196,13 +173,13 @@ function generateQuoteList() {
   /* Everytime the list changes, it is regenerated */
   resetCurrentQuote();
   var empty = true;
-  var warning_txt = '';
   price_type = $("input[name='price_type']:checked").val();
   var totalCostSweAc = 0;
   var totalCostInternal = 0;
   var overhead = parseInt($('#overhead_value').first().html());
   for (var product_id in allProducts) {
     var product = allProducts[product_id];
+    var warning_txt = '';
     if (product.quantity > 0) {
       /* check correct number of units */
       class_string = ''
@@ -236,8 +213,22 @@ function generateQuoteList() {
       applyWarning(warning_txt);
     }
   }
+  other_cost = parseFloat($('#other_cost_input').val());
+  other_cost = isNaN(other_cost) ? 0 : other_cost;
 
-  totalCostNonSwe = totalCostSweAc * (1+overhead);
+  discount = parseFloat($('#discount_input').val());
+  discount = isNaN(discount) ? 0 : discount;
+  discount_factor = 1-(discount/100.0);
+
+  totalCostInternal += other_cost;
+  totalCostInternal = totalCostInternal * discount_factor
+
+  totalCostNonSwe = (other_cost + totalCostSweAc * (1+overhead)) * discount_factor;
+
+  // Add to SweAc cost last since it would affect nonswe cost otherwise
+  totalCostSweAc += other_cost;
+  totalCostSweAc = totalCostSweAc * discount_factor
+
   /* Only show quote if non-empty */
   if (!empty){
     $('#current_quote').show();
@@ -283,6 +274,10 @@ function generateQuoteList() {
     generateQuoteList();
   }
 
+  $('.other_updateable').change(function(e) {
+      generateQuoteList();
+  })
+
   $('.quantity_updateable').change(function(e) {
     var product_id = $(this).data('product-id');
     var new_quantity = parseFloat($(this).val());
@@ -319,13 +314,6 @@ function updateTableCounts(product) {
   $(`#count_in_table_${product.REF_ID}`).html(product.quantity);
 }
 
-// This function checks if product is already in productsInQuote array
-function productFound(productId) {
-  return productsInQuote.find(function(item) {
-    return item.product.REF_ID === productId;
-  });
-}
-
 // Initialize sorting and searching javascript plugin
 function init_listjs() {
     // Setup - add a text input to each footer cell
@@ -346,7 +334,7 @@ function init_listjs() {
     $("#pricing_products_table_filter").appendTo("h1");
     $('#pricing_products_table_filter label input').appendTo($('#pricing_products_table_filter'));
     $('#pricing_products_table_filter label').remove();
-    $("#pricing_products_table_filter input").attr("placeholder", "Search..");
+    $("#pricing_products_table_filter input").attr("placeholder", "Search table...");
     // Apply the search
     table.columns().every( function () {
         var that = this;
