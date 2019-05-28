@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-<!-- 
+<!--
 Template file: rec_ctrl_view.html
 URL: /rec_ctrl/<projectid>
 Title: Reception Control View
@@ -27,7 +27,7 @@ Description: Quick view of reception control plates for a project
                 and <kbd><span class="glyphicon glyphicon-arrow-right"></span></kbd> cursors to move through these.</span>
         </div>
     </form>
-    
+
 
     {% for plate in sample_data%}
     <h3>Container {{ plate }}</h3>
@@ -38,7 +38,7 @@ Description: Quick view of reception control plates for a project
           {% set rows=[" "] + sample_data[plate]['y_axis'] %}
         {% end %}
         {% if len(sample_data[plate]['x_axis']) <= 12 %}
-          {% set cols=xrange(1,13) %}
+          {% set cols=range(1,13) %}
         {% else %}
           {% set cols=sample_data[plate]['x_axis'] %}
         {% end %}
@@ -74,4 +74,3 @@ var sdata={% raw json_data %};
 <script type="text/javascript" src="/static/js/chroma.min.js" ></script>
 <script type="text/javascript" src="/static/js/rec_ctrl_view.js?v={{ gs_globals['git_commit'] }}" ></script>
 {% end %}
-
