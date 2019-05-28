@@ -35,8 +35,10 @@ $( document ).ready(function() {
       generateQuoteList();
   });
 
-  tableLoad()
-  init_listjs();
+  tableLoad(null, null, function(){
+      /* need to wait until table has loaded before initializing the dataTable */
+      init_listjs();
+  });
 });
 
 function tableLoad(date=null, products=null, _callback=null) {
@@ -69,22 +71,23 @@ function tableLoad(date=null, products=null, _callback=null) {
       if (products !== null){
           generateQuoteList();
       }
-    });
 
-    // Activate the add-to-quote buttons
-    $('.add-to-quote').on('click', function(e) {
+
+      // Activate the add-to-quote buttons
+      $('.add-to-quote').on('click', function(e) {
         e.preventDefault();
         e.stopImmediatePropagation();
         product_id = $(this).attr('data-product-id')
         addToQuote(product_id);
         $('#current_quote').show();
+      });
+
     });
 
+    if (_callback !== null){
+      _callback();
+    };
   });
-
-  if (_callback !== null){
-    _callback();
-  };
 };
 
 function resetCurrentQuote(){
