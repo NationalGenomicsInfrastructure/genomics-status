@@ -174,21 +174,21 @@ function generateQuoteList() {
     if (price_type !== 'sweac'){
       p.setAttribute('class', 'text-muted')
     }
-    p.innerHTML = `<dt class='quote_totals_def quote_sweac'>Swedish academia:</dt><dd class='quote_totals_val quote_sweac'>${totalCostSweAc.toFixed(2)} SEK</dd>`;
+    p.innerHTML = `<dt class='quote_totals_def quote_sweac'>Swedish academia:</dt><dd class='quote_totals_val quote_sweac'>${Math.ceil(totalCostSweAc)} SEK</dd>`;
     totals_div.append(p);
 
     var p = document.createElement("p");
     if (price_type !== 'nonswe'){
       p.setAttribute('class', 'text-muted')
     }
-    p.innerHTML = `<dt class='quote_totals_def quote_nonswe'>Industry and non-Swedish academia:</dt><dd class='quote_totals_val quote_nonswe'>${totalCostNonSwe.toFixed(2)} SEK</dd>`;
+    p.innerHTML = `<dt class='quote_totals_def quote_nonswe'>Industry and non-Swedish academia:</dt><dd class='quote_totals_val quote_nonswe'>${Math.ceil(totalCostNonSwe)} SEK</dd>`;
     totals_div.append(p);
 
     var p = document.createElement("p");
     if (price_type !== 'internal'){
       p.setAttribute('class', 'text-muted')
     }
-    p.innerHTML = `<dt class='quote_totals_def quote_internal'>Internal projects:</dt><dd class='quote_totals_val quote_internal'>${totalCostInternal.toFixed(2)} SEK</dd>`;
+    p.innerHTML = `<dt class='quote_totals_def quote_internal'>Internal projects:</dt><dd class='quote_totals_val quote_internal'>${Math.ceil(totalCostInternal)} SEK</dd>`;
     totals_div.append(p);
 
     quoteTotEl.append(totals_div);
