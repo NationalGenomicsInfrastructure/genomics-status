@@ -116,6 +116,7 @@ pre.scrollable {
 }
 .nav.nav-tabs, .marginBottom { margin-bottom:15px; }
 .borderRight { border-right: 1px solid #eee; }
+.borderLeft { border-left: 1px solid #eee; }
 
 /* Tables */
 th { background-color: #ddd; }
@@ -1105,6 +1106,27 @@ div.setOverflow {
   z-index: 100;
 }
 
+
+.quote_product_prices_line{
+    float: right;
+}
+
+.quote_product_price_external {
+    float: left;
+}
+
+input.quantity_updateable {
+    width: 40px;
+}
+
+#current_quote{
+    font-size:14px;
+}
+
 .right_align_headers th{
   text-align: right;
+}
+
+#discount_container{
+    padding-left: 20px;
 }

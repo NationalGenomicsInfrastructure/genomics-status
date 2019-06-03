@@ -29,7 +29,8 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingComponentsDataHandler, PricingProductsDataHandler, \
-    PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler
+    PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, PricingProductListHandler, \
+    PricingQuoteHandler,PricingQuoteTbodyHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -193,6 +194,9 @@ class Application(tornado.web.Application):
             ("/nas_quotas", NASQuotasHandler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
+            ("/pricing_products", PricingProductListHandler),
+            ("/pricing_quote", PricingQuoteHandler),
+            ("/pricing_quote_tbody", PricingQuoteTbodyHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesHandler),
             ("/project/(P[^/]*)/([^/]*)$", ProjectSamplesHandler),
@@ -329,6 +333,9 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/nas_quotas.html")
+            tornado.autoreload.watch("design/pricing_products.html")
+            tornado.autoreload.watch("design/pricing_quote.html")
+            tornado.autoreload.watch("design/pricing_quote_tbody.html")
             tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/project_samples.html")
             tornado.autoreload.watch("design/project_summary.html")
