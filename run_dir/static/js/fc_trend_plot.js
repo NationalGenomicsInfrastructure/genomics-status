@@ -337,9 +337,9 @@ function init_page_js(){
         refresh_plot();
         
     });
-    $(".filter_inst_type").each(function(e){
-        $(this).prop('checked', true);
-    });
+    //    $(".filter_inst_type").each(function(e){
+    //	$(this).prop('checked', true);
+    //    });
     $(".filter_inst_type").change(function(e){
         e.stopImmediatePropagation()
         refresh_plot();
