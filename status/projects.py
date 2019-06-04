@@ -525,7 +525,7 @@ class CaliperImageHandler(SafeHandler):
             data = result.rows[0].value
         except TypeError:
             #can be triggered by the data.get().get() calls.
-            self.write("no caliper image found")
+            raise tornado.web.HTTPError(404, reason='No caliper image found')
         else:
             self.write(self.get_caliper_image(data.get(sample).get(step)))
 
@@ -549,7 +549,7 @@ class CaliperImageHandler(SafeHandler):
             return returnHTML
         except Exception as message:
             print(message)
-            return("Error fetching caliper images")
+            raise tornado.web.HTTPError(404, reason='Error fetching caliper images')
 
 class ProjectSamplesHandler(SafeHandler):
     """ Serves a page which lists the samples of a given project, with some
