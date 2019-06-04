@@ -866,8 +866,8 @@ function update_caliper(){
                 el.append('<img src="data:image/png;base64,'+data+'">');
                 el.prev('.caliper_loading_spinner').remove();
                 el.removeClass('loading');
-            }).fail(function(){
-                el.append('<span class="label label-danger"><abbr title="'+imglink+' '+jqxhr.responseText+'">Error</abbr></span>');
+            }).fail(function( jqxhr, textStatus, error) {
+                el.append('<span class="label label-danger"><abbr title="'+imglink+' '+textStatus+'">Error</abbr></span>');
                 el.prev('.caliper_loading_spinner').remove();
                 el.removeClass('loading');
             });
