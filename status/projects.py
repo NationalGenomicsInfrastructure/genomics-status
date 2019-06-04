@@ -541,7 +541,7 @@ class CaliperImageHandler(SafeHandler):
             transport.connect(username = self.application.genologics_login, password = self.application.genologics_pw)
             sftp_client = transport.open_sftp_client()
             my_file = sftp_client.open(uri, 'r')
-            encoded_string = base64.b64encode(my_file.read())
+            encoded_string = base64.b64encode(my_file.read()).decode('utf-8')
             my_file.close()
             sftp_client.close()
             transport.close()
