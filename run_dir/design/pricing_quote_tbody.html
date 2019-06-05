@@ -1,0 +1,62 @@
+<!-- Generates the contents of the table used in pricing_quote.html -->
+
+    {% for product in products %}
+        <tr class="status_{{product['Status'].lower()}}">
+            <td>
+                <a href="#0" class="button add-to-quote" data-product-id="{{product['REF_ID']}}"><i class="glyphicon glyphicon-plus"></i></a>
+                <span>(<span id="count_in_table_{{product['REF_ID']}}">0</span>)</span>
+            </td>
+            <td class="id">
+                {{product['REF_ID']}}
+            </td>
+            <td class="category">
+                {{product['Category']}}
+            </td>
+            <td class="type">
+                {{product['Type']}}
+            </td>
+            <td class="name">
+                {{product["Name"]}}
+            </td>
+            <td class=components">
+                {% if product['Components'] != "" %}
+                  {% for component_id, quant_d in product["Components"].items() %}
+                    <p>
+                    {% if quant_d["quantity"] != 1 %}
+                        {{quant_d["quantity"]}}:
+                    {% end %}
+                    {{ components[component_id]['Product name'] }}</p>
+                  {% end %}
+                {% end %}
+            </td>
+            <td class="alternative_components">
+                {% if product['Alternative Components'] != "" %}
+                  {% for component_id, quant_d in product["Alternative Components"].items() %}
+                    <p>
+                    {% if quant_d["quantity"] != 1 %}
+                        {{quant_d["quantity"]}}:
+                    {% end %}
+                    {{ components[component_id]['Product name'] }}</p>
+                  {% end %}
+                {% end %}
+            </td>
+            <td class="reagent_fee">
+                {{product["Reagent fee"]}}
+            </td>
+            <td class="overhead">
+                {{product["Re-run fee"]}}
+            </td>
+            <td class="minimum_quantity">
+                {{product["Minimum Quantity"]}}
+            </td>
+            <td class="price_internal">
+                {{product["price_internal"]}}
+            </td>
+            <td class="price_external">
+                {{product["price_external"]}}
+            </td>
+            <td class="comment">
+                {{product["Comment"]}}
+            </td>
+        </tr>
+    {% end %}

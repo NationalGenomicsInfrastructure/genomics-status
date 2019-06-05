@@ -12,5 +12,6 @@ run_dir/qc_reports/
 Pipfile
 Pipfile.lock
 run_dir/settings_prod.yaml
+run_dir/settings_dev.yaml
 *.swp
 *.orig

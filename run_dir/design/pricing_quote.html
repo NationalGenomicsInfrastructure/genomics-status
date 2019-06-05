@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+<!--
+Template file: pricing_quote.html
+URL: /pricing_quote
+Title: Creation of a quote for a project
+-->
+
+{% block stuff %}
+
+<div class="container-fluid" id="product_list">
+  <div id="pricing_quote_div">
+      <h1><span id="page_title">Project Quote</span></h1>
+      <div class="row">
+        <div class="col-md-5">
+          <p>Overhead for non-Swedish academia and industry: <span id='overhead_value'>1</span></p>
+          <div class="radio" id="price_type_selector">
+            <label class="radio-inline">
+              <input type="radio" name="price_type" value="sweac" checked> Swedish academia
+            </label>
+            <label class="radio-inline">
+              <input type="radio" name="price_type" value="nonswe"> Industry and non-Swedish academia
+            </label>
+            <label class="radio-inline">
+              <input type="radio" name="price_type" value="internal"> Internal
+            </label>
+          </div>
+          <span id='other_cost_container' class='other_updateable'>
+              <label for='other_cost_input'>Other cost</label>
+              <input id='other_cost_input' placeholder='SEK'>
+          </span>
+          <span id='discount_container' class='other_updateable'>
+              <label for='discount_input'>Discount</label>
+              <input id='discount_input' placeholder='%'>
+          </span>
+          <span class="help-block">
+              Other cost is applied directly to all three price types. Discount is applied last.
+          </span>
+        </div>
+        <div class="col-md-7">
+          <h4>Exchange rates</h4>
+          <dl class="dl-horizontal">
+            <dt>1 US $</dt>
+            <dd><span id='exch_rate_usd'>{{ exch_rates['USD_in_SEK'] }}</span> SEK</dd>
+            <dt>1 EUR €</dt>
+            <dd><span id='exch_rate_eur'>{{ exch_rates['EUR_in_SEK'] }}</span> SEK</dd>
+            <dt>Issued at</dt>
+            <dd><span id='exch_rate_issued_at'>{{ exch_rates['Issued at'] }}</span><a href="#" data-toggle="modal" data-target="#exch_rate_modal"> (Change)</a></dd>
+          </dl>
+          <!-- Exchange Rate Modal -->
+          <div class="modal fade" id="exch_rate_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" id="myModalLabel">Fetch historic exchange rate</h4>
+                </div>
+                <div class="modal-body">
+                  <p>Latest date exchange rates: <input id="datepicker" value="{{exch_rates['Issued at'] }}" data-date-format="yyyy-mm-dd"></p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                  <button id='datepicker-btn' type="button" class="btn btn-primary">Apply Exchange Rates</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="alert alert-success" id="success-alert" hidden="true">
+        <button type="button" class="close" data-dismiss="alert">x</button>
+        <strong>Success! </strong>
+        Prices have been updated according to the exchange rate chosen.
+      </div>
+      <div class="row" id="current_quote">
+        <div class="col-md-5">
+          <h3>Products</h3>
+          <span class="help-block">
+            To use fractions of units, please use full stop and not decimal comma.
+          </span>
+          <div id='product_warnings'></div>
+          <ul class="quote-product-list list-unstyled">
+          </ul>
+        </div>
+        <div class="col-md-4 borderLeft">
+          <h3>Totals</h3>
+          <ul class="quote-totals-list list-unstyled">
+          </ul>
+        </div>
+      </div>
+      <div class="products_chooseable_div">
+        <h2>Available Products</h2>
+        <table class="table table-striped table-bordered sortable" id="pricing_products_table">
+          <thead>
+            <tr class="sticky">
+              <th>Quoting</th>
+              <th class="sort" data-sort="id">ID</th>
+              <th class="sort" data-sort="category">Category</th>
+              <th class="sort" data-sort="type">Type</th>
+              <th class="sort" data-sort="name">Name</th>
+              <th class="sort" data-sort="components">Components</th>
+              <th class="sort" data-sort="alternative_components">Alternative Components</th>
+              <th class="sort" data-sort="reagent_fee">Reagent Fee</th>
+              <th class="sort" data-sort="overhead">Overhead</th>
+              <th class="sort" data-sort="minimum_quantity">Minimum Quantity</th>
+              <th class="sort" data-sort="price_internal">Internal Price</th>
+              <th class="sort" data-sort="price_external">External Price</th>
+              <th class="sort" data-sort="comment">Comment</th>
+            </tr>
+          </thead>
+          <tfoot>
+            <tr>
+              <th>Quoting</th>
+              <th class="sort" data-sort="id">ID</th>
+              <th class="sort" data-sort="category">Category</th>
+              <th class="sort" data-sort="type">Type</th>
+              <th class="sort" data-sort="name">Name</th>
+              <th class="sort" data-sort="alternatcomponents">Components</th>
+              <th class="sort" data-sort="alternative_components">Alternative Components</th>
+              <th class="sort" data-sort="reagent_fee">Reagent Fee</th>
+              <th class="sort" data-sort="overhead">Overhead</th>
+              <th class="sort" data-sort="minimum_quantity">Minimum Quantity</th>
+              <th class="sort" data-sort="price_internal">Internal Price (SEK)</th>
+              <th class="sort" data-sort="price_external">External Price</th>
+              <th class="sort" data-sort="comment">Comment</th>
+            </tr>
+          </tfoot>
+          <tbody class="list" id='pricing_products_tbody'>
+          </tbody>
+        </table>
+      </div>
+    </div>
+</div>
+
+<script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/bootstrap-datepicker.min.js"></script>
+<script src="/static/js/pricing_quote.js?v={{ gs_globals['git_commit'] }}"></script>
+
+<!-- Table Sorting -->
+<script type="text/javascript">
+
+</script>
+
+{% end %}
