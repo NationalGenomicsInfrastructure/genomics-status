@@ -525,7 +525,7 @@ class CaliperImageHandler(SafeHandler):
             data = result.rows[0].value
         except TypeError:
             #can be triggered by the data.get().get() calls.
-            self.write("no caliper image found")
+            raise tornado.web.HTTPError(404, reason='No caliper image found')
         else:
             self.write(self.get_caliper_image(data.get(sample).get(step)))
 
@@ -541,7 +541,7 @@ class CaliperImageHandler(SafeHandler):
             transport.connect(username = self.application.genologics_login, password = self.application.genologics_pw)
             sftp_client = transport.open_sftp_client()
             my_file = sftp_client.open(uri, 'r')
-            encoded_string = base64.b64encode(my_file.read())
+            encoded_string = base64.b64encode(my_file.read()).decode('utf-8')
             my_file.close()
             sftp_client.close()
             transport.close()
@@ -549,7 +549,7 @@ class CaliperImageHandler(SafeHandler):
             return returnHTML
         except Exception as message:
             print(message)
-            return("Error fetching caliper images")
+            raise tornado.web.HTTPError(404, reason='Error fetching caliper images')
 
 class ProjectSamplesHandler(SafeHandler):
     """ Serves a page which lists the samples of a given project, with some
