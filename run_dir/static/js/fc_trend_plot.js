@@ -384,7 +384,7 @@ function update_instrument_list(){
 }
 function update_instrument_filters(){
     var html='<ul class="list-inline">Filter out instruments ';
-    var html_hiseq='<ul class="list-inline">Filter out old intruments ';
+    var html_hiseq='<ul class="list-inline">Filter out old instruments ';
     var my_inst_id='';
     var my_inst_name='';
     var old_inst=['D00415', 'ST-E00269', 'ST-E00198', 'ST-E00201', 'D00410', 'ST-E00214', 'ST-E00266'];
