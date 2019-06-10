@@ -337,9 +337,6 @@ function init_page_js(){
         refresh_plot();
         
     });
-    $(".filter_inst_type").each(function(e){
-        $(this).prop('checked', true);
-    });
     $(".filter_inst_type").change(function(e){
         e.stopImmediatePropagation()
         refresh_plot();
@@ -386,28 +383,49 @@ function update_instrument_list(){
     }
 }
 function update_instrument_filters(){
-    var html='<ul class="list-inline">Filter out ';
+    var html='<ul class="list-inline">Filter out instruments ';
+    var html_hiseq='<ul class="list-inline">Filter out old instruments ';
     var my_inst_id='';
     var my_inst_name='';
+    var old_inst=['D00415', 'ST-E00269', 'ST-E00198', 'ST-E00201', 'D00410', 'ST-E00214', 'ST-E00266'];
     $.getJSON("/api/v1/instrument_names", function(data){
         for (i in window.current_instrument_list){
             my_inst_id=window.current_instrument_list[i];
-            html+='<li class="filter_insts" id="inst_filter_'+my_inst_id+'"style="cursor:pointer;border-left: 5px solid '+color_by_instrument(my_inst_id)+';">';
-            for (d in data){
-            my_inst_name='';
-                if(my_inst_id.indexOf(data[d].key)!= -1){
-                    my_inst_name=data[d].value;
-                    break;
-                }
-            }
-            if (my_inst_name==''){
-                my_inst_name=my_inst_id;
-            }
-            html+=my_inst_name + "</li>";
+      	    if (old_inst.indexOf(my_inst_id) == -1){
+		html+='<li class="filter_insts" id="inst_filter_'+my_inst_id+'"style="cursor:pointer;border-left: 5px solid '+color_by_instrument(my_inst_id)+';">';
+		for (d in data){
+		    my_inst_name='';
+		    if(my_inst_id.indexOf(data[d].key)!= -1){
+			my_inst_name=data[d].value;
+			break;
+		    }
+		}
+		if (my_inst_name==''){
+		    my_inst_name=my_inst_id;
+		}
+		html+=my_inst_name + "</li>";
 
-            html+=" ";
-        }
+		html+=" ";
+	    } else {
+		html_hiseq+='<li class="filter_insts" id="inst_filter_'+my_inst_id+'"style="cursor:pointer;border-left: 5px solid '+color_by_instrument(my_inst_id)+';">';
+                for (d in data){
+                    my_inst_name='';
+                    if(my_inst_id.indexOf(data[d].key)!= -1){
+                        my_inst_name=data[d].value;
+                        break;
+                    }
+                }
+                if (my_inst_name==''){
+                    my_inst_name=my_inst_id;
+                }
+                html_hiseq+=my_inst_name + "</li>";
+
+                html_hiseq+=" ";
+            }
+	}
         html+="</ul>";
+        html_hiseq+="</ul>";
+	html+=html_hiseq
         $("#inst_filter_div").html(html);
         
         $(".filter_insts").click(function(e){
