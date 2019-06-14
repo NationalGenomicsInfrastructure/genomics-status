@@ -57,7 +57,7 @@ from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandle
     UpdatedDocumentsDatahandler
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
     WorksetsDataHandler, WorksetSearchHandler
-
+from status.assign_roles import AssignRolesHandler, AssignRolesUsersHandler
 
 from zenpy import Zenpy
 from urllib.parse import urlsplit
@@ -213,6 +213,8 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/workset/([^/]*)$", WorksetHandler),
+            ("/assign_roles", AssignRolesHandler),
+            ("/api/v1/assign_roles/users", AssignRolesUsersHandler),
             (r'.*', BaseHandler)
         ]
 
@@ -349,6 +351,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/workset_samples.html")
             tornado.autoreload.watch("design/worksets.html")
             tornado.autoreload.watch("design/flowcell_trend_plot.html")
+            tornado.autoreload.watch("design/assign_roles.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 

@@ -81,7 +81,7 @@ class PresetsHandler(SafeHandler):
         self.write({'success': 'success!!'})
 
     def get_user_details(self):
-        user_email = self.get_current_user_email()
+        user_email = self.get_current_user().email
         if user_email == 'Testing User!':
             user_email=self.application.settings.get("username", None)+'@scilifelab.se'
         user_details={}
@@ -563,7 +563,7 @@ class ProjectSamplesHandler(SafeHandler):
         # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
         multiqc = self.get_multiqc(project) or ''
         self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
-                              user=self.get_current_user_name(),
+                              user=self.get_current_user(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
                               columns_sample = self.application.genstat_defaults.get('sample_columns'),
                               prettify = prettify_css_names,
@@ -581,7 +581,7 @@ class ProjectsHandler(SafeHandler):
     #def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, projects=projects, user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, projects=projects, user=self.get_current_user()))
 
 
 
@@ -612,12 +612,11 @@ class RunningNotesDataHandler(SafeHandler):
         note = self.get_argument('note', '')
         category = self.get_argument('category', '')
         user = self.get_current_user()
-        email = self.get_current_user_email()
         if not note:
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
-            newNote = RunningNotesDataHandler.make_project_running_note(self.application, project, note, category, user, email)
+            newNote = RunningNotesDataHandler.make_project_running_note(self.application, project, note, category, user.name, user.email)
             self.set_status(201)
             self.write(json.dumps(newNote))
 
@@ -665,7 +664,6 @@ class LinksDataHandler(SafeHandler):
 
     def post(self, project):
         user = self.get_current_user()
-        email = self.get_current_user_email()
         a_type = self.get_argument('type', '')
         title = self.get_argument('title', '')
         url = self.get_argument('url', '')
@@ -678,8 +676,8 @@ class LinksDataHandler(SafeHandler):
             p = Project(lims, id=project)
             p.get(force=True)
             links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
-            links[str(datetime.datetime.now())] = {'user': user,
-                                                   'email': email,
+            links[str(datetime.datetime.now())] = {'user': user.name,
+                                                   'email': user.email,
                                                    'type': a_type,
                                                    'title': title,
                                                    'url': url,
@@ -881,7 +879,7 @@ class ProjMetaCompareHandler(SafeHandler):
         pids = self.get_arguments("p")
         t = self.application.loader.load("proj_meta_compare.html")
         self.write(t.generate(gs_globals=self.application.gs_globals, pids=pids,
-                              user=self.get_current_user_name()))
+                              user=self.get_current_user()))
 
 class ProjectRNAMetaDataHandler(SafeHandler):
     """Handler to serve RNA metadata from project"""

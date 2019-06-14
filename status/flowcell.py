@@ -87,7 +87,7 @@ class FlowcellHandler(SafeHandler):
             t = self.application.loader.load("flowcell_error.html")
             self.write(t.generate(gs_globals=self.application.gs_globals,
                                   flowcell_id=flowcell_id,
-                                  user=self.get_current_user_name(),
+                                  user=self.get_current_user(),
                                   extra_message=extra_message
                                   ))
             return
@@ -102,4 +102,4 @@ class FlowcellHandler(SafeHandler):
                                   flowcell_id=flowcell_id,
                                   thresholds=thresholds,
                                   project_names=project_names,
-                                  user=self.get_current_user_name()))
+                                  user=self.get_current_user()))

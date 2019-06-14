@@ -63,7 +63,7 @@ class WorksetsHandler(SafeHandler):
                  ['Application', 'application'], ['Library','library_method'], \
                  ['Samples Passed', 'passed'],['Samples Failed', 'failed'], \
                  ['Pending Samples', 'unknown'], ['Total samples', 'total']];
-        self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user_name(), ws_data=ws_data, headers=headers, all=all))
+        self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user(), ws_data=ws_data, headers=headers, all=all))
 
 class WorksetDataHandler(SafeHandler):
     """Loaded through /api/v1/workset/[workset]"""
@@ -95,7 +95,7 @@ class WorksetHandler(SafeHandler):
     """Loaded through /workset/[workset]"""
     def get(self, workset):
         t = self.application.loader.load("workset_samples.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, workset_name=workset, user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, workset_name=workset, user=self.get_current_user()))
 
 class WorksetSearchHandler(SafeHandler):
     """ Searches Worksetsfor text string
@@ -153,7 +153,6 @@ class WorksetNotesDataHandler(SafeHandler):
     def post(self, workset):
         note = self.get_argument('note', '')
         user = self.get_current_user()
-        email = self.get_current_user_email()
         category = self.get_argument('category', 'Workset')
 
         if category == '':
@@ -168,7 +167,7 @@ class WorksetNotesDataHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>No workset id or note parameters found</body></html>')
         else:
-            newNote = {'user': user, 'email': email, 'note': note, 'category': category}
+            newNote = {'user': user.name, 'email': user.email, 'note': note, 'category': category}
             p = Process(self.lims, id=workset)
             p.get(force=True)
             workset_notes = json.loads(p.udf['Workset Notes']) if 'Workset Notes' in p.udf else {}
@@ -183,7 +182,7 @@ class WorksetNotesDataHandler(SafeHandler):
                 RunningNotesDataHandler.make_project_running_note(
                     self.application, project_id,
                     project_note, category,
-                    user, email
+                    user.name, user.email
                 )
 
             self.set_status(201)
@@ -228,7 +227,6 @@ class WorksetLinksHandler(SafeHandler):
 
     def post(self, lims_step):
         user = self.get_current_user()
-        email = self.get_current_user_email()
         a_type = self.get_argument('type', '')
         title = self.get_argument('title', '')
         url = self.get_argument('url', '')
@@ -241,8 +239,8 @@ class WorksetLinksHandler(SafeHandler):
             p = Process(self.lims, id=lims_step)
             p.get(force=True)
             links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
-            links[str(datetime.datetime.now())] = {'user': user,
-                                                   'email': email,
+            links[str(datetime.datetime.now())] = {'user': user.name,
+                                                   'email': user.email,
                                                    'type': a_type,
                                                    'title': title,
                                                    'url': url,

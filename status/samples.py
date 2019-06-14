@@ -45,7 +45,7 @@ class SampleRunHandler(SafeHandler):
     """
     def get(self, sample):
         t = self.application.loader.load("sample_runs.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, sample=sample, user= self.get_current_user_name(),
+        self.write(t.generate(gs_globals=self.application.gs_globals, sample=sample, user= self.get_current_user(),
                               deprecated=True))
 
 
@@ -88,7 +88,7 @@ class SampleQCSummaryHandler(SafeHandler):
     """
     def get(self, sample):
         t = self.application.loader.load("sample_run_qc.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, sample=sample, user= self.get_current_user_name(),
+        self.write(t.generate(gs_globals=self.application.gs_globals, sample=sample, user= self.get_current_user(),
                               deprecated=True))
 
 
@@ -179,7 +179,7 @@ class SamplesPerLaneHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("samples_per_lane.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(), deprecated=True))
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(), deprecated=True))
 
 
 class SamplesPerLanePlotHandler(SamplesPerLaneDataHandler):
