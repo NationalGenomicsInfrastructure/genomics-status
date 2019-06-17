@@ -11,7 +11,7 @@ Description: Shows a table with all genomics-status users with options to modify
 
 <h1 class="page_title"><span id="page_title">Assign Roles</span> <small>Create and modify users</small></h1>
 
-{% if user.role is not 'admin'%}
+{% if user.role != 'admin'%}
 
   <p>Sorry! Your user role does not allow you to view this page!</p>
 
