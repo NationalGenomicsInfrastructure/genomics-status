@@ -21,7 +21,7 @@ $(function(){
       $("#pickUserul").remove();
     }
     var pickuserdropdown='<ul id="pickUserul" class="dropdown-menu dropdown-menu-center dropdown-menu-wide" role="menu" aria-labelledby="pickUserBtn"  style="z-index: 200;">';
-    pickuserdropdown+='<li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="Choose User"> Choose User</a></li>';
+    pickuserdropdown+='<li><a href="#" class="clickDropdownGetValue triggerOptionChange" style="cursor:pointer;" data-value="Choose User"> Choose User</a></li>';
     $.getJSON('/api/v1/assign_roles/users', function (data) {
       tableData=data;
       $.each(data, function(name, role) {
@@ -119,19 +119,12 @@ $(function(){
         $("#currRoleBtn").addClass('disabled');
       }
       else{
-        $("#currRoleBtn").removeClass('disabled')
+        $("#currRoleBtn").removeClass('disabled');
       }
     }
     else{
-      if($.trim($('#pickUserBtn').text())==$('#asrol-js').data('user')){
-        $("#modDelBtnDelete").addClass('disabled');
-        $("#modDelBtnDelete").addClass('disabledNoClick');
-      }
-      else{
-        $("#currRoleBtn").removeClass('disabled');
-        $(this).addClass('btn-primary');
-        $("#modDelBtnModify").addClass('btn-default');
-      }
+      $(this).addClass('btn-primary');
+      $("#modDelBtnModify").addClass('btn-default');
     }
   });
 
@@ -215,6 +208,17 @@ function setChangingDropdownValue(elem, text, userrole){
   elem.find('.btn').html(constructI+text+' <span class="caret"></span>');
 }
 
+function checkForSelfDelete(chosenUser){
+  if(chosenUser)==$('#asrol-js').data('user')){
+    $("#modDelBtnDelete").addClass('disabled');
+    $("#modDelBtnDelete").addClass('disabledNoClick');
+  }
+  else{
+    $("#modDelBtnDelete").removeClass('disabled');
+    $("#modDelBtnDelete").removeClass('disabledNoClick');
+  }
+}
+
 $('body').on('click', '.triggerOptionChange', function(event){
   if($('#currRoletorem').length)
     $('#currRoletorem').remove();
@@ -222,4 +226,5 @@ $('body').on('click', '.triggerOptionChange', function(event){
   $('.rBtngp1').removeClass('active');
   $('.rBtngp1').addClass('btn-default');
   $("#currRoleRow").hide();
+  checkForSelfDelete($(this).data('value'));
 })
