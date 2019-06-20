@@ -115,10 +115,23 @@ $(function(){
       }
       $("#currRoleBtn").html('<i class="glyphicon glyphicon-list-alt" data-userrole='+curole+'></i> '+cuRole+' <span class="caret"></span>');
       $("#currRoleRow").show();
+      if($.trim($('#pickUserBtn').text())==$('#asrol-js').data('user')){
+        $("#currRoleBtn").addClass('disabled');
+      }
+      else{
+        $("#currRoleBtn").removeClass('disabled')
+      }
     }
     else{
-      $(this).addClass('btn-primary');
-      $("#modDelBtnModify").addClass('btn-default');
+      if($.trim($('#pickUserBtn').text())==$('#asrol-js').data('user')){
+        $("#modDelBtnDelete").addClass('disabled');
+        $("#modDelBtnDelete").addClass('disabledNoClick');
+      }
+      else{
+        $("#currRoleBtn").removeClass('disabled');
+        $(this).addClass('btn-primary');
+        $("#modDelBtnModify").addClass('btn-default');
+      }
     }
   });
 

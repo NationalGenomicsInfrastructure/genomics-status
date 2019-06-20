@@ -216,7 +216,7 @@ Description: Shows a table with all genomics-status users with options to modify
     </div>
   </div>
 
-  <script src="/static/js/assign_roles.js" id="asrol-js"></script>
+  <script src="/static/js/assign_roles.js" id="asrol-js" data-user='{{ user.email }}'></script>
   <script src="/static/js/jquery.dataTables.min.js"></script>
   <script src="/static/js/jquery-ui.min.js"></script>
 {% end %}
