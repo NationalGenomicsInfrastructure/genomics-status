@@ -209,7 +209,7 @@ function setChangingDropdownValue(elem, text, userrole){
 }
 
 function checkForSelfDelete(chosenUser){
-  if(chosenUser)==$('#asrol-js').data('user')){
+  if(chosenUser == $('#asrol-js').data('user')){
     $("#modDelBtnDelete").addClass('disabled');
     $("#modDelBtnDelete").addClass('disabledNoClick');
   }
