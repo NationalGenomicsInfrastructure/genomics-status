@@ -671,7 +671,7 @@ class RunningNotesDataHandler(SafeHandler):
                  You have been tagged by {} in a running note in the project {}! The note is as follows</p>\
                 <div class="panel panel-default">\
                     <div class="panel-heading">\
-                        <a href="#">{}</a> - <span>Wed Jul 10 2019, 4:53:51 PM</span> - <span>{}</span>\
+                        <a href="#">{}</a> - <span>{}</span> - <span>{}</span>\
                     </div>\
                     <div class="panel-body">\
                         <div class="mkdown">\
