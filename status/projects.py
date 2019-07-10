@@ -630,7 +630,7 @@ class RunningNotesDataHandler(SafeHandler):
         pattern = re.compile("@\w+[.]*[a-zA-Z]*")
         userTags = pattern.findall(note)
         if userTags:
-            RunningNotesDataHandler.notify_tagged_user(application, userTags, project, note, user)
+            RunningNotesDataHandler.notify_tagged_user(application, userTags, project, note, category, user, timestamp)
         ####
         p = Project(lims, id=project)
         p.get(force=True)
@@ -650,8 +650,9 @@ class RunningNotesDataHandler(SafeHandler):
         return newNote
 
     @staticmethod
-    def notify_tagged_user(application, userTags, project, note, tagger):
+    def notify_tagged_user(application, userTags, project, note, category, tagger, timestamp):
         view_result = {}
+        time_in_format = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S').strftime("%a %b %d %Y, %I:%M:%S %p")
         for row in application.gs_users_db.view('authorized/users'):
             if row.key != 'genstat_defaults':
                 view_result[row.key.split('@')[0]] = row.key
@@ -662,11 +663,20 @@ class RunningNotesDataHandler(SafeHandler):
                 msg['Subject']='[GenStat] Running Note:{}'.format(project)
                 msg['From']='genomics-status'
                 msg['To'] = view_result[user]
-                text='You have been tagged by {} in a running note in the project {} ! The note is as follows\n>{}'.format(tagger, project, note)
+                text = 'You have been tagged by {} in a running note in the project {}! The note is as follows\n\
+                >{} - {} - {}\
+                >{}'.format(tagger, project, tagger, time_in_format, category, note)
+
                 html = '<p> \
-                 You have been tagged by {} in a running note in the project {} ! The note is as follows\
-                <blockquote>{}</blockquote>\
-                </p>'.format(tagger, project, note)
+                 You have been tagged by {} in a running note in the project {}! The note is as follows</p>\
+                <div class="panel panel-default">\
+                    <div class="panel-heading">\
+                        <a href="#">{}</a> - <span>Wed Jul 10 2019, 4:53:51 PM</span> - <span>{}</span>\
+                    </div>\
+                    <div class="panel-body">\
+                        <div class="mkdown">\
+                        <p>{}</p>\
+                </div></div></div>'.format(tagger, project, tagger, time_in_format, category, note)
 
                 msg.attach(MIMEText(text, 'plain'))
                 msg.attach(MIMEText(html, 'html'))
