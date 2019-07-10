@@ -14,7 +14,9 @@ import base64
 import urllib.parse
 import os
 import logging
-
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 #from itertools import ifilter
 from collections import defaultdict
@@ -624,6 +626,12 @@ class RunningNotesDataHandler(SafeHandler):
     def make_project_running_note(application, project, note, category, user, email):
         timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
         newNote = {'user': user, 'email': email, 'note': note, 'category' : category, 'timestamp': timestamp}
+        ####
+        pattern = re.compile("@\w+[.]*[a-zA-Z]*")
+        userTags = pattern.findall(note)
+        if userTags:
+            RunningNotesDataHandler.notify_tagged_user(application, userTags, project, note, user)
+        ####
         p = Project(lims, id=project)
         p.get(force=True)
         running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
@@ -640,6 +648,32 @@ class RunningNotesDataHandler(SafeHandler):
         doc['details']['running_notes']=json.dumps(running_notes)
         application.projects_db.save(doc)
         return newNote
+
+    @staticmethod
+    def notify_tagged_user(application, userTags, project, note, tagger):
+        view_result = {}
+        for row in application.gs_users_db.view('authorized/users'):
+            if row.key != 'genstat_defaults':
+                view_result[row.key.split('@')[0]] = row.key
+        for user in userTags:
+            if user[1:] in view_result:
+                user=user[1:]
+                msg = MIMEMultipart('alternative')
+                msg['Subject']='[GenStat] Running Note:{}'.format(project)
+                msg['From']='genomics-status'
+                msg['To'] = view_result[user]
+                text='You have been tagged by {} in a running note in the project {} ! The note is as follows\n>{}'.format(tagger, project, note)
+                html = '<p> \
+                 You have been tagged by {} in a running note in the project {} ! The note is as follows\
+                <blockquote>{}</blockquote>\
+                </p>'.format(tagger, project, note)
+
+                msg.attach(MIMEText(text, 'plain'))
+                msg.attach(MIMEText(html, 'html'))
+
+                s = smtplib.SMTP('localhost')
+                s.sendmail('genomics-bioinfo@scilifelab.se', msg['To'], msg.as_string())
+                s.quit()
 
 
 class LinksDataHandler(SafeHandler):
