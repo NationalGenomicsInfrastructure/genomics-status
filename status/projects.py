@@ -667,16 +667,18 @@ class RunningNotesDataHandler(SafeHandler):
                 >{} - {} - {}\
                 >{}'.format(tagger, project, tagger, time_in_format, category, note)
 
-                html = '<p> \
+                html = '<html>\
+                <body>\
+                <p> \
                  You have been tagged by {} in a running note in the project {}! The note is as follows</p>\
-                <div class="panel panel-default">\
-                    <div class="panel-heading">\
+                 <blockquote>\
+                <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
+                    <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
                         <a href="#">{}</a> - <span>{}</span> - <span>{}</span>\
                     </div>\
-                    <div class="panel-body">\
-                        <div class="mkdown">\
+                    <div class="panel-body" style="padding: 15px;">\
                         <p>{}</p>\
-                </div></div></div>'.format(tagger, project, tagger, time_in_format, category, note)
+                </div></div></blockquote></body></html>'.format(tagger, project, tagger, time_in_format, category, note)
 
                 msg.attach(MIMEText(text, 'plain'))
                 msg.attach(MIMEText(html, 'html'))
