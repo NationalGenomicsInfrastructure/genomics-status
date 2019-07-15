@@ -618,8 +618,6 @@ class RunningNotesDataHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
-            import pdb
-            pdb.set_trace()
             newNote = RunningNotesDataHandler.make_project_running_note(self.application, project, note, category, user.name, user.email)
             self.set_status(201)
             self.write(json.dumps(newNote))
@@ -628,12 +626,6 @@ class RunningNotesDataHandler(SafeHandler):
     def make_project_running_note(application, project, note, category, user, email):
         timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
         newNote = {'user': user, 'email': email, 'note': note, 'category' : category, 'timestamp': timestamp}
-        ####
-        pattern = re.compile("@\w+[.]*[a-zA-Z]*")
-        userTags = pattern.findall(note)
-        if userTags:
-            RunningNotesDataHandler.notify_tagged_user(application, userTags, project, note, category, user, timestamp)
-        ####
         p = Project(lims, id=project)
         p.get(force=True)
         running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
@@ -649,6 +641,12 @@ class RunningNotesDataHandler(SafeHandler):
         doc=application.projects_db.get(doc_id)
         doc['details']['running_notes']=json.dumps(running_notes)
         application.projects_db.save(doc)
+        #### Check and send mail to tagged users
+        pattern = re.compile("@\w+[.]*[a-zA-Z]*")
+        userTags = pattern.findall(note)
+        if userTags:
+            RunningNotesDataHandler.notify_tagged_user(application, userTags, project, note, category, user, timestamp)
+        ####
         return newNote
 
     @staticmethod
@@ -672,7 +670,7 @@ class RunningNotesDataHandler(SafeHandler):
                 html = '<html>\
                 <body>\
                 <p> \
-                 You have been tagged by {} in a running note in the project <a href="#">{}</a>! The note is as follows</p>\
+                 You have been tagged by {} in a running note in the project <a href="{}/project/{}">{}</a>! The note is as follows</p>\
                  <blockquote>\
                 <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
                     <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
@@ -680,7 +678,8 @@ class RunningNotesDataHandler(SafeHandler):
                     </div>\
                     <div class="panel-body" style="padding: 15px;">\
                         <p>{}</p>\
-                </div></div></blockquote></body></html>'.format(tagger, project, tagger, time_in_format, category, note)
+                </div></div></blockquote></body></html>'.format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0],
+                 project, project, tagger, time_in_format, category, note)
 
                 msg.attach(MIMEText(text, 'plain'))
                 msg.attach(MIMEText(html, 'html'))
