@@ -618,6 +618,8 @@ class RunningNotesDataHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
+            import pdb
+            pdb.set_trace()
             newNote = RunningNotesDataHandler.make_project_running_note(self.application, project, note, category, user.name, user.email)
             self.set_status(201)
             self.write(json.dumps(newNote))
@@ -670,7 +672,7 @@ class RunningNotesDataHandler(SafeHandler):
                 html = '<html>\
                 <body>\
                 <p> \
-                 You have been tagged by {} in a running note in the project {}! The note is as follows</p>\
+                 You have been tagged by {} in a running note in the project <a href="#">{}</a>! The note is as follows</p>\
                  <blockquote>\
                 <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
                     <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
