@@ -642,7 +642,7 @@ class RunningNotesDataHandler(SafeHandler):
         doc['details']['running_notes']=json.dumps(running_notes)
         application.projects_db.save(doc)
         #### Check and send mail to tagged users
-        pattern = re.compile("@\w+[.]*[a-zA-Z]*")
+        pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
         userTags = pattern.findall(note)
         if userTags:
             RunningNotesDataHandler.notify_tagged_user(application, userTags, project, note, category, user, timestamp)

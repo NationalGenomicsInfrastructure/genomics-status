@@ -198,7 +198,7 @@ function make_project_links(s){
 }
 function create_user_tags(s){
   // Searches for @\w+ and replaces with a mail link
-  s = s.replace(/(@)(\w+[.]*[a-zA-Z]*)/g, '<a href="mailto:$2@scilifelab.se">$1$2</a>');
+  s = s.replace(/(@)([a-zA-Z0-9.-]+)/g, '<a href="mailto:$2@scilifelab.se">$1$2</a>');
   return s;
 }
 function check_img_sources(obj){
