@@ -657,8 +657,8 @@ class RunningNotesDataHandler(SafeHandler):
             if row.key != 'genstat_defaults':
                 view_result[row.key.split('@')[0]] = row.key
         for user in userTags:
-            if user[1:] in view_result:
-                user=user[1:]
+            if user[1] in view_result:
+                user=user[1]
                 msg = MIMEMultipart('alternative')
                 msg['Subject']='[GenStat] Running Note:{}'.format(project)
                 msg['From']='genomics-status'
