@@ -138,7 +138,7 @@
 		this.$itemList.show();
 		var element = this.$element;
 		var offset = this.$element.offset();
-		var pos = element.getCaretPosition();
+		var pos = getCaretCoordinates(element[0], element[0].selectionEnd);
 
 		this.$itemList.css({
 			left: offset.left + pos.left,

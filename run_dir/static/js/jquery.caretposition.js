@@ -1,93 +1,174 @@
-/**
- * jQuery plugin for getting position of cursor in textarea
+/*The MIT License (MIT)
 
- * @license under GNU license
- * @author Bevis Zhao (i@bevis.me, http://bevis.me)
- */
-$(function() {
+Copyright (c) 2015 Jonathan Ong me@jongleberry.com
 
-	var calculator = {
-		// key styles
-		primaryStyles: ['fontFamily', 'fontSize', 'fontWeight', 'fontVariant', 'fontStyle',
-			'paddingLeft', 'paddingTop', 'paddingBottom', 'paddingRight',
-			'marginLeft', 'marginTop', 'marginBottom', 'marginRight',
-			'borderLeftColor', 'borderTopColor', 'borderBottomColor', 'borderRightColor',
-			'borderLeftStyle', 'borderTopStyle', 'borderBottomStyle', 'borderRightStyle',
-			'borderLeftWidth', 'borderTopWidth', 'borderBottomWidth', 'borderRightWidth',
-			'line-height', 'outline', 'text-align'],
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-		specificStyle: {
-			'word-wrap': 'break-word',
-			'overflow-x': 'hidden',
-			'overflow-y': 'auto'
-		},
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-		simulator : $('<div id="textarea_simulator"/>').css({
-				position: 'absolute',
-				top: 0,
-				left: 0,
-				visibility: 'hidden'
-			}).appendTo(document.body),
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 
-		toHtml : function(text) {
-			return text.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g, '<br>')
-				.split(' ').join('<span style="white-space:prev-wrap">&nbsp;</span>');
-		},
-		// calculate position
-		getCaretPosition: function() {
-			var cal = calculator, self = this, element = self[0], elementOffset = self.offset();
+/* jshint browser: true */
 
-			// IE has easy way to get caret offset position
-			if ($.browser.msie && $.browser.version <= 9) {
-				// must get focus first
-				element.focus();
-			    var range = document.selection.createRange();
-			    $('#hskeywords').val(element.scrollTop);
-			    return {
-			        left: range.boundingLeft - elementOffset.left,
-			        top: parseInt(range.boundingTop) - elementOffset.top + element.scrollTop
-						+ document.documentElement.scrollTop + parseInt(self.getComputedStyle("fontSize"))
-			    };
-			}
+(function () {
 
-			cal.simulator.empty();
-			// clone primary styles to imitate textarea
-			$.each(cal.primaryStyles, function(index, styleName) {
-				self.cloneStyle(cal.simulator, styleName);
-			});
+// We'll copy the properties below into the mirror div.
+// Note that some browsers, such as Firefox, do not concatenate properties
+// into their shorthand (e.g. padding-top, padding-bottom etc. -> padding),
+// so we have to list every single property explicitly.
+var properties = [
+  'direction',  // RTL support
+  'boxSizing',
+  'width',  // on Chrome and IE, exclude the scrollbar, so the mirror div wraps exactly as the textarea does
+  'height',
+  'overflowX',
+  'overflowY',  // copy the scrollbar for IE
 
-			// caculate width and height
-			cal.simulator.css($.extend({
-				'width': self.width(),
-				'height': self.height()
-			}, cal.specificStyle));
+  'borderTopWidth',
+  'borderRightWidth',
+  'borderBottomWidth',
+  'borderLeftWidth',
+  'borderStyle',
 
-			var value = (self.val() || self.text()), cursorPosition = self.getCursorPosition();
-			var beforeText = value.substring(0, cursorPosition),
-				afterText = value.substring(cursorPosition);
+  'paddingTop',
+  'paddingRight',
+  'paddingBottom',
+  'paddingLeft',
 
-			var before = $('<span class="before"/>').html(cal.toHtml(beforeText)),
-				focus = $('<span class="focus"/>'),
-				after = $('<span class="after"/>').html(cal.toHtml(afterText));
+  // https://developer.mozilla.org/en-US/docs/Web/CSS/font
+  'fontStyle',
+  'fontVariant',
+  'fontWeight',
+  'fontStretch',
+  'fontSize',
+  'fontSizeAdjust',
+  'lineHeight',
+  'fontFamily',
 
-			cal.simulator.append(before).append(focus).append(after);
-			var focusOffset = focus.offset(), simulatorOffset = cal.simulator.offset();
-			// alert(focusOffset.left  + ',' +  simulatorOffset.left + ',' + element.scrollLeft);
-			return {
-				top: focusOffset.top - simulatorOffset.top - element.scrollTop
-					// calculate and add the font height except Firefox
-					+ ($.browser.mozilla ? 0 : parseInt(self.getComputedStyle("fontSize"))),
-				left: focus[0].offsetLeft -  cal.simulator[0].offsetLeft - element.scrollLeft
-			};
-		}
-	};
+  'textAlign',
+  'textTransform',
+  'textIndent',
+  'textDecoration',  // might not make a difference, but better be safe
 
-	$.fn.extend({
-		setCursorPosition : function(position){
-	    if(this.length == 0) return this;
-	    return $(this).setSelection(position, position);
-		},
-		setSelection: function(selectionStart, selectionEnd) {
+  'letterSpacing',
+  'wordSpacing',
+
+  'tabSize',
+  'MozTabSize'
+
+];
+
+var isBrowser = (typeof window !== 'undefined');
+var isFirefox = (isBrowser && window.mozInnerScreenX != null);
+
+function getCaretCoordinates(element, position, options) {
+  if (!isBrowser) {
+    throw new Error('textarea-caret-position#getCaretCoordinates should only be called in a browser');
+  }
+
+  var debug = options && options.debug || false;
+  if (debug) {
+    var el = document.querySelector('#input-textarea-caret-position-mirror-div');
+    if (el) el.parentNode.removeChild(el);
+  }
+
+  // The mirror div will replicate the textarea's style
+  var div = document.createElement('div');
+  div.id = 'input-textarea-caret-position-mirror-div';
+  document.body.appendChild(div);
+
+  var style = div.style;
+  var computed = window.getComputedStyle ? window.getComputedStyle(element) : element.currentStyle;  // currentStyle for IE < 9
+  var isInput = element.nodeName === 'INPUT';
+
+  // Default textarea styles
+  style.whiteSpace = 'pre-wrap';
+  if (!isInput)
+    style.wordWrap = 'break-word';  // only for textarea-s
+
+  // Position off-screen
+  style.position = 'absolute';  // required to return coordinates properly
+  if (!debug)
+    style.visibility = 'hidden';  // not 'display: none' because we want rendering
+
+  // Transfer the element's properties to the div
+  properties.forEach(function (prop) {
+    if (isInput && prop === 'lineHeight') {
+      // Special case for <input>s because text is rendered centered and line height may be != height
+      if (computed.boxSizing === "border-box") {
+        var height = parseInt(computed.height);
+        var outerHeight =
+          parseInt(computed.paddingTop) +
+          parseInt(computed.paddingBottom) +
+          parseInt(computed.borderTopWidth) +
+          parseInt(computed.borderBottomWidth);
+        var targetHeight = outerHeight + parseInt(computed.lineHeight);
+        if (height > targetHeight) {
+          style.lineHeight = height - outerHeight + "px";
+        } else if (height === targetHeight) {
+          style.lineHeight = computed.lineHeight;
+        } else {
+          style.lineHeight = 0;
+        }
+      } else {
+        style.lineHeight = computed.height;
+      }
+    } else {
+      style[prop] = computed[prop];
+    }
+  });
+
+  if (isFirefox) {
+    // Firefox lies about the overflow property for textareas: https://bugzilla.mozilla.org/show_bug.cgi?id=984275
+    if (element.scrollHeight > parseInt(computed.height))
+      style.overflowY = 'scroll';
+  } else {
+    style.overflow = 'hidden';  // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'
+  }
+
+  div.textContent = element.value.substring(0, position);
+  // The second special handling for input type="text" vs textarea:
+  // spaces need to be replaced with non-breaking spaces - http://stackoverflow.com/a/13402035/1269037
+  if (isInput)
+    div.textContent = div.textContent.replace(/\s/g, '\u00a0');
+
+  var span = document.createElement('span');
+  // Wrapping must be replicated *exactly*, including when a long word gets
+  // onto the next line, with whitespace at the end of the line before (#7).
+  // The  *only* reliable way to do that is to copy the *entire* rest of the
+  // textarea's content into the <span> created at the caret position.
+  // For inputs, just '.' would be enough, but no need to bother.
+  span.textContent = element.value.substring(position) || '.';  // || because a completely empty faux span doesn't render at all
+  div.appendChild(span);
+
+  var coordinates = {
+    top: span.offsetTop + parseInt(computed['borderTopWidth']),
+    left: span.offsetLeft + parseInt(computed['borderLeftWidth']),
+    height: parseInt(computed['lineHeight'])
+  };
+
+  if (debug) {
+    span.style.backgroundColor = '#aaa';
+  } else {
+    document.body.removeChild(div);
+  }
+
+  return coordinates;
+}
+
+if (typeof module != 'undefined' && typeof module.exports != 'undefined') {
+  module.exports = getCaretCoordinates;
+} else if(isBrowser) {
+  window.getCaretCoordinates = getCaretCoordinates;
+}
+
+$.fn.extend({
+  setCursorPosition : function(position){
+    if(this.length == 0) return this;
+    return $(this).setSelection(position, position);
+  },
+  setSelection: function(selectionStart, selectionEnd) {
 	    if(this.length == 0) return this;
 	    input = this[0];
 
@@ -115,71 +196,19 @@ $(function() {
 
 	    return this;
 		},
-		getComputedStyle: function(styleName) {
-			if (this.length == 0) return;
-			var thiz = this[0];
-			var result = this.css(styleName);
-			result = result || ($.browser.msie ?
-				thiz.currentStyle[styleName]:
-				document.defaultView.getComputedStyle(thiz, null)[styleName]);
-			return result;
-		},
-		// easy clone method
-		cloneStyle: function(target, styleName) {
-			var styleVal = this.getComputedStyle(styleName);
-			if (!!styleVal) {
-				$(target).css(styleName, styleVal);
-			}
-		},
-		cloneAllStyle: function(target, style) {
-			var thiz = this[0];
-			for (var styleName in thiz.style) {
-				var val = thiz.style[styleName];
-				typeof val == 'string' || typeof val == 'number'
-					? this.cloneStyle(target, styleName)
-					: NaN;
-			}
-		},
 		getCursorPosition : function() {
-			var element = input = this[0];
-			var value = (input.value || input.innerText)
-
-		    if(!this.data("lastCursorPosition")){
-		    	this.data("lastCursorPosition",0);
-		    }
-
-		    var lastCursorPosition = this.data("lastCursorPosition");
-
-		  if (document.selection) {
-		     input.focus();
-		      var sel = document.selection.createRange();
-		      var selLen = document.selection.createRange().text.length;
-		      sel.moveStart('character', -value.length);
-		      lastCursorPosition = sel.text.length - selLen;
-		  } else if (input.selectionStart || input.selectionStart == '0') {
-		  	return input.selectionStart;
-		  } else if (typeof window.getSelection != "undefined" && window.getSelection().rangeCount>0) {
-		  	  try{
-		  	  var selection = window.getSelection();
-		      var range = selection.getRangeAt(0);
-		      var preCaretRange = range.cloneRange();
-		      preCaretRange.selectNodeContents(element);
-		      preCaretRange.setEnd(range.endContainer, range.endOffset);
-		      lastCursorPosition =  preCaretRange.toString().length;
-		  	}catch(e){
-		  		lastCursorPosition = this.data("lastCursorPosition");	
-		  	}
-		  } else if (typeof document.selection != "undefined" && document.selection.type != "Control") {
-		      var textRange = document.selection.createRange();
-		      var preCaretTextRange = document.body.createTextRange();
-		      preCaretTextRange.moveToElementText(element);
-		      preCaretTextRange.setEndPoint("EndToEnd", textRange);
-		      lastCursorPosition =  preCaretTextRange.text.length;
-		  }
-
-    		this.data("lastCursorPosition",lastCursorPosition);
-		  return lastCursorPosition;
-	  },
-		getCaretPosition: calculator.getCaretPosition
-	});
-});
+			var thiz = this[0], result = 0;
+			if ('selectionStart' in thiz) {
+				result = thiz.selectionStart;
+			}
+      else if('selection' in document) {
+				var range = document.selection.createRange();
+				thiz.focus();
+				var length = document.selection.createRange().text.length;
+				range.moveStart('character', - thiz.value.length);
+				result = range.text.length - length;
+			}
+			return result;
+		}
+ });
+}());
