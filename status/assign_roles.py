@@ -5,8 +5,7 @@ import copy
 import base64
 import requests
 
-from status.util import SafeHandler, UnsafeHandler
-from status.authorization import UnAuthorizedHandler
+from status.util import SafeHandler
 
 
 class AssignRolesHandler(SafeHandler):
