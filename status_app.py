@@ -90,6 +90,8 @@ class Application(tornado.web.Application):
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
+            ("/assign_roles", AssignRolesHandler),
+            ("/api/v1/assign_roles/users", AssignRolesUsersHandler),            
             ("/api/v1/bioinfo_analysis", BioinfoAnalysisHandler),
             ("/api/v1/bioinfo_analysis/([^/]*)$", BioinfoAnalysisHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
@@ -213,8 +215,6 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/workset/([^/]*)$", WorksetHandler),
-            ("/assign_roles", AssignRolesHandler),
-            ("/api/v1/assign_roles/users", AssignRolesUsersHandler),
             (r'.*', BaseHandler)
         ]
 
