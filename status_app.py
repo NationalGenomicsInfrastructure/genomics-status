@@ -57,7 +57,7 @@ from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandle
     UpdatedDocumentsDatahandler
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
     WorksetsDataHandler, WorksetSearchHandler
-
+from status.assign_roles import AssignRolesHandler, AssignRolesUsersHandler
 
 from zenpy import Zenpy
 from urllib.parse import urlsplit
@@ -90,6 +90,7 @@ class Application(tornado.web.Application):
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
+            ("/api/v1/assign_roles/users", AssignRolesUsersHandler),
             ("/api/v1/bioinfo_analysis", BioinfoAnalysisHandler),
             ("/api/v1/bioinfo_analysis/([^/]*)$", BioinfoAnalysisHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
@@ -180,8 +181,13 @@ class Application(tornado.web.Application):
             ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
+            ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
+            ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
+            ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
+            ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
+            ("/assign_roles", AssignRolesHandler),
             ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
             ("/deliveries", DeliveriesPageHandler),
             ("/flowcells", FlowcellsHandler),
@@ -208,10 +214,6 @@ class Application(tornado.web.Application):
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/worksets", WorksetsHandler),
-            ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
-            ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
-            ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
-            ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/workset/([^/]*)$", WorksetHandler),
             (r'.*', BaseHandler)
         ]
@@ -349,6 +351,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/workset_samples.html")
             tornado.autoreload.watch("design/worksets.html")
             tornado.autoreload.watch("design/flowcell_trend_plot.html")
+            tornado.autoreload.watch("design/assign_roles.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 

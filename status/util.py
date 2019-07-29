@@ -32,6 +32,16 @@ ERROR_CODES = {
     511: 'Network Authentication Required'
 }
 
+
+class User(object):
+    """A minimal user class """
+
+    def __init__(self, name, email, role):
+        self.name = name
+        self.email = email
+        self.role = role
+
+
 class BaseHandler(tornado.web.RequestHandler):
     """Base Handler. Handlers should not inherit from this
     class directly but from either SafeHandler or UnsafeHandler
@@ -50,26 +60,19 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         # Disables authentication if test mode to ease integration testing
         if self.application.test_mode:
-            return 'Testing User!'
+            name = 'Testing User!'
+            role = 'admin'
+            email = 'Testing User!'
         else:
-            return str(self.get_secure_cookie("user"), 'utf-8') if self.get_secure_cookie("user") else None
-
-    def get_current_user_name(self):
-        # Fix ridiculous bug with quotation marks showing on the web
-        user = self.get_current_user()
-        if user:
-            if (user[0] == '"') and (user[-1] == '"'):
-                return user[1:-1]
-            else:
-                return user
+            name = str(self.get_secure_cookie("user"), 'utf-8') if self.get_secure_cookie("user") else None
+            # Fix ridiculous bug with quotation marks showing on the web
+            if name:
+                if (name[0] == '"') and (name[-1] == '"'):
+                    name = name[1:-1]
+            role = str(self.get_secure_cookie("role"), 'utf-8') if self.get_secure_cookie("role") else 'user'
+            email = str(self.get_secure_cookie("email"), 'utf-8') if self.get_secure_cookie("email") else None
+        user = User(name, email, role)
         return user
-
-    def get_current_user_email(self):
-        # Disables authentication if test mode to ease integration testing
-        if self.application.test_mode:
-            return 'Testing User!'
-        else:
-            return str(self.get_secure_cookie("email"), 'utf-8') if self.get_secure_cookie("email") else None
 
     def write_error(self, status_code, **kwargs):
         """ Overwrites write_error method to have custom error pages.
@@ -105,7 +108,7 @@ class BaseHandler(tornado.web.RequestHandler):
         # Render the error template
         else:
             t = self.application.loader.load("error_page.html")
-            self.write(t.generate(gs_globals=self.application.gs_globals, status=status_code, reason=reason, user=self.get_current_user_name()))
+            self.write(t.generate(gs_globals=self.application.gs_globals, status=status_code, reason=reason, user=self.get_current_user()))
 
     def get_multiqc(self, project_id):
         """
@@ -156,7 +159,7 @@ class MainHandler(UnsafeHandler):
 
     def get(self):
         t = self.application.loader.load("index.html")
-        user = self.get_current_user_name()
+        user = self.get_current_user()
         # Avoids pulling all historic data by assuming we have less than 30 NAS:es
         view = self.application.server_status_db.view('nases/by_timestamp', descending=True, limit=30)
         latest = max([parser.parse(row.key) for row in view.rows])

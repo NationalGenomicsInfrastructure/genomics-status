@@ -1130,3 +1130,17 @@ input.quantity_updateable {
 #discount_container{
     padding-left: 20px;
 }
+
+.dropdown-menu-center {
+  left: 25%;
+}
+.modal-backdrop {
+    visibility: hidden !important;
+}
+.modal.in {
+    background-color: rgba(0,0,0,0.5);
+}
+
+.disabledNoClick{
+   pointer-events: none;
+}

@@ -73,7 +73,7 @@ class FlowcellsHandler(SafeHandler):
         all=self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
         fcs=self.list_flowcells(all=all)
-        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user_name(), flowcells=fcs, form_date=formatDate, all=all))
+        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, form_date=formatDate, all=all))
 
 
 class FlowcellHandler(SafeHandler):
@@ -82,7 +82,7 @@ class FlowcellHandler(SafeHandler):
     """
     def get(self, flowcell):
         t = self.application.loader.load("flowcell_samples.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, flowcell=flowcell, user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, flowcell=flowcell, user=self.get_current_user()))
 
 
 class FlowcellsDataHandler(SafeHandler):
@@ -330,14 +330,13 @@ class FlowcellNotesDataHandler(SafeHandler):
             category = 'Flowcell'
 
         user = self.get_current_user()
-        email = self.get_current_user_email()
         flowcell_info = FlowcellsInfoDataHandler.get_flowcell_info(self.application, flowcell)
         projects = flowcell_info['pid_list']
         if not note:
             self.set_status(400)
             self.finish('<html><body>No note parameters found</body></html>')
         else:
-            newNote = {'user': user, 'email': email, 'note': note, 'category': category}
+            newNote = {'user': user.name, 'email': user.email, 'note': note, 'category': category}
             try:
                 p=get_container_from_id(flowcell)
             except (KeyError, IndexError) as e:
@@ -354,7 +353,7 @@ class FlowcellNotesDataHandler(SafeHandler):
                     RunningNotesDataHandler.make_project_running_note(
                         self.application, project,
                         project_note, category,
-                        user, email
+                        user.name, user.email
                     )
 
                 p.udf['Notes'] = json.dumps(running_notes)
@@ -389,7 +388,6 @@ class FlowcellLinksDataHandler(SafeHandler):
 
     def post(self, flowcell):
         user = self.get_current_user()
-        email = self.get_current_user_email()
         a_type = self.get_argument('type', '')
         title = self.get_argument('title', '')
         url = self.get_argument('url', '')
@@ -406,8 +404,8 @@ class FlowcellLinksDataHandler(SafeHandler):
                 self.write('Flowcell not found')
             else:
                 links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
-                links[str(datetime.datetime.now())] = {'user': user,
-                                                   'email': email,
+                links[str(datetime.datetime.now())] = {'user': user.name,
+                                                   'email': user.email,
                                                    'type': a_type,
                                                    'title': title,
                                                    'url': url,
@@ -431,7 +429,7 @@ class ReadsTotalHandler(SafeHandler):
         t = self.application.loader.load("reads_total.html")
 
         if not query:
-            self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(), readsdata=ordereddata, query=query))
+            self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(), readsdata=ordereddata, query=query))
         else:
             xfc_view = self.application.x_flowcells_db.view("samples/lane_clusters", reduce=False)
             for row in xfc_view[query:"{}Z".format(query)]:
@@ -440,7 +438,7 @@ class ReadsTotalHandler(SafeHandler):
                 data[row.key].append(row.value)
             for key in sorted(data.keys()):
                 ordereddata[key]=sorted(data[key], key=lambda d:d['fcp'])
-            self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user_name(), readsdata=ordereddata, query=query))
+            self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(), readsdata=ordereddata, query=query))
 #Functions
 def get_container_from_id(flowcell):
     if flowcell[7:].startswith('00000000'):

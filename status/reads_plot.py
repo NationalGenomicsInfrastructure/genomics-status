@@ -33,7 +33,7 @@ class  FlowcellPlotHandler(SafeHandler):
     def get(self):
         t = self.application.loader.load("flowcell_trend_plot.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                              user=self.get_current_user_name()))
+                              user=self.get_current_user()))
 
 
 class FlowcellCountPlotHandler(SafeHandler):
@@ -44,7 +44,7 @@ class FlowcellCountPlotHandler(SafeHandler):
     def get(self):
         t = self.application.loader.load("flowcell_count_plot.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                              user=self.get_current_user_name()))
+                              user=self.get_current_user()))
 
 
 def filter_count_data(app, group_level, start_date, end_date, display_type):
