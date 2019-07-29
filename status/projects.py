@@ -17,6 +17,7 @@ import logging
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import markdown
 
 #from itertools import ifilter
 from collections import defaultdict
@@ -656,6 +657,8 @@ class RunningNotesDataHandler(SafeHandler):
         for row in application.gs_users_db.view('authorized/users'):
             if row.key != 'genstat_defaults':
                 view_result[row.key.split('@')[0]] = row.key
+        if category:
+            category = ' - ' + category
         for user in userTags:
             if user[1] in view_result:
                 user=user[1]
@@ -664,7 +667,7 @@ class RunningNotesDataHandler(SafeHandler):
                 msg['From']='genomics-status'
                 msg['To'] = view_result[user]
                 text = 'You have been tagged by {} in a running note in the project {}! The note is as follows\n\
-                >{} - {} - {}\
+                >{} - {}{}\
                 >{}'.format(tagger, project, tagger, time_in_format, category, note)
 
                 html = '<html>\
@@ -674,12 +677,12 @@ class RunningNotesDataHandler(SafeHandler):
                  <blockquote>\
                 <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
                     <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
-                        <a href="#">{}</a> - <span>{}</span> - <span>{}</span>\
+                        <a href="#">{}</a> - <span>{}</span> <span>{}</span>\
                     </div>\
                     <div class="panel-body" style="padding: 15px;">\
                         <p>{}</p>\
                 </div></div></blockquote></body></html>'.format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0],
-                 project, project, tagger, time_in_format, category, note)
+                 project, project, tagger, time_in_format, category, markdown.markdown(note))
 
                 msg.attach(MIMEText(text, 'plain'))
                 msg.attach(MIMEText(html, 'html'))
