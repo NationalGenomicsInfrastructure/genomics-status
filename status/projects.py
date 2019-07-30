@@ -186,7 +186,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             else:
                 row.value['days_in_reception_control'] = diff
 
-        if row.value['order_details'] and row.value['order_details']['fields'] and row.value['order_details']['fields']['project_pi_name']:
+        if 'order_details' in row.value and 'fields' in row.value['order_details'] and 'project_pi_name' in row.value['order_details']['fields']:
             row.value['project_pi_name'] = row.value['order_details']['fields']['project_pi_name']
 
         return row
