@@ -5,9 +5,7 @@ import copy
 import base64
 import requests
 
-from dateutil import parser
-from status.util import SafeHandler, UnsafeHandler
-from status.authorization import UnAuthorizedHandler
+from status.util import SafeHandler
 
 
 class AssignRolesHandler(SafeHandler):
@@ -38,10 +36,8 @@ class AssignRolesUsersHandler(SafeHandler):
                    "Authorization": "Basic " + "{}:{}".format(base64.b64encode(bytes(self.application.settings.get("username", None), 'ascii')),
                    base64.b64encode(bytes(self.application.settings.get("password", None), 'ascii')))}
 
-        idtoChange=''
-        for row in self.application.gs_users_db.view('authorized/users'):
-            if row.get('key') == userToChange:
-                idtoChange = row.get('value')
+        view_result = self.application.gs_users_db.view('authorized/users', key=userToChange)
+        idtoChange = view_result.rows[0].value if view_result.rows else ''
         action = self.get_argument('action')
         if self.get_current_user().role == 'admin':
             if action == 'create':
@@ -53,7 +49,7 @@ class AssignRolesUsersHandler(SafeHandler):
                         self.application.gs_users_db.save(data)
                     except Exception as e:
                         self.set_status(400)
-                        self.write(e.message)
+                        self.finish(e.message)
 
                     self.set_status(201)
                     self.write({'success': 'success!!'})
@@ -67,7 +63,7 @@ class AssignRolesUsersHandler(SafeHandler):
                         self.application.gs_users_db.save(user_doc)
                     except Exception as e:
                         self.set_status(400)
-                        self.write(e.message)
+                        self.finish(e.message)
 
                     self.set_status(201)
                     self.write({'success': 'success!!'})
@@ -77,7 +73,7 @@ class AssignRolesUsersHandler(SafeHandler):
                         self.application.gs_users_db.delete(user_doc)
                     except Exception as e:
                         self.set_status(400)
-                        self.write(e.message)
+                        self.finish(e.message)
 
                     self.set_status(201)
                     self.write({'success': 'success!!'})
