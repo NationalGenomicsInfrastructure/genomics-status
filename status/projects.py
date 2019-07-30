@@ -186,6 +186,9 @@ class ProjectsBaseDataHandler(SafeHandler):
             else:
                 row.value['days_in_reception_control'] = diff
 
+        if 'order_details' in row.value and 'fields' in row.value['order_details'] and 'project_pi_name' in row.value['order_details']['fields']:
+            row.value['project_pi_name'] = row.value['order_details']['fields']['project_pi_name']
+
         return row
 
     def _get_two_year_from(self, from_date):
