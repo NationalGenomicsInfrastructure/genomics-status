@@ -14,7 +14,10 @@ import base64
 import urllib.parse
 import os
 import logging
-
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import markdown
 
 #from itertools import ifilter
 from collections import defaultdict
@@ -642,7 +645,54 @@ class RunningNotesDataHandler(SafeHandler):
         doc=application.projects_db.get(doc_id)
         doc['details']['running_notes']=json.dumps(running_notes)
         application.projects_db.save(doc)
+        #### Check and send mail to tagged users
+        pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
+        userTags = pattern.findall(note)
+        if userTags:
+            RunningNotesDataHandler.notify_tagged_user(application, userTags, project, note, category, user, timestamp)
+        ####
         return newNote
+
+    @staticmethod
+    def notify_tagged_user(application, userTags, project, note, category, tagger, timestamp):
+        view_result = {}
+        time_in_format = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S').strftime("%a %b %d %Y, %I:%M:%S %p")
+        for row in application.gs_users_db.view('authorized/users'):
+            if row.key != 'genstat_defaults':
+                view_result[row.key.split('@')[0]] = row.key
+        if category:
+            category = ' - ' + category
+        for user in userTags:
+            if user[1] in view_result:
+                user=user[1]
+                msg = MIMEMultipart('alternative')
+                msg['Subject']='[GenStat] Running Note:{}'.format(project)
+                msg['From']='genomics-status'
+                msg['To'] = view_result[user]
+                text = 'You have been tagged by {} in a running note in the project {}! The note is as follows\n\
+                >{} - {}{}\
+                >{}'.format(tagger, project, tagger, time_in_format, category, note)
+
+                html = '<html>\
+                <body>\
+                <p> \
+                 You have been tagged by {} in a running note in the project <a href="{}/project/{}">{}</a>! The note is as follows</p>\
+                 <blockquote>\
+                <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
+                    <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
+                        <a href="#">{}</a> - <span>{}</span> <span>{}</span>\
+                    </div>\
+                    <div class="panel-body" style="padding: 15px;">\
+                        <p>{}</p>\
+                </div></div></blockquote></body></html>'.format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0],
+                 project, project, tagger, time_in_format, category, markdown.markdown(note))
+
+                msg.attach(MIMEText(text, 'plain'))
+                msg.attach(MIMEText(html, 'html'))
+
+                s = smtplib.SMTP('localhost')
+                s.sendmail('genomics-bioinfo@scilifelab.se', msg['To'], msg.as_string())
+                s.quit()
 
 
 class LinksDataHandler(SafeHandler):

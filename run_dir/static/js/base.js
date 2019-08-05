@@ -196,6 +196,11 @@ function make_project_links(s){
   s = s.replace(/([\W])(\d{6})(_(?:ST-)?\w{5,10}_\d{3,4})(_\w{8,12}(?:\-\w{3,8})?)(?!\w)/g, '$1<a href="/flowcells/$2$4">$2$3$4</a>');
   return s;
 }
+function create_user_tags(s){
+  // Searches for @\w+ and replaces with a mail link
+  s = s.replace(/(@)([a-zA-Z0-9.-]+)/g, '<a href="mailto:$2@scilifelab.se">$1$2</a>');
+  return s;
+}
 function check_img_sources(obj){
   // Sort out any missing images
   // pass some images, eg $('#running_note_preview_body img')
@@ -211,6 +216,7 @@ function check_img_sources(obj){
 function make_markdown(s){
   s = marked(s);
   s = make_project_links(s);
+  s = create_user_tags(s);
   return '<div class="mkdown">'+s+'</div>';
 }
 
