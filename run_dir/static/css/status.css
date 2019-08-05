@@ -1146,36 +1146,36 @@ input.quantity_updateable {
 }
 
 .-sew-list-container {
-	background: white;
-	border: 1px solid #DDD;
-	border-radius: 3px;
-	box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
-	min-width: 200px;
+  background: white;
+  border: 1px solid #DDD;
+  border-radius: 3px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
 }
 
 .-sew-list {
-	list-style: none;
-	margin: 0;
-	padding: 2px;
-	max-height: 100px;
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  max-height: 100px;
   min-width: 120px;
-	overflow-x: hidden;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
 .-sew-list-item {
-	display: block;
-	padding: 5px 5px;
-	cursor: pointer;
+  display: block;
+  padding: 5px 5px;
+  cursor: pointer;
 }
 
 
 .-sew-list-item small {
-	color: #afafaf;
+  color: #afafaf;
 }
 
 .-sew-list-item.selected {
-	color: white;
-	background: #4183C4;
-	text-decoration: none;
+  color: white;
+  background: #4183C4;
+  text-decoration: none;
 }
