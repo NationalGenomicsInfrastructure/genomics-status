@@ -431,7 +431,7 @@ class PricingProductListHandler(PricingBaseHandler):
 
         t = self.application.loader.load("pricing_products.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                user=self.get_current_user_name(),
+                user=self.get_current_user(),
                 products=products,
                 components=components,
                 version=version))
@@ -460,7 +460,7 @@ class PricingQuoteHandler(PricingBaseHandler):
 
         t = self.application.loader.load("pricing_quote.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                user=self.get_current_user_name(),
+                user=self.get_current_user(),
                 products=products,
                 components=components,
                 exch_rates=exch_rates))
@@ -489,7 +489,7 @@ class PricingQuoteTbodyHandler(PricingBaseHandler):
 
         t = self.application.loader.load("pricing_quote_tbody.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                user=self.get_current_user_name(),
+                user=self.get_current_user(),
                 products=products,
                 components=components,
                 version=version))
