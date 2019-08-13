@@ -72,7 +72,10 @@ class BaseHandler(tornado.web.RequestHandler):
             role = str(self.get_secure_cookie("role"), 'utf-8') if self.get_secure_cookie("role") else 'user'
             email = str(self.get_secure_cookie("email"), 'utf-8') if self.get_secure_cookie("email") else None
         user = User(name, email, role)
-        return user
+        if user.name:
+            return user
+        else:
+            return None
 
     def write_error(self, status_code, **kwargs):
         """ Overwrites write_error method to have custom error pages.
