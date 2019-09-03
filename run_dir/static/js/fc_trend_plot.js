@@ -25,14 +25,14 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         chart: {
             type: plot_type
         },
-        title: {
+        title: { 
             text : name+' of the recent flowcells'
         },
         legend : {
             enabled : false
         },
         yAxis: {
-            min : 0,
+            min : 0, 
             title : {
               text : name
             }
@@ -58,7 +58,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             enabled : false
         },
         xAxis: {
-            type: 'category',
+            type: 'category', 
             labels: {
                 rotation: -90,
                     style: {
@@ -271,7 +271,7 @@ function get_parameters(){
      var second_date;
      var dp=$('#inp_date_1').val();
      if (dp != ''){
-         y_m_d=dp.split('-');
+         y_m_d=dp.split('-'); 
          first_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
      }else{
          first_date=new Date();
@@ -280,7 +280,7 @@ function get_parameters(){
      }
      dp=$('#inp_date_2').val();
      if (dp != ''){
-        y_m_d=dp.split('-');
+        y_m_d=dp.split('-'); 
         second_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
      }else{
         second_date=new Date();
@@ -288,7 +288,7 @@ function get_parameters(){
      }
      search_string=first_half + '-' + second_half;
 
-     //then, the display type
+     //then, the display type 
      var display_type;
      if ($("#display_by_flowcell").hasClass('active')){
          display_type='flowcell'
@@ -373,9 +373,11 @@ function init_page_js(){
         $(this).addClass("active");
         refresh_plot();
     });
+    
     $("#key_select_form").change(function(e){
         e.preventDefault();
         e.stopImmediatePropagation()
+        
         refresh_plot();
     });
     $(".filter_inst_type").change(function(e){
@@ -409,7 +411,7 @@ function update_chemistries_list(){
     window.current_chemistries_list=[];
     var version="";
     for (d in window.current_plot_data){
-        version = window.current_plot_data[d].instrument.substr(0,1) + window.current_plot_data[d].cver;
+        version = window.current_plot_data[d].instrument.substr(0,1) + window.current_plot_data[d].cver; 
         if ( window.current_chemistries_list.indexOf(version) == -1){
             window.current_chemistries_list.push(version);
         }
@@ -469,7 +471,6 @@ function update_instrument_filters(){
         html_hiseq+="</ul>";
 	html+=html_hiseq
         $("#inst_filter_div").html(html);
-
         $(".filter_insts").click(function(e){
             e.stopImmediatePropagation()
             if($(this).css('border-left').indexOf('rgb(195, 195, 195)')== -1){
