@@ -80,7 +80,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
               color: '#40ccea',
               dashStyle: 'shortdash',
               value: 650000000,
-              width: 2,
+              width: 1,
               label: {
                   text: 'SP',
                   align: 'right',
@@ -90,7 +90,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
               color: '#843ddf',
               dashStyle: 'shortdash',
               value: 1300000000,
-              width: 2,
+              width: 1,
               label: {
                     text: 'S1',
                     align: 'right',
@@ -100,7 +100,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
               color: '#ff00ae',
               dashStyle: 'shortdash',
               value: 3300000000,
-              width: 2,
+              width: 1,
               label: {
                    text: 'NovaSeq S2',
                    align: 'right'
@@ -109,7 +109,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
               color: '#30B668',
               dashStyle: 'shortdash',
               value: 8000000000,
-              width: 3,
+              width: 2,
               label: {
                    text: 'NovaSeq S4',
                    align: 'right'
