@@ -373,7 +373,6 @@ function init_page_js(){
         $(this).addClass("active");
         refresh_plot();
     });
-
     $("#key_select_form").change(function(e){
         e.preventDefault();
         e.stopImmediatePropagation()
@@ -470,6 +469,7 @@ function update_instrument_filters(){
         html_hiseq+="</ul>";
 	html+=html_hiseq
         $("#inst_filter_div").html(html);
+
         $(".filter_insts").click(function(e){
             e.stopImmediatePropagation()
             if($(this).css('border-left').indexOf('rgb(195, 195, 195)')== -1){
