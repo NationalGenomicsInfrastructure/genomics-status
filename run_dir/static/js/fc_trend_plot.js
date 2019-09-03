@@ -378,7 +378,6 @@ function init_page_js(){
         e.preventDefault();
         e.stopImmediatePropagation()
         refresh_plot();
-
     });
     $(".filter_inst_type").change(function(e){
         e.stopImmediatePropagation()
@@ -471,7 +470,6 @@ function update_instrument_filters(){
         html_hiseq+="</ul>";
 	html+=html_hiseq
         $("#inst_filter_div").html(html);
-
         $(".filter_insts").click(function(e){
             e.stopImmediatePropagation()
             if($(this).css('border-left').indexOf('rgb(195, 195, 195)')== -1){
