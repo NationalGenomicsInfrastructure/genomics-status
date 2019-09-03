@@ -74,7 +74,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             data:[]
         }],
     };
-    if (color_type == "chemver" && key == "total_clusters"){
+    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){
         toplot.yAxis={
             plotLines: [{
               color: '#40ccea',
