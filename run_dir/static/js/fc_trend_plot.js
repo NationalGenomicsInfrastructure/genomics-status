@@ -25,14 +25,14 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         chart: {
             type: plot_type
         },
-        title: { 
+        title: {
             text : name+' of the recent flowcells'
         },
         legend : {
             enabled : false
         },
         yAxis: {
-            min : 0, 
+            min : 0,
             title : {
               text : name
             }
@@ -58,7 +58,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             enabled : false
         },
         xAxis: {
-            type: 'category',  
+            type: 'category',
             labels: {
                 rotation: -90,
                     style: {
@@ -73,6 +73,49 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             name : name,
             data:[]
         }],
+    };
+    if (color_type == "chemver" && key == "total_clusters"){
+        toplot.yAxis={
+            plotLines: [{
+              color: '#40ccea',
+              dashStyle: 'shortdash',
+              value: 650000000,
+              width: 2,
+              label: {
+                  text: 'SP',
+                  align: 'right',
+                  rotation: 0
+              }
+              }, {
+              color: '#843ddf',
+              dashStyle: 'shortdash',
+              value: 1300000000,
+              width: 2,
+              label: {
+                    text: 'S1',
+                    align: 'right',
+                    rotation: 0
+              }
+              }, {
+              color: '#ff00ae',
+              dashStyle: 'shortdash',
+              value: 3300000000,
+              width: 2,
+              label: {
+                   text: 'NovaSeq S2',
+                   align: 'right'
+              }
+              }, {
+              color: '#30B668',
+              dashStyle: 'shortdash',
+              value: 8000000000,
+              width: 3,
+              label: {
+                   text: 'NovaSeq S4',
+                   align: 'right'
+                 }
+              }]
+          }
     };
     serie=build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst,  color_type);
     toplot.series=serie[1];
@@ -215,7 +258,7 @@ function color_by_month(id){
 
 function color_by_chemistry(chem){
     var id = Math.round(window.current_chemistries_list.indexOf(chem)*window.current_instrument_list.length/window.current_chemistries_list.length);
-    return current_color_schemes[3](id).hex();
+    return current_color_schemes[4](id).hex();
 }
 
 function get_parameters(){
@@ -228,7 +271,7 @@ function get_parameters(){
      var second_date;
      var dp=$('#inp_date_1').val();
      if (dp != ''){
-         y_m_d=dp.split('-');  
+         y_m_d=dp.split('-');
          first_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
      }else{
          first_date=new Date();
@@ -237,7 +280,7 @@ function get_parameters(){
      }
      dp=$('#inp_date_2').val();
      if (dp != ''){
-        y_m_d=dp.split('-');  
+        y_m_d=dp.split('-');
         second_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
      }else{
         second_date=new Date();
@@ -245,7 +288,7 @@ function get_parameters(){
      }
      search_string=first_half + '-' + second_half;
 
-     //then, the display type 
+     //then, the display type
      var display_type;
      if ($("#display_by_flowcell").hasClass('active')){
          display_type='flowcell'
@@ -335,7 +378,7 @@ function init_page_js(){
         e.preventDefault();
         e.stopImmediatePropagation()
         refresh_plot();
-        
+
     });
     $(".filter_inst_type").change(function(e){
         e.stopImmediatePropagation()
@@ -361,13 +404,14 @@ function update_color_schemes(){
     var chem_cs=chroma.scale(['pink', 'lightblue']).domain([0, 2]);
     var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
     var month_cs=chroma.scale(['yellow', 'lightblue', 'pink', 'orange']).domain([0,window.current_months_list.length-1]);
-    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs];
+    var chem2_cs=chroma.scale(['#ff00ae','#0080ff','#11ad11','#00d5ff']).domain([1,2,window.current_months_list.length])
+    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs, chem2_cs];
 }
 function update_chemistries_list(){
     window.current_chemistries_list=[];
     var version="";
     for (d in window.current_plot_data){
-        version = window.current_plot_data[d].instrument.substr(0,1) + window.current_plot_data[d].cver; 
+        version = window.current_plot_data[d].instrument.substr(0,1) + window.current_plot_data[d].cver;
         if ( window.current_chemistries_list.indexOf(version) == -1){
             window.current_chemistries_list.push(version);
         }
@@ -427,7 +471,7 @@ function update_instrument_filters(){
         html_hiseq+="</ul>";
 	html+=html_hiseq
         $("#inst_filter_div").html(html);
-        
+
         $(".filter_insts").click(function(e){
             e.stopImmediatePropagation()
             if($(this).css('border-left').indexOf('rgb(195, 195, 195)')== -1){
