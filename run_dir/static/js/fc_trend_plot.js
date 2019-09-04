@@ -20,6 +20,7 @@ function refresh_plot(){
     }
 
 }
+
 function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type, plot_type){
     var toplot={
         chart: {
@@ -77,27 +78,25 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
     if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){
         toplot.yAxis={
             plotLines: [{
-              color: '#40ccea',
+              color: '#d19d17',
               dashStyle: 'shortdash',
               value: 650000000,
               width: 1,
               label: {
                   text: 'SP',
-                  align: 'right',
-                  rotation: 0
+                  align: 'right'
               }
               }, {
-              color: '#843ddf',
+              color: '#247cd4',
               dashStyle: 'shortdash',
               value: 1300000000,
               width: 1,
               label: {
                     text: 'S1',
-                    align: 'right',
-                    rotation: 0
+                    align: 'right'
               }
               }, {
-              color: '#ff00ae',
+              color: '#cc1893',
               dashStyle: 'shortdash',
               value: 3300000000,
               width: 1,
@@ -106,10 +105,11 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                    align: 'right'
               }
               }, {
-              color: '#30B668',
+              color: '#358735',
               dashStyle: 'shortdash',
               value: 8000000000,
-              width: 2,
+              width: 1,
+              zIndex: 1,
               label: {
                    text: 'NovaSeq S4',
                    align: 'right'
@@ -232,7 +232,7 @@ function get_plot_data(search_string="", key, name, display_by, filter_inst_type
             //set the instrument filters
             update_instrument_filters();
             //plot the damn data
-            make_plot(key, name, display_by, filter_inst_type, color_type);
+            make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type);
         });
 }
 function color_by_instrument(instrument){
@@ -402,7 +402,7 @@ function update_color_schemes(){
     var chem_cs=chroma.scale(['pink', 'lightblue']).domain([0, 2]);
     var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
     var month_cs=chroma.scale(['yellow', 'lightblue', 'pink', 'orange']).domain([0,window.current_months_list.length-1]);
-    var chem2_cs=chroma.scale(['#ff00ae','#0080ff','#11ad11','#00d5ff']).domain([1,2,window.current_months_list.length])
+    var chem2_cs=chroma.scale(['#ff00ae','#0080ff','#11ad11','#00d5ff','#ffb700']).domain([0,1,2,3,4,5,window.current_months_list.length-1]);
     window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs, chem2_cs];
 }
 function update_chemistries_list(){

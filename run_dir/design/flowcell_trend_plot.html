@@ -54,8 +54,8 @@ Description: Plots the yield of recent flowcells.
                 <form class='form-inline' id="key_select_form">
                     Display : 
                     <select class="form-control input-sm" id="key_select">
-                        <option class="key_select_all" value='total_yield' selected>Yield</option>
-                        <option class="key_select_all" value='total_clusters'>Clusters</option>
+                        <option class="key_select_all" value='total_yield'>Yield</option>
+                        <option class="key_select_all" value='total_clusters' selected>Clusters</option>
                         <option class="key_select_lane" value='overeq_q30_pc' disabled>% >= Q30</option>
                         <option class="key_select_lane" value='mqs' disabled>Mean Quality Score</option>
                         <option class="key_select_lane" value='perfect_match_pc' disabled>% perfect match</option>
@@ -67,9 +67,9 @@ Description: Plots the yield of recent flowcells.
                 <form class='form-inline' id="color_select_form">
                     Color by :
                     <select class="form-control input-sm" id="color_select">
-                        <option class="color_option" value='inst_type' selected>Instrument Type</option>
+                        <option class="color_option" value='inst_type'>Instrument Type</option>
                         <option class="color_option" value='inst'>Instrument</option>
-                        <option class="color_option" value='chemver'>Chemistry version</option>
+                        <option class="color_option" value='chemver' selected>Chemistry version</option>
                         <option class="color_option" value='month'>Month</option>
                     </select>
                 </form>
