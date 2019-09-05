@@ -79,8 +79,13 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         toplot.yAxis={
             title: {
                 enabled: true,
-                text: 'Million clusters',
+                text: 'Clusters',
             },
+            labels: {
+              formatter: function() {
+                            return this.value.toExponential(2);
+                                  }
+                    },                           
             plotLines: [{
               color: '#d19d17',
               dashStyle: 'shortdash',
