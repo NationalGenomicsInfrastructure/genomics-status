@@ -77,6 +77,15 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
     };
     if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){
         toplot.yAxis={
+            title: {
+                enabled: true,
+                text: 'Clusters',
+            },
+            labels: {
+              formatter: function() {
+                            return this.value.toExponential(2);
+                                  }
+                    },                           
             plotLines: [{
               color: '#d19d17',
               dashStyle: 'shortdash',
