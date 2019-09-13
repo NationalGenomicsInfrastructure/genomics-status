@@ -11,6 +11,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
 from status.projects import RunningNotesDataHandler
+from genologics.entities import Queue, Artifact
 
 class WorksetsDataHandler(SafeHandler):
     """returns basic worksets json
@@ -251,3 +252,37 @@ class WorksetLinksHandler(SafeHandler):
             #ajax cries if it does not get anything back
             self.set_header("Content-type", "application/json")
             self.finish(json.dumps(links))
+
+class WorksetPoolsHandler(SafeHandler):
+    """ Serves all the samples that need to be added to worksets in LIMS
+    URL: /api/v1/workset_pools
+    """
+
+    def get(self):
+        limsg = lims.Lims(BASEURI, USERNAME, PASSWORD)
+        queues = {}
+        queues['TruSeqRNAprep'] = Queue(limsg, id='311')
+        queues['TruSeqSmallRNA'] = Queue(limsg, id='410')
+        queues['TruSeqDNAPCR_free'] = Queue(limsg, id='407')
+        queues['ThruPlex'] = Queue(limsg, id='451')
+        queues['Genotyping'] = Queue(limsg, id='901')
+        queues['RadSeq'] = Queue(limsg, id='1201')
+        queues['SMARTerPicoRNA'] = Queue(limsg, id='1551')
+        queues['ChromiumGenomev2'] = Queue(limsg, id='1801')
+
+        methods = queues.keys()
+        pools = {}
+
+        for method in methods:
+            pools[method] ={}
+            for artifact in queues[method].artifacts:
+                name = artifact.name
+                project = artifact.name.split('_')[0]
+                date_received =artifact.samples[0].date_received
+                if project in pools[method]:
+                    pools[method][project].append({'name': name, 'date_received': date_received })
+                else:
+                    pools[method][project] = [{'name': name, 'date_received': date_received }]
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(pools))

@@ -19,6 +19,7 @@ from tornado import template
 from tornado.options import define, options
 
 from status.applications import ApplicationDataHandler, ApplicationHandler, ApplicationsDataHandler, ApplicationsHandler
+from status.assign_roles import AssignRolesHandler, AssignRolesUsersHandler
 from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.deliveries import DeliveriesPageHandler
@@ -56,8 +57,7 @@ from status.testing import TestDataHandler
 from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, SafeStaticFileHandler, \
     UpdatedDocumentsDatahandler
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
-    WorksetsDataHandler, WorksetSearchHandler
-from status.assign_roles import AssignRolesHandler, AssignRolesUsersHandler
+    WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler
 
 from zenpy import Zenpy
 from urllib.parse import urlsplit
@@ -185,6 +185,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
             ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
+            ("/api/v1/workset_pools", WorksetPoolsHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/assign_roles", AssignRolesHandler),
@@ -200,6 +201,7 @@ class Application(tornado.web.Application):
             ("/nas_quotas", NASQuotasHandler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
+            ("/pools_qpcr", PoolingqPCRHandler),
             ("/pricing_products", PricingProductListHandler),
             ("/pricing_quote", PricingQuoteHandler),
             ("/pricing_quote_tbody", PricingQuoteTbodyHandler),
@@ -320,6 +322,7 @@ class Application(tornado.web.Application):
         if options['develop']:
             tornado.autoreload.watch("design/application.html")
             tornado.autoreload.watch("design/applications.html")
+            tornado.autoreload.watch("design/assign_roles.html")
             tornado.autoreload.watch("design/base.html")
             tornado.autoreload.watch("design/bioinfo_tab.html")
             tornado.autoreload.watch("design/bioinfo_tab/run_lane_sample_view.html")
@@ -330,11 +333,13 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcell.html")
             tornado.autoreload.watch("design/flowcell_error.html")
             tornado.autoreload.watch("design/flowcell_samples.html")
+            tornado.autoreload.watch("design/flowcell_trend_plot.html")
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/nas_quotas.html")
+            tornado.autoreload.watch("design/pooling.html")
             tornado.autoreload.watch("design/pricing_products.html")
             tornado.autoreload.watch("design/pricing_quote.html")
             tornado.autoreload.watch("design/pricing_quote_tbody.html")
@@ -350,8 +355,6 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/unauthorized.html")
             tornado.autoreload.watch("design/workset_samples.html")
             tornado.autoreload.watch("design/worksets.html")
-            tornado.autoreload.watch("design/flowcell_trend_plot.html")
-            tornado.autoreload.watch("design/assign_roles.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
