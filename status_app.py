@@ -201,7 +201,6 @@ class Application(tornado.web.Application):
             ("/nas_quotas", NASQuotasHandler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
-            ("/pools_qpcr", PoolingqPCRHandler),
             ("/pricing_products", PricingProductListHandler),
             ("/pricing_quote", PricingQuoteHandler),
             ("/pricing_quote_tbody", PricingQuoteTbodyHandler),
@@ -339,7 +338,6 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/nas_quotas.html")
-            tornado.autoreload.watch("design/pooling.html")
             tornado.autoreload.watch("design/pricing_products.html")
             tornado.autoreload.watch("design/pricing_quote.html")
             tornado.autoreload.watch("design/pricing_quote_tbody.html")
