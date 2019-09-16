@@ -72,34 +72,36 @@ $(".tabbable").on("click", '[role="tab"]', function() {
     $('#workset_table_filter').show();
   }
   if($(this).attr('href')=='#tab_pending_samples_to_worksets'){
-    $("#samples_table_body").html('<tr><td colspan="3" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
+    $("#samples_table_body").html('<tr><td colspan="4" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
     return $.getJSON('/api/v1/workset_pools', function(data) {
       $("#samples_table_body").empty();
       var size = 0;
       undefined_fields=[];
       $.each(data, function(key, value) {
-        $.each(value, function(project, samples){
-          var tbl_row = $('<tr>');
-          tbl_row.append($('<td>').html(key));
-          tbl_row.append($('<td>').html(function() {
-            var to_return = '<span class="glyphicon glyphicon-plus-sign expand-proj" aria-hidden="true"></span>';
-            to_return = to_return + project;
-            to_return = to_return + '<span style="float:inline-end; padding-right:50px;"><table cellpadding="5" border="0" style="visibility:collapse;">';
-            to_return = to_return + '<thead><tr><th>Samples</th></tr></thead>';
-            $.each(samples, function(i, sample){
-              to_return = to_return +
-              '<tr>'+
-                '<td>'+sample['name']+'</td>'+
-              '</tr>';
-              });
-              to_return = to_return +'</table></span>';
-            return to_return;
-          }));
-          tbl_row.append($('<td>').html(samples.length));
-          var number_of_days = Math.floor(Math.abs(new Date() - new Date(samples[0]['date_received']))/(1000*86400));
-          tbl_row.append($('<td>').html(number_of_days));
-          $("#samples_table_body").append(tbl_row);
+        if(!$.isEmptyObject(value)){
+          $.each(value, function(project, projval){
+            var tbl_row = $('<tr>');
+            tbl_row.append($('<td>').html(key));
+            tbl_row.append($('<td>').html(function() {
+              var to_return = '<span class="glyphicon glyphicon-plus-sign expand-proj" aria-hidden="true"></span>';
+              to_return = to_return + project;
+              to_return = to_return + '<span style="float:right; padding-right:50px;"><table cellpadding="5" border="0" style="visibility:collapse;">';
+              to_return = to_return + '<thead><tr><th>Samples</th></tr></thead>';
+              $.each(projval['samples'], function(i, sample){
+                to_return = to_return +
+                '<tr>'+
+                  '<td>'+sample+'</td>'+
+                '</tr>';
+                });
+                to_return = to_return +'</table></span>';
+                return to_return;
+              }));
+            tbl_row.append($('<td>').html(projval['samples'].length +' (/'+ projval['total_num_samples']+')'));
+            var number_of_days = Math.floor(Math.abs(new Date() - new Date(projval['queued_date']))/(1000*86400));
+            tbl_row.append($('<td>').html(number_of_days));
+            $("#samples_table_body").append(tbl_row);
           });
+        }
       });
       // Initialise the Javascript sorting now that we know the number of rows
       init_listjs2();

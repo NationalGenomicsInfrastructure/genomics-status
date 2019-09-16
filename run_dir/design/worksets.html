@@ -93,16 +93,16 @@ Description: Shows a table with all worksets.
                 <tr class="sticky">
                   <th></th>
                   <th>Project</th>
-                  <th>Number of Samples</th>
-                  <th>Days from Receival</th>
+                  <th>Number of Samples (/Total samples in project)</th>
+                  <th>Days from Queued Date</th>
                 </tr>
             </thead>
             <tfoot id="samples_table_footer">
               <tr>
                 <th></th>
                 <th>Project</th>
-                <th>Number of Samples</th>
-                <th>Days from Receival</th>
+                <th>Number of Samples (/Total samples in project)</th>
+                <th>Days from Queued Date</th>
               </tr>
             </tfoot>
             <tbody class="list" id="samples_table_body">
@@ -112,7 +112,8 @@ Description: Shows a table with all worksets.
       </div>
     </div>
   </div>
-</div> <!-- #page_content -->
+</div>
+<!-- #page_content -->
 
 <script src="/static/js/jquery.dataTables.min.js? }}"></script>
 <script src="/static/js/worksets.js?v={{ gs_globals['git_commit'] }}" id="worksets-js" data-worksets="{{worksets}}"></script>

@@ -11,7 +11,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
 from status.projects import RunningNotesDataHandler
-from genologics.entities import Queue, Artifact
+from genologics.entities import Queue, Artifact, Project
 
 class WorksetsDataHandler(SafeHandler):
     """returns basic worksets json
@@ -278,11 +278,12 @@ class WorksetPoolsHandler(SafeHandler):
             for artifact in queues[method].artifacts:
                 name = artifact.name
                 project = artifact.name.split('_')[0]
-                date_received =artifact.samples[0].date_received
                 if project in pools[method]:
-                    pools[method][project].append({'name': name, 'date_received': date_received })
+                    pools[method][project]['samples'].append(name)
                 else:
-                    pools[method][project] = [{'name': name, 'date_received': date_received }]
+                    total_num_samples = limsg.get_sample_number(projectlimsid=project)
+                    date_queued = Project(limsg, id=project).udf['Queued'].strftime("%Y-%m-%d")
+                    pools[method][project] = {'total_num_samples': total_num_samples, 'queued_date': date_queued, 'samples': [name]}
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(pools))
