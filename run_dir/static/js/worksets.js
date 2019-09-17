@@ -65,7 +65,7 @@ function load_workset_notes(wait) {
       console.log( "Workset notes request failed: " + err );
   });
 }
-
+var sumGroups = {};
 $(".tabbable").on("click", '[role="tab"]', function() {
   if($(this).attr('href')=='#tab_run_worksets'){
     $('#samples_table_filter').remove();
@@ -78,7 +78,8 @@ $(".tabbable").on("click", '[role="tab"]', function() {
       var size = 0;
       undefined_fields=[];
       $.each(data, function(key, value) {
-        if(!$.isEmptyObject(value)){
+        if(!($.isEmptyObject(value))){
+          sumGroups[key] = 0;
           $.each(value, function(project, projval){
             var tbl_row = $('<tr>');
             tbl_row.append($('<td>').html(key));
@@ -97,6 +98,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
                 return to_return;
               }));
             tbl_row.append($('<td>').html(projval['samples'].length +' (/'+ projval['total_num_samples']+')'));
+            sumGroups[key] = sumGroups[key] + projval['samples'].length;
             var number_of_days = Math.floor(Math.abs(new Date() - new Date(projval['queued_date']))/(1000*86400));
             tbl_row.append($('<td>').html(number_of_days));
             $("#samples_table_body").append(tbl_row);
@@ -154,27 +156,12 @@ function init_listjs2() {
           api.column(groupColumn, {page:'current'} ).data().each( function ( group, i ) {
             if ( last !== group ) {
               $(rows).eq( i ).before(
-                  '<tr class="group"><td colspan="4">'+group+'</td></tr>'
+                  '<tr class="group"><td colspan="4">'+group+' (Total: '+sumGroups[group] +')</td></tr>'
               );
               last = group;
             }
           });
         },
-        rowGroup: {
-          // Uses the 'row group' plugin
-          dataSrc: 0,
-          startRender: function (rows, group) {
-              var collapsed = !!collapsedGroups[group];
-              rows.nodes().each(function (r) {
-                  r.style.display = collapsed ? 'none' : '';
-              });
-              // Add category name to the <tr>. NOTE: Hardcoded colspan
-              return $('<tr/>')
-                  .append('<td colspan="4">' + group + ' (' + rows.count() + ')</td>')
-                  .attr('data-name', group)
-                  .toggleClass('collapsed', collapsed);
-          }
-        }
     });
     //Add the bootstrap classes to the search thingy
     if($('#workset_table_filter').length){
@@ -196,11 +183,3 @@ function init_listjs2() {
         } );
     } );
 }
-
-var collapsedGroups = {};
-
-$('#samples_table_body').on('click', 'tr.group', function () {
-      var name = $(this).data('name');
-      collapsedGroups[name] = !collapsedGroups[name];
-      $('#samples_table').draw();
-});
