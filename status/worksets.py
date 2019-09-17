@@ -11,6 +11,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
 from status.projects import RunningNotesDataHandler
+from genologics.entities import Queue, Artifact, Project
 
 class WorksetsDataHandler(SafeHandler):
     """returns basic worksets json
@@ -251,3 +252,38 @@ class WorksetLinksHandler(SafeHandler):
             #ajax cries if it does not get anything back
             self.set_header("Content-type", "application/json")
             self.finish(json.dumps(links))
+
+class WorksetPoolsHandler(SafeHandler):
+    """ Serves all the samples that need to be added to worksets in LIMS
+    URL: /api/v1/workset_pools
+    """
+
+    def get(self):
+        limsg = lims.Lims(BASEURI, USERNAME, PASSWORD)
+        queues = {}
+        queues['TruSeqRNAprep'] = Queue(limsg, id='311')
+        queues['TruSeqSmallRNA'] = Queue(limsg, id='410')
+        queues['TruSeqDNAPCR_free'] = Queue(limsg, id='407')
+        queues['ThruPlex'] = Queue(limsg, id='451')
+        queues['Genotyping'] = Queue(limsg, id='901')
+        queues['RadSeq'] = Queue(limsg, id='1201')
+        queues['SMARTerPicoRNA'] = Queue(limsg, id='1551')
+        queues['ChromiumGenomev2'] = Queue(limsg, id='1801')
+
+        methods = queues.keys()
+        pools = {}
+
+        for method in methods:
+            pools[method] ={}
+            for artifact in queues[method].artifacts:
+                name = artifact.name
+                project = artifact.name.split('_')[0]
+                if project in pools[method]:
+                    pools[method][project]['samples'].append(name)
+                else:
+                    total_num_samples = limsg.get_sample_number(projectlimsid=project)
+                    date_queued = Project(limsg, id=project).udf['Queued'].strftime("%Y-%m-%d")
+                    pools[method][project] = {'total_num_samples': total_num_samples, 'queued_date': date_queued, 'samples': [name]}
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(pools))

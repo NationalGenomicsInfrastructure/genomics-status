@@ -1179,3 +1179,13 @@ input.quantity_updateable {
   background: #4183C4;
   text-decoration: none;
 }
+
+tr.group, tr.group:hover {
+    background-color: #ddd !important;
+}
+
+.expand-proj{
+  color: #0088cc;
+  cursor: pointer;
+  margin-right: 6px;
+}
