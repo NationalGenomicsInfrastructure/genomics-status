@@ -30,7 +30,16 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             text : name+' of the recent flowcells'
         },
         legend : {
-            enabled : false
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle',
+            reversed: true,
+            title: {
+              text: 'Click to hide:',
+              style: {
+                fontStyle: 'italic'
+            },
+          },
         },
         yAxis: {
             min : 0,
@@ -61,21 +70,18 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         xAxis: {
             type: 'category',
             labels: {
-                rotation: -90,
-                    style: {
-                        fontSize: '9px',
-                        fontFamily: 'Verdana, sans-serif'
-                    }
+                enabled: false,
             },
             categories: []
         },
-
         series: [{
             name : name,
             data:[]
         }],
     };
-    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){
+    
+    //Styling the default view
+    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){  
         toplot.yAxis={
             title: {
                 enabled: true,
@@ -87,26 +93,26 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                                   }
                     },                           
             plotLines: [{
-              color: '#d19d17',
-              dashStyle: 'shortdash',
+              color: '#bf8e11',
+              dashStyle: 'longdash',
               value: 650000000,
               width: 1,
               label: {
-                  text: 'SP',
+                  text: 'NovaSeq SP',
                   align: 'right'
               }
               }, {
-              color: '#247cd4',
-              dashStyle: 'shortdash',
+              color: '#169c16',
+              dashStyle: 'longdash',
               value: 1300000000,
               width: 1,
               label: {
-                    text: 'S1',
+                    text: 'NovaSeq S1',
                     align: 'right'
               }
               }, {
-              color: '#cc1893',
-              dashStyle: 'shortdash',
+              color: '#176abd',
+              dashStyle: 'longdash',
               value: 3300000000,
               width: 1,
               label: {
@@ -114,8 +120,8 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                    align: 'right'
               }
               }, {
-              color: '#358735',
-              dashStyle: 'shortdash',
+              color: '#bf1789',
+              dashStyle: 'longdash',
               value: 8000000000,
               width: 1,
               zIndex: 1,
@@ -125,7 +131,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                  }
               }]
           }
-    };
+    };        
     serie=build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst,  color_type);
     toplot.series=serie[1];
     toplot.xAxis.categories = serie[0];
@@ -134,7 +140,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
 }
 
 
-function build_series(data, key, name, display_by, filter_inst_type, filter_inst,  color_type){
+function build_series(data, key, name, display_by, filter_inst_type, filter_inst, color_type){
 
     var series = [];
     var flowcell_link="/flowcells";
@@ -145,22 +151,35 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
         var col_color = "";
         var series_name = "";
         var flowcell_link="/flowcells/"+fcid;
-
         //Seq platform filter
         if (data[d].instrument.indexOf('E') != -1 && filter_inst_type.includes('E')){
-            continue;
+              series_name = "HiSeq X";
         }else if (data[d].instrument.indexOf('D') != -1 && filter_inst_type.includes('D')){
-            continue;
+              series_name = "HiSeq";
         }else if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
-            continue;
+              series_name = "MiSeq";
         }else if (data[d].instrument.indexOf('A') != -1 && filter_inst_type.includes('A')){
-            continue;
-        }
-
-        // Set colours and the name of data series
-        if (color_type=='chemver'){
-            series_name = data[d].instrument.substr(0,1)+data[d].cver
-            col_color=color_by_chemistry(series_name);
+              series_name = "NovaSeq";
+              //Splitting the NovaSeq FC's
+              if (color_type == 'chemver'){
+                  if (data[d].cver.includes('S4')){
+                      series_name = "S4";
+                      col_color=color_by_s4(series_name);
+                    }
+                  if (data[d].cver.includes('S2')){
+                      series_name = "S2";
+                      col_color=color_by_s2(series_name);
+                    }
+                  if (data[d].cver.includes('S1')){
+                      series_name = "S1";
+                      col_color=color_by_s1(series_name);
+                    }
+                  if (data[d].cver.includes('SP')){
+                      series_name = "SP";
+                      col_color=color_by_sp(series_name);
+                    }
+              }
+        // Set colours and the name of data series    
         }else if (color_type == 'month'){
             series_name = data[d].id.substr(0,4);
             col_color=color_by_month(data[d].id);
@@ -180,9 +199,22 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 series_name = "MiSeq";
             }else if (data[d].instrument.indexOf('A') != -1){
                 series_name = "NovaSeq";
+                //Splitting the NovaSeq FC's
+                if (data[d].cver.includes('S4') != -1){  
+                    series_name = "S4";
+                    }  
+                if (data[d].cver.includes('S2')){
+                    series_name = "S2";
+                    }
+                if (data[d].cver.includes('S1')){
+                    series_name = "S1";
+                    }
+                if (data[d].cver.includes('SP')){
+                    series_name = "SP";  
             }else{
               continue;
             }
+          }
         }
         // Create series
         if (!series.hasOwnProperty(series_name)) {
@@ -226,7 +258,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
     return [categories, proper_series];
 }
 
-function get_plot_data(search_string="", key, name, display_by, filter_inst_type, filter_inst,  color_type){
+function get_plot_data(search_string="", key, name, display_by, filter_inst_type, filter_inst, color_type){
         $.getJSON('/api/v1/flowcell_yield/'+search_string, function(data) {
             //update plot data
             window.current_plot_data=data;
@@ -266,10 +298,31 @@ function color_by_month(id){
 }
 
 function color_by_chemistry(chem){
-    var id = Math.round(window.current_chemistries_list.indexOf(chem)*window.current_instrument_list.length/window.current_chemistries_list.length);
-    return current_color_schemes[4](id).hex();
+    var id = Math.round(window.current_chemistries_list.indexOf(chem));
+	   return current_color_schemes[3](id).hex();
+	}
+//Workaround to get the NovaSeq colors to work  
+function color_by_s4(chem){
+  var id = Math.round(window.current_chemistries_list.indexOf(chem));
+   return current_color_schemes[4](id).hex();  
+  }
+    
+function color_by_s2(chem){
+  var id = Math.round(window.current_chemistries_list.indexOf(chem));
+   return current_color_schemes[5](id).hex();
+  }
+
+function color_by_s1(chem){
+  var id = Math.round(window.current_chemistries_list.indexOf(chem));
+   return current_color_schemes[6](id).hex();  
+}
+        
+function color_by_sp(chem){
+  var id = Math.round(window.current_chemistries_list.indexOf(chem));
+   return current_color_schemes[7](id).hex();  
 }
 
+        
 function get_parameters(){
      //first, the search string
      var search_string;
@@ -322,18 +375,19 @@ function get_parameters(){
              inst_type_filter.push($(this).val());
          }
      });
-
      //the instrument filter
      var inst_filter=[];
      $(".filter_insts.disabled").each(function(){
          inst_filter.push($(this).attr('id').split('_')[2]);
      });
+    
      //color type
      var color_by=$("#color_select option:selected").val();
+      
      var ret=[search_string, display_type, key, name, inst_type_filter, inst_filter, color_by, plot_type];
 
      return ret;
-}
+ }
 
 function init_page_js(){
     $('#datepick1').datepicker({autoclose: true,
@@ -411,8 +465,11 @@ function update_color_schemes(){
     var chem_cs=chroma.scale(['pink', 'lightblue']).domain([0, 2]);
     var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
     var month_cs=chroma.scale(['yellow', 'lightblue', 'pink', 'orange']).domain([0,window.current_months_list.length-1]);
-    var chem2_cs=chroma.scale(['#ff00ae','#0080ff','#11ad11','#00d5ff','#ffb700']).domain([0,1,2,3,4,5,window.current_months_list.length-1]);
-    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs, chem2_cs];
+    var s4_cs=chroma.scale(['#ff00ae', '#0080ff']).domain([0, window.current_chemistries_list.length-1]);  
+    var s2_cs=chroma.scale(['#0080ff', '#11ad11']).domain([0, window.current_chemistries_list.length-1]);
+    var s1_cs=chroma.scale(['#11ad11', '#00d5ff']).domain([0, window.current_chemistries_list.length-1]);
+    var sp_cs=chroma.scale(['#ffb700', '#ff00ae']).domain([0, window.current_chemistries_list.length-1]);
+    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs, s4_cs, s2_cs, s1_cs, sp_cs];
 }
 function update_chemistries_list(){
     window.current_chemistries_list=[];
@@ -421,7 +478,7 @@ function update_chemistries_list(){
         version = window.current_plot_data[d].instrument.substr(0,1) + window.current_plot_data[d].cver;
         if ( window.current_chemistries_list.indexOf(version) == -1){
             window.current_chemistries_list.push(version);
-        }
+            }
     }
 }
 
