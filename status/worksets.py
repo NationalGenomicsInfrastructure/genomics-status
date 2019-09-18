@@ -282,8 +282,11 @@ class WorksetPoolsHandler(SafeHandler):
                     pools[method][project]['samples'].append(name)
                 else:
                     total_num_samples = limsg.get_sample_number(projectlimsid=project)
-                    date_queued = Project(limsg, id=project).udf['Queued'].strftime("%Y-%m-%d")
-                    pools[method][project] = {'total_num_samples': total_num_samples, 'queued_date': date_queued, 'samples': [name]}
+                    proj = Project(limsg, id=project)
+                    date_queued = proj.udf['Queued'].strftime("%Y-%m-%d")
+                    projName = proj.name
+                    pools[method][project] = {'total_num_samples': total_num_samples, 'queued_date': date_queued, 'pname': projName,
+                                                'samples': [name]}
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(pools))

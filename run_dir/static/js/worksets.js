@@ -85,7 +85,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
             tbl_row.append($('<td>').html(key));
             tbl_row.append($('<td>').html(function() {
               var to_return = '<span class="glyphicon glyphicon-plus-sign expand-proj" aria-hidden="true"></span>';
-              to_return = to_return + project;
+              to_return = to_return + '<a href="/project/'+project+'">'+projval['pname']+' ('+project+') </a>';
               to_return = to_return + '<span style="float:right; padding-right:50px;"><table cellpadding="5" border="0" style="visibility:collapse;">';
               to_return = to_return + '<thead><tr><th>Samples</th></tr></thead>';
               $.each(projval['samples'], function(i, sample){
