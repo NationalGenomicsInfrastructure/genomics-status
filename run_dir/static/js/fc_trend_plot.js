@@ -29,18 +29,6 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         title: {
             text : name+' of the recent flowcells'
         },
-        legend : {
-            layout: 'vertical',
-            align: 'right',
-            verticalAlign: 'middle',
-            reversed: true,
-            title: {
-              text: 'Click to hide:',
-              style: {
-                fontStyle: 'italic'
-            },
-          },
-        },
         yAxis: {
             min : 0,
             title : {
@@ -77,14 +65,14 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         series: [{
             name : name,
             data:[]
-        }],
+        }], 
     };
     
     //Styling the default view
-    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){  
+    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){   
         toplot.yAxis={
             title: {
-                enabled: true,
+                enabled: true,  
                 text: 'Clusters',
             },
             labels: {
@@ -153,33 +141,35 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
         var flowcell_link="/flowcells/"+fcid;
         //Seq platform filter
         if (data[d].instrument.indexOf('E') != -1 && filter_inst_type.includes('E')){
-              series_name = "HiSeq X";
+            continue;
         }else if (data[d].instrument.indexOf('D') != -1 && filter_inst_type.includes('D')){
-              series_name = "HiSeq";
+            continue;
         }else if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
-              series_name = "MiSeq";
+            continue;
         }else if (data[d].instrument.indexOf('A') != -1 && filter_inst_type.includes('A')){
-              series_name = "NovaSeq";
-              //Splitting the NovaSeq FC's
-              if (color_type == 'chemver'){
-                  if (data[d].cver.includes('S4')){
-                      series_name = "S4";
-                      col_color=color_by_s4(series_name);
-                    }
-                  if (data[d].cver.includes('S2')){
-                      series_name = "S2";
-                      col_color=color_by_s2(series_name);
-                    }
-                  if (data[d].cver.includes('S1')){
-                      series_name = "S1";
-                      col_color=color_by_s1(series_name);
-                    }
-                  if (data[d].cver.includes('SP')){
-                      series_name = "SP";
-                      col_color=color_by_sp(series_name);
-                    }
-              }
+            continue;
+        }
         // Set colours and the name of data series    
+        if (color_type=='chemver'){
+            if (data[d].cver.includes('S4')){
+                series_name = "S4";
+                col_color = color_by_s4(series_name)
+                }
+            if (data[d].cver.includes('S2')){
+                series_name = "S2";
+                col_color = color_by_s2(series_name)
+                }
+            if (data[d].cver.includes('S1')){
+                series_name = "S1";
+                col_color = color_by_s1(series_name)
+                }
+            if (data[d].cver.includes('SP')){
+                series_name = "SP";
+                col_color = color_by_sp(series_name) 
+                }   
+            /*}else{    
+                col_color=color_by_chemistry(series_name);
+              }*/
         }else if (color_type == 'month'){
             series_name = data[d].id.substr(0,4);
             col_color=color_by_month(data[d].id);
@@ -190,30 +180,17 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 continue;
             }
         }else{
-            col_color=color_by_type(data[d].instrument);
-            if (data[d].instrument.indexOf('E') != -1){
-                series_name = "HiSeq X";
-            }else if (data[d].instrument.indexOf('D') != -1){
-                series_name = "HiSeq";
-            }else if (data[d].instrument.indexOf('M') != -1){
-                series_name = "MiSeq";
-            }else if (data[d].instrument.indexOf('A') != -1){
-                series_name = "NovaSeq";
-                //Splitting the NovaSeq FC's
-                if (data[d].cver.includes('S4') != -1){  
-                    series_name = "S4";
-                    }  
-                if (data[d].cver.includes('S2')){
-                    series_name = "S2";
-                    }
-                if (data[d].cver.includes('S1')){
-                    series_name = "S1";
-                    }
-                if (data[d].cver.includes('SP')){
-                    series_name = "SP";  
+          col_color=color_by_type(data[d].instrument);
+          if (data[d].instrument.indexOf('E') != -1){
+              series_name = "HiSeq X";
+          }else if (data[d].instrument.indexOf('D') != -1){
+              series_name = "HiSeq";
+          }else if (data[d].instrument.indexOf('M') != -1){
+              series_name = "MiSeq";
+          }else if (data[d].instrument.indexOf('A') != -1){
+              series_name = "NovaSeq";
             }else{
               continue;
-            }
           }
         }
         // Create series
