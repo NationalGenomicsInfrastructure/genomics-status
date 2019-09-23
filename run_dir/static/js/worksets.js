@@ -97,7 +97,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
                 to_return = to_return +'</table></span>';
                 return to_return;
               }));
-            tbl_row.append($('<td>').html(projval['samples'].length +' (/'+ projval['total_num_samples']+')'));
+            tbl_row.append($('<td>').html(projval['samples'].length +' ('+ projval['total_num_samples']+')'));
             sumGroups[key] = sumGroups[key] + projval['samples'].length;
             var number_of_days = Math.floor(Math.abs(new Date() - new Date(projval['queued_date']))/(1000*86400));
             tbl_row.append($('<td>').html(number_of_days));
