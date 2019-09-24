@@ -167,9 +167,6 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 series_name = "SP";
                 col_color = color_by_sp(series_name) 
                 }   
-            /*}else{    
-                col_color=color_by_chemistry(series_name);
-              }*/
         }else if (color_type == 'month'){
             series_name = data[d].id.substr(0,4);
             col_color=color_by_month(data[d].id);
