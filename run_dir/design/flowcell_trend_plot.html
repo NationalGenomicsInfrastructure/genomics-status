@@ -14,7 +14,7 @@ Description: Plots the yield of recent flowcells.
 <p>The default view shows 1 year worth of flowcells. </p>
 <div id="main_plot" style="height: 700px;">
 </div>
-<div id="control_container">
+<div id="control_container" style="margin-top:40px;">
     <div class="row">
         <div id="logs_date" class="col-md-4">
             <form class="form-inline" id="logs_date_form">
@@ -54,8 +54,8 @@ Description: Plots the yield of recent flowcells.
                 <form class='form-inline' id="key_select_form">
                     Display : 
                     <select class="form-control input-sm" id="key_select">
-                        <option class="key_select_all" value='total_yield'>Yield</option>
                         <option class="key_select_all" value='total_clusters' selected>Clusters</option>
+                        <option class="key_select_all" value='total_yield'>Yield</option>
                         <option class="key_select_lane" value='overeq_q30_pc' disabled>% >= Q30</option>
                         <option class="key_select_lane" value='mqs' disabled>Mean Quality Score</option>
                         <option class="key_select_lane" value='perfect_match_pc' disabled>% perfect match</option>
@@ -64,16 +64,16 @@ Description: Plots the yield of recent flowcells.
                 </form>
             </div>
             <div id="color_select_div">
-                <form class='form-inline' id="color_select_form">
-                    Color by :
+                <form class='form-inline' id="color_select_form" >
+                    Color by :            
                     <select class="form-control input-sm" id="color_select">
+                        <option class="color_option" value='chemver'>Chemistry Version</option>
                         <option class="color_option" value='inst_type'>Instrument Type</option>
                         <option class="color_option" value='inst'>Instrument</option>
-                        <option class="color_option" value='chemver' selected>Chemistry version</option>
                         <option class="color_option" value='month'>Month</option>
                     </select>
                 </form>
-            </div>
+            </div> 
         </div>
     </div>
     <div class="row" style="margin-top:10px;">
@@ -81,15 +81,14 @@ Description: Plots the yield of recent flowcells.
         </div>
         <div id="inst_type_filter_div" class="col-md-4">
             <form class='form-inline' id="inst_type_filter_form">
-                See :
-                <input id="filter_hiseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="D" /> HiSeq
-                <input id="filter_hiseqX" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="E" /> HiSeq X
-                <input id="filter_miseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="M" checked /> MiSeq
-                <input id="filter_novaseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="A" checked /> NovaSeq
+                <input id="filter_hiseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="D"/> HiSeq
+                <input id="filter_hiseqX" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="E"/> HiSeq X
+                <input id="filter_miseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="M" /> MiSeq
+                <input id="filter_novaseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="A" checked/> NovaSeq
             </form>
-
         </div>
-    </div>
+      </div>
+    </div>   
 </div>
 
 
