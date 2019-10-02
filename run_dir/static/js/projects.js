@@ -765,7 +765,7 @@ function get_current_selection(source){
   dates['old_close_date']= $('#inp_date_5').val();
   dates['new_close_date']= $('#inp_date_6').val();
   currDate=new Date();
-  monthNday=((''+currDate.getMonth()).length<2 ? '0' : '')+(currDate.getMonth()+1)+'-'+((''+currDate.getDate()).length<2 ? '0' : '')+(currDate.getDate());
+  monthNday=((''+(currDate.getMonth()+1)).length<2 ? '0' : '')+(currDate.getMonth()+1)+'-'+((''+currDate.getDate()).length<2 ? '0' : '')+(currDate.getDate());
   today=currDate.getFullYear()+'-'+monthNday;
   twoYearsAgo=currDate.getFullYear() - 2+'-'+monthNday;
   if(source!='save'){
