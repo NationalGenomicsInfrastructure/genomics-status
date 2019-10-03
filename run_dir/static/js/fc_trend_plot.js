@@ -35,6 +35,12 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
               text : name
             }
         },
+        legend: {
+            title: {
+                text: 'Click to hide:',
+                align: 'center'                 
+                }
+        },
         plotOptions : {
             series : {
                 turboThreshold: 0,
