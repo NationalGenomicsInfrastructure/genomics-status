@@ -14,7 +14,7 @@ function generate_category_label(category){
          category='<span class="label label-success">'+ category +"</span>";
      }else if (category == 'Meeting' || category == "Decision"){
          category='<span class="label label-info">'+ category +"</span>";
-     }else if (category == 'User Communication'){
+     }else if (category == 'User Communication' || category == 'Important'){
          category='<span class="label label-danger">'+ category +"</span>";
      }else if (category == 'Bioinformatics'){
          category='<span class="label label-warning">'+ category +"</span>";
