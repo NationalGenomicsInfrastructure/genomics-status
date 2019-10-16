@@ -166,7 +166,7 @@ table.narrow-headers th { width: 20%; }
 /* Custom Labels */
 .label-undefined  {color: #ccc; }
 .label-date  {color: #333; font-size:80%; }
-.label-imp  {background-color: #ffff00; color: #000;}
+.label-imp  {background-color: #a62100;}
 /* Date sliders */
 .slider-spacing { margin:40px 0; }
 
@@ -385,17 +385,17 @@ td.progress {
     border-bottom: none;
 }
 .btn-imp{
-  color: #5e5e5e;
-  background-color: #ffff00;
-  border-color: #ebeb02;
-}
-.btn-imp:focus, .btn-imp:hover {
-  color: #5e5e5e;
-  background-color: #ebeb02;
-  border-color: #ebeb02;
+ color: #fff;
+ background-color: #a62100;
+ border-color: #571100;
+ }
+ .btn-imp:focus, .btn-imp:hover {
+ color: #fff;
+ background-color: #8a1b00;
+ border-color: #8a1b00;
 }
 .panel-important{
-  background-color: #ffd9d9;
+  background-color: #ffd9d9 !important;
 }
 #markdown_help table td {
   width:50%;

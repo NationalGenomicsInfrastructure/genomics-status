@@ -60,7 +60,7 @@ function make_running_note(date, note){
   }
   var printHyphen =category? ' - ': ' ';
   var panelClass='';
-  if (category == 'important') {
+  if (note['category'] == 'Important') {
     panelClass = 'panel-important';
   }
   return '<div class="panel panel-default">' +
