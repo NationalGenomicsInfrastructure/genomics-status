@@ -66,7 +66,7 @@ function make_running_note(date, note){
   return '<div class="panel panel-default">' +
       '<div class="panel-heading '+panelClass+'">'+
         '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-       datestring + printHyphen +category +'</div><div class="panel-body">'+noteText+'</div></div>'
+       datestring + printHyphen +category +'</div><div class="panel-body">'+noteText+'</div></div>';
 }
 
 function load_running_notes(wait) {
