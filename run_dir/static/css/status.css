@@ -166,6 +166,7 @@ table.narrow-headers th { width: 20%; }
 /* Custom Labels */
 .label-undefined  {color: #ccc; }
 .label-date  {color: #333; font-size:80%; }
+.label-imp  {background-color: #ffff00; color: #000;}
 /* Date sliders */
 .slider-spacing { margin:40px 0; }
 
@@ -383,11 +384,22 @@ td.progress {
 .panel.with-nav-tabs > .panel-heading > ul.nav-tabs>li>a:hover {
     border-bottom: none;
 }
-
+.btn-imp{
+  color: #5e5e5e;
+  background-color: #ffff00;
+  border-color: #ebeb02;
+}
+.btn-imp:focus, .btn-imp:hover {
+  color: #5e5e5e;
+  background-color: #ebeb02;
+  border-color: #ebeb02;
+}
+.panel-important{
+  background-color: #ffd9d9;
+}
 #markdown_help table td {
   width:50%;
 }
-
 /* Markdown text styles */
 .mkdown blockquote {
   font-size: 1em;
