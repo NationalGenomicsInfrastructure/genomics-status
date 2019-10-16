@@ -385,14 +385,14 @@ td.progress {
     border-bottom: none;
 }
 .btn-imp{
- color: #fff;
- background-color: #a62100;
- border-color: #571100;
+  color: #fff;
+  background-color: #a62100;
+  border-color: #571100;
  }
  .btn-imp:focus, .btn-imp:hover {
- color: #fff;
- background-color: #8a1b00;
- border-color: #8a1b00;
+  color: #fff;
+  background-color: #8a1b00;
+  border-color: #8a1b00;
 }
 .panel-important{
   background-color: #ffd9d9 !important;
