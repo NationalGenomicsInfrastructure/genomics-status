@@ -540,7 +540,8 @@ class CaliperImageHandler(SafeHandler):
         pattern=re.compile("^sftp://([a-z\.]+)(.+)")
         host=pattern.search(url).group(1)
         uri=urllib.parse.unquote(pattern.search(url).group(2))
-
+        # Temporarily disable caliper image fetching (port closed)
+        raise tornado.web.HTTPError(404, reason='Error fetching caliper images')
         try:
             transport=paramiko.Transport(host)
 
