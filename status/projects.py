@@ -922,7 +922,8 @@ class RecCtrlDataHandler(SafeHandler):
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               project_id=project_id,
                               sample_data=sample_data,
-                              json_data=json.dumps(sample_data)))
+                              json_data=json.dumps(sample_data),
+                              user=self.get_current_user()))
 
 
 class ProjMetaCompareHandler(SafeHandler):
