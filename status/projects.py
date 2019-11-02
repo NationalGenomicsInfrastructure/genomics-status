@@ -415,7 +415,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             for date_row in date_result.rows:
                 for date_type, date in date_row.value.items():
                     summary_row.value[date_type] = date
-
+        summary_row.value['sourcedb_url'] = 'http://' + self.settings['couch_server'].split('@')[1]
         return summary_row.value
 
 
