@@ -415,7 +415,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             for date_row in date_result.rows:
                 for date_type, date in date_row.value.items():
                     summary_row.value[date_type] = date
-
+        summary_row.value['sourcedb_url'] = 'http://' + self.settings['couch_server'].split('@')[1]
         return summary_row.value
 
 
@@ -922,7 +922,8 @@ class RecCtrlDataHandler(SafeHandler):
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               project_id=project_id,
                               sample_data=sample_data,
-                              json_data=json.dumps(sample_data)))
+                              json_data=json.dumps(sample_data),
+                              user=self.get_current_user()))
 
 
 class ProjMetaCompareHandler(SafeHandler):
