@@ -339,7 +339,7 @@ function load_all_udfs(){
       if(key == 'uppnex_id'){ key = 'delivery_type'; }
 
       //fill in link to statusdb
-      $("#statusdb_link").attr('href', data['sourcedb_url']+"/_utils/document.html?projects/" + data['_doc_id']);
+      $("#statusdb_link").attr('href', data['sourcedb_url']+"/_utils/index.html?projects#database/projects/" + data['_doc_id']);
 
       // Set the project name and status
       if (prettify(key) == 'project_name'){
