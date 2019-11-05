@@ -80,7 +80,7 @@ if __name__=="__main__":
 
     try:
         with open(args.config, 'r') as f:
-            config = yaml.load(f)
+            config = yaml.load(f, loader=yaml.FullLoader)
     except IOError:
         raise IOError('Please make sure to specify a correct path to settings.yaml file')
 
