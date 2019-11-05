@@ -1,36 +1,31 @@
 #!/usr/bin/env python
+"""Updates status (archived or not) of the suggestions stored in the database.
 
+Requires the settings.yaml configuration file used to parameterize genomics-status
+"""
 import argparse
 import couchdb
+import logging
+import sys
 import yaml
 
 import trello
 
-from logbook import Logger, FileHandler
 
-DESCRIPTION = """Updates stauts (archived or not) of the suggestions stored in the database.
 
-Requires the settings.yaml configuration file used to parametrise genomics-status
-"""
-if __name__=="__main__":
+def main(config, log_file):
 
-    parser = argparse.ArgumentParser(description=DESCRIPTION)
-    parser.add_argument('config', type=str, help="Path to settings.yaml file")
-    args = parser.parse_args()
+    logfile = config.get('sb_log', None)
+    if logfile is None:
+        logging.error("No logfile found in config file. Exiting.")
+        sys.exit(-1)
 
-    try:
-        with open(args.config, 'r') as f:
-            config = yaml.load(f)
-    except IOError:
-        raise IOError('Please make sure to specify a correct path to settings.yaml file')
-
-    # From here, assume that all credentials are present in the configuration file,
-    # that is actually needed to run genomics-status
-
-    logfile = config.get('sb_log', None) or '~/.suggestion-box.log'
-    fh = FileHandler(logfile)
-    log = Logger('Suggestion Box')
-    log.handlers.append(fh)
+    # set logger object
+    logging.basicConfig(filename=log_file,
+                        level=logging.INFO,
+                        format='%(asctime)s %(levelname)s: %(message)s',
+                        datefmt="%Y-%m-%d %H:%M:%S")
+    log = logging.getLogger(__name__)
 
     # Connect to Trello
     api_key = config.get('trello').get('api_key')
@@ -77,3 +72,16 @@ if __name__=="__main__":
         docs.append(doc)
 
     sb_database.update(docs)
+
+if __name__=="__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('config', type=str, help="Path to settings.yaml file")
+    args = parser.parse_args()
+
+    try:
+        with open(args.config, 'r') as f:
+            config = yaml.load(f)
+    except IOError:
+        raise IOError('Please make sure to specify a correct path to settings.yaml file')
+
+    main(config)
