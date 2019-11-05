@@ -13,10 +13,10 @@ import trello
 
 
 
-def main(config, log_file):
+def main(config):
 
-    logfile = config.get('sb_log', None)
-    if logfile is None:
+    log_file = config.get('sb_log', None)
+    if log_file is None:
         logging.error("No logfile found in config file. Exiting.")
         sys.exit(-1)
 
