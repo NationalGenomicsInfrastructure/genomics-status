@@ -8,7 +8,7 @@ $(function(){
 });
 
 function generate_category_label(category){
-     if (category == 'Workset'){
+    if (category == 'Workset'){
          category='<span class="label label-primary">'+ category +"</span>";
      }else if (category == 'Flowcell'){
          category='<span class="label label-success">'+ category +"</span>";
@@ -18,6 +18,8 @@ function generate_category_label(category){
          category='<span class="label label-danger">'+ category +"</span>";
      }else if (category == 'Bioinformatics'){
          category='<span class="label label-warning">'+ category +"</span>";
+     }else if (category == 'Important'){
+         category='<span class="label label-imp">'+ category +"</span>";
      }else if (category != ''){
          category='<span class="label label-default">'+ category +"</span>";
      }
@@ -57,8 +59,12 @@ function make_running_note(date, note){
     var datestring = '?';
   }
   var printHyphen =category? ' - ': ' ';
+  var panelClass='';
+  if (note['category'] == 'Important') {
+    panelClass = 'panel-important';
+  }
   return '<div class="panel panel-default">' +
-      '<div class="panel-heading">'+
+      '<div class="panel-heading '+panelClass+'">'+
         '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
        datestring + printHyphen +category +'</div><div class="panel-body">'+noteText+'</div></div>';
 }
