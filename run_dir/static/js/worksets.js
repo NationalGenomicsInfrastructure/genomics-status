@@ -161,7 +161,7 @@ function init_listjs2() {
               last = group;
             }
           });
-        },
+        }
     });
     //Add the bootstrap classes to the search thingy
     if($('#workset_table_filter').length){
@@ -183,3 +183,7 @@ function init_listjs2() {
         } );
     } );
 }
+
+$('body').on('click', '.group', function(event) {
+  $($("#samples_table").DataTable().column(0).header()).trigger("click")
+});
