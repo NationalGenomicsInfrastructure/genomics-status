@@ -176,6 +176,14 @@ class WorksetNotesDataHandler(SafeHandler):
             p.udf['Workset Notes'] = json.dumps(workset_notes)
             p.put()
 
+            # Save the running note in statusdb per workset as well to be able
+            # to quickly show it in the worksets list
+            v = self.application.worksets_db.view("worksets/lims_id", key=workset)
+            doc_id = v.rows[0].id
+            doc = self.application.worksets_db.get(doc_id)
+            doc['Workset Notes'] = json.dumps(workset_notes)
+            self.application.worksets_db.save(doc)
+
             workset_link = "<a href='/workset/{0}'>{0}</a>".format(workset_name)
             project_note = "#####*Running note posted on workset {}:*\n".format(workset_link)
             project_note += note
