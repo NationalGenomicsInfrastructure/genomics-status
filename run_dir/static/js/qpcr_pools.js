@@ -24,7 +24,7 @@ function load_table() {
               to_return = to_return + container + ' ('+pools.length+')';
               to_return = to_return + '<span> \
               <table cellpadding="5" border="0" style="visibility:collapse;margin-bottom:0px;margin-top:5px;" class="table">';
-              to_return = to_return + '<thead><tr><th>Sample</th><th>Well</th><th>Waiting</th></tr></thead>';
+              to_return = to_return + '<thead><tr><th style="width:45%">Sample</th><th style="width:30%">Well</th><th>Waiting(in days)</th></tr></thead>';
               $.each(pools, function(pool, sample){
                 to_return = to_return +
                 '<tr>'+
