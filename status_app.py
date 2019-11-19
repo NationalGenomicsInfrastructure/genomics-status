@@ -40,8 +40,8 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
     ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler
-
 from status.nas_quotas import NASQuotasHandler
+from status.qpcr_pools import qPCRPoolsDataHandler, qPCRPoolsHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler, FlowcellCountPlotHandler, FlowcellCountApiHandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
     SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, SampleQCSummaryHandler, \
@@ -154,6 +154,7 @@ class Application(tornado.web.Application):
             ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/projectqc/([^/]*)$", ProjectQCDataHandler),
+            ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
             ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
             ("/api/v1/links/([^/]*)$", LinksDataHandler),
@@ -201,6 +202,7 @@ class Application(tornado.web.Application):
             ("/nas_quotas", NASQuotasHandler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
+            ("/pools_qpcr", qPCRPoolsHandler),
             ("/pricing_products", PricingProductListHandler),
             ("/pricing_quote", PricingQuoteHandler),
             ("/pricing_quote_tbody", PricingQuoteTbodyHandler),
@@ -338,6 +340,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/nas_quotas.html")
+            tornado.autoreload.watch("design/qpcr_pools.html")
             tornado.autoreload.watch("design/pricing_products.html")
             tornado.autoreload.watch("design/pricing_quote.html")
             tornado.autoreload.watch("design/pricing_quote_tbody.html")

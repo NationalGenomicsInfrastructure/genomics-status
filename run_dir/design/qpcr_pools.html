@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+<!--
+Template file: pooling.html
+URL: /qpcr_pools
+Title: List of qPCR pools
+Description: Shows a table with all qPCR pools.
+-->
+
+{% block stuff %}
+
+<div class="container-fluid" id="qpcrpools_list">
+  <div id="pools_table_div">
+      <h1><span id="page_title">qPCR pools</span>
+        <small>Showing all qPCR pools</small>
+      </h1>
+      <table class="table table-striped table-bordered sortable" id="pools_table">
+        <thead>
+          <tr class="sticky">
+            <th class="sort"></th>
+            <th class="sort">Pool</th>
+          </tr>
+        </thead>
+        <tfoot>
+          <tr>
+            <th class="sort"></th>
+            <th class="sort">Pool</th>
+          </tr>
+        </tfoot>
+        <tbody class="list" id="pools_table_body">
+        </tbody>
+      </table>
+    </div>
+</div>
+
+<script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/dataTables.rowGroup.min.js"></script>
+<script src="/static/js/qpcr_pools.js?v={{ gs_globals['git_commit'] }}"></script>
+<script src="/static/js/jquery-ui.min.js"></script>
+
+{% end %}
