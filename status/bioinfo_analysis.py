@@ -35,7 +35,7 @@ class BioinfoAnalysisHandler(SafeHandler):
                         changed = True
                 if changed:
                     original_doc['values'][timestamp] = data[run_id]
-                    original_doc['values'][timestamp]['user'] = user
+                    original_doc['values'][timestamp]['user'] = user.name
                     original_doc['values'][timestamp]['sample_status'] = data[run_id]['sample_status']
                     original_doc['status'] = data[run_id]['sample_status']
                     if 'datadelivered' in data[run_id]:
@@ -178,7 +178,7 @@ class BioinfoAnalysisHandler(SafeHandler):
         # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
         multiqc = self.get_multiqc(project_id) or ''
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                              user=self.get_current_user_name(),
+                              user=self.get_current_user(),
                               bioinfo=bioinfo_data,
                               app_classes=app_classes,
                               application=application,

@@ -13,5 +13,5 @@ class MultiQCReportHandler(SafeHandler):
             self.write(t.generate(gs_globals=self.application.gs_globals,
                                   status="404",
                                   reason="MultiQC Report Not Found",
-                                  user=self.get_current_user_name(),
+                                  user=self.get_current_user(),
                                   ))

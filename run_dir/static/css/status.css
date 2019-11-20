@@ -116,6 +116,7 @@ pre.scrollable {
 }
 .nav.nav-tabs, .marginBottom { margin-bottom:15px; }
 .borderRight { border-right: 1px solid #eee; }
+.borderLeft { border-left: 1px solid #eee; }
 
 /* Tables */
 th { background-color: #ddd; }
@@ -165,6 +166,7 @@ table.narrow-headers th { width: 20%; }
 /* Custom Labels */
 .label-undefined  {color: #ccc; }
 .label-date  {color: #333; font-size:80%; }
+.label-imp  {background-color: #a62100;}
 /* Date sliders */
 .slider-spacing { margin:40px 0; }
 
@@ -382,11 +384,22 @@ td.progress {
 .panel.with-nav-tabs > .panel-heading > ul.nav-tabs>li>a:hover {
     border-bottom: none;
 }
-
+.btn-imp{
+  color: #fff;
+  background-color: #a62100;
+  border-color: #571100;
+ }
+ .btn-imp:focus, .btn-imp:hover {
+  color: #fff;
+  background-color: #8a1b00;
+  border-color: #8a1b00;
+}
+.panel-important{
+  background-color: #ffd9d9 !important;
+}
 #markdown_help table td {
   width:50%;
 }
-
 /* Markdown text styles */
 .mkdown blockquote {
   font-size: 1em;
@@ -1105,6 +1118,87 @@ div.setOverflow {
   z-index: 100;
 }
 
+
+.quote_product_prices_line{
+    float: right;
+}
+
+.quote_product_price_external {
+    float: left;
+}
+
+input.quantity_updateable {
+    width: 40px;
+}
+
+#current_quote{
+    font-size:14px;
+}
+
 .right_align_headers th{
   text-align: right;
+}
+
+#discount_container{
+    padding-left: 20px;
+}
+
+.dropdown-menu-center {
+  left: 25%;
+}
+.modal-backdrop {
+    visibility: hidden !important;
+}
+.modal.in {
+    background-color: rgba(0,0,0,0.5);
+}
+
+.disabledNoClick{
+   pointer-events: none;
+}
+
+.-sew-list-container {
+  background: white;
+  border: 1px solid #DDD;
+  border-radius: 3px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+}
+
+.-sew-list {
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  max-height: 100px;
+  min-width: 120px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.-sew-list-item {
+  display: block;
+  padding: 5px 5px;
+  cursor: pointer;
+}
+
+
+.-sew-list-item small {
+  color: #afafaf;
+}
+
+.-sew-list-item.selected {
+  color: white;
+  background: #4183C4;
+  text-decoration: none;
+}
+
+tr.group, tr.group:hover, .dtrg-group {
+    background-color: #ddd !important;
+    cursor: pointer;
+}
+
+.expand-proj{
+  color: #0088cc;
+  cursor: pointer;
+  margin-right: 6px;
 }

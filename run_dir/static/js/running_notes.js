@@ -1,16 +1,27 @@
+$(function(){
+    return $.getJSON('/api/v1/assign_roles/users', function (data) {
+      window.users=Object.keys(data)
+        .map(n=>{
+            return {val:n.split('@')[0]};
+        });
+    });
+});
+
 function generate_category_label(category){
-     if (category == 'Workset'){
-         category=' - <span class="label label-primary">'+ category +"</span>";
+    if (category == 'Workset'){
+         category='<span class="label label-primary">'+ category +"</span>";
      }else if (category == 'Flowcell'){
-         category=' - <span class="label label-success">'+ category +"</span>";
+         category='<span class="label label-success">'+ category +"</span>";
      }else if (category == 'Meeting' || category == "Decision"){
-         category=' - <span class="label label-info">'+ category +"</span>";
+         category='<span class="label label-info">'+ category +"</span>";
      }else if (category == 'User Communication'){
-         category=' - <span class="label label-danger">'+ category +"</span>";
+         category='<span class="label label-danger">'+ category +"</span>";
      }else if (category == 'Bioinformatics'){
-         category=' - <span class="label label-warning">'+ category +"</span>";
+         category='<span class="label label-warning">'+ category +"</span>";
+     }else if (category == 'Important'){
+         category='<span class="label label-imp">'+ category +"</span>";
      }else if (category != ''){
-         category=' - <span class="label label-default">'+ category +"</span>";
+         category='<span class="label label-default">'+ category +"</span>";
      }
      return category;
 }
@@ -47,11 +58,15 @@ function make_running_note(date, note){
     noteText = '<pre>'+make_project_links(note['note'])+'</pre>';
     var datestring = '?';
   }
-  
+  var printHyphen =category? ' - ': ' ';
+  var panelClass='';
+  if (note['category'] == 'Important') {
+    panelClass = 'panel-important';
+  }
   return '<div class="panel panel-default">' +
-      '<div class="panel-heading">'+
+      '<div class="panel-heading '+panelClass+'">'+
         '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-       datestring + category +'</div><div class="panel-body">'+noteText+'</div></div>';
+       datestring + printHyphen +category +'</div><div class="panel-body">'+noteText+'</div></div>';
 }
 
 function load_running_notes(wait) {
@@ -88,7 +103,9 @@ function load_running_notes(wait) {
 function preview_running_notes(){
     var now = new Date();
     $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
-    $('#preview_category').html(generate_category_label($('#rn_category option:selected').val()));
+    var category = generate_category_label($('#rn_category option:selected').val());
+    category = category ? ' - '+ category : category;
+    $('#preview_category').html(category);
     var text = $('#new_note_text').val().trim();
     text = $('<div>').text(text).html();
     if (text.length > 0) {
@@ -103,8 +120,8 @@ function preview_running_notes(){
 function filter_running_notes(search){
     search=search.toLowerCase();
     $('#running_notes_panels').children().each(function(){
-        var header=$(this).children('.panel-heading').text(); 
-        var note=$(this).children('.panel-body').children().text(); 
+        var header=$(this).children('.panel-heading').text();
+        var note=$(this).children('.panel-body').children().text();
         if (header.toLowerCase().indexOf(search) != -1 || note.toLowerCase().indexOf(search) != -1){
             $(this).show();
         }else{
@@ -179,9 +196,10 @@ $("#running_notes_form").submit( function(e) {
             // Create a new running note and slide it in..
             var now = new Date();
             category=generate_category_label(category);
+            var printHyphen =category? ' - ': ' ';
             $('<div class="panel panel-success"><div class="panel-heading">'+
                   '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
-                  now.toDateString() + ', ' + now.toLocaleTimeString(now)+ category + 
+                  now.toDateString() + ', ' + now.toLocaleTimeString(now)+ printHyphen + category +
                 '</div><div class="panel-body">'+make_markdown(data['note'])+
                 '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
             check_img_sources($('#running_notes_panels img'));
@@ -193,3 +211,5 @@ $("#running_notes_form").submit( function(e) {
       }
     });
 });
+
+$(document).ready().delay(1000).queue(function(){$('#new_note_text').sew({values:window.users})});

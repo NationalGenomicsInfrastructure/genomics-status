@@ -11,6 +11,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
 from status.projects import RunningNotesDataHandler
+from genologics.entities import Queue, Artifact, Project
 
 class WorksetsDataHandler(SafeHandler):
     """returns basic worksets json
@@ -63,7 +64,7 @@ class WorksetsHandler(SafeHandler):
                  ['Application', 'application'], ['Library','library_method'], \
                  ['Samples Passed', 'passed'],['Samples Failed', 'failed'], \
                  ['Pending Samples', 'unknown'], ['Total samples', 'total']];
-        self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user_name(), ws_data=ws_data, headers=headers, all=all))
+        self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user(), ws_data=ws_data, headers=headers, all=all))
 
 class WorksetDataHandler(SafeHandler):
     """Loaded through /api/v1/workset/[workset]"""
@@ -95,7 +96,7 @@ class WorksetHandler(SafeHandler):
     """Loaded through /workset/[workset]"""
     def get(self, workset):
         t = self.application.loader.load("workset_samples.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, workset_name=workset, user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, workset_name=workset, user=self.get_current_user()))
 
 class WorksetSearchHandler(SafeHandler):
     """ Searches Worksetsfor text string
@@ -153,7 +154,6 @@ class WorksetNotesDataHandler(SafeHandler):
     def post(self, workset):
         note = self.get_argument('note', '')
         user = self.get_current_user()
-        email = self.get_current_user_email()
         category = self.get_argument('category', 'Workset')
 
         if category == '':
@@ -168,13 +168,21 @@ class WorksetNotesDataHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>No workset id or note parameters found</body></html>')
         else:
-            newNote = {'user': user, 'email': email, 'note': note, 'category': category}
+            newNote = {'user': user.name, 'email': user.email, 'note': note, 'category': category}
             p = Process(self.lims, id=workset)
             p.get(force=True)
             workset_notes = json.loads(p.udf['Workset Notes']) if 'Workset Notes' in p.udf else {}
             workset_notes[str(datetime.datetime.now())] = newNote
             p.udf['Workset Notes'] = json.dumps(workset_notes)
             p.put()
+
+            # Save the running note in statusdb per workset as well to be able
+            # to quickly show it in the worksets list
+            v = self.application.worksets_db.view("worksets/lims_id", key=workset)
+            doc_id = v.rows[0].id
+            doc = self.application.worksets_db.get(doc_id)
+            doc['Workset Notes'] = json.dumps(workset_notes)
+            self.application.worksets_db.save(doc)
 
             workset_link = "<a href='/workset/{0}'>{0}</a>".format(workset_name)
             project_note = "#####*Running note posted on workset {}:*\n".format(workset_link)
@@ -183,7 +191,7 @@ class WorksetNotesDataHandler(SafeHandler):
                 RunningNotesDataHandler.make_project_running_note(
                     self.application, project_id,
                     project_note, category,
-                    user, email
+                    user.name, user.email
                 )
 
             self.set_status(201)
@@ -228,7 +236,6 @@ class WorksetLinksHandler(SafeHandler):
 
     def post(self, lims_step):
         user = self.get_current_user()
-        email = self.get_current_user_email()
         a_type = self.get_argument('type', '')
         title = self.get_argument('title', '')
         url = self.get_argument('url', '')
@@ -241,8 +248,8 @@ class WorksetLinksHandler(SafeHandler):
             p = Process(self.lims, id=lims_step)
             p.get(force=True)
             links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
-            links[str(datetime.datetime.now())] = {'user': user,
-                                                   'email': email,
+            links[str(datetime.datetime.now())] = {'user': user.name,
+                                                   'email': user.email,
                                                    'type': a_type,
                                                    'title': title,
                                                    'url': url,
@@ -253,3 +260,41 @@ class WorksetLinksHandler(SafeHandler):
             #ajax cries if it does not get anything back
             self.set_header("Content-type", "application/json")
             self.finish(json.dumps(links))
+
+class WorksetPoolsHandler(SafeHandler):
+    """ Serves all the samples that need to be added to worksets in LIMS
+    URL: /api/v1/workset_pools
+    """
+
+    def get(self):
+        limsg = lims.Lims(BASEURI, USERNAME, PASSWORD)
+        queues = {}
+        queues['TruSeqRNAprep'] = Queue(limsg, id='311')
+        queues['TruSeqSmallRNA'] = Queue(limsg, id='410')
+        queues['TruSeqDNAPCR_free'] = Queue(limsg, id='407')
+        queues['ThruPlex'] = Queue(limsg, id='451')
+        queues['Genotyping'] = Queue(limsg, id='901')
+        queues['RadSeq'] = Queue(limsg, id='1201')
+        queues['SMARTerPicoRNA'] = Queue(limsg, id='1551')
+        queues['ChromiumGenomev2'] = Queue(limsg, id='1801')
+
+        methods = queues.keys()
+        pools = {}
+
+        for method in methods:
+            pools[method] ={}
+            for artifact in queues[method].artifacts:
+                name = artifact.name
+                project = artifact.name.split('_')[0]
+                if project in pools[method]:
+                    pools[method][project]['samples'].append(name)
+                else:
+                    total_num_samples = limsg.get_sample_number(projectlimsid=project)
+                    proj = Project(limsg, id=project)
+                    date_queued = proj.udf['Queued'].strftime("%Y-%m-%d")
+                    projName = proj.name
+                    pools[method][project] = {'total_num_samples': total_num_samples, 'queued_date': date_queued, 'pname': projName,
+                                                'samples': [name]}
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(pools))

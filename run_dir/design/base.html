@@ -64,6 +64,10 @@
                       <li><a href="/reads_total/">Read Count Totals</a></li>
                       <li><a href="/proj_meta">Compare Project Meta</a></li>
                       <li><a href="/instrument_logs">View Instrument Logs</a></li>
+                      {% if user and user.role == 'admin'%}
+                      <li><a href="/assign_roles">User Roles</a></li>
+                      {% end %}
+                      <li><a href="/pools_qpcr">qPCR Pooling</a></li>
                       <li role="separator" class="divider"></li>
                     <li><a href="http://lims-dashboard.scilifelab.se">Script Dashboard</a></li>
                   </ul>
@@ -73,9 +77,9 @@
                 <li><a href="/worksets">Worksets</a></li>
                 <li><a href="/deliveries">Bioinfo</a></li>
                 <li><a href="/suggestion_box">Suggestion Box</a></li>
-                {% try %}
-                    <li><a href="/logout">Log Out {{user}}</a></li>
-                {% except %}
+                {% if user %}
+                    <li><a href="/logout">Log Out {{user.name}}</a></li>
+                {% else %}
                     <li><a href="/login">Login</a></li>
                 {% end %}
             </ul>

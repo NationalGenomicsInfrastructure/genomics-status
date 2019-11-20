@@ -19,6 +19,7 @@ from tornado import template
 from tornado.options import define, options
 
 from status.applications import ApplicationDataHandler, ApplicationHandler, ApplicationsDataHandler, ApplicationsHandler
+from status.assign_roles import AssignRolesHandler, AssignRolesUsersHandler
 from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.deliveries import DeliveriesPageHandler
@@ -29,7 +30,8 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingComponentsDataHandler, PricingProductsDataHandler, \
-    PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler
+    PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, PricingProductListHandler, \
+    PricingQuoteHandler,PricingQuoteTbodyHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -38,8 +40,8 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
     ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler
-
 from status.nas_quotas import NASQuotasHandler
+from status.qpcr_pools import qPCRPoolsDataHandler, qPCRPoolsHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler, FlowcellCountPlotHandler, FlowcellCountApiHandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
     SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, SampleQCSummaryHandler, \
@@ -55,8 +57,7 @@ from status.testing import TestDataHandler
 from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, SafeStaticFileHandler, \
     UpdatedDocumentsDatahandler
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
-    WorksetsDataHandler, WorksetSearchHandler
-
+    WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler
 
 from zenpy import Zenpy
 from urllib.parse import urlsplit
@@ -89,6 +90,7 @@ class Application(tornado.web.Application):
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
+            ("/api/v1/assign_roles/users", AssignRolesUsersHandler),
             ("/api/v1/bioinfo_analysis", BioinfoAnalysisHandler),
             ("/api/v1/bioinfo_analysis/([^/]*)$", BioinfoAnalysisHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
@@ -152,6 +154,7 @@ class Application(tornado.web.Application):
             ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
             ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/projectqc/([^/]*)$", ProjectQCDataHandler),
+            ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
             ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
             ("/api/v1/links/([^/]*)$", LinksDataHandler),
@@ -179,8 +182,14 @@ class Application(tornado.web.Application):
             ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
+            ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
+            ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
+            ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
+            ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
+            ("/api/v1/workset_pools", WorksetPoolsHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
+            ("/assign_roles", AssignRolesHandler),
             ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
             ("/deliveries", DeliveriesPageHandler),
             ("/flowcells", FlowcellsHandler),
@@ -193,6 +202,10 @@ class Application(tornado.web.Application):
             ("/nas_quotas", NASQuotasHandler),
             ("/qc/([^/]*)$", SampleQCSummaryHandler),
             (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
+            ("/pools_qpcr", qPCRPoolsHandler),
+            ("/pricing_products", PricingProductListHandler),
+            ("/pricing_quote", PricingQuoteHandler),
+            ("/pricing_quote_tbody", PricingQuoteTbodyHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesHandler),
             ("/project/(P[^/]*)/([^/]*)$", ProjectSamplesHandler),
@@ -204,10 +217,6 @@ class Application(tornado.web.Application):
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/worksets", WorksetsHandler),
-            ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
-            ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
-            ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
-            ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/workset/([^/]*)$", WorksetHandler),
             (r'.*', BaseHandler)
         ]
@@ -314,6 +323,7 @@ class Application(tornado.web.Application):
         if options['develop']:
             tornado.autoreload.watch("design/application.html")
             tornado.autoreload.watch("design/applications.html")
+            tornado.autoreload.watch("design/assign_roles.html")
             tornado.autoreload.watch("design/base.html")
             tornado.autoreload.watch("design/bioinfo_tab.html")
             tornado.autoreload.watch("design/bioinfo_tab/run_lane_sample_view.html")
@@ -324,11 +334,16 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcell.html")
             tornado.autoreload.watch("design/flowcell_error.html")
             tornado.autoreload.watch("design/flowcell_samples.html")
+            tornado.autoreload.watch("design/flowcell_trend_plot.html")
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/nas_quotas.html")
+            tornado.autoreload.watch("design/qpcr_pools.html")
+            tornado.autoreload.watch("design/pricing_products.html")
+            tornado.autoreload.watch("design/pricing_quote.html")
+            tornado.autoreload.watch("design/pricing_quote_tbody.html")
             tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/project_samples.html")
             tornado.autoreload.watch("design/project_summary.html")
@@ -341,7 +356,6 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/unauthorized.html")
             tornado.autoreload.watch("design/workset_samples.html")
             tornado.autoreload.watch("design/worksets.html")
-            tornado.autoreload.watch("design/flowcell_trend_plot.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
 

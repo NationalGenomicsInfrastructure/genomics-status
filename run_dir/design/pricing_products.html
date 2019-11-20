@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+<!--
+Template file: flowcells.html
+URL: /flowcells
+Title: Summary of all Flowcells
+Description: Shows a table with all flow cells.
+-->
+
+{% block stuff %}
+
+<div class="container-fluid" id="product_list">
+  <div id="pricing_products_div">
+      <h1><span id="page_title">Products</span>
+      </h1>
+      <table class="table table-striped table-bordered sortable" id="pricing_products_table">
+        <thead>
+          <tr class="sticky">
+            <th class="sort" data-sort="category">Category</th>
+            <th class="sort" data-sort="type">Type</th>
+            <th class="sort" data-sort="name">Name</th>
+            <th class="sort" data-sort="components">Components</th>
+            <th class="sort" data-sort="alternative_components">Alternative Components</th>
+            <th class="sort" data-sort="reagent_fee">Reagent Fee</th>
+            <th class="sort" data-sort="overhead">Overhead</th>
+            <th class="sort" data-sort="minimum_quantity">Minimum Quantity</th>
+            <th class="sort" data-sort="price_internal">Internal Price</th>
+            <th class="sort" data-sort="price_external">External Price</th>
+            <th class="sort" data-sort="comment">Comment</th>
+          </tr>
+        </thead>
+        <tfoot>
+          <tr>
+            <th class="sort" data-sort="category">Category</th>
+            <th class="sort" data-sort="type">Type</th>
+            <th class="sort" data-sort="name">Name</th>
+            <th class="sort" data-sort="alternatcomponents">Components</th>
+            <th class="sort" data-sort="alternative_components">Alternative Components</th>
+            <th class="sort" data-sort="reagent_fee">Reagent Fee</th>
+            <th class="sort" data-sort="overhead">Overhead</th>
+            <th class="sort" data-sort="minimum_quantity">Minimum Quantity</th>
+            <th class="sort" data-sort="price_internal">Internal Price (SEK)</th>
+            <th class="sort" data-sort="price_external">External Price</th>
+            <th class="sort" data-sort="comment">Comment</th>
+          </tr>
+        </tfoot>
+        <tbody class="list">
+            {% for product in products %}
+                <tr class="status_{{product['Status'].lower()}}">
+                    <td class="category">
+                        {{product['Category']}}
+                    </td>
+                    <td class="type">
+                        {{product['Type']}}
+                    </td>
+                    <td class="name">
+                        {{product["Name"]}}
+                    </td>
+                    <td class=components">
+                        {% if product['Components'] != "" %}
+                          {% for component_id, quant_d in product["Components"].items() %}
+                            <p>
+                            {% if quant_d["quantity"] != 1 %}
+                                {{quant_d["quantity"]}}:
+                            {% end %}
+                            {{ components[component_id]['Product name'] }}</p>
+                          {% end %}
+                        {% end %}
+                    </td>
+                    <td class="alternative_components">
+                        {% if product['Alternative Components'] != "" %}
+                          {% for component_id, quant_d in product["Alternative Components"].items() %}
+                            <p>
+                            {% if quant_d["quantity"] != 1 %}
+                                {{quant_d["quantity"]}}:
+                            {% end %}
+                            {{ components[component_id]['Product name'] }}</p>
+                          {% end %}
+                        {% end %}
+                    </td>
+                    <td class="reagent_fee">
+                        {{product["Reagent fee"]}}
+                    </td>
+                    <td class="overhead">
+                        {{product["Re-run fee"]}}
+                    </td>
+                    <td class="minimum_quantity">
+                        {{product["Minimum Quantity"]}}
+                    </td>
+                    <td class="price_internal">
+                        {{product["price_internal"]}}
+                    </td>
+                    <td class="price_external">
+                        {{product["price_external"]}}
+                    </td>
+                    <td class="comment">
+                        {{product["Comment"]}}
+                    </td>
+                </tr>
+            {% end %}
+        </tbody>
+      </table>
+    </div>
+</div>
+
+<script src="/static/js/jquery.dataTables.min.js"></script>
+<!-- Table Sorting -->
+<script type="text/javascript">
+$( document ).ready(function() {
+  init_listjs();
+  //Formatting for Running note panel body
+  $(".running-note-panel > .panel-body").each(function(i){
+    $(this).html(make_markdown($(this).text()));
+  });
+});
+// Initialize sorting and searching javascript plugin
+function init_listjs() {
+    // Setup - add a text input to each footer cell
+    $('#pricing_products_table tfoot th').each( function () {
+      var title = $('#pricing_products_table thead th').eq( $(this).index() ).text();
+      $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
+    } );
+
+    var table = $('#pricing_products_table').DataTable({
+      "paging":false,
+      "info":false,
+      "order": [[ 0, "desc" ]]
+    });
+
+    //Add the bootstrap classes to the search thingy
+    $('div.dataTables_filter input').addClass('form-control search search-query');
+    $('#pricing_products_table_filter').addClass('form-inline pull-right');
+    $("#pricing_products_table_filter").appendTo("h1");
+    $('#pricing_products_table_filter label input').appendTo($('#pricing_products_table_filter'));
+    $('#pricing_products_table_filter label').remove();
+    $("#pricing_products_table_filter input").attr("placeholder", "Search..");
+    // Apply the search
+    table.columns().every( function () {
+        var that = this;
+        $( 'input', this.footer() ).on( 'keyup change', function () {
+            that
+            .search( this.value )
+            .draw();
+        } );
+    } );
+}
+</script>
+
+
+{% end %}
+pricing_products_table_filter

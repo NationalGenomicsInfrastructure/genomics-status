@@ -14,7 +14,10 @@ import base64
 import urllib.parse
 import os
 import logging
-
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import markdown
 
 #from itertools import ifilter
 from collections import defaultdict
@@ -81,7 +84,7 @@ class PresetsHandler(SafeHandler):
         self.write({'success': 'success!!'})
 
     def get_user_details(self):
-        user_email = self.get_current_user_email()
+        user_email = self.get_current_user().email
         if user_email == 'Testing User!':
             user_email=self.application.settings.get("username", None)+'@scilifelab.se'
         user_details={}
@@ -186,6 +189,9 @@ class ProjectsBaseDataHandler(SafeHandler):
             else:
                 row.value['days_in_reception_control'] = diff
 
+        if 'order_details' in row.value and 'fields' in row.value['order_details'] and 'project_pi_name' in row.value['order_details']['fields']:
+            row.value['project_pi_name'] = row.value['order_details']['fields']['project_pi_name']
+
         return row
 
     def _get_two_year_from(self, from_date):
@@ -257,7 +263,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
                 elif 'project_summary' in p_info and 'queued' in p_info['project_summary']:
                     queued_proj =True
-                    queued_condition = p_info['project_summary'].get('queued') >= start_queue_date and p_info['project_summary'].get('queued') <= end_queue_date
+                    queued_condition = p_info['project_summary'].get('queued') >= str(start_queue_date) and p_info['project_summary'].get('queued') <= str(end_queue_date)
 
                 if 'open_date' in p_info:
                     open_condition = p_info['open_date'] >= str(start_open_date) and p_info['open_date'] <= str(end_open_date)
@@ -409,7 +415,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             for date_row in date_result.rows:
                 for date_type, date in date_row.value.items():
                     summary_row.value[date_type] = date
-
+        summary_row.value['sourcedb_url'] = 'http://' + self.settings['couch_server'].split('@')[1]
         return summary_row.value
 
 
@@ -525,7 +531,7 @@ class CaliperImageHandler(SafeHandler):
             data = result.rows[0].value
         except TypeError:
             #can be triggered by the data.get().get() calls.
-            self.write("no caliper image found")
+            raise tornado.web.HTTPError(404, reason='No caliper image found')
         else:
             self.write(self.get_caliper_image(data.get(sample).get(step)))
 
@@ -534,14 +540,13 @@ class CaliperImageHandler(SafeHandler):
         pattern=re.compile("^sftp://([a-z\.]+)(.+)")
         host=pattern.search(url).group(1)
         uri=urllib.parse.unquote(pattern.search(url).group(2))
-
         try:
             transport=paramiko.Transport(host)
 
             transport.connect(username = self.application.genologics_login, password = self.application.genologics_pw)
             sftp_client = transport.open_sftp_client()
             my_file = sftp_client.open(uri, 'r')
-            encoded_string = base64.b64encode(my_file.read())
+            encoded_string = base64.b64encode(my_file.read()).decode('utf-8')
             my_file.close()
             sftp_client.close()
             transport.close()
@@ -549,7 +554,7 @@ class CaliperImageHandler(SafeHandler):
             return returnHTML
         except Exception as message:
             print(message)
-            return("Error fetching caliper images")
+            raise tornado.web.HTTPError(404, reason='Error fetching caliper images')
 
 class ProjectSamplesHandler(SafeHandler):
     """ Serves a page which lists the samples of a given project, with some
@@ -563,7 +568,7 @@ class ProjectSamplesHandler(SafeHandler):
         # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
         multiqc = self.get_multiqc(project) or ''
         self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
-                              user=self.get_current_user_name(),
+                              user=self.get_current_user(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
                               columns_sample = self.application.genstat_defaults.get('sample_columns'),
                               prettify = prettify_css_names,
@@ -581,7 +586,7 @@ class ProjectsHandler(SafeHandler):
     #def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, projects=projects, user=self.get_current_user_name()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, projects=projects, user=self.get_current_user()))
 
 
 
@@ -612,12 +617,11 @@ class RunningNotesDataHandler(SafeHandler):
         note = self.get_argument('note', '')
         category = self.get_argument('category', '')
         user = self.get_current_user()
-        email = self.get_current_user_email()
         if not note:
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
-            newNote = RunningNotesDataHandler.make_project_running_note(self.application, project, note, category, user, email)
+            newNote = RunningNotesDataHandler.make_project_running_note(self.application, project, note, category, user.name, user.email)
             self.set_status(201)
             self.write(json.dumps(newNote))
 
@@ -640,7 +644,54 @@ class RunningNotesDataHandler(SafeHandler):
         doc=application.projects_db.get(doc_id)
         doc['details']['running_notes']=json.dumps(running_notes)
         application.projects_db.save(doc)
+        #### Check and send mail to tagged users
+        pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
+        userTags = pattern.findall(note)
+        if userTags:
+            RunningNotesDataHandler.notify_tagged_user(application, userTags, project, note, category, user, timestamp)
+        ####
         return newNote
+
+    @staticmethod
+    def notify_tagged_user(application, userTags, project, note, category, tagger, timestamp):
+        view_result = {}
+        time_in_format = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S').strftime("%a %b %d %Y, %I:%M:%S %p")
+        for row in application.gs_users_db.view('authorized/users'):
+            if row.key != 'genstat_defaults':
+                view_result[row.key.split('@')[0]] = row.key
+        if category:
+            category = ' - ' + category
+        for user in userTags:
+            if user[1] in view_result:
+                user=user[1]
+                msg = MIMEMultipart('alternative')
+                msg['Subject']='[GenStat] Running Note:{}'.format(project)
+                msg['From']='genomics-status'
+                msg['To'] = view_result[user]
+                text = 'You have been tagged by {} in a running note in the project {}! The note is as follows\n\
+                >{} - {}{}\
+                >{}'.format(tagger, project, tagger, time_in_format, category, note)
+
+                html = '<html>\
+                <body>\
+                <p> \
+                 You have been tagged by {} in a running note in the project <a href="{}/project/{}">{}</a>! The note is as follows</p>\
+                 <blockquote>\
+                <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
+                    <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
+                        <a href="#">{}</a> - <span>{}</span> <span>{}</span>\
+                    </div>\
+                    <div class="panel-body" style="padding: 15px;">\
+                        <p>{}</p>\
+                </div></div></blockquote></body></html>'.format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0],
+                 project, project, tagger, time_in_format, category, markdown.markdown(note))
+
+                msg.attach(MIMEText(text, 'plain'))
+                msg.attach(MIMEText(html, 'html'))
+
+                s = smtplib.SMTP('localhost')
+                s.sendmail('genomics-bioinfo@scilifelab.se', msg['To'], msg.as_string())
+                s.quit()
 
 
 class LinksDataHandler(SafeHandler):
@@ -665,7 +716,6 @@ class LinksDataHandler(SafeHandler):
 
     def post(self, project):
         user = self.get_current_user()
-        email = self.get_current_user_email()
         a_type = self.get_argument('type', '')
         title = self.get_argument('title', '')
         url = self.get_argument('url', '')
@@ -678,8 +728,8 @@ class LinksDataHandler(SafeHandler):
             p = Project(lims, id=project)
             p.get(force=True)
             links = json.loads(p.udf['Links']) if 'Links' in p.udf else {}
-            links[str(datetime.datetime.now())] = {'user': user,
-                                                   'email': email,
+            links[str(datetime.datetime.now())] = {'user': user.name,
+                                                   'email': user.email,
                                                    'type': a_type,
                                                    'title': title,
                                                    'url': url,
@@ -872,7 +922,8 @@ class RecCtrlDataHandler(SafeHandler):
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               project_id=project_id,
                               sample_data=sample_data,
-                              json_data=json.dumps(sample_data)))
+                              json_data=json.dumps(sample_data),
+                              user=self.get_current_user()))
 
 
 class ProjMetaCompareHandler(SafeHandler):
@@ -881,7 +932,7 @@ class ProjMetaCompareHandler(SafeHandler):
         pids = self.get_arguments("p")
         t = self.application.loader.load("proj_meta_compare.html")
         self.write(t.generate(gs_globals=self.application.gs_globals, pids=pids,
-                              user=self.get_current_user_name()))
+                              user=self.get_current_user()))
 
 class ProjectRNAMetaDataHandler(SafeHandler):
     """Handler to serve RNA metadata from project"""
