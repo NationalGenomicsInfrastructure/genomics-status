@@ -12,6 +12,8 @@ thresholds = {
     'NovaSeq S1': 650,
     'NovaSeq S2': 1650,
     'NovaSeq S4': 2000,
+    'NextSeq Mid' : 32.5,
+    'NextSeq High' : 100,
 }
 
 class FlowcellHandler(SafeHandler):
