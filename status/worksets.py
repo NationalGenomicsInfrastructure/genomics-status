@@ -20,12 +20,12 @@ class WorksetsDataHandler(SafeHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
         ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
-        result={}
+        result={} 
         for row in ws_view:
             result[row.key]=row.value
             result[row.key].pop("_id", None)
             result[row.key].pop("_rev", None)
-        self.write(json.dumps(result))
+        self.write(json.dumps(result,result2))
 
 class WorksetsHandler(SafeHandler):
     """Loaded through /worksets
@@ -36,6 +36,7 @@ class WorksetsHandler(SafeHandler):
         half_a_year_ago = datetime.datetime.now() - relativedelta(months=6)
         ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
 
+            
         for row in ws_view:
             if all:
                 result[row.key]=row.value
@@ -63,7 +64,8 @@ class WorksetsHandler(SafeHandler):
                  ['Date finished', 'finish date'],['Operator', 'technician'],\
                  ['Application', 'application'], ['Library','library_method'], \
                  ['Samples Passed', 'passed'],['Samples Failed', 'failed'], \
-                 ['Pending Samples', 'unknown'], ['Total samples', 'total']];
+                 ['Pending Samples', 'unknown'], ['Total samples', 'total'], \
+                 ['Latest workset note', 'Workset Notes']];
         self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user(), ws_data=ws_data, headers=headers, all=all))
 
 class WorksetDataHandler(SafeHandler):

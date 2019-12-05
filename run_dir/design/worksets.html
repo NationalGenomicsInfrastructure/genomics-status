@@ -74,12 +74,27 @@ Description: Shows a table with all worksets.
                          </samp></td>
                      {% elif onekey[1] in ['passed', 'failed', 'unknown', 'total'] %}
                          <td>{{ ws_data[onews].get('samples', {}).get(onekey[1]) }}</td>
+                     {% elif onekey[1] == 'workset_notes'%}
+                         <td class="latest_workset_note" class="text-center">
+                         {% if ws_data[onews].get('workset_notes') %}
+                              {% set workset_notes = ws_data[onews].get('workset_notes') %}
+                              {% set latest_workset_note_key = max(k for k, v in workset_notes.items() if v != '') %}
+                              <div class="panel panel-default running-note-panel">
+                              <div class='panel-heading'>
+                              <a href='mailto:{{ workset_notes[latest_workset_note_key]["email"].encode("ascii","ignore")}}'>{{ workset_notes[latest_workset_note_key]["user"].encode("ascii","ignore")}}</a>  -  {{form_date(latest_workset_note_key)}}
+                              </div>
+                              <div class='panel-body' style='white-space: pre-line'>
+                              {{workset_notes[latest_workset_note_key]['note']}}
+                              </div>
+                              </div>
+                         {% end %}
+                        </td>
                      {% else %}
                         <td>{{ ws_data[onews].get(onekey[1]) }}</td>
                      {% end %}
                  {% end %}
-                 </tr>
                  {% end %}
+                </tr>
             </tbody>
           </table>
         </div>
@@ -114,8 +129,6 @@ Description: Shows a table with all worksets.
   </div>
 </div>
 <!-- #page_content -->
-
 <script src="/static/js/jquery.dataTables.min.js? }}"></script>
 <script src="/static/js/worksets.js?v={{ gs_globals['git_commit'] }}" id="worksets-js" data-worksets="{{worksets}}"></script>
-<script src="/static/js/jquery-ui.min.js"></script>
 {% end %}
