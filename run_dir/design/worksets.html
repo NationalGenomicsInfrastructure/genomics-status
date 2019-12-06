@@ -73,15 +73,15 @@ Description: Shows a table with all worksets.
                          {% raw '</samp><hr style="margin:0;"><samp>'.join(ws_data[onews].get(onekey[1])) %}
                          </samp></td>
                      {% elif onekey[1] in ['passed', 'failed', 'unknown', 'total'] %}
-                         <td>{{ ws_data[onews].get('samples', {}).get(onekey[1]) }}</td>
-                     {% elif onekey[1] == 'workset_notes'%}
-                         <td class="latest_workset_note" class="text-center">
-                         {% if ws_data[onews].get('workset_notes') %}
-                              {% set workset_notes = ws_data[onews].get('workset_notes') %}
-                              {% set latest_workset_note_key = max(k for k, v in workset_notes.items() if v != '') %}
+                         <td>{{ ws_data[onews].get('samples', {}).get(onekey[1]) }}</td> 
+                     {% elif onekey[1] == 'Workset Notes'%}
+                         <td class="latest_workset_note" class="text-center" style="min-width:250px">
+                         {% if ws_data[onews].get('Workset Notes') %}
+                              {% set workset_notes = ws_data[onews].get('Workset Notes') %}
+                              {% set latest_workset_note_key = list(workset_notes.keys())[0] %}
                               <div class="panel panel-default running-note-panel">
                               <div class='panel-heading'>
-                              <a href='mailto:{{ workset_notes[latest_workset_note_key]["email"].encode("ascii","ignore")}}'>{{ workset_notes[latest_workset_note_key]["user"].encode("ascii","ignore")}}</a>  -  {{form_date(latest_workset_note_key)}}
+                              <a href='mailto:{{ workset_notes[latest_workset_note_key]["email"].encode("ascii","ignore")}}'>{{ workset_notes[latest_workset_note_key]["user"].encode("ascii","ignore")}}</a>  -  {{ datetime.datetime.strptime(latest_workset_note_key, "%Y-%m-%d %H:%M:%S.%f").strftime("%a %b %d %Y, %I:%M:%S %p") }}
                               </div>
                               <div class='panel-body' style='white-space: pre-line'>
                               {{workset_notes[latest_workset_note_key]['note']}}
@@ -99,7 +99,13 @@ Description: Shows a table with all worksets.
           </table>
         </div>
       </div>
-
+      <script type="text/javascript">
+      $( document ).ready(function() {
+       $(".running-note-panel > .panel-body").each(function(i){
+         $(this).html(make_markdown($(this).text()));
+       });
+      });
+      </script>
       <div class="tab-pane fade" id="tab_pending_samples_to_worksets">
         <h2 class="worksets_page_heading"> <small>All samples that are available to be added to a workset in LIMS.</small></h2>
         <div id="samples-to-workset-list">
