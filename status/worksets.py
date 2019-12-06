@@ -25,7 +25,7 @@ class WorksetsDataHandler(SafeHandler):
             result[row.key]=row.value
             result[row.key].pop("_id", None)
             result[row.key].pop("_rev", None)
-        self.write(json.dumps(result,result2))
+        self.write(json.dumps(result))
 
 class WorksetsHandler(SafeHandler):
     """Loaded through /worksets
