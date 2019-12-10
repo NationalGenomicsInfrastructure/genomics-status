@@ -68,9 +68,9 @@ class WorksetsHandler(SafeHandler):
                  ['Projects (samples)','projects'],['Sequencing Setup', 'sequencing_setup'], \
                  ['Date finished', 'finish date'],['Operator', 'technician'], \
                  ['Application', 'application'],['Library','library_method'], \
-                 ['Samples Passed', 'passed'],['Latest workset note', 'Workset Notes'], \
-                 ['Samples Failed', 'failed'],['Pending Samples', 'unknown'], \
-                 ['Total samples', 'total']];
+                 ['Samples Passed', 'passed'],['Samples Failed', 'failed'] , \
+                 ['Pending Samples', 'unknown'],['Total samples', 'total'], \
+                 ['Latest workset note', 'Workset Notes']];
         self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user(), ws_data=ws_data, headers=headers, all=all))
 
 class WorksetDataHandler(SafeHandler):
@@ -98,7 +98,7 @@ class WorksetDataHandler(SafeHandler):
             result[row.key].pop("_id", None)
             result[row.key].pop("_rev", None)
         return result
-
+    
 class WorksetHandler(SafeHandler):
     """Loaded through /workset/[workset]"""
     def get(self, workset):
