@@ -55,10 +55,10 @@ Description: Shows a table with all worksets.
                          <td>
                          {% for onepj in ws_data.get(onews).get(onekey[1]) %}
                             {% if ws_data.get(onews).get(onekey[1]).get(onepj).get('status') == 'Open' %}
-                                <a href="/project/{{ onepj }}" class="open_ws_link" data-toggle="tooltip" title="Status: Open"><i class="glyphicon glyphicon-folder-open">&nbsp;</i>{{ ", ".join([ws_data.get(onews, {}).get(onekey[1], {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}</a>
+                                <a href="/project/{{ onepj }}" class="text-success" data-toggle="tooltip" title="Status: Open"><i class="glyphicon glyphicon-folder-open">&nbsp;</i>{{ ", ".join([ws_data.get(onews, {}).get(onekey[1], {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}</a>
                             {% end %}
                             {% if ws_data.get(onews).get(onekey[1]).get(onepj).get('status') == 'Closed' %}
-                                <a href="/project/{{ onepj }}" class="closed_ws_link" data-toggle="tooltip" title="Status: Closed"><i class="glyphicon glyphicon-folder-close">&nbsp;</i>{{ ", ".join([ws_data.get(onews, {}).get(onekey[1], {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}</a>
+                                <a href="/project/{{ onepj }}" class="text-warning" data-toggle="tooltip" title="Status: Closed"><i class="glyphicon glyphicon-folder-close">&nbsp;</i>{{ ", ".join([ws_data.get(onews, {}).get(onekey[1], {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}</a>
                             {% end %}
                             &nbsp;({{ ws_data.get(onews).get(onekey[1]).get(onepj).get('samples_nb') }})<br>
                             {% end %}

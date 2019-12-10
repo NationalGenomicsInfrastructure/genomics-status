@@ -470,9 +470,6 @@ td.progress {
     margin-left:-650px;
     left: 50%;
 }
-/* workset project name colors */
-a.open_ws_link	{ color: #5d963c !important; }
-a.closed_ws_link	{ color: #7a7a7a !important; }
 /* Email list */
 .email_list {
     display: flex;
