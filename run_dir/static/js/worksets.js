@@ -56,8 +56,17 @@ function init_listjs() {
             that
             .search( this.value )
             .draw();
-        } );
-    } );
+        });
+    });
+    // Copy workset table to clipboard
+    var clipboard = new Clipboard('#ws_copy_table');
+    clipboard.on('success', function(e) {
+      e.clearSelection();
+      $('#ws_copy_table').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+      setTimeout(function(){
+      $('#ws_copy_table').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
+      }, 2000);
+    });
 }
 
 function load_workset_notes(wait) {

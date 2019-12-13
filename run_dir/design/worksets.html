@@ -23,7 +23,10 @@ Description: Shows a table with all worksets.
         {% else %}
           <h2 id="{{ worksets }}" class="worksets_page_heading"> <small>Worksets from the last 6 months. </small><a class="btn btn-default" href="/worksets?all=True">Show all</a></h2>
         {% end %}
-        <div id="workset-list">
+        <div class="form-group">	
+	      <button type="button" id="ws_copy_table" class="btn btn-sm btn-default" data-clipboard-target="#workset_table"><span class="glyphicon glyphicon-copy"></span> Copy table</button>
+        <div id="workset-list">	
+        &nbsp;
           <table class="table table-striped table-bordered sortable" id="workset_table">
             <thead id="workset_table_head">
                 <tr class="sticky">
@@ -131,4 +134,5 @@ Description: Shows a table with all worksets.
 <!-- #page_content -->
 <script src="/static/js/jquery.dataTables.min.js? }}"></script>
 <script src="/static/js/worksets.js?v={{ gs_globals['git_commit'] }}" id="worksets-js" data-worksets="{{worksets}}"></script>
+<script src="/static/js/clipboard.min.js"></script>
 {% end %}
