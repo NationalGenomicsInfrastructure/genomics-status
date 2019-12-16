@@ -166,7 +166,7 @@ table.narrow-headers th { width: 20%; }
 /* Custom Labels */
 .label-undefined  {color: #ccc; }
 .label-date  {color: #333; font-size:80%; }
-.label-imp  {background-color: #7d4411;}
+.label-imp  {background-color: #a62100;}
 .label-devi  {background-color: #a13a7e;}
 /* Date sliders */
 .slider-spacing { margin:40px 0; }
