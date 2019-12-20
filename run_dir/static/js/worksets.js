@@ -13,6 +13,18 @@ $(document).ready(function() {
 });
 
 function load_table() {
+      var tbl_row = $('<tr>');
+      var latest_ws_note = tbl_row.find('td.latest_workset_note');
+      if (latest_ws_note.text() !== '') {
+        var note = JSON.parse(latest_workset_note_key.text());
+        var ndate = undefined;
+        for (key in note) { ndate = key; break; }
+        notedate = new Date(ndate);
+        latest_ws_note.html('<div class="panel panel-default running-note-panel">' +
+        '<div class="panel-heading">'+
+          note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
+        '</div><div class="panel-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
+        }
     init_listjs();
 }
 
@@ -44,8 +56,17 @@ function init_listjs() {
             that
             .search( this.value )
             .draw();
-        } );
-    } );
+        });
+    });
+    // Copy workset table to clipboard
+    var clipboard = new Clipboard('#ws_copy_table');
+    clipboard.on('success', function(e) {
+      e.clearSelection();
+      $('#ws_copy_table').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+      setTimeout(function(){
+      $('#ws_copy_table').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
+      }, 2000);
+    });
 }
 
 function load_workset_notes(wait) {

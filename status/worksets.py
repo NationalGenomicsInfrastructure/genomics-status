@@ -20,7 +20,7 @@ class WorksetsDataHandler(SafeHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
         ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
-        result={}
+        result={} 
         for row in ws_view:
             result[row.key]=row.value
             result[row.key].pop("_id", None)
@@ -35,22 +35,28 @@ class WorksetsHandler(SafeHandler):
         result={}
         half_a_year_ago = datetime.datetime.now() - relativedelta(months=6)
         ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
-
+        def _get_latest_running_note(val):
+            notes = json.loads(val['Workset Notes'])
+            latest_note = { max(notes.keys()): notes[max(notes.keys())] }
+            return latest_note
         for row in ws_view:
             if all:
                 result[row.key]=row.value
                 result[row.key].pop("_id", None)
                 result[row.key].pop("_rev", None)
+                if 'Workset Notes' in row.value:
+                    result[row.key]['Workset Notes'] = _get_latest_running_note(row.value)
             else:
                 try:
                     if parse(row.value['date_run']) >= half_a_year_ago:
                         result[row.key]=row.value
                         result[row.key].pop("_id", None)
                         result[row.key].pop("_rev", None)
+                        if 'Workset Notes' in row.value:
+                            result[row.key]['Workset Notes'] = _get_latest_running_note(row.value)
                 # Exception that date_run is not available
                 except TypeError:
                     continue
-
         return result
 
     def get(self):
@@ -59,11 +65,12 @@ class WorksetsHandler(SafeHandler):
         t = self.application.loader.load("worksets.html")
         ws_data=self.worksets_data(all=all)
         headers= [['Date Run', 'date_run'],['Workset Name', 'workset_name'], \
-                 ['Projects (samples)','projects'], ['Sequencing Setup', 'sequencing_setup'], \
-                 ['Date finished', 'finish date'],['Operator', 'technician'],\
-                 ['Application', 'application'], ['Library','library_method'], \
-                 ['Samples Passed', 'passed'],['Samples Failed', 'failed'], \
-                 ['Pending Samples', 'unknown'], ['Total samples', 'total']];
+                 ['Projects (samples)','projects'],['Sequencing Setup', 'sequencing_setup'], \
+                 ['Date finished', 'finish date'],['Operator', 'technician'], \
+                 ['Application', 'application'],['Library','library_method'], \
+                 ['Samples Passed', 'passed'],['Samples Failed', 'failed'] , \
+                 ['Pending Samples', 'unknown'],['Total samples', 'total'], \
+                 ['Latest workset note', 'Workset Notes']];
         self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user(), ws_data=ws_data, headers=headers, all=all))
 
 class WorksetDataHandler(SafeHandler):
@@ -91,7 +98,7 @@ class WorksetDataHandler(SafeHandler):
             result[row.key].pop("_id", None)
             result[row.key].pop("_rev", None)
         return result
-
+    
 class WorksetHandler(SafeHandler):
     """Loaded through /workset/[workset]"""
     def get(self, workset):
