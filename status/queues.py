@@ -56,7 +56,7 @@ class qPCRPoolsHandler(SafeHandler):
 
 class SequencingQueuesDataHandler(SafeHandler):
     """ Serves a page with sequencing queues from LIMS listed
-    URL: /api/v1/sequencing_pools
+    URL: /api/v1/sequencing_queues
     """
     def get(self):
         #sequencing queues are currently taken as the following
@@ -79,7 +79,22 @@ class SequencingQueuesDataHandler(SafeHandler):
                     attr_name = Artifact(lims, uri = artifact.attrib['uri']).name
                     value = artifact.find('location').find('value').text
                     proj_and_samples = {}
-                    for sample in Artifact(lims, uri = artifact.attrib['uri']).samples:
+                    conc_qpcr = ''
+                    art = Artifact(lims, uri = artifact.attrib['uri'])
+                    if method is 'MiSeq':
+                        conc_qpcr = art.udf['Concentration']
+                    elif method is 'NovaSeq':
+                        new_art = art.parent_process.input_output_maps[0][0]
+                        i = 0
+                        while i < 4:
+                            try:
+                                conc_qpcr = new_art['post-process-uri'].udf["Concentration"]
+                                break
+                            except KeyError:
+                                new_art = new_art['parent-process'].input_output_maps[0][0]
+                                i = i + 1
+
+                    for sample in art.samples:
                         project = sample.project.id
                         if project in pools[method]:
                             if container in pools[method][project]['plates']:
@@ -88,7 +103,8 @@ class SequencingQueuesDataHandler(SafeHandler):
                                 pools[method][project]['plates'][container] = {
                                                                                 'samples': [sample.name],
                                                                                 'well': value,
-                                                                                'queue_time': queue_time
+                                                                                'queue_time': queue_time,
+                                                                                'conc_pool_qpcr' : conc_qpcr
                                                                                 }
                         else:
                              setup = sample.project.udf['Sequencing setup']
@@ -98,7 +114,7 @@ class SequencingQueuesDataHandler(SafeHandler):
                              final_loading_conc = 'TBD'
                              if method is 'NovaSeq':
                                  try:
-                                     final_loading_conc = list(Container(lims, artifact.find('location').find('container').attrib['uri']).placements.values())[0].udf['Final Loading Concentration (pM)']
+                                     final_loading_conc = Artifact(lims, uri=artifact.attrib['uri']).udf['Final Loading Concentration (pM)']
                                  except KeyError:
                                      pass
                              pools[method][project] = {
@@ -107,9 +123,12 @@ class SequencingQueuesDataHandler(SafeHandler):
                                                         'runmode': runmode,
                                                         'final_loading_conc': final_loading_conc,
                                                         'librarytype': librarytype,
-                                                        'plates': { container: {'samples': [sample.name],
-                                                                    'well': value,
-                                                                    'queue_time': queue_time}
+                                                        'plates': { container: {
+                                                                                'samples': [sample.name],
+                                                                                'well': value,
+                                                                                'queue_time': queue_time,
+                                                                                'conc_pool_qpcr' : conc_qpcr
+                                                                                }
                                                                     }
                                                         }
         self.set_header("Content-type", "application/json")

@@ -11,8 +11,8 @@ $(document).ready(function() {
 // Initialize sorting and searching javascript plugin
 
 function load_table() {
-  $("#queues_table_body").html('<tr><td colspan="9" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
-  return $.getJSON('/api/v1/sequencing_pools', function(data) {
+  $("#queues_table_body").html('<tr><td colspan="10" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
+  return $.getJSON('/api/v1/sequencing_queues', function(data) {
     $("#queues_table_body").empty();
     $.each(data, function(flow, projects) {
       if(!($.isEmptyObject(projects))){
@@ -22,9 +22,11 @@ function load_table() {
           tbl_row.append($('<td>').html('<a href="/project/'+project+'">'+prinfo['name']+' ('+project+') </a>'));
           var plates = [];
           var queuetimes = [];
+          var qpcrconc = [];
           $.each(prinfo['plates'], function(plate, values){
             plates.push(plate+'<br>');
-            queuetimes.push(Math.floor(Math.abs(new Date() - new Date(values['queue_time']))/(1000*86400)) + '<br>')
+            queuetimes.push(Math.floor(Math.abs(new Date() - new Date(values['queue_time']))/(1000*86400)) + '<br>');
+            qpcrconc.push(values['conc_pool_qpcr']+'<br>');
           });
           tbl_row.append($('<td>').html(plates));
           tbl_row.append($('<td>').html(queuetimes));
@@ -32,6 +34,7 @@ function load_table() {
           tbl_row.append($('<td>').html(prinfo['lanes']));
           tbl_row.append($('<td>').html(prinfo['setup']));
           tbl_row.append($('<td>').html(prinfo['final_loading_conc']));
+          tbl_row.append($('<td>').html(qpcrconc));
           tbl_row.append($('<td>').html(prinfo['librarytype']));
           $("#queues_table_body").append(tbl_row);
         })
@@ -62,7 +65,7 @@ function init_listjs() {
         api.column(0, {page:'current'} ).data().each( function ( group, i ) {
           if ( last !== group ) {
             $(rows).eq( i ).before(
-                '<tr class="group"><td colspan="9">'+group+'</td></tr>'
+                '<tr class="group"><td colspan="10">'+group+'</td></tr>'
             );
             last = group;
           }

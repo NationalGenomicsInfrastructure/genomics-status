@@ -170,7 +170,7 @@ class Application(tornado.web.Application):
                 SampleQCInsertSizesDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
-            ("/api/v1/sequencing_pools", SequencingQueuesDataHandler),
+            ("/api/v1/sequencing_queues", SequencingQueuesDataHandler),
             ("/api/v1/stats",StatsAggregationHandler),
             ("/api/v1/stats/application_open_projects",ApplicationOpenProjectsHandler),
             ("/api/v1/stats/application_open_samples",ApplicationOpenSamplesHandler),
