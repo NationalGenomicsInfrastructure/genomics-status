@@ -169,11 +169,10 @@ Description: Shows a table with all flow cells.
                         {% set latest_running_note_key = max(k for k, v in running_notes.items() if v != '') %}
                         <div class="panel panel-default running-note-panel">
                           <div class='panel-heading'>
-                          <a href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"].encode("ascii","ignore")}}</a>  -  {{form_date(latest_running_note_key)}}
+                          <a href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"].encode().decode('unicode-escape')}}</a>  -  {{form_date(latest_running_note_key)}}
                           </div>
                           <div class='panel-body' style='white-space: pre-line'>
                             {{running_notes[latest_running_note_key]['note']}}
-                          </pre>
                           </div>
                         </div>
                     {% end %}
