@@ -94,3 +94,7 @@ function init_listjs() {
         } );
     } );
 }
+
+$('body').on('click', '.group', function(event) {
+  $($("#queues_table").DataTable().column(0).header()).trigger("click")
+});
