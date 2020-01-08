@@ -24,9 +24,13 @@ function load_table() {
           var queuetimes = [];
           var qpcrconc = [];
           $.each(prinfo['plates'], function(plate, values){
-            plates.push(plate+'<br>');
-            queuetimes.push(Math.floor(Math.abs(new Date() - new Date(values['queue_time']))/(1000*86400)) + '<br>');
-            qpcrconc.push(values['conc_pool_qpcr']+'<br>');
+            var plate_value = '<div class="mult-pools-margin">'+plate+'</div>';
+            if (values['is_rerun']){
+              plate_value = '<div class="mult-pools-margin">'+plate+' <span class="label label-warning sentenceCase">Rerun</span></div>';
+            }
+            plates.push(plate_value);
+            queuetimes.push('<div class="mult-pools-margin">'+Math.floor(Math.abs(new Date() - new Date(values['queue_time']))/(1000*86400)) + '</div>');
+            qpcrconc.push('<div class="mult-pools-margin">'+values['conc_pool_qpcr']+'</div>');
           });
           tbl_row.append($('<td>').html(plates));
           tbl_row.append($('<td>').html(queuetimes));
