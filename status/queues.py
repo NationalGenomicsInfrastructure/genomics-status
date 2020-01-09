@@ -87,10 +87,10 @@ class SequencingQueuesDataHandler(SafeHandler):
                         is_rerun = art.udf["Rerun"]
                     elif method is 'NovaSeq':
                         new_art = art.parent_process.input_output_maps[0][0]
-                        #This loop looks at the values of the post-process of the first parent process in the input output map.
-                        #If the values don't exist there, it goes one step up to the parent process of the current parent process
-                        # and repeats the loop. The loop iterates 4 times the values were found within the first 4 preceding
-                        # parent processes(through trial and error). 
+                        # The loop iterates 4 times as the values were found within the first 4 preceding
+                        # parent processes(through trial and error). If the values are not found within 4 iterations, they can be looked up
+                        # manually in LIMS. The loop is structured so as its not very clear in the genologics API which of the parent processes
+                        # will contain the values in post process and 4 seemed to get everything for the data at hand.
                         i = 0
                         while i < 4:
                             try:
