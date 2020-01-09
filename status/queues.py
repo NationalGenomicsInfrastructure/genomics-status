@@ -80,12 +80,17 @@ class SequencingQueuesDataHandler(SafeHandler):
                     value = artifact.find('location').find('value').text
                     proj_and_samples = {}
                     conc_qpcr = ''
+                    is_rerun = 'false'
                     art = Artifact(lims, uri = artifact.attrib['uri'])
                     if method is 'MiSeq':
                         conc_qpcr = art.udf['Concentration']
                         is_rerun = art.udf["Rerun"]
                     elif method is 'NovaSeq':
                         new_art = art.parent_process.input_output_maps[0][0]
+                        #This loop looks at the values of the post-process of the first parent process in the input output map.
+                        #If the values don't exist there, it goes one step up to the parent process of the current parent process
+                        # and repeats the loop. The loop iterates 4 times the values were found within the first 4 preceding
+                        # parent processes(through trial and error). 
                         i = 0
                         while i < 4:
                             try:
