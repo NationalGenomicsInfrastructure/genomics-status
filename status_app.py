@@ -41,7 +41,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
     ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler
 from status.nas_quotas import NASQuotasHandler
-from status.qpcr_pools import qPCRPoolsDataHandler, qPCRPoolsHandler
+from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler, FlowcellCountPlotHandler, FlowcellCountApiHandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
     SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, SampleQCSummaryHandler, \
@@ -170,6 +170,7 @@ class Application(tornado.web.Application):
                 SampleQCInsertSizesDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
+            ("/api/v1/sequencing_queues", SequencingQueuesDataHandler),
             ("/api/v1/stats",StatsAggregationHandler),
             ("/api/v1/stats/application_open_projects",ApplicationOpenProjectsHandler),
             ("/api/v1/stats/application_open_samples",ApplicationOpenSamplesHandler),
@@ -215,6 +216,7 @@ class Application(tornado.web.Application):
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
+            ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/worksets", WorksetsHandler),
             ("/workset/([^/]*)$", WorksetHandler),

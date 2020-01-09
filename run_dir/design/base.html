@@ -66,8 +66,7 @@
                       <li><a href="/instrument_logs">View Instrument Logs</a></li>
                       {% if user and user.role == 'admin'%}
                       <li><a href="/assign_roles">User Roles</a></li>
-                      {% end %}
-                      <li><a href="/pools_qpcr">qPCR Pooling</a></li>
+                      {% end %}</li>
                       <li role="separator" class="divider"></li>
                     <li><a href="http://lims-dashboard.scilifelab.se">Script Dashboard</a></li>
                   </ul>
@@ -75,6 +74,13 @@
                 <li><a href="/projects">Projects</a></li>
                 <li><a href="/flowcells">Flowcells</a></li>
                 <li><a href="/worksets">Worksets</a></li>
+                <li class="dropdown" id="queues">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#queues">Queues <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                      <li><a href="/pools_qpcr">qPCR Pooling</a></li>
+                      <li><a href="/sequencing_queues">Sequencing queues</a></li>
+                  </ul>
+                </li>
                 <li><a href="/deliveries">Bioinfo</a></li>
                 <li><a href="/suggestion_box">Suggestion Box</a></li>
                 {% if user %}

@@ -1166,6 +1166,8 @@ input.quantity_updateable {
    pointer-events: none;
 }
 
+
+/* Running Notes User dropdown */
 .-sew-list-container {
   background: white;
   border: 1px solid #DDD;
@@ -1210,4 +1212,9 @@ tr.group, tr.group:hover, .dtrg-group {
   color: #0088cc;
   cursor: pointer;
   margin-right: 6px;
+}
+
+/* Sequencing queues PAGE */
+.mult-pools-margin{
+  margin-bottom: 2px;
 }
