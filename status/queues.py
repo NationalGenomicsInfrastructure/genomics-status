@@ -83,7 +83,14 @@ class SequencingQueuesDataHandler(SafeHandler):
                     is_rerun = 'false'
                     art = Artifact(lims, uri = artifact.attrib['uri'])
                     if method is 'MiSeq':
-                        conc_qpcr = art.udf['Concentration']
+                        #FinishedLibrary
+                        if 'Concentration' in dict(art.udf.items()).keys():
+                            conc_qpcr = art.udf['Concentration']
+                        #MiSeq
+                        elif 'Pool Conc. (nM)' in dict(art.udf.items()).keys():
+                            conc_qpcr = str(art.udf['Pool Conc. (nM)'])
+                        else:
+                            pass
                         is_rerun = art.udf["Rerun"]
                     elif method is 'NovaSeq':
                         new_art = art.parent_process.input_output_maps[0][0]
