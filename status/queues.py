@@ -80,13 +80,13 @@ class SequencingQueuesDataHandler(SafeHandler):
                     value = artifact.find('location').find('value').text
                     proj_and_samples = {}
                     conc_qpcr = ''
-                    is_rerun = 'false'
+                    is_rerun = False
                     art = Artifact(lims, uri = artifact.attrib['uri'])
                     if method is 'MiSeq':
                         #FinishedLibrary
                         if 'Concentration' in dict(art.udf.items()).keys():
                             conc_qpcr = art.udf['Concentration']
-                        #MiSeq
+                        #InhouseLibrary
                         elif 'Pool Conc. (nM)' in dict(art.udf.items()).keys():
                             conc_qpcr = str(art.udf['Pool Conc. (nM)'])
                         else:
@@ -100,11 +100,12 @@ class SequencingQueuesDataHandler(SafeHandler):
                         # will contain the values in post process and 4 seemed to get everything for the data at hand.
                         i = 0
                         while i < 4:
-                            try:
+                            if 'Concentration' in dict(new_art['post-process-uri'].udf.items()).keys():
                                 conc_qpcr = new_art['post-process-uri'].udf["Concentration"]
-                                is_rerun = new_art['post-process-uri'].udf["Rerun"]
+                                if 'Rerun' in dict(new_art['post-process-uri'].udf.items()).keys():
+                                    is_rerun = new_art['post-process-uri'].udf["Rerun"]
                                 break
-                            except KeyError:
+                            else:
                                 new_art = new_art['parent-process'].input_output_maps[0][0]
                                 i = i + 1
 
