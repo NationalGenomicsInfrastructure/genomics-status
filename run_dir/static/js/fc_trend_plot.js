@@ -75,7 +75,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
     };
     
     //Styling the default view
-    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){  
+    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){
         toplot.yAxis={
             title: {
                 enabled: true,  
@@ -132,6 +132,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
     $("#main_plot").highcharts(toplot);
     window.current_plot_obj=toplot;
 }
+
 
 function build_series(data, key, name, display_by, filter_inst_type, filter_inst, color_type){
 
@@ -300,15 +301,18 @@ function color_by_chemistry(chem){
 function color_by_s4(chem){
   var id = Math.round(window.current_chemistries_list.indexOf(chem));
    return current_color_schemes[4](id).hex();  
-  }   
+  }
+
 function color_by_s2(chem){
   var id = Math.round(window.current_chemistries_list.indexOf(chem));
    return current_color_schemes[5](id).hex();
   }
+
 function color_by_s1(chem){
   var id = Math.round(window.current_chemistries_list.indexOf(chem));
    return current_color_schemes[6](id).hex();  
-}       
+}
+
 function color_by_sp(chem){
   var id = Math.round(window.current_chemistries_list.indexOf(chem));
    return current_color_schemes[7](id).hex();  
@@ -388,6 +392,7 @@ function get_parameters(){
      $(".filter_insts.disabled").each(function(){
          inst_filter.push($(this).attr('id').split('_')[2]);
      });
+
      //color type
      var color_by=$("#color_select option:selected").val();
       
