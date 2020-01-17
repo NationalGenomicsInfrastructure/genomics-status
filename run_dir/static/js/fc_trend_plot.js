@@ -300,7 +300,7 @@ function color_by_chemistry(chem){
 //Workaround to get the colors of the chemistry version view to work  
 function color_by_s4(chem){
   var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[4](id).hex();  
+   return current_color_schemes[4](id).hex();
   }
 
 function color_by_s2(chem){
@@ -310,7 +310,7 @@ function color_by_s2(chem){
 
 function color_by_s1(chem){
   var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[6](id).hex();  
+   return current_color_schemes[6](id).hex();
 }
 
 function color_by_sp(chem){
