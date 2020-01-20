@@ -75,7 +75,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
     };
     
     //Styling the default view
-    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){   
+    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){
         toplot.yAxis={
             title: {
                 enabled: true,  
@@ -159,20 +159,29 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
         if (color_type=='chemver'){
             if (data[d].cver.includes('S4')){
                 series_name = "S4";
-                col_color = color_by_s4(series_name)
                 }
             if (data[d].cver.includes('S2')){
                 series_name = "S2";
-                col_color = color_by_s2(series_name)
                 }
             if (data[d].cver.includes('S1')){
                 series_name = "S1";
-                col_color = color_by_s1(series_name)
                 }
             if (data[d].cver.includes('SP')){
-                series_name = "SP";
-                col_color = color_by_sp(series_name) 
+                series_name = "SP"; 
                 }   
+            if (data[d].cver.includes('Version2')){
+                series_name = "MiSeq v2";
+                }
+            if (data[d].cver.includes('Version3')){
+                series_name = "MiSeq v3";
+                }
+            if (data[d].cver.includes('X')){
+                series_name = "HiSeq X";
+                }
+             if (data[d].cver.includes('v2') || data[d].cver.includes('v4')){
+                 series_name = "HiSeq";
+                 }
+                 col_color = color_by_chemistry(series_name); 
         }else if (color_type == 'month'){
             series_name = data[d].id.substr(0,4);
             col_color=color_by_month(data[d].id);
@@ -277,32 +286,13 @@ function color_by_month(id){
     return current_color_schemes[3](window.current_months_list.indexOf(id.substr(0,4))).hex()
 }
 
-function color_by_chemistry(chem){
-    var id = Math.round(window.current_chemistries_list.indexOf(chem));
-	   return current_color_schemes[3](id).hex();
-	}
-//Workaround to get the NovaSeq colors to work  
-function color_by_s4(chem){
-  var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[4](id).hex();  
-  }
-    
-function color_by_s2(chem){
-  var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[5](id).hex();
-  }
-
-function color_by_s1(chem){
-  var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[6](id).hex();  
+function color_by_chemistry(series_name){
+    col = {"S4":4, "S2":5, "S1":6, "SP":7, "MiSeq v2":8, "MiSeq v3":9, "HiSeq X":10, "HiSeq":11};
+    //Not sure what this does, needs more investigation when time permits
+    var id = Math.round(window.current_chemistries_list.indexOf(series_name));
+	  return current_color_schemes[col[series_name]](id).hex();
 }
-        
-function color_by_sp(chem){
-  var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[7](id).hex();  
-}
-
-        
+ 
 function get_parameters(){
      //first, the search string
      var search_string;
@@ -360,7 +350,7 @@ function get_parameters(){
      $(".filter_insts.disabled").each(function(){
          inst_filter.push($(this).attr('id').split('_')[2]);
      });
-    
+
      //color type
      var color_by=$("#color_select option:selected").val();
       
@@ -449,7 +439,11 @@ function update_color_schemes(){
     var s2_cs=chroma.scale(['#0080ff', '#11ad11']).domain([0, window.current_chemistries_list.length-1]);
     var s1_cs=chroma.scale(['#11ad11', '#00d5ff']).domain([0, window.current_chemistries_list.length-1]);
     var sp_cs=chroma.scale(['#ffb700', '#ff00ae']).domain([0, window.current_chemistries_list.length-1]);
-    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs, s4_cs, s2_cs, s1_cs, sp_cs];
+    var v2_cs=chroma.scale(['#8400ff', '#ee00ff']).domain([0, window.current_chemistries_list.length-1]);
+    var v3_cs=chroma.scale(['#26807b', '#7fbde3']).domain([0, window.current_chemistries_list.length-1]);
+    var x_cs=chroma.scale(['#ff0000', '#ffd500']).domain([0, window.current_chemistries_list.length-1]);
+    var hi_cs=chroma.scale(['#917646', '#825f27']).domain([0, window.current_chemistries_list.length-1]);
+    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs, s4_cs, s2_cs, s1_cs, sp_cs, v2_cs, v3_cs, x_cs, hi_cs];
 }
 function update_chemistries_list(){
     window.current_chemistries_list=[];
