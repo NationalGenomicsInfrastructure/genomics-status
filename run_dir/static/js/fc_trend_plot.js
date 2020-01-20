@@ -159,36 +159,29 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
         if (color_type=='chemver'){
             if (data[d].cver.includes('S4')){
                 series_name = "S4";
-                col_color = color_by_s4(series_name)
                 }
             if (data[d].cver.includes('S2')){
                 series_name = "S2";
-                col_color = color_by_s2(series_name)
                 }
             if (data[d].cver.includes('S1')){
                 series_name = "S1";
-                col_color = color_by_s1(series_name)
                 }
             if (data[d].cver.includes('SP')){
-                series_name = "SP";
-                col_color = color_by_sp(series_name) 
+                series_name = "SP"; 
                 }   
             if (data[d].cver.includes('Version2')){
                 series_name = "MiSeq v2";
-                col_color = color_by_v2(series_name) 
                 }
             if (data[d].cver.includes('Version3')){
                 series_name = "MiSeq v3";
-                col_color = color_by_v3(series_name) 
                 }
             if (data[d].cver.includes('X')){
                 series_name = "HiSeq X";
-                col_color = color_by_x(series_name) 
                 }
              if (data[d].cver.includes('v2') || data[d].cver.includes('v4')){
                  series_name = "HiSeq";
-                 col_color = color_by_hi(series_name) 
                  }
+                 col_color = color_by_chemistry(series_name); 
         }else if (color_type == 'month'){
             series_name = data[d].id.substr(0,4);
             col_color=color_by_month(data[d].id);
@@ -293,48 +286,12 @@ function color_by_month(id){
     return current_color_schemes[3](window.current_months_list.indexOf(id.substr(0,4))).hex()
 }
 
-function color_by_chemistry(chem){
-    var id = Math.round(window.current_chemistries_list.indexOf(chem));
-	   return current_color_schemes[3](id).hex();
+function color_by_chemistry(series_name){
+    col = {"S4":4, "S2":5, "S1":6, "SP":7, "MiSeq v2":8, "MiSeq v3":9, "HiSeq X":10, "HiSeq":11};
+    var id = Math.round(window.current_chemistries_list.indexOf(series_name));
+	   return current_color_schemes[col[series_name]](id).hex();
 	}
-//Workaround to get the colors of the chemistry version view to work  
-function color_by_s4(chem){
-  var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[4](id).hex();
-  }
-
-function color_by_s2(chem){
-  var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[5](id).hex();
-  }
-
-function color_by_s1(chem){
-  var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[6](id).hex();
-}
-
-function color_by_sp(chem){
-  var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[7](id).hex();  
-}
-function color_by_v2(chem){
-  var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[8](id).hex();  
-}
-function color_by_v3(chem){
-  var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[9](id).hex();  
-}
-function color_by_x(chem){
-  var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[10](id).hex();  
-}
-function color_by_hi(chem){
-  var id = Math.round(window.current_chemistries_list.indexOf(chem));
-   return current_color_schemes[11](id).hex();  
-}
-
-        
+ 
 function get_parameters(){
      //first, the search string
      var search_string;
