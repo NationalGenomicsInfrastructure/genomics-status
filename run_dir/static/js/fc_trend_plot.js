@@ -288,9 +288,10 @@ function color_by_month(id){
 
 function color_by_chemistry(series_name){
     col = {"S4":4, "S2":5, "S1":6, "SP":7, "MiSeq v2":8, "MiSeq v3":9, "HiSeq X":10, "HiSeq":11};
+    //Not sure what this does, needs more investigation when time permits
     var id = Math.round(window.current_chemistries_list.indexOf(series_name));
-	   return current_color_schemes[col[series_name]](id).hex();
-	}
+	  return current_color_schemes[col[series_name]](id).hex();
+}
  
 function get_parameters(){
      //first, the search string
