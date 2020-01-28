@@ -14,7 +14,7 @@ lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
 class qPCRPoolsDataHandler(SafeHandler):
     """ Serves a page with qPCR queues from LIMS listed
-    URL: /api/v1/pools_qpcr
+    URL: /api/v1/qpcr_pools
     """
     def get(self):
         #qPCR queues
@@ -33,13 +33,20 @@ class qPCRPoolsDataHandler(SafeHandler):
                 for artifact in tree.iter('artifact'):
                     queue_time = artifact.find('queue-time').text
                     container = Container(lims, uri = artifact.find('location').find('container').attrib['uri']).name
-                    attr_name = Artifact(lims, uri = artifact.attrib['uri']).name
+                    art = Artifact(lims, uri = artifact.attrib['uri'])
                     value = artifact.find('location').find('value').text
-
+                    run_type = ''
+                    if not 'lambda DNA' in art.name:
+                        run_type = art.samples[0].project.udf["Library construction method"]
                     if container in pools[method]:
-                        pools[method][container].append({'name': attr_name, 'well': value, 'queue_time': queue_time})
+                        pools[method][container]['samples'].append({'name': art.name, 'well': value, 'queue_time': queue_time})
+                        if run_type and run_type not in pools[method][container]['run_types']:
+                            pools[method][container]['run_types'].append(run_type)
                     else:
-                        pools[method][container] = [{'name': attr_name, 'well': value, 'queue_time': queue_time}]
+                        pools[method][container] = {
+                                                    'samples':[{'name': art.name, 'well': value, 'queue_time': queue_time}],
+                                                    'run_types': [run_type]
+                                                    }
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(pools))
