@@ -756,7 +756,7 @@ class ProjectTicketsDataHandler(SafeHandler):
         try:
             #Search for all tickets with the given project name
             total_tickets = OrderedDict()
-            for ticket in self.application.zendesk.search(query="fieldvalue:{}".format(p_name)):
+            for ticket in self.application.zendesk.search(query='fieldvalue:"{}"'.format(p_name)):
                 total_tickets[ticket.id] = ticket.to_dict()
                 for comment in self.application.zendesk.tickets.comments(ticket=ticket.id):
                     if 'comments' not in total_tickets[ticket.id]:
