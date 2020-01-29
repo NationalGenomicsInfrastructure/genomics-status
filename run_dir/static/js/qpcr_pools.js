@@ -42,8 +42,15 @@ function load_table() {
           }));
           tbl_row.append($('<td>').html(function(){
             var to_return = '';
-            $.each( pools['run_types'], function(i, run_type){
-              to_return = to_return + '<div class="mult-pools-margin">'+ run_type +'</div>'
+            $.each( pools['library_types'], function(i, library_type){
+              to_return = to_return + '<div class="mult-pools-margin">'+ library_type +'</div>'
+            });
+            return to_return;
+          }));
+          tbl_row.append($('<td>').html(function(){
+            var to_return = '';
+            $.each( pools['runmodes'], function(i, runmode){
+              to_return = to_return + '<div class="mult-pools-margin">'+ runmode +'</div>'
             });
             return to_return;
           }));
@@ -77,7 +84,7 @@ function init_listjs() {
         api.column(0, {page:'current'} ).data().each( function ( group, i ) {
           if ( last !== group ) {
             $(rows).eq( i ).before(
-                '<tr class="group"><td colspan="3">'+group+'</td></tr>'
+                '<tr class="group"><td colspan="'+$('#pools_table > thead > tr:first > th').length + 1+'">'+group+'</td></tr>'
             );
             last = group;
           }

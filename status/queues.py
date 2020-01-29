@@ -9,19 +9,18 @@ from genologics import lims
 from genologics.entities import Queue, Artifact, Container
 import xml.etree.ElementTree as ET
 
-lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
-
 
 class qPCRPoolsDataHandler(SafeHandler):
     """ Serves a page with qPCR queues from LIMS listed
     URL: /api/v1/qpcr_pools
     """
     def get(self):
+        limsl = lims.Lims(BASEURI, USERNAME, PASSWORD)
         #qPCR queues
         queues = {}
-        queues['MiSeq'] = Queue(lims, id='1002')
-        queues['NovaSeq'] = Queue(lims, id='1666')
-        queues['LibraryValidation'] = Queue(lims, id='41')
+        queues['MiSeq'] = Queue(limsl, id='1002')
+        queues['NovaSeq'] = Queue(limsl, id='1666')
+        queues['LibraryValidation'] = Queue(limsl, id='41')
 
         methods = queues.keys()
         pools = {}
@@ -32,20 +31,25 @@ class qPCRPoolsDataHandler(SafeHandler):
                 tree = ET.fromstring(queues[method].xml())
                 for artifact in tree.iter('artifact'):
                     queue_time = artifact.find('queue-time').text
-                    container = Container(lims, uri = artifact.find('location').find('container').attrib['uri']).name
-                    art = Artifact(lims, uri = artifact.attrib['uri'])
+                    container = Container(limsl, uri = artifact.find('location').find('container').attrib['uri']).name
+                    art = Artifact(limsl, uri = artifact.attrib['uri'])
                     value = artifact.find('location').find('value').text
-                    run_type = ''
+                    library_type = ''
+                    runmode = ''
                     if not 'lambda DNA' in art.name:
-                        run_type = art.samples[0].project.udf["Library construction method"]
+                        library_type = art.samples[0].project.udf["Library construction method"]
+                        runmode = art.samples[0].project.udf['Sequencing platform']
                     if container in pools[method]:
                         pools[method][container]['samples'].append({'name': art.name, 'well': value, 'queue_time': queue_time})
-                        if run_type and run_type not in pools[method][container]['run_types']:
-                            pools[method][container]['run_types'].append(run_type)
+                        if library_type and library_type not in pools[method][container]['library_types']:
+                            pools[method][container]['library_types'].append(library_type)
+                        if runmode and runmode not in pools[method][container]['runmodes']:
+                            pools[method][container]['runmodes'].append(runmode)
                     else:
                         pools[method][container] = {
                                                     'samples':[{'name': art.name, 'well': value, 'queue_time': queue_time}],
-                                                    'run_types': [run_type]
+                                                    'library_types': [library_type],
+                                                    'runmodes': [runmode]
                                                     }
 
         self.set_header("Content-type", "application/json")
@@ -66,12 +70,13 @@ class SequencingQueuesDataHandler(SafeHandler):
     URL: /api/v1/sequencing_queues
     """
     def get(self):
+        limsl = lims.Lims(BASEURI, USERNAME, PASSWORD)
         #sequencing queues are currently taken as the following
         #Miseq- Step 7: Denature, Dilute and load sample
         #Novaseq Step 11: Load to flow cell
         queues = {}
-        queues['MiSeq'] = Queue(lims, id='55')
-        queues['NovaSeq'] = Queue(lims, id='1662')
+        queues['MiSeq'] = Queue(limsl, id='55')
+        queues['NovaSeq'] = Queue(limsl, id='1662')
 
         methods = queues.keys()
         pools = {}
@@ -82,13 +87,13 @@ class SequencingQueuesDataHandler(SafeHandler):
                 tree = ET.fromstring(queues[method].xml())
                 for artifact in tree.iter('artifact'):
                     queue_time = artifact.find('queue-time').text
-                    container = Container(lims, uri = artifact.find('location').find('container').attrib['uri']).name
-                    attr_name = Artifact(lims, uri = artifact.attrib['uri']).name
+                    container = Container(limsl, uri = artifact.find('location').find('container').attrib['uri']).name
+                    attr_name = Artifact(limsl, uri = artifact.attrib['uri']).name
                     value = artifact.find('location').find('value').text
                     proj_and_samples = {}
                     conc_qpcr = ''
                     is_rerun = False
-                    art = Artifact(lims, uri = artifact.attrib['uri'])
+                    art = Artifact(limsl, uri = artifact.attrib['uri'])
                     if method is 'MiSeq':
                         #FinishedLibrary
                         if 'Concentration' in dict(art.udf.items()).keys():
@@ -137,7 +142,7 @@ class SequencingQueuesDataHandler(SafeHandler):
                              final_loading_conc = 'TBD'
                              if method is 'NovaSeq':
                                  try:
-                                     final_loading_conc = Artifact(lims, uri=artifact.attrib['uri']).udf['Final Loading Concentration (pM)']
+                                     final_loading_conc = Artifact(limsl, uri=artifact.attrib['uri']).udf['Final Loading Concentration (pM)']
                                  except KeyError:
                                      pass
                              pools[method][project] = {
