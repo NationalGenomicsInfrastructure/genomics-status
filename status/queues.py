@@ -29,6 +29,17 @@ class qPCRPoolsDataHandler(SafeHandler):
             pools[method] ={}
             if queues[method].artifacts:
                 tree = ET.fromstring(queues[method].xml())
+                if tree.find('next-page') is not None:
+                    flag =True
+                    next_page_uri = tree.find('next-page').attrib['uri']
+                    while flag:
+                        next_page = ET.fromstring(Queue(limsl, uri = next_page_uri).xml())
+                        for elem in next_page.findall('artifacts'):
+                            tree.insert(0, elem)
+                        if next_page.find('next-page') is not None:
+                            next_page_uri = next_page.find('next-page').attrib['uri']
+                        else:
+                            flag = False
                 for artifact in tree.iter('artifact'):
                     queue_time = artifact.find('queue-time').text
                     container = Container(limsl, uri = artifact.find('location').find('container').attrib['uri']).name
@@ -38,7 +49,10 @@ class qPCRPoolsDataHandler(SafeHandler):
                     runmode = ''
                     if not 'lambda DNA' in art.name:
                         library_type = art.samples[0].project.udf["Library construction method"]
-                        runmode = art.samples[0].project.udf['Sequencing platform']
+                        try:
+                            runmode = art.samples[0].project.udf['Sequencing platform']
+                        except KeyError:
+                            runmode = 'NA'
                     if container in pools[method]:
                         pools[method][container]['samples'].append({'name': art.name, 'well': value, 'queue_time': queue_time})
                         if library_type and library_type not in pools[method][container]['library_types']:
