@@ -119,21 +119,26 @@ class SequencingQueuesDataHandler(SafeHandler):
                             pass
                         is_rerun = art.udf["Rerun"]
                     elif method is 'NovaSeq':
-                        new_art = art.parent_process.input_output_maps[0][0]
-                        # The loop iterates 4 times as the values were found within the first 4 preceding
-                        # parent processes(through trial and error). If the values are not found within 4 iterations, they can be looked up
-                        # manually in LIMS. The loop is structured so as its not very clear in the genologics API which of the parent processes
-                        # will contain the values in post process and 4 seemed to get everything for the data at hand.
-                        i = 0
-                        while i < 4:
-                            if 'Concentration' in dict(new_art['post-process-uri'].udf.items()).keys():
-                                conc_qpcr = new_art['post-process-uri'].udf["Concentration"]
-                                if 'Rerun' in dict(new_art['post-process-uri'].udf.items()).keys():
-                                    is_rerun = new_art['post-process-uri'].udf["Rerun"]
-                                break
-                            else:
-                                new_art = new_art['parent-process'].input_output_maps[0][0]
-                                i = i + 1
+                        if 'Concentration' in dict(art.udf.items()).keys():
+                            conc_qpcr = art.udf["Concentration"]
+                            if 'Rerun' in dict(art.udf.items()).keys():
+                                is_rerun = art.udf["Rerun"]
+                        else:
+                            new_art = art.parent_process.input_output_maps[0][0]
+                            # The loop iterates 4 times as the values were found within the first 4 preceding
+                            # parent processes(through trial and error). If the values are not found within 4 iterations, they can be looked up
+                            # manually in LIMS. The loop is structured so as its not very clear in the genologics API which of the parent processes
+                            # will contain the values in post process and 4 seemed to get everything for the data at hand.
+                            i = 0
+                            while i < 4:
+                                if 'Concentration' in dict(new_art['post-process-uri'].udf.items()).keys():
+                                    conc_qpcr = new_art['post-process-uri'].udf["Concentration"]
+                                    if 'Rerun' in dict(new_art['post-process-uri'].udf.items()).keys():
+                                        is_rerun = new_art['post-process-uri'].udf["Rerun"]
+                                    break
+                                else:
+                                    new_art = new_art['parent-process'].input_output_maps[0][0]
+                                    i = i + 1
 
                     for sample in art.samples:
                         project = sample.project.id
