@@ -23,10 +23,10 @@ Description: Shows a table with all worksets.
         {% else %}
           <h2 id="{{ worksets }}" class="worksets_page_heading"> <small>Worksets from the last 6 months. </small><a class="btn btn-default" href="/worksets?all=True">Show all</a></h2>
         {% end %}
-        <div class="form-group">	
+        <div class="form-group">
 	      <button type="button" id="ws_copy_table" class="btn btn-sm btn-default" data-clipboard-target="#workset_table"><span class="glyphicon glyphicon-copy"></span> Copy table</button>
         </div>
-        <div id="workset-list">	
+        <div id="workset-list">
         &nbsp;
           <table class="table table-striped table-bordered sortable" id="workset_table">
             <thead id="workset_table_head">
@@ -78,7 +78,7 @@ Description: Shows a table with all worksets.
                          {% raw '</samp><hr style="margin:0;"><samp>'.join(ws_data[onews].get(onekey[1])) %}
                          </samp></td>
                      {% elif onekey[1] in ['passed', 'failed', 'unknown', 'total'] %}
-                         <td>{{ ws_data[onews].get('samples', {}).get(onekey[1]) }}</td> 
+                         <td>{{ ws_data[onews].get('samples', {}).get(onekey[1]) }}</td>
                      {% elif onekey[1] == 'Workset Notes'%}
                          <td class="latest_workset_note" class="text-center" style="min-width:400px">
                          {% if ws_data[onews].get('Workset Notes') %}
@@ -107,7 +107,8 @@ Description: Shows a table with all worksets.
       <div class="tab-pane fade" id="tab_pending_samples_to_worksets">
         <h2 class="worksets_page_heading"> <small>All samples that are available to be added to a workset in LIMS.</small></h2>
         <div id="samples-to-workset-list">
-          <table class="table table-striped table-bordered sortable" id="samples_table">
+          <label class="btn btn-sm btn-default expand-all"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>Expand All</label>
+          <table class="table table-hover table-striped table-bordered sortable" id="samples_table">
             <thead id="samples_table_head">
                 <tr class="sticky">
                   <th></th>

@@ -29,7 +29,14 @@ function load_table() {
               plate_value = '<div class="mult-pools-margin">'+plate+' <span class="label label-warning sentenceCase">Rerun</span></div>';
             }
             plates.push(plate_value);
-            queuetimes.push('<div class="mult-pools-margin">'+Math.floor(Math.abs(new Date() - new Date(values['queue_time']))/(1000*86400)) + '</div>');
+            var lblinf = '';
+            var wait_time = Math.floor(Math.abs(new Date() - new Date(values['queue_time']))/(1000*86400));
+            switch(Math.floor(wait_time/7)){
+              case 0: lblinf = 'success'; break;
+              case 1: lblinf = 'warning'; break;
+              default: lblinf = 'danger';
+            }
+            queuetimes.push('<div class="mult-pools-margin"><span class="label label-'+lblinf+'">'+wait_time+'</span></div>');
             qpcrconc.push('<div class="mult-pools-margin">'+values['conc_pool_qpcr']+'</div>');
           });
           tbl_row.append($('<td>').html(plates));

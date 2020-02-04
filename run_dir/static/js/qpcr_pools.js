@@ -21,9 +21,9 @@ function load_table() {
           var avg_wait_calc = 0;
           var tbl_row = $('<tr>');
           tbl_row.append($('<td>').html(flow));
-          tbl_row.append($('<td>').html(function() {
-              var to_return = '<span class="glyphicon glyphicon-plus-sign expand-proj" aria-hidden="true"></span>';
-              to_return = to_return + container + ' ('+pools['samples'].length+')';
+          tbl_row.append($('<td class="expand-proj">').html(function() {
+              var to_return = '<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>';
+              to_return = to_return + container + ' <span class="badge">'+pools['samples'].length+'</span>';
               to_return = to_return + '<BR><span> \
               <table cellpadding="5" border="0" style="visibility:collapse;margin-bottom:0px;margin-top:5px;" align="right">';
               to_return = to_return + '<thead><tr><th style="width:45%">Sample</th><th style="width:20%">Well</th><th>Waiting (in days)</th></tr></thead>';
@@ -33,7 +33,7 @@ function load_table() {
                 '<tr>'+
                   '<td>'+sample['name']+'</td>'+
                   '<td>'+sample['well']+'</td>'+
-                  '<td>'+ wait +'</td>'+
+                  '<td>'+wait+'</td>'+
                 '</tr>';
                 avg_wait_calc = avg_wait_calc + wait;
                 });
@@ -54,7 +54,13 @@ function load_table() {
             });
             return to_return;
           }));
-          tbl_row.append($('<td>').html((avg_wait_calc/pools['samples'].length).toFixed(1)));
+          var lblinf='';
+          switch(Math.floor((avg_wait_calc/pools['samples'].length)/7)){
+            case 0: lblinf = 'success'; break;
+            case 1: lblinf = 'warning'; break;
+            default: lblinf = 'danger';
+          }
+          tbl_row.append($('<td>').html('<span class="label label-'+lblinf+'">'+(avg_wait_calc/pools['samples'].length).toFixed(1)+'</span>'));
           $("#pools_table_body").append(tbl_row);
         })
       }
@@ -110,13 +116,23 @@ function init_listjs() {
     } );
     $('.expand-proj').on('click', function () {
       if($(this).parent().find('table').css('visibility')=='collapse'){
-        $(this).toggleClass('glypicon-plus-sign glyphicon-minus-sign');
+        $(this).find('.glyphicon').toggleClass('glyphicon-plus-sign glyphicon-minus-sign');
         $(this).parent().find('table').css('visibility', 'visible');
       }
       else {
-        $(this).toggleClass('glyphicon-minus-sign glypicon-plus-sign');
+        $(this).find('.glyphicon').toggleClass('glyphicon-minus-sign glyphicon-plus-sign');
         $(this).parent().find('table').css('visibility', 'collapse');
       }
+    });
+    $('.expand-all').on('click', function () {
+      var reqText = {'Expand All': ['Collapse All', 'visible', 'glyphicon-plus-sign', 'glyphicon-minus-sign'],
+                      'Collapse All': ['Expand All', 'collapse', 'glyphicon-minus-sign', 'glyphicon-plus-sign']};
+      $('.expand-all').find('.glyphicon').removeClass(reqText[$('.expand-all').text()][2]);
+      $('#pools_table').find('tr').find('.glyphicon').removeClass(reqText[$('.expand-all').text()][2]);
+      $('.expand-all').find('.glyphicon').addClass(reqText[$('.expand-all').text()][3]);
+      $('#pools_table').find('tr').find('.glyphicon').addClass(reqText[$('.expand-all').text()][3]);
+      $('#pools_table').find('tr').find('table').css('visibility', reqText[$('.expand-all').text()][1]);
+      $('.expand-all').contents().filter(function(){ return this.nodeType == 3; }).first().replaceWith(reqText[$('.expand-all').text()][0]);
     });
 }
 
