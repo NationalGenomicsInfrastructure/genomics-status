@@ -28,13 +28,14 @@ function load_table() {
               <table cellpadding="5" border="0" style="visibility:collapse;margin-bottom:0px;margin-top:5px;" align="right">';
               to_return = to_return + '<thead><tr><th style="width:45%">Sample</th><th style="width:20%">Well</th><th>Waiting (in days)</th></tr></thead>';
               $.each(pools['samples'], function(pool, sample){
-                var wait = Math.floor(Math.abs(new Date() - new Date(sample['queue_time']))/(1000*86400));
+                var wait = getDaysAndDateLabel(sample['queue_time'], 'date')[0];
                 to_return = to_return +
                 '<tr>'+
                   '<td>'+sample['name']+'</td>'+
                   '<td>'+sample['well']+'</td>'+
                   '<td>'+wait+'</td>'+
                 '</tr>';
+                //use avg_wait_calc as a counter
                 avg_wait_calc = avg_wait_calc + wait;
                 });
                 to_return = to_return +'</table></span>';
@@ -54,13 +55,10 @@ function load_table() {
             });
             return to_return;
           }));
-          var lblinf='';
-          switch(Math.floor((avg_wait_calc/pools['samples'].length)/7)){
-            case 0: lblinf = 'success'; break;
-            case 1: lblinf = 'warning'; break;
-            default: lblinf = 'danger';
-          }
-          tbl_row.append($('<td>').html('<span class="label label-'+lblinf+'">'+(avg_wait_calc/pools['samples'].length).toFixed(1)+'</span>'));
+          //get average wait time for all samples in a pool.
+          avg_wait_calc = avg_wait_calc/pools['samples'].length;
+          var daysAndLabel = getDaysAndDateLabel(avg_wait_calc, 'label');
+          tbl_row.append($('<td>').html('<span class="label label-'+daysAndLabel[1]+'">'+(avg_wait_calc).toFixed(1)+'</span>'));
           $("#pools_table_body").append(tbl_row);
         })
       }
@@ -139,3 +137,27 @@ function init_listjs() {
 $('body').on('click', '.group', function(event) {
   $($("#samples_table").DataTable().column(0).header()).trigger("click")
 });
+
+function getDaysAndDateLabel(date, option){
+  var number_of_days = 0;
+  var label = '';
+  if( option=='date' || option=='both' ){
+    //calculate number of days from given date to current date
+    number_of_days = Math.floor(Math.abs(new Date() - new Date(date))/(1000*86400));
+  }
+  if (option=='label' || option=='both') {
+    if (option=='label'){
+      number_of_days = date;
+    }
+    if (number_of_days < 7){
+      label =  'success';
+    }
+    else if (number_of_days >= 7 && number_of_days < 14) {
+      label = 'warning';
+    }
+    else {
+      label = 'danger';
+    }
+  }
+   return [number_of_days, label];
+}

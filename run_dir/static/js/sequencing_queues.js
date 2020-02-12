@@ -29,14 +29,8 @@ function load_table() {
               plate_value = '<div class="mult-pools-margin">'+plate+' <span class="label label-warning sentenceCase">Rerun</span></div>';
             }
             plates.push(plate_value);
-            var lblinf = '';
-            var wait_time = Math.floor(Math.abs(new Date() - new Date(values['queue_time']))/(1000*86400));
-            switch(Math.floor(wait_time/7)){
-              case 0: lblinf = 'success'; break;
-              case 1: lblinf = 'warning'; break;
-              default: lblinf = 'danger';
-            }
-            queuetimes.push('<div class="mult-pools-margin"><span class="label label-'+lblinf+'">'+wait_time+'</span></div>');
+            var daysAndLabel = getDaysAndDateLabel(values['queue_time'], 'both');
+            queuetimes.push('<div class="mult-pools-margin"><span class="label label-'+daysAndLabel[1]+'">'+daysAndLabel[0]+'</span></div>');
             qpcrconc.push('<div class="mult-pools-margin">'+values['conc_pool_qpcr']+'</div>');
           });
           tbl_row.append($('<td>').html(plates));
@@ -105,3 +99,27 @@ function init_listjs() {
 $('body').on('click', '.group', function(event) {
   $($("#queues_table").DataTable().column(0).header()).trigger("click")
 });
+
+function getDaysAndDateLabel(date, option){
+  var number_of_days = 0;
+  var label = '';
+  if( option=='date' || option=='both' ){
+    //calculate number of days from given date to current date
+    number_of_days = Math.floor(Math.abs(new Date() - new Date(date))/(1000*86400));
+  }
+  if (option=='label' || option=='both') {
+    if (option=='label'){
+      number_of_days = date;
+    }
+    if (number_of_days < 7){
+      label =  'success';
+    }
+    else if (number_of_days >= 7 && number_of_days < 14) {
+      label = 'warning';
+    }
+    else {
+      label = 'danger';
+    }
+  }
+   return [number_of_days, label];
+}

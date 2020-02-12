@@ -104,7 +104,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
           $.each(value, function(project, projval){
             var tbl_row = $('<tr>');
             tbl_row.append($('<td>').html(key));
-            tbl_row.append($('<td class=" expand-proj">').html(function() {
+            tbl_row.append($('<td class="expand-proj">').html(function() {
               var to_return = '<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>';
               to_return = to_return + '<a href="/project/'+project+'">'+projval['pname']+' ('+project+') </a>';
               to_return = to_return + '<span style="float:right; padding-right:50px;"><table cellpadding="5" border="0" style="visibility:collapse;">';
@@ -120,14 +120,8 @@ $(".tabbable").on("click", '[role="tab"]', function() {
               }));
             tbl_row.append($('<td>').html(projval['samples'].length +' <span class="badge">'+ projval['total_num_samples']+'</span>'));
             sumGroups[key] = sumGroups[key] + projval['samples'].length;
-            var number_of_days = Math.floor(Math.abs(new Date() - new Date(projval['queued_date']))/(1000*86400));
-            var lblinf='';
-            switch(Math.floor(number_of_days/7)){
-              case 0: lblinf = 'success'; break;
-              case 1: lblinf = 'warning'; break;
-              default: lblinf = 'danger';
-            }
-            tbl_row.append($('<td>').html('<span class="label label-'+lblinf+'">'+number_of_days+'</span>'));
+            var daysAndLabel = getDaysAndDateLabel(projval['queued_date'], 'both');
+            tbl_row.append($('<td>').html('<span class="label label-'+daysAndLabel[1]+'">'+daysAndLabel[0]+'</span>'));
             $("#samples_table_body").append(tbl_row);
           });
         }
@@ -224,3 +218,27 @@ function init_listjs2() {
 $('body').on('click', '.group', function(event) {
   $($("#samples_table").DataTable().column(0).header()).trigger("click")
 });
+
+function getDaysAndDateLabel(date, option){
+  var number_of_days = 0;
+  var label = '';
+  if( option=='date' || option=='both' ){
+    //calculate number of days from given date to current date
+    number_of_days = Math.floor(Math.abs(new Date() - new Date(date))/(1000*86400));
+  }
+  if (option=='label' || option=='both') {
+    if (option=='label'){
+      number_of_days = date;
+    }
+    if (number_of_days < 7){
+      label =  'success';
+    }
+    else if (number_of_days >= 7 && number_of_days < 14) {
+      label = 'warning';
+    }
+    else {
+      label = 'danger';
+    }
+  }
+   return [number_of_days, label];
+}
