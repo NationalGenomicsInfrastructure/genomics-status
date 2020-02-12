@@ -1208,6 +1208,10 @@ tr.group, tr.group:hover, .dtrg-group {
     cursor: pointer;
 }
 
+.expand-proj {
+  cursor: pointer;
+}
+
 .expand-proj span.glyphicon{
   color: #0088cc;
   cursor: pointer;
