@@ -1208,7 +1208,11 @@ tr.group, tr.group:hover, .dtrg-group {
     cursor: pointer;
 }
 
-.expand-proj{
+.expand-proj {
+  cursor: pointer;
+}
+
+.expand-proj span.glyphicon{
   color: #0088cc;
   cursor: pointer;
   margin-right: 6px;
@@ -1217,4 +1221,10 @@ tr.group, tr.group:hover, .dtrg-group {
 /* Sequencing queues PAGE */
 .mult-pools-margin{
   margin-bottom: 2px;
+}
+
+.expand-all span.glyphicon{
+  color: #0088cc;
+  cursor: pointer;
+  margin-right: 4px;
 }
