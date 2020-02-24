@@ -691,7 +691,7 @@ class RunningNotesDataHandler(SafeHandler):
                 msg.attach(MIMEText(text, 'plain'))
                 msg.attach(MIMEText(html, 'html'))
 
-                s = smtplib.SMTP('localhost', 1025)
+                s = smtplib.SMTP('localhost')
                 s.sendmail('genomics-bioinfo@scilifelab.se', msg['To'], msg.as_string())
                 s.quit()
 
@@ -700,21 +700,23 @@ class RunningNotesDataHandler(SafeHandler):
                 client = slack.WebClient(token=application.slack_token)
 
                 blocks = [
-                                  {
-                                    "type": "section",
-		                            "text": {
-                                    "type": "mrkdwn",
-        		                    "text": ("_You have been tagged by *{}* in a running note for the project_ <https://genomics-status.scilifelab.se/project/{}|{}>! :smile: \n"
-                                             "_The note is as follows:_ \n\n\n").format(tagger, project, project) 
-                                    }
-                                  },
-                                  {
-                                    "type": "section",
-                                    "text": {
-                                    "type": "mrkdwn",
-                                    "text": ">*{} - {}{}*\n>{}\n\n\n\n _(Please do not respond to this message here in Slack. It will only be seen by you.)_".format(tagger, time_in_format, category, note.replace('\n', '\n>'))
-         	                        }
-                                  }                               
+                            {
+                              "type": "section",
+		                      "text": {
+                              "type": "mrkdwn",
+        		              "text": ("_You have been tagged by *{}* in a running note for the project_ "
+                                       "<{}/project/{}|{}>! :smile: \n_The note is as follows:_ \n\n\n")
+                                        .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project, project) 
+                              }
+                            },
+                            {
+                              "type": "section",
+                              "text": {
+                              "type": "mrkdwn",
+                              "text": ">*{} - {}{}*\n>{}\n\n\n\n _(Please do not respond to this message here in Slack."
+                                      " It will only be seen by you.)_".format(tagger, time_in_format, category, note.replace('\n', '\n>'))
+         	                  }
+                            }
                          ]
 
                 userid = client.users_lookupByEmail(email=view_result[user])
