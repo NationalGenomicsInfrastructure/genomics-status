@@ -298,6 +298,9 @@ class Application(tornado.web.Application):
         self.trello_api_secret = settings['trello']['api_secret']
         self.trello_token = settings['trello']['token']
 
+        # Slack
+        self.slack_token = settings['slack']['token']
+
         # Load password seed
         self.password_seed = settings.get("password_seed")
 
