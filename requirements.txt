@@ -19,6 +19,7 @@ PyYAML==5.1
 requests>=2.14.2
 simplejson>=3.10.0
 six>=1.10.0
+slackclient
 tornado>=6.0.2
 utils>=0.9.0
 Zenpy
