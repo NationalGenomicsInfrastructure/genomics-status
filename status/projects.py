@@ -703,19 +703,19 @@ class RunningNotesDataHandler(SafeHandler):
                             {
                               "type": "section",
 		                      "text": {
-                              "type": "mrkdwn",
-        		              "text": ("_You have been tagged by *{}* in a running note for the project_ "
+                                "type": "mrkdwn",
+        		                "text": ("_You have been tagged by *{}* in a running note for the project_ "
                                        "<{}/project/{}|{}>! :smile: \n_The note is as follows:_ \n\n\n")
                                         .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project, project) 
-                              }
+                               }
                             },
                             {
                               "type": "section",
                               "text": {
-                              "type": "mrkdwn",
-                              "text": ">*{} - {}{}*\n>{}\n\n\n\n _(Please do not respond to this message here in Slack."
+                                "type": "mrkdwn",
+                                "text": ">*{} - {}{}*\n>{}\n\n\n\n _(Please do not respond to this message here in Slack."
                                       " It will only be seen by you.)_".format(tagger, time_in_format, category, note.replace('\n', '\n>'))
-         	                  }
+         	                   }
                             }
                          ]
 

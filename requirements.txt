@@ -7,6 +7,7 @@ logbook
 cffi
 matplotlib>=2.0.0
 markdown
+nest_asyncio
 numpy>=1.12.1
 oauth2>=1.9.0.post1
 paramiko>=2.1.2
