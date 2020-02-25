@@ -18,6 +18,8 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import markdown
+import slack
+import nest_asyncio
 
 #from itertools import ifilter
 from collections import defaultdict
@@ -693,6 +695,34 @@ class RunningNotesDataHandler(SafeHandler):
                 s.sendmail('genomics-bioinfo@scilifelab.se', msg['To'], msg.as_string())
                 s.quit()
 
+                #Adding a slack IM to the tagged user with the running note
+                nest_asyncio.apply()
+                client = slack.WebClient(token=application.slack_token)
+
+                blocks = [
+                    {
+                        "type": "section",
+		                "text": {
+                            "type": "mrkdwn",
+        		            "text": ("_You have been tagged by *{}* in a running note for the project_ "
+                                     "<{}/project/{}|{}>! :smile: \n_The note is as follows:_ \n\n\n")
+                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project, project) 
+                        }
+                    },
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": ">*{} - {}{}*\n>{}\n\n\n\n _(Please do not respond to this message here in Slack."
+                            " It will only be seen by you.)_".format(tagger, time_in_format, category, note.replace('\n', '\n>'))
+         	            }
+                     }
+                ]
+
+                userid = client.users_lookupByEmail(email=view_result[user])
+                channel = client.conversations_open(users=userid.data['user']['id'])
+                client.chat_postMessage(channel=channel.data['channel']['id'], blocks=blocks)
+                client.conversations_close(channel=channel.data['channel']['id'])
 
 class LinksDataHandler(SafeHandler):
     """ Serves external links for each project
