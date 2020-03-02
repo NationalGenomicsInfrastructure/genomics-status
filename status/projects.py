@@ -638,6 +638,14 @@ class RunningNotesDataHandler(SafeHandler):
         # Saving running note in LIMS
         p.udf['Running Notes'] = json.dumps(running_notes)
         p.put()
+        p.get(force=True)
+        #Retry once more
+        if p.udf['Running Notes'] != json.dumps(running_notes):
+            p.udf['Running Notes'] = json.dumps(running_notes)
+            p.put()
+        p.get(force=True)
+        #In the rare case saving to LIMS does not work
+        assert (p.udf['Running Notes'] == json.dumps(running_notes)), "The Running note wasn't saved in LIMS!"
 
         #saving running notes directly in genstat, because reasons.
         v=application.projects_db.view("project/project_id")
@@ -706,7 +714,7 @@ class RunningNotesDataHandler(SafeHandler):
                             "type": "mrkdwn",
         		            "text": ("_You have been tagged by *{}* in a running note for the project_ "
                                      "<{}/project/{}|{}>! :smile: \n_The note is as follows:_ \n\n\n")
-                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project, project) 
+                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project, project)
                         }
                     },
                     {
