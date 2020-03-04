@@ -56,6 +56,7 @@ from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
 from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, SafeStaticFileHandler, \
     UpdatedDocumentsDatahandler
+from status.user_preferences import UserPrefPageHandler
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
     WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler
 
@@ -218,6 +219,7 @@ class Application(tornado.web.Application):
             ("/samples/([^/]*)$", SampleRunHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
+            ("/userpref", UserPrefPageHandler),
             ("/worksets", WorksetsHandler),
             ("/workset/([^/]*)$", WorksetHandler),
             (r'.*', BaseHandler)
@@ -359,6 +361,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/running_notes_tab.html")
             tornado.autoreload.watch("design/suggestion_box.html")
             tornado.autoreload.watch("design/unauthorized.html")
+            tornado.autoreload.watch("design/user_preferences.html")
             tornado.autoreload.watch("design/workset_samples.html")
             tornado.autoreload.watch("design/worksets.html")
 

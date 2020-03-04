@@ -353,7 +353,7 @@ class FlowcellNotesDataHandler(SafeHandler):
                 project_note += note
                 for project in projects:
                     RunningNotesDataHandler.make_project_running_note(
-                        self.application, project,
+                        self.application, self, project,
                         project_note, category,
                         user.name, user.email
                     )

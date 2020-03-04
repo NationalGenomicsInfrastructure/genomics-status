@@ -20,7 +20,7 @@ class WorksetsDataHandler(SafeHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
         ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
-        result={} 
+        result={}
         for row in ws_view:
             result[row.key]=row.value
             result[row.key].pop("_id", None)
@@ -98,7 +98,7 @@ class WorksetDataHandler(SafeHandler):
             result[row.key].pop("_id", None)
             result[row.key].pop("_rev", None)
         return result
-    
+
 class WorksetHandler(SafeHandler):
     """Loaded through /workset/[workset]"""
     def get(self, workset):
@@ -196,7 +196,7 @@ class WorksetNotesDataHandler(SafeHandler):
             project_note += note
             for project_id in projects:
                 RunningNotesDataHandler.make_project_running_note(
-                    self.application, project_id,
+                    self.application, self, project_id,
                     project_note, category,
                     user.name, user.email
                 )

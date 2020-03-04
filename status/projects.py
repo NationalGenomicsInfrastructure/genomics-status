@@ -53,7 +53,7 @@ class PresetsHandler(SafeHandler):
         """
         presets_list = self.get_argument('presets_list', 'pv_presets')
         self.set_header("Content-type", "application/json")
-        user_details=self.get_user_details()
+        user_details=self.get_user_details(self)
         presets = {
             "default": self.application.genstat_defaults.get(presets_list),
             "user": user_details.get('userpreset')
@@ -63,7 +63,7 @@ class PresetsHandler(SafeHandler):
     def post(self):
         """Save/Delete preset choices of columns into StatusDB
         """
-        doc=self.get_user_details()
+        doc=self.get_user_details(self)
         if self.get_arguments('save'):
             preset_name = self.get_argument('save')
             data = json.loads(self.request.body)
@@ -85,17 +85,18 @@ class PresetsHandler(SafeHandler):
         self.set_status(201)
         self.write({'success': 'success!!'})
 
-    def get_user_details(self):
-        user_email = self.get_current_user().email
+    @staticmethod
+    def get_user_details(inst):
+        user_email = inst.get_current_user().email
         if user_email == 'Testing User!':
-            user_email=self.application.settings.get("username", None)+'@scilifelab.se'
+            user_email=inst.application.settings.get("username", None)+'@scilifelab.se'
         user_details={}
         headers = {"Accept": "application/json",
-                   "Authorization": "Basic " + "{}:{}".format(base64.b64encode(bytes(self.application.settings.get("username", None), 'ascii')),
-                   base64.b64encode(bytes(self.application.settings.get("password", None), 'ascii')))}
-        for row in self.application.gs_users_db.view('authorized/users'):
+                   "Authorization": "Basic " + "{}:{}".format(base64.b64encode(bytes(inst.application.settings.get("username", None), 'ascii')),
+                   base64.b64encode(bytes(inst.application.settings.get("password", None), 'ascii')))}
+        for row in inst.application.gs_users_db.view('authorized/users'):
             if row.get('key') == user_email:
-                user_url = "{}/gs_users/{}".format(self.application.settings.get("couch_server"), row.get('value'))
+                user_url = "{}/gs_users/{}".format(inst.application.settings.get("couch_server"), row.get('value'))
                 r = requests.get(user_url, headers=headers).content.rstrip()
                 user_details=json.loads(r);
         return user_details
@@ -108,10 +109,10 @@ class PresetsOnLoadHandler(PresetsHandler):
     def get(self):
         action = self.get_argument('action', '')
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.get_user_details().get('onload')))
+        self.write(json.dumps(self.get_user_details(self).get('onload')))
 
     def post(self):
-        doc=self.get_user_details()
+        doc=self.get_user_details(self)
         data = json.loads(self.request.body)
         action=self.get_argument('action')
         doc['onload']=data
@@ -623,12 +624,12 @@ class RunningNotesDataHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
-            newNote = RunningNotesDataHandler.make_project_running_note(self.application, project, note, category, user.name, user.email)
+            newNote = RunningNotesDataHandler.make_project_running_note(self.application, self, project, note, category, user.name, user.email)
             self.set_status(201)
             self.write(json.dumps(newNote))
 
     @staticmethod
-    def make_project_running_note(application, project, note, category, user, email):
+    def make_project_running_note(application, inst, project, note, category, user, email):
         timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
         newNote = {'user': user, 'email': email, 'note': note, 'category' : category, 'timestamp': timestamp}
         p = Project(lims, id=project)
@@ -658,14 +659,15 @@ class RunningNotesDataHandler(SafeHandler):
         pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
         userTags = pattern.findall(note)
         if userTags:
-            RunningNotesDataHandler.notify_tagged_user(application, userTags, project, note, category, user, timestamp)
+            RunningNotesDataHandler.notify_tagged_user(application, inst, userTags, project, note, category, user, timestamp)
         ####
         return newNote
 
     @staticmethod
-    def notify_tagged_user(application, userTags, project, note, category, tagger, timestamp):
+    def notify_tagged_user(application, inst, userTags, project, note, category, tagger, timestamp):
         view_result = {}
         time_in_format = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S').strftime("%a %b %d %Y, %I:%M:%S %p")
+        option = PresetsHandler.get_user_details(inst).get('notification_preferences', 'Both')
         for row in application.gs_users_db.view('authorized/users'):
             if row.key != 'genstat_defaults':
                 view_result[row.key.split('@')[0]] = row.key
@@ -674,63 +676,65 @@ class RunningNotesDataHandler(SafeHandler):
         for user in userTags:
             if user[1] in view_result:
                 user=user[1]
-                msg = MIMEMultipart('alternative')
-                msg['Subject']='[GenStat] Running Note:{}'.format(project)
-                msg['From']='genomics-status'
-                msg['To'] = view_result[user]
-                text = 'You have been tagged by {} in a running note in the project {}! The note is as follows\n\
-                >{} - {}{}\
-                >{}'.format(tagger, project, tagger, time_in_format, category, note)
+                if option == 'E-mail' or option == 'Both':
+                    msg = MIMEMultipart('alternative')
+                    msg['Subject']='[GenStat] Running Note:{}'.format(project)
+                    msg['From']='genomics-status'
+                    msg['To'] = view_result[user]
+                    text = 'You have been tagged by {} in a running note in the project {}! The note is as follows\n\
+                    >{} - {}{}\
+                    >{}'.format(tagger, project, tagger, time_in_format, category, note)
 
-                html = '<html>\
-                <body>\
-                <p> \
-                 You have been tagged by {} in a running note in the project <a href="{}/project/{}">{}</a>! The note is as follows</p>\
-                 <blockquote>\
-                <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
+                    html = '<html>\
+                    <body>\
+                    <p> \
+                    You have been tagged by {} in a running note in the project <a href="{}/project/{}">{}</a>! The note is as follows</p>\
+                    <blockquote>\
+                    <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
                     <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
                         <a href="#">{}</a> - <span>{}</span> <span>{}</span>\
                     </div>\
                     <div class="panel-body" style="padding: 15px;">\
                         <p>{}</p>\
-                </div></div></blockquote></body></html>'.format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0],
-                 project, project, tagger, time_in_format, category, markdown.markdown(note))
+                    </div></div></blockquote></body></html>'.format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0],
+                    project, project, tagger, time_in_format, category, markdown.markdown(note))
 
-                msg.attach(MIMEText(text, 'plain'))
-                msg.attach(MIMEText(html, 'html'))
+                    msg.attach(MIMEText(text, 'plain'))
+                    msg.attach(MIMEText(html, 'html'))
 
-                s = smtplib.SMTP('localhost')
-                s.sendmail('genomics-bioinfo@scilifelab.se', msg['To'], msg.as_string())
-                s.quit()
+                    s = smtplib.SMTP('localhost')
+                    s.sendmail('genomics-bioinfo@scilifelab.se', msg['To'], msg.as_string())
+                    s.quit()
 
                 #Adding a slack IM to the tagged user with the running note
-                nest_asyncio.apply()
-                client = slack.WebClient(token=application.slack_token)
+                if option == 'Slack' or option == 'Both':
+                    nest_asyncio.apply()
+                    client = slack.WebClient(token=application.slack_token)
 
-                blocks = [
-                    {
+                    blocks = [
+                        {
                         "type": "section",
 		                "text": {
                             "type": "mrkdwn",
         		            "text": ("_You have been tagged by *{}* in a running note for the project_ "
                                      "<{}/project/{}|{}>! :smile: \n_The note is as follows:_ \n\n\n")
                              .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project, project)
-                        }
-                    },
-                    {
+                             }
+                        },
+                        {
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
                             "text": ">*{} - {}{}*\n>{}\n\n\n\n _(Please do not respond to this message here in Slack."
                             " It will only be seen by you.)_".format(tagger, time_in_format, category, note.replace('\n', '\n>'))
-         	            }
-                     }
-                ]
+         	                  }
+                        }
+                    ]
 
-                userid = client.users_lookupByEmail(email=view_result[user])
-                channel = client.conversations_open(users=userid.data['user']['id'])
-                client.chat_postMessage(channel=channel.data['channel']['id'], blocks=blocks)
-                client.conversations_close(channel=channel.data['channel']['id'])
+                    userid = client.users_lookupByEmail(email=view_result[user])
+                    channel = client.conversations_open(users=userid.data['user']['id'])
+                    client.chat_postMessage(channel=channel.data['channel']['id'], blocks=blocks)
+                    client.conversations_close(channel=channel.data['channel']['id'])
 
 class LinksDataHandler(SafeHandler):
     """ Serves external links for each project

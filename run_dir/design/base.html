@@ -84,7 +84,13 @@
                 <li><a href="/deliveries">Bioinfo</a></li>
                 <li><a href="/suggestion_box">Suggestion Box</a></li>
                 {% if user %}
-                    <li><a href="/logout">Log Out {{user.name}}</a></li>
+                    <li class="dropdown" id="userpref">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#userpref">{{user.name}} <span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                          <li><a href="/logout">Log Out</a></li>
+                          <li><a href="/userpref" class='li-modal'>Preferences</a></li>
+                      </ul>
+                    </li>
                 {% else %}
                     <li><a href="/login">Login</a></li>
                 {% end %}
@@ -113,8 +119,21 @@
     <p>Something broken or have an idea for an improvement? Please <a href="/suggestion_box">let us know</a>.</p>
 </div>
 
+<div class="modal fade text-center" id="userPrefModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
+
 <script src="/static/js/typeahead.bundle.min.js?v={{ gs_globals['git_commit'] }}"></script>
 <script src="/static/js/marked.min.js"></script>
 <script src="/static/js/base.js?v={{ gs_globals['git_commit'] }}"></script>
+<script>
+  $('.li-modal').on('click', function(e){
+    e.preventDefault();
+    $('#userPrefModal').modal('show').find('.modal-content').load($(this).attr('href'));
+  });
+</script>
 </body>
 </html>
