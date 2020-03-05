@@ -73,7 +73,7 @@ Description: Details page for a single project
       <dd><span class="rawdate" id="all_samples_sequenced">-</span>&nbsp; <span id="signature_all_samples_sequenced" class="upperCase label label-default"></span></dd>
 
       <dt>All Raw Data Delivered</dt>
-	    <dd><spanclass="rawdate"  id="all_raw_data_delivered">-</span>&nbsp; <span id="signature_all_raw_data_delivered" class="label label-default"></span></dd>
+	    <dd><span class="rawdate"  id="all_raw_data_delivered">-</span>&nbsp; <span id="signature_all_raw_data_delivered" class="label label-default"></span></dd>
 
       <dt class="bp-dates"><abbr data-toggle="tooltip" title="Best Practice">BP</abbr> Analysis Completed</dt>
 	    <dd class="bp-dates"><span class="rawdate" id="best_practice_analysis_completed">-</span>&nbsp; <span id="signature_best_practice_analysis_completed" class="upperCase label label-default"></span></dd>
@@ -386,7 +386,7 @@ Description: Details page for a single project
           <p>Choose which columns you would like to see in the project's Samples table.
             Click a heading to select / deselect all checkboxes in that group.</p>
           <div class="row">
-            <div class="col-sm-4" id="basic-columns">
+            <div class="col-sm-3" id="basic-columns">
               <h4 class="search-action" data-action="filterHeader">Basic <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['BASIC_COLUMNS'].items() %}
               <div class="checkbox">
@@ -397,7 +397,7 @@ Description: Details page for a single project
               </div>
               {% end %}
             </div>
-            <div class="col-sm-4" id="details-columns">
+            <div class="col-sm-3" id="details-columns">
               <h4 class="search-action" data-action="filterHeader">Sample Details <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['DETAILS_COLUMNS'].items() %}
               <div class="checkbox">
@@ -408,7 +408,7 @@ Description: Details page for a single project
               </div>
               {% end %}
             </div>
-            <div class="col-sm-4" id="initial-qc-columns">
+            <div class="col-sm-3" id="initial-qc-columns">
               <h4 class="search-action" data-action="filterHeader">Initial QC <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['INITIAL_QC_COLUMNS'].items() %}
               <div class="checkbox">
@@ -419,8 +419,6 @@ Description: Details page for a single project
               </div>
               {% end %}
             </div>
-          </div>
-          <div class="row">
             <div class="col-sm-3" id="library-prep-columns">
               <h4 class="search-action" data-action="filterHeader">Library Prep <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['LIBRARY_PREP_COLUMNS'].items() %}
@@ -432,6 +430,8 @@ Description: Details page for a single project
               </div>
               {% end %}
             </div>
+          </div>
+          <div class="row">
             <div class="col-sm-3" id="library-validation-columns">
               <h4 class="search-action" data-action="filterHeader">Library QC <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['LIBRARY_VALIDATION_COLUMNS'].items() %}
@@ -460,6 +460,17 @@ Description: Details page for a single project
               <div class="checkbox">
                 <label>
                   <input type="checkbox" class="filterCheckbox" data-columngroup="bioinfo-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="bioinfo-columns-{{col_name}}">
+                  {{col_display_name}}
+                </label>
+              </div>
+              {% end %}
+            </div>
+            <div class="col-sm-3" id="tissue-columns">
+              <h4 class="search-action" data-action="filterHeader">Tissue <input class="headingCheckbox" type="checkbox"></h4>
+              {% for col_display_name, col_name in columns_sample['TISSUE_COLUMNS'].items() %}
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" class="filterCheckbox" data-columngroup="tissue-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="tissue-columns-{{col_name}}">
                   {{col_display_name}}
                 </label>
               </div>

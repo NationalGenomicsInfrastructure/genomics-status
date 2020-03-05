@@ -102,6 +102,11 @@ $(function(){
 });
 // Load the Projects Table
 function load_table(status, type, columns, dates) {
+  if ($.fn.dataTable.isDataTable( '#project_table' )){
+      var dtbl= $('#project_table').DataTable();
+      dtbl.destroy();
+      $("#project_table_filter").remove();
+  }
   // Get the columns and write the table header
   load_table_head(columns);
   // Display the loading spinner in the table
@@ -136,11 +141,6 @@ function load_table(status, type, columns, dates) {
     fields.push($(this).attr('name'));
   });
   return $.getJSON(url, function(data) {
-    if ($.fn.dataTable.isDataTable( '#project_table' )){
-        var dtbl= $('#project_table').DataTable();
-        dtbl.destroy();
-        $("#project_table_filter").remove();
-    }
     $("#project_table_body").empty();
     var size = 0;
     undefined_fields=[];

@@ -14,17 +14,24 @@ Description: Shows a table with all qPCR pools.
       <h1><span id="page_title">qPCR pools</span>
         <small>Showing all qPCR pools</small>
       </h1>
-      <table class="table table-striped table-bordered sortable" id="pools_table">
+      <label class="btn btn-sm btn-default expand-all pull-right" style="margin-bottom: 1rem;"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>Expand All</label>
+      <table class="table table-hover table-striped table-bordered sortable" id="pools_table">
         <thead>
           <tr class="sticky">
             <th class="sort"></th>
             <th class="sort">Pool</th>
+            <th class="sort">Library Type</th>
+            <th class="sort">Run Types</th>
+            <th class="sort">Avg. Waiting (in days)</th>
           </tr>
         </thead>
         <tfoot>
           <tr>
             <th class="sort"></th>
             <th class="sort">Pool</th>
+            <th class="sort">Library Type</th>
+            <th class="sort">Run Types</th>
+            <th class="sort">Avg. Waiting (in days)</th>
           </tr>
         </tfoot>
         <tbody class="list" id="pools_table_body">
@@ -34,7 +41,6 @@ Description: Shows a table with all qPCR pools.
 </div>
 
 <script src="/static/js/jquery.dataTables.min.js"></script>
-<script src="/static/js/dataTables.rowGroup.min.js"></script>
 <script src="/static/js/qpcr_pools.js?v={{ gs_globals['git_commit'] }}"></script>
 <script src="/static/js/jquery-ui.min.js"></script>
 

@@ -11,31 +11,54 @@ $(document).ready(function() {
 // Initialize sorting and searching javascript plugin
 
 function load_table() {
-  $("#pools_table_body").html('<tr><td colspan="2" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
+  var colspan = $('#pools_table > thead > tr:first > th').length + 1; // adding the first column
+  $("#pools_table_body").html('<tr><td colspan="'+colspan+'" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
   return $.getJSON('/api/v1/qpcr_pools', function(data) {
     $("#pools_table_body").empty();
     $.each(data, function(flow, containers) {
       if(!($.isEmptyObject(containers))){
         $.each(containers, function(container, pools){
-          var tbl_row = $('<tr class="qpcr-container">');
+          var avg_wait_calc = 0;
+          var tbl_row = $('<tr>');
           tbl_row.append($('<td>').html(flow));
-          tbl_row.append($('<td>').html(function() {
-              var to_return = '<span class="glyphicon glyphicon-plus-sign expand-proj" aria-hidden="true"></span>';
-              to_return = to_return + container + ' ('+pools.length+')';
-              to_return = to_return + '<span> \
-              <table cellpadding="5" border="0" style="visibility:collapse;margin-bottom:0px;margin-top:5px;" class="table">';
-              to_return = to_return + '<thead><tr><th style="width:45%">Sample</th><th style="width:30%">Well</th><th>Waiting (in days)</th></tr></thead>';
-              $.each(pools, function(pool, sample){
+          tbl_row.append($('<td class="expand-proj">').html(function() {
+              var to_return = '<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>';
+              to_return = to_return + container + ' <span class="badge">'+pools['samples'].length+'</span>';
+              to_return = to_return + '<BR><span> \
+              <table cellpadding="5" border="0" style="visibility:collapse;margin-bottom:0px;margin-top:5px;" align="right">';
+              to_return = to_return + '<thead><tr><th style="width:45%">Sample</th><th style="width:20%">Well</th><th>Waiting (in days)</th></tr></thead>';
+              $.each(pools['samples'], function(pool, sample){
+                var wait = getDaysAndDateLabel(sample['queue_time'], 'date')[0];
                 to_return = to_return +
                 '<tr>'+
                   '<td>'+sample['name']+'</td>'+
                   '<td>'+sample['well']+'</td>'+
-                  '<td>'+ Math.floor(Math.abs(new Date() - new Date(sample['queue_time']))/(1000*86400)) +'</td>'+
+                  '<td>'+wait+'</td>'+
                 '</tr>';
+                //use avg_wait_calc as a counter
+                avg_wait_calc = avg_wait_calc + wait;
                 });
                 to_return = to_return +'</table></span>';
               return to_return;
           }));
+          tbl_row.append($('<td>').html(function(){
+            var to_return = '';
+            $.each( pools['library_types'], function(i, library_type){
+              to_return = to_return + '<div class="mult-pools-margin">'+ library_type +'</div>'
+            });
+            return to_return;
+          }));
+          tbl_row.append($('<td>').html(function(){
+            var to_return = '';
+            $.each( pools['runmodes'], function(i, runmode){
+              to_return = to_return + '<div class="mult-pools-margin">'+ runmode +'</div>'
+            });
+            return to_return;
+          }));
+          //get average wait time for all samples in a pool.
+          avg_wait_calc = avg_wait_calc/pools['samples'].length;
+          var daysAndLabel = getDaysAndDateLabel(avg_wait_calc, 'label');
+          tbl_row.append($('<td>').html('<span class="label label-'+daysAndLabel[1]+'">'+(avg_wait_calc).toFixed(1)+'</span>'));
           $("#pools_table_body").append(tbl_row);
         })
       }
@@ -65,7 +88,7 @@ function init_listjs() {
         api.column(0, {page:'current'} ).data().each( function ( group, i ) {
           if ( last !== group ) {
             $(rows).eq( i ).before(
-                '<tr class="group"><td colspan="3">'+group+'</td></tr>'
+                '<tr class="group"><td colspan="'+$('#pools_table > thead > tr:first > th').length + 1+'">'+group+'</td></tr>'
             );
             last = group;
           }
@@ -91,16 +114,50 @@ function init_listjs() {
     } );
     $('.expand-proj').on('click', function () {
       if($(this).parent().find('table').css('visibility')=='collapse'){
-        $(this).toggleClass('glypicon-plus-sign glyphicon-minus-sign');
+        $(this).find('.glyphicon').toggleClass('glyphicon-plus-sign glyphicon-minus-sign');
         $(this).parent().find('table').css('visibility', 'visible');
       }
       else {
-        $(this).toggleClass('glyphicon-minus-sign glypicon-plus-sign');
+        $(this).find('.glyphicon').toggleClass('glyphicon-minus-sign glyphicon-plus-sign');
         $(this).parent().find('table').css('visibility', 'collapse');
       }
+    });
+    $('.expand-all').on('click', function () {
+      var reqText = {'Expand All': ['Collapse All', 'visible', 'glyphicon-plus-sign', 'glyphicon-minus-sign'],
+                      'Collapse All': ['Expand All', 'collapse', 'glyphicon-minus-sign', 'glyphicon-plus-sign']};
+      $('.expand-all').find('.glyphicon').removeClass(reqText[$('.expand-all').text()][2]);
+      $('#pools_table').find('tr').find('.glyphicon').removeClass(reqText[$('.expand-all').text()][2]);
+      $('.expand-all').find('.glyphicon').addClass(reqText[$('.expand-all').text()][3]);
+      $('#pools_table').find('tr').find('.glyphicon').addClass(reqText[$('.expand-all').text()][3]);
+      $('#pools_table').find('tr').find('table').css('visibility', reqText[$('.expand-all').text()][1]);
+      $('.expand-all').contents().filter(function(){ return this.nodeType == 3; }).first().replaceWith(reqText[$('.expand-all').text()][0]);
     });
 }
 
 $('body').on('click', '.group', function(event) {
   $($("#samples_table").DataTable().column(0).header()).trigger("click")
 });
+
+function getDaysAndDateLabel(date, option){
+  var number_of_days = 0;
+  var label = '';
+  if( option=='date' || option=='both' ){
+    //calculate number of days from given date to current date
+    number_of_days = Math.floor(Math.abs(new Date() - new Date(date))/(1000*86400));
+  }
+  if (option=='label' || option=='both') {
+    if (option=='label'){
+      number_of_days = date;
+    }
+    if (number_of_days < 7){
+      label =  'success';
+    }
+    else if (number_of_days >= 7 && number_of_days < 14) {
+      label = 'warning';
+    }
+    else {
+      label = 'danger';
+    }
+  }
+   return [number_of_days, label];
+}

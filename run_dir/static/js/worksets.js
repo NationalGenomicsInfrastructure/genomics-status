@@ -13,6 +13,18 @@ $(document).ready(function() {
 });
 
 function load_table() {
+      var tbl_row = $('<tr>');
+      var latest_ws_note = tbl_row.find('td.latest_workset_note');
+      if (latest_ws_note.text() !== '') {
+        var note = JSON.parse(latest_workset_note_key.text());
+        var ndate = undefined;
+        for (key in note) { ndate = key; break; }
+        notedate = new Date(ndate);
+        latest_ws_note.html('<div class="panel panel-default running-note-panel">' +
+        '<div class="panel-heading">'+
+          note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
+        '</div><div class="panel-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
+        }
     init_listjs();
 }
 
@@ -44,8 +56,17 @@ function init_listjs() {
             that
             .search( this.value )
             .draw();
-        } );
-    } );
+        });
+    });
+    // Copy workset table to clipboard
+    var clipboard = new Clipboard('#ws_copy_table');
+    clipboard.on('success', function(e) {
+      e.clearSelection();
+      $('#ws_copy_table').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+      setTimeout(function(){
+      $('#ws_copy_table').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
+      }, 2000);
+    });
 }
 
 function load_workset_notes(wait) {
@@ -83,8 +104,8 @@ $(".tabbable").on("click", '[role="tab"]', function() {
           $.each(value, function(project, projval){
             var tbl_row = $('<tr>');
             tbl_row.append($('<td>').html(key));
-            tbl_row.append($('<td>').html(function() {
-              var to_return = '<span class="glyphicon glyphicon-plus-sign expand-proj" aria-hidden="true"></span>';
+            tbl_row.append($('<td class="expand-proj">').html(function() {
+              var to_return = '<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>';
               to_return = to_return + '<a href="/project/'+project+'">'+projval['pname']+' ('+project+') </a>';
               to_return = to_return + '<span style="float:right; padding-right:50px;"><table cellpadding="5" border="0" style="visibility:collapse;">';
               to_return = to_return + '<thead><tr><th>Samples</th></tr></thead>';
@@ -97,10 +118,10 @@ $(".tabbable").on("click", '[role="tab"]', function() {
                 to_return = to_return +'</table></span>';
                 return to_return;
               }));
-            tbl_row.append($('<td>').html(projval['samples'].length +' ('+ projval['total_num_samples']+')'));
+            tbl_row.append($('<td>').html(projval['samples'].length +' <span class="badge">'+ projval['total_num_samples']+'</span>'));
             sumGroups[key] = sumGroups[key] + projval['samples'].length;
-            var number_of_days = Math.floor(Math.abs(new Date() - new Date(projval['queued_date']))/(1000*86400));
-            tbl_row.append($('<td>').html(number_of_days));
+            var daysAndLabel = getDaysAndDateLabel(projval['queued_date'], 'both');
+            tbl_row.append($('<td>').html('<span class="label label-'+daysAndLabel[1]+'">'+daysAndLabel[0]+'</span>'));
             $("#samples_table_body").append(tbl_row);
           });
         }
@@ -109,13 +130,23 @@ $(".tabbable").on("click", '[role="tab"]', function() {
       init_listjs2();
       $('.expand-proj').on('click', function () {
         if($(this).parent().find('table').css('visibility')=='collapse'){
-          $(this).toggleClass('glypicon-plus-sign glyphicon-minus-sign');
+          $(this).find('.glyphicon').toggleClass('glyphicon-plus-sign glyphicon-minus-sign');
           $(this).parent().find('table').css('visibility', 'visible');
         }
         else {
-          $(this).toggleClass('glyphicon-minus-sign glypicon-plus-sign');
+          $(this).find('.glyphicon').toggleClass('glyphicon-minus-sign glyphicon-plus-sign');
           $(this).parent().find('table').css('visibility', 'collapse');
         }
+      });
+      $('.expand-all').on('click', function () {
+        var reqText = {'Expand All': ['Collapse All', 'visible', 'glyphicon-plus-sign', 'glyphicon-minus-sign'],
+                        'Collapse All': ['Expand All', 'collapse', 'glyphicon-minus-sign', 'glyphicon-plus-sign']};
+        $('.expand-all').find('.glyphicon').removeClass(reqText[$('.expand-all').text()][2]);
+        $('#samples_table').find('tr').find('.glyphicon').removeClass(reqText[$('.expand-all').text()][2]);
+        $('.expand-all').find('.glyphicon').addClass(reqText[$('.expand-all').text()][3]);
+        $('#samples_table').find('tr').find('.glyphicon').addClass(reqText[$('.expand-all').text()][3]);
+        $('#samples_table').find('tr').find('table').css('visibility', reqText[$('.expand-all').text()][1]);
+        $('.expand-all').contents().filter(function(){ return this.nodeType == 3; }).first().replaceWith(reqText[$('.expand-all').text()][0]);
       });
     });
   }
@@ -187,3 +218,27 @@ function init_listjs2() {
 $('body').on('click', '.group', function(event) {
   $($("#samples_table").DataTable().column(0).header()).trigger("click")
 });
+
+function getDaysAndDateLabel(date, option){
+  var number_of_days = 0;
+  var label = '';
+  if( option=='date' || option=='both' ){
+    //calculate number of days from given date to current date
+    number_of_days = Math.floor(Math.abs(new Date() - new Date(date))/(1000*86400));
+  }
+  if (option=='label' || option=='both') {
+    if (option=='label'){
+      number_of_days = date;
+    }
+    if (number_of_days < 7){
+      label =  'success';
+    }
+    else if (number_of_days >= 7 && number_of_days < 14) {
+      label = 'warning';
+    }
+    else {
+      label = 'danger';
+    }
+  }
+   return [number_of_days, label];
+}

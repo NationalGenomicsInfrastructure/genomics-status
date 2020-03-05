@@ -41,7 +41,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
     ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler
 from status.nas_quotas import NASQuotasHandler
-from status.qpcr_pools import qPCRPoolsDataHandler, qPCRPoolsHandler
+from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler, FlowcellCountPlotHandler, FlowcellCountApiHandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
     SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, SampleQCSummaryHandler, \
@@ -56,6 +56,7 @@ from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
 from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, SafeStaticFileHandler, \
     UpdatedDocumentsDatahandler
+from status.user_preferences import UserPrefPageHandler
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
     WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler
 
@@ -170,6 +171,7 @@ class Application(tornado.web.Application):
                 SampleQCInsertSizesDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
+            ("/api/v1/sequencing_queues", SequencingQueuesDataHandler),
             ("/api/v1/stats",StatsAggregationHandler),
             ("/api/v1/stats/application_open_projects",ApplicationOpenProjectsHandler),
             ("/api/v1/stats/application_open_samples",ApplicationOpenSamplesHandler),
@@ -215,7 +217,9 @@ class Application(tornado.web.Application):
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
             ("/samples/([^/]*)$", SampleRunHandler),
+            ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
+            ("/userpref", UserPrefPageHandler),
             ("/worksets", WorksetsHandler),
             ("/workset/([^/]*)$", WorksetHandler),
             (r'.*', BaseHandler)
@@ -296,6 +300,9 @@ class Application(tornado.web.Application):
         self.trello_api_secret = settings['trello']['api_secret']
         self.trello_token = settings['trello']['token']
 
+        # Slack
+        self.slack_token = settings['slack']['token']
+
         # Load password seed
         self.password_seed = settings.get("password_seed")
 
@@ -354,6 +361,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/running_notes_tab.html")
             tornado.autoreload.watch("design/suggestion_box.html")
             tornado.autoreload.watch("design/unauthorized.html")
+            tornado.autoreload.watch("design/user_preferences.html")
             tornado.autoreload.watch("design/workset_samples.html")
             tornado.autoreload.watch("design/worksets.html")
 
