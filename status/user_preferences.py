@@ -14,12 +14,12 @@ class UserPrefPageHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("user_preferences.html")
-        notf_pref = ph.get_user_details(self).get('notification_preferences', 'Both')
+        notf_pref = ph.get_user_details(self.application, self.get_current_user().email).get('notification_preferences', 'Both')
         self.write(t.generate(pref=notf_pref))
 
     def post(self):
         option = json.loads(self.request.body)
-        doc = ph.get_user_details(self)
+        doc = ph.get_user_details(self.application, self.get_current_user().email)
         doc['notification_preferences'] = option['notification_preferences']
         try:
             self.application.gs_users_db.save(doc)

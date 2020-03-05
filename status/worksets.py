@@ -196,7 +196,7 @@ class WorksetNotesDataHandler(SafeHandler):
             project_note += note
             for project_id in projects:
                 RunningNotesDataHandler.make_project_running_note(
-                    self.application, self, project_id,
+                    self.application, project_id,
                     project_note, category,
                     user.name, user.email
                 )

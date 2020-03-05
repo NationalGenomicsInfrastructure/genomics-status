@@ -53,7 +53,7 @@ class PresetsHandler(SafeHandler):
         """
         presets_list = self.get_argument('presets_list', 'pv_presets')
         self.set_header("Content-type", "application/json")
-        user_details=self.get_user_details(self)
+        user_details=self.get_user_details(self.application, self.get_current_user().email)
         presets = {
             "default": self.application.genstat_defaults.get(presets_list),
             "user": user_details.get('userpreset')
@@ -63,7 +63,7 @@ class PresetsHandler(SafeHandler):
     def post(self):
         """Save/Delete preset choices of columns into StatusDB
         """
-        doc=self.get_user_details(self)
+        doc=self.get_user_details(self.application, self.get_current_user().email)
         if self.get_arguments('save'):
             preset_name = self.get_argument('save')
             data = json.loads(self.request.body)
@@ -86,17 +86,16 @@ class PresetsHandler(SafeHandler):
         self.write({'success': 'success!!'})
 
     @staticmethod
-    def get_user_details(inst):
-        user_email = inst.get_current_user().email
+    def get_user_details(app, user_email):
         if user_email == 'Testing User!':
-            user_email=inst.application.settings.get("username", None)+'@scilifelab.se'
+            user_email=app.settings.get("username", None)+'@scilifelab.se'
         user_details={}
         headers = {"Accept": "application/json",
-                   "Authorization": "Basic " + "{}:{}".format(base64.b64encode(bytes(inst.application.settings.get("username", None), 'ascii')),
-                   base64.b64encode(bytes(inst.application.settings.get("password", None), 'ascii')))}
-        for row in inst.application.gs_users_db.view('authorized/users'):
+                   "Authorization": "Basic " + "{}:{}".format(base64.b64encode(bytes(app.settings.get("username", None), 'ascii')),
+                   base64.b64encode(bytes(app.settings.get("password", None), 'ascii')))}
+        for row in app.gs_users_db.view('authorized/users'):
             if row.get('key') == user_email:
-                user_url = "{}/gs_users/{}".format(inst.application.settings.get("couch_server"), row.get('value'))
+                user_url = "{}/gs_users/{}".format(app.settings.get("couch_server"), row.get('value'))
                 r = requests.get(user_url, headers=headers).content.rstrip()
                 user_details=json.loads(r);
         return user_details
@@ -109,10 +108,10 @@ class PresetsOnLoadHandler(PresetsHandler):
     def get(self):
         action = self.get_argument('action', '')
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.get_user_details(self).get('onload')))
+        self.write(json.dumps(self.get_user_details(self.application, self.get_current_user().email).get('onload')))
 
     def post(self):
-        doc=self.get_user_details(self)
+        doc=self.get_user_details(self.application, self.get_current_user().email())
         data = json.loads(self.request.body)
         action=self.get_argument('action')
         doc['onload']=data
@@ -624,12 +623,12 @@ class RunningNotesDataHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>No project id or note parameters found</body></html>')
         else:
-            newNote = RunningNotesDataHandler.make_project_running_note(self.application, self, project, note, category, user.name, user.email)
+            newNote = RunningNotesDataHandler.make_project_running_note(self.application, project, note, category, user.name, user.email)
             self.set_status(201)
             self.write(json.dumps(newNote))
 
     @staticmethod
-    def make_project_running_note(application, inst, project, note, category, user, email):
+    def make_project_running_note(application, project, note, category, user, email):
         timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
         newNote = {'user': user, 'email': email, 'note': note, 'category' : category, 'timestamp': timestamp}
         p = Project(lims, id=project)
@@ -659,15 +658,14 @@ class RunningNotesDataHandler(SafeHandler):
         pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
         userTags = pattern.findall(note)
         if userTags:
-            RunningNotesDataHandler.notify_tagged_user(application, inst, userTags, project, note, category, user, timestamp)
+            RunningNotesDataHandler.notify_tagged_user(application, userTags, project, note, category, user, timestamp)
         ####
         return newNote
 
     @staticmethod
-    def notify_tagged_user(application, inst, userTags, project, note, category, tagger, timestamp):
+    def notify_tagged_user(application, userTags, project, note, category, tagger, timestamp):
         view_result = {}
         time_in_format = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S').strftime("%a %b %d %Y, %I:%M:%S %p")
-        option = PresetsHandler.get_user_details(inst).get('notification_preferences', 'Both')
         for row in application.gs_users_db.view('authorized/users'):
             if row.key != 'genstat_defaults':
                 view_result[row.key.split('@')[0]] = row.key
@@ -675,7 +673,8 @@ class RunningNotesDataHandler(SafeHandler):
             category = ' - ' + category
         for user in userTags:
             if user[1] in view_result:
-                user=user[1]
+                user = user[1]
+                option = PresetsHandler.get_user_details(application, view_result[user]).get('notification_preferences', 'Both')
                 if option == 'E-mail' or option == 'Both':
                     msg = MIMEMultipart('alternative')
                     msg['Subject']='[GenStat] Running Note:{}'.format(project)
