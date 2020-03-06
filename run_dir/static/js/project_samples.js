@@ -361,17 +361,20 @@ function load_all_udfs(){
           $("#project_status_alert").addClass("label-danger").text("Aborted");
         }
         else {
-          if (!open_date && source == 'lims'){
-            $("#project_status_alert").addClass("label-info").text("Pending");
-          }
-          else if (open_date && !queue_date) {
-            $("#project_status_alert").addClass("label-default").text("Reception Control");
+          if (close_date){
+            $("#project_status_alert").addClass("label-success").text("Closed");
           }
           else if (queue_date && !close_date) {
             $("#project_status_alert").addClass("label-info").text("Ongoing");
           }
+          else if (open_date && !queue_date) {
+            $("#project_status_alert").addClass("label-default").text("Reception Control");
+          }
+          else if (!open_date && source == 'lims'){
+            $("#project_status_alert").addClass("label-info").text("Pending");
+          }
           else {
-            $("#project_status_alert").addClass("label-success").text("Closed");
+            $("#project_status_alert").addClass("label-info").text("Status unknown");
           }
           // Hide the aborted dates
           $('.aborted-dates').hide();
