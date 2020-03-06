@@ -448,6 +448,11 @@ def get_container_from_id(flowcell):
         proc=lims.get_processes(type='MiSeq Run (MiSeq) 4.0',udf={'Flow Cell ID': flowcell[7:]})[0]
         c = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
     else:
-        #Hiseq
-        c = lims.get_containers(name=flowcell[8:])[0]
+        #NovaSeq
+        try:
+            c = lims.get_containers(name=flowcell[8:])[0]
+        except IndexError:
+            #NextSeq
+            proc = lims.get_processes(type='Illumina Sequencing (NextSeq) v1.0',udf={'Flow Cell ID': flowcell[8:]})[0]
+            c = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]    
     return c
