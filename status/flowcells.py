@@ -22,6 +22,7 @@ thresholds = {
     'RapidRun': 114,
     'MiSeq Version3': 18,
     'MiSeq Version2': 10,
+    'MiSeq Version2Nano': 0.75,
     'NovaSeq SP': 325,
     'NovaSeq S1': 650,
     'NovaSeq S2': 1650,
