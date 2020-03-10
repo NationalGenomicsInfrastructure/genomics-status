@@ -675,6 +675,42 @@ class RunningNotesDataHandler(SafeHandler):
             if user[1] in view_result:
                 user = user[1]
                 option = PresetsHandler.get_user_details(application, view_result[user]).get('notification_preferences', 'Both')
+                #Adding a slack IM to the tagged user with the running note
+                if option == 'Slack' or option == 'Both':
+                    nest_asyncio.apply()
+                    client = slack.WebClient(token=application.slack_token)
+
+                    blocks = [
+                        {
+                        "type": "section",
+		                "text": {
+                            "type": "mrkdwn",
+        		            "text": ("_You have been tagged by *{}* in a running note for the project_ "
+                                     "<{}/project/{}|{}>! :smile: \n_The note is as follows:_ \n\n\n")
+                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project, project)
+                             }
+                        },
+                        {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": ">*{} - {}{}*\n>{}\n\n\n\n _(Please do not respond to this message here in Slack."
+                            " It will only be seen by you.)_".format(tagger, time_in_format, category, note.replace('\n', '\n>'))
+         	                  }
+                        }
+                    ]
+
+
+                    try:
+                        userid = client.users_lookupByEmail(email=view_result[user])
+                        channel = client.conversations_open(users=userid.data['user']['id'])
+                        client.chat_postMessage(channel=channel.data['channel']['id'], blocks=blocks)
+                        client.conversations_close(channel=channel.data['channel']['id'])
+                    except Exception:
+                        #falling back to email
+                        option = 'E-mail'
+
+                #default is email
                 if option == 'E-mail' or option == 'Both':
                     msg = MIMEMultipart('alternative')
                     msg['Subject']='[GenStat] Running Note:{}'.format(project)
@@ -704,36 +740,6 @@ class RunningNotesDataHandler(SafeHandler):
                     s = smtplib.SMTP('localhost')
                     s.sendmail('genomics-bioinfo@scilifelab.se', msg['To'], msg.as_string())
                     s.quit()
-
-                #Adding a slack IM to the tagged user with the running note
-                if option == 'Slack' or option == 'Both':
-                    nest_asyncio.apply()
-                    client = slack.WebClient(token=application.slack_token)
-
-                    blocks = [
-                        {
-                        "type": "section",
-		                "text": {
-                            "type": "mrkdwn",
-        		            "text": ("_You have been tagged by *{}* in a running note for the project_ "
-                                     "<{}/project/{}|{}>! :smile: \n_The note is as follows:_ \n\n\n")
-                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project, project)
-                             }
-                        },
-                        {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": ">*{} - {}{}*\n>{}\n\n\n\n _(Please do not respond to this message here in Slack."
-                            " It will only be seen by you.)_".format(tagger, time_in_format, category, note.replace('\n', '\n>'))
-         	                  }
-                        }
-                    ]
-
-                    userid = client.users_lookupByEmail(email=view_result[user])
-                    channel = client.conversations_open(users=userid.data['user']['id'])
-                    client.chat_postMessage(channel=channel.data['channel']['id'], blocks=blocks)
-                    client.conversations_close(channel=channel.data['channel']['id'])
 
 class LinksDataHandler(SafeHandler):
     """ Serves external links for each project
