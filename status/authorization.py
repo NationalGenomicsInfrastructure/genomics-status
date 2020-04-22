@@ -37,8 +37,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                         redirect_uri=self.application.settings['redirect_uri'],
                         client_id=self.application.oauth_key,
                         scope=['profile', 'email'],
-                        response_type='code',
-                        extra_params={'approval_prompt': 'auto'})
+                        response_type='code')
 
 class LogoutHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
     def get(self):
