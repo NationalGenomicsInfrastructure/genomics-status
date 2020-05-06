@@ -177,7 +177,7 @@ function load_table(status, type, columns, dates) {
       // Add links to Portal References
       var portal_name = summary_row['customer_project_reference'];
       var portal_id = summary_row['portal_id'];
-      tbl_row.find('td.customer_project_reference').html('<a target="_blank" href="https://ngisweden.scilifelab.se/order/'+portal_id + '">' + portal_name + '</a>');
+      tbl_row.find('td.customer_project_reference').html('<a target="_blank" href="https://ngisweden.scilifelab.se/orders/order/'+portal_id + '">' + portal_name + '</a>');
 
       //parse and display running notes
       var latest_note = tbl_row.find('td.latest_running_note');
