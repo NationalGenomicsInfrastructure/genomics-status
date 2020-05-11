@@ -332,7 +332,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         t_threshold = datetime.datetime.now() - relativedelta(minutes=3)
         if ProjectsBaseDataHandler.cached_search_list is None or \
                 ProjectsBaseDataHandler.search_list_last_fetched < t_threshold:
-            projects_view = self.application.projects_db.view("projects/name_to_id", descending=True)
+            projects_view = self.application.projects_db_views.view("projects/name_to_id_cust_ref", descending=True)
 
             ProjectsBaseDataHandler.cached_search_list = [(row.key, row.value) for row in projects_view]
             ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
@@ -340,10 +340,10 @@ class ProjectsBaseDataHandler(SafeHandler):
         search_string = search_string.lower()
 
         for row_key, row_value in ProjectsBaseDataHandler.cached_search_list:
-            if search_string in row_key.lower() or search_string in row_value.lower():
+            if search_string in row_key.lower() or search_string in row_value[0].lower() or (row_value[1] and search_string in row_value[1].lower()):
                 project = {
-                    "url": '/project/'+row_value,
-                    "name": "{} ({})".format(row_key, row_value)
+                    "url": '/project/'+row_value[0],
+                    "name": "{} ({})".format(row_key, row_value[0])
                 }
                 projects.append(project)
 

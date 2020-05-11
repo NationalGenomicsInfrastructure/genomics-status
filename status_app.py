@@ -245,6 +245,7 @@ class Application(tornado.web.Application):
             self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
             self.pricing_products_db = couch["pricing_products"]
             self.projects_db = couch["projects"]
+            self.projects_db_views = couch["projects_new"] #added because some views are timimg out in projects db but not in this one replicated from it
             self.samples_db = couch["samples"]
             self.server_status_db = couch['server_status']
             self.suggestions_db = couch["suggestion_box"]
