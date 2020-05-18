@@ -99,6 +99,9 @@ $(function(){
   $(".sortableListSource").sortable({
       connectWith: ".sortableListSource"
     });
+
+  $('[data-toggle="tooltip"]').tooltip()
+
 });
 // Load the Projects Table
 function load_table(status, type, columns, dates) {
@@ -206,12 +209,31 @@ function load_table_head(columns){
   var tbl_foot = $('<tr>');
   $.each(columns, function(i, column_tuple) {
     tbl_head.append($('<th>')
-      .addClass('sort a')
-      .attr('data-sort', column_tuple[1])
-      .text(column_tuple[0])
+      .addClass(function(){
+        var toReturn = 'sort a';
+        if(column_tuple[0].indexOf('glyphicon')>=0)
+          toReturn += ' glyphicon '+column_tuple[0];
+        return toReturn;
+      })
+      .attr("data-sort",  column_tuple[1])
+      .attr("data-toggle",  function(){
+        if(column_tuple[0].indexOf('glyphicon')>=0)
+        return 'tooltip';
+      })
+      .attr("title",  function(){
+        if(column_tuple[0].indexOf('glyphicon')>=0)
+        return column_tuple[2];
+      })
+      .text(function(){
+        if(column_tuple[0].indexOf('glyphicon')<0)
+          return column_tuple[0]
+      })
     );
     tbl_foot.append($('<th>')
-      .text(column_tuple[0])
+      .text(function(){
+        if(column_tuple[0].indexOf('glyphicon')<0)
+          return column_tuple[0]
+      })
     );
   });
   $("#project_table_head").html(tbl_head);
@@ -237,7 +259,10 @@ function init_listjs(no_items, columns) {
     // Setup - add a text input to each footer cell
     $('#project_table tfoot th').each( function () {
       var title = $('#project_table thead th').eq( $(this).index() ).text();
-      $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
+      var inputSize = 10;
+      if(title.length==0)
+        inputSize = 1;
+      $(this).html( '<input size='+inputSize+' type="text" placeholder="Search '+title+'" />' );
     } );
 
     //initialize custom project sorting
@@ -686,6 +711,8 @@ function getTableParamsandLoad(){
   var columns=new Array();
   $.each( select.columns, function( i, val ) {
     columns.push([i, val[0]]);
+    if(i.indexOf('glyphicon')<=0)
+      columns[columns.length-1].push(val[2]);
   })
   if(select.status.length==0 || columns.length==0){
     alert('Select a status and preset!');
@@ -798,6 +825,8 @@ function get_current_selection(source){
   $.each(columnorder, function (i, elem){
     getElem=$('#allColFields').find("input[name='"+elem+"']");
     columns[$(getElem).data('displayname')]=[$(getElem).attr('name'),$(getElem).data('columngroup')];
+    if($(getElem).data('displayname').indexOf("glyphicon")>=0)
+      columns[$(getElem).data('displayname')].push($(getElem).parent().text().match(/\(([^)]+)\)/)[1]);
   });
 
   return {
@@ -853,11 +882,22 @@ $('#resetReorderingbtn').on("click", function() {
   resetReorderFields();
 });
 
+function getTHeaderElem(elem){
+  thElem = '<li data-name="'+$(elem).prop('name')+'"';
+  if($(elem).data('displayname').indexOf('glyphicon')>=0){
+    thElem+= ' class="glyphicon '+$(elem).data('displayname')+'" data-toggle="tooltip" title="'+$(elem).parent().text().match(/\(([^)]+)\)/)[1]+'">';
+  }
+  else
+    thElem+='>'+$(elem).data('displayname');
+  thElem+='</li>';
+  return thElem;
+}
+
 function resetReorderFields(){
   $("#tHeaderListul").empty();
   tHList="";
   $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
-     tHList+='<li data-name="'+$(this).prop('name')+'">'+$(this).data('displayname')+'</li>';
+     tHList += getTHeaderElem(elem);
    })
   $('#tHeaderListul').append(tHList);
 }
@@ -868,7 +908,7 @@ function updateTableFields(order){
     if(selectedFields.size()>$('#tHeaderListul li').size()){
       $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
         if($('#tHeaderListul li[data-name="'+$(elem).prop('name')+'"]').length==0){
-          $("#tHeaderListul").append('<li data-name="'+$(this).prop('name')+'">'+$(this).data('displayname')+'</li>');
+          $("#tHeaderListul").append(getTHeaderElem(elem));
         }
       })
     }
@@ -885,8 +925,7 @@ function updateTableFields(order){
     $("#tHeaderListul").empty();
     tHList="";
     $.each(order, function (i, elem){
-      getElem=$('#allColFields').find("input[name='"+elem+"']");
-      tHList+='<li data-name="'+$(getElem).prop('name')+'">'+$(getElem).data('displayname')+'</li>';
+      tHList+= getTHeaderElem($('#allColFields').find("input[name='"+elem+"']"));
     })
     $('#tHeaderListul').append(tHList);
   }
