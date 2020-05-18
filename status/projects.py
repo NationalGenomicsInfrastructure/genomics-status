@@ -328,7 +328,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                               'days_prep' : ['library_prep_start', 'qc_library_finished']
                               }
                 for key, value in def_dates.items():
-                    if key == 'days_prep' and 'Library, By user' in final_projects[row.key[0]].get('library_construction_method'):
+                    if key == 'days_prep' and 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
                         final_projects[row.key[0]][key] = '-'
                     else:
                         final_projects[row.key[0]][key] = self._calculate_days_in_status(final_projects[row.key[0]].get(value[0]),
