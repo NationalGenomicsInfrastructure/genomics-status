@@ -1231,3 +1231,15 @@ tr.group, tr.group:hover, .dtrg-group {
   cursor: pointer;
   margin-right: 4px;
 }
+
+td.alert-red{
+  background-color: #ea9999;
+}
+
+td.alert-orange{
+  background-color: #facc99;
+}
+
+td.alert-green{
+  background-color: #d9ead3;
+}
