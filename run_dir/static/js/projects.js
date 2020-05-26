@@ -171,6 +171,39 @@ function load_table(status, type, columns, dates) {
             }
             return summary_row[column_tuple[1]];
           })
+          .addClass(function(){
+            if(column_tuple[0].indexOf('glyphicon')>=0){
+              to_ret='';
+              check_value = summary_row[column_tuple[1]]=='-'? 0 : Math.abs(summary_row[column_tuple[1]]);
+              switch(column_tuple[1]){
+                case 'days_recep_ctrl':
+                  to_ret = check_value>7 ? check_value>14 ? 'alert-red': 'alert-orange' :'alert-green';
+                  break;
+                case 'days_prep_start':
+                  to_ret = check_value>7 ? check_value>10 ? 'alert-red': 'alert-orange' :'alert-green';
+                  break;
+                case 'days_seq_start':
+                  to_ret = check_value>7 ? check_value>10 ? 'alert-red': 'alert-orange' :'alert-green';
+                  break;
+                case 'days_seq':
+                  to_ret = check_value>7 ? check_value>14 ? 'alert-red': 'alert-orange' :'alert-green';
+                  break;
+                case 'days_analysis':
+                  to_ret = check_value>7 ? check_value>10 ? 'alert-red': 'alert-orange' : 'alert-green';
+                  break;
+                case 'days_data_delivery':
+                  to_ret = check_value>7 ? check_value>10 ? 'alert-red': 'alert-orange' : 'alert-green';
+                  break;
+                case 'days_close':
+                  to_ret = check_value>7 ? check_value>10 ? 'alert-red': 'alert-orange' : 'alert-green';
+                  break;
+                case 'days_prep':
+                  to_ret = check_value>10 ? check_value>19 ? 'alert-red': 'alert-orange' : 'alert-green';
+                  break;
+              }
+              return to_ret;
+            }
+          })
         );
       });
 
