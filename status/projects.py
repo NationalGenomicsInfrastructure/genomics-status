@@ -207,6 +207,8 @@ class ProjectsBaseDataHandler(SafeHandler):
             else:
                 delta = datetime.datetime.now() - dateutil.parser.parse(start_date)
             days = delta.days
+        else:
+            days = '-'
         return days
 
     def list_projects(self, filter_projects='all'):
@@ -319,7 +321,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                     final_projects[row.key[0]][date_type] = date
 
                 def_dates = { 'days_recep_ctrl' : ['open_date', 'queued'],
-                              'days_prep_start' : ['queued', 'librart_prep_start'],
+                              'days_prep_start' : ['queued', 'library_prep_start'],
                               'days_seq_start' : ['qc_library_finished', 'sequencing_start_date'],
                               'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
                               'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
@@ -328,7 +330,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                               'days_prep' : ['library_prep_start', 'qc_library_finished']
                               }
                 for key, value in def_dates.items():
-                    if key == 'days_prep' and 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
+                    if key in ['days_prep', 'days_prep_start'] and 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
                         final_projects[row.key[0]][key] = '-'
                     else:
                         final_projects[row.key[0]][key] = self._calculate_days_in_status(final_projects[row.key[0]].get(value[0]),
