@@ -989,7 +989,8 @@ class RecCtrlDataHandler(SafeHandler):
     """Handler for the reception control view"""
     def get(self, project_id):
         sample_data={}
-        v = self.application.projects_db.view("samples/rec_ctrl_view")
+        #changed from projects due to view timing out with os_process_error 
+        v = self.application.projects_db_views.view("samples/rec_ctrl_view")
         for row in v[project_id]:
             sample_data.update(row.value)
 
