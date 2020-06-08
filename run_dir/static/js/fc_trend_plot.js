@@ -158,7 +158,6 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             continue;
         }
         // Set colours and the name of data series  
-        console.log(data[d].cver)
         if (color_type=='chemver'){
             if (data[d].cver.includes('S4')){
                 series_name = "S4";
