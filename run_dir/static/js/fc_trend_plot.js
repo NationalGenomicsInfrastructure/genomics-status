@@ -154,8 +154,10 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             continue;
         }else if (data[d].instrument.indexOf('A') != -1 && filter_inst_type.includes('A')){
             continue;
+        }else if (data[d].instrument.indexOf('N') != -1 && filter_inst_type.includes('N')){
+            continue;
         }
-        // Set colours and the name of data series    
+        // Set colours and the name of data series  
         if (color_type=='chemver'){
             if (data[d].cver.includes('S4')){
                 series_name = "S4";
@@ -175,13 +177,22 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             if (data[d].cver.includes('Version3')){
                 series_name = "MiSeq v3";
                 }
+            if (data[d].mode == '2'){
+                series_name = "MiSeq Nano"; 
+                }    
             if (data[d].cver.includes('X')){
                 series_name = "HiSeq X";
                 }
-             if (data[d].cver.includes('v2') || data[d].cver.includes('v4')){
-                 series_name = "HiSeq";
-                 }
-                 col_color = color_by_chemistry(series_name); 
+            if (data[d].cver.includes('v2') || data[d].cver.includes('v4')){
+                series_name = "HiSeq";
+                }
+            if (data[d].cver.includes('High')){
+                series_name = "NextSeq High";
+                }
+            if (data[d].cver.includes('Mid')){
+                series_name = "NextSeq Mid";
+                }
+                col_color = color_by_chemistry(series_name); 
         }else if (color_type == 'month'){
             series_name = data[d].id.substr(0,4);
             col_color=color_by_month(data[d].id);
@@ -201,6 +212,8 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
               series_name = "MiSeq";
           }else if (data[d].instrument.indexOf('A') != -1){
               series_name = "NovaSeq";
+          }else if (data[d].instrument.indexOf('N') != -1){
+              series_name = "NextSeq";
             }else{
               continue;
           }
@@ -272,12 +285,14 @@ function color_by_instrument(instrument){
 function color_by_type(instrument){
     if (instrument.indexOf('E') != -1){
         return current_color_schemes[0](0).hex();
-    } else if (instrument.indexOf('D') != -1){
+    }else if (instrument.indexOf('D') != -1){
         return current_color_schemes[0](1).hex();
     }else if (instrument.indexOf('M') != -1){
         return current_color_schemes[0](2).hex();
     }else if (instrument.indexOf('A') != -1){
         return current_color_schemes[0](3).hex();
+    }else if (instrument.indexOf('N') != -1){
+        return current_color_schemes[0](4).hex();
     }else{
       return "#c3c3c3";
     }
@@ -287,7 +302,7 @@ function color_by_month(id){
 }
 
 function color_by_chemistry(series_name){
-    col = {"S4":4, "S2":5, "S1":6, "SP":7, "MiSeq v2":8, "MiSeq v3":9, "HiSeq X":10, "HiSeq":11};
+    col = {"S4":4, "S2":5, "S1":6, "SP":7, "MiSeq v2":8, "MiSeq v3":9, "MiSeq Nano":10, "HiSeq X":11, "HiSeq":12, "NextSeq High":13, "NextSeq Mid":14};
     //Not sure what this does, needs more investigation when time permits
     var id = Math.round(window.current_chemistries_list.indexOf(series_name));
 	  return current_color_schemes[col[series_name]](id).hex();
@@ -441,9 +456,12 @@ function update_color_schemes(){
     var sp_cs=chroma.scale(['#ffb700', '#ff00ae']).domain([0, window.current_chemistries_list.length-1]);
     var v2_cs=chroma.scale(['#8400ff', '#ee00ff']).domain([0, window.current_chemistries_list.length-1]);
     var v3_cs=chroma.scale(['#26807b', '#7fbde3']).domain([0, window.current_chemistries_list.length-1]);
+    var mi_nano=chroma.scale(['#ff9100', '#ffa600']).domain([0, window.current_chemistries_list.length-1]);
     var x_cs=chroma.scale(['#ff0000', '#ffd500']).domain([0, window.current_chemistries_list.length-1]);
     var hi_cs=chroma.scale(['#917646', '#825f27']).domain([0, window.current_chemistries_list.length-1]);
-    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs, s4_cs, s2_cs, s1_cs, sp_cs, v2_cs, v3_cs, x_cs, hi_cs];
+    var nxt_hi=chroma.scale(['#00e6d2', '#00d0ff']).domain([0, window.current_chemistries_list.length-1]);
+    var nxt_mi=chroma.scale(['#d400ff', '#00c70d']).domain([0, window.current_chemistries_list.length-1]);
+    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs, s4_cs, s2_cs, s1_cs, sp_cs, v2_cs, v3_cs, mi_nano, x_cs, hi_cs, nxt_hi, nxt_mi];
 }
 function update_chemistries_list(){
     window.current_chemistries_list=[];
