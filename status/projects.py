@@ -314,21 +314,21 @@ class ProjectsBaseDataHandler(SafeHandler):
             row = self.project_summary_data(row)
             final_projects[row.key[1]] = row.value
 
+        def_dates = { 'days_recep_ctrl' : ['open_date', 'queued'],
+                      'days_prep_start' : ['queued', 'library_prep_start'],
+                      'days_seq_start' : ['qc_library_finished', 'sequencing_start_date'],
+                      'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
+                      'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
+                      'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
+                      'days_close' : ['all_raw_data_delivered', 'close_date'],
+                      'days_prep' : ['library_prep_start', 'qc_library_finished']
+                      }
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
             if row.key[0] in final_projects:
                 for date_type, date in row.value.items():
                     final_projects[row.key[0]][date_type] = date
 
-                def_dates = { 'days_recep_ctrl' : ['open_date', 'queued'],
-                              'days_prep_start' : ['queued', 'library_prep_start'],
-                              'days_seq_start' : ['qc_library_finished', 'sequencing_start_date'],
-                              'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
-                              'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
-                              'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
-                              'days_close' : ['all_raw_data_delivered', 'close_date'],
-                              'days_prep' : ['library_prep_start', 'qc_library_finished']
-                              }
                 for key, value in def_dates.items():
                     if key in ['days_prep', 'days_prep_start'] and 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
                         final_projects[row.key[0]][key] = '-'
@@ -707,7 +707,7 @@ class RunningNotesDataHandler(SafeHandler):
                 if option == 'Slack' or option == 'Both':
                     nest_asyncio.apply()
                     client = slack.WebClient(token=application.slack_token)
-
+                    notification_text = '{} has tagged you in {}!'.format(tagger, project)
                     blocks = [
                         {
                         "type": "section",
@@ -732,7 +732,7 @@ class RunningNotesDataHandler(SafeHandler):
                     try:
                         userid = client.users_lookupByEmail(email=view_result[user])
                         channel = client.conversations_open(users=userid.data['user']['id'])
-                        client.chat_postMessage(channel=channel.data['channel']['id'], blocks=blocks)
+                        client.chat_postMessage(channel=channel.data['channel']['id'], text=notification_text, blocks=blocks)
                         client.conversations_close(channel=channel.data['channel']['id'])
                     except Exception:
                         #falling back to email
@@ -989,7 +989,7 @@ class RecCtrlDataHandler(SafeHandler):
     """Handler for the reception control view"""
     def get(self, project_id):
         sample_data={}
-        #changed from projects due to view timing out with os_process_error 
+        #changed from projects due to view timing out with os_process_error
         v = self.application.projects_db_views.view("samples/rec_ctrl_view")
         for row in v[project_id]:
             sample_data.update(row.value)
