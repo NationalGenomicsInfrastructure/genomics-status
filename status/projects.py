@@ -218,6 +218,16 @@ class ProjectsBaseDataHandler(SafeHandler):
         openflag=False
         projtype=self.get_argument('type', 'all')
 
+        def_dates = { 'days_recep_ctrl' : ['open_date', 'queued'],
+                      'days_prep_start' : ['queued', 'library_prep_start'],
+                      'days_seq_start' : ['qc_library_finished', 'sequencing_start_date'],
+                      'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
+                      'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
+                      'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
+                      'days_close' : ['all_raw_data_delivered', 'close_date'],
+                      'days_prep' : ['library_prep_start', 'qc_library_finished']
+                      }
+
         if 'closed' in filter_projects or 'all' in filter_projects:
             closedflag=True
         if 'ongoing' in filter_projects or 'open' in filter_projects or 'review' in filter_projects or 'all' in filter_projects or 'closed' in filter_projects:
@@ -314,15 +324,6 @@ class ProjectsBaseDataHandler(SafeHandler):
             row = self.project_summary_data(row)
             final_projects[row.key[1]] = row.value
 
-        def_dates = { 'days_recep_ctrl' : ['open_date', 'queued'],
-                      'days_prep_start' : ['queued', 'library_prep_start'],
-                      'days_seq_start' : ['qc_library_finished', 'sequencing_start_date'],
-                      'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
-                      'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
-                      'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
-                      'days_close' : ['all_raw_data_delivered', 'close_date'],
-                      'days_prep' : ['library_prep_start', 'qc_library_finished']
-                      }
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
             if row.key[0] in final_projects:
