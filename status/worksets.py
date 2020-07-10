@@ -88,15 +88,16 @@ class WorksetDataHandler(SafeHandler):
             result[row.key] = row.value
             result[row.key].pop("_id", None)
             result[row.key].pop("_rev", None)
-        if result:
-            return result
-
+        if not result:
         # Check if the lims id was used
-        ws_view = application.worksets_db.view("worksets/lims_id")
-        for row in ws_view[workset]:
-            result[row.key] = row.value
-            result[row.key].pop("_id", None)
-            result[row.key].pop("_rev", None)
+            ws_view = application.worksets_db.view("worksets/lims_id")
+            for row in ws_view[workset]:
+                result[row.key] = row.value
+                result[row.key].pop("_id", None)
+                result[row.key].pop("_rev", None)
+        for key in result:
+            for project in result[key]['projects']:
+                result[key]['projects'][project]['samples'] = dict(sorted(result[key]['projects'][project]['samples'].items()))
         return result
 
 class WorksetHandler(SafeHandler):
