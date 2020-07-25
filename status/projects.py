@@ -9,9 +9,7 @@ import dateutil.parser
 import datetime
 import requests
 import re
-import paramiko
 import base64
-import urllib.parse
 import os
 import logging
 import smtplib
@@ -544,7 +542,7 @@ class FragAnImageHandler(SafeHandler):
 
     def get_frag_an_image(self,url):
         data = lims.get_file_contents(uri=url)
-        encoded_string = base64.b64encode(data.read())
+        encoded_string = base64.b64encode(data.read()).decode('utf-8')
         returnHTML=json.dumps(encoded_string)
         return returnHTML
 
@@ -567,20 +565,14 @@ class CaliperImageHandler(SafeHandler):
             self.write(self.get_caliper_image(data.get(sample).get(step)))
 
     def get_caliper_image(self,url):
-        """returns a base64 string of the caliper image aksed"""
-        pattern=re.compile("^sftp://([a-z\.]+)(.+)")
-        host=pattern.search(url).group(1)
-        uri=urllib.parse.unquote(pattern.search(url).group(2))
+        """returns a base64 string of the caliper image asked"""
+        #url pattern: sftp://genologics.scilifelab.se/home/glsftp/clarity/year/month/processid/artifact-id-file-id.png
+        artifact_attached_id= url.rsplit('.', 1)[0].rsplit('/', 1)[1].rsplit('-', 2)[0]
+        #Couldn't use fileid in the url directly as it was sometimes wrong
+        caliper_file_id = Artifact(lims=lims, id=artifact_attached_id).files[0].id
         try:
-            transport=paramiko.Transport(host)
-
-            transport.connect(username = self.application.genologics_login, password = self.application.genologics_pw)
-            sftp_client = transport.open_sftp_client()
-            my_file = sftp_client.open(uri, 'r')
+            my_file = lims.get_file_contents(id=caliper_file_id)
             encoded_string = base64.b64encode(my_file.read()).decode('utf-8')
-            my_file.close()
-            sftp_client.close()
-            transport.close()
             returnHTML=json.dumps(encoded_string)
             return returnHTML
         except Exception as message:
