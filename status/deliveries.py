@@ -68,7 +68,8 @@ class DeliveriesPageHandler(SafeHandler):
 
     def get(self):
         # get project summary data
-        summary_view = self.application.projects_db.view('project/summary')
+        summary_view = self.application.projects_db.view('project/summary', descending=True)
+        summary_view = summary_view[["open",'Z']:["open",'']]
         summary_data = {}
         for project in summary_view:
             # todo: check if this one works
