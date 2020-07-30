@@ -146,11 +146,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
         var series_name = "";
         var flowcell_link="/flowcells/"+fcid;
         //Seq platform filter
-        if (data[d].instrument.indexOf('E') != -1 && filter_inst_type.includes('E')){
-            continue;
-        }else if (data[d].instrument.indexOf('D') != -1 && filter_inst_type.includes('D')){
-            continue;
-        }else if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
+        if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
             continue;
         }else if (data[d].instrument.indexOf('A') != -1 && filter_inst_type.includes('A')){
             continue;
@@ -180,12 +176,6 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             if (data[d].mode == '2'){
                 series_name = "MiSeq Nano"; 
                 }    
-            if (data[d].cver.includes('X')){
-                series_name = "HiSeq X";
-                }
-            if (data[d].cver.includes('v2') || data[d].cver.includes('v4')){
-                series_name = "HiSeq";
-                }
             if (data[d].cver.includes('High')){
                 series_name = "NextSeq High";
                 }
@@ -204,11 +194,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             }
         }else{
           col_color=color_by_type(data[d].instrument);
-          if (data[d].instrument.indexOf('E') != -1){
-              series_name = "HiSeq X";
-          }else if (data[d].instrument.indexOf('D') != -1){
-              series_name = "HiSeq";
-          }else if (data[d].instrument.indexOf('M') != -1){
+          if (data[d].instrument.indexOf('M') != -1){
               series_name = "MiSeq";
           }else if (data[d].instrument.indexOf('A') != -1){
               series_name = "NovaSeq";
@@ -283,11 +269,7 @@ function color_by_instrument(instrument){
 }
 
 function color_by_type(instrument){
-    if (instrument.indexOf('E') != -1){
-        return current_color_schemes[0](0).hex();
-    }else if (instrument.indexOf('D') != -1){
-        return current_color_schemes[0](1).hex();
-    }else if (instrument.indexOf('M') != -1){
+    if (instrument.indexOf('M') != -1){
         return current_color_schemes[0](2).hex();
     }else if (instrument.indexOf('A') != -1){
         return current_color_schemes[0](3).hex();
@@ -302,7 +284,7 @@ function color_by_month(id){
 }
 
 function color_by_chemistry(series_name){
-    col = {"S4":4, "S2":5, "S1":6, "SP":7, "MiSeq v2":8, "MiSeq v3":9, "MiSeq Nano":10, "HiSeq X":11, "HiSeq":12, "NextSeq High":13, "NextSeq Mid":14};
+    col = {"S4":4, "S2":5, "S1":6, "SP":7, "MiSeq v2":8, "MiSeq v3":9, "MiSeq Nano":10, "NextSeq High":11, "NextSeq Mid":12};
     //Not sure what this does, needs more investigation when time permits
     var id = Math.round(window.current_chemistries_list.indexOf(series_name));
 	  return current_color_schemes[col[series_name]](id).hex();
@@ -457,11 +439,9 @@ function update_color_schemes(){
     var v2_cs=chroma.scale(['#8400ff', '#ee00ff']).domain([0, window.current_chemistries_list.length-1]);
     var v3_cs=chroma.scale(['#26807b', '#7fbde3']).domain([0, window.current_chemistries_list.length-1]);
     var mi_nano=chroma.scale(['#ff9100', '#ffa600']).domain([0, window.current_chemistries_list.length-1]);
-    var x_cs=chroma.scale(['#ff0000', '#ffd500']).domain([0, window.current_chemistries_list.length-1]);
-    var hi_cs=chroma.scale(['#917646', '#825f27']).domain([0, window.current_chemistries_list.length-1]);
     var nxt_hi=chroma.scale(['#00e6d2', '#00d0ff']).domain([0, window.current_chemistries_list.length-1]);
     var nxt_mi=chroma.scale(['#d400ff', '#00c70d']).domain([0, window.current_chemistries_list.length-1]);
-    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs, s4_cs, s2_cs, s1_cs, sp_cs, v2_cs, v3_cs, mi_nano, x_cs, hi_cs, nxt_hi, nxt_mi];
+    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs, s4_cs, s2_cs, s1_cs, sp_cs, v2_cs, v3_cs, mi_nano, nxt_hi, nxt_mi];
 }
 function update_chemistries_list(){
     window.current_chemistries_list=[];
