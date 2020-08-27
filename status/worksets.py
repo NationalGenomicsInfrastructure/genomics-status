@@ -59,19 +59,34 @@ class WorksetsHandler(SafeHandler):
                     continue
         return result
 
+    def closed_ws_data(self, all=True):
+        result={}
+        a_year_ago = datetime.datetime.now() - relativedelta(years=1)
+        ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
+        for row in ws_view:
+            try:
+                if parse(row.value['date_run']) <= a_year_ago:
+                    for project in row.value['projects']:
+                         if row.value['projects'][project]['status'] == 'Closed':
+                             result[row.key]=row.value
+            except TypeError:
+                continue
+        return result
+
     def get(self):
         # Default is to NOT show all worksets
         all=self.get_argument("all", False)
         t = self.application.loader.load("worksets.html")
         ws_data=self.worksets_data(all=all)
+        closed_worksets_data=self.closed_ws_data(all=all)
         headers= [['Date Run', 'date_run'],['Workset Name', 'workset_name'], \
                  ['Projects (samples)','projects'],['Sequencing Setup', 'sequencing_setup'], \
                  ['Date finished', 'finish date'],['Operator', 'technician'], \
                  ['Application', 'application'],['Library','library_method'], \
                  ['Samples Passed', 'passed'],['Samples Failed', 'failed'] , \
                  ['Pending Samples', 'unknown'],['Total samples', 'total'], \
-                 ['Latest workset note', 'Workset Notes']];
-        self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user(), ws_data=ws_data, headers=headers, all=all))
+                 ['Latest workset note', 'Workset Notes'],['Closed Worksets', 'closed_ws']];
+        self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user(), ws_data=ws_data, closed_worksets_data=closed_worksets_data, headers=headers, all=all))
 
 class WorksetDataHandler(SafeHandler):
     """Loaded through /api/v1/workset/[workset]"""
