@@ -59,26 +59,11 @@ class WorksetsHandler(SafeHandler):
                     continue
         return result
 
-    def closed_ws_data(self, all=True):
-        result={}
-        a_year_ago = datetime.datetime.now() - relativedelta(years=1)
-        ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
-        for row in ws_view:
-            try:
-                if parse(row.value['date_run']) <= a_year_ago:
-                    for project in row.value['projects']:
-                         if row.value['projects'][project]['status'] == 'Closed':
-                             result[row.key]=row.value
-            except TypeError:
-                continue
-        return result
-
     def get(self):
         # Default is to NOT show all worksets
         all=self.get_argument("all", False)
         t = self.application.loader.load("worksets.html")
         ws_data=self.worksets_data(all=all)
-        closed_worksets_data=self.closed_ws_data(all=all)
         headers= [['Date Run', 'date_run'],['Workset Name', 'workset_name'], \
                  ['Projects (samples)','projects'],['Sequencing Setup', 'sequencing_setup'], \
                  ['Date finished', 'finish date'],['Operator', 'technician'], \
@@ -86,7 +71,7 @@ class WorksetsHandler(SafeHandler):
                  ['Samples Passed', 'passed'],['Samples Failed', 'failed'] , \
                  ['Pending Samples', 'unknown'],['Total samples', 'total'], \
                  ['Latest workset note', 'Workset Notes'],['Closed Worksets', 'closed_ws']];
-        self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user(), ws_data=ws_data, closed_worksets_data=closed_worksets_data, headers=headers, all=all))
+        self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user(), ws_data=ws_data, headers=headers, all=all))
 
 class WorksetDataHandler(SafeHandler):
     """Loaded through /api/v1/workset/[workset]"""
@@ -114,6 +99,28 @@ class WorksetDataHandler(SafeHandler):
             for project in result[key]['projects']:
                 result[key]['projects'][project]['samples'] = dict(sorted(result[key]['projects'][project]['samples'].items()))
         return result
+class ClosedWorksetsHandler(SafeHandler):
+    """ Handles all closed worksets for the closed ws tab
+    URL: /api/v1/closed_worksets
+    """
+    def get(self):
+        result={}
+        a_year_ago = datetime.datetime.now() - relativedelta(years=1)
+        ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
+        for row in ws_view:
+            try:
+                if parse(row.value['date_run']) <= a_year_ago:
+                    flag=True
+                    for project in row.value['projects']:
+                        if row.value['projects'][project]['status'] == 'Open':
+                            flag=False
+                            break
+                    if flag:
+                            result[row.key]=row.value
+            except TypeError:
+                continue
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(result))
 
 class WorksetHandler(SafeHandler):
     """Loaded through /workset/[workset]"""
@@ -288,7 +295,6 @@ class WorksetPoolsHandler(SafeHandler):
     """ Serves all the samples that need to be added to worksets in LIMS
     URL: /api/v1/workset_pools
     """
-
     def get(self):
         limsg = lims.Lims(BASEURI, USERNAME, PASSWORD)
         queues = {}

@@ -132,44 +132,25 @@ Description: Shows a table with all worksets.
         </div>
       </div>
       <div class="tab-pane fade" id="tab_closed_worksets">
-       <h2 id="{{ worksets }}" class="closed_ws_page_heading"><small>All worksets with closed projects found in StatusDB</small></h2>
+       <h2 id="{{ worksets }}" class="closed_ws_page_heading"><small>All worksets with projects closed for >1 year in StatusDB</small></h2>
        <tbody class="list" id="closed_ws_table_body">
         <table class="table table-striped table-bordered sortable" id="closed_ws_table">
           <thead id="closed_ws_table_head">
               <tr class="sticky">
-               {% for onekey in headers %}
-                  {% if onekey[1] == 'date_run' %}
-                     <th>{{ onekey[0]}}</th>
-                  {% elif onekey[1] == 'workset_name'%}
-                     <th>{{ onekey[0]}}</th>
-                  {% elif onekey[1] == 'closed_ws'%}
-                     <th>{{ onekey[0]}}</th>
-                     {% end %}
-               {% end %}
-               </tr>
+                <th>Date Run</th>
+                <th>Workset Name</th>
+                <th>Closed Projects</th>
+              </tr>
           </thead>
-          {% for onews in closed_worksets_data%}
-          <tr>
-          {% for onekey in headers %}
-              {% if onekey[1] == 'date_run' %}
-                  <td>
-                  <span class="label label-date sentenceCase">{{ closed_worksets_data[onews].get(onekey[1]) }}</span>
-                  </td>
-              {% elif onekey[1] == 'workset_name'%}
-                  <td>
-                  <a href="/workset/{{ onews }}" style="color:#000000;">{{ onews }}</a>
-                  </td>
-              {% elif onekey[1] == 'closed_ws'%}
-                  <td>
-                  {% for onepj in closed_worksets_data.get(onews).get('projects') %}
-                        <a href="/project/{{ onepj }}" class="text-warning" data-toggle="tooltip" title="Status: Closed"><i class="glyphicon glyphicon-folder-close">&nbsp;</i>{{ ", ".join([closed_worksets_data.get(onews, {}).get('projects', {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}&nbsp;</a>
-                    {% end %}
-                  </td>
-                 {% end %}
-              {% end %}
-          {% end %}
-          </tr>
-          </tbody>
+          <tfoot id="closed_ws_table_footer">
+              <tr>
+              <th>Date Run</th>
+              <th>Workset Name</th>
+              <th>Closed Projects</th>
+              </tr>
+          </tfoot>
+          <tbody class="list" id="closed_ws_table_body">
+        </tbody>
         </table>
     </div>
   </div>

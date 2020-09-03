@@ -150,6 +150,33 @@ $(".tabbable").on("click", '[role="tab"]', function() {
       });
     });
   }
+  if($(this).attr('href')=='#tab_closed_worksets'){
+    $("#closed_ws_table_body").html('<tr><td colspan="4" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
+    return $.getJSON('/api/v1/closed_worksets', function(data) {
+      $("#closed_ws_table_body").empty();
+      $.each(data, function(key, value) {
+        if(!($.isEmptyObject(value))){
+          var tbl_row = $('<tr>');
+          tbl_row.append($('<td>').html(value['date_run']));
+          tbl_row.append($('<td>').html('<a href="/workset/'+key+'">'+'<font color="#000000">'+key+'</font>'+'</a>'));
+          tbl_row.append($('<td>').html(function() {
+            var t = '';
+            $.each(value['projects'], function(project, projval) {
+              if(!t.trim()){
+                t = t + '<a href="/project/'+project+'">'+'<font color="#870c7f">'+projval['project_name']+' ('+project+')</a>'+'</font>'+' <span class="glyphicon glyphicon-folder-close" style="color:#870c7f"></span>';
+              }
+              else {
+                t = t + ', <a href="/project/'+project+'">'+'<font color="#870c7f">'+projval['project_name']+' ('+project+')</a>'+'</font>'+' <span class="glyphicon glyphicon-folder-close" style="color:#870c7f"></span>';
+              }
+          });
+            return t;
+        }));
+        $("#closed_ws_table_body").append(tbl_row);
+      }
+    });
+   init_list_closed_ws();
+  });
+ }
 });
 
 // Initialize sorting and searching javascript plugin
@@ -214,6 +241,41 @@ function init_listjs2() {
         } );
     } );
 }
+
+// Initialize sorting and searching javascript plugin
+function init_list_closed_ws() {
+    // Setup - add a text input to each footer cell
+    $('#closed_ws_table tfoot th').each( function () {
+      var title = $('#closed_ws_table thead th').eq( $(this).index() ).text();
+      $(this).html( '<input size=10 type="text" placeholder="Search..." />' );
+    } );
+
+    var table = $('#closed_ws_table').DataTable({
+      "paging":false,
+      "info":false,
+      "order": [[ 0, "desc" ]]
+    });
+
+    //Add the bootstrap classes to the search thingy
+    if($('#workset_table_filter').length){
+      $('#workset_table_filter').hide();
+    }
+    $('div.dataTables_filter input').addClass('form-control search search-query');
+    $('#closed_ws_table_filter').addClass('form-inline pull-right');
+    $("#closed_ws_table_filter").appendTo("h1");
+    $('#closed_ws_table_filter label input').appendTo($('#closed_ws_table_filter'));
+    $('#closed_ws_table_filter label').remove();
+    $("#closed_ws_table_filter input").attr("placeholder", "Search..");
+    // Apply the search
+    table.columns().every( function () {
+        var that = this;
+        $( 'input', this.footer() ).on( 'keyup change', function () {
+            that
+            .search( this.value )
+            .draw();
+        });
+    });
+  }
 
 $('body').on('click', '.group', function(event) {
   $($("#samples_table").DataTable().column(0).header()).trigger("click")
