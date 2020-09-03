@@ -58,7 +58,7 @@ from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandle
     UpdatedDocumentsDatahandler
 from status.user_preferences import UserPrefPageHandler
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
-    WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler
+    WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler, ClosedWorksetsHandler
 
 from zenpy import Zenpy
 from urllib.parse import urlsplit
@@ -189,6 +189,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/api/v1/workset_pools", WorksetPoolsHandler),
+            ("/api/v1/closed_worksets", ClosedWorksetsHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/assign_roles", AssignRolesHandler),
