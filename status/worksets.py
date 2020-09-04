@@ -99,24 +99,25 @@ class WorksetDataHandler(SafeHandler):
             for project in result[key]['projects']:
                 result[key]['projects'][project]['samples'] = dict(sorted(result[key]['projects'][project]['samples'].items()))
         return result
+        
 class ClosedWorksetsHandler(SafeHandler):
     """ Handles all closed worksets for the closed ws tab
     URL: /api/v1/closed_worksets
     """
     def get(self):
-        result={}
+        result = {}
         a_year_ago = datetime.datetime.now() - relativedelta(years=1)
-        ws_view= self.application.worksets_db.view("worksets/summary", descending=True)
+        ws_view = self.application.worksets_db.view("worksets/summary", descending=True)
         for row in ws_view:
             try:
                 if parse(row.value['date_run']) <= a_year_ago:
-                    flag=True
+                    flag = True
                     for project in row.value['projects']:
                         if row.value['projects'][project]['status'] == 'Open':
-                            flag=False
+                            flag = False
                             break
                     if flag:
-                            result[row.key]=row.value
+                            result[row.key] = row.value
             except TypeError:
                 continue
         self.set_header("Content-type", "application/json")
