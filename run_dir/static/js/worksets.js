@@ -41,14 +41,13 @@ function init_listjs() {
       "info":false,
       "order": [[ 0, "desc" ]]
     });
-
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
     $('#workset_table_filter').addClass('form-inline pull-right');
     $("#workset_table_filter").appendTo("h1");
     $('#workset_table_filter label input').appendTo($('#workset_table_filter'));
     $('#workset_table_filter label').remove();
-    $("#workset_table_filter input").attr("placeholder", "Search..");
+    $("#workset_table_filter input").attr("placeholder", "Search...");
     // Apply the search
     table.columns().every( function () {
         var that = this;
@@ -90,6 +89,7 @@ var sumGroups = {};
 $(".tabbable").on("click", '[role="tab"]', function() {
   if($(this).attr('href')=='#tab_run_worksets'){
     $('#samples_table_filter').remove();
+    $('#closed_ws_table_filter').remove();
     $('#workset_table_filter').show();
   }
   if($(this).attr('href')=='#tab_pending_samples_to_worksets'){
@@ -223,14 +223,17 @@ function init_listjs2() {
     });
     //Add the bootstrap classes to the search thingy
     if($('#workset_table_filter').length){
-      $('#workset_table_filter').hide();
+      $('#workset_table_filter').hide(); 
+    }
+    if($('#closed_ws_table_filter').length){
+      $('#closed_ws_table_filter').hide(); 
     }
     $('div.dataTables_filter input').addClass('form-control search search-query');
     $('#samples_table_filter').addClass('form-inline pull-right');
     $("#samples_table_filter").appendTo("h1");
     $('#samples_table_filter label input').appendTo($('#samples_table_filter'));
     $('#samples_table_filter label').remove();
-    $("#samples_table_filter input").attr("placeholder", "Search..");
+    $("#samples_table_filter input").attr("placeholder", "Search...");
     // Apply the search
     table.columns().every( function () {
         var that = this;
@@ -265,7 +268,7 @@ function init_list_closed_ws() {
     $("#closed_ws_table_filter").appendTo("h1");
     $('#closed_ws_table_filter label input').appendTo($('#closed_ws_table_filter'));
     $('#closed_ws_table_filter label').remove();
-    $("#closed_ws_table_filter input").attr("placeholder", "Search..");
+    $("#closed_ws_table_filter input").attr("placeholder", "Search...");
     // Apply the search
     table.columns().every( function () {
         var that = this;
