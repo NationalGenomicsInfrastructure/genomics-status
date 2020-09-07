@@ -109,7 +109,7 @@ class ClosedWorksetsHandler(SafeHandler):
         a_year_ago = datetime.datetime.now() - relativedelta(years=1)
         ws_view = self.application.worksets_db.view("worksets/summary", descending=True)
         for row in ws_view:
-            try:
+            if row.value.get('date_run'):
                 if parse(row.value['date_run']) <= a_year_ago:
                     flag = True
                     for project in row.value['projects']:
@@ -118,8 +118,6 @@ class ClosedWorksetsHandler(SafeHandler):
                             break
                     if flag:
                             result[row.key] = row.value
-            except TypeError:
-                continue
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(result))
 

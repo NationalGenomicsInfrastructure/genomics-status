@@ -158,15 +158,15 @@ $(".tabbable").on("click", '[role="tab"]', function() {
         if(!($.isEmptyObject(value))){
           var tbl_row = $('<tr>');
           tbl_row.append($('<td>').html(value['date_run']));
-          tbl_row.append($('<td>').html('<a href="/workset/'+key+'">'+'<font color="#000000">'+key+'</font>'+'</a>'));
+          tbl_row.append($('<td>').html('<a href="/workset/'+key+'">'+key+'</font>'+'</a>'));
           tbl_row.append($('<td>').html(function() {
             var t = '';
             $.each(value['projects'], function(project, projval) {
               if(!t.trim()){
-                t = t + '<a href="/project/'+project+'">'+'<font color="#870c7f">'+projval['project_name']+' ('+project+')</a>'+'</font>'+' <span class="glyphicon glyphicon-folder-close" style="color:#870c7f"></span>';
+                t = t + '<a href="/project/'+project+'">'+projval['project_name']+' ('+project+')</a>'+' <span class="glyphicon glyphicon-folder-close" style="color:#337ab7"></span>';
               }
               else {
-                t = t + ', <a href="/project/'+project+'">'+'<font color="#870c7f">'+projval['project_name']+' ('+project+')</a>'+'</font>'+' <span class="glyphicon glyphicon-folder-close" style="color:#870c7f"></span>';
+                t = t + ', <a href="/project/'+project+'">'+projval['project_name']+' ('+project+')</a>'+' <span class="glyphicon glyphicon-folder-close" style="color:#337ab7"></span>';
               }
           });
             return t;
@@ -255,6 +255,7 @@ function init_list_closed_ws() {
 
     var table = $('#closed_ws_table').DataTable({
       "paging":false,
+      "destroy": true,
       "info":false,
       "order": [[ 0, "desc" ]]
     });
