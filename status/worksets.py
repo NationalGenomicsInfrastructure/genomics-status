@@ -107,18 +107,20 @@ class ClosedWorksetsHandler(SafeHandler):
     def get(self):
         result = {}
         a_year_ago = datetime.datetime.now() - relativedelta(years=1)
-        project_dates_view = self.applications.projects_db.view("project/project_dates")
-        project_dates = dict(project_dates_view)
+        project_dates_view = self.application.projects_db.view("project/id_name_dates")
+        project_dates = dict((row.key, row.value) for row in project_dates_view)
         ws_view = self.application.worksets_db.view("worksets/summary", descending=True)
         for row in ws_view:
             if row.value.get('date_run'):
                 if parse(row.value['date_run']) <= a_year_ago:
                     flag = True
                     for project in row.value['projects']:
-                        if project_dates[project]["close_date"] <= a_year_ago:
+                        close_date_s = project_dates[project]["close_date"]
+                        close_date = datetime.datetime.strptime(close_date_s, '%Y-%m-%d')
+                        if (close_date_s == "0000-00-00") or (close_date >= a_year_ago):
                             flag = False
                             break
-                        elif project_dates[project]["close_date"] == "0000-00-00":
+                        elif close_date >= a_year_ago:
                             flag = False
                             break
                     if flag:
