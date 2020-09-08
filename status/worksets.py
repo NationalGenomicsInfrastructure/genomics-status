@@ -99,7 +99,7 @@ class WorksetDataHandler(SafeHandler):
             for project in result[key]['projects']:
                 result[key]['projects'][project]['samples'] = dict(sorted(result[key]['projects'][project]['samples'].items()))
         return result
-        
+
 class ClosedWorksetsHandler(SafeHandler):
     """ Handles all closed worksets for the closed ws tab
     URL: /api/v1/closed_worksets
@@ -107,13 +107,18 @@ class ClosedWorksetsHandler(SafeHandler):
     def get(self):
         result = {}
         a_year_ago = datetime.datetime.now() - relativedelta(years=1)
+        project_dates_view = self.applications.projects_db.view("project/project_dates")
+        project_dates = dict(project_dates_view)
         ws_view = self.application.worksets_db.view("worksets/summary", descending=True)
         for row in ws_view:
             if row.value.get('date_run'):
                 if parse(row.value['date_run']) <= a_year_ago:
                     flag = True
                     for project in row.value['projects']:
-                        if row.value['projects'][project]['status'] == 'Open':
+                        if project_dates[project]["close_date"] <= a_year_ago:
+                            flag = False
+                            break
+                        elif project_dates[project]["close_date"] == "0000-00-00":
                             flag = False
                             break
                     if flag:
