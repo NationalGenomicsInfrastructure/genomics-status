@@ -116,15 +116,15 @@ class ClosedWorksetsHandler(SafeHandler):
                     flag = True
                     for project in row.value['projects']:
                         close_date_s = project_dates[project]["close_date"]
-                        close_date = datetime.datetime.strptime(close_date_s, '%Y-%m-%d')
-                        if (close_date_s == "0000-00-00") or (close_date >= a_year_ago):
+                        if close_date_s == "0000-00-00":
                             flag = False
                             break
-                        elif close_date >= a_year_ago:
+                        close_date = datetime.datetime.strptime(close_date_s, '%Y-%m-%d')
+                        if close_date >= a_year_ago:
                             flag = False
                             break
                     if flag:
-                            result[row.key] = row.value
+                        result[row.key] = row.value
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(result))
 
