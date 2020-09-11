@@ -223,10 +223,10 @@ function init_listjs2() {
     });
     //Add the bootstrap classes to the search thingy
     if($('#workset_table_filter').length){
-      $('#workset_table_filter').hide(); 
+      $('#workset_table_filter').hide();
     }
     if($('#closed_ws_table_filter').length){
-      $('#closed_ws_table_filter').hide(); 
+      $('#closed_ws_table_filter').hide();
     }
     $('div.dataTables_filter input').addClass('form-control search search-query');
     $('#samples_table_filter').addClass('form-inline pull-right');
@@ -288,23 +288,28 @@ $('body').on('click', '.group', function(event) {
 function getDaysAndDateLabel(date, option){
   var number_of_days = 0;
   var label = '';
-  if( option=='date' || option=='both' ){
-    //calculate number of days from given date to current date
-    number_of_days = Math.floor(Math.abs(new Date() - new Date(date))/(1000*86400));
-  }
-  if (option=='label' || option=='both') {
-    if (option=='label'){
-      number_of_days = date;
-    }
-    if (number_of_days < 7){
-      label =  'success';
-    }
-    else if (number_of_days >= 7 && number_of_days < 14) {
-      label = 'warning';
-    }
-    else {
+  if (date == null){
       label = 'danger';
-    }
+      number_of_days = ' Missing';
+  } else {
+      if( option=='date' || option=='both' ){
+        //calculate number of days from given date to current date
+        number_of_days = Math.floor(Math.abs(new Date() - new Date(date))/(1000*86400));
+      }
+      if (option=='label' || option=='both') {
+        if (option=='label'){
+          number_of_days = date;
+        }
+        if (number_of_days < 7){
+          label =  'success';
+        }
+        else if (number_of_days >= 7 && number_of_days < 14) {
+          label = 'warning';
+        }
+        else {
+          label = 'danger';
+        }
+      }
   }
-   return [number_of_days, label];
+  return [number_of_days, label];
 }

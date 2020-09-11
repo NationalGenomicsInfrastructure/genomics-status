@@ -326,7 +326,11 @@ class WorksetPoolsHandler(SafeHandler):
                 else:
                     total_num_samples = limsg.get_sample_number(projectlimsid=project)
                     proj = Project(limsg, id=project)
-                    date_queued = proj.udf['Queued'].strftime("%Y-%m-%d")
+                    try:
+                        date_queued = proj.udf['Queued'].strftime("%Y-%m-%d")
+                    except KeyError:
+                        # Queued should really be on a project at this point, but mistakes happen
+                        date_queued = None
                     projName = proj.name
                     pools[method][project] = {'total_num_samples': total_num_samples, 'queued_date': date_queued, 'pname': projName,
                                                 'samples': [name]}
