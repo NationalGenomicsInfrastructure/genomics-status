@@ -125,6 +125,10 @@ function generateQuoteList() {
               warning_txt = `Quantity for ` + product.Name + ` is not a multiple of its minimum quantity: ` + product["Minimum Quantity"]
           }
       }
+      if (product["Status"] == 'Discontinued') {
+          class_string = ' class="text-danger"'
+          warning_txt = 'Discontinued product: ' + product.Name + ' included in the current quote.'
+      }
       empty = false;
       var li = `<li data-quantity=${product.quantity}` + class_string + ` data-product-id=${product_id}>` +
         `<a href='#' class='remove_product' data-product-id=${product.REF_ID}><i class="glyphicon glyphicon-remove text-danger"></i></a> ` +
