@@ -273,11 +273,6 @@ class PagedQCDataHandler(SafeHandler):
 
         return sample_list
 
-class SafeStaticFileHandler(SafeHandler, tornado.web.StaticFileHandler):
-    """ Serve static files for authenticated users
-    """
-    pass
-
 
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
     """ Serves up static files without any tornado caching.
