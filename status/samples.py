@@ -40,15 +40,6 @@ class SampleQCSummaryDataHandler(SafeHandler):
         return result.rows[0].value
 
 
-class SampleRunHandler(SafeHandler):
-    """ Serves a page of brief statistics and sample runs of a given sample.
-    """
-    def get(self, sample):
-        t = self.application.loader.load("sample_runs.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, sample=sample, user= self.get_current_user(),
-                              deprecated=True))
-
-
 class SampleRunDataHandler(SafeHandler):
     """ Serves a list of sample runs for a given sample.
 
@@ -80,16 +71,6 @@ class SampleQCDataHandler(SafeHandler):
         result = self.application.samples_db.view("qc/qc_summary")[sample]
 
         return result.rows[0].value
-
-
-class SampleQCSummaryHandler(SafeHandler):
-    """ Serves a page which displays QC data with tables and plots for a
-    given sample run.
-    """
-    def get(self, sample):
-        t = self.application.loader.load("sample_run_qc.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, sample=sample, user= self.get_current_user(),
-                              deprecated=True))
 
 
 class SampleQCAlignmentDataHandler(SafeHandler):
@@ -171,15 +152,6 @@ class SamplesPerLaneDataHandler(SafeHandler):
             samples_per_lane.append(row.value)
 
         return samples_per_lane
-
-
-class SamplesPerLaneHandler(SafeHandler):
-    """ Serves a page which displays a plot for the number of samples
-    loaded on a lane.
-    """
-    def get(self):
-        t = self.application.loader.load("samples_per_lane.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(), deprecated=True))
 
 
 class SamplesPerLanePlotHandler(SamplesPerLaneDataHandler):
