@@ -344,6 +344,8 @@ class PricingProductsDataHandler(PricingBaseHandler):
     Use the optional parameter `version` to specify an exact version
     from the database. If omitted, the latest (highest number) version
     will be used.
+    Use the optional parameter `date` to specify the date to use for
+    exchange rates.
     Any information available for the product(s) will be returned.
     """
 
@@ -476,11 +478,16 @@ class PricingQuoteTbodyHandler(PricingBaseHandler):
     def get(self):
         version = self.get_argument('version', None)
         date = self.get_argument('date', None)
+        show_discontinued = self.get_argument('discontinued', False)
 
         products = self.get_product_prices(None, version=version,
                                        date=date,
                                        pretty_strings=True)
         products = [product for id,product in products.items()]
+
+        # Remove discontinued products from the list
+        if not show_discontinued:
+            products = [product for product in products if product["Status"] != 'Discontinued']
 
         components = self.get_component_prices(component_id=None,
                                         version=version,

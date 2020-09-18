@@ -13,7 +13,8 @@ $( document ).ready(function() {
       var original_html = $(this).text();
       $(this).html('<span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading...</em>');
       var that = this;
-      tableLoad(date, allProducts, function() {
+      var discontinued = false;
+      tableLoad(date, allProducts, discontinued, function() {
           $(that).html(original_html);
           $("#exch_rate_modal").modal('hide');
           generateQuoteList();
@@ -35,13 +36,13 @@ $( document ).ready(function() {
       generateQuoteList();
   });
 
-  tableLoad(null, null, function(){
+  tableLoad(null, null, false, function(){
       /* need to wait until table has loaded before initializing the dataTable */
       init_listjs();
   });
 });
 
-function tableLoad(date=null, products=null, _callback=null) {
+function tableLoad(date=null, products=null, discontinued=false, _callback=null) {
   // Table is loaded dynamically to enable switching of exchange rate date
   products_tbody_url = '/pricing_quote_tbody'
   products_url = '/api/v1/pricing_products'
@@ -49,6 +50,11 @@ function tableLoad(date=null, products=null, _callback=null) {
   if (date !== null){
       products_tbody_url += '?date=' + date
       products_url += '?date=' + date
+  };
+
+  if (discontinued) {
+      products_tbody_url += '?discontinued=true'
+      products_url += '?disctontinued=true'
   };
 
   $('#pricing_products_tbody').load(products_tbody_url, function(){
