@@ -37,9 +37,15 @@ class TestGet(object):
         no_regexp_pages = filter(lambda x: have_regexp.match(x) is None,
                                  pages)
 
+        ignore_pages = ['/api/v1/deliveries/set_bioinfo_responsible$',  # Never meant to be a api-get URL
+                        '/api/v1/bioinfo_analysis',  # Never meant to be a api-get URL
+                        '/api/v1/sequencing_queues' # lims-heavy request, refuses connection eventually
+                        ]
+        no_regexp_pages = [x for x in no_regexp_pages if x not in ignore_pages]
+
         # Check every url, that it gives a 200 OK response
-        error_pages = filter(lambda u: not requests.get(self.url + u).ok,
-                             no_regexp_pages)
+        error_pages = list(filter(lambda u: not requests.get(self.url + u).ok,
+                             no_regexp_pages))
 
         assert_true(len(error_pages) == 0,
                     msg=('Requests resulted in error: {0} '.format(error_pages)))
@@ -84,7 +90,7 @@ class TestGet(object):
                 url + 'sample_alignment/' + sample_run_id,
                 url + 'qc/' + sample_run_id]
 
-        error_pages = filter(lambda u: not requests.get(u).ok, urls)
+        error_pages = list(filter(lambda u: not requests.get(u).ok, urls))
         assert_true(len(error_pages) == 0,
                     msg=('Sample requests resulted in error {0} '.format(error_pages)))
 
