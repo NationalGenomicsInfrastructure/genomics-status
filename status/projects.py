@@ -1,7 +1,6 @@
 """ Handlers for sequencing project information.
 """
 import json
-import string
 import traceback
 
 import tornado.web
