@@ -48,7 +48,10 @@ class qPCRPoolsDataHandler(SafeHandler):
                     library_type = ''
                     runmode = ''
                     if not 'lambda DNA' in art.name:
-                        library_type = art.samples[0].project.udf["Library construction method"]
+                        try:
+                            library_type = art.samples[0].project.udf["Library construction method"]
+                        except KeyError:  # I think this was an issue on stage with strange data
+                            library_type = 'NA'
                         try:
                             runmode = art.samples[0].project.udf['Sequencing platform']
                         except KeyError:
