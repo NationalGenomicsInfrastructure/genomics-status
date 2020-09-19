@@ -105,7 +105,7 @@ class TestGet(object):
         url = self.url + '/api/v1/'
         urls = [url + 'quotas/' + quota_id]
 
-        error_pages = filter(lambda u: not requests.get(u).ok, urls)
+        error_pages = list(filter(lambda u: not requests.get(u).ok, urls))
         assert_true(len(error_pages) == 0,
                     msg=('Quota requests resulted in error {0} '.format(error_pages)))
 
@@ -126,12 +126,12 @@ class TestGet(object):
                 url + 'flowcell_info/' + flowcell_id,
                 url + 'flowcell_demultiplex/' + flowcell_id]
 
-        error_pages = filter(lambda u: not requests.get(u).ok, urls)
+        error_pages = list(filter(lambda u: not requests.get(u).ok, urls))
         assert_true(len(error_pages) == 0,
                     msg=('Flowcell requests resulted in error {0} '.format(error_pages)))
 
         non_error_url = filter(lambda u: u not in error_pages,  urls)
-        empty_json = filter(lambda u: len(json.loads(requests.get(u).content)) == 0, non_error_url)
+        empty_json = list(filter(lambda u: len(json.loads(requests.get(u).content)) == 0, non_error_url))
         assert_true(len(empty_json) == 0,
                     msg=('Flowcell requests are empty: {0} '.format(empty_json)))
 
@@ -149,11 +149,11 @@ class TestGet(object):
         urls = [url + 'project_summary/' + project_id,
                 url + 'application/' + application]
 
-        error_pages = filter(lambda u: not requests.get(u).ok, urls)
+        error_pages = list(filter(lambda u: not requests.get(u).ok, urls))
         assert_true(len(error_pages) == 0,
                     msg=('Misc requests resulted in error {0} '.format(error_pages)))
 
         non_error_url = filter(lambda u: u not in error_pages,  urls)
-        empty_json = filter(lambda u: len(json.loads(requests.get(u).content)) == 0, non_error_url)
+        empty_json = list(filter(lambda u: len(json.loads(requests.get(u).content)) == 0, non_error_url))
         assert_true(len(empty_json) == 0,
                     msg=('Misc requests are empty: {0} '.format(empty_json)))
