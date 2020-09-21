@@ -11,9 +11,6 @@ fill_updates_table = function(){
             } else if(summary[2] == 'Flowcell information'){
                 link = '<a href="/flowcells/'+summary[1]+'">';
                 linkend = '</a>';
-            } else if(summary[2] == 'Sample information'){
-                link = '<a href="/samples/'+summary[1]+'">';
-                linkend = '</a>';
             }
             tbl_row = '<tr>';
         tbl_row += '<td>' + link + summary[2] + linkend + '</td>';
@@ -47,7 +44,7 @@ fill_updates_table = function(){
         }
     });
 };
-    
+
 
 $(document).ready(function(){
     fill_updates_table();
