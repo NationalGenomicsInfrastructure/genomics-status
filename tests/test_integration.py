@@ -15,7 +15,7 @@ class TestGet(object):
         """Server Settings"""
         self.url = 'http://localhost:9761'
         self.api = requests.get(self.url + '/api/v1')
-        #assert_true(self.api.ok)
+        assert_true(self.api.ok)
         with open(TEST_ITEMS) as test_items:
             self.test_items = yaml.load(test_items, Loader=yaml.SafeLoader)
 
