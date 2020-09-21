@@ -208,9 +208,14 @@ class DataHandler(UnsafeHandler):
     """
     def get(self):
         self.set_header("Content-type", "application/json")
-        handlers = [h[0] for h in self.application.declared_handlers]
+        handlers = []
+        for h in self.application.declared_handlers:
+            try:
+                handlers.append(h[0])
+            except TypeError:  # 'URLSpec' object does not support indexing
+                handlers.append(h.regex.pattern)
         api = [h for h in handlers if h.startswith("/api")]
-        utils = [h for h in handlers if h == "/login" or h == "/logout"]
+        utils = [h for h in handlers if h == "/login" or h == "/logout" or h == ".*"]
         pages = list(set(handlers).difference(set(api)).difference(set(utils)))
         pages = [h for h in pages if not (h.endswith("?") or h.endswith("$"))]
         pages.sort(reverse=True)
@@ -233,11 +238,6 @@ class UpdatedDocumentsDatahandler(SafeHandler):
 
     def list_updated(self, num_items=25):
         last = []
-
-        view = self.application.samples_db.view("time/last_updated",
-                                                limit=num_items, descending=True)
-        for doc in view:
-            last.append((doc.key, doc.value, 'Sample information'))
 
         view = self.application.projects_db.view("time/last_updated",
                                                  limit=num_items, descending=True)
@@ -272,11 +272,6 @@ class PagedQCDataHandler(SafeHandler):
             sample_list.append(row.key)
 
         return sample_list
-
-class SafeStaticFileHandler(SafeHandler, tornado.web.StaticFileHandler):
-    """ Serve static files for authenticated users
-    """
-    pass
 
 
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):

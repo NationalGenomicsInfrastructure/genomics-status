@@ -1,7 +1,6 @@
 """ Handlers for sequencing project information.
 """
 import json
-import string
 import traceback
 
 import tornado.web
@@ -398,7 +397,7 @@ class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
     """
     def get(self):
         undefined = self.get_argument("undefined", "False")
-        undefined = (string.lower(undefined) == "true")
+        undefined = (undefined.lower() == "true")
         project_list = self.get_argument("project_list", "all")
         field_items = self.list_project_fields(undefined=undefined, project_list=project_list)
         self.write(json.dumps(list(field_items)))

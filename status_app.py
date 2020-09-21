@@ -44,9 +44,9 @@ from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler, FlowcellCountPlotHandler, FlowcellCountApiHandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
-    SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, SampleQCSummaryHandler, \
-    SampleReadCountDataHandler, SampleRunDataHandler, SampleRunHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
-    SamplesPerLaneHandler, SamplesPerLanePlotHandler
+    SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, \
+    SampleReadCountDataHandler, SampleRunDataHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
+    SamplesPerLanePlotHandler
 from status.sequencing import InstrumentClusterDensityPlotHandler, InstrumentErrorratePlotHandler, InstrumentUnmatchedPlotHandler, \
     InstrumentYieldPlotHandler, InstrumentClusterDensityDataHandler, InstrumentErrorrateDataHandler, InstrumentUnmatchedDataHandler, \
     InstrumentYieldDataHandler
@@ -54,7 +54,7 @@ from status.statistics import YearApplicationsProjectHandler, YearApplicationsSa
     ApplicationOpenProjectsHandler, ApplicationOpenSamplesHandler, WeekInstrumentTypeYieldHandler, StatsAggregationHandler, YearDeliverytimeApplicationHandler
 from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
-from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, SafeStaticFileHandler, \
+from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, \
     UpdatedDocumentsDatahandler
 from status.user_preferences import UserPrefPageHandler
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
@@ -203,8 +203,6 @@ class Application(tornado.web.Application):
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/nas_quotas", NASQuotasHandler),
-            ("/qc/([^/]*)$", SampleQCSummaryHandler),
-            (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
             ("/pools_qpcr", qPCRPoolsHandler),
             ("/pricing_products", PricingProductListHandler),
             ("/pricing_quote", PricingQuoteHandler),
@@ -217,7 +215,6 @@ class Application(tornado.web.Application):
             ("/proj_meta", ProjMetaCompareHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
-            ("/samples/([^/]*)$", SampleRunHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/userpref", UserPrefPageHandler),
