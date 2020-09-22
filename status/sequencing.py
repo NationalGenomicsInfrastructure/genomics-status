@@ -73,7 +73,7 @@ class InstrumentClusterDensityPlotHandler(InstrumentClusterDensityDataHandler):
                     upper.append(np.percentile(errors, 25))
                     lower.append(np.percentile(errors, 75))
 
-                except ValueError:
+                except IndexError:  # Empty list
                     continue
 
             c_ax = ax[i]
