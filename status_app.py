@@ -6,7 +6,6 @@ import uuid
 import yaml
 import json
 import requests
-import os
 
 from collections import OrderedDict
 from couchdb import Server
@@ -402,10 +401,6 @@ if __name__ == '__main__':
                                                 ssl_options = ssl_options)
 
     http_server.listen(server_settings.get("port", 8888))
-
-    # Start tornado in parallel mode
-    if os.uname().nodename in server_settings['production_node_names']:
-        http_server.start(server_settings['nr_production_processes'])
 
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
