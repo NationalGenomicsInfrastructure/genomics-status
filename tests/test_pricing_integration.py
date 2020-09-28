@@ -1,11 +1,13 @@
 import time
 import unittest
+import requests
+import json
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 
-class TestAddProduct(unittest.TestCase):
+class TestPricingQoute(unittest.TestCase):
     def setUp(self):
         self.driver = webdriver.Chrome()
         self.driver.get("http://localhost:9761/pricing_quote")
@@ -86,3 +88,17 @@ class TestAddProduct(unittest.TestCase):
         new_price_int = int(new_price.split(' ')[0])  # Get number from e.g. '8421 SEK'
 
         self.assertGreater(new_price_int, current_price_int, msg="Weaker SEK should lead to higher price")
+
+class TestApi(unittest.TestCase):
+
+    def test_discontinued_products(self):
+        base_url = 'http://localhost:9761/api/v1/pricing_products'
+
+        response = json.loads(requests.get(base_url).content)
+        discontinued_products = [product for ref_id, product in response.items() if product['Status'] != 'Available']
+        self.assertEquals(len(discontinued_products), 0, msg="No discontinued products by default")
+
+        url = base_url + '?discontinued=true'
+        response = json.loads(requests.get(url).content)
+        discontinued_products = [product for ref_id, product in response.items() if product['Status'] != 'Available']
+        self.assertGreater(len(discontinued_products), 0, msg="Discontinued products should be added")
