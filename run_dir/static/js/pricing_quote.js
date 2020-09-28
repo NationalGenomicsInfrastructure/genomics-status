@@ -13,7 +13,7 @@ $( document ).ready(function() {
       var original_html = $(this).text();
       $(this).html('<span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading...</em>');
       var that = this;
-      var discontinued = false;
+      var discontinued = $('#toggle_discontinued').hasClass('active');
       tableLoad(date, allProducts, discontinued, function() {
           $(that).html(original_html);
           $("#exch_rate_modal").modal('hide');
@@ -39,6 +39,21 @@ $( document ).ready(function() {
   tableLoad(null, null, false, function(){
       /* need to wait until table has loaded before initializing the dataTable */
       init_listjs();
+  });
+
+  /* Enable toggle of discontinued products */
+  $('#toggle_discontinued').click(function(e) {
+      if ($(this).hasClass('active')) {
+          reset_listjs(); /// Really brute force way of reinit datatable
+          tableLoad(null, null, false, function(){
+              init_listjs();
+          });
+      } else {
+          reset_listjs();
+          tableLoad(null, null, true, function(){
+              init_listjs();
+          });
+      };
   });
 });
 
@@ -252,6 +267,12 @@ function applyWarning(warning_txt){
 
 function updateTableCounts(product) {
   $(`#count_in_table_${product.REF_ID}`).html(product.quantity);
+}
+
+function reset_listjs() {
+    $('#pricing_products_table').DataTable().clear();
+    $('#pricing_products_table').DataTable().destroy();
+    $('#pricing_products_table_filter').remove();
 }
 
 // Initialize sorting and searching javascript plugin
