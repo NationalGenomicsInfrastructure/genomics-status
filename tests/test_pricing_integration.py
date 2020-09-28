@@ -7,7 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 
-class TestPricingQoute(unittest.TestCase):
+class TestPricingQuote(unittest.TestCase):
     def setUp(self):
         self.driver = webdriver.Chrome()
         self.driver.get("http://localhost:9761/pricing_quote")
@@ -16,6 +16,18 @@ class TestPricingQoute(unittest.TestCase):
 
     def tearDown(self):
         self.driver.quit()
+
+    def _change_date(self, date):
+        self.driver.execute_script("window.scrollTo(0, 0)")
+        self.driver.find_element(By.LINK_TEXT, "(Change)").click()
+        time.sleep(0.5)
+
+        self.driver.find_element(By.ID, "datepicker").click()
+        self.driver.find_element(By.ID, "datepicker").clear()
+        self.driver.find_element(By.ID, "datepicker").send_keys(date)
+        self.driver.find_element(By.CSS_SELECTOR, ".modal-body > p").click()
+        self.driver.find_element(By.ID, "datepicker-btn").click()
+        time.sleep(1.0)
 
     def test_addproduct(self):
         """Adding and removing product items to the quote, checking the counts in the input box. """
@@ -49,15 +61,7 @@ class TestPricingQoute(unittest.TestCase):
 
     def test_exchangerates(self):
         """Switching between two known exchange rate dates from _statusdb_dev_"""
-        self.driver.find_element(By.LINK_TEXT, "(Change)").click()
-        time.sleep(0.5)
-
-        self.driver.find_element(By.ID, "datepicker").click()
-        self.driver.find_element(By.ID, "datepicker").clear()
-        self.driver.find_element(By.ID, "datepicker").send_keys("2020-09-15")
-        self.driver.find_element(By.CSS_SELECTOR, ".modal-body > p").click()
-        self.driver.find_element(By.ID, "datepicker-btn").click()
-        time.sleep(1.0)
+        self._change_date("2020-09-15")
 
         usd_rate = self.driver.find_element_by_id('exch_rate_usd').text
         self.assertEqual(usd_rate, '8.75', msg="Matching the known rate")
@@ -70,16 +74,7 @@ class TestPricingQoute(unittest.TestCase):
         current_price = self.driver.find_elements(By.CSS_SELECTOR, ".quote_totals .quote_totals_val.quote_sweac")[0].text
         current_price_int = int(current_price.split(' ')[0])  # Get number from e.g. '8421 SEK'
 
-        self.driver.execute_script("window.scrollTo(0, 0)")
-        self.driver.find_element(By.LINK_TEXT, "(Change)").click()
-        time.sleep(0.5)
-
-        self.driver.find_element(By.ID, "datepicker").click()
-        self.driver.find_element(By.ID, "datepicker").clear()
-        self.driver.find_element(By.ID, "datepicker").send_keys("2020-07-01")
-        self.driver.find_element(By.CSS_SELECTOR, ".modal-body > p").click()
-        self.driver.find_element(By.ID, "datepicker-btn").click()
-        time.sleep(1.0)
+        self._change_date("2020-07-01")
 
         usd_rate = self.driver.find_element_by_id('exch_rate_usd').text
         self.assertEqual(usd_rate, '9.63', msg="Matching the known rate")
@@ -88,6 +83,31 @@ class TestPricingQoute(unittest.TestCase):
         new_price_int = int(new_price.split(' ')[0])  # Get number from e.g. '8421 SEK'
 
         self.assertGreater(new_price_int, current_price_int, msg="Weaker SEK should lead to higher price")
+
+    def test_discontinued_products(self):
+        """Discontinued products should not be shown only by opt-in"""
+
+        products = self.driver.find_elements(By.CSS_SELECTOR, '#pricing_products_tbody tr')
+        self._change_date("2020-07-01")
+        products_new_date = self.driver.find_elements(By.CSS_SELECTOR, '#pricing_products_tbody tr')
+        self.assertEqual(len(products), len(products_new_date), msg="Changing date should not change discontinued")
+        usd_rate = self.driver.find_element_by_id('exch_rate_usd').text
+
+        # Enable discontinued products
+        self.driver.find_element(By.ID, "more_options").click()
+        time.sleep(0.5)
+        self.driver.find_element(By.ID, "toggle_discontinued").click()
+        time.sleep(1.5)
+        all_products = self.driver.find_elements(By.CSS_SELECTOR, '#pricing_products_tbody tr')
+        self.assertGreater(len(all_products), len(products), msg="Available products should be fewer than all products")
+
+        new_usd_rate = self.driver.find_element_by_id('exch_rate_usd').text
+        self.assertEqual(usd_rate, new_usd_rate, msg="Showing discontinued products should not change the exchange rate")
+
+        self._change_date("2020-09-28")
+        products_new_date = self.driver.find_elements(By.CSS_SELECTOR, '#pricing_products_tbody tr')
+        self.assertEqual(len(all_products), len(products_new_date), msg="Changing date should not change discontinued")
+
 
 class TestApi(unittest.TestCase):
 
