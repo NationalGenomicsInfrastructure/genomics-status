@@ -269,7 +269,7 @@ class PricingBaseHandler(SafeHandler):
         return return_d
 
     def get_product_prices(self, product_id, version=None, date=None,
-                           pretty_strings=False):
+                           discontinued=None, pretty_strings=False):
         """Calculate the price for an individual or all products
 
         :param product_id: The id of the product to calculate price for.
@@ -279,6 +279,8 @@ class PricingBaseHandler(SafeHandler):
         :param date: The date for which the exchange rate will be fetched.
                         When not specified, the latest exchange rates will be
                         used.
+        :param discontinued: If evaluated to False, only products with status
+                        'available' will be included.
         :param pretty_strings: Output prices as formatted strings instead
                         of float numbers.
 
@@ -291,6 +293,10 @@ class PricingBaseHandler(SafeHandler):
         return_d = products.copy()
 
         for product_id, product in products.items():
+            if not discontinued and product['Status'] != 'Available':
+                return_d.pop(product_id)
+                continue
+
             price_int, price_ext = self._calculate_product_price(product, all_component_prices)
 
             if pretty_strings:
@@ -346,17 +352,20 @@ class PricingProductsDataHandler(PricingBaseHandler):
     will be used.
     Use the optional parameter `date` to specify the date to use for
     exchange rates.
+    By default, discontinued products are omitted, use the parameter
+    `discontinued` to include those.
     Any information available for the product(s) will be returned.
     """
 
     def get(self, search_string=None):
         """Returns individual or all products from the database as json"""
-
         version = self.get_argument('version', None)
         date = self.get_argument('date', None)
+        discontinued = self.get_argument('discontinued', None)
 
         rows = self.get_product_prices(search_string, version=version,
                                        date=date,
+                                       discontinued=discontinued,
                                        pretty_strings=True)
 
         self.write(json.dumps(rows))
@@ -447,13 +456,6 @@ class PricingQuoteHandler(PricingBaseHandler):
     """
 
     def get(self):
-        products = self.get_product_prices(None,
-                                       pretty_strings=True)
-        products = [product for id,product in products.items()]
-
-        components = self.get_component_prices(component_id=None,
-                                        pretty_strings=True)
-
         exch_rates = self.fetch_exchange_rates(None)
 
         exch_rates['Issued at'] = exch_rates['Issued at'][0:10]
@@ -463,8 +465,6 @@ class PricingQuoteHandler(PricingBaseHandler):
         t = self.application.loader.load("pricing_quote.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
                 user=self.get_current_user(),
-                products=products,
-                components=components,
                 exch_rates=exch_rates))
 
 class PricingQuoteTbodyHandler(PricingBaseHandler):
@@ -473,21 +473,22 @@ class PricingQuoteTbodyHandler(PricingBaseHandler):
     Loaded through e.g.:
         /pricing_quote_tbody?date=2019-03-23
 
+    The parameter discontinued can be used to also show products where
+        the status is not 'Available'
+
     """
 
     def get(self):
         version = self.get_argument('version', None)
         date = self.get_argument('date', None)
-        show_discontinued = self.get_argument('discontinued', False)
+        discontinued = self.get_argument('discontinued', None)
 
         products = self.get_product_prices(None, version=version,
                                        date=date,
+                                       discontinued=discontinued,
                                        pretty_strings=True)
-        products = [product for id,product in products.items()]
 
-        # Remove discontinued products from the list
-        if not show_discontinued:
-            products = [product for product in products if product["Status"] != 'Discontinued']
+        products = [product for id, product in products.items()]
 
         components = self.get_component_prices(component_id=None,
                                         version=version,
