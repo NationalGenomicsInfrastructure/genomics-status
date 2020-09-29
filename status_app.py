@@ -319,10 +319,9 @@ class Application(tornado.web.Application):
         self.multiqc_path = settings.get('multiqc_path')
 
         # Setup the Tornado Application
-        cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
+
         settings["debug"]= True
         settings["static_path"]= "static"
-        settings["cookie_secret"]= cookie_secret
         settings["login_url"]= "/login"
 
 
@@ -384,6 +383,10 @@ if __name__ == '__main__':
         server_settings = yaml.full_load(settings_file)
 
     server_settings["Testing mode"] = options['testing_mode']
+
+    if 'cookie_secret' not in server_settings:
+        cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
+        server_settings['cookie_secret'] = cookie_secret
 
     # Instantiate Application
     application = Application(server_settings)
