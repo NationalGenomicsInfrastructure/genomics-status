@@ -116,7 +116,7 @@ class TestApi(unittest.TestCase):
 
         response = json.loads(requests.get(base_url).content)
         discontinued_products = [product for ref_id, product in response.items() if product['Status'] != 'Available']
-        self.assertEquals(len(discontinued_products), 0, msg="No discontinued products by default")
+        self.assertEqual(len(discontinued_products), 0, msg="No discontinued products by default")
 
         url = base_url + '?discontinued=true'
         response = json.loads(requests.get(url).content)

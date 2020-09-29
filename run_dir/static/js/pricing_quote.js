@@ -26,8 +26,8 @@ $( document ).ready(function() {
           });
       });
 
-      $("#success-alert").fadeTo(5000, 500).slideUp(500, function(){
-          $("#success-alert").slideUp(500);
+      $("#exchange-success-alert").fadeTo(5000, 500).slideUp(500, function(){
+          $("#exchange-success-alert").slideUp(500);
       });
   });
 
@@ -52,6 +52,9 @@ $( document ).ready(function() {
           reset_listjs();
           tableLoad(null, null, true, function(){
               init_listjs();
+              $("#discontinued-shown-alert").fadeTo(5000, 500).slideUp(500, function(){
+                  $("#discontinued-shown-alert").slideUp(500);
+              });
           });
       };
   });

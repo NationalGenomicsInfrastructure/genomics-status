@@ -1243,3 +1243,7 @@ td.alert-orange{
 td.alert-green{
   background-color: #d9ead3;
 }
+
+tr.status_discontinued{
+  background-color: #f2dede;
+}
