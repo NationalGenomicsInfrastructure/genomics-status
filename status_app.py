@@ -374,6 +374,8 @@ if __name__ == '__main__':
                                                 "for testing purposes"))
     define('develop', default=False, help=("Define develop mode to look for changes "
                                            "in files and automatically reloading them"))
+
+    define('port', default=9761, type=int, help="The port that the server will listen to.")
     # After parsing the command line, the command line flags are stored in tornado.options
     tornado.options.parse_command_line()
 
@@ -400,7 +402,7 @@ if __name__ == '__main__':
     http_server = tornado.httpserver.HTTPServer(application,
                                                 ssl_options = ssl_options)
 
-    http_server.listen(server_settings.get("port", 8888))
+    http_server.listen(options["port"])
 
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
