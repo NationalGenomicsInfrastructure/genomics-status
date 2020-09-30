@@ -329,6 +329,9 @@ Description: Details page for a single project
           <a class="btn btn-sm btn-default" href='/reads_total/{{ project }}' role="button">Reads Aggregation</a>
           <a class="btn btn-sm btn-default" href='/rec_ctrl_view/{{ project }}' role="button">RecCtrl Plates</a>
         </div>
+        <button class="btn btn-sm btn-default" data-toggle="modal" type="button" data-target="#imagesModal">
+           Download Images
+        </button>
       </form>
 
       {% if len(worksets) > 0 %}
@@ -491,6 +494,50 @@ Description: Details page for a single project
 
 <!-- RUNNING NOTES HELP -->
 {% include "running_notes_help.html" %}
+
+<!-- ImagesDownload MODAL -->
+<div id="imagesModal" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3 class="modal-title">Download Images</h3>
+      </div>
+      <div class="modal-body">
+        <form id="chooseImgType" class="form form-search" role="form">
+          <div class="row">
+            <div class="col-sm-11">
+            <p><b>Choose image type to download in bulk.</b></p>
+            </div>
+          </div>
+          <div class="project_page_border_style">
+            <div class="form-group row">
+              <div class="form-group col-sm-12 mx-auto">
+                <div class="text-center">
+                  <label for="imgtype_dropdown" class="control-label">Choose Image option</label>
+                  <div id="img_dropdown" class="changingDropdown">
+                    <button class="btn btn-default btn-sm dropdown-toggle wrapStyle" type="button" id="img_dropdownBtn" data-toggle="dropdown">
+                       Choose Option <span class="caret"></span>
+                    </button>
+                    <ul id="img_dropdownUL" class="dropdown-menu dropdown-menu-center dropdown-menu-wide" role="menu" aria-labelledby="img_dropdownBtn"  style="z-index: 200;">
+                      <li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="frag_an" data-origin="default"> Initial QC Fragment Analyser</a></li>
+                      <li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="caliper_initial_qc">Initial QC Caliper</a></li>
+                      <li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="caliper_libval">Library Validation Caliper</a></li>
+                    </ul>
+                    <button type="button" class="btn btn-sm btn-primary" id="downloadImgsBtn">Download</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- CALIPER MODAL -->
 <div id="caliperModal" class="modal fade">

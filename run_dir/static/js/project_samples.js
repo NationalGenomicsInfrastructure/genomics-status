@@ -84,7 +84,9 @@ $(document).ready(function() {
           window.open(this.href);
       return false;
         });
-
+  $('.clickDropdownGetValue').on("click", function() {
+    setChangingDropdownValue($(this).parents(".changingDropdown"), $(this).data('value'), $(this).text());
+  });
 });
 
 // Initialize sorting and searching javascript plugin
@@ -1141,3 +1143,19 @@ function setup_internal_costs_form(){
     $('#internal_costs').show();
   });
 }
+function setChangingDropdownValue(elem, value, text){
+  elem.find('.btn-default').html('<i data-value="'+value+'"></i> '+text+' <span class="caret"></span>');
+}
+
+$('#downloadImgsBtn').click(function(e){
+  var option=$($.parseHTML($('#img_dropdownBtn').html())[0]).data('value');
+  if(option==undefined){
+    alert('Please choose an option!');
+    return;
+  }
+  $('#downloadImgsBtn').addClass('disabled').text('Downloading...');
+  var download_api_url = '/api/v1/download_images/'+project+'/'+option;
+  console.log(download_api_url)
+  var form = $('<form></form>').attr('action', download_api_url).attr('method', 'get');
+  form.appendTo('body').submit().remove();
+});
