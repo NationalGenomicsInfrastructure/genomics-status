@@ -596,7 +596,6 @@ class ImagesDownloadHandler(SafeHandler):
     """
 
     def get(self, project, type):
-        import base64
         from io import BytesIO
         import zipfile as zp
 
@@ -621,14 +620,15 @@ class ImagesDownloadHandler(SafeHandler):
 
         fileName = '{}_{}_images.zip'.format(project, name)
         f = BytesIO()
+        num_files = 0
         with zp.ZipFile(f, "w") as zf:
             for sample in data:
                 if data[sample]:
+                    num_files +=1
                     for key in data[sample]:
                         img_file_name = sample + '.'
                         if 'frag_an' in type and 'initial_qc' in key:
                             img_file_name = img_file_name + 'png'
-                            print(img_file_name)
                             zf.writestr(img_file_name, base64.b64decode(FragAnImageHandler.get_frag_an_image(data[sample][key])))
                         elif 'caliper' in type:
                             checktype = type.split('_',1)[1]
@@ -638,6 +638,8 @@ class ImagesDownloadHandler(SafeHandler):
                                 img_file_name = img_file_name + data[sample][key].rsplit('.')[-1]
                                 zf.writestr(img_file_name, base64.b64decode(CaliperImageHandler.get_caliper_image(data[sample][key])))
 
+        if num_files == 0:
+            raise tornado.web.HTTPError(status_code=404, log_message='No files!', reason='No files to be downloaded!!')
         self.set_header('Content-Type', 'application/zip')
         self.set_header('Content-Disposition', 'attachment; filename={}'.format(fileName))
         self.write(f.getvalue())

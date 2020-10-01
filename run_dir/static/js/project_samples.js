@@ -84,9 +84,6 @@ $(document).ready(function() {
           window.open(this.href);
       return false;
         });
-  $('.clickDropdownGetValue').on("click", function() {
-    setChangingDropdownValue($(this).parents(".changingDropdown"), $(this).data('value'), $(this).text());
-  });
 });
 
 // Initialize sorting and searching javascript plugin
@@ -1142,9 +1139,6 @@ function setup_internal_costs_form(){
     $('#edit_internal_costs').hide();
     $('#internal_costs').show();
   });
-}
-function setChangingDropdownValue(elem, value, text){
-  elem.find('.btn-default').html('<i data-value="'+value+'"></i> '+text+' <span class="caret"></span>');
 }
 
 $('#downloadImgsBtn').click(function(e){
