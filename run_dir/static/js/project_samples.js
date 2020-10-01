@@ -1148,14 +1148,11 @@ function setChangingDropdownValue(elem, value, text){
 }
 
 $('#downloadImgsBtn').click(function(e){
-  var option=$($.parseHTML($('#img_dropdownBtn').html())[0]).data('value');
+  var option=$('input[name="imgRadio"]:checked').val();
   if(option==undefined){
     alert('Please choose an option!');
     return;
   }
-  $('#downloadImgsBtn').addClass('disabled').text('Downloading...');
   var download_api_url = '/api/v1/download_images/'+project+'/'+option;
-  console.log(download_api_url)
-  var form = $('<form></form>').attr('action', download_api_url).attr('method', 'get');
-  form.appendTo('body').submit().remove();
+  $('#chooseImgType').attr('action', download_api_url).attr('method', 'get');
 });
