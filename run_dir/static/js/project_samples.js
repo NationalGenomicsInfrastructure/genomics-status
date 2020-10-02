@@ -1148,5 +1148,5 @@ $('#downloadImgsBtn').click(function(e){
     return;
   }
   var download_api_url = '/api/v1/download_images/'+project+'/'+option;
-  $('#chooseImgType').attr('action', download_api_url).attr('method', 'get');
+  $('#chooseImgType').attr('action', download_api_url).attr('method', 'post');
 });

@@ -595,7 +595,7 @@ class ImagesDownloadHandler(SafeHandler):
     where image types are currently frag_an, caliper_libval or caliper_initial_qc
     """
 
-    def get(self, project, type):
+    def post(self, project, type):
         from io import BytesIO
         import zipfile as zp
 
