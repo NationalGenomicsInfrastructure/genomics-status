@@ -588,6 +588,64 @@ class CaliperImageHandler(SafeHandler):
             print(message)
             raise tornado.web.HTTPError(404, reason='Error fetching caliper images')
 
+
+class ImagesDownloadHandler(SafeHandler):
+    """serves caliper/fragment_analyzer images in a zip archive.
+    Called through /api/v1/download_images/PROJECT/[image_type]
+    where image types are currently frag_an, caliper_libval or caliper_initial_qc
+    """
+
+    def post(self, project, type):
+        from io import BytesIO
+        import zipfile as zp
+
+        name = ''
+        if type == 'frag_an':
+            view = 'project/frag_an_links'
+            name = 'InitialQCFragmentAnalyser'
+        else:
+            view = 'project/caliper_links'
+            if 'libval' in type:
+                name = 'LibraryValidationCaliper'
+            elif 'initial_qc' in type:
+                name = 'InitialQCCaliper'
+
+        sample_view = self.application.projects_db.view(view)
+        result = sample_view[project]
+        try:
+            data = result.rows[0].value
+        except TypeError:
+            #can be triggered by the data.get().get() calls.
+            raise tornado.web.HTTPError(404, reason='No caliper image found')
+
+        fileName = '{}_{}_images.zip'.format(project, name)
+        f = BytesIO()
+        num_files = 0
+        with zp.ZipFile(f, "w") as zf:
+            for sample in data:
+                if data[sample]:
+                    num_files +=1
+                    for key in data[sample]:
+                        img_file_name = sample + '.'
+                        if 'frag_an' in type and 'initial_qc' in key:
+                            img_file_name = img_file_name + 'png'
+                            zf.writestr(img_file_name, base64.b64decode(FragAnImageHandler.get_frag_an_image(data[sample][key])))
+                        elif 'caliper' in type:
+                            checktype = type.split('_',1)[1]
+                            if 'libval' in checktype:
+                                img_file_name = img_file_name + key + '.'
+                            if checktype in key:
+                                img_file_name = img_file_name + data[sample][key].rsplit('.')[-1]
+                                zf.writestr(img_file_name, base64.b64decode(CaliperImageHandler.get_caliper_image(data[sample][key])))
+
+        if num_files == 0:
+            raise tornado.web.HTTPError(status_code=404, log_message='No files!', reason='No files to be downloaded!!')
+        self.set_header('Content-Type', 'application/zip')
+        self.set_header('Content-Disposition', 'attachment; filename={}'.format(fileName))
+        self.write(f.getvalue())
+        f.close()
+        self.finish()
+
 class ProjectSamplesHandler(SafeHandler):
     """ Serves a page which lists the samples of a given project, with some
     brief information for each sample.
