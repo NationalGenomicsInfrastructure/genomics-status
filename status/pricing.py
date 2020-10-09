@@ -212,8 +212,9 @@ class PricingBaseHandler(SafeHandler):
         # Fixed price trumps all component and reagent prices
         if 'fixed_price' in product:
             price = product['fixed_price']['price_in_sek']
-            external_price = product['fixed_price']['external_price_in_sek']
-            return price, external_price
+            price_academic = product['fixed_price']['price_for_academics_in_sek']
+            full_cost = product['fixed_price']['full_cost_in_sek']
+            return price, price_academic, full_cost
 
         for component_id, info in product['Components'].items():
             component_price_d = all_component_prices[str(component_id)]
@@ -226,8 +227,12 @@ class PricingBaseHandler(SafeHandler):
             component_price_d = all_component_prices[str(reagent)]
             price += component_price_d['price_per_unit_in_sek']
 
-        external_price = price + price * product['Re-run fee']
-        return price, external_price
+        price_academic = price + price * product['Re-run fee']
+
+        full_cost_fee = product.get('Full cost fee', 0)
+        full_cost = price_academic + full_cost_fee
+
+        return price, price_academic, full_cost
 
     # _______________________________ GET METHODS _____________________________
     def get_component_prices(self, component_id=None, version=None, date=None,
@@ -297,14 +302,16 @@ class PricingBaseHandler(SafeHandler):
                 return_d.pop(product_id)
                 continue
 
-            price_int, price_ext = self._calculate_product_price(product, all_component_prices)
+            price_int, price_acad, price_full = self._calculate_product_price(product, all_component_prices)
 
             if pretty_strings:
                 price_int = "{:.2f}".format(price_int)
-                price_ext = "{:.2f}".format(price_ext)
+                price_acad = "{:.2f}".format(price_acad)
+                price_full = "{:.2f}".format(price_full)
 
             return_d[product_id]['price_internal'] = price_int
-            return_d[product_id]['price_external'] = price_ext
+            return_d[product_id]['price_academic'] = price_acad
+            return_d[product_id]['price_full'] = price_full
 
         return return_d
 

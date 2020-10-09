@@ -136,6 +136,7 @@ function generateQuoteList() {
   price_type = $("input[name='price_type']:checked").val();
   var totalCostSweAc = 0;
   var totalCostInternal = 0;
+  var totalCostFull = 0;
   var overhead = parseInt($('#overhead_value').first().html());
   for (var product_id in allProducts) {
     var product = allProducts[product_id];
@@ -160,15 +161,15 @@ function generateQuoteList() {
             li += `${(product.price_internal * product.quantity).toFixed(0)}`;
             break;
           case "sweac":
-            li += `${(product.price_external * product.quantity).toFixed(0)}`;
+            li += `${(product.price_academic * product.quantity).toFixed(0)}`;
             break;
-          case "nonswe":
-            li += `${(product.price_external * product.quantity * (1+overhead)).toFixed(0)}`;
+          case "full":
+            li += `${(product.price_full * product.quantity).toFixed(0)}`;
       }
       li += ` SEK</span></span></li>`;
-      totalCostSweAc += product.price_external * product.quantity;
+      totalCostSweAc += product.price_academic * product.quantity;
       totalCostInternal += product.price_internal * product.quantity;
-
+      totalCostFull += product.price_full * product.quantity;
       quoteProdEl.append(li);
       applyWarning(warning_txt);
     }
@@ -181,13 +182,14 @@ function generateQuoteList() {
   discount_factor = 1-(discount/100.0);
 
   totalCostInternal += other_cost;
-  totalCostInternal = totalCostInternal * discount_factor
+  totalCostInternal = totalCostInternal * discount_factor;
 
-  totalCostNonSwe = (other_cost + totalCostSweAc * (1+overhead)) * discount_factor;
-
-  // Add to SweAc cost last since it would affect nonswe cost otherwise
   totalCostSweAc += other_cost;
-  totalCostSweAc = totalCostSweAc * discount_factor
+  totalCostSweAc = totalCostSweAc * discount_factor;
+
+  totalCostFull += other_cost;
+  totalCostFull = totalCostFull * discount_factor;
+
 
   /* Only show quote if non-empty */
   if (!empty){
@@ -202,10 +204,10 @@ function generateQuoteList() {
     totals_div.append(p);
 
     var p = document.createElement("p");
-    if (price_type !== 'nonswe'){
+    if (price_type !== 'full'){
       p.setAttribute('class', 'text-muted')
     }
-    p.innerHTML = `<dt class='quote_totals_def quote_nonswe'>Industry and non-Swedish academia:</dt><dd class='quote_totals_val quote_nonswe'>${Math.ceil(totalCostNonSwe)} SEK</dd>`;
+    p.innerHTML = `<dt class='quote_totals_def quote_full'>Industry and non-Swedish academia:</dt><dd class='quote_totals_val quote_full'>${Math.ceil(totalCostFull)} SEK</dd>`;
     totals_div.append(p);
 
     var p = document.createElement("p");
