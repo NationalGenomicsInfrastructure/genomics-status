@@ -229,8 +229,11 @@ class PricingBaseHandler(SafeHandler):
 
         price_academic = price + price * product['Re-run fee']
 
-        full_cost_fee = product.get('Full cost fee', 0)
-        full_cost = price_academic + full_cost_fee
+        full_cost_fee = product.get('Full cost fee', '')
+        if full_cost_fee == '':
+            full_cost_fee = '0.0'
+
+        full_cost = price_academic + float(full_cost_fee)
 
         return price, price_academic, full_cost
 
