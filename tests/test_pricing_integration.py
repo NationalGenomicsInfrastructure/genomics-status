@@ -27,7 +27,7 @@ class TestPricingQuote(unittest.TestCase):
         self.driver.find_element(By.ID, "datepicker").send_keys(date)
         self.driver.find_element(By.CSS_SELECTOR, ".modal-body > p").click()
         self.driver.find_element(By.ID, "datepicker-btn").click()
-        time.sleep(1.0)
+        time.sleep(1.5)
 
     def test_addproduct(self):
         """Adding and removing product items to the quote, checking the counts in the input box. """
