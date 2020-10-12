@@ -5,6 +5,15 @@ import os
 
 from status.util import SafeHandler
 
+
+def assert_project_id(p_id):
+    assert p_id.startswith('P')
+    try:
+        int(p_id[1:])
+    except ValueError:
+        raise AssertionError
+
+
 class BioinfoAnalysisHandler(SafeHandler):
     """queries and posts about bioinfo analysis
     URL: /api/v1/bioinfo/([^/]*)"""
@@ -14,10 +23,21 @@ class BioinfoAnalysisHandler(SafeHandler):
         user = self.get_current_user()
         data = json.loads(self.request.body)
         saved_data = {}
+        assert_project_id(project_id)
+        # Fetching documents one by one generates too many requests to statusdb
+        # Hopefully fetching all documents at once doesn't require too much memory
+        view = v[[project_id, "", "", ""]:[project_id, "Z", "Z", "Z"]]
+        cached_view = {}
+        for row in view.rows:
+            if tuple(row.key) in cached_view:
+                cached_view[tuple(row.key)].append(row)
+            else:
+                cached_view[tuple(row.key)] = [row]
+
         for run_id in data:
             ## why run_id is a string??
             project, sample, run, lane = run_id.split(',')
-            for row in v[[project, run, lane, sample]]:
+            for row in cached_view[(project, run, lane, sample)]:
                 original_doc = row.value
                 timestamp=datetime.datetime.now().isoformat()
                 # if the doc wasn't change, skip it
