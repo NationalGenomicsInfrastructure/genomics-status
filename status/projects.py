@@ -217,7 +217,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         def_dates = { 'days_recep_ctrl' : ['open_date', 'queued'],
                       'days_prep_start' : ['queued', 'library_prep_start'],
-                      'days_seq_start' : ['qc_library_finished', 'sequencing_start_date'],
+                      'days_seq_start' : [['qc_library_finished', 'queued'], 'sequencing_start_date'],
                       'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
                       'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
                       'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
@@ -328,11 +328,19 @@ class ProjectsBaseDataHandler(SafeHandler):
                     final_projects[row.key[0]][date_type] = date
 
                 for key, value in def_dates.items():
+                    if key == 'days_seq_start':
+                        if 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
+                             start_date = value[0][1]
+                        else:
+                            start_date = value[0][0]
+                    else:
+                        start_date = value[0]
+                    end_date = value[1]
                     if key in ['days_prep', 'days_prep_start'] and 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
                         final_projects[row.key[0]][key] = '-'
                     else:
-                        final_projects[row.key[0]][key] = self._calculate_days_in_status(final_projects[row.key[0]].get(value[0]),
-                                                                                                final_projects[row.key[0]].get(value[1]))
+                        final_projects[row.key[0]][key] = self._calculate_days_in_status(final_projects[row.key[0]].get(start_date),
+                                                                                                final_projects[row.key[0]].get(end_date))
         return final_projects
 
     def list_project_fields(self, undefined=False, project_list='all'):
@@ -539,7 +547,8 @@ class FragAnImageHandler(SafeHandler):
         else:
             self.write(self.get_frag_an_image(data.get(sample).get(step)))
 
-    def get_frag_an_image(self,url):
+    @staticmethod
+    def get_frag_an_image(url):
         data = lims.get_file_contents(uri=url)
         encoded_string = base64.b64encode(data.read()).decode('utf-8')
         returnHTML=json.dumps(encoded_string)
@@ -563,7 +572,8 @@ class CaliperImageHandler(SafeHandler):
         else:
             self.write(self.get_caliper_image(data.get(sample).get(step)))
 
-    def get_caliper_image(self,url):
+    @staticmethod
+    def get_caliper_image(url):
         """returns a base64 string of the caliper image asked"""
         #url pattern: sftp://genologics.scilifelab.se/home/glsftp/clarity/year/month/processid/artifact-id-file-id.png
         artifact_attached_id= url.rsplit('.', 1)[0].rsplit('/', 1)[1].rsplit('-', 2)[0]
@@ -577,6 +587,64 @@ class CaliperImageHandler(SafeHandler):
         except Exception as message:
             print(message)
             raise tornado.web.HTTPError(404, reason='Error fetching caliper images')
+
+
+class ImagesDownloadHandler(SafeHandler):
+    """serves caliper/fragment_analyzer images in a zip archive.
+    Called through /api/v1/download_images/PROJECT/[image_type]
+    where image types are currently frag_an, caliper_libval or caliper_initial_qc
+    """
+
+    def post(self, project, type):
+        from io import BytesIO
+        import zipfile as zp
+
+        name = ''
+        if type == 'frag_an':
+            view = 'project/frag_an_links'
+            name = 'InitialQCFragmentAnalyser'
+        else:
+            view = 'project/caliper_links'
+            if 'libval' in type:
+                name = 'LibraryValidationCaliper'
+            elif 'initial_qc' in type:
+                name = 'InitialQCCaliper'
+
+        sample_view = self.application.projects_db.view(view)
+        result = sample_view[project]
+        try:
+            data = result.rows[0].value
+        except TypeError:
+            #can be triggered by the data.get().get() calls.
+            raise tornado.web.HTTPError(404, reason='No caliper image found')
+
+        fileName = '{}_{}_images.zip'.format(project, name)
+        f = BytesIO()
+        num_files = 0
+        with zp.ZipFile(f, "w") as zf:
+            for sample in data:
+                if data[sample]:
+                    num_files +=1
+                    for key in data[sample]:
+                        img_file_name = sample + '.'
+                        if 'frag_an' in type and 'initial_qc' in key:
+                            img_file_name = img_file_name + 'png'
+                            zf.writestr(img_file_name, base64.b64decode(FragAnImageHandler.get_frag_an_image(data[sample][key])))
+                        elif 'caliper' in type:
+                            checktype = type.split('_',1)[1]
+                            if 'libval' in checktype:
+                                img_file_name = img_file_name + key + '.'
+                            if checktype in key:
+                                img_file_name = img_file_name + data[sample][key].rsplit('.')[-1]
+                                zf.writestr(img_file_name, base64.b64decode(CaliperImageHandler.get_caliper_image(data[sample][key])))
+
+        if num_files == 0:
+            raise tornado.web.HTTPError(status_code=404, log_message='No files!', reason='No files to be downloaded!!')
+        self.set_header('Content-Type', 'application/zip')
+        self.set_header('Content-Disposition', 'attachment; filename={}'.format(fileName))
+        self.write(f.getvalue())
+        f.close()
+        self.finish()
 
 class ProjectSamplesHandler(SafeHandler):
     """ Serves a page which lists the samples of a given project, with some

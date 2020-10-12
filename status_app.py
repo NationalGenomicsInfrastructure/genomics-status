@@ -39,7 +39,8 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
-    ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler
+    ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler, \
+    ImagesDownloadHandler
 from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler, FlowcellCountPlotHandler, FlowcellCountApiHandler
@@ -100,6 +101,7 @@ class Application(tornado.web.Application):
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
             ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
+            tornado.web.URLSpec("/api/v1/download_images/(?P<project>[^/]+)/(?P<type>[^/]+)", ImagesDownloadHandler, name="ImagesDownloadHandler"),
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_count/", FlowcellCountApiHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
@@ -319,10 +321,9 @@ class Application(tornado.web.Application):
         self.multiqc_path = settings.get('multiqc_path')
 
         # Setup the Tornado Application
-        cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
+
         settings["debug"]= True
         settings["static_path"]= "static"
-        settings["cookie_secret"]= cookie_secret
         settings["login_url"]= "/login"
 
 
@@ -374,6 +375,8 @@ if __name__ == '__main__':
                                                 "for testing purposes"))
     define('develop', default=False, help=("Define develop mode to look for changes "
                                            "in files and automatically reloading them"))
+
+    define('port', default=9761, type=int, help="The port that the server will listen to.")
     # After parsing the command line, the command line flags are stored in tornado.options
     tornado.options.parse_command_line()
 
@@ -382,6 +385,10 @@ if __name__ == '__main__':
         server_settings = yaml.full_load(settings_file)
 
     server_settings["Testing mode"] = options['testing_mode']
+
+    if 'cookie_secret' not in server_settings:
+        cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
+        server_settings['cookie_secret'] = cookie_secret
 
     # Instantiate Application
     application = Application(server_settings)
@@ -400,7 +407,7 @@ if __name__ == '__main__':
     http_server = tornado.httpserver.HTTPServer(application,
                                                 ssl_options = ssl_options)
 
-    http_server.listen(server_settings.get("port", 8888))
+    http_server.listen(options["port"])
 
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()

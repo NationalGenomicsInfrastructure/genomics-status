@@ -84,7 +84,6 @@ $(document).ready(function() {
           window.open(this.href);
       return false;
         });
-
 });
 
 // Initialize sorting and searching javascript plugin
@@ -1141,3 +1140,13 @@ function setup_internal_costs_form(){
     $('#internal_costs').show();
   });
 }
+
+$('#downloadImgsBtn').click(function(e){
+  var option=$('input[name="imgRadio"]:checked').val();
+  if(option==undefined){
+    alert('Please choose an option!');
+    return;
+  }
+  var download_api_url = '/api/v1/download_images/'+project+'/'+option;
+  $('#chooseImgType').attr('action', download_api_url).attr('method', 'post');
+});
