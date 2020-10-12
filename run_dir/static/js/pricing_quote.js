@@ -13,7 +13,8 @@ $( document ).ready(function() {
       var original_html = $(this).text();
       $(this).html('<span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading...</em>');
       var that = this;
-      tableLoad(date, allProducts, function() {
+      var discontinued = $('#toggle_discontinued').hasClass('active');
+      tableLoad(date, allProducts, discontinued, function() {
           $(that).html(original_html);
           $("#exch_rate_modal").modal('hide');
           generateQuoteList();
@@ -25,8 +26,8 @@ $( document ).ready(function() {
           });
       });
 
-      $("#success-alert").fadeTo(5000, 500).slideUp(500, function(){
-          $("#success-alert").slideUp(500);
+      $("#exchange-success-alert").fadeTo(5000, 500).slideUp(500, function(){
+          $("#exchange-success-alert").slideUp(500);
       });
   });
 
@@ -35,13 +36,31 @@ $( document ).ready(function() {
       generateQuoteList();
   });
 
-  tableLoad(null, null, function(){
+  tableLoad(null, null, false, function(){
       /* need to wait until table has loaded before initializing the dataTable */
       init_listjs();
   });
+
+  /* Enable toggle of discontinued products */
+  $('#toggle_discontinued').click(function(e) {
+      if ($(this).hasClass('active')) {
+          reset_listjs(); /// Really brute force way of reinit datatable
+          tableLoad(null, null, false, function(){
+              init_listjs();
+          });
+      } else {
+          reset_listjs();
+          tableLoad(null, null, true, function(){
+              init_listjs();
+              $("#discontinued-shown-alert").fadeTo(5000, 500).slideUp(500, function(){
+                  $("#discontinued-shown-alert").slideUp(500);
+              });
+          });
+      };
+  });
 });
 
-function tableLoad(date=null, products=null, _callback=null) {
+function tableLoad(date=null, products=null, discontinued=false, _callback=null) {
   // Table is loaded dynamically to enable switching of exchange rate date
   products_tbody_url = '/pricing_quote_tbody'
   products_url = '/api/v1/pricing_products'
@@ -49,6 +68,11 @@ function tableLoad(date=null, products=null, _callback=null) {
   if (date !== null){
       products_tbody_url += '?date=' + date
       products_url += '?date=' + date
+  };
+
+  if (discontinued) {
+      products_tbody_url += '?discontinued=true'
+      products_url += '?disctontinued=true'
   };
 
   $('#pricing_products_tbody').load(products_tbody_url, function(){
@@ -112,6 +136,7 @@ function generateQuoteList() {
   price_type = $("input[name='price_type']:checked").val();
   var totalCostSweAc = 0;
   var totalCostInternal = 0;
+  var totalCostFull = 0;
   var overhead = parseInt($('#overhead_value').first().html());
   for (var product_id in allProducts) {
     var product = allProducts[product_id];
@@ -136,15 +161,15 @@ function generateQuoteList() {
             li += `${(product.price_internal * product.quantity).toFixed(0)}`;
             break;
           case "sweac":
-            li += `${(product.price_external * product.quantity).toFixed(0)}`;
+            li += `${(product.price_academic * product.quantity).toFixed(0)}`;
             break;
-          case "nonswe":
-            li += `${(product.price_external * product.quantity * (1+overhead)).toFixed(0)}`;
+          case "full":
+            li += `${(product.price_full * product.quantity).toFixed(0)}`;
       }
       li += ` SEK</span></span></li>`;
-      totalCostSweAc += product.price_external * product.quantity;
+      totalCostSweAc += product.price_academic * product.quantity;
       totalCostInternal += product.price_internal * product.quantity;
-
+      totalCostFull += product.price_full * product.quantity;
       quoteProdEl.append(li);
       applyWarning(warning_txt);
     }
@@ -157,13 +182,14 @@ function generateQuoteList() {
   discount_factor = 1-(discount/100.0);
 
   totalCostInternal += other_cost;
-  totalCostInternal = totalCostInternal * discount_factor
+  totalCostInternal = totalCostInternal * discount_factor;
 
-  totalCostNonSwe = (other_cost + totalCostSweAc * (1+overhead)) * discount_factor;
-
-  // Add to SweAc cost last since it would affect nonswe cost otherwise
   totalCostSweAc += other_cost;
-  totalCostSweAc = totalCostSweAc * discount_factor
+  totalCostSweAc = totalCostSweAc * discount_factor;
+
+  totalCostFull += other_cost;
+  totalCostFull = totalCostFull * discount_factor;
+
 
   /* Only show quote if non-empty */
   if (!empty){
@@ -178,10 +204,10 @@ function generateQuoteList() {
     totals_div.append(p);
 
     var p = document.createElement("p");
-    if (price_type !== 'nonswe'){
+    if (price_type !== 'full'){
       p.setAttribute('class', 'text-muted')
     }
-    p.innerHTML = `<dt class='quote_totals_def quote_nonswe'>Industry and non-Swedish academia:</dt><dd class='quote_totals_val quote_nonswe'>${Math.ceil(totalCostNonSwe)} SEK</dd>`;
+    p.innerHTML = `<dt class='quote_totals_def quote_full'>Industry and non-Swedish academia:</dt><dd class='quote_totals_val quote_full'>${Math.ceil(totalCostFull)} SEK</dd>`;
     totals_div.append(p);
 
     var p = document.createElement("p");
@@ -246,6 +272,12 @@ function applyWarning(warning_txt){
 
 function updateTableCounts(product) {
   $(`#count_in_table_${product.REF_ID}`).html(product.quantity);
+}
+
+function reset_listjs() {
+    $('#pricing_products_table').DataTable().clear();
+    $('#pricing_products_table').DataTable().destroy();
+    $('#pricing_products_table_filter').remove();
 }
 
 // Initialize sorting and searching javascript plugin

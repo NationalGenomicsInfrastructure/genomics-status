@@ -18,11 +18,12 @@ various forms. Document specifications for StatusDB are available in the interna
 git clone --recursive https://github.com/SciLifeLab/status.git
 ```
 
-2 - Install the package
+2 - Install the package (the `pip install -r requirements_dev.txt` can be skipped on a production server)
 
 ```
 cd status
 pip install -r requirements.txt
+pip install -r requirements_dev.txt
 python setup.py install
 ```
 
