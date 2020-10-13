@@ -109,7 +109,6 @@ class TestPricingQuote(unittest.TestCase):
         self.assertEqual(len(all_products), len(products_new_date), msg="Changing date should not change discontinued")
 
         discontinued_product = self.driver.find_elements(By.CSS_SELECTOR, '#pricing_products_tbody tr.status_discontinued')[0]
-        discontinued_product_name = discontinued_product.find_elements(By.CSS_SELECTOR, 'td.name')[0].text
         discontinued_product.find_elements(By.CSS_SELECTOR, 'td a.add-to-quote')[0].click()
         time.sleep(1)
         quote_elements = self.driver.find_elements(By.CSS_SELECTOR, ".quote-product-list li > .quote_product_name")
