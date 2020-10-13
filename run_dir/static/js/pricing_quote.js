@@ -18,7 +18,7 @@ $( document ).ready(function() {
           $(that).html(original_html);
           $("#exch_rate_modal").modal('hide');
           generateQuoteList();
-          /* Fetch used exchange rate to update html*/
+          /* Fetch used exchange rate to update html */
           $.getJSON('/api/v1/pricing_exchange_rates?date='+date, function(data){
               $("#exch_rate_usd").text(parseFloat(data['USD_in_SEK']).toFixed(2));
               $("#exch_rate_eur").text(parseFloat(data['EUR_in_SEK']).toFixed(2));
@@ -61,20 +61,24 @@ $( document ).ready(function() {
 });
 
 function tableLoad(date=null, products=null, discontinued=false, _callback=null) {
-  // Table is loaded dynamically to enable switching of exchange rate date
-  products_tbody_url = '/pricing_quote_tbody'
-  products_url = '/api/v1/pricing_products'
+  // Table is loaded dynamically to enable switching of e.g. exchange rate date
+  products_tbody_url = '/pricing_quote_tbody';
+  products_tbody_par = new URLSearchParams();
+  products_url = '/api/v1/pricing_products';
+  products_par = new URLSearchParams();
+  products_par.append('discontinued', true);
 
   if (date !== null){
-      products_tbody_url += '?date=' + date
-      products_url += '?date=' + date
+      products_tbody_par.append('date', date);
+      products_par.append('date', date);
   };
 
   if (discontinued) {
-      products_tbody_url += '?discontinued=true'
-      products_url += '?disctontinued=true'
+      products_tbody_par.append('discontinued', true);
   };
 
+  products_tbody_url += '?' + products_tbody_par.toString();
+  products_url += '?' + products_par.toString();
   $('#pricing_products_tbody').load(products_tbody_url, function(){
     $.getJSON(products_url, function(data){
       allProducts = data;
