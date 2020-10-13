@@ -31,7 +31,7 @@ from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler,
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingComponentsDataHandler, PricingProductsDataHandler, \
     PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, PricingProductListHandler, \
-    PricingQuoteHandler,PricingQuoteTbodyHandler
+    PricingQuoteHandler, PricingQuoteTbodyHandler, PricingValidationDataHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -142,6 +142,7 @@ class Application(tornado.web.Application):
             ("/api/v1/pricing_exchange_rates", PricingExchangeRatesDataHandler),
             ("/api/v1/pricing_products", PricingProductsDataHandler),
             ("/api/v1/pricing_products/([^/]*)$", PricingProductsDataHandler),
+            ("/api/v1/pricing_validate", PricingValidationDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),

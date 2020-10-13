@@ -294,7 +294,6 @@ class PricingBaseHandler(SafeHandler):
 
         """
 
-        exch_rates = self.fetch_exchange_rates(date)
         all_component_prices = self.get_component_prices(version=version, date=date)
         products = self.fetch_products(product_id, version)
 
@@ -441,21 +440,22 @@ class PricingProductListHandler(PricingBaseHandler):
         date = self.get_argument('date', None)
 
         products = self.get_product_prices(None, version=version,
-                                       date=date,
-                                       pretty_strings=True)
-        products = [product for id,product in products.items()]
+                                           date=date,
+                                           pretty_strings=True)
+        products = [product for id, product in products.items()]
 
         components = self.get_component_prices(component_id=None,
-                                        version=version,
-                                        date=date,
-                                        pretty_strings=True)
+                                               version=version,
+                                               date=date,
+                                               pretty_strings=True)
 
         t = self.application.loader.load("pricing_products.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                user=self.get_current_user(),
-                products=products,
-                components=components,
-                version=version))
+                              user=self.get_current_user(),
+                              products=products,
+                              components=components,
+                              version=version))
+
 
 class PricingQuoteHandler(PricingBaseHandler):
     """ Serves a view from where a project quote can be built
@@ -474,8 +474,9 @@ class PricingQuoteHandler(PricingBaseHandler):
 
         t = self.application.loader.load("pricing_quote.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                user=self.get_current_user(),
-                exch_rates=exch_rates))
+                              user=self.get_current_user(),
+                              exch_rates=exch_rates))
+
 
 class PricingQuoteTbodyHandler(PricingBaseHandler):
     """ Serves a tbody specificly for /pricing_quote to be generated dynamically.
@@ -494,20 +495,202 @@ class PricingQuoteTbodyHandler(PricingBaseHandler):
         discontinued = self.get_argument('discontinued', None)
 
         products = self.get_product_prices(None, version=version,
-                                       date=date,
-                                       discontinued=discontinued,
-                                       pretty_strings=True)
+                                           date=date,
+                                           discontinued=discontinued,
+                                           pretty_strings=True)
 
         products = [product for id, product in products.items()]
 
         components = self.get_component_prices(component_id=None,
-                                        version=version,
-                                        date=date,
-                                        pretty_strings=True)
+                                               version=version,
+                                               date=date,
+                                               pretty_strings=True)
 
         t = self.application.loader.load("pricing_quote_tbody.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                user=self.get_current_user(),
-                products=products,
-                components=components,
-                version=version))
+                              user=self.get_current_user(),
+                              products=products,
+                              components=components,
+                              version=version))
+
+
+class PricingValidationError(Exception):
+    pass
+
+
+class PricingValidationDataHandler(PricingBaseHandler):
+    """Handles the validation of a new version of the pricing
+
+    """
+    # Which variables that shouldn't be changed while keeping the same _id_.
+    # If an update of any of these fields is needed, a new id should be created.
+    CONSERVED_KEY_SETS = {'products': ['Category', 'Type', 'Name'],
+                          'components': ['Category', 'Type', 'Product name']}
+
+    # The combination of these "columns" should be unique within the document.
+    UNIQUE_KEY_SETS = {'products': ['Category', 'Type', 'Name'],
+                       'components': ['Category', 'Type', 'Product name', 'Units']}
+
+    # These keys are not allowed to be undefined for any item
+    NOT_NULL_KEYS = {'products': ['REF_ID', 'Category', 'Type', 'Name', 'Re-run fee'],
+                     'components': ['REF_ID', 'Category', 'Type', 'Status',
+                                    'Product name', 'Units', 'Currency',
+                                    'List price', 'Discount']}
+
+    def initialize(self):
+        self.validation_msgs = []
+
+    def _validate_unique(self, items, type):
+        """Check all items to make sure they are 'unique'.
+
+        The uniqueness criteria is decided according to the UNIQUE_KEY_SETS.
+        Returns (True, []) if unique, and otherwise False wit h if not.
+        """
+        key_val_set = set()
+        for id, item in items.items():
+            keys = self.UNIQUE_KEY_SETS[type]
+            t = tuple(item[key] for key in keys)
+
+            # Check that it is not already added
+            if t in key_val_set:
+                self.validation_msgs.append("Key combination {}:{} is included multiple "
+                                            "times in the {} sheet. ".format(keys, t, type))
+                raise PricingValidationError
+            key_val_set.add(t)
+        return True
+
+    def _validate_not_null(self, items, type):
+        """Make sure type specific columns (given by NOT_NULL_KEYS) are not null."""
+
+        not_null_keys = self.NOT_NULL_KEYS[type]
+
+        for id, item in items.items():
+            for not_null_key in not_null_keys:
+                if item[not_null_key] is None or item[not_null_key] == '':
+                    # Special case for discontinued components
+                    if 'Status' in item and item['Status'] == 'Discontinued':
+                        pass
+                    else:
+                        self.validation_msgs.append("{} cannot be empty for {}."
+                                                    " Violated for item with id {}.".
+                                                    format(not_null_key, type, id))
+                        raise PricingValidationError
+        return True
+
+    def _validate_conserved(self, new_items, current_items, type):
+        """Ensures the keys in CONSERVED_KEY_SETS are conserved for each given id.
+
+        Compares the new version against the currently active one.
+        Params:
+            new_items     - A dict of the items that are to be added
+                            with ID attribute as the key.
+            current_items - A dict of the items currently in the database
+                            with ID attribute as the key.
+            type          - Either "components" or "products"
+        """
+        conserved_keys = self.CONSERVED_KEY_SETS[type]
+
+        for id, new_item in new_items.items():
+            if str(id) in current_items:
+                for conserved_key in conserved_keys:
+                    if conserved_key not in new_item:
+                        self.valication_msgs.append("{} column not found in new {} row with "
+                                                    "id {}. This column should be kept "
+                                                    "conserved.".format(conserved_key, type, id))
+                        raise PricingValidationError
+                    if new_item[conserved_key] != current_items[str(id)][conserved_key]:
+                        self.valication_msgs.append("{} should be conserved for {}. "
+                                                    "Violated for item with id {}. "
+                                                    "Found \"{}\" for new and \"{}\" for current. ".format(
+                                                        conserved_key, type,
+                                                        id, new_item[conserved_key],
+                                                        current_items[str(id)][conserved_key]))
+                        raise PricingValidationError
+        return True
+
+    def _validate_discontinued(self, components, products):
+        """Make sure no discontinued components are used for enabled products."""
+
+        for product_id, product in products.items():
+            component_ids = []
+
+            if product["Status"] == "Available":
+                if product["Components"]:
+                    component_ids += product["Components"].keys()
+
+                for component_id in component_ids:
+                    if components[component_id]["Status"] == "Discontinued":
+                        self.valication_msgs.append(("Product {}:\"{}\" uses the discontinued component "
+                                                     "{}:\"{}\", changing product status to \"discontinued\"").
+                                                    format(product_id, products[product_id]["Name"],
+                                                           component_id, components[component_id]["Product name"]))
+                        product["Status"] = "Discontinued"
+                        raise PricingValidationError
+
+                if product["Alternative Components"]:
+                    for component_id in product["Alternative Components"].keys():
+                        if components[component_id]["Status"] == "Discontinued":
+                            self.valication_msgs.append(("Product {}:\"{}\" uses the discontinued alternative component "
+                                                         "{}:\"{}\", please check whether product status should be \"discontinued\"").
+                                                        format(product_id, products[product_id]["Name"],
+                                                               component_id, components[component_id]["Product name"]))
+            return True
+
+    def validate(self, components, products):
+        self._validate_unique(components, 'components')
+        self._validate_not_null(components, 'components')
+
+        current_components = self.fetch_components()
+
+        if current_components:
+            self._validate_conserved(components, current_components, 'components')
+
+        self._validate_unique(products, 'products')
+        self._validate_not_null(products, 'products')
+
+        current_products = self.fetch_products(None)
+
+        if current_products:
+            self._validate_conserved(products, current_products, 'products')
+
+        # Verify no discontinued components are used for enabled products
+        self._validate_discontinued(components, products)
+
+    def get(self):
+        components = self.fetch_components()
+        products = self.fetch_products(None)
+        try:
+            self.validate(components, products)
+        except PricingValidationError:
+            raise tornado.web.HTTPError(
+                400, reason='\n'.join(self.validation_msgs))
+        except Exception:
+            raise # Maybe this is the default?
+
+        self.write(json.dumps("Sucess!"))
+
+    def save(self):
+        """
+        # Save it but push it only if products are also parsed correctly
+        comp_doc = doc.copy()
+        comp_doc['components'] = components
+
+        current_version = get_current_version(comp_db)
+        comp_doc['Version'] = current_version + 1
+
+        # Modify the `last updated`-field of each item
+        components = set_last_updated_field(components,
+                                            current_components,
+                                            'component')
+        # Modify the `last updated`-field of each item
+        products = set_last_updated_field(products,
+                                          current_products,
+                                          'product')
+
+        prod_doc = doc.copy()
+        prod_doc['products'] = products
+
+        current_version = get_current_version(prod_db)
+        prod_doc['Version'] = current_version + 1
+        """
+        pass
