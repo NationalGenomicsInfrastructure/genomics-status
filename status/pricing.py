@@ -277,7 +277,7 @@ class PricingBaseHandler(SafeHandler):
         return return_d
 
     def get_product_prices(self, product_id, version=None, date=None,
-                           discontinued=None, pretty_strings=False):
+                           discontinued=False, pretty_strings=False):
         """Calculate the price for an individual or all products
 
         :param product_id: The id of the product to calculate price for.
@@ -371,7 +371,7 @@ class PricingProductsDataHandler(PricingBaseHandler):
         """Returns individual or all products from the database as json"""
         version = self.get_argument('version', None)
         date = self.get_argument('date', None)
-        discontinued = self.get_argument('discontinued', None)
+        discontinued = self.get_argument('discontinued', False)
 
         rows = self.get_product_prices(search_string, version=version,
                                        date=date,
