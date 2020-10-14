@@ -60,7 +60,7 @@ class BarcodeHandler(SafeHandler):
 
         self.set_status(200)
         self.set_header("Content-type", "application/json")
-        self.finish()
+        self.finish({'message': 'Submitted to printer!'})
 
 
 def makeBarcode(label, print_bc):
