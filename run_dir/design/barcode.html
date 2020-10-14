@@ -37,6 +37,10 @@ a text in the text field or upload a file.<p>
 
 <script type="text/javascript">
   function submit_form() {
+    if($.trim($('#print_label_file').val()).length == 0 && $.trim($('#print_label_string').val()).length == 0){
+      alert('Both file and text input fields cannot be empty!');
+      return false;
+    }
     $.ajax({
            type: "POST",
            url: $('#barcode_from_file').attr('action'),
