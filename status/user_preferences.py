@@ -29,3 +29,14 @@ class UserPrefPageHandler(SafeHandler):
 
         self.set_status(201)
         self.write({'success': 'success!!'})
+
+
+class UserPrefPageHandler_b4(UserPrefPageHandler):
+    """ Serves a modal with user preferences and saves them
+    URL: /userpref_b4
+    """
+
+    def get(self):
+        t = self.application.loader.load("user_preferences_b4.html")
+        notf_pref = ph.get_user_details(self.application, self.get_current_user().email).get('notification_preferences', 'Both')
+        self.write(t.generate(pref=notf_pref))

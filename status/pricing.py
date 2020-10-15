@@ -427,36 +427,6 @@ class PricingExchangeRatesDataHandler(PricingBaseHandler):
         self.write(json.dumps(result))
 
 
-class PricingProductListHandler(PricingBaseHandler):
-    """ Serves a list view of all product prices
-
-    Loaded through:
-        /pricing_products
-
-    """
-
-    def get(self):
-        version = self.get_argument('version', None)
-        date = self.get_argument('date', None)
-
-        products = self.get_product_prices(None, version=version,
-                                           date=date,
-                                           pretty_strings=True)
-        products = [product for id, product in products.items()]
-
-        components = self.get_component_prices(component_id=None,
-                                               version=version,
-                                               date=date,
-                                               pretty_strings=True)
-
-        t = self.application.loader.load("pricing_products.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals,
-                              user=self.get_current_user(),
-                              products=products,
-                              components=components,
-                              version=version))
-
-
 class PricingQuoteHandler(PricingBaseHandler):
     """ Serves a view from where a project quote can be built
 
@@ -694,3 +664,53 @@ class PricingValidationDataHandler(PricingBaseHandler):
         prod_doc['Version'] = current_version + 1
         """
         pass
+
+from wtforms.fields import IntegerField
+from wtforms.validators import Required
+from wtforms_tornado import Form
+
+
+class SumForm(Form):
+
+    a = IntegerField(validators=[Required()])
+    b = IntegerField(validators=[Required()])
+
+
+class PricingUpdateHandler(PricingBaseHandler):
+    """ Serves a list view of all product prices
+
+    Loaded through:
+        /pricing_update
+
+    """
+
+    def get(self):
+        version = self.get_argument('version', None)
+        date = self.get_argument('date', None)
+        form = SumForm()
+        products = self.get_product_prices(None, version=version,
+                                           date=date,
+                                           pretty_strings=True)
+        products = [product for id, product in products.items()]
+
+        components = self.get_component_prices(component_id=None,
+                                               version=version,
+                                               date=date,
+                                               pretty_strings=True)
+
+        t = self.application.loader.load("pricing_update.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                              user=self.get_current_user(),
+                              products=products,
+                              components=components,
+                              version=version,
+                              form=form,
+                              deprecated=True))
+
+    def post(self):
+        form = SumForm(self.request.arguments)
+        if form.validate():
+            self.write(str(form.data['a'] + form.data['b']))
+        else:
+            self.set_status(400)
+            self.write("" % form.errors)

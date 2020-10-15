@@ -1,0 +1,42 @@
+
+
+<!--
+Template file: user_preferences.html
+URL: /userpref
+Title: displays all the user's preferences
+Description: Shows a page/modal with the user's personal settings for genomics_status.
+-->
+
+<div class="modal-header">
+  <h4 class="modal-title">Your Preferences</h4>
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+</div>
+<div class="modal-body">
+  <form id="SaveNotificationPref" class="form form-search" role="form">
+      <div class="form-group row">
+        <div class="col">
+          <div class="text-center">
+            <label for="notfRadioPref" class="control-label">Notification method</label>
+            <div id="notfRadioPref">
+              <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-sm rBtngp1 {%if pref=='E-mail'%} btn-primary active {% else %} btn-outline-dark {% end %}" id="EmailOn">
+                  <input type="radio" name="notfPref" autocomplete="off"> E-mail
+                </label>
+                <label class="btn btn-sm rBtngp1 {%if pref=='Slack'%} btn-primary active {% else %} btn-outline-dark {% end %}" id="SlackOn">
+                  <input type="radio" name="notfPref" autocomplete="off"> Slack
+                </label>
+                <label class="btn btn-sm rBtngp1 {%if pref=='Both'%} btn-primary active {% else %} btn-outline-dark {% end %}" id="BothOn">
+                  <input type="radio" name="notfPref" autocomplete="off"> Both
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </form>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-sm btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
+  <button id="submitPrefBtn" class="btn btn-sm btn-primary search-action" type="button">Save</button>
+</div>
+<script src="/static/js/user_preferences_b4.js"></script>

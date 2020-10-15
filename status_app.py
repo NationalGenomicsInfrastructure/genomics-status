@@ -30,8 +30,8 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingComponentsDataHandler, PricingProductsDataHandler, \
-    PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, PricingProductListHandler, \
-    PricingQuoteHandler, PricingQuoteTbodyHandler, PricingValidationDataHandler
+    PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
+    PricingQuoteHandler, PricingQuoteTbodyHandler, PricingValidationDataHandler, PricingUpdateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -57,7 +57,7 @@ from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
 from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, \
     UpdatedDocumentsDatahandler
-from status.user_preferences import UserPrefPageHandler
+from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b4
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
     WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler, ClosedWorksetsHandler
 
@@ -207,7 +207,7 @@ class Application(tornado.web.Application):
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/nas_quotas", NASQuotasHandler),
             ("/pools_qpcr", qPCRPoolsHandler),
-            ("/pricing_products", PricingProductListHandler),
+            ("/pricing_update", PricingUpdateHandler),
             ("/pricing_quote", PricingQuoteHandler),
             ("/pricing_quote_tbody", PricingQuoteTbodyHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
@@ -221,6 +221,7 @@ class Application(tornado.web.Application):
             ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/userpref", UserPrefPageHandler),
+            ("/userpref_b4", UserPrefPageHandler_b4),
             ("/worksets", WorksetsHandler),
             ("/workset/([^/]*)$", WorksetHandler),
             (r'.*', BaseHandler)
