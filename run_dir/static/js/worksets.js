@@ -41,14 +41,13 @@ function init_listjs() {
       "info":false,
       "order": [[ 0, "desc" ]]
     });
-
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
     $('#workset_table_filter').addClass('form-inline pull-right');
     $("#workset_table_filter").appendTo("h1");
     $('#workset_table_filter label input').appendTo($('#workset_table_filter'));
     $('#workset_table_filter label').remove();
-    $("#workset_table_filter input").attr("placeholder", "Search..");
+    $("#workset_table_filter input").attr("placeholder", "Search...");
     // Apply the search
     table.columns().every( function () {
         var that = this;
@@ -90,6 +89,7 @@ var sumGroups = {};
 $(".tabbable").on("click", '[role="tab"]', function() {
   if($(this).attr('href')=='#tab_run_worksets'){
     $('#samples_table_filter').remove();
+    $('#closed_ws_table_filter').remove();
     $('#workset_table_filter').show();
   }
   if($(this).attr('href')=='#tab_pending_samples_to_worksets'){
@@ -150,6 +150,33 @@ $(".tabbable").on("click", '[role="tab"]', function() {
       });
     });
   }
+  if($(this).attr('href')=='#tab_closed_worksets'){
+    $("#closed_ws_table_body").html('<tr><td colspan="4" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
+    return $.getJSON('/api/v1/closed_worksets', function(data) {
+      $("#closed_ws_table_body").empty();
+      $.each(data, function(key, value) {
+        if(!($.isEmptyObject(value))){
+          var tbl_row = $('<tr>');
+          tbl_row.append($('<td>').html(value['date_run']));
+          tbl_row.append($('<td>').html('<a href="/workset/'+key+'">'+key+'</font>'+'</a>'));
+          tbl_row.append($('<td>').html(function() {
+            var t = '';
+            $.each(value['projects'], function(project, projval) {
+              if(!t.trim()){
+                t = t + '<a href="/project/'+project+'">'+projval['project_name']+' ('+project+')</a>'+' <span class="glyphicon glyphicon-folder-close" style="color:#337ab7"></span>';
+              }
+              else {
+                t = t + ', <a href="/project/'+project+'">'+projval['project_name']+' ('+project+')</a>'+' <span class="glyphicon glyphicon-folder-close" style="color:#337ab7"></span>';
+              }
+          });
+            return t;
+        }));
+        $("#closed_ws_table_body").append(tbl_row);
+      }
+    });
+   init_list_closed_ws();
+  });
+ }
 });
 
 // Initialize sorting and searching javascript plugin
@@ -198,12 +225,15 @@ function init_listjs2() {
     if($('#workset_table_filter').length){
       $('#workset_table_filter').hide();
     }
+    if($('#closed_ws_table_filter').length){
+      $('#closed_ws_table_filter').hide();
+    }
     $('div.dataTables_filter input').addClass('form-control search search-query');
     $('#samples_table_filter').addClass('form-inline pull-right');
     $("#samples_table_filter").appendTo("h1");
     $('#samples_table_filter label input').appendTo($('#samples_table_filter'));
     $('#samples_table_filter label').remove();
-    $("#samples_table_filter input").attr("placeholder", "Search..");
+    $("#samples_table_filter input").attr("placeholder", "Search...");
     // Apply the search
     table.columns().every( function () {
         var that = this;
@@ -215,6 +245,42 @@ function init_listjs2() {
     } );
 }
 
+// Initialize sorting and searching javascript plugin
+function init_list_closed_ws() {
+    // Setup - add a text input to each footer cell
+    $('#closed_ws_table tfoot th').each( function () {
+      var title = $('#closed_ws_table thead th').eq( $(this).index() ).text();
+      $(this).html( '<input size=10 type="text" placeholder="Search..." />' );
+    } );
+
+    var table = $('#closed_ws_table').DataTable({
+      "paging":false,
+      "destroy": true,
+      "info":false,
+      "order": [[ 0, "desc" ]]
+    });
+
+    //Add the bootstrap classes to the search thingy
+    if($('#workset_table_filter').length){
+      $('#workset_table_filter').hide();
+    }
+    $('div.dataTables_filter input').addClass('form-control search search-query');
+    $('#closed_ws_table_filter').addClass('form-inline pull-right');
+    $("#closed_ws_table_filter").appendTo("h1");
+    $('#closed_ws_table_filter label input').appendTo($('#closed_ws_table_filter'));
+    $('#closed_ws_table_filter label').remove();
+    $("#closed_ws_table_filter input").attr("placeholder", "Search...");
+    // Apply the search
+    table.columns().every( function () {
+        var that = this;
+        $( 'input', this.footer() ).on( 'keyup change', function () {
+            that
+            .search( this.value )
+            .draw();
+        });
+    });
+  }
+
 $('body').on('click', '.group', function(event) {
   $($("#samples_table").DataTable().column(0).header()).trigger("click")
 });
@@ -222,23 +288,28 @@ $('body').on('click', '.group', function(event) {
 function getDaysAndDateLabel(date, option){
   var number_of_days = 0;
   var label = '';
-  if( option=='date' || option=='both' ){
-    //calculate number of days from given date to current date
-    number_of_days = Math.floor(Math.abs(new Date() - new Date(date))/(1000*86400));
-  }
-  if (option=='label' || option=='both') {
-    if (option=='label'){
-      number_of_days = date;
-    }
-    if (number_of_days < 7){
-      label =  'success';
-    }
-    else if (number_of_days >= 7 && number_of_days < 14) {
-      label = 'warning';
-    }
-    else {
+  if (date == null){
       label = 'danger';
-    }
+      number_of_days = ' Missing';
+  } else {
+      if( option=='date' || option=='both' ){
+        //calculate number of days from given date to current date
+        number_of_days = Math.floor(Math.abs(new Date() - new Date(date))/(1000*86400));
+      }
+      if (option=='label' || option=='both') {
+        if (option=='label'){
+          number_of_days = date;
+        }
+        if (number_of_days < 7){
+          label =  'success';
+        }
+        else if (number_of_days >= 7 && number_of_days < 14) {
+          label = 'warning';
+        }
+        else {
+          label = 'danger';
+        }
+      }
   }
-   return [number_of_days, label];
+  return [number_of_days, label];
 }

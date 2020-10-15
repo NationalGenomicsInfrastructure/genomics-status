@@ -1,7 +1,6 @@
 """ Handlers for sequencing project information.
 """
 import json
-import string
 import traceback
 
 import tornado.web
@@ -9,9 +8,7 @@ import dateutil.parser
 import datetime
 import requests
 import re
-import paramiko
 import base64
-import urllib.parse
 import os
 import logging
 import smtplib
@@ -111,7 +108,7 @@ class PresetsOnLoadHandler(PresetsHandler):
         self.write(json.dumps(self.get_user_details(self.application, self.get_current_user().email).get('onload')))
 
     def post(self):
-        doc=self.get_user_details(self.application, self.get_current_user().email())
+        doc=self.get_user_details(self.application, self.get_current_user().email)
         data = json.loads(self.request.body)
         action=self.get_argument('action')
         doc['onload']=data
@@ -199,12 +196,34 @@ class ProjectsBaseDataHandler(SafeHandler):
     def _get_two_year_from(self, from_date):
         return (datetime.datetime.strptime(from_date, "%Y-%m-%d") - relativedelta(years=2)).strftime("%Y-%m-%d")
 
+    def _calculate_days_in_status(self, start_date, end_date):
+        days = 0
+        if start_date:
+            if end_date:
+                delta = dateutil.parser.parse(end_date) - dateutil.parser.parse(start_date)
+            else:
+                delta = datetime.datetime.now() - dateutil.parser.parse(start_date)
+            days = delta.days
+        else:
+            days = '-'
+        return days
+
     def list_projects(self, filter_projects='all'):
         projects = OrderedDict()
         closedflag=False
         queuedflag=False
         openflag=False
         projtype=self.get_argument('type', 'all')
+
+        def_dates = { 'days_recep_ctrl' : ['open_date', 'queued'],
+                      'days_prep_start' : ['queued', 'library_prep_start'],
+                      'days_seq_start' : [['qc_library_finished', 'queued'], 'sequencing_start_date'],
+                      'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
+                      'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
+                      'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
+                      'days_close' : ['all_raw_data_delivered', 'close_date'],
+                      'days_prep' : ['library_prep_start', 'qc_library_finished']
+                      }
 
         if 'closed' in filter_projects or 'all' in filter_projects:
             closedflag=True
@@ -307,6 +326,21 @@ class ProjectsBaseDataHandler(SafeHandler):
             if row.key[0] in final_projects:
                 for date_type, date in row.value.items():
                     final_projects[row.key[0]][date_type] = date
+
+                for key, value in def_dates.items():
+                    if key == 'days_seq_start':
+                        if 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
+                             start_date = value[0][1]
+                        else:
+                            start_date = value[0][0]
+                    else:
+                        start_date = value[0]
+                    end_date = value[1]
+                    if key in ['days_prep', 'days_prep_start'] and 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
+                        final_projects[row.key[0]][key] = '-'
+                    else:
+                        final_projects[row.key[0]][key] = self._calculate_days_in_status(final_projects[row.key[0]].get(start_date),
+                                                                                                final_projects[row.key[0]].get(end_date))
         return final_projects
 
     def list_project_fields(self, undefined=False, project_list='all'):
@@ -332,7 +366,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         t_threshold = datetime.datetime.now() - relativedelta(minutes=3)
         if ProjectsBaseDataHandler.cached_search_list is None or \
                 ProjectsBaseDataHandler.search_list_last_fetched < t_threshold:
-            projects_view = self.application.projects_db.view("projects/name_to_id", descending=True)
+            projects_view = self.application.projects_db_views.view("projects/name_to_id_cust_ref", descending=True)
 
             ProjectsBaseDataHandler.cached_search_list = [(row.key, row.value) for row in projects_view]
             ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
@@ -340,10 +374,10 @@ class ProjectsBaseDataHandler(SafeHandler):
         search_string = search_string.lower()
 
         for row_key, row_value in ProjectsBaseDataHandler.cached_search_list:
-            if search_string in row_key.lower() or search_string in row_value.lower():
+            if search_string in row_key.lower() or search_string in row_value[0].lower() or (row_value[1] and search_string in row_value[1].lower()):
                 project = {
-                    "url": '/project/'+row_value,
-                    "name": "{} ({})".format(row_key, row_value)
+                    "url": '/project/'+row_value[0],
+                    "name": "{} ({})".format(row_key, row_value[0])
                 }
                 projects.append(project)
 
@@ -371,7 +405,7 @@ class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
     """
     def get(self):
         undefined = self.get_argument("undefined", "False")
-        undefined = (string.lower(undefined) == "true")
+        undefined = (undefined.lower() == "true")
         project_list = self.get_argument("project_list", "all")
         field_items = self.list_project_fields(undefined=undefined, project_list=project_list)
         self.write(json.dumps(list(field_items)))
@@ -513,9 +547,10 @@ class FragAnImageHandler(SafeHandler):
         else:
             self.write(self.get_frag_an_image(data.get(sample).get(step)))
 
-    def get_frag_an_image(self,url):
+    @staticmethod
+    def get_frag_an_image(url):
         data = lims.get_file_contents(uri=url)
-        encoded_string = base64.b64encode(data.read())
+        encoded_string = base64.b64encode(data.read()).decode('utf-8')
         returnHTML=json.dumps(encoded_string)
         return returnHTML
 
@@ -537,26 +572,79 @@ class CaliperImageHandler(SafeHandler):
         else:
             self.write(self.get_caliper_image(data.get(sample).get(step)))
 
-    def get_caliper_image(self,url):
-        """returns a base64 string of the caliper image aksed"""
-        pattern=re.compile("^sftp://([a-z\.]+)(.+)")
-        host=pattern.search(url).group(1)
-        uri=urllib.parse.unquote(pattern.search(url).group(2))
+    @staticmethod
+    def get_caliper_image(url):
+        """returns a base64 string of the caliper image asked"""
+        #url pattern: sftp://genologics.scilifelab.se/home/glsftp/clarity/year/month/processid/artifact-id-file-id.png
+        artifact_attached_id= url.rsplit('.', 1)[0].rsplit('/', 1)[1].rsplit('-', 2)[0]
+        #Couldn't use fileid in the url directly as it was sometimes wrong
+        caliper_file_id = Artifact(lims=lims, id=artifact_attached_id).files[0].id
         try:
-            transport=paramiko.Transport(host)
-
-            transport.connect(username = self.application.genologics_login, password = self.application.genologics_pw)
-            sftp_client = transport.open_sftp_client()
-            my_file = sftp_client.open(uri, 'r')
+            my_file = lims.get_file_contents(id=caliper_file_id)
             encoded_string = base64.b64encode(my_file.read()).decode('utf-8')
-            my_file.close()
-            sftp_client.close()
-            transport.close()
             returnHTML=json.dumps(encoded_string)
             return returnHTML
         except Exception as message:
             print(message)
             raise tornado.web.HTTPError(404, reason='Error fetching caliper images')
+
+
+class ImagesDownloadHandler(SafeHandler):
+    """serves caliper/fragment_analyzer images in a zip archive.
+    Called through /api/v1/download_images/PROJECT/[image_type]
+    where image types are currently frag_an, caliper_libval or caliper_initial_qc
+    """
+
+    def post(self, project, type):
+        from io import BytesIO
+        import zipfile as zp
+
+        name = ''
+        if type == 'frag_an':
+            view = 'project/frag_an_links'
+            name = 'InitialQCFragmentAnalyser'
+        else:
+            view = 'project/caliper_links'
+            if 'libval' in type:
+                name = 'LibraryValidationCaliper'
+            elif 'initial_qc' in type:
+                name = 'InitialQCCaliper'
+
+        sample_view = self.application.projects_db.view(view)
+        result = sample_view[project]
+        try:
+            data = result.rows[0].value
+        except TypeError:
+            #can be triggered by the data.get().get() calls.
+            raise tornado.web.HTTPError(404, reason='No caliper image found')
+
+        fileName = '{}_{}_images.zip'.format(project, name)
+        f = BytesIO()
+        num_files = 0
+        with zp.ZipFile(f, "w") as zf:
+            for sample in data:
+                if data[sample]:
+                    num_files +=1
+                    for key in data[sample]:
+                        img_file_name = sample + '.'
+                        if 'frag_an' in type and 'initial_qc' in key:
+                            img_file_name = img_file_name + 'png'
+                            zf.writestr(img_file_name, base64.b64decode(FragAnImageHandler.get_frag_an_image(data[sample][key])))
+                        elif 'caliper' in type:
+                            checktype = type.split('_',1)[1]
+                            if 'libval' in checktype:
+                                img_file_name = img_file_name + key + '.'
+                            if checktype in key:
+                                img_file_name = img_file_name + data[sample][key].rsplit('.')[-1]
+                                zf.writestr(img_file_name, base64.b64decode(CaliperImageHandler.get_caliper_image(data[sample][key])))
+
+        if num_files == 0:
+            raise tornado.web.HTTPError(status_code=404, log_message='No files!', reason='No files to be downloaded!!')
+        self.set_header('Content-Type', 'application/zip')
+        self.set_header('Content-Disposition', 'attachment; filename={}'.format(fileName))
+        self.write(f.getvalue())
+        f.close()
+        self.finish()
 
 class ProjectSamplesHandler(SafeHandler):
     """ Serves a page which lists the samples of a given project, with some
@@ -679,7 +767,7 @@ class RunningNotesDataHandler(SafeHandler):
                 if option == 'Slack' or option == 'Both':
                     nest_asyncio.apply()
                     client = slack.WebClient(token=application.slack_token)
-
+                    notification_text = '{} has tagged you in {}!'.format(tagger, project)
                     blocks = [
                         {
                         "type": "section",
@@ -704,7 +792,7 @@ class RunningNotesDataHandler(SafeHandler):
                     try:
                         userid = client.users_lookupByEmail(email=view_result[user])
                         channel = client.conversations_open(users=userid.data['user']['id'])
-                        client.chat_postMessage(channel=channel.data['channel']['id'], blocks=blocks)
+                        client.chat_postMessage(channel=channel.data['channel']['id'], text=notification_text, blocks=blocks)
                         client.conversations_close(channel=channel.data['channel']['id'])
                     except Exception:
                         #falling back to email
@@ -961,7 +1049,8 @@ class RecCtrlDataHandler(SafeHandler):
     """Handler for the reception control view"""
     def get(self, project_id):
         sample_data={}
-        v = self.application.projects_db.view("samples/rec_ctrl_view")
+        #changed from projects due to view timing out with os_process_error
+        v = self.application.projects_db_views.view("samples/rec_ctrl_view")
         for row in v[project_id]:
             sample_data.update(row.value)
 

@@ -20,7 +20,7 @@ function generate_category_label(category){
          category='<span class="label label-warning">'+ category +"</span>";
      }else if (category == 'Important'){
          category='<span class="label label-imp">'+ category +"</span>";
-     }else if (category == 'Deviation'){	
+     }else if (category == 'Deviation'){
 	       category='<span class="label label-devi">'+ category +"</span>";
      }else if (category != ''){
          category='<span class="label label-default">'+ category +"</span>";

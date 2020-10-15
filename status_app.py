@@ -19,6 +19,7 @@ from tornado import template
 from tornado.options import define, options
 
 from status.applications import ApplicationDataHandler, ApplicationHandler, ApplicationsDataHandler, ApplicationsHandler
+from status.barcode import BarcodeHandler
 from status.assign_roles import AssignRolesHandler, AssignRolesUsersHandler
 from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
@@ -39,14 +40,15 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
     ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
-    ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler
+    ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler, \
+    ImagesDownloadHandler
 from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler, FlowcellCountPlotHandler, FlowcellCountApiHandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
-    SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, SampleQCSummaryHandler, \
-    SampleReadCountDataHandler, SampleRunDataHandler, SampleRunHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
-    SamplesPerLaneHandler, SamplesPerLanePlotHandler
+    SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, \
+    SampleReadCountDataHandler, SampleRunDataHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
+    SamplesPerLanePlotHandler
 from status.sequencing import InstrumentClusterDensityPlotHandler, InstrumentErrorratePlotHandler, InstrumentUnmatchedPlotHandler, \
     InstrumentYieldPlotHandler, InstrumentClusterDensityDataHandler, InstrumentErrorrateDataHandler, InstrumentUnmatchedDataHandler, \
     InstrumentYieldDataHandler
@@ -54,11 +56,11 @@ from status.statistics import YearApplicationsProjectHandler, YearApplicationsSa
     ApplicationOpenProjectsHandler, ApplicationOpenSamplesHandler, WeekInstrumentTypeYieldHandler, StatsAggregationHandler, YearDeliverytimeApplicationHandler
 from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
-from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, SafeStaticFileHandler, \
+from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, \
     UpdatedDocumentsDatahandler
 from status.user_preferences import UserPrefPageHandler
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
-    WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler
+    WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler, ClosedWorksetsHandler
 
 from zenpy import Zenpy
 from urllib.parse import urlsplit
@@ -100,6 +102,7 @@ class Application(tornado.web.Application):
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
             ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
+            tornado.web.URLSpec("/api/v1/download_images/(?P<project>[^/]+)/(?P<type>[^/]+)", ImagesDownloadHandler, name="ImagesDownloadHandler"),
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_count/", FlowcellCountApiHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
@@ -189,6 +192,8 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/api/v1/workset_pools", WorksetPoolsHandler),
+            ("/api/v1/closed_worksets", ClosedWorksetsHandler),
+            ("/barcode", BarcodeHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/assign_roles", AssignRolesHandler),
@@ -202,8 +207,6 @@ class Application(tornado.web.Application):
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/nas_quotas", NASQuotasHandler),
-            ("/qc/([^/]*)$", SampleQCSummaryHandler),
-            (r"/qc_reports/(.*)", SafeStaticFileHandler, {"path": 'qc_reports'}),
             ("/pools_qpcr", qPCRPoolsHandler),
             ("/pricing_products", PricingProductListHandler),
             ("/pricing_quote", PricingQuoteHandler),
@@ -216,7 +219,6 @@ class Application(tornado.web.Application):
             ("/proj_meta", ProjMetaCompareHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
-            ("/samples/([^/]*)$", SampleRunHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/userpref", UserPrefPageHandler),
@@ -245,6 +247,7 @@ class Application(tornado.web.Application):
             self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
             self.pricing_products_db = couch["pricing_products"]
             self.projects_db = couch["projects"]
+            self.projects_db_views = couch["projects_new"] #added because some views are timimg out in projects db but not in this one replicated from it
             self.samples_db = couch["samples"]
             self.server_status_db = couch['server_status']
             self.suggestions_db = couch["suggestion_box"]
@@ -320,10 +323,9 @@ class Application(tornado.web.Application):
         self.multiqc_path = settings.get('multiqc_path')
 
         # Setup the Tornado Application
-        cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
+
         settings["debug"]= True
         settings["static_path"]= "static"
-        settings["cookie_secret"]= cookie_secret
         settings["login_url"]= "/login"
 
 
@@ -345,6 +347,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
+            tornado.autoreload.watch("design/barcode.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/nas_quotas.html")
             tornado.autoreload.watch("design/qpcr_pools.html")
@@ -375,6 +378,8 @@ if __name__ == '__main__':
                                                 "for testing purposes"))
     define('develop', default=False, help=("Define develop mode to look for changes "
                                            "in files and automatically reloading them"))
+
+    define('port', default=9761, type=int, help="The port that the server will listen to.")
     # After parsing the command line, the command line flags are stored in tornado.options
     tornado.options.parse_command_line()
 
@@ -383,6 +388,10 @@ if __name__ == '__main__':
         server_settings = yaml.full_load(settings_file)
 
     server_settings["Testing mode"] = options['testing_mode']
+
+    if 'cookie_secret' not in server_settings:
+        cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
+        server_settings['cookie_secret'] = cookie_secret
 
     # Instantiate Application
     application = Application(server_settings)
@@ -401,7 +410,7 @@ if __name__ == '__main__':
     http_server = tornado.httpserver.HTTPServer(application,
                                                 ssl_options = ssl_options)
 
-    http_server.listen(server_settings.get("port", 8888))
+    http_server.listen(options["port"])
 
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()

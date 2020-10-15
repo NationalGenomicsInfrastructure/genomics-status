@@ -48,7 +48,7 @@ class qPCRPoolsDataHandler(SafeHandler):
                     library_type = ''
                     runmode = ''
                     if not 'lambda DNA' in art.name:
-                        library_type = art.samples[0].project.udf["Library construction method"]
+                        library_type = art.samples[0].project.udf.get("Library construction method", 'NA')
                         try:
                             runmode = art.samples[0].project.udf['Sequencing platform']
                         except KeyError:
@@ -106,7 +106,6 @@ class SequencingQueuesDataHandler(SafeHandler):
                     value = artifact.find('location').find('value').text
                     proj_and_samples = {}
                     conc_qpcr = ''
-                    is_rerun = False
                     art = Artifact(limsl, uri = artifact.attrib['uri'])
                     if method is 'MiSeq':
                         #FinishedLibrary
@@ -117,12 +116,11 @@ class SequencingQueuesDataHandler(SafeHandler):
                             conc_qpcr = str(art.udf['Pool Conc. (nM)'])
                         else:
                             pass
-                        is_rerun = art.udf["Rerun"]
+                        is_rerun = art.udf.get('Rerun', False)
                     elif method is 'NovaSeq':
                         if 'Concentration' in dict(art.udf.items()).keys():
                             conc_qpcr = art.udf["Concentration"]
-                            if 'Rerun' in dict(art.udf.items()).keys():
-                                is_rerun = art.udf["Rerun"]
+                            is_rerun = art.udf.get('Rerun', False)
                         else:
                             new_art = art.parent_process.input_output_maps[0][0]
                             # The loop iterates 4 times as the values were found within the first 4 preceding
@@ -133,8 +131,7 @@ class SequencingQueuesDataHandler(SafeHandler):
                             while i < 4:
                                 if 'Concentration' in dict(new_art['post-process-uri'].udf.items()).keys():
                                     conc_qpcr = new_art['post-process-uri'].udf["Concentration"]
-                                    if 'Rerun' in dict(new_art['post-process-uri'].udf.items()).keys():
-                                        is_rerun = new_art['post-process-uri'].udf["Rerun"]
+                                    is_rerun = new_art['post-process-uri'].udf.get('Rerun', False)
                                     break
                                 else:
                                     new_art = new_art['parent-process'].input_output_maps[0][0]

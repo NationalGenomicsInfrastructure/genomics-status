@@ -212,8 +212,9 @@ class PricingBaseHandler(SafeHandler):
         # Fixed price trumps all component and reagent prices
         if 'fixed_price' in product:
             price = product['fixed_price']['price_in_sek']
-            external_price = product['fixed_price']['external_price_in_sek']
-            return price, external_price
+            price_academic = product['fixed_price']['price_for_academics_in_sek']
+            full_cost = product['fixed_price']['full_cost_in_sek']
+            return price, price_academic, full_cost
 
         for component_id, info in product['Components'].items():
             component_price_d = all_component_prices[str(component_id)]
@@ -226,8 +227,15 @@ class PricingBaseHandler(SafeHandler):
             component_price_d = all_component_prices[str(reagent)]
             price += component_price_d['price_per_unit_in_sek']
 
-        external_price = price + price * product['Re-run fee']
-        return price, external_price
+        price_academic = price + price * product['Re-run fee']
+
+        full_cost_fee = product.get('Full cost fee', '')
+        if full_cost_fee == '':
+            full_cost_fee = '0.0'
+
+        full_cost = price_academic + float(full_cost_fee)
+
+        return price, price_academic, full_cost
 
     # _______________________________ GET METHODS _____________________________
     def get_component_prices(self, component_id=None, version=None, date=None,
@@ -269,7 +277,7 @@ class PricingBaseHandler(SafeHandler):
         return return_d
 
     def get_product_prices(self, product_id, version=None, date=None,
-                           pretty_strings=False):
+                           discontinued=False, pretty_strings=False):
         """Calculate the price for an individual or all products
 
         :param product_id: The id of the product to calculate price for.
@@ -279,6 +287,8 @@ class PricingBaseHandler(SafeHandler):
         :param date: The date for which the exchange rate will be fetched.
                         When not specified, the latest exchange rates will be
                         used.
+        :param discontinued: If evaluated to False, only products with status
+                        'available' will be included.
         :param pretty_strings: Output prices as formatted strings instead
                         of float numbers.
 
@@ -291,14 +301,20 @@ class PricingBaseHandler(SafeHandler):
         return_d = products.copy()
 
         for product_id, product in products.items():
-            price_int, price_ext = self._calculate_product_price(product, all_component_prices)
+            if not discontinued and product['Status'] != 'Available':
+                return_d.pop(product_id)
+                continue
+
+            price_int, price_acad, price_full = self._calculate_product_price(product, all_component_prices)
 
             if pretty_strings:
                 price_int = "{:.2f}".format(price_int)
-                price_ext = "{:.2f}".format(price_ext)
+                price_acad = "{:.2f}".format(price_acad)
+                price_full = "{:.2f}".format(price_full)
 
             return_d[product_id]['price_internal'] = price_int
-            return_d[product_id]['price_external'] = price_ext
+            return_d[product_id]['price_academic'] = price_acad
+            return_d[product_id]['price_full'] = price_full
 
         return return_d
 
@@ -344,17 +360,22 @@ class PricingProductsDataHandler(PricingBaseHandler):
     Use the optional parameter `version` to specify an exact version
     from the database. If omitted, the latest (highest number) version
     will be used.
+    Use the optional parameter `date` to specify the date to use for
+    exchange rates.
+    By default, discontinued products are omitted, use the parameter
+    `discontinued` to include those.
     Any information available for the product(s) will be returned.
     """
 
     def get(self, search_string=None):
         """Returns individual or all products from the database as json"""
-
         version = self.get_argument('version', None)
         date = self.get_argument('date', None)
+        discontinued = self.get_argument('discontinued', False)
 
         rows = self.get_product_prices(search_string, version=version,
                                        date=date,
+                                       discontinued=discontinued,
                                        pretty_strings=True)
 
         self.write(json.dumps(rows))
@@ -445,13 +466,6 @@ class PricingQuoteHandler(PricingBaseHandler):
     """
 
     def get(self):
-        products = self.get_product_prices(None,
-                                       pretty_strings=True)
-        products = [product for id,product in products.items()]
-
-        components = self.get_component_prices(component_id=None,
-                                        pretty_strings=True)
-
         exch_rates = self.fetch_exchange_rates(None)
 
         exch_rates['Issued at'] = exch_rates['Issued at'][0:10]
@@ -461,8 +475,6 @@ class PricingQuoteHandler(PricingBaseHandler):
         t = self.application.loader.load("pricing_quote.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
                 user=self.get_current_user(),
-                products=products,
-                components=components,
                 exch_rates=exch_rates))
 
 class PricingQuoteTbodyHandler(PricingBaseHandler):
@@ -471,16 +483,22 @@ class PricingQuoteTbodyHandler(PricingBaseHandler):
     Loaded through e.g.:
         /pricing_quote_tbody?date=2019-03-23
 
+    The parameter discontinued can be used to also show products where
+        the status is not 'Available'
+
     """
 
     def get(self):
         version = self.get_argument('version', None)
         date = self.get_argument('date', None)
+        discontinued = self.get_argument('discontinued', None)
 
         products = self.get_product_prices(None, version=version,
                                        date=date,
+                                       discontinued=discontinued,
                                        pretty_strings=True)
-        products = [product for id,product in products.items()]
+
+        products = [product for id, product in products.items()]
 
         components = self.get_component_prices(component_id=None,
                                         version=version,

@@ -84,7 +84,6 @@ $(document).ready(function() {
           window.open(this.href);
       return false;
         });
-
 });
 
 // Initialize sorting and searching javascript plugin
@@ -107,30 +106,19 @@ function init_listjs (no_items, columns) {
 
 
 function read_current_filtering(header){
-  /* If header == True will return a dictionary representing exactly what the
-  page shows. I.e columns['basic-columns'] = [['SciLife Sample Name', 'scilife_name'] ...]
+  /*   If header == False, this will return only an array of pairs [display_name, column_id]
 
-  If header == False will return only an array of pairs [display_name, column_id]
+  If header == True, this will return an array representing with the column grouping as an extra value in the array
   */
-  if (header){
-    var columns = new Object();
-    $("#Filter .filterCheckbox:checked").each(function() {
-      var p = $(this).data('columngroup');
-      if (!columns.hasOwnProperty(p)) {
-        columns[p] = new Array([$(this).data('displayname'), $(this).attr('name')]);
-      }
-      else {
-        columns[p].push([$(this).data('displayname'), $(this).attr('name')]);
-      }
-    });
-    return columns;
-  } else {
-    var columns = new Array();
-    $("#Filter .filterCheckbox:checked").each(function() {
+  var columns = new Array();
+  $("#Filter .filterCheckbox:checked").each(function() {
+    if (header){
+      columns.push([$(this).data('displayname'), $(this).attr('name'), $(this).data('columngroup')]);
+    } else {
       columns.push([$(this).data('displayname'), $(this).attr('name')]);
-    });
-    return columns;
-  }
+    }
+  });
+  return columns;
 }
 
 function reset_default_checkboxes(){
@@ -205,11 +193,15 @@ function select_from_preset(preset_type, preset) {
     $('#Filter input:checkbox').removeAttr('checked');
     if (preset_type == "default_preset_buttons") {
       var choices = data['default'][preset];
+      var colOrder = {};
+      if('COLUMNORDER' in choices)
+        colOrder = choices['COLUMNORDER'];
       for (column in choices) {
-        for (choice in choices[column]) {
-          var column_id = column.toLowerCase().replace(/_/g, '-') + '-' + choice;
-          prettyobj(column_id).prop('checked', choices[column][choice]);
-        }
+        if(column!='COLUMNORDER')
+          for (choice in choices[column]) {
+            var column_id = column.toLowerCase().replace(/_/g, '-') + '-' + choice;
+            prettyobj(column_id).prop('checked', choices[column][choice]);
+          }
       }
       prettyobj(preset).addClass('active');
 
@@ -218,7 +210,7 @@ function select_from_preset(preset_type, preset) {
     }
 
     // Apply the filter
-    load_samples_table();
+    load_samples_table(colOrder);
   });
 }
 
@@ -346,7 +338,7 @@ function load_all_udfs(){
         if (!data['portal_id']) {
           project_title = project + ", " + data['project_name'] + " <small>(" + data['customer_project_reference'] + " - no order in NGI portal)</small>";
         } else {
-          project_title = project + ", " + data['project_name'] + ' &nbsp; <small>NGI Portal: <a href="https://ngisweden.scilifelab.se/order/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>';
+          project_title = project + ", " + data['project_name'] + ' &nbsp; <small>NGI Portal: <a href="https://ngisweden.scilifelab.se/orders/order/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>';
         }
         prettyobj(key).html(project_title);
         prettyobj(key).attr('p_name', data['project_name']);
@@ -411,6 +403,10 @@ function load_all_udfs(){
           if(!emails[bx]){emails[bx]=[elabel('Bioinfo', 'default')]} else {emails[bx].push(elabel('Bioinfo', 'default'))};
           var pi = validateEmail(data['order_details']['fields']['project_pi_email']);
           if(!emails[pi]){emails[pi]=[elabel('PI', 'info')]} else {emails[pi].push(elabel('PI', 'info'))};
+          if(data['snic_checked'] && data['snic_checked']['status']==false){
+            $("#grus_alert").show();
+            $("#grus_ids").text(pi);
+          }
         }
         catch(error) {
           console.log('Falling back to using doc["contact"]');
@@ -581,9 +577,17 @@ function load_table_head(columns){
   $("#samples_table_head").html(tbl_head);
 }
 
-function load_samples_table() {
+function load_samples_table(colOrder) {
   // Load the table header and get the filters
-  var cols = read_current_filtering();
+  var cols = read_current_filtering(true);
+  if(!jQuery.isEmptyObject(colOrder)){
+    var reorderCols = [];
+    var colIndex = cols.map(function(row){return row[1];})
+    $.each(colOrder, function(index, col){
+      reorderCols.push(cols[colIndex.indexOf(col)]);
+    });
+    cols=reorderCols;
+  }
   load_table_head(cols);
 
   // Display the loading spinner in the table
@@ -591,7 +595,6 @@ function load_samples_table() {
 
   // Print each sample
   $.getJSON("/api/v1/project/" + project, function (samples_data) {
-    columns = read_current_filtering(true);
     var tbl_body = "";
     var size = 0;
 
@@ -604,11 +607,10 @@ function load_samples_table() {
     $.each(samples_data, function (sample, info) {
       size++;
       tbl_row = '<tr>';
-      $.each(columns, function(subset, fields){
-        if (subset == "basic-columns") {
-          $.each(fields, function(idx, column_tuple) {
-            var column_name = column_tuple[0];
-            var column_id = column_tuple[1];
+      $.each(cols, function(i, value){
+        var column_name = value[0];
+        var column_id = value[1];
+        if (value[2] == "basic-columns") {
             info[column_id] = round_floats(info[column_id], 2);
 
             // Scilife Sample Name
@@ -661,12 +663,9 @@ function load_samples_table() {
               tbl_row += auto_samples_cell(column_id, info[column_id]);
             }
 
-          });
         }
-        else if (subset == "initial-qc-columns" && info['initial_qc'] !== undefined) {
-          $.each(fields, function(idx, column_tuple){
-            var column_name = column_tuple[0];
-            var column_id = column_tuple[1];
+        else if (value[2] == "initial-qc-columns" && info['initial_qc'] !== undefined) {
+
             info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
 
             // Fragment Analyzer Image
@@ -706,12 +705,8 @@ function load_samples_table() {
               tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
             }
 
-          });
         }
-        else if (subset == "library-prep-columns" && info['library_prep'] !== undefined) {
-          $.each(fields, function(idx, column_tuple){
-            var column_name = column_tuple[0];
-            var column_id = column_tuple[1];
+        else if (value[2] == "library-prep-columns" && info['library_prep'] !== undefined) {
 
             tbl_row += '<td class="' + column_id + '">';
             var libs = Object.keys(info['library_prep']).sort();
@@ -741,13 +736,9 @@ function load_samples_table() {
               }
             });
             tbl_row += '</td>';
-          });
         }
 
-        else if (subset == "library-validation-columns" && info['library_prep'] !== undefined) {
-          $.each(fields, function(idx, column_tuple){
-            var column_name = column_tuple[0];
-            var column_id = column_tuple[1];
+        else if (value[2] == "library-validation-columns" && info['library_prep'] !== undefined) {
             tbl_row += '<td class="' + column_id + '">';
             var libs = Object.keys(info['library_prep']).sort();
             $.each(libs, function(idx, library){
@@ -783,12 +774,8 @@ function load_samples_table() {
               }
             });
             tbl_row += '</td>';
-          });
         }
-        else if (subset == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
-          $.each(fields, function(idx, column_tuple){
-            var column_name = column_tuple[0];
-            var column_id = column_tuple[1];
+        else if (value[2] == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
             tbl_row += '<td class="' + column_id + '">';
             var libs = Object.keys(info['library_prep']).sort();
             $.each(libs, function(idx, library){
@@ -804,12 +791,8 @@ function load_samples_table() {
               }
             });
             tbl_row += '</td>';
-          });
         }
-        else if (subset == "bioinfo-columns" && info['run_metrics_data'] !== undefined) {
-          $.each(fields, function(idx, column_tuple){
-            var column_name = column_tuple[0];
-            var column_id = column_tuple[1];
+        else if (value[2] == "bioinfo-columns" && info['run_metrics_data'] !== undefined) {
             tbl_row += '<td class="' + column_id + '">';
             $.each(info['run_metrics_data'], function(rmd, rmid) {
               val=parseFloat(rmid[column_id])
@@ -825,17 +808,12 @@ function load_samples_table() {
               tbl_row+='<br />';
             });
             tbl_row += '</td>';
-          });
         }
 
         // Details columns
         else {
-          $.each(fields, function(idx, column_tuple){
-            var column_name = column_tuple[0];
-            var column_id = column_tuple[1];
             info['details'][column_id] = round_floats(info['details'][column_id], 2);
             tbl_row += auto_samples_cell(column_id, info['details'][column_id]);
-          });
         }
       });
       tbl_row += '</tr>';
@@ -1162,3 +1140,13 @@ function setup_internal_costs_form(){
     $('#internal_costs').show();
   });
 }
+
+$('#downloadImgsBtn').click(function(e){
+  var option=$('input[name="imgRadio"]:checked').val();
+  if(option==undefined){
+    alert('Please choose an option!');
+    return;
+  }
+  var download_api_url = '/api/v1/download_images/'+project+'/'+option;
+  $('#chooseImgType').attr('action', download_api_url).attr('method', 'post');
+});

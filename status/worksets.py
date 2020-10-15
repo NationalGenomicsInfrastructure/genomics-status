@@ -70,7 +70,7 @@ class WorksetsHandler(SafeHandler):
                  ['Application', 'application'],['Library','library_method'], \
                  ['Samples Passed', 'passed'],['Samples Failed', 'failed'] , \
                  ['Pending Samples', 'unknown'],['Total samples', 'total'], \
-                 ['Latest workset note', 'Workset Notes']];
+                 ['Latest workset note', 'Workset Notes'],['Closed Worksets', 'closed_ws']];
         self.write(t.generate(gs_globals=self.application.gs_globals, worksets=all, user=self.get_current_user(), ws_data=ws_data, headers=headers, all=all))
 
 class WorksetDataHandler(SafeHandler):
@@ -88,16 +88,45 @@ class WorksetDataHandler(SafeHandler):
             result[row.key] = row.value
             result[row.key].pop("_id", None)
             result[row.key].pop("_rev", None)
-        if result:
-            return result
-
+        if not result:
         # Check if the lims id was used
-        ws_view = application.worksets_db.view("worksets/lims_id")
-        for row in ws_view[workset]:
-            result[row.key] = row.value
-            result[row.key].pop("_id", None)
-            result[row.key].pop("_rev", None)
+            ws_view = application.worksets_db.view("worksets/lims_id")
+            for row in ws_view[workset]:
+                result[row.key] = row.value
+                result[row.key].pop("_id", None)
+                result[row.key].pop("_rev", None)
+        for key in result:
+            for project in result[key]['projects']:
+                result[key]['projects'][project]['samples'] = dict(sorted(result[key]['projects'][project]['samples'].items()))
         return result
+
+class ClosedWorksetsHandler(SafeHandler):
+    """ Handles all closed worksets for the closed ws tab
+    URL: /api/v1/closed_worksets
+    """
+    def get(self):
+        result = {}
+        a_year_ago = datetime.datetime.now() - relativedelta(years=1)
+        project_dates_view = self.application.projects_db.view("project/id_name_dates")
+        project_dates = dict((row.key, row.value) for row in project_dates_view)
+        ws_view = self.application.worksets_db.view("worksets/summary", descending=True)
+        for row in ws_view:
+            if row.value.get('date_run'):
+                if parse(row.value['date_run']) <= a_year_ago:
+                    flag = True
+                    for project in row.value['projects']:
+                        close_date_s = project_dates[project]["close_date"]
+                        if close_date_s == "0000-00-00":
+                            flag = False
+                            break
+                        close_date = datetime.datetime.strptime(close_date_s, '%Y-%m-%d')
+                        if close_date >= a_year_ago:
+                            flag = False
+                            break
+                    if flag:
+                        result[row.key] = row.value
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(result))
 
 class WorksetHandler(SafeHandler):
     """Loaded through /workset/[workset]"""
@@ -272,7 +301,6 @@ class WorksetPoolsHandler(SafeHandler):
     """ Serves all the samples that need to be added to worksets in LIMS
     URL: /api/v1/workset_pools
     """
-
     def get(self):
         limsg = lims.Lims(BASEURI, USERNAME, PASSWORD)
         queues = {}
@@ -298,7 +326,11 @@ class WorksetPoolsHandler(SafeHandler):
                 else:
                     total_num_samples = limsg.get_sample_number(projectlimsid=project)
                     proj = Project(limsg, id=project)
-                    date_queued = proj.udf['Queued'].strftime("%Y-%m-%d")
+                    try:
+                        date_queued = proj.udf['Queued'].strftime("%Y-%m-%d")
+                    except KeyError:
+                        # Queued should really be on a project at this point, but mistakes happen
+                        date_queued = None
                     projName = proj.name
                     pools[method][project] = {'total_num_samples': total_num_samples, 'queued_date': date_queued, 'pname': projName,
                                                 'samples': [name]}

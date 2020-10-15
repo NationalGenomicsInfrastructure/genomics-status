@@ -202,6 +202,9 @@ th.sort.desc:after {
   top:-4px;
   right:-5px;
 }
+th.sort.glyphicon {
+  display: table-cell;
+}
 
 /* For NVD3 graphs */
 .box { font: 10px sans-serif; }
@@ -1227,4 +1230,20 @@ tr.group, tr.group:hover, .dtrg-group {
   color: #0088cc;
   cursor: pointer;
   margin-right: 4px;
+}
+
+td.alert-red{
+  background-color: #ea9999;
+}
+
+td.alert-orange{
+  background-color: #facc99;
+}
+
+td.alert-green{
+  background-color: #d9ead3;
+}
+
+tr.status_discontinued{
+  background-color: #f2dede;
 }

@@ -252,8 +252,15 @@ Description: Shows all presets configured for user and enables their selection.
                               {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].items() %}
                               <div class="checkbox">
                                 <label>
-                                  <input type="checkbox" class="filterCheckbox" data-columngroup="EXTRA_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-extra-columns-{{col_name.replace("(", "").replace(")", "")}}">
-                                  {{col_display_name}}
+                                  <input type="checkbox" class="filterCheckbox" data-columngroup="EXTRA_COLUMNS" data-displayname="{{col_display_name}}"
+                                  {% if "glyphicon" in col_display_name %}
+                                    name="{{col_name[0]}}" id="allFields-extra-columns-{{col_name[0].replace("(", "").replace(")", "")}}">
+                                    <i class="glyphicon {{col_display_name}}"></i>
+                                      ({{col_name[1]}})
+                                  {% else %}
+                                    name="{{col_name}}" id="allFields-extra-columns-{{col_name.replace("(", "").replace(")", "")}}">
+                                    {{col_display_name}}
+                                  {% end %}
                                 </label>
                               </div>
                               {% end %}
