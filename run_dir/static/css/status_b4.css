@@ -2,10 +2,20 @@ body {
   padding-top: 60px;
   padding-bottom: 40px;
 }
+.footer {
+    font-size:0.9em;
+    color:#999;
+    text-align:center;
+}
+.footer a {
+    color:#999;
+    text-decoration:underline;
+}
 
-#navbar-searchbar .twitter-typeahead { background-color: #FFFFFF; }
 
 /* .tt = twitter typeahead styles. For homepage search box */
+#navbar-searchbar .twitter-typeahead { background-color: #FFFFFF; }
+
 .input-spinner { margin-left:-35px; }
 
 .tt-dropdown-menu {
