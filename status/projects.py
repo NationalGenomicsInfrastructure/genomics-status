@@ -754,6 +754,8 @@ class RunningNotesDataHandler(SafeHandler):
     def notify_tagged_user(application, userTags, project, note, category, tagger, timestamp):
         view_result = {}
         time_in_format = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S').strftime("%a %b %d %Y, %I:%M:%S %p")
+        note_id = 'running_note_' + project + '_' + \
+                    str(int((datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S') -  datetime.datetime(1970,1,1, 0, 0, 0)).total_seconds()))
         for row in application.gs_users_db.view('authorized/users'):
             if row.key != 'genstat_defaults':
                 view_result[row.key.split('@')[0]] = row.key
@@ -774,8 +776,8 @@ class RunningNotesDataHandler(SafeHandler):
 		                "text": {
                             "type": "mrkdwn",
         		            "text": ("_You have been tagged by *{}* in a running note for the project_ "
-                                     "<{}/project/{}|{}>! :smile: \n_The note is as follows:_ \n\n\n")
-                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project, project)
+                                     "<{}/project/{}#{}|{}>! :smile: \n_The note is as follows:_ \n\n\n")
+                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project, note_id, project)
                              }
                         },
                         {
@@ -811,7 +813,7 @@ class RunningNotesDataHandler(SafeHandler):
                     html = '<html>\
                     <body>\
                     <p> \
-                    You have been tagged by {} in a running note in the project <a href="{}/project/{}">{}</a>! The note is as follows</p>\
+                    You have been tagged by {} in a running note in the project <a href="{}/project/{}#{}">{}</a>! The note is as follows</p>\
                     <blockquote>\
                     <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
                     <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
@@ -820,7 +822,7 @@ class RunningNotesDataHandler(SafeHandler):
                     <div class="panel-body" style="padding: 15px;">\
                         <p>{}</p>\
                     </div></div></blockquote></body></html>'.format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0],
-                    project, project, tagger, time_in_format, category, markdown.markdown(note))
+                    project, note_id, project, tagger, time_in_format, category, markdown.markdown(note))
 
                     msg.attach(MIMEText(text, 'plain'))
                     msg.attach(MIMEText(html, 'html'))

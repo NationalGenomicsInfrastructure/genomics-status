@@ -84,6 +84,9 @@ $(document).ready(function() {
           window.open(this.href);
       return false;
         });
+  if(window.location.href.indexOf('#running_note_')!=-1)
+    $('.nav-tabs a[href="#tab_running_notes_content"]').tab('show');
+    location.hash = window.location.hash;
 });
 
 // Initialize sorting and searching javascript plugin
