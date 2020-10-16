@@ -87,8 +87,11 @@ $(document).ready(function() {
   if(window.location.href.indexOf('#running_note_')!=-1)
     $('.nav-tabs a[href="#tab_running_notes_content"]').tab('show');
     setTimeout(function(){
-      location.hash = window.location.hash;
-    }, 3000)
+      window.location.href = window.location.hash;
+      window.scrollTo(window.scrollX, window.scrollY - 53);
+      var elem_to_glow = $('a[href="'+window.location.hash+'"]').parents().eq(1);
+      elem_to_glow.addClass('glow').delay(3000).queue(function(){elem_to_glow.removeClass('glow')});
+    }, 2000)
 });
 
 // Initialize sorting and searching javascript plugin
