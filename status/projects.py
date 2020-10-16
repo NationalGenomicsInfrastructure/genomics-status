@@ -366,7 +366,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         t_threshold = datetime.datetime.now() - relativedelta(minutes=3)
         if ProjectsBaseDataHandler.cached_search_list is None or \
                 ProjectsBaseDataHandler.search_list_last_fetched < t_threshold:
-            projects_view = self.application.projects_db_views.view("projects/name_to_id_cust_ref", descending=True)
+            projects_view = self.application.projects_db.view("projects/name_to_id_cust_ref", descending=True)
 
             ProjectsBaseDataHandler.cached_search_list = [(row.key, row.value) for row in projects_view]
             ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
@@ -1052,7 +1052,7 @@ class RecCtrlDataHandler(SafeHandler):
     def get(self, project_id):
         sample_data={}
         #changed from projects due to view timing out with os_process_error
-        v = self.application.projects_db_views.view("samples/rec_ctrl_view")
+        v = self.application.projects_db.view("samples/rec_ctrl_view")
         for row in v[project_id]:
             sample_data.update(row.value)
 
