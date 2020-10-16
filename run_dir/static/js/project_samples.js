@@ -87,8 +87,8 @@ $(document).ready(function() {
   if(window.location.href.indexOf('#running_note_')!=-1)
     $('.nav-tabs a[href="#tab_running_notes_content"]').tab('show');
     setTimeout(function(){
-      location.hash = window.location.hash;
-    }, 3000)
+      window.location.href = window.location.hash;
+    }, 2000)
 });
 
 // Initialize sorting and searching javascript plugin
