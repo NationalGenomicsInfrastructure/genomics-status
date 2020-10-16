@@ -88,6 +88,8 @@ $(document).ready(function() {
     $('.nav-tabs a[href="#tab_running_notes_content"]').tab('show');
     setTimeout(function(){
       window.location.href = window.location.hash;
+      window.scrollTo(window.scrollX, window.scrollY - 53);
+      $('a[href="'+window.location.hash+'"]').parents().eq(1).removeClass('panel-default').addClass('panel-success');
     }, 2000)
 });
 
