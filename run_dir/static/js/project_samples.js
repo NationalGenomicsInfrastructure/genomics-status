@@ -89,7 +89,8 @@ $(document).ready(function() {
     setTimeout(function(){
       window.location.href = window.location.hash;
       window.scrollTo(window.scrollX, window.scrollY - 53);
-      $('a[href="'+window.location.hash+'"]').parents().eq(1).removeClass('panel-default').addClass('panel-success');
+      var elem_to_glow = $('a[href="'+window.location.hash+'"]').parents().eq(1);
+      elem_to_glow.addClass('glow').delay(3000).queue(function(){elem_to_glow.removeClass('glow')});
     }, 2000)
 });
 
