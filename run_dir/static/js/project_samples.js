@@ -84,6 +84,11 @@ $(document).ready(function() {
           window.open(this.href);
       return false;
         });
+  if(window.location.href.indexOf('#running_note_')!=-1)
+    $('.nav-tabs a[href="#tab_running_notes_content"]').tab('show');
+    setTimeout(function(){
+      location.hash = window.location.hash;
+    }, 3000)
 });
 
 // Initialize sorting and searching javascript plugin
