@@ -6,11 +6,25 @@
                 <div class="panel-heading">Add New Running Note</div>
                 <div class="panel-body">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-7 form-inline">
+                          <label>Choose category:</label>
+                          <div class="btn-toolbar" data-toggle="buttons" style="margin-top:5px">
+                             <button class="btn btn-xs btn-info btnCatFilter" value="Decision" data-toggle="tooltip" title="Use this category when an executive decision has been made">Decision &nbsp;<span class="fa fa-thumbs-up"</span></button>
+                             <button class="btn btn-xs btn-success btnCatFilter" value="Lab" data-toggle="tooltip" title="Use this category for lab-related work">Lab &nbsp;<span class="fa fa-bong"</span></button>
+                             <button class="btn btn-xs btn-warning btnCatFilter" value="Bioinformatics" data-toggle="tooltip" title="Use this category for all bioinformatics work">Bioinformatics &nbsp;<span class="fa fa-laptop-code"</span></button>
+                             <button class="btn btn-xs btn-usr btnCatFilter" value="User Communication" data-toggle="tooltip" title="Use this category for notes influenced by user-contact">User Communication &nbsp;<span class="fa fa-people-arrows"</span></button>
+                             <button class="btn btn-xs btn-danger btnCatFilter" value="Administration" data-toggle="tooltip" title="Use this category for notes involving documentation">Administration &nbsp;<span class="fa fa-folder-open"</span></button>
+                             <button class="btn btn-xs btn-imp btnCatFilter" value="Important" data-toggle="tooltip" title="Use this category when a note needs to be highlighted">Important &nbsp;<span class="fa fa-exclamation-circle"</span></button>
+                             <button class="btn btn-xs btn-devi btnCatFilter" value="Deviation" data-toggle="tooltip" title="Use this category for notes about a deviation">Deviation &nbsp;<span class="fa fa-frown"</span></button>
+                          </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6" style="margin-top:20px;">
                             <h4>Write Running Note</h4>
                             <textarea rows="5" class="form-control" id="new_note_text" style="height:97px;"></textarea>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" style="margin-top:20px;">
                             <h4>Preview</h4>
                             <div class="panel panel-default" id="running_note_preview_panel">
                                 <div class="panel-heading"><a href="#">{{ user.name }}</a> - <span class="todays_date">Date</span><span id="preview_category"> - Category</span></div>
@@ -20,23 +34,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="row" style="margin-top:15px;">
-                        <div class="col-md-6 form-inline">
-                            <label>Category :</label>
-                            <select name="rn_cat" class="form-control" id="rn_category">
-                                <option value="Workset">Workset</option>
-                                <option value="Flowcell">Flowcell</option>
-                                <option value="Meeting">Meeting</option>
-                                <option value="Decision">Decision</option>
-                                <option value="Bioinformatics">Bioinformatics</option>
-                                <option value="User Communication">User Communication</option>
-                                <option value="Invoicing">Invoicing</option>
-                                <option value="Important">Important</option>
-                                <option value="Deviation">Deviation</option>
-                                <option value="" selected="selected">None</option>
-                            </select>
-                        </div>
                         <div class="col-md-6 text-right">
                             <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help">Markdown Help</button>
                             <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
@@ -51,19 +48,22 @@
             <label>Search :</label>
             <input type="text" class="form-control" id="rn_search" size=30 />
             <label>Filter :</label>
-            <button id="rn_cat_all" type="button" class="btn btn-xs btnCatFilter glow">All</button>
-            <button id="rn_cat_workset" type="button" class="btn btn-xs btn-primary btnCatFilter">Workset</button>
-            <button id="rn_cat_flowcell" type="button" class="btn btn-xs btn-success btnCatFilter">Flowcell</button>
-            <button id="rn_cat_meeting" type="button" class="btn btn-xs btn-info btnCatFilter">Meeting</button>
-            <button id="rn_cat_decision" type="button" class="btn btn-xs btn-info btnCatFilter">Decision</button>
-            <button id="rn_cat_bioinfo" type="button" class="btn btn-xs btn-warning btnCatFilter">Bioinformatics</button>
-            <button id="rn_cat_uscom" type="button" class="btn btn-xs btn-danger btnCatFilter">User Communication</button>
-            <button id="rn_cat_uscom" type="button" class="btn btn-xs btn-danger btnCatFilter">Invoicing</button>
-            <button id="rn_cat_imp" type="button" class="btn btn-xs btn-imp btnCatFilter">Important</button>
-            <button id="rn_cat_devi" type="button" class="btn btn-xs btn-devi btnCatFilter">Deviation</button>
+            <select class="form-control" id="rn_category">
+            <option value="All">All</option>
+            <option value="Workset">Workset</option>
+            <option value="Flowcell">Flowcell</option>
+            <option value="Decision">Decision</option>
+            <option value="Bioinformatics">Bioinformatics</option>
+            <option value="User Communication">User Communication</option>
+            <option value="Administration">Administration</option>
+            <option value="Important">Important</option>
+            <option value="Deviation">Deviation</option>
+            <option value="Lab">Lab</option>
+            </select>
         </div>
         <!-- display running notes -->
         <div class="panel-group" id="running_notes_panels"></div>
     </div>
     <script src="/static/js/jquery.caretposition.js"></script>
     <script src="/static/js/jquery.sew.js"></script>
+    <script src="https://kit.fontawesome.com/778b59723b.js" crossorigin="anonymous"></script>

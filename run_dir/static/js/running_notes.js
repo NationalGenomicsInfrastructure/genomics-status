@@ -8,25 +8,26 @@ $(function(){
 });
 
 function generate_category_label(category){
-    if (category == 'Workset'){
-         category='<span class="label label-primary">'+ category +"</span>";
-     }else if (category == 'Flowcell'){
-         category='<span class="label label-success">'+ category +"</span>";
-     }else if (category == 'Meeting' || category == "Decision"){
-         category='<span class="label label-info">'+ category +"</span>";
-     }else if (category == 'User Communication'){
-         category='<span class="label label-danger">'+ category +"</span>";
-     }else if (category == 'Bioinformatics'){
-         category='<span class="label label-warning">'+ category +"</span>";
-     }else if (category == 'Important'){
-         category='<span class="label label-imp">'+ category +"</span>";
-     }else if (category == 'Deviation'){
-	       category='<span class="label label-devi">'+ category +"</span>";
-     }else if (category != ''){
-         category='<span class="label label-default">'+ category +"</span>";
-     }
-     return category;
+   if (category == 'Decision'){
+        category='<span class="label label-info">'+ category +"</span>";
+    }else if (category == 'Lab'){
+        category='<span class="label label-success">'+ category +"</span>";
+    }else if (category == 'Bioinformatics'){
+        category='<span class="label label-warning">'+ category +"</span>";
+    }else if (category == 'User Communication'){
+        category='<span class="label label-usr">'+ category +"</span>";
+    }else if (category == 'Administration'){
+        category='<span class="label label-danger">'+ category +"</span>";
+    }else if (category == 'Important'){
+        category='<span class="label label-imp">'+ category +"</span>";
+    }else if (category == 'Deviation'){
+        category='<span class="label label-devi">'+ category +"</span>";
+    }else if (category != ''){
+        category='<span class="label label-default">'+ category +"</span>";
+    }
+    return category;
 }
+
 function get_note_url() {
     // URL for the notes
     if ((typeof notetype !== 'undefined' && notetype == 'lims_step') || ('lims_step' in window && lims_step !== null)){
@@ -117,7 +118,7 @@ function load_running_notes(wait) {
 function preview_running_notes(){
     var now = new Date();
     $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
-    var category = generate_category_label($('#rn_category option:selected').val());
+    var category = generate_category_label($('.btnCatFilter.active').val());
     category = category ? ' - '+ category : category;
     $('#preview_category').html(category);
     var text = $('#new_note_text').val().trim();
@@ -143,33 +144,46 @@ function filter_running_notes(search){
         }
     });
 }
-//Filter notes by Category
+//Filter notes
 $('#rn_search').keyup(function() {
     var search=$('#rn_search').val();
     filter_running_notes(search);
 });
-$('.btnCatFilter').click(function() {
-    $('.btnCatFilter').each(function() {$(this).removeClass("glow")});
-    $(this).addClass("glow")
-    var search=$(this).text();
-    if (search == 'All'){
-        search='';
-    }
-    filter_running_notes(search);
+
+$(document).ready(function() {
+    $('#rn_category').change(function() {
+        var search=$('#rn_category :selected').text();
+        if (search == 'All'){
+            search='';
+        }
+        filter_running_notes(search);
+    });
 });
+
+$('.btnCatFilter').click(function(){
+    var was_selected = $(this).hasClass('active');
+    $('.btnCatFilter').removeClass('active');
+    if(!was_selected){ $(this).addClass('active'); }
+    });
+
 // Preview running notes
 $('#new_note_text').keyup(preview_running_notes);
-$('#rn_category').change(preview_running_notes);
+$('.btnCatFilter').change(preview_running_notes);
 
 // Insert new running note and reload the running notes table
 $("#running_notes_form").submit( function(e) {
     e.preventDefault();
     var text = $('#new_note_text').val().trim();
     text = $('<div>').text(text).html();
-    var category = $('#rn_category option:selected').val();
+    var category = $('.btnCatFilter.active').val();
     if (text.length == 0) {
         alert("Error: No running note entered.");
         return false;
+    }
+    if (!$('.btnCatFilter.active').val()) {
+       if (!confirm("Are you sure that you want to submit without choosing a category?")) {
+          return false;
+       }
     }
 
     note_url = get_note_url()

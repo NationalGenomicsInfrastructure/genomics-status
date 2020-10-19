@@ -168,6 +168,7 @@ table.narrow-headers th { width: 20%; }
 .label-date  {color: #333; font-size:80%; }
 .label-imp  {background-color: #a62100;}
 .label-devi  {background-color: #a13a7e;}
+.label-usr  {background-color: #ff6f00;}
 /* Date sliders */
 .slider-spacing { margin:40px 0; }
 
@@ -408,6 +409,14 @@ td.progress {
 .btn-devi:focus, .btn-devi:hover {
   color: #fff;
   background-color: #a13a7e;
+}
+.btn-usr{
+  color: #fff;
+  background-color: #ff6f00;
+}
+.btn-usr:focus, .btn-usr:hover {
+  color: #fff;
+  background-color: #ff6f00;
 }
 #markdown_help table td {
   width:50%;
