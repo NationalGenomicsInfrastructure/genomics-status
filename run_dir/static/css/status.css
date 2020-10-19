@@ -392,13 +392,7 @@ td.progress {
 .btn-imp{
   color: #fff;
   background-color: #a62100;
-  border-color: #571100;
  }
-.btn-imp:focus, .btn-imp:hover {
-  color: #fff;
-  background-color: #8a1b00;
-  border-color: #8a1b00;
-}
 .panel-important{
   background-color: #ffd9d9 !important;
 }
@@ -406,17 +400,13 @@ td.progress {
   color: #fff;
   background-color: #a13a7e;
 }
-.btn-devi:focus, .btn-devi:hover {
-  color: #fff;
-  background-color: #a13a7e;
-}
 .btn-usr{
   color: #fff;
   background-color: #ff6f00;
 }
-.btn-usr:focus, .btn-usr:hover {
-  color: #fff;
-  background-color: #ff6f00;
+.btnCatFilter:focus, .btnCatFilter:hover {
+  color: #000;
+  border-color: #000;
 }
 #markdown_help table td {
   width:50%;

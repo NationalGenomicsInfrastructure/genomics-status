@@ -160,11 +160,19 @@ $(document).ready(function() {
     });
 });
 
+// Update the category buttons
 $('.btnCatFilter').click(function(){
     var was_selected = $(this).hasClass('active');
     $('.btnCatFilter').removeClass('active');
     if(!was_selected){ $(this).addClass('active'); }
     });
+
+//Remove hover text from clicked button
+$(document).ready(function(){
+       $('[data-toggle="tooltip"]').click(function () {
+          $('[data-toggle="tooltip"]').tooltip("hide");
+       });
+})
 
 // Preview running notes
 $('#new_note_text').keyup(preview_running_notes);
