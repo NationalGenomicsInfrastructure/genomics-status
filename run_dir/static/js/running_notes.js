@@ -52,7 +52,17 @@ function make_running_note(date, note){
           noteText = '<pre class="plaintext_running_note">'+make_project_links(note['note'])+'</pre>';
         }
         datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date);
-        note_id = 'running_note_'+project+'_'+(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(),
+        var page_to_link = '';
+        if(typeof project !== 'undefined'){
+          page_to_link = project;
+        }
+        else if (typeof flowcell!== 'undefined') {
+          page_to_link = flowcell;
+        }
+        else if(typeof workset_name !== 'undefined'){
+          page_to_link = workset_name
+        }
+        note_id = 'running_note_'+page_to_link+'_'+(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(),
                    date.getUTCDate(), date.getHours(), date.getMinutes(), date.getSeconds())/1000);
         if ('category' in note){
             category=generate_category_label(note['category']);
