@@ -168,7 +168,7 @@ $('.btnCatFilter').click(function(){
 
 // Preview running notes
 $('#new_note_text').keyup(preview_running_notes);
-$('.btnCatFilter').change(preview_running_notes);
+$('.btnCatFilter').click(preview_running_notes);
 
 // Insert new running note and reload the running notes table
 $("#running_notes_form").submit( function(e) {
