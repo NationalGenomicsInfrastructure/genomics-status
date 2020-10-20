@@ -7,25 +7,28 @@ $(function(){
     });
 });
 
-function generate_category_label(category){
-   if (category == 'Decision'){
-        category='<span class="label label-info">'+ category +"</span>";
-    }else if (category == 'Lab'){
-        category='<span class="label label-success">'+ category +"</span>";
-    }else if (category == 'Bioinformatics'){
-        category='<span class="label label-warning">'+ category +"</span>";
-    }else if (category == 'User Communication'){
-        category='<span class="label label-usr">'+ category +"</span>";
-    }else if (category == 'Administration'){
-        category='<span class="label label-danger">'+ category +"</span>";
-    }else if (category == 'Important'){
-        category='<span class="label label-imp">'+ category +"</span>";
-    }else if (category == 'Deviation'){
-        category='<span class="label label-devi">'+ category +"</span>";
-    }else if (category != ''){
-        category='<span class="label label-default">'+ category +"</span>";
+function generate_category_label(cat_label){
+     var cat_classes = {
+        'Workset': ['primary', 'calendar-plus'],
+        'Flowcell': ['success', 'grip-vertical'],
+        'Decision': ['info', 'thumbs-up'],
+        'Lab': ['success', 'bong'],
+        'Bioinformatics': ['warning', 'laptop-code'],
+        'User Communication': ['usr', 'people-arrows'],
+        'Administration': ['danger', 'folder-open'],
+        'Important': ['imp', 'exclamation-circle'],
+        'Deviation': ['devi', 'frown']
     }
-    return category;
+    // Remove the whitespace
+    var cat_label = cat_label.trim()
+    // Check if we recognise this category in the class object keys
+    if (Object.keys(cat_classes).indexOf(cat_label) != -1){
+        cat_label = '<span class="label label-'+ cat_classes[cat_label][0] +'">'+ cat_label + '&nbsp;' + '<span class="fa fa-'+ cat_classes[cat_label][1] +'">'+"</span>";
+    }else{
+    // Default button formatting
+        cat_label = '<span class="label label-default">'+ cat_label +"</span>";
+    }
+    return cat_label;
 }
 
 function get_note_url() {
@@ -118,7 +121,7 @@ function load_running_notes(wait) {
 function preview_running_notes(){
     var now = new Date();
     $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
-    var category = generate_category_label($('.btnCatFilter.active').val());
+    var category = generate_category_label($('.rn-cat-filter button.active').text());
     category = category ? ' - '+ category : category;
     $('#preview_category').html(category);
     var text = $('#new_note_text').val().trim();
@@ -161,34 +164,36 @@ $(document).ready(function() {
 });
 
 // Update the category buttons
-$('.btnCatFilter').click(function(){
+$('.rn-cat-filter button').click(function(){
     var was_selected = $(this).hasClass('active');
-    $('.btnCatFilter').removeClass('active');
-    if(!was_selected){ $(this).addClass('active'); }
-    });
+    $('.rn-cat-filter button').removeClass('active');
+    if(!was_selected){
+        $(this).addClass('active');
+    }
+    preview_running_notes();
+});
 
 //Remove hover text from clicked button
 $(document).ready(function(){
-       $('[data-toggle="tooltip"]').click(function () {
-          $('[data-toggle="tooltip"]').tooltip("hide");
-       });
+      $('[data-toggle="tooltip"]').click(function (){
+         $('[data-toggle="tooltip"]').tooltip("hide");
+      });
 })
 
 // Preview running notes
 $('#new_note_text').keyup(preview_running_notes);
-$('.btnCatFilter').click(preview_running_notes);
 
 // Insert new running note and reload the running notes table
 $("#running_notes_form").submit( function(e) {
     e.preventDefault();
     var text = $('#new_note_text').val().trim();
     text = $('<div>').text(text).html();
-    var category = $('.btnCatFilter.active').val();
+    var category = $('.rn-cat-filter button.active').text();
     if (text.length == 0) {
         alert("Error: No running note entered.");
         return false;
     }
-    if (!$('.btnCatFilter.active').val()) {
+    if (!$('.rn-cat-filter button.active').text()) {
        if (!confirm("Are you sure that you want to submit without choosing a category?")) {
           return false;
        }

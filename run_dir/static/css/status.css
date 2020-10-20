@@ -404,7 +404,10 @@ td.progress {
   color: #fff;
   background-color: #ff6f00;
 }
-.btnCatFilter:focus, .btnCatFilter:hover {
+.rn-cat-filter button span{
+    margin-left: 0.5rem;
+}
+.rn-cat-filter button:focus, .rn-cat-filter button:hover{
   color: #000;
   border-color: #000;
 }
