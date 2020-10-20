@@ -85,6 +85,8 @@ class Application(tornado.web.Application):
             self.gs_globals['git_commit'] = 'unknown'
             self.gs_globals['git_commit_full'] = 'unknown'
 
+        self.gs_globals['font_awesome_url'] = settings.get('font_awesome_url', None)
+
         handlers = [
             ("/", MainHandler),
             ("/login", LoginHandler),
