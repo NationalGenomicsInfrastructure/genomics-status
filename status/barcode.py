@@ -62,6 +62,34 @@ class BarcodeHandler(SafeHandler):
         self.set_header("Content-type", "application/json")
         self.finish({'message': 'Submitted to printer!'})
 
+        # printing user project Labels
+        user_project_ID = self.get_argument('projectLabel_to_print')
+        startP = self.get_argument('plate_start')
+        endP = self.get_argument('plate_end')
+        projectNo = self.get_argument('numberOfProjects')
+
+        if len(user_project_ID) > 0 :
+            isValidUserID = match_userID(user_project_ID)
+            if isValidUserID:
+                projectNo_only = re.search('P(.*)', user_project_ID)
+                projectNo_only_extracted = projectNo_only.group(1)
+                for projects in range(0,int(projectNo)):#(int(projectNo))):
+                    new_projectNo = int(projectNo_only_extracted) + projects
+                    new_projectID = "P" + str(new_projectNo)
+                    for plate in range(int(startP),(int(endP)+1)) :
+                        new_projectID_plate = new_projectID + "P" + str(plate)
+                        print(new_projectID_plate)
+                        project_barcode = makeBarcode(new_projectID_plate, True)
+                        createdProjectLabel_joined = '\n'.join(project_barcode)
+                        print(createdProjectLabel_joined)
+                        #for _ in range(copies): # loops over copies to print
+                        #    print_barcode(createdLabel_joined)
+
+            else:
+                print("please enter a valid user ID, it should start with \"P\", followed by numbers (e.g. P12345)")
+        else:
+            print("no user project ID was given")
+
 
 def makeBarcode(label, print_bc):
     # prints the formated label to be piped to the barcode printer
@@ -101,6 +129,16 @@ def match_barcode(string_to_match, default_value):
     else:
         isbarcode = default_value
     return(isbarcode)
+
+def match_userID(string_to_match):
+    #identifies plate IDs as created by LIMS and returns boolean
+    userID_match = re.compile(r'P\d+$')
+    match = re.search(userID_match, string_to_match)
+    if match:
+        isUserID = True
+    else:
+        isUserID = False
+    return(isUserID)
 
 def print_barcode(barcodeFile):
     print('Ready to call lp for printing.')
