@@ -334,6 +334,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/applications.html")
             tornado.autoreload.watch("design/assign_roles.html")
             tornado.autoreload.watch("design/base.html")
+            tornado.autoreload.watch("design/base_b4.html")
             tornado.autoreload.watch("design/bioinfo_tab.html")
             tornado.autoreload.watch("design/bioinfo_tab/run_lane_sample_view.html")
             tornado.autoreload.watch("design/bioinfo_tab/sample_run_lane_view.html")
