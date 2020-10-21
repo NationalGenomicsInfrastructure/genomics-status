@@ -19,6 +19,7 @@ from tornado import template
 from tornado.options import define, options
 
 from status.applications import ApplicationDataHandler, ApplicationHandler, ApplicationsDataHandler, ApplicationsHandler
+from status.barcode import BarcodeHandler
 from status.assign_roles import AssignRolesHandler, AssignRolesUsersHandler
 from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
@@ -193,6 +194,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/api/v1/workset_pools", WorksetPoolsHandler),
             ("/api/v1/closed_worksets", ClosedWorksetsHandler),
+            ("/barcode", BarcodeHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/assign_roles", AssignRolesHandler),
@@ -247,7 +249,6 @@ class Application(tornado.web.Application):
             self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
             self.pricing_products_db = couch["pricing_products"]
             self.projects_db = couch["projects"]
-            self.projects_db_views = couch["projects_new"] #added because some views are timimg out in projects db but not in this one replicated from it
             self.samples_db = couch["samples"]
             self.server_status_db = couch['server_status']
             self.suggestions_db = couch["suggestion_box"]
@@ -348,6 +349,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
+            tornado.autoreload.watch("design/barcode.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/nas_quotas.html")
             tornado.autoreload.watch("design/qpcr_pools.html")

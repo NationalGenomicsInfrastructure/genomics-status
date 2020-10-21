@@ -51,7 +51,19 @@ function make_running_note(date, note){
         } else {
           noteText = '<pre class="plaintext_running_note">'+make_project_links(note['note'])+'</pre>';
         }
-        datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date)
+        datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date);
+        var page_to_link = '';
+        if(typeof project !== 'undefined'){
+          page_to_link = project;
+        }
+        else if (typeof flowcell!== 'undefined') {
+          page_to_link = flowcell;
+        }
+        else if(typeof workset_name !== 'undefined'){
+          page_to_link = workset_name
+        }
+        note_id = 'running_note_'+page_to_link+'_'+(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(),
+                   date.getUTCDate(), date.getHours(), date.getMinutes(), date.getSeconds())/1000);
         if ('category' in note){
             category=generate_category_label(note['category']);
         }
@@ -66,9 +78,9 @@ function make_running_note(date, note){
     panelClass = 'panel-important';
   }
   return '<div class="panel panel-default">' +
-      '<div class="panel-heading '+panelClass+'">'+
+      '<div class="panel-heading '+panelClass+'" id="'+note_id+'">'+
         '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-       datestring + printHyphen +category +'</div><div class="panel-body">'+noteText+'</div></div>';
+       '<a href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="panel-body">'+noteText+'</div></div>';
 }
 
 function load_running_notes(wait) {
