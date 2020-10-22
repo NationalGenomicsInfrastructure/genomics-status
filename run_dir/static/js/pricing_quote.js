@@ -12,7 +12,7 @@ $( document ).ready(function() {
       var original_html = $(this).text();
       $(this).html('<div class="spinner-border spinner-border-sm mr-2" role="status"></div>Loading...');
       var that = this;
-      var discontinued = $('#toggle_discontinued').hasClass('active');
+      var discontinued = $('#toggle_discontinued').hasClass('btn-success');
       tableLoad(date, allProducts, discontinued, function() {
           $(that).html(original_html);
           $("#exch_rate_modal").modal('hide');
@@ -24,7 +24,7 @@ $( document ).ready(function() {
               $("#exch_rate_issued_at").text(data['Issued at'].substring(0,10));
           });
       });
-
+      show_exchange_rate_alert();
       $("#exchange-success-alert").fadeTo(5000, 500).slideUp(500, function(){
           $("#exchange-success-alert").slideUp(500);
       });
@@ -43,25 +43,37 @@ $( document ).ready(function() {
   /* Enable toggle of discontinued products */
   $('#toggle_discontinued').click(function(e) {
       e.preventDefault();
-      if ($(this).hasClass('active')) {
+      if ($(this).hasClass('btn-success')) {
           reset_listjs(); /// Really brute force way of reinit datatable
           tableLoad(null, null, false, function(){
               init_listjs();
           });
-          $('#toggle_discontinued').removeClass('active');
+          $('#toggle_discontinued').removeClass('btn-success');
+          $('#toggle_discontinued').addClass('btn-warning');
+          $('#toggle_discontinued').html('Show Discontinued Products <i class="fas fa-exclamation-triangle fa-lg pl-2"></i>');
       } else {
           reset_listjs();
           tableLoad(null, null, true, function(){
               init_listjs();
-              $("#discontinued-shown-alert").show();
+              show_discontinued_alert();
               $("#discontinued-shown-alert").fadeTo(5000, 500).slideUp(500, function(){
                   $("#discontinued-shown-alert").slideUp(500);
               });
           });
-          $('#toggle_discontinued').addClass('active');
+          $('#toggle_discontinued').removeClass('btn-warning');
+          $('#toggle_discontinued').addClass('btn-success');
+          $('#toggle_discontinued').html('Hide Discontinued Products <i class="fad fa-book-heart fa-lg pl-2"></i>');
       };
   });
 });
+
+function show_discontinued_alert(){
+    $('#alerts_go_here').html('<div class="alert alert-warning alert-dismissible" id="discontinued-shown-alert">Discontinued products are now shown and marked with red in the table below.<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button></div>');
+};
+
+function show_exchange_rate_alert(){
+    $('#alerts_go_here').html('<div class="alert alert-success alert-dismissible" id="exchange-success-alert" hidden="true"><strong>Success! </strong>Prices have been updated according to the exchange rate chosen.<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button></div>');
+};
 
 function tableLoad(date=null, products=null, discontinued=false, _callback=null) {
   // Table is loaded dynamically to enable switching of e.g. exchange rate date
@@ -266,11 +278,9 @@ function generateQuoteList() {
 function applyWarning(warning_txt){
   if (warning_txt !== '') {
     var warning_html = ``+
-      `<div class="alert alert-warning alert-dismissable" role="alert">`+
-        `<button type="button" class="close" data-dismiss="alert" aria-label="Close">`+
-          `<span aria-hidden="false">&times;</span>`+
-        `</button>`+
-        `<h4>Warning</h4>`+
+      `<div class="alert alert-warning alert-dismissible" role="alert">`+
+        `<h4 class="alert-heading">Warning</h4>`+
+        `<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>`+
         `<p>`+warning_txt+`</p>`+
       `</div>`;
     $('#product_warnings').append(warning_html);
@@ -292,7 +302,7 @@ function init_listjs() {
     // Setup - add a text input to each footer cell
     $('#pricing_products_table tfoot th').each( function () {
       var title = $('#pricing_products_table thead th').eq( $(this).index() ).text();
-      $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
+      $(this).html( '<input class="form-control" type="text" placeholder="Search '+title+'" />' );
     } );
 
     var table = $('#pricing_products_table').DataTable({
@@ -303,8 +313,8 @@ function init_listjs() {
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#pricing_products_table_filter').addClass('form-inline py-1');
-    $("#pricing_products_table_filter").appendTo("#table_h2");
+    $('#pricing_products_table_filter').addClass('col-md-2 p-0 mr-3 mb-4 shadow-sm');
+    $("#pricing_products_table_filter").appendTo("#table_h_and_search");
     $('#pricing_products_table_filter label input').appendTo($('#pricing_products_table_filter'));
     $('#pricing_products_table_filter label').remove();
     $("#pricing_products_table_filter input").attr("placeholder", "Search table...");

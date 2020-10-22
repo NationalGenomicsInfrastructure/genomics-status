@@ -11,7 +11,7 @@ class TestPricingQuote(unittest.TestCase):
     def setUp(self):
         self.driver = webdriver.Chrome()
         self.driver.get("http://localhost:9761/pricing_quote")
-        self.driver.set_window_size(1920, 1080)
+        self.driver.set_window_size(1400, 1080)
         time.sleep(1)
 
     def tearDown(self):
@@ -55,6 +55,8 @@ class TestPricingQuote(unittest.TestCase):
         elements = self.driver.find_elements(By.CSS_SELECTOR, ".quote-product-list li > .quote_product_name")
         self.assertEqual(len(elements), 2, msg="Two products (2+1) added to the quote")
 
+        self.driver.execute_script("window.scrollTo(0, 0)")
+        time.sleep(1)
         self.driver.find_element(By.CSS_SELECTOR, ".quote-product-list li:nth-child(2) i").click()
         elements = self.driver.find_elements(By.CSS_SELECTOR, ".quote-product-list li > .quote_product_name")
         self.assertEqual(len(elements), 1, msg="Removing one product should leave just one in the quote")

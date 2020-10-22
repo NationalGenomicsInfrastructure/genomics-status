@@ -21,22 +21,22 @@
             <td class=components">
                 {% if product['Components'] != "" %}
                   {% for component_id, quant_d in product["Components"].items() %}
-                    <p>
+                    <div>
                     {% if quant_d["quantity"] != 1 %}
                         {{quant_d["quantity"]}}:
                     {% end %}
-                    {{ components[component_id]['Product name'] }}</p>
+                    {{ components[component_id]['Product name'] }}</div>
                   {% end %}
                 {% end %}
             </td>
             <td class="alternative_components">
                 {% if product['Alternative Components'] != "" %}
                   {% for component_id, quant_d in product["Alternative Components"].items() %}
-                    <p>
+                    <div>
                     {% if quant_d["quantity"] != 1 %}
                         {{quant_d["quantity"]}}:
                     {% end %}
-                    {{ components[component_id]['Product name'] }}</p>
+                    {{ components[component_id]['Product name'] }}</div>
                   {% end %}
                 {% end %}
             </td>

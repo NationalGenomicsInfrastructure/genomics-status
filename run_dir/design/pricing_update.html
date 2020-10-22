@@ -1,0 +1,17 @@
+{% extends "base_b5.html" %}
+
+{% block stuff %}
+
+<div class="container-fluid" id="product_list">
+  <div id="pricing_products_div">
+      <h1><span id="page_title">Products</span>
+      </h1>
+      <form enctype=”multipart/form-data” action=”/simple” method=”post”>
+      {% raw form.a() %}<br>
+      {% raw form.b %}<br>
+      <input type="submit">
+      </form>
+  </div>
+</div>
+
+{% end %}

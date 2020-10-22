@@ -58,7 +58,7 @@ from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
 from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, \
     UpdatedDocumentsDatahandler
-from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b4
+from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b5
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
     WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler, ClosedWorksetsHandler
 
@@ -225,7 +225,7 @@ class Application(tornado.web.Application):
             ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/userpref", UserPrefPageHandler),
-            ("/userpref_b4", UserPrefPageHandler_b4),
+            ("/userpref_b5", UserPrefPageHandler_b5),
             ("/worksets", WorksetsHandler),
             ("/workset/([^/]*)$", WorksetHandler),
             (r'.*', BaseHandler)
@@ -337,7 +337,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/applications.html")
             tornado.autoreload.watch("design/assign_roles.html")
             tornado.autoreload.watch("design/base.html")
-            tornado.autoreload.watch("design/base_b4.html")
+            tornado.autoreload.watch("design/base_b5.html")
             tornado.autoreload.watch("design/bioinfo_tab.html")
             tornado.autoreload.watch("design/bioinfo_tab/run_lane_sample_view.html")
             tornado.autoreload.watch("design/bioinfo_tab/sample_run_lane_view.html")

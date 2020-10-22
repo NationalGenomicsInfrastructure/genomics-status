@@ -1,4 +1,4 @@
-{% extends "base_b4.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: pricing_quote.html
@@ -34,22 +34,16 @@ Title: Creation of a quote for a project
               <label for='discount_input'>Discount</label>
               <input id='discount_input' placeholder='%'>
           </span>
-          <span class="form-text text-muted text-sm">
+          <div class="form-text text-muted text-sm">
               Other cost is applied directly to all three price types. Discount is applied last.
-          </span>
+          </div>
 
           <button class="btn btn-link" id="more_options_btn" type="button" data-toggle="collapse" data-target="#more_options" aria-expanded="false" aria-controls="more_options">
             More Options
           </button>
           <div class="collapse border-top py-3" id="more_options">
-            <div class="btn-group-toggle" data-toggle="buttons" role="group">
-              <label class="btn btn-warning statusOptions" id="toggle_discontinued">
-                <input type="checkbox">
-                Show Discontinued Products<i class="fas fa-exclamation-triangle fa-lg pl-2"></i>
-              </label>
-            </div>
+            <button type="button" class="btn btn-warning" id="toggle_discontinued">Show Discontinued Products <i class="fas fa-exclamation-triangle fa-lg pl-2"></i></button>
           </div>
-
         </div>
         <div class="col-md-4 col-xl-6">
           <h3>Exchange rates</h3>
@@ -67,7 +61,7 @@ Title: Creation of a quote for a project
               <div class="modal-content">
                 <div class="modal-header">
                   <h4 class="modal-title" id="myModalLabel">Fetch historic exchange rate</h4>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                   <p>Latest date exchange rates: <input id="datepicker" type='date' value="{{exch_rates['Issued at'] }}" data-date-format="yyyy-mm-dd"></p>
@@ -81,18 +75,7 @@ Title: Creation of a quote for a project
           </div>
         </div>
       </div>
-      <div class="alert alert-success alert-dismissible" id="exchange-success-alert" hidden="true">
-        <strong>Success! </strong>
-        Prices have been updated according to the exchange rate chosen.
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="alert alert-warning alert-dismissible" id="discontinued-shown-alert" hidden="true">
-        Discontinued products are now shown and marked with red in the table below.
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+      <div id="alerts_go_here">
       </div>
       <div class="row py-2" id="current_quote">
         <div class="col-md-8 col-xl-6 quote_lcol_header">
@@ -111,9 +94,11 @@ Title: Creation of a quote for a project
         </div>
       </div>
       <div class="products_chooseable_div">
-        <h2 id="table_h2">Available Products</h2>
-        <table class="table table-sm table-bordered sortable" id="pricing_products_table">
-          <thead>
+        <div class="row" id="table_h_and_search">
+          <h2 class="col mr-auto">Available Products</h2>
+        </div>
+        <table class="table table-sm sortable" id="pricing_products_table">
+          <thead class="table-light">
             <tr class="sticky">
               <th>Quoting</th>
               <th class="sort" data-sort="id">ID</th>
@@ -131,7 +116,7 @@ Title: Creation of a quote for a project
               <th class="sort" data-sort="comment">Comment</th>
             </tr>
           </thead>
-          <tfoot>
+          <tfoot class="table-light">
             <tr>
               <th>Quoting</th>
               <th class="sort" data-sort="id">ID</th>
