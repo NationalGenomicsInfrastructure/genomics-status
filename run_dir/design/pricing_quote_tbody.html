@@ -3,7 +3,7 @@
     {% for product in products %}
         <tr class="status_{{product['Status'].lower()}}">
             <td>
-                <a href="#0" class="button add-to-quote" data-product-id="{{product['REF_ID']}}"><i class="glyphicon glyphicon-plus"></i></a>
+                <a href="#0" class="button add-to-quote" data-product-id="{{product['REF_ID']}}"><i class="far fa-plus-square fa-lg"></i></a>
                 <span>(<span id="count_in_table_{{product['REF_ID']}}">0</span>)</span>
             </td>
             <td class="id">

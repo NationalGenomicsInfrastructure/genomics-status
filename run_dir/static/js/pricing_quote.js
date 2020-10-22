@@ -7,11 +7,10 @@ var quoteTotEl = $('.quote-totals-list');
 
 $( document ).ready(function() {
   /* Initialize active elements */
-  $("#datepicker").datepicker()
   $("#datepicker-btn").click(function(e) {
       var date = $("#datepicker").val();
       var original_html = $(this).text();
-      $(this).html('<span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading...</em>');
+      $(this).html('<div class="spinner-border spinner-border-sm mr-2" role="status"></div>Loading...');
       var that = this;
       var discontinued = $('#toggle_discontinued').hasClass('active');
       tableLoad(date, allProducts, discontinued, function() {
@@ -43,19 +42,23 @@ $( document ).ready(function() {
 
   /* Enable toggle of discontinued products */
   $('#toggle_discontinued').click(function(e) {
+      e.preventDefault();
       if ($(this).hasClass('active')) {
           reset_listjs(); /// Really brute force way of reinit datatable
           tableLoad(null, null, false, function(){
               init_listjs();
           });
+          $('#toggle_discontinued').removeClass('active');
       } else {
           reset_listjs();
           tableLoad(null, null, true, function(){
               init_listjs();
+              $("#discontinued-shown-alert").show();
               $("#discontinued-shown-alert").fadeTo(5000, 500).slideUp(500, function(){
                   $("#discontinued-shown-alert").slideUp(500);
               });
           });
+          $('#toggle_discontinued').addClass('active');
       };
   });
 });
@@ -156,7 +159,7 @@ function generateQuoteList() {
       }
       empty = false;
       var li = `<li data-quantity=${product.quantity}` + class_string + ` data-product-id=${product_id}>` +
-        `<a href='#' class='remove_product' data-product-id=${product.REF_ID}><i class="glyphicon glyphicon-remove text-danger"></i></a> ` +
+        `<a href='#' class='remove_product' data-product-id=${product.REF_ID}><i class="far fa-times-square fa-lg text-danger"></i></a> ` +
         `<input class='quantity_updateable' data-product-id=${product.REF_ID} min=0 value=${product.quantity}> ` +
         `<span class='quote_product_name'>${product.Name}</span>` +
         `<span class='quote_product_prices_line'><span class='quote_product_price'>`
@@ -300,8 +303,8 @@ function init_listjs() {
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#pricing_products_table_filter').addClass('form-inline pull-right');
-    $("#pricing_products_table_filter").appendTo("h1");
+    $('#pricing_products_table_filter').addClass('form-inline py-1');
+    $("#pricing_products_table_filter").appendTo("#table_h2");
     $('#pricing_products_table_filter label input').appendTo($('#pricing_products_table_filter'));
     $('#pricing_products_table_filter label').remove();
     $("#pricing_products_table_filter input").attr("placeholder", "Search table...");

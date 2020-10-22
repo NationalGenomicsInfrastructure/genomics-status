@@ -46,3 +46,26 @@ body {
 }
 .tt-suggestion p { margin: 0; }
 .tt-hint { visibility:hidden; }
+
+
+/* Pricing */
+
+tr.status_discontinued{
+  background-color: #f2dede;
+}
+
+.quote_product_prices_line{
+    float: right;
+}
+
+.quote_product_price_external {
+    float: left;
+}
+
+input.quantity_updateable {
+    width: 40px;
+}
+
+.quote_lcol_header {
+    max-width: 800px;
+}
