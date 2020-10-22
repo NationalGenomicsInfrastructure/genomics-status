@@ -13,6 +13,9 @@
 <script src="/static/js/jquery-3.5.1.min.js"></script>
 <script src="/static/js/bootstrap-4.5.3.bundle.min.js"></script>
 <script src="/static/js/moment.min.js"></script>
+{% if gs_globals['font_awesome_url'] %}
+<script src={{ gs_globals['font_awesome_url'] }} crossorigin="anonymous"></script>
+{% end %}
 
 <!-- Le styles -->
 <link rel="stylesheet" href="/static/css/bootstrap-4.5.3.css" rel="stylesheet">
