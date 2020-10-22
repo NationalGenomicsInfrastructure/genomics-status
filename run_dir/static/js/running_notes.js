@@ -7,12 +7,12 @@ $(function(){
     });
 });
 
-function generate_category_label(cat_label){
+function generate_category_label(category){
      var cat_classes = {
         'Workset': ['primary', 'calendar-plus'],
         'Flowcell': ['success', 'grip-vertical'],
         'Decision': ['info', 'thumbs-up'],
-        'Lab': ['success', 'bong'],
+        'Lab': ['success', 'flask'],
         'Bioinformatics': ['warning', 'laptop-code'],
         'User Communication': ['usr', 'people-arrows'],
         'Administration': ['danger', 'folder-open'],
@@ -20,13 +20,13 @@ function generate_category_label(cat_label){
         'Deviation': ['devi', 'frown']
     }
     // Remove the whitespace
-    var cat_label = cat_label.trim()
+    var category = category.trim()
     // Check if we recognise this category in the class object keys
-    if (Object.keys(cat_classes).indexOf(cat_label) != -1){
-        cat_label = '<span class="label label-'+ cat_classes[cat_label][0] +'">'+ cat_label + '&nbsp;' + '<span class="fa fa-'+ cat_classes[cat_label][1] +'">'+"</span>";
+    if (Object.keys(cat_classes).indexOf(category) != -1){
+        cat_label = '<span class="label label-'+ cat_classes[category][0] +'">'+ category + '&nbsp;' + '<span class="fa fa-'+ cat_classes[category][1] +'">'+"</span>";
     }else{
     // Default button formatting
-        cat_label = '<span class="label label-default">'+ cat_label +"</span>";
+        cat_label = '<span class="label label-default">'+ category +"</span>";
     }
     return cat_label;
 }
@@ -121,7 +121,7 @@ function load_running_notes(wait) {
 function preview_running_notes(){
     var now = new Date();
     $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
-    var category = generate_category_label($('.rn-cat-filter button.active').text());
+    var category = generate_category_label($('.rn-categ button.active').text());
     category = category ? ' - '+ category : category;
     $('#preview_category').html(category);
     var text = $('#new_note_text').val().trim();
@@ -164,9 +164,9 @@ $(document).ready(function() {
 });
 
 // Update the category buttons
-$('.rn-cat-filter button').click(function(){
+$('.rn-categ button').click(function(){
     var was_selected = $(this).hasClass('active');
-    $('.rn-cat-filter button').removeClass('active');
+    $('.rn-categ button').removeClass('active');
     if(!was_selected){
         $(this).addClass('active');
     }
@@ -188,12 +188,12 @@ $("#running_notes_form").submit( function(e) {
     e.preventDefault();
     var text = $('#new_note_text').val().trim();
     text = $('<div>').text(text).html();
-    var category = $('.rn-cat-filter button.active').text();
+    var category = $('.rn-categ button.active').text();
     if (text.length == 0) {
         alert("Error: No running note entered.");
         return false;
     }
-    if (!$('.rn-cat-filter button.active').text()) {
+    if (!$('.rn-categ button.active').text()) {
        if (!confirm("Are you sure that you want to submit without choosing a category?")) {
           return false;
        }
