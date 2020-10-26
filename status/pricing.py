@@ -665,7 +665,7 @@ class PricingValidationDataHandler(PricingBaseHandler):
         """
         pass
 
-from wtforms.fields import IntegerField, StringField, FieldList, FormField
+from wtforms.fields import IntegerField, StringField, FieldList, FormField, BooleanField
 from wtforms.validators import Required
 from wtforms_tornado import Form
 
@@ -749,9 +749,9 @@ class PricingUpdateHandler(PricingBaseHandler):
                               products_form=products_form))
 
     def post(self):
-        form = SumForm(self.request.arguments)
+        form = ProductsForm(self.request.arguments)
         if form.validate():
-            self.write(str(form.data['a'] + form.data['b']))
+            self.write(str(form.data))
         else:
             self.set_status(400)
             self.write("" % form.errors)

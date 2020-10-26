@@ -2,52 +2,69 @@
 
 {% block stuff %}
 
-<div class="container-fluid" id="product_list">
+<div class="container-xxl" id="product_list">
   <h1>Products Form</h1>
   <form enctype=”multipart/form-data” action=”/simple” method=”post”>
     <input type="submit">
-    <table class="table" id="pricing_products_table">
-      <thead class="table-light">
-        <tr class="sticky">
-          <th>ID</th>
-          <th>Category</th>
-          <th>Type</th>
-          <th>Name</th>
-          <th>Components</th>
-          <th>Alternative Components</th>
-          <th>Reagent Fee</th>
-          <th>Full Cost Fee</th>
-          <th>Re-run Fee</th>
-          <th>Minimum Quantity</th>
-          <th>Comment</th>
-        </tr>
-      </thead>
-      <tbody id='pricing_update_tbody'>
-        {% for product in products_form.products %}
-          <tr>
-            <td>{% raw product.ref_id(class_='form-control') %}</td>
-            <td>{% raw product.category(class_='form-control') %}</td>
-            <td>{% raw product.product_type(class_='form-control') %}</td>
-            <td>{% raw product.product_name(class_='form-control') %}</td>
-            <td>
-              {% for component in product.components %}
-                {% raw component(class_='form-control') %}
-              {% end %}
-            </td>
-            <td>
-              {% for component in product.alternative_components %}
-                {% raw component(class_='form-control') %}
-              {% end %}
-            </td>
-            <td>{% raw product.reagent_fee(class_='form-control') %}</td>
-            <td>{% raw product.full_cost_fee(class_='form-control') %}</td>
-            <td>{% raw product.rerun_fee(class_='form-control') %}</td>
-            <td>{% raw product.minimum_quantity(class_='form-control') %}</td>
-            <td>{% raw product.comment(class_='form-control') %}</td>
-          </tr>
-        {% end %}
-      </tbody>
-    </table>
+    {% for product in products_form.products %}
+      <div class="row my-4">
+        <h4>{{ product.product_name.data }}</h4>
+        <div class="row my-1">
+          <div class='col-md-1'>
+            {% raw product.ref_id.label(class_='form-label') %}
+            {% raw product.ref_id(class_='form-control') %}
+          </div>
+          <div class='col-md-3'>
+            {% raw product.category.label(class_='form-label') %}
+            {% raw product.category(class_='form-control') %}
+          </div>
+          <div class='col-md-2'>
+            {% raw product.product_type.label(class_='form-label') %}
+            {% raw product.product_type(class_='form-control') %}
+          </div>
+          <div class='col-md-6'>
+            {% raw product.product_name.label(class_='form-label') %}
+            {% raw product.product_name(class_='form-control') %}
+          </div>
+        </div>
+        <div class="row my-1">
+          <div class="col-md-6">
+            {% raw product.components.label(class_='form-label') %}
+            {% for component in product.components %}
+              {% raw component(class_='form-control') %}
+            {% end %}
+          </div>
+          <div class="col-md-6">
+            {% raw product.alternative_components.label(class_='form-label') %}
+            {% for component in product.alternative_components %}
+              {% raw component(class_='form-control') %}
+            {% end %}
+          </div>
+          </div>
+        <div class="row my-1">
+          <div class='col-md-2'>
+            {% raw product.reagent_fee.label(class_='form-label') %}
+            {% raw product.reagent_fee(class_='form-control') %}
+          </div>
+          <div class='col-md-2'>
+            {% raw product.full_cost_fee.label(class_='form-label') %}
+            {% raw product.full_cost_fee(class_='form-control') %}
+          </div>
+          <div class='col-md-2'>
+            {% raw product.rerun_fee.label(class_='form-label') %}
+            {% raw product.rerun_fee(class_='form-control') %}
+          </div>
+          <div class='col-md-2'>
+            {% raw product.minimum_quantity.label(class_='form-label') %}
+            {% raw product.minimum_quantity(class_='form-control') %}
+          </div>
+          <div class='col-md-4'>
+            {% raw product.comment.label(class_='form-label') %}
+            {% raw product.comment(class_='form-control') %}
+          </div>
+        </div>
+      </div>
+    {% end %}
   </form>
 </div>
 
