@@ -16,15 +16,19 @@ a text in the text field or upload a file.<p>
   each line will be printed on a separate label.<p>
 <br>
 <div id="query">
-  <form class="form-horizontal" enctype="multipart/form-data" role="form" id="barcode_from_file" method="post" action="/barcode" onsubmit="return submit_form()">
+  <form class="form-horizontal" enctype="multipart/form-data" role="form" id="barcode_from_file" method="post" action="/barcode" onsubmit="return submit_form('lab_labels')">
     <div class="pull-left" style="margin-right:5px">
       <input id="print_label_file" type="file" name="file_to_print" class="btn btn-default" />
+      <input type="hidden" id="formType" name="formType" value="lab_labels">
     </div>
     <br>
     <br>
     <br>
     <div class="pull-left" style="margin-right:5px">
       <input id="print_label_string" size="37" type="text" name="text_to_print" class="btn btn-default" placeholder="your text here" />
+      <td style="font-size:20px;"><strong>&nbsp;&nbsp;&nbsp; print with barcode: &nbsp;</strong></td>
+      <input id='print_with_barcodeHidden' type='hidden' value='noBC' name="print_with_barcode">
+      <input id="print_with_barcode" type="checkbox" name="print_with_barcode" >
     </div>
     <br>
     <br>
@@ -34,13 +38,13 @@ a text in the text field or upload a file.<p>
       <input id="label_copies" type="number" min="1" max="20" name="copies" class="btn btn-default" value="1" />
     </div>
     <button type="submit" class="btn btn-primary btn-lg" data-script="barcode">Print</button>
-<!--  </form> -->
+  </form>
 </div>
 <br>
 <hr>
 <h3><span>User Project Barcode Printing</span></h3>
 <div id="query">
-<!--  <form class="form-horizontal" enctype="multipart/form-data" role="form" id="project_barcode_from_text" method="post" action="/barcode" onsubmit="return submit_form()"> -->
+  <form class="form-horizontal" enctype="multipart/form-data" role="form" id="project_barcode_from_text" method="post" action="/barcode" onsubmit="return submit_form('user_labels')">
     <div class="pull-left" style="margin-right:5px">
       <input id="print_projectlabel" size="37" type="text" name="projectLabel_to_print" class="btn btn-default" placeholder="enter Project ID (i.e. P12345)" />
       <td style="font-size:20px;"><strong>&nbsp;&nbsp;&nbsp; start no. plate P_: &nbsp;</strong></td>
@@ -49,6 +53,7 @@ a text in the text field or upload a file.<p>
       <input id="project_Pend" type="number" min="1" max="20" name="plate_end" class="btn btn-default" value="5" />
       <td style="font-size:20px;"><strong>&nbsp;&nbsp;&nbsp; number of projects &nbsp;</strong></td>
       <input id="numberOfProjects" type="number" min="1" max="20" name="numberOfProjects" class="btn btn-default" value="1" />
+      <input type="hidden" id="formType" name="formType" value="user_labels">
     </div>
     <br>
     <br>
@@ -61,15 +66,19 @@ a text in the text field or upload a file.<p>
   </form>
 
 <script type="text/javascript">
-  function submit_form() {
+  function submit_form(label_type) {
     if($.trim($('#print_label_file').val()).length == 0 && $.trim($('#print_label_string').val()).length == 0 && $.trim($('#print_projectlabel').val()).length == 0){
       alert('File, text and project label input fields cannot be empty at the same time!');
       return false;
     }
+
+    if(label_type == 'lab_labels'){ submission_data = '#barcode_from_file'; }
+    else if(label_type == 'user_labels'){ submission_data = '#project_barcode_from_text'; }
+
     $.ajax({
            type: "POST",
-           url: $('#barcode_from_file').attr('action'),
-           data: $('#barcode_from_file').serialize(), // serializes the form's elements.
+           url: $(submission_data).attr('action'),
+           data: $(submission_data).serialize(), // serializes the form's elements.
            error: function(xhr, textStatus, errorThrown) {
              alert('Error: '+errorThrown);
              console.log(xhr); console.log(textStatus); console.log(errorThrown);
