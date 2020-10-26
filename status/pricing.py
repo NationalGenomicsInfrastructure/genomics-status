@@ -665,15 +665,54 @@ class PricingValidationDataHandler(PricingBaseHandler):
         """
         pass
 
-from wtforms.fields import IntegerField
+from wtforms.fields import IntegerField, StringField, FieldList, FormField
 from wtforms.validators import Required
 from wtforms_tornado import Form
 
 
-class SumForm(Form):
+# Convenience classes to construct the massive products form
+class ProductMapping(object):
+    def __init__(self, product):
+        self.ref_id = product['REF_ID']
+        self.product_type = product['Type']
+        self.category = product['Category']
+        self.product_name = product['Name']
+        if product['Components'] != '':
+            self.components = [int(id) for id, quant in product['Components'].items()]
+        else:
+            self.components = [None]
+        if product['Alternative Components'] != '':
+            self.alternative_components = [int(id) for id, quant in product['Alternative Components'].items()]
+        else:
+            self.alternative_components = [None]
+        self.reagent_fee = product['Reagent fee']
+        self.full_cost_fee = product['Full cost fee']
+        self.rerun_fee = product['Re-run fee']
+        self.minimum_quantity = product['Minimum Quantity']
+        self.comment = product['Comment']
 
-    a = IntegerField(validators=[Required()])
-    b = IntegerField(validators=[Required()])
+
+class ProductFormField(Form):
+    ref_id = IntegerField(validators=[Required()])
+    product_type = StringField()
+    category = StringField()
+    product_name = StringField()
+    components = FieldList(IntegerField())
+    alternative_components = FieldList(IntegerField())
+    reagent_fee = IntegerField()
+    full_cost_fee = IntegerField()
+    rerun_fee = IntegerField()
+    minimum_quantity = IntegerField()
+    comment = StringField()
+
+
+class ProductList(object):
+    def __init__(self, products):
+        self.products = products
+
+
+class ProductsForm(Form):
+    products = FieldList(FormField(ProductFormField))
 
 
 class PricingUpdateHandler(PricingBaseHandler):
@@ -687,25 +726,27 @@ class PricingUpdateHandler(PricingBaseHandler):
     def get(self):
         version = self.get_argument('version', None)
         date = self.get_argument('date', None)
-        form = SumForm()
         products = self.get_product_prices(None, version=version,
                                            date=date,
                                            pretty_strings=True)
-        products = [product for id, product in products.items()]
 
         components = self.get_component_prices(component_id=None,
                                                version=version,
                                                date=date,
                                                pretty_strings=True)
 
+        product_maps = []
+        for id, product in products.items():
+            product_maps.append(ProductMapping(product))
+
+        products_form = ProductsForm(obj=ProductList(product_maps))
+
         t = self.application.loader.load("pricing_update.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user(),
-                              products=products,
                               components=components,
                               version=version,
-                              form=form,
-                              deprecated=True))
+                              products_form=products_form))
 
     def post(self):
         form = SumForm(self.request.arguments)

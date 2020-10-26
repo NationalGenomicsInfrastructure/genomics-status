@@ -3,15 +3,52 @@
 {% block stuff %}
 
 <div class="container-fluid" id="product_list">
-  <div id="pricing_products_div">
-      <h1><span id="page_title">Products</span>
-      </h1>
-      <form enctype=”multipart/form-data” action=”/simple” method=”post”>
-      {% raw form.a() %}<br>
-      {% raw form.b %}<br>
-      <input type="submit">
-      </form>
-  </div>
+  <h1>Products Form</h1>
+  <form enctype=”multipart/form-data” action=”/simple” method=”post”>
+    <input type="submit">
+    <table class="table" id="pricing_products_table">
+      <thead class="table-light">
+        <tr class="sticky">
+          <th>ID</th>
+          <th>Category</th>
+          <th>Type</th>
+          <th>Name</th>
+          <th>Components</th>
+          <th>Alternative Components</th>
+          <th>Reagent Fee</th>
+          <th>Full Cost Fee</th>
+          <th>Re-run Fee</th>
+          <th>Minimum Quantity</th>
+          <th>Comment</th>
+        </tr>
+      </thead>
+      <tbody id='pricing_update_tbody'>
+        {% for product in products_form.products %}
+          <tr>
+            <td>{% raw product.ref_id(class_='form-control') %}</td>
+            <td>{% raw product.category(class_='form-control') %}</td>
+            <td>{% raw product.product_type(class_='form-control') %}</td>
+            <td>{% raw product.product_name(class_='form-control') %}</td>
+            <td>
+              {% for component in product.components %}
+                {% raw component(class_='form-control') %}
+              {% end %}
+            </td>
+            <td>
+              {% for component in product.alternative_components %}
+                {% raw component(class_='form-control') %}
+              {% end %}
+            </td>
+            <td>{% raw product.reagent_fee(class_='form-control') %}</td>
+            <td>{% raw product.full_cost_fee(class_='form-control') %}</td>
+            <td>{% raw product.rerun_fee(class_='form-control') %}</td>
+            <td>{% raw product.minimum_quantity(class_='form-control') %}</td>
+            <td>{% raw product.comment(class_='form-control') %}</td>
+          </tr>
+        {% end %}
+      </tbody>
+    </table>
+  </form>
 </div>
 
 {% end %}
