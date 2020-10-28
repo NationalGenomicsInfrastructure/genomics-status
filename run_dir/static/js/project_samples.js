@@ -475,9 +475,9 @@ function load_all_udfs(){
         conn_proj.forEach(function(proj){
            if (proj != project){
               if (!projs.trim()){
-                 projs += '<span class="email_link"><a href="/project/'+proj+'">'+proj+'</a>'+'</span>';
+                 projs += '<a class="email_link" href="/project/'+proj+'">'+proj+'</a>';
               }else{
-                 projs += ','+'&nbsp;'+'<span class="email_link"><a href="/project/'+proj+'">'+proj+'</a>'+'</span>';
+                 projs += ', '+'<a class="email_link" href="/project/'+proj+'">'+proj+'</a>';
               }
            }
         });
