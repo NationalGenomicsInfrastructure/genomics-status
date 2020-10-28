@@ -468,6 +468,21 @@ function load_all_udfs(){
         $('#textarea_internal_costs').html(value);
       }
 
+      //Add connected projects if any
+      else if (key == 'project_xref'){
+        projs = '';
+        var conn_proj = value.split(',');
+        conn_proj.forEach(function(proj){
+           if (proj != project){
+              if (!projs.trim()){
+                 projs += '<a class="email_link" href="/project/'+proj+'">'+proj+'</a>';
+              }else{
+                 projs += ', '+'<a class="email_link" href="/project/'+proj+'">'+proj+'</a>';
+              }
+           }
+        });
+        $('#connected_projects').html(projs);
+      }
 
       // Create the links for review and display the banner
       else if (prettify(key) == 'pending_reviews'){
