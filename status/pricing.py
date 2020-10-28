@@ -665,8 +665,9 @@ class PricingValidationDataHandler(PricingBaseHandler):
         """
         pass
 
-from wtforms.fields import IntegerField, StringField, FieldList, FormField, BooleanField
+from wtforms.fields import Field, IntegerField, StringField, FieldList, FormField, BooleanField
 from wtforms.validators import Required
+from wtforms.widgets import TextInput
 from wtforms_tornado import Form
 
 
@@ -678,18 +679,33 @@ class ProductMapping(object):
         self.category = product['Category']
         self.product_name = product['Name']
         if product['Components'] != '':
-            self.components = [int(id) for id, quant in product['Components'].items()]
+            self.components = [id for id, quant in product['Components'].items()]
         else:
-            self.components = [None]
+            self.components = []
         if product['Alternative Components'] != '':
-            self.alternative_components = [int(id) for id, quant in product['Alternative Components'].items()]
+            self.alternative_components = [id for id, quant in product['Alternative Components'].items()]
         else:
-            self.alternative_components = [None]
+            self.alternative_components = []
         self.reagent_fee = product['Reagent fee']
         self.full_cost_fee = product['Full cost fee']
         self.rerun_fee = product['Re-run fee']
         self.minimum_quantity = product['Minimum Quantity']
         self.comment = product['Comment']
+
+class ComponentsListField(Field):
+    widget = TextInput()
+
+    def _value(self):
+        if self.data:
+            return u', '.join(self.data)
+        else:
+            return u''
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            self.data = [x.strip() for x in valuelist[0].split(',')]
+        else:
+            self.data = []
 
 
 class ProductFormField(Form):
@@ -697,8 +713,8 @@ class ProductFormField(Form):
     product_type = StringField()
     category = StringField()
     product_name = StringField()
-    components = FieldList(IntegerField())
-    alternative_components = FieldList(IntegerField())
+    components = ComponentsListField()
+    alternative_components = ComponentsListField()
     reagent_fee = IntegerField()
     full_cost_fee = IntegerField()
     rerun_fee = IntegerField()
@@ -745,12 +761,19 @@ class PricingUpdateHandler(PricingBaseHandler):
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user(),
                               components=components,
+                              components_json=json.dumps(components),
+                              products=products,
+                              products_json=json.dumps(products),
                               version=version,
                               products_form=products_form))
 
     def post(self):
         form = ProductsForm(self.request.arguments)
-        if form.validate():
+        if form.validate_on_submit():
+            products = [entry.data for entry in form.products.entries]
+            components = self.get_component_prices(component_id=None,
+                                                   pretty_strings=True)
+            self.validate(components, products)
             self.write(str(form.data))
         else:
             self.set_status(400)

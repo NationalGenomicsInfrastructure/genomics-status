@@ -1,13 +1,12 @@
 {% extends "base_b5.html" %}
 
 {% block stuff %}
-
 <div class="container-xxl" id="product_list">
   <h1>Products Form</h1>
-  <form enctype=”multipart/form-data” action=”/simple” method=”post”>
-    <input type="submit">
+  <form enctype="multipart/form-data" action="/pricing_update" method="post">
+    <input type="submit" class="btn btn-primary">
     {% for product in products_form.products %}
-      <div class="row my-4">
+      <div class="row my-4 py-3 card">
         <h4>{{ product.product_name.data }}</h4>
         <div class="row my-1">
           <div class='col-md-1'>
@@ -27,20 +26,31 @@
             {% raw product.product_name(class_='form-control') %}
           </div>
         </div>
-        <div class="row my-1">
-          <div class="col-md-6">
+        <div class="row align-items-top my-2">
+          <div class="col-md-6 component-list-input" data-component-ids="{{ json_encode(product.components.data) }}">
             {% raw product.components.label(class_='form-label') %}
-            {% for component in product.components %}
-              {% raw component(class_='form-control') %}
-            {% end %}
+            <div class="input-group">
+              <fieldset disabled>
+                {% raw product.components(class_='form-control') %}
+              </fieldset>
+              <button type="button" class="btn btn-primary edit-components" data-product="{{product.ref_id.data}}" data-type="components">Edit</button>
+            </div>
+            <div class="component-display">
+            </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-6 alt-component-list-input" data-component-ids="{{ json_encode(product.alternative_components.data) }}">
             {% raw product.alternative_components.label(class_='form-label') %}
-            {% for component in product.alternative_components %}
-              {% raw component(class_='form-control') %}
-            {% end %}
+            <div class="input-group">
+              <fieldset disabled>
+                {% raw product.alternative_components(class_='form-control') %}
+              </fieldset>
+              <button type="button" class="btn btn-primary edit-components" data-product="{{product.ref_id.data}}" data-type="components">Edit</button>
+            </div>
+            <div class="alt-component-display">
+              <alt-component-item :product_id={{product.ref_id.data}}></alt-component-item>
+            </div>
           </div>
-          </div>
+        </div>
         <div class="row my-1">
           <div class='col-md-2'>
             {% raw product.reagent_fee.label(class_='form-label') %}
@@ -67,5 +77,12 @@
     {% end %}
   </form>
 </div>
+
+
+<script>var global_components_json={% raw components_json %}</script>
+<script>var global_products_json={% raw products_json %}</script>
+<!-- development version, includes helpful console warnings -->
+<script src="https://unpkg.com/vue@next"></script>
+<script src="/static/js/pricing_update.js?v={{ gs_globals['git_commit'] }}"></script>
 
 {% end %}
