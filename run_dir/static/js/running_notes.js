@@ -8,25 +8,29 @@ $(function(){
 });
 
 function generate_category_label(category){
-    if (category == 'Workset'){
-         category='<span class="label label-primary">'+ category +"</span>";
-     }else if (category == 'Flowcell'){
-         category='<span class="label label-success">'+ category +"</span>";
-     }else if (category == 'Meeting' || category == "Decision"){
-         category='<span class="label label-info">'+ category +"</span>";
-     }else if (category == 'User Communication'){
-         category='<span class="label label-danger">'+ category +"</span>";
-     }else if (category == 'Bioinformatics'){
-         category='<span class="label label-warning">'+ category +"</span>";
-     }else if (category == 'Important'){
-         category='<span class="label label-imp">'+ category +"</span>";
-     }else if (category == 'Deviation'){
-	       category='<span class="label label-devi">'+ category +"</span>";
-     }else if (category != ''){
-         category='<span class="label label-default">'+ category +"</span>";
-     }
-     return category;
+     var cat_classes = {
+        'Workset': ['primary', 'calendar-plus'],
+        'Flowcell': ['success', 'grip-vertical'],
+        'Decision': ['info', 'thumbs-up'],
+        'Lab': ['success', 'flask'],
+        'Bioinformatics': ['warning', 'laptop-code'],
+        'User Communication': ['usr', 'people-arrows'],
+        'Administration': ['danger', 'folder-open'],
+        'Important': ['imp', 'exclamation-circle'],
+        'Deviation': ['devi', 'frown']
+    }
+    // Remove the whitespace
+    var category = category.trim()
+    // Check if we recognise this category in the class object keys
+    if (Object.keys(cat_classes).indexOf(category) != -1){
+        cat_label = '<span class="label label-'+ cat_classes[category][0] +'">'+ category + '&nbsp;' + '<span class="fa fa-'+ cat_classes[category][1] +'">'+"</span>";
+    }else{
+    // Default button formatting
+        cat_label = '<span class="label label-default">'+ category +"</span>";
+    }
+    return cat_label;
 }
+
 function get_note_url() {
     // URL for the notes
     if ((typeof notetype !== 'undefined' && notetype == 'lims_step') || ('lims_step' in window && lims_step !== null)){
@@ -51,7 +55,19 @@ function make_running_note(date, note){
         } else {
           noteText = '<pre class="plaintext_running_note">'+make_project_links(note['note'])+'</pre>';
         }
-        datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date)
+        datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date);
+        var page_to_link = '';
+        if(typeof project !== 'undefined'){
+          page_to_link = project;
+        }
+        else if (typeof flowcell!== 'undefined') {
+          page_to_link = flowcell;
+        }
+        else if(typeof workset_name !== 'undefined'){
+          page_to_link = workset_name
+        }
+        note_id = 'running_note_'+page_to_link+'_'+(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(),
+                   date.getUTCDate(), date.getHours(), date.getMinutes(), date.getSeconds())/1000);
         if ('category' in note){
             category=generate_category_label(note['category']);
         }
@@ -66,9 +82,9 @@ function make_running_note(date, note){
     panelClass = 'panel-important';
   }
   return '<div class="panel panel-default">' +
-      '<div class="panel-heading '+panelClass+'">'+
+      '<div class="panel-heading '+panelClass+'" id="'+note_id+'">'+
         '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-       datestring + printHyphen +category +'</div><div class="panel-body">'+noteText+'</div></div>';
+       '<a href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="panel-body">'+noteText+'</div></div>';
 }
 
 function load_running_notes(wait) {
@@ -105,7 +121,7 @@ function load_running_notes(wait) {
 function preview_running_notes(){
     var now = new Date();
     $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
-    var category = generate_category_label($('#rn_category option:selected').val());
+    var category = generate_category_label($('.rn-categ button.active').text());
     category = category ? ' - '+ category : category;
     $('#preview_category').html(category);
     var text = $('#new_note_text').val().trim();
@@ -131,33 +147,56 @@ function filter_running_notes(search){
         }
     });
 }
-//Filter notes by Category
+//Filter notes
 $('#rn_search').keyup(function() {
     var search=$('#rn_search').val();
     filter_running_notes(search);
 });
-$('.btnCatFilter').click(function() {
-    $('.btnCatFilter').each(function() {$(this).removeClass("glow")});
-    $(this).addClass("glow")
-    var search=$(this).text();
-    if (search == 'All'){
-        search='';
-    }
-    filter_running_notes(search);
+
+$(document).ready(function() {
+    $('#rn_category').change(function() {
+        var search=$('#rn_category :selected').text();
+        if (search == 'All'){
+            search='';
+        }
+        filter_running_notes(search);
+    });
 });
+
+// Update the category buttons
+$('.rn-categ button').click(function(){
+    var was_selected = $(this).hasClass('active');
+    $('.rn-categ button').removeClass('active');
+    if(!was_selected){
+        $(this).addClass('active');
+    }
+    preview_running_notes();
+});
+
+//Remove hover text from clicked button
+$(document).ready(function(){
+      $('[data-toggle="tooltip"]').click(function (){
+         $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+})
+
 // Preview running notes
 $('#new_note_text').keyup(preview_running_notes);
-$('#rn_category').change(preview_running_notes);
 
 // Insert new running note and reload the running notes table
 $("#running_notes_form").submit( function(e) {
     e.preventDefault();
     var text = $('#new_note_text').val().trim();
     text = $('<div>').text(text).html();
-    var category = $('#rn_category option:selected').val();
+    var category = $('.rn-categ button.active').text();
     if (text.length == 0) {
         alert("Error: No running note entered.");
         return false;
+    }
+    if (!$('.rn-categ button.active').text()) {
+       if (!confirm("Are you sure that you want to submit without choosing a category?")) {
+          return false;
+       }
     }
 
     note_url = get_note_url()

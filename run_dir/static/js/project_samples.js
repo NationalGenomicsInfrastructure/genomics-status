@@ -84,6 +84,15 @@ $(document).ready(function() {
           window.open(this.href);
       return false;
         });
+  if(window.location.href.indexOf('#running_note_')!=-1){
+    $('.nav-tabs a[href="#tab_running_notes_content"]').tab('show');
+    setTimeout(function(){
+      window.location.href = window.location.hash;
+      window.scrollTo(window.scrollX, window.scrollY - 53);
+      var elem_to_glow = $('a[href="'+window.location.hash+'"]').parents().eq(1);
+      elem_to_glow.addClass('glow').delay(3000).queue(function(){elem_to_glow.removeClass('glow')});
+    }, 2000)
+  }
 });
 
 // Initialize sorting and searching javascript plugin
@@ -459,6 +468,21 @@ function load_all_udfs(){
         $('#textarea_internal_costs').html(value);
       }
 
+      //Add connected projects if any
+      else if (key == 'project_xref'){
+        projs = '';
+        var conn_proj = value.split(',');
+        conn_proj.forEach(function(proj){
+           if (proj != project){
+              if (!projs.trim()){
+                 projs += '<a class="email_link" href="/project/'+proj+'">'+proj+'</a>';
+              }else{
+                 projs += ', '+'<a class="email_link" href="/project/'+proj+'">'+proj+'</a>';
+              }
+           }
+        });
+        $('#connected_projects').html(projs);
+      }
 
       // Create the links for review and display the banner
       else if (prettify(key) == 'pending_reviews'){
