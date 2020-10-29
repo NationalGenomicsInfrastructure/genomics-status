@@ -84,12 +84,16 @@ app.component('modal-component', {
               <form>
                 <div class="row">
                   <h5>Selected Components</h5>
-                  <p>{{this.altComponentIds}}</p>
+                  <template v-for="component in this.altComponents">
+                    <span><i class="far fa-times-square fa-lg text-danger"></i>{{component['Product name']}}</span><br>
+                  </template>
                 </div>
                 <div class="row">
                   <h5>All components</h5>
                   <template v-for="(component, component_id) in this.$parent.all_components">
-                    {{ component['Product name']}}<br>
+                    <template v-if="component['Status'] != 'Discontinued'">
+                        {{ component['Product name']}}<br>
+                    </template>
                   </template>
                 </div>
               </form>
