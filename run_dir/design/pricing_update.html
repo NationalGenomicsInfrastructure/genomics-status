@@ -33,7 +33,7 @@
               <fieldset disabled>
                 {% raw product.components(class_='form-control') %}
               </fieldset>
-              <button type="button" class="btn btn-primary edit-components" data-product="{{product.ref_id.data}}" data-type="components">Edit</button>
+              <button type="button" class="btn btn-primary edit-components" data-toggle="modal" data-target="#componentsModal" data-product="{{product.ref_id.data}}" data-type="components">Edit</button>
             </div>
             <div class="component-display">
             </div>
@@ -44,7 +44,7 @@
               <fieldset disabled>
                 {% raw product.alternative_components(class_='form-control') %}
               </fieldset>
-              <button type="button" class="btn btn-primary edit-components" data-product="{{product.ref_id.data}}" data-type="components">Edit</button>
+              <button type="button" class="btn btn-primary edit-components" @click="showModalFn" data-product-id="{{product.ref_id.data}}" data-type="alt_components">Edit</button>
             </div>
             <div class="alt-component-display">
               <alt-component-item :product_id={{product.ref_id.data}}></alt-component-item>
@@ -76,6 +76,50 @@
       </div>
     {% end %}
   </form>
+
+
+  <div class="modal fade" id="myModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <modal-component></modal-component>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Update</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="componentsModal" tabindex="-1" aria-labelledby="componentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="componentsModalLabel">New message</h5>
+          <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="row">
+              <h5>Selected Components</h5>
+            </div>
+            <div class="row">
+              <h5>All components</h5>
+              {% for component_id, component in components.items() %}
+                {% if component['Status'] != 'Discontinued' %}
+                  {{component['Product name']}}<br>
+                {% end %}
+              {% end %}
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Update</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 
