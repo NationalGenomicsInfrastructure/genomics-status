@@ -29,7 +29,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
     lims_step=wsdata['id'];
     date_run=wsdata['date_run'];
     $('#date_run').html(date_run);
-    $('#span_lims_step').html('<a href="https://genologics.scilifelab.se/clarity/work-complete/'+lims_step.split("-")[1]+'">'+lims_step+'</a>');
+    $('#span_lims_step').html('<a href="https://ngi-lims-prod.scilifelab.se/clarity/work-complete/'+lims_step.split("-")[1]+'">'+lims_step+'</a>');
     load_running_notes();
     load_links();
 
@@ -67,7 +67,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                 <td>";
             $.each(sample_data.library, function(lib_id, lib_data){
                 lims_id=lib_id.split("-")[1];
-                content+="<a href='https://genologics.scilifelab.se/clarity/work-complete/"+lims_id+"'>" ;
+                content+="<a href='https://ngi-lims-prod.scilifelab.se/clarity/work-complete/"+lims_id+"'>" ;
                 content+=lib_data['date']+"</a> "
                 content+=auto_format(lib_data['status']);
                 content+=" <span class='label label-date'>"+lib_data['concentration']+"</span>"
@@ -78,7 +78,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                 content+="</td><td>";
             $.each(sample_data.sequencing, function(seq_id, seq_data){
                 lims_id=seq_id.split("-")[1];
-                content+="<a href='https://genologics.scilifelab.se/clarity/work-complete/"+lims_id+"'>"+seq_id+'</a> <span class="label label-date sentenceCase">'+seq_data['date']+"</span> "+auto_format(seq_data['status'])+"<br />";
+                content+="<a href='https://ngi-lims-prod.scilifelab.se/clarity/work-complete/"+lims_id+"'>"+seq_id+'</a> <span class="label label-date sentenceCase">'+seq_data['date']+"</span> "+auto_format(seq_data['status'])+"<br />";
             });
                 content+='</td><td class="text-center">'+sample_data['location']+"</td> \
                 </tr>";

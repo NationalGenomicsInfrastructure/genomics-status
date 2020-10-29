@@ -645,7 +645,7 @@ function load_samples_table(colOrder) {
               } else {
                 // TODO - Wire this up to the new QC page when it's ready
                 tbl_row += '<td class="'+column_id+'"><a target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
-                            'href="https://genologics.scilifelab.se/clarity/search?scope=Sample&query='+info[column_id]+'">'+
+                            'href="https://ngi-lims-prod.scilifelab.se/clarity/search?scope=Sample&query='+info[column_id]+'">'+
                             info[column_id] + '</a></td>';
               }
             }
@@ -746,7 +746,7 @@ function load_samples_table(colOrder) {
 
               // Special case for workset_setup, which is a link to the LIMS
               else if (column_id == "workset_setup" && info_library[column_id]) {
-                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a href="https://genologics.scilifelab.se/clarity/work-complete/';
+                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a href="https://ngi-lims-prod.scilifelab.se/clarity/work-complete/';
                 tbl_row += info_library[column_id].split('-')[1] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
               }
 
