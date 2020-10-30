@@ -110,11 +110,19 @@ app.component('alt-component-item', {
             return this.$parent.all_products[this.product_id]
         },
         altComponentIds() {
-            return this.product['Alternative Components']
+            return Object.keys(this.product['Alternative Components'])
+        },
+        altComponentIdsAsString() {
+            if (this.altComponentIds.length != 0) {
+                return this.altComponentIds.join(', ')
+            } else {
+                return ""
+            }
         },
         altComponents() {
             var components = new Array();
-            for (comp_id in this.altComponentIds) {
+            for (i in this.altComponentIds) {
+                comp_id = this.altComponentIds[i]
                 components.push(this.$parent.all_components[comp_id])
             }
             return components
