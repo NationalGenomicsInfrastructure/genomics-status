@@ -98,6 +98,7 @@ class BarcodeHandler(SafeHandler):
                             new_projectID_plate = new_projectID + 'P' + str(plate) # adding the plate number
                             project_barcode = makeBarcode(new_projectID_plate, True)
                             createdProjectLabel_joined = '\n'.join(project_barcode)
+                            print_barcode(createdProjectLabel_joined)
                     statusType = 200
                     message = {'message': 'Submitted to printer!'}
                 else:
