@@ -167,10 +167,15 @@ app.component('modal-component', {
             if (event) {
                 comp_id = event.target.dataset.componentId
                 if (this.$parent.modal_type == 'Alternative') {
-                    this.product['Alternative Components'][comp_id] = {'quantity': 1}
+                    key = 'Alternative Components'
                 } else {
-                    this.product['Components'][comp_id]  = {'quantity': 1}
+                    key = 'Components'
                 }
+
+                if (this.product[key] == '') {
+                    this.product[key] = {}
+                }
+                this.product[key][comp_id] = {'quantity': 1}
             }
         }
     }
