@@ -24,7 +24,7 @@ const ProductForm = {
 
 const app = Vue.createApp(ProductForm)
 
-app.component('product-form', {
+app.component('product-form-part', {
     props: ['product_id'],
     template:
         /*html*/`
@@ -140,7 +140,12 @@ app.component('modal-component', {
                   <h5>All components</h5>
                   <template v-for="(component, component_id) in this.$parent.all_components">
                     <template v-if="component['Status'] != 'Discontinued'">
-                        {{ component['Product name']}}<br>
+                      <span>
+                        <a clas="mr-2" href="#" @click="this.addComponent">
+                          <i class="far fa-plus-square fa-lg text-success" :data-component-id="component['REF_ID']"></i>
+                        </a>
+                        {{ component['Product name']}}
+                      </span><br>
                     </template>
                   </template>
                 </div>
@@ -155,6 +160,16 @@ app.component('modal-component', {
                     delete this.product['Alternative Components'][comp_id]
                 } else {
                     delete this.product['Components'][comp_id]
+                }
+            }
+        },
+        addComponent(event) {
+            if (event) {
+                comp_id = event.target.dataset.componentId
+                if (this.$parent.modal_type == 'Alternative') {
+                    this.product['Alternative Components'][comp_id] = {'quantity': 1}
+                } else {
+                    this.product['Components'][comp_id]  = {'quantity': 1}
                 }
             }
         }
