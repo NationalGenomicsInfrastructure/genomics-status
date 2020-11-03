@@ -132,7 +132,7 @@ class WorksetHandler(SafeHandler):
     """Loaded through /workset/[workset]"""
     def get(self, workset):
         t = self.application.loader.load("workset_samples.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, workset_name=workset, user=self.get_current_user()))
+        self.write(t.generate(gs_globals=self.application.gs_globals, workset_name=workset, lims_uri=BASEURI, user=self.get_current_user()))
 
 class WorksetSearchHandler(SafeHandler):
     """ Searches Worksetsfor text string
@@ -172,7 +172,7 @@ class WorksetSearchHandler(SafeHandler):
 
 class WorksetNotesDataHandler(SafeHandler):
     """Serves all notes from a given workset.
-    It connects to the genologics LIMS to fetch and update Workset Notes information.
+    It connects to LIMS to fetch and update Workset Notes information.
     URL: /api/v1/workset_notes/([^/]*)
     """
     lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
@@ -251,7 +251,7 @@ class WorksetNotesDataHandler(SafeHandler):
 
 class WorksetLinksHandler(SafeHandler):
     """ Serves external links for each project
-        Links are stored as JSON in genologics LIMS / project
+        Links are stored as JSON in LIMS / project
         URL: /api/v1/workset_links/([^/]*)
     """
 
