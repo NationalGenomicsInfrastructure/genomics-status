@@ -1,40 +1,3 @@
-
-$( document ).ready(function() {
-  /* Translate component ids for products */
-  $("div.jquery-component-list-input").each(function(i, e){
-      translate_component_ids(e);
-  });
-
-  /* Plain javascript style and no jquery since it's from bootstrap docs */
-  var componentsModal = document.getElementById('componentsModal')
-  componentsModal.addEventListener('show.bs.modal', function (event) {
-    // Button that triggered the modal
-    var button = event.relatedTarget
-    // Extract info from data-* attributes
-    var product_id = button.getAttribute('data-product')
-
-    var product = global_products_json[product_id]
-    // If necessary, you could initiate an AJAX request here
-    // and then do the updating in a callback.
-    //
-    // Update the modal's content.
-    var modalTitle = componentsModal.querySelector('.modal-title')
-
-    modalTitle.textContent = 'Edit components for ' + product.REF_ID
-  })
-});
-
-function translate_component_ids(element) {
-    var component_names = new Array();
-    if ($(element).attr('data-component-ids') != "[]"){
-        components = JSON.parse($(element).attr('data-component-ids'));
-        components.forEach(function(component_id){
-            component_names.push(global_components_json[component_id]["Product name"]);
-        });
-        $(element).children('.component-display').html(component_names.join('<br>'));
-    }
-}
-
 const all_products_reactive = Vue.reactive(global_products_json)
 const all_components_reactive = Vue.reactive(global_components_json)
 
@@ -64,8 +27,67 @@ const app = Vue.createApp(ProductForm)
 app.component('product-form', {
     props: ['product_id'],
     template:
-        `<h4> {{ product['Name'] }} </h4>
-        <slot></slot>
+        /*html*/`
+        <h4> {{ product['Name'] }} </h4>
+        <div class="row my-1">
+          <fieldset disabled class='col-md-1'>
+            <label class="form-label">
+              ID
+              <input class="form-control" v-model.number="product['REF_ID']" type="number">
+            </label>
+          </fieldset>
+          <label class="form-label col-md-3">
+            Category
+            <input class="form-control" v-model.text="product['Category']" type="text">
+          </label>
+          <label class="form-label col-md-2">
+            Product Type
+            <input class="form-control" v-model.text="product['Type']" type="text">
+          </label>
+          <label class="form-label col-md-6">
+            Product Name
+            <input class="form-control" v-model.text="product['Name']" type="text">
+          </label>
+        </div>
+        <div class="row align-items-top my-2">
+          <div class="col-md-6 component-list-input">
+            <label class="form-label" for="'products-' + product_id + '-components'">Components</label>
+            <components :product_id="product_id" :type="'Regular'">
+            </components>
+          </div>
+          <div class="col-md-6 alt-component-list-input">
+            <label class="form-label" for="'products-' + product_id + '-alternative_components'">Alternative Components</label>
+            <components :product_id="product_id" :type="'Alternative'">
+            </components>
+          </div>
+        </div>
+        <div class="row my-1">
+          <label class="form-label col-md-2">
+            Reagent Fee
+            <input class="form-control" v-model.text="product['Reagent fee']" type="text">
+          </label>
+
+          <label class="form-label col-md-2">
+            Full Cost Fee
+            <input class="form-control" v-model.text="product['Full cost fee']" type="text">
+          </label>
+
+          <label class="form-label col-md-2">
+            Rerun Fee
+            <input class="form-control" v-model.text="product['Re-run fee']" type="text">
+          </label>
+
+          <label class="form-label col-md-2">
+            Minimum Quantity
+            <input class="form-control" v-model.text="product['Minimum Quantity']" type="text">
+          </label>
+
+          <label class="form-label col-md-4">
+            Comment
+            <input class="form-control" v-model.text="product['Comment']" type="text">
+          </label>
+        </div>
+
         `,
     computed: {
         product() {
@@ -95,8 +117,8 @@ app.component('modal-component', {
             return components
         }
       },
-    template:
-        `   <div class="modal-header">
+    template: /*html*/`
+            <div class="modal-header">
               <h4 class="modal-title">{{this.product['Name']}}</h4>
               <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -106,7 +128,12 @@ app.component('modal-component', {
                 <div class="row">
                   <h5>Selected Components</h5>
                   <template v-for="component in this.Components">
-                    <span><a class="mr-2" href="#" @click="this.removeComponent"><i class="far fa-times-square fa-lg text-danger" :data-component-id="component['REF_ID']"></i></a>{{component['Product name']}}</span><br>
+                    <span>
+                      <a class="mr-2" href="#" @click="this.removeComponent">
+                        <i class="far fa-times-square fa-lg text-danger" :data-component-id="component['REF_ID']"></i>
+                      </a>
+                      {{component['Product name']}}
+                    </span><br>
                   </template>
                 </div>
                 <div class="row">
@@ -135,7 +162,7 @@ app.component('modal-component', {
 })
 
 app.component('components', {
-    template: `
+    template: /*html*/`
             <div class="input-group">
               <fieldset disabled>
                 <input class="form-control" :id="element_id" type="text" :value="ComponentIds">
@@ -181,29 +208,6 @@ app.component('components', {
         }
     },
     props: ['product_id', 'type']
-})
-
-app.component('alt-component-item', {
-    template: `<template v-for="component in altComponents">
-                 {{component["Product name"]}}<br>
-               </template>`,
-    computed: {
-        product() {
-            return this.$parent.all_products[this.product_id]
-        },
-        altComponentIds() {
-            return Object.keys(this.product['Alternative Components'])
-        },
-        altComponents() {
-            var components = new Array();
-            for (i in this.altComponentIds) {
-                comp_id = this.altComponentIds[i]
-                components.push(this.$parent.all_components[comp_id])
-            }
-            return components
-        }
-    },
-    props: ['product_id']
 })
 
 app.mount('#product_list')

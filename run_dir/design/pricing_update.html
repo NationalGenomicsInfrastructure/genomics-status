@@ -5,99 +5,15 @@
   <h1>Products Form</h1>
   <form enctype="multipart/form-data" action="/pricing_update" method="post">
     <input type="submit" class="btn btn-primary">
-    {{ products['1'] }}
     {% for product_id, product_d in products.items() %}
 
       <div class="row my-4 py-3 card">
         <product-form product_id="{{ product_id }}">
-          <div class="row align-items-top my-2">
-            <div class="col-md-6 component-list-input">
-              <label class="form-label" for="products-{{product_id}}-components">Components</label>
-              <components :product_id={{product_id}} :type="'Regular'">
-              <components>
-            </div>
-            <div class="col-md-6 alt-component-list-input">
-              <label class="form-label" for="products-{{product_id}}-alternative_components">Alternative Components</label>
-              <components :product_id={{product_id}} :type="'Alternative'">
-              <components>
-            </div>
-          </div>
         </product-form>
       </div>
 
     {% end %}
-    {% for product in products_form.products %}
-      <div class="row my-4 py-3 card">
-        <h4>{{ product.product_name.data }}</h4>
-        <div class="row my-1">
-          <div class='col-md-1'>
-            {% raw product.ref_id.label(class_='form-label') %}
-            {% raw product.ref_id(class_='form-control') %}
-          </div>
-          <div class='col-md-3'>
-            {% raw product.category.label(class_='form-label') %}
-            {% raw product.category(class_='form-control') %}
-          </div>
-          <div class='col-md-2'>
-            {% raw product.product_type.label(class_='form-label') %}
-            {% raw product.product_type(class_='form-control') %}
-          </div>
-          <div class='col-md-6'>
-            {% raw product.product_name.label(class_='form-label') %}
-            {% raw product.product_name(class_='form-control') %}
-          </div>
-        </div>
-        <div class="row align-items-top my-2">
-          <div class="col-md-6 jquery-component-list-input" data-component-ids="{{ json_encode(product.components.data) }}">
-            {% raw product.components.label(class_='form-label') %}
-            <div class="input-group">
-              <fieldset disabled>
-                {% raw product.components(class_='form-control') %}
-              </fieldset>
-              <button type="button" class="btn btn-primary edit-components" data-toggle="modal" data-target="#componentsModal" data-product="{{product.ref_id.data}}" data-type="components">Edit</button>
-            </div>
-            <div class="component-display">
-            </div>
-          </div>
-          <div class="col-md-6 alt-component-list-input" data-component-ids="{{ json_encode(product.alternative_components.data) }}">
-            {% raw product.alternative_components.label(class_='form-label') %}
-            <div class="input-group">
-              <fieldset disabled>
-                {% raw product.alternative_components(class_='form-control') %}
-              </fieldset>
-              <button type="button" class="btn btn-primary edit-components" @click="showModalFn" data-product-id="{{product.ref_id.data}}" data-type="alt_components">Edit</button>
-            </div>
-            <div class="alt-component-display">
-              <alt-component-item :product_id={{product.ref_id.data}}></alt-component-item>
-            </div>
-          </div>
-        </div>
-        <div class="row my-1">
-          <div class='col-md-2'>
-            {% raw product.reagent_fee.label(class_='form-label') %}
-            {% raw product.reagent_fee(class_='form-control') %}
-          </div>
-          <div class='col-md-2'>
-            {% raw product.full_cost_fee.label(class_='form-label') %}
-            {% raw product.full_cost_fee(class_='form-control') %}
-          </div>
-          <div class='col-md-2'>
-            {% raw product.rerun_fee.label(class_='form-label') %}
-            {% raw product.rerun_fee(class_='form-control') %}
-          </div>
-          <div class='col-md-2'>
-            {% raw product.minimum_quantity.label(class_='form-label') %}
-            {% raw product.minimum_quantity(class_='form-control') %}
-          </div>
-          <div class='col-md-4'>
-            {% raw product.comment.label(class_='form-label') %}
-            {% raw product.comment(class_='form-control') %}
-          </div>
-        </div>
-      </div>
-    {% end %}
   </form>
-
 
   <div class="modal fade" id="myModal">
     <div class="modal-dialog modal-lg">
@@ -110,39 +26,7 @@
       </div>
     </div>
   </div>
-
-  <div class="modal fade" id="componentsModal" tabindex="-1" aria-labelledby="componentsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="componentsModalLabel">New message</h5>
-          <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form>
-            <div class="row">
-              <h5>Selected Components</h5>
-            </div>
-            <div class="row">
-              <h5>All components</h5>
-              {% for component_id, component in components.items() %}
-                {% if component['Status'] != 'Discontinued' %}
-                  {{component['Product name']}}<br>
-                {% end %}
-              {% end %}
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary">Update</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
 </div>
-
 
 <script>var global_components_json={% raw components_json %}</script>
 <script>var global_products_json={% raw products_json %}</script>
