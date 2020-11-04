@@ -12,19 +12,22 @@
       <nav id="sidebar" class="nav sidebar">
         <div class="position-sticky">
           <nav class="nav nav-pills flex-column">
-            {% for cat_nr, category_t in enumerate(products_per_category.items()) %}
-              {% set category, category_d = category_t %}
-              {% set active_class = " active" if cat_nr == 0 else "" %}
-              <a class="nav-link{{active_class}}" href="#products_cat_{{cat_nr}}">{{category}}</a>
-            {% end %}
-          </nav
+            <a class="nav-link active" href="#products_top">Products</a>
+            <nav class="nav nav-pills flex-column">
+              {% for cat_nr, category_t in enumerate(products_per_category.items()) %}
+                {% set category, category_d = category_t %}
+                {% set active_class = " active" if cat_nr == 0 else "" %}
+                <a class="nav-link ml-2 my-2{{active_class}}" href="#products_cat_{{cat_nr}}">{{category}}</a>
+              {% end %}
+            </nav>
+          </nav>
         </div>
       </nav>
     </div>
 
     <div class="col-md-10">
       <div id="pricing_product_form_content" data-spy="scroll" data-target="#sidebar" data-offset="0" tabindex="0">
-        <h2>Products</h2>
+        <h2 id="products_top">Products</h2>
           <input type="submit" class="btn btn-primary">
           {% for cat_nr, category_t in enumerate(products_per_category.items()) %}
             {% set category, category_d = category_t %}
