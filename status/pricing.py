@@ -665,71 +665,6 @@ class PricingValidationDataHandler(PricingBaseHandler):
         """
         pass
 
-from wtforms.fields import Field, IntegerField, StringField, FieldList, FormField, BooleanField
-from wtforms.validators import Required
-from wtforms.widgets import TextInput
-from wtforms_tornado import Form
-
-
-# Convenience classes to construct the massive products form
-class ProductMapping(object):
-    def __init__(self, product):
-        self.ref_id = product['REF_ID']
-        self.product_type = product['Type']
-        self.category = product['Category']
-        self.product_name = product['Name']
-        if product['Components'] != '':
-            self.components = [id for id, quant in product['Components'].items()]
-        else:
-            self.components = []
-        if product['Alternative Components'] != '':
-            self.alternative_components = [id for id, quant in product['Alternative Components'].items()]
-        else:
-            self.alternative_components = []
-        self.reagent_fee = product['Reagent fee']
-        self.full_cost_fee = product['Full cost fee']
-        self.rerun_fee = product['Re-run fee']
-        self.minimum_quantity = product['Minimum Quantity']
-        self.comment = product['Comment']
-
-class ComponentsListField(Field):
-    widget = TextInput()
-
-    def _value(self):
-        if self.data:
-            return u', '.join(self.data)
-        else:
-            return u''
-
-    def process_formdata(self, valuelist):
-        if valuelist:
-            self.data = [x.strip() for x in valuelist[0].split(',')]
-        else:
-            self.data = []
-
-
-class ProductFormField(Form):
-    ref_id = IntegerField(validators=[Required()])
-    product_type = StringField()
-    category = StringField()
-    product_name = StringField()
-    components = ComponentsListField()
-    alternative_components = ComponentsListField()
-    reagent_fee = IntegerField()
-    full_cost_fee = IntegerField()
-    rerun_fee = IntegerField()
-    minimum_quantity = IntegerField()
-    comment = StringField()
-
-
-class ProductList(object):
-    def __init__(self, products):
-        self.products = products
-
-
-class ProductsForm(Form):
-    products = FieldList(FormField(ProductFormField))
-
 
 class PricingUpdateHandler(PricingBaseHandler):
     """ Serves a list view of all product prices
@@ -742,30 +677,30 @@ class PricingUpdateHandler(PricingBaseHandler):
     def get(self):
         version = self.get_argument('version', None)
         date = self.get_argument('date', None)
-        products = self.get_product_prices(None, version=version,
+        products_original = self.get_product_prices(None, version=version,
                                            date=date,
                                            pretty_strings=True)
+
+        products_per_category = {}
+        for product_id, product_d in products_original.items():
+            categ = product_d['Category']
+            if categ not in products_per_category:
+                products_per_category[product_d['Category']] = {}
+            products_per_category[product_d['Category']][product_id] = product_d
 
         components = self.get_component_prices(component_id=None,
                                                version=version,
                                                date=date,
                                                pretty_strings=True)
 
-        product_maps = []
-        for id, product in products.items():
-            product_maps.append(ProductMapping(product))
-
-        products_form = ProductsForm(obj=ProductList(product_maps))
-
         t = self.application.loader.load("pricing_update.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user(),
                               components=components,
                               components_json=json.dumps(components),
-                              products=products,
-                              products_json=json.dumps(products),
-                              version=version,
-                              products_form=products_form))
+                              products_per_category=products_per_category,
+                              products_json=json.dumps(products_original),
+                              version=version))
 
     def post(self):
         form = ProductsForm(self.request.arguments)
