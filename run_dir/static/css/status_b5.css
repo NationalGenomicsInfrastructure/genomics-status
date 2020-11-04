@@ -6,6 +6,7 @@ body {
     font-size:0.9em;
     color:#999;
     text-align:center;
+    height: 4vh;
 }
 .footer a {
     color:#999;
@@ -71,4 +72,11 @@ input.quantity_updateable {
 
 .quote_lcol_header {
     max-width: 800px;
+}
+
+/* Needed for bootstrap scrollspy */
+#pricing_product_form_content {
+    height: 87vh;
+    position: relative;
+    overflow-y: scroll;
 }

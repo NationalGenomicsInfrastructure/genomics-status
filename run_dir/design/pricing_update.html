@@ -1,19 +1,45 @@
 {% extends "base_b5.html" %}
 
 {% block stuff %}
-<div class="container-xxl" id="product_list">
-  <h1>Products Form</h1>
-  <form enctype="multipart/form-data" action="/pricing_update" method="post">
-    <input type="submit" class="btn btn-primary">
-    {% for product_id, product_d in products.items() %}
 
-      <div class="row my-4 py-3 card">
-        <product-form-part product_id="{{ product_id }}">
-        </product-form>
+
+<div class="container-xxl" id="pricing_update_main">
+  <div class="my-4">
+    <h1>Update Pricing</h1>
+  </div>
+  <div class="row">
+    <div class="col-md-2">
+      <nav id="sidebar" class="nav sidebar">
+        <div class="position-sticky">
+          <nav class="nav nav-pills flex-column">
+            {% for cat_nr, category_t in enumerate(products_per_category.items()) %}
+              {% set category, category_d = category_t %}
+              {% set active_class = " active" if cat_nr == 0 else "" %}
+              <a class="nav-link{{active_class}}" href="#products_cat_{{cat_nr}}">{{category}}</a>
+            {% end %}
+          </nav
+        </div>
+      </nav>
+    </div>
+
+    <div class="col-md-10">
+      <div id="pricing_product_form_content" data-spy="scroll" data-target="#sidebar" data-offset="0" tabindex="0">
+        <h2>Products</h2>
+          <input type="submit" class="btn btn-primary">
+          {% for cat_nr, category_t in enumerate(products_per_category.items()) %}
+            {% set category, category_d = category_t %}
+            <h3 id="products_cat_{{cat_nr}}">{{category}}</h3>
+            {% for product_id, product_d in category_d.items() %}
+              <div id="product_card_{{product_id}}" class="mx-2 my-3 p-3 card">
+                <product-form-part product_id="{{ product_id }}">
+                </product-form>
+              </div>
+            {% end %}
+          {% end %}
+
       </div>
-
-    {% end %}
-  </form>
+    </div>
+  </div>
 
   <div class="modal fade" id="myModal">
     <div class="modal-dialog modal-lg">

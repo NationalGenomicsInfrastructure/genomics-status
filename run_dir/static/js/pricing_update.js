@@ -230,4 +230,4 @@ app.component('components', {
     props: ['product_id', 'type']
 })
 
-app.mount('#product_list')
+app.mount('#pricing_update_main')
