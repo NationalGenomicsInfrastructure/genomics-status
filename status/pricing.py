@@ -677,16 +677,9 @@ class PricingUpdateHandler(PricingBaseHandler):
     def get(self):
         version = self.get_argument('version', None)
         date = self.get_argument('date', None)
-        products_original = self.get_product_prices(None, version=version,
+        products = self.get_product_prices(None, version=version,
                                            date=date,
                                            pretty_strings=True)
-
-        products_per_category = {}
-        for product_id, product_d in products_original.items():
-            categ = product_d['Category']
-            if categ not in products_per_category:
-                products_per_category[product_d['Category']] = {}
-            products_per_category[product_d['Category']][product_id] = product_d
 
         components = self.get_component_prices(component_id=None,
                                                version=version,
@@ -696,20 +689,10 @@ class PricingUpdateHandler(PricingBaseHandler):
         t = self.application.loader.load("pricing_update.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user(),
-                              components=components,
                               components_json=json.dumps(components),
-                              products_per_category=products_per_category,
-                              products_json=json.dumps(products_original),
+                              products_json=json.dumps(products),
                               version=version))
 
     def post(self):
-        form = ProductsForm(self.request.arguments)
-        if form.validate_on_submit():
-            products = [entry.data for entry in form.products.entries]
-            components = self.get_component_prices(component_id=None,
-                                                   pretty_strings=True)
-            self.validate(components, products)
-            self.write(str(form.data))
-        else:
-            self.set_status(400)
-            self.write("" % form.errors)
+        self.set_status(400)
+        self.write("Not implemented")
