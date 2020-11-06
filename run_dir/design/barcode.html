@@ -77,9 +77,10 @@ a text in the text field or upload a file.<p>
     $.ajax({
            type: "POST",
            url: $(submission_data).attr('action'),
-           data: $(submission_data).serialize(), // serializes the form's elements.
+           data: new FormData($(submission_data).get(0)),
+           processData: false,
+           contentType: false,
            error: function(xhr, textStatus, errorThrown) {
-             //alert('Error: '+errorThrown);
              alert('Error: '+xhr.responseJSON['Error']);
              console.log(xhr); console.log(textStatus); console.log(errorThrown);
            },

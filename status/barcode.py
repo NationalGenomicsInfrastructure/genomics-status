@@ -38,7 +38,6 @@ class BarcodeHandler(SafeHandler):
         if(labelType == 'lab_labels'):
             # how often is the label(s) to be printed? Default: 1
             copies = int(self.get_argument('copies'))
-
             # printing from file input
             try: # figure out if a file was entered in the form
                 file_for_printing = self.request.files['file_to_print']
@@ -87,10 +86,8 @@ class BarcodeHandler(SafeHandler):
             projectNo = self.get_argument('numberOfProjects')
 
             if len(user_project_ID) > 0 : # check that there is an entry
-                isValidUserID = match_userID(user_project_ID) # check that (only) a project ID was given (P12345 instead of P12345P1)
-                if isValidUserID:
-                    projectNo_only = re.search('P(.*)', user_project_ID)
-                    projectNo_only_extracted = projectNo_only.group(1) # have only the number of the project ID
+                if re.compile(r'^P\d+$').search(user_project_ID):
+                    projectNo_only_extracted = re.search('P(.*)', user_project_ID).group(1) # have only the number of the project ID
                     for projects in range(0,int(projectNo)):
                         new_projectNo = int(projectNo_only_extracted) + projects
                         new_projectID = 'P' + str(new_projectNo)
@@ -120,7 +117,7 @@ def makeBarcode(label, print_bc):
     if print_bc:
         ch_size = '20'
         xpositionText = '360'
-        if len(label) > 10:
+        if len(label) > 9:
             ch_size = '10' # squeezes the text for long texts
             xpositionText = '440' # moves the text position because the bc is longer
         formattedLabel.append('^FO{0},35^AFN,60,{1}^FN1^FS'.format(xpositionText, ch_size)) # AF = assign font F, field number 1 (FN1), print text at position field origin (FO) rel. to home
@@ -154,16 +151,6 @@ def match_barcode(string_to_match, default_value):
     else:
         isbarcode = default_value
     return(isbarcode)
-
-def match_userID(string_to_match):
-    #identifies plate IDs as created by LIMS and returns boolean
-    userID_match = re.compile(r'^P\d+$')
-    match = re.search(userID_match, string_to_match)
-    if match:
-        isUserID = True
-    else:
-        isUserID = False
-    return(isUserID)
 
 def print_barcode(barcodeFile):
     print('Ready to call lp for printing.')
