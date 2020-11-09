@@ -24,6 +24,13 @@ const ProductForm = {
         },
         enableProduct(prod_id) {
             this.all_products[prod_id]['Status'] = 'Enabled'
+        },
+        discontinueComponent(comp_id) {
+            console.log("Should disable comp_id: "+ comp_id)
+            this.all_components[comp_id]['Status'] = 'Discontinued'
+        },
+        enableComponent(comp_id) {
+            this.all_components[comp_id]['Status'] = 'Enabled'
         }
     },
     computed: {
@@ -140,7 +147,7 @@ app.component('product-form-list', {
             <h3 id="discontinued_components">Components</h3>
             <template v-for="component in this.$root.discontinued_components" :key="component['REF_ID']">
               <div class="mx-2 my-3 p-3 card">
-                <component-form-part :component_id="component['REF_ID']" :discontinued="true">
+                <component-form-part :component_id="component['REF_ID']">
                 </component-form-part>
               </div>
             </template>
@@ -238,10 +245,14 @@ app.component('product-form-part', {
 })
 
 app.component('component-form-part', {
-    props: ['component_id', 'discontinued'],
+    props: ['component_id'],
     template:
       /*html*/`
-        <h4>{{ component['Product name'] }}</h4>
+        <div class="row">
+          <h4 class="col-md-10">{{ component['Product name'] }}</h4>
+          <button v-if="this.discontinued" type="button" class="btn btn-sm btn-outline-danger col-md-2" @click="this.enableComponent">Enable</button>
+          <button v-else type="button" class="btn btn-sm btn-outline-danger col-md-2" @click="this.discontinueComponent">Discontinue<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
+        </div>
         <h5>{{ component['Last Updated']}}</h5>
         <div class="row my-1">
           <fieldset disabled class='col-md-1'>
@@ -316,6 +327,17 @@ app.component('component-form-part', {
     computed: {
         component() {
             return this.$root.all_components[this.component_id]
+        },
+        discontinued() {
+            return (this.component['Status'] == 'Discontinued')
+        }
+    },
+    methods: {
+        enableComponent() {
+            this.$root.enableComponent(this.component_id)
+        },
+        discontinueComponent() {
+            this.$root.discontinueComponent(this.component_id)
         }
     }
 })
