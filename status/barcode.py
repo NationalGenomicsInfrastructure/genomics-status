@@ -39,34 +39,30 @@ class BarcodeHandler(SafeHandler):
             # how often is the label(s) to be printed? Default: 1
             copies = int(self.get_argument('copies'))
             # printing from file input
-            try: # figure out if a file was entered in the form
+            if self.request.files.get('file_to_print'): # figure out if a file was entered in the form
                 file_for_printing = self.request.files['file_to_print']
-            except KeyError: # form entry for file was empty
-                print('no file was given')
-            else: #form entry for file was not empty
                 #retrieve file and transform the contained text to string format with utf-8 encoding
                 linesToPrint = str(file_for_printing[0]['body'], encoding='utf-8')
                 #check if file is already a label format file
-                barcodeFileMatch = re.compile('^\^XA')
-                isBarcodeFile = re.search(barcodeFileMatch, linesToPrint)
-                if isBarcodeFile: # if the file is already in the correct format it can be immediately moved to print
+                if re.compile('^\^XA').search(linesToPrint):
                     for _ in range(copies): # loops over copies to print
                         print_barcode(linesToPrint)
                 else: # file submitted is a text file
-                    array_linesToPrint = linesToPrint.splitlines() # split into the different lines of the text file
-                    for line in array_linesToPrint:
-                        createdLabel = makeBarcode(line, match_barcode(line, False))
+                    for line in linesToPrint.splitlines(): # split into the different lines of the text file
+                        createdLabel = make_barcode(line, match_barcode(line, False))
                         createdLabel_joined = '\n'.join(createdLabel)
                         for _ in range(copies): # loops over copies to print
                             print_barcode(createdLabel_joined)
+            else:
+                print('no file was given')
 
             # printing from string input
             text_for_printing = self.get_argument('text_to_print') # retrieves string from form
             if len(text_for_printing) > 0 : # check wether there was an entry or not
                 if self.get_argument('print_with_barcode', '') : # is true when barcode box is ticked
-                    createdLabel = makeBarcode(text_for_printing, match_barcode(text_for_printing, True))
+                    createdLabel = make_barcode(text_for_printing, match_barcode(text_for_printing, True))
                 else :
-                    createdLabel = makeBarcode(text_for_printing, match_barcode(text_for_printing, False))
+                    createdLabel = make_barcode(text_for_printing, match_barcode(text_for_printing, False))
                 createdLabel_joined = '\n'.join(createdLabel)
                 for _ in range(copies): # loops over copies to print
                     print_barcode(createdLabel_joined)
@@ -93,7 +89,7 @@ class BarcodeHandler(SafeHandler):
                         new_projectID = 'P' + str(new_projectNo)
                         for plate in range(int(startP),(int(endP)+1)) :
                             new_projectID_plate = new_projectID + 'P' + str(plate) # adding the plate number
-                            project_barcode = makeBarcode(new_projectID_plate, True)
+                            project_barcode = make_barcode(new_projectID_plate, True)
                             createdProjectLabel_joined = '\n'.join(project_barcode)
                             print_barcode(createdProjectLabel_joined)
                     statusType = 200
@@ -108,7 +104,7 @@ class BarcodeHandler(SafeHandler):
         self.set_header('Content-type', 'application/json')
         self.finish(message)
 
-def makeBarcode(label, print_bc):
+def make_barcode(label, print_bc):
     # prints the formated label to be piped to the barcode printer
     formattedLabel = []
     formattedLabel.append('^XA') # start of label
@@ -144,9 +140,7 @@ def makeBarcode(label, print_bc):
 
 def match_barcode(string_to_match, default_value):
     #identifies plate IDs as created by LIMS and returns boolean
-    barcode_match = re.compile('\d{2}-\d{6}')
-    match = re.search(barcode_match, string_to_match)
-    if match:
+    if re.compile('\d{2}-\d{6}').search(string_to_match):
         isbarcode = True
     else:
         isbarcode = default_value
