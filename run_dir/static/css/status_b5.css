@@ -74,9 +74,13 @@ input.quantity_updateable {
     max-width: 800px;
 }
 
+#pricing_update_main {
+    height: 78vh;
+}
+
 /* Needed for bootstrap scrollspy */
 #pricing_product_form_content {
-    height: 87vh;
+    height: 82vh;
     position: relative;
     overflow-y: scroll;
 }
