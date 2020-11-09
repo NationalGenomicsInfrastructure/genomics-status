@@ -678,7 +678,7 @@ class PricingUpdateHandler(PricingBaseHandler):
         version = self.get_argument('version', None)
         date = self.get_argument('date', None)
         products = self.get_product_prices(None, version=version,
-                                           date=date,
+                                           date=date, discontinued=True,
                                            pretty_strings=True)
 
         components = self.get_component_prices(component_id=None,

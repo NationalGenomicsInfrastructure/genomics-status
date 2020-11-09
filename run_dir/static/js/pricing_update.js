@@ -18,6 +18,12 @@ const ProductForm = {
             }
             var myModal = new bootstrap.Modal(document.getElementById('myModal'))
             myModal.show()
+        },
+        discontinueProduct(prod_id) {
+            this.all_products[prod_id]['Status'] = 'Discontinued'
+        },
+        enableProduct(prod_id) {
+            this.all_products[prod_id]['Status'] = 'Enabled'
         }
     },
     computed: {
@@ -25,12 +31,45 @@ const ProductForm = {
             prod_per_cat = {};
             for ([prod_id, product] of Object.entries(this.all_products)) {
                 cat = product['Category']
-                if (! (cat in prod_per_cat)) {
-                    prod_per_cat[cat] = {}
+                if (! (product['Status'] == 'Discontinued')) {
+                    if (! (cat in prod_per_cat)) {
+                        prod_per_cat[cat] = {}
+                    }
+                    prod_per_cat[cat][product['REF_ID']] = product
                 }
-                prod_per_cat[cat][product['REF_ID']] = product
             }
             return prod_per_cat
+        },
+        discontinued_products() {
+            disco_products = {};
+            for ([prod_id, product] of Object.entries(this.all_products)) {
+                if (product['Status'] == 'Discontinued') {
+                    disco_products[prod_id] = product
+                }
+            }
+            return disco_products
+        },
+        all_components_per_category() {
+            comp_per_cat = {};
+            for ([comp_id, component] of Object.entries(this.all_components)) {
+                cat = component['Category']
+                if (! (component['Status'] == 'Discontinued')) {
+                    if (! (cat in comp_per_cat)) {
+                        comp_per_cat[cat] = {}
+                    }
+                    comp_per_cat[cat][component['REF_ID']] = component
+                }
+            }
+            return comp_per_cat
+        },
+        discontinued_components() {
+            disco_components = {};
+            for ([comp_id, component] of Object.entries(this.all_components)) {
+                if (component['Status'] == 'Discontinued') {
+                    disco_components[comp_id] = component
+                }
+            }
+            return disco_components
         }
     }
 }
@@ -45,11 +84,22 @@ app.component('product-form-list', {
             <nav id="sidebar" class="nav sidebar">
               <div class="position-sticky">
                 <nav class="nav nav-pills flex-column">
-                  <a class="nav-link active" href="#products_top">Products</a>
+                  <a class="nav-link my-1" href="#products_top">Products</a>
                   <nav class="nav nav-pills flex-column">
                     <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)" :key="category">
-                      <a class="nav-link ml-2 my-2" :href="'#products_cat_' + cat_nr">{{category}}</a>
+                      <a class="nav-link ml-3 my-0 py-1" :href="'#products_cat_' + cat_nr">{{category}}</a>
                     </template>
+                  </nav>
+                  <a class="nav-link my-1" href="#components_top">Components</a>
+                  <nav class="nav nav-pills flex-column">
+                    <template v-for="(category, cat_nr) in Object.keys(this.$root.all_components_per_category)" :key="category">
+                      <a class="nav-link ml-3 my-0 py-1" :href="'#components_cat_' + cat_nr">{{category}}</a>
+                    </template>
+                  </nav>
+                  <a class="nav-link my-1" href="#discontinued_top">Discontinued</a>
+                  <nav class="nav nav-pills flex-column">
+                    <a class="nav-link ml-3 my-0 py-1" href="#discontinued_products">Products</a>
+                    <a class="nav-link ml-3 my-0 py-1" href="#discontinued_components">Components</a>
                   </nav>
                 </nav>
               </div>
@@ -59,19 +109,44 @@ app.component('product-form-list', {
         <div class="col-md-10">
           <div id="pricing_product_form_content" data-spy="scroll" data-target="#sidebar" data-offset="0" tabindex="0">
             <h2 id="products_top">Products</h2>
-              <input type="submit" class="btn btn-primary">
-              <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)" :key="category">
-                <h3 :id="'products_cat_' + cat_nr">{{category}}</h3>
-                <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
-                  <div class="mx-2 my-3 p-3 card">
-                    <product-form-part :product_id="product['REF_ID']">
-                    </product-form-part>
-                  </div>
-                </template>
+            <input type="submit" class="btn btn-primary">
+            <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)" :key="category">
+              <h3 :id="'products_cat_' + cat_nr">{{category}}</h3>
+              <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
+                <div class="mx-2 my-3 p-3 card">
+                  <product-form-part :product_id="product['REF_ID']">
+                  </product-form-part>
+                </div>
               </template>
-            </div>
+            </template>
+            <h2 id="components_top">Components</h2>
+            <template v-for="(category, cat_nr) in Object.keys(this.$root.all_components_per_category)" :key="category">
+              <h3 :id="'components_cat_' + cat_nr">{{category}}</h3>
+              <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
+                <div class="mx-2 my-3 p-3 card">
+                  <component-form-part :component_id="component['REF_ID']">
+                  </component-form-part>
+                </div>
+              </template>
+            </template>
+            <h2 class="mt-4" id="discontinued_top">Discontinued</h2>
+            <h3 id="discontinued_products">Products</h3>
+            <template v-for="product in this.$root.discontinued_products" :key="product['REF_ID']">
+              <div class="mx-2 my-3 p-3 card">
+                <product-form-part :product_id="product['REF_ID']">
+                </product-form-part>
+              </div>
+            </template>
+            <h3 id="discontinued_components">Components</h3>
+            <template v-for="component in this.$root.discontinued_components" :key="component['REF_ID']">
+              <div class="mx-2 my-3 p-3 card">
+                <component-form-part :component_id="component['REF_ID']" :discontinued="true">
+                </component-form-part>
+              </div>
+            </template>
           </div>
         </div>
+      </div>
         `
 })
 
@@ -79,7 +154,11 @@ app.component('product-form-part', {
     props: ['product_id'],
     template:
         /*html*/`
-        <h4> {{ product['Name'] }} </h4>
+        <div class="row">
+          <h4 class="col-md-10"> {{ product['Name'] }} </h4>
+          <button v-if="this.discontinued" type="button" class="btn btn-sm btn-outline-danger col-md-2" @click="this.enableProduct">Enable</button>
+          <button v-else type="button" class="btn btn-sm btn-outline-danger col-md-2" @click="this.discontinueProduct">Discontinue<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
+        </div>
         <div class="row my-1">
           <fieldset disabled class='col-md-1'>
             <label class="form-label">
@@ -143,9 +222,104 @@ app.component('product-form-part', {
     computed: {
         product() {
             return this.$root.all_products[this.product_id]
+        },
+        discontinued() {
+            return (this.product['Status'] == 'Discontinued')
+        }
+    },
+    methods: {
+        discontinueProduct() {
+            this.$root.discontinueProduct(this.product_id)
+        },
+        enableProduct() {
+            this.$root.enableProduct(this.product_id)
         }
     }
 })
+
+app.component('component-form-part', {
+    props: ['component_id', 'discontinued'],
+    template:
+      /*html*/`
+        <h4>{{ component['Product name'] }}</h4>
+        <h5>{{ component['Last Updated']}}</h5>
+        <div class="row my-1">
+          <fieldset disabled class='col-md-1'>
+            <label class="form-label">
+              ID
+              <input class="form-control" v-model.number="component['REF_ID']" type="number">
+            </label>
+          </fieldset>
+          <label class="form-label col-md-3">
+            Category
+            <input class="form-control" v-model.text="component['Category']" type="text">
+          </label>
+          <label class="form-label col-md-2">
+            Product Type
+            <input class="form-control" v-model.text="component['Type']" type="text">
+          </label>
+          <label class="form-label col-md-6">
+            Component Name
+            <input class="form-control" v-model.text="component['Product name']" type="text">
+          </label>
+        </div>
+        <div class="row my-1">
+          <label class="form-label col-md-2">
+            Manufacturer
+            <input class="form-control" v-model.text="component['Manufacturer']" type="text">
+          </label>
+
+          <label class="form-label col-md-2">
+            Re-seller
+            <input class="form-control" v-model.text="component['Re-seller']" type="text">
+          </label>
+
+          <label class="form-label col-md-4">
+            Product #
+            <input class="form-control" v-model.text="component['Product #']" type="text">
+          </label>
+
+          <label class="form-label col-md-2">
+            Units
+            <input class="form-control" v-model.text="component['Units']" type="text">
+          </label>
+
+          <label class="form-label col-md-2">
+            Min Quantity
+            <input class="form-control" v-model.text="component['Min Quantity']" type="text">
+          </label>
+
+        </div>
+        <div class="row my-1">
+          <label class="form-label col-md-2">
+            Discount
+            <input class="form-control" v-model.text="component['Discount']" type="text">
+          </label>
+
+          <label class="form-label col-md-2">
+            List Price
+            <input class="form-control" v-model.text="component['List price']" type="text">
+          </label>
+
+          <label class="form-label col-md-2">
+            Currency
+            <input class="form-control" v-model.text="component['Currency']" type="text">
+          </label>
+
+          <label class="form-label col-md-6">
+            Comment
+            <input class="form-control" v-model.text="component['Comment']" type="text">
+          </label>
+        </div>
+
+      `,
+    computed: {
+        component() {
+            return this.$root.all_components[this.component_id]
+        }
+    }
+})
+
 
 app.component('modal-component', {
     computed: {
@@ -189,14 +363,17 @@ app.component('modal-component', {
                 </div>
                 <div class="row">
                   <h5>All components</h5>
-                  <template v-for="(component, component_id) in this.$parent.all_components" :key="component['REF_ID']">
-                    <template v-if="component['Status'] != 'Discontinued'">
-                      <span>
-                        <a clas="mr-2" href="#" @click="this.addComponent">
-                          <i class="far fa-plus-square fa-lg text-success" :data-component-id="component['REF_ID']"></i>
-                        </a>
-                        {{ component['Product name']}}
-                      </span><br>
+                  <template v-for="category in Object.keys(this.$root.all_components_per_category)" :key="category">
+                    <h3>{{category}}</h3>
+                    <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
+                      <template v-if="component['Status'] != 'Discontinued'">
+                        <span>
+                          <a clas="mr-2" href="#" @click="this.addComponent">
+                            <i class="far fa-plus-square fa-lg text-success" :data-component-id="component['REF_ID']"></i>
+                          </a>
+                          {{ component['Product name']}}
+                        </span><br>
+                      </template>
                     </template>
                   </template>
                 </div>
