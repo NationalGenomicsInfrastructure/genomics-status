@@ -6,6 +6,8 @@ const ProductForm = {
         return {
             all_components: all_components_reactive,
             all_products: all_products_reactive,
+            new_products: new Set(),
+            new_components: new Set(),
             modal_product_id: "52", //Should probably be null when we handle that edge case
             modal_type: "Regular"
         }
@@ -31,13 +33,34 @@ const ProductForm = {
         },
         enableComponent(comp_id) {
             this.all_components[comp_id]['Status'] = 'Enabled'
+        },
+        cloneProduct(prod_id) {
+            product = this.all_products[prod_id]
+            new_prod = Object.assign({}, product)
+            /* The assign creates a shallow copy, so we
+               need to empty the component list */
+            new_prod['Components'] = {}
+            new_prod['Alternative Components'] = {}
+            new_id = this.next_product_id
+            new_prod['REF_ID'] = new_id
+            this.all_products[new_id] = new_prod
+            this.new_products.add(new_id)
+        },
+        removeProduct(prod_id) {
+            /* meant to be used with new products only */
+            delete this.all_products[prod_id]
+            delete this.new_products[prod_id]
         }
     },
     computed: {
         all_products_per_category() {
             prod_per_cat = {};
             for ([prod_id, product] of Object.entries(this.all_products)) {
-                cat = product['Category']
+                if ( this.new_products.has(prod_id) ) {
+                    cat = "New products"
+                } else {
+                    cat = product['Category']
+                }
                 if (! (product['Status'] == 'Discontinued')) {
                     if (! (cat in prod_per_cat)) {
                         prod_per_cat[cat] = {}
@@ -77,6 +100,11 @@ const ProductForm = {
                 }
             }
             return disco_components
+        },
+        next_product_id() {
+            all_ids = Object.keys(this.all_products)
+            max_id = Math.max(...all_ids.map(x => parseInt(x)))
+            return (1 + max_id).toString()
         }
     }
 }
@@ -162,9 +190,15 @@ app.component('product-form-part', {
     template:
         /*html*/`
         <div class="row">
-          <h4 class="col-md-10"> {{ product['Name'] }} </h4>
-          <button v-if="this.discontinued" type="button" class="btn btn-sm btn-outline-danger col-md-2" @click="this.enableProduct">Enable</button>
-          <button v-else type="button" class="btn btn-sm btn-outline-danger col-md-2" @click="this.discontinueProduct">Discontinue<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
+          <h4 class="col-md-8 mr-auto"> {{ product['Name'] }} </h4>
+          <button type="button" class="btn btn-sm btn-outline-success col-md-1" @click="this.cloneProduct">Clone</button>
+          <div v-if="this.isNew" class="col-md-2 ml-2">
+            <button type="button" class="btn btn-sm btn-outline-danger" @click="this.removeProduct">Remove<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
+          </div>
+          <div v-else class="col-md-2 ml-2">
+            <button v-if="this.discontinued" type="button" class="btn btn-sm btn-outline-danger" @click="this.enableProduct">Enable</button>
+            <button v-else type="button" class="btn btn-sm btn-outline-danger" @click="this.discontinueProduct">Discontinue<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
+          </div>
         </div>
         <div class="row my-1">
           <fieldset disabled class='col-md-1'>
@@ -232,6 +266,9 @@ app.component('product-form-part', {
         },
         discontinued() {
             return (this.product['Status'] == 'Discontinued')
+        },
+        isNew() {
+            return this.$root.new_products.has(this.product_id)
         }
     },
     methods: {
@@ -240,6 +277,15 @@ app.component('product-form-part', {
         },
         enableProduct() {
             this.$root.enableProduct(this.product_id)
+        },
+        cloneProduct() {
+            this.$root.cloneProduct(this.product_id)
+        },
+        removeProduct() {
+            if (! (this.isNew) ) {
+                alert("Only new products are allowed to be removed, others should be discontinued")
+            }
+            this.$root.removeProduct(this.product_id)
         }
     }
 })
