@@ -50,6 +50,19 @@ const ProductForm = {
             /* meant to be used with new products only */
             delete this.all_products[prod_id]
             delete this.new_products[prod_id]
+        },
+        cloneComponent(comp_id) {
+            component = this.all_components[comp_id]
+            new_comp = Object.assign({}, component)
+            new_id = this.next_component_id
+            new_comp['REF_ID'] = new_id
+            this.all_components[new_id] = new_comp
+            this.new_components.add(new_id)
+        },
+        removeComponent(comp_id) {
+            /* meant to be used with new components only */
+            delete this.all_components[comp_id]
+            delete this.new_components[comp_id]
         }
     },
     computed: {
@@ -82,7 +95,11 @@ const ProductForm = {
         all_components_per_category() {
             comp_per_cat = {};
             for ([comp_id, component] of Object.entries(this.all_components)) {
-                cat = component['Category']
+                if ( this.new_components.has(comp_id) ) {
+                    cat = "New components"
+                } else {
+                  cat = component['Category']
+                }
                 if (! (component['Status'] == 'Discontinued')) {
                     if (! (cat in comp_per_cat)) {
                         comp_per_cat[cat] = {}
@@ -103,6 +120,11 @@ const ProductForm = {
         },
         next_product_id() {
             all_ids = Object.keys(this.all_products)
+            max_id = Math.max(...all_ids.map(x => parseInt(x)))
+            return (1 + max_id).toString()
+        },
+        next_component_id() {
+            all_ids = Object.keys(this.all_components)
             max_id = Math.max(...all_ids.map(x => parseInt(x)))
             return (1 + max_id).toString()
         }
@@ -148,20 +170,16 @@ app.component('product-form-list', {
             <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)" :key="category">
               <h3 :id="'products_cat_' + cat_nr">{{category}}</h3>
               <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
-                <div class="mx-2 my-3 p-3 card">
-                  <product-form-part :product_id="product['REF_ID']">
-                  </product-form-part>
-                </div>
+                <product-form-part :product_id="product['REF_ID']">
+                </product-form-part>
               </template>
             </template>
             <h2 id="components_top">Components</h2>
             <template v-for="(category, cat_nr) in Object.keys(this.$root.all_components_per_category)" :key="category">
               <h3 :id="'components_cat_' + cat_nr">{{category}}</h3>
               <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
-                <div class="mx-2 my-3 p-3 card">
-                  <component-form-part :component_id="component['REF_ID']">
-                  </component-form-part>
-                </div>
+                <component-form-part :component_id="component['REF_ID']">
+                </component-form-part>
               </template>
             </template>
             <h2 class="mt-4" id="discontinued_top">Discontinued</h2>
@@ -188,16 +206,17 @@ app.component('product-form-list', {
 app.component('product-form-part', {
     props: ['product_id'],
     template:
-        /*html*/`
+      /*html*/`
+      <div class="mx-2 my-3 p-3 card" :class="{ 'border-success border-2': isNew }">
         <div class="row">
           <h4 class="col-md-8 mr-auto"> {{ product['Name'] }} </h4>
           <button type="button" class="btn btn-sm btn-outline-success col-md-1" @click="this.cloneProduct">Clone</button>
           <div v-if="this.isNew" class="col-md-2 ml-2">
-            <button type="button" class="btn btn-sm btn-outline-danger" @click="this.removeProduct">Remove<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
+            <button type="button" class="btn btn-outline-danger" @click="this.removeProduct">Remove<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
           </div>
           <div v-else class="col-md-2 ml-2">
             <button v-if="this.discontinued" type="button" class="btn btn-sm btn-outline-danger" @click="this.enableProduct">Enable</button>
-            <button v-else type="button" class="btn btn-sm btn-outline-danger" @click="this.discontinueProduct">Discontinue<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
+            <button v-else type="button" class="btn btn-outline-danger" @click="this.discontinueProduct">Discontinue<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
           </div>
         </div>
         <div class="row my-1">
@@ -258,6 +277,7 @@ app.component('product-form-part', {
             <input class="form-control" v-model.text="product['Comment']" type="text">
           </label>
         </div>
+      </div>
 
         `,
     computed: {
@@ -294,10 +314,19 @@ app.component('component-form-part', {
     props: ['component_id'],
     template:
       /*html*/`
+      <div class="mx-2 my-3 p-3 card" :class="{ 'border-success border-2': isNew }">
         <div class="row">
-          <h4 class="col-md-10">{{ component['Product name'] }}</h4>
-          <button v-if="this.discontinued" type="button" class="btn btn-sm btn-outline-danger col-md-2" @click="this.enableComponent">Enable</button>
-          <button v-else type="button" class="btn btn-sm btn-outline-danger col-md-2" @click="this.discontinueComponent">Discontinue<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
+          <h4 class="col-md-8 mr-auto"> {{ component['Product name'] }} </h4>
+          <div class="col-md-1">
+            <button type="button" class="btn btn-outline-success" @click="this.cloneComponent">Clone</button>
+          </div>
+          <div v-if="this.isNew" class="col-md-2">
+            <button type="button" class="btn btn-outline-danger" @click="this.removeComponent">Remove<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
+          </div>
+          <div v-else class="col-md-2">
+            <button v-if="this.discontinued" type="button" class="btn btn-outline-danger" @click="this.enableComponent">Enable</button>
+            <button v-else type="button" class="btn btn-outline-danger" @click="this.discontinueComponent">Discontinue<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
+          </div>
         </div>
         <h5>{{ component['Last Updated']}}</h5>
         <div class="row my-1">
@@ -368,6 +397,7 @@ app.component('component-form-part', {
             <input class="form-control" v-model.text="component['Comment']" type="text">
           </label>
         </div>
+      </div>
 
       `,
     computed: {
@@ -376,6 +406,9 @@ app.component('component-form-part', {
         },
         discontinued() {
             return (this.component['Status'] == 'Discontinued')
+        },
+        isNew() {
+            return this.$root.new_components.has(this.component_id)
         }
     },
     methods: {
@@ -384,6 +417,16 @@ app.component('component-form-part', {
         },
         discontinueComponent() {
             this.$root.discontinueComponent(this.component_id)
+        },
+        cloneComponent() {
+            this.$root.cloneComponent(this.component_id)
+        },
+        removeComponent() {
+            if (! (this.isNew) ) {
+                alert("Only new components are allowed to be removed, others should be discontinued")
+            } else {
+                this.$root.removeComponent(this.component_id)
+            }
         }
     }
 })
