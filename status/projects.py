@@ -152,7 +152,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         # Handle the pending reviews:
         if 'pending_reviews' in row.value:
-            links = ','.join(['<a href="https://genologics.scilifelab.se/clarity/work-complete/{0}">Review </a>'.format(rid) for rid in row.value['pending_reviews']])
+            links = ','.join(['<a href="{0}/clarity/work-complete/{1}">Review </a>'.format(BASEURI, rid) for rid in row.value['pending_reviews']])
             row.value['pending_reviews'] = links
 
         # Find the latest running note, return it as a separate field
@@ -575,7 +575,7 @@ class CaliperImageHandler(SafeHandler):
     @staticmethod
     def get_caliper_image(url):
         """returns a base64 string of the caliper image asked"""
-        #url pattern: sftp://genologics.scilifelab.se/home/glsftp/clarity/year/month/processid/artifact-id-file-id.png
+        #url pattern: sftp://ngi-lims-prod.scilifelab.se/home/glsftp/clarity/year/month/processid/artifact-id-file-id.png
         artifact_attached_id= url.rsplit('.', 1)[0].rsplit('/', 1)[1].rsplit('-', 2)[0]
         #Couldn't use fileid in the url directly as it was sometimes wrong
         caliper_file_id = Artifact(lims=lims, id=artifact_attached_id).files[0].id
@@ -664,6 +664,7 @@ class ProjectSamplesHandler(SafeHandler):
                               prettify = prettify_css_names,
                               worksets=worksets_view[project],
                               multiqc=multiqc,
+                              lims_uri=BASEURI
                               ))
 
 
@@ -683,7 +684,7 @@ class ProjectsHandler(SafeHandler):
 
 class RunningNotesDataHandler(SafeHandler):
     """Serves all running notes from a given project.
-    It connects to the genologics LIMS to fetch and update Running Notes information.
+    It connects to LIMS to fetch and update Running Notes information.
     URL: /api/v1/running_notes/([^/]*)
     """
     def get(self, project):
@@ -833,7 +834,7 @@ class RunningNotesDataHandler(SafeHandler):
 
 class LinksDataHandler(SafeHandler):
     """ Serves external links for each project
-        Links are stored as JSON in genologics LIMS / project
+        Links are stored as JSON in LIMS / project
         URL: /api/v1/links/([^/]*)
     """
 

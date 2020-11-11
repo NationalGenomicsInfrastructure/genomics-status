@@ -6,6 +6,7 @@ Powers /project/[PID] - template is run_dir/design/project_samples.html
 
 // Get pseudo-argument for this js file. Ie, project = P1234
 var project = $('#projects-js').attr('data-project');
+var lims_uri = $('#projects-js').attr('data-lims_uri');
 var ordered_reads = 0.0;
 $(document).ready(function() {
 
@@ -468,6 +469,21 @@ function load_all_udfs(){
         $('#textarea_internal_costs').html(value);
       }
 
+      //Add connected projects if any
+      else if (key == 'project_xref'){
+        projs = '';
+        var conn_proj = value.split(',');
+        conn_proj.forEach(function(proj){
+           if (proj != project){
+              if (!projs.trim()){
+                 projs += '<a class="email_link" href="/project/'+proj+'">'+proj+'</a>';
+              }else{
+                 projs += ', '+'<a class="email_link" href="/project/'+proj+'">'+proj+'</a>';
+              }
+           }
+        });
+        $('#connected_projects').html(projs);
+      }
 
       // Create the links for review and display the banner
       else if (prettify(key) == 'pending_reviews'){
@@ -630,7 +646,7 @@ function load_samples_table(colOrder) {
               } else {
                 // TODO - Wire this up to the new QC page when it's ready
                 tbl_row += '<td class="'+column_id+'"><a target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
-                            'href="https://genologics.scilifelab.se/clarity/search?scope=Sample&query='+info[column_id]+'">'+
+                            'href="' + lims_uri + '/clarity/search?scope=Sample&query='+info[column_id]+'">'+
                             info[column_id] + '</a></td>';
               }
             }
@@ -731,7 +747,7 @@ function load_samples_table(colOrder) {
 
               // Special case for workset_setup, which is a link to the LIMS
               else if (column_id == "workset_setup" && info_library[column_id]) {
-                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a href="https://genologics.scilifelab.se/clarity/work-complete/';
+                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a href="' + lims_uri+ '/clarity/work-complete/';
                 tbl_row += info_library[column_id].split('-')[1] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
               }
 

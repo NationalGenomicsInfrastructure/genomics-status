@@ -305,7 +305,7 @@ class FlowcellQ30Handler(SafeHandler):
 
 class FlowcellNotesDataHandler(SafeHandler):
     """Serves all running notes from a given flowcell.
-    It connects to the genologics LIMS to fetch and update Running Notes information.
+    It connects to LIMS to fetch and update Running Notes information.
     URL: /api/v1/flowcell_notes/([^/]*)
     """
     def get(self, flowcell):
@@ -366,7 +366,7 @@ class FlowcellNotesDataHandler(SafeHandler):
 
 class FlowcellLinksDataHandler(SafeHandler):
     """ Serves external links for each project
-        Links are stored as JSON in genologics LIMS / project
+        Links are stored as JSON in LIMS / project
         URL: /api/v1/links/([^/]*)
     """
 
@@ -422,7 +422,7 @@ class FlowcellLinksDataHandler(SafeHandler):
 
 class ReadsTotalHandler(SafeHandler):
     """ Serves external links for each project
-        Links are stored as JSON in genologics LIMS / project
+        Links are stored as JSON in LIMS / project
         URL: /reads_total/([^/]*)
     """
     def get(self, query):

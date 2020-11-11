@@ -168,6 +168,7 @@ table.narrow-headers th { width: 20%; }
 .label-date  {color: #333; font-size:80%; }
 .label-imp  {background-color: #a62100;}
 .label-devi  {background-color: #a13a7e;}
+.label-usr  {background-color: #ff6f00;}
 /* Date sliders */
 .slider-spacing { margin:40px 0; }
 
@@ -391,13 +392,7 @@ td.progress {
 .btn-imp{
   color: #fff;
   background-color: #a62100;
-  border-color: #571100;
  }
-.btn-imp:focus, .btn-imp:hover {
-  color: #fff;
-  background-color: #8a1b00;
-  border-color: #8a1b00;
-}
 .panel-important{
   background-color: #ffd9d9 !important;
 }
@@ -405,9 +400,16 @@ td.progress {
   color: #fff;
   background-color: #a13a7e;
 }
-.btn-devi:focus, .btn-devi:hover {
+.btn-usr{
   color: #fff;
-  background-color: #a13a7e;
+  background-color: #ff6f00;
+}
+.rn-categ button span{
+    margin-left: 0.5rem;
+}
+.rn-categ button:focus, .rn-categ button:hover{
+  color: #000;
+  border-color: #000;
 }
 #markdown_help table td {
   width:50%;

@@ -147,6 +147,7 @@ Description: Details page for a single project
               <tr><td>E-mails</td><td id="contact"></td></tr>
               <tr><td>Affiliation</td><td id="affiliation"></td></tr>
               <tr><td>Invoice Reference</td><td><code id="invoice_reference"></code></td></tr>
+              <tr><td>Connected Projects</td><td id="connected_projects"></td></tr>
             </tbody>
           </table>
         </div>
@@ -345,7 +346,7 @@ Description: Details page for a single project
             {{ workset.value }} <span class="caret"></span>
           </button>
           <ul class="dropdown-menu">
-            <li><a href="https://genologics.scilifelab.se/clarity/search?scope=Container&query={{ workset.value }}">Open in the LIMS</a></li>
+            <li><a href="{{ lims_uri }}/clarity/search?scope=Container&query={{ workset.value }}">Open in the LIMS</a></li>
             <li><a href="/workset/{{ workset.value }}">Open in Genomics Status</a></li>
           </ul>
         </div>
@@ -575,5 +576,5 @@ Description: Details page for a single project
 <script src="/static/js/clipboard.min.js"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ project }}"></script>
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-project="{{project}}"></script>
-<script src="/static/js/project_samples.js?v={{ gs_globals['git_commit'] }}" id="projects-js" data-project="{{project}}"></script>
+<script src="/static/js/project_samples.js?v={{ gs_globals['git_commit'] }}" id="projects-js" data-project="{{project}}" data-lims_uri="{{ lims_uri }}"></script>
 {% end %}
