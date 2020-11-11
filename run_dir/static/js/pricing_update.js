@@ -83,6 +83,26 @@ const ProductForm = {
             }
             return prod_per_cat
         },
+        product_categories() {
+            categories = new Set();
+            for ([prod_id, product] of Object.entries(this.all_products)) {
+                cat = product['Category']
+                if (! (product['Status'] == 'Discontinued')) {
+                    categories.add(product['Category'])
+                }
+            }
+            return categories
+        },
+        product_types() {
+            types = new Set();
+            for ([prod_id, product] of Object.entries(this.all_products)) {
+                cat = product['Type']
+                if (! (product['Status'] == 'Discontinued')) {
+                    types.add(product['Type'])
+                }
+            }
+            return types
+        },
         discontinued_products() {
             disco_products = {};
             for ([prod_id, product] of Object.entries(this.all_products)) {
@@ -108,6 +128,26 @@ const ProductForm = {
                 }
             }
             return comp_per_cat
+        },
+        component_categories() {
+            categories = new Set();
+            for ([comp_id, component] of Object.entries(this.all_components)) {
+                cat = component['Category']
+                if (! (component['Status'] == 'Discontinued')) {
+                    categories.add(component['Category'])
+                }
+            }
+            return categories
+        },
+        component_types() {
+            types = new Set();
+            for ([comp_id, component] of Object.entries(this.all_components)) {
+                cat = component['Type']
+                if (! (component['Status'] == 'Discontinued')) {
+                    types.add(component['Type'])
+                }
+            }
+            return types
         },
         discontinued_components() {
             disco_components = {};
@@ -167,7 +207,7 @@ app.component('product-form-list', {
           <div id="pricing_product_form_content" data-spy="scroll" data-target="#sidebar" data-offset="0" tabindex="0">
             <h2 id="products_top">Products</h2>
             <input type="submit" class="btn btn-primary">
-            <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)" :key="category">
+            <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)">
               <h3 :id="'products_cat_' + cat_nr">{{category}}</h3>
               <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
                 <product-form-part :product_id="product['REF_ID']">
@@ -175,7 +215,7 @@ app.component('product-form-list', {
               </template>
             </template>
             <h2 id="components_top">Components</h2>
-            <template v-for="(category, cat_nr) in Object.keys(this.$root.all_components_per_category)" :key="category">
+            <template v-for="(category, cat_nr) in Object.keys(this.$root.all_components_per_category)">
               <h3 :id="'components_cat_' + cat_nr">{{category}}</h3>
               <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
                 <component-form-part :component_id="component['REF_ID']">
@@ -228,11 +268,17 @@ app.component('product-form-part', {
           </fieldset>
           <label class="form-label col-md-3">
             Category
-            <input class="form-control" v-model.text="product['Category']" type="text">
+            <input class="form-control" :list="'categoryOptions' + product_id" v-model.text="product['Category']" type="text">
+            <datalist :id="'categoryOptions' + product_id">
+              <option v-for="category in categories">{{category}}</option>
+            </datalist>
           </label>
           <label class="form-label col-md-2">
             Product Type
-            <input class="form-control" v-model.text="product['Type']" type="text">
+            <input class="form-control" :list="'typeOptions' + product_id" v-model.text="product['Type']" type="text">
+            <datalist :id="'typeOptions' + product_id">
+              <option v-for="type in types">{{type}}</option>
+            </datalist>
           </label>
           <label class="form-label col-md-6">
             Product Name
@@ -289,6 +335,12 @@ app.component('product-form-part', {
         },
         isNew() {
             return this.$root.new_products.has(this.product_id)
+        },
+        categories() {
+            return this.$root.product_categories
+        },
+        types() {
+            return this.$root.product_types
         }
     },
     methods: {
@@ -338,11 +390,17 @@ app.component('component-form-part', {
           </fieldset>
           <label class="form-label col-md-3">
             Category
-            <input class="form-control" v-model.text="component['Category']" type="text">
+            <input class="form-control" :list="'compCategoryOptions' + component_id" v-model.text="component['Category']" type="text">
+            <datalist :id="'compCategoryOptions' + component_id">
+              <option v-for="category in categories">{{category}}</option>
+            </datalist>
           </label>
           <label class="form-label col-md-2">
             Product Type
-            <input class="form-control" v-model.text="component['Type']" type="text">
+            <input class="form-control" :list="'compTypeOptions' + component_id" v-model.text="component['Type']" type="text">
+            <datalist :id="'compTypeOptions' + component_id">
+              <option v-for="type in types">{{type}}</option>
+            </datalist>
           </label>
           <label class="form-label col-md-6">
             Component Name
@@ -409,6 +467,12 @@ app.component('component-form-part', {
         },
         isNew() {
             return this.$root.new_components.has(this.component_id)
+        },
+        categories() {
+            return this.$root.component_categories
+        },
+        types() {
+            return this.$root.component_types
         }
     },
     methods: {
