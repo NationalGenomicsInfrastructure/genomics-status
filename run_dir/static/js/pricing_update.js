@@ -255,7 +255,7 @@ app.component('product-form-part', {
             <button type="button" class="btn btn-outline-danger" @click="this.removeProduct">Remove<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
           </div>
           <div v-else class="col-md-2 ml-2">
-            <button v-if="this.discontinued" type="button" class="btn btn-sm btn-outline-danger" @click="this.enableProduct">Enable</button>
+            <button v-if="this.discontinued" type="button" class="btn btn-outline-danger" @click="this.enableProduct">Enable</button>
             <button v-else type="button" class="btn btn-outline-danger" @click="this.discontinueProduct">Discontinue<i class="far fa-times-square fa-lg text-danger ml-2"></i></button>
           </div>
         </div>
