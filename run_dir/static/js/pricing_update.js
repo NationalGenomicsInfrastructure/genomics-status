@@ -9,7 +9,10 @@ const ProductForm = {
             new_products: new Set(),
             new_components: new Set(),
             modal_product_id: "52", //Should probably be null when we handle that edge case
-            modal_type: "Regular"
+            modal_type: "Regular",
+            USD_in_SEK: null,
+            EUR_in_SEK: null,
+            exch_rate_issued_at: null
         }
     },
     methods: {
@@ -63,6 +66,15 @@ const ProductForm = {
             /* meant to be used with new components only */
             delete this.all_components[comp_id]
             delete this.new_components[comp_id]
+        },
+        fetchExchangeRates() {
+            axios
+              .get('/api/v1/pricing_exchange_rates')
+              .then(response => {
+                  this.USD_in_SEK = response.data.USD_in_SEK
+                  this.EUR_in_SEK = response.data.EUR_in_SEK
+                  this.exch_rate_issued_at = response.data['Issued at']
+              })
         }
     },
     computed: {
@@ -168,6 +180,9 @@ const ProductForm = {
             max_id = Math.max(...all_ids.map(x => parseInt(x)))
             return (1 + max_id).toString()
         }
+    },
+    mounted: function() {
+        this.fetchExchangeRates()
     }
 }
 
@@ -205,8 +220,12 @@ app.component('product-form-list', {
 
         <div class="col-md-10">
           <div id="pricing_product_form_content" data-spy="scroll" data-target="#sidebar" data-offset="0" tabindex="0">
-            <h2 id="products_top">Products</h2>
-            <input type="submit" class="btn btn-primary">
+            <div class="row">
+              <h2 id="products_top" class="col-md-2 mr-auto">Products</h2>
+              <div class="col-md-5">
+                <exchange-rates></exchange-rates>
+              </div>
+            </div>
             <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)">
               <h3 :id="'products_cat_' + cat_nr">{{category}}</h3>
               <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
@@ -241,6 +260,46 @@ app.component('product-form-list', {
         </div>
       </div>
         `
+})
+
+app.component('exchange-rates', {
+  template:
+      /*html*/`
+      <dl class="row">
+        <dt class="col-md-4 text-right">1 USD</dt>
+        <dd class="col-md-8"><span>{{USD_in_SEK}}</span></dd>
+        <dt class="col-md-4 text-right">1 EUR</dt>
+        <dd class="col-md-8"><span>{{EUR_in_SEK}}</span></dd>
+        <dt class="col-md-4 text-right">Issued at</dt>
+        <dd class="col-md-8"><span>{{issued_at}}</span></dd>
+      </dl>`,
+  computed: {
+    USD_in_SEK() {
+      val = this.$root.USD_in_SEK
+      if (val === null) {
+          return ""
+      } else {
+          return val.toFixed(2)
+      }
+    },
+    EUR_in_SEK() {
+      val = this.$root.EUR_in_SEK
+      if (val === null) {
+          return ""
+      } else {
+          return val.toFixed(2)
+      }
+    },
+    issued_at() {
+      val = this.$root.exch_rate_issued_at
+      if (val === null) {
+          return ""
+      } else {
+          date = new Date(Date.parse(val))
+          return date.toDateString()
+      }
+    }
+  }
 })
 
 app.component('product-form-part', {
