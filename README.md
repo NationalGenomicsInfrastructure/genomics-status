@@ -100,6 +100,20 @@ visualized on the various pages.
 
 If you've used the `settings.yaml` template above, you should now be able to access the site at `http://localhost:9761/` or `http://localhost:9761/login`
 
+## Generating the custom bootstrap css file
+The bootstrap css file is customised to use a smaller font size.
+To replicate this, use the following snippet:
+
+```
+conda create -n nodejs
+conda activate nodejs
+conda install nodejs
+npm install sass -g
+npm install bootstrap@next -g
+cd run_dir/static/scss
+sass custom.scss custom-bootstrap-5-alpha.css
+```
+
 ## Genomics Status architecture
 
 This pictures illustrates the architecture of how Genomics Status is built with a real example, a request to https://genomics-status.scilifelab.se/projects/all. It is simplified for the sake of comprehension, in reality there are a few more API calls.
