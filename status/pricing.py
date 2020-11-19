@@ -26,8 +26,7 @@ class PricingBaseHandler(SafeHandler):
         except ValueError:
             raise tornado.web.HTTPError(
                     400,
-                    reason="Bad request, {} id is not "
-                           "an integer".format(object_type)
+                    reason='Bad request, {} id is not an integer'.format(object_type)
                 )
         return int_key
 
@@ -47,13 +46,13 @@ class PricingBaseHandler(SafeHandler):
         if len(view.rows) == 0:
             raise tornado.web.HTTPError(
                     404,
-                    reason="No such {}(s) was found".format(object_type)
+                    reason='No such {}(s) was found'.format(object_type)
                 )
         if len(view.rows) > 1:
             raise tornado.web.HTTPError(
                     500,
-                    reason="Internal Server Error: Multiple {} rows returned. "
-                           "Expected only 1.".format(object_type)
+                    reason='Internal Server Error: Multiple {} rows returned. '
+                           'Expected only 1.'.format(object_type)
                 )
 
     # _____________________________ FETCH METHODS _____________________________
@@ -69,21 +68,21 @@ class PricingBaseHandler(SafeHandler):
         """
 
         if component_id is not None:
-            int_key = self._validate_object_id(component_id, "component")
+            int_key = self._validate_object_id(component_id, 'component')
 
         if version is not None:  # Specified version
             int_version = self._validate_version_param(version)
 
             if component_id is None:  # All components
                 view = self.application.pricing_components_db.view(
-                            "entire_document/by_version",
+                            'entire_document/by_version',
                             key=int_version,
                             limit=1,
                             descending=True
                             )
             else:
                 view = self.application.pricing_components_db.view(
-                            "individual_components/by_id_and_version",
+                            'individual_components/by_id_and_version',
                             key=[int_key, int_version],
                             limit=1
                             )
@@ -91,20 +90,20 @@ class PricingBaseHandler(SafeHandler):
         else:  # No specified version
             if component_id is None:  # All components
                 view = self.application.pricing_components_db.view(
-                            "entire_document/by_version",
+                            'entire_document/by_version',
                             limit=1,
                             descending=True
                             )
             else:
                 view = self.application.pricing_components_db.view(
-                            "individual_components/by_id_and_version",
+                            'individual_components/by_id_and_version',
                             startkey=[int_key, {}],
                             endkey=[int_key],
                             limit=1,
                             descending=True
                             )
 
-        self._validate_single_row_result(view, "component")
+        self._validate_single_row_result(view, 'component')
 
         if component_id is None:  # All components
             return view.rows[0].value['components']
@@ -121,21 +120,21 @@ class PricingBaseHandler(SafeHandler):
         :return: The rows fetched from the database
         """
         if product_id is not None:
-            int_key = self._validate_object_id(product_id, "product")
+            int_key = self._validate_object_id(product_id, 'product')
 
         if version is not None:  # Specified version
             int_version = self._validate_version_param(version)
 
             if product_id is None:  # All products
                 view = self.application.pricing_products_db.view(
-                        "entire_document/by_version",
+                        'entire_document/by_version',
                         key=int_version,
                         limit=1,
                         descending=True
                     )
             else:  # Individual product
                 view = self.application.pricing_products_db.view(
-                        "individual_products/by_id_and_version",
+                        'individual_products/by_id_and_version',
                         key=[int_key, int_version],
                         limit=1,
                         descending=True
@@ -143,19 +142,19 @@ class PricingBaseHandler(SafeHandler):
         else:  # No specified version
             if product_id is None:  # All products
                 view = self.application.pricing_products_db.view(
-                        "entire_document/by_version",
+                        'entire_document/by_version',
                         limit=1,
                         descending=True
                     )
             else:
                 view = self.application.pricing_products_db.view(
-                        "individual_products/by_id_and_version",
+                        'individual_products/by_id_and_version',
                         startkey=[int_key, {}],
                         endkey=[int_key],
                         limit=1,
                         descending=True
                     )
-        self._validate_single_row_result(view, "product")
+        self._validate_single_row_result(view, 'product')
 
         if product_id is None:  # All products
             return view.rows[0].value['products']
@@ -178,7 +177,7 @@ class PricingBaseHandler(SafeHandler):
         else:
             dt = datetime.datetime.now()
 
-        str_format_date = dt.strftime("%Y-%m-%d")
+        str_format_date = dt.strftime('%Y-%m-%d')
         view = self.application.pricing_exchange_rates_db.view(
                 'entire_document/by_date',
                 startkey=str_format_date,
@@ -198,7 +197,7 @@ class PricingBaseHandler(SafeHandler):
         if currency == 'SEK':
             sek_list_price = component['List price']
         else:
-            currency_key = "{}_in_SEK".format(currency)
+            currency_key = '{}_in_SEK'.format(currency)
             sek_list_price = exch_rates[currency_key] * component['List price']
 
         sek_price = sek_list_price - sek_list_price * component['Discount']
@@ -263,10 +262,10 @@ class PricingBaseHandler(SafeHandler):
                 price, price_per_unit = self._calculate_component_price(component,
                                                                         exch_rates)
                 if pretty_strings:
-                    price = "{:.2f}".format(price)
-                    price_per_unit = "{:.2f}".format(price_per_unit)
+                    price = '{:.2f}'.format(price)
+                    price_per_unit = '{:.2f}'.format(price_per_unit)
             elif component['Status'] != 'Discontinued':
-                raise ValueError("Empty list price for non-discontinued component")
+                raise ValueError('Empty list price for non-discontinued component')
             else:
                 price = ''
                 price_per_unit = ''
@@ -307,9 +306,9 @@ class PricingBaseHandler(SafeHandler):
             price_int, price_acad, price_full = self._calculate_product_price(product, all_component_prices)
 
             if pretty_strings:
-                price_int = "{:.2f}".format(price_int)
-                price_acad = "{:.2f}".format(price_acad)
-                price_full = "{:.2f}".format(price_full)
+                price_int = '{:.2f}'.format(price_int)
+                price_acad = '{:.2f}'.format(price_acad)
+                price_full = '{:.2f}'.format(price_full)
 
             return_d[product_id]['price_internal'] = price_int
             return_d[product_id]['price_academic'] = price_acad
@@ -395,7 +394,7 @@ class PricingDateToVersionDataHandler(PricingBaseHandler):
         # The versions of products and components should match perfectly,
         # so we only need to fetch from one database.
         prod_view = self.application.pricing_products_db.view(
-                        "version_info/by_date",
+                        'version_info/by_date',
                         descending=False
                         )
 
@@ -442,7 +441,7 @@ class PricingQuoteHandler(PricingBaseHandler):
         exch_rates['USD_in_SEK'] = '{:.2f}'.format(float(exch_rates['USD_in_SEK']))
         exch_rates['EUR_in_SEK'] = '{:.2f}'.format(float(exch_rates['EUR_in_SEK']))
 
-        t = self.application.loader.load("pricing_quote.html")
+        t = self.application.loader.load('pricing_quote.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user(),
                               exch_rates=exch_rates))
@@ -476,7 +475,7 @@ class PricingQuoteTbodyHandler(PricingBaseHandler):
                                                date=date,
                                                pretty_strings=True)
 
-        t = self.application.loader.load("pricing_quote_tbody.html")
+        t = self.application.loader.load('pricing_quote_tbody.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user(),
                               products=products,
@@ -497,7 +496,7 @@ class PricingValidationDataHandler(PricingBaseHandler):
     CONSERVED_KEY_SETS = {'products': ['Category', 'Type', 'Name'],
                           'components': ['Category', 'Type', 'Product name']}
 
-    # The combination of these "columns" should be unique within the document.
+    # The combination of these 'columns' should be unique within the document.
     UNIQUE_KEY_SETS = {'products': ['Category', 'Type', 'Name'],
                        'components': ['Category', 'Type', 'Product name', 'Units']}
 
@@ -523,8 +522,8 @@ class PricingValidationDataHandler(PricingBaseHandler):
 
             # Check that it is not already added
             if t in key_val_set:
-                self.validation_msgs.append("Key combination {}:{} is included multiple "
-                                            "times in the {} sheet. ".format(keys, t, type))
+                self.validation_msgs.append('Key combination {}:{} is included multiple '
+                                            'times in the {} sheet. '.format(keys, t, type))
                 raise PricingValidationError
             key_val_set.add(t)
         return True
@@ -541,8 +540,8 @@ class PricingValidationDataHandler(PricingBaseHandler):
                     if 'Status' in item and item['Status'] == 'Discontinued':
                         pass
                     else:
-                        self.validation_msgs.append("{} cannot be empty for {}."
-                                                    " Violated for item with id {}.".
+                        self.validation_msgs.append('{} cannot be empty for {}.'
+                                                    ' Violated for item with id {}.'.
                                                     format(not_null_key, type, id))
                         raise PricingValidationError
         return True
@@ -556,7 +555,7 @@ class PricingValidationDataHandler(PricingBaseHandler):
                             with ID attribute as the key.
             current_items - A dict of the items currently in the database
                             with ID attribute as the key.
-            type          - Either "components" or "products"
+            type          - Either 'components' or 'products'
         """
         conserved_keys = self.CONSERVED_KEY_SETS[type]
 
@@ -564,14 +563,14 @@ class PricingValidationDataHandler(PricingBaseHandler):
             if str(id) in current_items:
                 for conserved_key in conserved_keys:
                     if conserved_key not in new_item:
-                        self.valication_msgs.append("{} column not found in new {} row with "
-                                                    "id {}. This column should be kept "
-                                                    "conserved.".format(conserved_key, type, id))
+                        self.validation_msgs.append('{} column not found in new {} row with '
+                                                    'id {}. This column should be kept '
+                                                    'conserved.'.format(conserved_key, type, id))
                         raise PricingValidationError
                     if new_item[conserved_key] != current_items[str(id)][conserved_key]:
-                        self.valication_msgs.append("{} should be conserved for {}. "
-                                                    "Violated for item with id {}. "
-                                                    "Found \"{}\" for new and \"{}\" for current. ".format(
+                        self.validation_msgs.append('{} should be conserved for {}. '
+                                                    'Violated for item with id {}. '
+                                                    'Found "{}" for new and "{}" for current. '.format(
                                                         conserved_key, type,
                                                         id, new_item[conserved_key],
                                                         current_items[str(id)][conserved_key]))
@@ -584,26 +583,26 @@ class PricingValidationDataHandler(PricingBaseHandler):
         for product_id, product in products.items():
             component_ids = []
 
-            if product["Status"] == "Available":
-                if product["Components"]:
-                    component_ids += product["Components"].keys()
+            if product['Status'] == 'Available':
+                if product['Components']:
+                    component_ids += product['Components'].keys()
 
                 for component_id in component_ids:
-                    if components[component_id]["Status"] == "Discontinued":
-                        self.valication_msgs.append(("Product {}:\"{}\" uses the discontinued component "
-                                                     "{}:\"{}\", changing product status to \"discontinued\"").
-                                                    format(product_id, products[product_id]["Name"],
-                                                           component_id, components[component_id]["Product name"]))
-                        product["Status"] = "Discontinued"
+                    if components[component_id]['Status'] == 'Discontinued':
+                        self.validation_msgs.append(('Product {}:"{}" uses the discontinued component '
+                                                     '{}:"{}", changing product status to "discontinued"').
+                                                    format(product_id, products[product_id]['Name'],
+                                                           component_id, components[component_id]['Product name']))
+                        product['Status'] = 'Discontinued'
                         raise PricingValidationError
 
-                if product["Alternative Components"]:
-                    for component_id in product["Alternative Components"].keys():
-                        if components[component_id]["Status"] == "Discontinued":
-                            self.valication_msgs.append(("Product {}:\"{}\" uses the discontinued alternative component "
-                                                         "{}:\"{}\", please check whether product status should be \"discontinued\"").
-                                                        format(product_id, products[product_id]["Name"],
-                                                               component_id, components[component_id]["Product name"]))
+                if product['Alternative Components']:
+                    for component_id in product['Alternative Components'].keys():
+                        if components[component_id]['Status'] == 'Discontinued':
+                            self.validation_msgs.append(('Product {}:"{}" uses the discontinued alternative component '
+                                                         '{}:"{}", please check whether product status should be "discontinued"').
+                                                        format(product_id, products[product_id]['Name'],
+                                                               component_id, components[component_id]['Product name']))
             return True
 
     def validate(self, components, products):
@@ -637,7 +636,7 @@ class PricingValidationDataHandler(PricingBaseHandler):
         except Exception:
             raise # Maybe this is the default?
 
-        self.write(json.dumps("Sucess!"))
+        self.write(json.dumps('Sucess!'))
 
     def save(self):
         """
@@ -686,7 +685,7 @@ class PricingUpdateHandler(PricingBaseHandler):
                                                date=date,
                                                pretty_strings=True)
 
-        t = self.application.loader.load("pricing_update.html")
+        t = self.application.loader.load('pricing_update.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user(),
                               components_json=json.dumps(components),
@@ -695,4 +694,4 @@ class PricingUpdateHandler(PricingBaseHandler):
 
     def post(self):
         self.set_status(400)
-        self.write("Not implemented")
+        self.write('Not implemented')
