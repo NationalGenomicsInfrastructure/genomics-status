@@ -31,8 +31,8 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingComponentsDataHandler, PricingProductsDataHandler, \
-    PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, PricingProductListHandler, \
-    PricingQuoteHandler,PricingQuoteTbodyHandler
+    PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
+    PricingQuoteHandler, PricingQuoteTbodyHandler, PricingValidationDataHandler, PricingUpdateHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -58,7 +58,7 @@ from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
 from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, \
     UpdatedDocumentsDatahandler
-from status.user_preferences import UserPrefPageHandler
+from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b5
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
     WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler, ClosedWorksetsHandler
 
@@ -145,6 +145,7 @@ class Application(tornado.web.Application):
             ("/api/v1/pricing_exchange_rates", PricingExchangeRatesDataHandler),
             ("/api/v1/pricing_products", PricingProductsDataHandler),
             ("/api/v1/pricing_products/([^/]*)$", PricingProductsDataHandler),
+            ("/api/v1/pricing_validate", PricingValidationDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
@@ -210,7 +211,7 @@ class Application(tornado.web.Application):
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/nas_quotas", NASQuotasHandler),
             ("/pools_qpcr", qPCRPoolsHandler),
-            ("/pricing_products", PricingProductListHandler),
+            ("/pricing_update", PricingUpdateHandler),
             ("/pricing_quote", PricingQuoteHandler),
             ("/pricing_quote_tbody", PricingQuoteTbodyHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
@@ -224,6 +225,7 @@ class Application(tornado.web.Application):
             ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/userpref", UserPrefPageHandler),
+            ("/userpref_b5", UserPrefPageHandler_b5),
             ("/worksets", WorksetsHandler),
             ("/workset/([^/]*)$", WorksetHandler),
             (r'.*', BaseHandler)
@@ -335,6 +337,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/applications.html")
             tornado.autoreload.watch("design/assign_roles.html")
             tornado.autoreload.watch("design/base.html")
+            tornado.autoreload.watch("design/base_b5.html")
             tornado.autoreload.watch("design/bioinfo_tab.html")
             tornado.autoreload.watch("design/bioinfo_tab/run_lane_sample_view.html")
             tornado.autoreload.watch("design/bioinfo_tab/sample_run_lane_view.html")
