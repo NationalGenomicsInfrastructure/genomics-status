@@ -75,6 +75,48 @@ const ProductForm = {
                   this.EUR_in_SEK = response.data.EUR_in_SEK
                   this.exch_rate_issued_at = response.data['Issued at']
               })
+        },
+        componentCost(comp_id) {
+            component = this.all_components[comp_id]
+            currency = component['Currency']
+            list_price = component['List price']
+            if (currency == 'SEK') {
+                sek_list_price = list_price
+            } else {
+                currency_key = currency + "_in_SEK"
+                sek_list_price = this[currency_key] * list_price
+            }
+            sek_price = sek_list_price - sek_list_price*component['Discount']
+            sek_price_per_unit = sek_price/component['Units']
+
+            return {'sek_price': sek_price, 'sek_price_per_unit': sek_price_per_unit}
+        },
+        productCost(prod_id) {
+            product = this.all_products[prod_id]
+            if ('fixed_price' in product) {
+                cost = product['fixed_price']['price_in_sek']
+                cost_academic = product['fixed_price']['price_for_academics_in_sek']
+                full_cost = product['fixed_price']['full_cost_in_sek']
+            } else {
+                cost = 0
+                for ([comp_id, info] of Object.entries(product['Components'])) {
+                    componentCosts = this.componentCost(comp_id)
+                    quantity = info['quantity']
+                    cost += quantity * componentCosts['sek_price_per_unit']
+                }
+            }
+            reagent = product['Reagent fee']
+            if ((reagent !== null) && (reagent in this.componentCost)) {
+                reagent_cost = this.componentCost(reagent)
+                cost += reagent_cost['sek_price_per_unit']
+            }
+
+            cost_academic = cost + cost * product['Re-run fee']
+
+            full_cost_fee = parseFloat(product['Full cost fee'])
+            full_cost = cost_academic + full_cost_fee
+
+            return {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
         }
     },
     computed: {
@@ -372,6 +414,15 @@ app.component('product-form-part', {
             </div>
           </div>
           <div class="col-md-2 align-self-end pl-4">
+            <div class="pb-3">
+              <h4>Current Cost:</h4>
+              <dt>Internal</dt>
+              <dd>{{cost['cost'].toFixed(2)}} SEK</dd>
+              <dt>Swedish Academia</dt>
+              <dd>{{cost['cost_academic'].toFixed(2)}} SEK</dd>
+              <dt>Full Cost</dt>
+              <dd>{{cost['full_cost'].toFixed(2)}} SEK</dd>
+            </div>
             <button type="button" class="btn btn-outline-success w-100 mb-2" @click="this.cloneProduct">Clone<i class="far fa-clone fa-lg text-success ml-2"></i></button>
             <div v-if="this.isNew" class="">
               <button type="button" class="btn btn-outline-danger w-100" @click="this.removeProduct">Remove<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
@@ -400,6 +451,10 @@ app.component('product-form-part', {
         },
         types() {
             return this.$root.product_types
+        },
+        cost() {
+            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
+            return this.$root.productCost(this.product_id)
         }
     },
     methods: {
@@ -542,18 +597,7 @@ app.component('component-form-part', {
             return this.$root.component_types
         },
         cost() {
-            currency = this.component['Currency']
-            list_price = this.component['List price']
-            if (currency == 'SEK') {
-                sek_list_price = list_price
-            } else {
-                currency_key = currency + "_in_SEK"
-                sek_list_price = this.$root[currency_key] * list_price
-            }
-            sek_price = sek_list_price - sek_list_price*this.component['Discount']
-            sek_price_per_unit = sek_price/this.component['Units']
-
-            return {'sek_price': sek_price, 'sek_price_per_unit': sek_price_per_unit}
+            return this.$root.componentCost(this.component_id)
         }
     },
     methods: {
