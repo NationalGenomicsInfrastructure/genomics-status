@@ -21,8 +21,8 @@ const ProductForm = {
                 this.modal_product_id = event.target.dataset.productId
                 this.modal_type = event.target.dataset.type
             }
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'))
-            myModal.show()
+            var cModal = new bootstrap.Modal(document.getElementById('chooseComponentsModal'))
+            cModal.show()
         },
         discontinueProduct(prod_id) {
             this.all_products[prod_id]['Status'] = 'Discontinued'
@@ -640,7 +640,7 @@ app.component('modal-component', {
         removeComponent(event) {
             if (event) {
                 comp_id = event.target.dataset.componentId
-                if (this.$parent.modal_type == 'Alternative') {
+                if (this.$root.modal_type == 'Alternative') {
                     delete this.product['Alternative Components'][comp_id]
                 } else {
                     delete this.product['Components'][comp_id]
@@ -650,7 +650,7 @@ app.component('modal-component', {
         addComponent(event) {
             if (event) {
                 comp_id = event.target.dataset.componentId
-                if (this.$parent.modal_type == 'Alternative') {
+                if (this.$root.modal_type == 'Alternative') {
                     key = 'Alternative Components'
                 } else {
                     key = 'Components'
@@ -701,14 +701,14 @@ app.component('components', {
             var components = new Array();
             for (i in this.ComponentIds) {
                 comp_id = this.ComponentIds[i]
-                components.push(this.$parent.$parent.$parent.all_components[comp_id])
+                components.push(this.$root.all_components[comp_id])
             }
             return components
         }
     },
     methods: {
         showModalFn(event) {
-            this.$parent.$parent.$parent.showModalFn(event)
+            this.$root.showModalFn(event)
         }
     },
     props: ['product_id', 'type']
