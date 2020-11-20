@@ -18,8 +18,8 @@ const ProductForm = {
                 this.modal_product_id = event.target.dataset.productId
                 this.modal_type = event.target.dataset.type
             }
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'))
-            myModal.show()
+            var cModal = new bootstrap.Modal(document.getElementById('chooseComponentsModal'))
+            cModal.show()
         },
         discontinueProduct(prod_id) {
             this.all_products[prod_id]['Status'] = 'Discontinued'
