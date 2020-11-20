@@ -18,16 +18,15 @@ Description: Shows a page/modal with the user's personal settings for genomics_s
           <div class="text-center">
             <label for="notfRadioPref" class="control-label">Notification method</label>
             <div id="notfRadioPref">
-              <div class="btn-group" data-toggle="buttons">
-                <label class="btn btn-sm rBtngp1 {%if pref=='E-mail'%} btn-primary active {% else %} btn-outline-dark {% end %}" id="EmailOn">
-                  <input type="radio" name="notfPref" autocomplete="off"> E-mail
-                </label>
-                <label class="btn btn-sm rBtngp1 {%if pref=='Slack'%} btn-primary active {% else %} btn-outline-dark {% end %}" id="SlackOn">
-                  <input type="radio" name="notfPref" autocomplete="off"> Slack
-                </label>
-                <label class="btn btn-sm rBtngp1 {%if pref=='Both'%} btn-primary active {% else %} btn-outline-dark {% end %}" id="BothOn">
-                  <input type="radio" name="notfPref" autocomplete="off"> Both
-                </label>
+              <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="notfPref" id='EmailOn' autocomplete="off" {%if pref=='E-mail'%} checked {% end %} data-value='E-mail'>
+                <label class="btn btn-sm btn-outline-primary" for='EmailOn' data-value='E-mail'>E-mail</label>
+
+                <input type="radio" class="btn-check" name="notfPref" id='SlackOn' autocomplete="off" {%if pref=='Slack'%} checked {% end %} data-value='Slack'>
+                <label class="btn btn-sm btn-outline-primary" for='SlackOn'>Slack</label>
+
+                <input type="radio" class="btn-check" name="notfPref" id='BothOn' autocomplete="off" {%if pref=='Both'%} checked{% end %} data-value='Both'>
+                <label class="btn btn-sm btn-outline-primary" for="BothOn">Both</label>
               </div>
             </div>
           </div>
