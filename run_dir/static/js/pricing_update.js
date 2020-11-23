@@ -713,13 +713,13 @@ app.component('components', {
     template: /*html*/`
             <div class="input-group">
               <fieldset disabled>
-                <input class="form-control" :id="element_id" type="text" :value="ComponentIds">
+                <input class="form-control" :id="element_id" type="text" :value="componentIds">
               </fieldset>
               <button type="button" class="btn btn-primary edit-components" @click="this.showModalFn" :data-product-id="product_id" :data-type="type">Edit</button>
             </div>
             <div class="component-display">
-              <template v-for="component in Components" :key="component['REF_ID']">
-                {{component["REF_ID"]}}: {{component["Product name"]}}<br>
+              <template v-for="(component_data, comp_id) in components" :key="comp_id">
+                {{comp_id}}: {{component_data['component']['Product name']}} : <em># {{component_data['quantity']}}</em><br>
               </template>
             </div>
                `,
@@ -734,18 +734,25 @@ app.component('components', {
                 return "products-" + this.product_id + "-components"
             }
         },
-        ComponentIds() {
+        componentIds() {
             if (this.type == 'Alternative') {
                 return Object.keys(this.product['Alternative Components'])
             } else {
                 return Object.keys(this.product['Components'])
             }
         },
-        Components() {
-            var components = new Array();
-            for (i in this.ComponentIds) {
-                comp_id = this.ComponentIds[i]
-                components.push(this.$root.all_components[comp_id])
+        components() {
+            var components = new Object();
+            if (this.type == 'Alternative') {
+                component_input = this.product['Alternative Components']
+            } else {
+                component_input = this.product['Components']
+            }
+            for ([comp_id, info] of Object.entries(component_input)) {
+                components[comp_id] = {
+                    'component': this.$root.all_components[comp_id],
+                    'quantity': info['quantity']
+                }
             }
             return components
         }
