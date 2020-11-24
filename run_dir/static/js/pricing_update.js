@@ -641,17 +641,24 @@ app.component('modal-component', {
         product() {
             return this.$root.all_products[this.$root.modal_product_id]
         },
-        ComponentIds() {
+        componentIds() {
             if (this.$root.modal_type == 'Alternative') {
                 return Object.keys(this.product['Alternative Components'])
             } else {
                 return Object.keys(this.product['Components'])
             }
         },
-        Components() {
+        quantities() {
+            if (this.$root.modal_type == 'Alternative') {
+                return this.product['Alternative Components']
+            } else {
+                return this.product['Components']
+            }
+        },
+        components() {
             var components = new Array();
-            for (i in this.ComponentIds) {
-                comp_id = this.ComponentIds[i]
+            for (i in this.componentIds) {
+                comp_id = this.componentIds[i]
                 components.push(this.$root.all_components[comp_id])
             }
             return components
@@ -667,12 +674,14 @@ app.component('modal-component', {
               <form>
                 <div class="row border-bottom pb-3">
                   <h4>Selected Components</h4>
-                  <template v-for="component in this.Components" :key="component['REF_ID']">
+                  <template v-for="component in this.components" :key="component['REF_ID']">
                     <span>
                       <a class="mr-2" href="#" @click="this.removeComponent">
                         <i class="far fa-times-square fa-lg text-danger" :data-component-id="component['REF_ID']"></i>
+                        <!-- I was for some reason unable to solve this with regular v-model... -->
+                        <input :value="quantities[component['REF_ID']]['quantity']" @input="updateQuantity(component['REF_ID'], $event.target.value)"/>
                       </a>
-                      {{component['Product name']}}
+                      {{ component['Product name'] }}
                     </span><br>
                   </template>
                 </div>
@@ -686,7 +695,7 @@ app.component('modal-component', {
                           <a clas="mr-2" href="#" @click="this.addComponent">
                             <i class="far fa-plus-square fa-lg text-success" :data-component-id="component['REF_ID']"></i>
                           </a>
-                          {{ component['Product name']}}
+                          {{ component['Product name'] }}
                         </span><br>
                       </template>
                     </template>
@@ -720,6 +729,13 @@ app.component('modal-component', {
                 }
                 this.product[key][comp_id] = {'quantity': 1}
             }
+        },
+        updateQuantity(comp_id, new_val) {
+          if (this.$root.modal_type == 'Alternative') {
+            this.$root.all_products[this.$root.modal_product_id]['Alternative Components'][comp_id]['quantity'] = new_val
+          } else {
+            this.$root.all_products[this.$root.modal_product_id]['Components'][comp_id]['quantity'] = new_val
+          }
         }
     }
 })
