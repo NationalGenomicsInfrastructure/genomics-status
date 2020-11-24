@@ -209,7 +209,7 @@ class PricingBaseHandler(SafeHandler):
     def _calculate_product_price(self, product, all_component_prices):
         price = 0
         # Fixed price trumps all component and reagent prices
-        if 'fixed_price' in product:
+        if product['is_fixed_price']:
             price = product['fixed_price']['price_in_sek']
             price_academic = product['fixed_price']['price_for_academics_in_sek']
             full_cost = product['fixed_price']['full_cost_in_sek']
@@ -219,12 +219,6 @@ class PricingBaseHandler(SafeHandler):
             component_price_d = all_component_prices[str(component_id)]
             quantity = int(info['quantity'])
             price += quantity * component_price_d['price_per_unit_in_sek']
-
-        # Reagents are added to a special field, but are components as well.
-        reagent = product['Reagent fee']
-        if reagent:
-            component_price_d = all_component_prices[str(reagent)]
-            price += component_price_d['price_per_unit_in_sek']
 
         price_academic = price + price * product['Re-run fee']
 

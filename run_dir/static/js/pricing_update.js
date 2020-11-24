@@ -93,10 +93,10 @@ const ProductForm = {
         },
         productCost(prod_id) {
             product = this.all_products[prod_id]
-            if ('fixed_price' in product) {
-                cost = product['fixed_price']['price_in_sek']
-                cost_academic = product['fixed_price']['price_for_academics_in_sek']
-                full_cost = product['fixed_price']['full_cost_in_sek']
+            if (product['is_fixed_price']) {
+                cost = parseFloat(product['fixed_price']['price_in_sek'])
+                cost_academic = parseFloat(product['fixed_price']['price_for_academics_in_sek'])
+                full_cost = parseFloat(product['fixed_price']['full_cost_in_sek'])
             } else {
                 cost = 0
                 for ([comp_id, info] of Object.entries(product['Components'])) {
@@ -104,17 +104,11 @@ const ProductForm = {
                     quantity = info['quantity']
                     cost += quantity * componentCosts['sek_price_per_unit']
                 }
-            }
-            reagent = product['Reagent fee']
-            if ((reagent !== null) && (reagent in this.componentCost)) {
-                reagent_cost = this.componentCost(reagent)
-                cost += reagent_cost['sek_price_per_unit']
-            }
+                cost_academic = cost + cost * product['Re-run fee']
 
-            cost_academic = cost + cost * product['Re-run fee']
-
-            full_cost_fee = parseFloat(product['Full cost fee'])
-            full_cost = cost_academic + full_cost_fee
+                full_cost_fee = parseFloat(product['Full cost fee'])
+                full_cost = cost_academic + full_cost_fee
+            }
 
             return {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
         }
@@ -388,11 +382,6 @@ app.component('product-form-part', {
             </div>
             <div class="row my-1">
               <label class="form-label col-md-2">
-                Reagent Fee
-                <input class="form-control" v-model.text="product['Reagent fee']" type="text">
-              </label>
-
-              <label class="form-label col-md-2">
                 Full Cost Fee
                 <input class="form-control" v-model.text="product['Full cost fee']" type="text">
               </label>
@@ -402,15 +391,33 @@ app.component('product-form-part', {
                 <input class="form-control" v-model.text="product['Re-run fee']" type="text">
               </label>
 
-              <label class="form-label col-md-2">
-                Minimum Quantity
-                <input class="form-control" v-model.text="product['Minimum Quantity']" type="text">
-              </label>
+              <div class="form-check form-switch col-md-2 mt-3 pl-5">
+                <input class="form-check-input" @click="makeFixedPriceDict" type="checkbox" v-model="product['is_fixed_price']"/>
+                <label class="form-check-label">
+                  Fixed Price
+                </label>
+              </div>
 
               <label class="form-label col-md-4">
                 Comment
                 <input class="form-control" v-model.text="product['Comment']" type="text">
               </label>
+            </div>
+            <div v-if="this.isFixedPrice" class="row">
+              <h5>Fixed Price (SEK)</h5>
+                <label class="form-label col-md-2">
+                  Internal
+                  <input class="form-control" v-model.text="product['fixed_price']['price_in_sek']" type="text">
+                </label>
+
+                <label class="form-label col-md-2">
+                  Swedish Academia
+                  <input class="form-control" v-model.text="product['fixed_price']['price_for_academics_in_sek']" type="text">
+                </label>
+                <label class="form-label col-md-2">
+                  Full Cost
+                  <input class="form-control" v-model.text="product['fixed_price']['full_cost_in_sek']" type="text">
+                </label>
             </div>
           </div>
           <div class="col-md-2 align-self-end pl-4">
@@ -446,6 +453,9 @@ app.component('product-form-part', {
         isNew() {
             return this.$root.new_products.has(this.product_id)
         },
+        isFixedPrice() {
+            return this.product.is_fixed_price
+        },
         categories() {
             return this.$root.product_categories
         },
@@ -472,6 +482,11 @@ app.component('product-form-part', {
                 alert("Only new products are allowed to be removed, others should be discontinued")
             }
             this.$root.removeProduct(this.product_id)
+        },
+        makeFixedPriceDict() {
+            if (!('fixed_price' in this.product)) {
+                this.$root.all_products[this.product_id]['fixed_price'] = { "price_in_sek": 0, "price_for_academics_in_sek": 0, "full_cost_in_sek": 0 }
+            }
         }
     }
 })
