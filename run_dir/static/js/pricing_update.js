@@ -339,7 +339,7 @@ app.component('product-form-part', {
     template:
       /*html*/`
       <div class="mx-2 my-3 p-3 card" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}]">
-        <h4 :class="discontinued ? 'text-danger' : ''"> {{ product['Name'] }} {{ discontinued ? ' - Discontinued' : '' }} </h4>
+        <h4 :class="{'text-danger': discontinued}"> {{ product['Name'] }} {{ discontinued ? ' - Discontinued' : '' }} </h4>
         <div class="row">
           <div class="col-md-10">
             <div class="row my-1">
@@ -495,10 +495,10 @@ app.component('component-form-part', {
     props: ['component_id'],
     template:
       /*html*/`
-      <div class="mx-2 my-3 p-3 card" :class="{ 'border-success border-2': isNew }">
+      <div class="mx-2 my-3 p-3 card" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}]">
         <div class="row">
           <div class="col-md-10">
-            <h4> {{ component['Product name'] }} </h4>
+            <h4 :class="{'text-danger': discontinued}"> {{ component['Product name'] }} {{ discontinued ? ' - Discontinued' : '' }}</h4>
             <h5>{{ component['Last Updated']}}</h5>
             <div class="row my-1">
               <fieldset disabled class='col-md-1'>
