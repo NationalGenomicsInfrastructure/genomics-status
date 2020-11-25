@@ -338,8 +338,8 @@ app.component('product-form-part', {
     props: ['product_id'],
     template:
       /*html*/`
-      <div class="mx-2 my-3 p-3 card" :class="{ 'border-success border-2': isNew }">
-        <h4> {{ product['Name'] }} </h4>
+      <div class="mx-2 my-3 p-3 card" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}]">
+        <h4 :class="discontinued ? 'text-danger' : ''"> {{ product['Name'] }} {{ discontinued ? ' - Discontinued' : '' }} </h4>
         <div class="row">
           <div class="col-md-10">
             <div class="row my-1">
@@ -405,19 +405,19 @@ app.component('product-form-part', {
             </div>
             <div v-if="this.isFixedPrice" class="row">
               <h5>Fixed Price (SEK)</h5>
-                <label class="form-label col-md-2">
-                  Internal
-                  <input class="form-control" v-model.text="product['fixed_price']['price_in_sek']" type="text">
-                </label>
+              <label class="form-label col-md-2">
+                Internal
+                <input class="form-control" v-model.text="product['fixed_price']['price_in_sek']" type="text">
+              </label>
 
-                <label class="form-label col-md-2">
-                  Swedish Academia
-                  <input class="form-control" v-model.text="product['fixed_price']['price_for_academics_in_sek']" type="text">
-                </label>
-                <label class="form-label col-md-2">
-                  Full Cost
-                  <input class="form-control" v-model.text="product['fixed_price']['full_cost_in_sek']" type="text">
-                </label>
+              <label class="form-label col-md-2">
+                Swedish Academia
+                <input class="form-control" v-model.text="product['fixed_price']['price_for_academics_in_sek']" type="text">
+              </label>
+              <label class="form-label col-md-2">
+                Full Cost
+                <input class="form-control" v-model.text="product['fixed_price']['full_cost_in_sek']" type="text">
+              </label>
             </div>
           </div>
           <div class="col-md-2 align-self-end pl-4">

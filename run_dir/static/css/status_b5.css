@@ -72,8 +72,8 @@ input.quantity_updateable {
     max-width: 800px;
 }
 
-#pricing_update_main {
-
+#pricing_update_main .card.discontinued {
+    background-color: #f8d7da;
 }
 
 /* Needed for bootstrap scrollspy */
