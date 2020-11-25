@@ -756,8 +756,10 @@ class RunningNotesDataHandler(SafeHandler):
     @staticmethod
     def notify_tagged_user(application, userTags, project, note, category, tagger, timestamp):
         view_result = {}
+        project_id = project[0]
+        project_name = project[1]
         time_in_format = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S').strftime("%a %b %d %Y, %I:%M:%S %p")
-        note_id = 'running_note_' + project[0] + '_' + \
+        note_id = 'running_note_' + project_id + '_' + \
                     str(int((datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S') -  datetime.datetime.utcfromtimestamp(0)).total_seconds()))
         for row in application.gs_users_db.view('authorized/users'):
             if row.key != 'genstat_defaults':
@@ -772,7 +774,7 @@ class RunningNotesDataHandler(SafeHandler):
                 if option == 'Slack' or option == 'Both':
                     nest_asyncio.apply()
                     client = slack.WebClient(token=application.slack_token)
-                    notification_text = '{} has tagged you in {}, {}!'.format(tagger, project[0], project[1])
+                    notification_text = '{} has tagged you in {}, {}!'.format(tagger, project_id, project_name)
                     blocks = [
                         {
                         "type": "section",
@@ -780,7 +782,7 @@ class RunningNotesDataHandler(SafeHandler):
                             "type": "mrkdwn",
         		            "text": ("_You have been tagged by *{}* in a running note for the project_ "
                                      "<{}/project/{}#{}|{}, {}>! :smile: \n_The note is as follows:_ \n\n\n")
-                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project[0], note_id, project[0], project[1])
+                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project_id, note_id, project_id, project_name)
                              }
                         },
                         {
@@ -806,12 +808,12 @@ class RunningNotesDataHandler(SafeHandler):
                 #default is email
                 if option == 'E-mail' or option == 'Both':
                     msg = MIMEMultipart('alternative')
-                    msg['Subject']='[GenStat] Running Note:{}, {}'.format(project[0], project[1])
+                    msg['Subject']='[GenStat] Running Note:{}, {}'.format(project_id, project_name)
                     msg['From']='genomics-status'
                     msg['To'] = view_result[user]
                     text = 'You have been tagged by {} in a running note in the project {}, {}! The note is as follows\n\
                     >{} - {}{}\
-                    >{}'.format(tagger, project[0], project[1], tagger, time_in_format, category, note)
+                    >{}'.format(tagger, project_id, project_name, tagger, time_in_format, category, note)
 
                     html = '<html>\
                     <body>\
@@ -825,7 +827,7 @@ class RunningNotesDataHandler(SafeHandler):
                     <div class="panel-body" style="padding: 15px;">\
                         <p>{}</p>\
                     </div></div></blockquote></body></html>'.format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0],
-                    project[0], note_id, project[0], project[1], tagger, time_in_format, category, markdown.markdown(note))
+                    project_id, note_id, project_id, project_name, tagger, time_in_format, category, markdown.markdown(note))
 
                     msg.attach(MIMEText(text, 'plain'))
                     msg.attach(MIMEText(html, 'html'))
