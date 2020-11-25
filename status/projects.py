@@ -741,21 +741,25 @@ class RunningNotesDataHandler(SafeHandler):
         for row in v[project]:
             doc_id=row.value
         doc=application.projects_db.get(doc_id)
+        project_name = doc['project_name']
+        proj_ids = [project, project_name]
         doc['details']['running_notes']=json.dumps(running_notes)
         application.projects_db.save(doc)
         #### Check and send mail to tagged users
         pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
         userTags = pattern.findall(note)
         if userTags:
-            RunningNotesDataHandler.notify_tagged_user(application, userTags, project, note, category, user, timestamp)
+            RunningNotesDataHandler.notify_tagged_user(application, userTags, proj_ids, note, category, user, timestamp)
         ####
         return newNote
 
     @staticmethod
     def notify_tagged_user(application, userTags, project, note, category, tagger, timestamp):
         view_result = {}
+        project_id = project[0]
+        project_name = project[1]
         time_in_format = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S').strftime("%a %b %d %Y, %I:%M:%S %p")
-        note_id = 'running_note_' + project + '_' + \
+        note_id = 'running_note_' + project_id + '_' + \
                     str(int((datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S') -  datetime.datetime.utcfromtimestamp(0)).total_seconds()))
         for row in application.gs_users_db.view('authorized/users'):
             if row.key != 'genstat_defaults':
@@ -770,15 +774,15 @@ class RunningNotesDataHandler(SafeHandler):
                 if option == 'Slack' or option == 'Both':
                     nest_asyncio.apply()
                     client = slack.WebClient(token=application.slack_token)
-                    notification_text = '{} has tagged you in {}!'.format(tagger, project)
+                    notification_text = '{} has tagged you in {}, {}!'.format(tagger, project_id, project_name)
                     blocks = [
                         {
                         "type": "section",
 		                "text": {
                             "type": "mrkdwn",
         		            "text": ("_You have been tagged by *{}* in a running note for the project_ "
-                                     "<{}/project/{}#{}|{}>! :smile: \n_The note is as follows:_ \n\n\n")
-                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project, note_id, project)
+                                     "<{}/project/{}#{}|{}, {}>! :smile: \n_The note is as follows:_ \n\n\n")
+                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project_id, note_id, project_id, project_name)
                              }
                         },
                         {
@@ -804,17 +808,17 @@ class RunningNotesDataHandler(SafeHandler):
                 #default is email
                 if option == 'E-mail' or option == 'Both':
                     msg = MIMEMultipart('alternative')
-                    msg['Subject']='[GenStat] Running Note:{}'.format(project)
+                    msg['Subject']='[GenStat] Running Note:{}, {}'.format(project_id, project_name)
                     msg['From']='genomics-status'
                     msg['To'] = view_result[user]
-                    text = 'You have been tagged by {} in a running note in the project {}! The note is as follows\n\
+                    text = 'You have been tagged by {} in a running note in the project {}, {}! The note is as follows\n\
                     >{} - {}{}\
-                    >{}'.format(tagger, project, tagger, time_in_format, category, note)
+                    >{}'.format(tagger, project_id, project_name, tagger, time_in_format, category, note)
 
                     html = '<html>\
                     <body>\
                     <p> \
-                    You have been tagged by {} in a running note in the project <a href="{}/project/{}#{}">{}</a>! The note is as follows</p>\
+                    You have been tagged by {} in a running note in the project <a href="{}/project/{}#{}">{}, {}</a>! The note is as follows</p>\
                     <blockquote>\
                     <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
                     <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
@@ -823,7 +827,7 @@ class RunningNotesDataHandler(SafeHandler):
                     <div class="panel-body" style="padding: 15px;">\
                         <p>{}</p>\
                     </div></div></blockquote></body></html>'.format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0],
-                    project, note_id, project, tagger, time_in_format, category, markdown.markdown(note))
+                    project_id, note_id, project_id, project_name, tagger, time_in_format, category, markdown.markdown(note))
 
                     msg.attach(MIMEText(text, 'plain'))
                     msg.attach(MIMEText(html, 'html'))
