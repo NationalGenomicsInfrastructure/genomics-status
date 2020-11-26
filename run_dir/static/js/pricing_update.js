@@ -748,11 +748,20 @@ app.component('components', {
               </fieldset>
               <button type="button" class="btn btn-primary edit-components" @click="this.showModalFn" :data-product-id="product_id" :data-type="type">Edit</button>
             </div>
-            <div class="component-display">
-              <template v-for="(component_data, comp_id) in components" :key="comp_id">
-                {{comp_id}}: {{component_data['component']['Product name']}} : <em># {{component_data['quantity']}}</em><br>
-              </template>
-            </div>
+            <table v-if="Object.entries(components).length" class="table table-sm table-hover">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Name</th>
+                  <th scope="col">#</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="(component_data, comp_id) in components" :key="comp_id">
+                  <component-table-row :component_data="component_data" :component_id="comp_id"></component-table-row>
+                </template>
+              </tbody>
+            </table>
                `,
     computed: {
         product() {
@@ -794,6 +803,45 @@ app.component('components', {
         }
     },
     props: ['product_id', 'type']
+})
+
+app.component('component-table-row', {
+  template: /*html*/`
+    <tr data-toggle="tooltip" data-placement="top" :data-original-title="tooltip" data-animation=false data-html=true>
+      <th scope="row">{{component_id}}</th>
+      <td>{{component_data['component']['Product name']}}</td>
+      <td>{{component_data['quantity']}}</td>
+    </tr>
+    `,
+  props: ['component_data', 'component_id'],
+  computed: {
+      tooltip() {
+          /* this is duplicated on the modal, couldn't figure out how to share the code */
+          var component = this.component_data['component']
+          return `
+            <strong>Name: </strong>${component['Product name']}<br>
+            <strong>Category: </strong>${component['Category']}<br>
+            <strong>Type: </strong>${component['Type']}<br>
+            <strong>Manufacturer: </strong>${component['Manufacturer']}<br>
+            <strong>Re-seller: </strong>${component['Re-seller']}<br>
+            <strong>Product #: </strong>${component['Product #']}<br>
+            <strong>Units: </strong>${component['Units']}<br>
+            <strong>Min quantity: </strong>${component['Min Quantity']}<br>
+            <strong>Discount: </strong>${component['Discount']}<br>
+            <strong>List price: </strong>${component['List price']}<br>
+            <strong>Cost: </strong>${this.cost['sek_price'].toFixed(2)} SEK<br>
+            <strong>Per Unit: </strong>${this.cost['sek_price_per_unit'].toFixed(2)} SEK<br>
+            `
+      },
+      cost() {
+          return this.$root.componentCost(this.component_id)
+      }
+
+  },
+  mounted() {
+      /* Initializing tooltip, needed for dynamic content to have tooltips */
+      new bootstrap.Tooltip(this.$el)
+  }
 })
 
 app.mount('#pricing_update_main')
