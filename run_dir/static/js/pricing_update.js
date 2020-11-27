@@ -24,6 +24,22 @@ const ProductForm = {
             var cModal = new bootstrap.Modal(document.getElementById('chooseComponentsModal'))
             cModal.show()
         },
+        populatedComponents(product_id, type) {
+            var product = this.all_products[product_id]
+            var components = new Object();
+            if (type == 'Alternative') {
+                component_input = product['Alternative Components']
+            } else {
+                component_input = product['Components']
+            }
+            for ([comp_id, info] of Object.entries(component_input)) {
+                components[comp_id] = {
+                    'component': this.all_components[comp_id],
+                    'quantity': info['quantity']
+                }
+            }
+            return components
+        },
         discontinueProduct(prod_id) {
             this.all_products[prod_id]['Status'] = 'Discontinued'
         },
@@ -53,6 +69,14 @@ const ProductForm = {
             /* meant to be used with new products only */
             delete this.all_products[prod_id]
             delete this.new_products[prod_id]
+        },
+        removeProductComponent(product_id, component_id, type) {
+            var product = this.all_products[product_id]
+            if (type == 'Alternative') {
+              delete product['Alternative Components'][component_id]
+            } else {
+              delete product['Components'][component_id]
+            }
         },
         cloneComponent(comp_id) {
             component = this.all_components[comp_id]
@@ -656,14 +680,9 @@ app.component('modal-component', {
             }
         },
         components() {
-            var components = new Array();
-            for (i in this.componentIds) {
-                comp_id = this.componentIds[i]
-                components.push(this.$root.all_components[comp_id])
-            }
-            return components
+            return this.$root.populatedComponents(this.$root.modal_product_id, this.$root.modal_type)
         }
-      },
+    },
     template: /*html*/`
             <div class="modal-header">
               <h2 class="modal-title">{{this.product['Name']}}</h2>
@@ -674,14 +693,9 @@ app.component('modal-component', {
               <form>
                 <div class="row border-bottom pb-3">
                   <h4>Selected Components</h4>
-                  <template v-for="component in this.components" :key="component['REF_ID']">
+                  <template v-for="(component_data, comp_id) in components" :key="comp_id">
                     <span>
-                      <a class="mr-2" href="#" @click="this.removeComponent">
-                        <i class="far fa-times-square fa-lg text-danger" :data-component-id="component['REF_ID']"></i>
-                        <!-- I was for some reason unable to solve this with regular v-model... -->
-                        <input :value="quantities[component['REF_ID']]['quantity']" @input="updateQuantity(component['REF_ID'], $event.target.value)"/>
-                      </a>
-                      {{ component['Product name'] }}
+                      <component-table-row :product_id="this.$root.modal_product_id" :type="this.$root.modal_type" :component_data="component_data" :component_id="comp_id"></component-table-row>
                     </span><br>
                   </template>
                 </div>
@@ -705,16 +719,6 @@ app.component('modal-component', {
             </div>
         `,
     methods: {
-        removeComponent(event) {
-            if (event) {
-                comp_id = event.target.dataset.componentId
-                if (this.$root.modal_type == 'Alternative') {
-                    delete this.product['Alternative Components'][comp_id]
-                } else {
-                    delete this.product['Components'][comp_id]
-                }
-            }
-        },
         addComponent(event) {
             if (event) {
                 comp_id = event.target.dataset.componentId
@@ -729,13 +733,6 @@ app.component('modal-component', {
                 }
                 this.product[key][comp_id] = {'quantity': 1}
             }
-        },
-        updateQuantity(comp_id, new_val) {
-          if (this.$root.modal_type == 'Alternative') {
-            this.$root.all_products[this.$root.modal_product_id]['Alternative Components'][comp_id]['quantity'] = new_val
-          } else {
-            this.$root.all_products[this.$root.modal_product_id]['Components'][comp_id]['quantity'] = new_val
-          }
         }
     }
 })
@@ -758,7 +755,7 @@ app.component('components', {
               </thead>
               <tbody>
                 <template v-for="(component_data, comp_id) in components" :key="comp_id">
-                  <component-table-row :component_data="component_data" :component_id="comp_id"></component-table-row>
+                  <component-table-row :product_id="product['REF_ID']" :type="type" :component_data="component_data" :component_id="comp_id"></component-table-row>
                 </template>
               </tbody>
             </table>
@@ -782,19 +779,7 @@ app.component('components', {
             }
         },
         components() {
-            var components = new Object();
-            if (this.type == 'Alternative') {
-                component_input = this.product['Alternative Components']
-            } else {
-                component_input = this.product['Components']
-            }
-            for ([comp_id, info] of Object.entries(component_input)) {
-                components[comp_id] = {
-                    'component': this.$root.all_components[comp_id],
-                    'quantity': info['quantity']
-                }
-            }
-            return components
+            return this.$root.populatedComponents(this.product['REF_ID'], this.type)
         }
     },
     methods: {
@@ -807,16 +792,27 @@ app.component('components', {
 
 app.component('component-table-row', {
   template: /*html*/`
-    <tr data-toggle="tooltip" data-placement="top" :data-original-title="tooltip" data-animation=false data-html=true>
+    <tr data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
       <th scope="row">{{component_id}}</th>
       <td>{{component_data['component']['Product name']}}</td>
       <td>{{component_data['quantity']}}</td>
+      <td>
+        <a class="mr-2" href="#" @click="this.removeComponent">
+          <i class="far fa-times-square fa-lg text-danger"></i>
+        </a>
+      </td>
+      <td>
+        <!-- I was for some reason unable to solve this with regular v-model... -->
+        <input :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
+      </td>
     </tr>
     `,
-  props: ['component_data', 'component_id'],
+  props: ['component_data', 'component_id', 'product_id', 'type'],
+  data() {
+      return { tooltip: null }
+  },
   computed: {
-      tooltip() {
-          /* this is duplicated on the modal, couldn't figure out how to share the code */
+      tooltip_html() {
           var component = this.component_data['component']
           return `
             <strong>Name: </strong>${component['Product name']}<br>
@@ -836,11 +832,35 @@ app.component('component-table-row', {
       cost() {
           return this.$root.componentCost(this.component_id)
       }
-
+  },
+  methods: {
+      updateQuantity(new_val) {
+        if (this.type == 'Alternative') {
+          this.$root.all_products[this.product_id]['Alternative Components'][this.component_id]['quantity'] = new_val
+        } else {
+          this.$root.all_products[this.product_id]['Components'][this.component_id]['quantity'] = new_val
+        }
+    },
+    removeComponent(event) {
+        /* This took me some time to figure out - the problem is that the bootstrap tooltip would
+        remain open forever if it's not actively removed like this */
+        if (event) {
+          tooltip = bootstrap.Tooltip.getInstance(this.$el)
+          tooltip_el = this.$el
+          that = this
+          function whenHidden() {
+              tooltip_el.removeEventListener('hidden.bs.tooltip', whenHidden)
+              that.$root.removeProductComponent(that.product_id, that.component_id, that.type)
+          }
+          /* Wait until tooltip is actually hidden before removing the component */
+          tooltip_el.addEventListener('hidden.bs.tooltip', whenHidden)
+          tooltip.hide()
+        }
+    }
   },
   mounted() {
       /* Initializing tooltip, needed for dynamic content to have tooltips */
-      new bootstrap.Tooltip(this.$el)
+      this.tooltip = new bootstrap.Tooltip(this.$el)
   }
 })
 
