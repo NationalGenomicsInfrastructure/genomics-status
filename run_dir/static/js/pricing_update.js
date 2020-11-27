@@ -132,9 +132,9 @@ const ProductForm = {
         productCost(prod_id) {
             product = this.all_products[prod_id]
             if (product['is_fixed_price']) {
-                cost = parseFloat(product['fixed_price']['price_in_sek'])
-                cost_academic = parseFloat(product['fixed_price']['price_for_academics_in_sek'])
-                full_cost = parseFloat(product['fixed_price']['full_cost_in_sek'])
+                cost = parseFloat(product['fixed_price']['price_in_sek']) || 0
+                cost_academic = parseFloat(product['fixed_price']['price_for_academics_in_sek']) || 0
+                full_cost = parseFloat(product['fixed_price']['full_cost_in_sek']) || 0
             } else {
                 cost = 0
                 for ([comp_id, info] of Object.entries(product['Components'])) {
@@ -144,7 +144,7 @@ const ProductForm = {
                 }
                 cost_academic = cost + cost * product['Re-run fee']
 
-                full_cost_fee = parseFloat(product['Full cost fee'])
+                full_cost_fee = parseFloat(product['Full cost fee']) || 0
                 full_cost = cost_academic + full_cost_fee
             }
 
