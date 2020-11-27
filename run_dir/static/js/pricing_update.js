@@ -70,6 +70,20 @@ const ProductForm = {
             delete this.all_products[prod_id]
             delete this.new_products[prod_id]
         },
+        addProductComponent(product_id, component_id, type) {
+            var product = this.all_products[product_id.toString()]
+            if (type == 'Alternative') {
+                key = 'Alternative Components'
+            } else {
+                key = 'Components'
+            }
+
+            /* Initialize object if it doesn't exist */
+            if (product[key] == '') {
+                product[key] = {}
+            }
+            product[key][component_id] = {'quantity': 1}
+        },
         removeProductComponent(product_id, component_id, type) {
             var product = this.all_products[product_id]
             if (type == 'Alternative') {
@@ -188,7 +202,7 @@ const ProductForm = {
             comp_per_cat = {};
             for ([comp_id, component] of Object.entries(this.all_components)) {
                 if ( this.new_components.has(comp_id) ) {
-                    cat = "New components"
+                  cat = "New components"
                 } else {
                   cat = component['Category']
                 }
@@ -693,60 +707,47 @@ app.component('modal-component', {
               <form>
                 <div class="row border-bottom pb-3">
                   <h4>Selected Components</h4>
-                  <div>
-                  <table v-if="Object.entries(components).length" class="table table-sm table-hover">
-                    <thead>
-                      <tr>
-                        <th scope="col" class="col-md-2">ID</th>
-                        <th scope="col" class="col-md-7">Name</th>
-                        <th scope="col" class="col-md-2">#</th>
-                        <th scope="col" class="col-md-1">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <template v-for="(component_data, comp_id) in components" :key="comp_id">
-                        <component-table-row :product_id="this.$root.modal_product_id" :type="this.$root.modal_type" :added="true" :component_data="component_data" :component_id="comp_id"></component-table-row>
-                      </template>
-                    </tbody>
-                  </table>
-                  </div>
+                    <table v-if="Object.entries(components).length" class="table table-sm table-hover ml-4 w-75">
+                      <thead>
+                        <tr>
+                          <th scope="col" class="col-md-2">ID</th>
+                          <th scope="col" class="col-md-7">Name</th>
+                          <th scope="col" class="col-md-2">#</th>
+                          <th scope="col" class="col-md-1">Remove</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template v-for="(component_data, comp_id) in components" :key="comp_id">
+                          <component-table-row :product_id="this.$root.modal_product_id" :type="this.$root.modal_type" :added="true" :component_data="component_data" :component_id="comp_id"></component-table-row>
+                        </template>
+                      </tbody>
+                    </table>
                 </div>
                 <div class="row pt-3">
                   <h4>All components</h4>
                   <template v-for="category in Object.keys(this.$root.all_components_per_category)" :key="category">
                     <h5>{{category}}</h5>
-                    <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
-                      <template v-if="component['Status'] != 'Discontinued'">
-                        <span>
-                          <a clas="mr-2" href="#" @click="this.addComponent">
-                            <i class="far fa-plus-square fa-lg text-success" :data-component-id="component['REF_ID']"></i>
-                          </a>
-                          {{ component['Product name'] }}
-                        </span><br>
-                      </template>
-                    </template>
+                    <table class="table table-sm table-hover w-75 ml-4">
+                      <thead>
+                        <tr>
+                          <th scope="col" class="col-md-2">ID</th>
+                          <th scope="col" class="col-md-7">Name</th>
+                          <th scope="col" class="col-md-1">Add</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
+                          <template v-if="component['Status'] != 'Discontinued'">
+                            <component-table-row :product_id="this.$root.modal_product_id" :type="this.$root.modal_type" :added="false" :component_data="component" :component_id="component['REF_ID']"></component-table-row>
+                          </template>
+                        </template>
+                      </tbody>
+                    </table>
                   </template>
                 </div>
               </form>
             </div>
-        `,
-    methods: {
-        addComponent(event) {
-            if (event) {
-                comp_id = event.target.dataset.componentId
-                if (this.$root.modal_type == 'Alternative') {
-                    key = 'Alternative Components'
-                } else {
-                    key = 'Components'
-                }
-
-                if (this.product[key] == '') {
-                    this.product[key] = {}
-                }
-                this.product[key][comp_id] = {'quantity': 1}
-            }
-        }
-    }
+        `
 })
 
 app.component('components', {
@@ -763,12 +764,12 @@ app.component('components', {
                   <th scope="col" class="col-md-2">ID</th>
                   <th scope="col" class="col-md-7">Name</th>
                   <th scope="col" class="col-md-2">#</th>
-                  <th scope="col" class="col-md-1">Action</th>
+                  <th scope="col" class="col-md-1">Remove</th>
                 </tr>
               </thead>
               <tbody>
                 <template v-for="(component_data, comp_id) in components" :key="comp_id">
-                  <component-table-row :product_id="product['REF_ID']" :type="type" :component_data="component_data" :component_id="comp_id"></component-table-row>
+                  <component-table-row :product_id="product['REF_ID']" :type="type" :added="true" :component_data="component_data" :component_id="comp_id"></component-table-row>
                 </template>
               </tbody>
             </table>
@@ -807,26 +808,39 @@ app.component('component-table-row', {
   template: /*html*/`
     <tr data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
       <th scope="row">{{component_id}}</th>
-      <td>{{component_data['component']['Product name']}}</td>
-      <td>
+      <td>{{component['Product name']}}</td>
+      <td v-if="added">
         <!-- I was for some reason unable to solve this with regular v-model... -->
         <input class="form-control" type="number" :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
       </td>
-      <td class="pl-3 pt-2">
+      <td class="pl-3 pt-2" v-if="added">
         <a class="mr-2" href="#" @click="this.removeComponent">
           <i class="far fa-times-square fa-lg text-danger"></i>
+        </a>
+      </td>
+      <td class="pl-3 pt-2" v-if="!added">
+        <a class="mr-2" href="#" @click="this.addComponent">
+          <i class="far fa-plus-square fa-lg text-success"></i>
         </a>
       </td>
 
     </tr>
     `,
-  props: ['component_data', 'component_id', 'product_id', 'type'],
+  props: ['component_data', 'component_id', 'product_id', 'type', 'added'],
   data() {
       return { tooltip: null }
   },
   computed: {
+      component() {
+          if (this.added) {
+            var component = this.component_data['component']
+          } else {
+            var component = this.component_data
+          }
+          return component
+      },
       tooltip_html() {
-          var component = this.component_data['component']
+          component = this.component
           return `
             <strong>Name: </strong>${component['Product name']}<br>
             <strong>Category: </strong>${component['Category']}<br>
@@ -847,11 +861,17 @@ app.component('component-table-row', {
       }
   },
   methods: {
-      updateQuantity(new_val) {
+    updateQuantity(new_val) {
         if (this.type == 'Alternative') {
           this.$root.all_products[this.product_id]['Alternative Components'][this.component_id]['quantity'] = new_val
         } else {
           this.$root.all_products[this.product_id]['Components'][this.component_id]['quantity'] = new_val
+        }
+    },
+    addComponent(event) {
+        if (event) {
+          console.log(this.product_id)
+          this.$root.addProductComponent(this.product_id, this.component_id, this.type)
         }
     },
     removeComponent(event) {
