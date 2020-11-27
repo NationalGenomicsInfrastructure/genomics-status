@@ -811,7 +811,7 @@ app.component('component-table-row', {
       <td>{{component['Product name']}}</td>
       <td v-if="added">
         <!-- I was for some reason unable to solve this with regular v-model... -->
-        <input class="form-control" type="number" :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
+        <input class="form-control" type="number" min=1 :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
       </td>
       <td class="pl-3 pt-2" v-if="added">
         <a class="mr-2" href="#" @click="this.removeComponent">
