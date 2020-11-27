@@ -693,11 +693,23 @@ app.component('modal-component', {
               <form>
                 <div class="row border-bottom pb-3">
                   <h4>Selected Components</h4>
-                  <template v-for="(component_data, comp_id) in components" :key="comp_id">
-                    <span>
-                      <component-table-row :product_id="this.$root.modal_product_id" :type="this.$root.modal_type" :component_data="component_data" :component_id="comp_id"></component-table-row>
-                    </span><br>
-                  </template>
+                  <div>
+                  <table v-if="Object.entries(components).length" class="table table-sm table-hover">
+                    <thead>
+                      <tr>
+                        <th scope="col" class="col-md-2">ID</th>
+                        <th scope="col" class="col-md-7">Name</th>
+                        <th scope="col" class="col-md-2">#</th>
+                        <th scope="col" class="col-md-1">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template v-for="(component_data, comp_id) in components" :key="comp_id">
+                        <component-table-row :product_id="this.$root.modal_product_id" :type="this.$root.modal_type" :added="true" :component_data="component_data" :component_id="comp_id"></component-table-row>
+                      </template>
+                    </tbody>
+                  </table>
+                  </div>
                 </div>
                 <div class="row pt-3">
                   <h4>All components</h4>
@@ -748,9 +760,10 @@ app.component('components', {
             <table v-if="Object.entries(components).length" class="table table-sm table-hover">
               <thead>
                 <tr>
-                  <th scope="col">ID</th>
-                  <th scope="col">Name</th>
-                  <th scope="col">#</th>
+                  <th scope="col" class="col-md-2">ID</th>
+                  <th scope="col" class="col-md-7">Name</th>
+                  <th scope="col" class="col-md-2">#</th>
+                  <th scope="col" class="col-md-1">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -795,16 +808,16 @@ app.component('component-table-row', {
     <tr data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
       <th scope="row">{{component_id}}</th>
       <td>{{component_data['component']['Product name']}}</td>
-      <td>{{component_data['quantity']}}</td>
       <td>
+        <!-- I was for some reason unable to solve this with regular v-model... -->
+        <input class="form-control" type="number" :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
+      </td>
+      <td class="pl-3 pt-2">
         <a class="mr-2" href="#" @click="this.removeComponent">
           <i class="far fa-times-square fa-lg text-danger"></i>
         </a>
       </td>
-      <td>
-        <!-- I was for some reason unable to solve this with regular v-model... -->
-        <input :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
-      </td>
+
     </tr>
     `,
   props: ['component_data', 'component_id', 'product_id', 'type'],
