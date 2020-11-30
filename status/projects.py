@@ -215,15 +215,17 @@ class ProjectsBaseDataHandler(SafeHandler):
         openflag=False
         projtype=self.get_argument('type', 'all')
 
-        def_dates = { 'days_recep_ctrl' : ['open_date', 'queued'],
-                      'days_prep_start' : ['queued', 'library_prep_start'],
-                      'days_seq_start' : [['qc_library_finished', 'queued'], 'sequencing_start_date'],
-                      'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
-                      'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
-                      'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
-                      'days_close' : ['all_raw_data_delivered', 'close_date'],
-                      'days_prep' : ['library_prep_start', 'qc_library_finished']
-                      }
+        def_dates_gen = { 'days_recep_ctrl' : ['open_date', 'queued'],
+                          'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
+                          'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
+                          'days_close' : ['all_raw_data_delivered', 'close_date']
+                         }
+
+        def_dates_summary = { 'days_prep_start' : ['queued', 'library_prep_start'],
+                              'days_seq_start' : [['qc_library_finished', 'queued'], 'sequencing_start_date'],
+                              'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
+                              'days_prep' : ['library_prep_start', 'qc_library_finished']
+                             }
 
         if 'closed' in filter_projects or 'all' in filter_projects:
             closedflag=True
@@ -320,6 +322,11 @@ class ProjectsBaseDataHandler(SafeHandler):
             a=type(row)
             row = self.project_summary_data(row)
             final_projects[row.key[1]] = row.value
+            for key, value in def_dates_gen.items():
+                start_date = value[0]
+                end_date = value[1]
+                final_projects[row.key[1]][key] = self._calculate_days_in_status(final_projects[row.key[1]].get(start_date),
+                                                                                    final_projects[row.key[1]].get(end_date))
 
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
@@ -327,7 +334,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 for date_type, date in row.value.items():
                     final_projects[row.key[0]][date_type] = date
 
-                for key, value in def_dates.items():
+                for key, value in def_dates_summary.items():
                     if key == 'days_seq_start':
                         if 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
                              start_date = value[0][1]
