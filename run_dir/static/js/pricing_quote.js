@@ -161,14 +161,7 @@ function generateQuoteList() {
     var product = allProducts[product_id];
     var warning_txt = '';
     if (product.quantity > 0) {
-      /* check correct number of units */
       class_string = ''
-      if (product["Minimum Quantity"] !== ''){
-          if (product.quantity % parseInt(product["Minimum Quantity"]) !== 0) {
-              class_string = ' class="text-danger"'
-              warning_txt = `Quantity for ` + product.Name + ` is not a multiple of its minimum quantity: ` + product["Minimum Quantity"]
-          }
-      }
       empty = false;
       var li = `<li data-quantity=${product.quantity}` + class_string + ` data-product-id=${product_id}>` +
         `<a href='#' class='remove_product' data-product-id=${product.REF_ID}><i class="far fa-times-square fa-lg text-danger"></i></a> ` +
