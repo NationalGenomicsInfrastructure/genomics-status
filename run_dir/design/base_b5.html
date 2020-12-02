@@ -17,7 +17,7 @@
 {% end %}
 
 <!-- Le styles -->
-<link rel="stylesheet" href="/static/css/bootstrap-5-alpha.css" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/custom-bootstrap-5-alpha.css" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/status_b5.css?v={{ gs_globals['git_commit'] }}" rel="stylesheet">
 
 
@@ -31,7 +31,7 @@
 <body>
   <nav class="navbar navbar-expand-xl navbar-light bg-light fixed-top border-bottom shadow-sm">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">Genomics-Status</a>
+      <a class="navbar-brand" href="/">Genomics-Status</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#genstat-main-nav-collapse" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -124,6 +124,8 @@
   <script src="/static/js/bootstrap-5-alpha.bundle.min.js"></script>
   <script src="/static/js/typeahead.bundle.min.js?v={{ gs_globals['git_commit'] }}"></script>
   <script src="/static/js/marked.min.js"></script>
+  {% block js %}
+  {% end %}
   <script src="/static/js/base_b5.js?v={{ gs_globals['git_commit'] }}"></script>
   <script>
     $('.a-modal').on('click', function(e){

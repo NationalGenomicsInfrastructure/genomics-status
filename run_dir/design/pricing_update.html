@@ -15,13 +15,15 @@
         <modal-component></modal-component>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary">Update</button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+{% end %}
+
+{% block js %}
 <script>
   var global_components_json={% raw components_json %}
   var global_products_json={% raw products_json %}
@@ -29,6 +31,13 @@
 
 <!-- development version, includes helpful console warnings -->
 <script src="https://unpkg.com/vue@next"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="/static/js/pricing_update.js?v={{ gs_globals['git_commit'] }}"></script>
-
+<!-- Don't want to change the width for all tooltips so put it on just this page -->
+<style>
+  .tooltip-inner {
+      max-width: 100%;
+      min-width: 100px;
+  }
+</style>
 {% end %}
