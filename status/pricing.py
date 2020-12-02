@@ -678,7 +678,7 @@ class PricingUpdateHandler(PricingBaseHandler):
                                                version=version,
                                                date=date,
                                                pretty_strings=True)
-        body_attrs = 'data-spy="scroll" data-target="#pricing_update_sidebar"'
+        body_attrs = 'data-spy=scroll data-target=#pricing_update_sidebar'
 
         t = self.application.loader.load('pricing_update.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,
