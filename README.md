@@ -111,6 +111,11 @@ conda install nodejs
 npm install sass -g
 npm install bootstrap@next -g
 cd run_dir/static/scss
+```
+
+Then modify the `custom.scss` file, especially the hard-coded path according to your needs, and run the compilation:
+
+```
 sass custom.scss custom-bootstrap-5-alpha.css
 ```
 
