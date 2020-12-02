@@ -28,7 +28,11 @@
 
 </head>
 
+{% try %}
+<body {{ body_attrs }}>
+{% except NameError %}
 <body>
+{% end %}
   <nav class="navbar navbar-expand-xl navbar-light bg-light fixed-top border-bottom shadow-sm">
     <div class="container-fluid">
       <a class="navbar-brand" href="#">Genomics-Status</a>

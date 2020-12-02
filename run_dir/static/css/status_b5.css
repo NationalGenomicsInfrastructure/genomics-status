@@ -76,11 +76,6 @@ input.quantity_updateable {
     background-color: #f8d7da;
 }
 
-/* Needed for bootstrap scrollspy */
-#pricing_product_form_content {
-    /* Need to restrict the height, but keep space for footer and top nav bar
-    This is a bit of a hack and I'm not sure it will work for all window sizes */
-    height: calc(100vh - 200px);
-    position: relative;
-    overflow-y: scroll;
+#pricing_update_sidebar {
+    padding-top: 4rem;
 }
