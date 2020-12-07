@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: flowcells.html
@@ -13,11 +13,11 @@ Description: Shows a table with all flow cells.
   <div id="fc_table_div">
       <h1><span id="page_title">Flowcells</span>
           {% if all %}
-            <small>Showing all flowcells</small>
-            <a class="btn btn-default" href="/flowcells">Show last 6 months only</a>
+            <small class="text-muted">Showing all flowcells</small>
+            <a class="btn btn-outline-dark" href="/flowcells">Show last 6 months only</a>
           {% else %}
-            <small>Showing flowcells from the last 6 months.</small>
-            <a class="btn btn-default" href="/flowcells?all=True">Show all</a>
+            <small class="text-muted">Showing flowcells from the last 6 months.</small>
+            <a class="btn btn-outline-dark" href="/flowcells?all=True">Show all</a>
           {% end %}
       </h1>
       <table class="table table-striped table-bordered sortable" id="fc_table">
@@ -54,11 +54,11 @@ Description: Shows a table with all flow cells.
          {% for onefc in flowcells %}
             <tr>
                 <td class="run_id">
-                    <a href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a>
+                    <a class="text-decoration-none" href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a>
                     {% if flowcells.get(onefc).get('demultiplexing') == 'Done' %}
-                        <abbr title="Demultiplexing completed">&nbsp;<span class="glyphicon glyphicon-ok-sign"></span></abbr>
+                        <abbr title="Demultiplexing completed">&nbsp;<span class="fa fa-check-circle"></span></abbr>
                     {% else %}
-                        <abbr title="Ongoing">&nbsp;<span class="glyphicon glyphicon-hourglass"></span></abbr>
+                        <abbr title="Ongoing">&nbsp;<span class="fa fa-hourglass-half"></span></abbr>
                     {% end %}
                 </td>
                 <td class="start_date">{{ flowcells[onefc]["startdate"]}}</td>
@@ -76,7 +76,7 @@ Description: Shows a table with all flow cells.
                          {% for lane_id, lane in flowcells[onefc]['lane_info'].items() %}
                              <samp style="max-width:50px;">
                              {% for i, proj_name in enumerate(lane['project_name']) %}
-                                 <a href="/project/{{ lane['project_id'][i] }}">{{ proj_name }}</a>
+                                 <a class="text-decoration-none" href="/project/{{ lane['project_id'][i] }}">{{ proj_name }}</a>
                                  {% if i < len(lane['project_name'])-1 %}
                                      {{ ";" }}
                                  {% end %}
@@ -96,9 +96,9 @@ Description: Shows a table with all flow cells.
                                  {% end %}
                                  {% set threshold = thresholds.get(flowcells[onefc].get('run_mode', ''), 0) %}
                                  {% if int(lane.get('pf_clusters').replace(',',''))/1000000 >= threshold %}
-                                     <span class="glyphicon glyphicon-ok-sign" style="color:green"></span><br>
+                                     <span class="fa fa-check-circle" style="color:green"></span><br>
                                  {% else %}
-                                     <span class="glyphicon glyphicon-warning-sign" style="color:orange"></span><br>
+                                     <span class="fa fa-exclamation-triangle" style="color:orange"></span><br>
                                  {% end %}
                              {% else %}
                                  <samp style="max-width:50px;">{{ 'NA' }}</samp><br>
@@ -137,9 +137,9 @@ Description: Shows a table with all flow cells.
                              {% end %}
                              {% if flowcells[onefc]['lane_info'][onelane].get('q30_bases') %}
                                  {% if float(flowcells[onefc]['lane_info'][onelane]['q30_bases']) >= q30_threshold %}
-                                     <span class="glyphicon glyphicon-ok-sign" style="color:green"></span><br>
+                                     <span class="fa fa-check-circle" style="color:green"></span><br>
                                  {% else %}
-                                     <span class="glyphicon glyphicon-warning-sign" style="color:orange"></span><br>
+                                     <span class="fa fa-exclamation-triangle" style="color:orange"></span><br>
                                  {% end %}
                              {% else %}
                                  <br>
@@ -153,9 +153,9 @@ Description: Shows a table with all flow cells.
                              {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') %}
                                  <samp style="max-width:50px;">{{ round(flowcells[onefc]['lane_info'][onelane].get('er_rate'),2) }}</samp>
                                  {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') <= 2 %}
-                                     <span class="glyphicon glyphicon-ok-sign" style="color:green"></span><br>
+                                     <span class="fa fa-check-circle" style="color:green"></span><br>
                                  {% else %}
-                                     <span class="glyphicon glyphicon-warning-sign" style="color:orange"></span><br>
+                                     <span class="fa fa-exclamation-triangle" style="color:orange"></span><br>
                                  {% end %}
                              {% else %}
                                  <samp style="max-width:50px;">{{ 'NA' }}</samp><br>
@@ -167,11 +167,11 @@ Description: Shows a table with all flow cells.
                     {% if flowcells[onefc].get('running_notes') %}
                         {% set running_notes = flowcells[onefc].get('running_notes') %}
                         {% set latest_running_note_key = max(k for k, v in running_notes.items() if v != '') %}
-                        <div class="panel panel-default running-note-panel">
-                          <div class='panel-heading'>
-                          <a href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"].encode().decode('unicode-escape')}}</a>  -  {{form_date(latest_running_note_key)}}
+                        <div class="card running-note-card">
+                          <div class='card-header'>
+                          <a class="text-decoration-none" href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"].encode().decode('unicode-escape')}}</a>  -  {{form_date(latest_running_note_key)}}
                           </div>
-                          <div class='panel-body' style='white-space: pre-line'>
+                          <div class='card-body' style='white-space: pre-line'>
                             {{running_notes[latest_running_note_key]['note']}}
                           </div>
                         </div>
@@ -189,8 +189,8 @@ Description: Shows a table with all flow cells.
 <script type="text/javascript">
 $( document ).ready(function() {
   init_listjs();
-  //Formatting for Running note panel body
-  $(".running-note-panel > .panel-body").each(function(i){
+  //Formatting for Running note card body
+  $(".running-note-card > .card-body").each(function(i){
     $(this).html(make_markdown($(this).text()));
   });
 });
@@ -210,7 +210,7 @@ function init_listjs() {
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#fc_table_filter').addClass('form-inline pull-right');
+    $('#fc_table_filter').addClass('form-inline float-right');
     $("#fc_table_filter").appendTo("h1");
     $('#fc_table_filter label input').appendTo($('#fc_table_filter'));
     $('#fc_table_filter label').remove();

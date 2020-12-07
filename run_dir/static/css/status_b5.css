@@ -84,3 +84,28 @@ input.quantity_updateable {
     position: relative;
     overflow-y: scroll;
 }
+
+/* Make <samp> (flow cell IDs usually) a little smaller */
+samp { font-size:0.8em; }
+
+/*Tables*/
+th { background-color: #ddd!important; }
+
+.sticky th{
+  position: sticky;
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -ms-sticky;
+  position: -o-sticky;
+  top: 50px;
+  z-index: 100;
+}
+
+.navbar {
+ min-height: 50px;
+}
+
+/*Cards for running notes*/
+.running-note-card pre {
+  max-width:400px;
+}
