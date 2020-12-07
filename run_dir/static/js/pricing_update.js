@@ -294,12 +294,15 @@ app.component('product-form-list', {
 
         <div class="col-md-10">
           <div id="pricing_product_form_content" data-offset="0" tabindex="0">
-            <div class="row">
-              <h2 id="products_top" class="col-md-2 mr-auto">Products</h2>
-              <div class="col-md-5">
-                <exchange-rates></exchange-rates>
+            <div class="card p-3 mb-3">
+              <div class="row">
+                <h2 class="col-md-5 mr-auto">Edit draft Cost Calculator</h2>
+                <div class="col-md-5">
+                  <exchange-rates></exchange-rates>
+                </div>
               </div>
             </div>
+            <h2 id="products_top">Products</h2>
             <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)">
               <h3 :id="'products_cat_' + cat_nr">{{category}}</h3>
               <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
@@ -335,6 +338,7 @@ app.component('product-form-list', {
 app.component('exchange-rates', {
   template:
       /*html*/`
+      <h4>Exchange rates</h4>
       <dl class="row">
         <dt class="col-md-4 text-right">1 USD</dt>
         <dd class="col-md-8"><span>{{USD_in_SEK}}</span></dd>
@@ -376,14 +380,13 @@ app.component('product-form-part', {
     props: ['product_id'],
     template:
       /*html*/`
-      <div class="mx-2 my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}]">
+      <div class="mx-2 my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="row">
-          <h5 :class="{'text-danger': discontinued, 'col-md-6': true}"> {{ product['Name'] }} {{ discontinued ? ' - Discontinued' : '' }} </h5>
-          <a class="btn btn-primary col-md-2 ml-auto" data-toggle="collapse" :href="'#collapseProduct' + product_id" role="button" aria-expanded="false" :aria-controls="'collapseProduct' + product_id">
-            Expand
+          <a class="pricing_update_collapse_link" data-toggle="collapse" :href="'#collapseProduct' + product_id" role="button" aria-expanded="false" :aria-controls="'collapseProduct' + product_id">
+            <h5 :class="{'text-danger': discontinued, 'col-md-6 my-1': true}"> {{ product['Name'] }} {{ discontinued ? ' - Discontinued' : '' }} </h5>
           </a>
         </div>
-        <div :id="'collapseProduct' + product_id"  class="collapse card">
+        <div :id="'collapseProduct' + product_id"  class="collapse">
           <div class="row">
           <div class="col-md-10">
             <div class="row my-1">
@@ -540,10 +543,15 @@ app.component('component-form-part', {
     props: ['component_id'],
     template:
       /*html*/`
-      <div class="mx-2 my-3 p-3 card" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}]">
+      <div class="mx-2 my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="row">
-          <div class="col-md-10">
-            <h4 :class="{'text-danger': discontinued}"> {{ component['Product name'] }} {{ discontinued ? ' - Discontinued' : '' }}</h4>
+          <a class="pricing_update_collapse_link" data-toggle="collapse" :href="'#collapseComponent' + component_id" role="button" aria-expanded="false" :aria-controls="'collapseComponent' + component_id">
+            <h5 :class="{'text-danger': discontinued, 'col-md-6 my-1': true}"> {{ component['Product name'] }} {{ discontinued ? ' - Discontinued' : '' }}</h5>
+          </a>
+        </div>
+        <div :id="'collapseComponent' + component_id"  class="collapse">
+          <div class="row">
+            <div class="col-md-10">
             <h5>{{ component['Last Updated']}}</h5>
             <div class="row my-1">
               <fieldset disabled class='col-md-1'>

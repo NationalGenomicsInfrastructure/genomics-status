@@ -79,3 +79,8 @@ input.quantity_updateable {
 #pricing_update_sidebar {
     padding-top: 4rem;
 }
+
+.pricing_update_collapse_link {
+    text-decoration: none;
+    color: black;
+}
