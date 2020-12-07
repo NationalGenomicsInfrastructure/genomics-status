@@ -352,15 +352,16 @@ class FlowcellNotesDataHandler(SafeHandler):
                 flowcell_link = "<a href='/flowcells/{0}'>{0}</a>".format(flowcell)
                 project_note = "#####*Running note posted on flowcell {}:*\n".format(flowcell_link)
                 project_note += note
+
+                p.udf['Notes'] = json.dumps(running_notes)
+                p.put()
+                #write running note to projects only if it has been saved successfully in FC
                 for project in projects:
                     RunningNotesDataHandler.make_project_running_note(
                         self.application, project,
                         project_note, category,
                         user.name, user.email
                     )
-
-                p.udf['Notes'] = json.dumps(running_notes)
-                p.put()
                 self.set_status(201)
                 self.write(json.dumps(newNote))
 
