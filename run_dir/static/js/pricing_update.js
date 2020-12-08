@@ -294,7 +294,7 @@ app.component('product-form-list', {
 
         <div class="col-md-10">
           <div id="pricing_product_form_content" data-offset="0" tabindex="0">
-            <div class="card p-3 mb-3">
+            <div class="card p-3 mb-3 bg-light">
               <div class="row">
                 <h2 class="col-md-5 mr-auto">Edit draft Cost Calculator</h2>
                 <div class="col-md-5">
@@ -304,27 +304,27 @@ app.component('product-form-list', {
             </div>
             <h2 id="products_top">Products</h2>
             <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)">
-              <h3 :id="'products_cat_' + cat_nr">{{category}}</h3>
+              <h3 :id="'products_cat_' + cat_nr" class="mt-3">{{category}}</h3>
               <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
                 <product-form-part :product_id="product['REF_ID']">
                 </product-form-part>
               </template>
             </template>
-            <h2 id="components_top">Components</h2>
+            <h2 class="mt-4" id="components_top">Components</h2>
             <template v-for="(category, cat_nr) in Object.keys(this.$root.all_components_per_category)">
-              <h3 :id="'components_cat_' + cat_nr">{{category}}</h3>
+              <h3 :id="'components_cat_' + cat_nr" class="mt-3">{{category}}</h3>
               <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
                 <component-form-part :component_id="component['REF_ID']">
                 </component-form-part>
               </template>
             </template>
             <h2 class="mt-4" id="discontinued_top">Discontinued</h2>
-            <h3 id="discontinued_products">Products</h3>
+            <h3 id="discontinued_products" class="mt-3">Products</h3>
             <template v-for="product in this.$root.discontinued_products" :key="product['REF_ID']">
               <product-form-part :product_id="product['REF_ID']">
               </product-form-part>
             </template>
-            <h3 id="discontinued_components">Components</h3>
+            <h3 id="discontinued_components" class="mt-3">Components</h3>
             <template v-for="component in this.$root.discontinued_components" :key="component['REF_ID']">
               <component-form-part :component_id="component['REF_ID']">
               </component-form-part>
@@ -380,7 +380,7 @@ app.component('product-form-part', {
     props: ['product_id'],
     template:
       /*html*/`
-      <div class="mx-2 my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
+      <div class="my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="row">
           <a class="pricing_update_collapse_link" data-toggle="collapse" :href="'#collapseProduct' + product_id" role="button" aria-expanded="false" :aria-controls="'collapseProduct' + product_id">
             <h5 :class="{'text-danger': discontinued, 'col-md-6 my-1': true}"> {{ product['Name'] }} {{ discontinued ? ' - Discontinued' : '' }} </h5>
@@ -543,7 +543,7 @@ app.component('component-form-part', {
     props: ['component_id'],
     template:
       /*html*/`
-      <div class="mx-2 my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
+      <div class="my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="row">
           <a class="pricing_update_collapse_link" data-toggle="collapse" :href="'#collapseComponent' + component_id" role="button" aria-expanded="false" :aria-controls="'collapseComponent' + component_id">
             <h5 :class="{'text-danger': discontinued, 'col-md-6 my-1': true}"> {{ component['Product name'] }} {{ discontinued ? ' - Discontinued' : '' }}</h5>
