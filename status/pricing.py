@@ -678,14 +678,12 @@ class PricingUpdateHandler(PricingBaseHandler):
                                                version=version,
                                                date=date,
                                                pretty_strings=True)
-        body_attrs = 'data-spy=scroll data-target=#pricing_update_sidebar'
 
         t = self.application.loader.load('pricing_update.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user(),
                               components_json=json.dumps(components),
                               products_json=json.dumps(products),
-                              body_attrs=body_attrs,
                               version=version))
 
     def post(self):

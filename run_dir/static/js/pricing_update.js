@@ -2,6 +2,9 @@ const all_products_reactive = Vue.reactive(global_products_json)
 const all_components_reactive = Vue.reactive(global_components_json)
 
 const ProductForm = {
+/* Inject attributes needed for scrollspy */
+document.getElementsByTagName("body")[0].setAttribute("data-spy", "scroll");
+document.getElementsByTagName("body")[0].setAttribute("data-target", "#pricing_update_sidebar");
     data() {
         return {
             all_components: all_components_reactive,
