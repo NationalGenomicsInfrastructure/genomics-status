@@ -1,7 +1,11 @@
 const all_products_reactive = Vue.reactive(global_products_json)
 const all_components_reactive = Vue.reactive(global_components_json)
 
-const ProductForm = {
+/* Inject attributes needed for scrollspy */
+document.getElementsByTagName("body")[0].setAttribute("data-spy", "scroll");
+document.getElementsByTagName("body")[0].setAttribute("data-target", "#pricing_update_sidebar");
+
+const PricingUpdate = {
     data() {
         return {
             all_components: all_components_reactive,
@@ -260,14 +264,14 @@ const ProductForm = {
     }
 }
 
-const app = Vue.createApp(ProductForm)
+const app = Vue.createApp(PricingUpdate)
 
 app.component('product-form-list', {
     template:
         /*html*/`
         <div class="row">
           <div class="col-md-2">
-            <nav id="sidebar" class="nav sidebar">
+            <nav id="pricing_update_sidebar" class="nav sidebar sticky-top">
               <div class="position-sticky">
                 <nav class="nav nav-pills flex-column">
                   <a class="nav-link my-1" href="#products_top">Products</a>
@@ -293,35 +297,38 @@ app.component('product-form-list', {
           </div>
 
         <div class="col-md-10">
-          <div id="pricing_product_form_content" data-spy="scroll" data-target="#sidebar" data-offset="0" tabindex="0">
-            <div class="row">
-              <h2 id="products_top" class="col-md-2 mr-auto">Products</h2>
-              <div class="col-md-5">
-                <exchange-rates></exchange-rates>
+          <div id="pricing_product_form_content" data-offset="0" tabindex="0">
+            <div class="card p-3 mb-3 bg-light">
+              <div class="row">
+                <h2 class="col-md-5 mr-auto">Edit draft Cost Calculator</h2>
+                <div class="col-md-5">
+                  <exchange-rates></exchange-rates>
+                </div>
               </div>
             </div>
+            <h2 id="products_top">Products</h2>
             <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)">
-              <h3 :id="'products_cat_' + cat_nr">{{category}}</h3>
+              <h3 :id="'products_cat_' + cat_nr" class="mt-3">{{category}}</h3>
               <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
                 <product-form-part :product_id="product['REF_ID']">
                 </product-form-part>
               </template>
             </template>
-            <h2 id="components_top">Components</h2>
+            <h2 class="mt-4" id="components_top">Components</h2>
             <template v-for="(category, cat_nr) in Object.keys(this.$root.all_components_per_category)">
-              <h3 :id="'components_cat_' + cat_nr">{{category}}</h3>
+              <h3 :id="'components_cat_' + cat_nr" class="mt-3">{{category}}</h3>
               <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
                 <component-form-part :component_id="component['REF_ID']">
                 </component-form-part>
               </template>
             </template>
             <h2 class="mt-4" id="discontinued_top">Discontinued</h2>
-            <h3 id="discontinued_products">Products</h3>
+            <h3 id="discontinued_products" class="mt-3">Products</h3>
             <template v-for="product in this.$root.discontinued_products" :key="product['REF_ID']">
               <product-form-part :product_id="product['REF_ID']">
               </product-form-part>
             </template>
-            <h3 id="discontinued_components">Components</h3>
+            <h3 id="discontinued_components" class="mt-3">Components</h3>
             <template v-for="component in this.$root.discontinued_components" :key="component['REF_ID']">
               <component-form-part :component_id="component['REF_ID']">
               </component-form-part>
@@ -335,6 +342,7 @@ app.component('product-form-list', {
 app.component('exchange-rates', {
   template:
       /*html*/`
+      <h4>Exchange rates</h4>
       <dl class="row">
         <dt class="col-md-4 text-right">1 USD</dt>
         <dd class="col-md-8"><span>{{USD_in_SEK}}</span></dd>
@@ -376,9 +384,14 @@ app.component('product-form-part', {
     props: ['product_id'],
     template:
       /*html*/`
-      <div class="mx-2 my-3 p-3 card" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}]">
-        <h4 :class="{'text-danger': discontinued}"> {{ product['Name'] }} {{ discontinued ? ' - Discontinued' : '' }} </h4>
+      <div class="my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="row">
+          <a class="pricing_update_collapse_link" data-toggle="collapse" :href="'#collapseProduct' + product_id" role="button" aria-expanded="false" :aria-controls="'collapseProduct' + product_id">
+            <h5 :class="{'text-danger': discontinued, 'col-md-6 my-1': true}"> {{ product['Name'] }} {{ discontinued ? ' - Discontinued' : '' }} </h5>
+          </a>
+        </div>
+        <div :id="'collapseProduct' + product_id"  class="collapse">
+          <div class="row">
           <div class="col-md-10">
             <div class="row my-1">
               <fieldset disabled class='col-md-1'>
@@ -477,6 +490,7 @@ app.component('product-form-part', {
               <button v-else type="button" class="btn btn-outline-danger w-100" @click="this.discontinueProduct">Discontinue<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
             </div>
           </div>
+          </div>
         </div>
       </div>
 
@@ -533,10 +547,15 @@ app.component('component-form-part', {
     props: ['component_id'],
     template:
       /*html*/`
-      <div class="mx-2 my-3 p-3 card" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}]">
+      <div class="my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="row">
-          <div class="col-md-10">
-            <h4 :class="{'text-danger': discontinued}"> {{ component['Product name'] }} {{ discontinued ? ' - Discontinued' : '' }}</h4>
+          <a class="pricing_update_collapse_link" data-toggle="collapse" :href="'#collapseComponent' + component_id" role="button" aria-expanded="false" :aria-controls="'collapseComponent' + component_id">
+            <h5 :class="{'text-danger': discontinued, 'col-md-6 my-1': true}"> {{ component['Product name'] }} {{ discontinued ? ' - Discontinued' : '' }}</h5>
+          </a>
+        </div>
+        <div :id="'collapseComponent' + component_id"  class="collapse">
+          <div class="row">
+            <div class="col-md-10">
             <h5>{{ component['Last Updated']}}</h5>
             <div class="row my-1">
               <fieldset disabled class='col-md-1'>
