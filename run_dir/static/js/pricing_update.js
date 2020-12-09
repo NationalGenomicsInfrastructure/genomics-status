@@ -19,6 +19,113 @@ const PricingUpdate = {
             exch_rate_issued_at: null
         }
     },
+    computed: {
+        all_products_per_category() {
+            prod_per_cat = {};
+            for ([prod_id, product] of Object.entries(this.all_products)) {
+                if ( this.new_products.has(prod_id) ) {
+                    cat = "New products"
+                } else {
+                    cat = product['Category']
+                }
+                if (! (product['Status'] == 'Discontinued')) {
+                    if (! (cat in prod_per_cat)) {
+                        prod_per_cat[cat] = {}
+                    }
+                    prod_per_cat[cat][product['REF_ID']] = product
+                }
+            }
+            return prod_per_cat
+        },
+        product_categories() {
+            categories = new Set();
+            for ([prod_id, product] of Object.entries(this.all_products)) {
+                cat = product['Category']
+                if (! (product['Status'] == 'Discontinued')) {
+                    categories.add(product['Category'])
+                }
+            }
+            return categories
+        },
+        product_types() {
+            types = new Set();
+            for ([prod_id, product] of Object.entries(this.all_products)) {
+                cat = product['Type']
+                if (! (product['Status'] == 'Discontinued')) {
+                    types.add(product['Type'])
+                }
+            }
+            return types
+        },
+        discontinued_products() {
+            disco_products = {};
+            for ([prod_id, product] of Object.entries(this.all_products)) {
+                if (product['Status'] == 'Discontinued') {
+                    disco_products[prod_id] = product
+                }
+            }
+            return disco_products
+        },
+        all_components_per_category() {
+            comp_per_cat = {};
+            for ([comp_id, component] of Object.entries(this.all_components)) {
+                if ( this.new_components.has(comp_id) ) {
+                  cat = "New components"
+                } else {
+                  cat = component['Category']
+                }
+                if (! (component['Status'] == 'Discontinued')) {
+                    if (! (cat in comp_per_cat)) {
+                        comp_per_cat[cat] = {}
+                    }
+                    comp_per_cat[cat][component['REF_ID']] = component
+                }
+            }
+            return comp_per_cat
+        },
+        component_categories() {
+            categories = new Set();
+            for ([comp_id, component] of Object.entries(this.all_components)) {
+                cat = component['Category']
+                if (! (component['Status'] == 'Discontinued')) {
+                    categories.add(component['Category'])
+                }
+            }
+            return categories
+        },
+        component_types() {
+            types = new Set();
+            for ([comp_id, component] of Object.entries(this.all_components)) {
+                cat = component['Type']
+                if (! (component['Status'] == 'Discontinued')) {
+                    types.add(component['Type'])
+                }
+            }
+            return types
+        },
+        discontinued_components() {
+            disco_components = {};
+            for ([comp_id, component] of Object.entries(this.all_components)) {
+                if (component['Status'] == 'Discontinued') {
+                    disco_components[comp_id] = component
+                }
+            }
+            return disco_components
+        },
+        next_product_id() {
+            all_ids = Object.keys(this.all_products)
+            max_id = Math.max(...all_ids.map(x => parseInt(x)))
+            return (1 + max_id).toString()
+        },
+        next_component_id() {
+            all_ids = Object.keys(this.all_components)
+            max_id = Math.max(...all_ids.map(x => parseInt(x)))
+            return (1 + max_id).toString()
+        }
+    },
+    mounted: function() {
+        this.fetchExchangeRates()
+    },
     methods: {
         showModalFn(event) {
             if (event) {
@@ -154,113 +261,6 @@ const PricingUpdate = {
 
             return {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
         }
-    },
-    computed: {
-        all_products_per_category() {
-            prod_per_cat = {};
-            for ([prod_id, product] of Object.entries(this.all_products)) {
-                if ( this.new_products.has(prod_id) ) {
-                    cat = "New products"
-                } else {
-                    cat = product['Category']
-                }
-                if (! (product['Status'] == 'Discontinued')) {
-                    if (! (cat in prod_per_cat)) {
-                        prod_per_cat[cat] = {}
-                    }
-                    prod_per_cat[cat][product['REF_ID']] = product
-                }
-            }
-            return prod_per_cat
-        },
-        product_categories() {
-            categories = new Set();
-            for ([prod_id, product] of Object.entries(this.all_products)) {
-                cat = product['Category']
-                if (! (product['Status'] == 'Discontinued')) {
-                    categories.add(product['Category'])
-                }
-            }
-            return categories
-        },
-        product_types() {
-            types = new Set();
-            for ([prod_id, product] of Object.entries(this.all_products)) {
-                cat = product['Type']
-                if (! (product['Status'] == 'Discontinued')) {
-                    types.add(product['Type'])
-                }
-            }
-            return types
-        },
-        discontinued_products() {
-            disco_products = {};
-            for ([prod_id, product] of Object.entries(this.all_products)) {
-                if (product['Status'] == 'Discontinued') {
-                    disco_products[prod_id] = product
-                }
-            }
-            return disco_products
-        },
-        all_components_per_category() {
-            comp_per_cat = {};
-            for ([comp_id, component] of Object.entries(this.all_components)) {
-                if ( this.new_components.has(comp_id) ) {
-                  cat = "New components"
-                } else {
-                  cat = component['Category']
-                }
-                if (! (component['Status'] == 'Discontinued')) {
-                    if (! (cat in comp_per_cat)) {
-                        comp_per_cat[cat] = {}
-                    }
-                    comp_per_cat[cat][component['REF_ID']] = component
-                }
-            }
-            return comp_per_cat
-        },
-        component_categories() {
-            categories = new Set();
-            for ([comp_id, component] of Object.entries(this.all_components)) {
-                cat = component['Category']
-                if (! (component['Status'] == 'Discontinued')) {
-                    categories.add(component['Category'])
-                }
-            }
-            return categories
-        },
-        component_types() {
-            types = new Set();
-            for ([comp_id, component] of Object.entries(this.all_components)) {
-                cat = component['Type']
-                if (! (component['Status'] == 'Discontinued')) {
-                    types.add(component['Type'])
-                }
-            }
-            return types
-        },
-        discontinued_components() {
-            disco_components = {};
-            for ([comp_id, component] of Object.entries(this.all_components)) {
-                if (component['Status'] == 'Discontinued') {
-                    disco_components[comp_id] = component
-                }
-            }
-            return disco_components
-        },
-        next_product_id() {
-            all_ids = Object.keys(this.all_products)
-            max_id = Math.max(...all_ids.map(x => parseInt(x)))
-            return (1 + max_id).toString()
-        },
-        next_component_id() {
-            all_ids = Object.keys(this.all_components)
-            max_id = Math.max(...all_ids.map(x => parseInt(x)))
-            return (1 + max_id).toString()
-        }
-    },
-    mounted: function() {
-        this.fetchExchangeRates()
     }
 }
 
