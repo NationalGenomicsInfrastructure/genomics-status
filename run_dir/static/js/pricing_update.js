@@ -382,6 +382,52 @@ app.component('exchange-rates', {
 
 app.component('product-form-part', {
     props: ['product_id'],
+    computed: {
+        product() {
+            return this.$root.all_products[this.product_id]
+        },
+        discontinued() {
+            return (this.product['Status'] == 'Discontinued')
+        },
+        isNew() {
+            return this.$root.new_products.has(this.product_id)
+        },
+        isFixedPrice() {
+            return this.product.is_fixed_price
+        },
+        categories() {
+            return this.$root.product_categories
+        },
+        types() {
+            return this.$root.product_types
+        },
+        cost() {
+            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
+            return this.$root.productCost(this.product_id)
+        }
+    },
+    methods: {
+        discontinueProduct() {
+            this.$root.discontinueProduct(this.product_id)
+        },
+        enableProduct() {
+            this.$root.enableProduct(this.product_id)
+        },
+        cloneProduct() {
+            this.$root.cloneProduct(this.product_id)
+        },
+        removeProduct() {
+            if (! (this.isNew) ) {
+                alert("Only new products are allowed to be removed, others should be discontinued")
+            }
+            this.$root.removeProduct(this.product_id)
+        },
+        makeFixedPriceDict() {
+            if (!('fixed_price' in this.product)) {
+                this.$root.all_products[this.product_id]['fixed_price'] = { "price_in_sek": 0, "price_for_academics_in_sek": 0, "full_cost_in_sek": 0 }
+            }
+        }
+    },
     template:
       /*html*/`
       <div class="my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
@@ -494,53 +540,7 @@ app.component('product-form-part', {
         </div>
       </div>
 
-        `,
-    computed: {
-        product() {
-            return this.$root.all_products[this.product_id]
-        },
-        discontinued() {
-            return (this.product['Status'] == 'Discontinued')
-        },
-        isNew() {
-            return this.$root.new_products.has(this.product_id)
-        },
-        isFixedPrice() {
-            return this.product.is_fixed_price
-        },
-        categories() {
-            return this.$root.product_categories
-        },
-        types() {
-            return this.$root.product_types
-        },
-        cost() {
-            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
-            return this.$root.productCost(this.product_id)
-        }
-    },
-    methods: {
-        discontinueProduct() {
-            this.$root.discontinueProduct(this.product_id)
-        },
-        enableProduct() {
-            this.$root.enableProduct(this.product_id)
-        },
-        cloneProduct() {
-            this.$root.cloneProduct(this.product_id)
-        },
-        removeProduct() {
-            if (! (this.isNew) ) {
-                alert("Only new products are allowed to be removed, others should be discontinued")
-            }
-            this.$root.removeProduct(this.product_id)
-        },
-        makeFixedPriceDict() {
-            if (!('fixed_price' in this.product)) {
-                this.$root.all_products[this.product_id]['fixed_price'] = { "price_in_sek": 0, "price_for_academics_in_sek": 0, "full_cost_in_sek": 0 }
-            }
-        }
-    }
+        `
 })
 
 app.component('component-form-part', {
