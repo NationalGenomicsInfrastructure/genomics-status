@@ -340,17 +340,6 @@ app.component('product-form-list', {
 })
 
 app.component('exchange-rates', {
-  template:
-      /*html*/`
-      <h4>Exchange rates</h4>
-      <dl class="row">
-        <dt class="col-md-4 text-right">1 USD</dt>
-        <dd class="col-md-8"><span>{{USD_in_SEK}}</span></dd>
-        <dt class="col-md-4 text-right">1 EUR</dt>
-        <dd class="col-md-8"><span>{{EUR_in_SEK}}</span></dd>
-        <dt class="col-md-4 text-right">Issued at</dt>
-        <dd class="col-md-8"><span>{{issued_at}}</span></dd>
-      </dl>`,
   computed: {
     USD_in_SEK() {
       val = this.$root.USD_in_SEK
@@ -377,7 +366,18 @@ app.component('exchange-rates', {
           return date.toDateString()
       }
     }
-  }
+  },
+  template:
+      /*html*/`
+      <h4>Exchange rates</h4>
+      <dl class="row">
+        <dt class="col-md-4 text-right">1 USD</dt>
+        <dd class="col-md-8"><span>{{USD_in_SEK}}</span></dd>
+        <dt class="col-md-4 text-right">1 EUR</dt>
+        <dd class="col-md-8"><span>{{EUR_in_SEK}}</span></dd>
+        <dt class="col-md-4 text-right">Issued at</dt>
+        <dd class="col-md-8"><span>{{issued_at}}</span></dd>
+      </dl>`,
 })
 
 app.component('product-form-part', {
