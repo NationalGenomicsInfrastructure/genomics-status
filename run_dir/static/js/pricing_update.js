@@ -770,29 +770,7 @@ app.component('modal-component', {
 })
 
 app.component('components', {
-    template: /*html*/`
-            <div class="input-group">
-              <fieldset disabled>
-                <input class="form-control" :id="element_id" type="text" :value="componentIds">
-              </fieldset>
-              <button type="button" class="btn btn-primary edit-components" @click="this.showModalFn" :data-product-id="product_id" :data-type="type">Edit</button>
-            </div>
-            <table v-if="Object.entries(components).length" class="table table-sm table-hover">
-              <thead>
-                <tr>
-                  <th scope="col" class="col-md-2">ID</th>
-                  <th scope="col" class="col-md-7">Name</th>
-                  <th scope="col" class="col-md-2">#</th>
-                  <th scope="col" class="col-md-1">Remove</th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-for="(component_data, comp_id) in components" :key="comp_id">
-                  <component-table-row :product_id="product['REF_ID']" :type="type" :added="true" :component_data="component_data" :component_id="comp_id"></component-table-row>
-                </template>
-              </tbody>
-            </table>
-               `,
+    props: ['product_id', 'type'],
     computed: {
         product() {
             return this.$parent.product
@@ -820,31 +798,32 @@ app.component('components', {
             this.$root.showModalFn(event)
         }
     },
-    props: ['product_id', 'type']
+    template: /*html*/`
+            <div class="input-group">
+              <fieldset disabled>
+                <input class="form-control" :id="element_id" type="text" :value="componentIds">
+              </fieldset>
+              <button type="button" class="btn btn-primary edit-components" @click="this.showModalFn" :data-product-id="product_id" :data-type="type">Edit</button>
+            </div>
+            <table v-if="Object.entries(components).length" class="table table-sm table-hover">
+              <thead>
+                <tr>
+                  <th scope="col" class="col-md-2">ID</th>
+                  <th scope="col" class="col-md-7">Name</th>
+                  <th scope="col" class="col-md-2">#</th>
+                  <th scope="col" class="col-md-1">Remove</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="(component_data, comp_id) in components" :key="comp_id">
+                  <component-table-row :product_id="product['REF_ID']" :type="type" :added="true" :component_data="component_data" :component_id="comp_id"></component-table-row>
+                </template>
+              </tbody>
+            </table>
+               `
 })
 
 app.component('component-table-row', {
-  template: /*html*/`
-    <tr data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
-      <th scope="row">{{component_id}}</th>
-      <td>{{component['Product name']}}</td>
-      <td v-if="added">
-        <!-- I was for some reason unable to solve this with regular v-model... -->
-        <input class="form-control" type="number" min=1 :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
-      </td>
-      <td class="pl-3 pt-2" v-if="added">
-        <a class="mr-2" href="#" @click="this.removeComponent">
-          <i class="far fa-times-square fa-lg text-danger"></i>
-        </a>
-      </td>
-      <td class="pl-3 pt-2" v-if="!added">
-        <a class="mr-2" href="#" @click="this.addComponent">
-          <i class="far fa-plus-square fa-lg text-success"></i>
-        </a>
-      </td>
-
-    </tr>
-    `,
   props: ['component_data', 'component_id', 'product_id', 'type', 'added'],
   data() {
       return { tooltip: null }
@@ -879,6 +858,10 @@ app.component('component-table-row', {
           return this.$root.componentCost(this.component_id)
       }
   },
+  mounted() {
+      /* Initializing tooltip, needed for dynamic content to have tooltips */
+      this.tooltip = new bootstrap.Tooltip(this.$el)
+  },
   methods: {
     updateQuantity(new_val) {
         if (this.type == 'Alternative') {
@@ -910,10 +893,27 @@ app.component('component-table-row', {
         }
     }
   },
-  mounted() {
-      /* Initializing tooltip, needed for dynamic content to have tooltips */
-      this.tooltip = new bootstrap.Tooltip(this.$el)
-  }
+  template: /*html*/`
+    <tr data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
+      <th scope="row">{{component_id}}</th>
+      <td>{{component['Product name']}}</td>
+      <td v-if="added">
+        <!-- I was for some reason unable to solve this with regular v-model... -->
+        <input class="form-control" type="number" min=1 :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
+      </td>
+      <td class="pl-3 pt-2" v-if="added">
+        <a class="mr-2" href="#" @click="this.removeComponent">
+          <i class="far fa-times-square fa-lg text-danger"></i>
+        </a>
+      </td>
+      <td class="pl-3 pt-2" v-if="!added">
+        <a class="mr-2" href="#" @click="this.addComponent">
+          <i class="far fa-plus-square fa-lg text-success"></i>
+        </a>
+      </td>
+
+    </tr>
+    `
 })
 
 app.mount('#pricing_update_main')
