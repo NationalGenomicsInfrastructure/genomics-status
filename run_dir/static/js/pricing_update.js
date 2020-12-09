@@ -545,6 +545,44 @@ app.component('product-form-part', {
 
 app.component('component-form-part', {
     props: ['component_id'],
+    computed: {
+        component() {
+            return this.$root.all_components[this.component_id]
+        },
+        discontinued() {
+            return (this.component['Status'] == 'Discontinued')
+        },
+        isNew() {
+            return this.$root.new_components.has(this.component_id)
+        },
+        categories() {
+            return this.$root.component_categories
+        },
+        types() {
+            return this.$root.component_types
+        },
+        cost() {
+            return this.$root.componentCost(this.component_id)
+        }
+    },
+    methods: {
+        enableComponent() {
+            this.$root.enableComponent(this.component_id)
+        },
+        discontinueComponent() {
+            this.$root.discontinueComponent(this.component_id)
+        },
+        cloneComponent() {
+            this.$root.cloneComponent(this.component_id)
+        },
+        removeComponent() {
+            if (! (this.isNew) ) {
+                alert("Only new components are allowed to be removed, others should be discontinued")
+            } else {
+                this.$root.removeComponent(this.component_id)
+            }
+        }
+    },
     template:
       /*html*/`
       <div class="my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
@@ -651,45 +689,7 @@ app.component('component-form-part', {
           </div>
         </div>
       </div>
-      `,
-    computed: {
-        component() {
-            return this.$root.all_components[this.component_id]
-        },
-        discontinued() {
-            return (this.component['Status'] == 'Discontinued')
-        },
-        isNew() {
-            return this.$root.new_components.has(this.component_id)
-        },
-        categories() {
-            return this.$root.component_categories
-        },
-        types() {
-            return this.$root.component_types
-        },
-        cost() {
-            return this.$root.componentCost(this.component_id)
-        }
-    },
-    methods: {
-        enableComponent() {
-            this.$root.enableComponent(this.component_id)
-        },
-        discontinueComponent() {
-            this.$root.discontinueComponent(this.component_id)
-        },
-        cloneComponent() {
-            this.$root.cloneComponent(this.component_id)
-        },
-        removeComponent() {
-            if (! (this.isNew) ) {
-                alert("Only new components are allowed to be removed, others should be discontinued")
-            } else {
-                this.$root.removeComponent(this.component_id)
-            }
-        }
-    }
+      `
 })
 
 
