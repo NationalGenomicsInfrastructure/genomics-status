@@ -125,14 +125,15 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                  }
               }]
           }
-    };        
+    };      
     serie=build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst,  color_type);
     toplot.series=serie[1];
     toplot.xAxis.categories = serie[0];
     $("#main_plot").highcharts(toplot);
-    window.current_plot_obj=toplot;
+    window.current_plot_obj=toplot; 
+    // Export TO CSV
+    toplot.downloadCSV();
 }
-
 
 function build_series(data, key, name, display_by, filter_inst_type, filter_inst, color_type){
 
@@ -520,5 +521,4 @@ function update_instrument_filters(){
             refresh_plot();
         });
     });
-
 }
