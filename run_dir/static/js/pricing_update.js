@@ -19,6 +19,113 @@ const PricingUpdate = {
             exch_rate_issued_at: null
         }
     },
+    computed: {
+        all_products_per_category() {
+            prod_per_cat = {};
+            for ([prod_id, product] of Object.entries(this.all_products)) {
+                if ( this.new_products.has(prod_id) ) {
+                    cat = "New products"
+                } else {
+                    cat = product['Category']
+                }
+                if (! (product['Status'] == 'Discontinued')) {
+                    if (! (cat in prod_per_cat)) {
+                        prod_per_cat[cat] = {}
+                    }
+                    prod_per_cat[cat][product['REF_ID']] = product
+                }
+            }
+            return prod_per_cat
+        },
+        product_categories() {
+            categories = new Set();
+            for ([prod_id, product] of Object.entries(this.all_products)) {
+                cat = product['Category']
+                if (! (product['Status'] == 'Discontinued')) {
+                    categories.add(product['Category'])
+                }
+            }
+            return categories
+        },
+        product_types() {
+            types = new Set();
+            for ([prod_id, product] of Object.entries(this.all_products)) {
+                cat = product['Type']
+                if (! (product['Status'] == 'Discontinued')) {
+                    types.add(product['Type'])
+                }
+            }
+            return types
+        },
+        discontinued_products() {
+            disco_products = {};
+            for ([prod_id, product] of Object.entries(this.all_products)) {
+                if (product['Status'] == 'Discontinued') {
+                    disco_products[prod_id] = product
+                }
+            }
+            return disco_products
+        },
+        all_components_per_category() {
+            comp_per_cat = {};
+            for ([comp_id, component] of Object.entries(this.all_components)) {
+                if ( this.new_components.has(comp_id) ) {
+                  cat = "New components"
+                } else {
+                  cat = component['Category']
+                }
+                if (! (component['Status'] == 'Discontinued')) {
+                    if (! (cat in comp_per_cat)) {
+                        comp_per_cat[cat] = {}
+                    }
+                    comp_per_cat[cat][component['REF_ID']] = component
+                }
+            }
+            return comp_per_cat
+        },
+        component_categories() {
+            categories = new Set();
+            for ([comp_id, component] of Object.entries(this.all_components)) {
+                cat = component['Category']
+                if (! (component['Status'] == 'Discontinued')) {
+                    categories.add(component['Category'])
+                }
+            }
+            return categories
+        },
+        component_types() {
+            types = new Set();
+            for ([comp_id, component] of Object.entries(this.all_components)) {
+                cat = component['Type']
+                if (! (component['Status'] == 'Discontinued')) {
+                    types.add(component['Type'])
+                }
+            }
+            return types
+        },
+        discontinued_components() {
+            disco_components = {};
+            for ([comp_id, component] of Object.entries(this.all_components)) {
+                if (component['Status'] == 'Discontinued') {
+                    disco_components[comp_id] = component
+                }
+            }
+            return disco_components
+        },
+        next_product_id() {
+            all_ids = Object.keys(this.all_products)
+            max_id = Math.max(...all_ids.map(x => parseInt(x)))
+            return (1 + max_id).toString()
+        },
+        next_component_id() {
+            all_ids = Object.keys(this.all_components)
+            max_id = Math.max(...all_ids.map(x => parseInt(x)))
+            return (1 + max_id).toString()
+        }
+    },
+    mounted: function() {
+        this.fetchExchangeRates()
+    },
     methods: {
         showModalFn(event) {
             if (event) {
@@ -154,113 +261,6 @@ const PricingUpdate = {
 
             return {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
         }
-    },
-    computed: {
-        all_products_per_category() {
-            prod_per_cat = {};
-            for ([prod_id, product] of Object.entries(this.all_products)) {
-                if ( this.new_products.has(prod_id) ) {
-                    cat = "New products"
-                } else {
-                    cat = product['Category']
-                }
-                if (! (product['Status'] == 'Discontinued')) {
-                    if (! (cat in prod_per_cat)) {
-                        prod_per_cat[cat] = {}
-                    }
-                    prod_per_cat[cat][product['REF_ID']] = product
-                }
-            }
-            return prod_per_cat
-        },
-        product_categories() {
-            categories = new Set();
-            for ([prod_id, product] of Object.entries(this.all_products)) {
-                cat = product['Category']
-                if (! (product['Status'] == 'Discontinued')) {
-                    categories.add(product['Category'])
-                }
-            }
-            return categories
-        },
-        product_types() {
-            types = new Set();
-            for ([prod_id, product] of Object.entries(this.all_products)) {
-                cat = product['Type']
-                if (! (product['Status'] == 'Discontinued')) {
-                    types.add(product['Type'])
-                }
-            }
-            return types
-        },
-        discontinued_products() {
-            disco_products = {};
-            for ([prod_id, product] of Object.entries(this.all_products)) {
-                if (product['Status'] == 'Discontinued') {
-                    disco_products[prod_id] = product
-                }
-            }
-            return disco_products
-        },
-        all_components_per_category() {
-            comp_per_cat = {};
-            for ([comp_id, component] of Object.entries(this.all_components)) {
-                if ( this.new_components.has(comp_id) ) {
-                  cat = "New components"
-                } else {
-                  cat = component['Category']
-                }
-                if (! (component['Status'] == 'Discontinued')) {
-                    if (! (cat in comp_per_cat)) {
-                        comp_per_cat[cat] = {}
-                    }
-                    comp_per_cat[cat][component['REF_ID']] = component
-                }
-            }
-            return comp_per_cat
-        },
-        component_categories() {
-            categories = new Set();
-            for ([comp_id, component] of Object.entries(this.all_components)) {
-                cat = component['Category']
-                if (! (component['Status'] == 'Discontinued')) {
-                    categories.add(component['Category'])
-                }
-            }
-            return categories
-        },
-        component_types() {
-            types = new Set();
-            for ([comp_id, component] of Object.entries(this.all_components)) {
-                cat = component['Type']
-                if (! (component['Status'] == 'Discontinued')) {
-                    types.add(component['Type'])
-                }
-            }
-            return types
-        },
-        discontinued_components() {
-            disco_components = {};
-            for ([comp_id, component] of Object.entries(this.all_components)) {
-                if (component['Status'] == 'Discontinued') {
-                    disco_components[comp_id] = component
-                }
-            }
-            return disco_components
-        },
-        next_product_id() {
-            all_ids = Object.keys(this.all_products)
-            max_id = Math.max(...all_ids.map(x => parseInt(x)))
-            return (1 + max_id).toString()
-        },
-        next_component_id() {
-            all_ids = Object.keys(this.all_components)
-            max_id = Math.max(...all_ids.map(x => parseInt(x)))
-            return (1 + max_id).toString()
-        }
-    },
-    mounted: function() {
-        this.fetchExchangeRates()
     }
 }
 
@@ -340,17 +340,6 @@ app.component('product-form-list', {
 })
 
 app.component('exchange-rates', {
-  template:
-      /*html*/`
-      <h4>Exchange rates</h4>
-      <dl class="row">
-        <dt class="col-md-4 text-right">1 USD</dt>
-        <dd class="col-md-8"><span>{{USD_in_SEK}}</span></dd>
-        <dt class="col-md-4 text-right">1 EUR</dt>
-        <dd class="col-md-8"><span>{{EUR_in_SEK}}</span></dd>
-        <dt class="col-md-4 text-right">Issued at</dt>
-        <dd class="col-md-8"><span>{{issued_at}}</span></dd>
-      </dl>`,
   computed: {
     USD_in_SEK() {
       val = this.$root.USD_in_SEK
@@ -377,11 +366,68 @@ app.component('exchange-rates', {
           return date.toDateString()
       }
     }
-  }
+  },
+  template:
+      /*html*/`
+      <h4>Exchange rates</h4>
+      <dl class="row">
+        <dt class="col-md-4 text-right">1 USD</dt>
+        <dd class="col-md-8"><span>{{USD_in_SEK}}</span></dd>
+        <dt class="col-md-4 text-right">1 EUR</dt>
+        <dd class="col-md-8"><span>{{EUR_in_SEK}}</span></dd>
+        <dt class="col-md-4 text-right">Issued at</dt>
+        <dd class="col-md-8"><span>{{issued_at}}</span></dd>
+      </dl>`,
 })
 
 app.component('product-form-part', {
     props: ['product_id'],
+    computed: {
+        product() {
+            return this.$root.all_products[this.product_id]
+        },
+        discontinued() {
+            return (this.product['Status'] == 'Discontinued')
+        },
+        isNew() {
+            return this.$root.new_products.has(this.product_id)
+        },
+        isFixedPrice() {
+            return this.product.is_fixed_price
+        },
+        categories() {
+            return this.$root.product_categories
+        },
+        types() {
+            return this.$root.product_types
+        },
+        cost() {
+            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
+            return this.$root.productCost(this.product_id)
+        }
+    },
+    methods: {
+        discontinueProduct() {
+            this.$root.discontinueProduct(this.product_id)
+        },
+        enableProduct() {
+            this.$root.enableProduct(this.product_id)
+        },
+        cloneProduct() {
+            this.$root.cloneProduct(this.product_id)
+        },
+        removeProduct() {
+            if (! (this.isNew) ) {
+                alert("Only new products are allowed to be removed, others should be discontinued")
+            }
+            this.$root.removeProduct(this.product_id)
+        },
+        makeFixedPriceDict() {
+            if (!('fixed_price' in this.product)) {
+                this.$root.all_products[this.product_id]['fixed_price'] = { "price_in_sek": 0, "price_for_academics_in_sek": 0, "full_cost_in_sek": 0 }
+            }
+        }
+    },
     template:
       /*html*/`
       <div class="my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
@@ -494,57 +540,49 @@ app.component('product-form-part', {
         </div>
       </div>
 
-        `,
-    computed: {
-        product() {
-            return this.$root.all_products[this.product_id]
-        },
-        discontinued() {
-            return (this.product['Status'] == 'Discontinued')
-        },
-        isNew() {
-            return this.$root.new_products.has(this.product_id)
-        },
-        isFixedPrice() {
-            return this.product.is_fixed_price
-        },
-        categories() {
-            return this.$root.product_categories
-        },
-        types() {
-            return this.$root.product_types
-        },
-        cost() {
-            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
-            return this.$root.productCost(this.product_id)
-        }
-    },
-    methods: {
-        discontinueProduct() {
-            this.$root.discontinueProduct(this.product_id)
-        },
-        enableProduct() {
-            this.$root.enableProduct(this.product_id)
-        },
-        cloneProduct() {
-            this.$root.cloneProduct(this.product_id)
-        },
-        removeProduct() {
-            if (! (this.isNew) ) {
-                alert("Only new products are allowed to be removed, others should be discontinued")
-            }
-            this.$root.removeProduct(this.product_id)
-        },
-        makeFixedPriceDict() {
-            if (!('fixed_price' in this.product)) {
-                this.$root.all_products[this.product_id]['fixed_price'] = { "price_in_sek": 0, "price_for_academics_in_sek": 0, "full_cost_in_sek": 0 }
-            }
-        }
-    }
+        `
 })
 
 app.component('component-form-part', {
     props: ['component_id'],
+    computed: {
+        component() {
+            return this.$root.all_components[this.component_id]
+        },
+        discontinued() {
+            return (this.component['Status'] == 'Discontinued')
+        },
+        isNew() {
+            return this.$root.new_components.has(this.component_id)
+        },
+        categories() {
+            return this.$root.component_categories
+        },
+        types() {
+            return this.$root.component_types
+        },
+        cost() {
+            return this.$root.componentCost(this.component_id)
+        }
+    },
+    methods: {
+        enableComponent() {
+            this.$root.enableComponent(this.component_id)
+        },
+        discontinueComponent() {
+            this.$root.discontinueComponent(this.component_id)
+        },
+        cloneComponent() {
+            this.$root.cloneComponent(this.component_id)
+        },
+        removeComponent() {
+            if (! (this.isNew) ) {
+                alert("Only new components are allowed to be removed, others should be discontinued")
+            } else {
+                this.$root.removeComponent(this.component_id)
+            }
+        }
+    },
     template:
       /*html*/`
       <div class="my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
@@ -651,45 +689,7 @@ app.component('component-form-part', {
           </div>
         </div>
       </div>
-      `,
-    computed: {
-        component() {
-            return this.$root.all_components[this.component_id]
-        },
-        discontinued() {
-            return (this.component['Status'] == 'Discontinued')
-        },
-        isNew() {
-            return this.$root.new_components.has(this.component_id)
-        },
-        categories() {
-            return this.$root.component_categories
-        },
-        types() {
-            return this.$root.component_types
-        },
-        cost() {
-            return this.$root.componentCost(this.component_id)
-        }
-    },
-    methods: {
-        enableComponent() {
-            this.$root.enableComponent(this.component_id)
-        },
-        discontinueComponent() {
-            this.$root.discontinueComponent(this.component_id)
-        },
-        cloneComponent() {
-            this.$root.cloneComponent(this.component_id)
-        },
-        removeComponent() {
-            if (! (this.isNew) ) {
-                alert("Only new components are allowed to be removed, others should be discontinued")
-            } else {
-                this.$root.removeComponent(this.component_id)
-            }
-        }
-    }
+      `
 })
 
 
@@ -770,29 +770,7 @@ app.component('modal-component', {
 })
 
 app.component('components', {
-    template: /*html*/`
-            <div class="input-group">
-              <fieldset disabled>
-                <input class="form-control" :id="element_id" type="text" :value="componentIds">
-              </fieldset>
-              <button type="button" class="btn btn-primary edit-components" @click="this.showModalFn" :data-product-id="product_id" :data-type="type">Edit</button>
-            </div>
-            <table v-if="Object.entries(components).length" class="table table-sm table-hover">
-              <thead>
-                <tr>
-                  <th scope="col" class="col-md-2">ID</th>
-                  <th scope="col" class="col-md-7">Name</th>
-                  <th scope="col" class="col-md-2">#</th>
-                  <th scope="col" class="col-md-1">Remove</th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-for="(component_data, comp_id) in components" :key="comp_id">
-                  <component-table-row :product_id="product['REF_ID']" :type="type" :added="true" :component_data="component_data" :component_id="comp_id"></component-table-row>
-                </template>
-              </tbody>
-            </table>
-               `,
+    props: ['product_id', 'type'],
     computed: {
         product() {
             return this.$parent.product
@@ -820,31 +798,32 @@ app.component('components', {
             this.$root.showModalFn(event)
         }
     },
-    props: ['product_id', 'type']
+    template: /*html*/`
+            <div class="input-group">
+              <fieldset disabled>
+                <input class="form-control" :id="element_id" type="text" :value="componentIds">
+              </fieldset>
+              <button type="button" class="btn btn-primary edit-components" @click="this.showModalFn" :data-product-id="product_id" :data-type="type">Edit</button>
+            </div>
+            <table v-if="Object.entries(components).length" class="table table-sm table-hover">
+              <thead>
+                <tr>
+                  <th scope="col" class="col-md-2">ID</th>
+                  <th scope="col" class="col-md-7">Name</th>
+                  <th scope="col" class="col-md-2">#</th>
+                  <th scope="col" class="col-md-1">Remove</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="(component_data, comp_id) in components" :key="comp_id">
+                  <component-table-row :product_id="product['REF_ID']" :type="type" :added="true" :component_data="component_data" :component_id="comp_id"></component-table-row>
+                </template>
+              </tbody>
+            </table>
+               `
 })
 
 app.component('component-table-row', {
-  template: /*html*/`
-    <tr data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
-      <th scope="row">{{component_id}}</th>
-      <td>{{component['Product name']}}</td>
-      <td v-if="added">
-        <!-- I was for some reason unable to solve this with regular v-model... -->
-        <input class="form-control" type="number" min=1 :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
-      </td>
-      <td class="pl-3 pt-2" v-if="added">
-        <a class="mr-2" href="#" @click="this.removeComponent">
-          <i class="far fa-times-square fa-lg text-danger"></i>
-        </a>
-      </td>
-      <td class="pl-3 pt-2" v-if="!added">
-        <a class="mr-2" href="#" @click="this.addComponent">
-          <i class="far fa-plus-square fa-lg text-success"></i>
-        </a>
-      </td>
-
-    </tr>
-    `,
   props: ['component_data', 'component_id', 'product_id', 'type', 'added'],
   data() {
       return { tooltip: null }
@@ -879,6 +858,10 @@ app.component('component-table-row', {
           return this.$root.componentCost(this.component_id)
       }
   },
+  mounted() {
+      /* Initializing tooltip, needed for dynamic content to have tooltips */
+      this.tooltip = new bootstrap.Tooltip(this.$el)
+  },
   methods: {
     updateQuantity(new_val) {
         if (this.type == 'Alternative') {
@@ -910,10 +893,27 @@ app.component('component-table-row', {
         }
     }
   },
-  mounted() {
-      /* Initializing tooltip, needed for dynamic content to have tooltips */
-      this.tooltip = new bootstrap.Tooltip(this.$el)
-  }
+  template: /*html*/`
+    <tr data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
+      <th scope="row">{{component_id}}</th>
+      <td>{{component['Product name']}}</td>
+      <td v-if="added">
+        <!-- I was for some reason unable to solve this with regular v-model... -->
+        <input class="form-control" type="number" min=1 :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
+      </td>
+      <td class="pl-3 pt-2" v-if="added">
+        <a class="mr-2" href="#" @click="this.removeComponent">
+          <i class="far fa-times-square fa-lg text-danger"></i>
+        </a>
+      </td>
+      <td class="pl-3 pt-2" v-if="!added">
+        <a class="mr-2" href="#" @click="this.addComponent">
+          <i class="far fa-plus-square fa-lg text-success"></i>
+        </a>
+      </td>
+
+    </tr>
+    `
 })
 
 app.mount('#pricing_update_main')
