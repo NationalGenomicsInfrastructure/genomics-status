@@ -5,6 +5,8 @@ const all_components_reactive = Vue.reactive(global_components_json)
 document.getElementsByTagName("body")[0].setAttribute("data-spy", "scroll");
 document.getElementsByTagName("body")[0].setAttribute("data-target", "#pricing_update_sidebar");
 
+/* Does not follow the Vue style guide: https://v3.vuejs.org/style-guide/
+feel free to update */
 const PricingUpdate = {
     data() {
         return {
