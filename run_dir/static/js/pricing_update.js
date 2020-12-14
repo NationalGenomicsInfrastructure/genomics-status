@@ -1,6 +1,3 @@
-const all_products_reactive = Vue.reactive(global_products_json)
-const all_components_reactive = Vue.reactive(global_components_json)
-
 /* Inject attributes needed for scrollspy */
 document.getElementsByTagName("body")[0].setAttribute("data-spy", "scroll");
 document.getElementsByTagName("body")[0].setAttribute("data-target", "#pricing_update_sidebar");
@@ -10,8 +7,9 @@ feel free to update */
 const PricingUpdate = {
     data() {
         return {
-            all_components: all_components_reactive,
-            all_products: all_products_reactive,
+            all_components: null,
+            all_products: null,
+            data_loading: true,
             new_products: new Set(),
             new_components: new Set(),
             modal_product_id: "52", //Should probably be null when we handle that edge case
@@ -125,8 +123,9 @@ const PricingUpdate = {
             return (1 + max_id).toString()
         }
     },
-    mounted: function() {
-        this.fetchExchangeRates()
+    created: function() {
+        this.fetchExchangeRates(),
+        this.fetchCostCalculator()
     },
     methods: {
         showModalFn(event) {
@@ -227,6 +226,15 @@ const PricingUpdate = {
                   this.exch_rate_issued_at = response.data['Issued at']
               })
         },
+        fetchCostCalculator() {
+            axios
+              .get('/api/v1/cost_calculator')
+              .then(response => {
+                  this.all_products = response.data.products
+                  this.all_components = response.data.components
+                  this.data_loading = false
+              })
+        },
         componentCost(comp_id) {
             component = this.all_components[comp_id]
             currency = component['Currency']
@@ -269,8 +277,19 @@ const PricingUpdate = {
 const app = Vue.createApp(PricingUpdate)
 
 app.component('product-form-list', {
+    computed: {
+        data_loading() {
+            return this.$root.data_loading
+        }
+    },
     template:
         /*html*/`
+        <template v-if="this.data_loading">
+          <div>
+            Loading!
+          </div>
+        </template>
+        <template v-else>
         <div class="row">
           <div class="col-md-2">
             <nav id="pricing_update_sidebar" class="nav sidebar sticky-top">
@@ -338,6 +357,7 @@ app.component('product-form-list', {
           </div>
         </div>
       </div>
+      </template>
         `
 })
 
@@ -596,107 +616,111 @@ app.component('component-form-part', {
         <div :id="'collapseComponent' + component_id"  class="collapse">
           <div class="row">
             <div class="col-md-10">
-            <h5>{{ component['Last Updated']}}</h5>
-            <div class="row my-1">
-              <fieldset disabled class='col-md-1'>
-                <label class="form-label">
-                  ID
-                  <input class="form-control" v-model.number="component['REF_ID']" type="number">
-                </label>
-              </fieldset>
-              <label class="form-label col-md-3">
-                Category
-                <input class="form-control" :list="'compCategoryOptions' + component_id" v-model.text="component['Category']" type="text">
-                <datalist :id="'compCategoryOptions' + component_id">
-                  <option v-for="category in categories">{{category}}</option>
-                </datalist>
-              </label>
-              <label class="form-label col-md-2">
-                Product Type
-                <input class="form-control" :list="'compTypeOptions' + component_id" v-model.text="component['Type']" type="text">
-                <datalist :id="'compTypeOptions' + component_id">
-                  <option v-for="type in types">{{type}}</option>
-                </datalist>
-              </label>
-              <label class="form-label col-md-6">
-                Component Name
-                <input class="form-control" v-model.text="component['Product name']" type="text">
-              </label>
-            </div>
-            <div class="row my-1">
-              <label class="form-label col-md-2">
-                Manufacturer
-                <input class="form-control" v-model.text="component['Manufacturer']" type="text">
-              </label>
+              <h5>{{ component['Last Updated']}}</h5>
+                <div class="row my-1">
+                  <fieldset disabled class='col-md-1'>
+                    <label class="form-label">
+                      ID
+                      <input class="form-control" v-model.number="component['REF_ID']" type="number">
+                    </label>
+                  </fieldset>
+                  <label class="form-label col-md-3">
+                    Category
+                    <input class="form-control" :list="'compCategoryOptions' + component_id" v-model.text="component['Category']" type="text">
+                    <datalist :id="'compCategoryOptions' + component_id">
+                      <option v-for="category in categories">{{category}}</option>
+                    </datalist>
+                  </label>
+                  <label class="form-label col-md-2">
+                    Product Type
+                    <input class="form-control" :list="'compTypeOptions' + component_id" v-model.text="component['Type']" type="text">
+                    <datalist :id="'compTypeOptions' + component_id">
+                      <option v-for="type in types">{{type}}</option>
+                    </datalist>
+                  </label>
+                  <label class="form-label col-md-6">
+                    Component Name
+                    <input class="form-control" v-model.text="component['Product name']" type="text">
+                  </label>
+                </div>
+                <div class="row my-1">
+                  <label class="form-label col-md-2">
+                    Manufacturer
+                    <input class="form-control" v-model.text="component['Manufacturer']" type="text">
+                  </label>
 
-              <label class="form-label col-md-2">
-                Re-seller
-                <input class="form-control" v-model.text="component['Re-seller']" type="text">
-              </label>
+                  <label class="form-label col-md-2">
+                    Re-seller
+                    <input class="form-control" v-model.text="component['Re-seller']" type="text">
+                  </label>
 
-              <label class="form-label col-md-4">
-                Product #
-                <input class="form-control" v-model.text="component['Product #']" type="text">
-              </label>
+                  <label class="form-label col-md-4">
+                    Product #
+                    <input class="form-control" v-model.text="component['Product #']" type="text">
+                  </label>
 
-              <label class="form-label col-md-2">
-                Units
-                <input class="form-control" v-model.text="component['Units']" type="text">
-              </label>
+                  <label class="form-label col-md-2">
+                    Units
+                    <input class="form-control" v-model.text="component['Units']" type="text">
+                  </label>
 
-              <label class="form-label col-md-2">
-                Min Quantity
-                <input class="form-control" v-model.text="component['Min Quantity']" type="text">
-              </label>
+                  <label class="form-label col-md-2">
+                    Min Quantity
+                    <input class="form-control" v-model.text="component['Min Quantity']" type="text">
+                  </label>
 
-            </div>
-            <div class="row my-1">
-              <label class="form-label col-md-2">
-                Discount
-                <input class="form-control" v-model.text="component['Discount']" type="text">
-              </label>
+                </div>
+                <div class="row my-1">
+                  <label class="form-label col-md-2">
+                    Discount
+                    <input class="form-control" v-model.text="component['Discount']" type="text">
+                  </label>
 
-              <label class="form-label col-md-2">
-                List Price
-                <input class="form-control" v-model.text="component['List price']" type="text">
-              </label>
+                  <label class="form-label col-md-2">
+                    List Price
+                    <input class="form-control" v-model.text="component['List price']" type="text">
+                  </label>
 
-              <label class="form-label col-md-2">
-                Currency
-                <input class="form-control" v-model.text="component['Currency']" type="text">
-              </label>
+                  <label class="form-label col-md-2">
+                    Currency
+                    <input class="form-control" v-model.text="component['Currency']" type="text">
+                  </label>
 
-              <label class="form-label col-md-6">
-                Comment
-                <input class="form-control" v-model.text="component['Comment']" type="text">
-              </label>
-            </div>
-          </div>
-          <div class="col-md-2 align-self-end pl-4">
-            <div class="pb-3">
-              <h4>Current Cost:</h4>
-              <dt>Cost</dt>
-              <dd>{{cost['sek_price'].toFixed(2)}} SEK</dd>
-              <dt>Per Unit</dt>
-              <dd>{{cost['sek_price_per_unit'].toFixed(2)}} SEK</dd>
-            </div>
-            <button type="button" class="btn btn-outline-success w-100 mb-2" @click="this.cloneComponent">Clone<i class="far fa-clone fa-lg text-success ml-2"></i></button>
-            <div v-if="this.isNew">
-              <button type="button" class="btn btn-outline-danger w-100" @click="this.removeComponent">Remove<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
-            </div>
-            <div v-else>
-              <button v-if="this.discontinued" type="button" class="btn btn-outline-danger w-100" @click="this.enableComponent">Enable</button>
-              <button v-else type="button" class="btn btn-outline-danger w-100" @click="this.discontinueComponent">Discontinue<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
+                  <label class="form-label col-md-6">
+                    Comment
+                    <input class="form-control" v-model.text="component['Comment']" type="text">
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-2 align-self-end pl-4">
+                <div class="pb-3">
+                  <h4>Current Cost:</h4>
+                  <dt>Cost</dt>
+                  <dd>{{cost['sek_price'].toFixed(2)}} SEK</dd>
+                  <dt>Per Unit</dt>
+                  <dd>{{cost['sek_price_per_unit'].toFixed(2)}} SEK</dd>
+                </div>
+                <button type="button" class="btn btn-outline-success w-100 mb-2" @click="this.cloneComponent">Clone<i class="far fa-clone fa-lg text-success ml-2"></i></button>
+                <div v-if="this.isNew">
+                  <button type="button" class="btn btn-outline-danger w-100" @click="this.removeComponent">Remove<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
+                </div>
+                <div v-else>
+                  <button v-if="this.discontinued" type="button" class="btn btn-outline-danger w-100" @click="this.enableComponent">Enable</button>
+                  <button v-else type="button" class="btn btn-outline-danger w-100" @click="this.discontinueComponent">Discontinue<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       `
 })
 
 
 app.component('modal-component', {
     computed: {
+        data_loading() {
+            return this.$root.data_loading
+        },
         product() {
             return this.$root.all_products[this.$root.modal_product_id]
         },
@@ -719,6 +743,12 @@ app.component('modal-component', {
         }
     },
     template: /*html*/`
+          <template v-if="this.data_loading">
+            <div>
+              Loading
+            </div>
+          </template>
+          <template v-else>
             <div class="modal-header">
               <h2 class="modal-title">{{this.product['Name']}}</h2>
               <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
@@ -768,6 +798,7 @@ app.component('modal-component', {
                 </div>
               </form>
             </div>
+          </template>
         `
 })
 
