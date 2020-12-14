@@ -454,7 +454,7 @@ app.component('product-form-part', {
       /*html*/`
       <div class="my-2 p-2" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="row">
-          <a class="pricing_update_collapse_link" data-toggle="collapse" :href="'#collapseProduct' + product_id" role="button" aria-expanded="false" :aria-controls="'collapseProduct' + product_id">
+          <a class="pricing_update_collapse_link" data-toggle="collapse" :data-target="'#collapseProduct' + product_id" role="button" aria-expanded="false" :aria-controls="'collapseProduct' + product_id">
             <h5 :class="{'text-danger': discontinued, 'col-md-6 my-1': true}"> {{ product['Name'] }} {{ discontinued ? ' - Discontinued' : '' }} </h5>
           </a>
         </div>
