@@ -55,6 +55,14 @@ class PricingBaseHandler(SafeHandler):
                            'Expected only 1.'.format(object_type)
                 )
 
+    def _current_user_email(self):
+        current_user = self.get_current_user()
+        if current_user:
+            current_user_email = current_user.email
+        else:  # testing_mode
+            current_user_email = 'test@example.com'
+        return current_user_email
+
     # _____________________________ FETCH METHODS _____________________________
 
     def fetch_components(self, component_id=None, version=None):
@@ -659,33 +667,169 @@ class PricingValidationDataHandler(PricingBaseHandler):
         pass
 
 
+class PricingDataHandler(PricingBaseHandler):
+    """Loaded through /api/v1/cost_calculator """
+
+    def _get_latest_doc(self, db):
+        curr_rows = db.view('entire_document/by_version', descending=True, limit=1).rows
+        curr_doc = curr_rows[0].value
+        return curr_doc
+
+    def _get_doc_version(self, version, db):
+        rows = db.view('entire_document/by_version', descending=True, key=version, limit=1).rows
+        doc = rows[0].value
+        return doc
+
+    def get(self):
+        """ Should return the specified version of the cost calculator."""
+        version = self.get_argument('version', None)
+        cc_db = self.application.cost_calculator_db
+
+        if version is None:
+            doc = self._get_latest_doc(cc_db)
+        else:
+            doc = self._get_doc_version(version, cc_db)
+
+        self.write(json.dumps(doc))
+
+    def post(self):
+        """ Create a new draft cost calculator.
+
+        will check that:
+            - the latest version is not a draft (would return 400)
+        """
+        cc_db = self.application.cost_calculator_db
+
+        latest_doc = self._get_latest_doc(cc_db)
+        draft = latest_doc['Draft']
+
+        if draft:
+            self.set_status(400)
+            self.write("Error: A draft already exists. There can only be one.")
+
+        # Create a new draft
+        doc = latest_doc.copy()
+        version = latest_doc['Version'] + 1
+
+        current_user_email = self.current_user_email()
+
+        lock_info = {'Locked': True,
+                     'Locked by': current_user_email}
+
+        doc['Draft'] = True
+        doc['Version'] = version
+        doc['Lock Info'] = lock_info
+        # Should be set at the time of publication
+        doc['Issued by user'] = None
+        doc['Issued by user email'] = None
+        doc['Issued at'] = None
+
+        cc_db.save(doc)
+        self.write({'message': 'Draft created'})
+
+    def put(self):
+        """ Update the current draft cost calculator.
+
+        Only updates the components and products section of the document.
+        Expects a json blob with the keys 'components' and 'products'.
+        Will check that:
+            - the most recent one is a draft
+            - draft is not locked by other user
+        otherwise return 400.
+        """
+        cc_db = self.application.cost_calculator_db
+
+        latest_doc = self._get_latest_doc(cc_db)
+        draft = latest_doc['Draft']
+        if not draft:
+            self.set_status(400)
+            self.write("Error: Attempting to update a non-draft cost calculator.")
+
+        current_user_email = self.current_user_email()
+
+        lock_info = latest_doc['Lock Info']
+        if lock_info['Locked']:
+            if lock_info['Locked by'] != current_user_email:
+                self.set_status(400)
+                self.write("Error: Attempting to update a draft locked by someone else.")
+
+        new_doc_content = tornado.escape.json_decode(self.request.body)
+        if ('components' not in new_doc_content) or ('products' not in new_doc_content):
+            self.set_status(400)
+            self.write("Error: Malformed request body.")
+
+        ## TODO: Validate the data?
+        latest_doc['components'] = new_doc_content['components']
+        latest_doc['products'] = new_doc_content['products']
+
+        cc_db.save(latest_doc)
+        self.write({'message': 'Draft updated'})
+
+
+class PricingPublishDataHandler(PricingBaseHandler):
+    """ """
+
+    def post(self):
+        """ Publish a new cost calculator, from the current draft. """
+        self.set_status(400)
+        self.write('Not implemented')
+
+
 class PricingUpdateHandler(PricingBaseHandler):
-    """ Serves a list view of all product prices
+    """ Serves a form where the draft cost calculator can be updated.
+
+    If there is a current draft (version nr higher than the last published) this will be
+    served as the basis. Otherwise a new draft will be created.
+    Also makes sure that the draft is not locked by another user, otherwise redirect to preview page.
 
     Loaded through:
         /pricing_update
 
     """
+    def _get_latest_doc(self, db):
+        curr_rows = db.view('entire_document/by_version', descending=True, limit=1).rows
+        curr_doc = curr_rows[0].value
+        return curr_doc
 
     def get(self):
-        version = self.get_argument('version', None)
-        date = self.get_argument('date', None)
-        products = self.get_product_prices(None, version=version,
-                                           date=date, discontinued=True,
-                                           pretty_strings=True)
+        """ Serves the page where draft cost calculators can be updated.
 
-        components = self.get_component_prices(component_id=None,
-                                               version=version,
-                                               date=date,
-                                               pretty_strings=True)
+            Will check that:
+                - the most recent one is a draft
+                - draft is not locked by other user
+            otherwise return 400.
+        """
+
+        cc_db = self.application.cost_calculator_db
+
+        latest_doc = self._get_latest_doc(cc_db)
+        draft = latest_doc['Draft']
+        if not draft:
+            self.set_status(400)
+            self.write("Error: Attempting to update a non-draft cost calculator.")
+
+        current_user_email = self._current_user_email()
+
+        lock_info = latest_doc['Lock Info']
+        if lock_info['Locked']:
+            if lock_info['Locked by'] != current_user_email:
+                self.set_status(400)
+                self.write("Error: Attempting to update a draft locked by someone else.")
 
         t = self.application.loader.load('pricing_update.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                              user=self.get_current_user(),
-                              components_json=json.dumps(components),
-                              products_json=json.dumps(products),
-                              version=version))
+                              user=self.get_current_user()))
 
-    def post(self):
-        self.set_status(400)
-        self.write('Not implemented')
+
+class PricingPreviewHandler(PricingBaseHandler):
+    """ Serves a preview of the draft cost calculator.
+
+    Loaded through:
+        /pricing_preview
+
+    """
+
+    def get(self):
+        t = self.application.loader.load('pricing_preview.html')
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                              user=self.get_current_user()))

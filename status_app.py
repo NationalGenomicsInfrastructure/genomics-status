@@ -32,7 +32,8 @@ from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler,
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingComponentsDataHandler, PricingProductsDataHandler, \
     PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
-    PricingQuoteHandler, PricingQuoteTbodyHandler, PricingValidationDataHandler, PricingUpdateHandler
+    PricingQuoteHandler, PricingQuoteTbodyHandler, PricingValidationDataHandler, \
+    PricingUpdateHandler, PricingPreviewHandler, PricingDataHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -100,6 +101,7 @@ class Application(tornado.web.Application):
             ("/api/v1/bioinfo_analysis/([^/]*)$", BioinfoAnalysisHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
             ("/api/v1/charon_summary/([^/]*)$",CharonProjectHandler ),
+            ("/api/v1/cost_calculator", PricingDataHandler ),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
@@ -211,9 +213,10 @@ class Application(tornado.web.Application):
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/nas_quotas", NASQuotasHandler),
             ("/pools_qpcr", qPCRPoolsHandler),
-            ("/pricing_update", PricingUpdateHandler),
+            ("/pricing_preview", PricingPreviewHandler),
             ("/pricing_quote", PricingQuoteHandler),
             ("/pricing_quote_tbody", PricingQuoteTbodyHandler),
+            ("/pricing_update", PricingUpdateHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesHandler),
             ("/project/(P[^/]*)/([^/]*)$", ProjectSamplesHandler),
@@ -242,6 +245,7 @@ class Application(tornado.web.Application):
             self.analysis_db= couch["analysis"]
             self.application_categories_db = couch["application_categories"]
             self.bioinfo_db = couch["bioinfo_analysis"]
+            self.cost_calculator_db = couch["cost_calculator"]
             self.cronjobs_db = couch["cronjobs"]
             self.flowcells_db = couch["flowcells"]
             self.gs_users_db = couch["gs_users"]
