@@ -338,19 +338,13 @@ app.component('product-form-list', {
           </div>
 
         <div class="col-md-10">
-          <div id="pricing_product_form_content" data-offset="0" tabindex="0">
+          <div id="pricing_product_form_content" data-offset="0">
             <div class="card pt-3 px-3 bg-light">
               <div class="row">
                 <div class="col-md-7 mr-auto">
                   <h2>Edit draft Cost Calculator</h2>
-                  <div class="row">
-                    <div class="col-3">
-                      <button class="btn btn-primary btn-lg mt-2" @click="saveDraft">Save Draft</button>
-                    </div>
-                    <div class="col-9">
-                      <p class="text-success" v-if="save_message !== null"><strong>Saved!</strong> {{save_message}}</p>
-                    </div>
-                  </div>
+                  <p class="text-success" v-if="save_message !== null"><strong>Saved!</strong> {{save_message}}</p>
+                  <button class="btn btn-primary btn-lg position-absolute bottom-0 mb-3" @click="saveDraft">Save Draft</button>
                 </div>
                 <div class="col-md-5">
                   <exchange-rates></exchange-rates>
