@@ -504,6 +504,10 @@ function load_all_udfs(){
           safeobj(key).html('<span class="label label-default">'+value+'</span>');
         }
       }
+      // Make the user comments render Markdown
+      else if (prettify(key) == 'customer_project_description'){
+        $('#customer_project_description').html(make_markdown(value));
+      }
 
       // Everything else
       else {
