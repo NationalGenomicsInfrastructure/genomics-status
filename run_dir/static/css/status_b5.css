@@ -105,6 +105,21 @@ h1 small, h2 small, h3 small{
   z-index: 100;
 }
 
+tr.group, tr.group:hover, .dtrg-group {
+    background-color: #ddd !important;
+    cursor: pointer;
+}
+
+.expand-proj {
+  cursor: pointer;
+}
+
+.expand-proj span.fa{
+  color: #0088cc;
+  cursor: pointer;
+  margin-right: 6px;
+}
+
 .navbar {
  min-height: 50.5px;
 }

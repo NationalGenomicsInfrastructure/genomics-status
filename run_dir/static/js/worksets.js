@@ -43,7 +43,7 @@ function init_listjs() {
     });
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#workset_table_filter').addClass('form-inline pull-right');
+    $('#workset_table_filter').addClass('form-inline float-right');
     $("#workset_table_filter").appendTo("h1");
     $('#workset_table_filter label input').appendTo($('#workset_table_filter'));
     $('#workset_table_filter label').remove();
@@ -61,9 +61,9 @@ function init_listjs() {
     var clipboard = new Clipboard('#ws_copy_table');
     clipboard.on('success', function(e) {
       e.clearSelection();
-      $('#ws_copy_table').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+      $('#ws_copy_table').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
       setTimeout(function(){
-      $('#ws_copy_table').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
+      $('#ws_copy_table').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
       }, 2000);
     });
 }
@@ -93,7 +93,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
     $('#workset_table_filter').show();
   }
   if($(this).attr('href')=='#tab_pending_samples_to_worksets'){
-    $("#samples_table_body").html('<tr><td colspan="4" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
+    $("#samples_table_body").html('<tr><td colspan="4" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
     return $.getJSON('/api/v1/workset_pools', function(data) {
       $("#samples_table_body").empty();
       var size = 0;
@@ -105,10 +105,10 @@ $(".tabbable").on("click", '[role="tab"]', function() {
             var tbl_row = $('<tr>');
             tbl_row.append($('<td>').html(key));
             tbl_row.append($('<td class="expand-proj">').html(function() {
-              var to_return = '<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>';
-              to_return = to_return + '<a href="/project/'+project+'">'+projval['pname']+' ('+project+') </a>';
-              to_return = to_return + '<span style="float:right; padding-right:50px;"><table cellpadding="5" border="0" style="visibility:collapse;">';
-              to_return = to_return + '<thead><tr><th>Samples</th></tr></thead>';
+              var to_return = '<span class="fa fa-plus-circle" aria-hidden="true"></span>';
+              to_return = to_return + '<a class="text-decoration-none" href="/project/'+project+'">'+projval['pname']+' ('+project+') </a>';
+              to_return = to_return + '<span style="float:right; padding-right:50px;"><table border="0" style="visibility:collapse;">';
+              to_return = to_return + '<thead><tr class="darkth"><th>Samples</th></tr></thead>';
               $.each(projval['samples'], function(i, sample){
                 to_return = to_return +
                 '<tr>'+
@@ -118,10 +118,10 @@ $(".tabbable").on("click", '[role="tab"]', function() {
                 to_return = to_return +'</table></span>';
                 return to_return;
               }));
-            tbl_row.append($('<td>').html(projval['samples'].length +' <span class="badge">'+ projval['total_num_samples']+'</span>'));
+            tbl_row.append($('<td>').html(projval['samples'].length +' <span class="badge bg-secondary">'+ projval['total_num_samples']+'</span>'));
             sumGroups[key] = sumGroups[key] + projval['samples'].length;
             var daysAndLabel = getDaysAndDateLabel(projval['queued_date'], 'both');
-            tbl_row.append($('<td>').html('<span class="label label-'+daysAndLabel[1]+'">'+daysAndLabel[0]+'</span>'));
+            tbl_row.append($('<td>').html('<span class="badge bg-'+daysAndLabel[1]+'">'+daysAndLabel[0]+'</span>'));
             $("#samples_table_body").append(tbl_row);
           });
         }
@@ -130,43 +130,43 @@ $(".tabbable").on("click", '[role="tab"]', function() {
       init_listjs2();
       $('.expand-proj').on('click', function () {
         if($(this).parent().find('table').css('visibility')=='collapse'){
-          $(this).find('.glyphicon').toggleClass('glyphicon-plus-sign glyphicon-minus-sign');
+          $(this).find('.fa').toggleClass('fa-plus-circle fa-minus-circle');
           $(this).parent().find('table').css('visibility', 'visible');
         }
         else {
-          $(this).find('.glyphicon').toggleClass('glyphicon-minus-sign glyphicon-plus-sign');
+          $(this).find('.fa').toggleClass('fa-minus-circle fa-plus-circle');
           $(this).parent().find('table').css('visibility', 'collapse');
         }
       });
       $('.expand-all').on('click', function () {
-        var reqText = {'Expand All': ['Collapse All', 'visible', 'glyphicon-plus-sign', 'glyphicon-minus-sign'],
-                        'Collapse All': ['Expand All', 'collapse', 'glyphicon-minus-sign', 'glyphicon-plus-sign']};
-        $('.expand-all').find('.glyphicon').removeClass(reqText[$('.expand-all').text()][2]);
-        $('#samples_table').find('tr').find('.glyphicon').removeClass(reqText[$('.expand-all').text()][2]);
-        $('.expand-all').find('.glyphicon').addClass(reqText[$('.expand-all').text()][3]);
-        $('#samples_table').find('tr').find('.glyphicon').addClass(reqText[$('.expand-all').text()][3]);
+        var reqText = {'Expand All': ['Collapse All', 'visible', 'fa-plus-circle', 'fa-minus-circle'],
+                        'Collapse All': ['Expand All', 'collapse', 'fa-minus-circle', 'fa-plus-circle']};
+        $('.expand-all').find('.fa').removeClass(reqText[$('.expand-all').text()][2]);
+        $('#samples_table').find('tr').find('.fa').removeClass(reqText[$('.expand-all').text()][2]);
+        $('.expand-all').find('.fa').addClass(reqText[$('.expand-all').text()][3]);
+        $('#samples_table').find('tr').find('.fa').addClass(reqText[$('.expand-all').text()][3]);
         $('#samples_table').find('tr').find('table').css('visibility', reqText[$('.expand-all').text()][1]);
         $('.expand-all').contents().filter(function(){ return this.nodeType == 3; }).first().replaceWith(reqText[$('.expand-all').text()][0]);
       });
     });
   }
   if($(this).attr('href')=='#tab_closed_worksets'){
-    $("#closed_ws_table_body").html('<tr><td colspan="4" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
+    $("#closed_ws_table_body").html('<tr><td colspan="4" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
     return $.getJSON('/api/v1/closed_worksets', function(data) {
       $("#closed_ws_table_body").empty();
       $.each(data, function(key, value) {
         if(!($.isEmptyObject(value))){
           var tbl_row = $('<tr>');
           tbl_row.append($('<td>').html(value['date_run']));
-          tbl_row.append($('<td>').html('<a href="/workset/'+key+'">'+key+'</font>'+'</a>'));
+          tbl_row.append($('<td>').html('<a class="text-decoration-none" href="/workset/'+key+'">'+key+'</font>'+'</a>'));
           tbl_row.append($('<td>').html(function() {
             var t = '';
             $.each(value['projects'], function(project, projval) {
               if(!t.trim()){
-                t = t + '<a href="/project/'+project+'">'+projval['project_name']+' ('+project+')</a>'+' <span class="glyphicon glyphicon-folder-close" style="color:#337ab7"></span>';
+                t = t + '<a class="text-decoration-none" href="/project/'+project+'">'+projval['project_name']+' ('+project+')</a>'+' <span class="fa fa-folder" style="color:#337ab7"></span>';
               }
               else {
-                t = t + ', <a href="/project/'+project+'">'+projval['project_name']+' ('+project+')</a>'+' <span class="glyphicon glyphicon-folder-close" style="color:#337ab7"></span>';
+                t = t + ', <a class="text-decoration-none" href="/project/'+project+'">'+projval['project_name']+' ('+project+')</a>'+' <span class="fa fa-folder" style="color:#337ab7"></span>';
               }
           });
             return t;
@@ -229,7 +229,7 @@ function init_listjs2() {
       $('#closed_ws_table_filter').hide();
     }
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#samples_table_filter').addClass('form-inline pull-right');
+    $('#samples_table_filter').addClass('form-inline float-right');
     $("#samples_table_filter").appendTo("h1");
     $('#samples_table_filter label input').appendTo($('#samples_table_filter'));
     $('#samples_table_filter label').remove();
@@ -265,7 +265,7 @@ function init_list_closed_ws() {
       $('#workset_table_filter').hide();
     }
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#closed_ws_table_filter').addClass('form-inline pull-right');
+    $('#closed_ws_table_filter').addClass('form-inline float-right');
     $("#closed_ws_table_filter").appendTo("h1");
     $('#closed_ws_table_filter label input').appendTo($('#closed_ws_table_filter'));
     $('#closed_ws_table_filter label').remove();
