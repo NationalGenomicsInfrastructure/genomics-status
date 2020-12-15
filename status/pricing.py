@@ -705,13 +705,13 @@ class PricingDataHandler(PricingBaseHandler):
 
         if draft:
             self.set_status(400)
-            self.write("Error: A draft already exists. There can only be one.")
+            return self.write("Error: A draft already exists. There can only be one.")
 
         # Create a new draft
         doc = latest_doc.copy()
         version = latest_doc['Version'] + 1
 
-        current_user_email = self.current_user_email()
+        current_user_email = self._current_user_email()
 
         lock_info = {'Locked': True,
                      'Locked by': current_user_email}
@@ -743,27 +743,28 @@ class PricingDataHandler(PricingBaseHandler):
         draft = latest_doc['Draft']
         if not draft:
             self.set_status(400)
-            self.write("Error: Attempting to update a non-draft cost calculator.")
+            return self.write("Error: Attempting to update a non-draft cost calculator.")
 
-        current_user_email = self.current_user_email()
+        current_user_email = self._current_user_email()
 
         lock_info = latest_doc['Lock Info']
         if lock_info['Locked']:
             if lock_info['Locked by'] != current_user_email:
                 self.set_status(400)
-                self.write("Error: Attempting to update a draft locked by someone else.")
+                return self.write("Error: Attempting to update a draft locked by someone else.")
 
         new_doc_content = tornado.escape.json_decode(self.request.body)
         if ('components' not in new_doc_content) or ('products' not in new_doc_content):
             self.set_status(400)
-            self.write("Error: Malformed request body.")
+            return self.write("Error: Malformed request body.")
 
         ## TODO: Validate the data?
         latest_doc['components'] = new_doc_content['components']
         latest_doc['products'] = new_doc_content['products']
 
         cc_db.save(latest_doc)
-        self.write({'message': 'Draft updated'})
+        msg = "Draft successfully saved at {}".format(datetime.datetime.now())
+        return self.write({'message': msg})
 
 
 class PricingPublishDataHandler(PricingBaseHandler):
@@ -772,7 +773,7 @@ class PricingPublishDataHandler(PricingBaseHandler):
     def post(self):
         """ Publish a new cost calculator, from the current draft. """
         self.set_status(400)
-        self.write('Not implemented')
+        return self.write('Not implemented')
 
 
 class PricingUpdateHandler(PricingBaseHandler):

@@ -277,9 +277,29 @@ const PricingUpdate = {
 const app = Vue.createApp(PricingUpdate)
 
 app.component('product-form-list', {
+    data() {
+        return {
+            save_message: null
+        }
+    },
     computed: {
         data_loading() {
             return this.$root.data_loading
+        }
+    },
+    methods: {
+        saveDraft() {
+            axios.put('/api/v1/cost_calculator', {
+                components: this.$root.all_components,
+                products: this.$root.all_products
+            })
+            .then(response => {
+                this.save_message = response.data.message;
+                console.log(response);
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
         }
     },
     template:
@@ -319,9 +339,19 @@ app.component('product-form-list', {
 
         <div class="col-md-10">
           <div id="pricing_product_form_content" data-offset="0" tabindex="0">
-            <div class="card p-3 mb-3 bg-light">
+            <div class="card pt-3 px-3 bg-light">
               <div class="row">
-                <h2 class="col-md-5 mr-auto">Edit draft Cost Calculator</h2>
+                <div class="col-md-7 mr-auto">
+                  <h2>Edit draft Cost Calculator</h2>
+                  <div class="row">
+                    <div class="col-3">
+                      <button class="btn btn-primary btn-lg mt-2" @click="saveDraft">Save Draft</button>
+                    </div>
+                    <div class="col-9">
+                      <p class="text-success" v-if="save_message !== null"><strong>Saved!</strong> {{save_message}}</p>
+                    </div>
+                  </div>
+                </div>
                 <div class="col-md-5">
                   <exchange-rates></exchange-rates>
                 </div>
