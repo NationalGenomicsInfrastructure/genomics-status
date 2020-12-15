@@ -279,7 +279,8 @@ const app = Vue.createApp(PricingUpdate)
 app.component('product-form-list', {
     data() {
         return {
-            save_message: null
+            save_message: null,
+            all_expanded: false
         }
     },
     computed: {
@@ -300,6 +301,18 @@ app.component('product-form-list', {
             .catch(function (error) {
                 console.log(error);
             });
+        },
+        toggleCollapse(event) {
+            saved_html = event.target.innerHTML
+            event.target.textContent = 'Loading'
+            setTimeout(function() { event.target.innerHTML = 'Done!' }, 5000);
+            if (this.all_expanded) {
+                $('.collapse').collapse('hide')
+                this.all_expanded = false
+            } else {
+                $('.collapse').collapse('show')
+                this.all_expanded = true
+            }
         }
     },
     template:
@@ -344,7 +357,10 @@ app.component('product-form-list', {
                 <div class="col-md-7 mr-auto">
                   <h2>Edit draft Cost Calculator</h2>
                   <p class="text-success" v-if="save_message !== null"><strong>Saved!</strong> {{save_message}}</p>
-                  <button class="btn btn-primary btn-lg position-absolute bottom-0 mb-3" @click="saveDraft">Save Draft</button>
+                  <div class="position-absolute bottom-0 mb-3">
+                    <button class="btn btn-primary btn-lg" @click="saveDraft">Save Draft</button>
+                    <button class="btn btn-secondary btn-lg ml-2" @click="toggleCollapse">Expand/collapse All</button>
+                  </div>
                 </div>
                 <div class="col-md-5">
                   <exchange-rates></exchange-rates>
