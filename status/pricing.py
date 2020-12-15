@@ -763,7 +763,7 @@ class PricingDataHandler(PricingBaseHandler):
         latest_doc['products'] = new_doc_content['products']
 
         cc_db.save(latest_doc)
-        msg = "Draft successfully saved at {}".format(datetime.datetime.now())
+        msg = "Draft successfully saved at {}".format(datetime.datetime.now().strftime("%H:%M:%S"))
         return self.write({'message': msg})
 
 
