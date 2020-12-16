@@ -10,6 +10,9 @@ var worksets_page_type = $('#worksets-js').attr('data-worksets');
 $(document).ready(function() {
     // Load the data
     load_table();
+    $(".running-note-card > .card-body").each(function(i){
+      $(this).html(make_markdown($(this).text()));
+    });
 });
 
 function load_table() {
@@ -20,10 +23,10 @@ function load_table() {
         var ndate = undefined;
         for (key in note) { ndate = key; break; }
         notedate = new Date(ndate);
-        latest_ws_note.html('<div class="panel panel-default running-note-panel">' +
-        '<div class="panel-heading">'+
+        latest_ws_note.html('<div class="card running-note-card">' +
+        '<div class="card-header">'+
           note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
-        '</div><div class="panel-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
+        '</div><div class="card-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
         }
     init_listjs();
 }
