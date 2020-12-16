@@ -280,7 +280,8 @@ app.component('product-form-list', {
     data() {
         return {
             save_message: null,
-            all_expanded: false
+            all_expanded: false,
+            expand_button_text: 'Expand all (slow)'
         }
     },
     computed: {
@@ -303,15 +304,15 @@ app.component('product-form-list', {
             });
         },
         toggleCollapse(event) {
-            saved_html = event.target.innerHTML
-            event.target.textContent = 'Loading'
-            setTimeout(function() { event.target.innerHTML = 'Done!' }, 5000);
+            this.expand_button_text = 'Loading'
             if (this.all_expanded) {
                 $('.collapse').collapse('hide')
                 this.all_expanded = false
+                this.expand_button_text = 'Expand all (slow)'
             } else {
                 $('.collapse').collapse('show')
                 this.all_expanded = true
+                this.expand_button_text = 'Collapse all (slow)'
             }
         }
     },
@@ -359,7 +360,7 @@ app.component('product-form-list', {
                   <p class="text-success" v-if="save_message !== null"><strong>Saved!</strong> {{save_message}}</p>
                   <div class="position-absolute bottom-0 mb-3">
                     <button class="btn btn-primary btn-lg" @click="saveDraft">Save Draft</button>
-                    <button class="btn btn-secondary btn-lg ml-2" @click="toggleCollapse">Expand/collapse All</button>
+                    <button class="btn btn-secondary btn-lg ml-2" @click="toggleCollapse">{{expand_button_text}}</button>
                   </div>
                 </div>
                 <div class="col-md-5">
