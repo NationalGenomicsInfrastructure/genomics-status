@@ -304,6 +304,8 @@ app.component('product-form-list', {
             });
         },
         toggleCollapse(event) {
+            // The 'Loading' text is never visible because of some
+            // misunderstanding on my side on how javascript works.
             this.expand_button_text = 'Loading'
             if (this.all_expanded) {
                 $('.collapse').collapse('hide')
