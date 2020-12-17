@@ -20,8 +20,9 @@ $(function(){
     if($("#pickUserul").length){
       $("#pickUserul").remove();
     }
-    var pickuserdropdown='<ul id="pickUserul" class="dropdown-menu dropdown-menu-center dropdown-menu-wide" role="menu" aria-labelledby="pickUserBtn"  style="z-index: 200;">';
-    pickuserdropdown+='<li><a href="#" class="clickDropdownGetValue triggerOptionChange" style="cursor:pointer;" data-value="Choose User"> Choose User</a></li>';
+    var pickuserdropdown='<ul id="pickUserul" class="dropdown-menu dropdown-menu-center dropdown-menu-wide" \
+                            role="menu" aria-labelledby="pickUserBtn"  style="z-index: 200; height: 400px; overflow-y: scroll;">';
+    pickuserdropdown+='<li><a href="#" class="dropdown-item clickDropdownGetValue triggerOptionChange" style="cursor:pointer;" data-value="Choose User"> Choose User</a></li>';
     $.getJSON('/api/v1/assign_roles/users', function (data) {
       tableData=data;
       $.each(data, function(name, role) {
@@ -44,7 +45,7 @@ $(function(){
         }
         $("#user_table_body").append(tbl_row);
         //Modify user dropdown
-        pickuserdropdown+='<li><a href="#" class="clickDropdownGetValue triggerOptionChange" data-value="'+name+'">'+name+'</a></li>';
+        pickuserdropdown+='<li><a href="#" class="dropdown-item clickDropdownGetValue triggerOptionChange" data-value="'+name+'">'+name+'</a></li>';
       })
       pickuserdropdown+='</ul>';
       $('#pickUser').append(pickuserdropdown);
@@ -71,7 +72,7 @@ $(function(){
 
       //Add the bootstrap classes to the search thingy
       $('div.dataTables_filter input').addClass('form-control search search-query');
-      $('#ur_table_filter').addClass('form-inline pull-right');
+      $('#ur_table_filter').addClass('form-inline float-right');
       $("#ur_table_filter").appendTo("h1");
       $('#ur_table_filter label input').appendTo($('#ur_table_filter'));
       $('#ur_table_filter label').remove();
@@ -97,14 +98,10 @@ $(function(){
   };
 
   $('body').on('click', '.rBtngp1', function(event){
-    $('.rBtngp1').removeClass('btn-primary');
-    $('.rBtngp1').removeClass('btn-default');
     $("#currRoleRow").hide()
     if($('#currRoletorem').length)
       $('#currRoletorem').remove();
-    if($(this).prop('id')=="modDelBtnModify"){
-      $(this).addClass('btn-primary');
-      $("#modDelBtnDelete").addClass('btn-default');
+    if($(this).prop('htmlFor')=="modDelBtnModify"){
       currUserRole=getCurrRole();
       var curole, cuRole;
       if(typeof currUserRole !== 'undefined'){
@@ -113,7 +110,7 @@ $(function(){
       else{
         curole='user', cuRole='User';
       }
-      $("#currRoleBtn").html('<i class="glyphicon glyphicon-list-alt" data-userrole='+curole+'></i> '+cuRole+' <span class="caret"></span>');
+      $("#currRoleBtn").html('<i class="fa fa-list-alt" data-userrole='+curole+'></i> '+cuRole+' <span class="caret"></span>');
       $("#currRoleRow").show();
       if($.trim($('#pickUserBtn').text())==$('#asrol-js').data('user')){
         $("#currRoleBtn").addClass('disabled');
@@ -121,10 +118,6 @@ $(function(){
       else{
         $("#currRoleBtn").removeClass('disabled');
       }
-    }
-    else{
-      $(this).addClass('btn-primary');
-      $("#modDelBtnModify").addClass('btn-default');
     }
   });
 
@@ -138,12 +131,12 @@ $(function(){
   $('body').on('click', '#saveUserSettingsBtn', function(event){
     var chosenUser=$.trim($('#pickUserBtn').text());
     var role={};
-    if($('#modDelRadio').find('.active').prop('id')==='modDelBtnDelete' && chosenUser!='Choose User'){
+    if($("input[name='modDelBtn']:checked").prop('id')==='modDelBtnDelete' && chosenUser!='Choose User'){
        $('#modifyUserModal').modal('show');
        $('#formDeleteUserName').prop('placeholder', $.trim($("#pickUserBtn").text()));
        $('#delUserConfirmModal').modal('show');
     }
-    else if ($('#modDelRadio').find('.active').prop('id')==='modDelBtnModify' && chosenUser!='Choose User'){
+    else if ($("input[name='modDelBtn']:checked").prop('id')==='modDelBtnModify' && chosenUser!='Choose User'){
        $('#saveUserSettingsBtn').addClass('disabled').text('Saving...');
        role[$('#currRoleBtn').find('i').data('userrole')] = $.trim($('#currRoleBtn').text());
        modifyUser('modify', 'saveUserSettingsBtn', 'Save', $.trim($('#pickUserBtn').text()), role);
@@ -188,7 +181,7 @@ $(function(){
             $('#delUserConfirmModal').modal('hide');
           }
           $(".triggerOptionChange").trigger("click");
-          $('#pickUserBtn').html('<i class="glyphicon glyphicon-list-alt"></i> Choose User <span class="caret"></span>');
+          $('#pickUserBtn').html('<i class="fa fa-list-alt"></i> Choose User <span class="caret"></span>');
           load_user_table();
         });
       }
@@ -197,7 +190,7 @@ $(function(){
 });
 
 function setChangingDropdownValue(elem, text, userrole){
-  var saveClass=elem.find('.glyphicon').attr('class');
+  var saveClass=elem.find('.fa').attr('class');
   var constructI='<i class="'+saveClass+'"';
   if(typeof userrole !== 'undefined'){
     constructI+='data-userrole="'+userrole+'"></i> ';
@@ -222,9 +215,6 @@ function checkForSelfDelete(chosenUser){
 $('body').on('click', '.triggerOptionChange', function(event){
   if($('#currRoletorem').length)
     $('#currRoletorem').remove();
-  $('.rBtngp1').removeClass('btn-primary');
-  $('.rBtngp1').removeClass('active');
-  $('.rBtngp1').addClass('btn-default');
   $("#currRoleRow").hide();
   checkForSelfDelete($(this).data('value'));
 })
