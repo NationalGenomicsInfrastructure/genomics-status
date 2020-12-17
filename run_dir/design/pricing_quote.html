@@ -1,150 +1,19 @@
 {% extends "base_b5.html" %}
 
-<!--
-Template file: pricing_quote.html
-URL: /pricing_quote
-Title: Creation of a quote for a project
--->
-
 {% block stuff %}
 
-<div class="container-fluid" id="product_list">
-  <div id="pricing_quote_div">
-      <div class="row">
-        <h1 class="col-md-11"><span id="page_title">Project Quote</span></h1>
-      </div>
-      <div class="row">
-        <div class="col-md-8 col-xl-6 quote_lcol_header">
-          <div class="radio" id="price_type_selector">
-            <label class="radio-inline">
-              <input type="radio" name="price_type" value="sweac" checked> Swedish academia
-            </label>
-            <label class="radio-inline">
-              <input type="radio" name="price_type" value="full"> Industry and non-Swedish academia
-            </label>
-            <label class="radio-inline">
-              <input type="radio" name="price_type" value="internal"> Internal
-            </label>
-          </div>
-          <span id='other_cost_container' class='other_updateable'>
-              <label for='other_cost_input'>Other cost</label>
-              <input id='other_cost_input' placeholder='SEK'>
-          </span>
-          <span id='discount_container' class='other_updateable'>
-              <label for='discount_input'>Discount</label>
-              <input id='discount_input' placeholder='%'>
-          </span>
-          <div class="form-text text-muted text-sm">
-              Other cost is applied directly to all three price types. Discount is applied last.
-          </div>
-
-          <button class="btn btn-link" id="more_options_btn" type="button" data-toggle="collapse" data-target="#more_options" aria-expanded="false" aria-controls="more_options">
-            More Options
-          </button>
-          <div class="collapse border-top py-3" id="more_options">
-            <button type="button" class="btn btn-warning" id="toggle_discontinued">Show Discontinued Products <i class="fas fa-exclamation-triangle fa-lg pl-2"></i></button>
-          </div>
-        </div>
-        <div class="col-md-4 col-xl-6">
-          <h3>Exchange rates</h3>
-          <dl class="row">
-            <dt class="col-md-2 text-right">1 US $</dt>
-            <dd class="col-md-10"><span id='exch_rate_usd'>{{ exch_rates['USD_in_SEK'] }}</span> SEK</dd>
-            <dt class="col-md-2 text-right">1 EUR €</dt>
-            <dd class="col-md-10"><span id='exch_rate_eur'>{{ exch_rates['EUR_in_SEK'] }}</span> SEK</dd>
-            <dt class="col-md-2 text-right">Issued at</dt>
-            <dd class="col-md-10"><span id='exch_rate_issued_at'>{{ exch_rates['Issued at'] }}</span><a href="#" data-toggle="modal" data-target="#exch_rate_modal"> (Change)</a></dd>
-          </dl>
-          <!-- Exchange Rate Modal -->
-          <div class="modal fade" id="exch_rate_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-            <div class="modal-dialog" role="document">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h4 class="modal-title" id="myModalLabel">Fetch historic exchange rate</h4>
-                  <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <p>Latest date exchange rates: <input id="datepicker" type='date' value="{{exch_rates['Issued at'] }}" data-date-format="yyyy-mm-dd"></p>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                  <button id='datepicker-btn' type="button" class="btn btn-primary">Apply Exchange Rates</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="alerts_go_here">
-      </div>
-      <div class="row py-2" id="current_quote">
-        <div class="col-md-8 col-xl-6 quote_lcol_header">
-          <h3>Products</h3>
-          <span class="help-block">
-            To use fractions of units, please use full stop and not decimal comma.
-          </span>
-          <div id='product_warnings'></div>
-          <ul class="quote-product-list list-unstyled">
-          </ul>
-        </div>
-        <div class="col-md-4 col-xl-6 border-left">
-          <h3>Totals</h3>
-          <ul class="quote-totals-list list-unstyled">
-          </ul>
-        </div>
-      </div>
-      <div class="products_chooseable_div">
-        <div class="row" id="table_h_and_search">
-          <h2 class="col mr-auto">Available Products</h2>
-        </div>
-        <table class="table table-sm sortable" id="pricing_products_table">
-          <thead class="table-light">
-            <tr class="sticky">
-              <th>Quoting</th>
-              <th class="sort" data-sort="id">ID</th>
-              <th class="sort" data-sort="category">Category</th>
-              <th class="sort" data-sort="type">Type</th>
-              <th class="sort" data-sort="name">Name</th>
-              <th class="sort" data-sort="components">Components</th>
-              <th class="sort" data-sort="alternative_components">Alternative Components</th>
-              <th calss="sort" data-sort="full_cost_fee">Full Cost Fee</th>
-              <th class="sort" data-sort="overhead">Overhead</th>
-              <th class="sort" data-sort="price_internal">Internal Price (SEK)</th>
-              <th class="sort" data-sort="price_academic">Academic</th>
-              <th class="sort" data-sort="full_cost">Full Cost</th>
-              <th class="sort" data-sort="comment">Comment</th>
-            </tr>
-          </thead>
-          <tfoot class="table-light">
-            <tr>
-              <th>Quoting</th>
-              <th class="sort" data-sort="id">ID</th>
-              <th class="sort" data-sort="category">Category</th>
-              <th class="sort" data-sort="type">Type</th>
-              <th class="sort" data-sort="name">Name</th>
-              <th class="sort" data-sort="alternatcomponents">Components</th>
-              <th class="sort" data-sort="alternative_components">Alternative Components</th>
-              <th calss="sort" data-sort="full_cost_fee">Full Cost Fee</th>
-              <th class="sort" data-sort="overhead">Overhead</th>
-              <th class="sort" data-sort="price_internal">Internal Price (SEK)</th>
-              <th class="sort" data-sort="price_academic">Academic</th>
-              <th class="sort" data-sort="full_cost">Full Cost</th>
-              <th class="sort" data-sort="comment">Comment</th>
-            </tr>
-          </tfoot>
-          <tbody class="list" id='pricing_products_tbody'>
-          </tbody>
-        </table>
-      </div>
-    </div>
+<div class="container-fluid" id="pricing_quote_main">
+  <pricing-preview/>
 </div>
 
-<script src="/static/js/jquery.dataTables.min.js"></script>
+{% end %}
+
+{% block js %}
+
+<!-- development version, includes helpful console warnings -->
+<script src="https://unpkg.com/vue@next"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/static/js/pricing_main.js?v={{ gs_globals['git_commit'] }}"></script>
 <script src="/static/js/pricing_quote.js?v={{ gs_globals['git_commit'] }}"></script>
-
-<!-- Table Sorting -->
-<script type="text/javascript">
-
-</script>
 
 {% end %}
