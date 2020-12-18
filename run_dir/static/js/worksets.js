@@ -166,10 +166,10 @@ $(".tabbable").on("click", '[role="tab"]', function() {
             var t = '';
             $.each(value['projects'], function(project, projval) {
               if(!t.trim()){
-                t = t + '<a class="text-decoration-none" href="/project/'+project+'">'+projval['project_name']+' ('+project+')</a>'+' <span class="fa fa-folder" style="color:#337ab7"></span>';
+                t = t + '<a class="text-decoration-none" href="/project/'+project+'">'+projval['project_name']+' ('+project+') <span class="fa fa-folder"></span></a>';
               }
               else {
-                t = t + ', <a class="text-decoration-none" href="/project/'+project+'">'+projval['project_name']+' ('+project+')</a>'+' <span class="fa fa-folder" style="color:#337ab7"></span>';
+                t = t + ', <a class="text-decoration-none" href="/project/'+project+'">'+projval['project_name']+' ('+project+') <span class="fa fa-folder"></span></a>';
               }
           });
             return t;

@@ -63,7 +63,7 @@ Description: Shows a table with all worksets.
                                 <a href="/project/{{ onepj }}" class="text-success text-decoration-none" data-toggle="tooltip" title="Status: Open"><i class="fa fa-folder-open">&nbsp;</i>{{ ", ".join([ws_data.get(onews, {}).get(onekey[1], {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}</a>
                             {% end %}
                             {% if ws_data.get(onews).get(onekey[1]).get(onepj).get('status') == 'Closed' %}
-                                <a href="/project/{{ onepj }}" class="text-warning text-decoration-none" data-toggle="tooltip" title="Status: Closed"><i class="fa fa-folder">&nbsp;</i>{{ ", ".join([ws_data.get(onews, {}).get(onekey[1], {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}</a>
+                                <a href="/project/{{ onepj }}" class="text-black-50 text-decoration-none" data-toggle="tooltip" title="Status: Closed"><i class="fa fa-folder">&nbsp;</i>{{ ", ".join([ws_data.get(onews, {}).get(onekey[1], {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}</a>
                             {% end %}
                             &nbsp;({{ ws_data.get(onews).get(onekey[1]).get(onepj).get('samples_nb') }})<br>
                             {% end %}
