@@ -213,13 +213,18 @@ const vPricingMain = {
             delete this.all_components[comp_id]
             delete this.new_components[comp_id]
         },
-        fetchExchangeRates() {
+        fetchExchangeRates(date) {
+            url = '/api/v1/pricing_exchange_rates'
+            if (date !== undefined) {
+              url += '?date=' + date;
+            }
             axios
-              .get('/api/v1/pricing_exchange_rates')
+              .get(url)
               .then(response => {
                   this.USD_in_SEK = response.data.USD_in_SEK
                   this.EUR_in_SEK = response.data.EUR_in_SEK
-                  this.exch_rate_issued_at = response.data['Issued at']
+                  date = new Date(Date.parse(response.data['Issued at']))
+                  this.exch_rate_issued_at = date.toISOString().substring(0, 10)
               })
         },
         fetchCostCalculator() {
@@ -273,7 +278,12 @@ const vPricingMain = {
 const app = Vue.createApp(vPricingMain)
 
 app.component('exchange-rates', {
-  props: ['mutable'],
+  props: ['mutable', 'issued_at'],
+  data() {
+      return {
+          issued_at_form_bound: this.issued_at
+      }
+  },
   computed: {
     USD_in_SEK() {
       val = this.$root.USD_in_SEK
@@ -290,15 +300,17 @@ app.component('exchange-rates', {
       } else {
           return val.toFixed(2)
       }
-    },
-    issued_at() {
-      val = this.$root.exch_rate_issued_at
-      if (val === null) {
-          return ""
-      } else {
-          date = new Date(Date.parse(val))
-          return date.toISOString().substring(0, 10);
+    }
+  },
+  watch: {
+      issued_at(newVal, oldVal) {
+          this.issued_at_form_bound = newVal
       }
+  },
+  methods: {
+    reload_exch_rates() {
+        date = this.issued_at_form_bound;
+        this.$root.fetchExchangeRates(date);
     }
   },
   template:
@@ -324,11 +336,12 @@ app.component('exchange-rates', {
                 <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
-                <p>Latest date exchange rates: <input id="datepicker" type='date' :value="issued_at" data-date-format="yyyy-mm-dd"></p>
+                <p>The most recent rates prior to the date chosen will be used.</p>
+                <p>Latest date exchange rates: <input id="datepicker" type='date' v-model="issued_at_form_bound" data-date-format="yyyy-mm-dd"></p>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id='datepicker-btn' type="button" class="btn btn-primary">Apply Exchange Rates</button>
+                <button id='datepicker-btn' type="button" class="btn btn-primary" @click="reload_exch_rates">Apply Exchange Rates</button>
               </div>
             </div>
           </div>

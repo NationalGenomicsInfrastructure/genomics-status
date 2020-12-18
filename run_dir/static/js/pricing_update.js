@@ -92,7 +92,7 @@ app.component('product-form-list', {
                   </div>
                 </div>
                 <div class="col-md-5">
-                  <exchange-rates :mutable="false"/>
+                  <exchange-rates :mutable="false" :issued_at="this.$root.exch_rate_issued_at"/>
                 </div>
               </div>
             </div>

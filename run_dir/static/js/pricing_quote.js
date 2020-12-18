@@ -48,7 +48,7 @@ app.component('pricing-preview', {
               </div>
             </div>
             <div class="col-4">
-              <exchange-rates :mutable="true"/>
+              <exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
             </div>
           </div>
           <div id="alerts_go_here">
