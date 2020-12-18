@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: instrument_logs.html
@@ -13,29 +13,36 @@ Description: Shows instrument logs for the given period.default is one week.
 <h1>Instrument Logs</h1>
 <div id="logs_date" style="margin-bottom:15px;">
     <p>The default view shows 1 week worth of logs. You can customise the range here :</p>
-    <form class="form-inline" id="logs_date_form">
-        Select logs from
-        <div class='input-group input-group-sm date' id='datepick1'>
-            <input id="inp_date_1" type='text' class="form-control" /><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+    <form class="row row-cols-lg-auto" id="logs_date_form">
+        <div class='col-12'>
+          Select logs from
+        </div>
+        <div class='col-12'>
+          <div class='input-group input-group-sm date' id='datepick1'>
+            <input id="inp_date_1" type='text' class="form-control" /><span class="input-group-addon"><i class="input-group-text fa fa-calendar-alt"></i></span>
+          </div>
         </div>
     to
-    <div class='input-group input-group-sm date' id='datepick2'>
-        <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+    <div class='col-12'>
+      <div class='input-group input-group-sm date' id='datepick2'>
+        <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><i class="input-group-text fa fa-calendar-alt"></i></span>
+      </div>
     </div>
     <button id="submit_interval" class="btn btn-primary btn-sm">Search</button>
+    <div class='col-12 ml-auto' id='instrument_logs_table_filter_col'></div>
     </form>
 </div>
 <div id="main_table">
 <table class="table table-bordered narrow-headers" id="instrument_logs_table">
     <thead>
-      <tr class="sticky">
+      <tr class="sticky darkth">
         <th class="col-md-1">Date</th>
         <th class="col-md-1">Instrument</th>
         <th class="col-md-10">Message</th>
       </tr>
     </thead>
     <tfoot>
-      <tr>
+      <tr class="darkth">
         <th class="col-md-1">Date</th>
         <th class="col-md-1">Instrument</th>
         <th class="col-md-10">Message</th>
