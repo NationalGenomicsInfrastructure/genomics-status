@@ -44,7 +44,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ImagesDownloadHandler
 from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
-from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler, FlowcellCountPlotHandler, FlowcellCountApiHandler
+from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
     SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, \
     SampleReadCountDataHandler, SampleRunDataHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
@@ -106,7 +106,6 @@ class Application(tornado.web.Application):
             ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
             tornado.web.URLSpec("/api/v1/download_images/(?P<project>[^/]+)/(?P<type>[^/]+)", ImagesDownloadHandler, name="ImagesDownloadHandler"),
             ("/api/v1/flowcells", FlowcellsDataHandler),
-            ("/api/v1/flowcell_count/", FlowcellCountApiHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
@@ -205,7 +204,6 @@ class Application(tornado.web.Application):
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
-            ("/flowcell_count_plot", FlowcellCountPlotHandler),
             ("/instrument_logs",InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
