@@ -31,8 +31,8 @@ function init_listjs() {
 }
 
 function init_datepickers(){
-    $('#datepick1').datepicker();
-    $('#datepick2').datepicker();
+    $('#datepick1').datepicker({ orientation: 'left top'});
+    $('#datepick2').datepicker({ orientation: 'left top'});
 }
 function init_submit_button(){
     $('#submit_interval').click(function(e){
