@@ -23,10 +23,10 @@ function generate_category_label(category){
     var category = category.trim()
     // Check if we recognise this category in the class object keys
     if (Object.keys(cat_classes).indexOf(category) != -1){
-        cat_label = '<span class="label label-'+ cat_classes[category][0] +'">'+ category + '&nbsp;' + '<span class="fa fa-'+ cat_classes[category][1] +'">'+"</span>";
+        cat_label = '<span class="badge bg-'+ cat_classes[category][0] +'">'+ category + '&nbsp;' + '<span class="fa fa-'+ cat_classes[category][1] +'">'+"</span>";
     }else{
     // Default button formatting
-        cat_label = '<span class="label label-default">'+ category +"</span>";
+        cat_label = '<span class="badge bg-secondary">'+ category +"</span>";
     }
     return cat_label;
 }
@@ -79,12 +79,12 @@ function make_running_note(date, note){
   var printHyphen =category? ' - ': ' ';
   var panelClass='';
   if (note['category'] == 'Important') {
-    panelClass = 'panel-important';
+    panelClass = 'card-important';
   }
-  return '<div class="panel panel-default">' +
-      '<div class="panel-heading '+panelClass+'" id="'+note_id+'">'+
-        '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-       '<a href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="panel-body">'+noteText+'</div></div>';
+  return '<div class="card mb-2">' +
+      '<div class="card-header '+panelClass+'" id="'+note_id+'">'+
+        '<a class="text-decoration-none" href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
+       '<a class="text-decoration-none" href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="card-body">'+noteText+'</div></div>';
 }
 
 function load_running_notes(wait) {
@@ -138,8 +138,8 @@ function preview_running_notes(){
 function filter_running_notes(search){
     search=search.toLowerCase();
     $('#running_notes_panels').children().each(function(){
-        var header=$(this).children('.panel-heading').text();
-        var note=$(this).children('.panel-body').children().text();
+        var header=$(this).children('.card-header').text();
+        var note=$(this).children('.card-body').children().text();
         if (header.toLowerCase().indexOf(search) != -1 || note.toLowerCase().indexOf(search) != -1){
             $(this).show();
         }else{
@@ -164,7 +164,8 @@ $(document).ready(function() {
 });
 
 // Update the category buttons
-$('.rn-categ button').click(function(){
+$('.rn-categ button').click(function(e){
+    e.preventDefault();
     var was_selected = $(this).hasClass('active');
     $('.rn-categ button').removeClass('active');
     if(!was_selected){
@@ -238,10 +239,10 @@ $("#running_notes_form").submit( function(e) {
             var now = new Date();
             category=generate_category_label(category);
             var printHyphen =category? ' - ': ' ';
-            $('<div class="panel panel-success"><div class="panel-heading">'+
+            $('<div class="card"><div class="card-header bg-success">'+
                   '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
                   now.toDateString() + ', ' + now.toLocaleTimeString(now)+ printHyphen + category +
-                '</div><div class="panel-body">'+make_markdown(data['note'])+
+                '</div><div class="card-body">'+make_markdown(data['note'])+
                 '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
             check_img_sources($('#running_notes_panels img'));
           } else {
