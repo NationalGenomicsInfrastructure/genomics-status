@@ -200,6 +200,37 @@ pre {
   margin-bottom: 20px;
 }
 
+/*Flowcell samples*/
+.thousand_group {
+  margin-left:4px;
+}
+
+.undetermined {
+  width: 300px;
+}
+.undetermined th, .undetermined td {
+  text-align: right;
+  padding: 5px;
+}
+.undetermined tr th:first-child, .undetermined tr td:first-child {
+  text-align:left;
+}
+.undetermined samp {
+  font-size: 1em;
+  letter-spacing: 1px;
+}
+
+.undetermined-highlight {
+  color: #a94442;
+  background-color: #f2dede;
+  border: 1px solid #ebccd1;
+}
+.undetermined-warning {
+  color: #8a6d3b;
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+}
+
 /* Running Notes User dropdown */
 .-sew-list-container {
   background: white;
