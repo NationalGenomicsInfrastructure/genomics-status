@@ -30,15 +30,15 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
     lims_step=wsdata['id'];
     date_run=wsdata['date_run'];
     $('#date_run').html(date_run);
-    $('#span_lims_step').html('<a href="' + lims_uri + '/clarity/work-complete/'+lims_step.split("-")[1]+'">'+lims_step+'</a>');
+    $('#span_lims_step').html('<a class="text-decoration-none" href="' + lims_uri + '/clarity/work-complete/'+lims_step.split("-")[1]+'">'+lims_step+'</a>');
     load_running_notes();
     load_links();
 
     if(wsdata && wsdata.hasOwnProperty("projects")){
         $.each(wsdata.projects, function(project_id, project_data){
-            content+='<h2>Project <a href="/project/'+project_id+'">'+project_id+'</a></h2>';
+            content+='<h2>Project <a class="text-decoration-none" href="/project/'+project_id+'">'+project_id+'</a></h2>';
             content+='<table class="table table-bordered narrow-headers" id="ws-'+project_id+'"> \
-                     <tr> \
+                     <tr class="darkth"> \
                      <th>Project name</th> \
                      <th>Sequencing setup</th> \
                      <th>Application</th> \
@@ -50,9 +50,9 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                     <td>"+project_data['sequencing_setup']+"</td>\
                     <td>"+project_data['application']+"</td>\
                     <td>"+project_data['library']+"</td></tr></table>";
-        content+="<h3>Samples</h3>";
+        content+="<h4>Samples</h4>";
         content+='<table class="table table-bordered" id="ws-'+project_id+'"> \
-                     <tr> \
+                     <tr class="darkth"> \
                      <th class="col-md-1">Sample name</th> \
                      <th class="col-md-2">Submitter Name</th> \
                      <th class="col-md-1">Reception Control</th> \
@@ -68,18 +68,18 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                 <td>";
             $.each(sample_data.library, function(lib_id, lib_data){
                 lims_id=lib_id.split("-")[1];
-                content+="<a href='" + lims_uri + "/clarity/work-complete/"+lims_id+"'>" ;
+                content+="<a class='text-decoration-none' href='" + lims_uri + "/clarity/work-complete/"+lims_id+"'>" ;
                 content+=lib_data['date']+"</a> "
                 content+=auto_format(lib_data['status']);
-                content+=" <span class='label label-date'>"+lib_data['concentration']+"</span>"
-                content+=" <span class='label label-date'>"+lib_data['size']+"bp</span>"
-                content+=" <span class='label label-date'>"+lib_data['index']+"</span>"
+                content+=" <span class='badge bg-date'>"+lib_data['concentration']+"</span>"
+                content+=" <span class='badge bg-date'>"+lib_data['size']+"bp</span>"
+                content+=" <span class='badge bg-date'>"+lib_data['index']+"</span>"
                 content+="<br />";
             });
                 content+="</td><td>";
             $.each(sample_data.sequencing, function(seq_id, seq_data){
                 lims_id=seq_id.split("-")[1];
-                content+="<a href='" + lims_uri + "/clarity/work-complete/"+lims_id+"'>"+seq_id+'</a> <span class="label label-date sentenceCase">'+seq_data['date']+"</span> "+auto_format(seq_data['status'])+"<br />";
+                content+="<a href='" + lims_uri + "/clarity/work-complete/"+lims_id+"'>"+seq_id+'</a> <span class="badge bg-date sentenceCase">'+seq_data['date']+"</span> "+auto_format(seq_data['status'])+"<br />";
             });
                 content+='</td><td class="text-center">'+sample_data['location']+"</td> \
                 </tr>";
@@ -95,7 +95,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
     $('#page_content').show();
 
     // console.log(data)
-}).error(function(){
+}).fail(function(){
     // workset not found - probably
     $('#page_content').html('<h1>Error - Workset Not Found</h1><div class="alert alert-danger">Oops! Sorry about that, we can\'t find the Workset <strong>'+workset_name+'</strong></div>');
 
@@ -164,8 +164,8 @@ function updateSample(sample_id,sample_data, level){
 
 $(document).ready(function(){
     $('.plate-type-button').click(function(){
-        $(this).parent().siblings('li').removeClass('active');
-        $(this).parent().addClass('active');
+        $(this).parent().siblings('li').children('a').removeClass('active');
+        $(this).addClass('active');
         var target = $(this).attr('href').substr(1);
         updatePlate(target);
     });

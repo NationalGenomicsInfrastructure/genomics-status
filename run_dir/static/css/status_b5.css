@@ -92,6 +92,43 @@ h1 small, h2 small, h3 small{
   font-size: 65%;
 }
 
+/*
+=== Typography ===
+*/
+.sentenceCase { text-transform: capitalize; }
+
+/* Custom Labels */
+.bg-undefined  {color: #ccc; }
+.bg-date  {color: #333; font-size:80%; }
+.bg-imp  {background-color: #a62100;}
+.bg-devi  {background-color: #a13a7e;}
+.bg-usr  {background-color: #ff6f00;}
+
+.btn-imp{
+  color: #fff;
+  background-color: #a62100;
+ }
+.btn-devi{
+  color: #fff;
+  background-color: #a13a7e;
+}
+.btn-usr{
+  color: #fff;
+  background-color: #ff6f00;
+}
+
+.info-bg{
+  background-color: #d9edf7 !important;
+}
+
+.info-border{
+  border-color: #d9edf7 !important;
+}
+
+.card-important{
+  background-color: #ffd9d9 !important;
+}
+
 /*Tables*/
 .darkth > th { background-color: #ddd!important; }
 
@@ -127,4 +164,81 @@ tr.group, tr.group:hover, .dtrg-group {
 /*Cards for running notes*/
 .running-note-card pre {
   max-width:400px;
+}
+
+/* Markdown text styles */
+.mkdown blockquote {
+  font-size: 1em;
+  font-style:italic;
+}
+
+blockquote {
+    background-color: #f9f9f9;
+    border-left: 5px solid #eee;
+    padding: 10px 20px;
+}
+
+pre {
+  padding: 9.5px;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.zendesk-ticket .mkdown ul{
+  display:grid;
+  margin-bottom: -10px;
+}
+.zendesk-ticket .mkdown p{
+  margin: 0px;
+}
+
+.well{
+  padding: 19px;
+  background-color: #f5f5f5;
+  border: 1px solid #e3e3e3;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+/* Running Notes User dropdown */
+.-sew-list-container {
+  background: white;
+  border: 1px solid #DDD;
+  border-radius: 3px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+}
+
+.-sew-list {
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  max-height: 100px;
+  min-width: 120px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.-sew-list-item {
+  display: block;
+  padding: 5px 5px;
+  cursor: pointer;
+}
+
+
+.-sew-list-item small {
+  color: #afafaf;
+}
+
+.-sew-list-item.selected {
+  color: white;
+  background: #4183C4;
+  text-decoration: none;
+}
+
+/* worksets modal */
+#modal_plate .modal-content {
+    width:1300px;
+    margin-left:-650px;
+    left: 50%;
 }

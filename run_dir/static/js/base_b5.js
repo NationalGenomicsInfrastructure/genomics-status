@@ -115,7 +115,7 @@ function auto_format(value, samples_table){
             value == 'no' ||
             value == 'n/a' ||
             value == 'aborted' ))){
-    returnstring = '<span class="label label-danger sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="badge bg-danger sentenceCase">'+value+'</span> ';
   }
 
   // Put all False / Failed / Fail into labels
@@ -127,25 +127,25 @@ function auto_format(value, samples_table){
             value == 'yes' ||
             value == 'finished' ||
             value == 'p'))){
-    returnstring = '<span class="label label-success sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="badge bg-success sentenceCase">'+value+'</span> ';
   }
 
   // Put all unknowns into labels
   else if(value === true ||
 				  (typeof value == 'string' && (
             value == 'unknown'))){
-    returnstring = '<span class="label label-default sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="badge bg-secondary sentenceCase">'+value+'</span> ';
   }
 
   // Warning labels
   else if(typeof value == 'string' && (
             value == 'in progress')){
-    returnstring = '<span class="label label-warning sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="badge bg-warning sentenceCase">'+value+'</span> ';
   }
 
   // Dates
   else if(samples_table && typeof value == 'string' && value.split('-').length == 3 && value.length == 10){
-    returnstring = '<span class="label label-date sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="badge bg-date sentenceCase">'+value+'</span> ';
   }
 
   // Put all undefined into labels
@@ -153,7 +153,7 @@ function auto_format(value, samples_table){
           (typeof value == 'string' && value == 'null') ||
           (typeof value == 'string' && value == 'nan') ||
           typeof value == 'undefined' || typeof value == 'null' || typeof value == 'NaN'){
-    returnstring = '<span class="label label-undefined sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="badge bg-undefined sentenceCase">'+value+'</span> ';
   }
 
   else {
@@ -197,7 +197,7 @@ function make_project_links(s){
 }
 function create_user_tags(s){
   // Searches for @\w+ and replaces with a mail link
-  s = s.replace(/(@)([a-zA-Z0-9.-]+)/g, '<a href="mailto:$2@scilifelab.se">$1$2</a>');
+  s = s.replace(/(@)([a-zA-Z0-9.-]+)/g, '<a class="text-decoration-none" href="mailto:$2@scilifelab.se">$1$2</a>');
   return s;
 }
 function check_img_sources(obj){
