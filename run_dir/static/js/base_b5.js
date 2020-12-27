@@ -15,7 +15,10 @@ $(document).ready(function(){
   // Activate bootstrap hover tooltips
   var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'))
   var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl)
+    return new bootstrap.Tooltip(tooltipTriggerEl, {
+                                  boundary: 'window',
+                                  html: true
+                                })
   })
 
   // Main navigation - #depreciated_header is the list separator
@@ -182,7 +185,7 @@ marked.setOptions({
 });
 function make_project_links(s){
   // Searches for P[\d+] and replaces with a link to the project page
-  s = s.replace(/([\W])(P[\d]{3,5})(?!\w)/g, '$1<a href="/project/$2">$2</a>');
+  s = s.replace(/([\W])(P[\d]{3,5})(?!\w)/g, '$1<a class="text-decoration-none" href="/project/$2">$2</a>');
 
   // Searches for FlowCell IDs and replaces with a link (Most complicated regex ever)
   // - $1 = Captures a non-word character (javascript can't do lookbehind)
@@ -192,7 +195,7 @@ function make_project_links(s){
   // - Not capture lookahead to make sure that we're not followed by any more word characters
   // Replaces with link to flowcell ID without internal chunk
   // Example: 150505_D00450_0168_AC6H3RANXX links to 150505_AC6H3RANXX
-  s = s.replace(/([\W])(\d{6})(_(?:ST-)?\w{5,10}_\d{3,4})(_\w{8,12}(?:\-\w{3,8})?)(?!\w)/g, '$1<a href="/flowcells/$2$4">$2$3$4</a>');
+  s = s.replace(/([\W])(\d{6})(_(?:ST-)?\w{5,10}_\d{3,4})(_\w{8,12}(?:\-\w{3,8})?)(?!\w)/g, '$1<a class="text-decoration-none" href="/flowcells/$2$4">$2$3$4</a>');
   return s;
 }
 function create_user_tags(s){

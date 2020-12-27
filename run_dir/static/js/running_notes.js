@@ -81,7 +81,7 @@ function make_running_note(date, note){
   if (note['category'] == 'Important') {
     panelClass = 'card-important';
   }
-  return '<div class="card mb-2">' +
+  return '<div class="card mb-2 mx-2">' +
       '<div class="card-header '+panelClass+'" id="'+note_id+'">'+
         '<a class="text-decoration-none" href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
        '<a class="text-decoration-none" href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="card-body">'+noteText+'</div></div>';
