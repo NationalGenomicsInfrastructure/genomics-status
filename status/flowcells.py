@@ -349,7 +349,7 @@ class FlowcellNotesDataHandler(SafeHandler):
                 running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
                 running_notes[str(datetime.datetime.now())] = newNote
 
-                flowcell_link = "<a href='/flowcells/{0}'>{0}</a>".format(flowcell)
+                flowcell_link = "<a class='text-decoration-none' href='/flowcells/{0}'>{0}</a>".format(flowcell)
                 project_note = "#####*Running note posted on flowcell {}:*\n".format(flowcell_link)
                 project_note += note
 
