@@ -23,7 +23,7 @@ function generate_category_label(category){
     var category = category.trim()
     // Check if we recognise this category in the class object keys
     if (Object.keys(cat_classes).indexOf(category) != -1){
-        cat_label = '<span class="badge bg-'+ cat_classes[category][0] +'">'+ category + '&nbsp;' + '<span class="fa fa-'+ cat_classes[category][1] +'">'+"</span>";
+        cat_label = '<span class="badge bg-'+ cat_classes[category][0] +'">'+ category + '&nbsp;' + '<span class="fa fa-'+ cat_classes[category][1] +'">'+"</span></span>";
     }else{
     // Default button formatting
         cat_label = '<span class="badge bg-secondary">'+ category +"</span>";
