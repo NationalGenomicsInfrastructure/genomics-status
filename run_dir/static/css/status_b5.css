@@ -88,21 +88,33 @@ input.quantity_updateable {
 /* Make <samp> (flow cell IDs usually) a little smaller */
 samp { font-size:0.8em; }
 
-h1 small, h2 small, h3 small{
+h1 small, h2 small, h3 small, h4 small{
   font-size: 65%;
+}
+
+.card {
+  box-shadow: 0 1px 1px rgba(0,0,0,.05);
 }
 
 /*
 === Typography ===
 */
 .sentenceCase { text-transform: capitalize; }
+.nowrap { white-space: pre; }
+.dl-wide dt { width:260px; }
+.dl-wide dd { margin-left:280px; }
 
 /* Custom Labels */
 .bg-undefined  {color: #ccc; }
-.bg-date  {color: #333; font-size:80%; }
+.bg-date  {color: #333; font-size:80%; font-weight: normal;}
 .bg-imp  {background-color: #a62100;}
 .bg-devi  {background-color: #a13a7e;}
 .bg-usr  {background-color: #ff6f00;}
+
+.btn-xs {
+  padding: 1px 5px;
+  font-size: 12px;
+}
 
 .btn-imp{
   color: #fff;
@@ -127,6 +139,9 @@ h1 small, h2 small, h3 small{
 
 .card-important{
   background-color: #ffd9d9 !important;
+}
+.card-warning{
+  background-color: #fcf8e3 !important;
 }
 
 /*Tables*/
@@ -166,10 +181,27 @@ tr.group, tr.group:hover, .dtrg-group {
   max-width:400px;
 }
 
+#com_accordion pre,
+#running_notes_panels pre.plaintext_running_note,
+.running-note-card pre.plaintext_running_note {
+  background-color:transparent;
+  border:none;
+  font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
+  margin:0;
+  padding:0;
+}
+
 /* Markdown text styles */
 .mkdown blockquote {
   font-size: 1em;
   font-style:italic;
+}
+.zendesk-ticket .mkdown ul{
+  display:grid;
+  margin-bottom: -10px;
+}
+.zendesk-ticket .mkdown p{
+  margin: 0px;
 }
 
 blockquote {
@@ -272,4 +304,129 @@ pre {
     width:1300px;
     margin-left:-650px;
     left: 50%;
+}
+
+/* Email list */
+.email_list {
+    display: flex;
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    flex-flow: row wrap;
+    margin: 0;
+    padding: 0;
+}
+.email_link {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    flex: 3;
+    margin: 0;
+    padding: 0;
+}
+.email_labels {
+    vertical-align: middle;
+    text-align: right;
+    flex: 2;
+    margin: 0;
+    padding: 0;
+}
+
+.email_labels > span.badge{
+  margin: 1px;
+}
+
+.dl-horizontal > dt{
+  float: left;
+  text-align: right;
+  width: 160px;
+}
+
+.dl-horizontal > dd{
+  margin-left: 180px;
+  margin-bottom: 0px;
+}
+
+/* Make the user description have a max height */
+#customer_project_description_wrapper.showfade {
+  max-height: 100px;
+	position: relative;
+	overflow: hidden;
+}
+.fade-read-more {
+	position: absolute;
+	bottom: 0; left: 0;
+	width: 100%;
+	text-align: center;
+	margin: 0; padding: 30px 0;
+	background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, transparent),color-stop(1, white));
+  background-image: -webkit-linear-gradient(top, transparent, white);
+  background-image: -moz-linear-gradient(top, transparent, white);
+  background-image: -ms-linear-gradient(top, transparent, white);
+  background-image: -o-linear-gradient(top, transparent, white);
+}
+
+/* Coloured timeline bar and dates */
+.rawdate { cursor: pointer;
+display: inline-block;
+width:30%;
+}
+
+/* Cool colour bar for project page */
+.project_timescale {
+	margin: 20px 0;
+	height:1px;
+	background:#eee;
+	position:relative;
+}
+.project_timescale .timelineTarget {
+	height:16px;
+	width:16px;
+  margin-left:-6px;
+	position:absolute;
+	top:-7px;
+  cursor:pointer;
+}
+.project_timescale .timelineTick {
+  width:3px;
+  height:10px;
+  margin:3px 6.5px;
+}
+
+.project_page_border_style {
+  border: 1px solid hsl(120, 0%, 85%);
+  padding: 15px;
+  border-radius: 15px;
+  margin: 5px;
+}
+
+/* Links Tab */
+.link_wrapper {
+	border-bottom:1px solid #DDDDDD;
+	padding-top:15px;
+	padding-bottom:15px;
+}
+.link_wrapper:first-child {
+	padding-top:0;
+}
+
+/* Caliper thumbnail image in table */
+.caliper_loading_spinner {
+  display:inline-block;
+  min-width:200px;
+}
+.caliper-thumbnail img {
+  max-width:200px;
+}
+/* Caliper modal */
+#caliperModal .modal-content {
+    width:1040px;
+    margin-left:-520px;
+    left:50%;
+}
+#caliperModal .modal-body img {
+    width:100%;
+    max-width:1040px;
+    max-height:400px;
 }
