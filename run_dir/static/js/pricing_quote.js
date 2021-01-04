@@ -11,6 +11,7 @@ app.component('pricing-preview', {
     },
     watch: {
       data_loading(new_val, old_val) {
+        /* have to wait for the table to be drawn */
         this.$nextTick(() => {
           this.init_listjs()
         })
@@ -184,7 +185,7 @@ app.component('product-table-row', {
         }
     },
     template: /*html*/`
-      <tr class="status_{{product['Status'].lower()}}">
+      <tr :class="'status_' + product['Status'].toLowerCase()">
           <td>
               <a href="#0" class="button add-to-quote" data-product-id="{{product['REF_ID']}}"><i class="far fa-plus-square fa-lg"></i></a>
               <span>(<span id="count_in_table_{{product['REF_ID']}}">0</span>)</span>
