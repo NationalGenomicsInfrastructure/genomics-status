@@ -1117,7 +1117,8 @@ function make_timescale_bar(tsid, include_orderdates){
 			$(tsid).append('<div class="timelineTarget" style="left:'+percent+'%;" data-datestamp="'+rawdate+'" data-toggle="tooltip" data-placement="bottom"  data-html="true" title="'+rawdate+'<br /><strong>'+names.join('</strong><br /><strong>')+'</strong>'+diffdaystext+'"><div class="timelineTick" style="background-color:'+thiscol+';"></div></div>');
 
       // Coloured borders next to dates in table
-      $(':contains('+rawdate+')').filter(function(){if ($(this).children().length === 0) return $(this).children().length === 0;}).after('<span style="border-right: 2px solid '+thiscol+';"></span>');
+      $(':contains('+rawdate+')').filter(function(){if ($(this).children().length === 0){if($(this).next('.borderbar').length>0){$(this).next('.borderbar').remove()}
+        return $(this).children().length === 0;}}).after('<span class="borderbar" style="border-right: 2px solid '+thiscol+';"></span>');
 		});
 	}
   $('.timelineTarget[data-toggle="tooltip"]').tooltip();
