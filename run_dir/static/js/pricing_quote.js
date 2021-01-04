@@ -26,14 +26,19 @@ app.component('pricing-preview', {
 
             this.dataTable.columns().every( function () {
                 var that = this;
-                console.log('One column!')
                 $( 'input', this.footer() ).on( 'keyup change', function () {
                     that
                     .search( this.value )
                     .draw();
                 } );
             } );
-          console.log(this.dataTable)
+
+            $('#pricing_products_table_filter').addClass('col-md-2');
+            $("#pricing_products_table_filter").appendTo("#table_h_and_search");
+            $('#pricing_products_table_filter label input').appendTo($('#pricing_products_table_filter'));
+            $('#pricing_products_table_filter label').remove();
+            $('#pricing_products_table_filter input').addClass('form-control p-2 mb-2 float-right');
+            $("#pricing_products_table_filter input").attr("placeholder", "Search table...");
           }
         },
     template:
