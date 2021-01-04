@@ -1,9 +1,41 @@
 app.component('pricing-preview', {
+    data: function() {
+        return {
+          dataTable: null
+        }
+    },
     computed: {
         data_loading() {
             return this.$root.data_loading
         }
     },
+    watch: {
+      data_loading(new_val, old_val) {
+        this.$nextTick(() => {
+          this.init_listjs()
+        })
+      }
+    },
+    methods: {
+        init_listjs() {
+            this.dataTable = $('#pricing_products_table').DataTable({
+              "paging":false,
+              "info":false,
+              "order": [[ 0, "desc" ]]
+            });
+
+            this.dataTable.columns().every( function () {
+                var that = this;
+                console.log('One column!')
+                $( 'input', this.footer() ).on( 'keyup change', function () {
+                    that
+                    .search( this.value )
+                    .draw();
+                } );
+            } );
+          console.log(this.dataTable)
+          }
+        },
     template:
         /*html*/`
         <div class="row">
@@ -93,19 +125,19 @@ app.component('pricing-preview', {
               </thead>
               <tfoot class="table-light">
                 <tr>
-                  <th>Quoting</th>
-                  <th class="sort" data-sort="id">ID</th>
-                  <th class="sort" data-sort="category">Category</th>
-                  <th class="sort" data-sort="type">Type</th>
-                  <th class="sort" data-sort="name">Name</th>
-                  <th class="sort" data-sort="alternatcomponents">Components</th>
-                  <th class="sort" data-sort="alternative_components">Alternative Components</th>
-                  <th calss="sort" data-sort="full_cost_fee">Full Cost Fee</th>
-                  <th class="sort" data-sort="overhead">Overhead</th>
-                  <th class="sort" data-sort="price_internal">Internal Price (SEK)</th>
-                  <th class="sort" data-sort="price_academic">Academic</th>
-                  <th class="sort" data-sort="full_cost">Full Cost</th>
-                  <th class="sort" data-sort="comment">Comment</th>
+                  <th></th>
+                  <th class="sort" data-sort="id"><input class="form-control search search-query" type="text" placeholder="Search ID" /></th>
+                  <th class="sort" data-sort="category"><input class="form-control search search-query" type="text" placeholder="Search Category" /></th>
+                  <th class="sort" data-sort="type"><input class="form-control search search-query" type="text" placeholder="Search Type" /></th>
+                  <th class="sort" data-sort="name"><input class="form-control search search-query" type="text" placeholder="Search Name" /></th>
+                  <th class="sort" data-sort="components"><input class="form-control search search-query" type="text" placeholder="Search Components" /></th>
+                  <th class="sort" data-sort="alternative_components"><input class="form-control search search-query" type="text" placeholder="Search Alternative Components" /></th>
+                  <th calss="sort" data-sort="full_cost_fee"><input class="form-control search search-query" type="text" placeholder="Search Alternative Components" /></th>
+                  <th class="sort" data-sort="overhead"><input class="form-control search search-query" type="text" placeholder="Search Overhead" /></th>
+                  <th class="sort" data-sort="price_internal"><input class="form-control search search-query" type="text" placeholder="Search Internal Price (SEK)" /></th>
+                  <th class="sort" data-sort="price_academic"><input class="form-control search search-query" type="text" placeholder="Search Academic Price" /></th>
+                  <th class="sort" data-sort="full_cost"><input class="form-control search search-query" type="text" placeholder="Search Full Cost" /></th>
+                  <th class="sort" data-sort="comment"><input class="form-control search search-query" type="text" placeholder="Search Comment" /></th>
                 </tr>
               </tfoot>
               <tbody class="list" id='pricing_products_tbody'>
