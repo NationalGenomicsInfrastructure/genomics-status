@@ -1,7 +1,8 @@
 app.component('pricing-preview', {
     data: function() {
         return {
-          dataTable: null
+          dataTable: null,
+          show_discontinued: false
         }
     },
     computed: {
@@ -22,7 +23,7 @@ app.component('pricing-preview', {
             this.dataTable = $('#pricing_products_table').DataTable({
               "paging":false,
               "info":false,
-              "order": [[ 0, "desc" ]]
+              "order": [[ 1, "asc" ]]
             });
 
             this.dataTable.columns().every( function () {
@@ -40,8 +41,20 @@ app.component('pricing-preview', {
             $('#pricing_products_table_filter label').remove();
             $('#pricing_products_table_filter input').addClass('form-control p-2 mb-2 float-right');
             $("#pricing_products_table_filter input").attr("placeholder", "Search table...");
-          }
         },
+        reset_listjs() {
+            $('#pricing_products_table').DataTable().destroy();
+            $('#pricing_products_table_filter').remove();
+        },
+        toggle_discontinued() {
+            this.reset_listjs()
+            this.show_discontinued = !this.show_discontinued
+
+            this.$nextTick(() => {
+              this.init_listjs()
+            })
+        }
+    },
     template:
         /*html*/`
         <div class="row">
@@ -82,7 +95,12 @@ app.component('pricing-preview', {
                 More Options
               </button>
               <div class="collapse border-top py-3" id="more_options">
-                <button type="button" class="btn btn-warning" id="toggle_discontinued">Show Discontinued Products <i class="fas fa-exclamation-triangle fa-lg pl-2"></i></button>
+                <template v-if="show_discontinued">
+                  <button type="button" class="btn btn-success" @click="toggle_discontinued">Hide Discontinued Products <i class="fas fa-book-heart fa-lg pl-2"></i></button>
+                </template>
+                <template v-else>
+                  <button type="button" class="btn btn-warning" @click="toggle_discontinued">Show Discontinued Products <i class="fas fa-exclamation-triangle fa-lg pl-2"></i></button>
+                </template>
               </div>
             </div>
             <div class="col-4">
@@ -148,8 +166,8 @@ app.component('pricing-preview', {
               </tfoot>
               <tbody class="list" id='pricing_products_tbody'>
               <template v-for="product in this.$root.all_products" :key="product['REF_ID']">
-                <product-table-row :product_id="product['REF_ID']">
-                </product-table-row>
+                  <product-table-row :product_id="product['REF_ID']" :show_discontinued="this.show_discontinued">
+                  </product-table-row>
               </template>
               </tbody>
             </table>
@@ -159,13 +177,16 @@ app.component('pricing-preview', {
 })
 
 app.component('product-table-row', {
-    props: ['product_id'],
+    props: ['product_id', 'show_discontinued'],
     computed: {
         product() {
             return this.$root.all_products[this.product_id]
         },
         discontinued() {
             return (this.product['Status'] == 'Discontinued')
+        },
+        visible() {
+            return (this.show_discontinued || !this.discontinued)
         },
         isNew() {
             return this.$root.new_products.has(this.product_id)
@@ -185,50 +206,52 @@ app.component('product-table-row', {
         }
     },
     template: /*html*/`
-      <tr :class="'status_' + product['Status'].toLowerCase()">
-          <td>
-              <a href="#0" class="button add-to-quote" data-product-id="{{product['REF_ID']}}"><i class="far fa-plus-square fa-lg"></i></a>
-              <span>(<span id="count_in_table_{{product['REF_ID']}}">0</span>)</span>
-          </td>
-          <td class="id">
-              {{product['REF_ID']}}
-          </td>
-          <td class="category">
-              {{product['Category']}}
-          </td>
-          <td class="type">
-              {{product['Type']}}
-          </td>
-          <td class="name">
-              {{product["Name"]}}
-          </td>
-          <td class="components">
-            <product-table-components :product_id="product_id" :type="'Regular'">
-            </product-table-components>
-          </td>
-          <td class="alternative_components">
-            <product-table-components :product_id="product_id" :type="'Alternative'">
-            </product-table-components>
-          </td>
-          <td class="full_cost_fee">
-              {{product["Full cost fee"]}}
-          </td>
-          <td class="overhead">
-              {{product["Re-run fee"]}}
-          </td>
-          <td class="price_internal">
-              {{cost['cost'].toFixed(2)}}
-          </td>
-          <td class="price_academic">
-              {{cost['cost_academic'].toFixed(2)}}
-          </td>
-          <td class="full_cost">
-              {{cost['full_cost'].toFixed(2)}}
-          </td>
-          <td class="comment">
-              {{product["Comment"]}}
-          </td>
-      </tr>
+        <template v-if="this.visible">
+          <tr :class="'status_' + product['Status'].toLowerCase()">
+              <td>
+                  <a href="#0" class="button add-to-quote" data-product-id="{{product['REF_ID']}}"><i class="far fa-plus-square fa-lg"></i></a>
+                  <span>(<span id="count_in_table_{{product['REF_ID']}}">0</span>)</span>
+              </td>
+              <td class="id">
+                  {{product['REF_ID']}}
+              </td>
+              <td class="category">
+                  {{product['Category']}}
+              </td>
+              <td class="type">
+                  {{product['Type']}}
+              </td>
+              <td class="name">
+                  {{product["Name"]}}
+              </td>
+              <td class="components">
+                <product-table-components :product_id="product_id" :type="'Regular'">
+                </product-table-components>
+              </td>
+              <td class="alternative_components">
+                <product-table-components :product_id="product_id" :type="'Alternative'">
+                </product-table-components>
+              </td>
+              <td class="full_cost_fee">
+                  {{product["Full cost fee"]}}
+              </td>
+              <td class="overhead">
+                  {{product["Re-run fee"]}}
+              </td>
+              <td class="price_internal">
+                  {{cost['cost'].toFixed(2)}}
+              </td>
+              <td class="price_academic">
+                  {{cost['cost_academic'].toFixed(2)}}
+              </td>
+              <td class="full_cost">
+                  {{cost['full_cost'].toFixed(2)}}
+              </td>
+              <td class="comment">
+                  {{product["Comment"]}}
+              </td>
+          </tr>
+        </template>
     `
 })
 
