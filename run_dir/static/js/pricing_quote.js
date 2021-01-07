@@ -2,13 +2,25 @@ app.component('pricing-preview', {
     data: function() {
         return {
           dataTable: null,
-          show_discontinued: false
+          show_discontinued: false,
+          quote_prod_ids: {},
+          price_type: 'cost_academic'
         }
     },
     computed: {
-        data_loading() {
-            return this.$root.data_loading
+      any_quote() {
+        return Object.keys(this.quote_prod_ids).length
+      },
+      data_loading() {
+          return this.$root.data_loading
+      },
+      quote_cost() {
+        cost_sum = 0
+        for ([prod_id, prod_count] of Object.entries(this.quote_prod_ids)) {
+          cost_sum += prod_count * this.productCost(prod_id)[this.price_type]
         }
+        return cost_sum.toFixed(2)
+      },
     },
     watch: {
       data_loading(new_val, old_val) {
@@ -19,6 +31,16 @@ app.component('pricing-preview', {
       }
     },
     methods: {
+        add_prod_to_quote(prod_id) {
+            if (!(prod_id in this.quote_prod_ids)) {
+                this.quote_prod_ids[prod_id] = 0
+            }
+            this.quote_prod_ids[prod_id] += 1
+        },
+        productCost(prod_id) {
+            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
+            return this.$root.productCost(prod_id)
+        },
         init_listjs() {
             this.dataTable = $('#pricing_products_table').DataTable({
               "paging":false,
@@ -70,13 +92,13 @@ app.component('pricing-preview', {
             <div class="col-8 quote_lcol_header">
               <div class="radio" id="price_type_selector">
                 <label class="radio-inline py-2 pr-2">
-                  <input type="radio" name="price_type" value="sweac" checked> Swedish academia
+                  <input type="radio" name="price_type" v-model="price_type" value="cost_academic" checked> Swedish academia
                 </label>
                 <label class="radio-inline p-2">
-                  <input type="radio" name="price_type" value="full"> Industry and non-Swedish academia
+                  <input type="radio" name="price_type" v-model="price_type" value="full_cost"> Industry and non-Swedish academia
                 </label>
                 <label class="radio-inline p-2">
-                  <input type="radio" name="price_type" value="internal"> Internal
+                  <input type="radio" name="price_type" v-model="price_type" value="cost"> Internal
                 </label>
               </div>
               <span id='other_cost_container' class='other_updateable py-2 pr-2'>
@@ -109,22 +131,28 @@ app.component('pricing-preview', {
           </div>
           <div id="alerts_go_here">
           </div>
-          <div class="row py-2" id="current_quote">
-            <div class="col-md-8 col-xl-6 quote_lcol_header">
-              <h3>Products</h3>
-              <span class="help-block">
-                To use fractions of units, please use full stop and not decimal comma.
-              </span>
-              <div id='product_warnings'></div>
-              <ul class="quote-product-list list-unstyled">
-              </ul>
+          <template v-if="this.any_quote">
+            <div class="row py-2" id="current_quote">
+              <div class="col-md-8 col-xl-6 quote_lcol_header">
+                <h3>Products</h3>
+                <span class="help-block">
+                  To use fractions of units, please use full stop and not decimal comma.
+                </span>
+                <div id='product_warnings'></div>
+                <ul class="list-unstyled row">
+                  <template v-for="(prod_count, prod_id) in this.quote_prod_ids">
+                    <quote-list-product :product_id="prod_id" :product_count="prod_count" :price_type="price_type"/>
+                  </template>
+                </ul>
+              </div>
+              <div class="col-md-4 col-xl-6 border-left">
+                <h3>Totals</h3>
+                <ul class="quote-totals-list list-unstyled">
+                {{quote_cost}}
+                </ul>
+              </div>
             </div>
-            <div class="col-md-4 col-xl-6 border-left">
-              <h3>Totals</h3>
-              <ul class="quote-totals-list list-unstyled">
-              </ul>
-            </div>
-          </div>
+          </template>
           <div class="products_chooseable_div">
             <div class="row" id="table_h_and_search">
               <h2 class="col mr-auto">Available Products</h2>
@@ -176,6 +204,30 @@ app.component('pricing-preview', {
         `
 })
 
+app.component('quote-list-product', {
+    props: ['product_id', 'product_count', 'price_type'],
+    computed: {
+        product() {
+            return this.$root.all_products[this.product_id]
+        },
+        productCost() {
+            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
+            return this.$root.productCost(this.product_id)
+        },
+        cost() {
+            return this.productCost[this.price_type].toFixed(2)
+        }
+    },
+    template: /*html*/`
+      <li class="my-1">
+        <a href='#'><i class="far fa-times-square fa-lg text-danger"></i></a>
+        <input class="col-1 mx-2" min=0 :value="product_count">
+        <span class="col-9">{{product.Name}}</span>
+        <span class="col-2 float-right">{{cost}}</span>
+      </li>
+    `
+})
+
 app.component('product-table-row', {
     props: ['product_id', 'show_discontinued'],
     computed: {
@@ -205,11 +257,16 @@ app.component('product-table-row', {
             return this.$root.productCost(this.product_id)
         }
     },
+    methods: {
+        add_to_quote() {
+            this.$parent.add_prod_to_quote(this.product_id)
+        }
+    },
     template: /*html*/`
         <template v-if="this.visible">
           <tr :class="'status_' + product['Status'].toLowerCase()">
               <td>
-                  <a href="#0" class="button add-to-quote" data-product-id="{{product['REF_ID']}}"><i class="far fa-plus-square fa-lg"></i></a>
+                  <a href="#0" class="button add-to-quote" @click="add_to_quote" data-product-id="{{product['REF_ID']}}"><i class="far fa-plus-square fa-lg"></i></a>
                   <span>(<span id="count_in_table_{{product['REF_ID']}}">0</span>)</span>
               </td>
               <td class="id">
