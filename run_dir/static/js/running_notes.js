@@ -239,7 +239,7 @@ $("#running_notes_form").submit( function(e) {
             var now = new Date();
             category=generate_category_label(category);
             var printHyphen =category? ' - ': ' ';
-            $('<div class="card"><div class="card-header bg-success-old">'+
+            $('<div class="card"><div class="card-header bg-success-table">'+
                   '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
                   now.toDateString() + ', ' + now.toLocaleTimeString(now)+ printHyphen + category +
                 '</div><div class="card-body">'+make_markdown(data['note'])+

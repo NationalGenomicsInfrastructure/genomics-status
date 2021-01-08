@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 {% block stuff %}
 {% import datetime %}
 <div class="container-fluid" id="content">
@@ -6,23 +6,25 @@
 	<p>The tables below show information about all cronjobs running on production servers.</p>
 	<p><em>Deactivated (i.e commented) cronjobs will appear in red.</em></p>
 
-  <div class="panel-group" id="cronjobs_accordion">
+  <div class="accordion" id="cronjobs_accordion">
   {% for server, crontab in sorted(cronjobs.items(), key=lambda x:x[1].get('last_updated', ''), reverse=True) %}
     {% set two_month_ago=str(datetime.datetime.now() - datetime.timedelta(30*2))%}
-    <div class="panel {% if crontab.get('last_updated', '') < two_month_ago %} panel-warning {% else %} panel-default {% end %}">
-      <div class="panel-heading">
-        <h4 class="panel-title">
-          <a data-toggle="collapse" data-parent="#cronjobs_accordion" href="#cronjobs_{{ server }}">
+    <div class="accordion-item accordion-item-prettify">
+			<div class="accordion-default-header {% if crontab.get('last_updated', '') < two_month_ago %} accordion-warning {% end %}">
+        <h4 class="accordion-header">
+          <a class="text-decoration-none {% if crontab.get('last_updated', '') < two_month_ago %} text-warning{% else %} text-dark{% end %} collapsed"
+							role="button" data-toggle="collapse" data-target="#cronjobs_{{ server }}">
             {{ server }}
-            <small class="pull-right"><em>Last Updated:</em> <strong>{{ crontab.get('last_updated') }}</strong></small>
+            <small class="float-right text-muted"><em>Last Updated:</em> <strong>{{ crontab.get('last_updated') }}</strong></small>
           </a>
         </h4>
-      </div>
-      <div id="cronjobs_{{ server }}" class="panel-collapse collapse">
-        <div class="panel-body">
+			</div>
+      <div id="cronjobs_{{ server }}" class="accordion-collapse collapse collapsed"
+					data-parent="#cronjobs_accordion" {% if crontab.get('last_updated', '') < two_month_ago %} style="border-color: #fff3cd;" {% end %} >
+        <div class="accordion-body">
           <table class="table">
             <thead>
-              <tr>
+              <tr class="darkth">
                 <th>User</th>
                 <th>Minute</th>
                 <th>Hour</th>
@@ -46,7 +48,7 @@
                     <td>{{ job.get('Month') }}</td>
                     <td>{{ job.get('Day of week') }}</td>
                   {% end %}
-                  <td><pre class="{% if not job.get('Enabled', True) %}bg-danger{% end %}"><code>{% if job.get('Comment') %}# {{ job.get('Comment') }}<br>{% end %}{{ job.get('Command') }}</code></pre></td>
+                  <td><pre class="{% if not job.get('Enabled', True) %}bg-danger-table{% end %}"><code>{% if job.get('Comment') %}# {{ job.get('Comment') }}<br>{% end %}{{ job.get('Command') }}</code></pre></td>
                 </tr>
                 {% end %}
               {% end %}

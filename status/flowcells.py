@@ -79,15 +79,6 @@ class FlowcellsHandler(SafeHandler):
         self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, form_date=formatDate, all=all))
 
 
-class FlowcellHandler(SafeHandler):
-    """ Serves a page which shows information and QC stats for a given
-    flowcell.
-    """
-    def get(self, flowcell):
-        t = self.application.loader.load("flowcell_samples.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, flowcell=flowcell, user=self.get_current_user()))
-
-
 class FlowcellsDataHandler(SafeHandler):
     """ Serves brief information for each flowcell in the database.
 
