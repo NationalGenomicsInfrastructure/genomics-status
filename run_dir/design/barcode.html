@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 <!--
 Template file: barcode.html
 URL: /barcode/
@@ -17,26 +17,35 @@ a text in the text field or upload a file.<p>
 <br>
 <div id="query">
   <form class="form-horizontal" enctype="multipart/form-data" role="form" id="barcode_from_file" method="post" action="/barcode" onsubmit="return submit_form('lab_labels')">
-    <div class="pull-left" style="margin-right:5px">
-      <input id="print_label_file" type="file" name="file_to_print" class="btn btn-default" />
-      <input type="hidden" id="formType" name="formType" value="lab_labels">
+    <div class="row">
+      <div class="col-3 float-left" style="margin-right:5px">
+        <input id="print_label_file" type="file" name="file_to_print"  class="form-control"/>
+        <input type="hidden" id="formType" name="formType" value="lab_labels">
+      </div>
     </div>
     <br>
-    <br>
-    <br>
-    <div class="pull-left" style="margin-right:5px">
-      <input id="print_label_string" size="37" type="text" name="text_to_print" class="btn btn-default" placeholder="your text here" />
-      <td style="font-size:20px;"><strong>&nbsp;&nbsp;&nbsp; print with barcode: &nbsp;</strong></td>
-      <input id="print_with_barcode" type="checkbox" name="print_with_barcode" >
+    <div class="row" style="margin-right:5px">
+      <div class="col-3">
+        <input id="print_label_string" size="37" type="text" name="text_to_print" class="form-control text-center" placeholder="your text here" />
+      </div>
+      <div class="col-3">
+        <td style="font-size:20px;"><strong> print with barcode:</strong></td>
+        <input id="print_with_barcode" type="checkbox" name="print_with_barcode" >
+      </div>
     </div>
     <br>
-    <br>
-    <br>
-    <div class="pull-left" style="margin-right:5px">
-      <td style="font-size:20px;"><strong>&nbsp;&nbsp;&nbsp; copies: &nbsp;</strong></td>
-      <input id="label_copies" type="number" min="1" max="20" name="copies" class="btn btn-default" value="1" />
+    <div class="row text-center" style="margin-right:5px">
+      <div class="col-auto">
+        <td style="font-size:20px;"><strong> copies:</strong></td>
+      </div>
+      <div class="col-auto">
+        <input id="label_copies" type="number" min="1" max="20" name="copies" class="form-control" value="1" />
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary btn-lg" data-script="barcode">Print</button>
+      </div>
     </div>
-    <button type="submit" class="btn btn-primary btn-lg" data-script="barcode">Print</button>
+
   </form>
 </div>
 <br>
@@ -44,21 +53,35 @@ a text in the text field or upload a file.<p>
 <h3><span>User Project Barcode Printing</span></h3>
 <div id="query">
   <form class="form-horizontal" enctype="multipart/form-data" role="form" id="project_barcode_from_text" method="post" action="/barcode" onsubmit="return submit_form('user_labels')">
-    <div class="pull-left" style="margin-right:5px">
-      <input id="print_projectlabel" size="37" type="text" name="projectLabel_to_print" class="btn btn-default" placeholder="enter Project ID (i.e. P12345)" />
-      <td style="font-size:20px;"><strong>&nbsp;&nbsp;&nbsp; start no. plate P_: &nbsp;</strong></td>
-      <input id="project_Pstart" type="number" min="1" max="20" name="plate_start" class="btn btn-default" value="1" />
-      <td style="font-size:20px;"><strong>&nbsp;&nbsp;&nbsp; end no. plate P_: &nbsp;</strong></td>
-      <input id="project_Pend" type="number" min="1" max="20" name="plate_end" class="btn btn-default" value="5" />
-      <td style="font-size:20px;"><strong>&nbsp;&nbsp;&nbsp; number of projects &nbsp;</strong></td>
-      <input id="numberOfProjects" type="number" min="1" max="20" name="numberOfProjects" class="btn btn-default" value="1" />
+    <div class="row text-center" style="margin-right:5px">
+      <div class="col-3">
+        <input id="print_projectlabel" size="37" type="text" name="projectLabel_to_print" class="form-control" placeholder="enter Project ID (i.e. P12345)" />
+      </div>
+      <div class="col-auto col-form-label">
+        <td style="font-size:20px;"><strong> start no. plate P_:</strong></td>
+      </div>
+      <div class="col-1">
+        <input id="project_Pstart" type="number" min="1" max="20" name="plate_start" class="form-control" value="1" />
+      </div>
+      <div class="col-auto col-form-label">
+        <td style="font-size:20px;"><strong> end no. plate P_:</strong></td>
+      </div>
+      <div class="col-1">
+        <input id="project_Pend" type="number" min="1" max="20" name="plate_end" class="form-control" value="5" />
+      </div>
+      <div class="col-auto col-form-label">
+        <td style="font-size:20px;"><strong> number of projects:</strong></td>
+      </div>
+      <div class="col-1">
+        <input id="numberOfProjects" type="number" min="1" max="20" name="numberOfProjects" class="form-control" value="1" />
+      </div>
       <input type="hidden" id="formType" name="formType" value="user_labels">
     </div>
     <br>
-    <br>
-    <br>
-    <div class="pull-left" style="margin-right:5px">
-      <button type="submit" class="btn btn-primary btn-lg" data-script="barcode">Print Project Labels</button>
+    <div class="row" style="margin-right:5px">
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary btn-lg" data-script="barcode">Print Project Labels</button>
+      </div>
     </div>
     <br>
     <br>
