@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 <!--
 Template file: error_page.html
 URL: /<any>
@@ -14,7 +14,7 @@ NOTE: Returns JSON if an API call, this template if not.
 <div class="alert alert-danger" role="alert">
   <h4>Oops, something went wrong with your page request. Sorry about that!</h4>
   If you don't think that you did anything wrong, please let us know what page
-  you were trying to access, using the <a href="/suggestion_box">Suggestion Box</a>
+  you were trying to access, using the <a class="text-decoration-none" href="/suggestion_box">Suggestion Box</a>
   page.
 </div>
 {% if gs_globals.get('exception_fulltext') %}
