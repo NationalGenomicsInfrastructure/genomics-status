@@ -319,68 +319,6 @@ class PricingBaseHandler(SafeHandler):
         return return_d
 
 
-class PricingComponentsDataHandler(PricingBaseHandler):
-    """ Serves price data of pricing components
-
-    Loaded through:
-        /api/v1/pricing_components
-        /api/v1/pricing_components/([^/]*)$
-
-    where the optional search string is a ref_id of a component.
-    Use the optional parameter `version` to specify an exact version
-    from the database. If omitted, the latest (highest number) version
-    will be used.
-    Use the optional parameter `date` to specify an exact date for which the
-    exchange rate will be fetched. When not specified, the latest exchange
-    rates will be used.
-    Any information available for the component(s) will be returned.
-    """
-
-    def get(self, search_string=None):
-        """Returns individual or all components from the database as json"""
-        version = self.get_argument('version', None)
-        date = self.get_argument('date', None)
-
-        row = self.get_component_prices(component_id=search_string,
-                                        version=version,
-                                        date=date,
-                                        pretty_strings=True)
-
-        self.write(json.dumps(row))
-
-
-class PricingProductsDataHandler(PricingBaseHandler):
-    """ Serves data of pricing products
-
-    Loaded through:
-        /api/v1/pricing_products
-        /api/v1/pricing_products/([^/]*)$
-
-    where the optional search string is an id of a product.
-    Use the optional parameter `version` to specify an exact version
-    from the database. If omitted, the latest (highest number) version
-    will be used.
-    Use the optional parameter `date` to specify the date to use for
-    exchange rates.
-    By default, discontinued products are omitted, use the parameter
-    `discontinued` to include those.
-    Any information available for the product(s) will be returned.
-    """
-
-    def get(self, search_string=None):
-        """Returns individual or all products from the database as json"""
-        version = self.get_argument('version', None)
-        date = self.get_argument('date', None)
-        discontinued = self.get_argument('discontinued', False)
-
-        rows = self.get_product_prices(search_string, version=version,
-                                       date=date,
-                                       discontinued=discontinued,
-                                       pretty_strings=True)
-
-        self.write(json.dumps(rows))
-
-
 class PricingDateToVersionDataHandler(PricingBaseHandler):
     """Serves a map of when each version of pricing components and
     pricing products was issued.
@@ -432,57 +370,14 @@ class PricingQuoteHandler(PricingBaseHandler):
     """ Serves a view from where a project quote can be built
 
     Loaded through:
-        /pricing_quote
+        /pricing_quote_old
 
     """
 
     def get(self):
-        exch_rates = self.fetch_exchange_rates(None)
-
-        exch_rates['Issued at'] = exch_rates['Issued at'][0:10]
-        exch_rates['USD_in_SEK'] = '{:.2f}'.format(float(exch_rates['USD_in_SEK']))
-        exch_rates['EUR_in_SEK'] = '{:.2f}'.format(float(exch_rates['EUR_in_SEK']))
-
         t = self.application.loader.load('pricing_quote.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                              user=self.get_current_user(),
-                              exch_rates=exch_rates))
-
-
-class PricingQuoteTbodyHandler(PricingBaseHandler):
-    """ Serves a tbody specificly for /pricing_quote to be generated dynamically.
-
-    Loaded through e.g.:
-        /pricing_quote_tbody?date=2019-03-23
-
-    The parameter discontinued can be used to also show products where
-        the status is not 'Available'
-
-    """
-
-    def get(self):
-        version = self.get_argument('version', None)
-        date = self.get_argument('date', None)
-        discontinued = self.get_argument('discontinued', None)
-
-        products = self.get_product_prices(None, version=version,
-                                           date=date,
-                                           discontinued=discontinued,
-                                           pretty_strings=True)
-
-        products = [product for id, product in products.items()]
-
-        components = self.get_component_prices(component_id=None,
-                                               version=version,
-                                               date=date,
-                                               pretty_strings=True)
-
-        t = self.application.loader.load('pricing_quote_tbody.html')
-        self.write(t.generate(gs_globals=self.application.gs_globals,
-                              user=self.get_current_user(),
-                              products=products,
-                              components=components,
-                              version=version))
+                              user=self.get_current_user()))
 
 
 class PricingValidationError(Exception):

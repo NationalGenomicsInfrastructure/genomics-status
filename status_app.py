@@ -30,9 +30,9 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
-from status.pricing import PricingComponentsDataHandler, PricingProductsDataHandler, \
+from status.pricing import \
     PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
-    PricingQuoteHandler, PricingQuoteTbodyHandler, PricingValidationDataHandler, \
+    PricingQuoteHandler, PricingValidationDataHandler, \
     PricingUpdateHandler, PricingPreviewHandler, PricingDataHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
@@ -142,11 +142,7 @@ class Application(tornado.web.Application):
                 SamplesPerLanePlotHandler),
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
             ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
-            ("/api/v1/pricing_components", PricingComponentsDataHandler),
-            ("/api/v1/pricing_components/([^/]*)$", PricingComponentsDataHandler),
             ("/api/v1/pricing_exchange_rates", PricingExchangeRatesDataHandler),
-            ("/api/v1/pricing_products", PricingProductsDataHandler),
-            ("/api/v1/pricing_products/([^/]*)$", PricingProductsDataHandler),
             ("/api/v1/pricing_validate", PricingValidationDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
@@ -215,7 +211,6 @@ class Application(tornado.web.Application):
             ("/pools_qpcr", qPCRPoolsHandler),
             ("/pricing_preview", PricingPreviewHandler),
             ("/pricing_quote", PricingQuoteHandler),
-            ("/pricing_quote_tbody", PricingQuoteTbodyHandler),
             ("/pricing_update", PricingUpdateHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesHandler),
