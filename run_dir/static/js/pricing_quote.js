@@ -178,10 +178,10 @@ app.component('pricing-preview', {
               </button>
               <div class="collapse border-top py-3" id="more_options">
                 <template v-if="show_discontinued">
-                  <button type="button" class="btn btn-success" @click="toggle_discontinued">Hide Discontinued Products <i class="fas fa-book-heart fa-lg pl-2"></i></button>
+                  <button type="button" class="btn btn-success" id="toggle_discontinued" @click="toggle_discontinued">Hide Discontinued Products <i class="fas fa-book-heart fa-lg pl-2"></i></button>
                 </template>
                 <template v-else>
-                  <button type="button" class="btn btn-warning" @click="toggle_discontinued">Show Discontinued Products <i class="fas fa-exclamation-triangle fa-lg pl-2"></i></button>
+                  <button type="button" class="btn btn-warning" id="toggle_discontinued" @click="toggle_discontinued">Show Discontinued Products <i class="fas fa-exclamation-triangle fa-lg pl-2"></i></button>
                 </template>
               </div>
             </div>
@@ -199,7 +199,7 @@ app.component('pricing-preview', {
                   To use fractions of units, please use full stop and not decimal comma.
                 </span>
                 <div id='product_warnings'></div>
-                <ul class="list-unstyled">
+                <ul class="list-unstyled quote-product-list">
                   <template v-for="(prod_count, prod_id) in this.quote_prod_ids" :key="prod_id">
                     <quote-list-product :product_id="prod_id" :product_count="prod_count" :price_type="price_type"/>
                   </template>
@@ -233,15 +233,15 @@ app.component('pricing-preview', {
                   <dl class="quote_totals">
                     <p :class="{'text-muted': (price_type != 'cost_academic')}">
                       <dt>Swedish academia:</dt>
-                      <dd>{{quote_cost['cost_academic']}} SEK</dd>
+                      <dd class="quote_totals_val quote_sweac">{{quote_cost['cost_academic']}} SEK</dd>
                     </p>
                     <p :class="{'text-muted': (price_type != 'full_cost')}">
                       <dt>Industry and non-Swedish academia:</dt>
-                      <dd>{{quote_cost['full_cost']}} SEK</dd>
+                      <dd class="quote_totals_val quote_full">{{quote_cost['full_cost']}} SEK</dd>
                     </p>
                     <p :class="{'text-muted': (price_type != 'cost')}">
                       <dt>Internal projects:</dt>
-                      <dd>{{quote_cost['cost']}} SEK</dd>
+                      <dd class="quote_totals_val quote_internal">{{quote_cost['cost']}} SEK</dd>
                     </p>
                   </dl>
                 </ul>
@@ -327,9 +327,9 @@ app.component('quote-list-product', {
           <a href='#' @click="remove_from_quote"><i class="far fa-times-square fa-lg text-danger"></i></a>
         </div>
         <div class="col-1">
-          <input class="form-control" v-model="this.$parent.quote_prod_ids[product_id]" min=0>
+          <input class="form-control" v-model="this.$parent.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']">
         </div>
-        <span class="col-7">{{product.Name}}</span>
+        <span class="col-7 quote_product_name">{{product.Name}}</span>
         <span class="col-2">{{cost}} SEK</span>
       </li>
     `
@@ -380,7 +380,7 @@ app.component('product-table-row', {
         <template v-if="this.visible">
           <tr :class="'status_' + product['Status'].toLowerCase()">
               <td>
-                  <a href="#" class="button" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
+                  <a href="#" class="button add-to-quote" :data-product-id="product['REF_ID']" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
                   <span>({{quote_count}})</span>
               </td>
               <td class="id">

@@ -318,11 +318,11 @@ app.component('exchange-rates', {
       <h4>Exchange rates</h4>
       <dl class="row">
         <dt class="col-md-4 text-right">1 USD</dt>
-        <dd class="col-md-8"><span>{{USD_in_SEK}}</span></dd>
+        <dd class="col-md-8"><span id='exch_rate_usd'>{{USD_in_SEK}}</span></dd>
         <dt class="col-md-4 text-right">1 EUR</dt>
-        <dd class="col-md-8"><span>{{EUR_in_SEK}}</span></dd>
+        <dd class="col-md-8"><span id='exch_rate_eur'>{{EUR_in_SEK}}</span></dd>
         <dt class="col-md-4 text-right">Issued at</dt>
-        <dd class="col-md-8"><span>{{issued_at}}</span>
+        <dd class="col-md-8"><span id='exch_rate_issued_at'>{{issued_at}}</span>
           <a v-if="mutable" href="#" data-toggle="modal" data-target="#exch_rate_modal"> (Change)</a>
         </dd>
       </dl>
