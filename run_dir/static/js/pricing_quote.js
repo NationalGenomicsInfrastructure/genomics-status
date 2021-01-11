@@ -4,17 +4,29 @@ app.component('pricing-preview', {
           dataTable: null,
           show_discontinued: false,
           quote_prod_ids: {},
+          quote_special_addition_value: 0,
+          quote_special_addition_label: '',
+          quote_special_percentage_value: 0.0,
+          quote_special_percentage_label: '',
           price_type: 'cost_academic'
         }
     },
     computed: {
       any_quote() {
-        return Object.keys(this.quote_prod_ids).length
+        return ( this.any_special_addition ||
+                 this.any_special_percentage ||
+                Object.keys(this.quote_prod_ids).length)
+      },
+      any_special_addition() {
+        return this.quote_special_addition_label !== ''
+      },
+      any_special_percentage() {
+        return this.quote_special_percentage_label !== ''
       },
       data_loading() {
-          return this.$root.data_loading
+        return this.$root.data_loading
       },
-      quote_cost() {
+      product_cost() {
         cost_sum = 0
         cost_academic_sum = 0
         full_cost_sum = 0
@@ -23,6 +35,29 @@ app.component('pricing-preview', {
           cost_academic_sum += prod_count * this.productCost(prod_id)['cost_academic'];
           full_cost_sum +=  prod_count * this.productCost(prod_id)['full_cost'];
         }
+
+        return {'cost': cost_sum,
+                'cost_academic': cost_academic_sum,
+                'full_cost': full_cost_sum}
+      },
+      quote_cost() {
+        product_cost = this.product_cost
+        cost_sum = product_cost['cost']
+        cost_academic_sum = product_cost['cost_academic']
+        full_cost_sum = product_cost['full_cost']
+
+        if (this.any_special_addition) {
+          cost_sum += this.quote_special_addition_value
+          cost_academic_sum += this.quote_special_addition_value
+          full_cost_sum += this.quote_special_addition_value
+        }
+
+        if (this.any_special_percentage) {
+          cost_sum *= (100 - this.quote_special_percentage_value)/100
+          cost_academic_sum *= (100 - this.quote_special_percentage_value)/100
+          full_cost_sum *= (100 - this.quote_special_percentage_value)/100
+        }
+
         return {'cost': cost_sum.toFixed(2),
                 'cost_academic': cost_academic_sum.toFixed(2),
                 'full_cost': full_cost_sum.toFixed(2)}
@@ -81,6 +116,14 @@ app.component('pricing-preview', {
             this.$nextTick(() => {
               this.init_listjs()
             })
+        },
+        reset_special_percentage() {
+            this.quote_special_percentage_label = ''
+            this.quote_special_percentage_value = 0
+        },
+        reset_special_addition() {
+            this.quote_special_addition_label = ''
+            this.quote_special_addition_value = 0
         }
     },
     template:
@@ -95,7 +138,7 @@ app.component('pricing-preview', {
         </template>
         <template v-else>
           <div class="row">
-            <div class="col-8 quote_lcol_header">
+            <div class="col-5 quote_lcol_header">
               <div class="radio" id="price_type_selector">
                 <label class="radio-inline py-2 pr-2">
                   <input type="radio" name="price_type" v-model="price_type" value="cost_academic" checked> Swedish academia
@@ -106,6 +149,28 @@ app.component('pricing-preview', {
                 <label class="radio-inline p-2">
                   <input type="radio" name="price_type" v-model="price_type" value="cost"> Internal
                 </label>
+              </div>
+              <div class="row">
+                <div class="col-2">
+                  <label for='other_cost_value' class="form-label">Other cost</label>
+                  <input id='other_cost_value' class="form-control" v-model.number="this.quote_special_addition_value" type="number" >
+                </div>
+                <div class="col-10">
+                  <label for='other_cost_label' class="form-label">Other cost label</label>
+                  <input id='other_cost_label' class="form-control" v-model="this.quote_special_addition_label" type="text" >
+                </div>
+                <div class="mb-3 form-text">Specify a sum (positive or negative) that will be added to the quote cost. Will only be applied if a label is specified.</div>
+              </div>
+              <div class="row">
+                <div class="col-2">
+                  <label for='percentage_input' class="form-label">Percentage</label>
+                  <input id='percentage_input' class="form-control" type="number" v-model.number="this.quote_special_percentage_value">
+                </div>
+                <div class="col-10">
+                  <label for='percentage_label' class="form-label">Percentage label</label>
+                  <input id='percentage_label' class="form-control" type="text" v-model="this.quote_special_percentage_label">
+                </div>
+                <div class="mb-3 form-text">Specify a percentage (positive or negative) that will be subtracted (default is discount) from the total sum. Will only be applied if a label is specified.</div>
               </div>
 
               <button class="btn btn-link" id="more_options_btn" type="button" data-toggle="collapse" data-target="#more_options" aria-expanded="false" aria-controls="more_options">
@@ -120,7 +185,7 @@ app.component('pricing-preview', {
                 </template>
               </div>
             </div>
-            <div class="col-4">
+            <div class="col-4 offset-2">
               <exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
             </div>
           </div>
@@ -138,7 +203,29 @@ app.component('pricing-preview', {
                   <template v-for="(prod_count, prod_id) in this.quote_prod_ids" :key="prod_id">
                     <quote-list-product :product_id="prod_id" :product_count="prod_count" :price_type="price_type"/>
                   </template>
+                  <li class="row border-top mr-2">
+                    <p class="text-end col-3 offset-9 pt-2 fw-bold">{{product_cost[this.price_type].toFixed(2)}} SEK</p>
+                  </li>
+                  <template v-if="any_special_addition">
+                    <li class="my-1 row d-flex align-items-center">
+                      <span class="col-9">
+                        <a class="mr-2" href='#' @click="reset_special_addition"><i class="far fa-times-square fa-lg text-danger"></i></a>
+                        {{quote_special_addition_label}}
+                      </span>
+                      <span class="col-2 float-right">{{quote_special_addition_value}} SEK</span>
+                    </li>
+                  </template>
+                  <template v-if="any_special_percentage">
+                    <li class="my-1 row d-flex align-items-center">
+                      <span class="col-9">
+                        <a class="mr-2" href='#' @click="reset_special_percentage"><i class="far fa-times-square fa-lg text-danger"></i></a>
+                        {{quote_special_percentage_label}}
+                      </span>
+                      <span class="col-2 float-right">- {{quote_special_percentage_value}} %</span>
+                    </li>
+                  </template>
                 </ul>
+
               </div>
               <div class="col-md-4 col-xl-6 border-left">
                 <h3>Totals</h3>
