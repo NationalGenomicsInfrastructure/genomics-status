@@ -201,7 +201,7 @@ $("#running_notes_form").submit( function(e) {
     }
 
     note_url = get_note_url()
-    $('#save_note_button').addClass('disabled').text('Submitting..');
+    $('#save_note_button').addClass('disabled').text('Submitting...');
     $.ajax({
       type: 'POST',
       url: note_url,
@@ -239,8 +239,8 @@ $("#running_notes_form").submit( function(e) {
             var now = new Date();
             category=generate_category_label(category);
             var printHyphen =category? ' - ': ' ';
-            $('<div class="card"><div class="card-header bg-success-old">'+
-                  '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
+            $('<div class="card mb-2 mx-2"><div class="card-header bg-success-table">'+
+                  '<a class="text-decoration-none" href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
                   now.toDateString() + ', ' + now.toLocaleTimeString(now)+ printHyphen + category +
                 '</div><div class="card-body">'+make_markdown(data['note'])+
                 '</div></div>').hide().prependTo('#running_notes_panels').slideDown();

@@ -344,7 +344,6 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/error_page.html")
             tornado.autoreload.watch("design/flowcell.html")
             tornado.autoreload.watch("design/flowcell_error.html")
-            tornado.autoreload.watch("design/flowcell_samples.html")
             tornado.autoreload.watch("design/flowcell_trend_plot.html")
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/index.html")

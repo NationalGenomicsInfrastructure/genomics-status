@@ -452,16 +452,162 @@ width:30%;
     max-height:400px;
 }
 
-.bg-danger-old{
-  background-color: #f2dede;
+.bg-danger-table {
+  background-color: #f8d7da !important;
 }
 
-.bg-success-old{
-  background-color: #d1e7dd;;
+.bg-warning-table {
+  background-color: #fff3cd !important;
 }
 
-.accordion-warning{
-  color: #8a6d3b;
-  background-color: #fcf8e3;
-  border-color: #faebcc;
+.bg-success-table {
+  background-color: #d1e7dd !important;
+}
+
+.accordion-warning {
+  background-color: #fff3cd !important;
+}
+
+.accordion-default-header {
+  color: #333;
+  background-color: rgba(0, 0, 0, 0.09);
+  border-color: #ddd;
+  padding: 10px 15px;
+}
+
+.accordion-item-prettify {
+  margin: 0.25em;
+}
+
+.accordion-collapse {
+  border-width: 1px !important;
+}
+
+.table-bioinfo-status td.active{
+  background-color: #f5f5f5;
+}
+.table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-qc,
+.table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-bp,
+.table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-row {
+    cursor: not-allowed;
+}
+
+.table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-qc,
+.table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-bp,
+.table-bioinfo-status:not(.bioinfo-status-disabled) th.bioinfo-status-th,
+.table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-row {
+  cursor: pointer;
+}
+
+.table-bioinfo-status td, .table-bioinfo-status th {
+  text-align: center;
+  vertical-align: middle;
+}
+.table-bioinfo-status td.unknown {
+  color: #ccc;
+}
+
+.bioinfo-status-runstate {
+  text-transform: lowercase;
+}
+
+.bioinfo-status-disabled td {
+  background-color: #ededed;
+  color: #ccc;
+}
+
+.bioinfo-status-disabled td, .bioinfo-status-disabled th,
+.bioinfo-status-disabled .input-group.date,
+.bioinfo-status-disabled .input-group.date .input-group-addon
+{
+  cursor: not-allowed;
+}
+.bioinfo-status-disabled.bioinfo-delivered td.bioinfo-status-runstate {
+  cursor: pointer;
+}
+
+/*
+=== Homepage ===
+*/
+.homepage-ctas .well { text-align:center; }
+.homepage-ctas .well h3 { font-size:3em; }
+.homepage-ctas .well a i { color:#333; }
+
+#homepage-searchbar {
+  text-align:center;
+  border-top:1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding:10px 0;
+  display:inline-block;
+  width:100%;
+}
+#homepage-searchbar .control-label {
+  font-size:1.4em;
+  margin: 10px 15px 0 0;
+  padding:0;
+  top:5px;
+  vertical-align:top;
+}
+
+#homepage-searchbar .twitter-typeahead { width: 422px; }
+
+.subtle-spinner { color:#CCCCCC; }
+
+/* index.html page */
+.table-disk-quotas > tbody > tr > td {
+  padding: 8px;
+  width: 180px;
+}
+
+.table-disk-quotas > tbody > tr > td.disk-quotas-highcharts {
+  padding: 0;
+}
+
+.table-disk-quotas .wrapper {
+  display: inline-block;
+  position: relative;
+  height:100%;
+  width:100%;
+  white-space: nowrap;
+}
+
+.table-disk-quotas .val {
+  display: block;
+  position: absolute;
+  padding:0;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index:-1;
+  background-color: #ededed;
+}
+
+.table-disk-quotas .val span {
+  position: absolute;
+  top: 8px; left: 8px;
+}
+.table-disk-quotas .percent {
+  padding: 8px;
+}
+.table-disk-quotas .q-danger .val { background-color: #f2dede; }
+.table-disk-quotas .q-danger span { color: #a94442; }
+.table-disk-quotas .q-warning .val { background-color: #fcf8e3; }
+.table-disk-quotas .q-warning span { color: #8a6d3b; }
+
+.quota_decrease {
+    display: inline-block;
+    margin-left: 30px;
+}
+
+.glow {
+  box-shadow: 0 0 20px rgba(81, 203, 238, 1);
+  margin-bottom:5px;
+}
+
+/*
+=== Suggestions Box ===
+*/
+#suggestions_table {
+  max-height:800px;
+  overflow-y:scroll;
 }
