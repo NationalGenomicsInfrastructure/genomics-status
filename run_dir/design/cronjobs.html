@@ -12,7 +12,7 @@
     <div class="accordion-item accordion-item-prettify">
 			<div class="accordion-default-header {% if crontab.get('last_updated', '') < two_month_ago %} accordion-warning {% end %}">
         <h4 class="accordion-header">
-          <a class="text-decoration-none {% if crontab.get('last_updated', '') < two_month_ago %} text-warning{% else %} text-dark{% end %} collapsed"
+          <a class="text-decoration-none text-dark collapsed"
 							role="button" data-toggle="collapse" data-target="#cronjobs_{{ server }}">
             {{ server }}
             <small class="float-right text-muted"><em>Last Updated:</em> <strong>{{ crontab.get('last_updated') }}</strong></small>
@@ -24,7 +24,7 @@
         <div class="accordion-body">
           <table class="table">
             <thead>
-              <tr class="darkth">
+              <tr>
                 <th>User</th>
                 <th>Minute</th>
                 <th>Hour</th>
