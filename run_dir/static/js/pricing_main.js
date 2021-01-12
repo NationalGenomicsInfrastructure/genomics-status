@@ -12,7 +12,15 @@ const vPricingMain = {
             modal_type: "Regular",
             USD_in_SEK: null,
             EUR_in_SEK: null,
-            exch_rate_issued_at: null
+            exch_rate_issued_at: null,
+            /* For quote and preview: */
+            show_discontinued: false,
+            quote_prod_ids: {},
+            quote_special_addition_value: 0,
+            quote_special_addition_label: '',
+            quote_special_percentage_value: 0.0,
+            quote_special_percentage_label: '',
+            price_type: 'cost_academic'
         }
     },
     computed: {
@@ -277,6 +285,8 @@ const vPricingMain = {
 
 const app = Vue.createApp(vPricingMain)
 
+/* Reusable components */
+
 app.component('exchange-rates', {
   props: ['mutable', 'issued_at'],
   data() {
@@ -348,4 +358,219 @@ app.component('exchange-rates', {
         </div>
       </template>
       `,
+})
+
+app.component('v-products-table', {
+    props: ['show_discontinued'],
+    data: function() {
+        return {
+            dataTable: null
+        }
+    },
+    mounted() {
+        this.$nextTick(() => {
+            this.init_listjs()
+        })
+    },
+    watch: {
+      show_discontinued(new_val, old_val) {
+        this.reset_listjs()
+
+        /* have to wait for the table to be drawn */
+        this.$nextTick(() => {
+          this.init_listjs()
+        })
+      }
+    },
+    methods: {
+      init_listjs() {
+        this.dataTable = $('#pricing_products_table').DataTable({
+          "paging":false,
+          "info":false,
+          "order": [[ 1, "asc" ]]
+        });
+
+        this.dataTable.columns().every( function () {
+            var that = this;
+            $( 'input', this.footer() ).on( 'keyup change', function () {
+                that
+                .search( this.value )
+                .draw();
+            } );
+        } );
+
+        $('#pricing_products_table_filter').addClass('col-md-2');
+        $("#pricing_products_table_filter").appendTo("#table_h_and_search");
+        $('#pricing_products_table_filter label input').appendTo($('#pricing_products_table_filter'));
+        $('#pricing_products_table_filter label').remove();
+        $('#pricing_products_table_filter input').addClass('form-control p-2 mb-2 float-right');
+        $("#pricing_products_table_filter input").attr("placeholder", "Search table...");
+      },
+      reset_listjs() {
+        $('#pricing_products_table').DataTable().destroy();
+        $('#pricing_products_table_filter').remove();
+      }
+    },
+    template: /*html*/`
+      <table class="table table-sm sortable" id="pricing_products_table">
+        <thead class="table-light">
+          <tr class="sticky">
+            <th>Quoting</th>
+            <th class="sort" data-sort="id">ID</th>
+            <th class="sort" data-sort="category">Category</th>
+            <th class="sort" data-sort="type">Type</th>
+            <th class="sort" data-sort="name">Name</th>
+            <th class="sort" data-sort="components">Components</th>
+            <th class="sort" data-sort="alternative_components">Alternative Components</th>
+            <th calss="sort" data-sort="full_cost_fee">Full Cost Fee</th>
+            <th class="sort" data-sort="overhead">Overhead</th>
+            <th class="sort" data-sort="price_internal">Internal Price (SEK)</th>
+            <th class="sort" data-sort="price_academic">Academic</th>
+            <th class="sort" data-sort="full_cost">Full Cost</th>
+            <th class="sort" data-sort="comment">Comment</th>
+          </tr>
+        </thead>
+        <tfoot class="table-light">
+          <tr>
+            <th></th>
+            <th class="sort" data-sort="id"><input class="form-control search search-query" type="text" placeholder="Search ID" /></th>
+            <th class="sort" data-sort="category"><input class="form-control search search-query" type="text" placeholder="Search Category" /></th>
+            <th class="sort" data-sort="type"><input class="form-control search search-query" type="text" placeholder="Search Type" /></th>
+            <th class="sort" data-sort="name"><input class="form-control search search-query" type="text" placeholder="Search Name" /></th>
+            <th class="sort" data-sort="components"><input class="form-control search search-query" type="text" placeholder="Search Components" /></th>
+            <th class="sort" data-sort="alternative_components"><input class="form-control search search-query" type="text" placeholder="Search Alternative Components" /></th>
+            <th calss="sort" data-sort="full_cost_fee"><input class="form-control search search-query" type="text" placeholder="Search Alternative Components" /></th>
+            <th class="sort" data-sort="overhead"><input class="form-control search search-query" type="text" placeholder="Search Overhead" /></th>
+            <th class="sort" data-sort="price_internal"><input class="form-control search search-query" type="text" placeholder="Search Internal Price (SEK)" /></th>
+            <th class="sort" data-sort="price_academic"><input class="form-control search search-query" type="text" placeholder="Search Academic Price" /></th>
+            <th class="sort" data-sort="full_cost"><input class="form-control search search-query" type="text" placeholder="Search Full Cost" /></th>
+            <th class="sort" data-sort="comment"><input class="form-control search search-query" type="text" placeholder="Search Comment" /></th>
+          </tr>
+        </tfoot>
+        <tbody class="list" id='pricing_products_tbody'>
+        <template v-for="product in this.$root.all_products" :key="product['REF_ID']">
+            <product-table-row :product_id="product['REF_ID']">
+            </product-table-row>
+        </template>
+        </tbody>
+      </table>
+      `
+})
+
+app.component('product-table-row', {
+    props: ['product_id'],
+    computed: {
+        product() {
+            return this.$root.all_products[this.product_id]
+        },
+        quote_count() {
+            if (this.product_id in this.$root.quote_prod_ids) {
+                return this.$root.quote_prod_ids[this.product_id]
+            } else {
+                return 0
+            }
+        },
+        discontinued() {
+            return (this.product['Status'] == 'Discontinued')
+        },
+        visible() {
+            return (this.$root.show_discontinued || !this.discontinued)
+        },
+        isNew() {
+            return this.$root.new_products.has(this.product_id)
+        },
+        isFixedPrice() {
+            return this.product.is_fixed_price
+        },
+        categories() {
+            return this.$root.product_categories
+        },
+        types() {
+            return this.$root.product_types
+        },
+        cost() {
+            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
+            return this.$root.productCost(this.product_id)
+        }
+    },
+    methods: {
+        add_to_quote() {
+            if (!(this.product_id in this.$root.quote_prod_ids)) {
+                this.$root.quote_prod_ids[this.product_id] = 0
+            }
+            this.$root.quote_prod_ids[this.product_id] += 1
+        }
+    },
+    template: /*html*/`
+        <template v-if="this.visible">
+          <tr :class="'status_' + product['Status'].toLowerCase()">
+              <td>
+                  <a href="#" class="button add-to-quote" :data-product-id="product['REF_ID']" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
+                  <span>({{quote_count}})</span>
+              </td>
+              <td class="id">
+                  {{product['REF_ID']}}
+              </td>
+              <td class="category">
+                  {{product['Category']}}
+              </td>
+              <td class="type">
+                  {{product['Type']}}
+              </td>
+              <td class="name">
+                  {{product["Name"]}}
+              </td>
+              <td class="components">
+                <product-table-components :product_id="product_id" :type="'Regular'">
+                </product-table-components>
+              </td>
+              <td class="alternative_components">
+                <product-table-components :product_id="product_id" :type="'Alternative'">
+                </product-table-components>
+              </td>
+              <td class="full_cost_fee">
+                  {{product["Full cost fee"]}}
+              </td>
+              <td class="overhead">
+                  {{product["Re-run fee"]}}
+              </td>
+              <td class="price_internal">
+                  {{cost['cost'].toFixed(2)}}
+              </td>
+              <td class="price_academic">
+                  {{cost['cost_academic'].toFixed(2)}}
+              </td>
+              <td class="full_cost">
+                  {{cost['full_cost'].toFixed(2)}}
+              </td>
+              <td class="comment">
+                  {{product["Comment"]}}
+              </td>
+          </tr>
+        </template>
+    `
+})
+
+app.component('product-table-components', {
+    props: ['product_id', 'type'],
+    computed: {
+        product() {
+            return this.$root.all_products[this.product_id]
+        },
+        componentIds() {
+            if (this.type == 'Alternative') {
+                return Object.keys(this.product['Alternative Components'])
+            } else {
+                return Object.keys(this.product['Components'])
+            }
+        },
+        components() {
+            return this.$root.populatedComponents(this.product['REF_ID'], this.type)
+        }
+    },
+    template: /*html*/`
+        <template v-for="(component_data, comp_id) in components" :key="comp_id">
+          <div>{{component_data['component']['Product name']}}</div>
+        </template>
+      `
 })

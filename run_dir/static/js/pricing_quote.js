@@ -1,36 +1,21 @@
-app.component('pricing-preview', {
-    data: function() {
-        return {
-          dataTable: null,
-          show_discontinued: false,
-          quote_prod_ids: {},
-          quote_special_addition_value: 0,
-          quote_special_addition_label: '',
-          quote_special_percentage_value: 0.0,
-          quote_special_percentage_label: '',
-          price_type: 'cost_academic'
-        }
-    },
+app.component('v-pricing-quote', {
     computed: {
       any_quote() {
         return ( this.any_special_addition ||
                  this.any_special_percentage ||
-                Object.keys(this.quote_prod_ids).length)
+                Object.keys(this.$root.quote_prod_ids).length)
       },
       any_special_addition() {
-        return this.quote_special_addition_label !== ''
+        return this.$root.quote_special_addition_label !== ''
       },
       any_special_percentage() {
-        return this.quote_special_percentage_label !== ''
-      },
-      data_loading() {
-        return this.$root.data_loading
+        return this.$root.quote_special_percentage_label !== ''
       },
       product_cost() {
         cost_sum = 0
         cost_academic_sum = 0
         full_cost_sum = 0
-        for ([prod_id, prod_count] of Object.entries(this.quote_prod_ids)) {
+        for ([prod_id, prod_count] of Object.entries(this.$root.quote_prod_ids)) {
           cost_sum += prod_count * this.productCost(prod_id)['cost'];
           cost_academic_sum += prod_count * this.productCost(prod_id)['cost_academic'];
           full_cost_sum +=  prod_count * this.productCost(prod_id)['full_cost'];
@@ -47,15 +32,15 @@ app.component('pricing-preview', {
         full_cost_sum = product_cost['full_cost']
 
         if (this.any_special_addition) {
-          cost_sum += this.quote_special_addition_value
-          cost_academic_sum += this.quote_special_addition_value
-          full_cost_sum += this.quote_special_addition_value
+          cost_sum += this.$root.quote_special_addition_value
+          cost_academic_sum += this.$root.quote_special_addition_value
+          full_cost_sum += this.$root.quote_special_addition_value
         }
 
         if (this.any_special_percentage) {
-          cost_sum *= (100 - this.quote_special_percentage_value)/100
-          cost_academic_sum *= (100 - this.quote_special_percentage_value)/100
-          full_cost_sum *= (100 - this.quote_special_percentage_value)/100
+          cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
+          cost_academic_sum *= (100 - this.$root.quote_special_percentage_value)/100
+          full_cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
         }
 
         return {'cost': cost_sum.toFixed(2),
@@ -63,67 +48,21 @@ app.component('pricing-preview', {
                 'full_cost': full_cost_sum.toFixed(2)}
       },
     },
-    watch: {
-      data_loading(new_val, old_val) {
-        /* have to wait for the table to be drawn */
-        this.$nextTick(() => {
-          this.init_listjs()
-        })
-      }
-    },
     methods: {
-        add_prod_to_quote(prod_id) {
-            if (!(prod_id in this.quote_prod_ids)) {
-                this.quote_prod_ids[prod_id] = 0
-            }
-            this.quote_prod_ids[prod_id] += 1
-        },
         productCost(prod_id) {
             // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
             return this.$root.productCost(prod_id)
         },
-        init_listjs() {
-            this.dataTable = $('#pricing_products_table').DataTable({
-              "paging":false,
-              "info":false,
-              "order": [[ 1, "asc" ]]
-            });
-
-            this.dataTable.columns().every( function () {
-                var that = this;
-                $( 'input', this.footer() ).on( 'keyup change', function () {
-                    that
-                    .search( this.value )
-                    .draw();
-                } );
-            } );
-
-            $('#pricing_products_table_filter').addClass('col-md-2');
-            $("#pricing_products_table_filter").appendTo("#table_h_and_search");
-            $('#pricing_products_table_filter label input').appendTo($('#pricing_products_table_filter'));
-            $('#pricing_products_table_filter label').remove();
-            $('#pricing_products_table_filter input').addClass('form-control p-2 mb-2 float-right');
-            $("#pricing_products_table_filter input").attr("placeholder", "Search table...");
-        },
-        reset_listjs() {
-            $('#pricing_products_table').DataTable().destroy();
-            $('#pricing_products_table_filter').remove();
-        },
         toggle_discontinued() {
-            this.reset_listjs()
-            this.show_discontinued = !this.show_discontinued
-
-            this.$nextTick(() => {
-              this.init_listjs()
-            })
+            this.$root.show_discontinued = !this.$root.show_discontinued
         },
         reset_special_percentage() {
-            this.quote_special_percentage_label = ''
-            this.quote_special_percentage_value = 0
+            this.$root.quote_special_percentage_label = ''
+            this.$root.quote_special_percentage_value = 0
         },
         reset_special_addition() {
-            this.quote_special_addition_label = ''
-            this.quote_special_addition_value = 0
+            this.$root.quote_special_addition_label = ''
+            this.$root.quote_special_addition_value = 0
         }
     },
     template:
@@ -131,7 +70,7 @@ app.component('pricing-preview', {
         <div class="row">
           <h1 class="col-md-11"><span id="page_title">Project Quote</span></h1>
         </div>
-        <template v-if="this.data_loading">
+        <template v-if="this.$root.data_loading">
           <div>
             Loading!
           </div>
@@ -141,34 +80,34 @@ app.component('pricing-preview', {
             <div class="col-5 quote_lcol_header">
               <div class="radio" id="price_type_selector">
                 <label class="radio-inline py-2 pr-2">
-                  <input type="radio" name="price_type" v-model="price_type" value="cost_academic" checked> Swedish academia
+                  <input type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" checked> Swedish academia
                 </label>
                 <label class="radio-inline p-2">
-                  <input type="radio" name="price_type" v-model="price_type" value="full_cost"> Industry and non-Swedish academia
+                  <input type="radio" name="price_type" v-model="this.$root.price_type" value="full_cost"> Industry and non-Swedish academia
                 </label>
                 <label class="radio-inline p-2">
-                  <input type="radio" name="price_type" v-model="price_type" value="cost"> Internal
+                  <input type="radio" name="price_type" v-model="this.$root.price_type" value="cost"> Internal
                 </label>
               </div>
               <div class="row">
                 <div class="col-2">
                   <label for='other_cost_value' class="form-label">Other cost</label>
-                  <input id='other_cost_value' class="form-control" v-model.number="this.quote_special_addition_value" type="number" >
+                  <input id='other_cost_value' class="form-control" v-model.number="this.$root.quote_special_addition_value" type="number" >
                 </div>
                 <div class="col-10">
                   <label for='other_cost_label' class="form-label">Other cost label</label>
-                  <input id='other_cost_label' class="form-control" v-model="this.quote_special_addition_label" type="text" >
+                  <input id='other_cost_label' class="form-control" v-model="this.$root.quote_special_addition_label" type="text" >
                 </div>
                 <div class="mb-3 form-text">Specify a sum (positive or negative) that will be added to the quote cost. Will only be applied if a label is specified.</div>
               </div>
               <div class="row">
                 <div class="col-2">
                   <label for='percentage_input' class="form-label">Percentage</label>
-                  <input id='percentage_input' class="form-control" type="number" v-model.number="this.quote_special_percentage_value">
+                  <input id='percentage_input' class="form-control" type="number" v-model.number="this.$root.quote_special_percentage_value">
                 </div>
                 <div class="col-10">
                   <label for='percentage_label' class="form-label">Percentage label</label>
-                  <input id='percentage_label' class="form-control" type="text" v-model="this.quote_special_percentage_label">
+                  <input id='percentage_label' class="form-control" type="text" v-model="this.$root.quote_special_percentage_label">
                 </div>
                 <div class="mb-3 form-text">Specify a percentage (positive or negative) that will be subtracted (default is discount) from the total sum. Will only be applied if a label is specified.</div>
               </div>
@@ -177,7 +116,7 @@ app.component('pricing-preview', {
                 More Options
               </button>
               <div class="collapse border-top py-3" id="more_options">
-                <template v-if="show_discontinued">
+                <template v-if="this.$root.show_discontinued">
                   <button type="button" class="btn btn-success" id="toggle_discontinued" @click="toggle_discontinued">Hide Discontinued Products <i class="fas fa-book-heart fa-lg pl-2"></i></button>
                 </template>
                 <template v-else>
@@ -200,28 +139,28 @@ app.component('pricing-preview', {
                 </span>
                 <div id='product_warnings'></div>
                 <ul class="list-unstyled quote-product-list">
-                  <template v-for="(prod_count, prod_id) in this.quote_prod_ids" :key="prod_id">
-                    <quote-list-product :product_id="prod_id" :product_count="prod_count" :price_type="price_type"/>
+                  <template v-for="(prod_count, prod_id) in this.$root.quote_prod_ids" :key="prod_id">
+                    <quote-list-product :product_id="prod_id" :product_count="prod_count"/>
                   </template>
                   <li class="row border-top mr-2">
-                    <p class="text-end col-3 offset-9 pt-2 fw-bold">{{product_cost[this.price_type].toFixed(2)}} SEK</p>
+                    <p class="text-end col-3 offset-9 pt-2 fw-bold">{{product_cost[this.$root.price_type].toFixed(2)}} SEK</p>
                   </li>
                   <template v-if="any_special_addition">
                     <li class="my-1 row d-flex align-items-center">
                       <span class="col-9">
                         <a class="mr-2" href='#' @click="reset_special_addition"><i class="far fa-times-square fa-lg text-danger"></i></a>
-                        {{quote_special_addition_label}}
+                        {{this.$root.quote_special_addition_label}}
                       </span>
-                      <span class="col-2 float-right">{{quote_special_addition_value}} SEK</span>
+                      <span class="col-2 float-right">{{this.$root.quote_special_addition_value}} SEK</span>
                     </li>
                   </template>
                   <template v-if="any_special_percentage">
                     <li class="my-1 row d-flex align-items-center">
                       <span class="col-9">
                         <a class="mr-2" href='#' @click="reset_special_percentage"><i class="far fa-times-square fa-lg text-danger"></i></a>
-                        {{quote_special_percentage_label}}
+                        {{this.$root.quote_special_percentage_label}}
                       </span>
-                      <span class="col-2 float-right">- {{quote_special_percentage_value}} %</span>
+                      <span class="col-2 float-right">- {{this.$root.quote_special_percentage_value}} %</span>
                     </li>
                   </template>
                 </ul>
@@ -231,15 +170,15 @@ app.component('pricing-preview', {
                 <h3>Totals</h3>
                 <ul class="quote-totals-list list-unstyled">
                   <dl class="quote_totals">
-                    <p :class="{'text-muted': (price_type != 'cost_academic')}">
+                    <p :class="{'text-muted': (this.$root.price_type != 'cost_academic')}">
                       <dt>Swedish academia:</dt>
                       <dd class="quote_totals_val quote_sweac">{{quote_cost['cost_academic']}} SEK</dd>
                     </p>
-                    <p :class="{'text-muted': (price_type != 'full_cost')}">
+                    <p :class="{'text-muted': (this.$root.price_type != 'full_cost')}">
                       <dt>Industry and non-Swedish academia:</dt>
                       <dd class="quote_totals_val quote_full">{{quote_cost['full_cost']}} SEK</dd>
                     </p>
-                    <p :class="{'text-muted': (price_type != 'cost')}">
+                    <p :class="{'text-muted': (this.$root.price_type != 'cost')}">
                       <dt>Internal projects:</dt>
                       <dd class="quote_totals_val quote_internal">{{quote_cost['cost']}} SEK</dd>
                     </p>
@@ -252,55 +191,15 @@ app.component('pricing-preview', {
             <div class="row" id="table_h_and_search">
               <h2 class="col mr-auto">Available Products</h2>
             </div>
-            <table class="table table-sm sortable" id="pricing_products_table">
-              <thead class="table-light">
-                <tr class="sticky">
-                  <th>Quoting</th>
-                  <th class="sort" data-sort="id">ID</th>
-                  <th class="sort" data-sort="category">Category</th>
-                  <th class="sort" data-sort="type">Type</th>
-                  <th class="sort" data-sort="name">Name</th>
-                  <th class="sort" data-sort="components">Components</th>
-                  <th class="sort" data-sort="alternative_components">Alternative Components</th>
-                  <th calss="sort" data-sort="full_cost_fee">Full Cost Fee</th>
-                  <th class="sort" data-sort="overhead">Overhead</th>
-                  <th class="sort" data-sort="price_internal">Internal Price (SEK)</th>
-                  <th class="sort" data-sort="price_academic">Academic</th>
-                  <th class="sort" data-sort="full_cost">Full Cost</th>
-                  <th class="sort" data-sort="comment">Comment</th>
-                </tr>
-              </thead>
-              <tfoot class="table-light">
-                <tr>
-                  <th></th>
-                  <th class="sort" data-sort="id"><input class="form-control search search-query" type="text" placeholder="Search ID" /></th>
-                  <th class="sort" data-sort="category"><input class="form-control search search-query" type="text" placeholder="Search Category" /></th>
-                  <th class="sort" data-sort="type"><input class="form-control search search-query" type="text" placeholder="Search Type" /></th>
-                  <th class="sort" data-sort="name"><input class="form-control search search-query" type="text" placeholder="Search Name" /></th>
-                  <th class="sort" data-sort="components"><input class="form-control search search-query" type="text" placeholder="Search Components" /></th>
-                  <th class="sort" data-sort="alternative_components"><input class="form-control search search-query" type="text" placeholder="Search Alternative Components" /></th>
-                  <th calss="sort" data-sort="full_cost_fee"><input class="form-control search search-query" type="text" placeholder="Search Alternative Components" /></th>
-                  <th class="sort" data-sort="overhead"><input class="form-control search search-query" type="text" placeholder="Search Overhead" /></th>
-                  <th class="sort" data-sort="price_internal"><input class="form-control search search-query" type="text" placeholder="Search Internal Price (SEK)" /></th>
-                  <th class="sort" data-sort="price_academic"><input class="form-control search search-query" type="text" placeholder="Search Academic Price" /></th>
-                  <th class="sort" data-sort="full_cost"><input class="form-control search search-query" type="text" placeholder="Search Full Cost" /></th>
-                  <th class="sort" data-sort="comment"><input class="form-control search search-query" type="text" placeholder="Search Comment" /></th>
-                </tr>
-              </tfoot>
-              <tbody class="list" id='pricing_products_tbody'>
-              <template v-for="product in this.$root.all_products" :key="product['REF_ID']">
-                  <product-table-row :product_id="product['REF_ID']" :show_discontinued="this.show_discontinued">
-                  </product-table-row>
-              </template>
-              </tbody>
-            </table>
+            <v-products-table :show_discontinued="this.$root.show_discontinued"/>
           </div>
         </template>
         `
 })
 
+
 app.component('quote-list-product', {
-    props: ['product_id', 'price_type'],
+    props: ['product_id'],
     computed: {
         product() {
             return this.$root.all_products[this.product_id]
@@ -310,15 +209,15 @@ app.component('quote-list-product', {
             return this.$root.productCost(this.product_id)
         },
         cost() {
-            return (this.product_count * this.productCost[this.price_type]).toFixed(2)
+            return (this.product_count * this.productCost[this.$root.price_type]).toFixed(2)
         },
         product_count() {
-            return this.$parent.quote_prod_ids[this.product_id]
+            return this.$root.quote_prod_ids[this.product_id]
         }
     },
     methods: {
         remove_from_quote() {
-            delete this.$parent.quote_prod_ids[this.product_id]
+            delete this.$root.quote_prod_ids[this.product_id]
         }
     },
     template: /*html*/`
@@ -327,127 +226,12 @@ app.component('quote-list-product', {
           <a href='#' @click="remove_from_quote"><i class="far fa-times-square fa-lg text-danger"></i></a>
         </div>
         <div class="col-1">
-          <input class="form-control" v-model="this.$parent.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']">
+          <input class="form-control" v-model="this.$root.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']">
         </div>
         <span class="col-7 quote_product_name">{{product.Name}}</span>
         <span class="col-2">{{cost}} SEK</span>
       </li>
     `
-})
-
-app.component('product-table-row', {
-    props: ['product_id', 'show_discontinued'],
-    computed: {
-        product() {
-            return this.$root.all_products[this.product_id]
-        },
-        quote_count() {
-            if (this.product_id in this.$parent.quote_prod_ids) {
-                return this.$parent.quote_prod_ids[this.product_id]
-            } else {
-                return 0
-            }
-        },
-        discontinued() {
-            return (this.product['Status'] == 'Discontinued')
-        },
-        visible() {
-            return (this.show_discontinued || !this.discontinued)
-        },
-        isNew() {
-            return this.$root.new_products.has(this.product_id)
-        },
-        isFixedPrice() {
-            return this.product.is_fixed_price
-        },
-        categories() {
-            return this.$root.product_categories
-        },
-        types() {
-            return this.$root.product_types
-        },
-        cost() {
-            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
-            return this.$root.productCost(this.product_id)
-        }
-    },
-    methods: {
-        add_to_quote() {
-            this.$parent.add_prod_to_quote(this.product_id)
-        }
-    },
-    template: /*html*/`
-        <template v-if="this.visible">
-          <tr :class="'status_' + product['Status'].toLowerCase()">
-              <td>
-                  <a href="#" class="button add-to-quote" :data-product-id="product['REF_ID']" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
-                  <span>({{quote_count}})</span>
-              </td>
-              <td class="id">
-                  {{product['REF_ID']}}
-              </td>
-              <td class="category">
-                  {{product['Category']}}
-              </td>
-              <td class="type">
-                  {{product['Type']}}
-              </td>
-              <td class="name">
-                  {{product["Name"]}}
-              </td>
-              <td class="components">
-                <product-table-components :product_id="product_id" :type="'Regular'">
-                </product-table-components>
-              </td>
-              <td class="alternative_components">
-                <product-table-components :product_id="product_id" :type="'Alternative'">
-                </product-table-components>
-              </td>
-              <td class="full_cost_fee">
-                  {{product["Full cost fee"]}}
-              </td>
-              <td class="overhead">
-                  {{product["Re-run fee"]}}
-              </td>
-              <td class="price_internal">
-                  {{cost['cost'].toFixed(2)}}
-              </td>
-              <td class="price_academic">
-                  {{cost['cost_academic'].toFixed(2)}}
-              </td>
-              <td class="full_cost">
-                  {{cost['full_cost'].toFixed(2)}}
-              </td>
-              <td class="comment">
-                  {{product["Comment"]}}
-              </td>
-          </tr>
-        </template>
-    `
-})
-
-app.component('product-table-components', {
-    props: ['product_id', 'type'],
-    computed: {
-        product() {
-            return this.$root.all_products[this.product_id]
-        },
-        componentIds() {
-            if (this.type == 'Alternative') {
-                return Object.keys(this.product['Alternative Components'])
-            } else {
-                return Object.keys(this.product['Components'])
-            }
-        },
-        components() {
-            return this.$root.populatedComponents(this.product['REF_ID'], this.type)
-        }
-    },
-    template: /*html*/`
-        <template v-for="(component_data, comp_id) in components" :key="comp_id">
-          <div>{{component_data['component']['Product name']}}</div>
-        </template>
-      `
 })
 
 app.mount('#pricing_quote_main')
