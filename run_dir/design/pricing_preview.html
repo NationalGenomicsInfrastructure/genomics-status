@@ -2,12 +2,19 @@
 
 {% block stuff %}
 
-
-<div class="container-xxl">
-Hello {{ failure_msg }}
+<div class="container-fluid" id="pricing_preview_main">
+  <pricing-preview/>
 </div>
 
 {% end %}
 
 {% block js %}
+
+<!-- development version, includes helpful console warnings -->
+<script src="https://unpkg.com/vue@next"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/pricing_main.js?v={{ gs_globals['git_commit'] }}"></script>
+<script src="/static/js/pricing_preview.js?v={{ gs_globals['git_commit'] }}"></script>
+
 {% end %}
