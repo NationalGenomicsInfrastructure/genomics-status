@@ -5,7 +5,10 @@ const vPricingMain = {
         return {
             all_components: null,
             all_products: null,
-            data_loading: true,
+            current_user_email: null,
+            draft_cost_calculator: null,
+            draft_created_at: null,
+            draft_data_loading: true,
             new_products: new Set(),
             new_components: new Set(),
             modal_product_id: "52", //Should probably be null when we handle that edge case
@@ -13,14 +16,15 @@ const vPricingMain = {
             USD_in_SEK: null,
             EUR_in_SEK: null,
             exch_rate_issued_at: null,
-            /* For quote and preview: */
             show_discontinued: false,
             quote_prod_ids: {},
             quote_special_addition_value: 0,
             quote_special_addition_label: '',
             quote_special_percentage_value: 0.0,
             quote_special_percentage_label: '',
-            price_type: 'cost_academic'
+            price_type: 'cost_academic',
+            published_cost_calculator: null,
+            published_data_loading: true
         }
     },
     computed: {
@@ -127,12 +131,8 @@ const vPricingMain = {
             return (1 + max_id).toString()
         }
     },
-    created: function() {
-        this.fetchExchangeRates(),
-        this.fetchCostCalculator()
-    },
     methods: {
-        showModalFn(event) {
+        showComponentsUpdateModal(event) {
             if (event) {
                 this.modal_product_id = event.target.dataset.productId
                 this.modal_type = event.target.dataset.type
@@ -221,6 +221,22 @@ const vPricingMain = {
             delete this.all_components[comp_id]
             delete this.new_components[comp_id]
         },
+        fetchDraftCostCalculator(assign_data) {
+            axios
+              .get('/api/v1/draft_cost_calculator')
+              .then(response => {
+                  data = response.data.cost_calculator
+                  if (data !== null) {
+                    this.draft_cost_calculator = data
+                    if (assign_data) {
+                      this.all_products = data.products
+                      this.all_components = data.components
+                    }
+                  }
+                  this.current_user_email = response.data['current_user_email']
+                  this.draft_data_loading = false
+              })
+        },
         fetchExchangeRates(date) {
             url = '/api/v1/pricing_exchange_rates'
             if (date !== undefined) {
@@ -235,13 +251,20 @@ const vPricingMain = {
                   this.exch_rate_issued_at = date.toISOString().substring(0, 10)
               })
         },
-        fetchCostCalculator() {
+        fetchPublishedCostCalculator(assign_data) {
             axios
               .get('/api/v1/cost_calculator')
               .then(response => {
-                  this.all_products = response.data.products
-                  this.all_components = response.data.components
-                  this.data_loading = false
+                  data = response.data.cost_calculator
+                  if (data !== null) {
+                    this.published_cost_calculator = data
+                    if (assign_data) {
+                      this.all_products = data.products
+                      this.all_components = data.components
+                    }
+                  }
+                  this.current_user_email = response.data['current_user_email']
+                  this.published_data_loading = false
               })
         },
         componentCost(comp_id) {

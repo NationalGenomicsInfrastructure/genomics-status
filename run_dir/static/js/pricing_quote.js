@@ -48,6 +48,10 @@ app.component('v-pricing-quote', {
                 'full_cost': full_cost_sum.toFixed(2)}
       },
     },
+    created: function() {
+        this.$root.fetchPublishedCostCalculator(true),
+        this.$root.fetchExchangeRates()
+    },
     methods: {
         productCost(prod_id) {
             // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
@@ -70,7 +74,7 @@ app.component('v-pricing-quote', {
         <div class="row">
           <h1 class="col-md-11"><span id="page_title">Project Quote</span></h1>
         </div>
-        <template v-if="this.$root.data_loading">
+        <template v-if="this.$root.published_data_loading">
           <div>
             Loading!
           </div>

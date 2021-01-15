@@ -10,14 +10,13 @@ app.component('product-form-list', {
             expand_button_text: 'Expand all (slow)'
         }
     },
-    computed: {
-        data_loading() {
-            return this.$root.data_loading
-        }
+    created: function() {
+        this.$root.fetchDraftCostCalculator(true),
+        this.$root.fetchExchangeRates()
     },
     methods: {
         saveDraft() {
-            axios.put('/api/v1/cost_calculator', {
+            axios.put('/api/v1/draft_cost_calculator', {
                 components: this.$root.all_components,
                 products: this.$root.all_products
             })
@@ -46,7 +45,7 @@ app.component('product-form-list', {
     },
     template:
         /*html*/`
-        <template v-if="this.data_loading">
+        <template v-if="this.$root.draft_data_loading">
           <div>
             Loading!
           </div>
@@ -450,9 +449,6 @@ app.component('component-form-part', {
 
 app.component('modal-component', {
     computed: {
-        data_loading() {
-            return this.$root.data_loading
-        },
         product() {
             return this.$root.all_products[this.$root.modal_product_id]
         },
@@ -475,7 +471,7 @@ app.component('modal-component', {
         }
     },
     template: /*html*/`
-          <template v-if="this.data_loading">
+          <template v-if="this.$root.draft_data_loading">
             <div>
               Loading
             </div>
@@ -560,7 +556,7 @@ app.component('components', {
     },
     methods: {
         showModalFn(event) {
-            this.$root.showModalFn(event)
+            this.$root.showComponentsUpdateModal(event)
         }
     },
     template: /*html*/`

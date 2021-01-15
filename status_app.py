@@ -32,8 +32,8 @@ from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler,
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import \
     PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
-    PricingQuoteHandler, PricingValidationDataHandler, \
-    PricingUpdateHandler, PricingPreviewHandler, PricingDataHandler
+    PricingQuoteHandler, PricingValidationDataHandler, PricingPublishDataHandler, \
+    PricingUpdateHandler, PricingPreviewHandler, PricingDataHandler, PricingDraftDataHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -107,6 +107,7 @@ class Application(tornado.web.Application):
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
             ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
             tornado.web.URLSpec("/api/v1/download_images/(?P<project>[^/]+)/(?P<type>[^/]+)", ImagesDownloadHandler, name="ImagesDownloadHandler"),
+            ("/api/v1/draft_cost_calculator", PricingDraftDataHandler ),
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_count/", FlowcellCountApiHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
@@ -143,6 +144,7 @@ class Application(tornado.web.Application):
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
             ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
             ("/api/v1/pricing_exchange_rates", PricingExchangeRatesDataHandler),
+            ("/api/v1/pricing_publish_draft", PricingPublishDataHandler),
             ("/api/v1/pricing_validate", PricingValidationDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),

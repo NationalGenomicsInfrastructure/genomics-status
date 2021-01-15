@@ -57,10 +57,10 @@ class PricingBaseHandler(SafeHandler):
 
     def _current_user_email(self):
         current_user = self.get_current_user()
-        if current_user:
+        if current_user.email != 'Testing User!':
             current_user_email = current_user.email
         else:  # testing_mode
-            current_user_email = 'test@example.com'
+            current_user_email = 'johannes.alneberg@scilifelab.se' # 'test@example.com'
         return current_user_email
 
     # _____________________________ FETCH METHODS _____________________________
@@ -370,7 +370,7 @@ class PricingQuoteHandler(PricingBaseHandler):
     """ Serves a view from where a project quote can be built
 
     Loaded through:
-        /pricing_quote_old
+        /pricing_quote
 
     """
 
@@ -562,30 +562,32 @@ class PricingValidationDataHandler(PricingBaseHandler):
         pass
 
 
-class PricingDataHandler(PricingBaseHandler):
-    """Loaded through /api/v1/cost_calculator """
+class PricingDraftDataHandler(PricingBaseHandler):
+    """Loaded through /api/v1/draft_cost_calculator """
 
     def _get_latest_doc(self, db):
         curr_rows = db.view('entire_document/by_version', descending=True, limit=1).rows
         curr_doc = curr_rows[0].value
         return curr_doc
 
-    def _get_doc_version(self, version, db):
-        rows = db.view('entire_document/by_version', descending=True, key=version, limit=1).rows
-        doc = rows[0].value
-        return doc
-
     def get(self):
         """ Should return the specified version of the cost calculator."""
-        version = self.get_argument('version', None)
         cc_db = self.application.cost_calculator_db
+        doc = self._get_latest_doc(cc_db)
+        draft = doc['Draft']
 
-        if version is None:
-            doc = self._get_latest_doc(cc_db)
-        else:
-            doc = self._get_doc_version(version, cc_db)
+        response = dict()
+        if draft:
+            response['cost_calculator'] = doc
+        if not draft:
+            response['cost_calculator'] = None
 
-        self.write(json.dumps(doc))
+
+        current_user_email = self._current_user_email()
+        response['current_user_email'] = current_user_email
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(response))
 
     def post(self):
         """ Create a new draft cost calculator.
@@ -604,6 +606,8 @@ class PricingDataHandler(PricingBaseHandler):
 
         # Create a new draft
         doc = latest_doc.copy()
+        del doc['_id']
+        del doc['_rev']
         version = latest_doc['Version'] + 1
 
         current_user_email = self._current_user_email()
@@ -618,6 +622,17 @@ class PricingDataHandler(PricingBaseHandler):
         doc['Issued by user'] = None
         doc['Issued by user email'] = None
         doc['Issued at'] = None
+
+        user_name = self.get_current_user().name
+        user_email = self._current_user_email()
+
+        doc['Created by user'] = user_name
+        doc['Created by user email'] = user_email
+        doc['Created at'] = datetime.datetime.now().isoformat()
+
+        doc['Last modified by user'] = user_name
+        doc['Last modified by user email'] = user_email
+        doc['Last modified'] = datetime.datetime.now().isoformat()
 
         cc_db.save(doc)
         self.write({'message': 'Draft created'})
@@ -640,11 +655,12 @@ class PricingDataHandler(PricingBaseHandler):
             self.set_status(400)
             return self.write("Error: Attempting to update a non-draft cost calculator.")
 
-        current_user_email = self._current_user_email()
+        user_name = self.get_current_user().name
+        user_email = self._current_user_email()
 
         lock_info = latest_doc['Lock Info']
         if lock_info['Locked']:
-            if lock_info['Locked by'] != current_user_email:
+            if lock_info['Locked by'] != user_email:
                 self.set_status(400)
                 return self.write("Error: Attempting to update a draft locked by someone else.")
 
@@ -657,19 +673,89 @@ class PricingDataHandler(PricingBaseHandler):
         latest_doc['components'] = new_doc_content['components']
         latest_doc['products'] = new_doc_content['products']
 
+        latest_doc['Last modified by user'] = user_name
+        latest_doc['Last modified by user email'] = user_email
+        latest_doc['Last modified'] = datetime.datetime.now().isoformat()
+
         cc_db.save(latest_doc)
         msg = "Draft successfully saved at {}".format(datetime.datetime.now().strftime("%H:%M:%S"))
         return self.write({'message': msg})
 
+class PricingDataHandler(PricingBaseHandler):
+    """Loaded through /api/v1/cost_calculator """
+
+    def _get_latest_doc(self, db):
+        curr_rows = db.view('entire_document/published_by_version', descending=True, limit=1).rows
+        curr_doc = curr_rows[0].value
+        return curr_doc
+
+    def _get_doc_version(self, version, db):
+        rows = db.view('entire_document/published_by_version', descending=True, key=version, limit=1).rows
+        doc = rows[0].value
+        return doc
+
+    def get(self):
+        """ Should return the specified version of the cost calculator."""
+        version = self.get_argument('version', None)
+        cc_db = self.application.cost_calculator_db
+
+        if version is None:
+            doc = self._get_latest_doc(cc_db)
+        else:
+            doc = self._get_doc_version(version, cc_db)
+
+        response = dict()
+        response['cost_calculator'] = doc
+
+        current_user_email = self._current_user_email()
+        response['current_user_email'] = current_user_email
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(response))
+
 
 class PricingPublishDataHandler(PricingBaseHandler):
-    """ """
+    """ Accessed through
+      /api/v1/pricing_publish_draft
+    """
+
+    def _get_latest_doc(self, db):
+        curr_rows = db.view('entire_document/by_version', descending=True, limit=1).rows
+        curr_doc = curr_rows[0].value
+        return curr_doc
 
     def post(self):
         """ Publish a new cost calculator, from the current draft. """
-        self.set_status(400)
-        return self.write('Not implemented')
 
+        cc_db = self.application.cost_calculator_db
+
+        latest_doc = self._get_latest_doc(cc_db)
+        draft = latest_doc['Draft']
+
+        if not draft:
+            self.set_status(400)
+            return self.write("Error: No draft exists. Nothing to be published")
+
+        # Create a new draft
+        doc = latest_doc.copy()
+
+        user_name = self.get_current_user().name
+        user_email = self._current_user_email()
+
+        doc['Draft'] = False
+
+        doc['Last modified by user'] = user_name
+        doc['Last modified by user email'] = user_email
+        doc['Last modified'] = datetime.datetime.now().isoformat()
+
+        # Should be set at the time of publication
+        doc['Issued by user'] = user_name
+        doc['Issued by user email'] = user_email
+        doc['Issued at'] = datetime.datetime.now().isoformat()
+
+        print("Warning: draft being published without validation!")
+        cc_db.save(doc)
+        self.write({'message': 'New cost calculator published'})
 
 class PricingUpdateHandler(PricingBaseHandler):
     """ Serves a form where the draft cost calculator can be updated.
