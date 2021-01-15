@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: unauthorised.html
@@ -13,7 +13,7 @@ Description: Page seen when a users' e-mail is not recognised.
 <h3>Sorry, You are not authorized to access genomics-status.</h3>
 <p>Please contact
 <!--This will generate a mail with subject: Genomics Status access request - email -->
-<a href="mailto:{{contact}}?Subject=Genomics Status%20access%20request%20-%20{{email}}">{{contact}}</a>
+<a class="text-decoration-none" href="mailto:{{contact}}?Subject=Genomics Status%20access%20request%20-%20{{email}}">{{contact}}</a>
 to get an account.</p>
 
 {% end %}
