@@ -80,7 +80,11 @@ input.quantity_updateable {
     padding-top: 4rem;
 }
 
-.pricing_update_collapse_link {
+.pricing_collapse_link {
     text-decoration: none;
     color: black;
+}
+
+.pricing_hoverable {
+    cursor: help;
 }

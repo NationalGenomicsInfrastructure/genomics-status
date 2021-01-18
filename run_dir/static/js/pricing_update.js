@@ -22,10 +22,8 @@ app.component('product-form-list', {
             })
             .then(response => {
                 this.save_message = response.data.message;
-                console.log(response);
             })
             .catch(function (error) {
-                console.log(error);
             });
         },
         toggleCollapse(event) {
@@ -41,6 +39,16 @@ app.component('product-form-list', {
                 this.all_expanded = true
                 this.expand_button_text = 'Collapse all (slow)'
             }
+        },
+        validate() {
+            axios.post('/api/v1/pricing_validate_draft', {
+                components: this.$root.all_components,
+                products: this.$root.all_products
+            }).then(response => {
+                this.$root.product_changes = response.data.changes['products']
+                this.$root.component_changes = response.data.changes['components']
+                console.log(response.data)
+            })
         }
     },
     template:
@@ -85,14 +93,18 @@ app.component('product-form-list', {
                 <div class="col-md-7 mr-auto">
                   <h2>Edit draft Cost Calculator</h2>
                   <p class="text-success" v-if="save_message !== null"><strong>Saved!</strong> {{save_message}}</p>
-                  <div class="position-absolute bottom-0 mb-3">
+                  <div class="mb-3 mt-5">
                     <button class="btn btn-primary btn-lg" @click="saveDraft">Save Draft</button>
                     <button class="btn btn-secondary btn-lg ml-2" @click="toggleCollapse">{{expand_button_text}}</button>
+                    <button class="btn btn-secondary btn-lg ml-2" @click="validate">Validate draft</button>
                   </div>
                 </div>
                 <div class="col-md-5">
                   <exchange-rates :mutable="false" :issued_at="this.$root.exch_rate_issued_at"/>
                 </div>
+              </div>
+              <div>
+                <v-draft-changes-list/>
               </div>
             </div>
             <h2 class="mt-5" id="products_top">Products</h2>
@@ -182,7 +194,7 @@ app.component('product-form-part', {
       <div class="my-3" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="card-header">
           <div class="row">
-            <a class="pricing_update_collapse_link" data-toggle="collapse" :data-target="'#collapseProduct' + product_id" role="button" aria-expanded="false" :aria-controls="'collapseProduct' + product_id">
+            <a class="pricing_collapse_link" data-toggle="collapse" :data-target="'#collapseProduct' + product_id" role="button" aria-expanded="false" :aria-controls="'collapseProduct' + product_id">
               <h5 :class="{'text-danger': discontinued, 'my-1': true}"> {{ product['Name'] }} {{ discontinued ? ' - Discontinued' : '' }} <i class="fas fa-caret-down fa-lg pl-1"></i></h5>
             </a>
           </div>
@@ -339,7 +351,7 @@ app.component('component-form-part', {
       <div class="my-3" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="card-header">
           <div class="row">
-            <a class="pricing_update_collapse_link" data-toggle="collapse" :data-target="'#collapseComponent' + component_id" role="button" aria-expanded="false" :aria-controls="'collapseComponent' + component_id">
+            <a class="pricing_collapse_link" data-toggle="collapse" :data-target="'#collapseComponent' + component_id" role="button" aria-expanded="false" :aria-controls="'collapseComponent' + component_id">
               <h5 :class="{'text-danger': discontinued, 'my-1': true}"> {{ component['Product name'] }} {{ discontinued ? ' - Discontinued' : '' }} <i class="fas fa-caret-down fa-lg pl-1"></i></h5>
             </a>
           </div>
@@ -625,6 +637,7 @@ app.component('component-table-row', {
   },
   methods: {
     updateQuantity(new_val) {
+        new_val = parseInt(new_val)
         if (this.type == 'Alternative') {
           this.$root.all_products[this.product_id]['Alternative Components'][this.component_id]['quantity'] = new_val
         } else {

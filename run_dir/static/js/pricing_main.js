@@ -5,6 +5,7 @@ const vPricingMain = {
         return {
             all_components: null,
             all_products: null,
+            component_changes: null,
             current_user_email: null,
             draft_cost_calculator: null,
             draft_created_at: null,
@@ -23,6 +24,7 @@ const vPricingMain = {
             quote_special_percentage_value: 0.0,
             quote_special_percentage_label: '',
             price_type: 'cost_academic',
+            product_changes: null,
             published_cost_calculator: null,
             published_data_loading: true
         }
@@ -595,5 +597,86 @@ app.component('product-table-components', {
         <template v-for="(component_data, comp_id) in components" :key="comp_id">
           <div>{{component_data['component']['Product name']}}</div>
         </template>
+      `
+})
+
+app.component('v-draft-changes-list', {
+    computed: {
+        product_changes() {
+            return this.$root.product_changes
+        },
+        component_changes() {
+            return this.$root.component_changes
+        }
+    },
+    template: /*html*/`
+      <div v-if="(product_changes !== null) && (component_changes !== null)" class="my-3 card">
+        <div class="card-header">
+          <a class="pricing_collapse_link" data-toggle="collapse" data-target="#changes_card_body" role="button" aria-expanded="true" aria-controls="#changes_card_body">
+            <h4>Changes made: <i class="fas fa-caret-down fa-lg pl-1"></i> </h4>
+          </a>
+        </div>
+        <div class="card-body collapse show" id="changes_card_body">
+          <div class="row">
+            <div class="col-6">
+              <h4>Products</h4>
+              <div class="row">
+                <template v-for="(prod_changes_data, prod_id) in product_changes" :key="prod_id">
+                  <div class="ml-3 mb-3">
+                    <h5 class="col-12">{{this.$root.all_products[prod_id]['Name']}}:</h5>
+                    <div class="ml-3" v-for="(prod_type_changes_data, type_key) in prod_changes_data" :key="type_key">
+                      <strong class="mr-2">{{type_key}}:</strong>
+                      <template v-if="(type_key == 'Components') || (type_key == 'Alternative Components')">
+                        <div class="row">
+                          <div class="col-4 border-right">
+                            <div class="row" v-for="(prod_type_component_changes_data, component_id) in prod_type_changes_data[1]" :key="component_id">
+                              <div class="col-3 ml-3">
+                                <a href=""><span class="badge bg-secondary pricing_hoverable" :title="this.$root.all_components[component_id]['Product name']">{{component_id}}</span>
+                              </div>
+                              <div class="col-8">
+                                Quantity: {{prod_type_component_changes_data['quantity']}}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-auto d-flex align-items-center pl-1 pr-0">
+                            <i class="fas fa-arrow-right">
+                          </div>
+                          <div class="col-4">
+                            <div class="row" v-for="(prod_type_component_changes_data, component_id) in prod_type_changes_data[0]" :key="component_id">
+                              <div class="col-3 ml-2">
+                                <span class="badge bg-success pricing_hoverable" :title="this.$root.all_components[component_id]['Product name']">{{component_id}}</span>
+                              </div>
+                              <div class="col-8">
+                                Quantity: {{prod_type_component_changes_data['quantity']}}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                      <template v-else>
+                        {{prod_type_changes_data[1]}} <i class="fas fa-arrow-right"></i> {{prod_type_changes_data[0]}}
+                      </template>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <div class="col-6 border-left">
+              <h4>Components</h4>
+              <div class="row">
+                <template v-for="(comp_changes_data, comp_id) in component_changes" :key="comp_id">
+                  <div class="ml-3 mb-3">
+                    <h5 class="col-12">{{this.$root.all_components[comp_id]['Product name']}}:</h5>
+                    <div class="ml-3" v-for="(comp_type_changes_data, type_key) in comp_changes_data" :key="type_key">
+                      <strong class="mr-2">{{type_key}}:</strong>
+                      {{comp_type_changes_data[1]}} <i class="fas fa-arrow-right"></i> {{comp_type_changes_data[0]}}
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       `
 })

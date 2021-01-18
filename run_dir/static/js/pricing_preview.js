@@ -94,8 +94,8 @@ app.component('pricing-preview', {
                         <dd>{{draft_last_modified_at}}</dd>
                       </dl>
                       <template v-if="draft_locked_by_someone_else">
-                        <dd>{{draft_locked_by}}</dd>
-                        {{this.$root.current_user_email}}
+                        <p>Draft is currently locked by {{draft_locked_by}}</p>
+                        <a class="btn btn-primary" href="/pricing_update">Edit draft anyway</a>
                       </template>
                       <template v-else>
                         <p>Locked by you!</p>
