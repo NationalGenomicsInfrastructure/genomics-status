@@ -148,8 +148,28 @@ class PricingValidator():
                                     'Product name', 'Units', 'Currency',
                                     'List price', 'Discount']}
 
-    def initialize(self):
-        self.validation_msgs = []
+    def __init__(self, draft_doc, published_doc):
+        self.draft_components = draft_doc['components']
+        self.draft_products = draft_doc['products']
+        self.published_components = published_doc['components']
+        self.published_products = published_doc['products']
+        self.validation_msgs = {'components': dict(), 'products': dict()}
+        self.changes = {'components': dict(), 'products': dict()}
+        self.validation_result = True
+
+    def _add_validation_msg(self, type, id, error_type, msg):
+        if id not in self.validation_msgs[type]:
+            self.validation_msgs[type][id] = dict()
+        if error_type not in self.validation_msgs[type][id]:
+            self.validation_msgs[type][id][error_type] = []
+
+        self.validation_msgs[type][id][error_type].append(msg)
+
+    def _add_change(self, type, id, key, draft_val, published_val):
+        if id not in self.changes[type]:
+            self.changes[type][id] = dict()
+
+        self.changes[type][id][key] = (draft_val, published_val)
 
     def _validate_unique(self, items, type):
         """Check all items to make sure they are 'unique'.
@@ -164,17 +184,15 @@ class PricingValidator():
 
             # Check that it is not already added
             if t in key_val_set:
-                self.validation_msgs.append('Key combination {}:{} is included multiple '
-                                            'times in the {} sheet. '.format(keys, t, type))
-                raise PricingValidationError
+                self._add_validation_msg(type, id, 'unique', ('Key combination {}:{} is included multiple '
+                                            'times in the {} sheet. '.format(keys, t, type)))
+                self.validation_result = False
             key_val_set.add(t)
-        return True
 
     def _validate_not_null(self, items, type):
         """Make sure type specific columns (given by NOT_NULL_KEYS) are not null."""
 
         not_null_keys = self.NOT_NULL_KEYS[type]
-
         for id, item in items.items():
             for not_null_key in not_null_keys:
                 if item[not_null_key] is None or item[not_null_key] == '':
@@ -182,11 +200,10 @@ class PricingValidator():
                     if 'Status' in item and item['Status'] == 'Discontinued':
                         pass
                     else:
-                        self.validation_msgs.append('{} cannot be empty for {}.'
+                        self._add_validation_msg(type, id, 'not_null', ('{} cannot be empty for {}.'
                                                     ' Violated for item with id {}.'.
-                                                    format(not_null_key, type, id))
-                        raise PricingValidationError
-        return True
+                                                    format(not_null_key, type, id)))
+                        self.validation_result = False
 
     def _validate_conserved(self, new_items, current_items, type):
         """Ensures the keys in CONSERVED_KEY_SETS are conserved for each given id.
@@ -200,24 +217,22 @@ class PricingValidator():
             type          - Either 'components' or 'products'
         """
         conserved_keys = self.CONSERVED_KEY_SETS[type]
-
         for id, new_item in new_items.items():
             if str(id) in current_items:
                 for conserved_key in conserved_keys:
                     if conserved_key not in new_item:
-                        self.validation_msgs.append('{} column not found in new {} row with '
+                        self._add_validation_msg(type, id, 'conserved', ('{} column not found in new {} row with '
                                                     'id {}. This column should be kept '
-                                                    'conserved.'.format(conserved_key, type, id))
-                        raise PricingValidationError
+                                                    'conserved.'.format(conserved_key, type, id)))
+                        self.validation_result = False
                     if new_item[conserved_key] != current_items[str(id)][conserved_key]:
-                        self.validation_msgs.append('{} should be conserved for {}. '
+                        self._add_validation_msg(type, id, 'conserved', ('{} should be conserved for {}. '
                                                     'Violated for item with id {}. '
                                                     'Found "{}" for new and "{}" for current. '.format(
                                                         conserved_key, type,
                                                         id, new_item[conserved_key],
-                                                        current_items[str(id)][conserved_key]))
-                        raise PricingValidationError
-        return True
+                                                        current_items[str(id)][conserved_key])))
+                        self.validation_result = False
 
     def _validate_discontinued(self, components, products):
         """Make sure no discontinued components are used for enabled products."""
@@ -231,94 +246,105 @@ class PricingValidator():
 
                 for component_id in component_ids:
                     if components[component_id]['Status'] == 'Discontinued':
-                        self.validation_msgs.append(('Product {}:"{}" uses the discontinued component '
-                                                     '{}:"{}", changing product status to "discontinued"').
+                        self._add_validation_msg('prodcuts', product_id, 'discontinued', ('Product {}:"{}" uses the discontinued component '
+                                                     '{}:"{}", while product status is not "discontinued"').
                                                     format(product_id, products[product_id]['Name'],
                                                            component_id, components[component_id]['Product name']))
-                        product['Status'] = 'Discontinued'
-                        raise PricingValidationError
+                        self.validation_result = False
 
                 if product['Alternative Components']:
                     for component_id in product['Alternative Components'].keys():
                         if components[component_id]['Status'] == 'Discontinued':
-                            self.validation_msgs.append(('Product {}:"{}" uses the discontinued alternative component '
+                            self._add_validation_msg('products', product_id, 'discontinued', ('Product {}:"{}" uses the discontinued alternative component '
                                                          '{}:"{}", please check whether product status should be "discontinued"').
                                                         format(product_id, products[product_id]['Name'],
                                                                component_id, components[component_id]['Product name']))
-            return True
 
-    def validate(self, components, products):
-        self._validate_unique(components, 'components')
-        self._validate_not_null(components, 'components')
 
-        current_components = self.fetch_components()
+    def track_all_changes(self):
+        # Check which ids have been added
+        added_product_ids = set(self.draft_products.keys()) - set(self.published_products.keys())
+        added_component_ids = set(self.draft_components.keys()) - set(self.published_components.keys())
 
-        if current_components:
-            self._validate_conserved(components, current_components, 'components')
+        for product_id, published_prod in self.published_products.items():
+            draft_prod = self.draft_products[product_id]
 
-        self._validate_unique(products, 'products')
-        self._validate_not_null(products, 'products')
+            for product_key, published_val in published_prod.items():
+                draft_val = draft_prod[product_key]
+                if published_val != draft_val:
+                    self._add_change('products', product_id, product_key, draft_val, published_val)
 
-        current_products = self.fetch_products(None)
+        for component_id, published_comp in self.published_components.items():
+            draft_comp = self.draft_components[component_id]
+            for component_key, published_val in published_comp.items():
+                draft_val = draft_comp[component_key]
+                if published_val != draft_val:
+                    self._add_change('components', component_id, component_key, draft_val, published_val)
 
-        if current_products:
-            self._validate_conserved(products, current_products, 'products')
+
+    def validate(self):
+        self._validate_unique(self.draft_components, 'components')
+        self._validate_not_null(self.draft_components, 'components')
+
+        self._validate_conserved(self.draft_components, self.published_components, 'components')
+
+        self._validate_unique(self.draft_products, 'products')
+        self._validate_not_null(self.draft_products, 'products')
+
+        self._validate_conserved(self.draft_products, self.published_products, 'products')
 
         # Verify no discontinued components are used for enabled products
-        self._validate_discontinued(components, products)
+        self._validate_discontinued(self.draft_components, self.draft_products)
+
+
+class PricingValidateDraftDataHandler(PricingBaseHandler):
+    """Loaded through /api/v1/pricing_validate_unsaved_draft """
+
 
     def get(self):
-        components = self.fetch_components()
-        products = self.fetch_products(None)
-        try:
-            self.validate(components, products)
-        except PricingValidationError:
-            raise tornado.web.HTTPError(
-                400, reason='\n'.join(self.validation_msgs))
-        except Exception:
-            raise # Maybe this is the default?
+        draft_doc = self.fetch_latest_doc()
+        draft = draft_doc['Draft']
 
-        self.write(json.dumps('Sucess!'))
+        if not draft:
+            self.set_status(400)
+            return self.write("Error: No draft to validate. This should be handled better.")
 
-    def save(self):
-        """
-        # Save it but push it only if products are also parsed correctly
-        comp_doc = doc.copy()
-        comp_doc['components'] = components
+        published_doc = self.fetch_latest_published()
 
-        current_version = get_current_version(comp_db)
-        comp_doc['Version'] = current_version + 1
+        validator = PricingValidator(draft_doc, published_doc)
+        validator.validate()
+        validator.track_all_changes()
 
-        # Modify the `last updated`-field of each item
-        components = set_last_updated_field(components,
-                                            current_components,
-                                            'component')
-        # Modify the `last updated`-field of each item
-        products = set_last_updated_field(products,
-                                          current_products,
-                                          'product')
+        response = dict()
+        response['validation_msgs'] = validator.validation_msgs
+        response['changes'] = validator.changes
 
-        prod_doc = doc.copy()
-        prod_doc['products'] = products
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(response))
 
-        current_version = get_current_version(prod_db)
-        prod_doc['Version'] = current_version + 1
-        """
-        pass
+    def post(self):
+        draft_content = tornado.escape.json_decode(self.request.body)
+
+        published_doc = self.fetch_latest_published()
+
+        validator = PricingValidator(draft_content, published_doc)
+        validator.validate()
+        validator.track_all_changes()
+
+        response = dict()
+        response['validation_msgs'] = validator.validation_msgs
+        response['changes'] = validator.changes
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(response))
 
 
 class PricingDraftDataHandler(PricingBaseHandler):
     """Loaded through /api/v1/draft_cost_calculator """
 
-    def _get_latest_doc(self, db):
-        curr_rows = db.view('entire_document/by_version', descending=True, limit=1).rows
-        curr_doc = curr_rows[0].value
-        return curr_doc
-
     def get(self):
         """ Should return the specified version of the cost calculator."""
-        cc_db = self.application.cost_calculator_db
-        doc = self._get_latest_doc(cc_db)
+        doc = self.fetch_latest_doc()
         draft = doc['Draft']
 
         response = dict()
@@ -328,21 +354,20 @@ class PricingDraftDataHandler(PricingBaseHandler):
             response['cost_calculator'] = None
 
 
-        current_user_email = self._current_user_email()
+        current_user_email = self.get_current_user().email
         response['current_user_email'] = current_user_email
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(response))
 
     def post(self):
-        """ Create a new draft cost calculator.
+        """ Create a new draft cost calculator based on the currently published
 
         will check that:
             - the latest version is not a draft (would return 400)
         """
-        cc_db = self.application.cost_calculator_db
 
-        latest_doc = self._get_latest_doc(cc_db)
+        latest_doc = self.fetch_latest_doc()
         draft = latest_doc['Draft']
 
         if draft:
@@ -355,7 +380,7 @@ class PricingDraftDataHandler(PricingBaseHandler):
         del doc['_rev']
         version = latest_doc['Version'] + 1
 
-        current_user_email = self._current_user_email()
+        current_user_email = self.get_current_user().email
 
         lock_info = {'Locked': True,
                      'Locked by': current_user_email}
@@ -369,7 +394,7 @@ class PricingDraftDataHandler(PricingBaseHandler):
         doc['Issued at'] = None
 
         user_name = self.get_current_user().name
-        user_email = self._current_user_email()
+        user_email = self.get_current_user().email
 
         doc['Created by user'] = user_name
         doc['Created by user email'] = user_email
@@ -392,16 +417,15 @@ class PricingDraftDataHandler(PricingBaseHandler):
             - draft is not locked by other user
         otherwise return 400.
         """
-        cc_db = self.application.cost_calculator_db
 
-        latest_doc = self._get_latest_doc(cc_db)
+        latest_doc = self.fetch_latest_doc()
         draft = latest_doc['Draft']
         if not draft:
             self.set_status(400)
             return self.write("Error: Attempting to update a non-draft cost calculator.")
 
         user_name = self.get_current_user().name
-        user_email = self._current_user_email()
+        user_email = self.get_current_user().email
 
         lock_info = latest_doc['Lock Info']
         if lock_info['Locked']:
@@ -426,13 +450,9 @@ class PricingDraftDataHandler(PricingBaseHandler):
         msg = "Draft successfully saved at {}".format(datetime.datetime.now().strftime("%H:%M:%S"))
         return self.write({'message': msg})
 
+
 class PricingDataHandler(PricingBaseHandler):
     """Loaded through /api/v1/cost_calculator """
-
-    def _get_latest_doc(self, db):
-        curr_rows = db.view('entire_document/published_by_version', descending=True, limit=1).rows
-        curr_doc = curr_rows[0].value
-        return curr_doc
 
     def _get_doc_version(self, version, db):
         rows = db.view('entire_document/published_by_version', descending=True, key=version, limit=1).rows
@@ -464,17 +484,10 @@ class PricingPublishDataHandler(PricingBaseHandler):
       /api/v1/pricing_publish_draft
     """
 
-    def _get_latest_doc(self, db):
-        curr_rows = db.view('entire_document/by_version', descending=True, limit=1).rows
-        curr_doc = curr_rows[0].value
-        return curr_doc
-
     def post(self):
         """ Publish a new cost calculator, from the current draft. """
 
-        cc_db = self.application.cost_calculator_db
-
-        latest_doc = self._get_latest_doc(cc_db)
+        latest_doc = self.fetch_latest_doc()
         draft = latest_doc['Draft']
 
         if not draft:
@@ -485,7 +498,7 @@ class PricingPublishDataHandler(PricingBaseHandler):
         doc = latest_doc.copy()
 
         user_name = self.get_current_user().name
-        user_email = self._current_user_email()
+        user_email = self.get_current_user().email
 
         doc['Draft'] = False
 
@@ -502,6 +515,7 @@ class PricingPublishDataHandler(PricingBaseHandler):
         cc_db.save(doc)
         self.write({'message': 'New cost calculator published'})
 
+
 class PricingUpdateHandler(PricingBaseHandler):
     """ Serves a form where the draft cost calculator can be updated.
 
@@ -513,10 +527,6 @@ class PricingUpdateHandler(PricingBaseHandler):
         /pricing_update
 
     """
-    def _get_latest_doc(self, db):
-        curr_rows = db.view('entire_document/by_version', descending=True, limit=1).rows
-        curr_doc = curr_rows[0].value
-        return curr_doc
 
     def get(self):
         """ Serves the page where draft cost calculators can be updated.
@@ -526,16 +536,13 @@ class PricingUpdateHandler(PricingBaseHandler):
                 - draft is not locked by other user
             otherwise return 400.
         """
-
-        cc_db = self.application.cost_calculator_db
-
-        latest_doc = self._get_latest_doc(cc_db)
+        latest_doc = self.fetch_latest_doc()
         draft = latest_doc['Draft']
         if not draft:
             self.set_status(400)
             self.write("Error: Attempting to update a non-draft cost calculator.")
 
-        current_user_email = self._current_user_email()
+        current_user_email = self.get_current_user().email
 
         lock_info = latest_doc['Lock Info']
         if lock_info['Locked']:
@@ -558,5 +565,19 @@ class PricingPreviewHandler(PricingBaseHandler):
 
     def get(self):
         t = self.application.loader.load('pricing_preview.html')
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                              user=self.get_current_user()))
+
+
+class PricingQuoteHandler(PricingBaseHandler):
+    """ Serves a view from where a project quote can be built
+
+    Loaded through:
+        /pricing_quote
+
+    """
+
+    def get(self):
+        t = self.application.loader.load('pricing_quote.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user()))
