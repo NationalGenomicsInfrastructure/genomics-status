@@ -20,16 +20,6 @@ class PricingBaseHandler(SafeHandler):
                 400, reason='Bad request, version is not an integer')
         return int_version
 
-    def _validate_object_id(self, id, object_type):
-        try:
-            int_key = int(id)
-        except ValueError:
-            raise tornado.web.HTTPError(
-                    400,
-                    reason='Bad request, {} id is not an integer'.format(object_type)
-                )
-        return int_key
-
     def _validate_date_string(self, date):
             year, month, day = date.split('-')
 
@@ -42,132 +32,20 @@ class PricingBaseHandler(SafeHandler):
                     )
             return datetime_date
 
-    def _validate_single_row_result(self, view, object_type):
-        if len(view.rows) == 0:
-            raise tornado.web.HTTPError(
-                    404,
-                    reason='No such {}(s) was found'.format(object_type)
-                )
-        if len(view.rows) > 1:
-            raise tornado.web.HTTPError(
-                    500,
-                    reason='Internal Server Error: Multiple {} rows returned. '
-                           'Expected only 1.'.format(object_type)
-                )
-
-    def _current_user_email(self):
-        current_user = self.get_current_user()
-        if current_user.email != 'Testing User!':
-            current_user_email = current_user.email
-        else:  # testing_mode
-            current_user_email = 'johannes.alneberg@scilifelab.se' # 'test@example.com'
-        return current_user_email
 
     # _____________________________ FETCH METHODS _____________________________
 
-    def fetch_components(self, component_id=None, version=None):
-        """Fetch pricing component raw data from StatusDB.
+    def fetch_latest_doc(self):
+        db = self.application.cost_calculator_db
+        curr_rows = db.view('entire_document/by_version', descending=True, limit=1).rows
+        curr_doc = curr_rows[0].value
+        return curr_doc
 
-        :param component_id: integer id of component to fetch. If None, all
-                    components are fetched.
-        :param version: optional integer specifying version to fetch,
-                        if None, the latest is fetched
-        :return: The rows fetched from the database
-        """
-
-        if component_id is not None:
-            int_key = self._validate_object_id(component_id, 'component')
-
-        if version is not None:  # Specified version
-            int_version = self._validate_version_param(version)
-
-            if component_id is None:  # All components
-                view = self.application.pricing_components_db.view(
-                            'entire_document/by_version',
-                            key=int_version,
-                            limit=1,
-                            descending=True
-                            )
-            else:
-                view = self.application.pricing_components_db.view(
-                            'individual_components/by_id_and_version',
-                            key=[int_key, int_version],
-                            limit=1
-                            )
-
-        else:  # No specified version
-            if component_id is None:  # All components
-                view = self.application.pricing_components_db.view(
-                            'entire_document/by_version',
-                            limit=1,
-                            descending=True
-                            )
-            else:
-                view = self.application.pricing_components_db.view(
-                            'individual_components/by_id_and_version',
-                            startkey=[int_key, {}],
-                            endkey=[int_key],
-                            limit=1,
-                            descending=True
-                            )
-
-        self._validate_single_row_result(view, 'component')
-
-        if component_id is None:  # All components
-            return view.rows[0].value['components']
-        else:
-            return {component_id: view.rows[0].value}
-
-    def fetch_products(self, product_id, version=None):
-        """Fetch pricing products raw data from StatusDB.
-
-        :param product_id: integer id of product to fetch. If None, all
-                    products are fetched.
-        :param version: optional integer specifying version to fetch,
-                        if None, the latest is fetched
-        :return: The rows fetched from the database
-        """
-        if product_id is not None:
-            int_key = self._validate_object_id(product_id, 'product')
-
-        if version is not None:  # Specified version
-            int_version = self._validate_version_param(version)
-
-            if product_id is None:  # All products
-                view = self.application.pricing_products_db.view(
-                        'entire_document/by_version',
-                        key=int_version,
-                        limit=1,
-                        descending=True
-                    )
-            else:  # Individual product
-                view = self.application.pricing_products_db.view(
-                        'individual_products/by_id_and_version',
-                        key=[int_key, int_version],
-                        limit=1,
-                        descending=True
-                    )
-        else:  # No specified version
-            if product_id is None:  # All products
-                view = self.application.pricing_products_db.view(
-                        'entire_document/by_version',
-                        limit=1,
-                        descending=True
-                    )
-            else:
-                view = self.application.pricing_products_db.view(
-                        'individual_products/by_id_and_version',
-                        startkey=[int_key, {}],
-                        endkey=[int_key],
-                        limit=1,
-                        descending=True
-                    )
-        self._validate_single_row_result(view, 'product')
-
-        if product_id is None:  # All products
-            return view.rows[0].value['products']
-        else:
-            return {product_id: view.rows[0].value}
+    def fetch_latest_published(self):
+        db = self.application.cost_calculator_db
+        curr_rows = db.view('entire_document/published_by_version', descending=True, limit=1).rows
+        curr_doc = curr_rows[0].value
+        return curr_doc
 
     def fetch_exchange_rates(self, date=None):
         """Internal method to fetch exchange rates from StatusDB
@@ -199,125 +77,6 @@ class PricingBaseHandler(SafeHandler):
         result['Issued at'] = view.rows[0].value['Issued at']
         return result
 
-    # _____________________________ CALCULATION METHODS _______________________
-    def _calculate_component_price(self, component, exch_rates):
-        currency = component['Currency']
-        if currency == 'SEK':
-            sek_list_price = component['List price']
-        else:
-            currency_key = '{}_in_SEK'.format(currency)
-            sek_list_price = exch_rates[currency_key] * component['List price']
-
-        sek_price = sek_list_price - sek_list_price * component['Discount']
-
-        sek_price_per_unit = sek_price/float(component['Units'])
-
-        return sek_price, sek_price_per_unit
-
-    def _calculate_product_price(self, product, all_component_prices):
-        price = 0
-        # Fixed price trumps all component and reagent prices
-        if product['is_fixed_price']:
-            price = product['fixed_price']['price_in_sek']
-            price_academic = product['fixed_price']['price_for_academics_in_sek']
-            full_cost = product['fixed_price']['full_cost_in_sek']
-            return price, price_academic, full_cost
-
-        for component_id, info in product['Components'].items():
-            component_price_d = all_component_prices[str(component_id)]
-            quantity = int(info['quantity'])
-            price += quantity * component_price_d['price_per_unit_in_sek']
-
-        price_academic = price + price * product['Re-run fee']
-
-        full_cost_fee = product.get('Full cost fee', '')
-        if full_cost_fee == '':
-            full_cost_fee = '0.0'
-
-        full_cost = price_academic + float(full_cost_fee)
-
-        return price, price_academic, full_cost
-
-    # _______________________________ GET METHODS _____________________________
-    def get_component_prices(self, component_id=None, version=None, date=None,
-                             pretty_strings=False):
-        """Calculate prices for individual or all pricing components.
-
-        :param component_id: The id of the component to calculate price for.
-                        If None, all component prices will be calculated.
-        :param version: The version of components to use.
-                        When not specified, the latest version will be used.
-        :param date: The date for which the exchange rate will be fetched.
-                        When not specified, the latest exchange rates will be
-                        used.
-        :param pretty_strings: Output prices as formatted strings instead
-                        of float numbers.
-
-        """
-        exch_rates = self.fetch_exchange_rates(date)
-        all_components = self.fetch_components(component_id, version)
-
-        return_d = all_components.copy()
-
-        for component_id, component in all_components.items():
-            if component['List price']:
-                price, price_per_unit = self._calculate_component_price(component,
-                                                                        exch_rates)
-                if pretty_strings:
-                    price = '{:.2f}'.format(price)
-                    price_per_unit = '{:.2f}'.format(price_per_unit)
-            elif component['Status'] != 'Discontinued':
-                raise ValueError('Empty list price for non-discontinued component')
-            else:
-                price = ''
-                price_per_unit = ''
-
-            return_d[component_id]['price_in_sek'] = price
-            return_d[component_id]['price_per_unit_in_sek'] = price_per_unit
-
-        return return_d
-
-    def get_product_prices(self, product_id, version=None, date=None,
-                           discontinued=False, pretty_strings=False):
-        """Calculate the price for an individual or all products
-
-        :param product_id: The id of the product to calculate price for.
-                        If None, all product prices will be calculated.
-        :param version: The version of product and components to use.
-                        When not specified, the latest version will be used.
-        :param date: The date for which the exchange rate will be fetched.
-                        When not specified, the latest exchange rates will be
-                        used.
-        :param discontinued: If evaluated to False, only products with status
-                        'available' will be included.
-        :param pretty_strings: Output prices as formatted strings instead
-                        of float numbers.
-
-        """
-
-        all_component_prices = self.get_component_prices(version=version, date=date)
-        products = self.fetch_products(product_id, version)
-
-        return_d = products.copy()
-
-        for product_id, product in products.items():
-            if not discontinued and product['Status'] != 'Available':
-                return_d.pop(product_id)
-                continue
-
-            price_int, price_acad, price_full = self._calculate_product_price(product, all_component_prices)
-
-            if pretty_strings:
-                price_int = '{:.2f}'.format(price_int)
-                price_acad = '{:.2f}'.format(price_acad)
-                price_full = '{:.2f}'.format(price_full)
-
-            return_d[product_id]['price_internal'] = price_int
-            return_d[product_id]['price_academic'] = price_acad
-            return_d[product_id]['price_full'] = price_full
-
-        return return_d
-
 
 class PricingDateToVersionDataHandler(PricingBaseHandler):
     """Serves a map of when each version of pricing components and
@@ -326,19 +85,19 @@ class PricingDateToVersionDataHandler(PricingBaseHandler):
     Loaded through:
         /api/v1/pricing_date_to_version
 
-    Use this to be able to look back in history of the components and
-    products database at certain dates.
+    Use this to be able to look back in history of the cost calculator
+    database at certain dates.
     """
 
     def get(self):
         # The versions of products and components should match perfectly,
         # so we only need to fetch from one database.
-        prod_view = self.application.pricing_products_db.view(
+        cc_view = self.application.cost_calculator_db.view(
                         'version_info/by_date',
                         descending=False
                         )
 
-        self.write(json.dumps(prod_view.rows))
+        self.write(json.dumps(cc_view.rows))
 
 
 class PricingExchangeRatesDataHandler(PricingBaseHandler):
@@ -366,26 +125,12 @@ class PricingExchangeRatesDataHandler(PricingBaseHandler):
         self.write(json.dumps(result))
 
 
-class PricingQuoteHandler(PricingBaseHandler):
-    """ Serves a view from where a project quote can be built
-
-    Loaded through:
-        /pricing_quote
-
-    """
-
-    def get(self):
-        t = self.application.loader.load('pricing_quote.html')
-        self.write(t.generate(gs_globals=self.application.gs_globals,
-                              user=self.get_current_user()))
-
-
 class PricingValidationError(Exception):
     pass
 
 
-class PricingValidationDataHandler(PricingBaseHandler):
-    """Handles the validation of a new version of the pricing
+class PricingValidator():
+    """Helper object to store and handle the validation of a new version of the pricing
 
     """
     # Which variables that shouldn't be changed while keeping the same _id_.
@@ -700,14 +445,14 @@ class PricingDataHandler(PricingBaseHandler):
         cc_db = self.application.cost_calculator_db
 
         if version is None:
-            doc = self._get_latest_doc(cc_db)
+            doc = self.fetch_latest_published()
         else:
             doc = self._get_doc_version(version, cc_db)
 
         response = dict()
         response['cost_calculator'] = doc
 
-        current_user_email = self._current_user_email()
+        current_user_email = self.get_current_user().email
         response['current_user_email'] = current_user_email
 
         self.set_header("Content-type", "application/json")
