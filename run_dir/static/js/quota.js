@@ -14,7 +14,6 @@ function plot_chart(title, plot_data, limit_data, max_x_value, div_id) {
     var d = new Date();
     d.setMonth(d.getMonth() - 2);
     d.setHours(0,0,0);
-    console.log(d)
     d = d.getTime();
 
     $('#'+div_id).highcharts({
