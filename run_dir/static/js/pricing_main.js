@@ -5,7 +5,7 @@ const vPricingMain = {
         return {
             all_components: null,
             all_products: null,
-            component_changes: null,
+            component_changes: Object(),
             current_user_email: null,
             draft_cost_calculator: null,
             draft_created_at: null,
@@ -24,7 +24,7 @@ const vPricingMain = {
             quote_special_percentage_value: 0.0,
             quote_special_percentage_label: '',
             price_type: 'cost_academic',
-            product_changes: null,
+            product_changes: Object(),
             published_cost_calculator: null,
             published_data_loading: true
         }
@@ -165,7 +165,6 @@ const vPricingMain = {
             this.all_products[prod_id]['Status'] = 'Enabled'
         },
         discontinueComponent(comp_id) {
-            console.log("Should disable comp_id: "+ comp_id)
             this.all_components[comp_id]['Status'] = 'Discontinued'
         },
         enableComponent(comp_id) {
@@ -233,6 +232,8 @@ const vPricingMain = {
                     if (assign_data) {
                       this.all_products = data.products
                       this.all_components = data.components
+                      this.start_watching_for_validate()
+                      this.validate()
                     }
                   }
                   this.current_user_email = response.data['current_user_email']
@@ -269,6 +270,22 @@ const vPricingMain = {
                   this.published_data_loading = false
               })
         },
+        start_watching_for_validate() {
+            this.$watch('all_products',
+                function(newVal, oldVal) {
+                    this.validate()
+                }, {
+                  deep: true
+                }
+            )
+            this.$watch('all_components',
+                function(newVal, oldVal) {
+                    this.validate()
+                }, {
+                  deep: true
+                }
+            )
+        },
         componentCost(comp_id) {
             component = this.all_components[comp_id]
             currency = component['Currency']
@@ -304,6 +321,15 @@ const vPricingMain = {
             }
 
             return {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
+        },
+        validate() {
+            axios.post('/api/v1/pricing_validate_draft', {
+                components: this.all_components,
+                products: this.all_products
+            }).then(response => {
+                this.product_changes = response.data.changes['products']
+                this.component_changes = response.data.changes['components']
+            })
         }
     }
 }
@@ -601,24 +627,31 @@ app.component('product-table-components', {
 })
 
 app.component('v-draft-changes-list', {
+    props: ['modal'],
     computed: {
         product_changes() {
             return this.$root.product_changes
         },
         component_changes() {
             return this.$root.component_changes
+        },
+        no_changes() {
+            return (Object.keys(this.$root.product_changes).length === 0) && (Object.keys(this.$root.product_changes).length === 0)
         }
     },
     template: /*html*/`
-      <div v-if="(product_changes !== null) && (component_changes !== null)" class="my-3 card">
+      <div v-if="no_changes" class="my-2">
+        <h4>No changes between draft and published document.</h4>
+      </div>
+      <div v-else class="my-3 card">
         <div class="card-header">
           <a class="pricing_collapse_link" data-toggle="collapse" data-target="#changes_card_body" role="button" aria-expanded="true" aria-controls="#changes_card_body">
-            <h4>Changes made: <i class="fas fa-caret-down fa-lg pl-1"></i> </h4>
+            <h4>Changes made: <i class="fas fa-caret-down fa-lg pl-1"></i></h4>
           </a>
         </div>
         <div class="card-body collapse show" id="changes_card_body">
           <div class="row">
-            <div class="col-6">
+            <div :class="modal ? 'col-12' : 'col-6'">
               <h4>Products</h4>
               <div class="row">
                 <template v-for="(prod_changes_data, prod_id) in product_changes" :key="prod_id">
@@ -631,7 +664,7 @@ app.component('v-draft-changes-list', {
                           <div class="col-4 border-right">
                             <div class="row" v-for="(prod_type_component_changes_data, component_id) in prod_type_changes_data[1]" :key="component_id">
                               <div class="col-3 ml-3">
-                                <a href=""><span class="badge bg-secondary pricing_hoverable" :title="this.$root.all_components[component_id]['Product name']">{{component_id}}</span>
+                                <a href=""><span class="badge bg-secondary pricing_hoverable" :title="this.$root.all_components[component_id]['Product name']">{{component_id}}</span></a>
                               </div>
                               <div class="col-8">
                                 Quantity: {{prod_type_component_changes_data['quantity']}}
@@ -639,7 +672,7 @@ app.component('v-draft-changes-list', {
                             </div>
                           </div>
                           <div class="col-auto d-flex align-items-center pl-1 pr-0">
-                            <i class="fas fa-arrow-right">
+                            <i class="fas fa-arrow-right"></i>
                           </div>
                           <div class="col-4">
                             <div class="row" v-for="(prod_type_component_changes_data, component_id) in prod_type_changes_data[0]" :key="component_id">
@@ -661,7 +694,7 @@ app.component('v-draft-changes-list', {
                 </template>
               </div>
             </div>
-            <div class="col-6 border-left">
+            <div :class="modal ? 'col-12' : 'col-6 border-left'">
               <h4>Components</h4>
               <div class="row">
                 <template v-for="(comp_changes_data, comp_id) in component_changes" :key="comp_id">

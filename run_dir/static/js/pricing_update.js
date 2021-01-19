@@ -6,6 +6,7 @@ app.component('product-form-list', {
     data() {
         return {
             save_message: null,
+            save_error: false,
             all_expanded: false,
             expand_button_text: 'Expand all (slow)'
         }
@@ -22,9 +23,15 @@ app.component('product-form-list', {
             })
             .then(response => {
                 this.save_message = response.data.message;
+                this.backToPreview()
             })
-            .catch(function (error) {
+            .catch(error => {
+                this.save_message = error.response.data;
+                this.save_error = true;
             });
+        },
+        backToPreview() {
+            window.location.href = "/pricing_preview"
         },
         toggleCollapse(event) {
             // The 'Loading' text is never visible because of some
@@ -39,16 +46,6 @@ app.component('product-form-list', {
                 this.all_expanded = true
                 this.expand_button_text = 'Collapse all (slow)'
             }
-        },
-        validate() {
-            axios.post('/api/v1/pricing_validate_draft', {
-                components: this.$root.all_components,
-                products: this.$root.all_products
-            }).then(response => {
-                this.$root.product_changes = response.data.changes['products']
-                this.$root.component_changes = response.data.changes['components']
-                console.log(response.data)
-            })
         }
     },
     template:
@@ -92,11 +89,16 @@ app.component('product-form-list', {
               <div class="row">
                 <div class="col-md-7 mr-auto">
                   <h2>Edit draft Cost Calculator</h2>
-                  <p class="text-success" v-if="save_message !== null"><strong>Saved!</strong> {{save_message}}</p>
+                  <template v-if="save_message !== null">
+                    <p class="text-danger" v-if="save_error"><strong>Error saving</strong> {{save_message}}</p>
+                    <p class="text-success" v-else><strong>Saved!</strong> {{save_message}}</p>
+                  </template>
+                  <div>
+                    <button class="btn btn-secondary" @click="toggleCollapse"><i class="fas fa-caret-down"></i> {{expand_button_text}}</button>
+                  </div>
                   <div class="mb-3 mt-5">
-                    <button class="btn btn-primary btn-lg" @click="saveDraft">Save Draft</button>
-                    <button class="btn btn-secondary btn-lg ml-2" @click="toggleCollapse">{{expand_button_text}}</button>
-                    <button class="btn btn-secondary btn-lg ml-2" @click="validate">Validate draft</button>
+                    <button class="btn btn-primary btn-lg" @click="saveDraft"><i class="far fa-save"></i> Save and leave</button>
+                    <button class="btn btn-danger btn-lg ml-2" @click="backToPreview"><i class="fas fa-window-close"></i> Leave without saving</button>
                   </div>
                 </div>
                 <div class="col-md-5">
@@ -104,7 +106,7 @@ app.component('product-form-list', {
                 </div>
               </div>
               <div>
-                <v-draft-changes-list/>
+                <v-draft-changes-list :modal="false"/>
               </div>
             </div>
             <h2 class="mt-5" id="products_top">Products</h2>

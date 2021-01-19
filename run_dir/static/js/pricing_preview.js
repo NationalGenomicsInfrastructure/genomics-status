@@ -52,6 +52,16 @@ app.component('pricing-preview', {
                 this.$root.fetchPublishedCostCalculator()
               })
         },
+        reassign_lock() {
+            axios
+              .post('/api/v1/pricing_reassign_lock')
+              .then(response => {
+                this.$root.fetchDraftCostCalculator(true)
+              })
+              .catch(error => {
+                  this.error_message = error.response.data
+              });
+        },
         toggleDiscontinued() {
             this.reset_listjs()
             this.show_discontinued = !this.show_discontinued
@@ -95,7 +105,7 @@ app.component('pricing-preview', {
                       </dl>
                       <template v-if="draft_locked_by_someone_else">
                         <p>Draft is currently locked by {{draft_locked_by}}</p>
-                        <a class="btn btn-primary" href="/pricing_update">Edit draft anyway</a>
+                        <a class="btn btn-danger" @click="reassign_lock"><i class="fas fa-user-lock"></i> Reassign lock to you</a>
                       </template>
                       <template v-else>
                         <p>Locked by you!</p>
@@ -118,6 +128,7 @@ app.component('pricing-preview', {
                         <div class="modal-body">
                           <p>Are you sure you want to publish the current draft?</p>
                           <p>This will then become the default cost calculator used for all quotes.</p>
+                          <v-draft-changes-list :modal="true"/>
                         </div>
                         <div class="modal-footer">
                           <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -180,6 +191,7 @@ app.component('pricing-preview', {
           </div>
           <div id="alerts_go_here">
           </div>
+          <v-draft-changes-list :modal="false"/>
           <template v-if="draft_exists">
             <div class="products_chooseable_div">
               <div class="row" id="table_h_and_search">
