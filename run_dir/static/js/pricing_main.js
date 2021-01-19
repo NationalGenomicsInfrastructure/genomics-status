@@ -26,7 +26,8 @@ const vPricingMain = {
             price_type: 'cost_academic',
             product_changes: Object(),
             published_cost_calculator: null,
-            published_data_loading: true
+            published_data_loading: true,
+            validation_msgs: Object({'products': {}, 'components': {}})
         }
     },
     computed: {
@@ -131,6 +132,9 @@ const vPricingMain = {
             all_ids = Object.keys(this.all_components)
             max_id = Math.max(...all_ids.map(x => parseInt(x)))
             return (1 + max_id).toString()
+        },
+        no_validation_messages() {
+            return (Object.keys(this.validation_msgs['products']).length === 0) && (Object.keys(this.validation_msgs['components']).length === 0)
         }
     },
     methods: {
@@ -329,6 +333,7 @@ const vPricingMain = {
             }).then(response => {
                 this.product_changes = response.data.changes['products']
                 this.component_changes = response.data.changes['components']
+                this.validation_msgs = response.data.validation_msgs
             })
         }
     }
@@ -636,7 +641,7 @@ app.component('v-draft-changes-list', {
             return this.$root.component_changes
         },
         no_changes() {
-            return (Object.keys(this.$root.product_changes).length === 0) && (Object.keys(this.$root.product_changes).length === 0)
+            return (Object.keys(this.product_changes).length === 0) && (Object.keys(this.component_changes).length === 0)
         }
     },
     template: /*html*/`
@@ -656,7 +661,7 @@ app.component('v-draft-changes-list', {
               <div class="row">
                 <template v-for="(prod_changes_data, prod_id) in product_changes" :key="prod_id">
                   <div class="ml-3 mb-3">
-                    <h5 class="col-12">{{this.$root.all_products[prod_id]['Name']}}:</h5>
+                    <h5 class="col-12"><a :href="'#product_form_part_' + prod_id">{{this.$root.all_products[prod_id]['Name']}}:</a></h5>
                     <div class="ml-3" v-for="(prod_type_changes_data, type_key) in prod_changes_data" :key="type_key">
                       <strong class="mr-2">{{type_key}}:</strong>
                       <template v-if="(type_key == 'Components') || (type_key == 'Alternative Components')">
@@ -699,10 +704,72 @@ app.component('v-draft-changes-list', {
               <div class="row">
                 <template v-for="(comp_changes_data, comp_id) in component_changes" :key="comp_id">
                   <div class="ml-3 mb-3">
-                    <h5 class="col-12">{{this.$root.all_components[comp_id]['Product name']}}:</h5>
+                    <h5 class="col-12"><a :href="'#component_form_part_' + comp_id">{{this.$root.all_components[comp_id]['Product name']}}:</a></h5>
                     <div class="ml-3" v-for="(comp_type_changes_data, type_key) in comp_changes_data" :key="type_key">
                       <strong class="mr-2">{{type_key}}:</strong>
                       {{comp_type_changes_data[1]}} <i class="fas fa-arrow-right"></i> {{comp_type_changes_data[0]}}
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      `
+})
+
+
+app.component('v-draft-validation-msgs-list', {
+    props: ['modal'],
+    computed: {
+        product_messages() {
+            return this.$root.validation_msgs['products']
+        },
+        component_messages() {
+            return this.$root.validation_msgs['components']
+        },
+        no_messages() {
+            return (Object.keys(this.product_messages).length === 0) && (Object.keys(this.component_messages).length === 0)
+        }
+    },
+    template: /*html*/`
+      <div v-if="no_messages" class="my-2">
+        <h4>No validation messages</h4>
+      </div>
+      <div v-else class="my-3 card border-danger">
+        <div class="card-header">
+          <a class="pricing_collapse_link" data-toggle="collapse" data-target="#validation_msgs_card_body" role="button" aria-expanded="true" aria-controls="#validation_msgs_card_body">
+            <h4><span class="badge bg-danger">Validation errors:</span> <i class="fas fa-caret-down fa-lg pl-1"></i></h4>
+          </a>
+        </div>
+        <div class="card-body collapse show" id="validation_msgs_card_body">
+          <div class="row">
+            <div :class="modal ? 'col-12' : 'col-6'">
+              <h4>Products</h4>
+              <div class="row pr-4">
+                <template v-for="(prod_validation_msgs_data, prod_id) in product_messages" :key="prod_id">
+                  <div class="ml-3 mb-3">
+                    <h5 class="col-12"><a :href="'#product_form_part_' + prod_id">{{this.$root.all_products[prod_id]['Name']}}:</a></h5>
+                    <div class="ml-3" v-for="(prod_type_validation_msgs_data, type_key) in prod_validation_msgs_data" :key="type_key">
+                      <ul v-for="validation_msg in prod_type_validation_msgs_data">
+                        <li class="fs-5">{{validation_msg}}</li>
+                      </ul>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <div :class="modal ? 'col-12' : 'col-6'">
+              <h4>Components</h4>
+              <div class="row pr-4">
+                <template v-for="(comp_validation_msgs_data, comp_id) in component_messages" :key="comp_id">
+                  <div class="ml-3 mb-3">
+                    <h5 class="col-12"><a :href="'#component_form_part_' + comp_id">{{this.$root.all_components[comp_id]['Product name']}}:</a></h5>
+                    <div class="ml-3" v-for="(comp_type_validation_msgs_data, type_key) in comp_validation_msgs_data" :key="type_key">
+                      <ul v-for="validation_msg in comp_type_validation_msgs_data">
+                        <li class="fs-5">{{validation_msg}}</li>
+                      </ul>
                     </div>
                   </div>
                 </template>

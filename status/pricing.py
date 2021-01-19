@@ -246,7 +246,7 @@ class PricingValidator():
 
                 for component_id in component_ids:
                     if components[component_id]['Status'] == 'Discontinued':
-                        self._add_validation_msg('prodcuts', product_id, 'discontinued', ('Product {}:"{}" uses the discontinued component '
+                        self._add_validation_msg('products', product_id, 'discontinued', ('Product {}:"{}" uses the discontinued component '
                                                      '{}:"{}", while product status is not "discontinued"').
                                                     format(product_id, products[product_id]['Name'],
                                                            component_id, components[component_id]['Product name']))

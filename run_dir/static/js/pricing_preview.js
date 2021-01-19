@@ -126,13 +126,21 @@ app.component('pricing-preview', {
                           <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                          <p>Are you sure you want to publish the current draft?</p>
-                          <p>This will then become the default cost calculator used for all quotes.</p>
-                          <v-draft-changes-list :modal="true"/>
+                          <template v-if="this.$root.no_validation_messages">
+                            <p>Are you sure you want to publish the current draft?</p>
+                            <p>This will then become the default cost calculator used for all quotes.</p>
+                            <v-draft-changes-list :modal="true"/>
+                          </template>
+                          <template v-else>
+                            <p>The current draft contains validation errors, please fix these before publishing:</p>
+                            <v-draft-validation-msgs-list :modal="true"/>
+                          </template>
                         </div>
                         <div class="modal-footer">
                           <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                          <button id='datepicker-btn' type="button" class="btn btn-primary" @click="publish_draft" data-dismiss="modal">Publish New Cost Calculator</button>
+                          <template v-if="this.$root.no_validation_messages">
+                            <button id='datepicker-btn' type="button" class="btn btn-primary" @click="publish_draft" data-dismiss="modal">Publish New Cost Calculator</button>
+                          </template>
                         </div>
                       </div>
                     </div>
@@ -192,6 +200,7 @@ app.component('pricing-preview', {
           <div id="alerts_go_here">
           </div>
           <v-draft-changes-list :modal="false"/>
+          <v-draft-validation-msgs-list :modal="false"/>
           <template v-if="draft_exists">
             <div class="products_chooseable_div">
               <div class="row" id="table_h_and_search">

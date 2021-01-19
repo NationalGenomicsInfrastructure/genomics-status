@@ -61,6 +61,13 @@ app.component('product-form-list', {
             <nav id="pricing_update_sidebar" class="nav sidebar sticky-top">
               <div class="position-sticky">
                 <nav class="nav nav-pills flex-column">
+                  <a class="nav-link" href="#pricing_product_form_content">Top of the page</a>
+                  <nav class="nav nav-pills flex-column">
+                    <a class="nav-link ml-3 my-0 py-1" href="#changes_list">Changes</a>
+                    <template v-if="!this.$root.no_validation_messages">
+                      <a class="nav-link ml-3 my-0 py-1 text-danger" href="#validation_messages_list">Validation errors</a>
+                    </template>
+                  </nav>
                   <a class="nav-link my-1" href="#products_top">Products</a>
                   <nav class="nav nav-pills flex-column">
                     <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)" :key="category">
@@ -105,8 +112,11 @@ app.component('product-form-list', {
                   <exchange-rates :mutable="false" :issued_at="this.$root.exch_rate_issued_at"/>
                 </div>
               </div>
-              <div>
+              <div id="changes_list">
                 <v-draft-changes-list :modal="false"/>
+              </div>
+              <div id="validation_messages_list">
+                <v-draft-validation-msgs-list :modal="false"/>
               </div>
             </div>
             <h2 class="mt-5" id="products_top">Products</h2>
@@ -193,7 +203,7 @@ app.component('product-form-part', {
     },
     template:
       /*html*/`
-      <div class="my-3" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
+      <div :id="'product_form_part_' + product_id" class="my-3" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="card-header">
           <div class="row">
             <a class="pricing_collapse_link" data-toggle="collapse" :data-target="'#collapseProduct' + product_id" role="button" aria-expanded="false" :aria-controls="'collapseProduct' + product_id">
@@ -350,7 +360,7 @@ app.component('component-form-part', {
     },
     template:
       /*html*/`
-      <div class="my-3" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
+      <div :id="'component_form_part_' + component_id" class="my-3" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="card-header">
           <div class="row">
             <a class="pricing_collapse_link" data-toggle="collapse" :data-target="'#collapseComponent' + component_id" role="button" aria-expanded="false" :aria-controls="'collapseComponent' + component_id">
