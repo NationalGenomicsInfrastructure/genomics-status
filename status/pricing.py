@@ -324,7 +324,6 @@ class PricingValidateDraftDataHandler(PricingBaseHandler):
 
     def post(self):
         draft_content = tornado.escape.json_decode(self.request.body)
-
         published_doc = self.fetch_latest_published()
 
         validator = PricingValidator(draft_content, published_doc)
@@ -338,6 +337,31 @@ class PricingValidateDraftDataHandler(PricingBaseHandler):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(response))
 
+class PricingReassignLockDataHandler(PricingBaseHandler):
+    """Available at /api/v1/pricing_reassign_lock"""
+    def post(self):
+        doc = self.fetch_latest_doc()
+        draft = doc['Draft']
+        if not draft:
+            self.set_header("Content-type", "application/json")
+            self.set_status(400)
+            return self.write("Error: Attempting to update a non-draft cost calculator.")
+
+        user_name = self.get_current_user().name
+        user_email = self.get_current_user().email
+
+        lock_info = {'Locked': True,
+                     'Locked by': user_email}
+
+        doc['Lock Info'] = lock_info
+        doc['Last modified by user'] = user_name
+        doc['Last modified by user email'] = user_email
+        doc['Last modified'] = datetime.datetime.now().isoformat()
+
+        cc_db = self.application.cost_calculator_db
+        cc_db.save(doc)
+        self.set_header("Content-type", "application/json")
+        self.write({'message': 'Lock info updated'})
 
 class PricingDraftDataHandler(PricingBaseHandler):
     """Loaded through /api/v1/draft_cost_calculator """
@@ -404,7 +428,9 @@ class PricingDraftDataHandler(PricingBaseHandler):
         doc['Last modified by user email'] = user_email
         doc['Last modified'] = datetime.datetime.now().isoformat()
 
+        cc_db = self.application.cost_calculator_db
         cc_db.save(doc)
+        self.set_header("Content-type", "application/json")
         self.write({'message': 'Draft created'})
 
     def put(self):
@@ -446,8 +472,10 @@ class PricingDraftDataHandler(PricingBaseHandler):
         latest_doc['Last modified by user email'] = user_email
         latest_doc['Last modified'] = datetime.datetime.now().isoformat()
 
+        cc_db = self.application.cost_calculator_db
         cc_db.save(latest_doc)
         msg = "Draft successfully saved at {}".format(datetime.datetime.now().strftime("%H:%M:%S"))
+        self.set_header("Content-type", "application/json")
         return self.write({'message': msg})
 
 
@@ -512,6 +540,7 @@ class PricingPublishDataHandler(PricingBaseHandler):
         doc['Issued at'] = datetime.datetime.now().isoformat()
 
         print("Warning: draft being published without validation!")
+        cc_db = self.application.cost_calculator_db
         cc_db.save(doc)
         self.write({'message': 'New cost calculator published'})
 
