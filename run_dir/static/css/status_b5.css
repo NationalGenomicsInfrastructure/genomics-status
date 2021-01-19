@@ -528,7 +528,7 @@ width:30%;
 }
 
 .table-bioinfo-status td.datadelivered {
-    min-width: max-content;
+    min-width: 150px;
 }
 
 /*
