@@ -1,66 +1,70 @@
-{% extends base.html %}
+{% extends base_b5.html %}
 {% block stuff %}
 <div id="page_content">
 
     <span id="page_title" style="display:none;">Bioinfo Analysis {{ project_id }}</span>
     {% set status_css={
-      'Demultiplexing': 'label-default',
-      'Transferring': 'label-default',
-      'Sequencing': 'label-default',
-      'New': 'label-primary',
-      'QC-ongoing': 'label-warning',
-      'QC-done': 'label-success',
-      'BP-ongoing': 'label-warning',
-      'BP-done': 'label-success',
-      'ERROR': 'label-danger',
+      'Demultiplexing': 'bg-secondary',
+      'Transferring': 'bg-secondary',
+      'Sequencing': 'bg-secondary',
+      'New': 'bg-primary',
+      'QC-ongoing': 'bg-warning',
+      'QC-done': 'bg-success',
+      'BP-ongoing': 'bg-warning',
+      'BP-done': 'bg-success',
+      'ERROR': 'bg-danger',
       }; %}
-    {% set qc_css={ '?': 'unknown', 'Pass': 'success', 'Warning': 'warning', 'Fail': 'danger', 'N/A': 'active'} %}
-    <h3>
-      <a href="/project/{{ project_id }}">{{ project_id }}, {{ project_name }}</a><br>
-      <small>
-        &nbsp; <span class="bi-project-facility label {% if project_type == 'Application' %} label-success {% else %} label-primary {% end %}">{{ project_type }}</span>
+    {% set qc_css={ '?': 'unknown', 'Pass': 'bg-success-table', 'Warning': 'bg-warning-table', 'Fail': 'bg-danger-table', 'N/A': 'active'} %}
+    <h2>
+      <a class="text-decoration-none" href="/project/{{ project_id }}">{{ project_id }}, {{ project_name }}</a><br>
+      <small class="text-muted">
+        &nbsp; <span class="bi-project-facility badge {% if project_type == 'Application' %} bg-success {% else %} bg-primary {% end %}">{{ project_type }}</span>
         <span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">{{ application }}</span>
         &nbsp; <span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">{{ bioinfo_responsible }}</span>
       </small>
 
 
-    <a {% if multiqc %} href="/multiqc_report/{{ project_id }}"{% else %} disabled data-toggle="tooltip" data-placement="bottom" title="No MultiQC report available"{% end %}target="_blank" type="submit" class="btn btn-default pull-right">Open MultiQC report</a>
-    </h3>
+    <a {% if multiqc %} href="/multiqc_report/{{ project_id }}"{% else %} disabled data-toggle="tooltip" data-placement="bottom" title="No MultiQC report available"{% end %}target="_blank" type="submit" class="btn btn-outline-dark float-right">Open MultiQC report</a>
+    </h2>
     <hr>
-    <form class="form-inline">
-      <div class="form-group">
-        <label for="bioinfo-view">Select view: </label>
-        <select id="bioinfo-view" class="form-control">
+    <form class="row pb-4">
+      <div class="col-auto col-form-label pr-0">
+        <label for="bioinfo-view"><strong>Select view: </strong></label>
+      </div>
+      <div class="col-auto pl-1">
+        <select id="bioinfo-view" class="form-select">
           <option selected="selected" value="run-view">Run-lane-sample (default)</option>
           <option value="sample-view">Sample-run-lane</option>
         </select>
       </div>
       &nbsp; &nbsp; &nbsp;
-      <span class="pull-right bioinfo-savespan">
-        <button class="btn btn-primary" id="bioinfo-status-saveButton"
+      <div class="col-auto ml-auto">
+        <span class="float-right bioinfo-savespan">
+          <button class="btn btn-primary" id="bioinfo-status-saveButton"
           {% if project_closed %} disabled {% end %}> Save Changes</button>
-      </span>
+        </span>
+      </div>
     </form>
 
     {% include "bioinfo_tab/run_lane_sample_view.html" %}
     {% include "bioinfo_tab/sample_run_lane_view.html" %}
 
-    <button id="bioinfo-show-history-button" class="btn btn-default" data-target="#bioinfo-show-history">Show Edit History</button>
+    <button id="bioinfo-show-history-button" class="btn btn-outline-dark mb-4" data-target="#bioinfo-show-history">Show Edit History</button>
   </div>
 
 <div id='bioinfo-confirm-dialog' class="modal fade" tabindex="-1" role="dialog">
   <div class="modal-dialog">
-    <div class="modal-content panel-danger">
-      <div class="modal-header panel-heading">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <div class="modal-content">
+      <div class="modal-header bg-warning bg-gradient text-light">
         <h4 class="modal-title">Warning</h4>
+        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"></span></button>
       </div>
       <div class="modal-body">
         <p>After 'Data Delivered' is set, you cannot make any changes. Do you want to save changes? </p>
       </div>
       <div class="modal-footer">
         <button id="bioinfo-confirm-save" type="button" class="btn btn-primary">Save changes</button>
-        <button id="bioinfo-confirm-cancel" type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button id="bioinfo-confirm-cancel" type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
@@ -70,40 +74,40 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title">Edit history for project {{ project_id }}</h4>
+        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"></span></button>
       </div>
       <div class="modal-body">
-        <div class="panel-group" id="bioinfo_history_accordion">
+        <div class="accordion" id="bioinfo_history_accordion">
           {% for user_timestamp in sorted(edit_history.keys(), reverse=True) %}
           {% set history=edit_history.get(user_timestamp, {}) %}
-          <div class="panel panel-default">
-            <div class="panel-heading">
-               <h4 class="panel-title">
+          <div class="accordion-item accordion-item-prettify">
+            <div class="accordion-default-header">
+               <h4 class="accordion-header">
 
-                 <a class="timestamp" data-toggle="collapse" data-parent="#bioinfo_history_accordion"
+                 <a class="timestamp text-decoration-none text-dark collapsed" data-toggle="collapse" data-parent="#bioinfo_history_accordion"
                     href="#history_{{ user_timestamp[1].replace(' ', '-') }}_{{ user_timestamp[0].replace(' ', '-').replace(':', '-') }}">
                    {{ user_timestamp[0] }}</a>
-                 <span class="pull-right">
-                   <a data-toggle="collapse" data-parent="#bioinfo_history_accordion"
+                 <span class="float-right">
+                   <a class="text-decoration-none text-muted" data-toggle="collapse" data-parent="#bioinfo_history_accordion"
                       href="#history_{{ user_timestamp[1].replace(' ', '-') }}_{{ user_timestamp[0].replace(' ', '-').replace(':', '-') }}">
                      <small><em>User:</em> <strong>{{ user_timestamp[1] }}</strong></small></a>&nbsp;
-                   <button class="btn btn-default btn-xs pull-right btn-reset-history-timestamp">
-                     <span class="glyphicon glyphicon-copy" data-toggle="tooltip" data-placement="bottom" title="This applies changes on top of the current changes. It does not update the DB. To update DB, close this window and press 'Save Changes'"></span>
+                   <button class="btn btn-light btn-xs float-right btn-reset-history-timestamp">
+                     <span class="fa fa-file-import" data-toggle="tooltip" data-placement="bottom" title="This applies changes on top of the current changes. It does not update the DB. To update DB, close this window and press 'Save Changes'"></span>
                    </button>
                  </span>
                </h4>
             </div>
             <div id="history_{{ user_timestamp[1].replace(' ', '-') }}_{{ user_timestamp[0].replace(' ', '-').replace(':', '-') }}"
-                 class="panel-collapse collapse">
-              <div class="panel-body">
+                 class="accordion-collapse collapse">
+              <div class="accordion-body">
                 <table class="table table-bordered">
                   <tbody>
                     {% for flowcell_lane_sample in sorted(history.keys()) %}
-                      <tr class="history-header">
+                      <tr class="history-header darkth">
                         <th colspan="2"><span>{{ flowcell_lane_sample[0] }}-{{ flowcell_lane_sample[1] }}-{{ flowcell_lane_sample[2] }}</span>
-                          <button class="btn btn-default btn-xs pull-right btn-reset-history-sample">
-                            <span class="glyphicon glyphicon-copy" data-toggle="tooltip" data-placement="bottom" title="This applies changes on top of the current changes. It does not update the DB. To update DB, close this window and press 'Save Changes'"></span>
+                          <button class="btn btn-light btn-xs float-right btn-reset-history-sample">
+                            <span class="fa fa-file-import" data-toggle="tooltip" data-placement="bottom" title="This applies changes on top of the current changes. It does not update the DB. To update DB, close this window and press 'Save Changes'"></span>
                           </button>
                         </th>
                       </tr>
@@ -141,7 +145,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Close</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
