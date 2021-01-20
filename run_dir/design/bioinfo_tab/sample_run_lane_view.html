@@ -58,10 +58,12 @@
           <th class="bioinfo-status-th bioinfo-status-bp bioinfo-app-applications">Data approved</th>
         {% end %}
         <th class="bioinfo-status-th-date datadelivered">Data Delivered
-          <button class="btn btn-sm btn-light date-reset" {% if project_closed %} disabled="disabled"{% end %}>
-            <i class="fa fa-times"></i></button>
-          <button class="btn btn-sm btn-light datepicker-today" {% if project_closed %} disabled="disabled"{% end %}>
-            <i class="fa fa-arrow-alt-down"></i></button>
+          <nobr>
+            <button class="btn btn-sm btn-light date-reset" {% if project_closed %} disabled="disabled"{% end %}>
+              <i class="fa fa-times"></i></button>
+            <button class="btn btn-sm btn-light datepicker-today" {% if project_closed %} disabled="disabled"{% end %}>
+                <i class="fa fa-arrow-alt-down"></i></button>
+          </nobr>
         </th>
       </tr>
     </thead>
@@ -107,8 +109,8 @@
               <div class="input-group input-group-sm date"><input type="text" class="form-control"
                   {% if project_closed or sample.get('datadelivered','') != '' %} disabled="disabled" {% end %}
                   value="{{ sample.get('datadelivered', '') }}">
-                <button class="input-group-addon date-reset"><i class="fa fa-times"></i></button>
-                <button class="input-group-addon datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
+                <button class="btn btn-outline-dark date-reset"><i class="fa fa-times"></i></button>
+                <button class="btn btn-outline-dark datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
               </div>
             </td>
         </tr>
@@ -119,7 +121,7 @@
             <td></td>
             <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}" class="bioinfo-expand">
               <span class="fa fa-chevron-right"></span></a></td>
-            <td><samp><a href="/flowcells/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
+            <td><samp><a class="text-decoration-none" href="/flowcells/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
             <td class="bioinfo-status-runstate"><span class="badge {{ status_css.get(flowcell['flowcell_status'], 'bg-secondary') }}">{{ flowcell['flowcell_status'] }}</span></td>
             <td class="bioinfo-status-row ?"><span class="fa fa-arrow-alt-right"></span></td>
             <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
@@ -154,8 +156,8 @@
               <div class="input-group input-group-sm date"><input type="text" class="form-control"
                   {% if project_closed or flowcell.get('datadelivered','') != '' %} disabled="disabled" {% end %}
                 value="{{ flowcell.get('datadelivered', '') }}">
-                <button class="input-group-addon date-reset"><i class="fa fa-times"></i></button>
-                <button class="input-group-addon datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
+                <button class="btn btn-outline-dark date-reset"><i class="fa fa-times"></i></button>
+                <button class="btn btn-outline-dark datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
               </div>
             </td>
           </tr>
@@ -218,8 +220,8 @@
                 <td class="bioinfo-status datadelivered">
                   <div class="input-group input-group-sm date"><input type="text" class="form-control" {% if project_closed or lane.get('datadelivered','') != '' %} disabled="disabled" {% end %}
                     value="{{ lane.get('datadelivered', '') }}">
-                    <button class="input-group-addon date-reset"><i class="fa fa-times"></i></button>
-                    <button class="input-group-addon datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
+                    <button class="btn btn-outline-dark date-reset"><i class="fa fa-times"></i></button>
+                    <button class="btn btn-outline-dark datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
                   </div>
                 </td>
             </tr>

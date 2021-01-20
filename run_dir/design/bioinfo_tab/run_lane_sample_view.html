@@ -21,7 +21,6 @@
         <th class="bioinfo-app-applications" colspan="2">Applications (if applicable)</th>
       {% end %}
       <th>Data Delivered</th>
-      <th></th>
     </tr>
     <tr class="bioinfo-field-names bioinfo-project sticky darkth text-center" id="bioinfo-project-{{ project_id }}">
       <th class="bioinfo-project"><a class="bioinfo-expand text-decoration-none" href="#bioinfo-project-{{ project_id }}">
@@ -59,12 +58,13 @@
         <th class="bioinfo-status-th bioinfo-status-bp bioinfo-app-applications">Data approved</th>
       {% end %}
       <th class="bioinfo-status-th-date datadelivered">Data Delivered
-        <button class="btn btn-sm btn-light date-reset" {% if project_closed %} disabled="disabled"{% end %}>
-          <i class="fa fa-times"></i></button>
-        <button class="btn btn-sm btn-light datepicker-today"{% if project_closed %} disabled="disabled"{% end %}>
-          <i class="fa fa-arrow-alt-down"></i></button>
+        <nobr>
+          <button class="btn btn-sm btn-light date-reset" {% if project_closed %} disabled="disabled"{% end %}>
+            <i class="fa fa-times"></i></button>
+          <button class="btn btn-sm btn-light datepicker-today"{% if project_closed %} disabled="disabled"{% end %}>
+            <i class="fa fa-arrow-alt-down"></i></button>
+        </nobr>
       </th>
-      <th></th>
     </tr>
   </thead>
   <tbody class="text-center">
@@ -110,8 +110,8 @@
               <div class="input-group input-group-sm date">
                 <input type="text" class="form-control" {% if disabled %} disabled="disabled" {% end %}
                   value="{{ flowcell.get('datadelivered', '') }}">
-                <button class="input-group-addon date-reset"><i class="fa fa-times"></i></button>
-                <button class="input-group-addon datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
+                <button class="btn btn-outline-dark date-reset"><i class="fa fa-times"></i></button>
+                <button class="btn btn-outline-dark datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
               </div>
             </td>
         </tr>
@@ -157,8 +157,8 @@
               <div class="input-group input-group-sm date"><input type="text" class="form-control"
                   {% if disabled %} disabled="disabled" {% end %}
                   value="{{ lane.get('datadelivered', '') }}">
-                <button class="input-group-addon date-reset"><i class="fa fa-times"></i></button>
-                <button class="input-group-addon datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
+                <button class="btn btn-outline-dark date-reset"><i class="fa fa-times"></i></button>
+                <button class="btn btn-outline-dark datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
               </div>
             </td>
           </tr>
@@ -222,8 +222,8 @@
                   <div class="input-group input-group-sm date"><input type="text" class="form-control"
                       {% if disabled %} disabled="disabled" {% end %}
                       value="{{ sample.get('datadelivered', '') }}">
-                    <button class="input-group-addon date-reset"><i class="fa fa-times"></i></button>
-                    <button class="input-group-addon datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
+                    <button class="btn btn-outline-dark date-reset"><i class="fa fa-times"></i></button>
+                    <button class="btn btn-outline-dark datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
                   </div>
                 </td>
             </tr>
