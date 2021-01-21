@@ -37,13 +37,13 @@ Description: Shows a table with all genomics-status users with options to modify
     <thead>
       <tr class="sticky darkth">
         <th class="sort" data-sort="user_name">User Name</th>
-        <th class="sort" data-sort="role">Role</th>
+        <th class="sort" data-sort="permissions">Permissions</th>
       </tr>
     </thead>
     <tfoot>
       <tr class="darkth">
         <th class="sort" data-sort="user_name">User Name</th>
-        <th class="sort" data-sort="role">Roles</th>
+        <th class="sort" data-sort="permissions">Permissions</th>
       </tr>
     </tfoot>
     <tbody class="list" id="user_table_body">
@@ -62,7 +62,7 @@ Description: Shows a table with all genomics-status users with options to modify
         </div>
         <div class="modal-body">
           <form id="createUserForm" class="form" role="form">
-            <p class="fw-bold">Create new user for Genomics-Status with the specified roles.</p>
+            <p class="fw-bold">Create new user for Genomics-Status with the specified permissions.</p>
             <div class="row">
               <div class="col-6">
                 <div>
@@ -71,9 +71,9 @@ Description: Shows a table with all genomics-status users with options to modify
                   <input class="form-control" id="createUserName" placeholder="Name..." type="text">
                 </div>
               </div>
-              <div class="col-4 ml-5">
-                <label class="control-label fw-bold">Roles</label>
-                <p class="text-muted mb-1"> Choose user role</p>
+              <div class="col-5 ml-5">
+                <label class="control-label fw-bold">Permissions</label>
+                <p class="text-muted mb-1"> Optionally add permissions</p>
                 {% for role, Role in roles.items() %}
                   <div class="form-check-lg create-user-role-checkbox">
                     <input class="form-check-input" type="checkbox" value="{{role}}" id="create_check_{{role}}" data-label="{{Role}}">
@@ -119,7 +119,7 @@ Description: Shows a table with all genomics-status users with options to modify
                 </div>
               </div>
               <div class="col">
-                <label class="fw-bold">Roles</label>
+                <label class="fw-bold">Permissions</label>
                 {% for role, Role in roles.items() %}
                   <div class="form-check-lg modify-user-role-checkbox">
                     <input class="form-check-input" type="checkbox" value="{{role}}" id="check_{{role}}" data-label="{{Role}}">
