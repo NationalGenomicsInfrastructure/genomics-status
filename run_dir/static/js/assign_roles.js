@@ -31,7 +31,7 @@ $(function(){
         //Main table
         var tbl_row = $('<tr>');
         tbl_row.append($('<td>')
-          .html('<button class="btn btn-sm mr-2 btn-danger delete-user-btn" data-user=' + name + '><i class="fa fa-times"></i></button>' + name)
+          .html('<button class="btn btn-sm mr-3 ml-2 btn-outline-danger delete-user-btn" data-user=' + name + '><i class="fa fa-times"></i></button>' + name)
         );
         if(role){
           role_list = Object.values(role).toString()
@@ -110,7 +110,7 @@ $(function(){
         roles[role] = Role
     })
     $('#submitCreateUserBtn').addClass('disabled').text('Saving...');
-    modifyUser('create', 'submitCreateUserBtn', 'Save', $.trim($('#formCreateUser').val()), roles);
+    modifyUser('create', 'submitCreateUserBtn', 'Save', $.trim($('#createUserName').val()), roles);
   });
 
   $('body').on('click', '.delete-user-btn', function(event) {

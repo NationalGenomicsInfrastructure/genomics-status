@@ -54,65 +54,41 @@ Description: Shows a table with all genomics-status users with options to modify
   </div>
 
   <div id="createUserModal" class="modal fade">
-    <div class="modal-dialog modal-md">
+    <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header">
-          <h4>Create New User for Genomics-Status </h4>
+        <div class="modal-header bg-light">
+          <h4 class="modal-title"><i class="fa fa-plus mr-2"></i>Add User</h4>
           <button type="button" class="btn-close" data-dismiss="modal"><span class="sr-only">Cancel</span></button>
         </div>
         <div class="modal-body">
-          <form id="createUserForm" class="form form-search" role="form">
+          <form id="createUserForm" class="form" role="form">
+            <p class="fw-bold">Create new user for Genomics-Status with the specified roles.</p>
             <div class="row">
-              <div class="col-sm-11">
-                <p><b>Create new user.</b></p>
-              </div>
-            </div>
-            <div class="project_page_border_style">
-              <div class="form-group row">
-                <div class="form-group col-sm-6 mx-auto">
-                  <div class="text-center">
-                    <div class="row">
-                      <label for="userName" class="col fw-bold">Name</label>
-                    </div>
-                    <div class="row">
-                      <div id="userName" class="col-xs-12">
-                        <input class="form-control" id="formCreateUser" placeholder="Name..." type="text">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="form-group col-sm-6 mx-auto">
-                  <div class="text-center">
-                    <label class="control-label fw-bold">Roles</label>
-                    {% for role, Role in roles.items() %}
-                      <div class="form-check-lg create-user-role-checkbox">
-                        <input class="form-check-input" type="checkbox" value="{{role}}" id="create_check_{{role}}" data-label="{{Role}}">
-                        <label class="form-check-label" for="create_check_{{role}}">
-                          {{Role}}
-                        </label>
-                      </div>
-                    {% end %}
-                  </div>
+              <div class="col-6">
+                <div>
+                  <label for="createUserName" class="fw-bold">Name</label>
+                  <p class="text-muted mb-1">Enter user email (only scilifelab addresses).</p>
+                  <input class="form-control" id="createUserName" placeholder="Name..." type="text">
                 </div>
               </div>
-              <div class="form-group row">
-                <div class="form-group col-sm-6 mx-auto">
-                  <div class="text-center">
-                    <p>Enter user email (only scilifelab addresses).</p>
+              <div class="col-4 ml-5">
+                <label class="control-label fw-bold">Roles</label>
+                <p class="text-muted mb-1"> Choose user role</p>
+                {% for role, Role in roles.items() %}
+                  <div class="form-check-lg create-user-role-checkbox">
+                    <input class="form-check-input" type="checkbox" value="{{role}}" id="create_check_{{role}}" data-label="{{Role}}">
+                    <label class="form-check-label" for="create_check_{{role}}">
+                      {{Role}}
+                    </label>
                   </div>
-                </div>
-                <div class="form-group col-sm-6 mx-auto">
-                  <div class="text-center">
-                    <p> Choose user role</p>
-                  </div>
-                </div>
+                {% end %}
               </div>
             </div>
           </form>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
-          <button class="btn btn-primary btn-sm search-action" data-action="submitCreateUser" type="button" id="submitCreateUserBtn">Save</button>
+          <button class="btn btn-secondary" data-dismiss="modal" aria-hidden="true">Cancel</button>
+          <button class="btn btn-primary" type="button" id="submitCreateUserBtn">Save</button>
         </div>
       </div>
     </div>
