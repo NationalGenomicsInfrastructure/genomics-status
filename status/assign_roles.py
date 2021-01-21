@@ -32,9 +32,6 @@ class AssignRolesUsersHandler(SafeHandler):
     def post(self):
         data = json.loads(self.request.body)
         userToChange = data['username']
-        headers = {"Accept": "application/json",
-                   "Authorization": "Basic " + "{}:{}".format(base64.b64encode(bytes(self.application.settings.get("username", None), 'ascii')),
-                   base64.b64encode(bytes(self.application.settings.get("password", None), 'ascii')))}
 
         view_result = self.application.gs_users_db.view('authorized/users', key=userToChange)
         idtoChange = view_result.rows[0].value if view_result.rows else ''
@@ -54,11 +51,9 @@ class AssignRolesUsersHandler(SafeHandler):
                     self.set_status(201)
                     self.write({'success': 'success!!'})
             else:
-                user_url = "{}/gs_users/{}".format(self.application.settings.get("couch_server"), idtoChange)
-                r = requests.get(user_url, headers=headers).content.rstrip()
-                user_doc=json.loads(r)
+                user_doc = self.application.gs_users_db.get(idtoChange)
                 if action=='modify' and idtoChange:
-                    user_doc['role'] = data['role']
+                    user_doc['roles'] = data['roles']
                     try:
                         self.application.gs_users_db.save(user_doc)
                     except Exception as e:

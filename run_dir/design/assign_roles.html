@@ -36,7 +36,7 @@ Description: Shows a table with all genomics-status users with options to modify
     <tfoot>
       <tr class="darkth">
         <th class="sort" data-sort="user_name">User Name</th>
-        <th class="sort" data-sort="role">Role</th>
+        <th class="sort" data-sort="role">Roles</th>
       </tr>
     </tfoot>
     <tbody class="list" id="user_table_body">
@@ -73,17 +73,15 @@ Description: Shows a table with all genomics-status users with options to modify
                 </div>
                 <div class="form-group col-sm-6 mx-auto">
                   <div class="text-center">
-                    <label for="roles_dropdown" class="control-label fw-bold">Choose Role</label>
-                    <div id="roles_dropdown" class="changingDropdown">
-                      <button class="btn btn-secondary dropdown-toggle wrapStyle" type="button" id="roles_dropdownBtn" data-toggle="dropdown">
-                        <i class="fa fa-list-alt" data-userrole='user'></i> User <span class="caret"></span>
-                      </button>
-                      <ul id="roles_dropdownul" class="dropdown-menu dropdown-menu-center dropdown-menu-wide" role="menu" aria-labelledby="roles_dropdownBtn"  style="z-index: 200;">
-                      {% for role, Role in roles.items() %}
-                        <li><a href="#" class="dropdown-item clickDropdownGetValue" data-userrole="{{role}}">{{Role}}</a></li>
-                      {% end %}
-                      </ul>
-                    </div>
+                    <label class="control-label fw-bold">Roles</label>
+                    {% for role, Role in roles.items() %}
+                      <div class="form-check-lg create-user-role-checkbox">
+                        <input class="form-check-input" type="checkbox" value="{{role}}" id="create_check_{{role}}" data-label="{{Role}}">
+                        <label class="form-check-label" for="create_check_{{role}}">
+                          {{Role}}
+                        </label>
+                      </div>
+                    {% end %}
                   </div>
                 </div>
               </div>
@@ -133,52 +131,28 @@ Description: Shows a table with all genomics-status users with options to modify
                       <label for="pickUser" class="col fw-bold">Name</label>
                     </div>
                     <div class="row btn-group btn-block mb-3">
-                      <div id="pickUser" class="changingDropdown">
+                      <div id="pickUser" class="changingDropdown dropdown">
                         <button class="btn btn-secondary dropdown-toggle wrapStyle" type="button" id="pickUserBtn" data-toggle="dropdown">
                           <i class="fa fa-list-alt"></i> Choose User <span class="caret"></span>
                         </button>
+                        <ul id="pickUserul" class="dropdown-menu dropdown-menu-center dropdown-menu-wide" role="menu" aria-labelledby="pickUserBtn"  style="z-index: 200; height: 400px; overflow-y: scroll;">
+                        </ul>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div class="form-group row">
-                <div class="form-group col-sm mx-auto">
-                  <div class="text-center">
-                    <label for="modDelRadio" class="control-label fw-bold">Choose Function</label>
-                    <div id="modDelRadio">
-                      <div class="btn-group  mb-3" role="group">
-                        <input type="radio" class="btn-check" name="modDelBtn" id="modDelBtnModify" autocomplete="off">
-                        <label class="btn btn-outline-primary rBtngp1" for="modDelBtnModify">
-                           Modify
-                        </label>
-                        <input type="radio" class="btn-check" name="modDelBtn" id="modDelBtnDelete" autocomplete="off">
-                        <label class="btn btn-outline-primary rBtngp1" for="modDelBtnDelete">
-                           Delete
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div class="row">
+                <label class="col fw-bold">Roles</label>
               </div>
-              <div class="form-group row" id="currRoleRow" style="display: none;">
-                <div class="form-group col-sm mx-auto">
-                  <div class="text-center">
-                    <div class="row">
-                      <label for="currRole" class="col fw-bold">Role</label>
-                    </div>
-                    <div class="row btn-group btn-block mb-3">
-                      <div id="currRole" class="changingDropdown">
-                        <button class="btn btn-secondary dropdown-toggle wrapStyle" type="button" id="currRoleBtn" data-toggle="dropdown"><i class="fa fa-list-alt" data-userrole='user'></i> User<span class="caret"></span></button>
-                        <ul id="currrole_dropdownul" class="dropdown-menu dropdown-menu-center dropdown-menu-wide" role="menu" aria-labelledby="currRoleBtn"  style="z-index: 200;">
-                        {% for role, Role in roles.items() %}
-                          <li><a href="#" class="dropdown-item clickDropdownGetValue" data-userrole="{{role}}">{{Role}}</a></li>
-                        {% end %}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+              {% for role, Role in roles.items() %}
+              <div class="form-check-lg modify-user-role-checkbox">
+                <input class="form-check-input" type="checkbox" value="{{role}}" id="check_{{role}}" data-label="{{Role}}">
+                <label class="form-check-label" for="check_{{role}}">
+                  {{Role}}
+                </label>
               </div>
+              {% end %}
             </div>
           </form>
         </div>
@@ -219,7 +193,7 @@ Description: Shows a table with all genomics-status users with options to modify
     </div>
   </div>
 
-  <script src="/static/js/assign_roles.js" id="asrol-js" data-user='{{ user.email }}'></script>
+  <script src="/static/js/assign_roles.js?v={{ gs_globals['git_commit'] }}" id="asrol-js" data-user='{{ user.email }}'></script>
   <script src="/static/js/jquery.dataTables.min.js"></script>
   <script src="/static/js/jquery-ui.min.js"></script>
 {% end %}
