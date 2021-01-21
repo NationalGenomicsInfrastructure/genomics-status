@@ -65,7 +65,7 @@
                       <li><a href="/proj_meta">Compare Project Meta</a></li>
                       <li><a href="/instrument_logs">View Instrument Logs</a></li>
                       <li><a href="/barcode">Barcode and Label printing</a></li>
-                      {% if user and user.role == 'admin'%}
+                      {% if user and user.is_admin %}
                       <li><a href="/assign_roles">User Roles</a></li>
                       {% end %}</li>
                       <li role="separator" class="divider"></li>
