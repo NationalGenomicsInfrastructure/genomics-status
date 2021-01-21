@@ -1,15 +1,15 @@
 {% extends "base_b5.html" %}
 
 <!--
-Template file: assign_roles.html
-URL: /assign_roles
-Title: displays all the users quthorized to use genomics-status
+Template file: user_management.html
+URL: /user_management
+Title: displays all the users authorized to use genomics-status
 Description: Shows a table with all genomics-status users with options to modify them.
 -->
 
 {% block stuff %}
 <div class="container-xxl">
-<h1 class="page_title my-4"><span id="page_title">Assign Roles</span> <small class="text-muted">Create and modify users</small></h1>
+<h1 class="page_title my-4"><span id="page_title">User Management</span> <small class="text-muted">Create and modify users of Genomics Status</small></h1>
 
 {% if user.role != 'admin'%}
 

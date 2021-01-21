@@ -36,10 +36,14 @@ ERROR_CODES = {
 class User(object):
     """A minimal user class """
 
-    def __init__(self, name, email, role):
+    def __init__(self, name, email, roles):
         self.name = name
         self.email = email
-        self.role = role
+        self.roles = roles
+
+    @property
+    def is_admin(self):
+        return 'admin' in self.roles
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -61,7 +65,7 @@ class BaseHandler(tornado.web.RequestHandler):
         # Disables authentication if test mode to ease integration testing
         if self.application.test_mode:
             name = 'Testing User!'
-            role = 'admin'
+            roles = ['admin']
             email = 'Testing User!'
         else:
             name = str(self.get_secure_cookie("user"), 'utf-8') if self.get_secure_cookie("user") else None
@@ -69,9 +73,9 @@ class BaseHandler(tornado.web.RequestHandler):
             if name:
                 if (name[0] == '"') and (name[-1] == '"'):
                     name = name[1:-1]
-            role = str(self.get_secure_cookie("role"), 'utf-8') if self.get_secure_cookie("role") else 'user'
+            roles = str(self.get_secure_cookie("roles"), 'utf-8') if self.get_secure_cookie("roles") else ['user']
             email = str(self.get_secure_cookie("email"), 'utf-8') if self.get_secure_cookie("email") else None
-        user = User(name, email, role)
+        user = User(name, email, roles)
         if user.name:
             return user
         else:

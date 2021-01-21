@@ -1,32 +1,30 @@
-import tornado.web
 import json
-import time
-import copy
-import base64
-import requests
 
 from status.util import SafeHandler
 
 
-class AssignRolesHandler(SafeHandler):
+class UserManagementHandler(SafeHandler):
     """ Serves a page with users and roles listed, with the option to create new users
     URL: /assign_roles
     """
+
     def get(self):
-        t = self.application.loader.load("assign_roles.html")
+        t = self.application.loader.load("user_management.html")
+        user_roles = self.application.gs_users_db.view("authorized/roles", reduce=False)
         self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(),
         roles=self.application.genstat_defaults['roles']))
 
 
-class AssignRolesUsersHandler(SafeHandler):
+class UserManagementDataHandler(SafeHandler):
     """Serves the data for populating user roles table and also methods to modify user roles
-    URL: /api/v1/assign_roles/users
+    URL: /api/v1/user_managment/users
     """
+
     def get(self):
         self.set_header("Content-type", "application/json")
-        view_result={}
+        view_result = {}
         for row in self.application.gs_users_db.view('authorized/roles'):
-            view_result[row.key]=row.value
+            view_result[row.key] = row.value
         self.write(view_result)
 
     def post(self):
@@ -52,7 +50,7 @@ class AssignRolesUsersHandler(SafeHandler):
                     self.write({'success': 'success!!'})
             else:
                 user_doc = self.application.gs_users_db.get(idtoChange)
-                if action=='modify' and idtoChange:
+                if action == 'modify' and idtoChange:
                     user_doc['roles'] = data['roles']
                     try:
                         self.application.gs_users_db.save(user_doc)
@@ -63,7 +61,7 @@ class AssignRolesUsersHandler(SafeHandler):
                     self.set_status(201)
                     self.write({'success': 'success!!'})
 
-                elif action=='delete' and idtoChange:
+                elif action == 'delete' and idtoChange:
                     try:
                         self.application.gs_users_db.delete(user_doc)
                     except Exception as e:

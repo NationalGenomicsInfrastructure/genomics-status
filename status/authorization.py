@@ -15,13 +15,16 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                 )
             user = GoogleUser(user_token)
             user_view = self.application.gs_users_db.view("authorized/users", reduce=False)
-            user_role = self.application.gs_users_db.view("authorized/roles", reduce=False)
+            user_roles = self.application.gs_users_db.view("authorized/roles", reduce=False)
             if user.authenticated and user.is_authorized(user_view):
                 self.set_secure_cookie('user', user.display_name)
                 #It will have at least one email (otherwise she couldn't log in)
                 self.set_secure_cookie('email', user.emails[0])
-                user_role=[*user_role[user.emails[0]].rows[0].value][0] if user_role[user.emails[0]].rows[0].value else 'user'
-                self.set_secure_cookie('role', user_role)
+                if user_roles[user.emails[0]].rows[0].value:
+                    user_roles = [*user_roles[user.emails[0]].rows[0].value]
+                else:
+                    user_roles = ['user']
+                self.set_secure_cookie('roles', user_roles)
                 url=self.get_secure_cookie("login_redirect")
                 self.clear_cookie("login_redirect")
                 if url is None:
