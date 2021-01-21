@@ -502,6 +502,7 @@ width:30%;
 .table-bioinfo-status td, .table-bioinfo-status th {
   text-align: center;
   vertical-align: middle;
+  border-color:rgb(221, 221, 221);
 }
 .table-bioinfo-status td.unknown {
   color: #ccc;
@@ -524,6 +525,10 @@ width:30%;
 }
 .bioinfo-status-disabled.bioinfo-delivered td.bioinfo-status-runstate {
   cursor: pointer;
+}
+
+.table-bioinfo-status td.datadelivered {
+    min-width: 150px;
 }
 
 /*
@@ -612,6 +617,9 @@ width:30%;
   overflow-y:scroll;
 }
 
+th.sort{
+  cursor: pointer;
+}
 /* Deliveries page */
 .bi-fc-runningnote, .bi-project-note {
   color: #777;
