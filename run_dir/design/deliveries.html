@@ -98,94 +98,82 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           <dd>
             <button data-toggle="modal" data-target="#runningNotesModalDeliveries"
                     class="btn btn-xs btn-outline-dark float-right runningNotesModalDeliveries_button project_runningNotes">See all</button>
-            <div class="bi-project-note">{{ project['latest_running_note']['timestamp'] }} - {{ project['latest_running_note']['user'] }}</div>
-            <div class="bi-project-note">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>
+            <div class="bi-project-note bi-project-note-header">{{ project['latest_running_note']['timestamp'] }} - {{ project['latest_running_note']['category'] }} - {{ project['latest_running_note']['user'] }}</div>
+            <div class="bi-project-note bi-project-note-text">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>
           </dd>
         </dl>
-        <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
-          <thead>
-            <tr class="bioinfo-project darkth" id="bioinfo-project-{{ project_id }}">
-              <th class="bioinfo-project">
-                <a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
-                  <span class="fa fa-chevron-right"></span>
-                </a>
-              </th>
-              <th></th>
-              <th style="width: 25%;">Run ID</th>
-              <th style="width: 10%;">Status</th>
-              <th style="width: 15%;" class="hide-incoming">Checklists</th>
-              <th style="width: 50%;" class="hide-incoming">Latest running note</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for flowcell_id, flowcell in sorted(project['runs'].items()) %}
-            <tr class="bioinfo-fc" id="bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
-              <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" class="bioinfo-expand">
-                  <span class="fa fa-chevron-right"></span></a></td>
-              <td></td>
-              <td class="bioinfo-granularity"><samp><a class="text-decoration-none" href="/flowcells/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
-              <td><span class="bioinfo-status badge {{ status_css.get(flowcell['flowcell_status'], 'bg-primary') }}">{{ flowcell['flowcell_status'] }}</span></td>
-                <td class="bi-run-pwf hide-incoming {% if flowcell['checklist']['total'] == flowcell['checklist']['completed'] %} table-success {% else %} table-warning {% end %}">
-                  <div class="progress">
-                    <div class="progress-bar progress-bar-striped bg-success" style="width:{{ float(flowcell['checklist']['completed']) / float(flowcell['checklist']['total']) * 100.0 }}%"
-                         title="{{ flowcell['checklist']['completed'] }} completed" data-toggle="tooltip">{{ flowcell['checklist']['completed'] }}</div>
-                  </div>
-                </td>
-              {% set default_note = {'note': '-'} %}
-              <td class="bioinfo-running-notes" data-running-note="{{ flowcell.get('latest_running_note', default_note)['note'] }}">
-                <div contenteditable="true">{{ flowcell.get('latest_running_note', default_note)['note'] }}</div><button class="bioinfo-running-notes-save btn btn-xs btn-outline-dark">Save</button>
-                <button class="bioinfo-running-notes-cancel btn btn-xs btn-outline-dark">Cancel</button>
-              </td>
-            </tr>
-            {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
-              <tr class="bioinfo-lane" id="bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}"
-                  data-parent="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" style="display:none;">
-                <td></td>
-                <td class="bioinfo-status-expand"><a href="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" class="bioinfo-expand">
-                    <span class="fa fa-chevron-right"></span></a></td>
-                <td class="bioinfo-granularity"><samp>{{ lane_id }}</samp></td>
-                <td><span class="bioinfo-status badge {{ status_css.get(lane['lane_status'], 'bg-primary') }}">{{ lane['lane_status'] }}</span></td>
-                <td class="bi-run-pwf hide-incoming {% if lane['checklist']['total'] == lane['checklist']['completed'] %} table-success {% else %} table-warning {% end %}">
-                  <div class="progress">
-                    <div class="progress-bar progress-bar-striped bg-success" style="width:{{ float(lane['checklist']['completed']) / float(lane['checklist']['total']) * 100.0 }}%"
-                         title="{{ lane['checklist']['completed'] }} completed" data-toggle="tooltip">{{ lane['checklist']['completed'] }}</div>
-                  </div>
-                </td>
-                <td class="bioinfo-running-notes" data-running-note="{{ lane.get('latest_running_note', default_note)['note'] }}">
-                  <div contenteditable="true">{{ lane.get('latest_running_note', default_note)['note'] }}</div>
-                  <button class="bioinfo-running-notes-save btn btn-xs btn-outline-dark">Save</button>
-                  <button class="bioinfo-running-notes-cancel btn btn-xs btn-outline-dark">Cancel</button></td>
+        <div class="col-10 offset-1">
+          <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
+            <thead>
+              <tr class="bioinfo-project darkth" id="bioinfo-project-{{ project_id }}">
+                <th class="bioinfo-project" style="width: 3%;">
+                  <a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
+                    <span class="fa fa-chevron-right"></span>
+                  </a>
+                </th>
+                <th style="width: 3%;"></th>
+                <th style="width: 39%;">Run ID</th>
+                <th style="width: 15%;">Status</th>
+                <th class="hide-incoming" style="width: 40%;">Checklists</th>
               </tr>
-              {% for sample_id, sample in sorted(lane['samples'].items()) %}
-                {% set passed = len(sample['checklist']['passed']) %}
-                {% set warnings = len(sample['checklist']['warnings']) %}
-                {% set failed = len(sample['checklist']['failed']) %}
-                <!--division by zero-->
-                {% set total = max(len(sample['checklist']['total']), 1) %}
-                <tr class="bioinfo-sample" id="bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
-                    data-parent="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
-                  <td></td>
-                  <td><a href="#bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
-                      class="bioinfo-expand text-decoration-none"></a></td>
-                  <td class="bioinfo-granularity"><samp>{{ sample_id }}</samp></td>
-                  <td><span class="bioinfo-status badge {{ status_css.get(sample['status'], 'bg-primary') }}">{{ sample['status'] }}</span></td>
-                  <td class="bi-run-pwf hide-incoming {% if passed + warnings + failed < total %} table-warning {% else %} table-success {% end %}">
+            </thead>
+            <tbody>
+              {% for flowcell_id, flowcell in sorted(project['runs'].items()) %}
+              <tr class="bioinfo-fc" id="bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
+                <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" class="bioinfo-expand">
+                    <span class="fa fa-chevron-right"></span></a></td>
+                <td></td>
+                <td class="bioinfo-granularity"><samp><a class="text-decoration-none" href="/flowcells/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
+                <td><span class="bioinfo-status badge {{ status_css.get(flowcell['flowcell_status'], 'bg-primary') }}">{{ flowcell['flowcell_status'] }}</span></td>
+                  <td class="bi-run-pwf hide-incoming {% if flowcell['checklist']['total'] == flowcell['checklist']['completed'] %} table-success {% else %} table-warning {% end %}">
                     <div class="progress">
-                      <div class="progress-bar progress-bar-striped bg-success" style="width:{{ float(passed) / float(total) * 100.0 }}%" title="{{ passed }} Passes" data-toggle="tooltip">{{ passed }}</div>
-                      <div class="progress-bar progress-bar-striped bg-warning" style="width:{{ float(warnings) / float(total) * 100.0 }}%" title="{{ warnings }} Warnings" data-toggle="tooltip">{{ warnings }}</div>
-                      <div class="progress-bar progress-bar-striped bg-danger" style="width:{{ float(failed) / float(total) * 100.0 }}%" title="{{ failed }} Fail" data-toggle="tooltip">{{ failed }}</div>
+                      <div class="progress-bar progress-bar-striped bg-success" style="width:{{ float(flowcell['checklist']['completed']) / float(flowcell['checklist']['total']) * 100.0 }}%"
+                           title="{{ flowcell['checklist']['completed'] }} completed" data-toggle="tooltip">{{ flowcell['checklist']['completed'] }}</div>
                     </div>
                   </td>
-                  <td class="bioinfo-running-notes" data-running-note="{{ sample.get('latest_running_note', default_note)['note'] }}">
-                    <div contenteditable="true">{{ sample.get('latest_running_note', default_note)['note'] }}</div>
-                    <button class="bioinfo-running-notes-save btn btn-xs btn-outline-dark">Save</button>
-                    <button class="bioinfo-running-notes-cancel btn btn-xs btn-outline-dark">Cancel</button></td>
+              </tr>
+              {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
+                <tr class="bioinfo-lane" id="bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}"
+                    data-parent="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" style="display:none;">
+                  <td></td>
+                  <td class="bioinfo-status-expand"><a href="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" class="bioinfo-expand">
+                      <span class="fa fa-chevron-right"></span></a></td>
+                  <td class="bioinfo-granularity"><samp>{{ lane_id }}</samp></td>
+                  <td><span class="bioinfo-status badge {{ status_css.get(lane['lane_status'], 'bg-primary') }}">{{ lane['lane_status'] }}</span></td>
+                  <td class="bi-run-pwf hide-incoming {% if lane['checklist']['total'] == lane['checklist']['completed'] %} table-success {% else %} table-warning {% end %}">
+                    <div class="progress">
+                      <div class="progress-bar progress-bar-striped bg-success" style="width:{{ float(lane['checklist']['completed']) / float(lane['checklist']['total']) * 100.0 }}%"
+                           title="{{ lane['checklist']['completed'] }} completed" data-toggle="tooltip">{{ lane['checklist']['completed'] }}</div>
+                    </div>
+                  </td>
                 </tr>
-              {% end %} <!-- end samples-->
-            {% end %} <!--end lanes-->
-          {% end %} <!--end flowcells-->
-          </tbody>
-        </table>
+                {% for sample_id, sample in sorted(lane['samples'].items()) %}
+                  {% set passed = len(sample['checklist']['passed']) %}
+                  {% set warnings = len(sample['checklist']['warnings']) %}
+                  {% set failed = len(sample['checklist']['failed']) %}
+                  <!--division by zero-->
+                  {% set total = max(len(sample['checklist']['total']), 1) %}
+                  <tr class="bioinfo-sample" id="bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
+                      data-parent="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
+                    <td></td>
+                    <td><a href="#bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
+                        class="bioinfo-expand text-decoration-none"></a></td>
+                    <td class="bioinfo-granularity"><samp>{{ sample_id }}</samp></td>
+                    <td><span class="bioinfo-status badge {{ status_css.get(sample['status'], 'bg-primary') }}">{{ sample['status'] }}</span></td>
+                    <td class="bi-run-pwf hide-incoming {% if passed + warnings + failed < total %} table-warning {% else %} table-success {% end %}">
+                      <div class="progress">
+                        <div class="progress-bar progress-bar-striped bg-success" style="width:{{ float(passed) / float(total) * 100.0 }}%" title="{{ passed }} Passes" data-toggle="tooltip">{{ passed }}</div>
+                        <div class="progress-bar progress-bar-striped bg-warning" style="width:{{ float(warnings) / float(total) * 100.0 }}%" title="{{ warnings }} Warnings" data-toggle="tooltip">{{ warnings }}</div>
+                        <div class="progress-bar progress-bar-striped bg-danger" style="width:{{ float(failed) / float(total) * 100.0 }}%" title="{{ failed }} Fail" data-toggle="tooltip">{{ failed }}</div>
+                      </div>
+                    </td>
+                  </tr>
+                {% end %} <!-- end samples-->
+              {% end %} <!--end lanes-->
+            {% end %} <!--end flowcells-->
+            </tbody>
+          </table>
+        </div>
       {% end %} <!-- end if -->
     </div>
   {% end %} <!--end ongoing-->
@@ -310,7 +298,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 {% include "running_notes_help.html" %}
 
 <!-- Javascript -->
-<script src="../static/js/deliveries.js"></script>
+<script src="../static/js/deliveries.js" id="deliveries-js" data-user="{{ user.name }}"></script>
 <script src="/static/js/jquery.caretposition.js"></script>
 <script src="/static/js/jquery.sew.js"></script>
 <script src="../static/js/running_notes.js"></script>
