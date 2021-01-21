@@ -95,56 +95,46 @@ Description: Shows a table with all genomics-status users with options to modify
   </div>
 
   <div id="modifyUserModal" class="modal fade">
-    <div class="modal-dialog modal-md">
+    <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header">
-          <h4>Modify User </h4>
+        <div class="modal-header bg-light">
+          <h4><i class="fa fa-wrench mr-2"></i>Modify User</h4>
           <button type="button" class="btn-close" data-dismiss="modal"><span class="sr-only">Cancel</span></button>
         </div>
         <div class="modal-body">
-          <form id="modifyUser" class="form form-search" role="form">
+          <form id="modifyUser" class="form" role="form">
             <div class="row">
-              <div class="col-sm-11">
-                <p><b>Modify existing user in Genomics-Status.</b></p>
-                <p>The user must re-login to Genomics-Status after their profile has been modified for the changes to be reflected.</p>
-              </div>
+              <p class="fw-bold">Modify existing user in Genomics-Status.</p>
+              <p>The user must re-login to Genomics-Status after their profile has been modified for the changes to be reflected.</p>
             </div>
-            <div class="project_page_border_style">
-              <div class="form-group row">
-                <div class="form-group col-sm mx-auto">
-                  <div class="text-center">
-                    <div class="row">
-                      <label for="pickUser" class="col fw-bold">Name</label>
-                    </div>
-                    <div class="row btn-group btn-block mb-3">
-                      <div id="pickUser" class="changingDropdown dropdown">
-                        <button class="btn btn-secondary dropdown-toggle wrapStyle" type="button" id="pickUserBtn" data-toggle="dropdown">
-                          <i class="fa fa-list-alt"></i> Choose User <span class="caret"></span>
-                        </button>
-                        <ul id="pickUserul" class="dropdown-menu dropdown-menu-center dropdown-menu-wide" role="menu" aria-labelledby="pickUserBtn"  style="z-index: 200; height: 400px; overflow-y: scroll;">
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
+            <div class="row">
+              <div class="col">
+                <label for="pickUser" class="fw-bold">Name</label>
+                <div id="pickUser" class="changingDropdown dropdown">
+                  <button class="btn btn-secondary dropdown-toggle wrapStyle" type="button" id="pickUserBtn" data-toggle="dropdown">
+                    <i class="fa fa-list-alt"></i> Choose User <span class="caret"></span>
+                  </button>
+                  <ul id="pickUserul" class="dropdown-menu dropdown-menu-center dropdown-menu-wide" role="menu" aria-labelledby="pickUserBtn"  style="z-index: 200; height: 400px; overflow-y: scroll;">
+                  </ul>
                 </div>
               </div>
-              <div class="row">
-                <label class="col fw-bold">Roles</label>
+              <div class="col">
+                <label class="fw-bold">Roles</label>
+                {% for role, Role in roles.items() %}
+                  <div class="form-check-lg modify-user-role-checkbox">
+                    <input class="form-check-input" type="checkbox" value="{{role}}" id="check_{{role}}" data-label="{{Role}}">
+                    <label class="form-check-label" for="check_{{role}}">
+                      {{Role}}
+                    </label>
+                  </div>
+                {% end %}
               </div>
-              {% for role, Role in roles.items() %}
-              <div class="form-check-lg modify-user-role-checkbox">
-                <input class="form-check-input" type="checkbox" value="{{role}}" id="check_{{role}}" data-label="{{Role}}">
-                <label class="form-check-label" for="check_{{role}}">
-                  {{Role}}
-                </label>
-              </div>
-              {% end %}
             </div>
           </form>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
-          <button class="btn btn-primary btn-sm search-action" data-action="saveUserSettings" type="button" id="saveUserSettingsBtn">Save</button>
+          <button class="btn btn-secondary" data-dismiss="modal" aria-hidden="true">Cancel</button>
+          <button class="btn btn-primary" data-action="saveUserSettings" type="button" id="saveUserSettingsBtn">Save</button>
         </div>
       </div>
     </div>
