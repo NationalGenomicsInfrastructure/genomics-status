@@ -39,7 +39,7 @@ $(function(){
         }
         else{
           tbl_row.append($('<td>')
-            .html('User')
+            .html('')
           );
         }
         $("#user_table_body").append(tbl_row);
