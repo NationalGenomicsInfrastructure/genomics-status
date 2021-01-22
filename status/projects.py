@@ -909,9 +909,9 @@ class ProjectTicketsDataHandler(SafeHandler):
                 total_tickets[ticket.id] = ticket.to_dict()
                 for comment in self.application.zendesk.tickets.comments(ticket=ticket.id):
                     if 'comments' not in total_tickets[ticket.id]:
-                        total_tickets[ticket.id]['comments']=[comment.to_dict()]
+                        total_tickets[ticket.id]['comments']=[{'author':comment.author.name, 'comment': comment.to_dict()}]
                     else:
-                        total_tickets[ticket.id]['comments'].extend([comment.to_dict()])
+                        total_tickets[ticket.id]['comments'].extend([{'author':comment.author.name, 'comment': comment.to_dict()}])
             # Return the most recent ticket first
             self.write(total_tickets)
         except ZenpyException:
