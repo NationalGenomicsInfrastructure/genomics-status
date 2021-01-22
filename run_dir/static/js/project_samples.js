@@ -266,15 +266,15 @@ function load_tickets() {
           v['comments'].reverse();
           $.each(v['comments'], function(k, c){
             var panel_class = 'card-warning';
-						var panel_label = ' &nbsp; <span class="badge bg-warning">Internal</span>';
-            if (c['public']) {
+            var panel_label = ' &nbsp; <span class="badge bg-warning">Internal</span>';
+            if (c['comment']['public']) {
               panel_class = 'bg-light';
-			  panel_label = '';
+              panel_label = '';
             }
-            var updated_at = new Date(c['created_at']);
+            var updated_at = new Date(c['comment']['created_at']);
             ticket += '<div class="card zendesk-ticket mb-2">'+
-                        '<div class="card-header '+panel_class+'">'+updated_at.toGMTString() + panel_label + '</div>'+
-                        '<div class="card-body"><pre style="white-space: pre-wrap; word-break: keep-all;">'+make_markdown(c['body'])+'</pre></div>'+
+                        '<div class="card-header '+panel_class+'">'+c['author']+ ' - '+updated_at.toGMTString() + panel_label + '</div>'+
+                        '<div class="card-body"><pre style="white-space: pre-wrap; word-break: keep-all;">'+make_markdown(c['comment']['body'])+'</pre></div>'+
                       '</div>';
 
           });
