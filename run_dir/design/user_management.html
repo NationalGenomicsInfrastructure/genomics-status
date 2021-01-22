@@ -25,11 +25,6 @@ Description: Shows a table with all genomics-status users with options to modify
           <i class="fa fa-plus mr-2"></i> Create User
         </button>
       </div>
-      <div>
-        <button class="btn btn-primary btn-lg mt-3 w-100" data-toggle="modal" type="button" data-target="#modifyUserModal">
-          <i class="fa fa-wrench mr-2"></i> Modify User
-        </button>
-      </div>
     </div>
   </div>
   <div class="col-10">
@@ -98,7 +93,7 @@ Description: Shows a table with all genomics-status users with options to modify
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header bg-light">
-          <h4><i class="fa fa-wrench mr-2"></i>Modify User</h4>
+          <h4><i class="fa fa-wrench mr-2"></i>User</h4>
           <button type="button" class="btn-close" data-dismiss="modal"><span class="sr-only">Cancel</span></button>
         </div>
         <div class="modal-body">
@@ -107,15 +102,11 @@ Description: Shows a table with all genomics-status users with options to modify
               <p class="fw-bold">Modify existing user in Genomics-Status.</p>
               <p>The user must re-login to Genomics-Status after their profile has been modified for the changes to be reflected.</p>
             </div>
-            <div class="row">
-              <div class="col">
-                <label for="pickUser" class="fw-bold">Name</label>
-                <div id="pickUser" class="changingDropdown dropdown">
-                  <button class="btn btn-secondary dropdown-toggle wrapStyle" type="button" id="pickUserBtn" data-toggle="dropdown">
-                    <i class="fa fa-list-alt"></i> Choose User <span class="caret"></span>
-                  </button>
-                  <ul id="pickUserul" class="dropdown-menu dropdown-menu-center dropdown-menu-wide" role="menu" aria-labelledby="pickUserBtn"  style="z-index: 200; height: 400px; overflow-y: scroll;">
-                  </ul>
+            <div class="row my-2">
+              <div class="col mr-4">
+                <label for="pickUser" class="fw-bold">Modify Name</label>
+                <div>
+                  <input class="form-control" id="formModifyUserName" placeholder="" disabled type="text">
                 </div>
               </div>
               <div class="col">
