@@ -24,7 +24,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                     user_roles = [*user_roles[user.emails[0]].rows[0].value]
                 else:
                     user_roles = ['user']
-                self.set_secure_cookie('roles', user_roles)
+                self.set_secure_cookie('roles', json.dumps(user_roles))
                 url=self.get_secure_cookie("login_redirect")
                 self.clear_cookie("login_redirect")
                 if url is None:
