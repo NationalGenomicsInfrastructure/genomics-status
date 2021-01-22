@@ -45,6 +45,10 @@ class User(object):
     def is_admin(self):
         return 'admin' in self.roles
 
+    @property
+    def is_pricing_admin(self):
+        return 'pricing_admin' in self.roles
+
 
 class BaseHandler(tornado.web.RequestHandler):
     """Base Handler. Handlers should not inherit from this
@@ -73,7 +77,7 @@ class BaseHandler(tornado.web.RequestHandler):
             if name:
                 if (name[0] == '"') and (name[-1] == '"'):
                     name = name[1:-1]
-            roles = str(self.get_secure_cookie("roles"), 'utf-8') if self.get_secure_cookie("roles") else ['user']
+            roles = json.loads(str(self.get_secure_cookie("roles"), 'utf-8')) if self.get_secure_cookie("roles") else ['user']
             email = str(self.get_secure_cookie("email"), 'utf-8') if self.get_secure_cookie("email") else None
         user = User(name, email, roles)
         if user.name:
