@@ -11,7 +11,7 @@ Description: Shows a table with all genomics-status users with options to modify
 <div class="container-xxl">
 <h1 class="page_title my-4"><span id="page_title">User Management</span> <small class="text-muted">Create and modify users of Genomics Status</small></h1>
 
-{% if user.role != 'admin'%}
+{% if not user.is_admin %}
 
   <p>Sorry! Your user role does not allow you to view this page!</p>
 
@@ -165,7 +165,7 @@ Description: Shows a table with all genomics-status users with options to modify
     </div>
   </div>
 
-  <script src="/static/js/assign_roles.js?v={{ gs_globals['git_commit'] }}" id="asrol-js" data-user='{{ user.email }}'></script>
+  <script src="/static/js/user_management.js?v={{ gs_globals['git_commit'] }}" id="asrol-js" data-user='{{ user.email }}'></script>
   <script src="/static/js/jquery.dataTables.min.js"></script>
   <script src="/static/js/jquery-ui.min.js"></script>
 {% end %}

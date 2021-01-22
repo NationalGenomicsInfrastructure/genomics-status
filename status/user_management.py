@@ -34,7 +34,7 @@ class UserManagementDataHandler(SafeHandler):
         view_result = self.application.gs_users_db.view('authorized/users', key=userToChange)
         idtoChange = view_result.rows[0].value if view_result.rows else ''
         action = self.get_argument('action')
-        if self.get_current_user().role == 'admin':
+        if self.get_current_user().is_admin:
             if action == 'create':
                 if idtoChange:
                     self.set_status(409)

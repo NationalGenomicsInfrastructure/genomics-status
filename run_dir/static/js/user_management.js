@@ -25,7 +25,7 @@ $(function(){
     var pickuserdropdown=$('#pickUserul')
 
     pickuserdropdown.append('<li><a href="#" class="dropdown-item clickDropdownGetValue triggerOptionChange" style="cursor:pointer;" data-value="Choose User"> Choose User</a></li>');
-    $.getJSON('/api/v1/assign_roles/users', function (data) {
+    $.getJSON('/api/v1/user_management/users', function (data) {
       tableData=data;
       $.each(data, function(name, role) {
         //Main table
@@ -148,7 +148,7 @@ $(function(){
      $.ajax({
       type: 'POST',
       dataType: 'json',
-      url: '/api/v1/assign_roles/users?action='+option,
+      url: '/api/v1/user_management/users?action='+option,
       data: JSON.stringify({ 'username' : username,
         'roles' : roles}),
       error: function(xhr, textStatus, errorThrown) {
