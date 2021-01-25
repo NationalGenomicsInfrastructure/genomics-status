@@ -26,7 +26,7 @@ $(function(){
         user_td = '<div class="btn-group">' +
                   '<button class="btn btn-sm ml-2 btn-outline-primary btn-large modify-user-btn" data-user=' + name + '><i class="fa fa-wrench mr-1"></i>Modify</button>' +
                   '<button class="btn btn-sm btn-outline-danger btn-large delete-user-btn'
-        if (name != $('#asrol-js').data('user')){
+        if (name == $('#asrol-js').data('user')){
           user_td += ' disabled'
         }
         user_td += '" data-user=' + name + '><i class="fa fa-times mr-1"></i>Delete</button></div>'
