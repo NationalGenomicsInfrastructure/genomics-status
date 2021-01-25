@@ -26,9 +26,9 @@ $(function(){
         user_td = '<div class="btn-group">' +
                   '<button class="btn btn-sm ml-2 btn-outline-primary btn-large modify-user-btn" data-user=' + name + '><i class="fa fa-wrench mr-1"></i>Modify</button>'
         if (name != $('#asrol-js').data('user')){
-          user_td += '<button class="btn btn-sm mr-3 btn-outline-danger btn-large delete-user-btn" data-user=' + name + '><i class="fa fa-times mr-1"></i>Delete</button>'
+          user_td += '<button class="btn btn-sm btn-outline-danger btn-large delete-user-btn" data-user=' + name + '><i class="fa fa-times mr-1"></i>Delete</button>'
         }
-        user_td += '</div>' + name
+        user_td += '</div><span class="ml-3">' + name + '</span>'
 
         tbl_row.append($('<td>').html(user_td));
 
