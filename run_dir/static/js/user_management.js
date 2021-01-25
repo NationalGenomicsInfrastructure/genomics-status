@@ -1,7 +1,7 @@
 /*
-File: assign_roles.js
-URL: /static/js/assign_roles.js
-Powers /assign_roles/ - template is run_dir/design/assign_roles.html
+File: user_management.js
+URL: /static/js/user_management.js
+Powers /user_management/ - template is run_dir/design/user_management.html
 */
 
 // On page load
@@ -57,8 +57,8 @@ $(function(){
           })
 
           /* Fill in the checkboxed based on the chosen users roles */
-          $.each(roles, function(role, Role) {
-              checkbox_id = '#check_' + role;
+          $.each(roles, function(role_key, role_value) {
+              checkbox_id = '#check_' + role_key;
               $(checkbox_id).prop("checked", true);
           });
       });
@@ -99,9 +99,9 @@ $(function(){
   $('body').on('click', '#submitCreateUserBtn', function(event){
     var roles={};
     $('.create-user-role-checkbox input:checked').each(function() {
-        role = this.value
-        Role = $(this).attr('data-label')
-        roles[role] = Role
+        role_key = this.value
+        role_label = $(this).attr('data-label')
+        roles[role_key] = role_label
     })
     $('#submitCreateUserBtn').addClass('disabled').text('Saving...');
     modifyUser('create', 'submitCreateUserBtn', 'Save', $.trim($('#createUserName').val()), roles);
@@ -124,9 +124,9 @@ $(function(){
     var roles={};
     $(this).addClass('disabled').text('Saving...');
     $('.modify-user-role-checkbox input:checked').each(function() {
-      role = this.value
-      Role = $(this).attr('data-label')
-      roles[role] = Role
+      role_key = this.value
+      role_label = $(this).attr('data-label')
+      roles[role_key] = role_label
     })
     modifyUser('modify', 'saveUserSettingsBtn', 'Save', chosenUser, roles);
   });

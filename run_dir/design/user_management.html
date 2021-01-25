@@ -71,11 +71,11 @@ Description: Shows a table with all genomics-status users with options to modify
               <div class="col-5 ml-5">
                 <label class="control-label fw-bold">Permissions</label>
                 <p class="text-muted mb-1"> Optionally add permissions</p>
-                {% for role, Role in roles.items() %}
+                {% for role_key, role_value in roles.items() %}
                   <div class="form-check-lg create-user-role-checkbox">
-                    <input class="form-check-input" type="checkbox" value="{{role}}" id="create_check_{{role}}" data-label="{{Role}}">
-                    <label class="form-check-label" for="create_check_{{role}}">
-                      {{Role}}
+                    <input class="form-check-input" type="checkbox" value="{{role_key}}" id="create_check_{{role_key}}" data-label="{{role_value}}">
+                    <label class="form-check-label" for="create_check_{{role_key}}">
+                      {{role_value}}
                     </label>
                   </div>
                 {% end %}
@@ -113,11 +113,11 @@ Description: Shows a table with all genomics-status users with options to modify
               </div>
               <div class="col">
                 <label class="fw-bold">Permissions</label>
-                {% for role, Role in roles.items() %}
+                {% for role_key, role_value in roles.items() %}
                   <div class="form-check-lg modify-user-role-checkbox">
-                    <input class="form-check-input" type="checkbox" value="{{role}}" id="check_{{role}}" data-label="{{Role}}">
-                    <label class="form-check-label" for="check_{{role}}">
-                      {{Role}}
+                    <input class="form-check-input" type="checkbox" value="{{role_key}}" id="check_{{role_key}}" data-label="{{role_value}}">
+                    <label class="form-check-label" for="check_{{role_key}}">
+                      {{role_value}}
                     </label>
                   </div>
                 {% end %}
