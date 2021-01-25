@@ -24,11 +24,13 @@ $(function(){
         //Main table
         var tbl_row = $('<tr>');
         user_td = '<div class="btn-group">' +
-                  '<button class="btn btn-sm ml-2 btn-outline-primary btn-large modify-user-btn" data-user=' + name + '><i class="fa fa-wrench mr-1"></i>Modify</button>'
+                  '<button class="btn btn-sm ml-2 btn-outline-primary btn-large modify-user-btn" data-user=' + name + '><i class="fa fa-wrench mr-1"></i>Modify</button>' +
+                  '<button class="btn btn-sm btn-outline-danger btn-large delete-user-btn'
         if (name != $('#asrol-js').data('user')){
-          user_td += '<button class="btn btn-sm btn-outline-danger btn-large delete-user-btn" data-user=' + name + '><i class="fa fa-times mr-1"></i>Delete</button>'
+          user_td += ' disabled'
         }
-        user_td += '</div><span class="ml-3">' + name + '</span>'
+        user_td += '" data-user=' + name + '><i class="fa fa-times mr-1"></i>Delete</button></div>'
+        user_td += '<span class="ml-3">' + name + '</span>'
 
         tbl_row.append($('<td>').html(user_td));
 
