@@ -93,15 +93,26 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               <span class="button-reset-bioinfo-responsible fa fa-times text-muted" style="display:none;"></span>
           </small>
         </h3>
-        <dl class="dl-horizontal hide-incoming">
-          <dt>Project running note:</dt>
-          <dd>
-            <button data-toggle="modal" data-target="#runningNotesModalDeliveries"
-                    class="btn btn-xs btn-outline-dark float-right runningNotesModalDeliveries_button project_runningNotes">See all</button>
-            <div class="bi-project-note bi-project-note-header">{{ project['latest_running_note']['timestamp'] }} - {{ project['latest_running_note']['category'] }} - {{ project['latest_running_note']['user'] }}</div>
-            <div class="bi-project-note bi-project-note-text">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>
-          </dd>
-        </dl>
+        <div class="col-10 offset-1">
+          <dl class="dl-horizontal hide-incoming">
+            <dt>Latest running note:
+              <br>
+              <button data-toggle="modal" data-target="#runningNotesModalDeliveries"
+                    class="btn btn-xs btn-outline-dark mt-1 runningNotesModalDeliveries_button project_runningNotes">See all</button>
+            </dt>
+            <dd>
+              <div class="card">
+                  <div class="card-header bi-project-note-header">
+                    <a class="text-decoration-none" href="#">{{ project['latest_running_note']['user'] }}</a> - <span class="todays_date">{{ project['latest_running_note']['timestamp'] }}</span>
+                    {% if project['latest_running_note']['category'] %} - <span class="badge fillbadgecolour"> {{ project['latest_running_note']['category'] }} </span> {% end %}
+                  </div>
+                  <div class="card-body bi-project-note-text">
+                      <div class="running-note-body text-muted">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>
+                  </div>
+              </div>
+            </dd>
+          </dl>
+        </div>
         <div class="col-10 offset-1">
           <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
             <thead>
@@ -227,9 +238,11 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 text-right" style="margin-top:15px;">
+                    <div class="row mt-3">
+                      <div class="col-md-6 text-right" style="margin-top:15px;">
                         <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help"><a>Markdown Help</a></button>
                         <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
+                      </div>
                     </div>
                 </div>
             </div>

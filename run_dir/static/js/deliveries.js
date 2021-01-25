@@ -4,6 +4,9 @@ $(document).ready(function(){
         var raw_html = $(this).html();
         $(this).html( marked(raw_html) );
     });
+    $('.fillbadgecolour').each(function(){
+        $(this).addClass(categories[$(this).html().trim()]);
+    });
 });
 
 $('.deliveries-page').on('click', '.runningNotesModalDeliveries_button', function(e){
