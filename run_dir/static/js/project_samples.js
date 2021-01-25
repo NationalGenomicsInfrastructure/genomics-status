@@ -13,7 +13,8 @@ $(document).ready(function() {
   // Initialise everything - order is important :)
   $.when(load_presets()).done(function(){
     load_all_udfs();
-    load_samples_table();
+    //load_samples_table();
+    select_from_preset('default_preset_buttons', 'Default view');
     load_running_notes();
     load_links();
     load_charon_summary();
@@ -29,16 +30,16 @@ $(document).ready(function() {
   var clipboard = new Clipboard('#proj_samples_copy_table');
   clipboard.on('success', function(e) {
     e.clearSelection();
-    $('#proj_samples_copy_table').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+    $('#proj_samples_copy_table').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
     setTimeout(function(){
-      $('#proj_samples_copy_table').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
+      $('#proj_samples_copy_table').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
     }, 2000);
   });
   // Copy email address to clipboard and change the tooltip
   var email_clipboard = new Clipboard('.email_link a');
   email_clipboard.on('success', function(e) {
-    $('.email_link').attr('title', 'Copy to clipboard').tooltip('fixTitle');
-    $(e.trigger).parent().attr('title', 'Copied!').tooltip('fixTitle').tooltip('show');
+    $('.email_link').attr('title', 'Copy to clipboard').tooltip('_fixTitle');
+    $(e.trigger).parent().attr('title', 'Copied!').tooltip('_fixTitle').tooltip('show');
   });
 
 
@@ -174,12 +175,12 @@ function load_presets() {
 
     // Default presets
     for (var preset in default_presets) {
-      $('#default_preset_buttons').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-default">'+preset+'</button>');
+      $('#default_preset_buttons').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-outline-dark">'+preset+'</button>');
     }
     // User presets, if there are any
     if (!jQuery.isEmptyObject(user_presets)) {
       for (var preset in user_presets) {
-        $('#user_presets_dropdown').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-default">'+preset+'</button>');
+        $('#user_presets_dropdown').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-outline-dark">'+preset+'</button>');
       }
     }
     else {
@@ -200,7 +201,7 @@ function select_from_preset(preset_type, preset) {
 
     //First uncheck everything
     $('#default_preset_buttons button.active').removeClass('active');
-    $('#Filter input:checkbox').removeAttr('checked');
+    $('#Filter input:checkbox').prop('checked', false);
     if (preset_type == "default_preset_buttons") {
       var choices = data['default'][preset];
       var colOrder = {};
@@ -246,34 +247,34 @@ function load_tickets() {
           if(v['status'] == 'on-hold'){ label_class = 'warning'; v['status'] = 'On-Hold'; }
           if(v['status'] == 'solved'){ label_class = 'success'; v['status'] = 'Solved'; }
           if(v['status'] == 'closed'){ label_class = 'success'; v['status'] = 'Closed'; }
-          var title = '<span class="pull-right">'+
-                         '<a class="text-muted" data-toggle="collapse" data-parent="#accordion" href="#zendesk_ticket_'+k+'">'+
+          var title = '<span class="float-right">'+
+                         '<a class="text-muted text-decoration-none" data-toggle="collapse" data-parent="#com_accordion" href="#zendesk_ticket_'+k+'">'+
                            v['created_at'].split('T')[0] +
-                         '</a> &nbsp; <a href="https://ngisweden.zendesk.com/agent/#/tickets/'+k+'" target="_blank" class="btn btn-primary btn-xs">View ticket on ZenDesk</a>'+
+                         '</a> &nbsp; <a href="https://ngisweden.zendesk.com/agent/#/tickets/'+k+'" target="_blank" class="btn btn-primary btn-sm">View ticket on ZenDesk</a>'+
                       '</span>' +
-                      '<h4 class="panel-title">'+
-                        '<span class="label label-' + label_class + '">' + v['status'] + '</span> ' +
-                        '<a data-toggle="collapse" data-parent="#accordion" href="#zendesk_ticket_'+k+'">'+
+                      '<h4 class="card-title mb-0">'+
+                        '<span class="badge bg-' + label_class + '">' + v['status'] + '</span> ' +
+                        '<a class="text-decoration-none text-dark" data-toggle="collapse" data-parent="#com_accordion" href="#zendesk_ticket_'+k+'">'+
                           '#'+k + ' - ' + v['subject'] +
                         '</a>'+
                       '</h4>';
 
-          var ticket = '<div class="panel panel-default">' +
-                        '<div class="panel-heading">'+title+'</div>'+
-                        '<div id="zendesk_ticket_'+k+'" class="panel-collapse collapse"><div class="panel-body">';
+          var ticket = '<div class="card my-2">' +
+                        '<div class="card-header">'+title+'</div>'+
+                        '<div id="zendesk_ticket_'+k+'" class="collapse"><div class="card-body">';
 
           v['comments'].reverse();
           $.each(v['comments'], function(k, c){
-            var panel_class = 'warning';
-						var panel_label = ' &nbsp; <span class="label label-warning">Internal</span>';
+            var panel_class = 'card-warning';
+						var panel_label = ' &nbsp; <span class="badge bg-warning">Internal</span>';
             if (c['public']) {
-              panel_class = 'default';
+              panel_class = 'bg-light';
 			  panel_label = '';
             }
             var updated_at = new Date(c['created_at']);
-            ticket += '<div class="panel panel-'+panel_class+' zendesk-ticket">'+
-                        '<div class="panel-heading">'+updated_at.toGMTString() + panel_label + '</div>'+
-                        '<div class="panel-body"><pre style="white-space: pre-wrap; word-break: keep-all;">'+make_markdown(c['body'])+'</pre></div>'+
+            ticket += '<div class="card zendesk-ticket mb-2">'+
+                        '<div class="card-header '+panel_class+'">'+updated_at.toGMTString() + panel_label + '</div>'+
+                        '<div class="card-body"><pre style="white-space: pre-wrap; word-break: keep-all;">'+make_markdown(c['body'])+'</pre></div>'+
                       '</div>';
 
           });
@@ -293,7 +294,7 @@ function load_tickets() {
 }
 
 function load_undefined_info(){
-  $('#undefined_fields .panel-body').append('<div id="undefined_spinner" class="text-center"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading undefined fields</em></div>');
+  $('#undefined_fields .card-body').append('<div id="undefined_spinner" class="text-center"><span class="fa fa-sync fa-spin"></span> <em>Loading undefined fields</em></div>');
 
   $.getJSON("/api/v1/projects_fields?undefined=true", function(u_data) {
     var found_undefs = [];
@@ -346,9 +347,9 @@ function load_all_udfs(){
       // Set the project name and status
       if (prettify(key) == 'project_name'){
         if (!data['portal_id']) {
-          project_title = project + ", " + data['project_name'] + " <small>(" + data['customer_project_reference'] + " - no order in NGI portal)</small>";
+          project_title = project + ", " + data['project_name'] + " <small class='text-muted'>(" + data['customer_project_reference'] + " - no order in NGI portal)</small>";
         } else {
-          project_title = project + ", " + data['project_name'] + ' &nbsp; <small>NGI Portal: <a href="https://ngisweden.scilifelab.se/orders/order/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>';
+          project_title = project + ", " + data['project_name'] + ' &nbsp; <small class="text-muted">NGI Portal: <a class="text-decoration-none" href="https://ngisweden.scilifelab.se/orders/order/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>';
         }
         prettyobj(key).html(project_title);
         prettyobj(key).attr('p_name', data['project_name']);
@@ -360,23 +361,23 @@ function load_all_udfs(){
         var aborted = data["aborted"];
         var source = data["source"];
         if (aborted){
-          $("#project_status_alert").addClass("label-danger").text("Aborted");
+          $("#project_status_alert").addClass("bg-danger").text("Aborted");
         }
         else {
           if (close_date){
-            $("#project_status_alert").addClass("label-success").text("Closed");
+            $("#project_status_alert").addClass("bg-success").text("Closed");
           }
           else if (queue_date && !close_date) {
-            $("#project_status_alert").addClass("label-info").text("Ongoing");
+            $("#project_status_alert").addClass("bg-info").text("Ongoing");
           }
           else if (open_date && !queue_date) {
-            $("#project_status_alert").addClass("label-default").text("Reception Control");
+            $("#project_status_alert").addClass("bg-secondary").text("Reception Control");
           }
           else if (!open_date && source == 'lims'){
-            $("#project_status_alert").addClass("label-info").text("Pending");
+            $("#project_status_alert").addClass("bg-info").text("Pending");
           }
           else {
-            $("#project_status_alert").addClass("label-info").text("Status unknown");
+            $("#project_status_alert").addClass("bg-info").text("Status unknown");
           }
           // Hide the aborted dates
           $('.aborted-dates').hide();
@@ -386,7 +387,7 @@ function load_all_udfs(){
       // Make the project emails clickable and add labels.
       else if (prettify(key) == 'contact'){
         function elabel(text, label) {
-          return '<span class="label label-'+label+'">'+text+'</span>'
+          return '<span class="badge bg-'+label+'">'+text+'</span>'
         }
         function validateEmail(email) {
           var cap_email = null;
@@ -406,11 +407,11 @@ function load_all_udfs(){
         try {
           var contact = validateEmail(data['order_details']['owner']['email']);
           if(!contact) {throw 'TypeError';}
-          emails[contact] = [elabel('Requester', 'default')];
+          emails[contact] = [elabel('Requester', 'secondary')];
           var lab = validateEmail(data['order_details']['fields']['project_lab_email']);
-          if(!emails[lab]){emails[lab]=[elabel('Lab', 'default')]} else{emails[lab].push(elabel('Lab', 'default'))};
+          if(!emails[lab]){emails[lab]=[elabel('Lab', 'secondary')]} else{emails[lab].push(elabel('Lab', 'secondary'))};
           var bx = validateEmail(data['order_details']['fields']['project_bx_email']);
-          if(!emails[bx]){emails[bx]=[elabel('Bioinfo', 'default')]} else {emails[bx].push(elabel('Bioinfo', 'default'))};
+          if(!emails[bx]){emails[bx]=[elabel('Bioinfo', 'secondary')]} else {emails[bx].push(elabel('Bioinfo', 'secondary'))};
           var pi = validateEmail(data['order_details']['fields']['project_pi_email']);
           if(!emails[pi]){emails[pi]=[elabel('PI', 'info')]} else {emails[pi].push(elabel('PI', 'info'))};
           if(data['snic_checked'] && data['snic_checked']['status']==false){
@@ -426,7 +427,7 @@ function load_all_udfs(){
           if (k != 'null') {
             email_html += '<ul class="list-inline email_list">';
             email_html += '<li class="email_link" data-toggle="tooltip" data-placement="left" title="Copy to clipboard">';
-            email_html += '<a href="javascript:void(0);" data-clipboard-text="'+k+'">'+k+'</a></li>';
+            email_html += '<a class="text-decoration-none" href="javascript:void(0);" data-clipboard-text="'+k+'">'+k+'</a></li>';
             email_html += '<li class="email_labels">'+emails[k].join("")+'</li></ul>';
           }
         });
@@ -436,11 +437,11 @@ function load_all_udfs(){
       // Colour code the project type
       else if (prettify(key) == 'type'){
         if(value == 'Production'){
-          $('#type').html('<span class="label label-primary">'+value+'</span>');
+          $('#type').html('<span class="badge bg-primary">'+value+'</span>');
         } else if(value == 'Application'){
-          $('#type').html('<span class="label label-success">'+value+'</span>');
+          $('#type').html('<span class="badge bg-success">'+value+'</span>');
         } else {
-          $('#type').html('<span class="label label-default">'+value+'</span>');
+          $('#type').html('<span class="badge bg-secondary">'+value+'</span>');
         }
       }
 
@@ -453,7 +454,7 @@ function load_all_udfs(){
       // highlight if project is shared
       else if (prettify(key) == 'shared') {
         if (value != 'No') {
-          $('#type').append('<span class="label label-warning">Shared</span>');
+          $('#type').append('<span class="badge bg-warning">Shared</span>');
         }
       }
 
@@ -496,13 +497,17 @@ function load_all_udfs(){
         var parts = value.split('/');
         if(parts[0].replace(/\D/g,'').length > 0 && parts[1].replace(/\D/g,'').length > 0){
           if(parts[0].replace(/\D/g,'') < parts[1].replace(/\D/g,'')){
-            safeobj(key).html('<span class="label label-danger">'+value+'</span>');
+            safeobj(key).html('<span class="badge bg-danger">'+value+'</span>');
           } else if(parts[0].replace(/\D/g,'') >= parts[1].replace(/\D/g,'')){
-            safeobj(key).html('<span class="label label-success">'+value+'</span>');
+            safeobj(key).html('<span class="badge bg-success">'+value+'</span>');
           }
         } else {
-          safeobj(key).html('<span class="label label-default">'+value+'</span>');
+          safeobj(key).html('<span class="badge bg-secondary">'+value+'</span>');
         }
+      }
+      // Make the user comments render Markdown
+      else if (prettify(key) == 'customer_project_description'){
+        $('#customer_project_description').html(make_markdown(value));
       }
 
       // Everything else
@@ -543,7 +548,7 @@ function load_all_udfs(){
     document.title = $("#project_name").attr('p_name') + ' : Genomics Status';
 
 		// Make the cool timescale bar if we can
-		make_timescale();
+		make_timescale('order');
 
     // Warn users about old projects
     old_project_warning('2010-07-1');
@@ -580,12 +585,12 @@ function safeobj(s) {
 
 
 function load_table_head(columns){
-  var tbl_head = '<tr class="sticky">';
+  var tbl_head = '<tr class="sticky darkth">';
   $.each(columns, function(i, column_tuple) {
     tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">';
 
     if(column_tuple[0] == 'SciLife Sample Name') {
-      tbl_head += '<abbr data-toggle="tooltip" title="SciLifeLab Sample Name">Sample</abbr>';
+      tbl_head += 'Sample';
     } else if(column_tuple[0] == 'Prep Finished Date') {
       tbl_head += 'Prep Finished';
     } else if(column_tuple[0] == 'Library Validation Caliper Image') {
@@ -616,7 +621,7 @@ function load_samples_table(colOrder) {
   load_table_head(cols);
 
   // Display the loading spinner in the table
-  $("#samples_table_body").html('<tr><td colspan="'+cols.length+'" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
+  $("#samples_table_body").html('<tr><td colspan="'+cols.length+'" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
 
   // Print each sample
   $.getJSON("/api/v1/project/" + project, function (samples_data) {
@@ -641,11 +646,11 @@ function load_samples_table(colOrder) {
             // Scilife Sample Name
             if (column_id == "scilife_name") {
               if(info[column_id] == 'Unexpectedbarcode'){
-                tbl_row += '<td class="'+column_id+'"><span class="label label-danger" data-toggle="tooltip" title="These reads failed to demultiplex">'+
+                tbl_row += '<td class="'+column_id+'"><span class="badge bg-danger" data-toggle="tooltip" title="These reads failed to demultiplex">'+
                             info[column_id] + '</span></td>';
               } else {
                 // TODO - Wire this up to the new QC page when it's ready
-                tbl_row += '<td class="'+column_id+'"><a target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
+                tbl_row += '<td class="'+column_id+'"><a class="text-decoration-none" target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
                             'href="' + lims_uri + '/clarity/search?scope=Sample&query='+info[column_id]+'">'+
                             info[column_id] + '</a></td>';
               }
@@ -660,7 +665,7 @@ function load_samples_table(colOrder) {
                 fc = fc.substring(2);
                 fc = fc.replace(/_[ACTG\-]+$/,'');
                 fc = fc.replace('_NoIndex', '');
-                tbl_row += '<samp class="nowrap"><a href="/flowcells/' + fc + '">' +
+                tbl_row += '<samp class="nowrap"><a class="text-decoration-none" href="/flowcells/' + fc + '">' +
                 info[column_id][i] + '</a></samp><br>';
               }
               tbl_row += '</td>';
@@ -697,7 +702,7 @@ function load_samples_table(colOrder) {
             if (column_id == 'frag_an_image'){
                 tbl_row += '<td class="' + column_id + '">'+
                             '<span class="caliper_loading_spinner">'+
-                              '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading image..</span>'+
+                              '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
                             '</span>'+
                             '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+info['initial_qc'][column_id]+'" data-imgtype="Initial QC Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>'+
                           '</td>';
@@ -707,7 +712,7 @@ function load_samples_table(colOrder) {
             else if (column_id == 'caliper_image'){
                 tbl_row += '<td class="' + column_id + '">'+
                             '<span class="caliper_loading_spinner">'+
-                              '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading image..</span>'+
+                              '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
                             '</span>'+
                             '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+info['initial_qc'][column_id]+'" data-imgtype="Initial QC Caliper Image" data-samplename="'+info['scilife_name']+'"></a>'+
                           '</td>';
@@ -720,7 +725,7 @@ function load_samples_table(colOrder) {
                 sig = sig.substring(0,2);
               }
               tbl_row += '<td class="'+column_id+'">'+
-                          '<span class="label label-default" data-toggle="tooltip" title="Original signature: '+info['initial_qc'][column_id]+'">'+
+                          '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+info['initial_qc'][column_id]+'">'+
                               sig+'</span></td>';
             }
 
@@ -741,13 +746,13 @@ function load_samples_table(colOrder) {
 
               // Special case for workset_name, which is a link to Genstat workset page
               if (column_id == "workset_name" && info_library[column_id]) {
-                tbl_row += '<samp class="nowrap" title="Open Workset" data-toggle="tooltip"><a href="/workset/';
+                tbl_row += '<samp class="nowrap" title="Open Workset" data-toggle="tooltip"><a class="text-decoration-none" href="/workset/';
                 tbl_row += info_library[column_id] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
               }
 
               // Special case for workset_setup, which is a link to the LIMS
               else if (column_id == "workset_setup" && info_library[column_id]) {
-                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a href="' + lims_uri+ '/clarity/work-complete/';
+                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a class="text-decoration-none" href="' + lims_uri+ '/clarity/work-complete/';
                 tbl_row += info_library[column_id].split('-')[1] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
               }
 
@@ -777,7 +782,7 @@ function load_samples_table(colOrder) {
                   // Caliper column
                   if(column_id == 'caliper_image'){
                        tbl_row += '<span class="caliper_loading_spinner">'+
-                                     '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading image..</span>'+
+                                     '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
                                    '</span>'+
                                    '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
                   }
@@ -788,7 +793,7 @@ function load_samples_table(colOrder) {
                     if(sig.length == 3 && sig[2] == 'X'){
                       sig = sig.substring(0,2);
                     }
-                    tbl_row += '<span class="label label-default" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
+                    tbl_row += '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
                   }
 
                   // Everything else
@@ -864,7 +869,7 @@ function update_caliper(){
         var imglink = $(this).attr('href');
         var el = $(this);
         if(imglink==="undefined"){
-                el.append('<span class="label label-undefined">No caliper link</span>');
+                el.append('<span class="badge bg-undefined">No caliper link</span>');
                 el.prev('.caliper_loading_spinner').remove();
                 el.removeClass('loading');
         } else {
@@ -873,7 +878,7 @@ function update_caliper(){
                 el.prev('.caliper_loading_spinner').remove();
                 el.removeClass('loading');
             }).fail(function( jqxhr, textStatus, error) {
-                el.append('<span class="label label-danger"><abbr title="'+imglink+' '+textStatus+'">Error</abbr></span>');
+                el.append('<span class="badge bg-danger"><abbr title="'+imglink+' '+textStatus+'">Error</abbr></span>');
                 el.prev('.caliper_loading_spinner').remove();
                 el.removeClass('loading');
             });
@@ -943,11 +948,29 @@ $('#customer_project_description_wrapper, #customer_project_description_wrapper 
 // Awesome dates timeline
 $('#show_order_timeline').click(function(e){
   e.preventDefault();
-  $('#project_timescale_production, #project_timescale_orderdates, #show_orderdates_btn, #hide_orderdates_btn').toggle();
+  id = $('#show_order_timeline').children('span:visible').prop('id');
+  if( id == 'hide_orderdates_btn' ){
+    $('#project_timescale_orderdates').prop('style', 'visibility:hidden;');
+    $('#project_timescale_orderdates').empty();
+    make_timescale('production');
+    $('#project_timescale_production').css('visibility', 'visible');
+    $('#hide_orderdates_btn, #show_orderdates_btn').toggle();
+  }
+  else{
+    $('#project_timescale_production').prop('style', 'visibility:hidden;');
+    $('#project_timescale_production').empty();
+    make_timescale('order');
+    $('#project_timescale_orderdates').css('visibility', 'visible');
+    $('#hide_orderdates_btn, #show_orderdates_btn').toggle();
+  }
 });
-function make_timescale(){
-  make_timescale_bar('#project_timescale_production', false);
-  make_timescale_bar('#project_timescale_orderdates', true);
+function make_timescale(check){
+  if( check == 'order' ){
+    make_timescale_bar('#project_timescale_orderdates', true);
+  }
+  else{
+    make_timescale_bar('#project_timescale_production', false);
+  }
 }
 // Fire tooltips on datestamp hover
 $('.rawdate').hover(
@@ -1091,12 +1114,14 @@ function make_timescale_bar(tsid, include_orderdates){
 
       // Work out where to place the tick and plot it
 			var percent = ((dateobj.getTime() - oldest.getTime()) / range) * 100;
-			$(tsid).append('<div class="timelineTarget" style="left:'+percent+'%;" data-datestamp="'+rawdate+'" data-toggle="tooltip" data-placement="bottom" title="'+rawdate+'<br><strong>'+names.join('</strong><br><strong>')+'</strong>'+diffdaystext+'"><div class="timelineTick" style="background-color:'+thiscol+';"></div></div>');
+			$(tsid).append('<div class="timelineTarget" style="left:'+percent+'%;" data-datestamp="'+rawdate+'" data-toggle="tooltip" data-placement="bottom"  data-html="true" title="'+rawdate+'<br /><strong>'+names.join('</strong><br /><strong>')+'</strong>'+diffdaystext+'"><div class="timelineTick" style="background-color:'+thiscol+';"></div></div>');
 
       // Coloured borders next to dates in table
-      $(':contains('+rawdate+')').filter(function(){ return $(this).children().length === 0;}).css('border-right', '2px solid '+thiscol).css('padding-right','5px');
+      $(':contains('+rawdate+')').filter(function(){if ($(this).children().length === 0){if($(this).next('.borderbar').length>0){$(this).next('.borderbar').remove()}
+        return $(this).children().length === 0;}}).after('<span class="borderbar" style="border-right: 2px solid '+thiscol+';"></span>');
 		});
 	}
+  $('.timelineTarget[data-toggle="tooltip"]').tooltip();
 }
 
 // Warn users about old projects
@@ -1105,7 +1130,7 @@ function old_project_warning(warndate_raw){
   var warnDate = new Date(warndate_raw);
   if(openDate.getTime() < warnDate.getTime()){
     $('#old_project_warning').show();
-    $('#old_project_warning').attr('title', 'This project was created before '+warndate_raw+'.<br>Genomics Status may be inaccruate.');
+    $('#old_project_warning').attr('title', 'This project was created before '+warndate_raw+'.<br>Genomics Status may be inaccurate.');
   }
 }
 function load_charon_summary(){

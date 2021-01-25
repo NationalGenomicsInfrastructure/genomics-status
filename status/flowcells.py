@@ -79,15 +79,6 @@ class FlowcellsHandler(SafeHandler):
         self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, form_date=formatDate, all=all))
 
 
-class FlowcellHandler(SafeHandler):
-    """ Serves a page which shows information and QC stats for a given
-    flowcell.
-    """
-    def get(self, flowcell):
-        t = self.application.loader.load("flowcell_samples.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, flowcell=flowcell, user=self.get_current_user()))
-
-
 class FlowcellsDataHandler(SafeHandler):
     """ Serves brief information for each flowcell in the database.
 
@@ -349,18 +340,19 @@ class FlowcellNotesDataHandler(SafeHandler):
                 running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
                 running_notes[str(datetime.datetime.now())] = newNote
 
-                flowcell_link = "<a href='/flowcells/{0}'>{0}</a>".format(flowcell)
+                flowcell_link = "<a class='text-decoration-none' href='/flowcells/{0}'>{0}</a>".format(flowcell)
                 project_note = "#####*Running note posted on flowcell {}:*\n".format(flowcell_link)
                 project_note += note
+
+                p.udf['Notes'] = json.dumps(running_notes)
+                p.put()
+                #write running note to projects only if it has been saved successfully in FC
                 for project in projects:
                     RunningNotesDataHandler.make_project_running_note(
                         self.application, project,
                         project_note, category,
                         user.name, user.email
                     )
-
-                p.udf['Notes'] = json.dumps(running_notes)
-                p.put()
                 self.set_status(201)
                 self.write(json.dumps(newNote))
 

@@ -152,7 +152,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         # Handle the pending reviews:
         if 'pending_reviews' in row.value:
-            links = ','.join(['<a href="{0}/clarity/work-complete/{1}">Review </a>'.format(BASEURI, rid) for rid in row.value['pending_reviews']])
+            links = ', '.join(['<a class="text-decoration-none" href="{0}/clarity/work-complete/{1}">Review</a>'.format(BASEURI, rid) for rid in row.value['pending_reviews']])
             row.value['pending_reviews'] = links
 
         # Find the latest running note, return it as a separate field
@@ -215,15 +215,17 @@ class ProjectsBaseDataHandler(SafeHandler):
         openflag=False
         projtype=self.get_argument('type', 'all')
 
-        def_dates = { 'days_recep_ctrl' : ['open_date', 'queued'],
-                      'days_prep_start' : ['queued', 'library_prep_start'],
-                      'days_seq_start' : [['qc_library_finished', 'queued'], 'sequencing_start_date'],
-                      'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
-                      'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
-                      'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
-                      'days_close' : ['all_raw_data_delivered', 'close_date'],
-                      'days_prep' : ['library_prep_start', 'qc_library_finished']
-                      }
+        def_dates_gen = { 'days_recep_ctrl' : ['open_date', 'queued'],
+                          'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
+                          'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
+                          'days_close' : ['all_raw_data_delivered', 'close_date']
+                         }
+
+        def_dates_summary = { 'days_prep_start' : ['queued', 'library_prep_start'],
+                              'days_seq_start' : [['qc_library_finished', 'queued'], 'sequencing_start_date'],
+                              'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
+                              'days_prep' : ['library_prep_start', 'qc_library_finished']
+                             }
 
         if 'closed' in filter_projects or 'all' in filter_projects:
             closedflag=True
@@ -320,6 +322,11 @@ class ProjectsBaseDataHandler(SafeHandler):
             a=type(row)
             row = self.project_summary_data(row)
             final_projects[row.key[1]] = row.value
+            for key, value in def_dates_gen.items():
+                start_date = value[0]
+                end_date = value[1]
+                final_projects[row.key[1]][key] = self._calculate_days_in_status(final_projects[row.key[1]].get(start_date),
+                                                                                    final_projects[row.key[1]].get(end_date))
 
         # Include dates for each project:
         for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
@@ -327,7 +334,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 for date_type, date in row.value.items():
                     final_projects[row.key[0]][date_type] = date
 
-                for key, value in def_dates.items():
+                for key, value in def_dates_summary.items():
                     if key == 'days_seq_start':
                         if 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
                              start_date = value[0][1]
@@ -741,21 +748,25 @@ class RunningNotesDataHandler(SafeHandler):
         for row in v[project]:
             doc_id=row.value
         doc=application.projects_db.get(doc_id)
+        project_name = doc['project_name']
+        proj_ids = [project, project_name]
         doc['details']['running_notes']=json.dumps(running_notes)
         application.projects_db.save(doc)
         #### Check and send mail to tagged users
         pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
         userTags = pattern.findall(note)
         if userTags:
-            RunningNotesDataHandler.notify_tagged_user(application, userTags, project, note, category, user, timestamp)
+            RunningNotesDataHandler.notify_tagged_user(application, userTags, proj_ids, note, category, user, timestamp)
         ####
         return newNote
 
     @staticmethod
     def notify_tagged_user(application, userTags, project, note, category, tagger, timestamp):
         view_result = {}
+        project_id = project[0]
+        project_name = project[1]
         time_in_format = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S').strftime("%a %b %d %Y, %I:%M:%S %p")
-        note_id = 'running_note_' + project + '_' + \
+        note_id = 'running_note_' + project_id + '_' + \
                     str(int((datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S') -  datetime.datetime.utcfromtimestamp(0)).total_seconds()))
         for row in application.gs_users_db.view('authorized/users'):
             if row.key != 'genstat_defaults':
@@ -770,15 +781,15 @@ class RunningNotesDataHandler(SafeHandler):
                 if option == 'Slack' or option == 'Both':
                     nest_asyncio.apply()
                     client = slack.WebClient(token=application.slack_token)
-                    notification_text = '{} has tagged you in {}!'.format(tagger, project)
+                    notification_text = '{} has tagged you in {}, {}!'.format(tagger, project_id, project_name)
                     blocks = [
                         {
                         "type": "section",
 		                "text": {
                             "type": "mrkdwn",
         		            "text": ("_You have been tagged by *{}* in a running note for the project_ "
-                                     "<{}/project/{}#{}|{}>! :smile: \n_The note is as follows:_ \n\n\n")
-                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project, note_id, project)
+                                     "<{}/project/{}#{}|{}, {}>! :smile: \n_The note is as follows:_ \n\n\n")
+                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project_id, note_id, project_id, project_name)
                              }
                         },
                         {
@@ -804,17 +815,17 @@ class RunningNotesDataHandler(SafeHandler):
                 #default is email
                 if option == 'E-mail' or option == 'Both':
                     msg = MIMEMultipart('alternative')
-                    msg['Subject']='[GenStat] Running Note:{}'.format(project)
+                    msg['Subject']='[GenStat] Running Note:{}, {}'.format(project_id, project_name)
                     msg['From']='genomics-status'
                     msg['To'] = view_result[user]
-                    text = 'You have been tagged by {} in a running note in the project {}! The note is as follows\n\
+                    text = 'You have been tagged by {} in a running note in the project {}, {}! The note is as follows\n\
                     >{} - {}{}\
-                    >{}'.format(tagger, project, tagger, time_in_format, category, note)
+                    >{}'.format(tagger, project_id, project_name, tagger, time_in_format, category, note)
 
                     html = '<html>\
                     <body>\
                     <p> \
-                    You have been tagged by {} in a running note in the project <a href="{}/project/{}#{}">{}</a>! The note is as follows</p>\
+                    You have been tagged by {} in a running note in the project <a href="{}/project/{}#{}">{}, {}</a>! The note is as follows</p>\
                     <blockquote>\
                     <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
                     <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
@@ -823,7 +834,7 @@ class RunningNotesDataHandler(SafeHandler):
                     <div class="panel-body" style="padding: 15px;">\
                         <p>{}</p>\
                     </div></div></blockquote></body></html>'.format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0],
-                    project, note_id, project, tagger, time_in_format, category, markdown.markdown(note))
+                    project_id, note_id, project_id, project_name, tagger, time_in_format, category, markdown.markdown(note))
 
                     msg.attach(MIMEText(text, 'plain'))
                     msg.attach(MIMEText(html, 'html'))

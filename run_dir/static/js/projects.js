@@ -733,8 +733,10 @@ function dealWithDatepickers(datepick, option){
   if(option=='remove'){
     $('#'+datepick+'_start > .form-control').prop('disabled', true);
     $('#'+datepick+'_start').datepicker('remove');
+    $('#'+datepick+'_start').children('input').val('');
     $('#'+datepick+'_end > .form-control').prop('disabled', true);
     $('#'+datepick+'_end').datepicker('remove');
+    $('#'+datepick+'_end').children('input').val('');
   }
 }
 $('#loadTablebtn').click(function(e){
@@ -987,6 +989,19 @@ $(document).keypress(function(e) {
     $("#deletePresetBtnModal").trigger('click');
   }
 });
+
+$('#allHistoryCheckbox').change(function(e){
+    if($("#allHistoryCheckbox").prop('checked')){
+      $('#inp_date_1').val('2012-01-01');
+      $('#inp_date_3').val('2012-01-01');
+      $('#inp_date_5').val('2012-01-01');
+    }
+    else{
+      $('#inp_date_1').val('');
+      $('#inp_date_3').val('');
+      $('#inp_date_5').val('');
+    }
+})
 
 //
 // HELPER FUNCTIONS

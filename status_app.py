@@ -20,7 +20,7 @@ from tornado.options import define, options
 
 from status.applications import ApplicationDataHandler, ApplicationHandler, ApplicationsDataHandler, ApplicationsHandler
 from status.barcode import BarcodeHandler
-from status.assign_roles import AssignRolesHandler, AssignRolesUsersHandler
+from status.user_management import UserManagementHandler, UserManagementDataHandler
 from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.deliveries import DeliveriesPageHandler
@@ -46,7 +46,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ImagesDownloadHandler
 from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
-from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler, FlowcellCountPlotHandler, FlowcellCountApiHandler
+from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
     SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, \
     SampleReadCountDataHandler, SampleRunDataHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
@@ -97,7 +97,6 @@ class Application(tornado.web.Application):
             ("/api/v1", DataHandler),
             ("/api/v1/applications", ApplicationsDataHandler),
             ("/api/v1/application/([^/]*)$", ApplicationDataHandler),
-            ("/api/v1/assign_roles/users", AssignRolesUsersHandler),
             ("/api/v1/bioinfo_analysis", BioinfoAnalysisHandler),
             ("/api/v1/bioinfo_analysis/([^/]*)$", BioinfoAnalysisHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
@@ -110,7 +109,6 @@ class Application(tornado.web.Application):
             tornado.web.URLSpec("/api/v1/download_images/(?P<project>[^/]+)/(?P<type>[^/]+)", ImagesDownloadHandler, name="ImagesDownloadHandler"),
             ("/api/v1/draft_cost_calculator", PricingDraftDataHandler ),
             ("/api/v1/flowcells", FlowcellsDataHandler),
-            ("/api/v1/flowcell_count/", FlowcellCountApiHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
@@ -192,6 +190,7 @@ class Application(tornado.web.Application):
             ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             ("/api/v1/test/(\w+)?", TestDataHandler),
+            ("/api/v1/user_management/users", UserManagementDataHandler),
             ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
             ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
             ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
@@ -201,13 +200,11 @@ class Application(tornado.web.Application):
             ("/barcode", BarcodeHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
-            ("/assign_roles", AssignRolesHandler),
             ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
             ("/deliveries", DeliveriesPageHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
-            ("/flowcell_count_plot", FlowcellCountPlotHandler),
             ("/instrument_logs",InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
@@ -226,6 +223,7 @@ class Application(tornado.web.Application):
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
+            ("/user_management", UserManagementHandler),
             ("/userpref", UserPrefPageHandler),
             ("/userpref_b5", UserPrefPageHandler_b5),
             ("/worksets", WorksetsHandler),
@@ -338,7 +336,6 @@ class Application(tornado.web.Application):
         if options['develop']:
             tornado.autoreload.watch("design/application.html")
             tornado.autoreload.watch("design/applications.html")
-            tornado.autoreload.watch("design/assign_roles.html")
             tornado.autoreload.watch("design/base.html")
             tornado.autoreload.watch("design/base_b5.html")
             tornado.autoreload.watch("design/bioinfo_tab.html")
@@ -349,7 +346,6 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/error_page.html")
             tornado.autoreload.watch("design/flowcell.html")
             tornado.autoreload.watch("design/flowcell_error.html")
-            tornado.autoreload.watch("design/flowcell_samples.html")
             tornado.autoreload.watch("design/flowcell_trend_plot.html")
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/index.html")
@@ -371,6 +367,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/running_notes_tab.html")
             tornado.autoreload.watch("design/suggestion_box.html")
             tornado.autoreload.watch("design/unauthorized.html")
+            tornado.autoreload.watch("design/user_management.html")
             tornado.autoreload.watch("design/user_preferences.html")
             tornado.autoreload.watch("design/workset_samples.html")
             tornado.autoreload.watch("design/worksets.html")

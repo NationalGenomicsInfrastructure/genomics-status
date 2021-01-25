@@ -1,6 +1,6 @@
   <table class="table table-bioinfo-status {% if project_closed %} bioinfo-status-disabled {% end %} table-bioinfo-status-runview table-bordered">
     <thead>
-    <tr class="border-bottom">
+    <tr class="border-bottom darkth text-center">
       <th></th>
       <th></th>
       <th colspan="3">Sample</th>
@@ -21,11 +21,10 @@
         <th class="bioinfo-app-applications" colspan="2">Applications (if applicable)</th>
       {% end %}
       <th>Data Delivered</th>
-      <th></th>
     </tr>
-    <tr class="bioinfo-field-names bioinfo-project sticky" id="bioinfo-project-{{ project_id }}">
-      <th class="bioinfo-project"><a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
-        <span class="glyphicon glyphicon-chevron-right"></span></a></th>
+    <tr class="bioinfo-field-names bioinfo-project sticky darkth text-center" id="bioinfo-project-{{ project_id }}">
+      <th class="bioinfo-project"><a class="bioinfo-expand text-decoration-none" href="#bioinfo-project-{{ project_id }}">
+        <span class="fa fa-chevron-right"></span></a></th>
       <th></th>
       <th>Sample</th>
       <th>Status</th>
@@ -59,25 +58,26 @@
         <th class="bioinfo-status-th bioinfo-status-bp bioinfo-app-applications">Data approved</th>
       {% end %}
       <th class="bioinfo-status-th-date datadelivered">Data Delivered
-        <button class="btn btn-sm date-reset" {% if project_closed %} disabled="disabled"{% end %}>
-          <i class="glyphicon glyphicon-remove"></i></button>
-        <button class="btn btn-sm datepicker-today"{% if project_closed %} disabled="disabled"{% end %}>
-          <i class="glyphicon glyphicon-arrow-down"></i></button>
+        <nobr>
+          <button class="btn btn-sm btn-light date-reset" {% if project_closed %} disabled="disabled"{% end %}>
+            <i class="fa fa-times"></i></button>
+          <button class="btn btn-sm btn-light datepicker-today"{% if project_closed %} disabled="disabled"{% end %}>
+            <i class="fa fa-arrow-alt-down"></i></button>
+        </nobr>
       </th>
-      <th></th>
     </tr>
   </thead>
-  <tbody>
+  <tbody class="text-center">
       {% for flowcell_id, flowcell in sorted(bioinfo['run_lane_sample_view'].items()) %}
         {% set disabled = True if flowcell.get('flowcell_status') in ['Demultiplexing', 'Transferring', 'Sequencing', 'ERROR', 'Failed', 'Delivered'] else False %}
         <tr class="bioinfo-fc  {% if disabled %} bioinfo-status-disabled {% end %}"
             id="bioinfo-fc-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
-          <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ flowcell_id }}" class="bioinfo-expand">
-            <span class="glyphicon glyphicon-chevron-right"></span></a></td>
+          <td class="bioinfo-status-expand"><a class="bioinfo-expand text-decoration-none" href="#bioinfo-fc-{{ flowcell_id }}">
+            <span class="fa fa-chevron-right"></span></a></td>
           <td></td>
-          <td><samp><a href="/flowcells/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
-          <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(flowcell['flowcell_status'], 'label-default') }}">{{ flowcell['flowcell_status'] }}</span></td>
-          <td class="bioinfo-status-row ?"><span class="glyphicon glyphicon-arrow-right"></span></td>
+          <td><samp><a class="text-decoration-none" href="/flowcells/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
+          <td class="bioinfo-status-runstate"><span class="badge {{ status_css.get(flowcell['flowcell_status'], 'bg-secondary') }}">{{ flowcell['flowcell_status'] }}</span></td>
+          <td class="bioinfo-status-row ?"><span class="fa fa-arrow-alt-right"></span></td>
           <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
           <td class="bioinfo-status-qc unexpectedindexes unknown">?</td>
           <td class="bioinfo-status-qc lowsampleyield unknown">?</td>
@@ -110,8 +110,8 @@
               <div class="input-group input-group-sm date">
                 <input type="text" class="form-control" {% if disabled %} disabled="disabled" {% end %}
                   value="{{ flowcell.get('datadelivered', '') }}">
-                <span class="input-group-addon date-reset"><i class="glyphicon glyphicon-remove"></i></span>
-                <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
+                <button class="btn btn-outline-dark date-reset"><i class="fa fa-times"></i></button>
+                <button class="btn btn-outline-dark datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
               </div>
             </td>
         </tr>
@@ -120,11 +120,11 @@
               id="bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}"
               data-parent="#bioinfo-fc-{{ flowcell_id }}" style="display:none;">
             <td></td>
-            <td class="bioinfo-status-expand"><a href="#bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}" class="bioinfo-expand">
-              <span class="glyphicon glyphicon-chevron-right"></span></a></td>
+            <td class="bioinfo-status-expand"><a class="bioinfo-expand text-decoration-none" href="#bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}">
+              <span class="fa fa-chevron-right"></span></a></td>
             <td><samp>{{ lane_id }}</samp></td>
-            <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(lane['lane_status'], 'label-default') }}">{{ lane['lane_status'] }}</span></td>
-            <td class="bioinfo-status-row ?"><span class="glyphicon glyphicon-arrow-right"></span></td>
+            <td class="bioinfo-status-runstate"><span class="badge {{ status_css.get(lane['lane_status'], 'bg-secondary') }}">{{ lane['lane_status'] }}</span></td>
+            <td class="bioinfo-status-row ?"><span class="fa fa-arrow-alt-right"></span></td>
             <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
             <td class="bioinfo-status-qc unexpectedindexes unknown">?</td>
             <td class="bioinfo-status-qc lowsampleyield unknown">?</td>
@@ -157,8 +157,8 @@
               <div class="input-group input-group-sm date"><input type="text" class="form-control"
                   {% if disabled %} disabled="disabled" {% end %}
                   value="{{ lane.get('datadelivered', '') }}">
-                <span class="input-group-addon date-reset"><i class="glyphicon glyphicon-remove"></i></span>
-                <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
+                <button class="btn btn-outline-dark date-reset"><i class="fa fa-times"></i></button>
+                <button class="btn btn-outline-dark datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
               </div>
             </td>
           </tr>
@@ -167,10 +167,10 @@
                 id="bioinfo-sample-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
                 data-parent="#bioinfo-lane-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
               <td></td>
-              <td><a href="#bioinfo-sample-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"></a></td>
+              <td><a class="text-decoration-none" href="#bioinfo-sample-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"></a></td>
               <td class="bioinfo-status-expand"><samp>{{ sample_id }}</samp></td>
-              <td class="bioinfo-status-runstate"><span class="label {{ status_css.get(sample.get('sample_status', 'New'), 'label-default') }}">{{ sample.get('sample_status') }}</span></td>
-              <td class="bioinfo-status-row ?"><span class="glyphicon glyphicon-arrow-right"></span></td>
+              <td class="bioinfo-status-runstate"><span class="badge {{ status_css.get(sample.get('sample_status', 'New'), 'bg-secondary') }}">{{ sample.get('sample_status') }}</span></td>
+              <td class="bioinfo-status-row ?"><span class="fa fa-arrow-alt-right"></span></td>
               <!--THE ORDER OF THE CLASSES IS IMPORTANT!-->
               <td class="bioinfo-status-qc undemultiplexedreads {{ qc_css.get(sample.get('qc', {}).get('undemultiplexedreads', '?'), 'unknown') }}">
                 {{ sample.get('qc', {}).get('undemultiplexedreads', '?') }}</td>
@@ -222,8 +222,8 @@
                   <div class="input-group input-group-sm date"><input type="text" class="form-control"
                       {% if disabled %} disabled="disabled" {% end %}
                       value="{{ sample.get('datadelivered', '') }}">
-                    <span class="input-group-addon date-reset"><i class="glyphicon glyphicon-remove"></i></span>
-                    <span class="input-group-addon datepicker-today"><i class="glyphicon glyphicon-arrow-down"></i></span>
+                    <button class="btn btn-outline-dark date-reset"><i class="fa fa-times"></i></button>
+                    <button class="btn btn-outline-dark datepicker-today"><i class="fa fa-arrow-alt-down"></i></button>
                   </div>
                 </td>
             </tr>

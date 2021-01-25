@@ -92,7 +92,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
               value: 650000000,
               width: 1,
               label: {
-                  text: 'NovaSeq SP',
+                  text: 'NovaSeq SP threshold to pass',
                   align: 'right'
               }
               }, {
@@ -101,7 +101,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
               value: 1300000000,
               width: 1,
               label: {
-                    text: 'NovaSeq S1',
+                    text: 'NovaSeq S1 threshold to pass',
                     align: 'right'
               }
               }, {
@@ -110,7 +110,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
               value: 3300000000,
               width: 1,
               label: {
-                   text: 'NovaSeq S2',
+                   text: 'NovaSeq S2 threshold to pass',
                    align: 'right'
               }
               }, {
@@ -120,19 +120,21 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
               width: 1,
               zIndex: 1,
               label: {
-                   text: 'NovaSeq S4',
+                   text: 'NovaSeq S4 threshold to pass',
                    align: 'right'
                  }
               }]
           }
-    };        
+    };
     serie=build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst,  color_type);
     toplot.series=serie[1];
     toplot.xAxis.categories = serie[0];
     $("#main_plot").highcharts(toplot);
-    window.current_plot_obj=toplot;
+    window.current_plot_obj=toplot; 
+    // Export TO CSV
+    toplot.downloadCSV();
+    
 }
-
 
 function build_series(data, key, name, display_by, filter_inst_type, filter_inst, color_type){
 
@@ -519,6 +521,6 @@ function update_instrument_filters(){
             }
             refresh_plot();
         });
+        
     });
-
 }

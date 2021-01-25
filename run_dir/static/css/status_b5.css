@@ -87,4 +87,540 @@ input.quantity_updateable {
 
 .pricing_hoverable {
     cursor: help;
+
+/* Make <samp> (flow cell IDs usually) a little smaller */
+samp { font-size:0.8em; }
+
+h1 small, h2 small, h3 small, h4 small{
+  font-size: 65%;
+}
+
+.card {
+  box-shadow: 0 1px 1px rgba(0,0,0,.05);
+}
+
+/*
+=== Typography ===
+*/
+.sentenceCase { text-transform: capitalize; }
+.nowrap { white-space: pre; }
+.dl-wide dt { width:260px; }
+.dl-wide dd { margin-left:280px; }
+
+/* Custom Labels */
+.bg-undefined  {color: #ccc; }
+.bg-date  {color: #333; font-size:80%; font-weight: normal;}
+.bg-imp  {background-color: #a62100;}
+.bg-devi  {background-color: #a13a7e;}
+.bg-usr  {background-color: #ff6f00;}
+
+.btn-xs {
+  padding: 1px 5px;
+  font-size: 12px;
+}
+
+.btn-imp{
+  color: #fff;
+  background-color: #a62100;
+ }
+.btn-devi{
+  color: #fff;
+  background-color: #a13a7e;
+}
+.btn-usr{
+  color: #fff;
+  background-color: #ff6f00;
+}
+.btn-inf{
+  color: #fff;
+  background-color: #5bc0de;
+}
+.btn-succe{
+  color: #fff;
+  background-color: #5cb85c;
+}
+.btn-warn{
+  color: #fff;
+  background-color: #f0ad4e;
+}
+.btn-dang{
+  color: #fff;
+  background-color: #d9534f;
+}
+
+.info-bg{
+  background-color: #d9edf7 !important;
+}
+
+.info-border{
+  border-color: #d9edf7 !important;
+}
+
+.card-important{
+  background-color: #ffd9d9 !important;
+}
+.card-warning{
+  background-color: #fcf8e3 !important;
+}
+
+/*Tables*/
+.darkth > th { background-color: #ddd!important; }
+
+.sticky th{
+  position: sticky;
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -ms-sticky;
+  position: -o-sticky;
+  top: 50px;
+  z-index: 100;
+}
+
+tr.group, tr.group:hover, .dtrg-group {
+    background-color: #ddd !important;
+    cursor: pointer;
+}
+
+.expand-proj {
+  cursor: pointer;
+}
+
+.expand-proj span.fa{
+  color: #0088cc;
+  cursor: pointer;
+  margin-right: 6px;
+}
+
+.navbar {
+ min-height: 50.5px;
+}
+
+/*Cards for running notes*/
+.running-note-card pre {
+  max-width:400px;
+}
+
+#com_accordion pre,
+#running_notes_panels pre.plaintext_running_note,
+.running-note-card pre.plaintext_running_note {
+  background-color:transparent;
+  border:none;
+  font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
+  margin:0;
+  padding:0;
+}
+
+/* Markdown text styles */
+.mkdown blockquote {
+  font-size: 1em;
+  font-style:italic;
+}
+.zendesk-ticket .mkdown ul{
+  display:grid;
+  margin-bottom: -10px;
+}
+.zendesk-ticket .mkdown p{
+  margin: 0px;
+}
+
+blockquote {
+    background-color: #f9f9f9;
+    border-left: 5px solid #eee;
+    padding: 10px 20px;
+}
+
+pre {
+  padding: 9.5px;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  white-space: pre-wrap;
+}
+.zendesk-ticket .mkdown ul{
+  display:grid;
+  margin-bottom: -10px;
+}
+.zendesk-ticket .mkdown p{
+  margin: 0px;
+}
+
+.well{
+  padding: 19px;
+  background-color: #f5f5f5;
+  border: 1px solid #e3e3e3;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+/*Flowcell samples*/
+.thousand_group {
+  margin-left:4px;
+}
+
+.undetermined {
+  width: 300px;
+}
+.undetermined th, .undetermined td {
+  text-align: right;
+  padding: 5px;
+}
+.undetermined tr th:first-child, .undetermined tr td:first-child {
+  text-align:left;
+}
+.undetermined samp {
+  font-size: 1em;
+  letter-spacing: 1px;
+}
+
+.undetermined-highlight {
+  color: #a94442;
+  background-color: #f2dede;
+  border: 1px solid #ebccd1;
+}
+.undetermined-warning {
+  color: #8a6d3b;
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+}
+
+/* Running Notes User dropdown */
+.-sew-list-container {
+  background: white;
+  border: 1px solid #DDD;
+  border-radius: 3px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+}
+
+.-sew-list {
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  max-height: 100px;
+  min-width: 120px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.-sew-list-item {
+  display: block;
+  padding: 5px 5px;
+  cursor: pointer;
+}
+
+
+.-sew-list-item small {
+  color: #afafaf;
+}
+
+.-sew-list-item.selected {
+  color: white;
+  background: #4183C4;
+  text-decoration: none;
+}
+
+/* worksets modal */
+#modal_plate .modal-content {
+    width:1300px;
+    margin-left:-650px;
+    left: 50%;
+}
+
+/* Email list */
+.email_list {
+    display: flex;
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    flex-flow: row wrap;
+    margin: 0;
+    padding: 0;
+}
+.email_link {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    flex: 3;
+    margin: 0;
+    padding: 0;
+}
+.email_labels {
+    vertical-align: middle;
+    text-align: right;
+    flex: 3;
+    margin: 0;
+    padding: 0;
+}
+
+.email_labels > span.badge{
+  margin: 1px;
+}
+
+.badge {
+  font-weight:normal;
+}
+
+.dl-horizontal > dt{
+  float: left;
+  text-align: right;
+  width: 160px;
+}
+
+.dl-horizontal > dd{
+  margin-left: 180px;
+  margin-bottom: 0px;
+}
+
+/* Make the user description have a max height */
+#customer_project_description_wrapper.showfade {
+  max-height: 100px;
+	position: relative;
+	overflow: hidden;
+}
+.fade-read-more {
+	position: absolute;
+	bottom: 0; left: 0;
+	width: 100%;
+	text-align: center;
+	margin: 0; padding: 30px 0;
+	background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, transparent),color-stop(1, white));
+  background-image: -webkit-linear-gradient(top, transparent, white);
+  background-image: -moz-linear-gradient(top, transparent, white);
+  background-image: -ms-linear-gradient(top, transparent, white);
+  background-image: -o-linear-gradient(top, transparent, white);
+}
+
+/* Coloured timeline bar and dates */
+.rawdate { cursor: pointer;
+display: inline-block;
+width:30%;
+}
+
+/* Cool colour bar for project page */
+.project_timescale {
+	margin: 20px 0;
+	height:1px;
+	background:#eee;
+	position:relative;
+}
+.project_timescale .timelineTarget {
+	height:16px;
+	width:16px;
+  margin-left:-6px;
+	position:absolute;
+	top:-7px;
+  cursor:pointer;
+}
+.project_timescale .timelineTick {
+  width:3px;
+  height:10px;
+  margin:3px 6.5px;
+}
+
+.project_page_border_style {
+  border: 1px solid hsl(120, 0%, 85%);
+  padding: 15px;
+  border-radius: 15px;
+  margin: 5px;
+}
+
+/* Links Tab */
+.link_wrapper {
+	border-bottom:1px solid #DDDDDD;
+	padding-top:15px;
+	padding-bottom:15px;
+}
+.link_wrapper:first-child {
+	padding-top:0;
+}
+
+/* Caliper thumbnail image in table */
+.caliper_loading_spinner {
+  display:inline-block;
+  min-width:200px;
+}
+.caliper-thumbnail img {
+  max-width:200px;
+}
+/* Caliper modal */
+#caliperModal .modal-content {
+    width:1040px;
+    margin-left:-520px;
+    left:50%;
+}
+#caliperModal .modal-body img {
+    width:100%;
+    max-width:1040px;
+    max-height:400px;
+}
+
+.bg-danger-table {
+  background-color: #f8d7da !important;
+}
+
+.bg-warning-table {
+  background-color: #fff3cd !important;
+}
+
+.bg-success-table {
+  background-color: #d1e7dd !important;
+}
+
+.accordion-warning {
+  background-color: #fff3cd !important;
+}
+
+.accordion-default-header {
+  color: #333;
+  background-color: rgba(0, 0, 0, 0.09);
+  border-color: #ddd;
+  padding: 10px 15px;
+}
+
+.accordion-item-prettify {
+  margin: 0.25em;
+}
+
+.accordion-collapse {
+  border-width: 1px !important;
+}
+
+.table-bioinfo-status td.active{
+  background-color: #f5f5f5;
+}
+.table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-qc,
+.table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-bp,
+.table-bioinfo-status tr.bioinfo-status-disabled td.bioinfo-status-row {
+    cursor: not-allowed;
+}
+
+.table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-qc,
+.table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-bp,
+.table-bioinfo-status:not(.bioinfo-status-disabled) th.bioinfo-status-th,
+.table-bioinfo-status:not(.bioinfo-status-disabled) td.bioinfo-status-row {
+  cursor: pointer;
+}
+
+.table-bioinfo-status td, .table-bioinfo-status th {
+  text-align: center;
+  vertical-align: middle;
+  border-color:rgb(221, 221, 221);
+}
+.table-bioinfo-status td.unknown {
+  color: #ccc;
+}
+
+.bioinfo-status-runstate {
+  text-transform: lowercase;
+}
+
+.bioinfo-status-disabled td {
+  background-color: #ededed;
+  color: #ccc;
+}
+
+.bioinfo-status-disabled td, .bioinfo-status-disabled th,
+.bioinfo-status-disabled .input-group.date,
+.bioinfo-status-disabled .input-group.date .input-group-addon
+{
+  cursor: not-allowed;
+}
+.bioinfo-status-disabled.bioinfo-delivered td.bioinfo-status-runstate {
+  cursor: pointer;
+}
+
+.table-bioinfo-status td.datadelivered {
+    min-width: 150px;
+}
+
+/*
+=== Homepage ===
+*/
+.homepage-ctas .well { text-align:center; }
+.homepage-ctas .well h3 { font-size:3em; }
+.homepage-ctas .well a i { color:#333; }
+
+#homepage-searchbar {
+  text-align:center;
+  border-top:1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding:10px 0;
+  display:inline-block;
+  width:100%;
+}
+#homepage-searchbar .control-label {
+  font-size:1.4em;
+  margin: 10px 15px 0 0;
+  padding:0;
+  top:5px;
+  vertical-align:top;
+}
+
+#homepage-searchbar .twitter-typeahead { width: 422px; }
+
+.subtle-spinner { color:#CCCCCC; }
+
+/* index.html page */
+.table-disk-quotas > tbody > tr > td {
+  padding: 8px;
+  width: 180px;
+}
+
+.table-disk-quotas > tbody > tr > td.disk-quotas-highcharts {
+  padding: 0;
+}
+
+.table-disk-quotas .wrapper {
+  display: inline-block;
+  position: relative;
+  height:100%;
+  width:100%;
+  white-space: nowrap;
+}
+
+.table-disk-quotas .val {
+  display: block;
+  position: absolute;
+  padding:0;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index:-1;
+  background-color: #ededed;
+}
+
+.table-disk-quotas .val span {
+  position: absolute;
+  top: 8px; left: 8px;
+}
+.table-disk-quotas .percent {
+  padding: 8px;
+}
+.table-disk-quotas .q-danger .val { background-color: #f2dede; }
+.table-disk-quotas .q-danger span { color: #a94442; }
+.table-disk-quotas .q-warning .val { background-color: #fcf8e3; }
+.table-disk-quotas .q-warning span { color: #8a6d3b; }
+
+.quota_decrease {
+    display: inline-block;
+    margin-left: 30px;
+}
+
+.glow {
+  box-shadow: 0 0 20px rgba(81, 203, 238, 1);
+  margin-bottom:5px;
+}
+
+/*
+=== Suggestions Box ===
+*/
+#suggestions_table {
+  max-height:800px;
+  overflow-y:scroll;
+}
+
+th.sort{
+  cursor: pointer;
+
 }
