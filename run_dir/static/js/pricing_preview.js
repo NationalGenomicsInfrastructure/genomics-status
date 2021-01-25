@@ -206,7 +206,7 @@ app.component('pricing-preview', {
               <div class="row" id="table_h_and_search">
                 <h2 class="col mr-auto">Current Draft</h2>
               </div>
-              <v-products-table :show_discontinued="this.$root.show_discontinued"/>
+              <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="false"/>
             </div>
           </template>
         `

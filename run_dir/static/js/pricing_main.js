@@ -417,7 +417,7 @@ app.component('exchange-rates', {
 })
 
 app.component('v-products-table', {
-    props: ['show_discontinued'],
+    props: ['show_discontinued', 'quotable'],
     data: function() {
         return {
             dataTable: null
@@ -471,7 +471,7 @@ app.component('v-products-table', {
       <table class="table table-sm sortable" id="pricing_products_table">
         <thead class="table-light">
           <tr class="sticky">
-            <th>Quoting</th>
+            <th v-if="quotable">Quoting</th>
             <th class="sort" data-sort="id">ID</th>
             <th class="sort" data-sort="category">Category</th>
             <th class="sort" data-sort="type">Type</th>
@@ -488,7 +488,7 @@ app.component('v-products-table', {
         </thead>
         <tfoot class="table-light">
           <tr>
-            <th></th>
+            <th v-if="quotable"></th>
             <th class="sort" data-sort="id"><input class="form-control search search-query" type="text" placeholder="Search ID" /></th>
             <th class="sort" data-sort="category"><input class="form-control search search-query" type="text" placeholder="Search Category" /></th>
             <th class="sort" data-sort="type"><input class="form-control search search-query" type="text" placeholder="Search Type" /></th>
@@ -505,7 +505,7 @@ app.component('v-products-table', {
         </tfoot>
         <tbody class="list" id='pricing_products_tbody'>
         <template v-for="product in this.$root.all_products" :key="product['REF_ID']">
-            <product-table-row :product_id="product['REF_ID']">
+            <product-table-row :product_id="product['REF_ID']" :quotable="quotable">
             </product-table-row>
         </template>
         </tbody>
@@ -514,7 +514,7 @@ app.component('v-products-table', {
 })
 
 app.component('product-table-row', {
-    props: ['product_id'],
+    props: ['product_id', 'quotable'],
     computed: {
         product() {
             return this.$root.all_products[this.product_id]
@@ -526,8 +526,21 @@ app.component('product-table-row', {
                 return 0
             }
         },
+        changes() {
+            if (this.product_id in this.$root.product_changes) {
+                return this.$root.product_changes[this.product_id]
+            } else {
+                return null
+            }
+        },
+        is_changes() {
+            return (this.changes !== null)
+        },
         discontinued() {
             return (this.product['Status'] == 'Discontinued')
+        },
+        status_css() {
+            return 'status_' + this.product['Status'].toLowerCase()
         },
         visible() {
             return (this.$root.show_discontinued || !this.discontinued)
@@ -559,8 +572,8 @@ app.component('product-table-row', {
     },
     template: /*html*/`
         <template v-if="this.visible">
-          <tr :class="'status_' + product['Status'].toLowerCase()">
-              <td>
+          <tr :class="{status_css: true, 'table-primary': is_changes}">
+              <td v-if="quotable">
                   <a href="#" class="button add-to-quote" :data-product-id="product['REF_ID']" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
                   <span>({{quote_count}})</span>
               </td>
@@ -570,7 +583,10 @@ app.component('product-table-row', {
               <td class="category">
                   {{product['Category']}}
               </td>
-              <td class="type">
+              <td v-if="is_changes && ('Type' in changes)" class="type table-warning">
+                  {{product['Type']}}
+              </td>
+              <td v-else class="type">
                   {{product['Type']}}
               </td>
               <td class="name">
