@@ -17,7 +17,7 @@ class UserManagementHandler(SafeHandler):
 
 class UserManagementDataHandler(SafeHandler):
     """Serves the data for populating user roles table and also methods to modify user roles
-    URL: /api/v1/user_managment/users
+    URL: /api/v1/user_management/users
     """
 
     def get(self):
