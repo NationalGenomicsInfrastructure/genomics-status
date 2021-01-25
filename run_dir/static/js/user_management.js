@@ -78,8 +78,8 @@ $(function(){
 
       //Add the bootstrap classes to the search thingy
       $('div.dataTables_filter input').addClass('form-control search search-query');
-      $('#ur_table_filter').addClass('form-inline float-right');
-      $("#ur_table_filter").appendTo("h1");
+      $('#ur_table_filter').addClass('form-inline float-right mt-2');
+      $("#ur_table_filter").appendTo("#searchGoesHere");
       $('#ur_table_filter label input').appendTo($('#ur_table_filter'));
       $('#ur_table_filter label').remove();
       $("#ur_table_filter input").attr("placeholder", "Search..");
