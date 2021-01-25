@@ -35,7 +35,7 @@ $(function(){
         tbl_row.append($('<td>').html(user_td));
 
         if(role){
-          role_list = Object.values(role).toString()
+          role_list = Object.values(role).join(', ')
           tbl_row.append($('<td>').html(role_list))
         }
         else{
