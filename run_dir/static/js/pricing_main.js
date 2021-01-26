@@ -536,6 +536,16 @@ app.component('product-table-row', {
         is_changes() {
             return (this.changes !== null)
         },
+        validation_msgs() {
+            if (this.product_id in this.$root.validation_msgs['products']) {
+                return this.$root.validation_msgs['products'][this.product_id]
+            } else {
+                return null
+            }
+        },
+        is_invalid() {
+            return (this.validation_msgs !== null)
+        },
         discontinued() {
             return (this.product['Status'] == 'Discontinued')
         },
@@ -572,38 +582,35 @@ app.component('product-table-row', {
     },
     template: /*html*/`
         <template v-if="this.visible">
-          <tr :class="{status_css: true, 'table-primary': is_changes}">
+          <tr class="status_css" :class="{'pricing-tr-is-invalid': is_invalid, 'pricing-tr-changed': is_changes}">
               <td v-if="quotable">
                   <a href="#" class="button add-to-quote" :data-product-id="product['REF_ID']" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
                   <span>({{quote_count}})</span>
               </td>
-              <td class="id">
+              <td class="id" :class="{'table-warning': is_changes && ('REF_ID' in changes)}">
                   {{product['REF_ID']}}
               </td>
-              <td class="category">
+              <td class="category" :class="{'table-warning': is_changes && ('Category' in changes)}">
                   {{product['Category']}}
               </td>
-              <td v-if="is_changes && ('Type' in changes)" class="type table-warning">
+              <td class="type" :class="{'table-warning': is_changes && ('Type' in changes)}">
                   {{product['Type']}}
               </td>
-              <td v-else class="type">
-                  {{product['Type']}}
-              </td>
-              <td class="name">
+              <td class="name" :class="{'table-warning': is_changes && ('Name' in changes)}">
                   {{product["Name"]}}
               </td>
-              <td class="components">
+              <td class="components" :class="{'table-warning': is_changes && ('Components' in changes)}">
                 <product-table-components :product_id="product_id" :type="'Regular'">
                 </product-table-components>
               </td>
-              <td class="alternative_components">
+              <td class="alternative_components" :class="{'table-warning': is_changes && ('Alternative Components' in changes)}">
                 <product-table-components :product_id="product_id" :type="'Alternative'">
                 </product-table-components>
               </td>
-              <td class="full_cost_fee">
+              <td class="full_cost_fee" :class="{'table-warning': is_changes && ('Full cost fee' in changes)}">
                   {{product["Full cost fee"]}}
               </td>
-              <td class="overhead">
+              <td class="overhead" :class="{'table-warning': is_changes && ('Re-run fee' in changes)}">
                   {{product["Re-run fee"]}}
               </td>
               <td class="price_internal">
@@ -615,7 +622,7 @@ app.component('product-table-row', {
               <td class="full_cost">
                   {{cost['full_cost'].toFixed(2)}}
               </td>
-              <td class="comment">
+              <td class="comment" :class="{'table-warning': is_changes && ('Comment' in changes)}">
                   {{product["Comment"]}}
               </td>
           </tr>

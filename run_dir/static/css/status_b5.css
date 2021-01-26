@@ -80,6 +80,14 @@ input.quantity_updateable {
     padding-top: 4rem;
 }
 
+.pricing-tr-changed {
+    border: 2px dashed green;
+}
+
+.pricing-tr-is-invalid.pricing-tr-changed {
+    border: 2px dashed red;
+}
+
 .pricing_collapse_link {
     text-decoration: none;
     color: black;
