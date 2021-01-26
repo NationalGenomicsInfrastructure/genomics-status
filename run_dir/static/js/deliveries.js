@@ -283,7 +283,6 @@ $("#notes_form").submit( function(e) {
           return false;
        }
     }
-    //don't like to use this
     note_url = '/api/v1/running_notes/' + project_id;
     $('#save_note_button').addClass('disabled').text('Submitting..');
     $.ajax({
