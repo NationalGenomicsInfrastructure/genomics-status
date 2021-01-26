@@ -253,5 +253,4 @@ $("#running_notes_form").submit( function(e) {
       }
     });
 });
-
-$(document).ready().delay(1000).queue(function(){$('#new_note_text').sew({values:window.users})});
+$('#new_note_text').on('focus',function(){$(this).sew({values:window.users})});

@@ -20,11 +20,11 @@
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-6" style="margin-top:20px;">
+                        <div class="col-md-6 mt-4">
                             <h4>Write Running Note</h4>
                             <textarea rows="5" class="form-control" id="new_note_text" style="height:97px;"></textarea>
                         </div>
-                        <div class="col-md-6" style="margin-top:20px;">
+                        <div class="col-md-6 mt-4">
                             <h4>Preview</h4>
                             <div class="card" id="running_note_preview_card">
                                 <div class="card-header"><a class="text-decoration-none" href="#">{{ user.name }}</a> - <span class="todays_date">Date</span><span id="preview_category"> - Category</span></div>
@@ -34,10 +34,12 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row">
                         <div class="col-md-6 text-right">
                             <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help">Markdown Help</button>
                             <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
                         </div>
+                    </div>
                   </div>
               </div>
         </form>

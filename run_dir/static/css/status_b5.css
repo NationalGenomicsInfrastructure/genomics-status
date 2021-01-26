@@ -620,3 +620,34 @@ width:30%;
 th.sort{
   cursor: pointer;
 }
+/* Deliveries page */
+.bi-fc-runningnote, .bi-project-note {
+  color: #777;
+  font-size: 11px;
+  line-height: 13px;
+  margin: 4px 0;
+}
+
+#ongoing_deliveries .bi-run-status {
+  cursor: pointer;
+}
+
+.button-edit-bioinfo-responsible, .button-save-bioinfo-responsible, .button-reset-bioinfo-responsible{
+    cursor: pointer;
+}
+
+.delivery {
+  border-top: 1px solid #fff;
+  border-right: 1px solid #fff;
+  border-left: 1px solid #fff;
+  border-bottom: 1px solid #dedede;
+  -webkit-border-radius: 5px 5px 0 0;
+     -moz-border-radius: 5px 5px 0 0;
+          border-radius: 5px 5px 0 0;
+  padding: 0 10px;
+  margin-bottom: 25px;
+}
+
+.dl-horizontal.hide-incoming > dd{
+  display: flow-root;
+}
