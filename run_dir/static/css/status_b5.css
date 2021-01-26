@@ -80,12 +80,16 @@ input.quantity_updateable {
     padding-top: 4rem;
 }
 
-.pricing-tr-changed {
-    border: 2px solid #198754;
+.pricing-tr-changed .pricing-td-changed {
+    font-weight: bold;
+    color: #198754;
+    text-decoration: underline;
 }
 
-.pricing-tr-is-invalid.pricing-tr-changed {
-    border: 2px solid #dc3545;
+.pricing-tr-is-invalid .pricing-td-changed {
+    font-weight: bold;
+    color: #dc3545;
+    text-decoration: underline;
 }
 
 .pricing_collapse_link {

@@ -582,35 +582,35 @@ app.component('product-table-row', {
     },
     template: /*html*/`
         <template v-if="this.visible">
-          <tr class="status_css" :class="{'pricing-tr-is-invalid': is_invalid, 'pricing-tr-changed': is_changes}">
+          <tr class="status_css" :class="{'table-danger pricing-tr-is-invalid': is_invalid, 'table-success pricing-tr-changed': is_changes}">
               <td v-if="quotable">
                   <a href="#" class="button add-to-quote" :data-product-id="product['REF_ID']" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
                   <span>({{quote_count}})</span>
               </td>
-              <td class="id" :class="{'table-warning': is_changes && ('REF_ID' in changes)}">
+              <td class="id" :class="{'pricing-td-changed': is_changes && ('REF_ID' in changes)}">
                   {{product['REF_ID']}}
               </td>
-              <td class="category" :class="{'table-warning': is_changes && ('Category' in changes)}">
+              <td class="category" :class="{'pricing-td-changed': is_changes && ('Category' in changes)}">
                   {{product['Category']}}
               </td>
-              <td class="type" :class="{'table-warning': is_changes && ('Type' in changes)}">
+              <td class="type" :class="{'pricing-td-changed': is_changes && ('Type' in changes)}">
                   {{product['Type']}}
               </td>
-              <td class="name" :class="{'table-warning': is_changes && ('Name' in changes)}">
+              <td class="name" :class="{'pricing-td-changed': is_changes && ('Name' in changes)}">
                   {{product["Name"]}}
               </td>
-              <td class="components" :class="{'table-warning': is_changes && ('Components' in changes)}">
+              <td class="components" :class="{'pricing-td-changed': is_changes && ('Components' in changes)}">
                 <product-table-components :product_id="product_id" :type="'Regular'">
                 </product-table-components>
               </td>
-              <td class="alternative_components" :class="{'table-warning': is_changes && ('Alternative Components' in changes)}">
+              <td class="alternative_components" :class="{'pricing-td-changed': is_changes && ('Alternative Components' in changes)}">
                 <product-table-components :product_id="product_id" :type="'Alternative'">
                 </product-table-components>
               </td>
-              <td class="full_cost_fee" :class="{'table-warning': is_changes && ('Full cost fee' in changes)}">
+              <td class="full_cost_fee" :class="{'pricing-td-changed': is_changes && ('Full cost fee' in changes)}">
                   {{product["Full cost fee"]}}
               </td>
-              <td class="overhead" :class="{'table-warning': is_changes && ('Re-run fee' in changes)}">
+              <td class="overhead" :class="{'pricing-td-changed': is_changes && ('Re-run fee' in changes)}">
                   {{product["Re-run fee"]}}
               </td>
               <td class="price_internal">
@@ -622,7 +622,7 @@ app.component('product-table-row', {
               <td class="full_cost">
                   {{cost['full_cost'].toFixed(2)}}
               </td>
-              <td class="comment" :class="{'table-warning': is_changes && ('Comment' in changes)}">
+              <td class="comment" :class="{'pricing-td-changed': is_changes && ('Comment' in changes)}">
                   {{product["Comment"]}}
               </td>
           </tr>
@@ -763,7 +763,7 @@ app.component('v-draft-validation-msgs-list', {
       <div v-else class="my-3 card border-danger">
         <div class="card-header">
           <a class="pricing_collapse_link" data-toggle="collapse" data-target="#validation_msgs_card_body" role="button" aria-expanded="true" aria-controls="#validation_msgs_card_body">
-            <h4><span class="badge bg-danger">Validation errors:</span> <i class="fas fa-caret-down fa-lg pl-1"></i></h4>
+            <h4><span class="badge bg-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Validation errors:</span> <i class="fas fa-caret-down fa-lg pl-1"></i></h4>
           </a>
         </div>
         <div class="card-body collapse show" id="validation_msgs_card_body">
