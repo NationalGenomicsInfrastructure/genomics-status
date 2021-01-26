@@ -587,18 +587,10 @@ app.component('product-table-row', {
                   <a href="#" class="button add-to-quote" :data-product-id="product['REF_ID']" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
                   <span>({{quote_count}})</span>
               </td>
-              <td class="id" :class="{'pricing-td-changed': is_changes && ('REF_ID' in changes)}">
-                  {{product['REF_ID']}}
-              </td>
-              <td class="category" :class="{'pricing-td-changed': is_changes && ('Category' in changes)}">
-                  {{product['Category']}}
-              </td>
-              <td class="type" :class="{'pricing-td-changed': is_changes && ('Type' in changes)}">
-                  {{product['Type']}}
-              </td>
-              <td class="name" :class="{'pricing-td-changed': is_changes && ('Name' in changes)}">
-                  {{product["Name"]}}
-              </td>
+              <v-product-table-row-td td_key='REF_ID' :row_changes="this.changes" :product="this.product"/>
+              <v-product-table-row-td td_key='Category' :row_changes="this.changes" :product="this.product"/>
+              <v-product-table-row-td td_key='Type' :row_changes="this.changes" :product="this.product"/>
+              <v-product-table-row-td td_key='Name' :row_changes="this.changes" :product="this.product"/>
               <td class="components" :class="{'pricing-td-changed': is_changes && ('Components' in changes)}">
                 <product-table-components :product_id="product_id" :type="'Regular'">
                 </product-table-components>
@@ -607,12 +599,8 @@ app.component('product-table-row', {
                 <product-table-components :product_id="product_id" :type="'Alternative'">
                 </product-table-components>
               </td>
-              <td class="full_cost_fee" :class="{'pricing-td-changed': is_changes && ('Full cost fee' in changes)}">
-                  {{product["Full cost fee"]}}
-              </td>
-              <td class="overhead" :class="{'pricing-td-changed': is_changes && ('Re-run fee' in changes)}">
-                  {{product["Re-run fee"]}}
-              </td>
+              <v-product-table-row-td td_key='Full cost fee' :row_changes="this.changes" :product="this.product"/>
+              <v-product-table-row-td td_key='Re-run fee' :row_changes="this.changes" :product="this.product"/>
               <td class="price_internal">
                   {{cost['cost'].toFixed(2)}}
               </td>
@@ -622,13 +610,48 @@ app.component('product-table-row', {
               <td class="full_cost">
                   {{cost['full_cost'].toFixed(2)}}
               </td>
-              <td class="comment" :class="{'pricing-td-changed': is_changes && ('Comment' in changes)}">
-                  {{product["Comment"]}}
-              </td>
+              <v-product-table-row-td td_key='Comment' :row_changes="this.changes" :product="this.product"/>
           </tr>
         </template>
     `
 })
+
+app.component('v-product-table-row-td',  {
+    props: ['td_key', 'row_changes', 'product'],
+    data() {
+        return { tooltip: null }
+    },
+    computed: {
+        is_changes() {
+             return ((this.row_changes !== null) && (this.td_key in this.row_changes))
+        },
+        changes() {
+            if (this.row_changes !== null) {
+                return this.row_changes[this.td_key]
+            } else {
+                return null
+            }
+        },
+        tooltip_html() {
+          if (this.is_changes) {
+            return `${this.changes[1]} <i class="fas fa-arrow-right"></i> ${this.changes[0]}`
+          }
+        }
+    },
+    watch: {
+        changes(newVal, oldVal) {
+            if (this.is_changes) {
+              /* Initializing tooltip, needed for dynamic content to have tooltips */
+              this.tooltip = new bootstrap.Tooltip(this.$el)
+            }
+        }
+    },
+    template: /*html*/`
+        <td :class="{'pricing-td-changed': is_changes}" data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
+          {{product[td_key]}}
+        </td>
+        `
+    });
 
 app.component('product-table-components', {
     props: ['product_id', 'type'],
