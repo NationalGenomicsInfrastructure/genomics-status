@@ -587,20 +587,14 @@ app.component('product-table-row', {
                   <a href="#" class="button add-to-quote" :data-product-id="product['REF_ID']" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
                   <span>({{quote_count}})</span>
               </td>
-              <v-product-table-row-td td_key='REF_ID' :row_changes="this.changes" :product="this.product"/>
-              <v-product-table-row-td td_key='Category' :row_changes="this.changes" :product="this.product"/>
-              <v-product-table-row-td td_key='Type' :row_changes="this.changes" :product="this.product"/>
-              <v-product-table-row-td td_key='Name' :row_changes="this.changes" :product="this.product"/>
-              <td class="components" :class="{'pricing-td-changed': is_changes && ('Components' in changes)}">
-                <product-table-components :product_id="product_id" :type="'Regular'">
-                </product-table-components>
-              </td>
-              <td class="alternative_components" :class="{'pricing-td-changed': is_changes && ('Alternative Components' in changes)}">
-                <product-table-components :product_id="product_id" :type="'Alternative'">
-                </product-table-components>
-              </td>
-              <v-product-table-row-td td_key='Full cost fee' :row_changes="this.changes" :product="this.product"/>
-              <v-product-table-row-td td_key='Re-run fee' :row_changes="this.changes" :product="this.product"/>
+              <v-product-table-row-td td_key='REF_ID' :row_changes="this.changes" :product_id="this.product_id"/>
+              <v-product-table-row-td td_key='Category' :row_changes="this.changes" :product_id="this.product_id"/>
+              <v-product-table-row-td td_key='Type' :row_changes="this.changes" :product_id="this.product_id"/>
+              <v-product-table-row-td td_key='Name' :row_changes="this.changes" :product_id="this.product_id"/>
+              <v-product-table-row-td td_key='Components' :row_changes="this.changes" :product_id="this.product_id"/>
+              <v-product-table-row-td td_key='Alternative Components' :row_changes="this.changes" :product_id="this.product_id"/>
+              <v-product-table-row-td td_key='Full cost fee' :row_changes="this.changes" :product_id="this.product_id"/>
+              <v-product-table-row-td td_key='Re-run fee' :row_changes="this.changes" :product_id="this.product_id"/>
               <td class="price_internal">
                   {{cost['cost'].toFixed(2)}}
               </td>
@@ -610,14 +604,14 @@ app.component('product-table-row', {
               <td class="full_cost">
                   {{cost['full_cost'].toFixed(2)}}
               </td>
-              <v-product-table-row-td td_key='Comment' :row_changes="this.changes" :product="this.product"/>
+              <v-product-table-row-td td_key='Comment' :row_changes="this.changes" :product_id="this.product_id"/>
           </tr>
         </template>
     `
 })
 
 app.component('v-product-table-row-td',  {
-    props: ['td_key', 'row_changes', 'product'],
+    props: ['td_key', 'row_changes', 'product_id'],
     data() {
         return { tooltip: null }
     },
@@ -632,9 +626,25 @@ app.component('v-product-table-row-td',  {
                 return null
             }
         },
+        is_components() {
+            return (['Components', 'Alternative Components'].indexOf(this.td_key) !== -1)
+        },
+        is_regular_components() {
+            return this.td_key == 'Components'
+        },
+        is_alternative_components() {
+            return this.td_key == 'Alternative Components'
+        },
+        product() {
+            return this.$root.all_products[this.product_id]
+        },
         tooltip_html() {
           if (this.is_changes) {
-            return `${this.changes[1]} <i class="fas fa-arrow-right"></i> ${this.changes[0]}`
+            if (typeof this.changes[0] == 'string') {
+                return `${this.changes[1]} <i class="fas fa-arrow-right"></i> ${this.changes[0]}`
+            } else {
+                return JSON.stringify(this.changes[1]) + '<i class="fas fa-arrow-right"></i>' + JSON.stringify(this.changes[0])
+            }
           }
         }
     },
@@ -648,7 +658,19 @@ app.component('v-product-table-row-td',  {
     },
     template: /*html*/`
         <td :class="{'pricing-td-changed': is_changes}" data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
-          {{product[td_key]}}
+          <template v-if="is_components">
+            <template v-if="this.td_key == 'Components'">
+              <product-table-components :product_id="product_id" :type="'Regular'">
+              </product-table-components>
+            </template>
+            <template v-else>
+              <product-table-components :product_id="product_id" :type="'Alternative'">
+              </product-table-components>
+            </template>
+          </template>
+          <template v-else>
+            {{product[td_key]}}
+          </template>
         </td>
         `
     });
