@@ -5,7 +5,7 @@ from status.util import SafeHandler
 
 class UserManagementHandler(SafeHandler):
     """ Serves a page with users and roles listed, with the option to create new users
-    URL: /assign_roles
+    URL: /user_management
     """
 
     def get(self):
