@@ -1,5 +1,5 @@
 $(function(){
-    return $.getJSON('/api/v1/assign_roles/users', function (data) {
+    return $.getJSON('/api/v1/user_management/users', function (data) {
       window.users=Object.keys(data)
         .map(n=>{
             return {val:n.split('@')[0]};
