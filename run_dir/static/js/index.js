@@ -6,10 +6,10 @@ fill_updates_table = function(){
             var link = '';
             var linkend = '';
             if(summary[2] == 'Project information'){
-                link = '<a href="/project/'+summary[1]+'">';
+                link = '<a class="text-decoration-none" href="/project/'+summary[1]+'">';
                 linkend = '</a>';
             } else if(summary[2] == 'Flowcell information'){
-                link = '<a href="/flowcells/'+summary[1]+'">';
+                link = '<a class="text-decoration-none" href="/flowcells/'+summary[1]+'">';
                 linkend = '</a>';
             }
             tbl_row = '<tr>';

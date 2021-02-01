@@ -99,6 +99,7 @@ h1 small, h2 small, h3 small, h4 small{
 /*
 === Typography ===
 */
+.highlighted { background-color: #FFFFCC; }
 .sentenceCase { text-transform: capitalize; }
 .nowrap { white-space: pre; }
 .dl-wide dt { width:260px; }
