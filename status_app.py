@@ -38,8 +38,8 @@ from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotH
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
 from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
-    ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, ProjectSummaryHandler, \
-    ProjectSummaryUpdateHandler, ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
+    ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, \
+    ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
     ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler, \
     ImagesDownloadHandler
 from status.nas_quotas import NASQuotasHandler
@@ -152,8 +152,6 @@ class Application(tornado.web.Application):
             ("/api/v1/project/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
-            ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
-            ("/api/v1/project_summary_update/([^/]*)/([^/]*)$", ProjectSummaryUpdateHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
@@ -214,7 +212,6 @@ class Application(tornado.web.Application):
             ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesHandler),
             ("/project/(P[^/]*)/([^/]*)$", ProjectSamplesHandler),
-            ("/project_summary/([^/]*)$", ProjectSummaryHandler),
             ("/projects", ProjectsHandler),
             ("/proj_meta", ProjMetaCompareHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
@@ -356,7 +353,6 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/pricing_quote_tbody.html")
             tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/project_samples.html")
-            tornado.autoreload.watch("design/project_summary.html")
             tornado.autoreload.watch("design/projects.html")
             tornado.autoreload.watch("design/reads_total.html")
             tornado.autoreload.watch("design/rec_ctrl_view.html")
