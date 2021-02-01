@@ -80,6 +80,10 @@ input.quantity_updateable {
     padding-top: 4rem;
 }
 
+.pricing-td-changed:hover {
+    border: 2px solid #6c757d;
+}
+
 .pricing-tr-changed .pricing-td-changed {
     font-weight: bold;
     color: #198754;
@@ -90,6 +94,10 @@ input.quantity_updateable {
     font-weight: bold;
     color: #dc3545;
     text-decoration: underline;
+}
+
+.pricing-td-highlight-tooltip {
+    min-width: 150px;
 }
 
 .pricing_collapse_link {

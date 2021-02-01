@@ -640,10 +640,27 @@ app.component('v-product-table-row-td',  {
         },
         tooltip_html() {
           if (this.is_changes) {
+            return_html = '<div class="row pricing-td-highlight-tooltip"><div class="col-5">'
+            arrow_element = '</div><div class="col-2 d-flex align-self-center px-0"><h5><i class="fas fa-arrow-right"></i></h5></div>'
             if (typeof this.changes[0] == 'string') {
-                return `${this.changes[1]} <i class="fas fa-arrow-right"></i> ${this.changes[0]}`
+                return_html += `<p>${this.changes[1]}</p>`
+                return_html += arrow_element
+                return_html += '<div class="col-5">'
+                return_html += `<p>${this.changes[0]}</p>`
+                return_html += '</div></div>'
+                return return_html
             } else {
-                return JSON.stringify(this.changes[1]) + '<i class="fas fa-arrow-right"></i>' + JSON.stringify(this.changes[0])
+                for ([prod_id, quantity_data] of Object.entries(this.changes[1])) {
+                    return_html += '<p>' + quantity_data['quantity'] + ' x ' + this.$root.all_components[prod_id]['Product name'] + '</p>'
+                }
+                return_html += arrow_element
+                return_html += '<div class="col-5">'
+                for ([prod_id, quantity_data] of Object.entries(this.changes[0])) {
+                    return_html += '<p>' + quantity_data['quantity'] + ' x ' + this.$root.all_components[prod_id]['Product name'] + '</p>'
+                }
+                /* return JSON.stringify(this.changes[1]) + '<i class="fas fa-arrow-right"></i>' + JSON.stringify(this.changes[0]) */
+                return_html += '</div></div>'
+                return return_html
             }
           }
         }
@@ -651,8 +668,7 @@ app.component('v-product-table-row-td',  {
     watch: {
         changes(newVal, oldVal) {
             if (this.is_changes) {
-              /* Initializing tooltip, needed for dynamic content to have tooltips */
-              this.tooltip = new bootstrap.Tooltip(this.$el)
+                this.tooltip = new bootstrap.Tooltip(this.$el)
             }
         }
     },
@@ -660,23 +676,23 @@ app.component('v-product-table-row-td',  {
         <td :class="{'pricing-td-changed': is_changes}" data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
           <template v-if="is_components">
             <template v-if="this.td_key == 'Components'">
-              <product-table-components :product_id="product_id" :type="'Regular'">
+              <product-table-components :product_id="product_id" :type="'Regular'" :is_changes="is_changes">
               </product-table-components>
             </template>
             <template v-else>
-              <product-table-components :product_id="product_id" :type="'Alternative'">
+              <product-table-components :product_id="product_id" :type="'Alternative'" :is_changes="is_changes">
               </product-table-components>
             </template>
           </template>
           <template v-else>
-            {{product[td_key]}}
+            <p>{{product[td_key]}}</p>
           </template>
         </td>
         `
     });
 
 app.component('product-table-components', {
-    props: ['product_id', 'type'],
+    props: ['product_id', 'type', 'is_changes'],
     computed: {
         product() {
             return this.$root.all_products[this.product_id]
@@ -690,11 +706,19 @@ app.component('product-table-components', {
         },
         components() {
             return this.$root.populatedComponents(this.product['REF_ID'], this.type)
-        }
+        },
+        is_empty() {
+            return (this.componentIds.length == 0)
+        },
     },
     template: /*html*/`
-        <template v-for="(component_data, comp_id) in components" :key="comp_id">
-          <div>{{component_data['component']['Product name']}}</div>
+        <template v-if="is_changes && is_empty">
+          <h4><i class="fas fa-exclamation-triangle"></i></h4>
+        </template>
+        <template v-else>
+          <template v-for="(component_data, comp_id) in components" :key="comp_id">
+            <div>{{component_data['component']['Product name']}}</div>
+          </template>
         </template>
       `
 })
