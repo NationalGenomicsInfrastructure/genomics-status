@@ -152,6 +152,7 @@ class Application(tornado.web.Application):
             ("/api/v1/project/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
+            ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
