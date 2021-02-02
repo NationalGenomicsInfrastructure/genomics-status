@@ -195,7 +195,7 @@ app.component('v-pricing-quote', {
             <div class="row" id="table_h_and_search">
               <h2 class="col mr-auto">Available Products</h2>
             </div>
-            <v-products-table :show_discontinued="this.$root.show_discontinued" :quoteable="true"/>
+            <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="true"/>
           </div>
         </template>
         `

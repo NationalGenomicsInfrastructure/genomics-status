@@ -821,15 +821,12 @@ app.component('v-draft-validation-msgs-list', {
         component_messages() {
             return this.$root.validation_msgs['components']
         },
-        no_messages() {
-            return (Object.keys(this.product_messages).length === 0) && (Object.keys(this.component_messages).length === 0)
+        any_messages() {
+            return (Object.keys(this.product_messages).length !== 0) || (Object.keys(this.component_messages).length !== 0)
         }
     },
     template: /*html*/`
-      <div v-if="no_messages" class="my-2">
-        <h4>No validation messages</h4>
-      </div>
-      <div v-else class="my-3 card border-danger">
+      <div v-if="any_messages" class="my-3 card border-danger">
         <div class="card-header">
           <a class="pricing_collapse_link" data-toggle="collapse" data-target="#validation_msgs_card_body" role="button" aria-expanded="true" aria-controls="#validation_msgs_card_body">
             <h4><span class="badge bg-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Validation errors:</span> <i class="fas fa-caret-down fa-lg pl-1"></i></h4>
