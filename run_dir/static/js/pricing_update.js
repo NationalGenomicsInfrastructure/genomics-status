@@ -658,7 +658,6 @@ app.component('component-table-row', {
     },
     addComponent(event) {
         if (event) {
-          console.log(this.product_id)
           this.$root.addProductComponent(this.product_id, this.component_id, this.type)
         }
     },
