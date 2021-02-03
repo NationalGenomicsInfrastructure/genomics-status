@@ -265,6 +265,11 @@ class PricingValidator():
         # Check which ids have been added
         added_product_ids = set(self.draft_products.keys()) - set(self.published_products.keys())
         added_component_ids = set(self.draft_components.keys()) - set(self.published_components.keys())
+        for product_id in added_product_ids:
+            self._add_change('products', product_id, 'All', self.draft_products[product_id], None)
+
+        for component_id in added_component_ids:
+            self._add_change('components', component_id, 'All', self.draft_components[component_id], None)
 
         for product_id, published_prod in self.published_products.items():
             draft_prod = self.draft_products[product_id]
