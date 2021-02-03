@@ -10,6 +10,7 @@ const vPricingMain = {
             draft_cost_calculator: null,
             draft_created_at: null,
             draft_data_loading: true,
+            error_messages: null,
             new_products: new Set(),
             new_components: new Set(),
             modal_product_id: "52", //Should probably be null when we handle that edge case
@@ -242,6 +243,9 @@ const vPricingMain = {
                   }
                   this.current_user_email = response.data['current_user_email']
                   this.draft_data_loading = false
+              })
+              .catch(function (error) {
+                  this.error_messages = 'Unable to fetch data, please try again or contact a system administrator.'
               })
         },
         fetchExchangeRates(date) {
@@ -736,6 +740,15 @@ app.component('v-draft-changes-list', {
             return (Object.keys(this.product_changes).length === 0) && (Object.keys(this.component_changes).length === 0)
         }
     },
+    methods: {
+        is_new_product(prod_changes_data) {
+            if (Object.keys(prod_changes_data).length !== 0) {
+                return (Object.keys(prod_changes_data)[0] == 'All')
+            } else {
+                return false
+            }
+        }
+    },
     template: /*html*/`
       <div v-if="no_changes" class="my-2">
         <h4>No changes between draft and published document.</h4>
@@ -788,7 +801,7 @@ app.component('v-draft-changes-list', {
                       </template>
                     </div>
                   </div>
-                </template>
+                  </template>
               </div>
             </div>
             <div :class="modal ? 'col-12' : 'col-6 border-left'">

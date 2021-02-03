@@ -76,16 +76,17 @@ app.component('pricing-preview', {
         <div class="row mb-3">
           <template v-if="draft_exists">
             <div class="col-9">
+              <p>{{ this.$root.error_messages }}</p>
               <h1><span id="page_title">New Cost Calculator</span>
                 <template v-if="!this.$root.draft_data_loading">
                   <template v-if="!draft_locked_by_someone_else">
                     <a class="btn btn-primary btn-lg ml-5" href="/pricing_update"><i class="fas fa-edit mr-2"></i>Edit</a>
                     <button class="btn btn-success btn-lg ml-2" data-toggle="modal" data-target="#publish_draft_modal"><i class="far fa-paper-plane mr-2"></i>Publish</button>
                   </template>
-                </template>
-                <template v-else>
-                  <p>Draft is currently locked by {{draft_locked_by}}</p>
-                  <a class="btn btn-danger" @click="reassign_lock"><i class="fas fa-user-lock"></i> Reassign lock to you</a>
+                  <template v-else>
+                    <p>Draft is currently locked by {{draft_locked_by}}</p>
+                    <a class="btn btn-danger" @click="reassign_lock"><i class="fas fa-user-lock"></i> Reassign lock to you</a>
+                  </template>
                 </template>
               </h1>
               <span>
