@@ -12,7 +12,7 @@ $(document).ready(function() {
 
 function load_table() {
   var colspan = $('#pools_table > thead > tr:first > th').length + 1; // adding the first column
-  $("#pools_table_body").html('<tr><td colspan="'+colspan+'" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
+  $("#pools_table_body").html('<tr><td colspan="'+colspan+'" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
   return $.getJSON('/api/v1/qpcr_pools', function(data) {
     $("#pools_table_body").empty();
     $.each(data, function(flow, containers) {
@@ -22,11 +22,11 @@ function load_table() {
           var tbl_row = $('<tr>');
           tbl_row.append($('<td>').html(flow));
           tbl_row.append($('<td class="expand-proj">').html(function() {
-              var to_return = '<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>';
+              var to_return = '<span class="fa fa-plus-square" aria-hidden="true"></span>';
               to_return = to_return + container + ' <span class="badge">'+pools['samples'].length+'</span>';
               to_return = to_return + '<BR><span> \
               <table cellpadding="5" border="0" style="visibility:collapse;margin-bottom:0px;margin-top:5px;" align="right">';
-              to_return = to_return + '<thead><tr><th style="width:45%">Sample</th><th style="width:20%">Well</th><th>Waiting (in days)</th></tr></thead>';
+              to_return = to_return + '<thead><tr class="darkth"><th>Sample</th><th>Well</th><th>Waiting (in days)</th></tr></thead>';
               $.each(pools['samples'], function(pool, sample){
                 var wait = getDaysAndDateLabel(sample['queue_time'], 'date')[0];
                 to_return = to_return +
@@ -58,7 +58,7 @@ function load_table() {
           //get average wait time for all samples in a pool.
           avg_wait_calc = avg_wait_calc/pools['samples'].length;
           var daysAndLabel = getDaysAndDateLabel(avg_wait_calc, 'label');
-          tbl_row.append($('<td>').html('<span class="label label-'+daysAndLabel[1]+'">'+(avg_wait_calc).toFixed(1)+'</span>'));
+          tbl_row.append($('<td>').html('<span class="badge bg-'+daysAndLabel[1]+'">'+(avg_wait_calc).toFixed(1)+'</span>'));
           $("#pools_table_body").append(tbl_row);
         })
       }
@@ -98,7 +98,7 @@ function init_listjs() {
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#pools_table_filter').addClass('form-inline pull-right');
+    $('#pools_table_filter').addClass('form-inline float-right');
     $("#pools_table_filter").appendTo("h1");
     $('#pools_table_filter label input').appendTo($('#pools_table_filter'));
     $('#pools_table_filter label').remove();
@@ -114,21 +114,21 @@ function init_listjs() {
     } );
     $('.expand-proj').on('click', function () {
       if($(this).parent().find('table').css('visibility')=='collapse'){
-        $(this).find('.glyphicon').toggleClass('glyphicon-plus-sign glyphicon-minus-sign');
+        $(this).find('.fa').toggleClass('fa-plus-square fa-minus-square');
         $(this).parent().find('table').css('visibility', 'visible');
       }
       else {
-        $(this).find('.glyphicon').toggleClass('glyphicon-minus-sign glyphicon-plus-sign');
+        $(this).find('.fa').toggleClass('fa-minus-square fa-plus-square');
         $(this).parent().find('table').css('visibility', 'collapse');
       }
     });
     $('.expand-all').on('click', function () {
-      var reqText = {'Expand All': ['Collapse All', 'visible', 'glyphicon-plus-sign', 'glyphicon-minus-sign'],
-                      'Collapse All': ['Expand All', 'collapse', 'glyphicon-minus-sign', 'glyphicon-plus-sign']};
-      $('.expand-all').find('.glyphicon').removeClass(reqText[$('.expand-all').text()][2]);
-      $('#pools_table').find('tr').find('.glyphicon').removeClass(reqText[$('.expand-all').text()][2]);
-      $('.expand-all').find('.glyphicon').addClass(reqText[$('.expand-all').text()][3]);
-      $('#pools_table').find('tr').find('.glyphicon').addClass(reqText[$('.expand-all').text()][3]);
+      var reqText = {'Expand All': ['Collapse All', 'visible', 'fa-plus-square', 'fa-minus-square'],
+                      'Collapse All': ['Expand All', 'collapse', 'fa-minus-square', 'fa-plus-square']};
+      $('.expand-all').find('.fa').removeClass(reqText[$('.expand-all').text()][2]);
+      $('#pools_table').find('tr').find('.fa').removeClass(reqText[$('.expand-all').text()][2]);
+      $('.expand-all').find('.fa').addClass(reqText[$('.expand-all').text()][3]);
+      $('#pools_table').find('tr').find('.fa').addClass(reqText[$('.expand-all').text()][3]);
       $('#pools_table').find('tr').find('table').css('visibility', reqText[$('.expand-all').text()][1]);
       $('.expand-all').contents().filter(function(){ return this.nodeType == 3; }).first().replaceWith(reqText[$('.expand-all').text()][0]);
     });

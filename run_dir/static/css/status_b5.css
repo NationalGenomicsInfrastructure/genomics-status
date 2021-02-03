@@ -662,3 +662,9 @@ th.sort{
   .rcplate tr th:first-child {
     width: 4%;
 }
+
+.expand-all span.fa{
+  color: #0088cc;
+  cursor: pointer;
+  margin-right: 4px;
+}
