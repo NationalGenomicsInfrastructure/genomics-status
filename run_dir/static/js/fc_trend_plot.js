@@ -8,7 +8,6 @@ window.current_months_list=null;
 
 $(function(){
     init_page_js();
-    refresh_plot();
 });
 
 function refresh_plot(){
@@ -38,7 +37,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         legend: {
             title: {
                 text: 'Click to hide:',
-                align: 'center'                 
+                align: 'center'
                 }
         },
         plotOptions : {
@@ -71,21 +70,26 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         series: [{
             name : name,
             data:[]
-        }], 
+        }],
+        exporting: {
+          csv: {
+            itemDelimiter: ';'
+          }
+        }
     };
-    
+
     //Styling the default view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){
         toplot.yAxis={
             title: {
-                enabled: true,  
+                enabled: true,
                 text: 'Clusters',
             },
             labels: {
               formatter: function() {
                             return this.value.toExponential(2);
                                   }
-                    },                           
+                    },
             plotLines: [{
               color: '#bf8e11',
               dashStyle: 'longdash',
@@ -130,10 +134,8 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
     toplot.series=serie[1];
     toplot.xAxis.categories = serie[0];
     $("#main_plot").highcharts(toplot);
-    window.current_plot_obj=toplot; 
-    // Export TO CSV
-    toplot.downloadCSV();
-    
+    window.current_plot_obj=toplot;
+
 }
 
 function build_series(data, key, name, display_by, filter_inst_type, filter_inst, color_type){
@@ -155,7 +157,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
         }else if (data[d].instrument.indexOf('N') != -1 && filter_inst_type.includes('N')){
             continue;
         }
-        // Set colours and the name of data series  
+        // Set colours and the name of data series
         if (color_type=='chemver'){
             if (data[d].cver.includes('S4')){
                 series_name = "S4";
@@ -167,8 +169,8 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 series_name = "S1";
                 }
             if (data[d].cver.includes('SP')){
-                series_name = "SP"; 
-                }   
+                series_name = "SP";
+                }
             if (data[d].cver.includes('Version2')){
                 series_name = "MiSeq v2";
                 }
@@ -176,15 +178,15 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 series_name = "MiSeq v3";
                 }
             if (data[d].mode == '2'){
-                series_name = "MiSeq Nano"; 
-                }    
+                series_name = "MiSeq Nano";
+                }
             if (data[d].cver.includes('High')){
                 series_name = "NextSeq High";
                 }
             if (data[d].cver.includes('Mid')){
                 series_name = "NextSeq Mid";
                 }
-                col_color = color_by_chemistry(series_name); 
+                col_color = color_by_chemistry(series_name);
         }else if (color_type == 'month'){
             series_name = data[d].id.substr(0,4);
             col_color=color_by_month(data[d].id);
@@ -291,7 +293,7 @@ function color_by_chemistry(series_name){
     var id = Math.round(window.current_chemistries_list.indexOf(series_name));
 	  return current_color_schemes[col[series_name]](id).hex();
 }
- 
+
 function get_parameters(){
      //first, the search string
      var search_string;
@@ -352,7 +354,7 @@ function get_parameters(){
 
      //color type
      var color_by=$("#color_select option:selected").val();
-      
+
      var ret=[search_string, display_type, key, name, inst_type_filter, inst_filter, color_by, plot_type];
 
      return ret;
@@ -434,7 +436,7 @@ function update_color_schemes(){
     var chem_cs=chroma.scale(['pink', 'lightblue']).domain([0, 2]);
     var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
     var month_cs=chroma.scale(['yellow', 'lightblue', 'pink', 'orange']).domain([0,window.current_months_list.length-1]);
-    var s4_cs=chroma.scale(['#ff00ae', '#0080ff']).domain([0, window.current_chemistries_list.length-1]);  
+    var s4_cs=chroma.scale(['#ff00ae', '#0080ff']).domain([0, window.current_chemistries_list.length-1]);
     var s2_cs=chroma.scale(['#0080ff', '#11ad11']).domain([0, window.current_chemistries_list.length-1]);
     var s1_cs=chroma.scale(['#11ad11', '#00d5ff']).domain([0, window.current_chemistries_list.length-1]);
     var sp_cs=chroma.scale(['#ffb700', '#ff00ae']).domain([0, window.current_chemistries_list.length-1]);
@@ -465,8 +467,8 @@ function update_instrument_list(){
     }
 }
 function update_instrument_filters(){
-    var html='<ul class="list-inline">Filter out instruments ';
-    var html_hiseq='<ul class="list-inline">Filter out old instruments ';
+    var html='<label class="mb-2">Filter out instruments</label> <ul class="list-inline"> ';
+    var html_hiseq='<label class="mb-2">Filter out old instruments</label> <ul class="list-inline"> ';
     var my_inst_id='';
     var my_inst_name='';
     var old_inst=['D00415', 'ST-E00269', 'ST-E00198', 'ST-E00201', 'D00410', 'ST-E00214', 'ST-E00266'];
@@ -474,22 +476,22 @@ function update_instrument_filters(){
         for (i in window.current_instrument_list){
             my_inst_id=window.current_instrument_list[i];
       	    if (old_inst.indexOf(my_inst_id) == -1){
-		html+='<li class="filter_insts" id="inst_filter_'+my_inst_id+'"style="cursor:pointer;border-left: 5px solid '+color_by_instrument(my_inst_id)+';">';
-		for (d in data){
-		    my_inst_name='';
-		    if(my_inst_id.indexOf(data[d].key)!= -1){
-			my_inst_name=data[d].value;
-			break;
-		    }
-		}
-		if (my_inst_name==''){
-		    my_inst_name=my_inst_id;
-		}
-		html+=my_inst_name + "</li>";
-
-		html+=" ";
-	    } else {
-		html_hiseq+='<li class="filter_insts" id="inst_filter_'+my_inst_id+'"style="cursor:pointer;border-left: 5px solid '+color_by_instrument(my_inst_id)+';">';
+		            html+='<li class="filter_insts list-inline-item pl-1" id="inst_filter_'+my_inst_id+'"style="cursor:pointer;border-left: 5px solid '+color_by_instrument(my_inst_id)+';">';
+		            for (d in data){
+		                my_inst_name='';
+		                if(my_inst_id.indexOf(data[d].key)!= -1){
+			                   my_inst_name=data[d].value;
+			                   break;
+		                 }
+		             }
+		             if (my_inst_name==''){
+		                 my_inst_name=my_inst_id;
+		             }
+		             html+=my_inst_name + "</li>";
+                 html+=" ";
+	             }
+            else {
+		            html_hiseq+='<li class="filter_insts list-inline-item pl-1" id="inst_filter_'+my_inst_id+'"style="cursor:pointer;border-left: 5px solid '+color_by_instrument(my_inst_id)+';">';
                 for (d in data){
                     my_inst_name='';
                     if(my_inst_id.indexOf(data[d].key)!= -1){
@@ -501,13 +503,14 @@ function update_instrument_filters(){
                     my_inst_name=my_inst_id;
                 }
                 html_hiseq+=my_inst_name + "</li>";
-
                 html_hiseq+=" ";
             }
-	}
+	      }
         html+="</ul>";
         html_hiseq+="</ul>";
-	html+=html_hiseq
+        if(html_hiseq.indexOf("</li>") >= 0){
+           html+=html_hiseq
+        }
         $("#inst_filter_div").html(html);
 
         $(".filter_insts").click(function(e){
@@ -521,6 +524,5 @@ function update_instrument_filters(){
             }
             refresh_plot();
         });
-        
     });
 }
