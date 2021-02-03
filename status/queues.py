@@ -27,7 +27,8 @@ class qPCRPoolsDataHandler(SafeHandler):
         qpcr_control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
                                 'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
                                 'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
-                                'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA'
+                                'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
+                                'lambda DNA (qPCR)'
                               ]
         for method in methods:
             pools[method] ={}
@@ -55,8 +56,10 @@ class qPCRPoolsDataHandler(SafeHandler):
                     #skip if the Artifact is a control
                     if art.name in qpcr_control_names:
                         continue
-
-                    library_type = art.samples[0].project.udf.get("Library construction method", 'NA')
+                    try:
+                        library_type = art.samples[0].project.udf.get("Library construction method", 'NA')
+                    except:
+                        import pdb; pdb.set_trace()
                     try:
                         runmode = art.samples[0].project.udf['Sequencing platform']
                     except KeyError:
