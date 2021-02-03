@@ -14,10 +14,10 @@ Description: Plots the yield of recent flowcells.
 <p>The default view shows 1 year worth of flowcells. </p>
 <div id="main_plot" style="height: 700px;">
 </div>
-<div id="control_container" style="margin-top:40px;">
+<div id="control_container mt-5">
     <div class="row p-3">
         <div id="logs_date" class="col-md-3 d-flex justify-content-center border border-secondary p-3 rounded-3">
-          <form class="form-inline" id="logs_date_form">
+          <form id="logs_date_form">
             <div class="row">
               <div class="col-10">
                 Select flowcells from
@@ -36,9 +36,9 @@ Description: Plots the yield of recent flowcells.
           </form>
         </div>
         <div class="col-md-5 d-flex justify-content-center">
-          <div class="d-flex justify-content-center border border-secondary p-3 rounded-3" style="box-sizing: border-box; -moz-box-sizing: border-box; width: 50%">
+          <div class="d-flex justify-content-center border border-secondary p-3 rounded-3 w-50">
             <div id="display_type">
-                <form class='form-inline' id="display_type_form">
+                <form id="display_type_form">
                     Display type :
                     <div class='btn-group btn-group-sm' data-toggle="button" id='display_type_buttons'>
                         <button id="display_by_flowcell" aria-pressed="true" class="btn btn-outline-dark btn-sm active">Flowcell</button>
@@ -47,7 +47,7 @@ Description: Plots the yield of recent flowcells.
                 </form>
             </div>
             <div id="plot_type" class="ml-3">
-                <form class='form-inline' id="plot_type_form">
+                <form id="plot_type_form">
                     Plot type:
                         <div class='btn-group btn-group-sm' data-toggle="button" id='plot_type_buttons'>
                             <button id="plot_lines" aria-pressed="true" class="btn btn-outline-dark btn-sm active">Lines</button>
@@ -59,7 +59,7 @@ Description: Plots the yield of recent flowcells.
         </div>
         <div class="col-md-4 d-flex justify-content-center border border-secondary p-3 rounded-3">
             <div id="key_select_div" class="mr-3">
-                <form class='form-inline' id="key_select_form">
+                <form id="key_select_form">
                     Display :
                     <select class="form-select" id="key_select">
                         <option class="key_select_all" value='total_clusters' selected>Clusters</option>
@@ -72,7 +72,7 @@ Description: Plots the yield of recent flowcells.
                 </form>
             </div>
             <div id="color_select_div">
-                <form class='form-inline' id="color_select_form" >
+                <form id="color_select_form" >
                     Color by :
                     <select class="form-select" id="color_select">
                         <option class="color_option" value='chemver'>Chemistry Version</option>
@@ -86,13 +86,13 @@ Description: Plots the yield of recent flowcells.
     </div>
     <div class="row my-3 pb-3 pr-3">
       <div class="col-md-8 p-3" >
-          <div id="inst_filter_div" class="border border-secondary p-3 rounded-3" style="box-sizing: border-box; -moz-box-sizing: border-box; width: 70%">
+          <div id="inst_filter_div" class="border border-secondary p-3 rounded-3" style="width: 70%">
           </div>
       </div>
         <div id="inst_type_filter_div" class="col-md-4 p-0 pt-3">
           <div class="border border-secondary p-3 ml-1 rounded-3 pb-4">
           <label class="mb-2 d-flex justify-content-center"> Include instrument types </label>
-            <form class='form-inline d-flex justify-content-center pb-1' id="inst_type_filter_form">
+            <form class="d-flex justify-content-center pb-1" id="inst_type_filter_form">
               <div class="form-check form-check-inline">
                 <input class="form-check-input filter_inst_type" type="checkbox" id="filter_miseq" name="inst_type_filter" value="M">
                 <label class="form-check-label" for="filter_miseq">MiSeq</label>
