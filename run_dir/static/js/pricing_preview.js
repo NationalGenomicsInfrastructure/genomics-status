@@ -81,23 +81,21 @@ app.component('pricing-preview', {
               </template>
               <template v-else>
                 <p>{{ this.$root.error_messages }}</p>
-                <h1><span id="page_title">New Cost Calculator</span>
-
-                  <template v-if="!draft_locked_by_someone_else">
-                    <a class="btn btn-primary btn-lg ml-5" href="/pricing_update"><i class="fas fa-edit mr-2"></i>Edit</a>
-                    <button class="btn btn-success btn-lg ml-2" data-toggle="modal" data-target="#publish_draft_modal"><i class="far fa-paper-plane mr-2"></i>Publish</button>
-                  </template>
-                  <template v-else>
-                    <span>Draft is currently locked by {{draft_locked_by}}</span>
-                    <a class="btn btn-danger" @click="reassign_lock"><i class="fas fa-user-lock"></i> Reassign lock to you</a>
-                  </template>
-                </template>
-              </h1>
-              <span>
+                <h1>
+                  <span id="page_title">New Cost Calculator</span>
+                  <a class="btn btn-lg ml-5" :class="draft_locked_by_someone_else ? 'btn-secondary disabled' : 'btn-primary'" href="/pricing_update"><i class="fas fa-edit mr-2"></i>Edit</a>
+                  <button class="btn btn-lg ml-2" :class="draft_locked_by_someone_else ? 'btn-secondary disabled' : 'btn-success'" data-toggle="modal" data-target="#publish_draft_modal"><i class="far fa-paper-plane mr-2"></i>Publish</button>
+                </h1>
+                <p>
                 <span class="fw-bold">Last modified</span><span> by {{this.$root.draft_cost_calculator["Last modified by user"]}} at </span><span class="fst-italic"> {{draft_last_modified_at}}</span>
                 ---
-                <span class="fw-bold">Version {{this.$root.published_cost_calculator["Version"]}} was published </span><span> by {{this.$root.draft_cost_calculator["Last modified by user"]}} at </span><span class="fst-italic"> {{draft_last_modified_at}}</span>
-              </span>
+                <span class="fw-bold">Version {{this.$root.published_cost_calculator["Version"]}} was published </span><span> by {{this.$root.published_cost_calculator["Issued by user"]}} at </span><span class="fst-italic"> {{published_at}}</span>
+                </p>
+                <template v-if="draft_locked_by_someone_else">
+                  <a class="btn btn-danger" @click="reassign_lock"><i class="fas fa-user-lock"></i> Reassign lock to you</a>
+                  <p v-if="draft_locked_by_someone_else">Draft is currently locked by {{draft_locked_by}}</p>
+                </template>
+              </template>
             </div>
             <div class="col-3">
               <exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
@@ -114,12 +112,24 @@ app.component('pricing-preview', {
               </div>
             </div>
           </template>
+          <template v-else>
+            <h1>
+              <span id="page_title">New Cost Calculator</span>
+            </h1>
+            <p>
+            <span class="fw-bold">Version {{this.$root.published_cost_calculator["Version"]}} was published </span><span> by {{this.$root.published_cost_calculator["Issued by user"]}} at </span><span class="fst-italic"> {{published_at}}</span>
+            </p>
+            <p> No draft cost calculator exists. </p>
+            <p><button class="btn btn-success" @click="create_new_draft"><i class="fas fa-user-lock"></i> Create new draft</button></p>
+          </template>
         </div>
-        <div class="row">
-          <div class="col-12">
-            <v-draft-changes-list :modal="false"/>
+        <template v-if="draft_exists">
+          <div class="row">
+            <div class="col-12">
+              <v-draft-changes-list :modal="false"/>
+            </div>
           </div>
-        </div>
+        </template>
           <div class="row">
             <div class="col-3">
                   <div class="modal fade" id="publish_draft_modal" tabindex="-1" role="dialog" aria-labelledby="publishDraftModalHeader">
