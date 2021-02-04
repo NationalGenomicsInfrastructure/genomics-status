@@ -19,9 +19,9 @@ class DataDeliveryHandler(SafeHandler):
         searches = search_string.split('--')
         for row in staged_files_view.rows:
             filesize = 0
-            for key,val in row.value.items():
-                for key2,val2 in val.items():
-                    filesize += int(val2['size_in_bytes'])
+            for project,samples in row.value.items():
+                for sample,filesizes in samples.items():
+                    filesize += int(filesizes['size_in_bytes'])
             project_name = row.key[0]
             project_id_staged = row.key[1]
             for row in summary_view.rows:
