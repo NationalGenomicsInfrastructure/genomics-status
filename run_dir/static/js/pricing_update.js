@@ -12,6 +12,9 @@ app.component('v-pricing-update', {
         }
     },
     computed: {
+        draft_exists() {
+          return this.$root.draft_cost_calculator !== null
+        },
         draft_locked_by() {
           return this.$root.draft_cost_calculator["Lock Info"]["Locked by"]
         },
@@ -63,6 +66,10 @@ app.component('v-pricing-update', {
         </template>
         <template v-else-if="this.$root.any_errors">
           <v-pricing-error-display/>
+        </template>
+        <template v-else-if="!draft_exists">
+          <h1>Update Cost Calculator</h1>
+          <p>No draft exists, please return to <a href='/pricing_preview'>the main page</a></p>
         </template>
         <template v-else>
         <div class="row">
