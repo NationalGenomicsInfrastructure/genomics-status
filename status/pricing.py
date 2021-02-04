@@ -368,6 +368,7 @@ class PricingReassignLockDataHandler(PricingBaseHandler):
         self.set_header("Content-type", "application/json")
         self.write({'message': 'Lock info updated'})
 
+
 class PricingDraftDataHandler(PricingBaseHandler):
     """Loaded through /api/v1/draft_cost_calculator """
 
@@ -381,7 +382,6 @@ class PricingDraftDataHandler(PricingBaseHandler):
             response['cost_calculator'] = doc
         if not draft:
             response['cost_calculator'] = None
-
 
         current_user_email = self.get_current_user().email
         response['current_user_email'] = current_user_email
@@ -480,6 +480,34 @@ class PricingDraftDataHandler(PricingBaseHandler):
         cc_db = self.application.cost_calculator_db
         cc_db.save(latest_doc)
         msg = "Draft successfully saved at {}".format(datetime.datetime.now().strftime("%H:%M:%S"))
+        self.set_header("Content-type", "application/json")
+        return self.write({'message': msg})
+
+    def delete(self):
+        """ Delete the current draft cost calculator.abs
+
+            Will check that:
+                - the most recent one is a draft
+                - draft is not locked by other user
+            otherwise return 400.
+         """
+        latest_doc = self.fetch_latest_doc()
+        draft = latest_doc['Draft']
+        if not draft:
+            self.set_status(400)
+            return self.write("Error: There is no draft cost calculator that can be deleted.")
+
+        user_email = self.get_current_user().email
+
+        lock_info = latest_doc['Lock Info']
+        if lock_info['Locked']:
+            if lock_info['Locked by'] != user_email:
+                self.set_status(400)
+                return self.write("Error: Attempting to delete a draft locked by someone else.")
+
+        cc_db = self.application.cost_calculator_db
+        cc_db.delete(latest_doc)
+        msg = "Draft successfully deleted at {}".format(datetime.datetime.now().strftime("%H:%M:%S"))
         self.set_header("Content-type", "application/json")
         return self.write({'message': msg})
 
