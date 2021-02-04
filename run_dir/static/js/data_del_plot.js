@@ -111,7 +111,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
         }
         if (view_type == 'cumulative'){
             series_name = "All projects";
-            view_color = view_by_cumul(series_name);
+            view_color = view_coloring(series_name);
         }else if (view_type == 'platform'){
             if (data[d].platform.includes('NovaSeq')){
                 series_name = "NovaSeq";
@@ -122,7 +122,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
             }else{
                 series_name = "HiSeq";
             }
-            view_color = view_by_chem(series_name);
+            view_color = view_coloring(series_name);
         }else if (view_type == 'app'){
             if (data[d].app.includes('RNA')){
                 series_name = "RNA-Seq";
@@ -134,18 +134,18 @@ function build_series(data, key, name, view_type, filter_inst_type){
                 series_name = "Metagenomics";
             }else if (data[d].app.includes('novo')){
                 series_name = "de novo";
-            }else if (data[d].app.includes('Epgenetics')){
+            }else if (data[d].app.includes('Epigenetics')){
                 series_name = "Epigenetics";
             }else{
                 series_name = "Other";
             }
-            view_color = view_by_app(series_name);
+            view_color = view_coloring(series_name);
         }else if (view_type == 'typ'){
             series_name = data[d].typ;
-            view_color = view_by_ngi(series_name);
+            view_color = view_coloring(series_name);
         }else if (view_type == 'delivery'){
             series_name = data[d].delivery;
-            view_color = view_by_del(series_name);
+            view_color = view_coloring(series_name);
         }else if (view_type == 'sample'){
             if (data[d].sample.includes('Finished')){
                 series_name = "Finished Library";
@@ -160,7 +160,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
             }else{
                 series_name = "Other";
             }
-            view_color = view_by_sam(series_name);
+            view_color = view_coloring(series_name);
         }else if (view_type == 'bp'){
             if (data[d].bp == 'Yes'){
                 series_name = "BP bioinformatics";
@@ -171,7 +171,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
             }else{
                 series_name = "Other";
             }
-            view_color = view_by_bp(series_name);
+            view_color = view_coloring(series_name);
             }
         if (!series.hasOwnProperty(series_name)){
             series[series_name] = {
@@ -214,79 +214,54 @@ function get_plot_data(key, name, view_type, search_string="", filter_inst_type)
     });
 }
 //Since we have been confused by the coloring in the past, I set a few default colors to re-use for simplicity.
-function view_by_cumul(series_name){
-    return current_color_schemes[1].hex();
-}
-function view_by_chem(series_name){
-    if (series_name == "NovaSeq"){
-      return current_color_schemes[0].hex();
-    }else if (series_name == "MiSeq"){
-      return current_color_schemes[1].hex();
-    }else if (series_name == "NextSeq"){
-      return current_color_schemes[2].hex();
-    }else{
-      return "#c3c3c3";
-    }
-}
-function view_by_del(series_name){
-    if (series_name == 'HDD'){
-      return current_color_schemes[0].hex();
-    }else if (series_name == 'GRUS'){
-      return current_color_schemes[2].hex();
-    }else{
-      return "#c3c3c3";
-    }
-}
-function view_by_app(series_name){
-    if (series_name == 'RNA-Seq'){
-      return current_color_schemes[0].hex();
-    }else if (series_name == 'WG-reseq'){
-      return current_color_schemes[1].hex();
-    }else if (series_name == 'Target-reseq'){
-      return current_color_schemes[2].hex();
-    }else if (series_name == 'Metagenomics'){
-      return current_color_schemes[3].hex();
-    }else if (series_name == 'de novo'){
-      return current_color_schemes[4].hex();
-    }else if (series_name == 'Epigenetics'){
-      return current_color_schemes[5].hex();
-    }else{
-      return "#c3c3c3";
-    } 
-} 
-function view_by_ngi(series_name){
-    if (series_name == 'Production'){
-      return current_color_schemes[5].hex();
-    }else if (series_name == 'Application'){
-      return current_color_schemes[1].hex();
-    }else{
-      return "#c3c3c3";
-    }
-}
-function view_by_sam(series_name){
-    if (series_name == 'Finished Library'){
-      return current_color_schemes[0].hex();
-    }else if (series_name == 'total RNA'){
-      return current_color_schemes[1].hex();
-    }else if (series_name == 'Tissue'){
-      return current_color_schemes[2].hex();
-    }else if (series_name == 'Genomic DNA'){
-      return current_color_schemes[3].hex();
-    }else if (series_name == 'Amplicon'){
-      return current_color_schemes[6].hex();
-    }else{
-      return "#c3c3c3";
-    }
-}
-function view_by_bp(series_name){
-    if (series_name == "BP bioinformatics"){
-      return current_color_schemes[0].hex();
-    }else if (series_name == "No BP"){
-      return current_color_schemes[1].hex();
-    }else if (series_name == "Special"){
-      return current_color_schemes[2].hex();
-    }else{
-      return "#c3c3c3";
+function view_coloring(series_name){
+    switch(series_name){
+        case "All projects":
+            return current_color_schemes[1].hex();
+        case "NovaSeq":
+            return current_color_schemes[0].hex();
+        case "MiSeq":
+            return current_color_schemes[1].hex();
+        case "NextSeq":
+            return current_color_schemes[2].hex();
+        case "HDD":
+            return current_color_schemes[0].hex();
+        case "GRUS":
+            return current_color_schemes[2].hex();
+        case "RNA-Seq":
+            return current_color_schemes[0].hex();
+        case "WG-reseq":
+            return current_color_schemes[1].hex();
+        case "Target-reseq":
+            return current_color_schemes[2].hex();
+        case "Metagenomics":
+            return current_color_schemes[3].hex();
+        case "de novo":
+            return current_color_schemes[4].hex();
+        case "Epigenetics":
+            return current_color_schemes[5].hex();
+        case "Production":
+            return current_color_schemes[5].hex();
+        case "Application":
+            return current_color_schemes[1].hex();
+        case "Finished Library":
+            return current_color_schemes[0].hex();
+        case "total RNA":
+            return current_color_schemes[1].hex();
+        case "Tissue":
+            return current_color_schemes[2].hex();
+        case "Genomic DNA":
+            return current_color_schemes[3].hex();
+        case "Amplicon":
+            return current_color_schemes[6].hex();
+        case "BP bioinformatics":
+            return current_color_schemes[0].hex();
+        case "No BP":
+            return current_color_schemes[1].hex();
+        case "Special":
+            return current_color_schemes[2].hex();
+        default:
+            return "#c3c3c3";
     }
 }
 //For the filesize summarization.

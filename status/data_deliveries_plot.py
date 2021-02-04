@@ -33,17 +33,14 @@ class DataDeliveryHandler(SafeHandler):
                       and 'sample_type' in row.value['details'] and 'best_practice_bioinformatics' \
                       in row.value['details'] and 'delivery_type' in row.value:
                         delivered = row.value['project_summary']['all_raw_data_delivered']
-                        try:
-                            if searches[0] < delivered < searches[1]:
-                                platform = row.value['details']['sequencing_platform']
-                                app = row.value['details']['application']
-                                typ = row.value['details']['type']
-                                sample = row.value['details']['sample_type']
-                                bp = row.value['details']['best_practice_bioinformatics']
-                                delivery = row.value['delivery_type']
-                                delivered_data[project_id_summary] = {'filesize': filesize, 'project_name': project_name, 'delivered': delivered, 'platform': platform, 'app': app, 'typ': typ, 'sample': sample, 'bp': bp, 'delivery': delivery}
-                        except KeyError:
-                            continue
+                        if searches[0] < delivered < searches[1]:
+                            platform = row.value['details']['sequencing_platform']
+                            app = row.value['details']['application']
+                            typ = row.value['details']['type']
+                            sample = row.value['details']['sample_type']
+                            bp = row.value['details']['best_practice_bioinformatics']
+                            delivery = row.value['delivery_type']
+                            delivered_data[project_id_summary] = {'filesize': filesize, 'project_name': project_name, 'delivered': delivered, 'platform': platform, 'app': app, 'typ': typ, 'sample': sample, 'bp': bp, 'delivery': delivery}
         sorted_data = dict(sorted(delivered_data.items(), key=lambda t: t[1].get('delivered', '%Y-%m-%d')))
         self.set_header('Content-type', "application/json")
         self.write(json.dumps(sorted_data))
