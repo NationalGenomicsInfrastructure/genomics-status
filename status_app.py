@@ -23,6 +23,7 @@ from status.barcode import BarcodeHandler
 from status.assign_roles import AssignRolesHandler, AssignRolesUsersHandler
 from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
+from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
 from status.flowcell import FlowcellHandler
 from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandler, \
@@ -150,6 +151,7 @@ class Application(tornado.web.Application):
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
             ("/api/v1/produced_quarterly.png", ProducedQuarterlyPlotHandler),
+            ("/api/v1/proj_staged/([^/]*)$", DataDeliveryHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
@@ -205,6 +207,7 @@ class Application(tornado.web.Application):
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
+            ("/data_delivered_plot", DeliveryPlotHandler),
             ("/flowcell_count_plot", FlowcellCountPlotHandler),
             ("/instrument_logs",InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
@@ -342,6 +345,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/bioinfo_tab/run_lane_sample_view.html")
             tornado.autoreload.watch("design/bioinfo_tab/sample_run_lane_view.html")
             tornado.autoreload.watch("design/cronjobs.html")
+            tornado.autoreload.watch("design/data_delivered_plot.html")
             tornado.autoreload.watch("design/deliveries.html")
             tornado.autoreload.watch("design/error_page.html")
             tornado.autoreload.watch("design/flowcell.html")
