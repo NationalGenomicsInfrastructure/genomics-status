@@ -83,10 +83,10 @@ app.component('pricing-preview', {
         <template v-if="this.$root.draft_data_loading">
           <v-pricing-data-loading/>
         </template>
-        <template v-else-if="this.$root.any_errors">
-          <v-pricing-error-display/>
-        </template>
         <template v-else>
+          <template v-if="this.$root.any_errors">
+            <v-pricing-error-display/>
+          </template>
           <div class="row mb-3">
             <template v-if="draft_exists">
               <div class="col-9">

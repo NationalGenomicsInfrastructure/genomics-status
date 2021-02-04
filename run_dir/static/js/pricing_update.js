@@ -64,116 +64,118 @@ app.component('v-pricing-update', {
         <template v-if="this.$root.draft_data_loading">
           <v-pricing-data-loading/>
         </template>
-        <template v-else-if="this.$root.any_errors">
-          <v-pricing-error-display/>
-        </template>
-        <template v-else-if="!draft_exists">
-          <h1>Update Cost Calculator</h1>
-          <p>No draft exists, please return to <a href='/pricing_preview'>the main page</a></p>
-        </template>
         <template v-else>
-        <div class="row">
-          <div v-if="draft_locked_by_someone_else" class="col-12">
-            <div class="alert alert-danger" role="alert">
-              <h3>Warning</h3>
-              <p>The draft is locked by someone else, any changes will not be saved</p>
-              <a class="btn btn-lg btn-primary" href="/pricing_preview"><i class="fas fa-edit mr-2"></i>Back to preview</a>
-            </div>
-          </div>
-          <div class="col-md-2">
-            <nav id="pricing_update_sidebar" class="nav sidebar sticky-top">
-              <div class="position-sticky">
-                <nav class="nav nav-pills flex-column">
-                  <a class="nav-link" href="#pricing_product_form_content">Top of the page</a>
-                  <nav class="nav nav-pills flex-column">
-                    <a class="nav-link ml-3 my-0 py-1" href="#changes_list">Changes</a>
-                    <template v-if="!this.$root.no_validation_messages">
-                      <a class="nav-link ml-3 my-0 py-1 text-danger" href="#validation_messages_list">Validation errors</a>
-                    </template>
-                  </nav>
-                  <a class="nav-link my-1" href="#products_top">Products</a>
-                  <nav class="nav nav-pills flex-column">
-                    <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)" :key="category">
-                      <a class="nav-link ml-3 my-0 py-1" :href="'#products_cat_' + cat_nr">{{category}}</a>
-                    </template>
-                  </nav>
-                  <a class="nav-link my-1" href="#components_top">Components</a>
-                  <nav class="nav nav-pills flex-column">
-                    <template v-for="(category, cat_nr) in Object.keys(this.$root.all_components_per_category)" :key="category">
-                      <a class="nav-link ml-3 my-0 py-1" :href="'#components_cat_' + cat_nr">{{category}}</a>
-                    </template>
-                  </nav>
-                  <a class="nav-link my-1" href="#discontinued_top">Discontinued</a>
-                  <nav class="nav nav-pills flex-column">
-                    <a class="nav-link ml-3 my-0 py-1" href="#discontinued_products">Products</a>
-                    <a class="nav-link ml-3 my-0 py-1" href="#discontinued_components">Components</a>
-                  </nav>
+          <template v-if="this.$root.any_errors">
+            <v-pricing-error-display/>
+          </template>
+          <template v-if="!draft_exists">
+            <h1>Update Cost Calculator</h1>
+            <p>No draft exists, please return to <a href='/pricing_preview'>the main page</a></p>
+          </template>
+          <template v-else>
+            <div class="row">
+              <div v-if="draft_locked_by_someone_else" class="col-12">
+                <div class="alert alert-danger" role="alert">
+                  <h3>Warning</h3>
+                  <p>The draft is locked by someone else, any changes will not be saved</p>
+                  <a class="btn btn-lg btn-primary" href="/pricing_preview"><i class="fas fa-edit mr-2"></i>Back to preview</a>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <nav id="pricing_update_sidebar" class="nav sidebar sticky-top">
+                  <div class="position-sticky">
+                    <nav class="nav nav-pills flex-column">
+                      <a class="nav-link" href="#pricing_product_form_content">Top of the page</a>
+                      <nav class="nav nav-pills flex-column">
+                        <a class="nav-link ml-3 my-0 py-1" href="#changes_list">Changes</a>
+                        <template v-if="!this.$root.no_validation_messages">
+                          <a class="nav-link ml-3 my-0 py-1 text-danger" href="#validation_messages_list">Validation errors</a>
+                        </template>
+                      </nav>
+                      <a class="nav-link my-1" href="#products_top">Products</a>
+                      <nav class="nav nav-pills flex-column">
+                        <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)" :key="category">
+                          <a class="nav-link ml-3 my-0 py-1" :href="'#products_cat_' + cat_nr">{{category}}</a>
+                        </template>
+                      </nav>
+                      <a class="nav-link my-1" href="#components_top">Components</a>
+                      <nav class="nav nav-pills flex-column">
+                        <template v-for="(category, cat_nr) in Object.keys(this.$root.all_components_per_category)" :key="category">
+                          <a class="nav-link ml-3 my-0 py-1" :href="'#components_cat_' + cat_nr">{{category}}</a>
+                        </template>
+                      </nav>
+                      <a class="nav-link my-1" href="#discontinued_top">Discontinued</a>
+                      <nav class="nav nav-pills flex-column">
+                        <a class="nav-link ml-3 my-0 py-1" href="#discontinued_products">Products</a>
+                        <a class="nav-link ml-3 my-0 py-1" href="#discontinued_components">Components</a>
+                      </nav>
+                    </nav>
+                  </div>
                 </nav>
               </div>
-            </nav>
-          </div>
 
-        <div class="col-md-10">
-          <div id="pricing_product_form_content" data-offset="0">
-            <div class="card pt-3 px-3 bg-light">
-              <div class="row">
-                <div class="col-md-7 mr-auto">
-                  <h2>Edit draft Cost Calculator</h2>
-                  <template v-if="save_message !== null">
-                    <p class="text-danger" v-if="save_error"><strong>Error saving</strong> {{save_message}}</p>
-                    <p class="text-success" v-else><strong>Saved!</strong> {{save_message}}</p>
+            <div class="col-md-10">
+              <div id="pricing_product_form_content" data-offset="0">
+                <div class="card pt-3 px-3 bg-light">
+                  <div class="row">
+                    <div class="col-md-7 mr-auto">
+                      <h2>Edit draft Cost Calculator</h2>
+                      <template v-if="save_message !== null">
+                        <p class="text-danger" v-if="save_error"><strong>Error saving</strong> {{save_message}}</p>
+                        <p class="text-success" v-else><strong>Saved!</strong> {{save_message}}</p>
+                      </template>
+                      <div>
+                        <button class="btn btn-secondary" @click="toggleCollapse"><i class="fas fa-caret-down"></i> {{expand_button_text}}</button>
+                      </div>
+                      <div class="mb-3 mt-5">
+                        <button class="btn btn-primary btn-lg" @click="saveDraft"><i class="far fa-save"></i> Save and leave</button>
+                        <button class="btn btn-danger btn-lg ml-2" @click="backToPreview"><i class="fas fa-window-close"></i> Leave without saving</button>
+                      </div>
+                    </div>
+                    <div class="col-md-5">
+                      <exchange-rates :mutable="false" :issued_at="this.$root.exch_rate_issued_at"/>
+                    </div>
+                  </div>
+                  <div id="changes_list">
+                    <v-draft-changes-list :modal="false"/>
+                  </div>
+                  <div id="validation_messages_list">
+                    <v-draft-validation-msgs-list :modal="false"/>
+                  </div>
+                </div>
+                <h2 class="mt-5" id="products_top">Products</h2>
+                <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)">
+                  <h3 :id="'products_cat_' + cat_nr" class="mt-4">{{category}}</h3>
+                  <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
+                    <product-form-part :product_id="product['REF_ID']">
+                    </product-form-part>
                   </template>
-                  <div>
-                    <button class="btn btn-secondary" @click="toggleCollapse"><i class="fas fa-caret-down"></i> {{expand_button_text}}</button>
-                  </div>
-                  <div class="mb-3 mt-5">
-                    <button class="btn btn-primary btn-lg" @click="saveDraft"><i class="far fa-save"></i> Save and leave</button>
-                    <button class="btn btn-danger btn-lg ml-2" @click="backToPreview"><i class="fas fa-window-close"></i> Leave without saving</button>
-                  </div>
-                </div>
-                <div class="col-md-5">
-                  <exchange-rates :mutable="false" :issued_at="this.$root.exch_rate_issued_at"/>
-                </div>
-              </div>
-              <div id="changes_list">
-                <v-draft-changes-list :modal="false"/>
-              </div>
-              <div id="validation_messages_list">
-                <v-draft-validation-msgs-list :modal="false"/>
+                </template>
+                <h2 class="mt-5" id="components_top">Components</h2>
+                <template v-for="(category, cat_nr) in Object.keys(this.$root.all_components_per_category)">
+                  <h3 :id="'components_cat_' + cat_nr" class="mt-4">{{category}}</h3>
+                  <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
+                    <component-form-part :component_id="component['REF_ID']">
+                    </component-form-part>
+                  </template>
+                </template>
+                <h2 class="mt-4" id="discontinued_top">Discontinued</h2>
+                <h3 id="discontinued_products" class="mt-4">Products</h3>
+                <template v-for="product in this.$root.discontinued_products" :key="product['REF_ID']">
+                  <product-form-part :product_id="product['REF_ID']">
+                  </product-form-part>
+                </template>
+                <h3 id="discontinued_components" class="mt-4">Components</h3>
+                <template v-for="component in this.$root.discontinued_components" :key="component['REF_ID']">
+                  <component-form-part :component_id="component['REF_ID']">
+                  </component-form-part>
+                </template>
               </div>
             </div>
-            <h2 class="mt-5" id="products_top">Products</h2>
-            <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)">
-              <h3 :id="'products_cat_' + cat_nr" class="mt-4">{{category}}</h3>
-              <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
-                <product-form-part :product_id="product['REF_ID']">
-                </product-form-part>
-              </template>
-            </template>
-            <h2 class="mt-5" id="components_top">Components</h2>
-            <template v-for="(category, cat_nr) in Object.keys(this.$root.all_components_per_category)">
-              <h3 :id="'components_cat_' + cat_nr" class="mt-4">{{category}}</h3>
-              <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
-                <component-form-part :component_id="component['REF_ID']">
-                </component-form-part>
-              </template>
-            </template>
-            <h2 class="mt-4" id="discontinued_top">Discontinued</h2>
-            <h3 id="discontinued_products" class="mt-4">Products</h3>
-            <template v-for="product in this.$root.discontinued_products" :key="product['REF_ID']">
-              <product-form-part :product_id="product['REF_ID']">
-              </product-form-part>
-            </template>
-            <h3 id="discontinued_components" class="mt-4">Components</h3>
-            <template v-for="component in this.$root.discontinued_components" :key="component['REF_ID']">
-              <component-form-part :component_id="component['REF_ID']">
-              </component-form-part>
-            </template>
           </div>
-        </div>
-      </div>
+        </template>
       </template>
-        `
+          `
 })
 
 app.component('product-form-part', {

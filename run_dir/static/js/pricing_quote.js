@@ -75,11 +75,12 @@ app.component('v-pricing-quote', {
           <h1 class="col-md-11"><span id="page_title">Project Quote</span></h1>
         </div>
         <template v-if="this.$root.published_data_loading">
-          <div>
-            Loading!
-          </div>
+          <v-pricing-data-loading/>
         </template>
         <template v-else>
+          <template v-if="this.$root.any_errors">
+            <v-pricing-error-display/>
+          </template>
           <div class="row">
             <div class="col-5 quote_lcol_header">
               <div class="radio" id="price_type_selector">

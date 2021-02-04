@@ -247,7 +247,7 @@ const vPricingMain = {
                   this.current_user_email = response.data['current_user_email']
                   this.draft_data_loading = false
               })
-              .catch(function (error) {
+              .catch(error => {
                   this.error_messages.push('Unable to fetch data, please try again or contact a system administrator.')
               })
         },
@@ -263,6 +263,9 @@ const vPricingMain = {
                   this.EUR_in_SEK = response.data.EUR_in_SEK
                   date = new Date(Date.parse(response.data['Issued at']))
                   this.exch_rate_issued_at = date.toISOString().substring(0, 10)
+              })
+              .catch(error => {
+                  this.$root.error_messages.push('Unable to fetch exchange rates data, please try again or contact a system administrator.')
               })
         },
         fetchPublishedCostCalculator(assign_data) {
@@ -894,6 +897,8 @@ app.component('v-pricing-data-loading', {
  app.component('v-pricing-error-display', {
      template: /*html*/`
        <template v-for="msg in this.$root.error_messages">
-         <p class="border border-danger rounded p-3">{{msg}}</p>
+         <div class="alert alert-danger" role="alert">
+           {{msg}}
+         </div>
        </template>`
   })
