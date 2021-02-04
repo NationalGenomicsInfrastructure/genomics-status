@@ -570,19 +570,12 @@ class PricingUpdateHandler(PricingBaseHandler):
                 - draft is not locked by other user
             otherwise return 400.
         """
+
         latest_doc = self.fetch_latest_doc()
         draft = latest_doc['Draft']
         if not draft:
             self.set_status(400)
             self.write("Error: Attempting to update a non-draft cost calculator.")
-
-        current_user_email = self.get_current_user().email
-
-        lock_info = latest_doc['Lock Info']
-        if lock_info['Locked']:
-            if lock_info['Locked by'] != current_user_email:
-                self.set_status(400)
-                self.write("Error: Attempting to update a draft locked by someone else.")
 
         t = self.application.loader.load('pricing_update.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,

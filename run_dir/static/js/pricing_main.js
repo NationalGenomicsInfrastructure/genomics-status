@@ -10,7 +10,7 @@ const vPricingMain = {
             draft_cost_calculator: null,
             draft_created_at: null,
             draft_data_loading: true,
-            error_messages: null,
+            error_messages: [],
             new_products: new Set(),
             new_components: new Set(),
             modal_product_id: "52", //Should probably be null when we handle that edge case
@@ -48,6 +48,9 @@ const vPricingMain = {
                 }
             }
             return prod_per_cat
+        },
+        any_errors() {
+            return (this.error_messages.length !== 0)
         },
         product_categories() {
             categories = new Set();
@@ -245,7 +248,7 @@ const vPricingMain = {
                   this.draft_data_loading = false
               })
               .catch(function (error) {
-                  this.error_messages = 'Unable to fetch data, please try again or contact a system administrator.'
+                  this.error_messages.push('Unable to fetch data, please try again or contact a system administrator.')
               })
         },
         fetchExchangeRates(date) {
@@ -882,3 +885,15 @@ app.component('v-draft-validation-msgs-list', {
       </div>
       `
 })
+
+app.component('v-pricing-data-loading', {
+    template: /*html*/`
+      <div class="spinner-grow" role="status"></div><span class="ml-3">Loading data...</span>`
+ })
+
+ app.component('v-pricing-error-display', {
+     template: /*html*/`
+       <template v-for="msg in this.$root.error_messages">
+         <p class="border border-danger rounded p-3">{{msg}}</p>
+       </template>`
+  })

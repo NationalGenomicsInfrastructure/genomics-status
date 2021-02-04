@@ -73,14 +73,16 @@ app.component('pricing-preview', {
     },
     template:
         /*html*/`
-        <div class="row mb-3">
-          <template v-if="draft_exists">
-            <div class="col-9">
-              <template v-if="this.$root.draft_data_loading">
-                Data Loading
-              </template>
-              <template v-else>
-                <p>{{ this.$root.error_messages }}</p>
+        <template v-if="this.$root.draft_data_loading">
+          <v-pricing-data-loading/>
+        </template>
+        <template v-else-if="this.$root.any_errors">
+          <v-pricing-error-display/>
+        </template>
+        <template v-else>
+          <div class="row mb-3">
+            <template v-if="draft_exists">
+              <div class="col-9">
                 <h1>
                   <span id="page_title">New Cost Calculator</span>
                   <a class="btn btn-lg ml-5" :class="draft_locked_by_someone_else ? 'btn-secondary disabled' : 'btn-primary'" href="/pricing_update"><i class="fas fa-edit mr-2"></i>Edit</a>
@@ -95,22 +97,21 @@ app.component('pricing-preview', {
                   <a class="btn btn-danger" @click="reassign_lock"><i class="fas fa-user-lock"></i> Reassign lock to you</a>
                   <p v-if="draft_locked_by_someone_else">Draft is currently locked by {{draft_locked_by}}</p>
                 </template>
-              </template>
-            </div>
-            <div class="col-3">
-              <exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
-              <button class="btn btn-link" id="more_options_btn" type="button" data-toggle="collapse" data-target="#more_options" aria-expanded="false" aria-controls="more_options">
-                More Options
-              </button>
-              <div class="collapse border-top py-3" id="more_options">
-                <template v-if="show_discontinued">
-                  <button type="button" class="btn btn-success" id="toggle_discontinued" @click="toggleDiscontinued">Hide Discontinued Products <i class="fas fa-book-heart fa-lg pl-2"></i></button>
-                </template>
-                <template v-else>
-                  <button type="button" class="btn btn-warning" id="toggle_discontinued" @click="toggleDiscontinued">Show Discontinued Products <i class="fas fa-exclamation-triangle fa-lg pl-2"></i></button>
-                </template>
               </div>
-            </div>
+              <div class="col-3">
+                <exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
+                <button class="btn btn-link" id="more_options_btn" type="button" data-toggle="collapse" data-target="#more_options" aria-expanded="false" aria-controls="more_options">
+                  More Options
+                </button>
+                <div class="collapse border-top py-3" id="more_options">
+                  <template v-if="show_discontinued">
+                    <button type="button" class="btn btn-success" id="toggle_discontinued" @click="toggleDiscontinued">Hide Discontinued Products <i class="fas fa-book-heart fa-lg pl-2"></i></button>
+                  </template>
+                  <template v-else>
+                    <button type="button" class="btn btn-warning" id="toggle_discontinued" @click="toggleDiscontinued">Show Discontinued Products <i class="fas fa-exclamation-triangle fa-lg pl-2"></i></button>
+                  </template>
+                </div>
+              </div>
           </template>
           <template v-else>
             <h1>
@@ -171,6 +172,7 @@ app.component('pricing-preview', {
               </div>
               <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="false"/>
             </div>
+          </template>
           </template>
         `
 })

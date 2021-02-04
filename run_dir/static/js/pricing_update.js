@@ -2,13 +2,21 @@
 document.getElementsByTagName("body")[0].setAttribute("data-spy", "scroll");
 document.getElementsByTagName("body")[0].setAttribute("data-target", "#pricing_update_sidebar");
 
-app.component('product-form-list', {
+app.component('v-pricing-update', {
     data() {
         return {
             save_message: null,
             save_error: false,
             all_expanded: false,
             expand_button_text: 'Expand all (slow)'
+        }
+    },
+    computed: {
+        draft_locked_by() {
+          return this.$root.draft_cost_calculator["Lock Info"]["Locked by"]
+        },
+        draft_locked_by_someone_else() {
+          return this.draft_locked_by != this.$root.current_user_email
         }
     },
     created: function() {
@@ -51,12 +59,20 @@ app.component('product-form-list', {
     template:
         /*html*/`
         <template v-if="this.$root.draft_data_loading">
-          <div>
-            Loading!
-          </div>
+          <v-pricing-data-loading/>
+        </template>
+        <template v-else-if="this.$root.any_errors">
+          <v-pricing-error-display/>
         </template>
         <template v-else>
         <div class="row">
+          <div v-if="draft_locked_by_someone_else" class="col-12">
+            <div class="alert alert-danger" role="alert">
+              <h3>Warning</h3>
+              <p>The draft is locked by someone else, any changes will not be saved</p>
+              <a class="btn btn-lg btn-primary" href="/pricing_preview"><i class="fas fa-edit mr-2"></i>Back to preview</a>
+            </div>
+          </div>
           <div class="col-md-2">
             <nav id="pricing_update_sidebar" class="nav sidebar sticky-top">
               <div class="position-sticky">
