@@ -56,10 +56,8 @@ class qPCRPoolsDataHandler(SafeHandler):
                     #skip if the Artifact is a control
                     if art.name in qpcr_control_names:
                         continue
-                    try:
-                        library_type = art.samples[0].project.udf.get("Library construction method", 'NA')
-                    except:
-                        import pdb; pdb.set_trace()
+
+                    library_type = art.samples[0].project.udf.get("Library construction method", 'NA')
                     try:
                         runmode = art.samples[0].project.udf['Sequencing platform']
                     except KeyError:
