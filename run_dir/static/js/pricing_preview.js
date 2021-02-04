@@ -97,6 +97,7 @@ app.component('pricing-preview', {
                   <a class="btn btn-danger" @click="reassign_lock"><i class="fas fa-user-lock"></i> Reassign lock to you</a>
                   <p v-if="draft_locked_by_someone_else">Draft is currently locked by {{draft_locked_by}}</p>
                 </template>
+                <a class="btn btn-large btn-secondary mt-5" href='/pricing_quote'>Temporary link to pricing_quote</a>
               </div>
               <div class="col-3">
                 <exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
