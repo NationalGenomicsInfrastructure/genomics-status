@@ -6,7 +6,10 @@ Powers /qpcr_pools - template is run_dir/design/qpcr_pools.html
 
 $(document).ready(function() {
     // Load the data
-    load_table();
+    //load_table();
+    //Temp disable to fix loading times
+    var colspan = $('#pools_table > thead > tr:first > th').length + 1;
+    $("#pools_table_body").html('<tr><td colspan="'+colspan+'"><em>Page under Renovation... Please visit later!</em></td></tr>');
 });
 // Initialize sorting and searching javascript plugin
 
