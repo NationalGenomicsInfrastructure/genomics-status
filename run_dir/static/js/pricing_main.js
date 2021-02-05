@@ -248,7 +248,8 @@ const vPricingMain = {
                   this.draft_data_loading = false
               })
               .catch(error => {
-                  this.error_messages.push('Unable to fetch data, please try again or contact a system administrator.')
+                  this.error_messages.push('Unable to fetch draft cost calculator data, please try again or contact a system administrator.')
+                  this.draft_data_loading = false
               })
         },
         fetchExchangeRates(date) {
@@ -281,6 +282,10 @@ const vPricingMain = {
                     }
                   }
                   this.current_user_email = response.data['current_user_email']
+                  this.published_data_loading = false
+              })
+              .catch(error => {
+                  this.$root.error_messages.push('Unable to fetch published cost calculator data, please try again or contact a system administrator.')
                   this.published_data_loading = false
               })
         },
@@ -337,14 +342,24 @@ const vPricingMain = {
             return {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
         },
         validate() {
-            axios.post('/api/v1/pricing_validate_draft', {
-                components: this.all_components,
-                products: this.all_products
-            }).then(response => {
-                this.product_changes = response.data.changes['products']
-                this.component_changes = response.data.changes['components']
-                this.validation_msgs = response.data.validation_msgs
-            })
+            if (this.all_components !== null && this.all_products !== null) {
+              axios.post('/api/v1/pricing_validate_draft', {
+                  components: this.all_components,
+                  products: this.all_products
+              }).then(response => {
+                  this.product_changes = response.data.changes['products']
+                  this.component_changes = response.data.changes['components']
+                  this.validation_msgs = response.data.validation_msgs
+              })
+              .catch(error => {
+                  this.$root.error_messages.push('Unable to validate draft changes, please try again or contact a system administrator.')
+              })
+            } else {
+                /* Case for when the draft is/is being deleted */
+                this.$root.product_changes = null
+                this.$root.component_changes = null
+                this.$root.validation_msgs = null
+            }
         }
     }
 }
@@ -898,7 +913,7 @@ app.component('v-pricing-data-loading', {
      template: /*html*/`
        <template v-for="msg in this.$root.error_messages">
          <div class="alert alert-danger" role="alert">
-           {{msg}}
+           <h5 class="mt-2"><i class="far fa-exclamation-triangle mr-3"></i>{{msg}}</h5>
          </div>
        </template>`
   })

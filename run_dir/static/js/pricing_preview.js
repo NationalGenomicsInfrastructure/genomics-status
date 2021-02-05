@@ -22,9 +22,30 @@ app.component('pricing-preview', {
           datestring = this.$root.draft_cost_calculator['Created at']
           return datestring.substring(0,10) + ', ' + datestring.substring(11,16)
       },
+      published_cc() {
+          return this.$root.published_cost_calculator
+      },
       published_at() {
-          datestring = this.$root.published_cost_calculator['Issued at']
-          return datestring.substring(0,10) + ', ' + datestring.substring(11,16)
+          if (this.published_cc === null) {
+              return 'fetching...'
+          } else {
+            datestring = this.published_cc['Issued at']
+            return datestring.substring(0,10) + ', ' + datestring.substring(11,16)
+          }
+      },
+      published_issued_by() {
+          if (this.published_cc === null) {
+            return 'loading...'
+          } else {
+            return this.$root.published_cost_calculator["Issued by user"]
+          }
+      },
+      published_version() {
+          if (this.published_cc === null) {
+            return 'loading...'
+          } else {
+            this.$root.published_cost_calculator["Version"]
+          }
       }
     },
     created: function() {
@@ -40,6 +61,9 @@ app.component('pricing-preview', {
                   this.$root.draft_data_loading = true
                   this.$root.fetchDraftCostCalculator(true)
               })
+              .catch(error => {
+                  this.$root.error_messages.push('Unable to create new draft, please try again or contact system administrator')
+              })
         },
         delete_draft() {
             axios
@@ -47,7 +71,11 @@ app.component('pricing-preview', {
               .then(response => {
                 this.$root.draft_data_loading = true
                 this.$root.draft_cost_calculator = null
+                this.$root.all_products = null
+                this.$root.all_components = null
                 this.$root.fetchDraftCostCalculator(true)
+              }).catch(error => {
+                  this.$root.error_messages.push('Unable to delete draft, please try again or contact system administrator')
               })
         },
         publish_draft() {
@@ -57,6 +85,8 @@ app.component('pricing-preview', {
                 this.$root.published_data_loading = true
                 this.$root.draft_cost_calculator = null
                 this.$root.fetchPublishedCostCalculator()
+              }).catch(error => {
+                  this.$root.error_messages.push('Unable to publish cost calculator, please try again or contact system administrator')
               })
         },
         reassign_lock() {
@@ -66,7 +96,7 @@ app.component('pricing-preview', {
                 this.$root.fetchDraftCostCalculator(true)
               })
               .catch(error => {
-                  this.error_message = error.response.data
+                  this.$root.error_messages.push('Unable to reassign lock for draft, please try again or contact system administrator')
               });
         },
         toggleDiscontinued() {
@@ -80,7 +110,10 @@ app.component('pricing-preview', {
     },
     template:
         /*html*/`
-        <template v-if="this.$root.draft_data_loading">
+        <template v-if="this.$root.draft_data_loading || this.$root.published_data_loading">
+          <template v-if="this.$root.any_errors">
+            <v-pricing-error-display/>
+          </template>
           <v-pricing-data-loading/>
         </template>
         <template v-else>
@@ -99,7 +132,7 @@ app.component('pricing-preview', {
                 <p>
                   <span class="fw-bold">Last modified</span><span> by {{this.$root.draft_cost_calculator["Last modified by user"]}} at </span><span class="fst-italic"> {{draft_last_modified_at}}</span>
                   ---
-                  <span class="fw-bold">Version {{this.$root.published_cost_calculator["Version"]}} was published </span><span> by {{this.$root.published_cost_calculator["Issued by user"]}} at </span><span class="fst-italic"> {{published_at}}</span>
+                  <span class="fw-bold">Version {{published_version}} was published </span><span> by {{published_issued_by}} at </span><span class="fst-italic"> {{published_at}}</span>
                 </p>
                 <template v-if="draft_locked_by_someone_else">
                   <a class="btn btn-danger" @click="reassign_lock"><i class="fas fa-user-lock"></i> Reassign lock to you</a>
@@ -127,7 +160,7 @@ app.component('pricing-preview', {
                 <span id="page_title">New Cost Calculator</span>
               </h1>
               <p>
-              <span class="fw-bold">Version {{this.$root.published_cost_calculator["Version"]}} was published </span><span> by {{this.$root.published_cost_calculator["Issued by user"]}} at </span><span class="fst-italic"> {{published_at}}</span>
+              <span class="fw-bold">Version {{published_version}} was published </span><span> by {{published_issued_by}} at </span><span class="fst-italic"> {{published_at}}</span>
               </p>
               <p> No draft cost calculator exists. </p>
               <p><button class="btn btn-success" @click="create_new_draft"><i class="fas fa-user-lock"></i> Create new draft</button></p>

@@ -37,6 +37,7 @@ app.component('v-pricing-update', {
                 this.backToPreview()
             })
             .catch(error => {
+                this.$root.error_messages.push('Unable to save draft, please try again or contact an system administrator.')
                 this.save_message = error.response.data;
                 this.save_error = true;
             });
