@@ -1,6 +1,6 @@
 import json
 import datetime
-from status.util import dthandler, SafeHandler
+from status.util import SafeHandler
 
 
 class DataDeliveryHandler(SafeHandler):

@@ -4,7 +4,6 @@ window.current_view_schemes = null;
 
 $(function(){
     init_page_js();
-    refresh_plot();
 });
 
 function refresh_plot(){
@@ -216,50 +215,35 @@ function get_plot_data(key, name, view_type, search_string="", filter_inst_type)
 //Since we have been confused by the coloring in the past, I set a few default colors to re-use for simplicity.
 function view_coloring(series_name){
     switch(series_name){
-        case "All projects":
-            return current_color_schemes[1].hex();
         case "NovaSeq":
+        case "HDD":
+        case "RNA-Seq":
+        case "Finished Library":
+        case "BP bioinformatics":
             return current_color_schemes[0].hex();
+        case "All projects":
         case "MiSeq":
+        case "WG-reseq":
+        case "Application":
+        case "total RNA":
+        case "No BP":
             return current_color_schemes[1].hex();
         case "NextSeq":
-            return current_color_schemes[2].hex();
-        case "HDD":
-            return current_color_schemes[0].hex();
         case "GRUS":
-            return current_color_schemes[2].hex();
-        case "RNA-Seq":
-            return current_color_schemes[0].hex();
-        case "WG-reseq":
-            return current_color_schemes[1].hex();
         case "Target-reseq":
+        case "Tissue":
+        case "Special":
             return current_color_schemes[2].hex();
         case "Metagenomics":
+        case "Genomic DNA":
             return current_color_schemes[3].hex();
         case "de novo":
             return current_color_schemes[4].hex();
         case "Epigenetics":
-            return current_color_schemes[5].hex();
         case "Production":
             return current_color_schemes[5].hex();
-        case "Application":
-            return current_color_schemes[1].hex();
-        case "Finished Library":
-            return current_color_schemes[0].hex();
-        case "total RNA":
-            return current_color_schemes[1].hex();
-        case "Tissue":
-            return current_color_schemes[2].hex();
-        case "Genomic DNA":
-            return current_color_schemes[3].hex();
         case "Amplicon":
             return current_color_schemes[6].hex();
-        case "BP bioinformatics":
-            return current_color_schemes[0].hex();
-        case "No BP":
-            return current_color_schemes[1].hex();
-        case "Special":
-            return current_color_schemes[2].hex();
         default:
             return "#c3c3c3";
     }
