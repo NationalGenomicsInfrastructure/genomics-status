@@ -909,9 +909,9 @@ class ProjectTicketsDataHandler(SafeHandler):
                 total_tickets[ticket.id] = ticket.to_dict()
                 for comment in self.application.zendesk.tickets.comments(ticket=ticket.id):
                     if 'comments' not in total_tickets[ticket.id]:
-                        total_tickets[ticket.id]['comments']=[comment.to_dict()]
+                        total_tickets[ticket.id]['comments']=[{'author':comment.author.name, 'comment': comment.to_dict()}]
                     else:
-                        total_tickets[ticket.id]['comments'].extend([comment.to_dict()])
+                        total_tickets[ticket.id]['comments'].extend([{'author':comment.author.name, 'comment': comment.to_dict()}])
             # Return the most recent ticket first
             self.write(total_tickets)
         except ZenpyException:
@@ -968,96 +968,6 @@ class CharonProjectHandler(SafeHandler):
             self.set_status(400)
             self.finish('<html><body>There was a problem connecting to charon, please try it again later. {}</body></html>'.format(r.reason))
 
-
-class ProjectSummaryHandler(SafeHandler):
-    """serves project summary information"""
-    def get(self, project_id):
-
-        project=Project(lims, id=project_id)
-        processes=lims.get_processes(projectname=project.name, type='Project Summary 1.3')
-        samples=lims.get_samples(projectname=project.name)
-        self.getProjectSummaryFields(lims)
-
-
-        t = self.application.loader.load("project_summary.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals,
-                              project_id=project_id,
-                              processes=processes,
-                              samples=samples,
-                              step_fields=self.step_fields,
-                              sample_fields=self.sample_fields))
-
-    def getProjectSummaryFields(self, lims):
-        self.step_fields=[]
-        self.sample_fields=[]
-        p=Protocol(lims, id='101') #project summary configuration info
-        for step in p.steps:
-            if step.name  == 'Project Summary 1.3':
-                self.step_fields = [n['name'] for n in step.step_fields]
-                self.sample_fields = [n['name'] for n in step.sample_fields if n['attach-to'] == 'Sample']
-
-
-class ProjectSummaryUpdateHandler(SafeHandler):
-    """Handler for the Project Summary mockup"""
-    def post(self, id_type, cl_id):
-        if id_type == "Process":
-            update_class=Process
-        elif id_type == "Sample":
-            update_class=Sample
-        else:
-            self.set_status(400)
-            self.finish('<html><body><p>{} not recognized as a valid class:</p></body></html>'.format(id_type))
-        try:
-            cl=update_class(lims, id=cl_id)
-        except Exception as e:
-            self.set_status(400)
-            self.finish('<html><body><p>Entity {} not found :</p><pre>{}</pre></body></html>'.format( cl_id, e))
-        else:
-            for udf in cl.udf:
-                try:
-                    client_value=self.get_argument(udf)
-                except:
-                    #the argument was _not_ provided by the client, do nothing
-                    #application_log.error("{} not provided".format(udf))
-                    pass
-                else:
-                    #update the lims value with the value provided by the client
-                    try:
-                        if udf == 'Instructions':
-                            #there is a space at the end of the value for this udf. this space is lost in the url parameter encoding
-                            #also, we can't change that value because there is only one preset
-                            pass
-
-                        else:
-                            #application_log.error("{} : {} -> {}".format(udf, cl.udf[udf], client_value))
-                            cl.udf[udf]=client_value
-                    except TypeError as e:
-                        #type mismatch handling
-                        if isinstance(cl.udf[udf], datetime.date):
-                            cl.udf[udf]=datetime.datetime.strptime(client_value, "%Y-%m-%d").date()
-                        elif isinstance(cl.udf[udf], float):
-                            cl.udf[udf]=float(client_value)
-                        elif isinstance(cl.udf[udf], int):
-                            cl.udf[udf]=int(client_value)
-                        else:
-                            raise e
-
-            try:
-                cl.put()
-            except Exception as e:
-                self.set_status(400)
-                self.finish('<html><body><p>could not update Entity {} :</p><pre>{}</pre></body></html>'.format( cl_id, e))
-            else:
-                self.set_status(200)
-                self.set_header("Content-type", "application/json")
-                returnobj={}
-                for key, value in cl.udf.items():
-                    if isinstance(value, datetime.date):
-                        returnobj[key]=value.isoformat()
-                    else:
-                        returnobj[key]=value
-
-                self.write(json.dumps(returnobj))
 
 class RecCtrlDataHandler(SafeHandler):
     """Handler for the reception control view"""

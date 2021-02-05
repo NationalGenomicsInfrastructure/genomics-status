@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 <!--
 Template file: rec_ctrl_view.html
 URL: /rec_ctrl/<projectid>
@@ -9,28 +9,36 @@ Description: Quick view of reception control plates for a project
 {% block stuff %}
 
 <div>
-    <h1 id="page_title">User Plates for project : <a href="/project/{{ project_id}}"><span id="project_id">{{ project_id}}</span></a></h1>
+    <h1 id="page_title">User Plates for project : <a class="text-decoration-none" href="/project/{{ project_id}}"><span id="project_id">{{ project_id}}</span></a></h1>
 
-    <form id="selectors" class="form-inline">
-        <div class="form-group">
-            <label for="display_select">Data to display: </label>
-            <select class="form-control input-sm" id="display_select">
-              <option value="sid" selected>Sample ID</option>
-              <option value="conc">Concentration</option>
-              <option value="amount">Amount</option>
-              <option value="rin">RIN</option>
-              <option value="reads">Reads</option>
-              <option value="qc">QC</option>
-              <option value="cust_name">Customer Name</option>
-            </select>
-            <span style="margin-left: 15px;"><strong>Tip:</strong> You can use the <kbd><span class="glyphicon glyphicon-arrow-left"></span></kbd>
-                and <kbd><span class="glyphicon glyphicon-arrow-right"></span></kbd> cursors to move through these.</span>
+    <form id="selectors" class="row">
+        <div class="col-auto">
+          <div class="row">
+            <div class="col-auto pt-1 pr-0">
+              <label for="display_select" class="fw-bold">Data to display: </label>
+            </div>
+            <div class="col-auto">
+              <select class="form-select input-sm" id="display_select">
+                <option value="sid" selected>Sample ID</option>
+                <option value="conc">Concentration</option>
+                <option value="amount">Amount</option>
+                <option value="rin">RIN</option>
+                <option value="reads">Reads</option>
+                <option value="qc">QC</option>
+                <option value="cust_name">Customer Name</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="col-auto pt-1">
+            <span style="margin-left: 15px;"><strong>Tip:</strong> You can use the <kbd><span class="fa fa-arrow-alt-left"></span></kbd>
+                and <kbd><span class="fa fa-arrow-alt-right"></span></kbd> cursors to move through these.</span>
         </div>
     </form>
 
 
     {% for plate in sample_data%}
-    <h3>Container {{ plate }}</h3>
+    <h3 class="mt-5">Container {{ plate }}</h3>
     <table class="table table-bordered rcplate">
         {% if len(sample_data[plate]['y_axis']) <= 8 %}
           {% set rows="ABCDEFGH" %}
@@ -44,15 +52,17 @@ Description: Quick view of reception control plates for a project
         {% end %}
 
         <thead>
+          <tr class="darkth">
             <th class="text-center">#</th>
             {% for col in cols %}
                 <th class="text-center">{{ col }}</th>
             {% end %}
+          </tr>
         </thead>
         <tbody>
         {% for row in rows %}
         <tr>
-            <th class="text-center">{{ row }}</th>
+            <th class="text-center table-secondary">{{ row }}</th>
             {% for col in cols %}
                 {% if "{}:{}".format(row, col) in sample_data[plate] %}
                     {% set pid = sample_data[plate]["{}:{}".format(row, col)]['sample_name'] %}
