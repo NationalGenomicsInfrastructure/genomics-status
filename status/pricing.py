@@ -90,8 +90,6 @@ class PricingDateToVersionDataHandler(PricingBaseHandler):
     """
 
     def get(self):
-        # The versions of products and components should match perfectly,
-        # so we only need to fetch from one database.
         cc_view = self.application.cost_calculator_db.view(
                         'version_info/by_date',
                         descending=False
@@ -123,10 +121,6 @@ class PricingExchangeRatesDataHandler(PricingBaseHandler):
             result = self.fetch_exchange_rates(None)
 
         self.write(json.dumps(result))
-
-
-class PricingValidationError(Exception):
-    pass
 
 
 class PricingValidator():
@@ -305,28 +299,6 @@ class PricingValidator():
 class PricingValidateDraftDataHandler(PricingBaseHandler):
     """Loaded through /api/v1/pricing_validate_unsaved_draft """
 
-
-    def get(self):
-        draft_doc = self.fetch_latest_doc()
-        draft = draft_doc['Draft']
-
-        if not draft:
-            self.set_status(400)
-            return self.write("Error: No draft to validate. This should be handled better.")
-
-        published_doc = self.fetch_latest_published()
-
-        validator = PricingValidator(draft_doc, published_doc)
-        validator.validate()
-        validator.track_all_changes()
-
-        response = dict()
-        response['validation_msgs'] = validator.validation_msgs
-        response['changes'] = validator.changes
-
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(response))
-
     def post(self):
         draft_content = tornado.escape.json_decode(self.request.body)
         published_doc = self.fetch_latest_published()
@@ -342,8 +314,10 @@ class PricingValidateDraftDataHandler(PricingBaseHandler):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(response))
 
+
 class PricingReassignLockDataHandler(PricingBaseHandler):
     """Available at /api/v1/pricing_reassign_lock"""
+
     def post(self):
         doc = self.fetch_latest_doc()
         draft = doc['Draft']
@@ -469,7 +443,6 @@ class PricingDraftDataHandler(PricingBaseHandler):
             self.set_status(400)
             return self.write("Error: Malformed request body.")
 
-        ## TODO: Validate the data?
         latest_doc['components'] = new_doc_content['components']
         latest_doc['products'] = new_doc_content['products']
 
@@ -521,7 +494,10 @@ class PricingDataHandler(PricingBaseHandler):
         return doc
 
     def get(self):
-        """ Should return the specified version of the cost calculator."""
+        """ Should return the specified version of the cost calculator.
+
+        if no version is specified, the most recent published one is returned.
+        """
         version = self.get_argument('version', None)
         cc_db = self.application.cost_calculator_db
 
@@ -581,20 +557,12 @@ class PricingPublishDataHandler(PricingBaseHandler):
 class PricingUpdateHandler(PricingBaseHandler):
     """ Serves a form where the draft cost calculator can be updated.
 
-    If there is a current draft (version nr higher than the last published) this will be
-    served as the basis. Otherwise a new draft will be created.
-    Also makes sure that the draft is not locked by another user, otherwise redirect to preview page.
-
     Loaded through:
         /pricing_update
 
     """
 
     def get(self):
-        """ Serves the page where draft cost calculators can be updated.
-
-        """
-
         t = self.application.loader.load('pricing_update.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user()))
