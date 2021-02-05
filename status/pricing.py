@@ -32,7 +32,6 @@ class PricingBaseHandler(SafeHandler):
                     )
             return datetime_date
 
-
     # _____________________________ FETCH METHODS _____________________________
 
     def fetch_latest_doc(self):
