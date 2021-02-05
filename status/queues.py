@@ -24,7 +24,12 @@ class qPCRPoolsDataHandler(SafeHandler):
 
         methods = queues.keys()
         pools = {}
-
+        qpcr_control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
+                                'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
+                                'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
+                                'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
+                                'lambda DNA (qPCR)'
+                              ]
         for method in methods:
             pools[method] ={}
             if queues[method].artifacts:
@@ -47,12 +52,16 @@ class qPCRPoolsDataHandler(SafeHandler):
                     value = artifact.find('location').find('value').text
                     library_type = ''
                     runmode = ''
-                    if not 'lambda DNA' in art.name:
-                        library_type = art.samples[0].project.udf.get("Library construction method", 'NA')
-                        try:
-                            runmode = art.samples[0].project.udf['Sequencing platform']
-                        except KeyError:
-                            runmode = 'NA'
+
+                    #skip if the Artifact is a control
+                    if art.name in qpcr_control_names:
+                        continue
+
+                    library_type = art.samples[0].project.udf.get("Library construction method", 'NA')
+                    try:
+                        runmode = art.samples[0].project.udf['Sequencing platform']
+                    except KeyError:
+                        runmode = 'NA'
                     if container in pools[method]:
                         pools[method][container]['samples'].append({'name': art.name, 'well': value, 'queue_time': queue_time})
                         if library_type and library_type not in pools[method][container]['library_types']:
