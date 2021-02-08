@@ -1,6 +1,9 @@
 /* Inject attributes needed for scrollspy */
-document.getElementsByTagName("body")[0].setAttribute("data-spy", "scroll");
+
+document.getElementsByTagName("body")[0].setAttribute("data-offset", 75);
 document.getElementsByTagName("body")[0].setAttribute("data-target", "#pricing_update_sidebar");
+document.getElementsByTagName("body")[0].setAttribute("data-spy", "scroll");
+
 
 app.component('v-pricing-update', {
     data() {
@@ -23,7 +26,8 @@ app.component('v-pricing-update', {
         }
     },
     created: function() {
-        this.$root.fetchDraftCostCalculator(true),
+        this.$root.fetchDraftCostCalculator(true)
+        this.$root.fetchPublishedCostCalculator(false)
         this.$root.fetchExchangeRates()
     },
     methods: {
@@ -116,7 +120,7 @@ app.component('v-pricing-update', {
               </div>
 
             <div class="col-md-10">
-              <div id="pricing_product_form_content" data-offset="0">
+              <div id="pricing_product_form_content" class="link-target-offset" data-offset="0">
                 <div class="card pt-3 px-3 bg-light">
                   <div class="row">
                     <div class="col-md-7 mr-auto">
@@ -137,10 +141,10 @@ app.component('v-pricing-update', {
                       <exchange-rates :mutable="false" :issued_at="this.$root.exch_rate_issued_at"/>
                     </div>
                   </div>
-                  <div id="changes_list">
+                  <div id="changes_list" class="link-target-offset">
                     <v-draft-changes-list :modal="false"/>
                   </div>
-                  <div id="validation_messages_list">
+                  <div id="validation_messages_list" class="link-target-offset">
                     <v-draft-validation-msgs-list :modal="false"/>
                   </div>
                 </div>
@@ -229,7 +233,7 @@ app.component('product-form-part', {
     },
     template:
       /*html*/`
-      <div :id="'product_form_part_' + product_id" class="my-3" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
+      <div :id="'product_form_part_' + product_id" class="my-3 link-target-offset" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="card-header">
           <div class="row">
             <a class="pricing_collapse_link" data-toggle="collapse" :data-target="'#collapseProduct' + product_id" role="button" aria-expanded="false" :aria-controls="'collapseProduct' + product_id">

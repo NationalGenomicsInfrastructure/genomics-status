@@ -127,6 +127,9 @@ const vPricingMain = {
             }
             return disco_components
         },
+        done_loading() {
+            return (!this.draft_data_loading && !this.published_data_loading)
+        },
         next_product_id() {
             all_ids = Object.keys(this.all_products)
             max_id = Math.max(...all_ids.map(x => parseInt(x)))
@@ -139,6 +142,13 @@ const vPricingMain = {
         },
         no_validation_messages() {
             return (Object.keys(this.validation_msgs['products']).length === 0) && (Object.keys(this.validation_msgs['components']).length === 0)
+        }
+    },
+    watch: {
+        done_loading(newVal, oldVal) {
+          if(newVal) {
+            this.assignNewItems()
+          }
         }
     },
     methods: {
@@ -288,6 +298,39 @@ const vPricingMain = {
                   this.$root.error_messages.push('Unable to fetch published cost calculator data, please try again or contact a system administrator.')
                   this.published_data_loading = false
               })
+        },
+        assignNewItems() {
+            /* When loading a draft where new products or components have been added */
+            draft_prod_ids = new Set(Object.keys(this.all_products))
+            draft_comp_ids = new Set(Object.keys(this.all_components))
+
+            published_prod_ids = new Set(Object.keys(this.published_cost_calculator['products']))
+            published_comp_ids = new Set(Object.keys(this.published_cost_calculator['components']))
+
+            new_prod_ids = this.symmetricSetDifference(draft_prod_ids, published_prod_ids)
+            new_comp_ids = this.symmetricSetDifference( draft_comp_ids, published_comp_ids)
+
+            for (let new_prod_id of new_prod_ids) {
+                this.new_products.add(new_prod_id)
+            }
+
+            for (let new_comp_id of new_comp_ids) {
+                this.new_components.add(new_comp_id)
+            }
+        },
+        symmetricSetDifference(setA, setB) {
+            /* Convenience method taken from
+            https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
+            */
+            let _difference = new Set(setA)
+            for (let elem of setB) {
+                if (_difference.has(elem)) {
+                    _difference.delete(elem)
+                } else {
+                    _difference.add(elem)
+                }
+            }
+            return _difference
         },
         start_watching_for_validate() {
             this.$watch('all_products',

@@ -1,6 +1,12 @@
 body {
   padding-top: 60px;
 }
+
+/* Internal links should not be hidden behind top banner */
+h1, h2, h3, h4, h5, h6, .link-target-offset {
+  scroll-margin-top: 60px;
+}
+
 .footer {
     font-size:0.8em;
     color:#999;
