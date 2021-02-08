@@ -160,10 +160,10 @@ class SequencingQueuesDataHandler(SafeHandler):
                                                                                 'is_rerun' : is_rerun
                                                                                 }
                         else:
-                             setup = sample.project.udf['Sequencing setup']
-                             lanes = sample.project.udf['Sequence units ordered (lanes)']
-                             librarytype = sample.project.udf['Library construction method']
-                             runmode = sample.project.udf['Sequencing platform']
+                             setup = sample.project.udf.get('Sequencing setup', 'NA')
+                             lanes = sample.project.udf.get('Sequence units ordered (lanes)', 'NA')
+                             librarytype = sample.project.udf.get('Library construction method', 'NA')
+                             runmode = sample.project.udf.get('Sequencing platform', 'NA')
                              final_loading_conc = 'TBD'
                              if method is 'NovaSeq':
                                  try:
