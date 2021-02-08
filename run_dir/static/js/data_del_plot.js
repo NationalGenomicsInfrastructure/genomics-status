@@ -88,7 +88,12 @@ function make_plot(key, name, view_type, filter_inst_type){
         series: [{
             name : name,
             data:[]
-        }]
+        }],
+        exporting: {
+          csv: {
+            itemDelimiter: ';'
+          }
+        }
     }; 
     serie = build_series(window.current_plot_data, key, name, view_type, filter_inst_type);
     toplot.series = serie[1];
