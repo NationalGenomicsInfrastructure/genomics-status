@@ -180,13 +180,13 @@ const vPricingMain = {
             this.all_products[prod_id]['Status'] = 'Discontinued'
         },
         enableProduct(prod_id) {
-            this.all_products[prod_id]['Status'] = 'Enabled'
+            this.all_products[prod_id]['Status'] = 'Available'
         },
         discontinueComponent(comp_id) {
             this.all_components[comp_id]['Status'] = 'Discontinued'
         },
         enableComponent(comp_id) {
-            this.all_components[comp_id]['Status'] = 'Enabled'
+            this.all_components[comp_id]['Status'] = 'Available'
         },
         cloneProduct(prod_id) {
             product = this.all_products[prod_id]
