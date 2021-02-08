@@ -18,7 +18,27 @@ function refresh_plot(){
 function make_plot(key, name, view_type, filter_inst_type){ 
     var toplot = {
         chart: {
-            type: 'line'
+            type: 'line',
+            events: {
+                render: function() {
+                    let series = this.series
+                    let sum = 0
+                    for(let i = 0; i < series.length; i++) {
+                        if(series[i].visible){
+                        for(let j = 0; j < series[i].data.length; j++) {
+                            sum += series[i].data[j].y
+                            }
+                        }
+                    }
+                    if (sum === 0) return '0 Bytes';
+                    const k = 1024;
+                    const dm = 2 < 0 ? 0 : 2;
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+                    const i = Math.floor(Math.log(sum) / Math.log(k));
+                    var c_sum = parseFloat((sum / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+                this.setTitle({text: "File size of projects, sum in bytes: " + c_sum}, false, false) 
+                }
+            }
         },
         title: {
             text : name+' of projects'
@@ -57,6 +77,9 @@ function make_plot(key, name, view_type, filter_inst_type){
         },
         xAxis: {
             type: 'datetime',
+            title : {
+              text : 'Date delivered'
+            },
             labels: {
                enabled: false
             },
@@ -67,15 +90,6 @@ function make_plot(key, name, view_type, filter_inst_type){
             data:[]
         }]
     }; 
-    /*For the default total sum data delivered per time unit.
-    Not sure how to get this view working outside the loop, consequently 
-    we have multiple data points for the total sum, and the plot type is a workaround.*/
-    if (view_type == 'cumulative'){
-        toplot.chart = {
-            type: 'area'
-        }
-    }
-    
     serie = build_series(window.current_plot_data, key, name, view_type, filter_inst_type);
     toplot.series = serie[1];
     toplot.xAxis.categories = serie[0];
@@ -108,10 +122,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
         }else if (data[d].platform.includes('HiSeq') && filter_inst_type.includes('HiSeq')){
             continue;
         }
-        if (view_type == 'cumulative'){
-            series_name = "All projects";
-            view_color = view_coloring(series_name);
-        }else if (view_type == 'platform'){
+        if (view_type == 'platform'){
             if (data[d].platform.includes('NovaSeq')){
                 series_name = "NovaSeq";
             }else if (data[d].platform.includes('MiSeq')){
@@ -180,14 +191,6 @@ function build_series(data, key, name, view_type, filter_inst_type){
                 data: [],
             };
             series.length += 1; 
-        }else if (view_type == 'cumulative'){
-            cumul_xaxis = "Total filesize delivered";
-            dp = {
-                y: fs_sum,
-                data: fs_sum
-            };
-            series[series_name].data.push(dp);
-            categories.push(cumul_xaxis);
         }else{ 
             dp = {
                 y: data[d][key],
