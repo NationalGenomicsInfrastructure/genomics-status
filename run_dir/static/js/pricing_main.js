@@ -831,7 +831,7 @@ app.component('v-draft-changes-list', {
                 <template v-for="(prod_changes_data, prod_id) in product_changes" :key="prod_id">
                   <div class="ml-3 mb-3">
                     <h5 class="col-12"><a :href="'#product_form_part_' + prod_id">{{this.$root.all_products[prod_id]['Name']}}:</a></h5>
-                    <div class="ml-3" v-for="(prod_type_changes_data, type_key) in prod_changes_data" :key="type_key">
+                    <div class="ml-3 mr-2" v-for="(prod_type_changes_data, type_key) in prod_changes_data" :key="type_key">
                       <strong class="mr-2">{{type_key}}:</strong>
                       <template v-if="(type_key == 'Components') || (type_key == 'Alternative Components')">
                         <div class="row">
@@ -874,7 +874,7 @@ app.component('v-draft-changes-list', {
                 <template v-for="(comp_changes_data, comp_id) in component_changes" :key="comp_id">
                   <div class="ml-3 mb-3">
                     <h5 class="col-12"><a :href="'#component_form_part_' + comp_id">{{this.$root.all_components[comp_id]['Product name']}}:</a></h5>
-                    <div class="ml-3" v-for="(comp_type_changes_data, type_key) in comp_changes_data" :key="type_key">
+                    <div class="ml-3 mr-2" v-for="(comp_type_changes_data, type_key) in comp_changes_data" :key="type_key">
                       <strong class="mr-2">{{type_key}}:</strong>
                       {{comp_type_changes_data[1]}} <i class="fas fa-arrow-right"></i> {{comp_type_changes_data[0]}}
                     </div>

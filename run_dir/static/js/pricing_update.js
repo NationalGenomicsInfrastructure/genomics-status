@@ -38,7 +38,6 @@ app.component('v-pricing-update', {
             })
             .then(response => {
                 this.save_message = response.data.message;
-                this.backToPreview()
             })
             .catch(error => {
                 this.$root.error_messages.push('Unable to save draft, please try again or contact an system administrator.')
@@ -133,8 +132,8 @@ app.component('v-pricing-update', {
                         <button class="btn btn-secondary" @click="toggleCollapse"><i class="fas fa-caret-down"></i> {{expand_button_text}}</button>
                       </div>
                       <div class="mb-3 mt-5">
-                        <button class="btn btn-primary btn-lg" @click="saveDraft"><i class="far fa-save"></i> Save and leave</button>
-                        <button class="btn btn-danger btn-lg ml-2" @click="backToPreview"><i class="fas fa-window-close"></i> Leave without saving</button>
+                        <button class="btn btn-success btn-lg" @click="saveDraft"><i class="far fa-save"></i> Save </button>
+                        <button class="btn btn-secondary btn-lg ml-2" @click="backToPreview"><i class="fas fa-window-close"></i> Leave </button>
                       </div>
                     </div>
                     <div class="col-md-5">
@@ -390,7 +389,7 @@ app.component('component-form-part', {
     },
     template:
       /*html*/`
-      <div :id="'component_form_part_' + component_id" class="my-3" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
+      <div :id="'component_form_part_' + component_id" class="my-3 link-target-offset" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="card-header">
           <div class="row">
             <a class="pricing_collapse_link" data-toggle="collapse" :data-target="'#collapseComponent' + component_id" role="button" aria-expanded="false" :aria-controls="'collapseComponent' + component_id">
