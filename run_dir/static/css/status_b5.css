@@ -113,6 +113,11 @@ input.quantity_updateable {
 
 .pricing_hoverable {
     cursor: help;
+}
+
+.pricing-normal-width-tooltip {
+    max-width: 400px;
+}
 
 /* Make <samp> (flow cell IDs usually) a little smaller */
 samp { font-size:0.8em; }

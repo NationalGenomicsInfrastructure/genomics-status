@@ -38,6 +38,7 @@ app.component('v-pricing-update', {
             })
             .then(response => {
                 this.save_message = response.data.message;
+                this.save_error = false;
             })
             .catch(error => {
                 this.$root.error_messages.push('Unable to save draft, please try again or contact an system administrator.')
@@ -88,7 +89,7 @@ app.component('v-pricing-update', {
               <div class="col-md-2">
                 <nav id="pricing_update_sidebar" class="nav sidebar sticky-top">
                   <div class="position-sticky">
-                    <nav class="nav nav-pills flex-column">
+                    <nav class="nav nav-pills flex-column border-bottom">
                       <a class="nav-link" href="#pricing_product_form_content">Top of the page</a>
                       <nav class="nav nav-pills flex-column">
                         <a class="nav-link ml-3 my-0 py-1" href="#changes_list">Changes</a>
@@ -114,6 +115,11 @@ app.component('v-pricing-update', {
                         <a class="nav-link ml-3 my-0 py-1" href="#discontinued_components">Components</a>
                       </nav>
                     </nav>
+                    <button class="btn btn-success btn-lg ml-3 mt-3 mb-2" @click="saveDraft"><i class="far fa-save"></i> Save</button>
+                    <template v-if="save_message !== null">
+                      <p class="text-danger ml-3" v-if="save_error"><strong>Error saving</strong> {{save_message}}</p>
+                      <p class="text-success ml-3" v-else><strong>Saved!</strong> {{save_message}}</p>
+                    </template>
                   </div>
                 </nav>
               </div>
@@ -206,7 +212,17 @@ app.component('product-form-part', {
         cost() {
             // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
             return this.$root.productCost(this.product_id)
-        }
+        },
+        validation_msgs() {
+            if (this.product_id in this.$root.validation_msgs['products']) {
+                return this.$root.validation_msgs['products'][this.product_id]
+            } else {
+                return null
+            }
+        },
+        is_invalid() {
+            return (this.validation_msgs !== null)
+        },
     },
     methods: {
         discontinueProduct() {
@@ -240,9 +256,14 @@ app.component('product-form-part', {
       <div :id="'product_form_part_' + product_id" class="my-3 link-target-offset" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="card-header">
           <div class="row">
-            <a class="pricing_collapse_link" data-toggle="collapse" :data-target="'#collapseProduct' + product_id" role="button" aria-expanded="false" :aria-controls="'collapseProduct' + product_id">
+            <a class="pricing_collapse_link col-auto mr-auto" :class="{'text-danger': is_invalid}" data-toggle="collapse" :data-target="'#collapseProduct' + product_id" role="button" aria-expanded="false" :aria-controls="'collapseProduct' + product_id">
               <h5 :class="{'text-danger': discontinued, 'my-1': true}"> {{ product['Name'] }} {{ discontinued ? ' - Discontinued' : '' }} <i class="fas fa-caret-down fa-lg pl-1"></i></h5>
             </a>
+            <span class="col-1" v-if="is_invalid">
+              <div class="d-flex justify-content-end">
+                <v-form-validation-tooltip :product_id="product_id"/>
+              </div>
+            </span>
           </div>
         </div>
         <div :id="'collapseProduct' + product_id"  class="collapse card-body">
@@ -351,6 +372,48 @@ app.component('product-form-part', {
 
         `
 })
+
+app.component('v-form-validation-tooltip', {
+    props: ['product_id'],
+    computed: {
+      validation_msgs() {
+        if (this.product_id in this.$root.validation_msgs['products']) {
+          return_msg = ''
+          for (msg_type in this.$root.validation_msgs['products'][this.product_id]) {
+            validation_msgs = this.$root.validation_msgs['products'][this.product_id][msg_type]
+            for (msg_index in validation_msgs) {
+              msg = '<p class="fs-5 pricing-normal-width-tooltip">' + validation_msgs[msg_index] + '</p>'
+              return_msg += msg
+            }
+          }
+          return return_msg
+        } else {
+          return null
+        }
+      }
+    },
+    data() {
+        return {
+            tooltip: null
+        }
+    },
+    mounted() {
+        this.$nextTick(function() {
+            this.tooltip = new bootstrap.Tooltip(this.$el)
+        })
+    },
+    watch: {
+      validation_msgs(newVal, oldVal) {
+        this.$nextTick(function() {
+            this.tooltip = new bootstrap.Tooltip(this.$el)
+        })
+      }
+    },
+    template:  /*html*/`
+        <h3 class="my-0 text-danger" data-toggle="tooltip" data-customClass="pricing-normal-width-tooltip" data-placement="top" :title="validation_msgs" data-html=true>
+          <i class="fas fa-exclamation-triangle" :data-id="product_id"></i>
+        </h3>`
+    })
 
 app.component('component-form-part', {
     props: ['component_id'],
