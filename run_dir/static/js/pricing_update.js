@@ -438,7 +438,7 @@ app.component('component-form-part', {
                     <input class="form-control" v-model.text="component['Re-seller']" type="text">
                   </label>
 
-                  <label class="form-label col-md-4">
+                  <label class="form-label col-md-6">
                     Product #
                     <input class="form-control" v-model.text="component['Product #']" type="text">
                   </label>
@@ -446,11 +446,6 @@ app.component('component-form-part', {
                   <label class="form-label col-md-2">
                     Units
                     <input class="form-control" v-model.text="component['Units']" type="text">
-                  </label>
-
-                  <label class="form-label col-md-2">
-                    Min Quantity
-                    <input class="form-control" v-model.text="component['Min Quantity']" type="text">
                   </label>
 
                 </div>
@@ -661,7 +656,6 @@ app.component('component-table-row', {
             <strong>Re-seller: </strong>${component['Re-seller']}<br>
             <strong>Product #: </strong>${component['Product #']}<br>
             <strong>Units: </strong>${component['Units']}<br>
-            <strong>Min quantity: </strong>${component['Min Quantity']}<br>
             <strong>Discount: </strong>${component['Discount']}<br>
             <strong>List price: </strong>${component['List price']}<br>
             <strong>Cost: </strong>${this.cost['sek_price'].toFixed(2)} SEK<br>
