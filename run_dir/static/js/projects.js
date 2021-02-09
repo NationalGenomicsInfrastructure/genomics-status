@@ -282,7 +282,7 @@ function load_undefined_columns(cols) {
     $.each(cols, function(col_id, column) {
       $("#undefined_columns").append('<div class="checkbox">'+
           '<label>'+
-            '<input type="checkbox" class="filterCheckbox" data-columngroup="UNDEFINED_COLUMNS" data-displayname="'+column+'" name="'+column+'" id="allFields-undefined-columns-'+column+'">'+
+            '<input type="checkbox" class="filterCheckbox mr-1" data-columngroup="UNDEFINED_COLUMNS" data-displayname="'+column+'" name="'+column+'" id="allFields-undefined-columns-'+column+'">'+
             column+
           '</label>'+
         '</div>');
@@ -913,12 +913,12 @@ $('#resetReorderingbtn').on("click", function() {
 });
 
 function getTHeaderElem(elem){
-  thElem = '<li class="list-inline-item" data-name="'+$(elem).prop('name')+'"';
+  thElem = '<li data-name="'+$(elem).prop('name')+'"';
   if($(elem).data('displayname').indexOf('fa')>=0){
-    thElem+= ' class="fa '+$(elem).data('displayname')+'" data-toggle="tooltip" title="'+$(elem).parent().text().match(/\(([^)]+)\)/)[1]+'">';
+    thElem+= ' class="fa '+$(elem).data('displayname')+' list-inline-item" data-toggle="tooltip" title="'+$(elem).parent().text().match(/\(([^)]+)\)/)[1]+'">';
   }
   else
-    thElem+='>'+$(elem).data('displayname');
+    thElem+=' class="list-inline-item" >'+$(elem).data('displayname');
   thElem+='</li>';
   return thElem;
 }
