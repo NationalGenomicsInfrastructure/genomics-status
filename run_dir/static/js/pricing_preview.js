@@ -185,56 +185,59 @@ app.component('pricing-preview', {
               <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="false"/>
             </div>
           </template>
-        </template>
-        <!--- Modals --->
-        <div class="modal fade" id="publish_draft_modal" tabindex="-1" role="dialog" aria-labelledby="publishDraftModalHeader">
-          <div class="modal-dialog" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h4 class="modal-title" id="publishDraftModalHeader">Publish new cost calculator</h4>
-                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <template v-if="this.$root.no_validation_messages">
-                  <p>Are you sure you want to publish the current draft?</p>
-                  <p>This will then become the default cost calculator used for all quotes.</p>
-                  <v-draft-changes-list :modal="true"/>
-                </template>
-                <template v-else>
-                  <p>The current draft contains validation errors, please fix these before publishing:</p>
-                  <v-draft-validation-msgs-list :modal="true"/>
-                </template>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <template v-if="this.$root.no_validation_messages">
-                  <button type="button" class="btn btn-primary" @click="publish_draft" data-dismiss="modal">Publish New Cost Calculator</button>
-                </template>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal fade" id="delete_draft_modal" tabindex="-1" role="dialog" aria-labelledby="deleteDraftModalHeader">
-          <div class="modal-dialog" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h4 class="modal-title" id="deleteDraftModalHeader">Delete new cost calculator</h4>
-                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <div class="alert alert-danger">
-                  <h4>Are you sure you want to delete the current draft?</h4>
-                  <p class="fw-bold">All changes made will be lost!</p>
-                  <v-draft-changes-list :modal="true"/>
+
+          <template v-if="draft_exists">
+            <!--- Modals --->
+            <div class="modal fade" id="publish_draft_modal" tabindex="-1" role="dialog" aria-labelledby="publishDraftModalHeader">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h4 class="modal-title" id="publishDraftModalHeader">Publish new cost calculator</h4>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <template v-if="this.$root.no_validation_messages">
+                      <p>Are you sure you want to publish the current draft?</p>
+                      <p>This will then become the default cost calculator used for all quotes.</p>
+                      <v-draft-changes-list :modal="true"/>
+                    </template>
+                    <template v-else>
+                      <p>The current draft contains validation errors, please fix these before publishing:</p>
+                      <v-draft-validation-msgs-list :modal="true"/>
+                    </template>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <template v-if="this.$root.no_validation_messages">
+                      <button type="button" class="btn btn-primary" @click="publish_draft" data-dismiss="modal">Publish New Cost Calculator</button>
+                    </template>
+                  </div>
                 </div>
               </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" @click="delete_draft" data-dismiss="modal">Delete Draft</button>
+            </div>
+            <div class="modal fade" id="delete_draft_modal" tabindex="-1" role="dialog" aria-labelledby="deleteDraftModalHeader">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h4 class="modal-title" id="deleteDraftModalHeader">Delete new cost calculator</h4>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="alert alert-danger">
+                      <h4>Are you sure you want to delete the current draft?</h4>
+                      <p class="fw-bold">All changes made will be lost!</p>
+                      <v-draft-changes-list :modal="true"/>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" @click="delete_draft" data-dismiss="modal">Delete Draft</button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </template>
+        </template>
         `
 })
 

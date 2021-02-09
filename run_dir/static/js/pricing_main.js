@@ -141,13 +141,15 @@ const vPricingMain = {
             return (1 + max_id).toString()
         },
         no_validation_messages() {
-            return (Object.keys(this.validation_msgs['products']).length === 0) && (Object.keys(this.validation_msgs['components']).length === 0)
+          return (Object.keys(this.validation_msgs['products']).length === 0) && (Object.keys(this.validation_msgs['components']).length === 0)
         }
     },
     watch: {
         done_loading(newVal, oldVal) {
           if(newVal) {
-            this.assignNewItems()
+            if (this.draft_cost_calculator !== null && this.published_cost_calculator !== null) {
+              this.assignNewItems()
+            }
           }
         }
     },
@@ -398,10 +400,10 @@ const vPricingMain = {
                   this.$root.error_messages.push('Unable to validate draft changes, please try again or contact a system administrator.')
               })
             } else {
-                /* Case for when the draft is/is being deleted */
+                /* Case for when the draft is deleted or is being deleted */
                 this.$root.product_changes = null
                 this.$root.component_changes = null
-                this.$root.validation_msgs = null
+                this.$root.validation_msgs = Object({'products': {}, 'components': {}})
             }
         }
     }
@@ -893,10 +895,10 @@ app.component('v-draft-validation-msgs-list', {
     props: ['modal'],
     computed: {
         product_messages() {
-            return this.$root.validation_msgs['products']
+          return this.$root.validation_msgs['products']
         },
         component_messages() {
-            return this.$root.validation_msgs['components']
+          return this.$root.validation_msgs['components']
         },
         any_messages() {
             return (Object.keys(this.product_messages).length !== 0) || (Object.keys(this.component_messages).length !== 0)
