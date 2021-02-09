@@ -58,10 +58,6 @@ tfoot {
 
 /* Pricing */
 
-tr.status_discontinued{
-  background-color: #f2dede;
-}
-
 .quote_product_prices_line{
     float: right;
 }
