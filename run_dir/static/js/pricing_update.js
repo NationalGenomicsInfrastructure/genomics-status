@@ -216,7 +216,12 @@ app.component('product-form-part', {
             this.$root.enableProduct(this.product_id)
         },
         cloneProduct() {
-            this.$root.cloneProduct(this.product_id)
+            new_id = this.$root.cloneProduct(this.product_id)
+            this.$nextTick(function() {
+                // Scroll to the new product
+                window.location.href = '#'
+                window.location.href = '#product_form_part_' + new_id;
+            })
         },
         removeProduct() {
             if (! (this.isNew) ) {
@@ -377,7 +382,12 @@ app.component('component-form-part', {
             this.$root.discontinueComponent(this.component_id)
         },
         cloneComponent() {
-            this.$root.cloneComponent(this.component_id)
+            new_id = this.$root.cloneComponent(this.component_id)
+            this.$nextTick(function() {
+                // Scroll to the new product
+                window.location.href = '#'
+                window.location.href = '#component_form_part_' + new_id;
+            })
         },
         removeComponent() {
             if (! (this.isNew) ) {

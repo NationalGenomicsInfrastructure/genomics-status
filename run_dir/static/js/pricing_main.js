@@ -201,6 +201,7 @@ const vPricingMain = {
             new_prod['REF_ID'] = new_id
             this.all_products[new_id] = new_prod
             this.new_products.add(new_id)
+            return new_id
         },
         removeProduct(prod_id) {
             /* meant to be used with new products only */
@@ -236,6 +237,7 @@ const vPricingMain = {
             new_comp['REF_ID'] = new_id
             this.all_components[new_id] = new_comp
             this.new_components.add(new_id)
+            return new_id
         },
         removeComponent(comp_id) {
             /* meant to be used with new components only */
