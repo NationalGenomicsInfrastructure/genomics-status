@@ -178,28 +178,28 @@ function load_table(status, type, columns, dates) {
                 check_value = Math.abs(summary_row[column_tuple[1]]);
                 switch(column_tuple[1]){
                   case 'days_recep_ctrl':
-                    to_ret = check_value>7 ? check_value>14 ? 'alert-red': 'alert-orange' :'alert-green';
+                    to_ret = check_value>7 ? check_value>14 ? 'table-danger': 'table-warning' :'table-success';
                     break;
                   case 'days_prep_start':
-                    to_ret = check_value>7 ? check_value>10 ? 'alert-red': 'alert-orange' :'alert-green';
+                    to_ret = check_value>7 ? check_value>10 ? 'table-danger': 'table-warning' :'table-success';
                     break;
                   case 'days_seq_start':
-                    to_ret = check_value>7 ? check_value>10 ? 'alert-red': 'alert-orange' :'alert-green';
+                    to_ret = check_value>7 ? check_value>10 ? 'table-danger': 'table-warning' :'table-success';
                     break;
                   case 'days_seq':
-                    to_ret = check_value>7 ? check_value>14 ? 'alert-red': 'alert-orange' :'alert-green';
+                    to_ret = check_value>7 ? check_value>14 ? 'table-danger': 'table-warning' :'table-success';
                     break;
                   case 'days_analysis':
-                    to_ret = check_value>7 ? check_value>10 ? 'alert-red': 'alert-orange' : 'alert-green';
+                    to_ret = check_value>7 ? check_value>10 ? 'table-danger': 'table-warning' : 'table-success';
                     break;
                   case 'days_data_delivery':
-                    to_ret = check_value>7 ? check_value>10 ? 'alert-red': 'alert-orange' : 'alert-green';
+                    to_ret = check_value>7 ? check_value>10 ? 'table-danger': 'table-warning' : 'table-success';
                     break;
                   case 'days_close':
-                    to_ret = check_value>7 ? check_value>10 ? 'alert-red': 'alert-orange' : 'alert-green';
+                    to_ret = check_value>7 ? check_value>10 ? 'table-danger': 'table-warning' : 'table-success';
                     break;
                   case 'days_prep':
-                    to_ret = check_value>10 ? check_value>19 ? 'alert-red': 'alert-orange' : 'alert-green';
+                    to_ret = check_value>10 ? check_value>19 ? 'table-danger': 'table-warning' : 'table-success';
                     break;
                 }
               return to_ret;
@@ -246,8 +246,6 @@ function load_table_head(columns){
     tbl_head.append($('<th>')
       .addClass(function(){
         var toReturn = 'sort a';
-        if(column_tuple[0].indexOf('fa')>=0)
-          toReturn += ' fa '+column_tuple[0];
         return toReturn;
       })
       .attr("data-sort",  column_tuple[1])
@@ -262,6 +260,11 @@ function load_table_head(columns){
       .text(function(){
         if(column_tuple[0].indexOf('fa')<0)
           return column_tuple[0]
+      })
+      .html(function(){
+        if(column_tuple[0].indexOf('fa')>=0){
+            return '<i class= "fa '+column_tuple[0]+'"></i>';
+        }
       })
     );
     tbl_foot.append($('<th>')
@@ -913,12 +916,12 @@ $('#resetReorderingbtn').on("click", function() {
 });
 
 function getTHeaderElem(elem){
-  thElem = '<li data-name="'+$(elem).prop('name')+'"';
+  thElem = '<li data-name="'+$(elem).prop('name')+'" class="list-inline-item">';
   if($(elem).data('displayname').indexOf('fa')>=0){
-    thElem+= ' class="fa '+$(elem).data('displayname')+' list-inline-item" data-toggle="tooltip" title="'+$(elem).parent().text().match(/\(([^)]+)\)/)[1]+'">';
+    thElem+= '<i class="fa '+$(elem).data('displayname')+'" data-toggle="tooltip" title="'+$(elem).parent().text().match(/\(([^)]+)\)/)[1]+'"></i>';
   }
   else
-    thElem+=' class="list-inline-item" >'+$(elem).data('displayname');
+    thElem+=$(elem).data('displayname');
   thElem+='</li>';
   return thElem;
 }
