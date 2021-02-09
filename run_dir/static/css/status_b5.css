@@ -604,14 +604,6 @@ width:30%;
   margin-bottom:5px;
 }
 
-/*
-=== Suggestions Box ===
-*/
-#suggestions_table {
-  max-height:800px;
-  overflow-y:scroll;
-}
-
 .sortableListSource li {
   margin: 5px;
   padding: 5px;
@@ -623,4 +615,12 @@ width:30%;
   border: 1px solid #ddd;
   color: black;
   cursor: pointer;
+}
+
+/*
+=== Suggestions Box ===
+*/
+#suggestions_table {
+  max-height:800px;
+  overflow-y:scroll;
 }
