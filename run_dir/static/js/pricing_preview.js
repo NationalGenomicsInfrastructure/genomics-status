@@ -1,9 +1,4 @@
 app.component('pricing-preview', {
-    data: function() {
-        return {
-          show_discontinued: false
-        }
-    },
     computed: {
       draft_exists() {
         return this.$root.draft_cost_calculator !== null
@@ -100,12 +95,7 @@ app.component('pricing-preview', {
               });
         },
         toggleDiscontinued() {
-            this.reset_listjs()
-            this.show_discontinued = !this.show_discontinued
-
-            this.$nextTick(() => {
-              this.init_listjs()
-            })
+            this.$root.show_discontinued = !this.$root.show_discontinued
         }
     },
     template:
@@ -146,7 +136,7 @@ app.component('pricing-preview', {
                   More Options
                 </button>
                 <div class="collapse border-top py-3" id="more_options">
-                  <template v-if="show_discontinued">
+                  <template v-if="this.$root.show_discontinued">
                     <button type="button" class="btn btn-success" id="toggle_discontinued" @click="toggleDiscontinued">Hide Discontinued Products <i class="fas fa-book-heart fa-lg pl-2"></i></button>
                   </template>
                   <template v-else>
