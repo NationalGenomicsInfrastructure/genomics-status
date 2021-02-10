@@ -4,6 +4,10 @@ document.getElementsByTagName("body")[0].setAttribute("data-offset", 75);
 document.getElementsByTagName("body")[0].setAttribute("data-target", "#pricing_update_sidebar");
 document.getElementsByTagName("body")[0].setAttribute("data-spy", "scroll");
 
+window.onbeforeunload = function(){
+  /* This message will only show up on IE... But needs to return something */
+  return 'Please make sure you have saved your changes before leaving'
+};
 
 app.component('v-pricing-update', {
     data() {
