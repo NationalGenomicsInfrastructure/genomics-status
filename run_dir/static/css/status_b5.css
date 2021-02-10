@@ -815,6 +815,20 @@ width:30%;
   height: 5px;
 }
 
+td.alert-red{
+  background-color: #ea9999 !important;
+  background-image: inherit !important;
+}
+
+td.alert-orange{
+  background-color: #facc99 !important;
+  background-image: inherit !important;
+}
+
+td.alert-green{
+  background-color: #d9ead3 !important;
+  background-image: inherit !important;
+}
 
 /*
 === Suggestions Box ===
