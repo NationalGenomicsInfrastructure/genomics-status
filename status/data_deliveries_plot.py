@@ -27,20 +27,21 @@ class DataDeliveryHandler(SafeHandler):
             for row in summary_view.rows:
                 project_id_summary = row.key[1]
                 if project_id_staged == project_id_summary: 
-                    if 'project_summary' in row.value and 'details' in row.value  and 'all_raw_data_delivered' \
-                      in row.value['project_summary'] and 'sequencing_platform' in row.value['details'] \
-                      and 'application' in row.value['details'] and 'type' in row.value['details'] \
-                      and 'sample_type' in row.value['details'] and 'best_practice_bioinformatics' \
-                      in row.value['details'] and 'delivery_type' in row.value:
+                    if 'project_summary' in row.value and 'details' in row.value  and 'all_raw_data_delivered' in row.value['project_summary']:
                         delivered = row.value['project_summary']['all_raw_data_delivered']
                         if searches[0] < delivered < searches[1]:
-                            platform = row.value['details']['sequencing_platform']
-                            app = row.value['details']['application']
-                            typ = row.value['details']['type']
-                            sample = row.value['details']['sample_type']
-                            bp = row.value['details']['best_practice_bioinformatics']
-                            delivery = row.value['delivery_type']
-                            delivered_data[project_id_summary] = {'filesize': filesize, 'project_name': project_name, 'delivered': delivered, 'platform': platform, 'app': app, 'typ': typ, 'sample': sample, 'bp': bp, 'delivery': delivery}
+                            if 'sequencing_platform' in row.value['details'] and 'application' in row.value['details'] \
+                              and 'type' in row.value['details'] and 'sample_type' in row.value['details'] and \
+                              'best_practice_bioinformatics' in row.value['details'] and 'delivery_type' in row.value:
+                                platform = row.value['details']['sequencing_platform']
+                                app = row.value['details']['application']
+                                typ = row.value['details']['type']
+                                sample = row.value['details']['sample_type']
+                                bp = row.value['details']['best_practice_bioinformatics']
+                                delivery = row.value['delivery_type']
+                                delivered_data[project_id_summary] = {'filesize': filesize, 'project_name': project_name, 'delivered': delivered, 'platform': platform, 'app': app, 'typ': typ, 'sample': sample, 'bp': bp, 'delivery': delivery}
+                            else:
+                                delivered_data[project_id_summary] = {'filesize': filesize, 'project_name': project_name, 'delivered': delivered}
         sorted_data = dict(sorted(delivered_data.items(), key=lambda t: t[1].get('delivered', '%Y-%m-%d')))
         self.set_header('Content-type', "application/json")
         self.write(json.dumps(sorted_data))

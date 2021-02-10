@@ -108,25 +108,21 @@ function build_series(data, key, name, view_type, filter_inst_type){
     var view_color = "";
     var series_name = "";
     var categories = [];
-    //For the cumulative view.
-    var fs_sum = sum(data, 'filesize');
     for (d in data){
-        //Currently the data point links to the delivery page of the project.
         var bioinfo_link="/bioinfo/"+d; 
         var project_name = data[d].project_name;
         var date_del = data[d].delivered;
-        /*For the instrument filter. This is currently not working for the cumulative
-        view, but maybe not necessary since we have a view for the seq platforms.*/
-        if (data[d].platform.includes('NovaSeq') && filter_inst_type.includes('NovaSeq')){
+        if (data[d].platform == null){
+            continue;
+        }else if (data[d].platform.includes('NovaSeq') && filter_inst_type.includes('NovaSeq')){
             continue;
         }else if (data[d].platform.includes('MiSeq') && filter_inst_type.includes('MiSeq')){
             continue;
         }else if (data[d].platform.includes('NextSeq') && filter_inst_type.includes('NextSeq')){
             continue;
-        //Added HiSeq since the projects are still in the db.
         }else if (data[d].platform.includes('HiSeq') && filter_inst_type.includes('HiSeq')){
             continue;
-        }
+        }  
         if (view_type == 'platform'){
             if (data[d].platform.includes('NovaSeq')){
                 series_name = "NovaSeq";
@@ -152,14 +148,22 @@ function build_series(data, key, name, view_type, filter_inst_type){
             }else if (data[d].app.includes('Epigenetics')){
                 series_name = "Epigenetics";
             }else{
-                series_name = "Other";
+                series_name = "Other/undefined";
             }
             view_color = view_coloring(series_name);
         }else if (view_type == 'typ'){
-            series_name = data[d].typ;
+            if (data[d].typ == null){
+                series_name = "Other/undefined";
+            }else{
+                series_name = data[d].typ;
+            }
             view_color = view_coloring(series_name);
         }else if (view_type == 'delivery'){
-            series_name = data[d].delivery;
+            if (data[d].delivery == null){
+                series_name = "Other/undefined";
+            }else{
+                series_name = data[d].delivery;
+            }
             view_color = view_coloring(series_name);
         }else if (view_type == 'sample'){
             if (data[d].sample.includes('Finished')){
@@ -173,7 +177,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
             }else if (data[d].sample.includes('Amplicon')){
                 series_name = "Amplicon";
             }else{
-                series_name = "Other";
+                series_name = "Other/undefined";
             }
             view_color = view_coloring(series_name);
         }else if (view_type == 'bp'){
@@ -184,7 +188,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
             }else if (data[d].bp == 'Special'){
                 series_name = "Special";
             }else{
-                series_name = "Other";
+                series_name = "Other/undefined";
             }
             view_color = view_coloring(series_name);
             }
