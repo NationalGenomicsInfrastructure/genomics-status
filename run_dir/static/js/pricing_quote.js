@@ -72,7 +72,7 @@ app.component('v-pricing-quote', {
     template:
         /*html*/`
         <div class="row">
-          <h1 class="col-md-11"><span id="page_title">Project Quote</span></h1>
+          <h1 class="col-md-11"><span id="page_title">Cost Calculator</span></h1>
         </div>
         <template v-if="this.$root.published_data_loading">
           <v-pricing-data-loading/>

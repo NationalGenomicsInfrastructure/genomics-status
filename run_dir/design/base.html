@@ -65,6 +65,7 @@
                       <li><a href="/proj_meta">Compare Project Meta</a></li>
                       <li><a href="/instrument_logs">View Instrument Logs</a></li>
                       <li><a href="/barcode">Barcode and Label printing</a></li>
+                      <li><a href="/pricing_quote">Cost Calculator</a></li>
                       {% if user and (user.is_admin or user.is_pricing_admin) %}
                         <li role="separator" class="divider"></li>
                         <li class="dropdown-header">Admin</li>
@@ -72,7 +73,7 @@
                         <li><a href="/user_management">User Management</a></li>
                         {% end %}
                         {% if user and user.is_pricing_admin %}
-                        <li><a href="/pricing_preview">Cost Calculator</a></li>
+                        <li><a href="/pricing_preview">Edit Cost Calculator</a></li>
                         {% end %}
                       {% end %}
                       <li role="separator" class="divider"></li>
