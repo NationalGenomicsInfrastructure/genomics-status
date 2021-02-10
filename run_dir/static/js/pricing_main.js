@@ -654,7 +654,7 @@ app.component('product-table-row', {
     },
     template: /*html*/`
         <template v-if="this.visible">
-          <tr class="status_css" :class="{'table-danger pricing-tr-is-invalid': is_invalid, 'table-warning': discontinued, 'table-success pricing-tr-changed': is_changes}">
+          <tr :id="'product_form_part_' + product_id" class="status_css link-target-offset-extra" :class="{'table-danger pricing-tr-is-invalid': is_invalid, 'table-warning': discontinued, 'table-success pricing-tr-changed': is_changes}">
               <td v-if="quotable">
                   <a href="#" class="button add-to-quote" :data-product-id="product['REF_ID']" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
                   <span>({{quote_count}})</span>

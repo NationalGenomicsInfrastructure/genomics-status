@@ -4,7 +4,11 @@ body {
 
 /* Internal links should not be hidden behind top banner */
 h1, h2, h3, h4, h5, h6, .link-target-offset {
-  scroll-margin-top: 60px;
+    scroll-margin-top: 60px;
+}
+
+.link-target-offset-extra {
+    scroll-margin-top: 75px;
 }
 
 .footer {
