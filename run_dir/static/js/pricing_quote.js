@@ -1,62 +1,63 @@
 app.component('v-pricing-quote', {
+    /* Main component of the pricing quote page.
+     *
+     * Add products from the table to create a quote and switch between price types.
+     */
     computed: {
-      any_quote() {
-        return ( this.any_special_addition ||
-                 this.any_special_percentage ||
-                Object.keys(this.$root.quote_prod_ids).length)
-      },
-      any_special_addition() {
-        return this.$root.quote_special_addition_label !== ''
-      },
-      any_special_percentage() {
-        return this.$root.quote_special_percentage_label !== ''
-      },
-      product_cost() {
-        cost_sum = 0
-        cost_academic_sum = 0
-        full_cost_sum = 0
-        for ([prod_id, prod_count] of Object.entries(this.$root.quote_prod_ids)) {
-          cost_sum += prod_count * this.productCost(prod_id)['cost'];
-          cost_academic_sum += prod_count * this.productCost(prod_id)['cost_academic'];
-          full_cost_sum +=  prod_count * this.productCost(prod_id)['full_cost'];
-        }
+        any_quote() {
+            return (this.any_special_addition ||
+                    this.any_special_percentage ||
+                    Object.keys(this.$root.quote_prod_ids).length)
+        },
+        any_special_addition() {
+            return this.$root.quote_special_addition_label !== ''
+        },
+        any_special_percentage() {
+            return this.$root.quote_special_percentage_label !== ''
+        },
+        product_cost_sum() {
+            /* calculate the cost of the products independent of any special items */
+            cost_sum = 0
+            cost_academic_sum = 0
+            full_cost_sum = 0
+            for ([prod_id, prod_count] of Object.entries(this.$root.quote_prod_ids)) {
+                cost_sum += prod_count * this.$root.productCost(prod_id)['cost'];
+                cost_academic_sum += prod_count * this.$root.productCost(prod_id)['cost_academic'];
+                full_cost_sum +=  prod_count * this.$root.productCost(prod_id)['full_cost'];
+            }
 
-        return {'cost': cost_sum,
-                'cost_academic': cost_academic_sum,
-                'full_cost': full_cost_sum}
-      },
-      quote_cost() {
-        product_cost = this.product_cost
-        cost_sum = product_cost['cost']
-        cost_academic_sum = product_cost['cost_academic']
-        full_cost_sum = product_cost['full_cost']
+            return {'cost': cost_sum,
+                    'cost_academic': cost_academic_sum,
+                    'full_cost': full_cost_sum}
+        },
+        quote_cost() {
+            product_cost = this.product_cost_sum
+            cost_sum = product_cost['cost']
+            cost_academic_sum = product_cost['cost_academic']
+            full_cost_sum = product_cost['full_cost']
 
-        if (this.any_special_addition) {
-          cost_sum += this.$root.quote_special_addition_value
-          cost_academic_sum += this.$root.quote_special_addition_value
-          full_cost_sum += this.$root.quote_special_addition_value
-        }
+            if (this.any_special_addition) {
+                cost_sum += this.$root.quote_special_addition_value
+                cost_academic_sum += this.$root.quote_special_addition_value
+                full_cost_sum += this.$root.quote_special_addition_value
+            }
 
-        if (this.any_special_percentage) {
-          cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
-          cost_academic_sum *= (100 - this.$root.quote_special_percentage_value)/100
-          full_cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
-        }
+            if (this.any_special_percentage) {
+                cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
+                cost_academic_sum *= (100 - this.$root.quote_special_percentage_value)/100
+                full_cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
+            }
 
-        return {'cost': cost_sum.toFixed(2),
-                'cost_academic': cost_academic_sum.toFixed(2),
-                'full_cost': full_cost_sum.toFixed(2)}
-      },
+            return {'cost': cost_sum.toFixed(2),
+                    'cost_academic': cost_academic_sum.toFixed(2),
+                    'full_cost': full_cost_sum.toFixed(2)}
+        },
     },
     created: function() {
         this.$root.fetchPublishedCostCalculator(true),
         this.$root.fetchExchangeRates()
     },
     methods: {
-        productCost(prod_id) {
-            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
-            return this.$root.productCost(prod_id)
-        },
         toggle_discontinued() {
             this.$root.show_discontinued = !this.$root.show_discontinued
         },
@@ -133,8 +134,6 @@ app.component('v-pricing-quote', {
               <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
             </div>
           </div>
-          <div id="alerts_go_here">
-          </div>
           <template v-if="this.any_quote">
             <div class="row py-2" id="current_quote">
               <div class="col-md-8 col-xl-6 quote_lcol_header">
@@ -145,7 +144,7 @@ app.component('v-pricing-quote', {
                 <div id='product_warnings'></div>
                 <ul class="list-unstyled quote-product-list">
                   <template v-for="(prod_count, prod_id) in this.$root.quote_prod_ids" :key="prod_id">
-                    <quote-list-product :product_id="prod_id" :product_count="prod_count"/>
+                    <v-quote-list-product :product_id="prod_id" :product_count="prod_count"/>
                   </template>
                   <li class="row border-top mr-2">
                     <p class="text-end col-3 offset-9 pt-2 fw-bold">{{product_cost[this.$root.price_type].toFixed(2)}} SEK</p>
@@ -203,7 +202,8 @@ app.component('v-pricing-quote', {
 })
 
 
-app.component('quote-list-product', {
+app.component('v-quote-list-product', {
+    /* Display products which are added to the quote */
     props: ['product_id'],
     computed: {
         product() {

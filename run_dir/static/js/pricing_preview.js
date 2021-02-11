@@ -160,8 +160,6 @@ app.component('v-pricing-preview', {
             </div>
           </template>
 
-          <div id="alerts_go_here">
-          </div>
           <v-draft-validation-msgs-list :modal="false"/>
           <template v-if="draft_exists">
             <div class="products_chooseable_div mt-2">
