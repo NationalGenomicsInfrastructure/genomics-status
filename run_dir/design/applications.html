@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: applications.html
@@ -9,10 +9,10 @@ Description: Displays pie charts with statistics for numbers of samples + projec
 
 {% block stuff %}
 
-<h1><span id="page_title">Application Statistics</span> <small id="dates"></small></h1>
+<h1><span id="page_title">Application Statistics</span> <small id="dates" class="text-muted"></small></h1>
 
 <div class="row slider-spacing">
-  <div class="col-md-10 col-md-push-1">
+  <div class="col-md-10 offset-1 mb-5">
     <div id="date_slider"></div>
   </div>
 </div>
@@ -24,13 +24,13 @@ Description: Displays pie charts with statistics for numbers of samples + projec
   <p>The amount of sequencing projects by application type that were opened within the given timeframe.</p>
 
   <div class="row">
-    <div class="col-md-9 col-md-push-3">
-      <div id='main_chart'><svg style="height:600px"></svg></div>
+    <div class="col-md-8 offset-1 order-2">
+      <div id='main_chart'><svg style="height:600px; width:800px"></svg></div>
     </div>
-    <div class="col-md-3 col-md-pull-9">
+    <div class="col-md-3 order-1">
       <table class="table table-bordered" id="application_table">
         <thead>
-          <tr>
+          <tr class="darkth">
             <th>Application</th>
             <th># Projects</th>
           </tr>
@@ -44,13 +44,13 @@ Description: Displays pie charts with statistics for numbers of samples + projec
   <h2>Samples per Application</h2>
   <p>The amount of samples per sequencing application within the same timeframe.</p>
   <div class="row">
-    <div class="col-md-9 col-md-push-3">
-      <div id='per_sample_chart'><svg style="height:600px"></svg></div>
+    <div class="col-md-8 offset-1 order-2">
+      <div id='per_sample_chart'><svg style="height:600px; width:800px"></svg></div>
     </div>
-    <div class="col-md-3 col-md-pull-9">
+    <div class="col-md-3 order-1">
       <table class="table table-bordered" id="samples_table">
         <thead>
-          <tr>
+          <tr class="darkth">
             <th>Application</th>
             <th># Projects</th>
           </tr>
@@ -108,6 +108,7 @@ function draw_chart(data, obj) {
     .color(nvd3_colours)
     .x(function(d) { return d.label })
     .y(function(d) { return d.value })
+    .width(600)
     .labelThreshold(0.05)
     .showLabels(true);
     d3.select(obj)
@@ -131,8 +132,8 @@ function load_data(start, stop) {
     s_keys = getSortedKeys(applications);
     for (k in s_keys) {
       trow = '<tr>';
-      trow += '<td><a href="/application/'+s_keys[k]+'">'+s_keys[k]+'</a></td>';
-      trow += '<td class="text-right"><a href="/application/'+s_keys[k]+'">'+data.applications[s_keys[k]]+'</a></td>';
+      trow += '<td><a class="text-decoration-none" href="/application/'+s_keys[k]+'">'+s_keys[k]+'</a></td>';
+      trow += '<td class="text-right"><a class="text-decoration-none" href="/application/'+s_keys[k]+'">'+data.applications[s_keys[k]]+'</a></td>';
       trow += '</tr>';
       $("#application_table tbody").append(trow)
     };
@@ -145,8 +146,8 @@ function load_data(start, stop) {
     s_keys = getSortedKeys(samples);
     for (k in s_keys) {
       trow = '<tr>';
-      trow += '<td><a href="/application/'+s_keys[k]+'">'+s_keys[k]+'</a></td>';
-      trow += '<td class="text-right"><a href="/application/'+s_keys[k]+'">'+data.samples[s_keys[k]]+'</a></td>';
+      trow += '<td><a class="text-decoration-none" href="/application/'+s_keys[k]+'">'+s_keys[k]+'</a></td>';
+      trow += '<td class="text-right"><a class="text-decoration-none" href="/application/'+s_keys[k]+'">'+data.samples[s_keys[k]]+'</a></td>';
       trow += '</tr>';
       $("#samples_table tbody").append(trow)
     };
