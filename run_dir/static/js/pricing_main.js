@@ -1,37 +1,60 @@
 /* Does not follow the Vue style guide: https://v3.vuejs.org/style-guide/
 feel free to update */
 const vPricingMain = {
+    /* Main pricing app that all components will be added to.
+     * The ambition is to keep the data stored here in the root so that components
+     * can easily reach the data by using the this.$root short cut.
+     */
     data() {
         return {
+            // Main data holders
             all_components: null,
             all_products: null,
-            component_changes: Object(),
-            current_user_email: null,
             draft_cost_calculator: null,
-            draft_created_at: null,
-            draft_data_loading: true,
-            error_messages: [],
+            published_cost_calculator: null,
+
+            // Tracking changes
+            component_changes: Object(),
+            product_changes: Object(),
             new_products: new Set(),
             new_components: new Set(),
-            modal_product_id: "52", //Should probably be null when we handle that edge case
+            validation_msgs: Object({'products': {}, 'components': {}}),
+
+            // Convenience
+            current_user_email: null,
+            draft_data_loading: true,
+            published_data_loading: true,
+            error_messages: [],
+            // Looks weird, but products are never removed, so using 52 instead of null shouldn't break
+            // and we don't have to handle the null edge case.
+            modal_product_id: "52",
             modal_type: "Regular",
+            show_discontinued: false,
+
+            // Exchange rates
             USD_in_SEK: null,
             EUR_in_SEK: null,
             exch_rate_issued_at: null,
-            show_discontinued: false,
+
+            // Quote data
             quote_prod_ids: {},
             quote_special_addition_value: 0,
             quote_special_addition_label: '',
             quote_special_percentage_value: 0.0,
             quote_special_percentage_label: '',
-            price_type: 'cost_academic',
-            product_changes: Object(),
-            published_cost_calculator: null,
-            published_data_loading: true,
-            validation_msgs: Object({'products': {}, 'components': {}})
+            price_type: 'cost_academic'
         }
     },
     computed: {
+        any_errors() {
+            return (this.error_messages.length !== 0)
+        },
+        no_validation_messages() {
+          return (Object.keys(this.validation_msgs['products']).length === 0) && (Object.keys(this.validation_msgs['components']).length === 0)
+        },
+        done_loading() {
+            return (!this.draft_data_loading && !this.published_data_loading)
+        },
         all_products_per_category() {
             prod_per_cat = {};
             for ([prod_id, product] of Object.entries(this.all_products)) {
@@ -48,9 +71,6 @@ const vPricingMain = {
                 }
             }
             return prod_per_cat
-        },
-        any_errors() {
-            return (this.error_messages.length !== 0)
         },
         product_categories() {
             categories = new Set();
@@ -85,9 +105,9 @@ const vPricingMain = {
             comp_per_cat = {};
             for ([comp_id, component] of Object.entries(this.all_components)) {
                 if ( this.new_components.has(comp_id) ) {
-                  cat = "New components"
+                    cat = "New components"
                 } else {
-                  cat = component['Category']
+                    cat = component['Category']
                 }
                 if (! (component['Status'] == 'Discontinued')) {
                     if (! (cat in comp_per_cat)) {
@@ -127,57 +147,45 @@ const vPricingMain = {
             }
             return disco_components
         },
-        done_loading() {
-            return (!this.draft_data_loading && !this.published_data_loading)
-        },
         next_product_id() {
+            /* Returns the lowest unused product id */
             all_ids = Object.keys(this.all_products)
             max_id = Math.max(...all_ids.map(x => parseInt(x)))
             return (1 + max_id).toString()
         },
         next_component_id() {
+            /* Returns the lowest unused component id */
             all_ids = Object.keys(this.all_components)
             max_id = Math.max(...all_ids.map(x => parseInt(x)))
             return (1 + max_id).toString()
-        },
-        no_validation_messages() {
-          return (Object.keys(this.validation_msgs['products']).length === 0) && (Object.keys(this.validation_msgs['components']).length === 0)
         }
     },
     watch: {
         done_loading(newVal, oldVal) {
-          if(newVal) {
-            if (this.draft_cost_calculator !== null && this.published_cost_calculator !== null) {
-              this.assignNewItems()
+            /* Need to wait for both cost calculator and draft calculator to be loaded by http
+             * before figuring out which items have been added in the draft.
+             */
+            if(newVal) {
+                if (this.draft_cost_calculator !== null && this.published_cost_calculator !== null) {
+                    this.assignNewItems()
+                }
             }
-          }
+        },
+        all_products: {
+            handler(newVal, oldVal) {
+                this.validate()
+            },
+            deep: true
+        },
+        all_components: {
+            handler(newVal, oldVal) {
+                this.validate()
+            },
+            deep: true
         }
     },
     methods: {
-        showComponentsUpdateModal(event) {
-            if (event) {
-                this.modal_product_id = event.target.dataset.productId
-                this.modal_type = event.target.dataset.type
-            }
-            var cModal = new bootstrap.Modal(document.getElementById('chooseComponentsModal'))
-            cModal.show()
-        },
-        populatedComponents(product_id, type) {
-            var product = this.all_products[product_id]
-            var components = new Object();
-            if (type == 'Alternative') {
-                component_input = product['Alternative Components']
-            } else {
-                component_input = product['Components']
-            }
-            for ([comp_id, info] of Object.entries(component_input)) {
-                components[comp_id] = {
-                    'component': this.all_components[comp_id],
-                    'quantity': info['quantity']
-                }
-            }
-            return components
-        },
+        // Data modification methods
         discontinueProduct(prod_id) {
             this.all_products[prod_id]['Status'] = 'Discontinued'
         },
@@ -225,9 +233,9 @@ const vPricingMain = {
         removeProductComponent(product_id, component_id, type) {
             var product = this.all_products[product_id]
             if (type == 'Alternative') {
-              delete product['Alternative Components'][component_id]
+                delete product['Alternative Components'][component_id]
             } else {
-              delete product['Components'][component_id]
+                delete product['Components'][component_id]
             }
         },
         cloneComponent(comp_id) {
@@ -244,114 +252,85 @@ const vPricingMain = {
             delete this.all_components[comp_id]
             delete this.new_components[comp_id]
         },
+        // Fetch methods
         fetchDraftCostCalculator(assign_data) {
             axios
-              .get('/api/v1/draft_cost_calculator')
-              .then(response => {
-                  data = response.data.cost_calculator
-                  if (data !== null) {
-                    this.draft_cost_calculator = data
-                    if (assign_data) {
-                      this.all_products = data.products
-                      this.all_components = data.components
-                      this.start_watching_for_validate()
-                      this.validate()
+                .get('/api/v1/draft_cost_calculator')
+                .then(response => {
+                    data = response.data.cost_calculator
+                    if (data !== null) {
+                        this.draft_cost_calculator = data
+                        if (assign_data) {
+                            this.all_products = data.products
+                            this.all_components = data.components
+                        }
                     }
-                  }
-                  this.current_user_email = response.data['current_user_email']
-                  this.draft_data_loading = false
-              })
-              .catch(error => {
-                  this.error_messages.push('Unable to fetch draft cost calculator data, please try again or contact a system administrator.')
-                  this.draft_data_loading = false
-              })
+                    this.current_user_email = response.data['current_user_email']
+                    this.draft_data_loading = false
+                })
+                .catch(error => {
+                    this.error_messages.push('Unable to fetch draft cost calculator data, please try again or contact a system administrator.')
+                    this.draft_data_loading = false
+                })
         },
         fetchExchangeRates(date) {
             url = '/api/v1/pricing_exchange_rates'
             if (date !== undefined) {
-              url += '?date=' + date;
+                url += '?date=' + date;
             }
             axios
-              .get(url)
-              .then(response => {
-                  this.USD_in_SEK = response.data.USD_in_SEK
-                  this.EUR_in_SEK = response.data.EUR_in_SEK
-                  date = new Date(Date.parse(response.data['Issued at']))
-                  this.exch_rate_issued_at = date.toISOString().substring(0, 10)
-              })
-              .catch(error => {
-                  this.$root.error_messages.push('Unable to fetch exchange rates data, please try again or contact a system administrator.')
-              })
+                .get(url)
+                .then(response => {
+                    this.USD_in_SEK = response.data.USD_in_SEK
+                    this.EUR_in_SEK = response.data.EUR_in_SEK
+                    date = new Date(Date.parse(response.data['Issued at']))
+                    this.exch_rate_issued_at = date.toISOString().substring(0, 10)
+                })
+                .catch(error => {
+                    this.$root.error_messages.push('Unable to fetch exchange rates data, please try again or contact a system administrator.')
+                })
         },
         fetchPublishedCostCalculator(assign_data) {
             axios
-              .get('/api/v1/cost_calculator')
-              .then(response => {
-                  data = response.data.cost_calculator
-                  if (data !== null) {
-                    this.published_cost_calculator = data
-                    if (assign_data) {
-                      this.all_products = data.products
-                      this.all_components = data.components
+                .get('/api/v1/cost_calculator')
+                .then(response => {
+                    data = response.data.cost_calculator
+                    if (data !== null) {
+                        this.published_cost_calculator = data
+                        if (assign_data) {
+                            this.all_products = data.products
+                            this.all_components = data.components
+                        }
                     }
-                  }
-                  this.current_user_email = response.data['current_user_email']
-                  this.published_data_loading = false
-              })
-              .catch(error => {
-                  this.$root.error_messages.push('Unable to fetch published cost calculator data, please try again or contact a system administrator.')
-                  this.published_data_loading = false
-              })
+                    this.current_user_email = response.data['current_user_email']
+                    this.published_data_loading = false
+                })
+                .catch(error => {
+                    this.$root.error_messages.push('Unable to fetch published cost calculator data, please try again or contact a system administrator.')
+                    this.published_data_loading = false
+                })
         },
-        assignNewItems() {
-            /* When loading a draft where new products or components have been added */
-            draft_prod_ids = new Set(Object.keys(this.all_products))
-            draft_comp_ids = new Set(Object.keys(this.all_components))
-
-            published_prod_ids = new Set(Object.keys(this.published_cost_calculator['products']))
-            published_comp_ids = new Set(Object.keys(this.published_cost_calculator['components']))
-
-            new_prod_ids = this.symmetricSetDifference(draft_prod_ids, published_prod_ids)
-            new_comp_ids = this.symmetricSetDifference( draft_comp_ids, published_comp_ids)
-
-            for (let new_prod_id of new_prod_ids) {
-                this.new_products.add(new_prod_id)
+        validate() {
+            if (this.all_components !== null && this.all_products !== null) {
+                axios.post('/api/v1/pricing_validate_draft', {
+                    components: this.all_components,
+                    products: this.all_products
+                }).then(response => {
+                    this.product_changes = response.data.changes['products']
+                    this.component_changes = response.data.changes['components']
+                    this.validation_msgs = response.data.validation_msgs
+                })
+                .catch(error => {
+                    this.$root.error_messages.push('Unable to validate draft changes, please try again or contact a system administrator.')
+                })
+            } else {
+                /* Case for when the draft is deleted, is being deleted or not yet loaded */
+                this.$root.product_changes = null
+                this.$root.component_changes = null
+                this.$root.validation_msgs = Object({'products': {}, 'components': {}})
             }
-
-            for (let new_comp_id of new_comp_ids) {
-                this.new_components.add(new_comp_id)
-            }
         },
-        symmetricSetDifference(setA, setB) {
-            /* Convenience method taken from
-            https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
-            */
-            let _difference = new Set(setA)
-            for (let elem of setB) {
-                if (_difference.has(elem)) {
-                    _difference.delete(elem)
-                } else {
-                    _difference.add(elem)
-                }
-            }
-            return _difference
-        },
-        start_watching_for_validate() {
-            this.$watch('all_products',
-                function(newVal, oldVal) {
-                    this.validate()
-                }, {
-                  deep: true
-                }
-            )
-            this.$watch('all_components',
-                function(newVal, oldVal) {
-                    this.validate()
-                }, {
-                  deep: true
-                }
-            )
-        },
+        // Methods to calculate cost
         componentCost(comp_id) {
             component = this.all_components[comp_id]
             currency = component['Currency']
@@ -388,25 +367,57 @@ const vPricingMain = {
 
             return {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
         },
-        validate() {
-            if (this.all_components !== null && this.all_products !== null) {
-              axios.post('/api/v1/pricing_validate_draft', {
-                  components: this.all_components,
-                  products: this.all_products
-              }).then(response => {
-                  this.product_changes = response.data.changes['products']
-                  this.component_changes = response.data.changes['components']
-                  this.validation_msgs = response.data.validation_msgs
-              })
-              .catch(error => {
-                  this.$root.error_messages.push('Unable to validate draft changes, please try again or contact a system administrator.')
-              })
-            } else {
-                /* Case for when the draft is deleted or is being deleted */
-                this.$root.product_changes = null
-                this.$root.component_changes = null
-                this.$root.validation_msgs = Object({'products': {}, 'components': {}})
+        // Other methods
+        assignNewItems() {
+            /* When loading a draft where new products or components have been added,
+             * this will figure out which products and components are 'new'.
+             */
+            draft_prod_ids = new Set(Object.keys(this.all_products))
+            draft_comp_ids = new Set(Object.keys(this.all_components))
+
+            published_prod_ids = new Set(Object.keys(this.published_cost_calculator['products']))
+            published_comp_ids = new Set(Object.keys(this.published_cost_calculator['components']))
+
+            new_prod_ids = this.symmetricSetDifference(draft_prod_ids, published_prod_ids)
+            new_comp_ids = this.symmetricSetDifference( draft_comp_ids, published_comp_ids)
+
+            for (let new_prod_id of new_prod_ids) {
+                this.new_products.add(new_prod_id)
             }
+
+            for (let new_comp_id of new_comp_ids) {
+                this.new_components.add(new_comp_id)
+            }
+        },
+        symmetricSetDifference(setA, setB) {
+            /* Convenience method taken from
+            https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
+            */
+            let _difference = new Set(setA)
+            for (let elem of setB) {
+                if (_difference.has(elem)) {
+                    _difference.delete(elem)
+                } else {
+                    _difference.add(elem)
+                }
+            }
+            return _difference
+        },
+        populatedComponents(product_id, type) {
+            var product = this.all_products[product_id]
+            var components = new Object();
+            if (type == 'Alternative') {
+                component_input = product['Alternative Components']
+            } else {
+                component_input = product['Components']
+            }
+            for ([comp_id, info] of Object.entries(component_input)) {
+                components[comp_id] = {
+                    'component': this.all_components[comp_id],
+                    'quantity': info['quantity']
+                }
+            }
+            return components
         }
     }
 }
@@ -415,7 +426,10 @@ const app = Vue.createApp(vPricingMain)
 
 /* Reusable components */
 
-app.component('exchange-rates', {
+app.component('v-exchange-rates', {
+  /* Exchange rates used fot the cost calculator and a modal to
+   * change dates for when the rates were issued.
+   */
   props: ['mutable', 'issued_at'],
   data() {
       return {
@@ -423,22 +437,22 @@ app.component('exchange-rates', {
       }
   },
   computed: {
-    USD_in_SEK() {
-      val = this.$root.USD_in_SEK
-      if (val === null) {
-          return ""
-      } else {
-          return val.toFixed(2)
+      USD_in_SEK() {
+          val = this.$root.USD_in_SEK
+          if (val === null) {
+              return ""
+          } else {
+              return val.toFixed(2)
+          }
+      },
+      EUR_in_SEK() {
+          val = this.$root.EUR_in_SEK
+          if (val === null) {
+              return ""
+          } else {
+              return val.toFixed(2)
+          }
       }
-    },
-    EUR_in_SEK() {
-      val = this.$root.EUR_in_SEK
-      if (val === null) {
-          return ""
-      } else {
-          return val.toFixed(2)
-      }
-    }
   },
   watch: {
       issued_at(newVal, oldVal) {
@@ -452,6 +466,7 @@ app.component('exchange-rates', {
     }
   },
   template:
+      /* Using the html comment tag can enable html syntax highlighting in editors */
       /*html*/`
       <h4>Exchange rates</h4>
       <dl class="row">
@@ -489,6 +504,11 @@ app.component('exchange-rates', {
 })
 
 app.component('v-products-table', {
+    /* Table listing products - either draft or published.
+     * Can optionally:
+     *   - show discontinued products
+     *   - have buttons to add products to quote
+     */
     props: ['show_discontinued', 'quotable'],
     data: function() {
         return {
@@ -501,43 +521,47 @@ app.component('v-products-table', {
         })
     },
     watch: {
-      show_discontinued(new_val, old_val) {
-        this.reset_listjs()
+        show_discontinued(new_val, old_val) {
+            this.reset_listjs()
 
-        /* have to wait for the table to be drawn */
-        this.$nextTick(() => {
-          this.init_listjs()
-        })
-      }
+            // have to wait for the table to be drawn
+            this.$nextTick(() => {
+                this.init_listjs()
+            })
+        }
     },
     methods: {
-      init_listjs() {
-        this.dataTable = $('#pricing_products_table').DataTable({
-          "paging":false,
-          "info":false,
-          "order": [[ 1, "asc" ]]
-        });
+        init_listjs() {
+            /* Just the ordinary datatable initializing. */
+            this.dataTable = $('#pricing_products_table').DataTable({
+                "paging":false,
+                "info":false,
+                "order": [[ 1, "asc" ]]
+            });
 
-        this.dataTable.columns().every( function () {
-            var that = this;
-            $( 'input', this.footer() ).on( 'keyup change', function () {
-                that
-                .search( this.value )
-                .draw();
-            } );
-        } );
+            this.dataTable.columns().every(function() {
+                var that = this;
+                $('input', this.footer()).on( 'keyup change', function() {
+                    that
+                        .search(this.value)
+                        .draw();
+                });
+            });
 
-        $('#pricing_products_table_filter').addClass('col-md-2');
-        $("#pricing_products_table_filter").appendTo("#table_h_and_search");
-        $('#pricing_products_table_filter label input').appendTo($('#pricing_products_table_filter'));
-        $('#pricing_products_table_filter label').remove();
-        $('#pricing_products_table_filter input').addClass('form-control p-2 mb-2 float-right');
-        $("#pricing_products_table_filter input").attr("placeholder", "Search table...");
-      },
-      reset_listjs() {
-        $('#pricing_products_table').DataTable().destroy();
-        $('#pricing_products_table_filter').remove();
-      }
+            $('#pricing_products_table_filter').addClass('col-md-2');
+            $("#pricing_products_table_filter").appendTo("#table_h_and_search");
+            $('#pricing_products_table_filter label input').appendTo($('#pricing_products_table_filter'));
+            $('#pricing_products_table_filter label').remove();
+            $('#pricing_products_table_filter input').addClass('form-control p-2 mb-2 float-right');
+            $("#pricing_products_table_filter input").attr("placeholder", "Search table...");
+        },
+        reset_listjs() {
+            /* A bit hacky way to get datatables to handle a DOM update:
+             *  - drop it and recreate it.
+             */
+            $('#pricing_products_table').DataTable().destroy();
+            $('#pricing_products_table_filter').remove();
+        }
     },
     template: /*html*/`
       <table class="table table-sm sortable" id="pricing_products_table">
@@ -577,15 +601,15 @@ app.component('v-products-table', {
         </tfoot>
         <tbody class="list" id='pricing_products_tbody'>
         <template v-for="product in this.$root.all_products" :key="product['REF_ID']">
-            <product-table-row :product_id="product['REF_ID']" :quotable="quotable">
-            </product-table-row>
+            <v-product-table-row :product_id="product['REF_ID']" :quotable="quotable"/>
         </template>
         </tbody>
       </table>
       `
 })
 
-app.component('product-table-row', {
+app.component('v-product-table-row', {
+    /* Individual rows of the product table. */
     props: ['product_id', 'quotable'],
     computed: {
         product() {
@@ -655,34 +679,35 @@ app.component('product-table-row', {
     template: /*html*/`
         <template v-if="this.visible">
           <tr :id="'product_form_part_' + product_id" class="status_css link-target-offset-extra" :class="{'table-danger pricing-tr-is-invalid': is_invalid, 'table-warning': discontinued, 'table-success pricing-tr-changed': is_changes}">
-              <td v-if="quotable">
-                  <a href="#" class="button add-to-quote" :data-product-id="product['REF_ID']" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
-                  <span>({{quote_count}})</span>
-              </td>
-              <v-product-table-row-td td_key='REF_ID' :row_changes="this.changes" :product_id="this.product_id"/>
-              <v-product-table-row-td td_key='Category' :row_changes="this.changes" :product_id="this.product_id"/>
-              <v-product-table-row-td td_key='Type' :row_changes="this.changes" :product_id="this.product_id"/>
-              <v-product-table-row-td td_key='Name' :row_changes="this.changes" :product_id="this.product_id"/>
-              <v-product-table-row-td td_key='Components' :row_changes="this.changes" :product_id="this.product_id"/>
-              <v-product-table-row-td td_key='Alternative Components' :row_changes="this.changes" :product_id="this.product_id"/>
-              <v-product-table-row-td td_key='Full cost fee' :row_changes="this.changes" :product_id="this.product_id"/>
-              <v-product-table-row-td td_key='Re-run fee' :row_changes="this.changes" :product_id="this.product_id"/>
-              <td class="price_internal">
-                  {{cost['cost'].toFixed(2)}}
-              </td>
-              <td class="price_academic">
-                  {{cost['cost_academic'].toFixed(2)}}
-              </td>
-              <td class="full_cost">
-                  {{cost['full_cost'].toFixed(2)}}
-              </td>
-              <v-product-table-row-td td_key='Comment' :row_changes="this.changes" :product_id="this.product_id"/>
+            <td v-if="quotable">
+              <a href="#" class="button add-to-quote" :data-product-id="product['REF_ID']" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
+              <span>({{quote_count}})</span>
+            </td>
+            <v-product-table-row-td td_key='REF_ID' :row_changes="this.changes" :product_id="this.product_id"/>
+            <v-product-table-row-td td_key='Category' :row_changes="this.changes" :product_id="this.product_id"/>
+            <v-product-table-row-td td_key='Type' :row_changes="this.changes" :product_id="this.product_id"/>
+            <v-product-table-row-td td_key='Name' :row_changes="this.changes" :product_id="this.product_id"/>
+            <v-product-table-row-td td_key='Components' :row_changes="this.changes" :product_id="this.product_id"/>
+            <v-product-table-row-td td_key='Alternative Components' :row_changes="this.changes" :product_id="this.product_id"/>
+            <v-product-table-row-td td_key='Full cost fee' :row_changes="this.changes" :product_id="this.product_id"/>
+            <v-product-table-row-td td_key='Re-run fee' :row_changes="this.changes" :product_id="this.product_id"/>
+            <td class="price_internal">
+              {{cost['cost'].toFixed(2)}}
+            </td>
+            <td class="price_academic">
+              {{cost['cost_academic'].toFixed(2)}}
+            </td>
+            <td class="full_cost">
+              {{cost['full_cost'].toFixed(2)}}
+            </td>
+            <v-product-table-row-td td_key='Comment' :row_changes="this.changes" :product_id="this.product_id"/>
           </tr>
         </template>
     `
 })
 
 app.component('v-product-table-row-td',  {
+    /* Indivudal <td> for product table (not all of them) */
     props: ['td_key', 'row_changes', 'product_id'],
     data() {
         return { tooltip: null }
@@ -711,30 +736,29 @@ app.component('v-product-table-row-td',  {
             return this.$root.all_products[this.product_id]
         },
         tooltip_html() {
-          if (this.is_changes) {
-            return_html = '<div class="row pricing-td-highlight-tooltip"><div class="col-5">'
-            arrow_element = '</div><div class="col-2 d-flex align-self-center px-0"><h5><i class="fas fa-arrow-right"></i></h5></div>'
-            if (typeof this.changes[0] == 'string') {
-                return_html += `<p>${this.changes[1]}</p>`
-                return_html += arrow_element
-                return_html += '<div class="col-5">'
-                return_html += `<p>${this.changes[0]}</p>`
-                return_html += '</div></div>'
-                return return_html
-            } else {
-                for ([prod_id, quantity_data] of Object.entries(this.changes[1])) {
-                    return_html += '<p>' + quantity_data['quantity'] + ' x ' + this.$root.all_components[prod_id]['Product name'] + '</p>'
+            if (this.is_changes) {
+                return_html = '<div class="row pricing-td-highlight-tooltip"><div class="col-5">'
+                arrow_element = '</div><div class="col-2 d-flex align-self-center px-0"><h5><i class="fas fa-arrow-right"></i></h5></div>'
+                if (typeof this.changes[0] == 'string') {
+                    return_html += `<p>${this.changes[1]}</p>`
+                    return_html += arrow_element
+                    return_html += '<div class="col-5">'
+                    return_html += `<p>${this.changes[0]}</p>`
+                    return_html += '</div></div>'
+                    return return_html
+                } else {
+                    for ([prod_id, quantity_data] of Object.entries(this.changes[1])) {
+                        return_html += '<p>' + quantity_data['quantity'] + ' x ' + this.$root.all_components[prod_id]['Product name'] + '</p>'
+                    }
+                    return_html += arrow_element
+                    return_html += '<div class="col-5">'
+                    for ([prod_id, quantity_data] of Object.entries(this.changes[0])) {
+                        return_html += '<p>' + quantity_data['quantity'] + ' x ' + this.$root.all_components[prod_id]['Product name'] + '</p>'
+                    }
+                    return_html += '</div></div>'
+                    return return_html
                 }
-                return_html += arrow_element
-                return_html += '<div class="col-5">'
-                for ([prod_id, quantity_data] of Object.entries(this.changes[0])) {
-                    return_html += '<p>' + quantity_data['quantity'] + ' x ' + this.$root.all_components[prod_id]['Product name'] + '</p>'
-                }
-                /* return JSON.stringify(this.changes[1]) + '<i class="fas fa-arrow-right"></i>' + JSON.stringify(this.changes[0]) */
-                return_html += '</div></div>'
-                return return_html
             }
-          }
         }
     },
     watch: {
@@ -748,12 +772,10 @@ app.component('v-product-table-row-td',  {
         <td :class="{'pricing-td-changed': is_changes}" data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
           <template v-if="is_components">
             <template v-if="this.td_key == 'Components'">
-              <product-table-components :product_id="product_id" :type="'Regular'" :is_changes="is_changes">
-              </product-table-components>
+              <v-product-table-components :product_id="product_id" :type="'Regular'" :is_changes="is_changes"/>
             </template>
             <template v-else>
-              <product-table-components :product_id="product_id" :type="'Alternative'" :is_changes="is_changes">
-              </product-table-components>
+              <v-product-table-components :product_id="product_id" :type="'Alternative'" :is_changes="is_changes"/>
             </template>
           </template>
           <template v-else>
@@ -763,7 +785,8 @@ app.component('v-product-table-row-td',  {
         `
     });
 
-app.component('product-table-components', {
+app.component('v-product-table-components', {
+    /* The <td> of the product table with the list of components or alternative components */
     props: ['product_id', 'type', 'is_changes'],
     computed: {
         product() {
@@ -796,6 +819,9 @@ app.component('product-table-components', {
 })
 
 app.component('v-draft-changes-list', {
+    /* A list of changes in the draft compared to the latest published cost calculator.
+     *   - Slightly modified look if it is placed in a modal
+     */
     props: ['modal'],
     computed: {
         product_changes() {
@@ -869,7 +895,7 @@ app.component('v-draft-changes-list', {
                       </template>
                     </div>
                   </div>
-                  </template>
+                </template>
               </div>
             </div>
             <div :class="modal ? 'col-12' : 'col-6 border-left'">
@@ -894,6 +920,9 @@ app.component('v-draft-changes-list', {
 
 
 app.component('v-draft-validation-msgs-list', {
+    /* A list of validation errors in the draft compared to the latest published cost calculator.
+     *   - Slightly modified look if it is placed in a modal
+     */
     props: ['modal'],
     computed: {
         product_messages() {
@@ -952,11 +981,13 @@ app.component('v-draft-validation-msgs-list', {
 })
 
 app.component('v-pricing-data-loading', {
+    /* A div with a bootstrap spinner. */
     template: /*html*/`
       <div class="spinner-grow" role="status"></div><span class="ml-3">Loading data...</span>`
  })
 
  app.component('v-pricing-error-display', {
+     /* A list of error messages */
      template: /*html*/`
        <template v-for="msg in this.$root.error_messages">
          <div class="alert alert-danger" role="alert">

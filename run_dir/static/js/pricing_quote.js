@@ -130,7 +130,7 @@ app.component('v-pricing-quote', {
               </div>
             </div>
             <div class="col-4 offset-2">
-              <exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
+              <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
             </div>
           </div>
           <div id="alerts_go_here">

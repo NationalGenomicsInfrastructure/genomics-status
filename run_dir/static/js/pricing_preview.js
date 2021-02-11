@@ -130,7 +130,7 @@ app.component('pricing-preview', {
                 </template>
               </div>
               <div class="col-3">
-                <exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
+                <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
                 <button class="btn btn-link" id="more_options_btn" type="button" data-toggle="collapse" data-target="#more_options" aria-expanded="false" aria-controls="more_options">
                   More Options
                 </button>

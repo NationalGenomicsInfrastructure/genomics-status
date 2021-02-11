@@ -147,7 +147,7 @@ app.component('v-pricing-update', {
                       </div>
                     </div>
                     <div class="col-md-5">
-                      <exchange-rates :mutable="false" :issued_at="this.$root.exch_rate_issued_at"/>
+                      <v-exchange-rates :mutable="false" :issued_at="this.$root.exch_rate_issued_at"/>
                     </div>
                   </div>
                   <div id="changes_list" class="link-target-offset">
@@ -681,7 +681,12 @@ app.component('components', {
     },
     methods: {
         showModalFn(event) {
-            this.$root.showComponentsUpdateModal(event)
+            if (event) {
+                this.$root.modal_product_id = event.target.dataset.productId
+                this.$root.modal_type = event.target.dataset.type
+            }
+            var cModal = new bootstrap.Modal(document.getElementById('chooseComponentsModal'))
+            cModal.show()
         }
     },
     template: /*html*/`
