@@ -1,5 +1,4 @@
 /* Inject attributes needed for scrollspy */
-
 document.getElementsByTagName("body")[0].setAttribute("data-offset", 75);
 document.getElementsByTagName("body")[0].setAttribute("data-target", "#pricing_update_sidebar");
 document.getElementsByTagName("body")[0].setAttribute("data-spy", "scroll");
@@ -10,6 +9,15 @@ window.onbeforeunload = function(){
 };
 
 app.component('v-pricing-update', {
+    /* Main component of the pricing update page.
+     *
+     * Serves a page where:
+     *   - Products and components can be modified
+     *   - New products and components can be added
+     *   - Products and components can be discontinued
+     *   - Changes need to be saved manually to be stored in the database.
+     *   - Changes are validated live on the server to check for validation errors
+     */
     data() {
         return {
             save_message: null,
@@ -20,13 +28,13 @@ app.component('v-pricing-update', {
     },
     computed: {
         draft_exists() {
-          return this.$root.draft_cost_calculator !== null
+            return this.$root.draft_cost_calculator !== null
         },
         draft_locked_by() {
-          return this.$root.draft_cost_calculator["Lock Info"]["Locked by"]
+            return this.$root.draft_cost_calculator["Lock Info"]["Locked by"]
         },
         draft_locked_by_someone_else() {
-          return this.draft_locked_by != this.$root.current_user_email
+            return this.draft_locked_by != this.$root.current_user_email
         }
     },
     created: function() {
@@ -51,12 +59,10 @@ app.component('v-pricing-update', {
             });
         },
         backToPreview() {
+            /* Redirect user to the preview page */
             window.location.href = "/pricing_preview"
         },
         toggleCollapse(event) {
-            // The 'Loading' text is never visible because of some
-            // misunderstanding on my side on how javascript works.
-            this.expand_button_text = 'Loading'
             if (this.all_expanded) {
                 $('.collapse').collapse('hide')
                 this.all_expanded = false
@@ -161,28 +167,24 @@ app.component('v-pricing-update', {
                 <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)">
                   <h3 :id="'products_cat_' + cat_nr" class="mt-4">{{category}}</h3>
                   <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
-                    <product-form-part :product_id="product['REF_ID']">
-                    </product-form-part>
+                    <v-product-form-part :product_id="product['REF_ID']"/>
                   </template>
                 </template>
                 <h2 class="mt-5" id="components_top">Components</h2>
                 <template v-for="(category, cat_nr) in Object.keys(this.$root.all_components_per_category)">
                   <h3 :id="'components_cat_' + cat_nr" class="mt-4">{{category}}</h3>
                   <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
-                    <component-form-part :component_id="component['REF_ID']">
-                    </component-form-part>
+                    <v-component-form-part :component_id="component['REF_ID']"/>
                   </template>
                 </template>
                 <h2 class="mt-4" id="discontinued_top">Discontinued</h2>
                 <h3 id="discontinued_products" class="mt-4">Products</h3>
                 <template v-for="product in this.$root.discontinued_products" :key="product['REF_ID']">
-                  <product-form-part :product_id="product['REF_ID']">
-                  </product-form-part>
+                  <v-product-form-part :product_id="product['REF_ID']"/>
                 </template>
                 <h3 id="discontinued_components" class="mt-4">Components</h3>
                 <template v-for="component in this.$root.discontinued_components" :key="component['REF_ID']">
-                  <component-form-part :component_id="component['REF_ID']">
-                  </component-form-part>
+                  <v-component-form-part :component_id="component['REF_ID']"/>
                 </template>
               </div>
             </div>
@@ -192,7 +194,8 @@ app.component('v-pricing-update', {
           `
 })
 
-app.component('product-form-part', {
+app.component('v-product-form-part', {
+    /* Representing an individual product on the update form */
     props: ['product_id'],
     computed: {
         product() {
@@ -244,7 +247,8 @@ app.component('product-form-part', {
             })
         },
         removeProduct() {
-            if (! (this.isNew) ) {
+            if (!(this.isNew) ) {
+                /* This should never happen, but better safe than sorry. */
                 alert("Only new products are allowed to be removed, others should be discontinued")
             }
             this.$root.removeProduct(this.product_id)
@@ -302,13 +306,11 @@ app.component('product-form-part', {
             <div class="row align-items-top my-2">
               <div class="col-md-6 component-list-input">
                 <label class="form-label" for="'products-' + product_id + '-components'">Components</label>
-                <components :product_id="product_id" :type="'Regular'">
-                </components>
+                <v-components-for-product :product_id="product_id" :type="'Regular'"/>
               </div>
               <div class="col-md-6 alt-component-list-input">
                 <label class="form-label" for="'products-' + product_id + '-alternative_components'">Alternative Components</label>
-                <components :product_id="product_id" :type="'Alternative'">
-                </components>
+                <v-components-for-product :product_id="product_id" :type="'Alternative'"/>
               </div>
             </div>
             <div class="row my-1">
@@ -378,23 +380,26 @@ app.component('product-form-part', {
 })
 
 app.component('v-form-validation-tooltip', {
+    /* handles the warning triangle on individual product headers which can display a
+     * list of validation errors for that specific product
+     */
     props: ['product_id'],
     computed: {
-      validation_msgs() {
-        if (this.product_id in this.$root.validation_msgs['products']) {
-          return_msg = ''
-          for (msg_type in this.$root.validation_msgs['products'][this.product_id]) {
-            validation_msgs = this.$root.validation_msgs['products'][this.product_id][msg_type]
-            for (msg_index in validation_msgs) {
-              msg = '<p class="fs-5 pricing-normal-width-tooltip">' + validation_msgs[msg_index] + '</p>'
-              return_msg += msg
+        validation_msgs() {
+            if (this.product_id in this.$root.validation_msgs['products']) {
+                return_msg = ''
+                for (msg_type in this.$root.validation_msgs['products'][this.product_id]) {
+                    validation_msgs = this.$root.validation_msgs['products'][this.product_id][msg_type]
+                    for (msg_index in validation_msgs) {
+                        msg = '<p class="fs-5 pricing-normal-width-tooltip">' + validation_msgs[msg_index] + '</p>'
+                        return_msg += msg
+                    }
+                }
+                return return_msg
+            } else {
+                return null
             }
-          }
-          return return_msg
-        } else {
-          return null
         }
-      }
     },
     data() {
         return {
@@ -407,11 +412,11 @@ app.component('v-form-validation-tooltip', {
         })
     },
     watch: {
-      validation_msgs(newVal, oldVal) {
-        this.$nextTick(function() {
-            this.tooltip = new bootstrap.Tooltip(this.$el)
-        })
-      }
+        validation_msgs(newVal, oldVal) {
+            this.$nextTick(function() {
+                this.tooltip = new bootstrap.Tooltip(this.$el)
+            })
+        }
     },
     template:  /*html*/`
         <h3 class="my-0 text-danger" data-toggle="tooltip" data-customClass="pricing-normal-width-tooltip" data-placement="top" :title="validation_msgs" data-html=true>
@@ -419,7 +424,8 @@ app.component('v-form-validation-tooltip', {
         </h3>`
     })
 
-app.component('component-form-part', {
+app.component('v-component-form-part', {
+    /* Representing an individual component on the update form */
     props: ['component_id'],
     computed: {
         component() {
@@ -572,7 +578,8 @@ app.component('component-form-part', {
 })
 
 
-app.component('modal-component', {
+app.component('v-modal-component', {
+    /* Representing the content of the modal where components are associated to a specific product */
     computed: {
         product() {
             return this.$root.all_products[this.$root.modal_product_id]
@@ -655,7 +662,8 @@ app.component('modal-component', {
         `
 })
 
-app.component('components', {
+app.component('v-components-for-product', {
+    /* Representing the disabled input field for components associated to a specific product */
     props: ['product_id', 'type'],
     computed: {
         product() {
@@ -707,103 +715,104 @@ app.component('components', {
               </thead>
               <tbody>
                 <template v-for="(component_data, comp_id) in components" :key="comp_id">
-                  <component-table-row :product_id="product['REF_ID']" :type="type" :added="true" :component_data="component_data" :component_id="comp_id"></component-table-row>
+                  <v-component-table-row :product_id="product['REF_ID']" :type="type" :added="true" :component_data="component_data" :component_id="comp_id"></component-table-row>
                 </template>
               </tbody>
             </table>
                `
 })
 
-app.component('component-table-row', {
-  props: ['component_data', 'component_id', 'product_id', 'type', 'added'],
-  data() {
-      return { tooltip: null }
-  },
-  computed: {
-      component() {
-          if (this.added) {
-            var component = this.component_data['component']
+app.component('v-component-table-row', {
+    /* Representing an individual component in the 'v-components-for-product' list*/
+    props: ['component_data', 'component_id', 'product_id', 'type', 'added'],
+    data() {
+        return { tooltip: null }
+    },
+    computed: {
+        component() {
+            if (this.added) {
+                var component = this.component_data['component']
+            } else {
+                var component = this.component_data
+            }
+            return component
+        },
+        tooltip_html() {
+            component = this.component
+            return `
+                <strong>Name: </strong>${component['Product name']}<br>
+                <strong>Category: </strong>${component['Category']}<br>
+                <strong>Type: </strong>${component['Type']}<br>
+                <strong>Manufacturer: </strong>${component['Manufacturer']}<br>
+                <strong>Re-seller: </strong>${component['Re-seller']}<br>
+                <strong>Product #: </strong>${component['Product #']}<br>
+                <strong>Units: </strong>${component['Units']}<br>
+                <strong>Discount: </strong>${component['Discount']}<br>
+                <strong>List price: </strong>${component['List price']}<br>
+                <strong>Cost: </strong>${this.cost['sek_price'].toFixed(2)} SEK<br>
+                <strong>Per Unit: </strong>${this.cost['sek_price_per_unit'].toFixed(2)} SEK<br>
+                `
+        },
+        cost() {
+            return this.$root.componentCost(this.component_id)
+        }
+    },
+    mounted() {
+        /* Initializing tooltip, needed for dynamic content to have tooltips */
+        this.tooltip = new bootstrap.Tooltip(this.$el)
+    },
+    methods: {
+      updateQuantity(new_val) {
+          new_val = parseInt(new_val)
+          if (this.type == 'Alternative') {
+              this.$root.all_products[this.product_id]['Alternative Components'][this.component_id]['quantity'] = new_val
           } else {
-            var component = this.component_data
+              this.$root.all_products[this.product_id]['Components'][this.component_id]['quantity'] = new_val
           }
-          return component
       },
-      tooltip_html() {
-          component = this.component
-          return `
-            <strong>Name: </strong>${component['Product name']}<br>
-            <strong>Category: </strong>${component['Category']}<br>
-            <strong>Type: </strong>${component['Type']}<br>
-            <strong>Manufacturer: </strong>${component['Manufacturer']}<br>
-            <strong>Re-seller: </strong>${component['Re-seller']}<br>
-            <strong>Product #: </strong>${component['Product #']}<br>
-            <strong>Units: </strong>${component['Units']}<br>
-            <strong>Discount: </strong>${component['Discount']}<br>
-            <strong>List price: </strong>${component['List price']}<br>
-            <strong>Cost: </strong>${this.cost['sek_price'].toFixed(2)} SEK<br>
-            <strong>Per Unit: </strong>${this.cost['sek_price_per_unit'].toFixed(2)} SEK<br>
-            `
+      addComponent(event) {
+          if (event) {
+              this.$root.addProductComponent(this.product_id, this.component_id, this.type)
+          }
       },
-      cost() {
-          return this.$root.componentCost(this.component_id)
+      removeComponent(event) {
+          /* This took me some time to figure out - the problem is that the bootstrap tooltip would
+          remain open forever if it's not actively removed like this */
+          if (event) {
+              tooltip = bootstrap.Tooltip.getInstance(this.$el)
+              tooltip_el = this.$el
+              that = this
+              function whenHidden() {
+                  tooltip_el.removeEventListener('hidden.bs.tooltip', whenHidden)
+                  that.$root.removeProductComponent(that.product_id, that.component_id, that.type)
+              }
+              /* Wait until tooltip is actually hidden before removing the component */
+              tooltip_el.addEventListener('hidden.bs.tooltip', whenHidden)
+              tooltip.hide()
+          }
       }
-  },
-  mounted() {
-      /* Initializing tooltip, needed for dynamic content to have tooltips */
-      this.tooltip = new bootstrap.Tooltip(this.$el)
-  },
-  methods: {
-    updateQuantity(new_val) {
-        new_val = parseInt(new_val)
-        if (this.type == 'Alternative') {
-          this.$root.all_products[this.product_id]['Alternative Components'][this.component_id]['quantity'] = new_val
-        } else {
-          this.$root.all_products[this.product_id]['Components'][this.component_id]['quantity'] = new_val
-        }
     },
-    addComponent(event) {
-        if (event) {
-          this.$root.addProductComponent(this.product_id, this.component_id, this.type)
-        }
-    },
-    removeComponent(event) {
-        /* This took me some time to figure out - the problem is that the bootstrap tooltip would
-        remain open forever if it's not actively removed like this */
-        if (event) {
-          tooltip = bootstrap.Tooltip.getInstance(this.$el)
-          tooltip_el = this.$el
-          that = this
-          function whenHidden() {
-              tooltip_el.removeEventListener('hidden.bs.tooltip', whenHidden)
-              that.$root.removeProductComponent(that.product_id, that.component_id, that.type)
-          }
-          /* Wait until tooltip is actually hidden before removing the component */
-          tooltip_el.addEventListener('hidden.bs.tooltip', whenHidden)
-          tooltip.hide()
-        }
-    }
-  },
-  template: /*html*/`
-    <tr data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
-      <th scope="row">{{component_id}}</th>
-      <td>{{component['Product name']}}</td>
-      <td v-if="added">
-        <!-- I was for some reason unable to solve this with regular v-model... -->
-        <input class="form-control" type="number" min=1 :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
-      </td>
-      <td class="pl-3 pt-2" v-if="added">
-        <a class="mr-2" href="#" @click="this.removeComponent">
-          <i class="far fa-times-square fa-lg text-danger"></i>
-        </a>
-      </td>
-      <td class="pl-3 pt-2" v-if="!added">
-        <a class="mr-2" href="#" @click="this.addComponent">
-          <i class="far fa-plus-square fa-lg text-success"></i>
-        </a>
-      </td>
+    template: /*html*/`
+      <tr data-toggle="tooltip" data-placement="top" :data-original-title="tooltip_html" data-animation=false data-html=true>
+        <th scope="row">{{component_id}}</th>
+        <td>{{component['Product name']}}</td>
+        <td v-if="added">
+          <!-- I was for some reason unable to solve this with regular v-model... -->
+          <input class="form-control" type="number" min=1 :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
+        </td>
+        <td class="pl-3 pt-2" v-if="added">
+          <a class="mr-2" href="#" @click="this.removeComponent">
+            <i class="far fa-times-square fa-lg text-danger"></i>
+          </a>
+        </td>
+        <td class="pl-3 pt-2" v-if="!added">
+          <a class="mr-2" href="#" @click="this.addComponent">
+            <i class="far fa-plus-square fa-lg text-success"></i>
+          </a>
+        </td>
 
-    </tr>
-    `
+      </tr>
+      `
 })
 
 app.mount('#pricing_update_main')

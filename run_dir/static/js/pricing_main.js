@@ -4,6 +4,7 @@ const vPricingMain = {
     /* Main pricing app that all components will be added to.
      * The ambition is to keep the data stored here in the root so that components
      * can easily reach the data by using the this.$root short cut.
+     * The exception is if data is never accessed from outside of the component itself.
      */
     data() {
         return {
