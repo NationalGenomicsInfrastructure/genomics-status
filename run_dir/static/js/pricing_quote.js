@@ -230,8 +230,8 @@ app.component('v-quote-list-product', {
         <div class="col-auto  pr-0">
           <a href='#' @click="remove_from_quote"><i class="far fa-times-square fa-lg text-danger"></i></a>
         </div>
-        <div class="col-1">
-          <input class="form-control" v-model="this.$root.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']">
+        <div class="col-2">
+          <input class="form-control" v-model="this.$root.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']" type=number>
         </div>
         <span class="col-7 quote_product_name">{{product.Name}}</span>
         <span class="col-2">{{cost}} SEK</span>
