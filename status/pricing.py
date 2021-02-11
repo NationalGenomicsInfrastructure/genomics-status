@@ -21,16 +21,16 @@ class PricingBaseHandler(SafeHandler):
         return int_version
 
     def _validate_date_string(self, date):
-            year, month, day = date.split('-')
+        year, month, day = date.split('-')
 
-            try:
-                datetime_date = datetime.datetime(int(year), int(month), int(day))
-            except ValueError:
-                raise tornado.web.HTTPError(
-                    400,
-                    reason='Bad request, date format is not valid (YYYY-MM-DD)'
-                    )
-            return datetime_date
+        try:
+            datetime_date = datetime.datetime(int(year), int(month), int(day))
+        except ValueError:
+            raise tornado.web.HTTPError(
+                400,
+                reason='Bad request, date format is not valid (YYYY-MM-DD)'
+                )
+        return datetime_date
 
     # _____________________________ FETCH METHODS _____________________________
 
@@ -50,6 +50,18 @@ class PricingBaseHandler(SafeHandler):
         curr_rows = db.view('entire_document/published_by_version', descending=True, limit=1).rows
         curr_doc = curr_rows[0].value
         return curr_doc
+
+    # ____________________________ UPDATE DOC HELPER METHODS ____________________
+
+    def _update_last_modified(self, doc):
+        user_name = self.get_current_user().name
+        user_email = self.get_current_user().email
+
+        doc['Last modified by user'] = user_name
+        doc['Last modified by user email'] = user_email
+        doc['Last modified'] = datetime.datetime.now().isoformat()
+
+        return doc
 
 
 class PricingDateToVersionDataHandler(PricingBaseHandler):
@@ -327,16 +339,13 @@ class PricingReassignLockDataHandler(PricingBaseHandler):
             self.set_status(400)
             return self.write("Error: Attempting to update a non-draft cost calculator.")
 
-        user_name = self.get_current_user().name
         user_email = self.get_current_user().email
 
         lock_info = {'Locked': True,
                      'Locked by': user_email}
 
         doc['Lock Info'] = lock_info
-        doc['Last modified by user'] = user_name
-        doc['Last modified by user email'] = user_email
-        doc['Last modified'] = datetime.datetime.now().isoformat()
+        doc = self._update_last_modified(doc)
 
         cc_db = self.application.cost_calculator_db
         cc_db.save(doc)
@@ -392,6 +401,7 @@ class PricingDraftDataHandler(PricingBaseHandler):
         doc['Draft'] = True
         doc['Version'] = version
         doc['Lock Info'] = lock_info
+
         # Should be set at the time of publication
         doc['Issued by user'] = None
         doc['Issued by user email'] = None
@@ -404,9 +414,7 @@ class PricingDraftDataHandler(PricingBaseHandler):
         doc['Created by user email'] = user_email
         doc['Created at'] = datetime.datetime.now().isoformat()
 
-        doc['Last modified by user'] = user_name
-        doc['Last modified by user email'] = user_email
-        doc['Last modified'] = datetime.datetime.now().isoformat()
+        self._update_last_modified(doc)
 
         cc_db = self.application.cost_calculator_db
         cc_db.save(doc)
@@ -430,7 +438,6 @@ class PricingDraftDataHandler(PricingBaseHandler):
             self.set_status(400)
             return self.write("Error: Attempting to update a non-draft cost calculator.")
 
-        user_name = self.get_current_user().name
         user_email = self.get_current_user().email
 
         lock_info = latest_doc['Lock Info']
@@ -447,9 +454,7 @@ class PricingDraftDataHandler(PricingBaseHandler):
         latest_doc['components'] = new_doc_content['components']
         latest_doc['products'] = new_doc_content['products']
 
-        latest_doc['Last modified by user'] = user_name
-        latest_doc['Last modified by user email'] = user_email
-        latest_doc['Last modified'] = datetime.datetime.now().isoformat()
+        self._update_last_modified(latest_doc)
 
         cc_db = self.application.cost_calculator_db
         cc_db.save(latest_doc)
@@ -535,16 +540,13 @@ class PricingPublishDataHandler(PricingBaseHandler):
 
         doc['Draft'] = False
 
-        doc['Last modified by user'] = user_name
-        doc['Last modified by user email'] = user_email
-        doc['Last modified'] = datetime.datetime.now().isoformat()
+        self._update_last_modified(doc)
 
         # Should be set at the time of publication
         doc['Issued by user'] = user_name
         doc['Issued by user email'] = user_email
         doc['Issued at'] = datetime.datetime.now().isoformat()
 
-        print("Warning: draft being published without validation!")
         cc_db = self.application.cost_calculator_db
         cc_db.save(doc)
         self.write({'message': 'New cost calculator published'})
