@@ -260,13 +260,6 @@ function view_coloring(series_name){
             return "#c3c3c3";
     }
 }
-//For the filesize summarization.
-function sum(object, key) {
-    return Object.entries(object).reduce((s, [k, v]) => {
-        if (v && typeof v === 'object') return s + sum(v, key);
-        return s;
-    }, key in object ? object[key] : 0);
-}
 function get_parameters(){
     var search_string;
     var m_d_y;
