@@ -1,13 +1,22 @@
-app.component('pricing-preview', {
+app.component('v-pricing-preview', {
+    /* Main component of the pricing preview page.
+     *
+     * Serves a landing page where:
+     *   - Changes and validation errors are listed
+     *   - A new draft can be created
+     *   - The draft can be published
+     *   - The draft can be deleted
+     *   - The draft can be locked by a user
+     */
     computed: {
       draft_exists() {
-        return this.$root.draft_cost_calculator !== null
+          return this.$root.draft_cost_calculator !== null
       },
       draft_locked_by() {
-        return this.$root.draft_cost_calculator["Lock Info"]["Locked by"]
+          return this.$root.draft_cost_calculator["Lock Info"]["Locked by"]
       },
       draft_locked_by_someone_else() {
-        return this.draft_locked_by != this.$root.current_user_email
+          return this.draft_locked_by != this.$root.current_user_email
       },
       draft_last_modified_at() {
           datestring = this.$root.draft_cost_calculator['Last modified']
@@ -21,26 +30,14 @@ app.component('pricing-preview', {
           return this.$root.published_cost_calculator
       },
       published_at() {
-          if (this.published_cc === null) {
-              return 'fetching...'
-          } else {
-            datestring = this.published_cc['Issued at']
-            return datestring.substring(0,10) + ', ' + datestring.substring(11,16)
-          }
+          datestring = this.published_cc['Issued at']
+          return datestring.substring(0,10) + ', ' + datestring.substring(11,16)
       },
       published_issued_by() {
-          if (this.published_cc === null) {
-            return 'loading...'
-          } else {
-            return this.$root.published_cost_calculator["Issued by user"]
-          }
+          return this.$root.published_cost_calculator["Issued by user"]
       },
       published_version() {
-          if (this.published_cc === null) {
-            return 'loading...'
-          } else {
-            this.$root.published_cost_calculator["Version"]
-          }
+          return this.$root.published_cost_calculator["Version"]
       }
     },
     created: function() {
@@ -51,48 +48,48 @@ app.component('pricing-preview', {
     methods: {
         create_new_draft() {
             axios
-              .post('/api/v1/draft_cost_calculator')
-              .then(response => {
-                  this.$root.draft_data_loading = true
-                  this.$root.fetchDraftCostCalculator(true)
-              })
-              .catch(error => {
-                  this.$root.error_messages.push('Unable to create new draft, please try again or contact system administrator')
-              })
+                .post('/api/v1/draft_cost_calculator')
+                .then(response => {
+                    this.$root.draft_data_loading = true
+                    this.$root.fetchDraftCostCalculator(true)
+                })
+                .catch(error => {
+                    this.$root.error_messages.push('Unable to create new draft, please try again or contact system administrator')
+                })
         },
         delete_draft() {
             axios
-              .delete('/api/v1/draft_cost_calculator')
-              .then(response => {
-                this.$root.draft_data_loading = true
-                this.$root.draft_cost_calculator = null
-                this.$root.all_products = null
-                this.$root.all_components = null
-                this.$root.fetchDraftCostCalculator(true)
-              }).catch(error => {
-                  this.$root.error_messages.push('Unable to delete draft, please try again or contact system administrator')
-              })
+                .delete('/api/v1/draft_cost_calculator')
+                .then(response => {
+                    this.$root.draft_data_loading = true
+                    this.$root.draft_cost_calculator = null
+                    this.$root.all_products = null
+                    this.$root.all_components = null
+                    this.$root.fetchDraftCostCalculator(true)
+                }).catch(error => {
+                    this.$root.error_messages.push('Unable to delete draft, please try again or contact system administrator')
+                })
         },
         publish_draft() {
             axios
-              .post('/api/v1/pricing_publish_draft')
-              .then(response => {
-                this.$root.published_data_loading = true
-                this.$root.draft_cost_calculator = null
-                this.$root.fetchPublishedCostCalculator()
-              }).catch(error => {
-                  this.$root.error_messages.push('Unable to publish cost calculator, please try again or contact system administrator')
-              })
+                .post('/api/v1/pricing_publish_draft')
+                .then(response => {
+                    this.$root.published_data_loading = true
+                    this.$root.draft_cost_calculator = null
+                    this.$root.fetchPublishedCostCalculator()
+                }).catch(error => {
+                    this.$root.error_messages.push('Unable to publish cost calculator, please try again or contact system administrator')
+                })
         },
         reassign_lock() {
             axios
-              .post('/api/v1/pricing_reassign_lock')
-              .then(response => {
-                this.$root.fetchDraftCostCalculator(true)
-              })
-              .catch(error => {
-                  this.$root.error_messages.push('Unable to reassign lock for draft, please try again or contact system administrator')
-              });
+                .post('/api/v1/pricing_reassign_lock')
+                .then(response => {
+                    this.$root.fetchDraftCostCalculator(true)
+                })
+                .catch(error => {
+                    this.$root.error_messages.push('Unable to reassign lock for draft, please try again or contact system administrator')
+                });
         },
         toggleDiscontinued() {
             this.$root.show_discontinued = !this.$root.show_discontinued
