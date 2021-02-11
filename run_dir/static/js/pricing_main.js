@@ -325,8 +325,8 @@ const vPricingMain = {
                 })
             } else {
                 /* Case for when the draft is deleted, is being deleted or not yet loaded */
-                this.$root.product_changes = null
-                this.$root.component_changes = null
+                this.$root.product_changes = Object()
+                this.$root.component_changes = Object()
                 this.$root.validation_msgs = Object({'products': {}, 'components': {}})
             }
         },
