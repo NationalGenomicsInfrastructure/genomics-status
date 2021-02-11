@@ -147,7 +147,7 @@ app.component('v-pricing-quote', {
                     <v-quote-list-product :product_id="prod_id" :product_count="prod_count"/>
                   </template>
                   <li class="row border-top mr-2">
-                    <p class="text-end col-3 offset-9 pt-2 fw-bold">{{product_cost[this.$root.price_type].toFixed(2)}} SEK</p>
+                    <p class="text-end col-3 offset-9 pt-2 fw-bold">{{product_cost_sum[this.$root.price_type].toFixed(2)}} SEK</p>
                   </li>
                   <template v-if="any_special_addition">
                     <li class="my-1 row d-flex align-items-center">
