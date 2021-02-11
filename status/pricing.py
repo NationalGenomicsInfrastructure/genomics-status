@@ -34,6 +34,11 @@ class PricingBaseHandler(SafeHandler):
 
     # _____________________________ FETCH METHODS _____________________________
 
+    def fetch_doc_version(self, version, db):
+        rows = db.view('entire_document/published_by_version', descending=True, key=version, limit=1).rows
+        doc = rows[0].value
+        return doc
+
     def fetch_latest_doc(self):
         db = self.application.cost_calculator_db
         curr_rows = db.view('entire_document/by_version', descending=True, limit=1).rows
@@ -46,40 +51,9 @@ class PricingBaseHandler(SafeHandler):
         curr_doc = curr_rows[0].value
         return curr_doc
 
-    def fetch_exchange_rates(self, date=None):
-        """Internal method to fetch exchange rates from StatusDB
-
-        :param date: string in format 'YYYY-MM-DD'
-        :return: dictionary with keys 'USD_in_SEK', 'EUR_in_SEK' and
-        'Issued at'.
-
-        Returns the most recent rates prior to date given by parameter `date`
-        If parameter `date` is not supplied, the current timestamp is used.
-        """
-
-        if date is not None:
-            dt = self._validate_date_string(date)
-        else:
-            dt = datetime.datetime.now()
-
-        str_format_date = dt.strftime('%Y-%m-%d')
-        view = self.application.pricing_exchange_rates_db.view(
-                'entire_document/by_date',
-                startkey=str_format_date,
-                descending=True,
-                limit=1
-            )
-
-        result = {}
-        result['USD_in_SEK'] = view.rows[0].value['USD_in_SEK']
-        result['EUR_in_SEK'] = view.rows[0].value['EUR_in_SEK']
-        result['Issued at'] = view.rows[0].value['Issued at']
-        return result
-
 
 class PricingDateToVersionDataHandler(PricingBaseHandler):
-    """Serves a map of when each version of pricing components and
-    pricing products was issued.
+    """Serves a map of when each version of the cost calculator was issued.
 
     Loaded through:
         /api/v1/pricing_date_to_version
@@ -111,13 +85,43 @@ class PricingExchangeRatesDataHandler(PricingBaseHandler):
     If `date` is omitted, the most recent exchange rates will be served.
     """
 
+    def _fetch_exchange_rates(self, date=None):
+        """Internal method to fetch exchange rates from StatusDB
+
+        :param date: string in format 'YYYY-MM-DD'
+        :return: dictionary with keys 'USD_in_SEK', 'EUR_in_SEK' and
+        'Issued at'.
+
+        Returns the most recent rates prior to date given by parameter `date`
+        If parameter `date` is not supplied, the current timestamp is used.
+        """
+
+        if date is not None:
+            dt = self._validate_date_string(date)
+        else:
+            dt = datetime.datetime.now()
+
+        str_format_date = dt.strftime('%Y-%m-%d')
+        view = self.application.pricing_exchange_rates_db.view(
+                'entire_document/by_date',
+                startkey=str_format_date,
+                descending=True,
+                limit=1
+            )
+
+        result = {}
+        result['USD_in_SEK'] = view.rows[0].value['USD_in_SEK']
+        result['EUR_in_SEK'] = view.rows[0].value['EUR_in_SEK']
+        result['Issued at'] = view.rows[0].value['Issued at']
+        return result
+
     def get(self):
         date = self.get_argument('date', None)
 
         if date is not None:
-            result = self.fetch_exchange_rates(date)
+            result = self._fetch_exchange_rates(date)
         else:
-            result = self.fetch_exchange_rates(None)
+            result = self._fetch_exchange_rates(None)
 
         self.write(json.dumps(result))
 
@@ -253,7 +257,6 @@ class PricingValidator():
                                                         format(product_id, products[product_id]['Name'],
                                                                component_id, components[component_id]['Product name']))
 
-
     def track_all_changes(self):
         # Check which ids have been added
         added_product_ids = set(self.draft_products.keys()) - set(self.published_products.keys())
@@ -278,7 +281,6 @@ class PricingValidator():
                 draft_val = draft_comp[component_key]
                 if published_val != draft_val:
                     self._add_change('components', component_id, component_key, draft_val, published_val)
-
 
     def validate(self):
         self._validate_unique(self.draft_components, 'components')
@@ -487,11 +489,6 @@ class PricingDraftDataHandler(PricingBaseHandler):
 class PricingDataHandler(PricingBaseHandler):
     """Loaded through /api/v1/cost_calculator """
 
-    def _get_doc_version(self, version, db):
-        rows = db.view('entire_document/published_by_version', descending=True, key=version, limit=1).rows
-        doc = rows[0].value
-        return doc
-
     def get(self):
         """ Should return the specified version of the cost calculator.
 
@@ -503,7 +500,7 @@ class PricingDataHandler(PricingBaseHandler):
         if version is None:
             doc = self.fetch_latest_published()
         else:
-            doc = self._get_doc_version(version, cc_db)
+            doc = self.fetch_doc_version(version, cc_db)
 
         response = dict()
         response['cost_calculator'] = doc

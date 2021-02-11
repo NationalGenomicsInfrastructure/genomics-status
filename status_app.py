@@ -30,11 +30,10 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
-from status.pricing import \
-    PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
+from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
     PricingQuoteHandler, PricingValidateDraftDataHandler, PricingPublishDataHandler, \
-    PricingReassignLockDataHandler, \
-    PricingUpdateHandler, PricingPreviewHandler, PricingDataHandler, PricingDraftDataHandler
+    PricingReassignLockDataHandler, PricingUpdateHandler, PricingPreviewHandler, \
+    PricingDataHandler, PricingDraftDataHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -100,14 +99,14 @@ class Application(tornado.web.Application):
             ("/api/v1/bioinfo_analysis", BioinfoAnalysisHandler),
             ("/api/v1/bioinfo_analysis/([^/]*)$", BioinfoAnalysisHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
-            ("/api/v1/charon_summary/([^/]*)$",CharonProjectHandler ),
-            ("/api/v1/cost_calculator", PricingDataHandler ),
+            ("/api/v1/charon_summary/([^/]*)$", CharonProjectHandler),
+            ("/api/v1/cost_calculator", PricingDataHandler),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
             ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
             tornado.web.URLSpec("/api/v1/download_images/(?P<project>[^/]+)/(?P<type>[^/]+)", ImagesDownloadHandler, name="ImagesDownloadHandler"),
-            ("/api/v1/draft_cost_calculator", PricingDraftDataHandler ),
+            ("/api/v1/draft_cost_calculator", PricingDraftDataHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
