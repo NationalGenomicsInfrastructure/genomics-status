@@ -5,17 +5,31 @@ import json
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import ElementNotInteractableException, ElementClickInterceptedException
 
 class TestPricingQuote(unittest.TestCase):
     def setUp(self):
         self.driver = webdriver.Chrome()
         self.driver.get("http://localhost:9761/pricing_quote")
-        self.driver.set_window_size(1920, 1080)
+        self.driver.set_window_size(1400, 1080)
+        self.wait = WebDriverWait(self.driver, 10)
         time.sleep(1)
 
     def tearDown(self):
         self.driver.quit()
+
+    def _wait_and_click(self, by_statement, selector, scrollLocation = None):
+        element = (by_statement, selector)
+        self.wait.until(EC.element_to_be_clickable(element))
+        try:
+            self.driver.find_element(*element).click()
+        except (ElementNotInteractableException, ElementClickInterceptedException):
+            if scrollLocation:
+                self.driver.execute_script("window.scrollTo({},{})".format(*scrollLocation))
+            time.sleep(2.5)  # Backup solution/hack
+            self.driver.find_element(*element).click()
 
     def _change_date(self, date):
         self.driver.execute_script("window.scrollTo(0, 0)")
@@ -24,15 +38,20 @@ class TestPricingQuote(unittest.TestCase):
 
         self.driver.find_element(By.ID, "datepicker").click()
         self.driver.find_element(By.ID, "datepicker").clear()
-        self.driver.find_element(By.ID, "datepicker").send_keys(date)
+
+        for date_part in date.split('-'):
+            self.driver.find_element(By.ID, "datepicker").send_keys(date_part)
+            self.driver.find_element(By.ID, "datepicker").send_keys(Keys.RIGHT)
+
         self.driver.find_element(By.CSS_SELECTOR, ".modal-body > p").click()
         self.driver.find_element(By.ID, "datepicker-btn").click()
         time.sleep(1.5)
 
     def test_addproduct(self):
         """Adding and removing product items to the quote, checking the counts in the input box. """
-        self.driver.find_element(By.CSS_SELECTOR, ".status_available:nth-child(2) .add-to-quote .glyphicon").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".status_available:nth-child(5) .add-to-quote .glyphicon").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".status_available:nth-child(2) .add-to-quote i").click()
+        self.driver.execute_script("window.scrollBy(0, 600)")
+        self._wait_and_click(By.CSS_SELECTOR, ".status_available:nth-child(5) .add-to-quote i")
 
         # Fetch the ref_id of the product added
         e = self.driver.find_element(By.CSS_SELECTOR, ".status_available:nth-child(5) .add-to-quote")
@@ -47,15 +66,15 @@ class TestPricingQuote(unittest.TestCase):
         e = self.driver.find_element(By.CSS_SELECTOR, ".quote-product-list input[data-product-id='{}']".format(id))
         self.assertEqual(e.get_attribute('value'), '1', msg="Two items of this product are added")
 
-        self.driver.find_element(By.CSS_SELECTOR, ".status_available:nth-child(5) .glyphicon").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".status_available:nth-child(5) i").click()
         elements = self.driver.find_elements(By.CSS_SELECTOR, ".quote-product-list li > .quote_product_name")
         self.assertEqual(len(elements), 2, msg="Two products (2+1) added to the quote")
 
-        self.driver.find_element(By.CSS_SELECTOR, ".quote-product-list li:nth-child(2) .glyphicon").click()
+        self._wait_and_click(By.CSS_SELECTOR, ".quote-product-list li:nth-child(2) i", scrollLocation=(0,0))
         elements = self.driver.find_elements(By.CSS_SELECTOR, ".quote-product-list li > .quote_product_name")
         self.assertEqual(len(elements), 1, msg="Removing one product should leave just one in the quote")
 
-        self.driver.find_element(By.CSS_SELECTOR, ".quote-product-list li:nth-child(1) .glyphicon").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".quote-product-list li:nth-child(1) i").click()
         elements = self.driver.find_elements(By.CSS_SELECTOR, ".quote-product-list li > .quote_product_name")
         self.assertEqual(len(elements), 0, msg="Removing the last product should leave no product in the quote")
 
@@ -67,13 +86,17 @@ class TestPricingQuote(unittest.TestCase):
         self.assertEqual(usd_rate, '8.75', msg="Matching the known rate")
 
         # Add bunch of products
+        self.driver.execute_script("window.scrollTo(0, 200)")
+        time.sleep(1)
         for i in range(6):
-            self.driver.find_element(By.CSS_SELECTOR, ".status_available:nth-child({}) .add-to-quote .glyphicon".format(i+1)).click()
+            self.driver.find_element(By.CSS_SELECTOR, ".status_available:nth-child({}) .add-to-quote i".format(i+1)).click()
         time.sleep(1.0)
 
         current_price = self.driver.find_elements(By.CSS_SELECTOR, ".quote_totals .quote_totals_val.quote_sweac")[0].text
         current_price_int = int(current_price.split(' ')[0])  # Get number from e.g. '8421 SEK'
 
+        self.driver.execute_script("window.scrollTo(0, 0)")
+        time.sleep(1)
         self._change_date("2020-07-01")
 
         usd_rate = self.driver.find_element_by_id('exch_rate_usd').text
@@ -94,7 +117,7 @@ class TestPricingQuote(unittest.TestCase):
         usd_rate = self.driver.find_element_by_id('exch_rate_usd').text
 
         # Enable discontinued products
-        self.driver.find_element(By.ID, "more_options").click()
+        self.driver.find_element(By.ID, "more_options_btn").click()
         time.sleep(0.5)
         self.driver.find_element(By.ID, "toggle_discontinued").click()
         time.sleep(1.5)
@@ -109,7 +132,8 @@ class TestPricingQuote(unittest.TestCase):
         self.assertEqual(len(all_products), len(products_new_date), msg="Changing date should not change discontinued")
 
         discontinued_product = self.driver.find_elements(By.CSS_SELECTOR, '#pricing_products_tbody tr.status_discontinued')[0]
-        discontinued_product_name = discontinued_product.find_elements(By.CSS_SELECTOR, 'td.name')[0].text
+        self.driver.execute_script("window.scrollTo(0, 500)")
+        time.sleep(1)
         discontinued_product.find_elements(By.CSS_SELECTOR, 'td a.add-to-quote')[0].click()
         time.sleep(1)
         quote_elements = self.driver.find_elements(By.CSS_SELECTOR, ".quote-product-list li > .quote_product_name")

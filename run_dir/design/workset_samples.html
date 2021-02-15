@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: workset_sample.html
@@ -9,21 +9,21 @@ Description: Shows information about a specific workset
 
 {% block stuff %}
 
-<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading workset page..</div>
+<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="fa fa-sync fa-spin"></span>  Loading workset page..</div>
 <div id="page_content" style="display:none;">
     <h1>
-        <button class="btn btn-primary btn-lg pull-right" data-toggle="modal" data-target="#modal_plate">Launch plate view</button>
+        <button class="btn btn-primary btn-lg float-right" data-toggle="modal" data-target="#modal_plate">Launch plate view</button>
         Workset <span id="page_title">{{ workset_name}}</span>
     </h1>
     <h3>Lims Step: <span id="span_lims_step"></span>, run on <span id="date_run"></span></h3>
     <div class="tabbable">
-        <ul class="nav nav-tabs">
-            <li class="active"><a href="#workset_tables" role="tab" data-toggle="tab">Workset Tables</a></li>
-            <li><a href="#tab_running_notes_content" role="tab" data-toggle="tab">Workset Notes</a></li>
-            <li><a href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
+        <ul class="nav nav-tabs mb" role="tablist">
+            <li class="nav-item"><a class="nav-link active" href="#workset_tables" role="tab" data-toggle="tab" aria-selected="true">Workset Tables</a></li>
+            <li class="nav-item"><a class="nav-link" href="#tab_running_notes_content" role="tab" data-toggle="tab">Workset Notes</a></li>
+            <li class="nav-item"><a class="nav-link" href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
         </ul>
         <div class="tab-content">
-            <div class="tab-pane fade in active" id="workset_tables"></div>
+            <div class="tab-pane fade show active" id="workset_tables"></div>
             <!-- RUNNING NOTES TAB -->
             {% include "running_notes_tab.html" %}
             <!-- LINK TAB -->
@@ -37,15 +37,15 @@ Description: Shows information about a specific workset
     <div class="plate_modal modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 class="modal-title">Plate View: {{ workset_name}}</h3>
+              <h3 class="modal-title">Plate View: {{ workset_name}}</h3>
+              <button type="button" class="btn-close" data-dismiss="modal" aria-hidden="true"></button>
             </div>
             <div class="modal-body">
                 <div role="tabpanel">
                     <ul class="nav nav-tabs" role="tablist">
-                        <li role="presentation"><a href="#rec_ctrl" class="plate-type-button">Reception Control</a></li>
-                        <li role="presentation" class="active"><a href="#library" class="plate-type-button">Library Validation</a></li>
-                        <li role="presentation"><a href="#seq" class="plate-type-button">Sequencing</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link plate-type-button" href="#rec_ctrl">Reception Control</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link active plate-type-button" href="#library">Library Validation</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link plate-type-button" href="#seq">Sequencing</a></li>
                     </ul>
                 </div>
                 <div class="tab-content">
@@ -64,7 +64,6 @@ Description: Shows information about a specific workset
 
 </div>
 
-<script src="https://code.jquery.com/jquery-1.11.1.min.js" id="dt-js"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ workset_name }}"></script>
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ workset_name }}"></script>
 <script src="/static/js/workset_samples.js?v={{ gs_globals['git_commit'] }}" id="workset-js" data-workset="{{ workset_name }}" data-lims_uri="{{ lims_uri }}"></script>

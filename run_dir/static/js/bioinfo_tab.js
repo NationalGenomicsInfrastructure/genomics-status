@@ -1,22 +1,22 @@
 
-var bioinfo_qc_statuses = {'?': 'unknown', 'Pass': 'success', 'Warning': 'warning', 'Fail': 'danger', 'N/A': 'active'};
-var bioinfo_qc_classes = ['unknown', 'success', 'warning', 'danger', 'active'];
+var bioinfo_qc_statuses = {'?': 'unknown', 'Pass': 'bg-success-table', 'Warning': 'bg-warning-table', 'Fail': 'bg-danger-table', 'N/A': 'active'};
+var bioinfo_qc_classes = ['unknown', 'bg-success-table', 'bg-warning-table', 'bg-danger-table', 'active'];
 var bioinfo_qc_values = ['?', 'Pass', 'Warning', 'Fail', 'N/A'];
 
 var sample_statuses = {
-    'Demultiplexing': 'label-default',
-    'Transferring': 'label-default',
-    'Sequencing': 'label-default',
-    'New': 'label-primary',
-    'QC-ongoing': 'label-warning',
-    'QC-done': 'label-success',
-    'BP-ongoing': 'label-warning',
-    'BP-done': 'label-success',
-    'Failed': 'label-danger',
-    'Delivered': 'label-primary',
-    'ERROR': 'label-danger',
+    'Demultiplexing': 'bg-secondary',
+    'Transferring': 'bg-secondary',
+    'Sequencing': 'bg-secondary',
+    'New': 'bg-primary',
+    'QC-ongoing': 'bg-warning',
+    'QC-done': 'bg-success',
+    'BP-ongoing': 'bg-warning',
+    'BP-done': 'bg-success',
+    'Failed': 'bg-danger',
+    'Delivered': 'bg-primary',
+    'ERROR': 'bg-danger',
     };
-var sample_classes = ['label-default', 'label-default', 'label-default', 'label-primary', 'label-warning', 'label-success', 'label-warning', 'label-success', 'label-danger', 'label-primary', 'label-danger'];
+var sample_classes = ['bg-secondary', 'bg-secondary', 'bg-secondary', 'bg-primary', 'bg-warning', 'bg-success', 'bg-warning', 'bg-success', 'bg-danger', 'bg-primary', 'bg-danger'];
 var sample_values = ['Demultiplexing', 'Transferring', 'Sequencing', 'New', 'QC-ongoing', 'QC-done', 'BP-ongoing', 'BP-done', 'Failed', 'Delivered', 'ERROR'];
 
 
@@ -136,12 +136,12 @@ $('.bioinfo-expand').click(function(e){
 function collapse(element) {
     // element is tr
     var element_id = $(element).attr('id');
-    var expanded = $(element).find("a[href=#"+element_id+"]");
+    var expanded = $(element).find('a[href="#'+element_id+'"]');
     $(expanded).removeClass('expanded');
-    var span =$(element).find('td.bioinfo-status-expand span.glyphicon');
-    if ($(span).hasClass('glyphicon-chevron-down')) {
-        $(span).removeClass('glyphicon-chevron-down');
-        $(span).addClass('glyphicon-chevron-right');
+    var span =$(element).find('td.bioinfo-status-expand span.fa');
+    if ($(span).hasClass('fa-chevron-down')) {
+        $(span).removeClass('fa-chevron-down');
+        $(span).addClass('fa-chevron-right');
     }
 
     var tr = $(element);
@@ -159,18 +159,18 @@ function collapse(element) {
         }
     }
     var children = $(element).nextUntil('tr.'+tr_class, 'tr:not(.'+parent_class+')'); // does not inlcude tr and next tr
-    $(children).hide().children('td.bioinfo-status-expand span.gpyhicon').removeClass('glyphicon-chevron-down glyphicon-chevron-right').addClass('glyphicon-chevron-right');
+    $(children).hide().children('td.bioinfo-status-expand span.fa').removeClass('fa-chevron-down fa-chevron-right').addClass('fa-chevron-right');
 };
 
 function expand(element) {
     var a = $(element).find('.bioinfo-expand');
     $(a).addClass('expanded');
     var tr_id = $(element).attr('id');
-    $('tr[data-parent=#'+tr_id+']').show();
-    var span = $(element).find('td.bioinfo-status-expand span.glyphicon')
-    if ($(span).hasClass('glyphicon-chevron-right')) {
-        $(span).removeClass('glyphicon-chevron-right')
-        $(span).addClass('glyphicon-chevron-down');
+    $('tr[data-parent="#'+tr_id+'"]').show();
+    var span = $(element).find('td.bioinfo-status-expand span.fa')
+    if ($(span).hasClass('fa-chevron-right')) {
+        $(span).removeClass('fa-chevron-right')
+        $(span).addClass('fa-chevron-down');
     }
 };
 
@@ -196,8 +196,8 @@ function collapseAll(a) {
             }
         });
         $(a).removeClass('expanded');
-        $(a).find('span.glyphicon').removeClass('glyphicon-chevron-down');
-        $(a).find('span.glyphicon').addClass('glyphicon-chevron-right');
+        $(a).find('span.fa').removeClass('fa-chevron-down');
+        $(a).find('span.fa').addClass('fa-chevron-right');
     } else { // expand - not recursively
         var trs = $.merge($(table).find('tr.'+top_level_class), $(table).find('tr.'+second_level_class));
         $.each(trs, function(index, tr) {
@@ -206,8 +206,8 @@ function collapseAll(a) {
             }
         });
         $(a).addClass('expanded');
-        $(a).find('span.glyphicon').removeClass('glyphicon-chevron-right');
-        $(a).find('span.glyphicon').addClass('glyphicon-chevron-down');
+        $(a).find('span.fa').removeClass('fa-chevron-right');
+        $(a).find('span.fa').addClass('fa-chevron-down');
     }
 };
 
@@ -540,8 +540,8 @@ function setParentStatus(td) {
     }
     if ($(parent_td).text().trim() == 'Pass' && $(td).text().trim() == 'Warning')  {
         $(parent_td).text('Warning');
-        $(parent_td).removeClass('success');
-        $(parent_td).addClass('warning')
+        $(parent_td).removeClass('bg-success-table');
+        $(parent_td).addClass('bg-warning-table')
     } else {
         aggregateTdStatus(parent_td);
     }
@@ -830,7 +830,7 @@ $('#bioinfo-status-saveButton').click(function(e){
                     console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(sample_run_lane_statuses));
                 },
                 success: function(saved_data, textStatus, xhr) {
-                    var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="glyphicon glyphicon-ok"></span></span>');
+                    var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="fa fa-check"></span></span>');
                     success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
                     $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
                     //$('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
@@ -858,7 +858,7 @@ $('#bioinfo-status-saveButton').click(function(e){
                 console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(sample_run_lane_statuses));
               },
               success: function(saved_data, textStatus, xhr) {
-                var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="glyphicon glyphicon-ok"></span></span>');
+                var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="fa fa-check"></span></span>');
                 success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
                 $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
                 //$('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
@@ -923,18 +923,18 @@ function updateSecondTable(saved_data) {
 }
 
 var sample_statuses = {
-    'Demultiplexing': 'label-default',
-    'Transferring': 'label-default',
-    'Sequencing': 'label-default',
-    'New': 'label-primary',
-    'QC-ongoing': 'label-warning',
-    'QC-done': 'label-success',
-    'BP-ongoing': 'label-warning',
-    'BP-done': 'label-success',
-    'Failed': 'label-danger',
-    'Delivered': 'label-success',
+    'Demultiplexing': 'bg-secondary',
+    'Transferring': 'bg-secondary',
+    'Sequencing': 'bg-secondary',
+    'New': 'bg-primary',
+    'QC-ongoing': 'bg-warning',
+    'QC-done': 'bg-success',
+    'BP-ongoing': 'bg-warning',
+    'BP-done': 'bg-success',
+    'Failed': 'bg-danger',
+    'Delivered': 'bg-success',
     };
-var sample_classes = ['label-default', 'label-default', 'label-default', 'label-primary', 'label-warning', 'label-success', 'label-warning', 'label-success', 'label-danger', 'label-sucess'];
+var sample_classes = ['bg-secondary', 'bg-secondary', 'bg-secondary', 'bg-primary', 'bg-warning', 'bg-success', 'bg-warning', 'bg-success', 'bg-danger', 'bg-sucess'];
 var sample_values = ['Demultiplexing', 'Transferring', 'Sequencing', 'New', 'QC-ongoing', 'QC-done', 'BP-ongoing', 'BP-done', 'Failed', 'Delivered'];
 
 // this one shouldn't be done like that
@@ -950,7 +950,7 @@ function setParentSpanStatus(span) {
     var sibling_trs = $(".table-bioinfo-status:visible tr[data-parent='#"+parent_tr.attr('id')+"']");
     var statuses = [];
     $.each(sibling_trs, function(index, sibling_tr) {
-        var span = $(sibling_tr).find('td.bioinfo-status-runstate span.label');
+        var span = $(sibling_tr).find('td.bioinfo-status-runstate span.badge');
         if (statuses.indexOf($(span).text().trim()) == -1) {
             statuses.push($(span).text().trim());
         }
@@ -980,7 +980,7 @@ function setParentSpanStatus(span) {
         parent_status = 'Delivered';
     }
 
-    var parent_span = $(parent_tr).find('td.bioinfo-status-runstate span.label');
+    var parent_span = $(parent_tr).find('td.bioinfo-status-runstate span.badge');
     var span_status = $(parent_span).text().trim();
     $(parent_span).text(parent_status);
     $(parent_span).removeClass(sample_statuses[span_status]);
@@ -1074,7 +1074,7 @@ $('#bioinfo-show-history-button').on('click', function(e){
 });
 
 $('button.btn-reset-history-timestamp').on('click', function(e){
-    var table = $(this).closest('div.panel').find('table');
+    var table = $(this).closest('div.accordion-item').find('table');
     // headers - to extract fc-lane-sample id
     var spans = $(table).find('tr.history-header th span');
     // update the view

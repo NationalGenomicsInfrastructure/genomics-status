@@ -220,7 +220,7 @@ class WorksetNotesDataHandler(SafeHandler):
             doc['Workset Notes'] = json.dumps(workset_notes)
             self.application.worksets_db.save(doc)
 
-            workset_link = "<a href='/workset/{0}'>{0}</a>".format(workset_name)
+            workset_link = '<a class="text-decoration-none" href="/workset/{0}">{0}</a>'.format(workset_name)
             project_note = "#####*Running note posted on workset {}:*\n".format(workset_link)
             project_note += note
             for project_id in projects:

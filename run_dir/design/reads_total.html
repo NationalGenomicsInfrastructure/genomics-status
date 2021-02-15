@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: reads_total.html
@@ -14,36 +14,36 @@ Description: Summing tool for the reads
     <div id="querybox">
         <form action="/reads_total/" id="reads_form">
             <div class="form-group">
-                <label for="reads_query">Enter new search term here:</label>
+                <label class="fw-bold" for="reads_query">Enter new search term here:</label>
                 <div class="input-group" style="max-width: 400px;">
                     <input type="text" class="form-control" id="reads_query" placeholder="eg. P1234">
                     <span class="input-group-btn">
-                        <button class="btn btn-default" type="submit">Search</button>
+                        <button class="btn btn-outline-secondary" type="submit">Search</button>
                     </span>
                 </div>
-                <span class="help-block">Page finds any samples whose names begin with the search term.</span>
+                <span class="form-text">Page finds any samples whose names begin with the search term.</span>
             </div>
         </form>
     </div>
 </div>
 
 {% if query == '' %}
-    <h3>Welcome to the read count totals page!</h3>
+    <h3 class="mt-3">Welcome to the read count totals page!</h3>
     <p>To begin, enter a search term above and click <code>Search</code></p>
     <p>The search works by matching any sample names that begin with your search term. So P123 will match samples <code>P123_001</code> and <code>P1234_003</code></p>
     <p>Note that sample names do not have full project names such as <code>A.Project_15_03</code>, so these kinds of searches will not work.</p>
 {% elif readsdata %}
 <div style="width: 250px; position:fixed; left: 10px; top: 65px; height: 90%; overflow: auto;">
     <h3 id="summary_table_section">Summary of Selected {% if "isHiseqX" in readsdata %}Cluster{% else %}Reads{% end %} Counts</h3>
-    <p><button id="rt_summary_download" class="btn btn-default">Download as tab-delimited file</button></p>
+    <p><button id="rt_summary_download" class="btn btn-outline-secondary">Download as tab-delimited file</button></p>
     <div id="summary_table"></div>
 </div>
 <div style="margin-left: 270px;">
     <div id="reads_total_summary_chart"></div>
     <form class="form-inline">
     <div class="btn-group" role="group" >
-        <input type="button" id="check_all" class="btn btn-default" value="Check all"/>
-        <input type="button" id="uncheck_all" class="btn btn-default" value="Uncheck all"/>
+        <input type="button" id="check_all" class="btn btn-outline-secondary" value="Check all"/>
+        <input type="button" id="uncheck_all" class="btn btn-outline-secondary" value="Uncheck all"/>
         <input type="text" class="form-control" id="check_key" />
     </div>
     </form>
@@ -54,24 +54,24 @@ Description: Summing tool for the reads
             {% if counter%2==0 %}</div><hr><div class="row">{% end %}
             <div id="{{ sample }}" class="col-lg-6 sample_table" style="padding-top:15px;">
                 <table id="table_{{ sample }}"class="table reads_table">
-                    <tr>
-                        <th><a href="/project/{{ sample.split('_')[0] }}">{{ sample }}</a></th>
+                    <tr class="darkth">
+                        <th><a class="text-decoration-none" href="/project/{{ sample.split('_')[0] }}">{{ sample }}</a></th>
                         <th>%&nbsp;&gt;&nbsp;q30</th>
                         <th>Add</th>
                         <th>{% if "isHiseqX" in readsdata %}Cluster{% else %}Reads{% end %}</th>
                     </tr>
                 {% for d in readsdata[sample] %}
                     <tr class="reads_data">
-                        <td class="flowcell"><a href="/flowcells/{{ d['fcp'].split('_')[0] }}_{{ d['fcp'].split('_')[-1].split(':')[0] }}">{{ d['fcp'] }}</a></td>
+                        <td class="flowcell"><a class="text-decoration-none" href="/flowcells/{{ d['fcp'].split('_')[0] }}_{{ d['fcp'].split('_')[-1].split(':')[0] }}">{{ d['fcp'] }}</a></td>
                         {% if '_UD' not in d['fcp']  %}
                             {% if d['q30'] is not None and d['q30']>75 %}
-                                <td class="success myq30">{{ d['q30'] }}</td>
+                                <td class="table-success myq30">{{ d['q30'] }}</td>
                                 <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}" checked /></td>
                             {% elif d['q30'] is not None and d['q30']>30 %}
-                                <td class="warning myq30">{{ d['q30'] }}</td>
+                                <td class="table-warning myq30">{{ d['q30'] }}</td>
                                 <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}"/></td>
                             {% else %}
-                                <td class="danger myq30">{{ d['q30'] }}</td>
+                                <td class="table-danger myq30">{{ d['q30'] }}</td>
                                 <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}"/></td>
                             {% end %}
                         {% else %}
@@ -81,7 +81,7 @@ Description: Summing tool for the reads
                         <td class="clusters">{{ d['cl'] }}</td>
                     </tr>
                 {% end %}
-                    <tr>
+                    <tr class="darkth">
                         <th>Total</th>
                         <th></th>
                         <th class="sample_name">{{ sample }}</th>
@@ -95,7 +95,7 @@ Description: Summing tool for the reads
     </div>
 </div>
 {% else %}
-<div class="alert alert-danger">
+<div class="alert alert-danger mt-3">
     <h4>Error - No samples found</h4>
     <p>Sorry, we weren't able to find any samples matching <code>{{ query }}</code>. Please try again with the box above.</p>
     <p>The search works by matching any sample names that begin with your search term. So P123 will match samples <code>P123_001</code> and <code>P1234_003</code></p>
