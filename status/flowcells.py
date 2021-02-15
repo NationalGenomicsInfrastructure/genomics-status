@@ -29,6 +29,8 @@ thresholds = {
     'NovaSeq S4': 2000,
     'NextSeq Mid' : 25,
     'NextSeq High' : 75,
+    'NextSeq 2000 P2' : 400,
+    'NextSeq 2000 P3' : 1100
 }
 
 def formatDate(date):
