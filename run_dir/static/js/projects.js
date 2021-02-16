@@ -224,10 +224,10 @@ function load_table(status, type, columns, dates) {
         var ndate = undefined;
         for (key in note) { ndate = key; break; }
         notedate = new Date(ndate);
-        latest_note.html('<div class="panel panel-default running-note-panel">' +
-            '<div class="panel-heading">'+
+        latest_note.html('<div class="card">' +
+            '<div class="card-header">'+
               note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
-            '</div><div class="panel-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
+            '</div><div class="card-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
 
       }
       $("#project_table_body").append(tbl_row);
