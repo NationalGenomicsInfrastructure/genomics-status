@@ -62,9 +62,11 @@ class FlowcellsHandler(SafeHandler):
         for row in xfc_view:
             try:
                 row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'], "%y%m%d").strftime("%Y-%m-%d")
-
             except ValueError:
-                row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'].split()[0], "%m/%d/%Y").strftime("%Y-%m-%d")
+                try:
+                    row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'], "%Y-%m-%dT%H:%M:%SZ").strftime("%Y-%m-%d")
+                except ValueError:
+                    row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'].split()[0], "%m/%d/%Y").strftime("%Y-%m-%d")
 
             # Lanes were previously in the wrong order
             row.value['lane_info'] = OrderedDict(sorted(row.value['lane_info'].items()))
