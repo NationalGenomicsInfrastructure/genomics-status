@@ -357,10 +357,9 @@ class PricingDraftDataHandler(PricingBaseHandler):
         draft = doc['Draft']
 
         response = dict()
+        response['cost_calculator'] = None
         if draft:
             response['cost_calculator'] = doc
-        if not draft:
-            response['cost_calculator'] = None
 
         current_user_email = self.get_current_user().email
         response['current_user_email'] = current_user_email
