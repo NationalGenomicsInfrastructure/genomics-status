@@ -34,20 +34,18 @@ class PricingBaseHandler(SafeHandler):
 
     # _____________________________ FETCH METHODS _____________________________
 
-    def fetch_doc_version(self, version, db):
-        rows = db.view('entire_document/published_by_version', descending=True, key=version, limit=1).rows
+    def fetch_published_doc_version(self, version=None):
+        db = self.application.cost_calculator_db
+        if version is not None:
+            rows = db.view('entire_document/published_by_version', descending=True, key=version, limit=1).rows
+        else:
+            rows = db.view('entire_document/published_by_version', descending=True, limit=1).rows
         doc = rows[0].value
         return doc
 
     def fetch_latest_doc(self):
         db = self.application.cost_calculator_db
         curr_rows = db.view('entire_document/by_version', descending=True, limit=1).rows
-        curr_doc = curr_rows[0].value
-        return curr_doc
-
-    def fetch_latest_published(self):
-        db = self.application.cost_calculator_db
-        curr_rows = db.view('entire_document/published_by_version', descending=True, limit=1).rows
         curr_doc = curr_rows[0].value
         return curr_doc
 
@@ -314,7 +312,7 @@ class PricingValidateDraftDataHandler(PricingBaseHandler):
 
     def post(self):
         draft_content = tornado.escape.json_decode(self.request.body)
-        published_doc = self.fetch_latest_published()
+        published_doc = self.fetch_published_doc_version()
 
         validator = PricingValidator(draft_content, published_doc)
         validator.validate()
@@ -502,10 +500,7 @@ class PricingDataHandler(PricingBaseHandler):
         version = self.get_argument('version', None)
         cc_db = self.application.cost_calculator_db
 
-        if version is None:
-            doc = self.fetch_latest_published()
-        else:
-            doc = self.fetch_doc_version(version, cc_db)
+        doc = self.fetch_published_doc_version(version)
 
         response = dict()
         response['cost_calculator'] = doc
