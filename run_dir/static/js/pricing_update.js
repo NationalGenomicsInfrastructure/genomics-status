@@ -286,21 +286,21 @@ app.component('v-product-form-part', {
               </fieldset>
               <label class="form-label col-md-3">
                 Category
-                <input class="form-control" :list="'categoryOptions' + product_id" v-model.text="product['Category']" type="text">
+                <input class="form-control" :list="'categoryOptions' + product_id" v-model.text="product['Category']" type="text" :disabled="discontinued">
                 <datalist :id="'categoryOptions' + product_id">
                   <option v-for="category in categories">{{category}}</option>
                 </datalist>
               </label>
               <label class="form-label col-md-2">
                 Product Type
-                <input class="form-control" :list="'typeOptions' + product_id" v-model.text="product['Type']" type="text">
+                <input class="form-control" :list="'typeOptions' + product_id" v-model.text="product['Type']" type="text" :disabled="discontinued">
                 <datalist :id="'typeOptions' + product_id">
                   <option v-for="type in types">{{type}}</option>
                 </datalist>
               </label>
               <label class="form-label col-md-6">
                 Product Name
-                <input class="form-control" v-model.text="product['Name']" type="text">
+                <input class="form-control" v-model.text="product['Name']" type="text" :disabled="discontinued">
               </label>
             </div>
             <div class="row align-items-top my-2">
@@ -316,16 +316,16 @@ app.component('v-product-form-part', {
             <div class="row my-1">
               <label class="form-label col-md-2">
                 Full Cost Fee
-                <input class="form-control" v-model.text="product['Full cost fee']" type="text">
+                <input class="form-control" v-model.text="product['Full cost fee']" type="text" :disabled="discontinued">
               </label>
 
               <label class="form-label col-md-2">
                 Rerun Fee
-                <input class="form-control" v-model.text="product['Re-run fee']" type="text">
+                <input class="form-control" v-model.text="product['Re-run fee']" type="text" :disabled="discontinued">
               </label>
 
               <div class="form-check form-switch col-md-2 mt-3 pl-5">
-                <input class="form-check-input" @click="makeFixedPriceDict" type="checkbox" v-model="product['is_fixed_price']"/>
+                <input class="form-check-input" @click="makeFixedPriceDict" type="checkbox" v-model="product['is_fixed_price']" :disabled="discontinued"/>
                 <label class="form-check-label">
                   Fixed Price
                 </label>
@@ -333,23 +333,23 @@ app.component('v-product-form-part', {
 
               <label class="form-label col-md-4">
                 Comment
-                <input class="form-control" v-model.text="product['Comment']" type="text">
+                <input class="form-control" v-model.text="product['Comment']" type="text" :disabled="discontinued">
               </label>
             </div>
             <div v-if="this.isFixedPrice" class="row">
               <h5>Fixed Price (SEK)</h5>
               <label class="form-label col-md-2">
                 Internal
-                <input class="form-control" v-model.text="product['fixed_price']['price_in_sek']" type="text">
+                <input class="form-control" v-model.text="product['fixed_price']['price_in_sek']" type="text" :disabled="discontinued">
               </label>
 
               <label class="form-label col-md-2">
                 Swedish Academia
-                <input class="form-control" v-model.text="product['fixed_price']['price_for_academics_in_sek']" type="text">
+                <input class="form-control" v-model.text="product['fixed_price']['price_for_academics_in_sek']" type="text" :disabled="discontinued">
               </label>
               <label class="form-label col-md-2">
                 Full Cost
-                <input class="form-control" v-model.text="product['fixed_price']['full_cost_in_sek']" type="text">
+                <input class="form-control" v-model.text="product['fixed_price']['full_cost_in_sek']" type="text" :disabled="discontinued">
               </label>
             </div>
           </div>
@@ -493,64 +493,67 @@ app.component('v-component-form-part', {
                   </fieldset>
                   <label class="form-label col-md-3">
                     Category
-                    <input class="form-control" :list="'compCategoryOptions' + component_id" v-model.text="component['Category']" type="text">
+                    <input class="form-control" :list="'compCategoryOptions' + component_id" v-model.text="component['Category']" type="text" :disabled="discontinued">
                     <datalist :id="'compCategoryOptions' + component_id">
                       <option v-for="category in categories">{{category}}</option>
                     </datalist>
                   </label>
                   <label class="form-label col-md-2">
                     Product Type
-                    <input class="form-control" :list="'compTypeOptions' + component_id" v-model.text="component['Type']" type="text">
+                    <input class="form-control" :list="'compTypeOptions' + component_id" v-model.text="component['Type']" type="text" :disabled="discontinued">
                     <datalist :id="'compTypeOptions' + component_id">
                       <option v-for="type in types">{{type}}</option>
                     </datalist>
                   </label>
                   <label class="form-label col-md-6">
                     Component Name
-                    <input class="form-control" v-model.text="component['Product name']" type="text">
+                    <input class="form-control" v-model.text="component['Product name']" type="text" :disabled="discontinued">
                   </label>
                 </div>
                 <div class="row my-1">
                   <label class="form-label col-md-2">
                     Manufacturer
-                    <input class="form-control" v-model.text="component['Manufacturer']" type="text">
+                    <input class="form-control" v-model.text="component['Manufacturer']" type="text" :disabled="discontinued">
                   </label>
 
                   <label class="form-label col-md-2">
                     Re-seller
-                    <input class="form-control" v-model.text="component['Re-seller']" type="text">
+                    <input class="form-control" v-model.text="component['Re-seller']" type="text" :disabled="discontinued">
                   </label>
 
                   <label class="form-label col-md-6">
                     Product #
-                    <input class="form-control" v-model.text="component['Product #']" type="text">
+                    <input class="form-control" v-model.text="component['Product #']" type="text" :disabled="discontinued">
                   </label>
 
                   <label class="form-label col-md-2">
                     Units
-                    <input class="form-control" v-model.text="component['Units']" type="text">
+                    <input class="form-control" v-model.text="component['Units']" type="text" :disabled="discontinued">
                   </label>
 
                 </div>
                 <div class="row my-1">
                   <label class="form-label col-md-2">
                     Discount
-                    <input class="form-control" v-model.text="component['Discount']" type="text">
+                    <input class="form-control" v-model.text="component['Discount']" type="text" :disabled="discontinued">
                   </label>
 
                   <label class="form-label col-md-2">
                     List Price
-                    <input class="form-control" v-model.text="component['List price']" type="text">
+                    <input class="form-control" v-model.text="component['List price']" type="text" :disabled="discontinued">
                   </label>
 
                   <label class="form-label col-md-2">
                     Currency
-                    <input class="form-control" v-model.text="component['Currency']" type="text">
+                    <select class="form-select" list="currencyList" v-model.text="component['Currency']" type="text" :disabled="discontinued">
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="SEK">SEK</option>
                   </label>
 
                   <label class="form-label col-md-6">
                     Comment
-                    <input class="form-control" v-model.text="component['Comment']" type="text">
+                    <input class="form-control" v-model.text="component['Comment']" type="text" :disabled="discontinued">
                   </label>
                 </div>
               </div>
@@ -629,7 +632,7 @@ app.component('v-modal-component', {
                       </thead>
                       <tbody>
                         <template v-for="(component_data, comp_id) in components" :key="comp_id">
-                          <component-table-row :product_id="this.$root.modal_product_id" :type="this.$root.modal_type" :added="true" :component_data="component_data" :component_id="comp_id"></component-table-row>
+                          <v-component-table-row :product_id="this.$root.modal_product_id" :type="this.$root.modal_type" :added="true" :component_data="component_data" :component_id="comp_id"/>
                         </template>
                       </tbody>
                     </table>
@@ -649,7 +652,7 @@ app.component('v-modal-component', {
                       <tbody>
                         <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
                           <template v-if="component['Status'] != 'Discontinued'">
-                            <component-table-row :product_id="this.$root.modal_product_id" :type="this.$root.modal_type" :added="false" :component_data="component" :component_id="component['REF_ID']"></component-table-row>
+                            <v-component-table-row :product_id="this.$root.modal_product_id" :type="this.$root.modal_type" :added="false" :component_data="component" :component_id="component['REF_ID']"/>
                           </template>
                         </template>
                       </tbody>
@@ -668,6 +671,9 @@ app.component('v-components-for-product', {
     computed: {
         product() {
             return this.$parent.product
+        },
+        discontinued() {
+            return (this.product['Status'] == 'Discontinued')
         },
         element_id() {
             if (this.type == 'Alternative') {
@@ -702,7 +708,7 @@ app.component('v-components-for-product', {
               <fieldset disabled>
                 <input class="form-control" :id="element_id" type="text" :value="componentIds">
               </fieldset>
-              <button type="button" class="btn btn-primary edit-components" @click="this.showModalFn" :data-product-id="product_id" :data-type="type">Edit</button>
+              <button type="button" class="btn btn-primary edit-components" @click="this.showModalFn" :data-product-id="product_id" :data-type="type" :disabled="discontinued">Edit</button>
             </div>
             <table v-if="Object.entries(components).length" class="table table-sm table-hover">
               <thead>
@@ -715,7 +721,7 @@ app.component('v-components-for-product', {
               </thead>
               <tbody>
                 <template v-for="(component_data, comp_id) in components" :key="comp_id">
-                  <v-component-table-row :product_id="product['REF_ID']" :type="type" :added="true" :component_data="component_data" :component_id="comp_id"></component-table-row>
+                  <v-component-table-row :product_id="product['REF_ID']" :type="type" :added="true" :component_data="component_data" :component_id="comp_id"/>
                 </template>
               </tbody>
             </table>
@@ -736,6 +742,12 @@ app.component('v-component-table-row', {
                 var component = this.component_data
             }
             return component
+        },
+        product() {
+            return this.$parent.product
+        },
+        discontinued() {
+            return (this.product['Status'] == 'Discontinued')
         },
         tooltip_html() {
             component = this.component
@@ -798,19 +810,13 @@ app.component('v-component-table-row', {
         <td>{{component['Product name']}}</td>
         <td v-if="added">
           <!-- I was for some reason unable to solve this with regular v-model... -->
-          <input class="form-control" type="number" min=1 :value="component_data['quantity']" @input="updateQuantity($event.target.value)"/>
+          <input class="form-control" type="number" min=1 :value="component_data['quantity']" @input="updateQuantity($event.target.value)" :disabled="discontinued"/>
         </td>
         <td class="pl-3 pt-2" v-if="added">
-          <a class="mr-2" href="#" @click="this.removeComponent">
+          <button class="btn mr-2" href="#" @click="this.removeComponent" :disabled="discontinued">
             <i class="far fa-times-square fa-lg text-danger"></i>
-          </a>
+          </button>
         </td>
-        <td class="pl-3 pt-2" v-if="!added">
-          <a class="mr-2" href="#" @click="this.addComponent">
-            <i class="far fa-plus-square fa-lg text-success"></i>
-          </a>
-        </td>
-
       </tr>
       `
 })
