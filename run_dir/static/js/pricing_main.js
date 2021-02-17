@@ -490,7 +490,7 @@ app.component('v-exchange-rates', {
                 <p>Latest date exchange rates: <input id="datepicker" type='date' v-model="issued_at_form_bound" data-date-format="yyyy-mm-dd"></p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button id='datepicker-btn' type="button" class="btn btn-primary" @click="reload_exch_rates" data-dismiss="modal">Apply Exchange Rates</button>
               </div>
             </div>
