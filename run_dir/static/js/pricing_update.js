@@ -237,9 +237,17 @@ app.component('v-product-form-part', {
         },
         enableProduct() {
             this.$root.enableProduct(this.product_id)
+            this.$nextTick(function() {
+                // Scroll to the new product
+                window.location.href = '#'
+                window.location.href = '#product_form_part_' + this.product_id;
+            })
         },
         cloneProduct() {
             new_id = this.$root.cloneProduct(this.product_id)
+            if (this.discontinued) {
+                this.$root.enableProduct(new_id)
+            }
             this.$nextTick(function() {
                 // Scroll to the new product
                 window.location.href = '#'
@@ -450,12 +458,20 @@ app.component('v-component-form-part', {
     methods: {
         enableComponent() {
             this.$root.enableComponent(this.component_id)
+            this.$nextTick(function() {
+                // Scroll to the new product
+                window.location.href = '#'
+                window.location.href = '#component_form_part_' + this.component_id;
+            })
         },
         discontinueComponent() {
             this.$root.discontinueComponent(this.component_id)
         },
         cloneComponent() {
             new_id = this.$root.cloneComponent(this.component_id)
+            if (this.discontinued) {
+                this.$root.enableComponent(new_id)
+            }
             this.$nextTick(function() {
                 // Scroll to the new product
                 window.location.href = '#'
