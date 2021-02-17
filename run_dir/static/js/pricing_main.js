@@ -76,7 +76,6 @@ const vPricingMain = {
         product_categories() {
             categories = new Set();
             for ([prod_id, product] of Object.entries(this.all_products)) {
-                cat = product['Category']
                 if (! (product['Status'] == 'Discontinued')) {
                     categories.add(product['Category'])
                 }
@@ -86,7 +85,6 @@ const vPricingMain = {
         product_types() {
             types = new Set();
             for ([prod_id, product] of Object.entries(this.all_products)) {
-                cat = product['Type']
                 if (! (product['Status'] == 'Discontinued')) {
                     types.add(product['Type'])
                 }
@@ -122,7 +120,6 @@ const vPricingMain = {
         component_categories() {
             categories = new Set();
             for ([comp_id, component] of Object.entries(this.all_components)) {
-                cat = component['Category']
                 if (! (component['Status'] == 'Discontinued')) {
                     categories.add(component['Category'])
                 }
@@ -132,7 +129,6 @@ const vPricingMain = {
         component_types() {
             types = new Set();
             for ([comp_id, component] of Object.entries(this.all_components)) {
-                cat = component['Type']
                 if (! (component['Status'] == 'Discontinued')) {
                     types.add(component['Type'])
                 }
