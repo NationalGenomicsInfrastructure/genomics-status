@@ -128,10 +128,7 @@ class PricingExchangeRatesDataHandler(PricingBaseHandler):
     def get(self):
         date = self.get_argument('date', None)
 
-        if date is not None:
-            result = self._fetch_exchange_rates(date)
-        else:
-            result = self._fetch_exchange_rates(None)
+        result = self._fetch_exchange_rates(date)
 
         self.write(json.dumps(result))
 
