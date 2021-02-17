@@ -84,15 +84,18 @@ app.component('v-pricing-quote', {
           </template>
           <div class="row">
             <div class="col-5 quote_lcol_header">
-              <div class="radio" id="price_type_selector">
-                <label class="radio-inline py-2 pr-2">
-                  <input type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" checked> Swedish academia
+              <div class="form-radio" id="price_type_selector">
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac">
+                <label class="form-check-label pl-1 pr-3" for="price_type_sweac">
+                  Swedish academia
                 </label>
-                <label class="radio-inline p-2">
-                  <input type="radio" name="price_type" v-model="this.$root.price_type" value="full_cost"> Industry and non-Swedish academia
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="full_cost" id="price_type_industry">
+                <label class="form-check-label pl-1 pr-3" for="price_type_industry">
+                  Industry and non-Swedish academia
                 </label>
-                <label class="radio-inline p-2">
-                  <input type="radio" name="price_type" v-model="this.$root.price_type" value="cost"> Internal
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost" id="price_type_internal">
+                <label class="form-check-label pl-1 pr-3" for="price_type_internal">
+                  Internal
                 </label>
               </div>
               <div class="row">
