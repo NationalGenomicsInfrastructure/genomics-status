@@ -9,13 +9,13 @@ $(function(){
 function refresh_plot(){
     var params = get_parameters();
     if (window.current_plot_data == null){
-        get_plot_data(key=params[0], name=params[1], view_type=params[2], search_string=params[3], inst_type_filter=params[4]); 
+        get_plot_data(key=params[0], name=params[1], view_type=params[2], search_string=params[3], inst_type_filter=params[4]);
     }else{
         make_plot(key=params[0], name=params[1], view_type=params[2], inst_type_filter=params[4]);
     }
 }
 
-function make_plot(key, name, view_type, filter_inst_type){ 
+function make_plot(key, name, view_type, filter_inst_type){
     var toplot = {
         chart: {
             type: 'line',
@@ -36,7 +36,7 @@ function make_plot(key, name, view_type, filter_inst_type){
                     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
                     const i = Math.floor(Math.log(sum) / Math.log(k));
                     var c_sum = parseFloat((sum / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-                this.setTitle({text: "File size of projects, sum in bytes: " + c_sum}, false, false) 
+                this.setTitle({text: "File size of projects, sum in bytes: " + c_sum}, false, false)
                 }
             }
         },
@@ -76,9 +76,9 @@ function make_plot(key, name, view_type, filter_inst_type){
             enabled : false
         },
         xAxis: {
-            type: 'datetime',
+            type: 'category',
             title : {
-              text : 'Date delivered'
+              text : 'Close Date'
             },
             labels: {
                enabled: false
@@ -94,98 +94,97 @@ function make_plot(key, name, view_type, filter_inst_type){
             itemDelimiter: ';'
           }
         }
-    }; 
+    };
     serie = build_series(window.current_plot_data, key, name, view_type, filter_inst_type);
     toplot.series = serie[1];
     toplot.xAxis.categories = serie[0];
     $("#main_plot").highcharts(toplot);
-    window.current_plot_obj = toplot; 
+    window.current_plot_obj = toplot;
 }
 
 function build_series(data, key, name, view_type, filter_inst_type){
     var series = [];
-    var bioinfo_link="/bioinfo";
     var view_color = "";
     var series_name = "";
     var categories = [];
     for (d in data){
-        var bioinfo_link="/bioinfo/"+d; 
-        var project_name = data[d].project_name;
-        var date_del = data[d].delivered;
-        if (data[d].platform == null){
+        var bioinfo_link="/bioinfo/"+data[d][0];
+        var project_name = data[d][1].project_name;
+        var date_close = data[d][1].close_date;
+        if (data[d][1].sequencing_platform == null){
             continue;
-        }else if (data[d].platform.includes('NovaSeq') && filter_inst_type.includes('NovaSeq')){
+        }else if (data[d][1].sequencing_platform.includes('NovaSeq') && filter_inst_type.includes('NovaSeq')){
             continue;
-        }else if (data[d].platform.includes('MiSeq') && filter_inst_type.includes('MiSeq')){
+        }else if (data[d][1].sequencing_platform.includes('MiSeq') && filter_inst_type.includes('MiSeq')){
             continue;
-        }else if (data[d].platform.includes('NextSeq') && filter_inst_type.includes('NextSeq')){
+        }else if (data[d][1].sequencing_platform.includes('NextSeq') && filter_inst_type.includes('NextSeq')){
             continue;
-        }else if (data[d].platform.includes('HiSeq') && filter_inst_type.includes('HiSeq')){
+        }else if (data[d][1].sequencing_platform.includes('HiSeq') && filter_inst_type.includes('HiSeq')){
             continue;
         }  
-        if (view_type == 'platform'){
-            if (data[d].platform.includes('NovaSeq')){
+        if (view_type == 'sequencing_platform'){
+            if (data[d][1].sequencing_platform.includes('NovaSeq')){
                 series_name = "NovaSeq";
-            }else if (data[d].platform.includes('MiSeq')){
+            }else if (data[d][1].sequencing_platform.includes('MiSeq')){
                 series_name = "MiSeq";
-            }else if (data[d].platform.includes('NextSeq')){
+            }else if (data[d][1].sequencing_platform.includes('NextSeq')){
                 series_name = "NextSeq";
             }else{
                 series_name = "HiSeq";
             }
             view_color = view_coloring(series_name);
-        }else if (view_type == 'app'){
-            if (data[d].app.includes('RNA')){
+        }else if (view_type == 'application'){
+            if (data[d][1].application.includes('RNA')){
                 series_name = "RNA-Seq";
-            }else if (data[d].app.includes('WG')){
+            }else if (data[d][1].application.includes('WG')){
                 series_name = "WG-reseq"; 
-            }else if (data[d].app.includes('Target')){
+            }else if (data[d][1].application.includes('Target')){
                 series_name = "Target-reseq"; 
-            }else if (data[d].app.includes('Metagenomics')){
+            }else if (data[d][1].application.includes('Metagenomics')){
                 series_name = "Metagenomics";
-            }else if (data[d].app.includes('novo')){
+            }else if (data[d][1].application.includes('novo')){
                 series_name = "de novo";
-            }else if (data[d].app.includes('Epigenetics')){
+            }else if (data[d][1].application.includes('Epigenetics')){
                 series_name = "Epigenetics";
             }else{
                 series_name = "Other/undefined";
             }
             view_color = view_coloring(series_name);
-        }else if (view_type == 'typ'){
-            if (data[d].typ == null){
+        }else if (view_type == 'type'){
+            if (data[d][1].type == null){
                 series_name = "Other/undefined";
             }else{
-                series_name = data[d].typ;
+                series_name = data[d][1].type;
             }
             view_color = view_coloring(series_name);
-        }else if (view_type == 'delivery'){
-            if (data[d].delivery == null){
+        }else if (view_type == 'delivery_type'){
+            if (data[d][1].delivery_type == null){
                 series_name = "Other/undefined";
             }else{
-                series_name = data[d].delivery;
+                series_name = data[d][1].delivery_type;
             }
             view_color = view_coloring(series_name);
-        }else if (view_type == 'sample'){
-            if (data[d].sample.includes('Finished')){
+        }else if (view_type == 'sample_type'){
+            if (data[d][1].sample_type.includes('Finished')){
                 series_name = "Finished Library";
-            }else if (data[d].sample.includes('total')){
+            }else if (data[d][1].sample_type.includes('total')){
                 series_name = "total RNA";
-            }else if (data[d].sample.includes('Tissue')){
+            }else if (data[d][1].sample_type.includes('Tissue')){
                 series_name = "Tissue";
-            }else if (data[d].sample.includes('Genomic')){
+            }else if (data[d][1].sample_type.includes('Genomic')){
                 series_name = "Genomic DNA";
-            }else if (data[d].sample.includes('Amplicon')){
+            }else if (data[d][1].sample_type.includes('Amplicon')){
                 series_name = "Amplicon";
             }else{
                 series_name = "Other/undefined";
             }
             view_color = view_coloring(series_name);
-        }else if (view_type == 'bp'){
-            if (data[d].bp == 'Yes'){
+        }else if (view_type == 'best_practice_bioinformatics'){
+            if (data[d][1].best_practice_bioinformatics == 'Yes'){
                 series_name = "BP bioinformatics";
-            }else if (data[d].bp == 'No'){
-                series_name = "No BP";
-            }else if (data[d].bp == 'Special'){
+            }else if (data[d][1].best_practice_bioinformatics == 'No'){
+                series_name = "No BP bioinformatics";
+            }else if (data[d][1].best_practice_bioinformatics == 'Special'){
                 series_name = "Special";
             }else{
                 series_name = "Other/undefined";
@@ -199,20 +198,20 @@ function build_series(data, key, name, view_type, filter_inst_type){
                 color: view_color,
                 data: [],
             };
-            series.length += 1; 
-        }else{ 
-            dp = {
-                y: data[d][key],
-                name: project_name + ': ' + "<i>" + date_del + "</i>",
-                ownURL: bioinfo_link
-            };
-            series[series_name].data.push(dp);
-            categories.push(date_del);
-      }
-      var proper_series = []
-      for (s in series) {
-          proper_series.push(series[s]);
-      }
+            series.length += 1;
+        }
+        dp = {
+            y: data[d][1][key],
+            name: project_name + ': ' + "<i>" + date_close + "</i>",
+            ownURL: bioinfo_link
+        };
+        series[series_name].data.push(dp);
+        categories.push(date_close);
+        // Hackery to get a proper JS array for HCharts
+        var proper_series = []
+        for (s in series) {
+            proper_series.push(series[s]);
+        }
     }
   return [categories, proper_series];
 }
@@ -238,7 +237,7 @@ function view_coloring(series_name){
         case "WG-reseq":
         case "Application":
         case "total RNA":
-        case "No BP":
+        case "No BP bioinformatics":
             return current_color_schemes[1].hex();
         case "NextSeq":
         case "GRUS":
@@ -280,12 +279,12 @@ function get_parameters(){
        second_half = dp;
     }else{
        second_date=new Date();
-       second_half=second_date.toISOString() + second_date.toISOString().substr(5,2) + second_date.toISOString().substr(8,2); 
+       second_half=second_date.toISOString() + second_date.toISOString().substr(5,2) + second_date.toISOString().substr(8,2);
     }
     search_string = first_half + '--' + second_half;
-    
+
     //The key could also be set as a variable.
-    key = 'filesize';
+    key = 'filesize_in_bytes';
     name = 'File size';
     var view_type = $("#view_select option:selected").val();
     var inst_type_filter=[];
@@ -294,7 +293,7 @@ function get_parameters(){
             inst_type_filter.push($(this).val());
         }
     });
-    
+
     var types = [key, name, view_type, search_string, inst_type_filter];
     return types;
  }
