@@ -666,7 +666,8 @@ app.component('v-product-table-row', {
         }
     },
     methods: {
-        add_to_quote() {
+        add_to_quote(event) {
+            event.preventDefault();
             if (!(this.product_id in this.$root.quote_prod_ids)) {
                 this.$root.quote_prod_ids[this.product_id] = 0
             }
