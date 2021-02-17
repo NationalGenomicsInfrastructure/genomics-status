@@ -100,7 +100,7 @@ app.component('v-pricing-update', {
                 <nav id="pricing_update_sidebar" class="nav sidebar sticky-top">
                   <div class="position-sticky">
                     <nav class="nav nav-pills flex-column border-bottom">
-                      <a class="nav-link" href="#pricing_product_form_content">Top of the page</a>
+                      <a class="nav-link my-1" href="#pricing_product_form_content">Top of the page</a>
                       <nav class="nav nav-pills flex-column">
                         <a class="nav-link ml-3 my-0 py-1" href="#changes_list">Changes</a>
                         <template v-if="!this.$root.no_validation_messages">
