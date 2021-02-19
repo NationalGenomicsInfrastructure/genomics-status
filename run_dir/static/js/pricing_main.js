@@ -228,11 +228,21 @@ const vPricingMain = {
             product[key][component_id] = {'quantity': 1}
         },
         removeProductComponent(product_id, component_id, type) {
+            reset_empty = function(components_object) {
+                /* Reset empty object to the default value (empty string)*/
+                if (Object.keys(components_object).length == 0) {
+                    return "";
+                } else {
+                    return components_object;
+                }
+            }
             var product = this.all_products[product_id]
             if (type == 'Alternative') {
                 delete product['Alternative Components'][component_id]
+                product['Alternative Components'] = reset_empty(product['Alternative Components'])
             } else {
                 delete product['Components'][component_id]
+                product['Components'] = reset_empty(product['Components'])
             }
         },
         cloneComponent(comp_id) {
