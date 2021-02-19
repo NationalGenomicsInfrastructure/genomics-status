@@ -561,10 +561,11 @@ app.component('v-component-form-part', {
 
                   <label class="form-label col-md-2">
                     Currency
-                    <select class="form-select" list="currencyList" v-model.text="component['Currency']" type="text" :disabled="discontinued">
+                    <select class="form-select" list="currencyList" v-model.select="component['Currency']" :disabled="discontinued">
                       <option value="USD">USD</option>
                       <option value="EUR">EUR</option>
                       <option value="SEK">SEK</option>
+                    </select>
                   </label>
 
                   <label class="form-label col-md-6">
