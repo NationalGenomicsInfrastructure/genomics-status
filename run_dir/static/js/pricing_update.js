@@ -799,6 +799,7 @@ app.component('v-component-table-row', {
           }
       },
       addComponent(event) {
+          event.preventDefault()
           if (event) {
               this.$root.addProductComponent(this.product_id, this.component_id, this.type)
           }
@@ -807,6 +808,7 @@ app.component('v-component-table-row', {
           /* This took me some time to figure out - the problem is that the bootstrap tooltip would
           remain open forever if it's not actively removed like this */
           if (event) {
+              event.preventDefault()
               tooltip = bootstrap.Tooltip.getInstance(this.$el)
               tooltip_el = this.$el
               that = this
@@ -831,6 +833,11 @@ app.component('v-component-table-row', {
         <td class="pl-3 pt-2" v-if="added">
           <button class="btn mr-2" href="#" @click="this.removeComponent" :disabled="discontinued">
             <i class="far fa-times-square fa-lg text-danger"></i>
+          </button>
+        </td>
+        <td class="pl-3 pt-2" v-else>
+          <button class="btn mr-2" href="#" @click="this.addComponent" :disabled="discontinued">
+            <i class="far fa-plus-square fa-lg text-success"></i>
           </button>
         </td>
       </tr>
