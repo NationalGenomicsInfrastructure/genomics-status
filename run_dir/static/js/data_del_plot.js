@@ -20,13 +20,13 @@ function make_plot(key, name, view_type, filter_inst_type){
         chart: {
             type: 'line',
             events: {
-                render: function() {
+                render: function(){
                     let series = this.series
                     let sum = 0
-                    for(let i = 0; i < series.length; i++) {
-                        if(series[i].visible){
-                        for(let j = 0; j < series[i].data.length; j++) {
-                            sum += series[i].data[j].y
+                    for (let i = 0; i < series.length; i++){
+                        if (series[i].visible){
+                            for (let j = 0; j < series[i].data.length; j++){
+                                sum += series[i].data[j].y
                             }
                         }
                     }
@@ -73,21 +73,21 @@ function make_plot(key, name, view_type, filter_inst_type){
             pointFormat: '{series.name} : <b>{point.y}</b>'
         },
         credits: {
-            enabled : false
+            enabled: false
         },
         xAxis: {
             type: 'category',
-            title : {
-              text : 'Close Date'
-            },
             labels: {
-               enabled: false
+                enabled: false,
+            },
+            title : {
+                text : 'Close Date'
             },
             categories: []
         },
         series: [{
             name : name,
-            data:[]
+            data: []
         }],
         exporting: {
           csv: {
@@ -193,7 +193,6 @@ function build_series(data, key, name, view_type, filter_inst_type){
             }
         if (!series.hasOwnProperty(series_name)){
             series[series_name] = {
-                step: true,
                 name: series_name,
                 color: view_color,
                 data: [],
@@ -202,7 +201,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
         }
         dp = {
             y: data[d][1][key],
-            name: project_name + ': ' + "<i>" + date_close + "</i>",
+            name: date_close,
             ownURL: bioinfo_link
         };
         series[series_name].data.push(dp);
