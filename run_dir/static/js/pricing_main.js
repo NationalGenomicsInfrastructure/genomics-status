@@ -102,6 +102,7 @@ const vPricingMain = {
         },
         all_components_per_category() {
             comp_per_cat = {};
+
             for ([comp_id, component] of Object.entries(this.all_components)) {
                 if ( this.new_components.has(comp_id) ) {
                     cat = "New components"
@@ -110,21 +111,46 @@ const vPricingMain = {
                 }
                 if (! (component['Status'] == 'Discontinued')) {
                     if (! (cat in comp_per_cat)) {
-                        comp_per_cat[cat] = {}
+                        comp_per_cat[cat] = [];
                     }
-                    comp_per_cat[cat][component['REF_ID']] = component
+                    comp_per_cat[cat].push(component)
                 }
             }
+
+            // Sort components on name within each category
+            sortFun = (firstComp, secondComp) => {
+                if (firstComp['Product name'] < secondComp['Product name']) {
+                    return -1;
+                } else if (firstComp['Product name'] > secondComp['Product name']) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+
+            for (category in comp_per_cat) {
+                sorted_components = comp_per_cat[category].sort(sortFun)
+                comp_per_cat[category] = sorted_components
+            }
+
             return comp_per_cat
         },
         component_categories() {
             categories = new Set();
+            add_new_at_end = false;
             for ([comp_id, component] of Object.entries(this.all_components)) {
                 if (! (component['Status'] == 'Discontinued')) {
+                    if ( this.new_components.has(comp_id) ) {
+                        add_new_at_end = true;
+                    }
                     categories.add(component['Category'])
                 }
             }
-            return categories
+            categories_array = Array.from(categories).sort()
+            if (add_new_at_end) {
+                categories_array.push('New components')
+            }
+            return categories_array
         },
         component_types() {
             types = new Set();
