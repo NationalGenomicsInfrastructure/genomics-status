@@ -328,6 +328,9 @@ const vPricingMain = {
                     case 'Status':
                         new_component[key] = 'Available'
                         break;
+                    case 'Currency':
+                        new_component[key] = 'SEK'
+                        break;
                     default:
                         new_component[key] = ''
                 }

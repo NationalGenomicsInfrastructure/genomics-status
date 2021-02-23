@@ -409,13 +409,27 @@ app.component('v-form-validation-tooltip', {
     /* handles the warning triangle on individual product headers which can display a
      * list of validation errors for that specific product
      */
-    props: ['product_id'],
+    props: ['product_id', 'component_id'],
     computed: {
+        id_defined() {
+            if (this.component_id === undefined) {
+                return this.product_id
+            } else {
+                return this.component_id
+            }
+        },
+        type() {
+            if (this.component_id === undefined) {
+                return 'products'
+            } else {
+                return 'components'
+            }
+        },
         validation_msgs() {
-            if (this.product_id in this.$root.validation_msgs['products']) {
+            if (this.id_defined in this.$root.validation_msgs[this.type]) {
                 return_msg = ''
-                for (msg_type in this.$root.validation_msgs['products'][this.product_id]) {
-                    validation_msgs = this.$root.validation_msgs['products'][this.product_id][msg_type]
+                for (msg_type in this.$root.validation_msgs[this.type][this.id_defined]) {
+                    validation_msgs = this.$root.validation_msgs[this.type][this.id_defined][msg_type]
                     for (msg_index in validation_msgs) {
                         msg = '<p class="fs-5 pricing-normal-width-tooltip">' + validation_msgs[msg_index] + '</p>'
                         return_msg += msg
@@ -446,7 +460,7 @@ app.component('v-form-validation-tooltip', {
     },
     template:  /*html*/`
         <h3 class="my-0 text-danger" data-toggle="tooltip" data-customClass="pricing-normal-width-tooltip" data-placement="top" :title="validation_msgs" data-html=true>
-          <i class="fas fa-exclamation-triangle" :data-id="product_id"></i>
+          <i class="fas fa-exclamation-triangle"></i>
         </h3>`
     })
 
@@ -471,6 +485,16 @@ app.component('v-component-form-part', {
         },
         cost() {
             return this.$root.componentCost(this.component_id)
+        },
+        validation_msgs() {
+            if (this.component_id in this.$root.validation_msgs['components']) {
+                return this.$root.validation_msgs['components'][this.component_id]
+            } else {
+                return null
+            }
+        },
+        is_invalid() {
+            return (this.validation_msgs !== null)
         }
     },
     methods: {
@@ -509,9 +533,14 @@ app.component('v-component-form-part', {
       <div :id="'component_form_part_' + component_id" class="my-3 link-target-offset" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="card-header">
           <div class="row">
-            <a class="pricing_collapse_link" data-toggle="collapse" :data-target="'#collapseComponent' + component_id" role="button" aria-expanded="false" :aria-controls="'collapseComponent' + component_id">
+            <a class="pricing_collapse_link col-auto mr-auto" :class="{'text-danger': is_invalid}" data-toggle="collapse" :data-target="'#collapseComponent' + component_id" role="button" aria-expanded="false" :aria-controls="'collapseComponent' + component_id">
               <h5 :class="{'text-danger': discontinued, 'my-1': true}"> {{ component['Product name'] }} {{ discontinued ? ' - Discontinued' : '' }} <i class="fas fa-caret-down fa-lg pl-1"></i></h5>
             </a>
+            <span class="col-1" v-if="is_invalid">
+              <div class="d-flex justify-content-end">
+                <v-form-validation-tooltip :component_id="component_id"/>
+              </div>
+            </span>
           </div>
         </div>
         <div :id="'collapseComponent' + component_id"  class="collapse card-body">
