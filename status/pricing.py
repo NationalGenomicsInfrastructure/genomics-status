@@ -334,7 +334,11 @@ class PricingReassignLockDataHandler(PricingBaseHandler):
             self.set_status(400)
             return self.write("Error: Attempting to update a non-draft cost calculator.")
 
-        user_email = self.get_current_user().email
+        current_user = self.get_current_user()
+        if not current_user.is_pricing_admin:
+            self.set_status(400)
+            return self.write("Error: Cannot reassign lock to non-pricing admin.")
+        user_email = current_user.email
 
         lock_info = {'Locked': True,
                      'Locked by': user_email}
@@ -381,13 +385,17 @@ class PricingDraftDataHandler(PricingBaseHandler):
             self.set_status(400)
             return self.write("Error: A draft already exists. There can only be one.")
 
+        current_user = self.get_current_user()
+        if not current_user.is_pricing_admin:
+            self.set_status(400)
+            return self.write("Error: Non-pricing admin cannot create a new draft.")
+        current_user_email = current_user.email
+
         # Create a new draft
         doc = latest_doc.copy()
         del doc['_id']
         del doc['_rev']
         version = latest_doc['Version'] + 1
-
-        current_user_email = self.get_current_user().email
 
         lock_info = {'Locked': True,
                      'Locked by': current_user_email}
@@ -432,7 +440,11 @@ class PricingDraftDataHandler(PricingBaseHandler):
             self.set_status(400)
             return self.write("Error: Attempting to update a non-draft cost calculator.")
 
-        user_email = self.get_current_user().email
+        current_user = self.get_current_user()
+        if not current_user.is_pricing_admin:
+            self.set_status(400)
+            return self.write("Error: Non-pricing admin cannot update draft cost calculator.")
+        user_email = current_user.email
 
         lock_info = latest_doc['Lock Info']
         if lock_info['Locked']:
@@ -470,7 +482,11 @@ class PricingDraftDataHandler(PricingBaseHandler):
             self.set_status(400)
             return self.write("Error: There is no draft cost calculator that can be deleted.")
 
-        user_email = self.get_current_user().email
+        current_user = self.get_current_user()
+        if not current_user.is_pricing_admin:
+            self.set_status(400)
+            return self.write("Error: Non-pricing admin cannot delete draft cost calculator.")
+        user_email = current_user.email
 
         lock_info = latest_doc['Lock Info']
         if lock_info['Locked']:
@@ -494,7 +510,6 @@ class PricingDataHandler(PricingBaseHandler):
         if no version is specified, the most recent published one is returned.
         """
         version = self.get_argument('version', None)
-        cc_db = self.application.cost_calculator_db
 
         doc = self.fetch_published_doc_version(version)
 
@@ -523,12 +538,16 @@ class PricingPublishDataHandler(PricingBaseHandler):
             self.set_status(400)
             return self.write("Error: No draft exists. Nothing to be published")
 
+        current_user = self.get_current_user()
+        if not current_user.is_pricing_admin:
+            self.set_status(400)
+            return self.write("Error: Non-pricing admin cannot publish new cost calculator.")
+
+        user_name = current_user.name
+        user_email = current_user.email
+
         # Create a new draft
         doc = latest_doc.copy()
-
-        user_name = self.get_current_user().name
-        user_email = self.get_current_user().email
-
         doc['Draft'] = False
 
         self._update_last_modified(doc)
