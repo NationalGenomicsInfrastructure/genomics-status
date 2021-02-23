@@ -115,7 +115,7 @@ app.component('v-pricing-update', {
                       </nav>
                       <a class="nav-link my-1" href="#pricing_update_products_top">Products</a>
                       <nav class="nav nav-pills flex-column">
-                        <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)" :key="category">
+                        <template v-for="(category, cat_nr) in this.$root.product_categories" :key="category">
                           <a class="nav-link ml-3 my-0 py-1" :href="'#products_cat_' + cat_nr">{{category}}</a>
                         </template>
                       </nav>
@@ -171,7 +171,7 @@ app.component('v-pricing-update', {
                   </template>
                 </template>
                 <h1 class="mt-5 display-3" id="pricing_update_products_top">Products</h1>
-                <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)">
+                <template v-for="(category, cat_nr) in this.$root.product_categories" :key="category">
                   <h3 :id="'products_cat_' + cat_nr" class="mt-4">{{category}}</h3>
                   <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
                     <v-product-form-part :product_id="product['REF_ID']"/>

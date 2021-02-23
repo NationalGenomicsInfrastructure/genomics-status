@@ -66,21 +66,36 @@ const vPricingMain = {
                 }
                 if (! (product['Status'] == 'Discontinued')) {
                     if (! (cat in prod_per_cat)) {
-                        prod_per_cat[cat] = {}
+                        prod_per_cat[cat] = []
                     }
-                    prod_per_cat[cat][product['REF_ID']] = product
+                    prod_per_cat[cat].push(product)
                 }
+            }
+
+
+            for (category in prod_per_cat) {
+                sorted_products = prod_per_cat[category].sort(this.sortProducts)
+                prod_per_cat[category] = sorted_products
             }
             return prod_per_cat
         },
         product_categories() {
             categories = new Set();
+            add_new_at_end = false;
             for ([prod_id, product] of Object.entries(this.all_products)) {
                 if (! (product['Status'] == 'Discontinued')) {
+                    if ( this.new_products.has(prod_id) ) {
+                        add_new_at_end = true;
+                    }
                     categories.add(product['Category'])
                 }
             }
-            return categories
+
+            categories_array = Array.from(categories).sort()
+            if (add_new_at_end) {
+                categories_array.push('New products')
+            }
+            return categories_array
         },
         product_types() {
             types = new Set();
@@ -92,13 +107,13 @@ const vPricingMain = {
             return types
         },
         discontinued_products() {
-            disco_products = {};
+            disco_products = [];
             for ([prod_id, product] of Object.entries(this.all_products)) {
                 if (product['Status'] == 'Discontinued') {
-                    disco_products[prod_id] = product
+                    disco_products.push(product)
                 }
             }
-            return disco_products
+            return disco_products.sort(this.sortProducts)
         },
         all_components_per_category() {
             comp_per_cat = {};
@@ -117,19 +132,10 @@ const vPricingMain = {
                 }
             }
 
-            // Sort components on name within each category
-            sortFun = (firstComp, secondComp) => {
-                if (firstComp['Product name'] < secondComp['Product name']) {
-                    return -1;
-                } else if (firstComp['Product name'] > secondComp['Product name']) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            }
+
 
             for (category in comp_per_cat) {
-                sorted_components = comp_per_cat[category].sort(sortFun)
+                sorted_components = comp_per_cat[category].sort(this.sortComponents)
                 comp_per_cat[category] = sorted_components
             }
 
@@ -162,13 +168,13 @@ const vPricingMain = {
             return types
         },
         discontinued_components() {
-            disco_components = {};
+            disco_components = [];
             for ([comp_id, component] of Object.entries(this.all_components)) {
                 if (component['Status'] == 'Discontinued') {
-                    disco_components[comp_id] = component
+                    disco_components.push(component)
                 }
             }
-            return disco_components
+            return disco_components.sort(this.sortComponents)
         },
         next_product_id() {
             /* Returns the lowest unused product id */
@@ -422,10 +428,31 @@ const vPricingMain = {
                 this.new_components.add(new_comp_id)
             }
         },
+        sortComponents(firstComp, secondComp) {
+            // Comparison function used to sort components on name within each category
+            if (firstComp['Product name'] < secondComp['Product name']) {
+                return -1;
+            } else if (firstComp['Product name'] > secondComp['Product name']) {
+                return 1;
+            } else {
+                return 0;
+            }
+        },
+        sortProducts(firstProd, secondProd) {
+            /* Comparison function used to sort products on name within each category
+             */
+            if (firstProd['Name'] < secondProd['Name']) {
+                return -1;
+            } else if (firstProd['Name'] > secondProd['Name']) {
+                return 1;
+            } else {
+                return 0;
+            }
+        },
         symmetricSetDifference(setA, setB) {
             /* Convenience method taken from
-            https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
-            */
+             * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
+             */
             let _difference = new Set(setA)
             for (let elem of setB) {
                 if (_difference.has(elem)) {
