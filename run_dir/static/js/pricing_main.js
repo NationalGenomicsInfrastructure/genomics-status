@@ -240,6 +240,33 @@ const vPricingMain = {
             this.new_products.add(new_id)
             return new_id
         },
+        newProduct() {
+            new_id = this.next_product_id
+            /* Hacky way to be able to avoid typing all keys that a product should contain */
+            old_id = parseInt(new_id) - 1
+            new_id = this.cloneProduct(old_id)
+            new_product = {}
+            Object.keys(this.all_products[new_id]).forEach(function(key) {
+                switch(key) {
+                    case 'REF_ID':
+                        new_product[key] = new_id
+                        break;
+                    case 'Status':
+                        new_product[key] = 'Available'
+                        break;
+                    case 'Components':
+                        new_product[key] = {}
+                        break;
+                    case 'Alternative Components':
+                        new_product[key] = {}
+                        break;
+                    default:
+                        new_product[key] = ''
+                }
+            })
+            this.all_products[new_id] = new_product
+            return new_id
+        },
         removeProduct(prod_id) {
             /* meant to be used with new products only */
             delete this.all_products[prod_id]
@@ -284,6 +311,28 @@ const vPricingMain = {
             new_comp['REF_ID'] = new_id
             this.all_components[new_id] = new_comp
             this.new_components.add(new_id)
+            return new_id
+        },
+        newComponent() {
+            new_id = this.next_component_id
+            /* Hacky way to be able to avoid typing all keys that a component should contain */
+            old_id = parseInt(new_id) - 1
+            new_id = this.cloneComponent(old_id)
+            new_component = {}
+
+            Object.keys(this.all_components[new_id]).forEach(function(key) {
+                switch(key) {
+                    case 'REF_ID':
+                        new_component[key] = new_id
+                        break;
+                    case 'Status':
+                        new_component[key] = 'Available'
+                        break;
+                    default:
+                        new_component[key] = ''
+                }
+            })
+            this.all_components[new_id] = new_component
             return new_id
         },
         removeComponent(comp_id) {

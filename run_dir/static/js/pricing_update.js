@@ -62,6 +62,24 @@ app.component('v-pricing-update', {
             /* Redirect user to the preview page */
             window.location.href = "/pricing_preview"
         },
+        newProduct(event) {
+            event.preventDefault()
+            new_id = this.$root.newProduct()
+            this.$nextTick(function() {
+                // Scroll to the new product
+                window.location.href = '#'
+                window.location.href = '#product_form_part_' + new_id;
+            })
+        },
+        newComponent(event) {
+            event.preventDefault()
+            new_id = this.$root.newComponent()
+            this.$nextTick(function() {
+                // Scroll to the new product
+                window.location.href = '#'
+                window.location.href = '#component_form_part_' + new_id;
+            })
+        },
         toggleCollapse(event) {
             if (this.all_expanded) {
                 $('.collapse').collapse('hide')
@@ -147,7 +165,7 @@ app.component('v-pricing-update', {
                       <div>
                         <button class="btn btn-secondary" @click="toggleCollapse"><i class="fas fa-caret-down"></i> {{expand_button_text}}</button>
                       </div>
-                      <div class="mb-3 mt-5">
+                      <div class="mb-3 mt-4">
                         <button class="btn btn-success btn-lg" @click="saveDraft"><i class="far fa-save"></i> Save </button>
                         <button class="btn btn-secondary btn-lg ml-2" @click="backToPreview"><i class="fas fa-window-close"></i> Leave </button>
                       </div>
@@ -163,14 +181,14 @@ app.component('v-pricing-update', {
                     <v-draft-validation-msgs-list :modal="false"/>
                   </div>
                 </div>
-                <h1 class="mt-5 display-3" id="pricing_update_components_top">Components</h1>
+                <h1 class="mt-5 display-3" id="pricing_update_components_top">Components <button class="btn btn-success btn-lg ml-2" @click="newComponent"><i class="fas fa-plus"></i> New Component </button></h1>
                 <template v-for="(category, cat_nr) in this.$root.component_categories" :key="category">
                   <h3 :id="'components_cat_' + cat_nr" class="mt-4">{{category}}</h3>
                   <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
                     <v-component-form-part :component_id="component['REF_ID']"/>
                   </template>
                 </template>
-                <h1 class="mt-5 display-3" id="pricing_update_products_top">Products</h1>
+                <h1 class="mt-5 display-3" id="pricing_update_products_top">Products <button class="btn btn-success btn-lg ml-2" @click="newProduct"><i class="fas fa-plus"></i> New Product </button></h1>
                 <template v-for="(category, cat_nr) in this.$root.product_categories" :key="category">
                   <h3 :id="'products_cat_' + cat_nr" class="mt-4">{{category}}</h3>
                   <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
