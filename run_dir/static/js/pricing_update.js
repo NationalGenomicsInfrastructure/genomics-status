@@ -107,22 +107,22 @@ app.component('v-pricing-update', {
                           <a class="nav-link ml-3 my-0 py-1 text-danger" href="#validation_messages_list">Validation errors</a>
                         </template>
                       </nav>
-                      <a class="nav-link my-1" href="#products_top">Products</a>
-                      <nav class="nav nav-pills flex-column">
-                        <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)" :key="category">
-                          <a class="nav-link ml-3 my-0 py-1" :href="'#products_cat_' + cat_nr">{{category}}</a>
-                        </template>
-                      </nav>
-                      <a class="nav-link my-1" href="#components_top">Components</a>
+                      <a class="nav-link my-1" href="#pricing_update_components_top">Components</a>
                       <nav class="nav nav-pills flex-column">
                         <template v-for="(category, cat_nr) in this.$root.component_categories" :key="category">
                           <a class="nav-link ml-3 my-0 py-1" :href="'#components_cat_' + cat_nr">{{category}}</a>
                         </template>
                       </nav>
+                      <a class="nav-link my-1" href="#pricing_update_products_top">Products</a>
+                      <nav class="nav nav-pills flex-column">
+                        <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)" :key="category">
+                          <a class="nav-link ml-3 my-0 py-1" :href="'#products_cat_' + cat_nr">{{category}}</a>
+                        </template>
+                      </nav>
                       <a class="nav-link my-1" href="#discontinued_top">Discontinued</a>
                       <nav class="nav nav-pills flex-column">
-                        <a class="nav-link ml-3 my-0 py-1" href="#discontinued_products">Products</a>
                         <a class="nav-link ml-3 my-0 py-1" href="#discontinued_components">Components</a>
+                        <a class="nav-link ml-3 my-0 py-1" href="#discontinued_products">Products</a>
                       </nav>
                     </nav>
                     <button class="btn btn-success btn-lg ml-3 mt-3 mb-2" @click="saveDraft"><i class="far fa-save"></i> Save</button>
@@ -163,28 +163,28 @@ app.component('v-pricing-update', {
                     <v-draft-validation-msgs-list :modal="false"/>
                   </div>
                 </div>
-                <h2 class="mt-5" id="products_top">Products</h2>
-                <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)">
-                  <h3 :id="'products_cat_' + cat_nr" class="mt-4">{{category}}</h3>
-                  <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
-                    <v-product-form-part :product_id="product['REF_ID']"/>
-                  </template>
-                </template>
-                <h2 class="mt-5" id="components_top">Components</h2>
+                <h1 class="mt-5 display-3" id="pricing_update_components_top">Components</h1>
                 <template v-for="(category, cat_nr) in this.$root.component_categories" :key="category">
                   <h3 :id="'components_cat_' + cat_nr" class="mt-4">{{category}}</h3>
                   <template v-for="component in this.$root.all_components_per_category[category]" :key="component['REF_ID']">
                     <v-component-form-part :component_id="component['REF_ID']"/>
                   </template>
                 </template>
-                <h2 class="mt-4" id="discontinued_top">Discontinued</h2>
-                <h3 id="discontinued_products" class="mt-4">Products</h3>
-                <template v-for="product in this.$root.discontinued_products" :key="product['REF_ID']">
-                  <v-product-form-part :product_id="product['REF_ID']"/>
+                <h1 class="mt-5 display-3" id="pricing_update_products_top">Products</h1>
+                <template v-for="(category, cat_nr) in Object.keys(this.$root.all_products_per_category)">
+                  <h3 :id="'products_cat_' + cat_nr" class="mt-4">{{category}}</h3>
+                  <template v-for="product in this.$root.all_products_per_category[category]" :key="product['REF_ID']">
+                    <v-product-form-part :product_id="product['REF_ID']"/>
+                  </template>
                 </template>
+                <h2 class="mt-4" id="discontinued_top">Discontinued</h2>
                 <h3 id="discontinued_components" class="mt-4">Components</h3>
                 <template v-for="component in this.$root.discontinued_components" :key="component['REF_ID']">
                   <v-component-form-part :component_id="component['REF_ID']"/>
+                </template>
+                <h3 id="discontinued_products" class="mt-4">Products</h3>
+                <template v-for="product in this.$root.discontinued_products" :key="product['REF_ID']">
+                  <v-product-form-part :product_id="product['REF_ID']"/>
                 </template>
               </div>
             </div>

@@ -86,6 +86,10 @@ input.quantity_updateable {
     padding-top: 4rem;
 }
 
+#pricing_update_products_top {
+    margin-top: 7rem !important;
+}
+
 .pricing-td-changed:hover {
     border: 2px solid #6c757d;
 }
