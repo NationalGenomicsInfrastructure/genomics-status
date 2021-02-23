@@ -18,7 +18,7 @@ function refresh_plot(){
 function make_plot(key, name, view_type, filter_inst_type){
     var toplot = {
         chart: {
-            type: 'line',
+            type: 'scatter',
             events: {
                 render: function(){
                     let series = this.series
@@ -68,9 +68,18 @@ function make_plot(key, name, view_type, filter_inst_type){
             }
         },
         tooltip: {
+            shared: true,
             useHTML: true,
             headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{point.key}</small><br />',
-            pointFormat: '{series.name} : <b>{point.y}</b>'
+            pointFormatter: function () {
+                if (this.y === 0) return '0 Bytes';
+                const k = 1024;
+                const dm = 2 < 0 ? 0 : 2;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+                const i = Math.floor(Math.log(this.y) / Math.log(k));
+                var fs = parseFloat((this.y / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+                return this.series.name + ', ' + this.pm + ': ' + '<b>' + fs + '</b>'
+            },
         },
         credits: {
             enabled: false
@@ -86,7 +95,7 @@ function make_plot(key, name, view_type, filter_inst_type){
             categories: []
         },
         series: [{
-            name : name,
+            name: name,
             data: []
         }],
         exporting: {
@@ -202,6 +211,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
         dp = {
             y: data[d][1][key],
             name: date_close,
+            pm: project_name,
             ownURL: bioinfo_link
         };
         series[series_name].data.push(dp);
