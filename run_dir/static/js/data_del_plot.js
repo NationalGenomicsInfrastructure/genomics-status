@@ -36,7 +36,7 @@ function make_plot(key, name, view_type, filter_inst_type){
                     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
                     const i = Math.floor(Math.log(sum) / Math.log(k));
                     var c_sum = parseFloat((sum / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-                this.setTitle({text: "File size of projects, sum in bytes: " + c_sum}, false, false)
+                    this.setTitle({text: "File size of projects, sum in bytes: " + c_sum}, false, false)
                 }
             }
         },
@@ -53,7 +53,7 @@ function make_plot(key, name, view_type, filter_inst_type){
             title: {
                 text: 'Click to hide:',
                 align: 'center'
-                }
+            }
         },
         plotOptions : {
             series : {
@@ -120,6 +120,15 @@ function build_series(data, key, name, view_type, filter_inst_type){
         var bioinfo_link="/bioinfo/"+data[d][0];
         var project_name = data[d][1].project_name;
         var date_close = data[d][1].close_date;
+        sequencing_platforms = ['NovaSeq', 'MiSeq', 'NextSeq', 'HiSeq'];	
+	      if (data[d][1].sequencing_platform == null && filter_inst_type.length > 0){
+	          continue;
+	      }
+	      for (var p in sequencing_platforms){
+	          if (data[d][1].sequencing_platform !== undefined && data[d][1].sequencing_platform.includes(p) && filter_inst_type.includes(p)){
+	              continue;
+	          }
+	      }
         if (data[d][1].sequencing_platform == null){
             continue;
         }else if (data[d][1].sequencing_platform.includes('NovaSeq') && filter_inst_type.includes('NovaSeq')){
@@ -217,10 +226,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
         series[series_name].data.push(dp);
         categories.push(date_close);
         // Hackery to get a proper JS array for HCharts
-        var proper_series = []
-        for (s in series) {
-            proper_series.push(series[s]);
-        }
+        var proper_series = Object.values(series)
     }
   return [categories, proper_series];
 }
@@ -228,7 +234,6 @@ function build_series(data, key, name, view_type, filter_inst_type){
 function get_plot_data(key, name, view_type, search_string="", filter_inst_type){
     $.getJSON('/api/v1/proj_staged/'+search_string, function(data) {
         window.current_plot_data=data;
-        update_color_schemes(data);
         make_plot(key, name, view_type, filter_inst_type);
     });
 }
@@ -240,30 +245,30 @@ function view_coloring(series_name){
         case "RNA-Seq":
         case "Finished Library":
         case "BP bioinformatics":
-            return current_color_schemes[0].hex();
+            return chroma('hotpink').hex();
         case "All projects":
         case "MiSeq":
         case "WG-reseq":
         case "Application":
         case "total RNA":
         case "No BP bioinformatics":
-            return current_color_schemes[1].hex();
+            return chroma('blue').hex();
         case "NextSeq":
         case "GRUS":
         case "Target-reseq":
         case "Tissue":
         case "Special":
-            return current_color_schemes[2].hex();
+            return chroma('green').hex();
         case "Metagenomics":
         case "Genomic DNA":
-            return current_color_schemes[3].hex();
+            return chroma('orange').hex();
         case "de novo":
-            return current_color_schemes[4].hex();
+            return chroma('purple').hex();
         case "Epigenetics":
         case "Production":
-            return current_color_schemes[5].hex();
+            return chroma('red').hex();
         case "Amplicon":
-            return current_color_schemes[6].hex();
+            return chroma('turquoise').hex();
         default:
             return "#c3c3c3";
     }
@@ -308,50 +313,40 @@ function get_parameters(){
  }
 
 function init_page_js(){
-  $('#datepick1').datepicker({autoclose: true,
-    format: 'yyyy-mm-dd',
-    todayBtn: true,
-    todayHighlight: true,
-    weekStart: 1,
-    daysOfWeekHighlighted: "0,6" });
+    $('#datepick1').datepicker({autoclose: true,
+        format: 'yyyy-mm-dd',
+        todayBtn: true,
+        todayHighlight: true,
+        weekStart: 1,
+        daysOfWeekHighlighted: "0,6" });
     $('#datepick2').datepicker({autoclose: true,
-    format: 'yyyy-mm-dd',
-    todayBtn: true,
-    todayHighlight: true,
-    weekStart: 1,
-    daysOfWeekHighlighted: "0,6" });
-     var my_date=new Date();
-     $('#inp_date_2').val(my_date.toISOString().substr(0,10));
-     my_date.setYear(my_date.getFullYear()-1);
-     $('#inp_date_1').val(my_date.toISOString().substr(0,10));
+        format: 'yyyy-mm-dd',
+        todayBtn: true,
+        todayHighlight: true,
+        weekStart: 1,
+        daysOfWeekHighlighted: "0,6" });
+    var my_date=new Date();
+    $('#inp_date_2').val(my_date.toISOString().substr(0,10));
+    my_date.setYear(my_date.getFullYear()-1);
+    $('#inp_date_1').val(my_date.toISOString().substr(0,10));
     $('#submit_interval').click(function(e){
-     e.preventDefault();
-     window.current_plot_data=null;
-     refresh_plot();
+        e.preventDefault();
+        window.current_plot_data=null;
+        refresh_plot();
     });
-  $("#key_select_form").change(function(e){
-      e.preventDefault();
-      e.stopImmediatePropagation()
-      refresh_plot();
-  });
-  $(".filter_inst_type").change(function(e){
+    $("#key_select_form").change(function(e){
+        e.preventDefault();
         e.stopImmediatePropagation()
         refresh_plot();
     });
-  $("#view_select").change(function(e){
-      e.stopImmediatePropagation()
-      refresh_plot();
-  });
-  refresh_plot();
+    $(".filter_inst_type").change(function(e){
+        e.stopImmediatePropagation()
+        refresh_plot();
+    });
+    $("#view_select").change(function(e){
+        e.stopImmediatePropagation()
+        refresh_plot();
+    });
+    refresh_plot();
 }
 
-function update_color_schemes(){
-    var pink = chroma('hotpink');
-    var blue = chroma('blue');
-    var green = chroma('green');
-    var orange = chroma('orange');
-    var purple = chroma('purple');
-    var red = chroma('red');
-    var turquoise = chroma('turquoise');
-    window.current_color_schemes = [pink, blue, green, orange, purple, red, turquoise];
-}
