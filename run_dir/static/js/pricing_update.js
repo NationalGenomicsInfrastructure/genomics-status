@@ -35,7 +35,14 @@ app.component('v-pricing-update', {
         },
         draft_locked_by_someone_else() {
             return this.draft_locked_by != this.$root.current_user_email
-        }
+        },
+        no_changes() {
+            return (Object.keys(this.$root.product_changes).length === 0) && (Object.keys(this.$root.component_changes).length === 0)
+        },
+        is_invalid() {
+            return (Object.keys(this.$root.validation_msgs['products']).length !== 0) ||
+                   (Object.keys(this.$root.validation_msgs['components']).length !== 0)
+        },
     },
     created: function() {
         this.$root.fetchDraftCostCalculator(true)
@@ -119,12 +126,6 @@ app.component('v-pricing-update', {
                   <div class="position-sticky">
                     <nav class="nav nav-pills flex-column border-bottom">
                       <a class="nav-link my-1" href="#pricing_product_form_content">Top of the page</a>
-                      <nav class="nav nav-pills flex-column">
-                        <a class="nav-link ml-3 my-0 py-1" href="#changes_list">Changes</a>
-                        <template v-if="!this.$root.no_validation_messages">
-                          <a class="nav-link ml-3 my-0 py-1 text-danger" href="#validation_messages_list">Validation errors</a>
-                        </template>
-                      </nav>
                       <a class="nav-link my-1" href="#pricing_update_components_top">Components</a>
                       <nav class="nav nav-pills flex-column">
                         <template v-for="(category, cat_nr) in this.$root.component_categories" :key="category">
@@ -148,6 +149,14 @@ app.component('v-pricing-update', {
                       <p class="text-danger ml-3" v-if="save_error"><strong>Error saving</strong> {{save_message}}</p>
                       <p class="text-success ml-3" v-else><strong>Saved!</strong> {{save_message}}</p>
                     </template>
+                    <button class="btn btn-lg ml-3 mt-3 mb-2" :class="no_changes ? 'btn-secondary' : 'btn-warning'" data-toggle="modal" data-target="#pricing_view_changes_modal">
+                      <template v-if="no_changes">
+                        No changes
+                      </template>
+                      <template v-else>
+                        List changes<i v-if="is_invalid" class="fas fa-exclamation-triangle ml-1"></i>
+                      </template>
+                    </button>
                   </div>
                 </nav>
               </div>
@@ -162,23 +171,59 @@ app.component('v-pricing-update', {
                         <p class="text-danger" v-if="save_error"><strong>Error saving</strong> {{save_message}}</p>
                         <p class="text-success" v-else><strong>Saved!</strong> {{save_message}}</p>
                       </template>
+                    </div>
+                    <div class="col-md-auto">
                       <div>
-                        <button class="btn btn-secondary" @click="toggleCollapse"><i class="fas fa-caret-down"></i> {{expand_button_text}}</button>
+                        <button class="btn btn-secondary" @click="toggleCollapse">{{expand_button_text}} <i class="fas fa-caret-down"></i></button>
                       </div>
-                      <div class="mb-3 mt-4">
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="d-flex align-items-start flex-column col-auto mr-auto">
+                      <div class="mb-auto">
                         <button class="btn btn-success btn-lg" @click="saveDraft"><i class="far fa-save"></i> Save </button>
                         <button class="btn btn-secondary btn-lg ml-2" @click="backToPreview"><i class="fas fa-window-close"></i> Leave </button>
                       </div>
+                      <div>
+                        <button class="btn btn-lg mb-3" :class="no_changes ? 'btn-secondary' : 'btn-warning'" data-toggle="modal" data-target="#pricing_view_changes_modal">
+                          <template v-if="no_changes">
+                            No changes
+                          </template>
+                          <template v-else>
+                            List changes<i v-if="is_invalid" class="fas fa-exclamation-triangle ml-1"></i>
+                          </template>
+                        </button>
+                        <!----- Modal ----->
+                        <div class="modal fade" id="pricing_view_changes_modal" tabindex="-1" role="dialog" aria-labelledby="pricing_view_changes_modal_header">
+                          <div class="modal-dialog modal-lg" role="document">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h4 class="modal-title" id="pricing_view_changes_modal_header">List of Changes and Validation Errors</h4>
+                                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                <template v-if="this.$root.no_validation_messages">
+                                  <p>No validation erros found</p>
+                                </template>
+                                <template v-else>
+                                  <p>The current draft contains validation errors, please fix these before publishing:</p>
+                                  <v-draft-validation-msgs-list :modal="true" :modal_id="'pricing_view_changes_modal'"/>
+                                </template>
+                                <v-draft-changes-list :modal="true" :modal_id="'pricing_view_changes_modal'"/>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div class="col-md-5">
-                      <v-exchange-rates :mutable="false" :issued_at="this.$root.exch_rate_issued_at"/>
+                    <div class="col-xl-3 col-lg-4">
+                      <div class="mt-4">
+                        <v-exchange-rates :mutable="false" :issued_at="this.$root.exch_rate_issued_at"/>
+                      </div>
                     </div>
-                  </div>
-                  <div id="changes_list" class="link-target-offset">
-                    <v-draft-changes-list :modal="false"/>
-                  </div>
-                  <div id="validation_messages_list" class="link-target-offset">
-                    <v-draft-validation-msgs-list :modal="false"/>
                   </div>
                 </div>
                 <h1 class="mt-5 display-3" id="pricing_update_components_top">Components <button class="btn btn-success btn-lg ml-2" @click="newComponent"><i class="fas fa-plus"></i> New Component </button></h1>

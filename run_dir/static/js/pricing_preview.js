@@ -183,11 +183,11 @@ app.component('v-pricing-preview', {
                     <template v-if="this.$root.no_validation_messages">
                       <p>Are you sure you want to publish the current draft?</p>
                       <p>This will then become the default cost calculator used for all quotes.</p>
-                      <v-draft-changes-list :modal="true"/>
+                      <v-draft-changes-list :modal="true" :modal_id="'publish_draft_modal'"/>
                     </template>
                     <template v-else>
                       <p>The current draft contains validation errors, please fix these before publishing:</p>
-                      <v-draft-validation-msgs-list :modal="true"/>
+                      <v-draft-validation-msgs-list :modal="true" :modal_id="'publish_draft_modal'"/>
                     </template>
                   </div>
                   <div class="modal-footer">

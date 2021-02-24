@@ -935,7 +935,7 @@ app.component('v-draft-changes-list', {
     /* A list of changes in the draft compared to the latest published cost calculator.
      *   - Slightly modified look if it is placed in a modal
      */
-    props: ['modal'],
+    props: ['modal', 'modal_id'],
     computed: {
         product_changes() {
             return this.$root.product_changes
@@ -953,6 +953,26 @@ app.component('v-draft-changes-list', {
                 return (Object.keys(prod_changes_data)[0] == 'All')
             } else {
                 return false
+            }
+        },
+        scroll_to_on_page(event) {
+            event.preventDefault();
+            destination = event.target.dataset.scrollToLink
+
+            scroll_to = function(dest) {
+                window.location.href = '#'
+                window.location.href = dest
+            }
+            if (this.modal) {
+
+                var myModalEl = document.getElementById(this.modal_id)
+                var modal = bootstrap.Modal.getInstance(myModalEl) // Returns a Bootstrap modal instance
+                myModalEl.addEventListener('hidden.bs.modal', function (event) {
+                    scroll_to(destination)
+                })
+                modal.hide();
+            } else {
+                scroll_to(destination)
             }
         }
     },
@@ -973,7 +993,7 @@ app.component('v-draft-changes-list', {
               <div class="row">
                 <template v-for="(prod_changes_data, prod_id) in product_changes" :key="prod_id">
                   <div class="ml-3 mb-3">
-                    <h5 class="col-12"><a :href="'#product_form_part_' + prod_id">{{this.$root.all_products[prod_id]['Name']}}:</a></h5>
+                    <h5 class="col-12"><a href='#' :data-scroll-to-link="'#product_form_part_' + prod_id" @click="scroll_to_on_page">{{this.$root.all_products[prod_id]['Name']}}:</a></h5>
                     <div class="ml-3 mr-2" v-for="(prod_type_changes_data, type_key) in prod_changes_data" :key="type_key">
                       <strong class="mr-2">{{type_key}}:</strong>
                       <template v-if="(type_key == 'Components') || (type_key == 'Alternative Components')">
@@ -1016,7 +1036,7 @@ app.component('v-draft-changes-list', {
               <div class="row">
                 <template v-for="(comp_changes_data, comp_id) in component_changes" :key="comp_id">
                   <div class="ml-3 mb-3">
-                    <h5 class="col-12"><a :href="'#component_form_part_' + comp_id">{{this.$root.all_components[comp_id]['Product name']}}:</a></h5>
+                    <h5 class="col-12"><a href='#' :data-scroll-to-link="'#component_form_part_' + comp_id" @click="scroll_to_on_page">{{this.$root.all_components[comp_id]['Product name']}}:</a></h5>
                     <div class="ml-3 mr-2" v-for="(comp_type_changes_data, type_key) in comp_changes_data" :key="type_key">
                       <strong class="mr-2">{{type_key}}:</strong>
                       {{comp_type_changes_data[1]}} <i class="fas fa-arrow-right"></i> {{comp_type_changes_data[0]}}
@@ -1036,16 +1056,38 @@ app.component('v-draft-validation-msgs-list', {
     /* A list of validation errors in the draft compared to the latest published cost calculator.
      *   - Slightly modified look if it is placed in a modal
      */
-    props: ['modal'],
+    props: ['modal', 'modal_id'],
     computed: {
         product_messages() {
-          return this.$root.validation_msgs['products']
+            return this.$root.validation_msgs['products']
         },
         component_messages() {
-          return this.$root.validation_msgs['components']
+            return this.$root.validation_msgs['components']
         },
         any_messages() {
             return (Object.keys(this.product_messages).length !== 0) || (Object.keys(this.component_messages).length !== 0)
+        }
+    },
+    methods: {
+        scroll_to_on_page(event) {
+            event.preventDefault();
+            destination = event.target.dataset.scrollToLink
+            console.log(this.modal_id)
+            scroll_to = function(dest) {
+                window.location.href = '#'
+                window.location.href = dest
+            }
+            if (this.modal) {
+
+                var myModalEl = document.getElementById(this.modal_id)
+                var modal = bootstrap.Modal.getInstance(myModalEl) // Returns a Bootstrap modal instance
+                myModalEl.addEventListener('hidden.bs.modal', function (event) {
+                    scroll_to(destination)
+                })
+                modal.hide();
+            } else {
+                scroll_to(destination)
+            }
         }
     },
     template: /*html*/`
@@ -1062,7 +1104,7 @@ app.component('v-draft-validation-msgs-list', {
               <div class="row pr-4">
                 <template v-for="(prod_validation_msgs_data, prod_id) in product_messages" :key="prod_id">
                   <div class="ml-3 mb-3">
-                    <h5 class="col-12"><a :href="'#product_form_part_' + prod_id">{{this.$root.all_products[prod_id]['Name']}}:</a></h5>
+                    <h5 class="col-12"><a href='#' :data-scroll-to-link="'#product_form_part_' + prod_id" @click="scroll_to_on_page">{{this.$root.all_products[prod_id]['Name']}}:</a></h5>
                     <div class="ml-3" v-for="(prod_type_validation_msgs_data, type_key) in prod_validation_msgs_data" :key="type_key">
                       <ul v-for="validation_msg in prod_type_validation_msgs_data">
                         <li class="fs-5">{{validation_msg}}</li>
@@ -1077,7 +1119,7 @@ app.component('v-draft-validation-msgs-list', {
               <div class="row pr-4">
                 <template v-for="(comp_validation_msgs_data, comp_id) in component_messages" :key="comp_id">
                   <div class="ml-3 mb-3">
-                    <h5 class="col-12"><a :href="'#component_form_part_' + comp_id">{{this.$root.all_components[comp_id]['Product name']}}:</a></h5>
+                    <h5 class="col-12"><a href="#" :data-scroll-to-link="'#component_form_part_' + comp_id" @click="scroll_to_on_page">{{this.$root.all_components[comp_id]['Product name']}}:</a></h5>
                     <div class="ml-3" v-for="(comp_type_validation_msgs_data, type_key) in comp_validation_msgs_data" :key="type_key">
                       <ul v-for="validation_msg in comp_type_validation_msgs_data">
                         <li class="fs-5">{{validation_msg}}</li>
