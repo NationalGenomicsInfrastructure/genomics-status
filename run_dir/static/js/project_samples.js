@@ -241,10 +241,10 @@ function load_tickets() {
         $.each(Object.keys(data).reverse(), function(_, k) {
           var v = data[k];
 
-          var label_class = 'default';
+          var label_class = 'secondary';
           if(v['status'] == 'open'){ label_class = 'danger'; v['status'] = 'Open'; }
           if(v['status'] == 'pending'){ label_class = 'info'; v['status'] = 'Pending'; }
-          if(v['status'] == 'on-hold'){ label_class = 'warning'; v['status'] = 'On-Hold'; }
+          if(v['status'] == 'on-hold' || v['status'] == 'hold'){ label_class = 'warning'; v['status'] = 'On-Hold'; }
           if(v['status'] == 'solved'){ label_class = 'success'; v['status'] = 'Solved'; }
           if(v['status'] == 'closed'){ label_class = 'success'; v['status'] = 'Closed'; }
           var title = '<span class="float-right">'+
