@@ -387,12 +387,12 @@ app.component('v-product-form-part', {
             <div class="row my-1">
               <label class="form-label col-md-2">
                 Full Cost Fee
-                <input class="form-control" v-model.text="product['Full cost fee']" type="text" :disabled="discontinued">
+                <input class="form-control" v-model.number="product['Full cost fee']" type="number" :disabled="discontinued">
               </label>
 
               <label class="form-label col-md-2">
                 Overhead
-                <input class="form-control" v-model.text="product['Overhead']" type="text" :disabled="discontinued">
+                <input class="form-control" v-model.number="product['Overhead']" type="number" :disabled="discontinued">
               </label>
 
               <div class="form-check form-switch col-md-2 mt-3 pl-5">
@@ -411,16 +411,16 @@ app.component('v-product-form-part', {
               <h5>Fixed Price (SEK)</h5>
               <label class="form-label col-md-2">
                 Internal
-                <input class="form-control" v-model.text="product['fixed_price']['price_in_sek']" type="text" :disabled="discontinued">
+                <input class="form-control" v-model.number="product['fixed_price']['price_in_sek']" type="number" :disabled="discontinued">
               </label>
 
               <label class="form-label col-md-2">
                 Swedish Academia
-                <input class="form-control" v-model.text="product['fixed_price']['price_for_academics_in_sek']" type="text" :disabled="discontinued">
+                <input class="form-control" v-model.number="product['fixed_price']['price_for_academics_in_sek']" type="number" :disabled="discontinued">
               </label>
               <label class="form-label col-md-2">
                 Full Cost
-                <input class="form-control" v-model.text="product['fixed_price']['full_cost_in_sek']" type="text" :disabled="discontinued">
+                <input class="form-control" v-model.number="product['fixed_price']['full_cost_in_sek']" type="number" :disabled="discontinued">
               </label>
             </div>
           </div>
