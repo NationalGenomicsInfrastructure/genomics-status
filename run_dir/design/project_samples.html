@@ -8,6 +8,7 @@ Description: Details page for a single project
 -->
 
 {% block stuff %}
+<link rel="stylesheet" href="/static/css/datatables.min.css" rel="stylesheet">
 
 <div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="fa fa-sync fa-spin"></span>  Loading project page..</div>
 <div id="page_content" style="display:none;" class="mb-3">
@@ -582,6 +583,7 @@ Description: Details page for a single project
 <!-- Javascript -->
 <script src="/static/js/list.min.js"></script>
 <script src="/static/js/clipboard.min.js"></script>
+<script src="/static/js/datatables.min.js"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ project }}"></script>
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-project="{{project}}"></script>
 <script src="/static/js/project_samples.js?v={{ gs_globals['git_commit'] }}" id="projects-js" data-project="{{project}}" data-lims_uri="{{ lims_uri }}"></script>
