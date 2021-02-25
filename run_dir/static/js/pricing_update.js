@@ -391,8 +391,8 @@ app.component('v-product-form-part', {
               </label>
 
               <label class="form-label col-md-2">
-                Rerun Fee
-                <input class="form-control" v-model.text="product['Re-run fee']" type="text" :disabled="discontinued">
+                Overhead
+                <input class="form-control" v-model.text="product['Overhead']" type="text" :disabled="discontinued">
               </label>
 
               <div class="form-check form-switch col-md-2 mt-3 pl-5">

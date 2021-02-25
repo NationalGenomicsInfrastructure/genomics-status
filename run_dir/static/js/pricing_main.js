@@ -450,7 +450,7 @@ const vPricingMain = {
                     quantity = info['quantity']
                     cost += quantity * componentCosts['sek_price_per_unit']
                 }
-                cost_academic = cost + cost * product['Re-run fee']
+                cost_academic = cost + cost * product['Overhead']
 
                 full_cost_fee = parseFloat(product['Full cost fee']) || 0
                 full_cost = cost_academic + full_cost_fee
@@ -803,7 +803,7 @@ app.component('v-product-table-row', {
             <v-product-table-row-td td_key='Components' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Alternative Components' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Full cost fee' :row_changes="this.changes" :product_id="this.product_id"/>
-            <v-product-table-row-td td_key='Re-run fee' :row_changes="this.changes" :product_id="this.product_id"/>
+            <v-product-table-row-td td_key='Overhead' :row_changes="this.changes" :product_id="this.product_id"/>
             <td class="price_internal">
               {{cost['cost'].toFixed(2)}}
             </td>

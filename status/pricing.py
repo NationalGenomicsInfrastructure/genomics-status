@@ -147,7 +147,7 @@ class PricingValidator():
                        'components': ['Category', 'Type', 'Product name', 'Units']}
 
     # These keys are not allowed to be undefined for any item
-    NOT_NULL_KEYS = {'products': ['REF_ID', 'Category', 'Type', 'Name', 'Re-run fee'],
+    NOT_NULL_KEYS = {'products': ['REF_ID', 'Category', 'Type', 'Name', 'Overhead'],
                      'components': ['REF_ID', 'Category', 'Type', 'Status',
                                     'Product name', 'Units', 'Currency',
                                     'List price', 'Discount']}
