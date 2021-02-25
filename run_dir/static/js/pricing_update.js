@@ -591,101 +591,100 @@ app.component('v-component-form-part', {
         <div :id="'collapseComponent' + component_id"  class="collapse card-body">
           <div class="row">
             <div class="col-md-10">
-              <h5>{{ component['Last Updated']}}</h5>
-                <div class="row my-1">
-                  <fieldset disabled class='col-md-1'>
-                    <label class="form-label">
-                      ID
-                      <input class="form-control" v-model.number="component['REF_ID']" type="number">
-                    </label>
-                  </fieldset>
-                  <label class="form-label col-md-3">
-                    Category
-                    <input class="form-control" :list="'compCategoryOptions' + component_id" v-model.text="component['Category']" type="text" :disabled="discontinued">
-                    <datalist :id="'compCategoryOptions' + component_id">
-                      <option v-for="category in categories">{{category}}</option>
-                    </datalist>
+              <div class="row my-1">
+                <fieldset disabled class='col-md-1'>
+                  <label class="form-label">
+                    ID
+                    <input class="form-control" v-model.number="component['REF_ID']" type="number">
                   </label>
-                  <label class="form-label col-md-2">
-                    Product Type
-                    <input class="form-control" :list="'compTypeOptions' + component_id" v-model.text="component['Type']" type="text" :disabled="discontinued">
-                    <datalist :id="'compTypeOptions' + component_id">
-                      <option v-for="type in types">{{type}}</option>
-                    </datalist>
-                  </label>
-                  <label class="form-label col-md-6">
-                    Component Name
-                    <input class="form-control" v-model.text="component['Product name']" type="text" :disabled="discontinued">
-                  </label>
-                </div>
-                <div class="row my-1">
-                  <label class="form-label col-md-2">
-                    Manufacturer
-                    <input class="form-control" v-model.text="component['Manufacturer']" type="text" :disabled="discontinued">
-                  </label>
-
-                  <label class="form-label col-md-2">
-                    Re-seller
-                    <input class="form-control" v-model.text="component['Re-seller']" type="text" :disabled="discontinued">
-                  </label>
-
-                  <label class="form-label col-md-6">
-                    Product #
-                    <input class="form-control" v-model.text="component['Product #']" type="text" :disabled="discontinued">
-                  </label>
-
-                  <label class="form-label col-md-2">
-                    Units
-                    <input class="form-control" v-model.number="component['Units']" type="number" :disabled="discontinued">
-                  </label>
-
-                </div>
-                <div class="row my-1">
-                  <label class="form-label col-md-2">
-                    Discount
-                    <input class="form-control" v-model.number="component['Discount']" type="number" :disabled="discontinued">
-                  </label>
-
-                  <label class="form-label col-md-2">
-                    List Price
-                    <input class="form-control" v-model.number="component['List price']" type="number" :disabled="discontinued">
-                  </label>
-
-                  <label class="form-label col-md-2">
-                    Currency
-                    <select class="form-select" list="currencyList" v-model.select="component['Currency']" :disabled="discontinued">
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                      <option value="SEK">SEK</option>
-                    </select>
-                  </label>
-
-                  <label class="form-label col-md-6">
-                    Comment
-                    <input class="form-control" v-model.text="component['Comment']" type="text" :disabled="discontinued">
-                  </label>
-                </div>
+                </fieldset>
+                <label class="form-label col-md-3">
+                  Category
+                  <input class="form-control" :list="'compCategoryOptions' + component_id" v-model.text="component['Category']" type="text" :disabled="discontinued">
+                  <datalist :id="'compCategoryOptions' + component_id">
+                    <option v-for="category in categories">{{category}}</option>
+                  </datalist>
+                </label>
+                <label class="form-label col-md-2">
+                  Product Type
+                  <input class="form-control" :list="'compTypeOptions' + component_id" v-model.text="component['Type']" type="text" :disabled="discontinued">
+                  <datalist :id="'compTypeOptions' + component_id">
+                    <option v-for="type in types">{{type}}</option>
+                  </datalist>
+                </label>
+                <label class="form-label col-md-6">
+                  Component Name
+                  <input class="form-control" v-model.text="component['Product name']" type="text" :disabled="discontinued">
+                </label>
               </div>
-              <div class="col-md-2 align-self-end pl-4">
-                <div class="pb-3">
-                  <h4>Current Cost:</h4>
-                  <dt>Cost</dt>
-                  <dd>{{cost['sek_price'].toFixed(2)}} SEK</dd>
-                  <dt>Per Unit</dt>
-                  <dd>{{cost['sek_price_per_unit'].toFixed(2)}} SEK</dd>
-                </div>
-                <button type="button" class="btn btn-outline-success w-100 mb-2" @click="this.cloneComponent">Clone<i class="far fa-clone fa-lg text-success ml-2"></i></button>
-                <div v-if="this.isNew">
-                  <button type="button" class="btn btn-outline-danger w-100" @click="this.removeComponent">Remove<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
-                </div>
-                <div v-else>
-                  <button v-if="this.discontinued" type="button" class="btn btn-outline-danger w-100" @click="this.enableComponent">Enable</button>
-                  <button v-else type="button" class="btn btn-outline-danger w-100" @click="this.discontinueComponent">Discontinue<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
-                </div>
+              <div class="row my-1">
+                <label class="form-label col-md-2">
+                  Manufacturer
+                  <input class="form-control" v-model.text="component['Manufacturer']" type="text" :disabled="discontinued">
+                </label>
+
+                <label class="form-label col-md-2">
+                  Re-seller
+                  <input class="form-control" v-model.text="component['Re-seller']" type="text" :disabled="discontinued">
+                </label>
+
+                <label class="form-label col-md-6">
+                  Product #
+                  <input class="form-control" v-model.text="component['Product #']" type="text" :disabled="discontinued">
+                </label>
+
+                <label class="form-label col-md-2">
+                  Units
+                  <input class="form-control" v-model.number="component['Units']" type="number" :disabled="discontinued">
+                </label>
+
+              </div>
+              <div class="row my-1">
+                <label class="form-label col-md-2">
+                  Discount
+                  <input class="form-control" v-model.number="component['Discount']" type="number" :disabled="discontinued">
+                </label>
+
+                <label class="form-label col-md-2">
+                  List Price
+                  <input class="form-control" v-model.number="component['List price']" type="number" :disabled="discontinued">
+                </label>
+
+                <label class="form-label col-md-2">
+                  Currency
+                  <select class="form-select" list="currencyList" v-model.select="component['Currency']" :disabled="discontinued">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="SEK">SEK</option>
+                  </select>
+                </label>
+
+                <label class="form-label col-md-6">
+                  Comment
+                  <input class="form-control" v-model.text="component['Comment']" type="text" :disabled="discontinued">
+                </label>
+              </div>
+            </div>
+            <div class="col-md-2 align-self-end pl-4">
+              <div class="pb-3">
+                <h4>Current Cost:</h4>
+                <dt>Cost</dt>
+                <dd>{{cost['sek_price'].toFixed(2)}} SEK</dd>
+                <dt>Per Unit</dt>
+                <dd>{{cost['sek_price_per_unit'].toFixed(2)}} SEK</dd>
+              </div>
+              <button type="button" class="btn btn-outline-success w-100 mb-2" @click="this.cloneComponent">Clone<i class="far fa-clone fa-lg text-success ml-2"></i></button>
+              <div v-if="this.isNew">
+                <button type="button" class="btn btn-outline-danger w-100" @click="this.removeComponent">Remove<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
+              </div>
+              <div v-else>
+                <button v-if="this.discontinued" type="button" class="btn btn-outline-danger w-100" @click="this.enableComponent">Enable</button>
+                <button v-else type="button" class="btn btn-outline-danger w-100" @click="this.discontinueComponent">Discontinue<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
               </div>
             </div>
           </div>
         </div>
+      </div>
       `
 })
 
