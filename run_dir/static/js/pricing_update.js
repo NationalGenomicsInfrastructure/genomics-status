@@ -636,19 +636,19 @@ app.component('v-component-form-part', {
 
                   <label class="form-label col-md-2">
                     Units
-                    <input class="form-control" v-model.text="component['Units']" type="text" :disabled="discontinued">
+                    <input class="form-control" v-model.number="component['Units']" type="number" :disabled="discontinued">
                   </label>
 
                 </div>
                 <div class="row my-1">
                   <label class="form-label col-md-2">
                     Discount
-                    <input class="form-control" v-model.text="component['Discount']" type="text" :disabled="discontinued">
+                    <input class="form-control" v-model.number="component['Discount']" type="number" :disabled="discontinued">
                   </label>
 
                   <label class="form-label col-md-2">
                     List Price
-                    <input class="form-control" v-model.text="component['List price']" type="text" :disabled="discontinued">
+                    <input class="form-control" v-model.number="component['List price']" type="number" :disabled="discontinued">
                   </label>
 
                   <label class="form-label col-md-2">
