@@ -948,9 +948,18 @@ app.component('v-draft-changes-list', {
         }
     },
     methods: {
-        is_new_product(prod_changes_data) {
+        is_new_product(prod_id) {
+            prod_changes_data = this.product_changes[prod_id]
             if (Object.keys(prod_changes_data).length !== 0) {
                 return (Object.keys(prod_changes_data)[0] == 'All')
+            } else {
+                return false
+            }
+        },
+        is_new_component(comp_id) {
+            comp_changes_data = this.component_changes[comp_id]
+            if (Object.keys(comp_changes_data).length !== 0) {
+                return (Object.keys(comp_changes_data)[0] == 'All')
             } else {
                 return false
             }
@@ -993,10 +1002,25 @@ app.component('v-draft-changes-list', {
               <div class="row">
                 <template v-for="(prod_changes_data, prod_id) in product_changes" :key="prod_id">
                   <div class="ml-3 mb-3">
-                    <h5 class="col-12"><a href='#' :data-scroll-to-link="'#product_form_part_' + prod_id" @click="scroll_to_on_page">{{this.$root.all_products[prod_id]['Name']}}:</a></h5>
-                    <div class="ml-3 mr-2" v-for="(prod_type_changes_data, type_key) in prod_changes_data" :key="type_key">
-                      <strong class="mr-2">{{type_key}}:</strong>
-                      <template v-if="(type_key == 'Components') || (type_key == 'Alternative Components')">
+                    <h5 class="col-12">
+                      <a href='#' :data-scroll-to-link="'#product_form_part_' + prod_id" @click="scroll_to_on_page">
+                        {{this.$root.all_products[prod_id]['Name']}}:
+                      </a>
+                      <template v-if="is_new_product(prod_id)">
+                        <strong class="ml-2"> - New product!</strong>
+                      </template>
+                    </h5>
+                    <template v-if="is_new_product(prod_id)">
+                      <div class="ml-3 mr-2">
+                        <div v-for="(new_prod_value, new_prod_key) in prod_changes_data['All'][0]" :key="new_prod_key">
+                          <strong>{{new_prod_key}}:</strong> {{new_prod_value}}
+                        </div>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div class="ml-3 mr-2" v-for="(prod_type_changes_data, type_key) in prod_changes_data" :key="type_key">
+                        <strong class="mr-2">{{type_key}}:</strong>
+                        <template v-if="(type_key == 'Components') || (type_key == 'Alternative Components')">
                         <div class="row">
                           <div class="col-4 border-right">
                             <div class="row" v-for="(prod_type_component_changes_data, component_id) in prod_type_changes_data[1]" :key="component_id">
@@ -1022,11 +1046,12 @@ app.component('v-draft-changes-list', {
                             </div>
                           </div>
                         </div>
-                      </template>
-                      <template v-else>
-                        {{prod_type_changes_data[1]}} <i class="fas fa-arrow-right"></i> {{prod_type_changes_data[0]}}
-                      </template>
-                    </div>
+                        </template>
+                        <template v-else>
+                          {{prod_type_changes_data[1]}} <i class="fas fa-arrow-right"></i> {{prod_type_changes_data[0]}}
+                        </template>
+                      </div>
+                    </template>
                   </div>
                 </template>
               </div>
@@ -1036,11 +1061,27 @@ app.component('v-draft-changes-list', {
               <div class="row">
                 <template v-for="(comp_changes_data, comp_id) in component_changes" :key="comp_id">
                   <div class="ml-3 mb-3">
-                    <h5 class="col-12"><a href='#' :data-scroll-to-link="'#component_form_part_' + comp_id" @click="scroll_to_on_page">{{this.$root.all_components[comp_id]['Product name']}}:</a></h5>
-                    <div class="ml-3 mr-2" v-for="(comp_type_changes_data, type_key) in comp_changes_data" :key="type_key">
-                      <strong class="mr-2">{{type_key}}:</strong>
-                      {{comp_type_changes_data[1]}} <i class="fas fa-arrow-right"></i> {{comp_type_changes_data[0]}}
-                    </div>
+                    <h5 class="col-12">
+                      <a href='#' :data-scroll-to-link="'#component_form_part_' + comp_id" @click="scroll_to_on_page">
+                        {{this.$root.all_components[comp_id]['Product name']}}:
+                      </a>
+                      <template v-if="is_new_component(comp_id)">
+                        <strong class="ml-2"> - New component!</strong>
+                      </template>
+                    </h5>
+                    <template v-if="is_new_component(comp_id)">
+                      <div class="ml-3 mr-2">
+                        <div v-for="(new_comp_value, new_comp_key) in comp_changes_data['All'][0]" :key="new_comp_key">
+                          <strong>{{new_comp_key}}:</strong> {{new_comp_value}}
+                        </div>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div class="ml-3 mr-2" v-for="(comp_type_changes_data, type_key) in comp_changes_data" :key="type_key">
+                        <strong class="mr-2">{{type_key}}:</strong>
+                        {{comp_type_changes_data[1]}} <i class="fas fa-arrow-right"></i> {{comp_type_changes_data[0]}}
+                      </div>
+                    </template>
                   </div>
                 </template>
               </div>
