@@ -81,19 +81,19 @@ const vPricingMain = {
         },
         product_categories() {
             categories = new Set();
-            add_new_at_end = false;
+            add_new_at_start = false;
             for ([prod_id, product] of Object.entries(this.all_products)) {
                 if (! (product['Status'] == 'Discontinued')) {
                     if ( this.new_products.has(prod_id) ) {
-                        add_new_at_end = true;
+                        add_new_at_start = true;
                     }
                     categories.add(product['Category'])
                 }
             }
 
             categories_array = Array.from(categories).sort()
-            if (add_new_at_end) {
-                categories_array.push('New products')
+            if (add_new_at_start) {
+                categories_array.unshift('New products')
             }
             return categories_array
         },
@@ -143,18 +143,18 @@ const vPricingMain = {
         },
         component_categories() {
             categories = new Set();
-            add_new_at_end = false;
+            add_new_at_start = false;
             for ([comp_id, component] of Object.entries(this.all_components)) {
                 if (! (component['Status'] == 'Discontinued')) {
                     if ( this.new_components.has(comp_id) ) {
-                        add_new_at_end = true;
+                        add_new_at_start = true;
                     }
                     categories.add(component['Category'])
                 }
             }
             categories_array = Array.from(categories).sort()
-            if (add_new_at_end) {
-                categories_array.push('New components')
+            if (add_new_at_start) {
+                categories_array.unshift('New components')
             }
             return categories_array
         },
