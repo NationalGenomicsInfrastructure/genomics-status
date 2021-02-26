@@ -15,7 +15,10 @@ $(document).ready(function(){
   // Activate bootstrap hover tooltips
   var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'))
   var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl)
+    return new bootstrap.Tooltip(tooltipTriggerEl, {
+                                  boundary: 'window',
+                                  html: true
+                                })
   })
 
   // Main navigation - #depreciated_header is the list separator
@@ -115,7 +118,7 @@ function auto_format(value, samples_table){
             value == 'no' ||
             value == 'n/a' ||
             value == 'aborted' ))){
-    returnstring = '<span class="label label-danger sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="badge bg-danger sentenceCase">'+value+'</span> ';
   }
 
   // Put all False / Failed / Fail into labels
@@ -127,25 +130,25 @@ function auto_format(value, samples_table){
             value == 'yes' ||
             value == 'finished' ||
             value == 'p'))){
-    returnstring = '<span class="label label-success sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="badge bg-success sentenceCase">'+value+'</span> ';
   }
 
   // Put all unknowns into labels
   else if(value === true ||
 				  (typeof value == 'string' && (
             value == 'unknown'))){
-    returnstring = '<span class="label label-default sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="badge bg-secondary sentenceCase">'+value+'</span> ';
   }
 
   // Warning labels
   else if(typeof value == 'string' && (
             value == 'in progress')){
-    returnstring = '<span class="label label-warning sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="badge bg-warning sentenceCase">'+value+'</span> ';
   }
 
   // Dates
   else if(samples_table && typeof value == 'string' && value.split('-').length == 3 && value.length == 10){
-    returnstring = '<span class="label label-date sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="badge bg-date sentenceCase">'+value+'</span> ';
   }
 
   // Put all undefined into labels
@@ -153,7 +156,7 @@ function auto_format(value, samples_table){
           (typeof value == 'string' && value == 'null') ||
           (typeof value == 'string' && value == 'nan') ||
           typeof value == 'undefined' || typeof value == 'null' || typeof value == 'NaN'){
-    returnstring = '<span class="label label-undefined sentenceCase">'+value+'</span> ';
+    returnstring = '<span class="badge bg-undefined sentenceCase">'+value+'</span> ';
   }
 
   else {
@@ -182,7 +185,7 @@ marked.setOptions({
 });
 function make_project_links(s){
   // Searches for P[\d+] and replaces with a link to the project page
-  s = s.replace(/([\W])(P[\d]{3,5})(?!\w)/g, '$1<a href="/project/$2">$2</a>');
+  s = s.replace(/([\W])(P[\d]{3,5})(?!\w)/g, '$1<a class="text-decoration-none" href="/project/$2">$2</a>');
 
   // Searches for FlowCell IDs and replaces with a link (Most complicated regex ever)
   // - $1 = Captures a non-word character (javascript can't do lookbehind)
@@ -192,12 +195,12 @@ function make_project_links(s){
   // - Not capture lookahead to make sure that we're not followed by any more word characters
   // Replaces with link to flowcell ID without internal chunk
   // Example: 150505_D00450_0168_AC6H3RANXX links to 150505_AC6H3RANXX
-  s = s.replace(/([\W])(\d{6})(_(?:ST-)?\w{5,10}_\d{3,4})(_\w{8,12}(?:\-\w{3,8})?)(?!\w)/g, '$1<a href="/flowcells/$2$4">$2$3$4</a>');
+  s = s.replace(/([\W])(\d{6})(_(?:ST-)?\w{5,10}_\d{3,4})(_\w{8,12}(?:\-\w{3,8})?)(?!\w)/g, '$1<a class="text-decoration-none" href="/flowcells/$2$4">$2$3$4</a>');
   return s;
 }
 function create_user_tags(s){
   // Searches for @\w+ and replaces with a mail link
-  s = s.replace(/(@)([a-zA-Z0-9.-]+)/g, '<a href="mailto:$2@scilifelab.se">$1$2</a>');
+  s = s.replace(/(@)([a-zA-Z0-9.-]+)/g, '<a class="text-decoration-none" href="mailto:$2@scilifelab.se">$1$2</a>');
   return s;
 }
 function check_img_sources(obj){

@@ -28,18 +28,18 @@ yLogAxis = 'linear';
 
 // Wait for page to load
 $(function(){
-    
+
     // Check to see if project ID box is filled on page load and submit if so.
     if($('#projects_meta_input').val() !== ''){
         load_projects_meta();
     }
-    
+
     // Load data when form is submitted
     $('#project_chooser').submit(function(e){
         e.preventDefault();
         load_projects_meta();
     });
-    
+
     // Select dropdown box is changed
     $('#meta_key_selector select').change(function(){
         // Clear previous results
@@ -48,14 +48,14 @@ $(function(){
         }
         $('#proj_meta_plot').html('<p class="text-center text-muted">Please select an X and a Y variable</p>');
         $('#proj_meta_correlation').text('?');
-        
+
         var sect1 = $('#proj_meta_yvalue option:selected').data('section');
         var key1 = $('#proj_meta_yvalue').val();
         var sect2 = $('#proj_meta_xvalue option:selected').data('section');
         var key2 = $('#proj_meta_xvalue').val();
         var sect3 = $('#proj_meta_colvalue option:selected').data('section');
         var key3 = $('#proj_meta_colvalue').val();
-        
+
         if(key1 != '' && key2 != ''){
             plot_meta({
                 'y': [sect1, key1],
@@ -64,20 +64,20 @@ $(function(){
             });
         }
     });
-    
+
     // Download all data button
     $('#projMeta_downloadAll').click(function(e){
         e.preventDefault();
         pmeta_download();
     });
-    
+
     // Copy to clipboard button
     new Clipboard('#projMeta_copyRaw', {
         text: function(trigger) {
             return JSON.stringify(project_data, null, "  ");
         }
     });
-    
+
     // Change between log and linear axes
     $('.meta_xLogLin_buttons button').click(function(e){
         e.preventDefault();
@@ -95,14 +95,14 @@ $(function(){
         else { yLogAxis = 'linear'; }
         $('#proj_meta_plot').highcharts().yAxis[0].update({ type: yLogAxis});
     });
-    
+
 });
 
 
 // Main function that fires when project IDs are filled in and the form
 // is submitted. Loads page.
 function load_projects_meta(){
-    
+
     // Destroy previous work
     // Clear previous results
     if($('#proj_meta_plot').highcharts()) {
@@ -113,11 +113,11 @@ function load_projects_meta(){
     $('#projMeta_downloadAll, #projMeta_copyRaw').prop('disabled', true);
     $('#proj_meta_yvalue, #proj_meta_xvalue').prop('disabled', true).html('<option value="">[ select value ]</option>');
     $('#proj_meta_colvalue').prop('disabled', true).html('<option data-section="" value="">Project</option>');
-    
+
     // Collect the user supplied project IDs
     var projects_str = $('#projects_meta_input').val();
     var projects_raw = projects_str.split(/[\s+,;]/);
-    
+
     // Clean up the user input
     var projects = [];
     for (var i = 0; i < projects_raw.length; i++) {
@@ -131,7 +131,7 @@ function load_projects_meta(){
             return;
         }
     }
-    
+
     // Update the status box
     var completed_ajax = 0;
     var num_samples = 0;
@@ -139,7 +139,7 @@ function load_projects_meta(){
     $('#status_box span').html('Loading '+projects.length+' projects: <code>'+projects.join('</code>, <code>')+'</code>.'+
          '<div class="progress" style="margin: 15px 0 0;"><div id="project_status_pbar" class="progress-bar" style="width: 0%;">'+
          '<span id="project_status_counter">0</span> projects loaded (<span id="project_status_sample_counter">0</span> samples)</div></div>');
-    
+
     // Ajax caller function
     var ajax_caller = function(pid) {
         var this_url = '/api/v1/project/'+pid;
@@ -148,7 +148,7 @@ function load_projects_meta(){
             num_samples += Object.keys(data).length;
         });
     };
-    
+
     //RNA ajax caller function:
     var RNA_caller = function(pid){
         var rna_url = '/api/v1/rna_report/'+pid;
@@ -169,7 +169,7 @@ function load_projects_meta(){
     for (var i = 0; i < projects.length; i++) {
         ajax_calls.push( ajax_caller( projects[i] ) );
     }
-    
+
     //when they are done, start the second round of ajax calls
     $.when.apply(this, ajax_calls).done(function() {
         rna_calls = [];
@@ -181,7 +181,7 @@ function load_projects_meta(){
             // Update the status box
             $('#status_box').removeClass().addClass('alert alert-success');
             $('#status_box span').html(completed_ajax+' projects loaded ('+num_samples+' samples). <strong id="second_level_stats">Next: choose X and Y values to plot</strong>');
-            
+
             // Collect available shared keys
             numeric_keys = {'base': [], 'library_prep': [], 'rna_meta' : []};
             for (var pid in project_data){
@@ -204,7 +204,7 @@ function load_projects_meta(){
                                     }
                                     key_min['library_prep'][l_attr] = Math.min(validation[lv][l_attr], key_min['library_prep'][l_attr]);
                                     key_max['library_prep'][l_attr] = Math.max(validation[lv][l_attr], key_min['library_prep'][l_attr]);
-                                }    
+                                }
                             }
                         }
                         else if(attr == 'rna_meta'){
@@ -237,7 +237,7 @@ function load_projects_meta(){
                                     }
                                     key_min[attr][s_attr] = Math.min(project_data[pid][s_name][attr][s_attr], key_min[attr][s_attr]);
                                     key_max[attr][s_attr] = Math.max(project_data[pid][s_name][attr][s_attr], key_max[attr][s_attr]);
-                                }    
+                                }
                             }
                             // Delete if no numeric keys found
                             if(numeric_keys[attr].length == 0){
@@ -266,11 +266,10 @@ function load_projects_meta(){
                 }
                 group.appendTo($('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue'));
             }
-            
+
             // Remove disabled states
             $('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue, #projMeta_downloadAll, #projMeta_copyRaw').prop('disabled', false);
-            
-        console.log(project_data);
+
         });
     });
 }
@@ -347,13 +346,13 @@ function plot_meta(keys){
         }
         data.push(ds);
     }
-    
+
     // No samples plotted - sometihng went wrong
     if(num_data == 0){
       $('#proj_meta_plot').html('<div class="alert alert-danger"><strong>Error:</strong> No data found to plot. Please try another combination.</div>');
       return false;
     }
-    
+
     // List skipped samples
     if(skipped_samples.length > 0){
         var stat_string = '<strong>Warning:</strong> '+skipped_samples.length+' samples out of ' + (num_data + skipped_samples.length) + ' skipped:<br>';
@@ -362,7 +361,7 @@ function plot_meta(keys){
             stat_string += '<code>'+pid+'</code>: '+count+' out of ' + Object.keys(project_data[pid]).length + ' samples skipped<br>';
           }
         });
-        stat_string += ' <br><button class="btn btn-default btn-sm" onClick="$(\'#skipped_samples_list\').slideToggle();">show / hide hidden sample names</button>'+
+        stat_string += ' <br><button class="btn btn-outline-dark btn-sm" onClick="$(\'#skipped_samples_list\').slideToggle();">show / hide hidden sample names</button>'+
         '<pre id="skipped_samples_list" style="display:none;">'+skipped_samples.join("\n")+'</pre>'
         $('#skipped_status_tip').html(stat_string);
     } else {
@@ -371,7 +370,7 @@ function plot_meta(keys){
     if(data.length == 0){
         $('#proj_meta_plot').text('No data to show');
     }
-    
+
     var ytitle = keys['y'][0]+': '+keys['y'][1];
     var xtitle = keys['x'][0]+': '+keys['x'][1];
     $('#proj_meta_plot').highcharts({
@@ -421,7 +420,7 @@ function plot_meta(keys){
             useHTML: true,
             headerFormat: ' <span style="font-size: 30px"><b>{point.point.name}</b></span><br>',
             pointFormat: '<b>'+ytitle+':</b> {point.y}<br><b>'+xtitle+':</b> {point.x}',
-            
+
             useHTML: true,
             headerFormat: '<span style="font-size: 15px; font-weight:bold;">{point.point.name}</span><table>',
             pointFormat: '<tr><td style="font-weight:bold; padding:5px;">'+ytitle+':</td><td style="text-align: right; padding:5px;">{point.y}</td></tr>'+
@@ -458,7 +457,7 @@ function plot_meta(keys){
 // Function to calculate a correlation score. Takes a HighCharts
 // series object
 function calc_corr_score(plot_data){
-  
+
     // Initialise variables
     var y_sum = 0;
     var x_sum = 0;
@@ -466,7 +465,7 @@ function calc_corr_score(plot_data){
     var x_sqsum = 0;
     var p_sum = 0;
     var num_samps = 0;
-    
+
     // Loop through all of the data points
     for (var s in plot_data){
         if(plot_data[s]['visible'] == true){
@@ -484,7 +483,7 @@ function calc_corr_score(plot_data){
             }
         }
     }
-    
+
     // Calculate the correlation coefficient
     var corr_co = 0;
     var num = p_sum - (y_sum * x_sum / num_samps);
@@ -492,20 +491,20 @@ function calc_corr_score(plot_data){
     if (den !== 0){
         corr_co = num / den;
     }
-    var lclass = 'default';  
+    var lclass = 'secondary';
     if(corr_co > 0.8 || corr_co < -0.8){ lclass = 'success'; }
     else if(corr_co > 0.6 || corr_co < -0.6){ lclass = 'info'; }
-    else if(corr_co > 0.4 || corr_co < -0.4){ lclass = 'default'; }
+    else if(corr_co > 0.4 || corr_co < -0.4){ lclass = 'secondary'; }
     else if(corr_co > 0.2 || corr_co < -0.2){ lclass = 'warning'; }
     else if(isNaN(corr_co)){ lclass = 'danger'; }
-    $('#proj_meta_correlation').html('<span class="label label-'+lclass+'">'+corr_co.toFixed(3)+'</span> ('+num_samps+' samples)');
+    $('#proj_meta_correlation').html('<span class="badge bg-'+lclass+'">'+corr_co.toFixed(3)+'</span> ('+num_samps+' samples)');
 }
 
 
 
 /// Download all of the data
 function pmeta_download(){
-    
+
     // Get the keys (headers)
     var keys = [];
     $('#proj_meta_yvalue option').each(function(){
@@ -513,7 +512,7 @@ function pmeta_download(){
         var tsect = $(this).data('section');
         if(tval !== ''){ keys.push([tsect, tval]); }
     });
-    
+
     // Build the data structure
     var data = [];
     for (var pid in project_data){

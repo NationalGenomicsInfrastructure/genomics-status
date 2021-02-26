@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: worksets.html
@@ -12,33 +12,33 @@ Description: Shows a table with all worksets.
 <h1 class="worksets_page_heading"><span id="page_title">Worksets</span></h1>
 <div id="page_content" >
   <div class="tabbable">
-    <ul class="nav nav-tabs">
-      <li class="active"><a href="#tab_run_worksets" role="tab" data-toggle="tab">Worksets</a></li>
-      <li><a href="#tab_pending_samples_to_worksets" role="tab" data-toggle="tab">Samples pending for worksets</a></li>
-      <li><a href="#tab_closed_worksets" role="tab" data-toggle="tab">Finished worksets</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item" role="presentation"><a class="nav-link active" href="#tab_run_worksets" role="tab" data-toggle="tab" aria-selected="true">Worksets</a></li>
+      <li class="nav-item"><a class="nav-link" href="#tab_pending_samples_to_worksets" role="tab" data-toggle="tab">Samples pending for worksets</a></li>
+      <li class="nav-item"><a class="nav-link" href="#tab_closed_worksets" role="tab" data-toggle="tab">Finished worksets</a></li>
     </ul>
     <div class="tab-content">
-      <div class="tab-pane fade in active" id="tab_run_worksets">
+      <div class="tab-pane fade show active" id="tab_run_worksets">
         {% if all %}
-          <h2 id="{{ worksets }}" class="worksets_page_heading" <small>All worksets found in statusdb. </small><a class="btn btn-default" href="/worksets">Show last 6 months only</a></h2>
+          <h2 id="{{ worksets }}" class="worksets_page_heading" <small class="text-muted">All worksets found in statusdb. </small><a class="btn btn-outline-dark" href="/worksets">Show last 6 months only</a></h2>
         {% else %}
-          <h2 id="{{ worksets }}" class="worksets_page_heading"> <small>Worksets from the last 6 months. </small><a class="btn btn-default" href="/worksets?all=True">Show all</a></h2>
+          <h2 id="{{ worksets }}" class="worksets_page_heading"> <small class="text-muted">Worksets from the last 6 months. </small><a class="btn btn-outline-dark" href="/worksets?all=True">Show all</a></h2>
         {% end %}
-        <div class="form-group">
-	      <button type="button" id="ws_copy_table" class="btn btn-sm btn-default" data-clipboard-target="#workset_table"><span class="glyphicon glyphicon-copy"></span> Copy table</button>
+        <div>
+	      <button type="button" id="ws_copy_table" class="btn btn-sm btn-outline-dark" data-clipboard-target="#workset_table"><span class="fa fa-copy"></span> Copy table</button>
         </div>
         <div id="workset-list">
         &nbsp;
           <table class="table table-striped table-bordered sortable" id="workset_table">
             <thead id="workset_table_head">
-                <tr class="sticky">
+                <tr class="sticky darkth">
                  {% for onekey in headers %}
                     <th>{{ onekey[0] }}</th>
                  {% end %}
                  </tr>
             </thead>
             <tfoot id="workset_table_footer">
-                <tr>
+                <tr class="darkth">
                  {% for onekey in headers %}
                     <th>{{ onekey[0] }}</th>
                  {% end %}
@@ -54,16 +54,16 @@ Description: Shows a table with all worksets.
                          </td>
                      {% elif onekey[1] == 'workset_name'%}
                          <td>
-                         <a href="/workset/{{ onews }}" style="color:#000000;">{{ onews }}</a>
+                         <a href="/workset/{{ onews }}" style="color:#000000;" class="text-decoration-none">{{ onews }}</a>
                          </td>
                      {% elif onekey[1] == 'projects'%}
                          <td>
                          {% for onepj in ws_data.get(onews).get(onekey[1]) %}
                             {% if ws_data.get(onews).get(onekey[1]).get(onepj).get('status') == 'Open' %}
-                                <a href="/project/{{ onepj }}" class="text-success" data-toggle="tooltip" title="Status: Open"><i class="glyphicon glyphicon-folder-open">&nbsp;</i>{{ ", ".join([ws_data.get(onews, {}).get(onekey[1], {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}</a>
+                                <a href="/project/{{ onepj }}" class="text-success text-decoration-none" data-toggle="tooltip" title="Status: Open"><i class="fa fa-folder-open">&nbsp;</i>{{ ", ".join([ws_data.get(onews, {}).get(onekey[1], {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}</a>
                             {% end %}
                             {% if ws_data.get(onews).get(onekey[1]).get(onepj).get('status') == 'Closed' %}
-                                <a href="/project/{{ onepj }}" class="text-warning" data-toggle="tooltip" title="Status: Closed"><i class="glyphicon glyphicon-folder-close">&nbsp;</i>{{ ", ".join([ws_data.get(onews, {}).get(onekey[1], {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}</a>
+                                <a href="/project/{{ onepj }}" class="text-black-50 text-decoration-none" data-toggle="tooltip" title="Status: Closed"><i class="fa fa-folder">&nbsp;</i>{{ ", ".join([ws_data.get(onews, {}).get(onekey[1], {}).get(onepj, {}).get('project_name', 'NA'), onepj]) }}</a>
                             {% end %}
                             &nbsp;({{ ws_data.get(onews).get(onekey[1]).get(onepj).get('samples_nb') }})<br>
                             {% end %}
@@ -85,11 +85,11 @@ Description: Shows a table with all worksets.
                          {% if ws_data[onews].get('Workset Notes') %}
                               {% set workset_notes = ws_data[onews].get('Workset Notes') %}
                               {% set latest_workset_note_key = list(workset_notes.keys())[0] %}
-                              <div class="panel panel-default running-note-panel">
-                              <div class='panel-heading'>
-                              <a href='mailto:{{ workset_notes[latest_workset_note_key]["email"].encode("ascii","ignore")}}'>{{ workset_notes[latest_workset_note_key]["user"].encode("ascii","ignore")}}</a>  -  {{ datetime.datetime.strptime(latest_workset_note_key, "%Y-%m-%d %H:%M:%S.%f").strftime("%a %b %d %Y, %I:%M:%S %p") }}
+                              <div class="card running-note-card">
+                              <div class='card-header'>
+                              <a class="text-decoration-none" href='mailto:{{ workset_notes[latest_workset_note_key]["email"].encode("ascii","ignore")}}'>{{ workset_notes[latest_workset_note_key]["user"].encode("ascii","ignore")}}</a>  -  {{ datetime.datetime.strptime(latest_workset_note_key, "%Y-%m-%d %H:%M:%S.%f").strftime("%a %b %d %Y, %I:%M:%S %p") }}
                               </div>
-                              <div class='panel-body' style='white-space: pre-line'>
+                              <div class='card-body' style='white-space: pre-line'>
                               {{workset_notes[latest_workset_note_key]['note']}}
                               </div>
                               </div>
@@ -106,12 +106,18 @@ Description: Shows a table with all worksets.
         </div>
       </div>
       <div class="tab-pane fade" id="tab_pending_samples_to_worksets">
-        <label class="btn btn-sm btn-default expand-all pull-right"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>Expand All</label>
-        <h2 class="worksets_page_heading"> <small>All samples that are available to be added to a workset in LIMS.</small></h2>
+        <div class="row">
+          <div class="col">
+            <h2 class="worksets_page_heading"> <small class="text-muted">All samples that are available to be added to a workset in LIMS.</small></h2>
+          </div>
+          <div class="col ml-auto gy-2">
+            <label class="btn btn-sm btn-outline-dark expand-all float-right"><span class="fa fa-plus-circle" aria-hidden="true"></span>Expand All</label>
+          </div>
+        </div>
         <div id="samples-to-workset-list">
           <table class="table table-hover table-striped table-bordered sortable" id="samples_table">
             <thead id="samples_table_head">
-                <tr class="sticky">
+                <tr class="sticky darkth">
                   <th></th>
                   <th>Project</th>
                   <th>Number of Samples (Total samples in project)</th>
@@ -119,7 +125,7 @@ Description: Shows a table with all worksets.
                 </tr>
             </thead>
             <tfoot id="samples_table_footer">
-              <tr>
+              <tr class="darkth">
                 <th></th>
                 <th>Project</th>
                 <th>Number of Samples (Total samples in project)</th>
@@ -132,18 +138,18 @@ Description: Shows a table with all worksets.
         </div>
       </div>
       <div class="tab-pane fade" id="tab_closed_worksets">
-       <h2 class="closed_ws_page_heading"><small>All worksets with projects closed for >1 year in StatusDB</small></h2>
+       <h2 class="closed_ws_page_heading"><small class="text-muted">All worksets with projects closed for >1 year in StatusDB</small></h2>
        <tbody class="list" id="closed_ws_table_body">
         <table class="table table-striped table-bordered sortable" id="closed_ws_table">
           <thead id="closed_ws_table_head">
-              <tr class="sticky">
+              <tr class="sticky darkth">
                 <th>Date Run</th>
                 <th>Workset Name</th>
                 <th>Closed Projects</th>
               </tr>
           </thead>
           <tfoot id="closed_ws_table_footer">
-              <tr>
+              <tr class="darkth">
               <th>Date Run</th>
               <th>Workset Name</th>
               <th>Closed Projects</th>

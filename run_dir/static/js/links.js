@@ -13,7 +13,7 @@ function get_link_url() {
 
 function load_links() {
   link_url=get_link_url();
-  var link_icon = {'Deviation':'exclamation-sign text-danger', 'Other':'file text-primary'};
+  var link_icon = {'Deviation':'exclamation-circle text-danger', 'Other':'file text-primary'};
   $("#existing_links").empty();
   $("#existing_links_projinfo").empty();
   $("#links_tab").hide();
@@ -25,22 +25,29 @@ function load_links() {
       date = date.replace(/\.\d{6}/, '');
       date = new Date(date);
       $("#existing_links_projinfo").append('<tr><td>'+
-      '<div class="media"><a class="media-left"'+link_href+'>'+
-        '<span style="font-size:18px;" class="glyphicon glyphicon-'+link_icon[link['type']]+'"></span></a>'+
-        '<span class="media-left"><a "'+link_href+'>'+link['title']+'</a>'
-        +'</td><td>'+link['desc']+'<small> &nbsp;<a href="mailto:'+link['email']+'">'+link['user']+'</a>'+
+      '<div><a class="pr-2"'+link_href+'>'+
+        '<span style="font-size:18px;" class="fa fa-'+link_icon[link['type']]+'"></span></a>'+
+        '<span class="align-top"><a class="text-decoration-none" "'+link_href+'>'+link['title']+'</a>'
+        +'</td><td>'+link['desc']+'<small> &nbsp;<a class="text-decoration-none" href="mailto:'+link['email']+'">'+link['user']+'</a>'+
         ' - '+date.toDateString()+'</span></td></tr>');
-      $("#existing_links").append('<div class="link_wrapper"><div class="col-sm-8 col-sm-offset-2">'+
-          '<div class="media"><a class="media-left"'+link_href+'>'+
-            '<span style="font-size:18px;" class="glyphicon glyphicon-'+link_icon[link['type']]+'"></span>'+
-          '</a><div class="media-body">'+
-            '<h4 class="media-heading"><span class="media-left"><a "'+link_href+'>'+link['title']+'</a>'+
-              ' &nbsp; <small><a href="mailto:'+link['email']+'">'+link['user']+'</a>'+
-              ' - '+date.toDateString()+
-            '</span></h4>'+
-            link['desc']+
-          '</div></div>'+
-          '</div><div class="clearfix"></div></div>');
+      $("#existing_links").append('<div class="link_wrapper"> \
+                                    <div class="container"> \
+                                    <div class="row justify-content-center">  \
+                                      <div class="col-1 pr-0"> \
+                                        <a class="float-right"'+link_href+'><i style="font-size:18px;" class="fa fa-'+link_icon[link['type']]+'"></i> \
+                                        </a> \
+                                      </div> \
+                                      <div class="col-9"> \
+                                        <h4> \
+                                          <a class="text-decoration-none" "'+link_href+'>'+link['title']+'</a> \
+                                          <small> \
+                                          <a class="text-decoration-none" href="mailto:'+link['email']+'">'+link['user']+'</a> - '+date.toDateString()+' \
+                                          </small> \
+                                        </h4> '+link['desc']+' \
+                                      </div> \
+                                    </div> \
+                                    </div> \
+                                   </div>');
     });
   });
 }

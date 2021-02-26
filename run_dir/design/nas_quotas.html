@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 {% block stuff %}
   <h1 id="page_title">Storage quotas used on NAS servers</h1>
   <p>The quota limit is indicated with a dashed red line.</p>
-  <p><span id="show_all_text">Showing data from last two months.</span> &nbsp; <button id="show_all_data" class="btn btn-default btn-xs">Show all data</button></p>
+  <p><span id="show_all_text">Showing data from last two months.</span> &nbsp; <button id="show_all_data" class="btn btn-outline-dark btn-xs">Show all data</button></p>
   <div id="plots">
     {% for nas_url in nases.keys() %}
     <div class="row" id='{{ nas_url.replace(".", "--") }}'>

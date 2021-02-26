@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: projects.html
@@ -12,164 +12,175 @@ Description: Shows all presets configured for user and enables their selection.
 
 <h1 id="{{ projects }}" class="projects_page_heading">
   <span id="page_title">Projects</span>
-  <button type="submit" class="btn pull-right btn-lg space-left btn-primary" id="loadTablebtn">Load Table</button>
+  <button type="submit" class="btn float-right btn-lg space-left btn-primary" id="loadTablebtn">Load Table</button>
 </h1>
 <form id="Search-form" class="horizontal">
 
 <!---->
-  <div class="panel panel-default">
-      <div class="panel-heading" role="tab" id="headingOne">
-      <div id="loading_spinner" style="text-align:center;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading presets...</div>
-        <h6 class="panel-title">
-          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-            Customise <i class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></i>
+  <div class="card mb-3">
+      <div class="card-header" role="tab" id="headingOne">
+      <div id="loading_spinner" style="text-align:center;"><span class='fa fa-sync fa-spin'></span>  Loading presets...</div>
+        <h4 class="card-title mt-2">
+          <a role="button" class="text-decoration-none text-dark" data-toggle="collapse" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            Customise <i class="fa fa-caret-down" aria-hidden="true"></i>
           </a>
-  		    <div class="btn-group mr-2" data-toggle="buttons" role="group" id="presetButtons">
+  		    <div class="btn-group mr-2 ml-5" data-toggle="buttons" role="group" id="presetButtons">
   		        <div class="btn-group" id="default_preset_buttons"></div>
-              <div id="user_presets_dropdown" class="btn-group changingDropdown rBtngp2"></div>
+              <div id="user_presets_dropdown" class="btn-group changingDropdown rBtngp2">
+              </div>
   		    </div>
-          <button type="button" class="btn btn-default pull-right space-left" id="pageInfo">
-          <font class="glyphicon glyphicon-question-sign"></font></button>
-          <button class="btn btn-default pull-right" data-toggle="modal" type="button" data-target="#settingsModal">
-              <i class="glyphicon glyphicon-cog"></i> Settings
+          <button type="button" class="btn btn-outline-dark float-right ml-1" id="pageInfo">
+          <font class="fa fa-question-square"></font></button>
+          <button class="btn btn-outline-dark float-right" data-toggle="modal" type="button" data-target="#settingsModal">
+              <i class="fa fa-cog"></i> Settings
             </button>
-        </h6>
+        </h4>
       </div>
-      <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
-        <div class="panel-body">
-          <div class="form-group row row-eq-height">
-            <div class="col-md-6 panel-group">
-              <div class="panel panel-default">
-                <div class="panel-heading">
-                  <h4 class="panel-title">
+      <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="headingOne">
+        <div class="card-body">
+          <div class="row">
+          <div class="card-group">
+
+              <div class="card m-2" style="max-height: 45vh; min-height: 45vh">
+                <div class="card-header">
+                  <h4 class="card-title">
                     Filters
                   </h4>
                 </div>
-                <div class="panel-body">
+                <div class="card-body overflow-scroll">
                   <div class="form-group">
                     <div class="text-center">
-                    <label for="statusbtnBar1" class="control-label">Choose Status <button type="button" class="btn btn-xs btn-default" id="filterInfo">
-                      <span class="glyphicon glyphicon-info-sign"></span></button></label>
-                      <div id='displayInfo' style="display:none;" class="alert alert-info" role="alert">
-                        <span type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></span>
+                    <label for="statusbtnBar1" class="fw-bold pb-2">Choose Status <button type="button" class="btn btn-xs btn-outline-secondary" id="filterInfo">
+                      <span class="fa fa-info-circle"></span></button></label>
+                      <div id='displayInfo' style="display:none;" class="alert alert-info mt-1" role="alert">
                         <div class="text-left">
+                          <span type="button" class="btn-close float-right" aria-label="Close"></span>
                             The Project status/Dates relationships are as follows:
                             <ul>
-                              <li><b>Pending</b>: Do not have Open, Queue or Close Dates.</li>
-                              <li><b>Reception Control</b>: Have Open Date, but not Queue or Close Dates.</li>
+                              <li><b>Pending</b>: Does not have Open, Queue or Close Dates.</li>
+                              <li><b>Reception Control</b>: Has Open Date, but not Queue or Close Dates.</li>
                               <li><b>Needs Review</b>: May have Open and Queue Dates, but not Close Date.</li>
-                              <li><b>Ongoing</b>: Have Open and Queue Date, but not Close Date.</li>
-                              <li><b>Open</b>: Have Open Date.</li>
-                              <li><b>Closed</b>: Have Close Date. May have Open and Queue dates.</li>
-                              <li><b>Aborted</b>: Have Aborted date.</li>
+                              <li><b>Ongoing</b>: Has Open and Queue Dates, but not Close Date.</li>
+                              <li><b>Open</b>: Has Open Date.</li>
+                              <li><b>Closed</b>: Has Close Date. May have Open and Queue dates.</li>
+                              <li><b>Aborted</b>: Has Aborted date.</li>
                             </ul>
+                            Default search results are from the past two years. Use the 'Consider all projects from the beginning of time' checkbox or
+                            the date fields below to expand search results.
                         </div>
                       </div>
-                    <div class="btn-toolbar" role="toolbar" id="statusbtnBar1" aria-label="..." style="margin-right: -3px;">
-                      <div class="btn-group" data-toggle="buttons" role="group" aria-label="..." id="statusbtnBar1All">
-                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptAll" data-projects="all" autocomplete="off"><i class="glyphicon glyphicon-globe"></i> All</label>
+                    <div class="btn-toolbar d-flex justify-content-center align-self-center" role="toolbar" id="statusbtnBar1" aria-label="..." style="margin-right: -3px;">
+                      <div class="btn-group pr-1" data-toggle="buttons" role="group" aria-label="..." id="statusbtnBar1All">
+                        <input type="checkbox" class="btn-check sOptions" name="statusOptions" id="statusOptAll" data-projects="all" autocomplete="off">
+                        <label class="btn btn-outline-dark  btn-sm statusOptions" for="statusOptAll"><i class="fa fa-globe-europe"></i> All</label>
                       </div>
                       <div class="btn-group" data-toggle="buttons" role="group" aria-label="..." id="statusbtnBar1Granular">
-                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptPending" data-projects="pending" autocomplete="off"><i class="glyphicon glyphicon-time"></i> Pending</label>
-                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptRecCtrl" data-projects="reception_control" autocomplete="off"><i class="glyphicon glyphicon-tags"></i> Rec Ctrl</label>
-                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptNeedReview" data-projects="review" autocomplete="off"><i class="glyphicon glyphicon-exclamation-sign"></i> Need Review</label>
-                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptOngoing" data-projects="ongoing" autocomplete="off"><i class="glyphicon glyphicon-road"></i> Ongoing</label>
-                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptOpen" data-projects="open" autocomplete="off"><i class="glyphicon glyphicon-folder-open"></i>&nbsp; Open</label>
-                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptClosed" data-projects="closed" autocomplete="off"><i class="glyphicon glyphicon-folder-close"></i> Closed</label>
-                        <label class="btn btn-default btn-sm statusOptions"><input type="checkbox" name="statusOptions" id="statusOptAborted" data-projects="aborted" autocomplete="off"><i class="glyphicon glyphicon-thumbs-down"></i> Aborted</label>
+                        <input type="checkbox" class="btn-check sOptions" name="statusOptions" id="statusOptPending" data-projects="pending" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-sm statusOptions" for="statusOptPending"><i class="fa fa-clock"></i> Pending</label>
+                        <input type="checkbox" class="btn-check sOptions" name="statusOptions" id="statusOptRecCtrl" data-projects="reception_control" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-sm statusOptions" for="statusOptRecCtrl"><i class="fa fa-tags"></i> Rec Ctrl</label>
+                        <input type="checkbox" class="btn-check sOptions" name="statusOptions" id="statusOptNeedReview" data-projects="review" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-sm statusOptions" for="statusOptNeedReview"><i class="fa fa-exclamation-circle"></i> Need Review</label>
+                        <input type="checkbox" class="btn-check sOptions" name="statusOptions" id="statusOptOngoing" data-projects="ongoing" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-sm statusOptions" for="statusOptOngoing"><i class="fa fa-road"></i> Ongoing</label>
+                        <input type="checkbox" class="btn-check sOptions" name="statusOptions" id="statusOptOpen" data-projects="open" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-sm statusOptions" for="statusOptOpen"><i class="fa fa-folder-open"></i>&nbsp; Open</label>
+                        <input type="checkbox" class="btn-check sOptions" name="statusOptions" id="statusOptClosed" data-projects="closed" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-sm statusOptions" for="statusOptClosed"><i class="fa fa-folder"></i> Closed</label>
+                        <input type="checkbox" class="btn-check sOptions" name="statusOptions" id="statusOptAborted" data-projects="aborted" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-sm statusOptions" for="statusOptAborted"><i class="fa fa-thumbs-down"></i> Aborted</label>
                       </div>
-                      <input class="hidden" type="text" id="formStatus">
+                      <input type="text" id="formStatus" hidden>
                     </div>
                     </div>
                   </div>
-                  <div class="form-group row">
-                    <div class="col-sm-11 checkbox">
+                  <div class="row py-3 justify-content-center">
+                    <div class="col-auto checkbox">
                       <label>
                         <input type="checkbox" name="allHistoryCheckbox" id="allHistoryCheckbox">
                         Consider all projects from the beginning of time (Filter further with below date fields)
                       </label>
                     </div>
                   </div>
-                  <div class="form-group row">
-                    <label for="formType" class="col-sm-1">Type</label>
+                  <div class="row">
+                    <label for="formType" class="col-sm-2 d-flex justify-content-end align-self-center fw-bold">Type</label>
                     <div id="formTypedropdown" class="col-sm-4 col-form-label changingDropdown">
-                      <button class="btn btn-default dropdown-toggle" type="button" id="formType" data-toggle="dropdown">
-                        <i class="glyphicon glyphicon-tag"></i> All <span class="caret"></span>
+                      <button class="btn btn-outline-dark dropdown-toggle" type="button" id="formType" data-toggle="dropdown">
+                        <i class="fa fa-tag"></i> All <span class="caret"></span>
                       </button>
                       <ul id="formTypeul" class="dropdown-menu" role="menu" aria-labelledby="formTypeul">
-                        <li><a class="clickDropdownGetValue" href="#">All</a></li>
-                        <li><a class="clickDropdownGetValue" href="#">Production</a></li>
-                        <li><a class="clickDropdownGetValue" href="#">Application</a></li>
+                        <li class="p-1"><a class="clickDropdownGetValue text-decoration-none text-dark" href="#">All</a></li>
+                        <li class="p-1"><a class="clickDropdownGetValue text-decoration-none text-dark" href="#">Production</a></li>
+                        <li class="p-1"><a class="clickDropdownGetValue text-decoration-none text-dark" href="#">Application</a></li>
                       </ul>
                     </div>
                   </div>
-                  <div class="form-group row">
-                    <label for="OpenDate" class="col-sm-1 col-form-label">Open Date</label>
+                  <div class="row p-1">
+                    <label for="OpenDate" class="col-sm-2 col-form-label fw-bold text-right">Open Date</label>
                     <div id="OpenDate" class="col-md-4">
                       <div class='input-group input-group-sm date' id='datepick1_start'>
-                        <input id="inp_date_1" type='text' class="form-control" /><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                        <input id="inp_date_1" type='text' class="form-control" /><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt"></span></span>
                       </div>
                     </div>
                     <div class="col-md-1"><p class="form-control-static" align="center">to</p></div>
                     <div id="OpenDate2" class="col-md-4">
                       <div class='input-group input-group-sm date' id='datepick1_end'>
-                        <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                        <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt""></span></span>
                       </div>
                     </div>
                   </div>
-                  <div class="form-group row">
-                    <label for="QueueDate" class="col-sm-1 col-form-label">Queue Date</label>
+                  <div class="row p-1">
+                    <label for="QueueDate" class="col-sm-2 col-form-label fw-bold text-right">Queue Date</label>
                     <div id="QueueDate" class="col-md-4">
                       <div class='input-group input-group-sm date' id='datepick2_start'>
-                        <input id="inp_date_3" type='text' class="form-control col-md-3" /><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                        <input id="inp_date_3" type='text' class="form-control col-md-3" /><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt""></span></span>
                       </div>
                     </div>
                     <div class="col-md-1"><p class="form-control-static" align="center">to</p></div>
                     <div id="QueueDate2" class="col-md-4">
                       <div class='input-group input-group-sm date' id='datepick2_end'>
-                        <input id="inp_date_4" type='text' class="form-control col-md-3"/><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                        <input id="inp_date_4" type='text' class="form-control col-md-3"/><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt""></span></span>
                       </div>
                     </div>
                   </div>
-                  <div class="form-group row">
-                    <label for="CloseDate" class="col-sm-1 col-form-label">Close Date</label>
+                  <div class="row p-1">
+                    <label for="CloseDate" class="col-sm-2 col-form-label fw-bold text-right">Close Date</label>
                     <div id="CloseDate" class="col-md-4">
                       <div class='input-group input-group-sm date' id='datepick3_start' disabled>
-                        <input id="inp_date_5" type='text' class="form-control col-md-3" /><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                        <input id="inp_date_5" type='text' class="form-control col-md-3" /><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt""></span></span>
                       </div>
                     </div>
                     <div class="col-md-1"><p class="form-control-static" align="center">to</p></div>
                     <div id="CloseDate2" class="col-md-4">
                       <div class='input-group input-group-sm date' id='datepick3_end' disabled>
-                        <input id="inp_date_6" type='text' class="form-control col-md-3"/><span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                        <input id="inp_date_6" type='text' class="form-control col-md-3"/><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt""></span></span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="col-md-6 panel-group">
-              <div class="panel panel-default">
-                <div class="panel-heading">
-                  <h4 class="panel-title">
+
+
+              <div class="card m-2 border-left" style="max-height: 45vh; min-height: 45vh">
+                <div class="card-header">
+                  <h4 class="card-title">
                     Fields
                   </h4>
                 </div>
-                <div id="collapse2" class="panel-collapse collapse in">
-                  <div class="panel-body">
-                    <div class="form-group">
+                <div id="collapse2" class="overflow-scroll">
+                  <div class="card-body">
                       <div class="col-sm-12">
-                        <input type="text" class="form-control form-control-sm" id="formSearchfields" placeholder="Search">
-                        <div id="allFields" class="setOverflow">
-                          <div class="row">
-                            <div class="col-sm-4 col-offset-sm-1">
-                            <label id="uncheckAll" style="margin-top:10px;">
+                        <input type="text" class="form-control" id="formSearchfields" placeholder="Search">
+                        <div id="allFields">
+                          <div class="row my-2">
+                            <div class="col-sm-4">
+                            <label id="uncheckAll" class="fw-bold" style="margin-top:10px;">
                               <input type="checkbox" > Check/Uncheck All
                             </label>
                             </div>
                             <div class="col-sm-6">
-                            <label id="displaySelected" style="margin-top:10px;">
-                              <input type="checkbox" > Only display selected
+                            <label id="displaySelected" class="fw-bold" style="margin-top:10px;">
+                              <input type="checkbox"> Only display selected
                             </label>
                             </div>
                           </div>
@@ -178,7 +189,7 @@ Description: Shows all presets configured for user and enables their selection.
                             <div class="colHeader" id="basic_columns">
                               <h4 class="search-action" data-action="filterHeader" id="basic">Basic <input class="headingCheckbox" type="checkbox"></h4>
                               {% for col_display_name, col_name in columns['BASIC_COLUMNS'].items() %}
-                              <div class="checkbox">
+                              <div class="checkbox my-1">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="BASIC_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-basic-columns-{{col_name.replace("(", "").replace(")", "")}}">
                                   {{col_display_name}}
@@ -189,7 +200,7 @@ Description: Shows all presets configured for user and enables their selection.
                             <div class="colHeader" id="setup_project_columns">
                               <h4 class="search-action" data-action="filterHeader" id="setup-project">Setup Project <input class="headingCheckbox" type="checkbox"></h4>
                               {% for col_display_name, col_name in columns['SETUP_PROJECT_COLUMNS'].items() %}
-                              <div class="checkbox">
+                              <div class="checkbox my-1">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="SETUP_PROJECT_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-setup-project-columns-{{col_name.replace("(", "").replace(")", "")}}">
                                   {{col_display_name}}
@@ -200,7 +211,7 @@ Description: Shows all presets configured for user and enables their selection.
                             <div class="colHeader" id="bioinfo_columns">
                               <h4 class="search-action" data-action="filterHeader" id="bioinfo">Bioinformatics <input class="headingCheckbox" type="checkbox"></h4>
                               {% for col_display_name, col_name in columns['BIOINFO_COLUMNS'].items() %}
-                              <div class="checkbox">
+                              <div class="checkbox my-1">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="BIOINFO_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-bioinfo-columns-{{col_name.replace("(", "").replace(")", "")}}">
                                   {{col_display_name}}
@@ -211,7 +222,7 @@ Description: Shows all presets configured for user and enables their selection.
                             <div class="colHeader" id="sequencing_columns">
                               <h4 class="search-action" data-action="filterHeader" id="sequencing">Sequencing <input class="headingCheckbox" type="checkbox"></h4>
                               {% for col_display_name, col_name in columns['SEQUENCING_COLUMNS'].items() %}
-                              <div class="checkbox">
+                              <div class="checkbox my-1">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="SEQUENCING_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-sequencing-columns-{{col_name.replace("(", "").replace(")", "")}}">
                                   {{col_display_name}}
@@ -222,7 +233,7 @@ Description: Shows all presets configured for user and enables their selection.
                             <div class="colHeader" id="accreditation_columns">
                               <h4 class="search-action" data-action="filterHeader" id="accreditation">Accreditation <input class="headingCheckbox" type="checkbox"></h4>
                               {% for col_display_name, col_name in columns['ACCREDITATION_COLUMNS'].items() %}
-                              <div class="checkbox">
+                              <div class="checkbox my-1">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="ACCREDITATION_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-accreditation-columns-{{col_name.replace("(", "").replace(")", "")}}">
                                   {{col_display_name}}
@@ -235,7 +246,7 @@ Description: Shows all presets configured for user and enables their selection.
                             <div class="colHeader" id="details_columns">
                               <h4 class="search-action" data-action="filterHeader" id="details">Project Details <input class="headingCheckbox" type="checkbox"></h4>
                               {% for col_display_name, col_name in columns['DETAILS_COLUMNS'].items() %}
-                              <div class="checkbox">
+                              <div class="checkbox my-1">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="DETAILS_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-details-columns-{{col_name.replace("(", "").replace(")", "")}}">
                                   {{col_display_name}}
@@ -246,7 +257,7 @@ Description: Shows all presets configured for user and enables their selection.
                             <div class="colHeader" id="library_prep_columns">
                               <h4 class="search-action" data-action="filterHeader" id="library-prep">Library Prep <input class="headingCheckbox" type="checkbox"></h4>
                               {% for col_display_name, col_name in columns['LIBRARY_PREP_COLUMNS'].items() %}
-                              <div class="checkbox">
+                              <div class="checkbox my-1">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="LIBRARY_PREP_COLUMNS" data-displayname="{{col_display_name}}" name="{{col_name}}" id="allFields-library-prep-columns-{{col_name.replace("(", "").replace(")", "")}}">
                                   {{col_display_name}}
@@ -258,12 +269,12 @@ Description: Shows all presets configured for user and enables their selection.
                             <div class="colHeader" id="extra_columns">
                               <h4 class="search-action" data-action="filterHeader" id="extra">Extra <input class="headingCheckbox" type="checkbox"></h4>
                               {% for col_display_name, col_name in columns['EXTRA_COLUMNS'].items() %}
-                              <div class="checkbox">
+                              <div class="checkbox my-1">
                                 <label>
                                   <input type="checkbox" class="filterCheckbox" data-columngroup="EXTRA_COLUMNS" data-displayname="{{col_display_name}}"
-                                  {% if "glyphicon" in col_display_name %}
+                                  {% if "fa" in col_display_name %}
                                     name="{{col_name[0]}}" id="allFields-extra-columns-{{col_name[0].replace("(", "").replace(")", "")}}">
-                                    <i class="glyphicon {{col_display_name}}"></i>
+                                    <i class="fa {{col_display_name}}"></i>
                                       ({{col_name[1]}})
                                   {% else %}
                                     name="{{col_name}}" id="allFields-extra-columns-{{col_name.replace("(", "").replace(")", "")}}">
@@ -282,22 +293,22 @@ Description: Shows all presets configured for user and enables their selection.
                           </div>
                         </div>
                       </div>
-                    </div>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
-          <div class="form-group row row-eq-height">
-            <div class="col-md-12 panel-group">
-              <div class="panel panel-default">
-                <div class="panel-heading">
-                  <h4 class="panel-title">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card m-2">
+                <div class="card-header">
+                  <h4 class="card-title">
                     Reorder Table Fields
-                    <button type="button" class="btn btn-sm btn-default" id="resetReorderingbtn">Reset Ordering</button>
+                    <button type="button" class="btn btn-sm btn-outline-dark" id="resetReorderingbtn">Reset Ordering</button>
                   </h4>
                 </div>
-                <div class="panel-body">
+                <div class="card-body">
                   <div class="sortableList" id="tHeaderList">
                       <ul class="sortableListSource list-inline" id="tHeaderListul">
                       </ul>
@@ -306,8 +317,8 @@ Description: Shows all presets configured for user and enables their selection.
               </div>
             </div>
           </div>
-          <div class="form-group row">
-            <div class="col text-center">
+          <div class="row">
+            <div class="col text-center m-3">
                 <button type="button" class="btn btn-primary" id="savePresetBtn" data-toggle="modal" data-target="#projectFieldsModal">Save as Preset</button>
             </div>
           </div>
@@ -315,8 +326,8 @@ Description: Shows all presets configured for user and enables their selection.
       </div>
     </div>
     <div id='displayPageInfo' style="display:none;" class="alert alert-info" role="alert">
-      <span type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></span>
       <div class="text-left">
+        <button type="button" class="btn-close float-right" aria-label="Close"></button>
         The Projects page offers you a single Preset bar with default presets and the option of making your own presets to help you view the projects you want.  The presets can be customised through the ‘Customise’ dropdown where you can choose to change the following
         <ul>
           <li>Project status</li>
@@ -362,11 +373,14 @@ Description: Shows all presets configured for user and enables their selection.
 
 <!-- Settings FIELD MODAL -->
 <div id="settingsModal" class="modal fade">
-  <div class="modal-dialog modal-md">
+  <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h4>Projects page Settings</h4>
+      <div class="modal-header bg-light">
+        <h4 class="modal-title">
+          <i class="fa fa-cog mr-2" aria-hidden="true"></i>
+          Projects page Settings
+        </h4>
+        <button type="button" class="btn-close" data-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <form id="Filter" class="form form-search" role="form">
@@ -376,38 +390,27 @@ Description: Shows all presets configured for user and enables their selection.
             </div>
           </div>
           <div class="project_page_border_style">
-            <div class="form-group row">
-              <div class="form-group col-sm-6 mx-auto">
+            <div class="row">
+              <div class="col-sm-6 mx-auto">
                 <div class="text-center">
-                <label for="onLoadRadio" class="control-label">Load Table</label>
-                <div id="onLoadRadio">
-                  <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-default btn-sm rBtngp1" id="onLoadTableOn">
-                      <input type="radio" name="onLoadTable" autocomplete="off"> On
-                    </label>
-                    <label class="btn btn-default btn-sm rBtngp1" id="onLoadTableOff">
-                      <input type="radio" name="onLoadTable" autocomplete="off"> Off
-                    </label>
+                  <label for="onLoadRadio" class="fw-bold">Load Table</label>
+                  <p class="text-muted mb-1">Load result table on Project page load</p>
+                  <div id="onLoadRadio">
+                    <div class="btn-group" role="group" data-toggle="buttons">
+                      <input type="radio" class="btn-check" name="onLoadTable" autocomplete="off" id="onLoadTableOn">
+                      <label class="btn btn-outline-primary" for="onLoadTableOn">On</label>
+
+                      <input type="radio" class="btn-check" name="onLoadTable" autocomplete="off" id="onLoadTableOff">
+                      <label class="btn btn-outline-primary" for="onLoadTableOff">Off</label>
+                    </div>
                   </div>
                 </div>
-                </div>
               </div>
-              <div class="form-group col-sm-6 mx-auto">
+              <div class="col-sm-6 mx-auto">
                 <div class="text-center">
-                  <label for="all_presets_dropdown" class="control-label">Load Preset</label>
+                  <label for="all_presets_dropdown" class="fw-bold">Load Preset</label>
+                  <p class="text-muted mb-1"> Project page loaded with above selected preset</p>
                   <div id="all_presets_dropdown" class="changingDropdown"></div>
-                </div>
-              </div>
-            </div>
-            <div class="form-group row">
-              <div class="form-group col-sm-6 mx-auto">
-                <div class="text-center">
-                <p style="margin-top:-10px;">Load result table on Project page load</p>
-                </div>
-              </div>
-              <div class="form-group col-sm-6 mx-auto">
-                <div class="text-center">
-                <p style="margin-top:-10px;"> Project page loaded with above selected preset</p>
                 </div>
               </div>
             </div>
@@ -415,8 +418,8 @@ Description: Shows all presets configured for user and enables their selection.
         </form>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-default btn-sm" data-dismiss="modal" aria-hidden="true">Close</button>
-        <button class="btn btn-primary btn-sm search-action" data-action="filterApply" type="button" id="applySettingsModal">Save</button>
+        <button class="btn btn-secondary" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn btn-primary search-action" data-action="filterApply" type="button" id="applySettingsModal">Save</button>
       </div>
     </div>
   </div>
@@ -426,13 +429,13 @@ Description: Shows all presets configured for user and enables their selection.
   <div class="modal-dialog modal-sm">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
         <h4>Save Preset</h4>
+        <button type="button" class="btn-close" data-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <form id="SavePreset" class="form form-search" role="form">
           <div class=" form-horizontal">
-            <div class="form-group row">
+            <div class="row">
               <div class="col">
                 <label for="presetName" class="col-xs-2">Name</label>
                 <div id="presetName" class="col-xs-10">
@@ -444,7 +447,7 @@ Description: Shows all presets configured for user and enables their selection.
         </form>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-sm btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn btn-sm btn-secondary" data-dismiss="modal" aria-hidden="true">Close</button>
         <button id="submitPresetNameBtn" class="btn btn-sm btn-primary search-action" type="button">Save</button>
       </div>
     </div>
@@ -455,14 +458,14 @@ Description: Shows all presets configured for user and enables their selection.
   <div class="modal-dialog modal-sm">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
         <h4>Delete Preset</h4>
+        <button type="button" class="btn-close" data-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <form id="DeletePreset" class="form form-search" role="form">
           <div class=" form-horizontal">
             <p>Are you sure you want to delete this preset?</p>
-            <div class="form-group row">
+            <div class="row">
               <div class="col">
                 <div id="deletePresetName" class="col-xs-10">
                   <input class="form-control" id="formDeletePresetName" placeholder="" disabled type="text">
@@ -473,44 +476,13 @@ Description: Shows all presets configured for user and enables their selection.
         </form>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-sm btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn btn-sm btn-secondary" data-dismiss="modal" aria-hidden="true">Close</button>
         <button class="btn btn-sm btn-primary" id="deletePresetBtnModal" type="button">Delete</button>
       </div>
     </div>
   </div>
 </div>
 
-<div id="projectFilterDate" class="modal fade">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h3>Filter Projects per Date</h3>
-      </div>
-      <div class="modal-body">
-        <div class="panel panel-default">
-        <div class="panel-body">
-        <label>Open Date</label>
-        <div id="OpenDateSlider" class="dateSlider" style="height: 80px;"> </div>
-        </div>
-        </div>
-        <div class="panel panel-default">
-        <div class="panel-body">
-        <label>Queue Date</label>
-        <div id="QueueDateSlider" class="dateSlider" style="height: 80px;"> </div>
-        </div>
-        </div>
-        <div class="panel panel-default">
-        <div class="panel-body">
-        <label>Close Date</label>
-        <div id="CloseDateSlider" class="dateSlider" style="height: 80px;"> </div>
-        </div>
-        </div>
-        <button class="btn btn-primary" onclick="load_table()" data-dismiss="modal" aria-hidden="true">Update List</button>
-      </div>
-    </div>
-  </div>
-</div>
 <script src="/static/js/jquery-ui.min.js"></script>
 <script src="/static/js/clipboard.min.js"></script>
 <script src="/static/js/bootstrap-datepicker.min.js"></script>

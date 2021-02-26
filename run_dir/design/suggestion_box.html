@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: suggestion_box.html
@@ -12,16 +12,16 @@ Dependent on /static/js/suggestion_box.js
 
 
 
-<h1 id="page_title">Suggestion Box</h1>
+<h1 id="page_title" class="mt-3">Suggestion Box</h1>
 
 <div class="row">
   <div class="col-md-6">
-    <legend>Please describe your suggestion below..</legend>
-    <form class="form-horizontal" role="form" id="suggestionForm" method="post" action="/suggestion_box">
-      <div class="form-group">
-        <label class="col-sm-3 control-label" for="area">Area of Work</label>
+    <legend class="border-bottom mb-3">Please describe your suggestion below..</legend>
+    <form role="form" id="suggestionForm" method="post" action="/suggestion_box">
+      <div class="row mb-3 pb-3">
+        <label class="col-sm-3 col-form-label text-right fw-bold" for="area">Area of Work</label>
         <div class="col-sm-9">
-          <select class="form-control" id="area" name="area" required>
+          <select class="form-select" id="area" name="area" required>
             <option value="">[ select area ]</option>
             <option>Information Management</option>
             <option>Policy</option>
@@ -31,13 +31,13 @@ Dependent on /static/js/suggestion_box.js
             <option>Meetings</option>
             <option>Other</option>
           </select>
-          <span class="help-block">What area of work is this (mostly) regarding?</span>
+          <span class="form-text">What area of work is this (mostly) regarding?</span>
         </div>
       </div>
-      <div class="form-group">
-        <label class="col-sm-3 control-label" for="system">System</label>
+      <div class="row mb-3 pb-3">
+        <label class="col-sm-3 col-form-label text-right fw-bold" for="system">System</label>
         <div class="col-sm-9">
-          <select class="form-control" id="system" name="system" required>
+          <select class="form-select" id="system" name="system" required>
             <option value="">[ select system ]</option>
             <option>Genomics Status</option>
             <option>LIMS</option>
@@ -50,47 +50,47 @@ Dependent on /static/js/suggestion_box.js
             <option>Other</option>
             <option>No System</option>
           </select>
-          <span class="help-block">What system is this (mostly) regarding?</span>
+          <span class="form-text">What system is this (mostly) regarding?</span>
         </div>
       </div>
-      <div class="form-group">
-        <label class="col-sm-3 control-label" for="importance">Importance</label>
+      <div class="row mb-3 pb-3">
+        <label class="col-sm-3 col-form-label text-right fw-bold" for="importance">Importance</label>
         <div class="col-sm-9">
-          <select class="form-control" id="importance" name="importance" required>
+          <select class="form-select" id="importance" name="importance" required>
             <option value="1">1 - Low Priority</option>
             <option value="2">2 - Medium Priority</option>
             <option value="3">3 - Important</option>
             <option value="4">4 - Urgent</option>
             <option value="5">5 - Critical</option>
           </select>
-          <span class="help-block">Grade how serious the issue is</span>
+          <span class="form-text">Grade how serious the issue is</span>
         </div>
       </div>
-      <div class="form-group">
-        <label class="col-sm-3 control-label" for="title">Title</label>
+      <div class="row mb-3 pb-3">
+        <label class="col-sm-3 col-form-label text-right fw-bold" for="title">Title</label>
         <div class="col-sm-9">
           <input class="form-control" type="text" id="title" name="title" placeholder="Issue / Observation" required>
-          <span class="help-block">Summarize the issue in a few words</span>
+          <span class="form-text">Summarize the issue in a few words</span>
         </div>
       </div>
-      <div class="form-group">
-        <label class="col-sm-3 control-label" for="description">Description</label>
+      <div class="row mb-3 pb-3">
+        <label class="col-sm-3 col-form-label text-right fw-bold" for="description">Description</label>
         <div class="col-sm-9">
           <textarea class="form-control" class="span12" rows="6" id="description" name="description" required></textarea>
-          <span class="help-block">Describe the issue in more detail</span>
+          <span class="form-text">Describe the issue in more detail</span>
         </div>
       </div>
-      <div class="form-group">
-        <label class="col-sm-3 control-label" for="suggestion">Suggestion</label>
+      <div class="row mb-3 pb-3">
+        <label class="col-sm-3 col-form-label text-right fw-bold" for="suggestion">Suggestion</label>
         <div class="col-sm-9">
           <textarea class="form-control" class="span12" rows="6" id="suggestion" name="suggestion"></textarea>
-          <span class="help-block">Provide a suggestion for how the issue can be solved <em>(optional)</em></span>
+          <span class="form-text">Provide a suggestion for how the issue can be solved <em>(optional)</em></span>
         </div>
       </div>
-      <div class="form-group">
-        <label class="col-sm-3 control-label" for="difficulty">Difficulty</label>
+      <div class="row mb-3 pb-3">
+        <label class="col-sm-3 col-form-label text-right fw-bold" for="difficulty">Difficulty</label>
         <div class="col-sm-9">
-          <select class="form-control" id="difficulty" name="difficulty">
+          <select class="form-select" id="difficulty" name="difficulty">
             <option value="">Do not know</option>
             <option value="1">1 - Easy</option>
             <option value="2">2 - </option>
@@ -98,24 +98,26 @@ Dependent on /static/js/suggestion_box.js
             <option value="4">4 - </option>
             <option value="5">5 - Very Difficult</option>
           </select>
-          <span class="help-block">Grade how difficult / much effort it will take to fix the issue</span>
+          <span class="form-text">Grade how difficult / much effort it will take to fix the issue</span>
         </div>
       </div>
-      <div class="form-actions col-sm-9 col-sm-offset-3">
-        <button type="submit" class="btn btn-primary btn-lg">Submit Suggestions</button>
-        <span class="help-block">Your username <strong>{{ user.name }}</strong> will be recorded when you submit this form.</span>
+      <div class="row mb-3 pb-3">
+        <div class="form-actions col-sm-9 offset-sm-3">
+          <button type="submit" class="btn btn-primary btn-lg">Submit Suggestions</button>
+          <span class="form-text d-block">Your username <strong>{{ user.name }}</strong> will be recorded when you submit this form.</span>
+        </div>
       </div>
     </form>
   </div>
 
   <div class="col-md-6">
-    <legend>List of existing suggestions</legend>
+    <legend class="border-bottom mb-3">List of existing suggestions</legend>
     <p>Click on a suggestion title to go to it's corresponding Trello card.
       Archived cards will appear in green.</p>
     <div id="suggestions_table">
         <table class="table table-bordered" id="suggestionsTable">
           <thead>
-            <tr>
+            <tr class="darkth">
               <th>Suggestion</th>
               <th>Creation Date</th>
             </tr>

@@ -11,7 +11,7 @@ $(function(){
      $('#displayPageInfo').slideToggle();
   });
 
-  $('#displayPageInfo').find('span[type="button"]').click(function(){
+  $('#displayPageInfo').find('button').click(function(){
      $('#displayPageInfo').slideToggle();
   });
 
@@ -113,7 +113,7 @@ function load_table(status, type, columns, dates) {
   // Get the columns and write the table header
   load_table_head(columns);
   // Display the loading spinner in the table
-  $("#project_table_body").html('<tr><td colspan="'+columns.length+'" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
+  $("#project_table_body").html('<tr><td colspan="'+columns.length+'" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading...</em></td></tr>');
   url="/api/v1/projects?list=";
   $.each( status, function( i, val ) {
     if(i+1<status.length){
@@ -147,7 +147,7 @@ function load_table(status, type, columns, dates) {
     $("#project_table_body").empty();
     var size = 0;
     undefined_fields=[];
-    $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-default" data-clipboard-target="#project_table"><span class="glyphicon glyphicon-copy"></span> Copy table to clipboard</button>');
+    $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-outline-dark" data-clipboard-target="#project_table"><span class="fa fa-copy"></span> Copy table to clipboard</button>');
 
     $.each(data, function(project_id, summary_row) {
       $.each(summary_row, function(key,value){
@@ -172,7 +172,7 @@ function load_table(status, type, columns, dates) {
             return summary_row[column_tuple[1]];
           })
           .addClass(function(){
-            if(column_tuple[0].indexOf('glyphicon')>=0){
+            if(column_tuple[0].indexOf('fa')>=0){
               if(summary_row[column_tuple[1]]!='-' && typeof summary_row[column_tuple[1]] !== 'undefined'){
                 to_ret='';
                 check_value = Math.abs(summary_row[column_tuple[1]]);
@@ -210,12 +210,12 @@ function load_table(status, type, columns, dates) {
       });
 
       // Add links to projects
-      tbl_row.find('td.project').html('<a href="/project/' + project_id + '">' + project_id + '</a>');
+      tbl_row.find('td.project').html('<a class="text-decoration-none" href="/project/' + project_id + '">' + project_id + '</a>');
 
       // Add links to Portal References
       var portal_name = summary_row['customer_project_reference'];
       var portal_id = summary_row['portal_id'];
-      tbl_row.find('td.customer_project_reference').html('<a target="_blank" href="https://ngisweden.scilifelab.se/orders/order/'+portal_id + '">' + portal_name + '</a>');
+      tbl_row.find('td.customer_project_reference').html('<a target="_blank" class="text-decoration-none" href="https://ngisweden.scilifelab.se/orders/order/'+portal_id + '">' + portal_name + '</a>');
 
       //parse and display running notes
       var latest_note = tbl_row.find('td.latest_running_note');
@@ -224,10 +224,10 @@ function load_table(status, type, columns, dates) {
         var ndate = undefined;
         for (key in note) { ndate = key; break; }
         notedate = new Date(ndate);
-        latest_note.html('<div class="panel panel-default running-note-panel">' +
-            '<div class="panel-heading">'+
+        latest_note.html('<div class="card">' +
+            '<div class="card-header">'+
               note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
-            '</div><div class="panel-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
+            '</div><div class="card-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
 
       }
       $("#project_table_body").append(tbl_row);
@@ -240,33 +240,36 @@ function load_table(status, type, columns, dates) {
 }
 
 function load_table_head(columns){
-  var tbl_head = $('<tr class="sticky">');
-  var tbl_foot = $('<tr>');
+  var tbl_head = $('<tr class="sticky darkth">');
+  var tbl_foot = $('<tr class="darkth">');
   $.each(columns, function(i, column_tuple) {
     tbl_head.append($('<th>')
       .addClass(function(){
         var toReturn = 'sort a';
-        if(column_tuple[0].indexOf('glyphicon')>=0)
-          toReturn += ' glyphicon '+column_tuple[0];
         return toReturn;
       })
       .attr("data-sort",  column_tuple[1])
       .attr("data-toggle",  function(){
-        if(column_tuple[0].indexOf('glyphicon')>=0)
+        if(column_tuple[0].indexOf('fa')>=0)
         return 'tooltip';
       })
       .attr("title",  function(){
-        if(column_tuple[0].indexOf('glyphicon')>=0)
+        if(column_tuple[0].indexOf('fa')>=0)
         return column_tuple[2];
       })
       .text(function(){
-        if(column_tuple[0].indexOf('glyphicon')<0)
+        if(column_tuple[0].indexOf('fa')<0)
           return column_tuple[0]
+      })
+      .html(function(){
+        if(column_tuple[0].indexOf('fa')>=0){
+            return '<i class= "fa '+column_tuple[0]+'"></i>';
+        }
       })
     );
     tbl_foot.append($('<th>')
       .text(function(){
-        if(column_tuple[0].indexOf('glyphicon')<0)
+        if(column_tuple[0].indexOf('fa')<0)
           return column_tuple[0]
       })
     );
@@ -282,7 +285,7 @@ function load_undefined_columns(cols) {
     $.each(cols, function(col_id, column) {
       $("#undefined_columns").append('<div class="checkbox">'+
           '<label>'+
-            '<input type="checkbox" class="filterCheckbox" data-columngroup="UNDEFINED_COLUMNS" data-displayname="'+column+'" name="'+column+'" id="allFields-undefined-columns-'+column+'">'+
+            '<input type="checkbox" class="filterCheckbox mr-1" data-columngroup="UNDEFINED_COLUMNS" data-displayname="'+column+'" name="'+column+'" id="allFields-undefined-columns-'+column+'">'+
             column+
           '</label>'+
         '</div>');
@@ -328,7 +331,7 @@ function init_listjs(no_items, columns) {
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#project_table_filter').addClass('form-inline pull-right');
+    $('#project_table_filter').addClass('form-inline float-right m-2');
     $("#project_table_filter").appendTo("h1");
     $('#project_table_filter label input').appendTo($('#project_table_filter'));
     $('#project_table_filter label').remove();
@@ -379,20 +382,26 @@ function load_presets() {
     var user_presets = data['user'];
 
 
-    var allPresetsDropdownMod='<button class="btn btn-default btn-sm dropdown-toggle wrapStyle" type="button" id="inputStateAll" data-toggle="dropdown"><i class="glyphicon glyphicon-list-alt"></i> Choose Preset <span class="caret"></span></button><ul id="inputStateAllul" class="dropdown-menu dropdown-menu-right dropdown-menu-wide" role="menu" aria-labelledby="inputStateAll"  style="z-index: 200;">';
-    allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="Choose Preset" data-origin="default"> Choose Preset</a></li>';
-    for (var preset in default_presets) {
-      $('#default_preset_buttons').append('<label class="btn btn-default rBtngp2"><input type="radio" name="presetOptions" id="presetOpt-'+prettify(preset)+'" data-value="'+preset+'" autocomplete="off"><i class="glyphicon '+default_presets[preset].ICON.glyphicon+'"></i> '+preset+'</label>');
+    var allPresetsDropdownMod='<button class="btn btn-outline-dark dropdown-toggle wrapStyle" type="button" id="inputStateAll" data-toggle="dropdown">\
+      <i class="fa fa-list-alt"></i> Choose Preset <span class="caret"></span></button> \
+      <ul id="inputStateAllul" class="dropdown-menu" role="menu" aria-labelledby="inputStateAll">';
 
-      allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue" data-value="'+preset+'" data-origin="default">'+preset+'</a></li>';
+    allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue dropdown-item" style="cursor:pointer;" data-value="Choose Preset" data-origin="default"> Choose Preset</a></li>';
+    for (var preset in default_presets) {
+      $('#default_preset_buttons').append('<input type="radio" name="presetOptions" id="presetOpt-'+prettify(preset)+'" data-value="'+preset+'" autocomplete="off" class="btn-check">\
+          <label class="btn btn-outline-dark rBtngp2" for="presetOpt-'+prettify(preset)+'"><i class="fa '+default_presets[preset].ICON.glyphicon+'"></i> '+preset+'</label>');
+
+      allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue dropdown-item" data-value="'+preset+'" data-origin="default">'+preset+'</a></li>';
     }
 
-    var userDefPresetsDropdown='<button id="inputPreset" class="btn btn-default dropdown-toggle wrapStyle" data-toggle="dropdown" type="button"> <i class="glyphicon glyphicon-user"></i> User defined Presets <span class="caret"></span></button><ul id="inputPresetul" class="dropdown-menu dropdown-menu-wide" role="menu" aria-labelledby="inputPresetul">';
+    var userDefPresetsDropdown='<button id="inputPreset" class="btn btn-outline-dark dropdown-toggle wrapStyle" data-toggle="dropdown" type="button">\
+      <i class="fa fa-user"></i> User defined Presets <span class="caret"></span></button>\
+      <ul id="inputPresetul" class="dropdown-menu dropdown-menu-wide" role="menu" aria-labelledby="inputPreset">';
     // User presets, if there are any
     if (!jQuery.isEmptyObject(user_presets)) {
       for (var preset in user_presets) {
-        userDefPresetsDropdown+='<li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="'+preset+'"> '+preset+'</a></li>';
-        allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue" style="cursor:pointer;" data-value="'+preset+'" data-origin="userdefined"">'+preset+'</a></li>';
+        userDefPresetsDropdown+='<li><a href="#" class="clickDropdownGetValue dropdown-item" style="cursor:pointer;" data-value="'+preset+'"> '+preset+'</a></li>';
+        allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue dropdown-item" style="cursor:pointer;" data-value="'+preset+'" data-origin="userdefined"">'+preset+'</a></li>';
       }
     }
     userDefPresetsDropdown+='</ul>';
@@ -419,7 +428,7 @@ function update_presets_onChange() {
 }
 
 function setChangingDropdownValue(elem, origin, text){
-  var saveClass=elem.find('.glyphicon').attr('class');
+  var saveClass=elem.find('.fa').attr('class');
   elem.find('.btn').html('<i class="'+saveClass+'" data-origin="'+origin+'"></i> '+text+' <span class="caret"></span>');
 }
 
@@ -439,25 +448,12 @@ $('body').on('click', '.search-action', function(event) {
   }
 });
 
-$('body').on('click', '.rBtngp1', function(event){
-  $('.rBtngp1').removeClass('btn-primary');
-  $('.rBtngp1').removeClass('btn-default');
-  if($(this).prop('id')=="onLoadTableOn"){
-    $(this).addClass('btn-primary');
-    $("#onLoadTableOff").addClass('btn-default');
-  }
-  else{
-    $(this).addClass('btn-primary');
-    $("#onLoadTableOn").addClass('btn-default');
-  }
-});
-
 function saveOnLoadStatus(){
   var checked;
   var origin="";
   var preset="";
 
-  if($('#onLoadRadio').find('.active').prop('id')=="onLoadTableOn")
+  if($("input[name='onLoadTable']:checked").prop('id')=="onLoadTableOn")
     checked=true;
   else
     checked=false;
@@ -485,14 +481,18 @@ function saveOnLoadStatus(){
   });
 }
 
-$('body').on('click', '.rBtngp2', function(event){
+$('body').on('click hidden.bs.dropdown', '.rBtngp2', function(event){
   event.preventDefault();
-  $('.rBtngp2').removeClass('active');
-  if($(this).find(".btn").prop('id')=="inputPreset"){
+  if ($(this).hasClass('changingDropdown')){
+    $.each($('.rBtngp2').get().map(x => x.getAttribute('for')), function(i, id){
+      $('#'+id).prop('checked', false);
+    })
     $(this).find(".btn").addClass('active');
+
   }
   else{
-    $(this).addClass('active');
+    $('#inputPreset').removeClass('active');
+    $('#'+$(this).attr('for')).prop('checked', true);
   }
   //get chosen preset and populate in table
   read_current_filtering();
@@ -515,7 +515,7 @@ function read_current_filtering(){
     if($('#deletePresetBtn').closest("html").length>0)
       $('#deletePresetBtn').remove();
     $('#formPresetName').val('');
-    preset=$("#presetButtons .active").children('input').data('value');
+    preset=$('#presetButtons').find('input:checked').data('value');
     $('#formDeletePresetName').val('');
     select_from_preset("default_preset_buttons", preset);
   }
@@ -523,7 +523,7 @@ function read_current_filtering(){
 
 function appendDeleteBtn(preset){
   $('#deletePresetBtn').remove();
-  $("#savePresetBtn").after("<button type='submit' class='btn btn-default' id='deletePresetBtn' data-toggle='modal' data-target='#deleteModal' style='margin:5px;'>Delete "+preset+"</button>");
+  $("#savePresetBtn").after("<button type='submit' class='btn btn-danger m-2' id='deletePresetBtn' data-toggle='modal' data-target='#deleteModal'>Delete "+preset+"</button>");
 }
 
 function sel_from_ps(preset_type, preset, data){
@@ -532,15 +532,15 @@ function sel_from_ps(preset_type, preset, data){
   $('.filterCheckbox').prop('checked', false);
   if (preset_type == "default_preset_buttons") {
     if(preset=='Lab Ongoing'){
-      $('.statusOptions').removeClass('active');
+      $('[name="statusOptions"').prop('checked', false)
       updateStatusBar1($('#statusOptOngoing'), 'defaultClick');
     }
     if(preset=='Rec Ctrl'){
-      $('.statusOptions').removeClass('active');
+      $('[name="statusOptions"').prop('checked', false)
       updateStatusBar1($('#statusOptRecCtrl'), 'defaultClick');
     }
     if(preset=='Need Review'){
-      $('.statusOptions').removeClass('active');
+      $('[name="statusOptions"').prop('checked', false)
       updateStatusBar1($('#statusOptNeedReview'), 'defaultClick');
 
     }
@@ -570,15 +570,14 @@ function sel_from_ps(preset_type, preset, data){
       }
       else {
         if(column.indexOf('STATUS')!=-1){
-          $('.statusOptions').removeClass('active');
-          $('.statusOptions').find('input').prop('checked', false);
+          $('.sOptions').prop('checked', false);
           $.each( choices[column].split(', '), function(i, val) {
             $('#statusbtnBar1 :input[data-projects='+val+']').prop('checked', true);
             updateStatusBar1($('#statusbtnBar1 :input[data-projects="'+val+'"]'));
           })
         }
         if(column.indexOf('TYPE')!=-1){
-          var saveClass=$('#formTypedropdown').find('.glyphicon').attr('class');
+          var saveClass=$('#formTypedropdown').find('.fa').attr('class');
           $('#formTypedropdown').find('.btn').html('<i class="'+saveClass+'"></i> '+choices[column]+' <span class="caret"></span>')
         }
         if(column.indexOf('DATES')!=-1){
@@ -650,8 +649,8 @@ $('#deletePresetBtnModal').click(function(e){
   });
 })
 
-$('body').on('change', '.statusOptions', function(event) {
-  updateStatusBar1($(this).find('input'), 'add');
+$('body').on('change', '.sOptions', function(event) {
+  updateStatusBar1($(this), 'add');
 });
 
 function updateStatusBar1(source, type){
@@ -659,7 +658,7 @@ function updateStatusBar1(source, type){
   var prevChoices=[];
   var chosenStatusStr="";
   if(type!='defaultClick'){
-    $('.statusOptions').find('input').each(function(e){
+    $('.sOptions').each(function(e){
       if(this.checked)
         prevChoices.push($(this).attr('id'));
     })
@@ -667,10 +666,8 @@ function updateStatusBar1(source, type){
   else{
     prevChoices.push(currChoice);
   }
-  $('.statusOptions').removeClass('active');
-  $('.statusOptions').find('input').prop('checked', false);
+  $('.sOptions').prop('checked', false);
   if(currChoice=='statusOptAll' || prevChoices.length==7 || prevChoices.length==0){
-    $('#statusOptAll').parent().addClass('active');
     $('#statusOptAll').prop('checked', true);
     chosenStatusStr="All";
     dealWithDatepickers('datepick1', 'add');
@@ -683,29 +680,28 @@ function updateStatusBar1(source, type){
     dealWithDatepickers('datepick1', 'remove');
     dealWithDatepickers('datepick2', 'remove');
     dealWithDatepickers('datepick3', 'remove');
-    if(jQuery.inArray('statusOptAll', checklist) !== -1){
+    if($.inArray('statusOptAll', checklist) !== -1){
         checklist.splice(checklist.indexOf('statusOptAll'),1);
     }
-    if(jQuery.inArray('statusOptClosed', checklist) !== -1){
+    if($.inArray('statusOptClosed', checklist) !== -1){
       dealWithDatepickers('datepick1', 'add');
       dealWithDatepickers('datepick3', 'add');
       dealWithDatepickers('datepick2', 'add');
     }
-    if(jQuery.inArray('statusOptOngoing', checklist) !== -1 || jQuery.inArray('statusOptOpen', checklist) !== -1 || jQuery.inArray('statusOptNeedReview', checklist) !== -1 || jQuery.inArray('statusOptRecCtrl', checklist) !== -1 ){
+    if($.inArray('statusOptOngoing', checklist) !== -1 || $.inArray('statusOptOpen', checklist) !== -1 || $.inArray('statusOptNeedReview', checklist) !== -1 || $.inArray('statusOptRecCtrl', checklist) !== -1 ){
       dealWithDatepickers('datepick1', 'add');
     }
-    if(jQuery.inArray('statusOptOngoing', checklist) !== -1 || jQuery.inArray('statusOptOpen', checklist) !== -1 || jQuery.inArray('statusOptNeedReview', checklist) !== -1 ){
+    if($.inArray('statusOptOngoing', checklist) !== -1 || $.inArray('statusOptOpen', checklist) !== -1 || $.inArray('statusOptNeedReview', checklist) !== -1 ){
       dealWithDatepickers('datepick2', 'add');
     }
     $.each( prevChoices, function(i, val) {
       if(val!='statusOptAll'){
-        $('#'+val).parent().addClass('active');
         $('#'+val).prop('checked', true);
         if(i+1<j){
-          chosenStatusStr=chosenStatusStr+ $('#'+val).closest('label').text()+", ";
+          chosenStatusStr=chosenStatusStr+ $('#'+val).next('label').text()+", ";
         }
         else {
-          chosenStatusStr=chosenStatusStr+ $('#'+val).closest('label').text();
+          chosenStatusStr=chosenStatusStr+ $('#'+val).next('label').text();
         }
       }
     })
@@ -748,7 +744,7 @@ function getTableParamsandLoad(){
   var columns=new Array();
   $.each( select.columns, function( i, val ) {
     columns.push([i, val[0]]);
-    if(i.indexOf('glyphicon')<=0)
+    if(i.indexOf('fa')<=0)
       columns[columns.length-1].push(val[2]);
   })
   if(select.status.length==0 || columns.length==0){
@@ -862,7 +858,7 @@ function get_current_selection(source){
   $.each(columnorder, function (i, elem){
     getElem=$('#allColFields').find("input[name='"+elem+"']");
     columns[$(getElem).data('displayname')]=[$(getElem).attr('name'),$(getElem).data('columngroup')];
-    if($(getElem).data('displayname').indexOf("glyphicon")>=0)
+    if($(getElem).data('displayname').indexOf("fa")>=0)
       columns[$(getElem).data('displayname')].push($(getElem).parent().text().match(/\(([^)]+)\)/)[1]);
   });
 
@@ -920,12 +916,12 @@ $('#resetReorderingbtn').on("click", function() {
 });
 
 function getTHeaderElem(elem){
-  thElem = '<li data-name="'+$(elem).prop('name')+'"';
-  if($(elem).data('displayname').indexOf('glyphicon')>=0){
-    thElem+= ' class="glyphicon '+$(elem).data('displayname')+'" data-toggle="tooltip" title="'+$(elem).parent().text().match(/\(([^)]+)\)/)[1]+'">';
+  thElem = '<li data-name="'+$(elem).prop('name')+'" class="list-inline-item">';
+  if($(elem).data('displayname').indexOf('fa')>=0){
+    thElem+= '<i class="fa '+$(elem).data('displayname')+'" data-toggle="tooltip" title="'+$(elem).parent().text().match(/\(([^)]+)\)/)[1]+'"></i>';
   }
   else
-    thElem+='>'+$(elem).data('displayname');
+    thElem+=$(elem).data('displayname');
   thElem+='</li>';
   return thElem;
 }
@@ -942,14 +938,14 @@ function resetReorderFields(){
 function updateTableFields(order){
   var selectedFields=$("#allColFields input[class='filterCheckbox']:checked");
   if(order==""){
-    if(selectedFields.size()>$('#tHeaderListul li').size()){
+    if(selectedFields.length>$('#tHeaderListul li').length){
       $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
         if($('#tHeaderListul li[data-name="'+$(elem).prop('name')+'"]').length==0){
           $("#tHeaderListul").append(getTHeaderElem(elem));
         }
       })
     }
-    else if(selectedFields.size()<$('#tHeaderListul li').size()){
+    else if(selectedFields.length<$('#tHeaderListul li').length){
       $("#tHeaderListul li").each(function(i, elem){
         var get = selectedFields.toArray().findIndex(function(element) {return $(element).prop('name')==$(elem).data('name');})
         if(get==-1){
@@ -972,9 +968,9 @@ function updateTableFields(order){
 var clipboard = new Clipboard('#proj_table_copy_results');
 clipboard.on('success', function(e) {
   e.clearSelection();
-  $('#proj_table_copy_results').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+  $('#proj_table_copy_results').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
   setTimeout(function(){
-    $('#proj_table_copy_results').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table to clipboard');
+    $('#proj_table_copy_results').removeClass('active').html('<span class="fa fa-copy"></span> Copy table to clipboard');
   }, 2000);
 });
 
@@ -1007,10 +1003,10 @@ $('#allHistoryCheckbox').change(function(e){
 // HELPER FUNCTIONS
 //
 $('#collapseOne').on('shown.bs.collapse', function () {
-  $('.panel-title a .glyphicon').removeClass('glyphicon-triangle-bottom').addClass('glyphicon-triangle-top');
+ $('.card-title a .fa').removeClass('fa-caret-down').addClass('fa-caret-up');
 });
 $('#collapseOne').on('hidden.bs.collapse', function () {
-  $('.panel-title a .glyphicon').removeClass('glyphicon-triangle-top').addClass('glyphicon-triangle-bottom');
+ $('.card-title a .fa').removeClass('fa-caret-up').addClass('fa-caret-down');
 });
 function prettify(s) {
   // Replaces whitespace with underscores. Replaces sequential _s with one

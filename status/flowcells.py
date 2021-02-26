@@ -29,6 +29,8 @@ thresholds = {
     'NovaSeq S4': 2000,
     'NextSeq Mid' : 25,
     'NextSeq High' : 75,
+    'NextSeq 2000 P2' : 400,
+    'NextSeq 2000 P3' : 1100
 }
 
 def formatDate(date):
@@ -60,9 +62,11 @@ class FlowcellsHandler(SafeHandler):
         for row in xfc_view:
             try:
                 row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'], "%y%m%d").strftime("%Y-%m-%d")
-
             except ValueError:
-                row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'].split()[0], "%m/%d/%Y").strftime("%Y-%m-%d")
+                try:
+                    row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'], "%Y-%m-%dT%H:%M:%SZ").strftime("%Y-%m-%d")
+                except ValueError:
+                    row.value['startdate'] = datetime.datetime.strptime(row.value['startdate'].split()[0], "%m/%d/%Y").strftime("%Y-%m-%d")
 
             # Lanes were previously in the wrong order
             row.value['lane_info'] = OrderedDict(sorted(row.value['lane_info'].items()))
@@ -77,15 +81,6 @@ class FlowcellsHandler(SafeHandler):
         t = self.application.loader.load("flowcells.html")
         fcs=self.list_flowcells(all=all)
         self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, form_date=formatDate, all=all))
-
-
-class FlowcellHandler(SafeHandler):
-    """ Serves a page which shows information and QC stats for a given
-    flowcell.
-    """
-    def get(self, flowcell):
-        t = self.application.loader.load("flowcell_samples.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, flowcell=flowcell, user=self.get_current_user()))
 
 
 class FlowcellsDataHandler(SafeHandler):
@@ -349,7 +344,7 @@ class FlowcellNotesDataHandler(SafeHandler):
                 running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
                 running_notes[str(datetime.datetime.now())] = newNote
 
-                flowcell_link = "<a href='/flowcells/{0}'>{0}</a>".format(flowcell)
+                flowcell_link = "<a class='text-decoration-none' href='/flowcells/{0}'>{0}</a>".format(flowcell)
                 project_note = "#####*Running note posted on flowcell {}:*\n".format(flowcell_link)
                 project_note += note
 
