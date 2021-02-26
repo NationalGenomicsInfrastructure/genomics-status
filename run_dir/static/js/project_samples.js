@@ -111,8 +111,8 @@ function init_listjs (no_items, columns) {
   featureList.search($('#search_field').val());
   var table = $('#sample_table').DataTable({
         "paging": false,
-        dom: 'Qlfrtip',
-        "bFilter": false
+        dom: 'Qlrtip',
+        deferRender: true
   });
 }
 
