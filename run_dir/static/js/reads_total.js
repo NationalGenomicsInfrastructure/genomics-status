@@ -32,15 +32,15 @@ function plot_summary_chart(data, sample_names){
 }
 
 function create_summary_table(ar_s, ar_c){
-    var tbl = '<table class="table table-hover"><tr><th>Sample</th><th>Clusters</th></tr>';
+    var tbl = '<table class="table table-hover"><tr class="darkth"><th>Sample</th><th>Clusters</th></tr>';
     var sum = 0;
     var num_samples = 0;
     for (index in ar_s){
         sum += ar_c[index];
         num_samples += 1;
-        tbl += '<tr><td><a href="#'+ar_s[index]+'" class="plink">'+ar_s[index]+'</a></td><td class="text-right thousands">'+ar_c[index]+'</td></tr>';
+        tbl += '<tr><td><a href="#'+ar_s[index]+'" class="plink text-decoration-none">'+ar_s[index]+'</a></td><td class="text-right thousands">'+ar_c[index]+'</td></tr>';
     }
-    tbl+="<tr><th>Total ("+num_samples+" samples)</th><th class='text-right thousands'>"+ sum +"</th></tr>";
+    tbl+='<tr class="darkth"><th>Total ('+num_samples+' samples)</th><th class="text-right thousands">'+ sum +'</th></tr>';
     tbl+="<table>";
     $('#summary_table').html(tbl);
 
@@ -92,7 +92,7 @@ function update_all_totals(){
         $(this).find(".reads_total").text(checked);
     });
     create_summary_table(ar_samples, ar_clusters);
-    
+
     plot_summary_chart(data, ar_samples);
 }
 
@@ -128,16 +128,16 @@ $("#uncheck_all").click(function(){
 // On page load
 $(function(){
     update_all_totals();
-    
+
     // Update page when a checkbox changed
     $('.reads_check').click(update_all_totals);
-    
+
     // Project link clicked
     $('#summary_table').on('click', '.plink', function(){
         $('.sample_table').removeClass('highlighted');
         $($(this).attr('href')).addClass('highlighted');
     });
-    
+
     // Download table as a file
     $('#rt_summary_download').click(function(e){
         e.preventDefault();

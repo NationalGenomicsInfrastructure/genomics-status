@@ -11,7 +11,7 @@ $(document).ready(function() {
 // Initialize sorting and searching javascript plugin
 
 function load_table() {
-  $("#queues_table_body").html('<tr><td colspan="10" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> <em>Loading..</em></td></tr>');
+  $("#queues_table_body").html('<tr><td colspan="10" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
   return $.getJSON('/api/v1/sequencing_queues', function(data) {
     $("#queues_table_body").empty();
     $.each(data, function(flow, projects) {
@@ -19,18 +19,18 @@ function load_table() {
         $.each(projects, function(project, prinfo){
           var tbl_row = $('<tr>');
           tbl_row.append($('<td>').html(flow));
-          tbl_row.append($('<td>').html('<a href="/project/'+project+'">'+prinfo['name']+' ('+project+') </a>'));
+          tbl_row.append($('<td>').html('<a class="text-decoration-none" href="/project/'+project+'">'+prinfo['name']+' ('+project+') </a>'));
           var plates = [];
           var queuetimes = [];
           var qpcrconc = [];
           $.each(prinfo['plates'], function(plate, values){
             var plate_value = '<div class="mult-pools-margin">'+plate+'</div>';
             if (values['is_rerun']){
-              plate_value = '<div class="mult-pools-margin">'+plate+' <span class="label label-warning sentenceCase">Rerun</span></div>';
+              plate_value = '<div class="mult-pools-margin">'+plate+' <span class="badge bg-warning sentenceCase">Rerun</span></div>';
             }
             plates.push(plate_value);
             var daysAndLabel = getDaysAndDateLabel(values['queue_time'], 'both');
-            queuetimes.push('<div class="mult-pools-margin"><span class="label label-'+daysAndLabel[1]+'">'+daysAndLabel[0]+'</span></div>');
+            queuetimes.push('<div class="mult-pools-margin"><span class="badge bg-'+daysAndLabel[1]+'">'+daysAndLabel[0]+'</span></div>');
             qpcrconc.push('<div class="mult-pools-margin">'+values['conc_pool_qpcr']+'</div>');
           });
           tbl_row.append($('<td>').html(plates));
@@ -80,7 +80,7 @@ function init_listjs() {
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#queues_table_filter').addClass('form-inline pull-right');
+    $('#queues_table_filter').addClass('form-inline float-right');
     $("#queues_table_filter").appendTo("h1");
     $('#queues_table_filter label input').appendTo($('#queues_table_filter'));
     $('#queues_table_filter label').remove();

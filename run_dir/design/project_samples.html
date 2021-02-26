@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: project_samples.html
@@ -9,17 +9,17 @@ Description: Details page for a single project
 
 {% block stuff %}
 
-<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span>  Loading project page..</div>
-<div id="page_content" style="display:none;">
+<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="fa fa-sync fa-spin"></span>  Loading project page..</div>
+<div id="page_content" style="display:none;" class="mb-3">
 
 <h1>
   <span id="project_name">-</span>
-  <small><span class="label" id="project_status_alert"></span></small>
-  <a href="#" class="btn btn-default btn-xs pull-right" id="show_order_timeline" style="margin-top:20px;"><span id="show_orderdates_btn" style="display:none;">Show</span> <span id="hide_orderdates_btn">Hide</span> order dates on timeline</a>
+  <small><span class="badge" id="project_status_alert"></span></small>
+  <a href="#" class="btn btn-outline-dark btn-xs float-right" id="show_order_timeline" style="margin-top:20px;"><span id="show_orderdates_btn" style="display:none;">Show</span> <span id="hide_orderdates_btn">Hide</span> order dates on timeline</a>
 </h1>
 
-<div class="project_timescale" id="project_timescale_production" style="display:none;"></div>
-<div class="project_timescale" id="project_timescale_orderdates"></div>
+<div class="project_timescale" id="project_timescale_production" style="visibility:hidden;"></div>
+<div class="project_timescale my-4" id="project_timescale_orderdates"></div>
 
 <div class="review_alert alert alert-danger" id="review_alert" style="display:none;" >This project requires a review by a manager: <span id="review_ids"></span></div>
 <div class="review_alert alert alert-danger" id="grus_alert" style="display:none;">The email for project PI does not have an associated account in SNIC: <span id="grus_ids"></span></div>
@@ -51,33 +51,33 @@ Description: Details page for a single project
   <div class="col-md-4 borderRight">
     <h4>Project Timeline</h4>
     <dl class="dl-horizontal">
-      <dt><abbr data-toggle="tooltip" title="From <em>Open date</em><br>until close / today">Days in Production</abbr></dt>
+      <dt><abbr data-toggle="tooltip" data-html="true" title="From <em>Open date</em><br>until close / today">Days in Production</abbr></dt>
       <dd id="days_in_production">-</dd>
 
       <dt>Open date</dt>
       <dd>
         <span class="rawdate" id="open_date">-</span>
-        <span class="label label-danger" id="old_project_warning" data-toggle="tooltip" style="display:none;">Warning - Old Project!</span>
+        <span class="badge bg-danger" id="old_project_warning" data-toggle="tooltip" style="display:none;">Warning - Old Project!</span>
       </dd>
 
-      <dt><abbr data-toggle="tooltip" title="First Initial Quality Control">QC</abbr> Start Date</dt>
+      <dt><abbr data-toggle="tooltip" data-html="true" title="First Initial Quality Control">QC</abbr> Start Date</dt>
 			<dd><span class="rawdate" id="first_initial_qc_start_date">-</span></dd>
 
       <dt>Queue Date</dt>
-      <dd><span class="rawdate" id="queued">-</span>&nbsp; <span id="signature_queued" class="upperCase label label-default"></span></dd>
+      <dd><span class="rawdate" id="queued">-</span>&nbsp; <span id="signature_queued" class="upperCase badge bg-secondary"></span></dd>
 
       <dt>Library Prep Start</dt>					<dd><span class="rawdate" id="library_prep_start">-</span></dd>
       <dt>QC Library Finished</dt>				<dd><span class="rawdate" id="qc_library_finished">-</span></dd>
       <dt>Sequencing Start</dt>						<dd><span class="rawdate" id="sequencing_start_date">-</span></dd>
 
       <dt>All Samples Sequenced</dt>
-      <dd><span class="rawdate" id="all_samples_sequenced">-</span>&nbsp; <span id="signature_all_samples_sequenced" class="upperCase label label-default"></span></dd>
+      <dd><span class="rawdate" id="all_samples_sequenced">-</span>&nbsp; <span id="signature_all_samples_sequenced" class="upperCase label badge bg-secondary"></span></dd>
 
       <dt>All Raw Data Delivered</dt>
-	    <dd><span class="rawdate"  id="all_raw_data_delivered">-</span>&nbsp; <span id="signature_all_raw_data_delivered" class="label label-default"></span></dd>
+	    <dd><span class="rawdate"  id="all_raw_data_delivered">-</span>&nbsp; <span id="signature_all_raw_data_delivered" class="badge bg-secondary"></span></dd>
 
-      <dt class="bp-dates"><abbr data-toggle="tooltip" title="Best Practice">BP</abbr> Analysis Completed</dt>
-	    <dd class="bp-dates"><span class="rawdate" id="best_practice_analysis_completed">-</span>&nbsp; <span id="signature_best_practice_analysis_completed" class="upperCase label label-default"></span></dd>
+      <dt class="bp-dates"><abbr data-toggle="tooltip" data-html="true" title="Best Practice">BP</abbr> Analysis Completed</dt>
+	    <dd class="bp-dates"><span class="rawdate" id="best_practice_analysis_completed">-</span>&nbsp; <span id="signature_best_practice_analysis_completed" class="upperCase badge bg-secondary"></span></dd>
 
       <dt>Close Date</dt>
       <dd><span class="rawdate" id="close_date">-</span></dd>
@@ -101,41 +101,41 @@ Description: Details page for a single project
       </textarea>
     </div>
     <div class="form-group text-right">
-        <button id="cancel_internal_costs" class="btn btn-default btn-sm">Cancel <span class="glyphicon glyphicon-remove"></span></button>
-        <button id="submit_internal_costs" class="btn btn-primary btn-sm">Save <span class="glyphicon glyphicon-ok"></span></button>
+        <button id="cancel_internal_costs" class="btn btn-secondary btn-sm">Cancel <span class="fa fa-times"></span></button>
+        <button id="submit_internal_costs" class="btn btn-primary btn-sm">Save <span class="fa fa-check"></span></button>
     </div>
     </form>
         <hr>
 
     <h4>User project description
-      <small class="text-danger">Use with caution! <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="left" title="This is the original user description of the project and may not reflect the final order."></i></small>
+      <small class="text-danger">Use with caution! <i class="fa fa-info-circle" data-toggle="tooltip" data-html="true" data-placement="left" title="This is the original user description of the project and may not reflect the final order."></i></small>
     </h4>
     <div id="customer_project_description_wrapper" class="showfade">
       <p id="customer_project_description"></p>
-      <p class="fade-read-more"><a href="#" class="btn btn-default" style="display:none;">Read More</a></p>
+      <p class="fade-read-more"><a href="#" class="btn btn-light text-dark" style="display:none;">Read More</a></p>
     </div>
   </div>
 </div>
 
 <!-- TABS -->
 <div class="tabbable">
-  <ul class="nav nav-tabs">
-    <li class="active"><a href="#tab_details_content" role="tab" data-toggle="tab">Project information</a></li>
-    <li><a href="#tab_samples_content" role="tab" data-toggle="tab">Samples</a></li>
-    <li><a href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
-    <li><a href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
-    <li><a href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
-    <li><a {% if not multiqc %} disabled data-toggle="tooltip" data-placement="bottom" title="No MultiQC report available"{% else %} href="/multiqc_report/{{ project }}" {% end %} target="_blank" type="submit" class="btn">Open MultiQC report</a></li>
-    <li><a href="/bioinfo/{{ project }}" target="_blank">Open bioinfo tab</a></li>
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link active" href="#tab_details_content" role="tab" data-toggle="tab">Project information</a></li>
+    <li class="nav-item"><a class="nav-link" href="#tab_samples_content" role="tab" data-toggle="tab">Samples</a></li>
+    <li class="nav-item"><a class="nav-link" href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
+    <li class="nav-item"><a class="nav-link" href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
+    <li class="nav-item"><a class="nav-link" href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
+    <li class="nav-item"><a class="nav-link" {% if not multiqc %} disabled data-toggle="tooltip" data-html="true" data-placement="bottom" title="No MultiQC report available"{% else %} href="/multiqc_report/{{ project }}" {% end %} target="_blank" type="submit" class="btn">Open MultiQC report</a></li>
+    <li class="nav-item"><a class="nav-link" href="/bioinfo/{{ project }}" target="_blank">Open bioinfo tab</a></li>
   </ul>
   <div class="tab-content">
-    <div class="tab-pane fade in active" id="tab_details_content">
+    <div class="tab-pane fade show active" id="tab_details_content">
       <div class="row">
         <div class="col-sm-4">
           <!--Order Info Table-->
           <table class="table table-bordered table-striped">
             <thead>
-              <tr>
+              <tr class="darkth">
                 <th colspan="2">Order info &amp; Contacts</th>
               </tr>
             </thead>
@@ -156,7 +156,7 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped">
             <thead>
-              <tr><th colspan="2">Bioinformatics <a id="statusdb_link" data-toggle="tooltip" title="Opens project page in StatusDB" class="btn btn-default btn-xs pull-right" target="_blank">StatusDB</a>
+              <tr class="darkth"><th colspan="2">Bioinformatics <a id="statusdb_link" data-toggle="tooltip" title="Opens project page in StatusDB" class="btn btn-light btn-xs float-right" target="_blank">StatusDB</a>
               </th></tr>
             </thead>
             <tbody>
@@ -174,7 +174,7 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped">
             <thead>
-              <tr><th colspan="2">Wet Lab</th></tr>
+              <tr class="darkth"><th colspan="2">Wet Lab</th></tr>
             </thead>
             <tbody>
               <tr><td>Sample type</td><td id="sample_type"></td></tr>
@@ -183,7 +183,7 @@ Description: Details page for a single project
               <tr><td>% phiX</td><td id="phix_spike-in_(percent)"></td></tr>
               <tr><td>Low Diversity</td><td id="low_diversity"></td></tr>
               <tr><td>Custom Primer</td><td id="custom_primer"></td></tr>
-              <tr><td>Lanes Ordered</td><td><span class="badge" id="sequence_units_ordered_(lanes)"></span></td></tr>
+              <tr><td>Lanes Ordered</td><td><span class="badge bg-secondary" id="sequence_units_ordered_(lanes)"></span></td></tr>
             </tbody>
           </table>
         </div>
@@ -194,12 +194,12 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped">
             <thead>
-              <tr><th colspan="2">Samples</th></tr>
+              <tr class="darkth"><th colspan="2">Samples</th></tr>
             </thead>
             <tbody>
-              <tr><td>Non-aborted samples</td><td><span class="badge" id="final_number_of_samples"></span></td></tr>
-              <tr><td>Samples provided</td><td><span class="badge" id="no_samples"></span></td></tr>
-              <tr><td>Pools</td><td><span class="badge" id='number_of_pools'></span></td></tr>
+              <tr><td>Non-aborted samples</td><td><span class="badge bg-secondary" id="final_number_of_samples"></span></td></tr>
+              <tr><td>Samples provided</td><td><span class="badge bg-secondary" id="no_samples"></span></td></tr>
+              <tr><td>Pools</td><td><span class="badge bg-secondary" id='number_of_pools'></span></td></tr>
             </tbody>
           </table>
         </div>
@@ -207,12 +207,12 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped">
             <thead>
-              <tr><th colspan="2">Sample Status</th></tr>
+              <tr class="darkth"><th colspan="2">Sample Status</th></tr>
             </thead>
             <tbody>
-              <tr><td>Finished</td><td><span class="badge label-success" id='finished_samples'></span></td></tr>
-              <tr><td>In progress</td><td><span class="badge" id='in_progress_samples'></span></td></tr>
-              <tr><td>Aborted</td><td><span class="badge label-danger" id='aborted_samples'></span></td></tr>
+              <tr><td>Finished</td><td><span class="badge bg-success" id='finished_samples'></span></td></tr>
+              <tr><td>In progress</td><td><span class="badge bg-secondary" id='in_progress_samples'></span></td></tr>
+              <tr><td>Aborted</td><td><span class="badge bg-danger" id='aborted_samples'></span></td></tr>
             </tbody>
           </table>
         </div>
@@ -221,14 +221,14 @@ Description: Details page for a single project
           <table class="table table-bordered table-striped">
             <thead>
               <!--<tr><th colspan="2"><a href="/project_summary/{{ project }}">Progress summary</a></th></tr>-->
-              <tr><th colspan="2">Progress summary</th></tr>
+              <tr class="darkth"><th colspan="2">Progress summary</th></tr>
             </thead>
             <tbody>
               <tr><td>Passed Initial QC</td><td id='passed_initial_qc'></td></tr>
               <tr><td>Passed Library QC</td><td id='passed_library_qc'></td></tr>
-              <tr><td>Lanes Started</td><td><span class="badge" id="lanes_sequenced"></span></td></tr>
-              <tr><td>Sequencing QC (Gdocs)</td><td><span class="badge" id='passed_seq_qc'></span></td></tr>
-              <tr><td>Library re-preps (Genstat)</td><td><span class="badge" id='library_repreps'></span></td></tr>
+              <tr><td>Lanes Started</td><td><span class="badge bg-secondary" id="lanes_sequenced"></span></td></tr>
+              <tr><td>Sequencing QC (Gdocs)</td><td><span class="badge bg-secondary" id='passed_seq_qc'></span></td></tr>
+              <tr><td>Library re-preps (Genstat)</td><td><span class="badge bg-secondary" id='library_repreps'></span></td></tr>
             </tbody>
           </table>
         </div>
@@ -238,44 +238,44 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped" id="charon-status" style="display:none;">
             <thead>
-              <tr><th>Charon Status</th><th><a href="https://charon.scilifelab.se/project/{{ project }}" id="charon_link_button" class="btn btn-default btn-xs pull-right">Charon</a></th></tr>
+              <tr class="darkth"><th>Charon Status</th><th><a href="https://charon.scilifelab.se/project/{{ project }}" id="charon_link_button" class="btn btn-light btn-xs float-right">Charon</a></th></tr>
             </thead>
             <tbody>
               <tr>
                   <td>Total amount of samples</td>
-                  <td><span class="badge" id="charon-status-tot"></span></td>
+                  <td><span class="badge bg-secondary" id="charon-status-tot"></span></td>
               </tr>
               <tr>
                   <td>Aborted samples</td>
-                  <td><span class="badge label-warning" id="charon-status-ab"></span></td>
+                  <td><span class="badge bg-warning" id="charon-status-ab"></span></td>
               </tr>
               <tr>
                   <td>Sequenced samples</td>
-                  <td><span class="badge" id="charon-status-seq"></span></td>
+                  <td><span class="badge bg-secondary" id="charon-status-seq"></span></td>
               </tr>
               <tr>
                   <td>Analyzed samples</td>
-                  <td><span class="badge" id="charon-status-ana"></span></td>
+                  <td><span class="badge bg-secondary" id="charon-status-ana"></span></td>
               </tr>
               <tr>
                   <td>Successful Analysis (non-aborted)</td>
-                  <td><span class="badge label-success" id="charon-status-passed"></span></td>
+                  <td><span class="badge bg-success" id="charon-status-passed"></span></td>
               </tr>
               <tr>
                   <td>Failed Analysis</td>
-                  <td><span class="badge label-danger" id="charon-status-failed"></span></td>
+                  <td><span class="badge bg-danger" id="charon-status-failed"></span></td>
               </tr>
               <tr>
                   <td>Running Analysis</td>
-                  <td><span class="badge label-info" id="charon-status-runn"></span></td>
+                  <td><span class="badge bg-info" id="charon-status-runn"></span></td>
               </tr>
               <tr>
                   <td>30X Human Genomes Equivalents</td>
-                  <td><span class="badge" id="charon-status-hge"></span></td>
+                  <td><span class="badge bg-secondary" id="charon-status-hge"></span></td>
               </tr>
               <tr>
                   <td>Delivery Project(s)</td>
-                  <td><span class="badge" id="charon-status-gdp"></span></td>
+                  <td><span class="badge bg-secondary" id="charon-status-gdp"></span></td>
               </tr>
             </tbody>
           </table>
@@ -284,7 +284,7 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table id='links_tab' class="table table-bordered table-striped">
             <thead>
-              <tr><th colspan="2">Links</th></tr>
+              <tr class="darkth"><th colspan="2">Links</th></tr>
             </thead>
             <tbody id="existing_links_projinfo">
               <div ></div>
@@ -293,13 +293,13 @@ Description: Details page for a single project
         </div>
       </div>
       <!-- Undefined Fields Table -->
-      <div class="panel-group" id="undefined_fields_accordion" role="tablist" aria-multiselectable="true">
-        <div class="panel panel-default">
-          <div class="panel-heading" role="tab" id="headingOne">
-            <h4 class="panel-title"><a data-toggle="collapse" data-parent="#undefined_fields_accordion" href="#undefined_fields">Undefined Fields</a></h4>
+      <div id="undefined_fields_accordion" role="tablist" aria-multiselectable="true">
+        <div class="card">
+          <div class="card-header" role="tab" id="headingOne">
+            <h4 class="card-title my-1"><a class="text-decoration-none text-dark" data-toggle="collapse" data-parent="#undefined_fields_accordion" href="#undefined_fields">Undefined Fields</a></h4>
           </div>
-          <div id="undefined_fields" class="panel-collapse collapse" role="tabpanel">
-            <div class="panel-body">
+          <div id="undefined_fields" class="collapse" role="tabpanel">
+            <div class="card-body">
               <dl id="undefined_project_info" class="dl-horizontal dl-wide"></dl>
              </div>
             </div>
@@ -309,30 +309,40 @@ Description: Details page for a single project
 
     <!-- SAMPLES TAB -->
     <div class="tab-pane fade" id="tab_samples_content">
-      <form class="form-inline" role="form" id="Search-form">
-        <button class="pull-right btn btn-sm btn-primary" data-toggle="modal" data-target="#sampleFieldsModal">Filter Columns</button>
-        <div class="form-group form-group-sm">
-          <label for="search_field">Search Samples:</label>
+      <form class="row row-cols-lg-auto g-3" role="form" id="Search-form" >
+        <div class="form-group col-12 p-2">
+          <label class="col-form-label" for="search_field">Search Samples:</label>
+        </div>
+        <div class="form-group col-12 p-2">
           <input class="form-control search search-query" type="text" placeholder="Search..." id="search_field">
         </div>
         &nbsp;
-        <div class="form-group">
-        <button type="button" id="proj_samples_copy_table" class="btn btn-sm btn-default" data-clipboard-target="#sample_table"><span class="glyphicon glyphicon-copy"></span> Copy table</button>
-        <!--&nbsp;-->
-
-        <!--<div class="form-group form-group-sm">-->
-          <label>Column Presets:</label>
+        <div class="form-group col-12 p-2 d-inline-flex">
+        <button type="button" id="proj_samples_copy_table" class="btn btn-sm btn-outline-dark" data-clipboard-target="#sample_table"><span class="fa fa-copy"></span> Copy table</button>
+        </div>
+        <div class="btn-toolbar p-2" role="toolbar">
+          <label class="col-form-label p-1">Column Presets:</label>
           <div class="btn-group btn-group-sm" id="default_preset_buttons">
             <!-- Load default presets (to be filled with JS) -->
           </div>
-        </div>
-        <div class="form-group form-group-sm" style="margin-left:2em;">
-          <a class="btn btn-sm btn-default" href='/reads_total/{{ project }}' role="button">Reads Aggregation</a>
-          <a class="btn btn-sm btn-default" href='/rec_ctrl_view/{{ project }}' role="button">RecCtrl Plates</a>
-        </div>
-        <button class="btn btn-sm btn-default" data-toggle="modal" type="button" data-target="#imagesModal">
+
+          <div class="btn-group ml-4" role="group">
+          <a class="btn btn-sm btn-outline-dark d-flex align-items-center" href='/reads_total/{{ project }}' role="button">Reads Aggregation</a>
+          </div>
+          <div class="btn-group ml-1" role="group">
+          <a class="btn btn-sm btn-outline-dark d-flex align-items-center" href='/rec_ctrl_view/{{ project }}' role="button">RecCtrl Plates</a>
+          </div>
+          <div class="btn-group ml-1" role="group">
+            <button class="btn btn-sm btn-outline-dark" data-toggle="modal" type="button" data-target="#imagesModal">
            Download Images
-        </button>
+            </button>
+          </div>
+          </div>
+
+          <div class="col-12 p-2 d-inline-flex offset-1" >
+           <button class="float-right btn btn-sm btn-primary" data-toggle="modal" data-target="#sampleFieldsModal">Filter Columns</button>
+         </div>
+
       </form>
 
       {% if len(worksets) > 0 %}
@@ -342,12 +352,12 @@ Description: Details page for a single project
       <div id="tab_samples_worksets">
       {% for workset in worksets %}
         <div class="btn-group btn-group-sm">
-          <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <button type="button" class="btn btn-sm btn-outline-dark dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             {{ workset.value }} <span class="caret"></span>
           </button>
           <ul class="dropdown-menu">
-            <li><a href="{{ lims_uri }}/clarity/search?scope=Container&query={{ workset.value }}">Open in the LIMS</a></li>
-            <li><a href="/workset/{{ workset.value }}">Open in Genomics Status</a></li>
+            <li><a class="dropdown-item" href="{{ lims_uri }}/clarity/search?scope=Container&query={{ workset.value }}">Open in the LIMS</a></li>
+            <li><a class="dropdown-item" href="/workset/{{ workset.value }}">Open in Genomics Status</a></li>
           </ul>
         </div>
       {% end %}
@@ -368,8 +378,8 @@ Description: Details page for a single project
 
     <!-- USER COMMUNICATION TAB -->
     <div class="tab-pane fade" id="tab_com_content">
-      <div id="zendesk_loading_spinner" style="text-align:center; margin:100px 0;"><span class='glyphicon glyphicon-refresh glyphicon-spin'></span>  Loading ZenDesk tickets..</div>
-      <div class="panel-group" id="com_accordion"></div>
+      <div id="zendesk_loading_spinner" style="text-align:center; margin:100px 0;"><span class='fa fa-sync fa-spin'></span>  Loading ZenDesk tickets..</div>
+      <div id="com_accordion"></div>
     </div>
 
     <!-- LINK TAB -->
@@ -380,11 +390,11 @@ Description: Details page for a single project
 
 <!-- SAMPLE FIELD MODAL -->
 <div id="sampleFieldsModal" class="modal fade">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
         <h3>Filter Sample Table Columns</h3>
+        <button type="button" class="btn-close" data-dismiss="modal"><span class="sr-only">Close</span></button>
       </div>
       <div class="modal-body">
         <form id="Filter" class="form form-search" role="form">
@@ -394,9 +404,9 @@ Description: Details page for a single project
             <div class="col-sm-3" id="basic-columns">
               <h4 class="search-action" data-action="filterHeader">Basic <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['BASIC_COLUMNS'].items() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="basic-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="basic-columns-{{col_name}}">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input filterCheckbox" data-columngroup="basic-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="basic-columns-{{col_name}}">
+                <label class="form-check-label" for="basic-columns-{{col_name}}">
                   {{col_display_name}}
                 </label>
               </div>
@@ -405,9 +415,9 @@ Description: Details page for a single project
             <div class="col-sm-3" id="details-columns">
               <h4 class="search-action" data-action="filterHeader">Sample Details <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['DETAILS_COLUMNS'].items() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="details-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="details-columns-{{col_name}}">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input filterCheckbox" data-columngroup="details-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="details-columns-{{col_name}}">
+                <label class="form-check-label" for="details-columns-{{col_name}}">
                   {{col_display_name}}
                 </label>
               </div>
@@ -416,9 +426,9 @@ Description: Details page for a single project
             <div class="col-sm-3" id="initial-qc-columns">
               <h4 class="search-action" data-action="filterHeader">Initial QC <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['INITIAL_QC_COLUMNS'].items() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="initial-qc-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="initial-qc-columns-{{col_name}}">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input filterCheckbox" data-columngroup="initial-qc-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="initial-qc-columns-{{col_name}}">
+                <label class="form-check-label" for="initial-qc-columns-{{col_name}}">
                   {{col_display_name}}
                 </label>
               </div>
@@ -427,22 +437,22 @@ Description: Details page for a single project
             <div class="col-sm-3" id="library-prep-columns">
               <h4 class="search-action" data-action="filterHeader">Library Prep <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['LIBRARY_PREP_COLUMNS'].items() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="library-prep-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="library-prep-columns-{{col_name}}">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input filterCheckbox" data-columngroup="library-prep-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="library-prep-columns-{{col_name}}">
+                <label class="form-check-label" for="library-prep-columns-{{col_name}}">
                   {{col_display_name}}
                 </label>
               </div>
               {% end %}
             </div>
           </div>
-          <div class="row">
+          <div class="row pt-2">
             <div class="col-sm-3" id="library-validation-columns">
               <h4 class="search-action" data-action="filterHeader">Library QC <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['LIBRARY_VALIDATION_COLUMNS'].items() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="library-validation-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="library-validation-columns-{{col_name}}">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input filterCheckbox" data-columngroup="library-validation-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="library-validation-columns-{{col_name}}">
+                <label class="form-check-label" for="library-validation-columns-{{col_name}}">
                   {{col_display_name}}
                 </label>
               </div>
@@ -451,9 +461,9 @@ Description: Details page for a single project
             <div class="col-sm-3" id="pre-prep-library-validation-columns">
               <h4 class="search-action" data-action="filterHeader">Pre Prep Library QC <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['PRE_PREP_LIBRARY_VALIDATION_COLUMNS'].items() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="pre-prep-library-validation-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="pre-prep-library-validation-columns-{{col_name}}">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input filterCheckbox" data-columngroup="pre-prep-library-validation-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="pre-prep-library-validation-columns-{{col_name}}">
+                <label class="form-check-label" for="pre-prep-library-validation-columns-{{col_name}}">
                   {{col_display_name}}
                 </label>
               </div>
@@ -462,9 +472,9 @@ Description: Details page for a single project
             <div class="col-sm-3" id="bioinfo-columns">
               <h4 class="search-action" data-action="filterHeader">Bioinfo <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['BIOINFO_COLUMNS'].items() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="bioinfo-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="bioinfo-columns-{{col_name}}">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input filterCheckbox" data-columngroup="bioinfo-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="bioinfo-columns-{{col_name}}">
+                <label class="form-check-label" for="bioinfo-columns-{{col_name}}">
                   {{col_display_name}}
                 </label>
               </div>
@@ -473,9 +483,9 @@ Description: Details page for a single project
             <div class="col-sm-3" id="tissue-columns">
               <h4 class="search-action" data-action="filterHeader">Tissue <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['TISSUE_COLUMNS'].items() %}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" class="filterCheckbox" data-columngroup="tissue-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="tissue-columns-{{col_name}}">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input filterCheckbox" data-columngroup="tissue-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="tissue-columns-{{col_name}}">
+                <label class="form-check-label" for="tissue-columns-{{col_name}}">
                   {{col_display_name}}
                 </label>
               </div>
@@ -485,8 +495,8 @@ Description: Details page for a single project
         </form>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
-        <button class="btn btn-default search-action" data-dismiss="modal" data-action="filterReset">Reset</button>
+        <button class="btn btn-secondary" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn btn-secondary search-action" data-dismiss="modal" data-action="filterReset">Reset</button>
         <button class="btn btn-primary search-action" data-dismiss="modal" data-action="filterApply" type="submit">Apply</button>
       </div>
     </div>
@@ -501,8 +511,8 @@ Description: Details page for a single project
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <h3 class="modal-title">Download Images</h3>
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
       </div>
       <div class="modal-body">
         <form id="chooseImgType" class="form form-search" role="form" target="_blank">
@@ -513,7 +523,6 @@ Description: Details page for a single project
           </div>
           <div class="project_page_border_style">
             <div class="form-group row">
-              <div class="form-group col-sm-12 mx-auto">
                 <div class="form-group col-sm-6">
                   <div class="form-check">
                     <input class="form-check-input" name="imgRadio" type="radio" id="imgCheck1" value="frag_an">
@@ -534,10 +543,9 @@ Description: Details page for a single project
                     </label>
                   </div>
                 </div>
-                <div class="form-group col-sm-6" style="padding: 4%;">
+                <div class="form-group col-sm-6 text-center py-4">
                     <button type="submit" class="btn btn-sm btn-primary" id="downloadImgsBtn">Download</button>
                 </div>
-              </div>
             </div>
           </div>
         </form>
@@ -554,15 +562,15 @@ Description: Details page for a single project
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <h3 class="modal-title">Caliper Image</h3>
+        <button type="button" class="btn-close" data-dismiss="modal" aria-hidden="true"></button>
       </div>
       <div class="modal-body">
         <div id="caliper_modal_image_wrapper">
           <p>Caliper image loading...</p>
         </div>
-        <a class="left carousel-control" href="#" role="button"><span class="glyphicon glyphicon-chevron-left"></span></a>
-        <a class="right carousel-control" href="#" role="button"><span class="glyphicon glyphicon-chevron-right"></span></a>
+        <a class="left carousel-control-prev" href="#" role="button"><span class="fa fa-chevron-left" style="font-size:40px; color:black;"></span></a>
+        <a class="right carousel-control-next" href="#" role="button"><span class="fa fa-chevron-right" style="font-size:40px; color:black;"></span></a>
       </div>
       <div class="modal-footer">
         <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Close</button>

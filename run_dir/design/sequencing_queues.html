@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: sequencing_queues.html
@@ -12,11 +12,11 @@ Description: Shows a table with extant sequencing queues.
 <div class="container-fluid" id="seqQueues_list">
   <div id="pools_table_div">
       <h1><span id="page_title">Sequencing queues</span>
-        <small>Showing all sequencing queues</small>
+        <small class="text-muted">Showing all sequencing queues</small>
       </h1>
       <table class="table table-hover table-striped table-bordered sortable" id="queues_table">
         <thead>
-          <tr class="sticky">
+          <tr class="sticky darkth">
             <th class="sort"></th>
             <th class="sort">Project</th>
             <th class="sort">Pools</th>
@@ -30,7 +30,7 @@ Description: Shows a table with extant sequencing queues.
           </tr>
         </thead>
         <tfoot>
-          <tr>
+          <tr class="darkth">
             <th class="sort"></th>
             <th class="sort">Project</th>
             <th class="sort">Pools</th>

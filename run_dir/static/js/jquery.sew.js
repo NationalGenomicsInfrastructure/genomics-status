@@ -36,7 +36,7 @@
 		this.init();
 	}
 
-	Plugin.MENU_TEMPLATE = "<div class='-sew-list-container' style='display: none; position: absolute;'><ul class='-sew-list'></ul></div>";
+	Plugin.MENU_TEMPLATE = "<div class='-sew-list-container' style='display: none; position: absolute; z-index:2000;'><ul class='-sew-list'></ul></div>";
 
 	Plugin.ITEM_TEMPLATE = '<li class="-sew-list-item"></li>';
 

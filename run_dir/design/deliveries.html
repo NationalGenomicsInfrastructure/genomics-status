@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
 <!--
 Template file: deliveries.html
@@ -10,15 +10,15 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 {% block stuff %}
 
 {% set status_css={
-    'Sequencing': 'label-default',
-    'Demultiplexing': 'label-default',
-    'New': 'label-primary',
-    'Transferring': 'label-default',
-    'QC-ongoing': 'label-warning',
-    'QC-done': 'label-success',
-    'BP-ongoing': 'label-warning',
-    'BP-done': 'label-success',
-    'ERROR': 'label-danger',
+    'Sequencing': 'bg-secondary',
+    'Demultiplexing': 'bg-secondary',
+    'New': 'bg-primary',
+    'Transferring': 'bg-secondary',
+    'QC-ongoing': 'bg-warning',
+    'QC-done': 'bg-success',
+    'BP-ongoing': 'bg-warning',
+    'BP-done': 'bg-success',
+    'ERROR': 'bg-danger',
     }; %}
 
 <div id="page_content" class="deliveries-page">
@@ -28,28 +28,28 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
       <div class="form col-md-4">
         <h4>Number of</h4>
         <dl class="dl-horizontal">
-          <dt>Ongoing Projects: </dt><dd><span class="badge badge-small">{{ ongoing_projects }}</span></dd>
-          <dt>Projects to be closed: </dt><dd><span class="badge badge-small">{{ projects_to_be_closed }}</span></dd>
-          <dt>Flowcells: </dt><dd><span class="badge badge-small">{{ number_of_flowcells }}</span></dd>
-          <dt>Lanes: </dt><dd><span class="badge badge-small">{{ number_of_lanes }}</span></dd>
-          <dt>Samples: <dd><span class="badge badge-small">{{ number_of_samples }}</span></dd>
+          <dt>Ongoing Projects: </dt><dd><span class="badge rounded-pill bg-secondary">{{ ongoing_projects }}</span></dd>
+          <dt>Projects to be closed: </dt><dd><span class="badge rounded-pill bg-secondary">{{ projects_to_be_closed }}</span></dd>
+          <dt>Flowcells: </dt><dd><span class="badge rounded-pill bg-secondary">{{ number_of_flowcells }}</span></dd>
+          <dt>Lanes: </dt><dd><span class="badge rounded-pill bg-secondary">{{ number_of_lanes }}</span></dd>
+          <dt>Samples: <dd><span class="badge rounded-pill bg-secondary">{{ number_of_samples }}</span></dd>
         </dl>
       </div>
       <div class="form col-md-4 status-filters">
         <h4>Flowcell status
           <div class="btn-group">
-            <a href="#" class="btn btn-sm btn-default all-statuses">All</a>
-            <a href="#" class="btn btn-sm btn-default none-statuses">None</a>
+            <a href="#" class="btn btn-sm btn-outline-dark all-statuses">All</a>
+            <a href="#" class="btn btn-sm btn-outline-dark none-statuses">None</a>
           </div>
         </h4>
         <div id="visible-classes" class="{{ ' '.join(status_list.keys()) }}"></div>
         <div id="filtered-classes" class=""></div>
         {% for status, number in status_list.items() %}
 	        {% if number != 0 %}
-	        <div class="form-group">
+	        <div class="chkbox mb-2">
 	          <label class="checkbox-inline">
-	            <input class="fc-status-checkbox" type="checkbox" value="{{ status }}" checked>{{ status }}
-	              <span class="badge badge-small"> {{ number }}</span></label>
+	            <input class="fc-status-checkbox mr-1" type="checkbox" value="{{ status }}" checked> {{ status }}
+	              <span class="badge rounded-pill bg-secondary"> {{ number }}</span></label>
 	        </div>
 	        {% end %}
         {% end %}
@@ -57,15 +57,15 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
       <div class="form col-md-4 responsible-filters">
         <h4>Bioinfo responsible
           <div class="btn-group">
-            <a href="#" class="btn btn-sm btn-default all-responsibles">All</a>
-            <a href="#" class="btn btn-sm btn-default none-responsibles">None</a>
+            <a href="#" class="btn btn-sm btn-outline-dark all-responsibles">All</a>
+            <a href="#" class="btn btn-sm btn-outline-dark none-responsibles">None</a>
           </div>
         </h4>
         {% for responsible, number in sorted(responsible_list.items()) %}
-          <div class="form-group">
+          <div class="chkbox mb-2">
             <label class="checkbox-inline">
-              <input class="bi-responsible-checkbox" type="checkbox" value="{{ responsible }}" checked> {{ responsible }}
-                <span class="badge badge-small"> {{ number }}</span></label>
+              <input class="bi-responsible-checkbox mr-1" type="checkbox" value="{{ responsible }}" checked> {{ responsible }}
+                <span class="badge rounded-pill bg-secondary"> {{ number }}</span></label>
           </div>
         {% end %}
       </div>
@@ -77,115 +77,114 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           <h3><a href="project/'+pid+'" class="bi-project-id">'+pid+'</a></h3><div class="alert alert-danger"><strong>Error</strong> - could not find project information for {{ project_id }}</div>
         {% else %}
         <h3>
-          <a href="/project/{{ project_id }}" data-toggle="tooltip" title="Project Page" class="bi-project-id">{{ project_id }}</a>:
-          <a href="/bioinfo/{{ project_id }}" data-toggle="tooltip" title="Bioinfo Tab" class="bi-project-name">{{ project['project_name'] }}</a><br>
+          <a class="text-decoration-none" href="/project/{{ project_id }}" data-toggle="tooltip" title="Project Page" class="bi-project-id">{{ project_id }}</a>:
+          <a class="text-decoration-none" href="/bioinfo/{{ project_id }}" data-toggle="tooltip" title="Bioinfo Tab" class="bi-project-name">{{ project['project_name'] }}</a><br>
           <small>
-            &nbsp; <span class="bi-project-facility label {% if project['type'] == 'Application' %} label-success {% else %} label-primary {% end %}">{{ project.get('type') }}</span>
-            <span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">{{ project['application'] }}</span>
-            &nbsp; <span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">{{ project['bioinfo_responsible'] }} </span>
-              <select class="input-small edit-bi-project-assigned" style="display:none;">
+            &nbsp; <span class="bi-project-facility badge {% if project['type'] == 'Application' %} bg-success {% else %} bg-primary {% end %}">{{ project.get('type') }}</span>
+            <span class="bi-project-application text-muted" data-toggle="tooltip" data-delay="500" title="Application">{{ project['application'] }}</span>
+            &nbsp; <span class="bi-project-assigned text-muted" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">{{ project['bioinfo_responsible'] }} </span>
+              <select class="input-small edit-bi-project-assigned text-muted" style="display:none;">
                 {% for responsible in lims_responsibles %}
                   <option value="{{ responsible }}" {% if project['bioinfo_responsible'] == responsible %} selected {% end %}>{{ responsible }}</option>
                 {% end %}
               </select>
-              <span class="button-edit-bioinfo-responsible glyphicon glyphicon-pencil"></span>
-              <span class="button-save-bioinfo-responsible glyphicon glyphicon-ok" style="display:none;"></span>
-              <span class="button-reset-bioinfo-responsible glyphicon glyphicon-remove" style="display:none;"></span>
+              <span class="button-edit-bioinfo-responsible fa fa-edit text-muted"></span>
+              <span class="button-save-bioinfo-responsible fa fa-check text-muted" style="display:none;"></span>
+              <span class="button-reset-bioinfo-responsible fa fa-times text-muted" style="display:none;"></span>
           </small>
         </h3>
-        <dl class="dl-horizontal hide-incoming">
-          <dt>Project running note:</dt>
-          <dd>
-            <button data-toggle="modal" data-target="#runningNotesModalDeliveries"
-                    class="btn btn-xs btn-default pull-right runningNotesModalDeliveries_button project_runningNotes">See all</button>
-            <div class="bi-project-note">{{ project['latest_running_note']['timestamp'] }} - {{ project['latest_running_note']['user'] }}</div>
-            <div class="bi-project-note">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>
-          </dd>
-        </dl>
-        <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
-          <thead>
-            <tr class="bioinfo-project" id="bioinfo-project-{{ project_id }}">
-              <th class="bioinfo-project">
-                <a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
-                  <span class="glyphicon glyphicon-chevron-right"></span>
-                </a>
-              </th>
-              <th></th>
-              <th style="width: 25%;">Run ID</th>
-              <th style="width: 10%;">Status</th>
-              <th style="width: 15%;" class="hide-incoming">Checklists</th>
-              <th style="width: 50%;" class="hide-incoming">Latest running note</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for flowcell_id, flowcell in sorted(project['runs'].items()) %}
-            <tr class="bioinfo-fc" id="bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
-              <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" class="bioinfo-expand">
-                  <span class="glyphicon glyphicon-chevron-right"></span></a></td>
-              <td></td>
-              <td class="bioinfo-granularity"><samp><a href="/flowcells/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
-              <td><span class="bioinfo-status label {{ status_css.get(flowcell['flowcell_status'], 'label-primary') }}">{{ flowcell['flowcell_status'] }}</span></td>
-                <td class="bi-run-pwf hide-incoming {% if flowcell['checklist']['total'] == flowcell['checklist']['completed'] %} success {% else %} warning {% end %}">
-                  <div class="progress">
-                    <div class="progress-bar progress-bar-success" style="width:{{ float(flowcell['checklist']['completed']) / float(flowcell['checklist']['total']) * 100.0 }}%"
-                         title="{{ flowcell['checklist']['completed'] }} completed" data-toggle="tooltip">{{ flowcell['checklist']['completed'] }}</div>
+        <div class="col-10 offset-1">
+          <dl class="dl-horizontal hide-incoming">
+            <dt>Latest running note:
+              <br>
+              <button data-toggle="modal" data-target="#runningNotesModalDeliveries"
+                    class="btn btn-xs btn-outline-dark mt-1 runningNotesModalDeliveries_button project_runningNotes">See all</button>
+            </dt>
+            <dd>
+              <div class="card">
+                  <div class="card-header bi-project-note-header">
+                    <a class="text-decoration-none" href="#">{{ project['latest_running_note']['user'] }}</a> - <span class="todays_date">{{ project['latest_running_note']['timestamp'] }}</span>
+                    {% if project['latest_running_note']['category'] %} - <span class="badge fillbadgecolour"> {{ project['latest_running_note']['category'] }} </span> {% end %}
                   </div>
-                </td>
-              {% set default_note = {'note': '-'} %}
-              <td class="bioinfo-running-notes" data-running-note="{{ flowcell.get('latest_running_note', default_note)['note'] }}">
-                <div contenteditable="true">{{ flowcell.get('latest_running_note', default_note)['note'] }}</div><button class="bioinfo-running-notes-save btn btn-xs btn-default">Save</button>
-                <button class="bioinfo-running-notes-cancel btn btn-xs btn-default">Cancel</button>
-              </td>
-            </tr>
-            {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
-              <tr class="bioinfo-lane" id="bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}"
-                  data-parent="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" style="display:none;">
-                <td></td>
-                <td class="bioinfo-status-expand"><a href="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" class="bioinfo-expand">
-                    <span class="glyphicon glyphicon-chevron-right"></span></a></td>
-                <td class="bioinfo-granularity"><samp>{{ lane_id }}</samp></td>
-                <td><span class="bioinfo-status label {{ status_css.get(lane['lane_status'], 'label-primary') }}">{{ lane['lane_status'] }}</span></td>
-                <td class="bi-run-pwf hide-incoming {% if lane['checklist']['total'] == lane['checklist']['completed'] %} success {% else %} warning {% end %}">
-                  <div class="progress">
-                    <div class="progress-bar progress-bar-success" style="width:{{ float(lane['checklist']['completed']) / float(lane['checklist']['total']) * 100.0 }}%"
-                         title="{{ lane['checklist']['completed'] }} completed" data-toggle="tooltip">{{ lane['checklist']['completed'] }}</div>
+                  <div class="card-body bi-project-note-text">
+                      <div class="running-note-body text-muted">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>
                   </div>
-                </td>
-                <td class="bioinfo-running-notes" data-running-note="{{ lane.get('latest_running_note', default_note)['note'] }}">
-                  <div contenteditable="true">{{ lane.get('latest_running_note', default_note)['note'] }}</div>
-                  <button class="bioinfo-running-notes-save btn btn-xs btn-default">Save</button>
-                  <button class="bioinfo-running-notes-cancel btn btn-xs btn-default">Cancel</button></td>
+              </div>
+            </dd>
+          </dl>
+        </div>
+        <div class="col-10 offset-1">
+          <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
+            <thead>
+              <tr class="bioinfo-project darkth" id="bioinfo-project-{{ project_id }}">
+                <th class="bioinfo-project" style="width: 3%;">
+                  <a href="#bioinfo-project-{{ project_id }}" class="bioinfo-expand">
+                    <span class="fa fa-chevron-right"></span>
+                  </a>
+                </th>
+                <th style="width: 3%;"></th>
+                <th style="width: 39%;">Run ID</th>
+                <th style="width: 15%;">Status</th>
+                <th class="hide-incoming" style="width: 40%;">Checklists</th>
               </tr>
-              {% for sample_id, sample in sorted(lane['samples'].items()) %}
-                {% set passed = len(sample['checklist']['passed']) %}
-                {% set warnings = len(sample['checklist']['warnings']) %}
-                {% set failed = len(sample['checklist']['failed']) %}
-                <!--division by zero-->
-                {% set total = max(len(sample['checklist']['total']), 1) %}
-                <tr class="bioinfo-sample" id="bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
-                    data-parent="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
-                  <td></td>
-                  <td><a href="#bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
-                      class="bioinfo-expand"></a></td>
-                  <td class="bioinfo-granularity"><samp>{{ sample_id }}</samp></td>
-                  <td><span class="bioinfo-status label {{ status_css.get(sample['status'], 'label-primary') }}">{{ sample['status'] }}</span></td>
-                  <td class="bi-run-pwf hide-incoming {% if passed + warnings + failed < total %} warning {% else %} success {% end %}">
+            </thead>
+            <tbody>
+              {% for flowcell_id, flowcell in sorted(project['runs'].items()) %}
+              <tr class="bioinfo-fc" id="bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
+                <td class="bioinfo-status-expand"><a href="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" class="bioinfo-expand">
+                    <span class="fa fa-chevron-right"></span></a></td>
+                <td></td>
+                <td class="bioinfo-granularity"><samp><a class="text-decoration-none" href="/flowcells/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
+                <td><span class="bioinfo-status badge {{ status_css.get(flowcell['flowcell_status'], 'bg-primary') }}">{{ flowcell['flowcell_status'] }}</span></td>
+                  <td class="bi-run-pwf hide-incoming {% if flowcell['checklist']['total'] == flowcell['checklist']['completed'] %} table-success {% else %} table-warning {% end %}">
                     <div class="progress">
-                      <div class="progress-bar progress-bar-success" style="width:{{ float(passed) / float(total) * 100.0 }}%" title="{{ passed }} Passes" data-toggle="tooltip">{{ passed }}</div>
-                      <div class="progress-bar progress-bar-warning" style="width:{{ float(warnings) / float(total) * 100.0 }}%" title="{{ warnings }} Warnings" data-toggle="tooltip">{{ warnings }}</div>
-                      <div class="progress-bar progress-bar-danger" style="width:{{ float(failed) / float(total) * 100.0 }}%" title="{{ failed }} Fail" data-toggle="tooltip">{{ failed }}</div>
+                      <div class="progress-bar progress-bar-striped bg-success" style="width:{{ float(flowcell['checklist']['completed']) / float(flowcell['checklist']['total']) * 100.0 }}%"
+                           title="{{ flowcell['checklist']['completed'] }} completed" data-toggle="tooltip">{{ flowcell['checklist']['completed'] }}</div>
                     </div>
                   </td>
-                  <td class="bioinfo-running-notes" data-running-note="{{ sample.get('latest_running_note', default_note)['note'] }}">
-                    <div contenteditable="true">{{ sample.get('latest_running_note', default_note)['note'] }}</div>
-                    <button class="bioinfo-running-notes-save btn btn-xs btn-default">Save</button>
-                    <button class="bioinfo-running-notes-cancel btn btn-xs btn-default">Cancel</button></td>
+              </tr>
+              {% for lane_id, lane in sorted(flowcell['lanes'].items()) %}
+                <tr class="bioinfo-lane" id="bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}"
+                    data-parent="#bioinfo-fc-{{ project_id }}-{{ flowcell_id }}" style="display:none;">
+                  <td></td>
+                  <td class="bioinfo-status-expand"><a href="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" class="bioinfo-expand">
+                      <span class="fa fa-chevron-right"></span></a></td>
+                  <td class="bioinfo-granularity"><samp>{{ lane_id }}</samp></td>
+                  <td><span class="bioinfo-status badge {{ status_css.get(lane['lane_status'], 'bg-primary') }}">{{ lane['lane_status'] }}</span></td>
+                  <td class="bi-run-pwf hide-incoming {% if lane['checklist']['total'] == lane['checklist']['completed'] %} table-success {% else %} table-warning {% end %}">
+                    <div class="progress">
+                      <div class="progress-bar progress-bar-striped bg-success" style="width:{{ float(lane['checklist']['completed']) / float(lane['checklist']['total']) * 100.0 }}%"
+                           title="{{ lane['checklist']['completed'] }} completed" data-toggle="tooltip">{{ lane['checklist']['completed'] }}</div>
+                    </div>
+                  </td>
                 </tr>
-              {% end %} <!-- end samples-->
-            {% end %} <!--end lanes-->
-          {% end %} <!--end flowcells-->
-          </tbody>
-        </table>
+                {% for sample_id, sample in sorted(lane['samples'].items()) %}
+                  {% set passed = len(sample['checklist']['passed']) %}
+                  {% set warnings = len(sample['checklist']['warnings']) %}
+                  {% set failed = len(sample['checklist']['failed']) %}
+                  <!--division by zero-->
+                  {% set total = max(len(sample['checklist']['total']), 1) %}
+                  <tr class="bioinfo-sample" id="bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
+                      data-parent="#bioinfo-lane-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}" style="display:none;">
+                    <td></td>
+                    <td><a href="#bioinfo-sample-{{ project_id }}-{{ flowcell_id }}-{{ lane_id }}-{{ sample_id }}"
+                        class="bioinfo-expand text-decoration-none"></a></td>
+                    <td class="bioinfo-granularity"><samp>{{ sample_id }}</samp></td>
+                    <td><span class="bioinfo-status badge {{ status_css.get(sample['status'], 'bg-primary') }}">{{ sample['status'] }}</span></td>
+                    <td class="bi-run-pwf hide-incoming {% if passed + warnings + failed < total %} table-warning {% else %} table-success {% end %}">
+                      <div class="progress">
+                        <div class="progress-bar progress-bar-striped bg-success" style="width:{{ float(passed) / float(total) * 100.0 }}%" title="{{ passed }} Passes" data-toggle="tooltip">{{ passed }}</div>
+                        <div class="progress-bar progress-bar-striped bg-warning" style="width:{{ float(warnings) / float(total) * 100.0 }}%" title="{{ warnings }} Warnings" data-toggle="tooltip">{{ warnings }}</div>
+                        <div class="progress-bar progress-bar-striped bg-danger" style="width:{{ float(failed) / float(total) * 100.0 }}%" title="{{ failed }} Fail" data-toggle="tooltip">{{ failed }}</div>
+                      </div>
+                    </td>
+                  </tr>
+                {% end %} <!-- end samples-->
+              {% end %} <!--end lanes-->
+            {% end %} <!--end flowcells-->
+            </tbody>
+          </table>
+        </div>
       {% end %} <!-- end if -->
     </div>
   {% end %} <!--end ongoing-->
@@ -197,83 +196,101 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h3 class="modal-title" id="runningNotesModalDeliveries_title" data-project-id="">Running Notes</h3>
+        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"></span></button>
       </div>
       <div class="modal-body">
 
         <!-- add running note -->
         <form action="" method="POST" id="notes_form" role="form">
-            <div class="panel panel-info">
-                <div class="panel-heading">Add New Running Note</div>
-                <div class="panel-body">
-                    <div class="row">
+            <div class="card text-dark info-border mb-3 mt-3">
+                <div class="card-header info-bg">Add New Running Note</div>
+                <div class="card-body">
+                  <div class="row">
+                      <div class="col-auto form-inline">
+                        <label>Choose category:</label>
+                        <div class="btn-toolbar rn-categ mt-2" data-toggle="buttons">
+                           <button class="btn btn-sm btn-inf mr-2" value="Decision" data-toggle="tooltip" title="For when an executive decision has been made">Decision <span class="fa fa-thumbs-up"></span></button>
+                           <button class="btn btn-sm btn-succe mr-2" value="Lab" data-toggle="tooltip" title="For lab-related work">Lab <span class="fa fa-flask"></span></button>
+                           <button class="btn btn-sm btn-warn mr-2" value="Bioinformatics" data-toggle="tooltip" title="For all bioinformatics work">Bioinformatics <span class="fa fa-laptop-code"></span></button>
+                           <button class="btn btn-sm btn-usr mr-2" value="User Communication" data-toggle="tooltip" title="For notes influenced by user-contact">User Communication <span class="fa fa-people-arrows"></span></button>
+                           <button class="btn btn-sm btn-dang mr-2" value="Administration" data-toggle="tooltip" title="For notes involving documentation">Administration <span class="fa fa-folder-open"></span></button>
+                           <button class="btn btn-sm btn-imp mr-2" value="Important" data-toggle="tooltip" title="For when a note needs to be highlighted">Important <span class="fa fa-exclamation-circle"></span></button>
+                           <button class="btn btn-sm btn-devi" value="Deviation" data-toggle="tooltip" title="For notes about a deviation">Deviation <span class="fa fa-frown"</span></button>
+                        </div>
+                      </div>
+                  </div>
+                    <div class="row mt-3">
                         <div class="col-md-6">
                             <h4>Write Running Note</h4>
                             <textarea rows="5" class="form-control" id="new_note_text" style="height:97px;"></textarea>
-
-                            <label>Category :</label>
-                            <select name="rn_cat" class="form-control" id="rn_category">
-                                <option value="Workset">Workset</option>
-                                <option value="Flowcell">Flowcell</option>
-                                <option value="Meeting">Meeting</option>
-                                <option value="Decision">Decision</option>
-                                <option value="Bioinformatics">Bioinformatics</option>
-                                <option value="User Communication">User Communication</option>
-                                <option value="" selected="selected">None</option>
-                            </select>
                         </div>
                         <div class="col-md-6">
                             <h4>Preview</h4>
-                            <div class="panel panel-default" id="running_note_preview_panel">
-                                <div class="panel-heading"><a href="#"></a> - <span class="todays_date">Date</span></div>
-                                <div class="panel-body" id="running_note_preview_body">
+                            <div class="card" id="running_note_preview_panel">
+                                <div class="card-header">
+                                  <a class="text-decoration-none" href="#">{{ user.name }}</a> - <span class="todays_date">Date</span>
+                                  <span id="preview_category"> - Category</span>
+                                </div>
+                                <div class="card-body" id="running_note_preview_body">
                                     <p class="text-muted"><em>Nothing to preview..</em></p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="text-right" style="margin-top:15px;">
+                    <div class="row mt-3">
+                      <div class="col-md-6 text-right mt-2">
                         <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help"><a>Markdown Help</a></button>
                         <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
+                      </div>
                     </div>
                 </div>
             </div>
         </form>
 
         <!-- filter running notes -->
-        <div id="running_notes_filter" class="form-inline" style="margin-bottom:12px;">
+        <div id="running_notes_filter" class="row" style="margin-bottom:12px;">
+          <div class="col-3 ml-2">
             <label>Search :</label>
-            <input type="text" class="form-control" id="running_notes_search" size=30 />
+            <input type="text" class="form-control" id="rn_search" />
+          </div>
+          <div class="col-2">
             <label>Filter :</label>
-            <button id="rn_cat_all" type="button" class="btn btn-xs btnCategoryFilter glow">All</button>
-            <button id="rn_cat_workset" type="button" class="btn btn-xs btn-primary btnCategoryFilter">Workset</button>
-            <button id="rn_cat_flowcell" type="button" class="btn btn-xs btn-success btnCategoryFilter">Flowcell</button>
-            <button id="rn_cat_meeting" type="button" class="btn btn-xs btn-info btnCategoryFilter">Meeting</button>
-            <button id="rn_cat_decision" type="button" class="btn btn-xs btn-info btnCategoryFilter">Decision</button>
-            <button id="rn_cat_bioinfo" type="button" class="btn btn-xs btn-warning btnCategoryFilter">Bioinformatics</button>
-            <button id="rn_cat_uscom" type="button" class="btn btn-xs btn-danger btnCategoryFilter">User Communication</button>
+            <select class="form-select" id="rn_category">
+            <option>All</option>
+            <option>Workset</option>
+            <option>Flowcell</option>
+            <option>Decision</option>
+            <option>Bioinformatics</option>
+            <option>User Communication</option>
+            <option>Administration</option>
+            <option>Important</option>
+            <option>Deviation</option>
+            <option>Lab</option>
+            </select>
+          </div>
+        </div>
         </div>
 
-        {% set categories={ 'Workset': 'label-primary',
-                            'Flowcell': 'label-success',
-                            'Meeting': 'label-info',
-                            'Decision': 'label-info',
-                            'User Communication': 'label-danger',
-                            'Bioinformatics': 'label-warning',
-                            'All': 'label-default' } %}
+        {% set categories={ 'Workset': 'bg-primary',
+                            'Flowcell': 'bg-success',
+                            'Meeting': 'bg-info',
+                            'Decision': 'bg-info',
+                            'User Communication': 'bg-danger',
+                            'Bioinformatics': 'bg-warning',
+                            'All': 'bg-secondary' } %}
         <!-- display running notes -->
         <!--on click will show only running notes for the selected project, and hide all the rest-->
-        <div class="panel-group" id="running_notes_panels">
+        <div id="running_notes_panels">
           {% for project_run_lane_sample, list_of_notes in running_notes.items() %}
             {% for timestamp, running_note in sorted(list_of_notes.items(), reverse=True) %}
-              <div class="running-notes-panel panel panel-default {{ running_note.get('category', '').replace(' ', '') }}" id="running-note-{{ project_run_lane_sample }}" style="display:none;">
-                <div class="panel-heading"><a href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ timestamp }}
-                {% if running_note.get('category') %}
-                  <span class="label {{ categories.get(running_note.get('category'), 'All') }}">{{ running_note.get('category') }}</span>
+              <div class="running-notes-panel card mb-2 mx-2 {{ running_note.get('category', '').replace(' ', '') }}" id="running-note-{{ project_run_lane_sample }}" style="display:none;">
+                <div class="card-header"><a class="text-decoration-none" href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ datetime.datetime.strptime(timestamp.rsplit('.')[0], '%Y-%m-%d %H:%M:%S').strftime('%a %b %d %Y, %H:%M:%S') }}
+                {% if running_note.get('category') %} -
+                  <span class="badge {{ categories.get(running_note.get('category'), 'All') }}"> {{ running_note.get('category') }}</span>
                 {% end %}
                 </div>
-                <div class="panel-body">
+                <div class="card-body">
                   <div class="running-note-body">
                     {{ running_note['note'] }}
                   </div>
@@ -282,10 +299,11 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
             {% end %}
           {% end %}
         </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Close</button>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
+
     </div>
   </div>
 </div>
@@ -293,6 +311,8 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 {% include "running_notes_help.html" %}
 
 <!-- Javascript -->
-<script src="../static/js/deliveries.js"></script>
+<script src="../static/js/deliveries.js" id="deliveries-js" data-user="{{ user.name }}"></script>
+<script src="/static/js/jquery.caretposition.js"></script>
+<script src="/static/js/jquery.sew.js"></script>
 <script src="../static/js/running_notes.js"></script>
 {% end %}

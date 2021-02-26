@@ -4,78 +4,9 @@ $(document).ready(function(){
         var raw_html = $(this).html();
         $(this).html( marked(raw_html) );
     });
-});
-
-$('.bioinfo-running-notes-save').click(function(e) {
-    var td = $(this).parent();
-    var tr = $(td).parent();
-    var running_note = $(td).find('div[contenteditable="true"]').text();
-
-    // do not save an empty value or if the running note wasn't modified
-    if (running_note == "" || $(td).attr('data-running-note') == running_note) {
-        return false;
-    }
-
-    var tr_class = $(tr).attr('class');
-    var tr_id = $(tr).attr('id');
-    tr_id = tr_id.replace('bioinfo-', '').split('-');
-    var project_id = tr_id[1];
-    var run_id = tr_id[2];
-    var lane_id = tr_id[3];
-    var sample_id = tr_id[4];
-
-    // if hiseqX: 160531_ST-E00198_0117_BHN5N3CCXX,
-    // then we get run_id=160531_ST and lane_id =E00198_0117_BHN5N3CCXX
-    if (run_id.indexOf('_ST') != -1) {
-        run_id = run_id + '-' + lane_id;
-        lane_id = sample_id;
-        sample_id = tr_id[5];
-    }
-
-    // join not undefined values -> if undefined, will skip
-    var prefix = [run_id, lane_id, sample_id].join(' ');
-
-    running_note = prefix + '::: ' + running_note;
-
-    var url='/api/v1/running_notes/' + project_id;
-    var button = $(this);
-    $(button).addClass('disabled').text('Submitting..');
-    $.ajax({
-        type: 'POST',
-        method: 'POST',
-        url: url,
-        dataType: 'json',
-        data: {"note": running_note},
-        error: function(xhr, textStatus, errorThrown) {
-            alert('Error: '+xhr['responseText']+' ('+errorThrown+')');
-            $(button).removeClass('disabled').text('Save');
-            console.log(xhr);
-            console.log(textStatus);
-            console.log(errorThrown);
-        },
-        success: function(data, textStatus, xhr) {
-            $(button).removeClass('disabled').text('Save');
-            $(td).attr('data-running-note', data['note']);
-            $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note').text(data['note']);
-            // add to the project running_notes
-            // new notes are displayed in green
-            var new_note_html = '<div class="running-notes-panel panel panel-success" id="running-note-'+project_id+'" style="display:none;">' +
-                  '<div class="panel-heading"><a href="mailto:'+data['email']+'">'+ data['user'] + '</a> - '+ data["timestamp"]+'</div>' +
-                  '<div class="panel-body"><div class="mkdown">'+data['note']+'</div></div></div>';
-            // marked is defined in base.js. Do not use make_markdown - it breaks html!
-            var markdown = marked(new_note_html);
-            $('#running_notes_panels').prepend(markdown);
-            $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note').text(data['timestamp']+' - ' +data['note']);
-        }
+    $('.fillbadgecolour').each(function(){
+        $(this).addClass(categories[$(this).html().trim()]);
     });
-
-});
-
-$('.bioinfo-running-notes-cancel').click(function(e) {
-    var td = $(this).parent();
-    var tr = $(td).parent();
-    var running_note = $(td).attr('data-running-note');
-    $(td).find('p').text(running_note);
 });
 
 $('.deliveries-page').on('click', '.runningNotesModalDeliveries_button', function(e){
@@ -114,12 +45,12 @@ $('.bioinfo-expand').click(function(e){
 function collapse(element) {
     // element is tr
   var element_id = $(element).attr('id');
-  var expanded = $(element).find("a[href=#"+element_id+"]");
+  var expanded = $(element).find('a[href="#'+element_id+'"]');
   $(expanded).removeClass('expanded');
-  var span =$(element).find('td.bioinfo-status-expand span.glyphicon');
-  if ($(span).hasClass('glyphicon-chevron-down')) {
-    $(span).removeClass('glyphicon-chevron-down');
-    $(span).addClass('glyphicon-chevron-right');
+  var span =$(element).find('td.bioinfo-status-expand span.fa');
+  if ($(span).hasClass('fa-chevron-down')) {
+    $(span).removeClass('fa-chevron-down');
+    $(span).addClass('fa-chevron-right');
   }
   var children = $(element).parent().find('tr[data-parent="#'+element_id+'"]')
   $.each(children, function(index, child) {
@@ -133,10 +64,10 @@ function expand(element) {
     $(a).addClass('expanded');
     var tr_id = $(element).attr('id');
     $('tr[data-parent="#'+tr_id+'"]').show().removeClass('collapsed').addClass('expanded');
-    var span = $(element).find('td.bioinfo-status-expand span.glyphicon');
-    if ($(span).hasClass('glyphicon-chevron-right')) {
-        $(span).removeClass('glyphicon-chevron-right')
-        $(span).addClass('glyphicon-chevron-down');
+    var span = $(element).find('td.bioinfo-status-expand span.fa');
+    if ($(span).hasClass('fa-chevron-right')) {
+        $(span).removeClass('fa-chevron-right')
+        $(span).addClass('fa-chevron-down');
     }
 };
 
@@ -161,8 +92,8 @@ function collapseAll(a) {
             collapse(tr);
         });
         $(a).removeClass('expanded');
-        $(a).find('span.glyphicon').removeClass('glyphicon-chevron-down');
-        $(a).find('span.glyphicon').addClass('glyphicon-chevron-right');
+        $(a).find('span.fa').removeClass('fa-chevron-down');
+        $(a).find('span.fa').addClass('fa-chevron-right');
     } else { // expand - not recursively
         var trs = $.merge($(table).find('tr:not(.filtered).'+top_level_class),
             $(table).find('tr:not(.filtered).'+top_level_class).nextUntil('tr.'+top_level_class,
@@ -171,8 +102,8 @@ function collapseAll(a) {
             expand(tr);
         });
         $(a).addClass('expanded');
-        $(a).find('span.glyphicon').removeClass('glyphicon-chevron-right');
-        $(a).find('span.glyphicon').addClass('glyphicon-chevron-down');
+        $(a).find('span.fa').removeClass('fa-chevron-right');
+        $(a).find('span.fa').addClass('fa-chevron-down');
     }
 };
 
@@ -285,7 +216,7 @@ $('.button-save-bioinfo-responsible').click(function() {
                 console.log(errorThrown);
             },
             success: function(data, textStatus, xhr) {
-                var success_msg = $('<span id="bioinfo-resp-status" class="delivery-saved-status">    Updated<span class="glyphicon glyphicon-ok"></span></span>');
+                var success_msg = $('<span id="bioinfo-resp-status" class="delivery-saved-status">    Updated<span class="fa fa-check"></span></span>');
                 success_msg.appendTo($(parent).find('.button-edit-bioinfo-responsible')).fadeOut(1600, function(){ $(this).remove(); });
 
                 // updating bioinfo-responsible filter
@@ -295,7 +226,7 @@ $('.button-save-bioinfo-responsible').click(function() {
                 var old_number_of_projects = parseInt($(old_number_span).text().trim());
                 // hide if it was the last project
                 if (old_number_of_projects == 1) {
-                    $(old_checkbox).closest('div.form-group').hide();
+                    $(old_checkbox).closest('div.chkbox').hide();
                 // reduce otherwise
                 } else {
                     $(old_number_span).text(old_number_of_projects - 1);
@@ -304,8 +235,8 @@ $('.button-save-bioinfo-responsible').click(function() {
                 var new_checkbox = $('div.responsible-filters').find('input.bi-responsible-checkbox[value="'+responsible+'"]');
                 // create checkbox if not exist
                 if (new_checkbox.length == 0) {
-                    var html = '<div class="form-group"> <label class="checkbox-inline"> <input class="bi-responsible-checkbox" type="checkbox" value="'
-                        + responsible+'" checked>' + responsible + ' <span class="badge badge-small">1</span> </label> </div>'
+                    var html = '<div class="chkbox mb-2"> <label class="checkbox-inline"> <input class="bi-responsible-checkbox" type="checkbox" value="'
+                        + responsible+'" checked>' + responsible + ' <span class="badge rounded-pill bg-secondary">1</span> </label> </div>'
                     var new_element = $.parseHTML(html);
                     $('div.responsible-filters').append(new_element);
                 // increase the number of projects
@@ -325,13 +256,15 @@ $('.button-save-bioinfo-responsible').click(function() {
     $(this).parent().find('.button-reset-bioinfo-responsible').hide();
 });
 
-var categories={ 'Workset': 'label-primary',
-                            'Flowcell': 'label-success',
-                            'Meeting': 'label-info',
-                            'Decision': 'label-info',
-                            'User Communication': 'label-danger',
-                            'Bioinformatics': 'label-warning',
-                            'All': 'label-default' }
+var categories={ 'Workset': 'bg-primary',
+                 'Flowcell': 'bg-success',
+                 'Decision': 'bg-info',
+                 'Lab': 'bg-success',
+                 'Bioinformatics': 'bg-warning',
+                 'User Communication': 'bg-usr',
+                 'Administration': 'bg-danger',
+                 'Important': 'bg-imp',
+                 'Deviation': 'bg-devi' }
 
 // not using running_notes.js anymore
 // Insert new running note and reload the running notes table
@@ -339,15 +272,17 @@ $("#notes_form").submit( function(e) {
     e.preventDefault();
     // should be set when clicking the button 'See All'
     var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
-
     var text = $('#new_note_text').val().trim();
-    text = $('<div>').text(text).html();
-    var category = $('#rn_category option:selected').val();
+    var category = $('.rn-categ button.active').text().trim();
     if (text.length == 0) {
         alert("Error: No running note entered.");
         return false;
     }
-    // don't like to use this
+    if (!$('.rn-categ button.active').text()) {
+       if (!confirm("Are you sure that you want to submit without choosing a category?")) {
+          return false;
+       }
+    }
     note_url = '/api/v1/running_notes/' + project_id;
     $('#save_note_button').addClass('disabled').text('Submitting..');
     $.ajax({
@@ -383,17 +318,19 @@ $("#notes_form").submit( function(e) {
             }
             // Create a new running note and slide it in..
             var now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-            var category_span = " <span class='label " + categories[category] + "'>"+category+"</span>";
-            $('<div class="running-notes-panel panel panel-success ' + category.replace(/\s+/, '') +
-                '" id="running-note-'+project_id+'"><div class="panel-heading">'+
-                  '<a href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
-                  now + category_span +
-                '</div><div class="panel-body">'+make_markdown(data['note'])+
-                '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
+            var category_span = " <span class='badge " + categories[category] + "'>"+category+"</span>";
+            $('<div class="running-notes-panel card mb-2 mx-2" id="running-note-'+project_id+'">\
+                <div class="card-header bg-success-table">'+
+                  '<a class="text-decoration-none" href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
+                  now + ' - ' + category_span +'</div>\
+                  <div class="card-body">'+make_markdown(data['note'])+'</div>\
+                </div>').hide().prependTo('#running_notes_panels').slideDown();
             // Enable the submit button again
             $('#save_note_button').removeClass('disabled').text('Submit Running Note');
             // add latest running note
-            $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note').text(now+' - ' +data['note']);
+            var user = $('#deliveries-js').data('user');
+            $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note-header').text(now + ' - ' + category + ' - ' + user);
+            $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note-text').html(marked(data['note']));
           } else {
             alert('Error - LIMS did not save your running note.');
             // Enable the submit button again
@@ -403,55 +340,3 @@ $("#notes_form").submit( function(e) {
       }
     });
 });
-
-//Filter notes by Category
-$('#running_notes_search').keyup(function() {
-    var search=$('#running_notes_search').val();
-    search_running_notes(search);
-});
-
-$('.btnCategoryFilter').click(function() {
-    $('.btnCategoryFilter').each(function() {$(this).removeClass("glow")});
-    $(this).addClass("glow")
-    var key=$(this).text();
-    if (key == 'All'){
-        key='';
-    }
-    key = key.replace(/\s+/g, '');
-    filter_by_category(key);
-});
-
-function filter_by_category(key){
-    var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
-    $('div#running_notes_panels div.running_notes_panel').hide();
-    if (key == '') {
-        $('#running_notes_panels #running-note-'+project_id).show();
-    } else {
-        $('#running_notes_panels #running-note-'+project_id).hide();
-        $('#running_notes_panels #running-note-'+project_id + '.'+ key).show();
-    }
-};
-
-function search_running_notes(search) {
-    var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
-    $('div#running_notes_panels div.running-notes-panel').hide();
-
-     $('.btnCategoryFilter').each(function() {
-        if ($(this).text() == 'All') {
-            $(this).addClass('glow');
-        } else {
-            $(this).removeClass("glow")
-        }
-    });
-
-    if (search == "") {
-        $('#running_notes_panels #running-note-'+project_id).show();
-    } else {
-        $.each($('#running_notes_panels #running-note-'+project_id), function(index, panel){
-            var note = $(panel).children('.panel-body').children().text().toLowerCase();
-            if (note.indexOf(search) != -1) {
-                $(panel).show();
-            }
-        });
-    }
-};

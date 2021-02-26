@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_b5.html" %}
 
-<!-- 
+<!--
 Template file: application.html
 URL: /application/[application_type]
 Title: Projects with application [application_type]
@@ -11,14 +11,12 @@ Description: Displays a list of Project Identifiers for a given application type
 <div class="container-fluid">
   <h2 id="page_title">Projects with application <em>{{ application }}</em></h2><br>
   <ul id="project_list">
-		<tbody></tbody>
-  </table>
 </div>
 
 <script>
 $.getJSON("/api/v1/application/{{ application }}", function(data) {
   $.each(data, function(k, project) {
-    $("#project_list").append('<li><a href="/projects/' + project + '">' + project + '</a></li>')
+    $("#project_list").append('<li><a class="text-decoration-none" href="/projects/' + project + '">' + project + '</a></li>')
   })
 })
 </script>
