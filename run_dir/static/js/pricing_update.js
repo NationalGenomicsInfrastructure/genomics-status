@@ -274,7 +274,12 @@ app.component('v-product-form-part', {
             return this.product.is_fixed_price
         },
         categories() {
-            return this.$root.product_categories
+            categories = [...this.$root.product_categories]
+            index_of_new = categories.indexOf('New products')
+            if (index_of_new > -1) {
+                categories.splice(index_of_new, 1)
+            }
+            return categories
         },
         types() {
             return this.$root.product_types
@@ -523,7 +528,12 @@ app.component('v-component-form-part', {
             return this.$root.new_components.has(this.component_id)
         },
         categories() {
-            return this.$root.component_categories
+            categories = [...this.$root.component_categories]
+            index_of_new = categories.indexOf('New components')
+            if (index_of_new > -1) {
+                categories.splice(index_of_new, 1)
+            }
+            return categories
         },
         types() {
             return this.$root.component_types
