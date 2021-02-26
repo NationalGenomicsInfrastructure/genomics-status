@@ -66,6 +66,7 @@ class TestPricingQuote(unittest.TestCase):
         e = self.driver.find_element(By.CSS_SELECTOR, ".quote-product-list input[data-product-id='{}']".format(id))
         self.assertEqual(e.get_attribute('value'), '1', msg="Two items of this product are added")
 
+        self.driver.execute_script("window.scrollBy(0, 600)")
         self.driver.find_element(By.CSS_SELECTOR, ".status_available:nth-child(5) i").click()
         elements = self.driver.find_elements(By.CSS_SELECTOR, ".quote-product-list li > .quote_product_name")
         self.assertEqual(len(elements), 2, msg="Two products (2+1) added to the quote")
@@ -86,14 +87,14 @@ class TestPricingQuote(unittest.TestCase):
         self.assertEqual(usd_rate, '8.75', msg="Matching the known rate")
 
         # Add bunch of products
-        self.driver.execute_script("window.scrollTo(0, 200)")
-        time.sleep(1)
         for i in range(6):
-            self.driver.find_element(By.CSS_SELECTOR, ".status_available:nth-child({}) .add-to-quote i".format(i+1)).click()
+            self.driver.execute_script("window.scrollTo(0, 400)")
+            time.sleep(1.0)
+            self.driver.find_element(By.CSS_SELECTOR, ".status_available:nth-child({}) td:nth-child(1) > a > i".format(i+1)).click()
         time.sleep(1.0)
 
         current_price = self.driver.find_elements(By.CSS_SELECTOR, ".quote_totals .quote_totals_val.quote_sweac")[0].text
-        current_price_int = int(current_price.split(' ')[0])  # Get number from e.g. '8421 SEK'
+        current_price_int = round(float(current_price.split(' ')[0]))  # Get number from e.g. '8421 SEK'
 
         self.driver.execute_script("window.scrollTo(0, 0)")
         time.sleep(1)
@@ -103,7 +104,7 @@ class TestPricingQuote(unittest.TestCase):
         self.assertEqual(usd_rate, '9.63', msg="Matching the known rate")
 
         new_price = self.driver.find_elements(By.CSS_SELECTOR, ".quote_totals .quote_totals_val.quote_sweac")[0].text
-        new_price_int = int(new_price.split(' ')[0])  # Get number from e.g. '8421 SEK'
+        new_price_int = round(float(new_price.split(' ')[0]))  # Get number from e.g. '8421 SEK'
 
         self.assertGreater(new_price_int, current_price_int, msg="Weaker SEK should lead to higher price")
 

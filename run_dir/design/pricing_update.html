@@ -5,14 +5,13 @@
 
 <div class="container-xxl" id="pricing_update_main">
   <div class="my-4">
-    <product-form-list>
-    </product-form-list>
+    <v-pricing-update/>
   </div>
 
   <div class="modal fade" id="chooseComponentsModal">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <modal-component></modal-component>
+        <v-modal-component/>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         </div>
@@ -24,14 +23,11 @@
 {% end %}
 
 {% block js %}
-<script>
-  var global_components_json={% raw components_json %}
-  var global_products_json={% raw products_json %}
-</script>
 
 <!-- development version, includes helpful console warnings -->
 <script src="https://unpkg.com/vue@next"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/static/js/pricing_main.js?v={{ gs_globals['git_commit'] }}"></script>
 <script src="/static/js/pricing_update.js?v={{ gs_globals['git_commit'] }}"></script>
 <!-- Don't want to change the width for all tooltips so put it on just this page -->
 <style>

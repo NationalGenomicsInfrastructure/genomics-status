@@ -2,8 +2,8 @@
 
 {% block stuff %}
 
-<div class="container-fluid" id="pricing_quote_main">
-  <v-pricing-quote/>
+<div class="container-fluid" id="pricing_preview_main">
+  <v-pricing-preview/>
 </div>
 
 {% end %}
@@ -15,6 +15,6 @@
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="/static/js/jquery.dataTables.min.js"></script>
 <script src="/static/js/pricing_main.js?v={{ gs_globals['git_commit'] }}"></script>
-<script src="/static/js/pricing_quote.js?v={{ gs_globals['git_commit'] }}"></script>
+<script src="/static/js/pricing_preview.js?v={{ gs_globals['git_commit'] }}"></script>
 
 {% end %}
