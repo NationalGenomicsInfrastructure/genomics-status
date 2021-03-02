@@ -30,9 +30,10 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
-from status.pricing import PricingComponentsDataHandler, PricingProductsDataHandler, \
-    PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
-    PricingQuoteHandler, PricingQuoteTbodyHandler, PricingValidationDataHandler, PricingUpdateHandler
+from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
+    PricingQuoteHandler, PricingValidateDraftDataHandler, PricingPublishDataHandler, \
+    PricingReassignLockDataHandler, PricingUpdateHandler, PricingPreviewHandler, \
+    PricingDataHandler, PricingDraftDataHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -98,12 +99,14 @@ class Application(tornado.web.Application):
             ("/api/v1/bioinfo_analysis", BioinfoAnalysisHandler),
             ("/api/v1/bioinfo_analysis/([^/]*)$", BioinfoAnalysisHandler),
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
-            ("/api/v1/charon_summary/([^/]*)$",CharonProjectHandler ),
+            ("/api/v1/charon_summary/([^/]*)$", CharonProjectHandler),
+            ("/api/v1/cost_calculator", PricingDataHandler),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
             ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
             tornado.web.URLSpec("/api/v1/download_images/(?P<project>[^/]+)/(?P<type>[^/]+)", ImagesDownloadHandler, name="ImagesDownloadHandler"),
+            ("/api/v1/draft_cost_calculator", PricingDraftDataHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
@@ -138,12 +141,10 @@ class Application(tornado.web.Application):
                 SamplesPerLanePlotHandler),
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
             ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
-            ("/api/v1/pricing_components", PricingComponentsDataHandler),
-            ("/api/v1/pricing_components/([^/]*)$", PricingComponentsDataHandler),
             ("/api/v1/pricing_exchange_rates", PricingExchangeRatesDataHandler),
-            ("/api/v1/pricing_products", PricingProductsDataHandler),
-            ("/api/v1/pricing_products/([^/]*)$", PricingProductsDataHandler),
-            ("/api/v1/pricing_validate", PricingValidationDataHandler),
+            ("/api/v1/pricing_publish_draft", PricingPublishDataHandler),
+            ("/api/v1/pricing_reassign_lock", PricingReassignLockDataHandler),
+            ("/api/v1/pricing_validate_draft", PricingValidateDraftDataHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
@@ -207,9 +208,9 @@ class Application(tornado.web.Application):
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/nas_quotas", NASQuotasHandler),
             ("/pools_qpcr", qPCRPoolsHandler),
-            ("/pricing_update", PricingUpdateHandler),
+            ("/pricing_preview", PricingPreviewHandler),
             ("/pricing_quote", PricingQuoteHandler),
-            ("/pricing_quote_tbody", PricingQuoteTbodyHandler),
+            ("/pricing_update", PricingUpdateHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesHandler),
             ("/project/(P[^/]*)/([^/]*)$", ProjectSamplesHandler),
@@ -238,6 +239,7 @@ class Application(tornado.web.Application):
             self.analysis_db= couch["analysis"]
             self.application_categories_db = couch["application_categories"]
             self.bioinfo_db = couch["bioinfo_analysis"]
+            self.cost_calculator_db = couch["cost_calculator"]
             self.cronjobs_db = couch["cronjobs"]
             self.flowcells_db = couch["flowcells"]
             self.gs_users_db = couch["gs_users"]

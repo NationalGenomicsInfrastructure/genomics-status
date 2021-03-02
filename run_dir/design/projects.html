@@ -277,7 +277,7 @@ Description: Shows all presets configured for user and enables their selection.
                                     <i class="fa {{col_display_name}}"></i>
                                       ({{col_name[1]}})
                                   {% else %}
-                                    name="{{col_name}}" id="allFields-extra-columns-{{col_name[0].replace("(", "").replace(")", "")}}">
+                                    name="{{col_name}}" id="allFields-extra-columns-{{col_name.replace("(", "").replace(")", "")}}">
                                     {{col_display_name}}
                                   {% end %}
                                 </label>

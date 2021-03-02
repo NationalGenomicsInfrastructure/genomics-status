@@ -1,323 +1,245 @@
-// Globals
-var productsInQuote = [];
-var allProducts;
-var quoteProdEl = $('.quote-product-list');
-var quoteTotEl = $('.quote-totals-list');
+app.component('v-pricing-quote', {
+    /* Main component of the pricing quote page.
+     *
+     * Add products from the table to create a quote and switch between price types.
+     */
+    computed: {
+        any_quote() {
+            return (this.any_special_addition ||
+                    this.any_special_percentage ||
+                    Object.keys(this.$root.quote_prod_ids).length)
+        },
+        any_special_addition() {
+            return this.$root.quote_special_addition_label !== ''
+        },
+        any_special_percentage() {
+            return this.$root.quote_special_percentage_label !== ''
+        },
+        product_cost_sum() {
+            /* calculate the cost of the products independent of any special items */
+            cost_sum = 0
+            cost_academic_sum = 0
+            full_cost_sum = 0
+            for ([prod_id, prod_count] of Object.entries(this.$root.quote_prod_ids)) {
+                cost_sum += prod_count * this.$root.productCost(prod_id)['cost'];
+                cost_academic_sum += prod_count * this.$root.productCost(prod_id)['cost_academic'];
+                full_cost_sum +=  prod_count * this.$root.productCost(prod_id)['full_cost'];
+            }
 
+            return {'cost': cost_sum,
+                    'cost_academic': cost_academic_sum,
+                    'full_cost': full_cost_sum}
+        },
+        quote_cost() {
+            product_cost = this.product_cost_sum
+            cost_sum = product_cost['cost']
+            cost_academic_sum = product_cost['cost_academic']
+            full_cost_sum = product_cost['full_cost']
 
-$( document ).ready(function() {
-  /* Initialize active elements */
-  $("#datepicker-btn").click(function(e) {
-      var date = $("#datepicker").val();
-      var original_html = $(this).text();
-      $(this).html('<div class="spinner-border spinner-border-sm mr-2" role="status"></div>Loading...');
-      var that = this;
-      var discontinued = $('#toggle_discontinued').hasClass('btn-success');
-      tableLoad(date, allProducts, discontinued, function() {
-          $(that).html(original_html);
-          $("#exch_rate_modal").modal('hide');
-          generateQuoteList();
-          /* Fetch used exchange rate to update html */
-          $.getJSON('/api/v1/pricing_exchange_rates?date='+date, function(data){
-              $("#exch_rate_usd").text(parseFloat(data['USD_in_SEK']).toFixed(2));
-              $("#exch_rate_eur").text(parseFloat(data['EUR_in_SEK']).toFixed(2));
-              $("#exch_rate_issued_at").text(data['Issued at'].substring(0,10));
-          });
-      });
-      show_exchange_rate_alert();
-      $("#exchange-success-alert").fadeTo(5000, 500).slideUp(500, function(){
-          $("#exchange-success-alert").slideUp(500);
-      });
-  });
+            if (this.any_special_addition) {
+                cost_sum += this.$root.quote_special_addition_value
+                cost_academic_sum += this.$root.quote_special_addition_value
+                full_cost_sum += this.$root.quote_special_addition_value
+            }
 
-  $('#price_type_selector input').change(function(e) {
-      /* Regenerate the quote list to show the new prices */
-      generateQuoteList();
-  });
+            if (this.any_special_percentage) {
+                cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
+                cost_academic_sum *= (100 - this.$root.quote_special_percentage_value)/100
+                full_cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
+            }
 
-  tableLoad(null, null, false, function(){
-      /* need to wait until table has loaded before initializing the dataTable */
-      init_listjs();
-  });
-
-  /* Enable toggle of discontinued products */
-  $('#toggle_discontinued').click(function(e) {
-      e.preventDefault();
-      if ($(this).hasClass('btn-success')) {
-          reset_listjs(); /// Really brute force way of reinit datatable
-          tableLoad(null, null, false, function(){
-              init_listjs();
-          });
-          $('#toggle_discontinued').removeClass('btn-success');
-          $('#toggle_discontinued').addClass('btn-warning');
-          $('#toggle_discontinued').html('Show Discontinued Products <i class="fas fa-exclamation-triangle fa-lg pl-2"></i>');
-      } else {
-          reset_listjs();
-          tableLoad(null, null, true, function(){
-              init_listjs();
-              show_discontinued_alert();
-              $("#discontinued-shown-alert").fadeTo(5000, 500).slideUp(500, function(){
-                  $("#discontinued-shown-alert").slideUp(500);
-              });
-          });
-          $('#toggle_discontinued').removeClass('btn-warning');
-          $('#toggle_discontinued').addClass('btn-success');
-          $('#toggle_discontinued').html('Hide Discontinued Products <i class="fad fa-book-heart fa-lg pl-2"></i>');
-      };
-  });
-});
-
-function show_discontinued_alert(){
-    $('#alerts_go_here').html('<div class="alert alert-warning alert-dismissible" id="discontinued-shown-alert">Discontinued products are now shown and marked with red in the table below.<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button></div>');
-};
-
-function show_exchange_rate_alert(){
-    $('#alerts_go_here').html('<div class="alert alert-success alert-dismissible" id="exchange-success-alert" hidden="true"><strong>Success! </strong>Prices have been updated according to the exchange rate chosen.<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button></div>');
-};
-
-function tableLoad(date=null, products=null, discontinued=false, _callback=null) {
-  // Table is loaded dynamically to enable switching of e.g. exchange rate date
-  products_tbody_url = '/pricing_quote_tbody';
-  products_tbody_par = new URLSearchParams();
-  products_url = '/api/v1/pricing_products';
-  products_par = new URLSearchParams();
-  products_par.append('discontinued', true);
-
-  if (date !== null){
-      products_tbody_par.append('date', date);
-      products_par.append('date', date);
-  };
-
-  if (discontinued) {
-      products_tbody_par.append('discontinued', true);
-  };
-
-  products_tbody_url += '?' + products_tbody_par.toString();
-  products_url += '?' + products_par.toString();
-  $('#pricing_products_tbody').load(products_tbody_url, function(){
-    $.getJSON(products_url, function(data){
-      allProducts = data;
-        // Initialize all quantities as 0 unless already modified products
-        // are given
-      for (var key in allProducts) {
-        if (products !== null){
-          allProducts[key].quantity = products[key].quantity;
-          /* Reset the number on table row */
-          updateTableCounts(products[key]);
-        } else {
-          allProducts[key].quantity = 0;
+            return {'cost': cost_sum.toFixed(2),
+                    'cost_academic': cost_academic_sum.toFixed(2),
+                    'full_cost': full_cost_sum.toFixed(2)}
+        },
+    },
+    created: function() {
+        this.$root.fetchPublishedCostCalculator(true),
+        this.$root.fetchExchangeRates()
+    },
+    methods: {
+        toggle_discontinued() {
+            this.$root.show_discontinued = !this.$root.show_discontinued
+        },
+        reset_special_percentage() {
+            this.$root.quote_special_percentage_label = ''
+            this.$root.quote_special_percentage_value = 0
+        },
+        reset_special_addition() {
+            this.$root.quote_special_addition_label = ''
+            this.$root.quote_special_addition_value = 0
         }
-      };
-      /* Reload data when date changes */
-      resetCurrentQuote();
+    },
+    template:
+        /*html*/`
+        <div class="row">
+          <h1 class="col-md-11"><span id="page_title">Cost Calculator</span></h1>
+        </div>
+        <template v-if="this.$root.published_data_loading">
+          <v-pricing-data-loading/>
+        </template>
+        <template v-else>
+          <template v-if="this.$root.any_errors">
+            <v-pricing-error-display/>
+          </template>
+          <div class="row">
+            <div class="col-5 quote_lcol_header">
+              <div class="form-radio" id="price_type_selector">
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac">
+                <label class="form-check-label pl-1 pr-3" for="price_type_sweac">
+                  Swedish academia
+                </label>
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="full_cost" id="price_type_industry">
+                <label class="form-check-label pl-1 pr-3" for="price_type_industry">
+                  Industry and non-Swedish academia
+                </label>
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost" id="price_type_internal">
+                <label class="form-check-label pl-1 pr-3" for="price_type_internal">
+                  Internal
+                </label>
+              </div>
+              <div class="row">
+                <div class="col-2">
+                  <label for='other_cost_value' class="form-label">Other cost</label>
+                  <input id='other_cost_value' class="form-control" v-model.number="this.$root.quote_special_addition_value" type="number" >
+                </div>
+                <div class="col-10">
+                  <label for='other_cost_label' class="form-label">Other cost label</label>
+                  <input id='other_cost_label' class="form-control" v-model="this.$root.quote_special_addition_label" type="text" >
+                </div>
+                <div class="mb-3 form-text">Specify a sum (positive or negative) that will be added to the quote cost. Will only be applied if a label is specified.</div>
+              </div>
+              <div class="row">
+                <div class="col-2">
+                  <label for='percentage_input' class="form-label">Percentage</label>
+                  <input id='percentage_input' class="form-control" type="number" v-model.number="this.$root.quote_special_percentage_value">
+                </div>
+                <div class="col-10">
+                  <label for='percentage_label' class="form-label">Percentage label</label>
+                  <input id='percentage_label' class="form-control" type="text" v-model="this.$root.quote_special_percentage_label">
+                </div>
+                <div class="mb-3 form-text">Specify a percentage (positive or negative) that will be subtracted (default is discount) from the total sum. Will only be applied if a label is specified.</div>
+              </div>
 
-      if (products !== null){
-          generateQuoteList();
-      }
+              <button class="btn btn-link" id="more_options_btn" type="button" data-toggle="collapse" data-target="#more_options" aria-expanded="false" aria-controls="more_options">
+                More Options
+              </button>
+              <div class="collapse border-top py-3" id="more_options">
+                <template v-if="this.$root.show_discontinued">
+                  <button type="button" class="btn btn-success" id="toggle_discontinued" @click="toggle_discontinued">Hide Discontinued Products <i class="fas fa-book-heart fa-lg pl-2"></i></button>
+                </template>
+                <template v-else>
+                  <button type="button" class="btn btn-warning" id="toggle_discontinued" @click="toggle_discontinued">Show Discontinued Products <i class="fas fa-exclamation-triangle fa-lg pl-2"></i></button>
+                </template>
+              </div>
+            </div>
+            <div class="col-4 offset-2">
+              <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
+            </div>
+          </div>
+          <template v-if="this.any_quote">
+            <div class="row py-2" id="current_quote">
+              <div class="col-md-8 col-xl-6 quote_lcol_header">
+                <h3>Products</h3>
+                <span class="help-block">
+                  To use fractions of units, please use full stop and not decimal comma.
+                </span>
+                <div id='product_warnings'></div>
+                <ul class="list-unstyled quote-product-list">
+                  <template v-for="(prod_count, prod_id) in this.$root.quote_prod_ids" :key="prod_id">
+                    <v-quote-list-product :product_id="prod_id" :product_count="prod_count"/>
+                  </template>
+                  <li class="row border-top mr-2">
+                    <p class="text-end col-3 offset-9 pt-2 fw-bold">{{product_cost_sum[this.$root.price_type].toFixed(2)}} SEK</p>
+                  </li>
+                  <template v-if="any_special_addition">
+                    <li class="my-1 row d-flex align-items-center">
+                      <span class="col-9">
+                        <a class="mr-2" href='#' @click="reset_special_addition"><i class="far fa-times-square fa-lg text-danger"></i></a>
+                        {{this.$root.quote_special_addition_label}}
+                      </span>
+                      <span class="col-2 float-right">{{this.$root.quote_special_addition_value}} SEK</span>
+                    </li>
+                  </template>
+                  <template v-if="any_special_percentage">
+                    <li class="my-1 row d-flex align-items-center">
+                      <span class="col-9">
+                        <a class="mr-2" href='#' @click="reset_special_percentage"><i class="far fa-times-square fa-lg text-danger"></i></a>
+                        {{this.$root.quote_special_percentage_label}}
+                      </span>
+                      <span class="col-2 float-right">- {{this.$root.quote_special_percentage_value}} %</span>
+                    </li>
+                  </template>
+                </ul>
+
+              </div>
+              <div class="col-md-4 col-xl-6 border-left">
+                <h3>Totals</h3>
+                <ul class="quote-totals-list list-unstyled">
+                  <dl class="quote_totals">
+                    <p :class="{'text-muted': (this.$root.price_type != 'cost_academic')}">
+                      <dt>Swedish academia:</dt>
+                      <dd class="quote_totals_val quote_sweac">{{quote_cost['cost_academic']}} SEK</dd>
+                    </p>
+                    <p :class="{'text-muted': (this.$root.price_type != 'full_cost')}">
+                      <dt>Industry and non-Swedish academia:</dt>
+                      <dd class="quote_totals_val quote_full">{{quote_cost['full_cost']}} SEK</dd>
+                    </p>
+                    <p :class="{'text-muted': (this.$root.price_type != 'cost')}">
+                      <dt>Internal projects:</dt>
+                      <dd class="quote_totals_val quote_internal">{{quote_cost['cost']}} SEK</dd>
+                    </p>
+                  </dl>
+                </ul>
+              </div>
+            </div>
+          </template>
+          <div class="products_chooseable_div">
+            <div class="row" id="table_h_and_search">
+              <h2 class="col mr-auto">Available Products</h2>
+            </div>
+            <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="true"/>
+          </div>
+        </template>
+        `
+})
 
 
-      // Activate the add-to-quote buttons
-      $('.add-to-quote').on('click', function(e) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        product_id = $(this).attr('data-product-id')
-        addToQuote(product_id);
-        $('#current_quote').show();
-      });
+app.component('v-quote-list-product', {
+    /* Display products which are added to the quote */
+    props: ['product_id'],
+    computed: {
+        product() {
+            return this.$root.all_products[this.product_id]
+        },
+        productCost() {
+            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
+            return this.$root.productCost(this.product_id)
+        },
+        cost() {
+            return (this.product_count * this.productCost[this.$root.price_type]).toFixed(2)
+        },
+        product_count() {
+            return this.$root.quote_prod_ids[this.product_id]
+        }
+    },
+    methods: {
+        remove_from_quote() {
+            delete this.$root.quote_prod_ids[this.product_id]
+        }
+    },
+    template: /*html*/`
+      <li class="my-1 row d-flex align-items-center">
+        <div class="col-auto  pr-0">
+          <a href='#' @click="remove_from_quote"><i class="far fa-times-square fa-lg text-danger"></i></a>
+        </div>
+        <div class="col-2">
+          <input class="form-control" v-model="this.$root.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']" type=number>
+        </div>
+        <span class="col-7 quote_product_name">{{product.Name}}</span>
+        <span class="col-2">{{cost}} SEK</span>
+      </li>
+    `
+})
 
-    });
-
-    if (_callback !== null){
-      _callback();
-    };
-  });
-};
-
-function resetCurrentQuote(){
-  $('#current_quote').hide();
-  quoteProdEl.html('');
-  quoteTotEl.html('');
-  $('#product_warnings').html('');
-}
-
-// Add one item of the product to the quote
-function addToQuote(id) {
-  var obj = allProducts[id];
-  obj.quantity++;
-  updateTableCounts(obj);
-  generateQuoteList();
-}
-
-function generateQuoteList() {
-  /* Everytime the list changes, it is regenerated */
-  resetCurrentQuote();
-  var empty = true;
-  price_type = $("input[name='price_type']:checked").val();
-  var totalCostSweAc = 0;
-  var totalCostInternal = 0;
-  var totalCostFull = 0;
-  var overhead = parseInt($('#overhead_value').first().html());
-  for (var product_id in allProducts) {
-    var product = allProducts[product_id];
-    var warning_txt = '';
-    if (product.quantity > 0) {
-      class_string = ''
-      empty = false;
-      var li = `<li data-quantity=${product.quantity}` + class_string + ` data-product-id=${product_id}>` +
-        `<a href='#' class='remove_product' data-product-id=${product.REF_ID}><i class="far fa-times-square fa-lg text-danger"></i></a> ` +
-        `<input class='quantity_updateable' data-product-id=${product.REF_ID} min=0 value=${product.quantity}> ` +
-        `<span class='quote_product_name'>${product.Name}</span>` +
-        `<span class='quote_product_prices_line'><span class='quote_product_price'>`
-      switch(price_type) {
-          case "internal":
-            li += `${(product.price_internal * product.quantity).toFixed(0)}`;
-            break;
-          case "sweac":
-            li += `${(product.price_academic * product.quantity).toFixed(0)}`;
-            break;
-          case "full":
-            li += `${(product.price_full * product.quantity).toFixed(0)}`;
-      }
-      li += ` SEK</span></span></li>`;
-      totalCostSweAc += product.price_academic * product.quantity;
-      totalCostInternal += product.price_internal * product.quantity;
-      totalCostFull += product.price_full * product.quantity;
-      quoteProdEl.append(li);
-      applyWarning(warning_txt);
-    }
-  }
-  other_cost = parseFloat($('#other_cost_input').val());
-  other_cost = isNaN(other_cost) ? 0 : other_cost;
-
-  discount = parseFloat($('#discount_input').val());
-  discount = isNaN(discount) ? 0 : discount;
-  discount_factor = 1-(discount/100.0);
-
-  totalCostInternal += other_cost;
-  totalCostInternal = totalCostInternal * discount_factor;
-
-  totalCostSweAc += other_cost;
-  totalCostSweAc = totalCostSweAc * discount_factor;
-
-  totalCostFull += other_cost;
-  totalCostFull = totalCostFull * discount_factor;
-
-
-  /* Only show quote if non-empty */
-  if (!empty){
-    $('#current_quote').show();
-    var totals_div = document.createElement("dl");
-    totals_div.setAttribute("class", "quote_totals");
-    var p = document.createElement("p");
-    if (price_type !== 'sweac'){
-      p.setAttribute('class', 'text-muted')
-    }
-    p.innerHTML = `<dt class='quote_totals_def quote_sweac'>Swedish academia:</dt><dd class='quote_totals_val quote_sweac'>${Math.ceil(totalCostSweAc)} SEK</dd>`;
-    totals_div.append(p);
-
-    var p = document.createElement("p");
-    if (price_type !== 'full'){
-      p.setAttribute('class', 'text-muted')
-    }
-    p.innerHTML = `<dt class='quote_totals_def quote_full'>Industry and non-Swedish academia:</dt><dd class='quote_totals_val quote_full'>${Math.ceil(totalCostFull)} SEK</dd>`;
-    totals_div.append(p);
-
-    var p = document.createElement("p");
-    if (price_type !== 'internal'){
-      p.setAttribute('class', 'text-muted')
-    }
-    p.innerHTML = `<dt class='quote_totals_def quote_internal'>Internal projects:</dt><dd class='quote_totals_val quote_internal'>${Math.ceil(totalCostInternal)} SEK</dd>`;
-    totals_div.append(p);
-
-    quoteTotEl.append(totals_div);
-  }
-
-  function updateQuantity(product, new_quantity){
-    if ((new_quantity.length === 0) || (new_quantity < 0)) {
-      // Invalid value given
-      $("ul").find(`li[data-product-id='${product.REF_ID}']`).addClass("text-danger");
-      var warning_txt=`Incorrectly entered value for ` + product.Name
-      applyWarning(warning_txt);
-      return;
-    }
-    product.quantity = new_quantity;
-
-    updateTableCounts(product);
-    generateQuoteList();
-  }
-
-  $('.other_updateable').change(function(e) {
-      generateQuoteList();
-  })
-
-  $('.quantity_updateable').change(function(e) {
-    var product_id = $(this).data('product-id');
-    var new_quantity = parseFloat($(this).val());
-    // Check that the number makes sense
-    if (! isNaN(new_quantity)) {
-        updateQuantity(allProducts[product_id], new_quantity);
-    }
-  });
-
-  $('.remove_product').on('click', function(e) {
-    $(this).parent('li').remove();
-    var product_id = $(this).data('product-id');
-    updateQuantity(allProducts[product_id], 0)
-  });
-
-  // generateCartButtons()
-}
-
-function applyWarning(warning_txt){
-  if (warning_txt !== '') {
-    var warning_html = ``+
-      `<div class="alert alert-warning alert-dismissible" role="alert">`+
-        `<h4 class="alert-heading">Warning</h4>`+
-        `<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>`+
-        `<p>`+warning_txt+`</p>`+
-      `</div>`;
-    $('#product_warnings').append(warning_html);
-  };
-}
-
-function updateTableCounts(product) {
-  $(`#count_in_table_${product.REF_ID}`).html(product.quantity);
-}
-
-function reset_listjs() {
-    $('#pricing_products_table').DataTable().clear();
-    $('#pricing_products_table').DataTable().destroy();
-    $('#pricing_products_table_filter').remove();
-}
-
-// Initialize sorting and searching javascript plugin
-function init_listjs() {
-    // Setup - add a text input to each footer cell
-    $('#pricing_products_table tfoot th').each( function () {
-      var title = $('#pricing_products_table thead th').eq( $(this).index() ).text();
-      $(this).html( '<input class="form-control" type="text" placeholder="Search '+title+'" />' );
-    } );
-
-    var table = $('#pricing_products_table').DataTable({
-      "paging":false,
-      "info":false,
-      "order": [[ 0, "desc" ]]
-    });
-
-    //Add the bootstrap classes to the search thingy
-    $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#pricing_products_table_filter').addClass('col-md-2 p-0 mr-3 mb-4 shadow-sm');
-    $("#pricing_products_table_filter").appendTo("#table_h_and_search");
-    $('#pricing_products_table_filter label input').appendTo($('#pricing_products_table_filter'));
-    $('#pricing_products_table_filter label').remove();
-    $("#pricing_products_table_filter input").attr("placeholder", "Search table...");
-    // Apply the search
-    table.columns().every( function () {
-        var that = this;
-        $( 'input', this.footer() ).on( 'keyup change', function () {
-            that
-            .search( this.value )
-            .draw();
-        } );
-    } );
-}
+app.mount('#pricing_quote_main')
