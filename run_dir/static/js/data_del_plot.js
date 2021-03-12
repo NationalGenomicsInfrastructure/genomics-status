@@ -16,99 +16,96 @@ function refresh_plot(){
 }
 
 function make_plot(key, name, view_type, filter_inst_type){
-    var toplot = {
-        chart: {
-            type: 'scatter',
-            events: {
-                render: function(){
-                    let series = this.series
-                    let sum = 0
-                    for (let i = 0; i < series.length; i++){
-                        if (series[i].visible){
-                            for (let j = 0; j < series[i].data.length; j++){
-                                sum += series[i].data[j].y
-                            }
-                        }
-                    }
-                    if (sum === 0) return '0 Bytes';
-                    const k = 1024;
-                    const dm = 2 < 0 ? 0 : 2;
-                    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-                    const i = Math.floor(Math.log(sum) / Math.log(k));
-                    var c_sum = parseFloat((sum / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-                    this.setTitle({text: "File size of projects, sum in bytes: " + c_sum}, false, false)
-                }
-            }
-        },
-        title: {
-            text : name+' of projects'
-        },
-        yAxis: {
-            min : 0,
-            title : {
-              text : name
-            }
-        },
-        legend: {
-            title: {
-                text: 'Click to hide:',
-                align: 'center'
-            }
-        },
-        plotOptions : {
-            series : {
-                turboThreshold: 0,
-                point: {
-                  events: {
-                    click: function() {
-                      window.open(this.options.ownURL)
-                    }
-                  }
-                }
-            }
-        },
-        tooltip: {
-            shared: true,
-            useHTML: true,
-            headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{point.key}</small><br />',
-            pointFormatter: function () {
-                if (this.y === 0) return '0 Bytes';
-                const k = 1024;
-                const dm = 2 < 0 ? 0 : 2;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-                const i = Math.floor(Math.log(this.y) / Math.log(k));
-                var fs = parseFloat((this.y / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-                return this.series.name + ', ' + this.pm + ': ' + '<b>' + fs + '</b>'
-            },
-        },
-        credits: {
-            enabled: false
-        },
-        xAxis: {
-            type: 'category',
-            labels: {
-                enabled: false,
-            },
-            title : {
-                text : 'Close Date'
-            },
-            categories: []
-        },
-        series: [{
-            name: name,
-            data: []
-        }],
-        exporting: {
-          csv: {
-            itemDelimiter: ';'
+
+  function formatBytes(bytes){
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const dm = 2 < 0 ? 0 : 2;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+  function sumFilesize(series){
+      sum = 0
+      for (let i = 0; i < series.length; i++){
+          if (series[i].visible){
+              for (let j = 0; j < series[i].data.length; j++){
+                  sum += series[i].data[j].y
+              }
           }
-        }
-    };
-    serie = build_series(window.current_plot_data, key, name, view_type, filter_inst_type);
-    toplot.series = serie[1];
-    toplot.xAxis.categories = serie[0];
-    $("#main_plot").highcharts(toplot);
-    window.current_plot_obj = toplot;
+      }
+      return formatBytes(sum);
+  }
+  var toplot = {
+      chart: {
+          type: 'scatter',
+          events: {
+              render: function(){
+                  this.setTitle({text: "File size of projects, sum in bytes: " + sumFilesize(this.series)}, false, false)
+              }
+          }
+      },
+      yAxis: {
+          min : 0,
+          title : {
+              text : name
+          }
+      },
+      legend: {
+          title: {
+              text: 'Click to hide:',
+              align: 'center'
+          }
+      },
+      plotOptions : {
+          series : {
+              turboThreshold: 0,
+              point: {
+                  events: {
+                      click: function() {
+                          window.open(this.options.ownURL)
+                      }
+                  }
+              }
+          }
+      },
+      credits: {
+          enabled: false
+      },
+      xAxis: {
+          type: 'category',
+          labels: {
+              enabled: false,
+          },
+          title : {
+              text: 'Close Date'
+          },
+          categories: []
+      },
+      series: [{
+          name: name,
+          data: []
+      }],
+      title: {
+          text: function() { return name+' of projects, sum in bytes: ' +  sumFilesize(series, data, true); }
+      },
+      tooltip: {
+          shared: true,
+          useHTML: true,
+          headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{point.key}</small><br />',
+          pointFormatter: function () { return this.series.name + ', ' + this.pm + ': ' + '<b>' + formatBytes(this.y, true) + '</b>'},
+      },
+      exporting: {
+          csv: {
+              itemDelimiter: ';'
+          }
+      }
+  };
+  serie = build_series(window.current_plot_data, key, name, view_type, filter_inst_type);
+  toplot.series = serie[1];
+  toplot.xAxis.categories = serie[0];
+  $("#main_plot").highcharts(toplot);
+  window.current_plot_obj = toplot;
 }
 
 function build_series(data, key, name, view_type, filter_inst_type){
