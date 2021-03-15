@@ -41,7 +41,7 @@ function make_plot(key, name, view_type, filter_inst_type){
           type: 'scatter',
           events: {
               render: function(){
-                  this.setTitle({text: "File size of projects, sum in bytes: " + sumFilesize(this.series)}, false, false)
+                  this.setTitle({text: "File size of projects: " + sumFilesize(this.series)}, false, false)
               }
           }
       },
