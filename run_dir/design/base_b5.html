@@ -57,8 +57,16 @@
               <a class="dropdown-item" href="/proj_meta">Compare Project Meta</a>
               <a class="dropdown-item" href="/instrument_logs">View Instrument Logs</a>
               <a class="dropdown-item" href="/barcode">Barcode and Label printing</a>
-              {% if user and user.is_admin %}
-              <a class="dropdown-item" href="/user_management">User Management</a>
+              <a class="dropdown-item" href="/pricing_quote">Cost Calculator</a>
+              {% if user and (user.is_admin or user.is_pricing_admin) %}
+                <div role="separator" class="dropdown-divider"></div>
+                <h6 class="dropdown-header">Admin</h6>
+                {% if user and user.is_admin %}
+                <a class="dropdown-item" href="/user_management">User Management</a>
+                {% end %}
+                {% if user and user.is_pricing_admin %}
+                <a class="dropdown-item" href="/pricing_preview">New Cost Calculator</a>
+                {% end %}
               {% end %}
               <div role="separator" class="dropdown-divider"></div>
               <a class="dropdown-item" href="http://lims-dashboard.scilifelab.se">Script Dashboard</a>
