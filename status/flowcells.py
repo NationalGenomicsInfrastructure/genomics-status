@@ -449,7 +449,11 @@ def get_container_from_id(flowcell):
         if lims.get_containers(name=flowcell[8:],type=['S1','S2','S4','SP','Illumina Flow Cell','Patterned Flow Cell']):
             c = lims.get_containers(name=flowcell[8:])[0]
         else:
-            #NextSeq
-            proc = lims.get_processes(type='Illumina Sequencing (NextSeq) v1.0',udf={'Flow Cell ID': flowcell[8:]})[0]
+            try:
+                #NextSeq500
+                proc = lims.get_processes(type='Illumina Sequencing (NextSeq) v1.0',udf={'Flow Cell ID': flowcell[8:]})[0]
+            except IndexError:
+                #NextSeq2000
+                proc = lims.get_processes(type='Illumina Sequencing (NextSeq) v1.0',udf={'Flow Cell ID': flowcell.split('_')[1]})[0]
             c = lims.get_containers(name=proc.udf['Reagent Cartridge ID'])[0]
     return c
