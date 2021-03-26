@@ -697,11 +697,11 @@ class RunningNotesDataHandler(SafeHandler):
     def get(self, project):
         self.set_header("Content-type", "application/json")
         v = self.application.projects_db.view("project/project_id")
-        for row in v[project]:
-            doc_id = row.value
-        if not doc_id:
+        if len(v[project]) == 0:
             raise tornado.web.HTTPError(404, reason='Project not found: {}'.format(project))
         else:
+            for row in v[project]:
+                doc_id = row.value
             doc = self.application.projects_db.get(doc_id)
             # Sorted running notes, by date
             running_notes = json.loads(doc['details'].get('running_notes', '{}'))
