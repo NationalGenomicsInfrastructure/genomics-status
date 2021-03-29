@@ -69,7 +69,7 @@ class BaseHandler(tornado.web.RequestHandler):
         # Disables authentication if test mode to ease integration testing
         if self.application.test_mode:
             name = 'Testing User!'
-            roles = ['admin']
+            roles = ['admin', 'pricing_admin']
             email = 'Testing User!'
         else:
             name = str(self.get_secure_cookie("user"), 'utf-8') if self.get_secure_cookie("user") else None

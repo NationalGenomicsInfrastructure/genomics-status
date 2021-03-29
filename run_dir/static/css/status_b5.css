@@ -1,6 +1,16 @@
 body {
   padding-top: 60px;
 }
+
+/* Internal links should not be hidden behind top banner */
+h1, h2, h3, h4, h5, h6, .link-target-offset {
+    scroll-margin-top: 60px;
+}
+
+.link-target-offset-extra {
+    scroll-margin-top: 75px;
+}
+
 .footer {
     font-size:0.8em;
     color:#999;
@@ -52,10 +62,6 @@ tfoot {
 
 /* Pricing */
 
-tr.status_discontinued{
-  background-color: #f2dede;
-}
-
 .quote_product_prices_line{
     float: right;
 }
@@ -80,9 +86,41 @@ input.quantity_updateable {
     padding-top: 4rem;
 }
 
-.pricing_update_collapse_link {
+#pricing_update_products_top {
+    margin-top: 7rem !important;
+}
+
+.pricing-td-changed:hover {
+    border: 2px solid #6c757d;
+}
+
+.pricing-tr-changed .pricing-td-changed {
+    font-weight: bold;
+    color: #198754;
+    text-decoration: underline;
+}
+
+.pricing-tr-is-invalid .pricing-td-changed {
+    font-weight: bold;
+    color: #dc3545;
+    text-decoration: underline;
+}
+
+.pricing-td-highlight-tooltip {
+    min-width: 150px;
+}
+
+.pricing_collapse_link {
     text-decoration: none;
     color: black;
+}
+
+.pricing_hoverable {
+    cursor: help;
+}
+
+.pricing-normal-width-tooltip {
+    max-width: 400px;
 }
 
 /* Make <samp> (flow cell IDs usually) a little smaller */
@@ -846,6 +884,7 @@ td.alert-green{
 
 th.sort{
   cursor: pointer;
+
 }
 /* Deliveries page */
 .bi-fc-runningnote, .bi-project-note {
