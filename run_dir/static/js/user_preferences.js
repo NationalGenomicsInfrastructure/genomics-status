@@ -5,27 +5,8 @@ Powers /userpref - template is run_dir/design/user_preferences.html
 */
 
 // On page load
-$(function(){
-  $('body').on('click', '.rBtngp1', function(event){
-    $('.rBtngp1').removeClass('btn-primary');
-    $('.rBtngp1').removeClass('btn-default');
-    $(this).addClass('btn-primary');
-    if($(this).prop('id')=="EmailOn"){
-      $("#SlackOn").addClass('btn-default');
-      $("#BothOn").addClass('btn-default');
-    }
-    else if($(this).prop('id')=="SlackOn"){
-      $("#EmailOn").addClass('btn-default');
-      $("#BothOn").addClass('btn-default');
-    }
-    else{
-      $("#SlackOn").addClass('btn-default');
-      $("#EmailOn").addClass('btn-default');
-    }
-  });
-});
 $('#submitPrefBtn').click(function(e){
-  var option=$.trim($('#notfRadioPref').find('label.active').text())
+  var option=$("input[name='notfPref']:checked").data('value')
   $('#submitPrefBtn').addClass('disabled').text('Saving...');
   var api_url = "/userpref";
   $.ajax({

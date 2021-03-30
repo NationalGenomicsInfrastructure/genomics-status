@@ -8,8 +8,8 @@ Description: Shows a page/modal with the user's personal settings for genomics_s
 -->
 
 <div class="modal-header">
-  <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-  <h4>Your Preferences</h4>
+  <h4 class="modal-title">Your Preferences</h4>
+  <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
 </div>
 <div class="modal-body">
   <form id="SaveNotificationPref" class="form form-search" role="form">
@@ -18,16 +18,15 @@ Description: Shows a page/modal with the user's personal settings for genomics_s
           <div class="text-center">
             <label for="notfRadioPref" class="control-label">Notification method</label>
             <div id="notfRadioPref">
-              <div class="btn-group" data-toggle="buttons">
-                <label class="btn btn-sm rBtngp1 {%if pref=='E-mail'%} btn-primary active {% else %} btn-default {% end %}" id="EmailOn">
-                  <input type="radio" name="notfPref" autocomplete="off"> E-mail
-                </label>
-                <label class="btn btn-sm rBtngp1 btn-default {%if pref=='Slack'%} btn-primary active {% else %} btn-default {% end %}" id="SlackOn">
-                  <input type="radio" name="notfPref" autocomplete="off"> Slack
-                </label>
-                <label class="btn btn-sm rBtngp1 btn-default {%if pref=='Both'%} btn-primary active {% else %} btn-default {% end %}" id="BothOn">
-                  <input type="radio" name="notfPref" autocomplete="off"> Both
-                </label>
+              <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="notfPref" id='EmailOn' autocomplete="off" {%if pref=='E-mail'%} checked {% end %} data-value='E-mail'>
+                <label class="btn btn-sm btn-outline-primary" for='EmailOn' data-value='E-mail'>E-mail</label>
+
+                <input type="radio" class="btn-check" name="notfPref" id='SlackOn' autocomplete="off" {%if pref=='Slack'%} checked {% end %} data-value='Slack'>
+                <label class="btn btn-sm btn-outline-primary" for='SlackOn'>Slack</label>
+
+                <input type="radio" class="btn-check" name="notfPref" id='BothOn' autocomplete="off" {%if pref=='Both'%} checked{% end %} data-value='Both'>
+                <label class="btn btn-sm btn-outline-primary" for="BothOn">Both</label>
               </div>
             </div>
           </div>
@@ -36,7 +35,7 @@ Description: Shows a page/modal with the user's personal settings for genomics_s
   </form>
 </div>
 <div class="modal-footer">
-  <button class="btn btn-sm btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
+  <button class="btn btn-sm btn-secondary" data-dismiss="modal" aria-hidden="true">Close</button>
   <button id="submitPrefBtn" class="btn btn-sm btn-primary search-action" type="button">Save</button>
 </div>
 <script src="/static/js/user_preferences.js"></script>
