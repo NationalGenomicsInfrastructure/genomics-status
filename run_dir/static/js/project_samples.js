@@ -109,11 +109,6 @@ function init_listjs (no_items, columns) {
   };
   var featureList = new List('tab_samples_content', options);
   featureList.search($('#search_field').val());
-  var table = $('#sample_table').DataTable({
-        "paging": false,
-        dom: 'Qlrtip',
-        deferRender: true
-  });
 }
 
 ////////////////////////////////////
