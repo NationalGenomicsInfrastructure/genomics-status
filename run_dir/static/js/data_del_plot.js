@@ -179,7 +179,9 @@ function build_series(data, key, name, view_type, filter_inst_type){
             }
             view_color = view_coloring(series_name);
         }else if (view_type == 'sample_type'){
-            if (data[d][1].sample_type.includes('Finished')){
+            if (data[d][1].sample_type == null){
+                series_name = "Other/undefined";
+            }else if (data[d][1].sample_type.includes('Finished')){
                 series_name = "Finished Library";
             }else if (data[d][1].sample_type.includes('total')){
                 series_name = "total RNA";
