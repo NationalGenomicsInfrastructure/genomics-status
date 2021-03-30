@@ -137,7 +137,9 @@ function build_series(data, key, name, view_type, filter_inst_type){
             continue;
         }  
         if (view_type == 'sequencing_platform'){
-            if (data[d][1].sequencing_platform.includes('NovaSeq')){
+            if (data[d][1].sequencing_platform == null){
+                series_name = "Other/undefined";
+            }else if (data[d][1].sequencing_platform.includes('NovaSeq')){
                 series_name = "NovaSeq";
             }else if (data[d][1].sequencing_platform.includes('MiSeq')){
                 series_name = "MiSeq";
@@ -148,7 +150,9 @@ function build_series(data, key, name, view_type, filter_inst_type){
             }
             view_color = view_coloring(series_name);
         }else if (view_type == 'application'){
-            if (data[d][1].application.includes('RNA')){
+            if (data[d][1].application == null){
+                series_name = "Other/undefined";
+            }else if (data[d][1].application.includes('RNA')){
                 series_name = "RNA-Seq";
             }else if (data[d][1].application.includes('WG')){
                 series_name = "WG-reseq"; 
@@ -196,7 +200,9 @@ function build_series(data, key, name, view_type, filter_inst_type){
             }
             view_color = view_coloring(series_name);
         }else if (view_type == 'best_practice_bioinformatics'){
-            if (data[d][1].best_practice_bioinformatics == 'Yes'){
+            if (data[d][1].best_practice_bioinformatics == null){
+                series_name = "Other/undefined";
+            }else if (data[d][1].best_practice_bioinformatics == 'Yes'){
                 series_name = "BP bioinformatics";
             }else if (data[d][1].best_practice_bioinformatics == 'No'){
                 series_name = "No BP bioinformatics";
