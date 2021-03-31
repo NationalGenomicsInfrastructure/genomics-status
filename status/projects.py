@@ -696,16 +696,15 @@ class RunningNotesDataHandler(SafeHandler):
     """
     def get(self, project):
         self.set_header("Content-type", "application/json")
-        p = Project(lims, id=project)
-        try:
-            p.get(force=True)
-        except:
+        v = self.application.projects_db.view("project/project_id")
+        if len(v[project]) == 0:
             raise tornado.web.HTTPError(404, reason='Project not found: {}'.format(project))
-            # self.set_status(404)
-            # self.write({})
         else:
+            for row in v[project]:
+                doc_id = row.value
+            doc = self.application.projects_db.get(doc_id)
             # Sorted running notes, by date
-            running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
+            running_notes = json.loads(doc['details'].get('running_notes', '{}'))
             sorted_running_notes = OrderedDict()
             for k, v in sorted(running_notes.items(), key=lambda t: t[0], reverse=True):
                 sorted_running_notes[k] = v
@@ -727,31 +726,24 @@ class RunningNotesDataHandler(SafeHandler):
     def make_project_running_note(application, project, note, category, user, email):
         timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
         newNote = {'user': user, 'email': email, 'note': note, 'category' : category, 'timestamp': timestamp}
-        p = Project(lims, id=project)
-        p.get(force=True)
-        running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
-        running_notes.update({timestamp: newNote})
-        # Saving running note in LIMS
-        p.udf['Running Notes'] = json.dumps(running_notes)
-        p.put()
-        p.get(force=True)
-        #Retry once more
-        if p.udf['Running Notes'] != json.dumps(running_notes):
-            p.udf['Running Notes'] = json.dumps(running_notes)
-            p.put()
-        p.get(force=True)
-        #In the rare case saving to LIMS does not work
-        assert (p.udf['Running Notes'] == json.dumps(running_notes)), "The Running note wasn't saved in LIMS!"
 
-        #saving running notes directly in genstat, because reasons.
-        v=application.projects_db.view("project/project_id")
+        #get and save running notes directly in genstat.
+        v = application.projects_db.view("project/project_id")
         for row in v[project]:
-            doc_id=row.value
-        doc=application.projects_db.get(doc_id)
+            doc_id = row.value
+        doc = application.projects_db.get(doc_id)
+
+        running_notes = json.loads(doc['details'].get('running_notes', '{}'))
+        running_notes.update({timestamp: newNote})
         project_name = doc['project_name']
         proj_ids = [project, project_name]
-        doc['details']['running_notes']=json.dumps(running_notes)
+        doc['details']['running_notes'] = json.dumps(running_notes)
         application.projects_db.save(doc)
+
+        #check if it was saved
+        doc = application.projects_db.get(doc_id)
+        assert (doc['details']['running_notes'] == json.dumps(running_notes)), "The Running note wasn't saved in StatusDB!"
+
         #### Check and send mail to tagged users
         pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
         userTags = pattern.findall(note)
