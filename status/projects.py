@@ -19,7 +19,6 @@ import slack
 import nest_asyncio
 import itertools
 
-
 from collections import defaultdict
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
@@ -34,6 +33,7 @@ from genologics.entities import Protocol
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
 from zenpy import Zenpy, ZenpyException
+
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 application_log=logging.getLogger("tornado.application")
@@ -167,19 +167,19 @@ class ProjectsBaseDataHandler(SafeHandler):
             except ValueError:
                 pass
 
-        if row.key[0] == 'open' and 'queued' in row.value:
+        if row.key[0] in ['need_review', 'ongoing', 'reception_control'] and 'queued' in row.value:
             #Add days ongoing in production field
             now = datetime.datetime.now()
             queued = row.value['queued']
             diff = now - dateutil.parser.parse(queued)
             row.value['days_in_production'] = diff.days
-        elif row.key[0] == 'closed' and 'close_date' and 'queued' in row.value:
+        elif row.key[0] in ['aborted', 'closed'] and 'close_date' and 'queued' in row.value:
             #Days project was in production
             close = dateutil.parser.parse(row.value['close_date'])
             diff = close - dateutil.parser.parse(row.value['queued'])
             row.value['days_in_production'] = diff.days
 
-        if row.key[0] == 'open' and 'open_date' in row.value:
+        if row.key[0] in ['need_review', 'ongoing', 'reception_control'] and 'open_date' in row.value:
             end_date = datetime.datetime.now()
             if 'queued' in row.value:
                 end_date =  dateutil.parser.parse(row.value['queued'])
@@ -274,6 +274,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
         else:
+            # Loop over each row from the different view calls
             for row in itertools.chain.from_iterable(view_calls):
                 p_info=row.value
                 ptype=p_info['details'].get('type')
@@ -325,35 +326,34 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         final_projects = OrderedDict()
         for row in filtered_projects:
-            a=type(row)
             row = self.project_summary_data(row)
-            final_projects[row.key[1]] = row.value
+            proj_id = row.key[1]
+            final_projects[proj_id] = row.value
+            for date_type, date in row.value['summary_dates'].items():
+                final_projects[proj_id][date_type] = date
+
             for key, value in def_dates_gen.items():
                 start_date = value[0]
                 end_date = value[1]
-                final_projects[row.key[1]][key] = self._calculate_days_in_status(final_projects[row.key[1]].get(start_date),
-                                                                                    final_projects[row.key[1]].get(end_date))
+                final_projects[proj_id][key] = self._calculate_days_in_status(final_projects[proj_id].get(start_date),
+                                                                                    final_projects[proj_id].get(end_date))
 
-        # Include dates for each project:
-        for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
-            if row.key[0] in final_projects:
-                for date_type, date in row.value.items():
-                    final_projects[row.key[0]][date_type] = date
+            for key, value in def_dates_summary.items():
+                if key == 'days_seq_start':
 
-                for key, value in def_dates_summary.items():
-                    if key == 'days_seq_start':
-                        if 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
-                             start_date = value[0][1]
-                        else:
-                            start_date = value[0][0]
+                    if 'Library, By user' in final_projects[proj_id].get('library_construction_method', '-'):
+                        start_date = value[0][1]
                     else:
-                        start_date = value[0]
-                    end_date = value[1]
-                    if key in ['days_prep', 'days_prep_start'] and 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
-                        final_projects[row.key[0]][key] = '-'
-                    else:
-                        final_projects[row.key[0]][key] = self._calculate_days_in_status(final_projects[row.key[0]].get(start_date),
-                                                                                                final_projects[row.key[0]].get(end_date))
+                        start_date = value[0][0]
+                else:
+                    start_date = value[0]
+                end_date = value[1]
+                if key in ['days_prep', 'days_prep_start'] and 'Library, By user' in final_projects[proj_id].get('library_construction_method', '-'):
+                    final_projects[proj_id][key] = '-'
+                else:
+                    final_projects[proj_id][key] = self._calculate_days_in_status(final_projects[proj_id].get(start_date),
+                                                                                            final_projects[proj_id].get(end_date))
+
         return final_projects
 
     def list_project_fields(self, undefined=False, project_list='all'):
