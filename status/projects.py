@@ -17,8 +17,9 @@ from email.mime.multipart import MIMEMultipart
 import markdown
 import slack
 import nest_asyncio
+import itertools
 
-#from itertools import ifilter
+
 from collections import defaultdict
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
@@ -248,13 +249,18 @@ class ProjectsBaseDataHandler(SafeHandler):
             end_open_date = self.get_argument('youngest_open_date', default_end_date)
             start_open_date = self.get_argument('oldest_open_date', self._get_two_year_from(end_open_date))
 
-        summary_view = self.application.projects_db.view("project/summary", descending=True)
+        summary_view = self.application.projects_db.view("project/summary_status", descending=True)
 
+        # view_calls collects http requests to statusdb for each status requested
+        view_calls = []
         if filter_projects[:1] != 'P':
-            if  filter_projects == 'closed':
-                summary_view = summary_view[["closed",'Z']:["closed",'']]
-            elif 'all' not in filter_projects and 'aborted' not in filter_projects and 'closed' not in filter_projects:
-                summary_view = summary_view[["open",'Z']:["open",'']]
+            if 'all' in filter_projects:
+                view_calls.append(summary_view)
+            else:
+                for status in filter_projects.split(','):
+                    status = status.replace('_', ' ')
+                    if status in ['aborted', 'closed', 'ongoing', 'pending', 'reception control']:
+                        view_calls.append(summary_view[[status, 'Z']:[status, '']])
 
         filtered_projects = []
 
@@ -268,7 +274,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
         else:
-            for row in summary_view:
+            for row in itertools.chain.from_iterable(view_calls):
                 p_info=row.value
                 ptype=p_info['details'].get('type')
 
