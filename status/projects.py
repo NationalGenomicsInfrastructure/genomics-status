@@ -752,7 +752,8 @@ class RunningNotesDataHandler(SafeHandler):
         ####
         ##Notify proj coordinators for all project running notes
         proj_coord = '.'.join(doc['details']['project_coordinator'].lower().split())
-        RunningNotesDataHandler.notify_tagged_user(application, [proj_coord], proj_ids, note, category, user, timestamp, 'creation')
+        if proj_coord:
+            RunningNotesDataHandler.notify_tagged_user(application, [proj_coord], proj_ids, note, category, user, timestamp, 'creation')
         return newNote
 
     @staticmethod
