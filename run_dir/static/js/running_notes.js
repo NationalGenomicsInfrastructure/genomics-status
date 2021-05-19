@@ -114,7 +114,7 @@ function load_running_notes(wait) {
       $('#running_notes_panels').append('<div class="alert alert-danger">' +
           '<h4>Error Loading Running Notes: '+err+'</h4>' +
           '<p>Apologies, running notes could not be loaded.' +
-          'Running notes are retrieved from the LIMS, so these problems are usually ' +
+          'These problems are usually ' +
           'due to connection problems. Please try again later and report if the problem persists.</p></div>'+debugging);
   });
 }
@@ -215,7 +215,7 @@ $("#running_notes_form").submit( function(e) {
         console.log(errorThrown);
       },
       success: function(data, textStatus, xhr) {
-        // Manually check whether the running note has saved - LIMS API always returns success
+        // Manually check whether the running note has saved
         note_url=get_note_url()
         $.getJSON(note_url, function(newdata) {
           var newNote = false;
@@ -246,7 +246,7 @@ $("#running_notes_form").submit( function(e) {
                 '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
             check_img_sources($('#running_notes_panels img'));
           } else {
-            alert('Error - LIMS did not save your running note.');
+            alert('Error - Your running note was not saved.');
             $('#save_note_button').removeClass('disabled').text('Submit Running Note');
           }
         });
