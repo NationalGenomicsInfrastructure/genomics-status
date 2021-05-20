@@ -257,10 +257,18 @@ class ProjectsBaseDataHandler(SafeHandler):
             if 'all' in filter_projects:
                 view_calls.append(summary_view)
             else:
+                statusdb_statuses = set()
+                # Need special treatment for these as they are not actual statuses
+                if 'review' in filter_projects or 'open' in filter_projects:
+                    statusdb_statuses.add('ongoing')
+                    statusdb_statuses.add('reception control')
                 for status in filter_projects.split(','):
                     status = status.replace('_', ' ')
                     if status in ['aborted', 'closed', 'ongoing', 'pending', 'reception control']:
-                        view_calls.append(summary_view[[status, 'Z']:[status, '']])
+                        statusdb_statuses.add(status)
+
+                for status in statusdb_statuses:
+                    view_calls.append(summary_view[[status, 'Z']:[status, '']])
 
         filtered_projects = []
 
@@ -328,6 +336,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         for row in filtered_projects:
             row = self.project_summary_data(row)
             proj_id = row.key[1]
+
             final_projects[proj_id] = row.value
             for date_type, date in row.value['summary_dates'].items():
                 final_projects[proj_id][date_type] = date
