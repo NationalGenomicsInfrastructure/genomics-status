@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+<!--
+Template file: data_delivered_plot.html
+URL: /delivered_plot/[timestamp1]-[timestamp2]
+Title: Data delivered plot
+Description: Plots the data delivered.
+-->
+
+{% block stuff %}
+
+<div id="page_content">
+<h1>Data Delivered Plot</h1>
+<p>The default view shows the total file size of all delivered data for a given project.</p>
+<div id="main_plot" style="height: 700px;">
+</div>
+<div id="control_container" style="margin-top:40px;">
+  <div class="row pb-4">
+    <div id="logs_date" class="col-md-6">
+            <form class="row row-cols-lg-auto" id="logs_date_form">
+              <div class="col-12 align-self-center p-0 pl-3">
+                Select data delivered from:
+              </div>
+              <div class="col-12 p-1">
+                <div class='input-group input-group-sm date' id='datepick1'>
+                    <input id="inp_date_1" type='text' class="form-control"/><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt"></span></span>
+                </div>
+              </div>
+              <div class="col-12 align-self-center p-0">
+                to
+              </div>
+             <div class="col-12 p-1">
+                <div class='input-group input-group-sm date' id='datepick2'>
+                     <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt"></span></span>
+                </div>
+             </div>
+             <div class="col-12 p-1">
+               <button id="submit_interval" class="btn btn-primary">Search</button>
+             </div>
+            </form>
+    </div>
+  <div class="col-md-3">
+            <div id="view_select_div">
+                <form class='row row-cols-lg-auto' id="view_select_form" >
+                  <div class="col-12 align-self-center p-0">
+                    View by:
+                  </div>
+                  <div class="col-12 p-1">
+                    <select class="form-select input-sm" id="view_select">
+                        <option class="view_option" value='sequencing_platform'>Sequencing Platform</option>
+                        <option class="view_option" value='application'>Application</option>
+                        <option class="view_option" value='type'>Department</option>
+                        <option class="view_option" value='delivery_type'>Delivery</option>
+                        <option class="view_option" value='sample_type'>Sample library</option>
+                        <option class="view_option" value='best_practice_bioinformatics'>Best Practice</option>
+                    </select>
+                  </div>
+                </form>
+            </div>
+  </div>
+  <div class="col-md-3 align-self-center">
+            <div id="inst_type_filter_div">
+                 <form id="inst_type_filter_form">
+                     Filter by:
+                     <input id="filter_novaseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="NovaSeq" checked/> NovaSeq
+                     <input id="filter_miseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="MiSeq" checked/> MiSeq
+                     <input id="filter_nextseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="NextSeq" checked/> NextSeq
+                     <input id="filter_hiseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="HiSeq" checked/> HiSeq
+                 </form>
+            </div>
+  </div>
+  </div>
+  </div>
+  </div>
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="/static/js/bootstrap-datepicker.min.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script type="text/javascript" src="/static/js/chroma.min.js" ></script>
+<script src="/static/js/data_del_plot.js?v={{ gs_globals['git_commit'] }}"></script>
+{% end %}

@@ -10,18 +10,17 @@
 <meta name="author" content="Phil Ewels, Denis Moreno, Kate Stepanova,Guillermo Carrasco, Remi-André Olsen, many others.">
 
 <!-- Javascript -->
-<script src="/static/js/jquery-1.11.1.min.js"></script>
-<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/jquery-3.5.1.min.js"></script>
 <script src="/static/js/moment.min.js"></script>
 {% if gs_globals['font_awesome_url'] %}
 <script src={{ gs_globals['font_awesome_url'] }} crossorigin="anonymous"></script>
 {% end %}
 
 <!-- Le styles -->
-<link rel="stylesheet" href="/static/css/jquery-ui.min.css" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/custom-bootstrap-5-alpha.css" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.min.css" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/status.css?v={{ gs_globals['git_commit'] }}" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/status_b5.css?v={{ gs_globals['git_commit'] }}" rel="stylesheet">
+
 
 <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
 <!--[if lt IE 9]>
@@ -31,118 +30,115 @@
 </head>
 
 <body>
-<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+  <nav class="navbar navbar-expand-xl navbar-light bg-light fixed-top border-bottom shadow-sm">
     <div class="container-fluid">
+      <a class="navbar-brand" href="/">Genomics-Status</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#genstat-main-nav-collapse" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#genstat-main-nav-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">Genomics-Status</a>
-        </div>
-
-        <div class="collapse navbar-collapse" id="genstat-main-nav-collapse">
-            <form class="navbar-form navbar-left" role="search">
-                <div class="form-group statusdb-search" id="navbar-searchbar">
-                    <input type="text" class="form-control typeahead" placeholder="Search">
-                </div>
-            </form>
-            <ul class="nav navbar-nav navbar-right">
-                <li class="dropdown" id="production">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#production">Production <span class="caret"></span></a>
-                    <ul class="dropdown-menu" role="menu">
-                      <li class="dropdown-header">General stats</li>
-                      <li><a href="/applications">Application Counts</a></li>
-                      <li><a href="/production/cronjobs">Cronjobs List</a></li>
-                      <li><a href="/flowcells_plot">Flowcells Trends</a></li>
-                      <li role="separator" class="divider"></li>
-                      <li class="dropdown-header">Tools</li>
-                      <li><a href="/nas_quotas">NAS Quotas</a></li>
-                      <li><a href="/reads_total/">Read Count Totals</a></li>
-                      <li><a href="/proj_meta">Compare Project Meta</a></li>
-                      <li><a href="/instrument_logs">View Instrument Logs</a></li>
-                      <li><a href="/barcode">Barcode and Label printing</a></li>
-                      <li><a href="/pricing_quote">Cost Calculator</a></li>
-                      {% if user and (user.is_admin or user.is_pricing_admin) %}
-                        <li role="separator" class="divider"></li>
-                        <li class="dropdown-header">Admin</li>
-                        {% if user and user.is_admin %}
-                        <li><a href="/user_management">User Management</a></li>
-                        {% end %}
-                        {% if user and user.is_pricing_admin %}
-                        <li><a href="/pricing_preview">Edit Cost Calculator</a></li>
-                        {% end %}
-                      {% end %}
-                      <li role="separator" class="divider"></li>
-                    <li><a href="http://lims-dashboard.scilifelab.se">Script Dashboard</a></li>
-                  </ul>
-                </li>
-                <li><a href="/projects">Projects</a></li>
-                <li><a href="/flowcells">Flowcells</a></li>
-                <li><a href="/worksets">Worksets</a></li>
-                <li class="dropdown" id="queues">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#queues">Queues <span class="caret"></span></a>
-                    <ul class="dropdown-menu" role="menu">
-                      <li><a href="/pools_qpcr">qPCR Pooling</a></li>
-                      <li><a href="/sequencing_queues">Sequencing queues</a></li>
-                  </ul>
-                </li>
-                <li><a href="/deliveries">Bioinfo</a></li>
-                <li><a href="/suggestion_box">Suggestion Box</a></li>
-                {% if user %}
-                    <li class="dropdown" id="userpref">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#userpref">{{user.name}} <span class="caret"></span></a>
-                        <ul class="dropdown-menu" role="menu">
-                          <li><a href="/logout">Log Out</a></li>
-                          <li><a href="/userpref" class='li-modal'>Preferences</a></li>
-                      </ul>
-                    </li>
-                {% else %}
-                    <li><a href="/login">Login</a></li>
+      <div class="collapse navbar-collapse" id="genstat-main-nav-collapse">
+        <form class="form-inline statusdb-search" role="search" id="navbar-searchbar">
+          <input class="form-control typeahead" type="text" placeholder="Search" aria-label="Search">
+        </form>
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item dropdown px-1">
+            <a class="nav-link dropdown-toggle" id="nav_production_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Production</a>
+            <div class="dropdown-menu" aria-labelledby="nav_production_dropdown">
+              <h6 class="dropdown-header">General stats</h6>
+              <a class="dropdown-item" href="/applications">Application Counts</a>
+              <a class="dropdown-item" href="/production/cronjobs">Cronjobs List</a>
+              <a class="dropdown-item" href="/flowcells_plot">Flowcells Trends</a>
+              <a class="dropdown-item" href="/data_delivered_plot">Data Delivered Trends</a>
+              <div role="separator" class="dropdown-divider"></div>
+              <h6 class="dropdown-header">Tools</h6>
+              <a class="dropdown-item" href="/nas_quotas">NAS Quotas</a>
+              <a class="dropdown-item" href="/reads_total/">Read Count Totals</a>
+              <a class="dropdown-item" href="/proj_meta">Compare Project Meta</a>
+              <a class="dropdown-item" href="/instrument_logs">View Instrument Logs</a>
+              <a class="dropdown-item" href="/barcode">Barcode and Label printing</a>
+              <a class="dropdown-item" href="/pricing_quote">Cost Calculator</a>
+              {% if user and (user.is_admin or user.is_pricing_admin) %}
+                <div role="separator" class="dropdown-divider"></div>
+                <h6 class="dropdown-header">Admin</h6>
+                {% if user and user.is_admin %}
+                <a class="dropdown-item" href="/user_management">User Management</a>
                 {% end %}
-            </ul>
-        </div>
+                {% if user and user.is_pricing_admin %}
+                <a class="dropdown-item" href="/pricing_preview">New Cost Calculator</a>
+                {% end %}
+              {% end %}
+              <div role="separator" class="dropdown-divider"></div>
+              <a class="dropdown-item" href="http://lims-dashboard.scilifelab.se">Script Dashboard</a>
+            </div>
+          </li>
+          <li class="nav-item px-1"><a class="nav-link" href="/projects">Projects</a></li>
+          <li class="nav-item px-1"><a class="nav-link" href="/flowcells">Flowcells</a></li>
+          <li class="nav-item px-1"><a class="nav-link" href="/worksets">Worksets</a></li>
+          <li class="nav-item dropdown px-1">
+            <a class="nav-link dropdown-toggle" id="nav_queues_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Queues</a>
+            <div class="dropdown-menu" aria-labelledby="nav_queues_dropdown" role="menu">
+              <a class="dropdown-item" href="/pools_qpcr">qPCR Pooling</a>
+              <a class="dropdown-item" href="/sequencing_queues">Sequencing queues</a>
+            </div>
+          </li>
+          <li class="nav-item px-1"><a class="nav-link" href="/deliveries">Bioinfo</a></li>
+          <li class="nav-item px-1"><a class="nav-link" href="/suggestion_box">Suggestion Box</a></li>
+          {% if user %}
+            <li class="nav-item dropdown px-1">
+              <a class="nav-link dropdown-toggle" id="userpref" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">{{user.name}}</a>
+              <div class="dropdown-menu" aria-labelledby="userpref" role="menu">
+                <a class="dropdown-item" href="/logout">Log Out</a>
+                <a class="dropdown-item a-modal" href="/userpref">Preferences</a>
+              </div>
+            </li>
+          {% else %}
+            <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+          {% end %}
+        </ul>
+      </div>
     </div>
-</nav>
-<div class="container-fluid">
+  </nav>
+
+  <main class="container-fluid">
     <!-- Content -->
     {% try %}
     {% if deprecated %}
-    <div class="alert alert-danger">
-        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <p><strong>Deprecation Warning!</strong> This page is deprecated and any information displayed here should be used with caution.</p>
+    <div class="alert alert-danger alert-dismissible m-2" role="alert">
+      <strong>Deprecation Warning!</strong> This page is deprecated and any information displayed here should be used with caution.
+      <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
     </div>
-
     {% end %}
     {% except %}
     {% end %}
     {% block stuff %}
     {% end %}
-</div>
-<hr>
-<div class="container-fluid footer">
-    <p>Genomics Status version {{ gs_globals['gs_version'] }} (commit <a href="https://github.com/SciLifeLab/genomics-status/tree/{{ gs_globals['git_commit_full'] }}" target="_blank">{{ gs_globals['git_commit'] }}</a>)</p>
-    <p>Something broken or have an idea for an improvement? Please <a href="/suggestion_box">let us know</a>.</p>
-</div>
+  </main>
 
-<div class="modal fade text-center" id="userPrefModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
+  <div class="container-fluid footer border-top pt-3">
+      <p>Genomics Status version {{ gs_globals['gs_version'] }} (commit <a href="https://github.com/SciLifeLab/genomics-status/tree/{{ gs_globals['git_commit_full'] }}" target="_blank">{{ gs_globals['git_commit'] }}</a>)</p>
+      <p>Something broken or have an idea for an improvement? Please <a href="/suggestion_box">let us know</a>.</p>
+  </div>
+
+  <div class="modal fade" id="userPrefModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <p>Content!</p>
+      </div>
     </div>
   </div>
-</div>
 
-<script src="/static/js/typeahead.bundle.min.js?v={{ gs_globals['git_commit'] }}"></script>
-<script src="/static/js/marked.min.js"></script>
-<script src="/static/js/base.js?v={{ gs_globals['git_commit'] }}"></script>
-<script>
-  $('.li-modal').on('click', function(e){
-    e.preventDefault();
-    $('#userPrefModal').modal('show').find('.modal-content').load($(this).attr('href'));
-  });
-</script>
+  <script src="/static/js/bootstrap-5-alpha.bundle.min.js"></script>
+  <script src="/static/js/typeahead.bundle.min.js?v={{ gs_globals['git_commit'] }}"></script>
+  <script src="/static/js/marked.min.js"></script>
+  {% block js %}
+  {% end %}
+  <script src="/static/js/base.js?v={{ gs_globals['git_commit'] }}"></script>
+  <script>
+    $('.a-modal').on('click', function(e){
+      e.preventDefault();
+      $('#userPrefModal').modal('show').find('.modal-content').load($(this).attr('href'));
+    });
+  </script>
 </body>
 </html>

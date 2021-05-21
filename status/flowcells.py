@@ -70,6 +70,23 @@ class FlowcellsHandler(SafeHandler):
 
             # Lanes were previously in the wrong order
             row.value['lane_info'] = OrderedDict(sorted(row.value['lane_info'].items()))
+            run_setup = sorted(row.value['reads'], key=lambda k: k['Number'])
+            run_setup_text = ''
+            read_count = 0
+            index_count = 0
+            for read in run_setup:
+                run_setup_text += read['NumCycles'] + 'nt'
+                if read['IsIndexedRead'] == 'N':
+                    read_count += 1
+                    run_setup_text += '(R' + str(read_count)
+                elif read['IsIndexedRead'] == 'Y':
+                    index_count += 1
+                    run_setup_text += '(I'+ str(index_count)
+                if run_setup.index(read) == len(run_setup)-1:
+                    run_setup_text += ')'
+                else:
+                    run_setup_text += ')-'
+            row.value['actual_recipe'] = run_setup_text
 
             temp_flowcells[row.key] = row.value
 

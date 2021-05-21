@@ -696,16 +696,15 @@ class RunningNotesDataHandler(SafeHandler):
     """
     def get(self, project):
         self.set_header("Content-type", "application/json")
-        p = Project(lims, id=project)
-        try:
-            p.get(force=True)
-        except:
+        v = self.application.projects_db.view("project/project_id")
+        if len(v[project]) == 0:
             raise tornado.web.HTTPError(404, reason='Project not found: {}'.format(project))
-            # self.set_status(404)
-            # self.write({})
         else:
+            for row in v[project]:
+                doc_id = row.value
+            doc = self.application.projects_db.get(doc_id)
             # Sorted running notes, by date
-            running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
+            running_notes = json.loads(doc['details'].get('running_notes', '{}'))
             sorted_running_notes = OrderedDict()
             for k, v in sorted(running_notes.items(), key=lambda t: t[0], reverse=True):
                 sorted_running_notes[k] = v
@@ -727,41 +726,38 @@ class RunningNotesDataHandler(SafeHandler):
     def make_project_running_note(application, project, note, category, user, email):
         timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
         newNote = {'user': user, 'email': email, 'note': note, 'category' : category, 'timestamp': timestamp}
-        p = Project(lims, id=project)
-        p.get(force=True)
-        running_notes = json.loads(p.udf['Running Notes']) if 'Running Notes' in p.udf else {}
-        running_notes.update({timestamp: newNote})
-        # Saving running note in LIMS
-        p.udf['Running Notes'] = json.dumps(running_notes)
-        p.put()
-        p.get(force=True)
-        #Retry once more
-        if p.udf['Running Notes'] != json.dumps(running_notes):
-            p.udf['Running Notes'] = json.dumps(running_notes)
-            p.put()
-        p.get(force=True)
-        #In the rare case saving to LIMS does not work
-        assert (p.udf['Running Notes'] == json.dumps(running_notes)), "The Running note wasn't saved in LIMS!"
 
-        #saving running notes directly in genstat, because reasons.
-        v=application.projects_db.view("project/project_id")
+        #get and save running notes directly in genstat.
+        v = application.projects_db.view("project/project_id")
         for row in v[project]:
-            doc_id=row.value
-        doc=application.projects_db.get(doc_id)
+            doc_id = row.value
+        doc = application.projects_db.get(doc_id)
+
+        running_notes = json.loads(doc['details'].get('running_notes', '{}'))
+        running_notes.update({timestamp: newNote})
         project_name = doc['project_name']
         proj_ids = [project, project_name]
-        doc['details']['running_notes']=json.dumps(running_notes)
+        doc['details']['running_notes'] = json.dumps(running_notes)
         application.projects_db.save(doc)
+
+        #check if it was saved
+        doc = application.projects_db.get(doc_id)
+        assert (doc['details']['running_notes'] == json.dumps(running_notes)), "The Running note wasn't saved in StatusDB!"
+
         #### Check and send mail to tagged users
         pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
-        userTags = pattern.findall(note)
+        userTags = [x[1] for x in pattern.findall(note)]
         if userTags:
-            RunningNotesDataHandler.notify_tagged_user(application, userTags, proj_ids, note, category, user, timestamp)
+            RunningNotesDataHandler.notify_tagged_user(application, userTags, proj_ids, note, category, user, timestamp, 'userTag')
         ####
+        ##Notify proj coordinators for all project running notes
+        proj_coord = '.'.join(doc['details'].get('project_coordinator','').lower().split())
+        if proj_coord and proj_coord not in userTags and proj_coord!=email.split('@')[0]:
+            RunningNotesDataHandler.notify_tagged_user(application, [proj_coord], proj_ids, note, category, user, timestamp, 'creation')
         return newNote
 
     @staticmethod
-    def notify_tagged_user(application, userTags, project, note, category, tagger, timestamp):
+    def notify_tagged_user(application, userTags, project, note, category, tagger, timestamp, tagtype):
         view_result = {}
         project_id = project[0]
         project_name = project[1]
@@ -773,23 +769,32 @@ class RunningNotesDataHandler(SafeHandler):
                 view_result[row.key.split('@')[0]] = row.key
         if category:
             category = ' - ' + category
+
+        if tagtype=='userTag':
+            notf_text = 'tagged you'
+            slack_notf_text = 'You have been tagged by *{}* in a running note'.format(tagger)
+            email_text = 'You have been tagged by {} in a running note'.format(tagger)
+        else:
+            notf_text = 'created note'
+            slack_notf_text = 'Running note created by *{}*'.format(tagger)
+            email_text = 'Running note created by {}'.format(tagger)
+
         for user in userTags:
-            if user[1] in view_result:
-                user = user[1]
+            if user in view_result:
                 option = PresetsHandler.get_user_details(application, view_result[user]).get('notification_preferences', 'Both')
                 #Adding a slack IM to the tagged user with the running note
                 if option == 'Slack' or option == 'Both':
                     nest_asyncio.apply()
                     client = slack.WebClient(token=application.slack_token)
-                    notification_text = '{} has tagged you in {}, {}!'.format(tagger, project_id, project_name)
+                    notification_text = '{} has {} in {}, {}!'.format(tagger, notf_text, project_id, project_name)
                     blocks = [
                         {
                         "type": "section",
 		                "text": {
                             "type": "mrkdwn",
-        		            "text": ("_You have been tagged by *{}* in a running note for the project_ "
+        		            "text": ("_{} for the project_ "
                                      "<{}/project/{}#{}|{}, {}>! :smile: \n_The note is as follows:_ \n\n\n")
-                             .format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0], project_id, note_id, project_id, project_name)
+                             .format(slack_notf_text, application.settings['redirect_uri'].rsplit('/',1)[0], project_id, note_id, project_id, project_name)
                              }
                         },
                         {
@@ -818,14 +823,14 @@ class RunningNotesDataHandler(SafeHandler):
                     msg['Subject']='[GenStat] Running Note:{}, {}'.format(project_id, project_name)
                     msg['From']='genomics-status'
                     msg['To'] = view_result[user]
-                    text = 'You have been tagged by {} in a running note in the project {}, {}! The note is as follows\n\
+                    text = '{} in the project {}, {}! The note is as follows\n\
                     >{} - {}{}\
-                    >{}'.format(tagger, project_id, project_name, tagger, time_in_format, category, note)
+                    >{}'.format(email_text, project_id, project_name, tagger, time_in_format, category, note)
 
                     html = '<html>\
                     <body>\
                     <p> \
-                    You have been tagged by {} in a running note in the project <a href="{}/project/{}#{}">{}, {}</a>! The note is as follows</p>\
+                    {} in the project <a href="{}/project/{}#{}">{}, {}</a>! The note is as follows</p>\
                     <blockquote>\
                     <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
                     <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
@@ -833,7 +838,7 @@ class RunningNotesDataHandler(SafeHandler):
                     </div>\
                     <div class="panel-body" style="padding: 15px;">\
                         <p>{}</p>\
-                    </div></div></blockquote></body></html>'.format(tagger, application.settings['redirect_uri'].rsplit('/',1)[0],
+                    </div></div></blockquote></body></html>'.format(email_text, application.settings['redirect_uri'].rsplit('/',1)[0],
                     project_id, note_id, project_id, project_name, tagger, time_in_format, category, markdown.markdown(note))
 
                     msg.attach(MIMEText(text, 'plain'))
