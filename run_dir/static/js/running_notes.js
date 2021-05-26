@@ -168,8 +168,7 @@ function count_cards(){
         var label = $.trim($(this).text())
         if (label == 'All'){
             $('.all_count').append('&nbsp;'+'<span class="badge bg-secondary">'+all+'</span>');
-        }
-        if (!cat_cards[label]){
+        }else if (!cat_cards[label]){
             $(this).prop('disabled', true);
         }else{
             if (label == 'Workset'){
