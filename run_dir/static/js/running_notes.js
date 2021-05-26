@@ -168,10 +168,29 @@ function count_cards(){
         var label = $.trim($(this).text())
         if (label == 'All'){
             $('.all_count').append('&nbsp;'+'<span class="badge bg-secondary">'+all+'</span>');
-        }else if (label in cat_cards){
-            $(this).append('&nbsp;'+'<span class="badge bg-secondary">'+cat_cards[label]+'</span>');
+        }
+        if (!cat_cards[label]){
+            $(this).prop('disabled', true);
         }else{
-            $(this).prop('disabled', true);;
+            if (label == 'Workset'){
+                $(this).append('&nbsp;'+'<span class="badge bg-primary">'+cat_cards[label]+'</span>');
+            }else if (label == 'Decision'){
+                $(this).append('&nbsp;'+'<span class="badge bg-info">'+cat_cards[label]+'</span>');
+            }else if (label == 'Flowcell'){
+                $(this).append('&nbsp;'+'<span class="badge bg-success">'+cat_cards[label]+'</span>');
+            }else if (label == 'Lab'){
+                $(this).append('&nbsp;'+'<span class="badge bg-succe">'+cat_cards[label]+'</span>');
+            }else if (label == 'Bioinformatics'){
+                $(this).append('&nbsp;'+'<span class="badge bg-warning">'+cat_cards[label]+'</span>');
+            }else if (label == 'User Communication'){
+                $(this).append('&nbsp;'+'<span class="badge bg-usr">'+cat_cards[label]+'</span>');
+            }else if (label == 'Administration'){
+                $(this).append('&nbsp;'+'<span class="badge bg-danger">'+cat_cards[label]+'</span>');
+            }else if (label == 'Important'){
+                $(this).append('&nbsp;'+'<span class="badge bg-imp">'+cat_cards[label]+'</span>');
+            }else if (label == 'Deviation'){
+                $(this).append('&nbsp;'+'<span class="badge bg-devi">'+cat_cards[label]+'</span>')
+            }
         }
     });
 }

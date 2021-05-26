@@ -149,6 +149,7 @@ h1 small, h2 small, h3 small, h4 small{
 .bg-imp  {background-color: #a62100;}
 .bg-devi  {background-color: #a13a7e;}
 .bg-usr  {background-color: #ff6f00;}
+.bg-succe {background-color: #5cb85c;}
 
 .btn-xs {
   padding: 1px 5px;
@@ -247,7 +248,7 @@ tr.group, tr.group:hover, .dtrg-group {
 }
 
 .trunc-note{
-  max-height: 500px;
+  max-height: 400px;
   overflow: auto;
 }
 
