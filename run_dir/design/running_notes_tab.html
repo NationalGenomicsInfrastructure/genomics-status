@@ -52,18 +52,21 @@
       </div>
       <div class="col-2">
         <label>Filter :</label>
-        <select class="form-select" id="rn_category">
-        <option>All</option>
-        <option>Workset</option>
-        <option>Flowcell</option>
-        <option>Decision</option>
-        <option>Bioinformatics</option>
-        <option>User Communication</option>
-        <option>Administration</option>
-        <option>Important</option>
-        <option>Deviation</option>
-        <option>Lab</option>
-        </select>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary text-dark dropdown-toggle btn_count" type="button" id="rn_category" data-toggle="dropdown" aria-expanded="false"></button>
+            <ul class="dropdown-menu" aria-labelledby="rn_category">
+                <li><button class="dropdown-item note_category all_count" type="button">All</button></li>
+                <li><button class="dropdown-item note_category" type="button">Workset</button></li>
+                <li><button class="dropdown-item note_category" type="button">Flowcell</button></li>
+                <li><button class="dropdown-item note_category" type="button">Decision</button></li>
+                <li><button class="dropdown-item note_category" type="button">Bioinformatics</button></li>
+                <li><button class="dropdown-item note_category" type="button">User Communication</button></li>
+                <li><button class="dropdown-item note_category" type="button">Administration</button></li>
+                <li><button class="dropdown-item note_category" type="button">Important</button></li>
+                <li><button class="dropdown-item note_category" type="button">Deviation</button></li>
+                <li><button class="dropdown-item note_category" type="button">Lab</button></li>
+            </ul>
+        </div>
       </div>
     </div>
     <!-- display running notes -->

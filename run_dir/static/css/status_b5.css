@@ -246,6 +246,11 @@ tr.group, tr.group:hover, .dtrg-group {
   padding:0;
 }
 
+.trunc-note{
+  max-height: 500px !important;
+  overflow: auto !important;
+}
+
 /* Markdown text styles */
 .mkdown blockquote {
   font-size: 1em;

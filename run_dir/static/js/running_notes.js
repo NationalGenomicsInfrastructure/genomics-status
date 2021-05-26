@@ -84,7 +84,7 @@ function make_running_note(date, note){
   return '<div class="card mb-2 mx-2">' +
       '<div class="card-header '+panelClass+'" id="'+note_id+'">'+
         '<a class="text-decoration-none" href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-       '<a class="text-decoration-none" href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="card-body">'+noteText+'</div></div>';
+       '<a class="text-decoration-none" href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="card-body trunc-note">'+noteText+'</div></div>';
 }
 
 function load_running_notes(wait) {
@@ -99,6 +99,7 @@ function load_running_notes(wait) {
         $('#running_notes_panels').append(make_running_note(date, note));
       });
       check_img_sources($('#running_notes_panels img'));
+      count_cards();
     }
   }).fail(function( jqxhr, textStatus, error ) {
       try {
@@ -114,7 +115,7 @@ function load_running_notes(wait) {
       $('#running_notes_panels').append('<div class="alert alert-danger">' +
           '<h4>Error Loading Running Notes: '+err+'</h4>' +
           '<p>Apologies, running notes could not be loaded.' +
-          'Running notes are retrieved from the LIMS, so these problems are usually ' +
+          'These problems are usually ' +
           'due to connection problems. Please try again later and report if the problem persists.</p></div>'+debugging);
   });
 }
@@ -147,20 +148,48 @@ function filter_running_notes(search){
         }
     });
 }
+//Count rn's of each category and add badge with number to filter dropdown
+function count_cards(){
+    var cat_cards = {};
+    var all = 0;
+    $('#running_notes_panels').find('.badge').each(function(){
+        var label = $.trim($(this).text());
+        all++
+        if (label){
+            if (label in cat_cards){
+                cat_cards[label]++;
+            }else{
+                cat_cards[label] = 1;
+            }
+        }
+    });
+    $('.btn_count').append('All'+'&nbsp;'+'<span class="badge bg-secondary">'+all+'</span>');
+    $('#rn_category').next().find('.dropdown-item').each(function(){
+        var label = $.trim($(this).text())
+        if (label == 'All'){
+            $('.all_count').append('&nbsp;'+'<span class="badge bg-secondary">'+all+'</span>');
+        }else if (label in cat_cards){
+            $(this).append('&nbsp;'+'<span class="badge bg-secondary">'+cat_cards[label]+'</span>');
+        }else{
+            $(this).prop('disabled', true);;
+        }
+    });
+}
+
 //Filter notes
 $('#rn_search').keyup(function() {
     var search=$('#rn_search').val();
     filter_running_notes(search);
 });
 
-$(document).ready(function() {
-    $('#rn_category').change(function() {
-        var search=$('#rn_category :selected').text();
-        if (search == 'All'){
-            search='';
-        }
-        filter_running_notes(search);
-    });
+//Filter dropdown
+$('.note_category').on('click', function(){
+    $('#rn_category').html($(this).html());
+    var search = $(this)[0].textContent.replace(/[0-9]/g, '');
+    if (search.includes('All')){
+        search = '';
+    }
+    filter_running_notes(search);
 });
 
 // Update the category buttons
@@ -179,7 +208,19 @@ $(document).ready(function(){
       $('[data-toggle="tooltip"]').click(function (){
          $('[data-toggle="tooltip"]').tooltip("hide");
       });
-})
+      var cat_cards = [];
+      $('#running_notes_panels').find('.badge').each(function(){
+          var label = $.trim($(this).text())
+          if (label){
+              if($.inArray(label, cat_cards) !== -1){
+                  cat_cards[label]++;
+              }
+              else{
+                  cat_cards[label] = 1;
+              }
+          }
+      });
+});
 
 // Preview running notes
 $('#new_note_text').keyup(preview_running_notes);
@@ -215,7 +256,7 @@ $("#running_notes_form").submit( function(e) {
         console.log(errorThrown);
       },
       success: function(data, textStatus, xhr) {
-        // Manually check whether the running note has saved - LIMS API always returns success
+        // Manually check whether the running note has saved
         note_url=get_note_url()
         $.getJSON(note_url, function(newdata) {
           var newNote = false;
@@ -246,7 +287,7 @@ $("#running_notes_form").submit( function(e) {
                 '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
             check_img_sources($('#running_notes_panels img'));
           } else {
-            alert('Error - LIMS did not save your running note.');
+            alert('Error - Your running note was not saved.');
             $('#save_note_button').removeClass('disabled').text('Submit Running Note');
           }
         });
