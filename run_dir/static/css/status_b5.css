@@ -247,8 +247,8 @@ tr.group, tr.group:hover, .dtrg-group {
 }
 
 .trunc-note{
-  max-height: 500px !important;
-  overflow: auto !important;
+  max-height: 500px;
+  overflow: auto;
 }
 
 /* Markdown text styles */
