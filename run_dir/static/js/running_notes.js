@@ -167,28 +167,28 @@ function count_cards(){
     $('#rn_category').next().find('.dropdown-item').each(function(){
         var label = $.trim($(this).text())
         if (label == 'All'){
-            $('.all_count').append('&nbsp;'+'<span class="badge bg-secondary">'+all+'</span>');
+            $('.all_count').prepend('<span class="badge bg-secondary">'+all+'</span>'+'&nbsp;');
         }else if (!cat_cards[label]){
-            $(this).prop('disabled', true);
+            $(this).parent('li').addClass('d-none');
         }else{
             if (label == 'Workset'){
-                $(this).append('&nbsp;'+'<span class="badge bg-primary">'+cat_cards[label]+'</span>');
-            }else if (label == 'Decision'){
-                $(this).append('&nbsp;'+'<span class="badge bg-info">'+cat_cards[label]+'</span>');
+                $(this).prepend('<span class="badge bg-primary">'+cat_cards[label]+'</span>'+'&nbsp;');
             }else if (label == 'Flowcell'){
-                $(this).append('&nbsp;'+'<span class="badge bg-success">'+cat_cards[label]+'</span>');
+                $(this).prepend('<span class="badge bg-success">'+cat_cards[label]+'</span>'+'&nbsp;');
+            }else if (label == 'Decision'){
+                $(this).prepend('<span class="badge bg-info">'+cat_cards[label]+'</span>'+'&nbsp;');
             }else if (label == 'Lab'){
-                $(this).append('&nbsp;'+'<span class="badge bg-succe">'+cat_cards[label]+'</span>');
+                $(this).prepend('<span class="badge bg-succe">'+cat_cards[label]+'</span>'+'&nbsp;');
             }else if (label == 'Bioinformatics'){
-                $(this).append('&nbsp;'+'<span class="badge bg-warning">'+cat_cards[label]+'</span>');
+                $(this).prepend('<span class="badge bg-warning">'+cat_cards[label]+'</span>'+'&nbsp;');
             }else if (label == 'User Communication'){
-                $(this).append('&nbsp;'+'<span class="badge bg-usr">'+cat_cards[label]+'</span>');
+                $(this).prepend('<span class="badge bg-usr">'+cat_cards[label]+'</span>'+'&nbsp;');
             }else if (label == 'Administration'){
-                $(this).append('&nbsp;'+'<span class="badge bg-danger">'+cat_cards[label]+'</span>');
+                $(this).prepend('<span class="badge bg-danger">'+cat_cards[label]+'</span>'+'&nbsp;');
             }else if (label == 'Important'){
-                $(this).append('&nbsp;'+'<span class="badge bg-imp">'+cat_cards[label]+'</span>');
+                $(this).prepend('<span class="badge bg-imp">'+cat_cards[label]+'</span>'+'&nbsp;');
             }else if (label == 'Deviation'){
-                $(this).append('&nbsp;'+'<span class="badge bg-devi">'+cat_cards[label]+'</span>')
+                $(this).p('<span class="badge bg-devi">'+cat_cards[label]+'</span>'+'&nbsp;')
             }
         }
     });
