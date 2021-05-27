@@ -944,7 +944,7 @@ th.sort{
   margin-top: 165px;
   text-align: justify;
   text-justify: justify;
-  text-align-last: left!important;
+  text-align-last: left;
   orphans: 4;
   widows: 4;
 
@@ -954,6 +954,7 @@ th.sort{
   @bottom-right {
     content: "Page " counter(page) " of " counter(pages);
     border-top:1px solid;
+    text-align-last: right;
  }
 }
 
@@ -977,13 +978,12 @@ th.sort{
 .dl-horizontal-quote-price > dt{
   float: left;
   text-align: left;
-  padding: .375rem .375rem;
 }
 
 .dl-horizontal-quote-price> dd{
   margin-left: 180px;
   margin-bottom: 0px;
-  text-align: right;
+  text-align-last: right;
 }
 
 .dl-horizontal-quote-details> dd > p{
