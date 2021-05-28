@@ -181,6 +181,7 @@ function count_cards(){
 $('#rn_search').keyup(function() {
     var search=$('#rn_search').val();
     filter_running_notes(search);
+    $('#rn_category').html('<span class="badge bg-secondary mr-2">All</span>');
 });
 
 //Filter dropdown
@@ -208,18 +209,6 @@ $('.rn-categ button').click(function(e){
 $(document).ready(function(){
       $('[data-toggle="tooltip"]').click(function (){
          $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-      var cat_cards = [];
-      $('#running_notes_panels').find('.badge').each(function(){
-          var label = $.trim($(this).text())
-          if (label){
-              if($.inArray(label, cat_cards) !== -1){
-                  cat_cards[label]++;
-              }
-              else{
-                  cat_cards[label] = 1;
-              }
-          }
       });
 });
 
