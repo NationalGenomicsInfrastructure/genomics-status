@@ -181,7 +181,8 @@ function count_cards(){
 $('#rn_search').keyup(function() {
     var search=$('#rn_search').val();
     filter_running_notes(search);
-    $('#rn_category').html('<span class="badge bg-secondary mr-2">All</span>');
+    $('#rn_category').html('<span class="badge bg-secondary mr-2">'+
+    $('#running_notes_panels').find('.badge').length+'</span>All');
 });
 
 //Filter dropdown
