@@ -8,7 +8,7 @@ $(function(){
 });
 
 function generate_category_label(category){
-     var cat_classes = {
+     cat_classes = {
         'Workset': ['primary', 'calendar-plus'],
         'Flowcell': ['success', 'grip-vertical'],
         'Decision': ['info', 'thumbs-up'],
@@ -166,23 +166,13 @@ function count_cards(){
     $('.btn_count').append('All <span class="badge bg-secondary">'+all+'</span>');
     $('#rn_category').next().find('.dropdown-item').each(function(){
         var label = $.trim($(this).text())
-        var cat_classes = {
-           'All': ['secondary'],
-           'Workset': ['primary'],
-           'Flowcell': ['success'],
-           'Decision': ['info'],
-           'Lab': ['succe'],
-           'Bioinformatics': ['warning'],
-           'User Communication': ['usr'],
-           'Administration': ['danger'],
-           'Important': ['imp'],
-           'Deviation': ['devi']
-        }
         cat_cards['All'] = all;
         if (!cat_cards[label]){
             $(this).parent('li').addClass('d-none');
         }else if (Object.keys(cat_classes).indexOf(label) != -1){
-            $(this).prepend('<span class="badge bg-'+cat_classes[label]+' mr-2'+'">'+cat_cards[label]+'</span>');
+            $(this).prepend('<span class="badge bg-'+cat_classes[label][0]+' mr-2">'+cat_cards[label]+'</span>');
+        }else{
+            $(this).prepend('<span class="badge bg-secondary mr-2">'+cat_cards[label]+'</span>');
         }
     });
 }
