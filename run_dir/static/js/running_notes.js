@@ -12,7 +12,7 @@ function generate_category_label(category){
         'Workset': ['primary', 'calendar-plus'],
         'Flowcell': ['success', 'grip-vertical'],
         'Decision': ['info', 'thumbs-up'],
-        'Lab': ['success', 'flask'],
+        'Lab': ['succe', 'flask'],
         'Bioinformatics': ['warning', 'laptop-code'],
         'User Communication': ['usr', 'people-arrows'],
         'Administration': ['danger', 'folder-open'],
@@ -154,7 +154,7 @@ function count_cards(){
     var all = 0;
     $('#running_notes_panels').find('.badge').each(function(){
         var label = $.trim($(this).text());
-        all++
+        all++;
         if (label){
             if (label in cat_cards){
                 cat_cards[label]++;
@@ -163,33 +163,26 @@ function count_cards(){
             }
         }
     });
-    $('.btn_count').append('All'+'&nbsp;'+'<span class="badge bg-secondary">'+all+'</span>');
+    $('.btn_count').append('All <span class="badge bg-secondary">'+all+'</span>');
     $('#rn_category').next().find('.dropdown-item').each(function(){
         var label = $.trim($(this).text())
-        if (label == 'All'){
-            $('.all_count').prepend('<span class="badge bg-secondary">'+all+'</span>'+'&nbsp;');
-        }else if (!cat_cards[label]){
+        var cat_classes = {
+           'All': ['secondary'],
+           'Workset': ['primary'],
+           'Flowcell': ['success'],
+           'Decision': ['info'],
+           'Lab': ['succe'],
+           'Bioinformatics': ['warning'],
+           'User Communication': ['usr'],
+           'Administration': ['danger'],
+           'Important': ['imp'],
+           'Deviation': ['devi']
+        }
+        cat_cards['All'] = all;
+        if (!cat_cards[label]){
             $(this).parent('li').addClass('d-none');
-        }else{
-            if (label == 'Workset'){
-                $(this).prepend('<span class="badge bg-primary">'+cat_cards[label]+'</span>'+'&nbsp;');
-            }else if (label == 'Flowcell'){
-                $(this).prepend('<span class="badge bg-success">'+cat_cards[label]+'</span>'+'&nbsp;');
-            }else if (label == 'Decision'){
-                $(this).prepend('<span class="badge bg-info">'+cat_cards[label]+'</span>'+'&nbsp;');
-            }else if (label == 'Lab'){
-                $(this).prepend('<span class="badge bg-succe">'+cat_cards[label]+'</span>'+'&nbsp;');
-            }else if (label == 'Bioinformatics'){
-                $(this).prepend('<span class="badge bg-warning">'+cat_cards[label]+'</span>'+'&nbsp;');
-            }else if (label == 'User Communication'){
-                $(this).prepend('<span class="badge bg-usr">'+cat_cards[label]+'</span>'+'&nbsp;');
-            }else if (label == 'Administration'){
-                $(this).prepend('<span class="badge bg-danger">'+cat_cards[label]+'</span>'+'&nbsp;');
-            }else if (label == 'Important'){
-                $(this).prepend('<span class="badge bg-imp">'+cat_cards[label]+'</span>'+'&nbsp;');
-            }else if (label == 'Deviation'){
-                $(this).p('<span class="badge bg-devi">'+cat_cards[label]+'</span>'+'&nbsp;')
-            }
+        }else if (Object.keys(cat_classes).indexOf(label) != -1){
+            $(this).prepend('<span class="badge bg-'+cat_classes[label]+' mr-2'+'">'+cat_cards[label]+'</span>');
         }
     });
 }
@@ -201,9 +194,9 @@ $('#rn_search').keyup(function() {
 });
 
 //Filter dropdown
-$('.note_category').on('click', function(){
+$('#rn_category ~ ul > li > button').on('click', function(){
     $('#rn_category').html($(this).html());
-    var search = $(this)[0].textContent.replace(/[0-9]/g, '');
+    var search = this.lastChild.textContent;
     if (search.includes('All')){
         search = '';
     }
