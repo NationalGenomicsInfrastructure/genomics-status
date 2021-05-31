@@ -149,6 +149,7 @@ h1 small, h2 small, h3 small, h4 small{
 .bg-imp  {background-color: #a62100;}
 .bg-devi  {background-color: #a13a7e;}
 .bg-usr  {background-color: #ff6f00;}
+.bg-succe {background-color: #5cb85c;}
 
 .btn-xs {
   padding: 1px 5px;
@@ -244,6 +245,20 @@ tr.group, tr.group:hover, .dtrg-group {
   font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
   margin:0;
   padding:0;
+}
+
+.trunc-note {
+  max-height: 400px;
+  overflow: scroll;
+}
+.trunc-note::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 7px;
+}
+.trunc-note::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(0,0,0,.5);
+  -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
 }
 
 /* Markdown text styles */
