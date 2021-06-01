@@ -1,5 +1,6 @@
 import json
 import datetime
+import markdown
 
 import tornado.web
 from status.util import SafeHandler
@@ -602,3 +603,35 @@ class PricingQuoteHandler(PricingBaseHandler):
         t = self.application.loader.load('pricing_quote.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user()))
+
+
+class GenerateQuoteHandler(SafeHandler):
+    """ Serves a built preliminary pricing quote page
+
+    Loaded through:
+        /generate_quote
+
+    """
+    def post(self):
+        quote_input = tornado.escape.json_decode(self.request.body.decode('utf-8').split('=')[1])
+        curr_rows = self.application.agreement_templates_db.view('entire_document/by_version', descending=True, limit=1).rows
+        template_text = curr_rows[0].value
+        template_text.pop('_id')
+        template_text.pop('_rev')
+        template_text['appendices'] = markdown.markdown(template_text['appendices'], extensions=['sane_lists'])
+        template_text['full_cost_conditions'] = markdown.markdown(template_text['full_cost_conditions'])
+
+        data = {}
+        data['total_cost'] = quote_input['total_cost']
+        data['price_type'] = quote_input['price_type']
+        data['date'] = datetime.datetime.now().date().isoformat()
+
+        if 'agreement_summary' in quote_input.keys():
+            data['agreement_summary'] = markdown.markdown(quote_input['agreement_summary'], extensions=['sane_lists'])
+        else:
+            data['agreement_summary'] = markdown.markdown('1. **Library preparation**:\n 1. **Sequencing**: \n' \
+                                                            '1. **Data processing**:\n 1. **Data analysis**: ')
+
+        t = self.application.loader.load('agreement.html')
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(),
+                              data=data, template_text=template_text))

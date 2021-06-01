@@ -34,7 +34,7 @@ from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
     PricingQuoteHandler, PricingValidateDraftDataHandler, PricingPublishDataHandler, \
     PricingReassignLockDataHandler, PricingUpdateHandler, PricingPreviewHandler, \
-    PricingDataHandler, PricingDraftDataHandler
+    PricingDataHandler, PricingDraftDataHandler, GenerateQuoteHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -206,6 +206,7 @@ class Application(tornado.web.Application):
             ("/flowcells/([^/]*)$", FlowcellHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
+            ("/generate_quote", GenerateQuoteHandler),
             ("/instrument_logs",InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
@@ -239,6 +240,7 @@ class Application(tornado.web.Application):
         # Global connection to the database
         couch = Server(settings.get("couch_server", None))
         if couch:
+            self.agreement_templates_db = couch["agreement_templates"]
             self.analysis_db= couch["analysis"]
             self.application_categories_db = couch["application_categories"]
             self.bioinfo_db = couch["bioinfo_analysis"]

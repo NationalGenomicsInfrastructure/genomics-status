@@ -3,6 +3,11 @@ app.component('v-pricing-quote', {
      *
      * Add products from the table to create a quote and switch between price types.
      */
+    data() {
+      return {
+        message: ''
+      }
+    },
     computed: {
         any_quote() {
             return (this.any_special_addition ||
@@ -52,6 +57,9 @@ app.component('v-pricing-quote', {
                     'cost_academic': cost_academic_sum.toFixed(2),
                     'full_cost': full_cost_sum.toFixed(2)}
         },
+        compiledMarkdown() {
+          return marked(this.message, { sanitize: true });
+        }
     },
     created: function() {
         this.$root.fetchPublishedCostCalculator(true),
@@ -68,12 +76,60 @@ app.component('v-pricing-quote', {
         reset_special_addition() {
             this.$root.quote_special_addition_label = ''
             this.$root.quote_special_addition_value = 0
+        },
+        update_freetext: function(e) {
+          this.message = e.target.value;
+          },
+        generate_quote:  function (event) {
+          product_list = {}
+          if(Object.keys(this.$root.quote_prod_ids).length > 0){
+            for (prod_id in this.$root.quote_prod_ids){
+              product_list[prod_id] = this.$root.all_products[prod_id]
+              product_list[prod_id]['product_cost'] = this.$root.productCost(prod_id)[this.$root.price_type].toFixed(2)
+            }
+            product_list['total_products_cost'] = this.product_cost_sum[this.$root.price_type].toFixed(2)
+            product_list['total_cost'] = this.quote_cost[this.$root.price_type]
+            product_list['price_type'] = this.$root.price_type
+            if (this.any_special_addition){
+              var obj = {};
+              obj[this.$root.quote_special_addition_label] = this.$root.quote_special_addition_value;
+              product_list['special_addition'] =  obj
+            }
+            if (this.any_special_percentage){
+              var obj = {};
+              obj[this.$root.quote_special_percentage_label] = this.$root.this.$root.quote_special_percentage_value
+              product_list['special_percentage'] = obj
+            }
+            if(this.message !== ''){
+              product_list['agreement_summary'] = this.message
+            }
+            /* Submitting it in a form to get the generated quote doc to open in a new page/tab */
+            var newForm = $('<form>', {
+              'action': '/generate_quote',
+              'target': '_blank',
+              'method': 'post',
+              'enctype':'text/plain'
+            }).append($('<input>', {
+                  'name': 'data',
+                  'value': JSON.stringify(product_list),
+                  'type': 'hidden'
+                }));
+            newForm.hide().appendTo("body").submit();
+          }
+          else{
+            event.preventDefault();
+          }
         }
     },
     template:
         /*html*/`
         <div class="row">
-          <h1 class="col-md-11"><span id="page_title">Cost Calculator</span></h1>
+          <h1 class="col-md-11 mb-3"><span id="page_title">Cost Calculator</span></h1>
+        </div>
+        <div class="row row-cols-lg-auto mb-3">
+          <div class="col">
+            <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote">Generate Quote</button>
+          </div>
         </div>
         <template v-if="this.$root.published_data_loading">
           <v-pricing-data-loading/>
@@ -120,7 +176,6 @@ app.component('v-pricing-quote', {
                 </div>
                 <div class="mb-3 form-text">Specify a percentage (positive or negative) that will be subtracted (default is discount) from the total sum. Will only be applied if a label is specified.</div>
               </div>
-
               <button class="btn btn-link" id="more_options_btn" type="button" data-toggle="collapse" data-target="#more_options" aria-expanded="false" aria-controls="more_options">
                 More Options
               </button>
@@ -135,6 +190,17 @@ app.component('v-pricing-quote', {
             </div>
             <div class="col-4 offset-2">
               <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
+            </div>
+          </div>
+          <div class="p-2"> <h4>Enter markdown text for document</h4> </div>
+          <div class="row p-3">
+            <div class="col-6">
+              <div id="pricing_freeformtext_editor">
+                <textarea placeholder="1. Library preparation: \n1. Sequencing: \n1. Data processing: \n1. Data analysis:" v-model="this.$root.message" @input="update_freetext" class="md_textarea"></textarea>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="md_display_box border" v-html="compiledMarkdown"></div>
             </div>
           </div>
           <template v-if="this.any_quote">
