@@ -614,7 +614,7 @@ class GenerateQuoteHandler(SafeHandler):
     """
     def post(self):
         quote_input = tornado.escape.json_decode(self.request.body.decode('utf-8').split('=')[1])
-        curr_rows = self.application.agreements_db.view('entire_document/by_version', descending=True, limit=1).rows
+        curr_rows = self.application.agreement_templates_db.view('entire_document/by_version', descending=True, limit=1).rows
         template_text = curr_rows[0].value
         template_text.pop('_id')
         template_text.pop('_rev')

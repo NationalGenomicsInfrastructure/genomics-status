@@ -240,7 +240,7 @@ class Application(tornado.web.Application):
         # Global connection to the database
         couch = Server(settings.get("couch_server", None))
         if couch:
-            self.agreements_db = couch["agreements"]
+            self.agreement_templates_db = couch["agreement_templates"]
             self.analysis_db= couch["analysis"]
             self.application_categories_db = couch["application_categories"]
             self.bioinfo_db = couch["bioinfo_analysis"]
