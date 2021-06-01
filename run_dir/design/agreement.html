@@ -17,7 +17,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td class="small">{{ data['doc_id'] }}-{{ data['edition'] }} {{ data['title'] }}</td></tr>
+            <tr><td class="small">{{ template_text['doc_id'] }}-{{ template_text['edition'] }} {{ template_text['title'] }}</td></tr>
           </tbody>
         </table>
       </div>
@@ -35,7 +35,7 @@
         <dd> {% raw data['agreement_summary']%}
           {%if data['price_type']=='full_cost' %}
           <div class="small pt-2 pr-2">
-            {% raw data['full_cost_conditions']%}
+            {% raw template_text['full_cost_conditions']%}
           </div>
           {% end %}
         </dd>
@@ -46,9 +46,9 @@
         <dd> {{ data['total_cost'] }}</dd>
     </dl>
 
-    <div class="small pb-3">{{ data['first_page_text']['coverage'] }}</div>
-    <div class="text-danger">{{ data['first_page_text']['conditions'] }}</div>
-    <div><b>Note: </b>{{ data['first_page_text']['note'] }}</div>
+    <div class="small pb-3">{{ template_text['first_page_text']['coverage'] }}</div>
+    <div class="text-danger">{{ template_text['first_page_text']['conditions'] }}</div>
+    <div><b>Note: </b>{{ template_text['first_page_text']['note'] }}</div>
     <div class="row py-3">
         <table class="table-bordered border-header">
           <thead>
@@ -81,7 +81,7 @@
     </div>
 
     <div class="appendices">
-      {% raw data['appendices'] %}
+      {% raw template_text['appendices'] %}
     </div>
     <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
   </body>
