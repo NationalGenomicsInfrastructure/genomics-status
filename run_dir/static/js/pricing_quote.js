@@ -103,7 +103,7 @@ app.component('v-pricing-quote', {
             if(this.message !== ''){
               product_list['agreement_summary'] = this.message
             }
-
+            /* Submitting it in a form to get the generated quote doc to open in a new page/tab */
             var newForm = $('<form>', {
               'action': '/generate_quote',
               'target': '_blank',
