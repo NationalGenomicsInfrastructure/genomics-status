@@ -625,6 +625,7 @@ class GenerateQuoteHandler(SafeHandler):
         data['total_cost'] = quote_input['total_cost']
         data['price_type'] = quote_input['price_type']
         data['date'] = datetime.datetime.now().date().isoformat()
+        data['project_type'] = quote_input['project_type']
 
         if 'agreement_summary' in quote_input.keys():
             data['agreement_summary'] = markdown.markdown(quote_input['agreement_summary'], extensions=['sane_lists'])

@@ -5,7 +5,9 @@ app.component('v-pricing-quote', {
      */
     data() {
       return {
-        message: ''
+        md_message: '',
+        md_src_message: '',
+        proj_type: 'ptype_prod'
       }
     },
     computed: {
@@ -58,12 +60,20 @@ app.component('v-pricing-quote', {
                     'full_cost': full_cost_sum.toFixed(2)}
         },
         compiledMarkdown() {
-          return marked(this.message, { sanitize: true });
+          return marked(this.md_src_message, { sanitize: true });
         }
     },
     created: function() {
         this.$root.fetchPublishedCostCalculator(true),
         this.$root.fetchExchangeRates()
+    },
+    mounted: function () {
+        this.init_text();
+    },
+    watch: {
+        md_src_message() {
+            this.md_message = this.compiledMarkdown;
+        }
     },
     methods: {
         toggle_discontinued() {
@@ -77,9 +87,12 @@ app.component('v-pricing-quote', {
             this.$root.quote_special_addition_label = ''
             this.$root.quote_special_addition_value = 0
         },
-        update_freetext: function(e) {
-          this.message = e.target.value;
-          },
+        init_text: function(){
+          this.md_src_message = '1. **Library preparation**:\n'+
+                                '1. **Sequencing**:\n'+
+                                '1. **Data processing**: Demultiplexing, quality control and raw data delivery on Uppmax/GRUS (validated method)\n'+
+                                '1. **Data analysis**: None'
+        },
         generate_quote:  function (event) {
           product_list = {}
           if(Object.keys(this.$root.quote_prod_ids).length > 0){
@@ -101,8 +114,9 @@ app.component('v-pricing-quote', {
               product_list['special_percentage'] = obj
             }
             if(this.message !== ''){
-              product_list['agreement_summary'] = this.message
+              product_list['agreement_summary'] = this.md_src_message
             }
+            product_list['project_type'] = this.proj_type
             /* Submitting it in a form to get the generated quote doc to open in a new page/tab */
             var newForm = $('<form>', {
               'action': '/generate_quote',
@@ -194,13 +208,25 @@ app.component('v-pricing-quote', {
           </div>
           <div class="p-2"> <h4>Enter markdown text for document</h4> </div>
           <div class="row p-3">
+            <div class="form-radio" id="proj_type_selector">
+              <input class="form-check-input" type="radio" name="project_type" v-model="this.proj_type" value="ptype_prod" id="proj_type_prod">
+              <label class="form-check-label pl-1 pr-3" for="proj_type_prod">
+                Production
+                </label>
+              <input class="form-check-input" type="radio" name="project_type" v-model="this.proj_type" value="ptype_app" id="proj_type_application">
+              <label class="form-check-label pl-1 pr-3" for="proj_type_application">
+              Application
+              </label>
+            </div>
+          </div>
+          <div class="row p-3">
             <div class="col-6">
               <div id="pricing_freeformtext_editor">
-                <textarea placeholder="1. Library preparation: \n1. Sequencing: \n1. Data processing: \n1. Data analysis:" v-model="this.$root.message" @input="update_freetext" class="md_textarea"></textarea>
+                <textarea v-model="this.md_src_message" class="md_textarea"></textarea>
               </div>
             </div>
             <div class="col-6">
-              <div class="md_display_box border" v-html="compiledMarkdown"></div>
+              <div class="md_display_box border" v-html="md_message"></div>
             </div>
           </div>
           <template v-if="this.any_quote">
