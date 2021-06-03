@@ -87,14 +87,11 @@ app.component('v-pricing-quote', {
             this.$root.quote_special_addition_label = ''
             this.$root.quote_special_addition_value = 0
         },
-        update_freetext: function(e) {
-          this.message = e.target.value;
-        },
         init_text: function(){
-          this.md_src_message = '1. **Library preparation**: \
-                                \n1. **Sequencing**: \
-                                \n1. **Data processing**: Demultiplexing, quality control and raw data delivery on Uppmax/GRUS (validated method)\
-                                \n1. **Data analysis**: None'
+          this.md_src_message = '1. **Library preparation**:\n'+
+                                '1. **Sequencing**:\n'+
+                                '1. **Data processing**: Demultiplexing, quality control and raw data delivery on Uppmax/GRUS (validated method)\n'+
+                                '1. **Data analysis**: None'
         },
         generate_quote:  function (event) {
           product_list = {}
@@ -225,7 +222,7 @@ app.component('v-pricing-quote', {
           <div class="row p-3">
             <div class="col-6">
               <div id="pricing_freeformtext_editor">
-                <textarea v-model="this.md_src_message" @input="update_freetext" class="md_textarea"></textarea>
+                <textarea v-model="this.md_src_message" class="md_textarea"></textarea>
               </div>
             </div>
             <div class="col-6">
