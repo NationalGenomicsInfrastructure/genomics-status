@@ -5,7 +5,8 @@ app.component('v-pricing-quote', {
      */
     data() {
       return {
-        message: ''
+        md_message: '',
+        md_src_message: ''
       }
     },
     computed: {
@@ -58,7 +59,7 @@ app.component('v-pricing-quote', {
                     'full_cost': full_cost_sum.toFixed(2)}
         },
         compiledMarkdown() {
-          return marked(this.message, { sanitize: true });
+          return marked(this.md_src_message, { sanitize: true });
         }
     },
     created: function() {
@@ -66,12 +67,12 @@ app.component('v-pricing-quote', {
         this.$root.fetchExchangeRates()
     },
     mounted: function () {
-        this.init_text()
-        setTimeout(function(){
-          var e = document.createEvent('HTMLEvents');
-          e.initEvent('input', true, true);
-          $('.md_textarea')[0].dispatchEvent(e);
-          }, 1000);
+        this.init_text();
+    },
+    watch: {
+        md_src_message(newVal, oldVal) {
+            this.md_message = this.compiledMarkdown;
+        }
     },
     methods: {
         toggle_discontinued() {
@@ -89,7 +90,7 @@ app.component('v-pricing-quote', {
           this.message = e.target.value;
         },
         init_text: function(){
-          this.$root.message = '1. **Library preparation**: \
+          this.md_src_message = '1. **Library preparation**: \
                                 \n1. **Sequencing**: \
                                 \n1. **Data processing**: Demultiplexing, quality control and raw data delivery on Uppmax/GRUS (validated method)\
                                 \n1. **Data analysis**: None'
@@ -210,11 +211,11 @@ app.component('v-pricing-quote', {
           <div class="row p-3">
             <div class="col-6">
               <div id="pricing_freeformtext_editor">
-                <textarea v-model="this.$root.message" @input="update_freetext" class="md_textarea"></textarea>
+                <textarea v-model="this.md_src_message" @input="update_freetext" class="md_textarea"></textarea>
               </div>
             </div>
             <div class="col-6">
-              <div class="md_display_box border" v-html="compiledMarkdown"></div>
+              <div class="md_display_box border" v-html="md_message"></div>
             </div>
           </div>
           <template v-if="this.any_quote">
