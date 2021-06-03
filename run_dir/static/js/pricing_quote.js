@@ -95,7 +95,10 @@ app.component('v-pricing-quote', {
         },
         generate_quote:  function (event) {
           product_list = {}
+          var no_prod_error = 'Please add Products to generate a quote!';
           if(Object.keys(this.$root.quote_prod_ids).length > 0){
+            if(this.$root.any_errors)
+              this.$root.error_messages.pop()
             for (prod_id in this.$root.quote_prod_ids){
               product_list[prod_id] = this.$root.all_products[prod_id]
               product_list[prod_id]['product_cost'] = this.$root.productCost(prod_id)[this.$root.price_type].toFixed(2)
@@ -132,6 +135,12 @@ app.component('v-pricing-quote', {
           }
           else{
             event.preventDefault();
+            var flag = 1;
+            if(this.$root.any_errors &&
+              this.$root.error_messages[this.$root.error_messages.length -1]===no_prod_error)
+              flag = 0;
+            if(flag)
+              this.$root.error_messages.push(no_prod_error);
           }
         }
     },
