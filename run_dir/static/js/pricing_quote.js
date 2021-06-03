@@ -65,6 +65,14 @@ app.component('v-pricing-quote', {
         this.$root.fetchPublishedCostCalculator(true),
         this.$root.fetchExchangeRates()
     },
+    mounted: function () {
+        this.init_text()
+        setTimeout(function(){
+          var e = document.createEvent('HTMLEvents');
+          e.initEvent('input', true, true);
+          $('.md_textarea')[0].dispatchEvent(e);
+          }, 1000);
+    },
     methods: {
         toggle_discontinued() {
             this.$root.show_discontinued = !this.$root.show_discontinued
@@ -79,7 +87,13 @@ app.component('v-pricing-quote', {
         },
         update_freetext: function(e) {
           this.message = e.target.value;
-          },
+        },
+        init_text: function(){
+          this.$root.message = '1. **Library preparation**: \
+                                \n1. **Sequencing**: \
+                                \n1. **Data processing**: Demultiplexing, quality control and raw data delivery on Uppmax/GRUS (validated method)\
+                                \n1. **Data analysis**: None'
+        },
         generate_quote:  function (event) {
           product_list = {}
           if(Object.keys(this.$root.quote_prod_ids).length > 0){
@@ -196,7 +210,7 @@ app.component('v-pricing-quote', {
           <div class="row p-3">
             <div class="col-6">
               <div id="pricing_freeformtext_editor">
-                <textarea placeholder="1. Library preparation: \n1. Sequencing: \n1. Data processing: \n1. Data analysis:" v-model="this.$root.message" @input="update_freetext" class="md_textarea"></textarea>
+                <textarea v-model="this.$root.message" @input="update_freetext" class="md_textarea"></textarea>
               </div>
             </div>
             <div class="col-6">
