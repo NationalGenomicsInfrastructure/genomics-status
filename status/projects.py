@@ -378,7 +378,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             ProjectsBaseDataHandler.cached_search_list = [(row.key, row.value) for row in projects_view]
             ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
 
-        search_string = search_string.lower()
+        search_string = search_string.lower().strip()
 
         for row_key, row_value in ProjectsBaseDataHandler.cached_search_list:
             if search_string in row_key.lower() or search_string in row_value[0].lower() or (row_value[1] and search_string in row_value[1].lower()):
