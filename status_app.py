@@ -47,6 +47,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
 from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
+from status.sample_requirements import SampleRequirementsViewHandler, SampleRequirementsDataHandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
     SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, \
     SampleReadCountDataHandler, SampleRunDataHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
@@ -175,6 +176,7 @@ class Application(tornado.web.Application):
             ("/api/v1/sample_summary/([^/]*)$", SampleQCSummaryDataHandler),
             ("/api/v1/sample_insert_sizes/([^/]*)$",
                 SampleQCInsertSizesDataHandler),
+            ("/api/v1/sample_requirements", SampleRequirementsDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/sequencing_queues", SequencingQueuesDataHandler),
@@ -222,6 +224,7 @@ class Application(tornado.web.Application):
             ("/proj_meta", ProjMetaCompareHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
+            ("/sample_requirements", SampleRequirementsViewHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/user_management", UserManagementHandler),
@@ -254,6 +257,7 @@ class Application(tornado.web.Application):
             self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
             self.pricing_products_db = couch["pricing_products"]
             self.projects_db = couch["projects"]
+            self.sample_requirements_db = couch["sample_requirements"]
             self.samples_db = couch["samples"]
             self.server_status_db = couch['server_status']
             self.suggestions_db = couch["suggestion_box"]
