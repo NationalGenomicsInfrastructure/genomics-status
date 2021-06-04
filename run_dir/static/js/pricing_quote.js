@@ -7,7 +7,9 @@ app.component('v-pricing-quote', {
       return {
         md_message: '',
         md_src_message: '',
-        proj_type: 'ptype_prod'
+        proj_type: 'ptype_prod',
+        cLabel_index: 0,
+        active_cost_labels: {}
       }
     },
     computed: {
@@ -17,7 +19,12 @@ app.component('v-pricing-quote', {
                     Object.keys(this.$root.quote_prod_ids).length)
         },
         any_special_addition() {
-            return this.$root.quote_special_addition_label !== ''
+            for ([index, label] of Object.entries(this.$root.quote_special_addition_labels)){
+              if(label.name!== ''){
+                this.active_cost_labels[index] = label;
+              }
+            }
+            return Object.keys(this.active_cost_labels).length > 0
         },
         any_special_percentage() {
             return this.$root.quote_special_percentage_label !== ''
@@ -44,9 +51,13 @@ app.component('v-pricing-quote', {
             full_cost_sum = product_cost['full_cost']
 
             if (this.any_special_addition) {
-                cost_sum += this.$root.quote_special_addition_value
-                cost_academic_sum += this.$root.quote_special_addition_value
-                full_cost_sum += this.$root.quote_special_addition_value
+              for ([index, label] of Object.entries(this.active_cost_labels)){
+                if(label.value !== ''){
+                  cost_sum += label.value
+                  cost_academic_sum += label.value
+                  full_cost_sum += label.value
+                }
+              }
             }
 
             if (this.any_special_percentage) {
@@ -83,9 +94,15 @@ app.component('v-pricing-quote', {
             this.$root.quote_special_percentage_label = ''
             this.$root.quote_special_percentage_value = 0
         },
-        reset_special_addition() {
-            this.$root.quote_special_addition_label = ''
-            this.$root.quote_special_addition_value = 0
+        add_cost_label: function(){
+          this.$root.quote_special_addition_labels[this.cLabel_index] = { name: '', value: 0 };
+          this.cLabel_index++;
+        },
+        remove_cost_label: function(index){
+          delete this.$root.quote_special_addition_labels[index];
+          if(this.active_cost_labels.hasOwnProperty(index)){
+            delete this.active_cost_labels[index];
+          }
         },
         init_text: function(){
           this.md_src_message = '1. **Library preparation**:\n'+
@@ -106,10 +123,8 @@ app.component('v-pricing-quote', {
             product_list['total_products_cost'] = this.product_cost_sum[this.$root.price_type].toFixed(2)
             product_list['total_cost'] = this.quote_cost[this.$root.price_type]
             product_list['price_type'] = this.$root.price_type
-            if (this.any_special_addition){
-              var obj = {};
-              obj[this.$root.quote_special_addition_label] = this.$root.quote_special_addition_value;
-              product_list['special_addition'] =  obj
+            if (this.any_special_addition){;
+              product_list['special_addition'] =  this.active_cost_labels
             }
             if (this.any_special_percentage){
               var obj = {};
@@ -178,15 +193,29 @@ app.component('v-pricing-quote', {
                 </label>
               </div>
               <div class="row">
+                <div class="col-3 pt-2 d-flex align-items-center">
+                  <button class="btn btn-sm btn-outline-primary" @click="add_cost_label"><i class="fa fa-plus fa-lg" aria-hidden="true"></i> Add Cost Label</button>
+                </div>
+                <div class="col-9 pt-2">
+                  <div class="form-text">Specify a sum (positive or negative) that will be added to the quote cost. Will only be applied if a label is specified.</div>
+                </div>
+              </div>
+              <div class="row" v-for="(label, index) in this.$root.quote_special_addition_labels" :key="index" :id="'cLabelRow_'+index">
                 <div class="col-2">
-                  <label for='other_cost_value' class="form-label">Other cost</label>
-                  <input id='other_cost_value' class="form-control" v-model.number="this.$root.quote_special_addition_value" type="number" >
+                  <label :for="'cost_label_val_'+ index" class="form-label">Cost </label>
+                  <input :id="'cost_label_val'+ index" class="form-control" v-model.number="label.value" type="number" >
                 </div>
                 <div class="col-10">
-                  <label for='other_cost_label' class="form-label">Other cost label</label>
-                  <input id='other_cost_label' class="form-control" v-model="this.$root.quote_special_addition_label" type="text" >
+                  <label :for="'cost_label_'+ index" class="form-label">Label</label>
+                  <div class="row">
+                    <div class="col-11">
+                      <input :id="'cost_label_'+ index" class="form-control" v-model="label.name" type="text" >
+                    </div>
+                    <div class="col-1 d-flex align-items-center">
+                      <i class="far fa-times-square fa-lg text-danger" aria-hidden="true" @click.self="remove_cost_label(index)"></i>
+                    </div>
+                  </div>
                 </div>
-                <div class="mb-3 form-text">Specify a sum (positive or negative) that will be added to the quote cost. Will only be applied if a label is specified.</div>
               </div>
               <div class="row">
                 <div class="col-2">
@@ -254,12 +283,12 @@ app.component('v-pricing-quote', {
                     <p class="text-end col-3 offset-9 pt-2 fw-bold">{{product_cost_sum[this.$root.price_type].toFixed(2)}} SEK</p>
                   </li>
                   <template v-if="any_special_addition">
-                    <li class="my-1 row d-flex align-items-center">
+                    <li class="my-1 row d-flex align-items-center" v-for="(label, index) in this.active_cost_labels" :key="index" >
                       <span class="col-9">
-                        <a class="mr-2" href='#' @click="reset_special_addition"><i class="far fa-times-square fa-lg text-danger"></i></a>
-                        {{this.$root.quote_special_addition_label}}
+                        <a class="mr-2" href='#' @click="remove_cost_label(index)"><i class="far fa-times-square fa-lg text-danger"></i></a>
+                        {{ label.name }}
                       </span>
-                      <span class="col-2 float-right">{{this.$root.quote_special_addition_value}} SEK</span>
+                      <span class="col-2 float-right">{{ label.value }} SEK</span>
                     </li>
                   </template>
                   <template v-if="any_special_percentage">

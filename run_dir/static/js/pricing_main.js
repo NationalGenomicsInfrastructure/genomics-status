@@ -39,8 +39,7 @@ const vPricingMain = {
 
             // Quote data
             quote_prod_ids: {},
-            quote_special_addition_value: 0,
-            quote_special_addition_label: '',
+            quote_special_addition_labels: {},
             quote_special_percentage_value: 0.0,
             quote_special_percentage_label: '',
             price_type: 'cost_academic'
