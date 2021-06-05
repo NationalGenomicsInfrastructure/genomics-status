@@ -122,7 +122,6 @@ const vSampleRequirementsMain = {
                         this.published_sample_requirements = data
                         if (assign_data) {
                             this.sample_requirements = data.sample_requirements
-                            console.log(this.sample_requirements)
                         }
                     }
                     this.current_user_email = response.data['current_user_email']
@@ -214,10 +213,25 @@ app.component('v-sample-requirements-view', {
         <table class="table table-sm table-hover">
           <thead>
             <tr>
-              <th scope="col" class="col-md-2">Name</th>
-              <th scope="col" class="col-md-7">Input material</th>
-              <th scope="col" class="col-md-2">Conc (ng/&microl) Min</th>
-              <th scope="col" class="col-md-1">Min vol (&microl)</th>
+              <th scope="col" rowspan="2" colspan="1">Name</th>
+              <th scope="col" rowspan="2" colspan="1">Input material</th>
+              <th scope="col" rowspan="2" colspan="1">QC recommendation</th>
+              <th scope="col" rowspan="1" colspan="2">Quality requirement</th>
+              <th scope="col" rowspan="1" colspan="3">Concentration</th>
+              <th scope="col" rowspan="1" colspan="2">Volume</th>
+              <th scope="col" rowspan="1" colspan="3">Amount</th>
+            </tr>
+            <tr>
+              <th scope="col">Method</th>
+              <th scope="col">RIN</th>
+              <th scope="col">Min</th>
+              <th scope="col">Max</th>
+              <th scope="col">Unit</th>
+              <th scope="col">Min</th>
+              <th scope="col">Unit</th>
+              <th scope="col">Min</th>
+              <th scope="col">Recommended</th>
+              <th scope="col">Unit</th>
             </tr>
           </thead>
           <tbody>
@@ -232,13 +246,46 @@ app.component('v-sample-requirements-view', {
 app.component('v-requirement-table-row', {
     /* component to display a single row of sample requirements table */
     props: ['requirement_id', 'requirement_data'],
+    computed: {
+        quality_requirement_method() {
+            if (this.requirement_data['Quality requirement'] === null) {
+                return ''
+            } else {
+                if ('Method' in this.requirement_data['Quality requirement']) {
+                    return this.requirement_data['Quality requirement']['Method']
+                } else {
+                    return ''
+                }
+            }
+        },
+        quality_requirement_RIN() {
+            if (this.requirement_data['Quality requirement'] === null) {
+                return ''
+            } else {
+                if ('RIN' in this.requirement_data['Quality requirement']) {
+                    return this.requirement_data['Quality requirement']['RIN']
+                } else {
+                    return ''
+                }
+            }
+        }
+    },
     template:
         /*html*/`
         <tr>
             <th>{{this.requirement_data['Name']}}</th>
             <td>{{this.requirement_data['Input material']}}</td>
+            <td>{{this.requirement_data['QC recommendation']}}</td>
+            <td>{{this.quality_requirement_method}}</td>
+            <td>{{this.quality_requirement_RIN}}</td>
             <td>{{this.requirement_data['Concentration']['Minimum']}}</td>
+            <td>{{this.requirement_data['Concentration']['Maximum']}}</td>
+            <td>{{this.requirement_data['Concentration']['Unit']}}</td>
             <td>{{this.requirement_data['Volume']['Minimum']}}</td>
+            <td>{{this.requirement_data['Volume']['Unit']}}</td>
+            <td>{{this.requirement_data['Amount']['Minimum']}}</td>
+            <td>{{this.requirement_data['Amount']['Recommended']}}</td>
+            <td>{{this.requirement_data['Amount']['Unit']}}</td>
         </tr>
         `
     }
