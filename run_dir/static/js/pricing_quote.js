@@ -19,7 +19,7 @@ app.component('v-pricing-quote', {
                     Object.keys(this.$root.quote_prod_ids).length)
         },
         any_special_addition() {
-            for ([index, label] of Object.entries(this.$root.quote_special_addition_labels)){
+            for ([index, label] of Object.entries(this.$root.quote_special_additions)){
               if(label.name!== ''){
                 this.active_cost_labels[index] = label;
               }
@@ -95,11 +95,11 @@ app.component('v-pricing-quote', {
             this.$root.quote_special_percentage_value = 0
         },
         add_cost_label: function(){
-          this.$root.quote_special_addition_labels[this.cLabel_index] = { name: '', value: 0 };
+          this.$root.quote_special_additions[this.cLabel_index] = { name: '', value: 0 };
           this.cLabel_index++;
         },
         remove_cost_label: function(index){
-          delete this.$root.quote_special_addition_labels[index];
+          delete this.$root.quote_special_additions[index];
           if(this.active_cost_labels.hasOwnProperty(index)){
             delete this.active_cost_labels[index];
           }
@@ -200,7 +200,7 @@ app.component('v-pricing-quote', {
                   <div class="form-text">Specify a sum (positive or negative) that will be added to the quote cost. Will only be applied if a label is specified.</div>
                 </div>
               </div>
-              <div class="row" v-for="(label, index) in this.$root.quote_special_addition_labels" :key="index" :id="'cLabelRow_'+index">
+              <div class="row" v-for="(label, index) in this.$root.quote_special_additions" :key="index" :id="'cLabelRow_'+index">
                 <div class="col-2">
                   <label :for="'cost_label_val_'+ index" class="form-label">Cost </label>
                   <input :id="'cost_label_val'+ index" class="form-control" v-model.number="label.value" type="number" >
