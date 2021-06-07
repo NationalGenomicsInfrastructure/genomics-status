@@ -47,7 +47,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
 from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
-from status.sample_requirements import SampleRequirementsViewHandler, SampleRequirementsDataHandler
+from status.sample_requirements import SampleRequirementsViewHandler, SampleRequirementsDataHandler, SampleRequirementsUpdateHandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
     SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, \
     SampleReadCountDataHandler, SampleRunDataHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
@@ -225,6 +225,7 @@ class Application(tornado.web.Application):
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
             ("/sample_requirements", SampleRequirementsViewHandler),
+            ("/sample_requirements_update", SampleRequirementsUpdateHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/user_management", UserManagementHandler),

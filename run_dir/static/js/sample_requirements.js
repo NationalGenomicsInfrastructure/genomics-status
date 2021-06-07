@@ -1,7 +1,4 @@
-window.onbeforeunload = function(){
-  /* This message will only show up on IE... But needs to return something */
-  return 'Please make sure you have saved your changes before leaving'
-};
+
 
 
 const vSampleRequirementsMain = {
@@ -180,66 +177,73 @@ const app = Vue.createApp(vSampleRequirementsMain)
 
 app.component('v-sample-requirements-view', {
     /* Component to view the current state of sample requirements */
-    data() {
-        return {
-            sample_requirements_test: {"DNA, Illumina TruSeq PCR-free, 350bp, -, 1291": {
-                                      "Amount": {
-                                        "Minimum": 2200,
-                                        "Recommended": 2200,
-                                        "Unit": "ng"
-                                      },
-                                      "Concentration": {
-                                        "Maximum": 300,
-                                        "Minimum": 50,
-                                        "Unit": "ng/uL"
-                                      },
-                                      "Input material": "DNA",
-                                      "QC recommendation": "Gel",
-                                      "Quality requirement": null,
-                                      "Volume": {
-                                        "Minimum": 20,
-                                        "Unit": "uL"
-                                      }
-                                    }
-                                }
-        }
-    },
     created: function() {
         this.$root.fetchPublishedSampleRequirements(true)
+        window.onbeforeunload = function(){
+          /* This message will only show up on IE... But needs to return something */
+          return 'Please make sure you have saved your changes before leaving'
+        };
+    },
+    computed: {
+        version() {
+            return this.$root.published_sample_requirements['Version']
+        },
+        release_date() {
+            date = this.$root.published_sample_requirements['Issued at']
+            if (!(date === undefined)) {
+                return date.substring(0,10)
+            }
+        }
     },
     template:
         /*html*/`
-        <h2>Sample Requirements</h2>
-        <table class="table table-sm table-hover">
-          <thead>
-            <tr>
-              <th scope="col" rowspan="2" colspan="1">Name</th>
-              <th scope="col" rowspan="2" colspan="1">Input material</th>
-              <th scope="col" rowspan="2" colspan="1">QC recommendation</th>
-              <th scope="col" rowspan="1" colspan="2">Quality requirement</th>
-              <th scope="col" rowspan="1" colspan="3">Concentration</th>
-              <th scope="col" rowspan="1" colspan="2">Volume</th>
-              <th scope="col" rowspan="1" colspan="3">Amount</th>
-            </tr>
-            <tr>
-              <th scope="col">Method</th>
-              <th scope="col">RIN</th>
-              <th scope="col">Min</th>
-              <th scope="col">Max</th>
-              <th scope="col">Unit</th>
-              <th scope="col">Min</th>
-              <th scope="col">Unit</th>
-              <th scope="col">Min</th>
-              <th scope="col">Recommended</th>
-              <th scope="col">Unit</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="(requirement_data, requirement_id) in this.$root.sample_requirements" :key="requirement_id">
-              <v-requirement-table-row :requirement_data="requirement_data" :requirement_id="requirement_id"/>
-            </template>
-          </tbody>
-        </table>
+        <template v-if="this.$root.published_data_loading">
+          <v-sample-requirements-data-loading/>
+        </template>
+        <template v-else>
+          <template v-if="this.$root.any_errors">
+            <v-sample-requirements-error-display/>
+          </template>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <h2>Sample Requirements</h2>
+              <h4>Version {{version}} - Released {{release_date}}</h4>
+            </div>
+            <div class="col-md-2 offset-md-6">
+              <a class="btn btn-lg" :class="draft_locked_by_someone_else ? 'btn-secondary disabled' : 'btn-primary'" href="/sample_requirements_update"><i class="fas fa-edit mr-2"></i>Edit</a>
+            </div>
+          </div>
+
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th scope="col" rowspan="2" colspan="1">Name</th>
+                <th scope="col" rowspan="2" colspan="1">Input material</th>
+                <th scope="col" rowspan="2" colspan="1">QC recommendation</th>
+                <th scope="col" rowspan="1" colspan="2">Quality requirement</th>
+                <th scope="col" rowspan="1" colspan="3">Concentration</th>
+                <th scope="col" rowspan="1" colspan="2">Volume</th>
+                <th scope="col" rowspan="1" colspan="3">Amount</th>
+              </tr>
+              <tr>
+                <th scope="col">Method</th>
+                <th scope="col">RIN</th>
+                <th scope="col">Min</th>
+                <th scope="col">Max</th>
+                <th scope="col">Unit</th>
+                <th scope="col">Min</th>
+                <th scope="col">Unit</th>
+                <th scope="col">Min</th>
+                <th scope="col">Recommended</th>
+                <th scope="col">Unit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-for="(requirement_data, requirement_id) in this.$root.sample_requirements" :key="requirement_id">
+                <v-requirement-table-row :requirement_data="requirement_data" :requirement_id="requirement_id"/>
+              </template>
+            </tbody>
+          </table>
         `
 })
 
@@ -267,6 +271,21 @@ app.component('v-requirement-table-row', {
     }
 )
 
+app.component('v-sample-requirements-data-loading', {
+    /* A div with a bootstrap spinner. */
+    template: /*html*/`
+      <div class="spinner-grow" role="status"></div><span class="ml-3">Loading data...</span>`
+ })
+
+ app.component('v-sample-requirements-error-display', {
+     /* A list of error messages */
+     template: /*html*/`
+       <template v-for="msg in this.$root.error_messages">
+         <div class="alert alert-danger" role="alert">
+           <h5 class="mt-2"><i class="far fa-exclamation-triangle mr-3"></i>{{msg}}</h5>
+         </div>
+       </template>`
+  })
 
 app.component('v-sample-requirements-update', {
     /* Component to be able to update sample requirements.
