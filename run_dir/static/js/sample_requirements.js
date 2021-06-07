@@ -246,38 +246,14 @@ app.component('v-sample-requirements-view', {
 app.component('v-requirement-table-row', {
     /* component to display a single row of sample requirements table */
     props: ['requirement_id', 'requirement_data'],
-    computed: {
-        quality_requirement_method() {
-            if (this.requirement_data['Quality requirement'] === null) {
-                return ''
-            } else {
-                if ('Method' in this.requirement_data['Quality requirement']) {
-                    return this.requirement_data['Quality requirement']['Method']
-                } else {
-                    return ''
-                }
-            }
-        },
-        quality_requirement_RIN() {
-            if (this.requirement_data['Quality requirement'] === null) {
-                return ''
-            } else {
-                if ('RIN' in this.requirement_data['Quality requirement']) {
-                    return this.requirement_data['Quality requirement']['RIN']
-                } else {
-                    return ''
-                }
-            }
-        }
-    },
     template:
         /*html*/`
         <tr>
             <th>{{this.requirement_data['Name']}}</th>
             <td>{{this.requirement_data['Input material']}}</td>
             <td>{{this.requirement_data['QC recommendation']}}</td>
-            <td>{{this.quality_requirement_method}}</td>
-            <td>{{this.quality_requirement_RIN}}</td>
+            <td>{{this.requirement_data['Quality requirement']['Method']}}</td>
+            <td>{{this.requirement_data['Quality requirement']['RIN']}}</td>
             <td>{{this.requirement_data['Concentration']['Minimum']}}</td>
             <td>{{this.requirement_data['Concentration']['Maximum']}}</td>
             <td>{{this.requirement_data['Concentration']['Unit']}}</td>
