@@ -167,7 +167,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             except ValueError:
                 pass
 
-        if row.key[0] in ['need_review', 'ongoing', 'reception_control'] and 'queued' in row.value:
+        if row.key[0] in ['review', 'ongoing', 'reception control'] and 'queued' in row.value:
             #Add days ongoing in production field
             now = datetime.datetime.now()
             queued = row.value['queued']
@@ -178,8 +178,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             close = dateutil.parser.parse(row.value['close_date'])
             diff = close - dateutil.parser.parse(row.value['queued'])
             row.value['days_in_production'] = diff.days
-
-        if row.key[0] in ['need_review', 'ongoing', 'reception_control'] and 'open_date' in row.value:
+        if row.key[0] in ['review', 'ongoing', 'reception control'] and 'open_date' in row.value:
             end_date = datetime.datetime.now()
             if 'queued' in row.value:
                 end_date =  dateutil.parser.parse(row.value['queued'])
