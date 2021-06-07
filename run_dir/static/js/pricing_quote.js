@@ -194,7 +194,7 @@ app.component('v-pricing-quote', {
               </div>
               <div class="row">
                 <div class="col-3 pt-2 d-flex align-items-center">
-                  <button class="btn btn-sm btn-outline-primary" @click="add_cost_label"><i class="fa fa-plus fa-lg" aria-hidden="true"></i> Add Cost Label</button>
+                  <button class="btn btn-sm btn-outline-primary" @click="add_cost_label"><i class="fa fa-plus fa-lg" aria-hidden="true"></i> Add Extra Cost</button>
                 </div>
                 <div class="col-9 pt-2">
                   <div class="form-text">Specify a sum (positive or negative) that will be added to the quote cost. Will only be applied if a label is specified.</div>
