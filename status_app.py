@@ -179,7 +179,7 @@ class Application(tornado.web.Application):
             ("/api/v1/sample_insert_sizes/([^/]*)$",
                 SampleQCInsertSizesDataHandler),
             ("/api/v1/sample_requirements", SampleRequirementsDataHandler),
-            ("/api/v1/sample_requirements_validate_unsaved_draft", SampleRequirementsValidateDraftDataHandler),
+            ("/api/v1/sample_requirements_validate_draft", SampleRequirementsValidateDraftDataHandler),
             ("/api/v1/sample_requirements_reassign_lock", SampleRequirementsReassignLockDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),

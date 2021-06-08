@@ -42,6 +42,14 @@ const vSampleRequirementsMain = {
             return (1 + max_id).toString()
         }
     },
+    watch: {
+        sample_requirements: {
+            handler(newVal, oldVal) {
+                this.validate()
+            },
+            deep: true
+        }
+    },
     methods: {
         // Data modification methods
         discontinueSampleRequirements(id) {
@@ -129,6 +137,23 @@ const vSampleRequirementsMain = {
                     this.$root.error_messages.push('Unable to fetch published sample requirements data, please try again or contact a system administrator.')
                     this.published_data_loading = false
                 })
+        },
+        validate() {
+            if (this.sample_requirements !== null) {
+                axios.post('/api/v1/sample_requirements_validate_draft', {
+                    sample_requirements: this.sample_requirements
+                }).then(response => {
+                    this.changes = response.data.changes
+                    this.validation_msgs = response.data.validation_msgs
+                })
+                .catch(error => {
+                    this.$root.error_messages.push('Unable to validate draft changes, please try again or contact a system administrator.')
+                })
+            } else {
+                /* Case for when the draft is deleted, is being deleted or not yet loaded */
+                this.changes = {}
+                this.validation_msgs = {}
+            }
         },
 
         // Other methods
@@ -531,7 +556,7 @@ app.component('v-sample-requirements-data-loading', {
                   <template v-for="(changes_data, req_id) in changes" :key="req_id">
                     <div class="ml-3 mb-3">
                       <h5 class="col-12">
-                        {{this.$root.all_requirements[comp_id]['Requirement name']}}:
+                        {{this.$root.sample_requirements[req_id]['Name']}}:
                         <template v-if="is_new_requirement(req_id)">
                           <strong class="ml-2"> - New requirement!</strong>
                         </template>
@@ -603,7 +628,6 @@ app.component('v-sample-requirements-data-loading', {
           <div class="card-body collapse show" id="validation_msgs_card_body">
             <div class="row">
               <div :class="modal ? 'col-12' : 'col-6'">
-                <h4>Requirements</h4>
                 <div class="row pr-4">
                   <template v-for="(validation_msgs_data, req_id) in messages" :key="req_id">
                     <div class="ml-3 mb-3">
@@ -877,18 +901,20 @@ app.component('v-form-validation-tooltip', {
     /* handles the warning triangle on individual product headers which can display a
      * list of validation errors for that specific product
      */
-    props: ['req_id'],
+    props: ['requirement_id'],
     computed: {
         validation_msgs() {
-            if (this.req_id in this.$root.validation_msgs) {
+            if (this.requirement_id in this.$root.validation_msgs) {
                 return_msg = ''
-                for (msg_type in this.$root.validation_msgs[this.req_id]) {
-                    validation_msgs = this.$root.validation_msgs[this.req_id[msg_type]]
+                for (msg_type in this.$root.validation_msgs[this.requirement_id]) {
+                    validation_msgs = this.$root.validation_msgs[this.requirement_id][msg_type]
                     for (msg_index in validation_msgs) {
                         msg = '<p class="fs-5 pricing-normal-width-tooltip">' + validation_msgs[msg_index] + '</p>'
                         return_msg += msg
                     }
                 }
+                console.log("Return_msg: " +return_msg)
+                console.log(this.$root.validation_msgs[this.requirement_id])
                 return return_msg
             } else {
                 return null

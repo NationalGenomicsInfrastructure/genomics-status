@@ -274,8 +274,8 @@ class RequirementsValidator():
     NOT_NULL_KEYS = ['Name']
 
     def __init__(self, draft_doc, published_doc):
-        self.draft_requirements = draft_doc['requirements']
-        self.published_requirements = published_doc['requirements']
+        self.draft_requirements = draft_doc['sample_requirements']
+        self.published_requirements = published_doc['sample_requirements']
         self.validation_msgs = {}
         self.changes = {}
         self.validation_result = True
@@ -308,7 +308,7 @@ class RequirementsValidator():
             # Check that it is not already added
             if t in key_val_set:
                 self._add_validation_msg(id, 'unique', ('Key combination {}:{} is included multiple '
-                                            'times in the sheet. '.format(keys, t)))
+                                            'times. '.format(keys, t)))
                 self.validation_result = False
             key_val_set.add(t)
 
@@ -323,7 +323,7 @@ class RequirementsValidator():
                     if 'Status' in item and item['Status'] == 'Discontinued':
                         pass
                     else:
-                        self._add_validation_msg(type, id, 'not_null', ('{} cannot be empty.'
+                        self._add_validation_msg(id, 'not_null', ('{} cannot be empty.'
                                                     ' Violated for item with id {}.'.
                                                     format(not_null_key, id)))
                         self.validation_result = False
@@ -348,7 +348,7 @@ class RequirementsValidator():
                                                     'conserved.'.format(conserved_key, id)))
                         self.validation_result = False
                     if new_item[conserved_key] != current_items[str(id)][conserved_key]:
-                        self._add_validation_msg(id, 'conserved', ('{} should be conserved for {}. '
+                        self._add_validation_msg(id, 'conserved', ('{} should be conserved. '
                                                     'Violated for item with id {}. '
                                                     'Found "{}" for new and "{}" for current. '.format(
                                                         conserved_key,
@@ -360,7 +360,7 @@ class RequirementsValidator():
         # Check which ids have been added
         added_requirement_ids = set(self.draft_requirements.keys()) - set(self.published_requirements.keys())
         for requirement_id in added_requirement_ids:
-            self._add_change('requirements', requirement_id, 'All', self.draft_requirements[requirement_id], None)
+            self._add_change(requirement_id, 'All', self.draft_requirements[requirement_id], None)
 
         for requirement_id, published_req in self.published_requirements.items():
             draft_req = self.draft_requirements[requirement_id]
@@ -368,13 +368,13 @@ class RequirementsValidator():
             for requirement_key, published_val in published_req.items():
                 draft_val = draft_req[requirement_key]
                 if published_val != draft_val:
-                    self._add_change('requirements', requirement_id, requirement_key, draft_val, published_val)
+                    self._add_change(requirement_id, requirement_key, draft_val, published_val)
 
     def validate(self):
-        self._validate_unique(self.draft_requirements, 'requirements')
-        self._validate_not_null(self.draft_requirements, 'requirements')
+        self._validate_unique(self.draft_requirements)
+        self._validate_not_null(self.draft_requirements)
 
-        self._validate_conserved(self.draft_requirements, self.published_requirements, 'requirements')
+        self._validate_conserved(self.draft_requirements, self.published_requirements)
 
 
 class SampleRequirementsValidateDraftDataHandler(SampleRequirementsBaseHandler):
