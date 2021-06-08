@@ -214,6 +214,7 @@ class SampleRequirementsDraftDataHandler(SampleRequirementsBaseHandler):
             self.set_status(400)
             return self.write("Error: Malformed request body.")
 
+        raise Exception
         latest_doc['components'] = new_doc_content['components']
         latest_doc['products'] = new_doc_content['products']
 
@@ -256,6 +257,143 @@ class SampleRequirementsDraftDataHandler(SampleRequirementsBaseHandler):
         msg = "Draft successfully deleted at {}".format(datetime.datetime.now().strftime("%H:%M:%S"))
         self.set_header("Content-type", "application/json")
         return self.write({'message': msg})
+
+
+class RequirementsValidator():
+    """Helper object to store and handle the validation of a new version of the samples requirement
+
+    """
+    # Which variables that shouldn't be changed while keeping the same _id_.
+    # If an update of any of these fields is needed, a new id should be created.
+    CONSERVED_KEY_SETS = ['Name']
+
+    # The combination of these 'columns' should be unique within the document.
+    UNIQUE_KEY_SETS = ['Name']
+
+    # These keys are not allowed to be undefined for any item
+    NOT_NULL_KEYS = ['Name']
+
+    def __init__(self, draft_doc, published_doc):
+        self.draft_requirements = draft_doc['requirements']
+        self.published_requirements = published_doc['requirements']
+        self.validation_msgs = {}
+        self.changes = {}
+        self.validation_result = True
+
+    def _add_validation_msg(self, id, error_type, msg):
+        if id not in self.validation_msgs:
+            self.validation_msgs[id] = dict()
+        if error_type not in self.validation_msgs[id]:
+            self.validation_msgs[id][error_type] = []
+
+        self.validation_msgs[id][error_type].append(msg)
+
+    def _add_change(self, id, key, draft_val, published_val):
+        if id not in self.changes:
+            self.changes[id] = dict()
+
+        self.changes[id][key] = (draft_val, published_val)
+
+    def _validate_unique(self, items):
+        """Check all items to make sure they are 'unique'.
+
+        The uniqueness criteria is decided according to the UNIQUE_KEY_SETS.
+        Returns (True, []) if unique, and otherwise False wit h if not.
+        """
+        key_val_set = set()
+        for id, item in items.items():
+            keys = self.UNIQUE_KEY_SETS
+            t = tuple(item[key] for key in keys)
+
+            # Check that it is not already added
+            if t in key_val_set:
+                self._add_validation_msg(id, 'unique', ('Key combination {}:{} is included multiple '
+                                            'times in the sheet. '.format(keys, t)))
+                self.validation_result = False
+            key_val_set.add(t)
+
+    def _validate_not_null(self, items):
+        """Make sure type specific columns (given by NOT_NULL_KEYS) are not null."""
+
+        not_null_keys = self.NOT_NULL_KEYS
+        for id, item in items.items():
+            for not_null_key in not_null_keys:
+                if item[not_null_key] is None or item[not_null_key] == '':
+                    # Special case for discontinued components
+                    if 'Status' in item and item['Status'] == 'Discontinued':
+                        pass
+                    else:
+                        self._add_validation_msg(type, id, 'not_null', ('{} cannot be empty.'
+                                                    ' Violated for item with id {}.'.
+                                                    format(not_null_key, id)))
+                        self.validation_result = False
+
+    def _validate_conserved(self, new_items, current_items):
+        """Ensures the keys in CONSERVED_KEY_SETS are conserved for each given id.
+
+        Compares the new version against the currently active one.
+        Params:
+            new_items     - A dict of the items that are to be added
+                            with ID attribute as the key.
+            current_items - A dict of the items currently in the database
+                            with ID attribute as the key.
+        """
+        conserved_keys = self.CONSERVED_KEY_SETS
+        for id, new_item in new_items.items():
+            if str(id) in current_items:
+                for conserved_key in conserved_keys:
+                    if conserved_key not in new_item:
+                        self._add_validation_msg(id, 'conserved', ('{} column not found in new {} row with '
+                                                    'id {}. This column should be kept '
+                                                    'conserved.'.format(conserved_key, id)))
+                        self.validation_result = False
+                    if new_item[conserved_key] != current_items[str(id)][conserved_key]:
+                        self._add_validation_msg(id, 'conserved', ('{} should be conserved for {}. '
+                                                    'Violated for item with id {}. '
+                                                    'Found "{}" for new and "{}" for current. '.format(
+                                                        conserved_key,
+                                                        id, new_item[conserved_key],
+                                                        current_items[str(id)][conserved_key])))
+                        self.validation_result = False
+
+    def track_all_changes(self):
+        # Check which ids have been added
+        added_requirement_ids = set(self.draft_requirements.keys()) - set(self.published_requirements.keys())
+        for requirement_id in added_requirement_ids:
+            self._add_change('requirements', requirement_id, 'All', self.draft_requirements[requirement_id], None)
+
+        for requirement_id, published_req in self.published_requirements.items():
+            draft_req = self.draft_requirements[requirement_id]
+
+            for requirement_key, published_val in published_req.items():
+                draft_val = draft_req[requirement_key]
+                if published_val != draft_val:
+                    self._add_change('requirements', requirement_id, requirement_key, draft_val, published_val)
+
+    def validate(self):
+        self._validate_unique(self.draft_requirements, 'requirements')
+        self._validate_not_null(self.draft_requirements, 'requirements')
+
+        self._validate_conserved(self.draft_requirements, self.published_requirements, 'requirements')
+
+
+class SampleRequirementsValidateDraftDataHandler(SampleRequirementsBaseHandler):
+    """Loaded through /api/v1/sample_requirements_validate_unsaved_draft """
+
+    def post(self):
+        draft_content = tornado.escape.json_decode(self.request.body)
+        published_doc = self.fetch_published_doc_version()
+
+        validator = RequirementsValidator(draft_content, published_doc)
+        validator.validate()
+        validator.track_all_changes()
+
+        response = dict()
+        response['validation_msgs'] = validator.validation_msgs
+        response['changes'] = validator.changes
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(response))
 
 
 class SampleRequirementsDataHandler(SampleRequirementsBaseHandler):
@@ -329,6 +467,19 @@ class SampleRequirementsUpdateHandler(SampleRequirementsBaseHandler):
 
     def get(self):
         t = self.application.loader.load('sample_requirements_update.html')
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                              user=self.get_current_user()))
+
+class SampleRequirementsPreviewHandler(SampleRequirementsBaseHandler):
+    """ Serves a preview of the draft cost calculator.
+
+    Loaded through:
+        /sample_requirements_preview
+
+    """
+
+    def get(self):
+        t = self.application.loader.load('sample_requirements_preview.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user()))
 
