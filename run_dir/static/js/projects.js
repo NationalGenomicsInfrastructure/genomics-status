@@ -227,7 +227,7 @@ function load_table(status, type, columns, dates) {
         latest_note.html('<div class="card">' +
             '<div class="card-header">'+
               note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
-            '</div><div class="card-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
+            '</div><div class="card-body trunc-note">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
 
       }
       $("#project_table_body").append(tbl_row);
