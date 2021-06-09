@@ -64,6 +64,8 @@ const vSampleRequirementsMain = {
 
             new_id = this.next_sample_requirement_id
             new_sr['REF_ID'] = new_id
+            new_sr['Amount'] = sample_requirement['Amount']
+            new_sr['Amount'] = {'Minimum': null, 'Recommended': null, 'Unit': 'ng'}
             this.sample_requirements[new_id] = new_sr
             this.new_sample_requirements.add(new_id)
             return new_id
@@ -80,8 +82,19 @@ const vSampleRequirementsMain = {
                         new_sr[key] = new_id
                         break;
                     case 'Status':
-                        new_sr[key] = 'Active'
+                        new_sr[key] = "Active"
                         break;
+                    case 'Amount':
+                        new_sr['Amount'] = {"Minimum": null, "Recommended": null, "Unit": "ng"}
+                        break;
+                    case 'Concentration':
+                        new_sr['Concentration'] = {"Maximum": null, "Minimum": null, "Unit": "ng/uL"}
+                        break
+                    case 'Quality requirement':
+                        new_sr['Quality requirement'] = {"Method": null, "RIN": null}
+                        break
+                    case 'Volume':
+                        new_sr['Volume'] = {"Minimum": null, "Unit": "uL"}
                     default:
                         new_sr[key] = ''
                 }
@@ -453,7 +466,7 @@ app.component('v-sample-requirements-data-loading', {
             <template v-if="draft_exists">
               <div class="row">
                 <div class="col-12">
-                  <p>Changes here! <!-- <v-draft-changes-list :modal="false"/> --></p>
+                  <v-draft-changes-list :modal="false"/>
                 </div>
               </div>
             </template>
@@ -685,8 +698,7 @@ app.component('v-sample-requirements-update', {
 
         saveDraft() {
             axios.put('/api/v1/draft_sample_requirements', {
-                components: this.$root.all_components,
-                requirements: this.$root.all_requirements
+                sample_requirements: this.$root.sample_requirements
             })
             .then(response => {
                 this.save_message = response.data.message;
@@ -913,8 +925,6 @@ app.component('v-form-validation-tooltip', {
                         return_msg += msg
                     }
                 }
-                console.log("Return_msg: " +return_msg)
-                console.log(this.$root.validation_msgs[this.requirement_id])
                 return return_msg
             } else {
                 return null

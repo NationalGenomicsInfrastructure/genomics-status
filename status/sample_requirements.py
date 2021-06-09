@@ -214,9 +214,7 @@ class SampleRequirementsDraftDataHandler(SampleRequirementsBaseHandler):
             self.set_status(400)
             return self.write("Error: Malformed request body.")
 
-        raise Exception
-        latest_doc['components'] = new_doc_content['components']
-        latest_doc['products'] = new_doc_content['products']
+        latest_doc['sample_requirements'] = new_doc_content['sample_requirements']
 
         self._update_last_modified(latest_doc)
 
@@ -378,7 +376,7 @@ class RequirementsValidator():
 
 
 class SampleRequirementsValidateDraftDataHandler(SampleRequirementsBaseHandler):
-    """Loaded through /api/v1/sample_requirements_validate_unsaved_draft """
+    """Loaded through /api/v1/sample_requirements_validate_draft """
 
     def post(self):
         draft_content = tornado.escape.json_decode(self.request.body)
