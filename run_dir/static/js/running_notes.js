@@ -35,8 +35,8 @@ function get_note_url() {
     // URL for the notes
     if ((typeof notetype !== 'undefined' && notetype == 'lims_step') || ('lims_step' in window && lims_step !== null)){
         note_url='/api/v1/workset_notes/' + lims_step;
-    } else if ((typeof notetype !== 'undefined' && notetype == 'flowcell') || ('flowcell' in window && flowcell!== null)){
-        note_url='/api/v1/flowcell_notes/' + flowcell;
+    } else if ((typeof notetype !== 'undefined' && notetype == 'flowcell') || ('flowcell_id_reference' in window && flowcell_id_reference!== null)){
+        note_url='/api/v1/flowcell_notes/' + flowcell_id_reference;
     } else {
         note_url='/api/v1/running_notes/' + project;
     }
