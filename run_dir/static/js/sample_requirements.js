@@ -62,10 +62,10 @@ const vSampleRequirementsMain = {
     },
     methods: {
         // Data modification methods
-        discontinueSampleRequirements(id) {
+        discontinueSampleRequirement(id) {
             this.sample_requirements[id]['Status'] = 'Discontinued'
         },
-        enableSampleRequirements(id) {
+        enableSampleRequirement(id) {
             this.sample_requirements[id]['Status'] = 'Active'
         },
         cloneSampleRequirement(id) {
@@ -95,7 +95,7 @@ const vSampleRequirementsMain = {
                         new_sr[key] = "Active"
                         break;
                     case 'Amount':
-                        new_sr['Amount'] = {"Minimum": null, "Recommended": null, "Unit": "ng"}
+                        new_sr['Amount'] = {"Minimum": null, "Maximum": null, "Recommended": null, "Unit": "ng"}
                         break;
                     case 'Concentration':
                         new_sr['Concentration'] = {"Maximum": null, "Minimum": null, "Unit": "ng/uL"}
@@ -104,7 +104,7 @@ const vSampleRequirementsMain = {
                         new_sr['Quality requirement'] = {"Method": null, "RIN": null}
                         break
                     case 'Volume':
-                        new_sr['Volume'] = {"Minimum": null, "Unit": "uL"}
+                        new_sr['Volume'] = {"Minimum": null, "Maximum": null, "Unit": "uL"}
                     default:
                         new_sr[key] = ''
                 }
@@ -273,8 +273,8 @@ app.component('v-requirements-table', {
               <th scope="col" rowspan="2" colspan="1">QC recommendation</th>
               <th scope="col" rowspan="1" colspan="2">Quality requirement</th>
               <th scope="col" rowspan="1" colspan="3">Concentration</th>
-              <th scope="col" rowspan="1" colspan="2">Volume</th>
-              <th scope="col" rowspan="1" colspan="3">Amount</th>
+              <th scope="col" rowspan="1" colspan="3">Volume</th>
+              <th scope="col" rowspan="1" colspan="4">Amount</th>
             </tr>
             <tr>
               <th scope="col">Method</th>
@@ -283,8 +283,10 @@ app.component('v-requirements-table', {
               <th scope="col">Max</th>
               <th scope="col">Unit</th>
               <th scope="col">Min</th>
+              <th scope="col">Max</th>
               <th scope="col">Unit</th>
               <th scope="col">Min</th>
+              <th scope="col">Max</th>
               <th scope="col">Recommended</th>
               <th scope="col">Unit</th>
             </tr>
@@ -314,8 +316,10 @@ app.component('v-requirement-table-row', {
             <td>{{this.requirement_data['Concentration']['Maximum']}}</td>
             <td>{{this.requirement_data['Concentration']['Unit']}}</td>
             <td>{{this.requirement_data['Volume']['Minimum']}}</td>
+            <td>{{this.requirement_data['Volume']['Maximum']}}</td>
             <td>{{this.requirement_data['Volume']['Unit']}}</td>
             <td>{{this.requirement_data['Amount']['Minimum']}}</td>
+            <td>{{this.requirement_data['Amount']['Maximum']}}</td>
             <td>{{this.requirement_data['Amount']['Recommended']}}</td>
             <td>{{this.requirement_data['Amount']['Unit']}}</td>
         </tr>
@@ -474,7 +478,7 @@ app.component('v-sample-requirements-data-loading', {
                 <span class="fw-bold">Version {{published_version}} was published </span><span> by {{published_issued_by}} at </span><span class="fst-italic"> {{published_at}}</span>
                 </p>
                 <p> No draft sample requirements exists. </p>
-                <p><button class="btn btn-success" @click="create_new_draft"><i class="fas fa-user-lock"></i> Create sample requirements</button></p>
+                <p><button class="btn btn-success" @click="create_new_draft"><i class="fas fa-user-lock"></i> Create New Draft</button></p>
               </template>
             </div>
             <template v-if="draft_exists">
@@ -488,7 +492,7 @@ app.component('v-sample-requirements-data-loading', {
             <template v-if="draft_exists">
               <div class="requirements_chooseable_div mt-2">
                 <div class="row" id="table_h_and_search">
-                  <h2 class="col mr-auto">Preview</h2>
+                  <h2 class="col mr-auto">Preview of Draft</h2>
                 </div>
                 <v-requirements-table/>
               </div>
@@ -596,9 +600,9 @@ app.component('v-sample-requirements-data-loading', {
                         </div>
                       </template>
                       <template v-else>
-                        <div class="ml-3 mr-2" v-for="(comp_type_changes_data, type_key) in comp_changes_data" :key="type_key">
+                        <div class="ml-3 mr-2" v-for="(type_changes_data, type_key) in changes_data" :key="type_key">
                           <strong class="mr-2">{{type_key}}:</strong>
-                          {{comp_type_changes_data[1]}} <i class="fas fa-arrow-right"></i> {{comp_type_changes_data[0]}}
+                          {{type_changes_data[1]}} <i class="fas fa-arrow-right"></i> {{type_changes_data[0]}}
                         </div>
                       </template>
                     </div>
@@ -847,11 +851,11 @@ app.component('v-requirement-form-part', {
         },
     },
     methods: {
-        discontinueRequirement() {
-            this.$root.discontinueRequirement(this.requirement_id)
+        discontinueSampleRequirement() {
+            this.$root.discontinueSampleRequirement(this.requirement_id)
         },
-        enableRequirement() {
-            this.$root.enableRequirement(this.requirement_id)
+        enableSampleRequirement() {
+            this.$root.enableSampleRequirement(this.requirement_id)
             this.$nextTick(function() {
                 // Scroll to the new requirement
                 window.location.href = '#'
@@ -861,7 +865,7 @@ app.component('v-requirement-form-part', {
         cloneRequirement() {
             new_id = this.$root.cloneRequirement(this.requirement_id)
             if (this.discontinued) {
-                this.$root.enableRequirement(new_id)
+                this.$root.enableSampleRequirement(new_id)
             }
             this.$nextTick(function() {
                 // Scroll to the new requirement
@@ -899,8 +903,8 @@ app.component('v-requirement-form-part', {
                   <button type="button" class="btn btn-outline-danger w-100" @click="this.removeSampleRequirement">Remove<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
                 </div>
                 <div v-else class="col-md-6">
-                  <button v-if="this.discontinued" type="button" class="btn btn-outline-danger w-100" @click="this.enableRequirement">Enable<i class="far fa-backward fa-lg text-danger ml-2"></i></button>
-                  <button v-else type="button" class="btn btn-outline-danger w-100" @click="this.discontinueRequirement">Discontinue<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
+                  <button v-if="this.discontinued" type="button" class="btn btn-outline-danger w-100" @click="this.enableSampleRequirement">Enable<i class="far fa-backward fa-lg text-danger ml-2"></i></button>
+                  <button v-else type="button" class="btn btn-outline-danger w-100" @click="this.discontinueSampleRequirement">Discontinue<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
                 </div>
               </div>
             </div>
@@ -956,6 +960,10 @@ app.component('v-requirement-form-part', {
                     <label :for="'amount_minimum_' + requirement_id">Minimum</label>
                   </div>
                   <div class="form-floating mb-3">
+                    <input :id="'amount_maximum_' + requirement_id" class="form-control" v-model.number="requirement['Amount']['Maximum']" type="number" :disabled="discontinued">
+                    <label :for="'amount_maximum_' + requirement_id">Maximum</label>
+                  </div>
+                  <div class="form-floating mb-3">
                     <input :id="'amount_recommended_' + requirement_id" class="form-control" v-model.number="requirement['Amount']['Recommended']" type="number" :disabled="discontinued">
                     <label :for="'amount_recommended_' + requirement_id">Recommended</label>
                   </div>
@@ -969,6 +977,10 @@ app.component('v-requirement-form-part', {
                   <div class="form-floating mb-3">
                     <input :id="'volume_minimum_' + requirement_id" class="form-control" v-model.number="requirement['Volume']['Minimum']" type="number" :disabled="discontinued">
                     <label :for="'volume_minimum_' + requirement_id">Minimum</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    <input :id="'volume_maximum_' + requirement_id" class="form-control" v-model.number="requirement['Volume']['Maximum']" type="number" :disabled="discontinued">
+                    <label :for="'volume_maximum_' + requirement_id">Maximum</label>
                   </div>
                   <div class="form-floating">
                     <input id="volume_unit_{{requirement_id}}" class="form-control" v-model.text="requirement['Volume']['Unit']" type="text" :disabled="discontinued">
