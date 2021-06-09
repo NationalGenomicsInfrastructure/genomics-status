@@ -48,6 +48,16 @@ const vSampleRequirementsMain = {
                 this.validate()
             },
             deep: true
+        },
+        done_loading(newVal, oldVal) {
+            /* Need to wait for both published and draft to be loaded by http
+             * before figuring out which items have been added in the draft.
+             */
+            if(newVal) {
+                if (this.draft_sample_requirements !== null && this.published_sample_requirements !== null) {
+                    this.assignNewItems()
+                }
+            }
         }
     },
     methods: {
@@ -105,11 +115,15 @@ const vSampleRequirementsMain = {
         },
         removeSampleRequirement(sr_id) {
             /* meant to be used with new sample requirements only */
-            if (!(sr_id in this.new_product)) {
+            if (!(this.new_sample_requirements.has(sr_id))) {
                 this.error_messages.push('Cannot remove sample requirement that is not new, try discontinue instead.')
             } else {
                 delete this.sample_requirements[sr_id]
                 delete this.new_sample_requirements[sr_id]
+                /* Reset this so it doesn't cause an id not found error
+                   will be repopulated automatically by the watch method anyway */
+                this.$root.validation_msgs = {}
+                this.$root.changes = {}
             }
         },
         // Fetch methods
@@ -176,7 +190,7 @@ const vSampleRequirementsMain = {
              */
             draft_sr_ids = new Set(Object.keys(this.sample_requirements))
 
-            published_sr_ids = new Set(Object.keys(this.published_sample_requirements))
+            published_sr_ids = new Set(Object.keys(this.published_sample_requirements['sample_requirements']))
 
             new_sr_ids = this.symmetricSetDifference(draft_sr_ids, published_sr_ids)
 
@@ -855,12 +869,12 @@ app.component('v-requirement-form-part', {
                 window.location.href = '#requirement_form_part_' + new_id;
             })
         },
-        removeRequirement() {
+        removeSampleRequirement() {
             if (!(this.isNew) ) {
                 /* This should never happen, but better safe than sorry. */
                 alert("Only new requirements are allowed to be removed, others should be discontinued")
             }
-            this.$root.removeRequirement(this.requirement_id)
+            this.$root.removeSampleRequirement(this.requirement_id)
         }
     },
     template:
@@ -882,7 +896,7 @@ app.component('v-requirement-form-part', {
                   <button type="button" class="btn btn-outline-success w-100 mb-2" @click="this.cloneRequirement">Clone<i class="far fa-clone fa-lg text-success ml-2"></i></button>
                 </div>
                 <div v-if="this.isNew" class="col-md-6">
-                  <button type="button" class="btn btn-outline-danger w-100" @click="this.removeRequirement">Remove<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
+                  <button type="button" class="btn btn-outline-danger w-100" @click="this.removeSampleRequirement">Remove<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
                 </div>
                 <div v-else class="col-md-6">
                   <button v-if="this.discontinued" type="button" class="btn btn-outline-danger w-100" @click="this.enableRequirement">Enable<i class="far fa-backward fa-lg text-danger ml-2"></i></button>
