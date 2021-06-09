@@ -868,40 +868,111 @@ app.component('v-requirement-form-part', {
       <div :id="'requirement_form_part_' + requirement_id" class="my-3 link-target-offset" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="card-header">
           <div class="row">
-            <h5 :class="{'text-danger': discontinued, 'my-1': true}"> {{ requirement['Name'] }} {{ discontinued ? ' - Discontinued' : '' }}</h5>
-            <span class="col-1" v-if="is_invalid">
-              <div class="d-flex justify-content-end">
-                <v-form-validation-tooltip :requirement_id="requirement_id"/>
+            <div class="col-md-8">
+              <h5 :class="{'text-danger': discontinued, 'my-1': true}"> {{ requirement['Name'] }} {{ discontinued ? ' - Discontinued' : '' }}</h5>
+              <span class="col-1" v-if="is_invalid">
+                <div class="d-flex justify-content-end">
+                  <v-form-validation-tooltip :requirement_id="requirement_id"/>
+                </div>
+              </span>
+            </div>
+            <div class="col-md-4 align-self-end pl-4">
+              <div class="row">
+                <div class="col-md-6">
+                  <button type="button" class="btn btn-outline-success w-100 mb-2" @click="this.cloneRequirement">Clone<i class="far fa-clone fa-lg text-success ml-2"></i></button>
+                </div>
+                <div v-if="this.isNew" class="col-md-6">
+                  <button type="button" class="btn btn-outline-danger w-100" @click="this.removeRequirement">Remove<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
+                </div>
+                <div v-else class="col-md-6">
+                  <button v-if="this.discontinued" type="button" class="btn btn-outline-danger w-100" @click="this.enableRequirement">Enable<i class="far fa-backward fa-lg text-danger ml-2"></i></button>
+                  <button v-else type="button" class="btn btn-outline-danger w-100" @click="this.discontinueRequirement">Discontinue<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
+                </div>
               </div>
-            </span>
+            </div>
           </div>
         </div>
         <div class="card-body">
           <div class="row">
-            <div class="col-md-10">
-              <div class="row my-1">
                 <fieldset disabled class='col-md-1'>
-                  <label class="form-label">
-                    ID
-                    <input class="form-control" v-model.number="requirement['REF_ID']" type="number">
-                  </label>
+                  <div class="form-floating">
+                    <input :id="'id_' + requirement_id" class="form-control" v-model.number="requirement['REF_ID']" type="number">
+                    <label :for="'id_' + requirement_id">ID</label>
+                  </div>
                 </fieldset>
-                <label class="form-label col-md-6">
-                  Name
-                  <input class="form-control" v-model.text="requirement['Name']" type="text" :disabled="discontinued">
-                </label>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <input :id="'name_' + requirement_id" class="form-control" v-model.text="requirement['Name']" type="text" :disabled="discontinued">
+                    <label :for="'name_' + requirement_id">Name</label>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <input :id="'qc_recommendation_' + requirement_id" class="form-control" v-model.text="requirement['QC recommendation']" type="text" :disabled="discontinued">
+                    <label :for="'qc_recommendation_' + requirement_id">QC Recommendation</label>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-floating">
+                    <input :id="'input_material_' + requirement_id" class="form-control" v-model.text="requirement['Input material']" type="text" :disabled="discontinued">
+                    <label :for="'input_material_' + requirement_id">Input material</label>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="col-md-2 align-self-end pl-4">
-              <button type="button" class="btn btn-outline-success w-100 mb-2" @click="this.cloneRequirement">Clone<i class="far fa-clone fa-lg text-success ml-2"></i></button>
-              <div v-if="this.isNew" class="">
-                <button type="button" class="btn btn-outline-danger w-100" @click="this.removeRequirement">Remove<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
-              </div>
-              <div v-else class="">
-                <button v-if="this.discontinued" type="button" class="btn btn-outline-danger w-100" @click="this.enableRequirement">Enable<i class="far fa-backward fa-lg text-danger ml-2"></i></button>
-                <button v-else type="button" class="btn btn-outline-danger w-100" @click="this.discontinueRequirement">Discontinue<i class="fas fa-times fa-lg text-danger ml-2"></i></button>
-              </div>
-            </div>
+              <div class="row my-1">
+                <div class="col-3">
+                  <h5>Concentration</h5>
+                  <div class="form-floating mb-3">
+                    <input :id="'concentration_minimum_' + requirement_id" class="form-control" v-model.number="requirement['Concentration']['Minimum']" type="number" :disabled="discontinued">
+                    <label :for="'concentration_minimum_' + requirement_id">Minimum</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    <input :id="'concentration_maximum_' + requirement_id" class="form-control" v-model.number="requirement['Concentration']['Maximum']" type="number" :disabled="discontinued">
+                    <label :for="'concentration_maximum_' + requirement_id">Maximum</label>
+                  </div>
+                  <div class="form-floating">
+                    <input id="concentration_unit_{{requirement_id}}" class="form-control" v-model.text="requirement['Concentration']['Unit']" type="text" :disabled="discontinued">
+                    <label for="concentration_unit_{{requirement_id}}">Unit</label>
+                  </div>
+                </div>
+                <div class="col-3">
+                  <h5>Amount</h5>
+                  <div class="form-floating mb-3">
+                    <input :id="'amount_minimum_' + requirement_id" class="form-control" v-model.number="requirement['Amount']['Minimum']" type="number" :disabled="discontinued">
+                    <label :for="'amount_minimum_' + requirement_id">Minimum</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    <input :id="'amount_recommended_' + requirement_id" class="form-control" v-model.number="requirement['Amount']['Recommended']" type="number" :disabled="discontinued">
+                    <label :for="'amount_recommended_' + requirement_id">Recommended</label>
+                  </div>
+                  <div class="form-floating">
+                    <input id="amount_unit_{{requirement_id}}" class="form-control" v-model.text="requirement['Amount']['Unit']" type="text" :disabled="discontinued">
+                    <label for="amount_unit_{{requirement_id}}">Unit</label>
+                  </div>
+                </div>
+                <div class="col-3">
+                  <h5>Volume</h5>
+                  <div class="form-floating mb-3">
+                    <input :id="'volume_minimum_' + requirement_id" class="form-control" v-model.number="requirement['Volume']['Minimum']" type="number" :disabled="discontinued">
+                    <label :for="'volume_minimum_' + requirement_id">Minimum</label>
+                  </div>
+                  <div class="form-floating">
+                    <input id="volume_unit_{{requirement_id}}" class="form-control" v-model.text="requirement['Volume']['Unit']" type="text" :disabled="discontinued">
+                    <label for="volume_unit_{{requirement_id}}">Unit</label>
+                  </div>
+                </div>
+                <div class="col-3">
+                  <h5>Quality requirement</h5>
+                  <div class="form-floating mb-3">
+                    <input :id="'quality_requirement_method_' + requirement_id" class="form-control" v-model.text="requirement['Quality requirement']['Method']" type="text" :disabled="discontinued">
+                    <label :for="'quality_requirement_method_' + requirement_id">Method</label>
+                  </div>
+                  <div class="form-floating">
+                    <input id="quality_requirement_RIN_{{requirement_id}}" class="form-control" v-model.number="requirement['Quality requirement']['RIN']" type="number" :disabled="discontinued">
+                    <label for="quality_requirement_RIN_{{requirement_id}}">RIN</label>
+                  </div>
+                </div>
+
           </div>
         </div>
       </div>
