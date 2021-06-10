@@ -275,12 +275,50 @@ app.component('v-sample-requirements-view', {
 })
 
 app.component('v-requirements-table', {
+    mounted() {
+        this.$nextTick(() => {
+            this.init_listjs()
+        })
+    },
+    methods: {
+        init_listjs() {
+            /* Just the ordinary datatable initializing. */
+            this.dataTable = $('#sample_requirements_table').DataTable({
+                "paging":false,
+                "info":false,
+                "order": [[ 1, "asc" ]]
+            });
+
+            this.dataTable.columns().every(function() {
+                var that = this;
+                $('input', this.footer()).on( 'keyup change', function() {
+                    that
+                        .search(this.value)
+                        .draw();
+                });
+            });
+
+            $('#sample_requirements_table_filter').addClass('col-md-2');
+            $("#sample_requirements_table_filter").appendTo("#table_h_and_search");
+            $('#sample_requirements_table_filter label input').appendTo($('#sample_requirements_table_filter'));
+            $('#sample_requirements_table_filter label').remove();
+            $('#sample_requirements_table_filter input').addClass('form-control p-2 mb-2 float-right');
+            $("#sample_requirements_table_filter input").attr("placeholder", "Search table...");
+        },
+        reset_listjs() {
+            /* A bit hacky way to get datatables to handle a DOM update:
+             *  - drop it and recreate it.
+             */
+            $('#sample_requirements_table').DataTable().destroy();
+            $('#sample_requirements_table_filter').remove();
+        }
+    },
     template:
         /*html*/`
-        <table class="table table-sm table-hover">
+        <table class="table table-hover" id="sample_requirements_table">
           <thead>
             <tr>
-              <th scope="col" rowspan="2" colspan="1">Name</th>
+              <th scope="col" rowspan="2" colspan="1" style="width:30%">Name</th>
               <th scope="col" rowspan="2" colspan="1">Input material</th>
               <th scope="col" rowspan="2" colspan="1">QC recommendation</th>
               <th scope="col" rowspan="1" colspan="2">Quality requirement</th>
@@ -303,6 +341,25 @@ app.component('v-requirements-table', {
               <th scope="col">Unit</th>
             </tr>
           </thead>
+          <tfoot class="table-light">
+            <tr>
+              <th scope="col" data-sort="name"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="input_material"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="qc_recommendation"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="quality_requirement_method"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="quality_requirement_RIN"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="concentration_min"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="concentration_max"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="concentration_unit"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="volume_min"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="volume_max"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="volume_unit"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="amount_min"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="amount_max"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="amount_recommended"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="amount_unit"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+            </tr>
+          </tfoot>
           <tbody>
             <template v-for="(requirement_data, requirement_id) in this.$root.sample_requirements" :key="requirement_id">
               <template v-if="requirement_data['Status'] !== 'Discontinued'">
@@ -504,7 +561,7 @@ app.component('v-sample-requirements-data-loading', {
             </template>
 
             <template v-if="draft_exists">
-              <div class="requirements_chooseable_div mt-2">
+              <div class="mt-2">
                 <div class="row" id="table_h_and_search">
                   <h2 class="col mr-auto">Preview of Draft</h2>
                 </div>
