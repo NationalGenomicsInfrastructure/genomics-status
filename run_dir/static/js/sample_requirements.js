@@ -839,12 +839,16 @@ app.component('v-sample-requirements-update', {
                 <h5 class="mt-2"><i class="far fa-exclamation-triangle mr-3"></i>The draft is locked by {{draft_locked_by}}, please reassign lock before attempting to make any changes.</h5>
               </div>
             </template>
-            <h1>Update Sample Requirements</h1>
-            <div class="link-target-offset" data-offset="0">
-              <div class="card pt-3 px-3 bg-light">
+            <div class="row">
+                <h1 class="col-md-6">Update Sample Requirements</h1>
+                <div class="col-md-6">
+                  <div class="mb-auto">
+                    <button class="btn btn-success btn-lg" @click="saveDraft"><i class="far fa-save"></i> Save </button>
+                    <button class="btn btn-secondary btn-lg ml-2" @click="backToPreview"><i class="fas fa-window-close"></i> Leave </button>
+                  </div>
+                </div>
                 <div class="row">
                   <div class="col-md-7 mr-auto">
-                    <h2>Edit draft Sample Requirements</h2>
                     <template v-if="save_message !== null">
                       <p class="text-danger" v-if="save_error"><strong>Error saving</strong> {{save_message}}</p>
                       <p class="text-success" v-else><strong>Saved!</strong> {{save_message}}</p>
@@ -852,10 +856,6 @@ app.component('v-sample-requirements-update', {
                   </div>
                   <div class="row">
                     <div class="d-flex align-items-start flex-column col-auto mr-auto">
-                      <div class="mb-auto">
-                        <button class="btn btn-success btn-lg" @click="saveDraft"><i class="far fa-save"></i> Save </button>
-                        <button class="btn btn-secondary btn-lg ml-2" @click="backToPreview"><i class="fas fa-window-close"></i> Leave </button>
-                      </div>
                       <div>
                         <button class="btn btn-lg mb-3" :class="no_changes ? 'btn-secondary' : 'btn-warning'" data-toggle="modal" data-target="#sample_requirements_view_changes_modal">
                           <template v-if="no_changes">
@@ -894,16 +894,18 @@ app.component('v-sample-requirements-update', {
                   </div>
                 </div>
               </div>
-              <h1 class="mt-5 display-3">Sample Requirements <button class="btn btn-success btn-lg ml-2" @click="newSampleRequirement"><i class="fas fa-plus"></i> New Requirement</button></h1>
-              <template v-for="(requirement_data, requirement_id) in this.$root.sample_requirements" :key="requirement_id">
-                <template v-if="requirement_data['Status'] !== 'Discontinued'">
+              <div class="link-target-offset" data-offset="0">
+                <h1 class="mt-5 display-3">Sample Requirements <button class="btn btn-success btn-lg ml-2" @click="newSampleRequirement"><i class="fas fa-plus"></i> New Requirement</button></h1>
+                <template v-for="(requirement_data, requirement_id) in this.$root.sample_requirements" :key="requirement_id">
+                  <template v-if="requirement_data['Status'] !== 'Discontinued'">
+                    <v-requirement-form-part :requirement_id="requirement_id"/>
+                  </template>
+                </template>
+                <h2 class="mt-5 display-3">Discontinued</h2>
+                <template v-for="(requirement_data, requirement_id) in this.$root.discontinued_sample_requirements" :key="requirement_id">
                   <v-requirement-form-part :requirement_id="requirement_id"/>
                 </template>
-              </template>
-              <h2 class="mt-5 display-3">Discontinued</h2>
-              <template v-for="(requirement_data, requirement_id) in this.$root.discontinued_sample_requirements" :key="requirement_id">
-                <v-requirement-form-part :requirement_id="requirement_id"/>
-              </template>
+              </div>
             </div>
           </template>
         </template>
