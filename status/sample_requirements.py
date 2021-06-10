@@ -93,10 +93,10 @@ class SampleRequirementsReassignLockDataHandler(SampleRequirementsBaseHandler):
             return self.write("Error: Attempting to update a non-draft sample requirements.")
 
         current_user = self.get_current_user()
-        # TODO add another role for this, for now reuse the pricing-admin role
+        # TODO add another role for this, for now reuse the sample-requirements-admin role
         if not current_user.is_sample_requirements_admin:
             self.set_status(400)
-            return self.write("Error: Cannot reassign lock to non-pricing admin.")
+            return self.write("Error: Cannot reassign lock to user that is not sample requirements admin.")
         user_email = current_user.email
 
         lock_info = {'Locked': True,
@@ -147,7 +147,7 @@ class SampleRequirementsDraftDataHandler(SampleRequirementsBaseHandler):
         current_user = self.get_current_user()
         if not current_user.is_sample_requirements_admin:
             self.set_status(400)
-            return self.write("Error: Non-pricing admin cannot create a new draft.")
+            return self.write("Error: Only sample requirements admin cannot create a new draft.")
         current_user_email = current_user.email
 
         # Create a new draft
@@ -200,7 +200,7 @@ class SampleRequirementsDraftDataHandler(SampleRequirementsBaseHandler):
         current_user = self.get_current_user()
         if not current_user.is_sample_requirements_admin:
             self.set_status(400)
-            return self.write("Error: Non-pricing admin cannot update draft sample requirements.")
+            return self.write("Error: Only sample requirements admin cannot update draft sample requirements.")
         user_email = current_user.email
 
         lock_info = latest_doc['Lock Info']
@@ -241,7 +241,7 @@ class SampleRequirementsDraftDataHandler(SampleRequirementsBaseHandler):
         current_user = self.get_current_user()
         if not current_user.is_sample_requirements_admin:
             self.set_status(400)
-            return self.write("Error: Non-pricing admin cannot delete draft sample requirements.")
+            return self.write("Error: Only sample requirements admin cannot delete draft sample requirements.")
         user_email = current_user.email
 
         lock_info = latest_doc['Lock Info']
@@ -434,7 +434,7 @@ class SampleRequirementsPublishDataHandler(SampleRequirementsBaseHandler):
         current_user = self.get_current_user()
         if not current_user.is_sample_requirements_admin:
             self.set_status(400)
-            return self.write("Error: Non-pricing admin cannot publish new sample requirements.")
+            return self.write("Error: Only sample requirements admin cannot publish new sample requirements.")
 
         user_name = current_user.name
         user_email = current_user.email
