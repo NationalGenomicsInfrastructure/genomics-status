@@ -305,7 +305,9 @@ app.component('v-requirements-table', {
           </thead>
           <tbody>
             <template v-for="(requirement_data, requirement_id) in this.$root.sample_requirements" :key="requirement_id">
-              <v-requirement-table-row :requirement_data="requirement_data" :requirement_id="requirement_id"/>
+              <template v-if="requirement_data['Status'] !== 'Discontinued'">
+                <v-requirement-table-row :requirement_data="requirement_data" :requirement_id="requirement_id"/>
+              </template>
             </template>
           </tbody>
         </table>
