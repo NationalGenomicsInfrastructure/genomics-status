@@ -32,6 +32,15 @@ const vSampleRequirementsMain = {
         any_errors() {
             return (this.error_messages.length !== 0)
         },
+        discontinued_sample_requirements() {
+            discontinued_reqs = {}
+            for ([req_id, req] of Object.entries(this.$root.sample_requirements)) {
+                if (req['Status'] == 'Discontinued') {
+                    discontinued_reqs[req_id] = req
+                }
+            }
+            return discontinued_reqs
+        },
         done_loading() {
             return (!this.draft_data_loading && !this.published_data_loading)
         },
@@ -592,8 +601,7 @@ app.component('v-sample-requirements-data-loading', {
           </div>
           <div class="card-body collapse show" id="changes_card_body">
             <div class="row">
-              <div :class="modal ? 'col-12' : 'col-6 border-left'">
-                <h4>Sample Requirements</h4>
+              <div :class="modal ? 'col-12' : 'col-6'">
                 <div class="row">
                   <template v-for="(changes_data, req_id) in changes" :key="req_id">
                     <div class="ml-3 mb-3">
@@ -829,6 +837,12 @@ app.component('v-sample-requirements-update', {
               </div>
               <h1 class="mt-5 display-3">Sample Requirements <button class="btn btn-success btn-lg ml-2" @click="newSampleRequirement"><i class="fas fa-plus"></i> New Requirement</button></h1>
               <template v-for="(requirement_data, requirement_id) in this.$root.sample_requirements" :key="requirement_id">
+                <template v-if="requirement_data['Status'] !== 'Discontinued'">
+                  <v-requirement-form-part :requirement_id="requirement_id"/>
+                </template>
+              </template>
+              <h2 class="mt-5 display-3">Discontinued</h2>
+              <template v-for="(requirement_data, requirement_id) in this.$root.discontinued_sample_requirements" :key="requirement_id">
                 <v-requirement-form-part :requirement_id="requirement_id"/>
               </template>
             </div>
@@ -921,7 +935,7 @@ app.component('v-requirement-form-part', {
     },
     template:
       /*html*/`
-      <div :id="'requirement_form_part_' + requirement_id" class="my-3 link-target-offset" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
+      <div :id="'requirement_form_part_' + requirement_id" class="my-5 link-target-offset" :class="[{'border-success border-2': isNew}, {'discontinued': discontinued}, {'card': true}]">
         <div class="card-header">
           <div class="row">
             <div class="col-md-8">
