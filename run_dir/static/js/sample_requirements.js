@@ -40,6 +40,9 @@ const vSampleRequirementsMain = {
             all_ids = Object.keys(this.sample_requirements)
             max_id = Math.max(...all_ids.map(x => parseInt(x)))
             return (1 + max_id).toString()
+        },
+        no_validation_messages() {
+          return (Object.keys(this.validation_msgs).length === 0)
         }
     },
     watch: {
@@ -508,13 +511,21 @@ app.component('v-sample-requirements-data-loading', {
                       <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                      <p>Are you sure you want to publish the current draft?</p>
-                      <p>This will then become the default sample requirements used for all quotes.</p>
-                      <v-draft-changes-list :modal="true" :modal_id="'publish_draft_modal'"/>
+                      <template v-if="this.$root.no_validation_messages">
+                        <p>Are you sure you want to publish the current draft?</p>
+                        <p>This will then become the default cost calculator used for all quotes.</p>
+                        <v-draft-changes-list :modal="true" :modal_id="'publish_draft_modal'"/>
+                      </template>
+                      <template v-else>
+                        <p>The current draft contains validation errors, please fix these before publishing:</p>
+                        <v-draft-validation-msgs-list :modal="true" :modal_id="'publish_draft_modal'"/>
+                      </template>
                     </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                      <button type="button" class="btn btn-primary" @click="publish_draft" data-dismiss="modal">Publish New Sample Requirements</button>
+                      <template v-if="this.$root.no_validation_messages">
+                        <button type="button" class="btn btn-primary" @click="publish_draft" data-dismiss="modal">Publish New Sample Requirements</button>
+                      </template>
                     </div>
                   </div>
                 </div>
@@ -889,8 +900,8 @@ app.component('v-requirement-form-part', {
                 window.location.href = '#requirement_form_part_' + this.requirement_id;
             })
         },
-        cloneRequirement() {
-            new_id = this.$root.cloneRequirement(this.requirement_id)
+        cloneSampleRequirement() {
+            new_id = this.$root.cloneSampleRequirement(this.requirement_id)
             if (this.discontinued) {
                 this.$root.enableSampleRequirement(new_id)
             }
@@ -924,7 +935,7 @@ app.component('v-requirement-form-part', {
             <div class="col-md-4 align-self-end pl-4">
               <div class="row">
                 <div class="col-md-6">
-                  <button type="button" class="btn btn-outline-success w-100 mb-2" @click="this.cloneRequirement">Clone<i class="far fa-clone fa-lg text-success ml-2"></i></button>
+                  <button type="button" class="btn btn-outline-success w-100 mb-2" @click="this.cloneSampleRequirement">Clone<i class="far fa-clone fa-lg text-success ml-2"></i></button>
                 </div>
                 <div v-if="this.isNew" class="col-md-6">
                   <button type="button" class="btn btn-outline-danger w-100" @click="this.removeSampleRequirement">Remove<i class="fas fa-times fa-lg text-danger ml-2"></i></button>

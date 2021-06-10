@@ -48,7 +48,8 @@ from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.sample_requirements import SampleRequirementsViewHandler, SampleRequirementsDataHandler, SampleRequirementsUpdateHandler, \
-    SampleRequirementsDraftDataHandler, SampleRequirementsValidateDraftDataHandler, SampleRequirementsPreviewHandler, SampleRequirementsReassignLockDataHandler
+    SampleRequirementsDraftDataHandler, SampleRequirementsValidateDraftDataHandler, SampleRequirementsPreviewHandler, SampleRequirementsReassignLockDataHandler, \
+    SampleRequirementsPublishDataHandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
     SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, \
     SampleReadCountDataHandler, SampleRunDataHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
@@ -179,6 +180,7 @@ class Application(tornado.web.Application):
             ("/api/v1/sample_insert_sizes/([^/]*)$",
                 SampleQCInsertSizesDataHandler),
             ("/api/v1/sample_requirements", SampleRequirementsDataHandler),
+            ("/api/v1/sample_requirements_publish_draft", SampleRequirementsPublishDataHandler),
             ("/api/v1/sample_requirements_validate_draft", SampleRequirementsValidateDraftDataHandler),
             ("/api/v1/sample_requirements_reassign_lock", SampleRequirementsReassignLockDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
