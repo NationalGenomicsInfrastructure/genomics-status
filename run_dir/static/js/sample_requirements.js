@@ -82,12 +82,22 @@ const vSampleRequirementsMain = {
         },
         cloneSampleRequirement(id) {
             sample_requirement = this.sample_requirements[id]
-            new_sr = Object.assign({}, sample_requirement)
-
+            let new_sr = {}
             new_id = this.next_sample_requirement_id
-            new_sr['REF_ID'] = new_id
-            new_sr['Amount'] = sample_requirement['Amount']
-            new_sr['Amount'] = {'Minimum': null, 'Recommended': null, 'Unit': 'ng'}
+            for (let key in sample_requirement) {
+                switch(key) {
+                    case 'REF_ID':
+                        new_sr[key] = new_id
+                    case 'Amount':
+                    case 'Concentration':
+                    case 'Quality requirement':
+                    case 'Volume':
+                        new_sr[key] = {}
+                        Object.assign(new_sr[key], sample_requirement[key])
+                    default:
+                        new_sr[key] = sample_requirement[key]
+                }
+            }
             this.sample_requirements[new_id] = new_sr
             this.new_sample_requirements.add(new_id)
             return new_id
