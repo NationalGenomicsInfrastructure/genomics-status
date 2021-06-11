@@ -320,6 +320,7 @@ app.component('v-requirements-table', {
             <tr>
               <th scope="col" rowspan="2" colspan="1" style="width:30%">Name</th>
               <th scope="col" rowspan="2" colspan="1" class="border-left">Input material</th>
+              <th scope="col" rowspan="2" colspan="1" class="border-left">Production</th>
               <th scope="col" rowspan="2" colspan="1" class="border-left">QC recommendation</th>
               <th scope="col" rowspan="1" colspan="2" class="border-left">Quality requirement</th>
               <th scope="col" rowspan="1" colspan="3" class="border-left">Concentration</th>
@@ -345,6 +346,7 @@ app.component('v-requirements-table', {
             <tr>
               <th scope="col" data-sort="name"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
               <th scope="col" data-sort="input_material" class="border-left"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="production" class="border-left"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
               <th scope="col" data-sort="qc_recommendation" class="border-left"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
               <th scope="col" data-sort="quality_requirement_method" class="border-left"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
               <th scope="col" data-sort="quality_requirement_RIN"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
@@ -380,6 +382,7 @@ app.component('v-requirement-table-row', {
         <tr>
             <th>{{this.requirement_data['Name']}}</th>
             <td class="border-left">{{this.requirement_data['Input material']}}</td>
+            <td class="border-left">{{this.requirement_data['Production']}}</td>
             <td class="border-left">{{this.requirement_data['QC recommendation']}}</td>
             <td class="border-left">{{this.requirement_data['Quality requirement']['Method']}}</td>
             <td class="text-right">{{this.requirement_data['Quality requirement']['RIN']}}</td>
@@ -839,53 +842,52 @@ app.component('v-sample-requirements-update', {
                 <h5 class="mt-2"><i class="far fa-exclamation-triangle mr-3"></i>The draft is locked by {{draft_locked_by}}, please reassign lock before attempting to make any changes.</h5>
               </div>
             </template>
-            <div class="row">
-                <h1 class="col-md-6">Update Sample Requirements</h1>
-                <div class="col-md-6">
-                  <div class="mb-auto">
-                    <button class="btn btn-success btn-lg" @click="saveDraft"><i class="far fa-save"></i> Save </button>
-                    <button class="btn btn-secondary btn-lg ml-2" @click="backToPreview"><i class="fas fa-window-close"></i> Leave </button>
-                  </div>
+            <div class="row justify-content-between">
+              <h1 class="col-md-6">Update Sample Requirements</h1>
+              <div class="col-md-3">
+                <div class="d-flex justify-content-end">
+                  <button class="btn btn-success btn-lg px-5" @click="saveDraft"><i class="far fa-save mr-1"></i> Save </button>
+                  <button class="btn btn-secondary btn-lg ml-2 px-5" @click="backToPreview"><i class="fas fa-window-close mr-1"></i> Leave </button>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-7 mr-auto">
+                  <template v-if="save_message !== null">
+                    <p class="text-danger fs-2" v-if="save_error"><strong>Error saving</strong> {{save_message}}</p>
+                    <p class="text-success fs-2" v-else><strong>Saved!</strong> {{save_message}}</p>
+                  </template>
                 </div>
                 <div class="row">
-                  <div class="col-md-7 mr-auto">
-                    <template v-if="save_message !== null">
-                      <p class="text-danger" v-if="save_error"><strong>Error saving</strong> {{save_message}}</p>
-                      <p class="text-success" v-else><strong>Saved!</strong> {{save_message}}</p>
-                    </template>
-                  </div>
-                  <div class="row">
-                    <div class="d-flex align-items-start flex-column col-auto mr-auto">
-                      <div>
-                        <button class="btn btn-lg mb-3" :class="no_changes ? 'btn-secondary' : 'btn-warning'" data-toggle="modal" data-target="#sample_requirements_view_changes_modal">
-                          <template v-if="no_changes">
-                            No changes
-                          </template>
-                          <template v-else>
-                            List changes<i v-if="is_invalid" class="fas fa-exclamation-triangle ml-1"></i>
-                          </template>
-                        </button>
-                        <!----- Modal ----->
-                        <div class="modal fade" id="sample_requirements_view_changes_modal" tabindex="-1" role="dialog" aria-labelledby="sample_requirements_view_changes_modal_header">
-                          <div class="modal-dialog modal-lg" role="document">
-                            <div class="modal-content">
-                              <div class="modal-header">
-                                <h4 class="modal-title" id="sample_requirements_view_changes_modal_header">List of Changes and Validation Errors</h4>
-                                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-                              </div>
-                              <div class="modal-body">
-                                <template v-if="this.$root.no_validation_messages">
-                                  <p>No validation erros found</p>
-                                </template>
-                                <template v-else>
-                                  <p>The current draft contains validation errors, please fix these before publishing:</p>
-                                  <v-draft-validation-msgs-list :modal="true" :modal_id="'sample_requirements_view_changes_modal'"/>
-                                </template>
-                                <v-draft-changes-list :modal="true" :modal_id="'sample_requirements_view_changes_modal'"/>
-                              </div>
-                              <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                              </div>
+                  <div class="mt-3">
+                    <div>
+                      <button class="btn btn-lg mb-3" :class="no_changes ? 'btn-secondary' : 'btn-warning'" data-toggle="modal" data-target="#sample_requirements_view_changes_modal">
+                        <template v-if="no_changes">
+                          No changes
+                        </template>
+                        <template v-else>
+                          List changes<i v-if="is_invalid" class="fas fa-exclamation-triangle ml-1"></i>
+                        </template>
+                      </button>
+                      <!----- Modal ----->
+                      <div class="modal fade" id="sample_requirements_view_changes_modal" tabindex="-1" role="dialog" aria-labelledby="sample_requirements_view_changes_modal_header">
+                        <div class="modal-dialog modal-lg" role="document">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h4 class="modal-title" id="sample_requirements_view_changes_modal_header">List of Changes and Validation Errors</h4>
+                              <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                              <template v-if="this.$root.no_validation_messages">
+                                <p>No validation erros found</p>
+                              </template>
+                              <template v-else>
+                                <p>The current draft contains validation errors, please fix these before publishing:</p>
+                                <v-draft-validation-msgs-list :modal="true" :modal_id="'sample_requirements_view_changes_modal'"/>
+                              </template>
+                              <v-draft-changes-list :modal="true" :modal_id="'sample_requirements_view_changes_modal'"/>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                             </div>
                           </div>
                         </div>
@@ -894,18 +896,18 @@ app.component('v-sample-requirements-update', {
                   </div>
                 </div>
               </div>
-              <div class="link-target-offset" data-offset="0">
-                <h1 class="mt-5 display-3">Sample Requirements <button class="btn btn-success btn-lg ml-2" @click="newSampleRequirement"><i class="fas fa-plus"></i> New Requirement</button></h1>
-                <template v-for="(requirement_data, requirement_id) in this.$root.sample_requirements" :key="requirement_id">
-                  <template v-if="requirement_data['Status'] !== 'Discontinued'">
-                    <v-requirement-form-part :requirement_id="requirement_id"/>
-                  </template>
-                </template>
-                <h2 class="mt-5 display-3">Discontinued</h2>
-                <template v-for="(requirement_data, requirement_id) in this.$root.discontinued_sample_requirements" :key="requirement_id">
+            </div>
+            <div class="link-target-offset" data-offset="0">
+              <h1 class="mt-5 display-3">Sample Requirements <button class="btn btn-success btn-lg ml-2" @click="newSampleRequirement"><i class="fas fa-plus"></i> New Requirement</button></h1>
+              <template v-for="(requirement_data, requirement_id) in this.$root.sample_requirements" :key="requirement_id">
+                <template v-if="requirement_data['Status'] !== 'Discontinued'">
                   <v-requirement-form-part :requirement_id="requirement_id"/>
                 </template>
-              </div>
+              </template>
+              <h2 class="mt-5 display-3">Discontinued</h2>
+              <template v-for="(requirement_data, requirement_id) in this.$root.discontinued_sample_requirements" :key="requirement_id">
+                <v-requirement-form-part :requirement_id="requirement_id"/>
+              </template>
             </div>
           </template>
         </template>
@@ -1031,13 +1033,21 @@ app.component('v-requirement-form-part', {
                 <label :for="'id_' + requirement_id">ID</label>
               </div>
             </fieldset>
-            <div class="col-md-6">
+            <div class="col-md-5">
               <div class="form-floating mb-3">
                 <input :id="'name_' + requirement_id" class="form-control" v-model.text="requirement['Name']" type="text" :disabled="discontinued">
                 <label :for="'name_' + requirement_id">Name</label>
               </div>
             </div>
-            <div class="col-md-3">
+            <div class="form-check form-switch col-md-2 align-self-center pl-2">
+              <div class="ml-5">
+                <input :id="'production_' + requirement_id" class="form-check-input" type="checkbox" v-model.boolean="requirement['Production']" :disabled="discontinued"/>
+                <label :for="'production_' + requirement_id" class="form-check-label">
+                  <h4>Production</h4>
+                </label>
+              </div>
+            </div>
+            <div class="col-md-2">
               <div class="form-floating">
                 <input :id="'qc_recommendation_' + requirement_id" :list="'qc_recommendation_options_' + requirement_id" class="form-control" v-model.text="requirement['QC recommendation']" type="text" :disabled="discontinued">
                 <label :for="'qc_recommendation_' + requirement_id">QC Recommendation</label>
