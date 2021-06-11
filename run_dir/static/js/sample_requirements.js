@@ -315,27 +315,27 @@ app.component('v-requirements-table', {
     },
     template:
         /*html*/`
-        <table class="table table-hover" id="sample_requirements_table">
+        <table class="table table-hover table-striped" id="sample_requirements_table">
           <thead>
             <tr>
               <th scope="col" rowspan="2" colspan="1" style="width:30%">Name</th>
-              <th scope="col" rowspan="2" colspan="1">Input material</th>
-              <th scope="col" rowspan="2" colspan="1">QC recommendation</th>
-              <th scope="col" rowspan="1" colspan="2">Quality requirement</th>
-              <th scope="col" rowspan="1" colspan="3">Concentration</th>
-              <th scope="col" rowspan="1" colspan="3">Volume</th>
-              <th scope="col" rowspan="1" colspan="4">Amount</th>
+              <th scope="col" rowspan="2" colspan="1" class="border-left">Input material</th>
+              <th scope="col" rowspan="2" colspan="1" class="border-left">QC recommendation</th>
+              <th scope="col" rowspan="1" colspan="2" class="border-left">Quality requirement</th>
+              <th scope="col" rowspan="1" colspan="3" class="border-left">Concentration</th>
+              <th scope="col" rowspan="1" colspan="3" class="border-left">Volume</th>
+              <th scope="col" rowspan="1" colspan="4" class="border-left">Amount</th>
             </tr>
             <tr>
-              <th scope="col">Method</th>
+              <th scope="col" class="border-left">Method</th>
               <th scope="col">RIN</th>
-              <th scope="col">Min</th>
+              <th scope="col" class="border-left">Min</th>
               <th scope="col">Max</th>
               <th scope="col">Unit</th>
-              <th scope="col">Min</th>
+              <th scope="col" class="border-left">Min</th>
               <th scope="col">Max</th>
               <th scope="col">Unit</th>
-              <th scope="col">Min</th>
+              <th scope="col" class="border-left">Min</th>
               <th scope="col">Max</th>
               <th scope="col">Recommended</th>
               <th scope="col">Unit</th>
@@ -344,17 +344,17 @@ app.component('v-requirements-table', {
           <tfoot class="table-light">
             <tr>
               <th scope="col" data-sort="name"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
-              <th scope="col" data-sort="input_material"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
-              <th scope="col" data-sort="qc_recommendation"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
-              <th scope="col" data-sort="quality_requirement_method"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="input_material" class="border-left"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="qc_recommendation" class="border-left"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="quality_requirement_method" class="border-left"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
               <th scope="col" data-sort="quality_requirement_RIN"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
-              <th scope="col" data-sort="concentration_min"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="concentration_min" class="border-left"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
               <th scope="col" data-sort="concentration_max"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
               <th scope="col" data-sort="concentration_unit"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
-              <th scope="col" data-sort="volume_min"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="volume_min" class="border-left"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
               <th scope="col" data-sort="volume_max"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
               <th scope="col" data-sort="volume_unit"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
-              <th scope="col" data-sort="amount_min"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
+              <th scope="col" data-sort="amount_min" class="border-left"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
               <th scope="col" data-sort="amount_max"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
               <th scope="col" data-sort="amount_recommended"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
               <th scope="col" data-sort="amount_unit"> <input class="form-control search search-query" type="text" placeholder="Search..."/></th>
@@ -379,17 +379,17 @@ app.component('v-requirement-table-row', {
         /*html*/`
         <tr>
             <th>{{this.requirement_data['Name']}}</th>
-            <td>{{this.requirement_data['Input material']}}</td>
-            <td>{{this.requirement_data['QC recommendation']}}</td>
-            <td>{{this.requirement_data['Quality requirement']['Method']}}</td>
+            <td class="border-left">{{this.requirement_data['Input material']}}</td>
+            <td class="border-left">{{this.requirement_data['QC recommendation']}}</td>
+            <td class="border-left">{{this.requirement_data['Quality requirement']['Method']}}</td>
             <td>{{this.requirement_data['Quality requirement']['RIN']}}</td>
-            <td>{{this.requirement_data['Concentration']['Minimum']}}</td>
+            <td class="border-left">{{this.requirement_data['Concentration']['Minimum']}}</td>
             <td>{{this.requirement_data['Concentration']['Maximum']}}</td>
             <td>{{this.requirement_data['Concentration']['Unit']}}</td>
-            <td>{{this.requirement_data['Volume']['Minimum']}}</td>
+            <td class="border-left">{{this.requirement_data['Volume']['Minimum']}}</td>
             <td>{{this.requirement_data['Volume']['Maximum']}}</td>
             <td>{{this.requirement_data['Volume']['Unit']}}</td>
-            <td>{{this.requirement_data['Amount']['Minimum']}}</td>
+            <td class="border-left">{{this.requirement_data['Amount']['Minimum']}}</td>
             <td>{{this.requirement_data['Amount']['Maximum']}}</td>
             <td>{{this.requirement_data['Amount']['Recommended']}}</td>
             <td>{{this.requirement_data['Amount']['Unit']}}</td>
