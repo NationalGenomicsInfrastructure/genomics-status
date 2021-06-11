@@ -88,12 +88,14 @@ const vSampleRequirementsMain = {
                 switch(key) {
                     case 'REF_ID':
                         new_sr[key] = new_id
+                        break;
                     case 'Amount':
                     case 'Concentration':
                     case 'Quality requirement':
                     case 'Volume':
                         new_sr[key] = {}
                         Object.assign(new_sr[key], sample_requirement[key])
+                        break;
                     default:
                         new_sr[key] = sample_requirement[key]
                 }
