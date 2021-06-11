@@ -382,16 +382,16 @@ app.component('v-requirement-table-row', {
             <td class="border-left">{{this.requirement_data['Input material']}}</td>
             <td class="border-left">{{this.requirement_data['QC recommendation']}}</td>
             <td class="border-left">{{this.requirement_data['Quality requirement']['Method']}}</td>
-            <td>{{this.requirement_data['Quality requirement']['RIN']}}</td>
-            <td class="border-left">{{this.requirement_data['Concentration']['Minimum']}}</td>
-            <td>{{this.requirement_data['Concentration']['Maximum']}}</td>
+            <td class="text-right">{{this.requirement_data['Quality requirement']['RIN']}}</td>
+            <td class="border-left text-right">{{this.requirement_data['Concentration']['Minimum']}}</td>
+            <td class="text-right">{{this.requirement_data['Concentration']['Maximum']}}</td>
             <td>{{this.requirement_data['Concentration']['Unit']}}</td>
-            <td class="border-left">{{this.requirement_data['Volume']['Minimum']}}</td>
-            <td>{{this.requirement_data['Volume']['Maximum']}}</td>
+            <td class="border-left text-right">{{this.requirement_data['Volume']['Minimum']}}</td>
+            <td class="text-right">{{this.requirement_data['Volume']['Maximum']}}</td>
             <td>{{this.requirement_data['Volume']['Unit']}}</td>
-            <td class="border-left">{{this.requirement_data['Amount']['Minimum']}}</td>
-            <td>{{this.requirement_data['Amount']['Maximum']}}</td>
-            <td>{{this.requirement_data['Amount']['Recommended']}}</td>
+            <td class="border-left text-right">{{this.requirement_data['Amount']['Minimum']}}</td>
+            <td class="text-right">{{this.requirement_data['Amount']['Maximum']}}</td>
+            <td class="text-right">{{this.requirement_data['Amount']['Recommended']}}</td>
             <td>{{this.requirement_data['Amount']['Unit']}}</td>
         </tr>
         `
