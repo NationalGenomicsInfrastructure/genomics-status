@@ -33,14 +33,14 @@
         <dd>{{ user.name }} / orders@ngisweden.se</dd>
       <dt>Agreement summary</dt>
         <dd> {% raw data['agreement_summary']%}
-          {%if data['project_type']=='ptype_app' %}
+          {%for condition in data['agreement_conditions']%}
           <div class="small pt-2 pr-2">
-            {% raw template_text['first_page_text']['application_conditions']%}
+            {% raw template_text['first_page_text']['specific_conditions'][condition]%}
           </div>
           {% end %}
           {%if data['price_type']=='full_cost' %}
           <div class="small pt-2 pr-2">
-            {% raw template_text['full_cost_conditions']%}
+            {% raw template_text['first_page_text']['specific_conditions']['full_cost_conditions']%}
           </div>
           {% end %}
         </dd>
