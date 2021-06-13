@@ -75,11 +75,15 @@ app.component('v-pricing-quote', {
         },
         compiledMarkdown() {
           msg_display = this.md_src_message;
+          first_page_text = this.template_text_data.first_page_text;
           if(this.applProj){
-            msg_display += '\n\n'+ this.template_text_data['first_page_text']['application_conditions'];
+            msg_display += '\n\n'+ first_page_text['specific_conditions']['application_conditions'];
           }
           if(this.noQCProj){
-            msg_display += '\n\n'+ this.template_text_data['first_page_text']['no-qc_conditions'];
+            msg_display += '\n\n'+ first_page_text['specific_conditions']['no-qc_conditions'];
+          }
+          if(this.$root.price_type==='full_cost'){
+            msg_display += '\n\n'+ first_page_text['specific_conditions']['full_cost_conditions'];
           }
           return marked(msg_display, { sanitize: true });
         }
@@ -210,15 +214,15 @@ app.component('v-pricing-quote', {
           <div class="row">
             <div class="col-5 quote_lcol_header">
               <div class="form-radio" id="price_type_selector">
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac">
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac" @change="add_to_md_text">
                 <label class="form-check-label pl-1 pr-3" for="price_type_sweac">
                   Swedish academia
                 </label>
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="full_cost" id="price_type_industry">
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="full_cost" id="price_type_industry" @change="add_to_md_text">
                 <label class="form-check-label pl-1 pr-3" for="price_type_industry">
                   Industry and non-Swedish academia
                 </label>
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost" id="price_type_internal">
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost" id="price_type_internal" @change="add_to_md_text">
                 <label class="form-check-label pl-1 pr-3" for="price_type_internal">
                   Internal
                 </label>
