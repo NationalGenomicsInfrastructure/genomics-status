@@ -614,18 +614,17 @@ class GenerateQuoteHandler(SafeHandler):
     """
     def post(self):
         quote_input = tornado.escape.json_decode(self.request.body.decode('utf-8').split('=')[1])
-        curr_rows = self.application.agreement_templates_db.view('entire_document/by_version', descending=True, limit=1).rows
-        template_text = curr_rows[0].value
-        template_text.pop('_id')
-        template_text.pop('_rev')
+        template_text = quote_input['template_text']
         template_text['appendices'] = markdown.markdown(template_text['appendices'], extensions=['sane_lists'])
-        template_text['full_cost_conditions'] = markdown.markdown(template_text['full_cost_conditions'])
+        for condition in template_text['first_page_text']['specific_conditions']:
+            template_text['first_page_text']['specific_conditions'][condition] = \
+                markdown.markdown(template_text['first_page_text']['specific_conditions'][condition])
 
         data = {}
         data['total_cost'] = quote_input['total_cost']
         data['price_type'] = quote_input['price_type']
         data['date'] = datetime.datetime.now().date().isoformat()
-        data['project_type'] = quote_input['project_type']
+        data['agreement_conditions'] = quote_input['agreement_conditions']
 
         if 'agreement_summary' in quote_input.keys():
             data['agreement_summary'] = markdown.markdown(quote_input['agreement_summary'], extensions=['sane_lists'])
@@ -636,3 +635,24 @@ class GenerateQuoteHandler(SafeHandler):
         t = self.application.loader.load('agreement.html')
         self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(),
                               data=data, template_text=template_text))
+
+
+class AgreementTemplateTextHandler(SafeHandler):
+    """ Serves the agreement template text from statusdb
+
+    Loaded through:
+        /api/v1/get_agreement_template_text
+
+    """
+    def get(self):
+        response = self.fetch_latest_agreement_doc()
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(response))
+
+    def fetch_latest_agreement_doc(self):
+        db = self.application.agreement_templates_db
+        curr_rows = db.view('entire_document/by_version', descending=True, limit=1).rows
+        curr_doc = curr_rows[0].value
+        curr_doc.pop('_id')
+        curr_doc.pop('_rev')
+        return curr_doc

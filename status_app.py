@@ -34,7 +34,7 @@ from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
     PricingQuoteHandler, PricingValidateDraftDataHandler, PricingPublishDataHandler, \
     PricingReassignLockDataHandler, PricingUpdateHandler, PricingPreviewHandler, \
-    PricingDataHandler, PricingDraftDataHandler, GenerateQuoteHandler
+    PricingDataHandler, PricingDraftDataHandler, GenerateQuoteHandler, AgreementTemplateTextHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -121,6 +121,7 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
             tornado.web.URLSpec("/api/v1/frag_an_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", FragAnImageHandler, name="FragAnImageHandler"),
+            ("/api/v1/get_agreement_template_text", AgreementTemplateTextHandler),
             ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
             ("/api/v1/instrument_cluster_density.png",

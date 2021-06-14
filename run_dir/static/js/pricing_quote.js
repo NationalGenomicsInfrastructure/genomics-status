@@ -9,7 +9,10 @@ app.component('v-pricing-quote', {
         md_src_message: '',
         proj_type: 'ptype_prod',
         cLabel_index: 0,
-        active_cost_labels: {}
+        active_cost_labels: {},
+        template_text_data: {},
+        applProj: false,
+        noQCProj: false
       }
     },
     computed: {
@@ -71,19 +74,31 @@ app.component('v-pricing-quote', {
                     'full_cost': full_cost_sum.toFixed(2)}
         },
         compiledMarkdown() {
-          return marked(this.md_src_message, { sanitize: true });
+          msg_display = this.md_src_message;
+          first_page_text = this.template_text_data.first_page_text;
+          if(this.applProj){
+            msg_display += '\n\n'+ first_page_text['specific_conditions']['application_conditions'];
+          }
+          if(this.noQCProj){
+            msg_display += '\n\n'+ first_page_text['specific_conditions']['no-qc_conditions'];
+          }
+          if(this.$root.price_type==='full_cost'){
+            msg_display += '\n\n'+ first_page_text['specific_conditions']['full_cost_conditions'];
+          }
+          return marked(msg_display, { sanitize: true });
         }
     },
     created: function() {
         this.$root.fetchPublishedCostCalculator(true),
-        this.$root.fetchExchangeRates()
+        this.$root.fetchExchangeRates(),
+        this.fetch_latest_agreement_doc()
     },
     mounted: function () {
         this.init_text();
     },
     watch: {
         md_src_message() {
-            this.md_message = this.compiledMarkdown;
+            this.add_to_md_text();
         }
     },
     methods: {
@@ -93,6 +108,16 @@ app.component('v-pricing-quote', {
         reset_special_percentage() {
             this.$root.quote_special_percentage_label = ''
             this.$root.quote_special_percentage_value = 0
+        },
+        fetch_latest_agreement_doc: function(){
+          axios
+              .get('/api/v1/get_agreement_template_text')
+              .then(response => {
+                  this.template_text_data = response.data
+              })
+              .catch(error => {
+                  this.error_messages.push('Unable to fetch agreement template data, please try again or contact a system administrator.')
+              })
         },
         add_cost_label: function(){
           this.$root.quote_special_additions[this.cLabel_index] = { name: '', value: 0 };
@@ -109,6 +134,9 @@ app.component('v-pricing-quote', {
                                 '1. **Sequencing**:\n'+
                                 '1. **Data processing**: Demultiplexing, quality control and raw data delivery on Uppmax/GRUS (validated method)\n'+
                                 '1. **Data analysis**: None'
+        },
+        add_to_md_text: function(){
+          this.md_message = this.compiledMarkdown;
         },
         generate_quote:  function (event) {
           product_list = {}
@@ -134,7 +162,14 @@ app.component('v-pricing-quote', {
             if(this.message !== ''){
               product_list['agreement_summary'] = this.md_src_message
             }
-            product_list['project_type'] = this.proj_type
+            product_list['agreement_conditions'] = [];
+            if(this.applProj){
+              product_list['agreement_conditions'].push('application_conditions')
+            }
+            if(this.noQCProj){
+              product_list['agreement_conditions'].push('no-qc_conditions')
+            }
+            product_list['template_text'] = this.template_text_data
             /* Submitting it in a form to get the generated quote doc to open in a new page/tab */
             var newForm = $('<form>', {
               'action': '/generate_quote',
@@ -179,15 +214,15 @@ app.component('v-pricing-quote', {
           <div class="row">
             <div class="col-5 quote_lcol_header">
               <div class="form-radio" id="price_type_selector">
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac">
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac" @change="add_to_md_text">
                 <label class="form-check-label pl-1 pr-3" for="price_type_sweac">
                   Swedish academia
                 </label>
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="full_cost" id="price_type_industry">
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="full_cost" id="price_type_industry" @change="add_to_md_text">
                 <label class="form-check-label pl-1 pr-3" for="price_type_industry">
                   Industry and non-Swedish academia
                 </label>
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost" id="price_type_internal">
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost" id="price_type_internal" @change="add_to_md_text">
                 <label class="form-check-label pl-1 pr-3" for="price_type_internal">
                   Internal
                 </label>
@@ -245,16 +280,17 @@ app.component('v-pricing-quote', {
             </div>
           </div>
           <div class="p-2"> <h4>Enter markdown text for document</h4> </div>
-          <div class="row p-3">
-            <div class="form-radio" id="proj_type_selector">
-              <input class="form-check-input" type="radio" name="project_type" v-model="this.proj_type" value="ptype_prod" id="proj_type_prod">
-              <label class="form-check-label pl-1 pr-3" for="proj_type_prod">
-                Production
-                </label>
-              <input class="form-check-input" type="radio" name="project_type" v-model="this.proj_type" value="ptype_app" id="proj_type_application">
-              <label class="form-check-label pl-1 pr-3" for="proj_type_application">
-              Application
-              </label>
+          <div class="row m-2">
+            <label class="form-check-label p-1" for="template_text_btn_group"> Add project template text for: </label>
+            <div class="col">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="appCheck" v-model="applProj" @change="add_to_md_text">
+                <label class="form-check-label" for="appCheck">Applications</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="noQCCheck" v-model="noQCProj" @change="add_to_md_text">
+                <label class="form-check-label" for="noQCCheck">No-QC</label>
+              </div>
             </div>
           </div>
           <div class="row p-3">
