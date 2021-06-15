@@ -1081,14 +1081,21 @@ app.component('v-requirement-form-part', {
           <div class="row my-1">
             <div class="col-3">
               <h5>Concentration</h5>
-              <div class="form-floating mb-3">
-                <input :id="'concentration_minimum_' + requirement_id" class="form-control" v-model.number="requirement['Concentration']['Minimum']" type="number" :disabled="discontinued">
-                <label :for="'concentration_minimum_' + requirement_id">Minimum</label>
+              <div class="row">
+                <div class="col-6">
+                  <div class="form-floating mb-3">
+                    <input :id="'concentration_minimum_' + requirement_id" class="form-control" v-model.number="requirement['Concentration']['Minimum']" type="number" :disabled="discontinued">
+                    <label :for="'concentration_minimum_' + requirement_id">Minimum</label>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-floating mb-3">
+                    <input :id="'concentration_maximum_' + requirement_id" class="form-control" v-model.number="requirement['Concentration']['Maximum']" type="number" :disabled="discontinued">
+                    <label :for="'concentration_maximum_' + requirement_id">Maximum</label>
+                  </div>
+                </div>
               </div>
-              <div class="form-floating mb-3">
-                <input :id="'concentration_maximum_' + requirement_id" class="form-control" v-model.number="requirement['Concentration']['Maximum']" type="number" :disabled="discontinued">
-                <label :for="'concentration_maximum_' + requirement_id">Maximum</label>
-              </div>
+
               <div class="form-floating">
                 <input id="concentration_unit_{{requirement_id}}" class="form-control" v-model.text="requirement['Concentration']['Unit']" type="text" :disabled="discontinued">
                 <label for="concentration_unit_{{requirement_id}}">Unit</label>
@@ -1096,13 +1103,19 @@ app.component('v-requirement-form-part', {
             </div>
             <div class="col-3">
               <h5>Amount</h5>
-              <div class="form-floating mb-3">
-                <input :id="'amount_minimum_' + requirement_id" class="form-control" v-model.number="requirement['Amount']['Minimum']" type="number" :disabled="discontinued">
-                <label :for="'amount_minimum_' + requirement_id">Minimum</label>
-              </div>
-              <div class="form-floating mb-3">
-                <input :id="'amount_maximum_' + requirement_id" class="form-control" v-model.number="requirement['Amount']['Maximum']" type="number" :disabled="discontinued">
-                <label :for="'amount_maximum_' + requirement_id">Maximum</label>
+              <div class="row">
+                <div class="col-6">
+                  <div class="form-floating mb-3">
+                    <input :id="'amount_minimum_' + requirement_id" class="form-control" v-model.number="requirement['Amount']['Minimum']" type="number" :disabled="discontinued">
+                    <label :for="'amount_minimum_' + requirement_id">Minimum</label>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-floating mb-3">
+                    <input :id="'amount_maximum_' + requirement_id" class="form-control" v-model.number="requirement['Amount']['Maximum']" type="number" :disabled="discontinued">
+                    <label :for="'amount_maximum_' + requirement_id">Maximum</label>
+                  </div>
+                </div>
               </div>
               <div class="form-floating mb-3">
                 <input :id="'amount_recommended_' + requirement_id" class="form-control" v-model.number="requirement['Amount']['Recommended']" type="number" :disabled="discontinued">
@@ -1115,13 +1128,19 @@ app.component('v-requirement-form-part', {
             </div>
             <div class="col-3">
               <h5>Volume</h5>
-              <div class="form-floating mb-3">
-                <input :id="'volume_minimum_' + requirement_id" class="form-control" v-model.number="requirement['Volume']['Minimum']" type="number" :disabled="discontinued">
-                <label :for="'volume_minimum_' + requirement_id">Minimum</label>
-              </div>
-              <div class="form-floating mb-3">
-                <input :id="'volume_maximum_' + requirement_id" class="form-control" v-model.number="requirement['Volume']['Maximum']" type="number" :disabled="discontinued">
-                <label :for="'volume_maximum_' + requirement_id">Maximum</label>
+              <div class="row">
+                <div class="col-6">
+                  <div class="form-floating mb-3">
+                    <input :id="'volume_minimum_' + requirement_id" class="form-control" v-model.number="requirement['Volume']['Minimum']" type="number" :disabled="discontinued">
+                    <label :for="'volume_minimum_' + requirement_id">Minimum</label>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-floating mb-3">
+                    <input :id="'volume_maximum_' + requirement_id" class="form-control" v-model.number="requirement['Volume']['Maximum']" type="number" :disabled="discontinued">
+                    <label :for="'volume_maximum_' + requirement_id">Maximum</label>
+                  </div>
+                </div>
               </div>
               <div class="form-floating">
                 <input id="volume_unit_{{requirement_id}}" class="form-control" v-model.text="requirement['Volume']['Unit']" type="text" :disabled="discontinued">
