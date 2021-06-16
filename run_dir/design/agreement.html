@@ -47,8 +47,23 @@
     </dl>
 
     <dl class="dl-horizontal-quote-price">
-      <dt>Total cost in SEK ({% if data['price_type']=="cost_academic" %}Swedish academia{% else %}Industry and non-Swedish academia{% end %})</dt>
-        <dd> {{ data['total_cost'] }}</dd>
+      {% for category in data['price_breakup'] %}
+      <dt class="fw-normal">{{ category }}</dt>
+        <dd> {{ data['price_breakup'][category] }} SEK</dd>
+      {% end %}
+      {%if 'special_addition' in data %}
+        {%for label in data['special_addition'] %}
+      <dt class="fw-normal">{{ data['special_addition'][label]['name'] }}</dt>
+        <dd> {{ data['special_addition'][label]['value'] }} SEK</dd>
+        {% end %}
+      {% end %}
+      {%if 'special_percentage' in data %}
+      <dt class="fw-normal">{{ data['special_percentage']['name'] }}</dt>
+        <dd> -{{ data['special_percentage']['value'] }} %</dd>
+      {% end %}
+      <hr>
+      <dt>Total cost ({% if data['price_type']=="cost_academic" %}Swedish academia{% else %}Industry and non-Swedish academia{% end %})</dt>
+        <dd> {{ data['total_cost'] }} SEK</dd>
     </dl>
 
     <div class="small pb-3">{{ template_text['first_page_text']['coverage'] }}</div>
