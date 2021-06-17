@@ -47,6 +47,9 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
 from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
+from status.sample_requirements import SampleRequirementsViewHandler, SampleRequirementsDataHandler, SampleRequirementsUpdateHandler, \
+    SampleRequirementsDraftDataHandler, SampleRequirementsValidateDraftDataHandler, SampleRequirementsPreviewHandler, SampleRequirementsReassignLockDataHandler, \
+    SampleRequirementsPublishDataHandler
 from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
     SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, \
     SampleReadCountDataHandler, SampleRunDataHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
@@ -108,6 +111,7 @@ class Application(tornado.web.Application):
             ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
             tornado.web.URLSpec("/api/v1/download_images/(?P<project>[^/]+)/(?P<type>[^/]+)", ImagesDownloadHandler, name="ImagesDownloadHandler"),
             ("/api/v1/draft_cost_calculator", PricingDraftDataHandler),
+            ("/api/v1/draft_sample_requirements", SampleRequirementsDraftDataHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
@@ -176,6 +180,10 @@ class Application(tornado.web.Application):
             ("/api/v1/sample_summary/([^/]*)$", SampleQCSummaryDataHandler),
             ("/api/v1/sample_insert_sizes/([^/]*)$",
                 SampleQCInsertSizesDataHandler),
+            ("/api/v1/sample_requirements", SampleRequirementsDataHandler),
+            ("/api/v1/sample_requirements_publish_draft", SampleRequirementsPublishDataHandler),
+            ("/api/v1/sample_requirements_validate_draft", SampleRequirementsValidateDraftDataHandler),
+            ("/api/v1/sample_requirements_reassign_lock", SampleRequirementsReassignLockDataHandler),
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/sequencing_queues", SequencingQueuesDataHandler),
@@ -208,7 +216,7 @@ class Application(tornado.web.Application):
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
             ("/generate_quote", GenerateQuoteHandler),
-            ("/instrument_logs",InstrumentLogsHandler),
+            ("/instrument_logs", InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/nas_quotas", NASQuotasHandler),
@@ -223,6 +231,9 @@ class Application(tornado.web.Application):
             ("/proj_meta", ProjMetaCompareHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
+            ("/sample_requirements", SampleRequirementsViewHandler),
+            ("/sample_requirements_preview", SampleRequirementsPreviewHandler),
+            ("/sample_requirements_update", SampleRequirementsUpdateHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/user_management", UserManagementHandler),
@@ -253,6 +264,7 @@ class Application(tornado.web.Application):
             self.instrument_logs_db = couch["instrument_logs"]
             self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
             self.projects_db = couch["projects"]
+            self.sample_requirements_db = couch["sample_requirements"]
             self.samples_db = couch["samples"]
             self.server_status_db = couch['server_status']
             self.suggestions_db = couch["suggestion_box"]
