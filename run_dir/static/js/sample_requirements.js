@@ -596,7 +596,7 @@ app.component('v-sample-requirements-data-loading', {
                     <div class="modal-body">
                       <template v-if="this.$root.no_validation_messages">
                         <p>Are you sure you want to publish the current draft?</p>
-                        <p>This will then become the default cost calculator used for all quotes.</p>
+                        <p>This will then become the default sample requirements.</p>
                         <v-draft-changes-list :modal="true" :modal_id="'publish_draft_modal'"/>
                       </template>
                       <template v-else>
@@ -890,7 +890,7 @@ app.component('v-sample-requirements-update', {
                             </div>
                             <div class="modal-body">
                               <template v-if="this.$root.no_validation_messages">
-                                <p>No validation erros found</p>
+                                <p>No validation errors found</p>
                               </template>
                               <template v-else>
                                 <p>The current draft contains validation errors, please fix these before publishing:</p>
