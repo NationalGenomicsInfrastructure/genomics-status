@@ -139,37 +139,47 @@ app.component('v-pricing-quote', {
           this.md_message = this.compiledMarkdown;
         },
         generate_quote:  function (event) {
-          product_list = {}
+          agreement_data = {}
           var no_prod_error = 'Please add Products to generate a quote!';
           if(Object.keys(this.$root.quote_prod_ids).length > 0){
             if(this.$root.any_errors)
               this.$root.error_messages.pop()
+            product_list = {}
             for (prod_id in this.$root.quote_prod_ids){
-              product_list[prod_id] = this.$root.all_products[prod_id]
-              product_list[prod_id]['product_cost'] = this.$root.productCost(prod_id)[this.$root.price_type].toFixed(2)
+              product = this.$root.all_products[prod_id]
+              prod_cost = (this.$root.productCost(prod_id)[this.$root.price_type] * this.$root.quote_prod_ids[prod_id]).toFixed(2)
+              if(product['Category'] in product_list){
+                product_list[product['Category']] = (parseFloat(product_list[product['Category']]) + parseFloat(prod_cost)).toFixed(2)
+              }
+              else{
+                product_list[product['Category']] = prod_cost
+              }
             }
-            product_list['total_products_cost'] = this.product_cost_sum[this.$root.price_type].toFixed(2)
-            product_list['total_cost'] = this.quote_cost[this.$root.price_type]
-            product_list['price_type'] = this.$root.price_type
+            for (category in product_list){
+              product_list[category] = Math.round(parseFloat(product_list[category]))
+            }
+            agreement_data['price_breakup'] = product_list
+            agreement_data['total_products_cost'] = Math.round(this.product_cost_sum[this.$root.price_type])
+            agreement_data['total_cost'] = Math.round(this.quote_cost[this.$root.price_type])
+            agreement_data['price_type'] = this.$root.price_type
             if (this.any_special_addition){;
-              product_list['special_addition'] =  this.active_cost_labels
+              agreement_data['special_addition'] =  this.active_cost_labels
             }
             if (this.any_special_percentage){
-              var obj = {};
-              obj[this.$root.quote_special_percentage_label] = this.$root.this.$root.quote_special_percentage_value
-              product_list['special_percentage'] = obj
+              agreement_data['special_percentage'] = {'name': this.$root.quote_special_percentage_label,
+                                                       'value':  this.$root.quote_special_percentage_value}
             }
             if(this.message !== ''){
-              product_list['agreement_summary'] = this.md_src_message
+              agreement_data['agreement_summary'] = this.md_src_message
             }
-            product_list['agreement_conditions'] = [];
+            agreement_data['agreement_conditions'] = [];
             if(this.applProj){
-              product_list['agreement_conditions'].push('application_conditions')
+              agreement_data['agreement_conditions'].push('application_conditions')
             }
             if(this.noQCProj){
-              product_list['agreement_conditions'].push('no-qc_conditions')
+              agreement_data['agreement_conditions'].push('no-qc_conditions')
             }
-            product_list['template_text'] = this.template_text_data
+            agreement_data['template_text'] = this.template_text_data
             /* Submitting it in a form to get the generated quote doc to open in a new page/tab */
             var newForm = $('<form>', {
               'action': '/generate_quote',
@@ -178,7 +188,7 @@ app.component('v-pricing-quote', {
               'enctype':'text/plain'
             }).append($('<input>', {
                   'name': 'data',
-                  'value': JSON.stringify(product_list),
+                  'value': JSON.stringify(agreement_data),
                   'type': 'hidden'
                 }));
             newForm.hide().appendTo("body").submit();
