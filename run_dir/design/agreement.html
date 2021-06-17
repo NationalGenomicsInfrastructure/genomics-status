@@ -24,11 +24,26 @@
     </div>
     <div class="bottom-rule"><hr></div>
 
-    <h2>Preliminary Quote</h2>
+    <h2>{%if data['origin']=='Agreement' %}
+      Agreement of commisioned activities
+      {% else %}
+      Preliminary Quote
+      {% end %}
+    </h2>
     Sequencing at Science for Life Laboratory is administered by the Royal Institute of Technology (KTH).
     <dl class="dl-horizontal-quote-details p-1">
+      {%if data['origin']=='Agreement' %}
+      <dt>NGI Project ID</dt>
+        <dd>{{ data['ngi_project_id'] }}</dd>
+      <dt>User (name / affiliation)</dt>
+        <dd>{{ data['user_and_affiliation'] }}</dd>
+      {% end %}
       <dt>Issue Date</dt>
         <dd>{{ data['date']}}</dd>
+      {%if data['origin']=='Agreement' %}
+      <dt>Agreement number</dt>
+        <dd> {{ data['agreement_number'] }}</dd>   
+      {% end %}
       <dt>Issuer (name/email)</dt>
         <dd>{{ user.name }} / orders@ngisweden.se</dd>
       <dt>Agreement summary</dt>
