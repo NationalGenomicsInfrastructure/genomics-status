@@ -158,75 +158,61 @@ app.component('v-pricing-quote', {
         },
         generate_quote:  function (event) {
           agreement_data = {}
-          var no_prod_error = 'Please add Products to generate a quote!';
-          if(Object.keys(this.$root.quote_prod_ids).length > 0){
-            if(this.$root.any_errors)
-              this.$root.error_messages.pop()
-            product_list = {}
-            for (prod_id in this.$root.quote_prod_ids){
-              product = this.$root.all_products[prod_id]
-              prod_cost = (this.$root.productCost(prod_id)[this.$root.price_type] * this.$root.quote_prod_ids[prod_id]).toFixed(2)
-              if(product['Category'] in product_list){
-                product_list[product['Category']] = (parseFloat(product_list[product['Category']]) + parseFloat(prod_cost)).toFixed(2)
-              }
-              else{
-                product_list[product['Category']] = prod_cost
-              }
-            }
-            for (category in product_list){
-              product_list[category] = Math.round(parseFloat(product_list[category]))
-            }
-            agreement_data['price_breakup'] = product_list
-            agreement_data['total_products_cost'] = Math.round(this.product_cost_sum[this.$root.price_type])
-            agreement_data['total_cost'] = Math.round(this.quote_cost[this.$root.price_type])
-            agreement_data['price_type'] = this.$root.price_type
-            if (this.any_special_addition){;
-              agreement_data['special_addition'] =  this.active_cost_labels
-            }
-            if (this.any_special_percentage){
-              agreement_data['special_percentage'] = {'name': this.$root.quote_special_percentage_label,
-                                                       'value':  this.$root.quote_special_percentage_value}
-            }
-            if(this.message !== ''){
-              agreement_data['agreement_summary'] = this.md_src_message
-            }
-            agreement_data['agreement_conditions'] = [];
-            if(this.applProj){
-              agreement_data['agreement_conditions'].push('application_conditions')
-            }
-            if(this.noQCProj){
-              agreement_data['agreement_conditions'].push('no-qc_conditions')
-            }
-            agreement_data['template_text'] = this.template_text_data
-            agreement_data['origin'] = this.origin
-            if(this.origin === 'Agreement'){
-              proj_id = $('#projects-js').attr('data-project')
-              axios
-                  .get('/api/v1/project_summary/'+proj_id)
-                  .then(response => {
-                      pdata = response.data
-                      agreement_data['ngi_project_id'] = proj_id + ', '+pdata['project_name']+ ' ('+pdata['order_details']['title']+')'
-                      agreement_data['user_and_affiliation'] = pdata['project_pi_name']+ ' / ' + pdata['affiliation']
-                      agreement_data['project_name'] = pdata['project_name']
-                      this.submit_quote_form(agreement_data);
-                  })
-                  .catch(error => {
-                    console.log(error)
-                      this.$root.error_messages.push('Unable to fetch project data, please try again or contact a system administrator.')
-                  })
+          product_list = {}
+          for (prod_id in this.$root.quote_prod_ids){
+            product = this.$root.all_products[prod_id]
+            prod_cost = (this.$root.productCost(prod_id)[this.$root.price_type] * this.$root.quote_prod_ids[prod_id]).toFixed(2)
+            if(product['Category'] in product_list){
+              product_list[product['Category']] = (parseFloat(product_list[product['Category']]) + parseFloat(prod_cost)).toFixed(2)
             }
             else{
-              this.submit_quote_form(agreement_data);
+              product_list[product['Category']] = prod_cost
             }
           }
+          for (category in product_list){
+            product_list[category] = Math.round(parseFloat(product_list[category]))
+          }
+          agreement_data['price_breakup'] = product_list
+          agreement_data['total_products_cost'] = Math.round(this.product_cost_sum[this.$root.price_type])
+          agreement_data['total_cost'] = Math.round(this.quote_cost[this.$root.price_type])
+          agreement_data['price_type'] = this.$root.price_type
+          if (this.any_special_addition){;
+            agreement_data['special_addition'] =  this.active_cost_labels
+          }
+          if (this.any_special_percentage){
+            agreement_data['special_percentage'] = {'name': this.$root.quote_special_percentage_label,
+                                                     'value':  this.$root.quote_special_percentage_value}
+          }
+          if(this.message !== ''){
+            agreement_data['agreement_summary'] = this.md_src_message
+          }
+          agreement_data['agreement_conditions'] = [];
+          if(this.applProj){
+            agreement_data['agreement_conditions'].push('application_conditions')
+          }
+          if(this.noQCProj){
+            agreement_data['agreement_conditions'].push('no-qc_conditions')
+          }
+          agreement_data['template_text'] = this.template_text_data
+          agreement_data['origin'] = this.origin
+          if(this.origin === 'Agreement'){
+            proj_id = $('#projects-js').attr('data-project')
+            axios
+                .get('/api/v1/project_summary/'+proj_id)
+                .then(response => {
+                    pdata = response.data
+                    agreement_data['ngi_project_id'] = proj_id + ', '+pdata['project_name']+ ' ('+pdata['order_details']['title']+')'
+                    agreement_data['user_and_affiliation'] = pdata['project_pi_name']+ ' / ' + pdata['affiliation']
+                    agreement_data['project_name'] = pdata['project_name']
+                    this.submit_quote_form(agreement_data);
+                })
+                .catch(error => {
+                  console.log(error)
+                    this.$root.error_messages.push('Unable to fetch project data, please try again or contact a system administrator.')
+                })
+          }
           else{
-            event.preventDefault();
-            var flag = 1;
-            if(this.$root.any_errors &&
-              this.$root.error_messages[this.$root.error_messages.length -1]===no_prod_error)
-              flag = 0;
-            if(flag)
-              this.$root.error_messages.push(no_prod_error);
+            this.submit_quote_form(agreement_data);
           }
         }
     },
