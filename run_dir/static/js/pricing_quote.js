@@ -3,6 +3,7 @@ app.component('v-pricing-quote', {
      *
      * Add products from the table to create a quote and switch between price types.
      */
+    props: ['origin'],
     data() {
       return {
         md_message: '',
@@ -116,7 +117,7 @@ app.component('v-pricing-quote', {
                   this.template_text_data = response.data
               })
               .catch(error => {
-                  this.error_messages.push('Unable to fetch agreement template data, please try again or contact a system administrator.')
+                  this.$root.error_messages.push('Unable to fetch agreement template data, please try again or contact a system administrator.')
               })
         },
         add_cost_label: function(){
@@ -138,80 +139,91 @@ app.component('v-pricing-quote', {
         add_to_md_text: function(){
           this.md_message = this.compiledMarkdown;
         },
+        submit_quote_form: function(agreement_data){
+          /* Submitting it in a form to get the generated quote doc to open in a new page/tab */
+          var newForm = $('<form>', {
+            'action': '/generate_quote',
+            'target': '_blank',
+            'method': 'post',
+            'enctype':'text/plain',
+            'id': 'my_form'
+          }).append($('<input>', {
+                'name': 'data',
+                'value': JSON.stringify(agreement_data),
+                'type': 'hidden'
+              }));
+          newForm.hide();
+          newForm.appendTo("body");
+          newForm.submit();
+        },
         generate_quote:  function (event) {
           agreement_data = {}
-          var no_prod_error = 'Please add Products to generate a quote!';
-          if(Object.keys(this.$root.quote_prod_ids).length > 0){
-            if(this.$root.any_errors)
-              this.$root.error_messages.pop()
-            product_list = {}
-            for (prod_id in this.$root.quote_prod_ids){
-              product = this.$root.all_products[prod_id]
-              prod_cost = (this.$root.productCost(prod_id)[this.$root.price_type] * this.$root.quote_prod_ids[prod_id]).toFixed(2)
-              if(product['Category'] in product_list){
-                product_list[product['Category']] = (parseFloat(product_list[product['Category']]) + parseFloat(prod_cost)).toFixed(2)
-              }
-              else{
-                product_list[product['Category']] = prod_cost
-              }
+          product_list = {}
+          for (prod_id in this.$root.quote_prod_ids){
+            product = this.$root.all_products[prod_id]
+            prod_cost = (this.$root.productCost(prod_id)[this.$root.price_type] * this.$root.quote_prod_ids[prod_id]).toFixed(2)
+            if(product['Category'] in product_list){
+              product_list[product['Category']] = (parseFloat(product_list[product['Category']]) + parseFloat(prod_cost)).toFixed(2)
             }
-            for (category in product_list){
-              product_list[category] = Math.round(parseFloat(product_list[category]))
+            else{
+              product_list[product['Category']] = prod_cost
             }
-            agreement_data['price_breakup'] = product_list
-            agreement_data['total_products_cost'] = Math.round(this.product_cost_sum[this.$root.price_type])
-            agreement_data['total_cost'] = Math.round(this.quote_cost[this.$root.price_type])
-            agreement_data['price_type'] = this.$root.price_type
-            if (this.any_special_addition){;
-              agreement_data['special_addition'] =  this.active_cost_labels
-            }
-            if (this.any_special_percentage){
-              agreement_data['special_percentage'] = {'name': this.$root.quote_special_percentage_label,
-                                                       'value':  this.$root.quote_special_percentage_value}
-            }
-            if(this.message !== ''){
-              agreement_data['agreement_summary'] = this.md_src_message
-            }
-            agreement_data['agreement_conditions'] = [];
-            if(this.applProj){
-              agreement_data['agreement_conditions'].push('application_conditions')
-            }
-            if(this.noQCProj){
-              agreement_data['agreement_conditions'].push('no-qc_conditions')
-            }
-            agreement_data['template_text'] = this.template_text_data
-            /* Submitting it in a form to get the generated quote doc to open in a new page/tab */
-            var newForm = $('<form>', {
-              'action': '/generate_quote',
-              'target': '_blank',
-              'method': 'post',
-              'enctype':'text/plain'
-            }).append($('<input>', {
-                  'name': 'data',
-                  'value': JSON.stringify(agreement_data),
-                  'type': 'hidden'
-                }));
-            newForm.hide().appendTo("body").submit();
+          }
+          for (category in product_list){
+            product_list[category] = Math.round(parseFloat(product_list[category]))
+          }
+          agreement_data['price_breakup'] = product_list
+          agreement_data['total_products_cost'] = Math.round(this.product_cost_sum[this.$root.price_type])
+          agreement_data['total_cost'] = Math.round(this.quote_cost[this.$root.price_type])
+          agreement_data['price_type'] = this.$root.price_type
+          if (this.any_special_addition){;
+            agreement_data['special_addition'] =  this.active_cost_labels
+          }
+          if (this.any_special_percentage){
+            agreement_data['special_percentage'] = {'name': this.$root.quote_special_percentage_label,
+                                                     'value':  this.$root.quote_special_percentage_value}
+          }
+          if(this.message !== ''){
+            agreement_data['agreement_summary'] = this.md_src_message
+          }
+          agreement_data['agreement_conditions'] = [];
+          if(this.applProj){
+            agreement_data['agreement_conditions'].push('application_conditions')
+          }
+          if(this.noQCProj){
+            agreement_data['agreement_conditions'].push('no-qc_conditions')
+          }
+          agreement_data['template_text'] = this.template_text_data
+          agreement_data['origin'] = this.origin
+          if(this.origin === 'Agreement'){
+            proj_id = $('#projects-js').attr('data-project')
+            axios
+                .get('/api/v1/project_summary/'+proj_id)
+                .then(response => {
+                    pdata = response.data
+                    agreement_data['ngi_project_id'] = proj_id + ', '+pdata['project_name']+ ' ('+pdata['order_details']['title']+')'
+                    agreement_data['user_and_affiliation'] = pdata['project_pi_name']+ ' / ' + pdata['affiliation']
+                    agreement_data['project_name'] = pdata['project_name']
+                    this.submit_quote_form(agreement_data);
+                })
+                .catch(error => {
+                  console.log(error)
+                    this.$root.error_messages.push('Unable to fetch project data, please try again or contact a system administrator.')
+                })
           }
           else{
-            event.preventDefault();
-            var flag = 1;
-            if(this.$root.any_errors &&
-              this.$root.error_messages[this.$root.error_messages.length -1]===no_prod_error)
-              flag = 0;
-            if(flag)
-              this.$root.error_messages.push(no_prod_error);
+            this.submit_quote_form(agreement_data);
           }
         }
     },
     template:
         /*html*/`
-        <div class="row">
+        <div class="row" v-if="origin === 'Quote'">
           <h1 class="col-md-11 mb-3"><span id="page_title">Cost Calculator</span></h1>
         </div>
         <div class="row row-cols-lg-auto mb-3">
           <div class="col">
-            <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote">Generate Quote</button>
+            <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote">Generate {{ this.origin }}</button>
           </div>
         </div>
         <template v-if="this.$root.published_data_loading">
