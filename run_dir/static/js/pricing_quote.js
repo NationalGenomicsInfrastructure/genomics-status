@@ -8,7 +8,7 @@ app.component('v-pricing-quote', {
       return {
         md_message: '',
         md_src_message: '',
-        proj_type: 'ptype_prod',
+        proj_data: {},
         cLabel_index: 0,
         active_cost_labels: {},
         template_text_data: {},
@@ -96,6 +96,7 @@ app.component('v-pricing-quote', {
     },
     mounted: function () {
         this.init_text();
+        this.get_project_specific_data();
     },
     watch: {
         md_src_message() {
@@ -103,6 +104,30 @@ app.component('v-pricing-quote', {
         }
     },
     methods: {
+        get_project_specific_data() {
+          if(this.origin === 'Agreement'){
+            proj_id = document.querySelector('#pricing_quote_main').dataset.project
+            axios
+                .get('/api/v1/project_summary/'+proj_id)
+                .then(response => {
+                    pdata = response.data
+                    this.proj_data['ngi_project_id'] = proj_id + ', '+pdata['project_name']+ ' ('+pdata['order_details']['title']+')'
+                    this.proj_data['user_and_affiliation'] = pdata['project_pi_name']+ ' / ' + pdata['affiliation']
+                    this.proj_data['project_name'] = pdata['project_name']
+                    if(pdata['type']==='Application'){
+                      this.applProj = true
+                    }
+                    if(pdata['library_prep_option']==='No QC'){
+                      this.noQCProj = true
+                    }
+                    this.add_to_md_text()
+                })
+                .catch(error => {
+                  console.log(error)
+                    this.$root.error_messages.push('Unable to fetch project data, please try again or contact a system administrator.')
+                })
+            }
+        },
         toggle_discontinued() {
             this.$root.show_discontinued = !this.$root.show_discontinued
         },
@@ -196,24 +221,9 @@ app.component('v-pricing-quote', {
           agreement_data['template_text'] = this.template_text_data
           agreement_data['origin'] = this.origin
           if(this.origin === 'Agreement'){
-            proj_id = $('#projects-js').attr('data-project')
-            axios
-                .get('/api/v1/project_summary/'+proj_id)
-                .then(response => {
-                    pdata = response.data
-                    agreement_data['ngi_project_id'] = proj_id + ', '+pdata['project_name']+ ' ('+pdata['order_details']['title']+')'
-                    agreement_data['user_and_affiliation'] = pdata['project_pi_name']+ ' / ' + pdata['affiliation']
-                    agreement_data['project_name'] = pdata['project_name']
-                    this.submit_quote_form(agreement_data);
-                })
-                .catch(error => {
-                  console.log(error)
-                    this.$root.error_messages.push('Unable to fetch project data, please try again or contact a system administrator.')
-                })
+            agreement_data['project_data'] = this.proj_data
           }
-          else{
-            this.submit_quote_form(agreement_data);
-          }
+          this.submit_quote_form(agreement_data);
         }
     },
     template:
