@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block stuff %}
+  <h1 id="page_title">Temperature info from Sensorpush</h1>
+  <p>Showing data from last 4 weeks</p>
+  <div id="plots">
+    {% for sensor in sensor_data.keys() %}
+    <div class="row" id='{{ sensor }}'>
+        <div class
+          <h2>{{ sensor }}</h2>
+          <i class="far fa-sensor-alert"></i>
+        </span>
+        <div class="sensorpush_plot" id="sensorpush_{{ sensor }}"></div>
+    </div>
+    {% end %}
+  </div>
+
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="/static/js/sensorpush.js"></script>
+  <script>
+    $(document).ready(function(){
+      {% for sensor, data in sensor_data.items() %}
+        var title = "Temperature over time (UTC)";
+        var plot_data = date_parse({% raw json_encode(data['samples']) %});
+        var div_id = "sensorpush_{{ sensor }}"
+        var min_temp = {{ data['min_temp'] }};
+        var max_temp = {{ data['max_temp'] }};
+        var limit_lower = date_parse({% raw json_encode(data['limit_lower']) %})
+        var limit_upper = date_parse({% raw json_encode(data['limit_upper']) %})
+        var min_limit_lower = {% raw json_encode(data['min_limit_lower']) %}
+        var max_limit_upper  = {% raw json_encode(data['max_limit_upper']) %}
+        // plot_chart is defined in sensorpush.js
+        plot_chart(title, plot_data, limit_lower, limit_upper, min_temp, max_temp, min_limit_lower, max_limit_upper, div_id);
+      {% end %}
+    });
+  </script>
+{% end %}

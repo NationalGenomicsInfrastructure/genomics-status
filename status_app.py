@@ -54,6 +54,7 @@ from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, 
     SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, \
     SampleReadCountDataHandler, SampleRunDataHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
     SamplesPerLanePlotHandler
+from status.sensorpush import SensorpushDataHandler, SensorpushHandler
 from status.sequencing import InstrumentClusterDensityPlotHandler, InstrumentErrorratePlotHandler, InstrumentUnmatchedPlotHandler, \
     InstrumentYieldPlotHandler, InstrumentClusterDensityDataHandler, InstrumentErrorrateDataHandler, InstrumentUnmatchedDataHandler, \
     InstrumentYieldDataHandler
@@ -187,6 +188,7 @@ class Application(tornado.web.Application):
             ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
             ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/sequencing_queues", SequencingQueuesDataHandler),
+            ("/api/v1/sensorpush", SensorpushDataHandler),
             ("/api/v1/stats",StatsAggregationHandler),
             ("/api/v1/stats/application_open_projects",ApplicationOpenProjectsHandler),
             ("/api/v1/stats/application_open_samples",ApplicationOpenSamplesHandler),
@@ -234,6 +236,7 @@ class Application(tornado.web.Application):
             ("/sample_requirements", SampleRequirementsViewHandler),
             ("/sample_requirements_preview", SampleRequirementsPreviewHandler),
             ("/sample_requirements_update", SampleRequirementsUpdateHandler),
+            ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/user_management", UserManagementHandler),
@@ -266,6 +269,7 @@ class Application(tornado.web.Application):
             self.projects_db = couch["projects"]
             self.sample_requirements_db = couch["sample_requirements"]
             self.samples_db = couch["samples"]
+            self.sensorpush_db = couch["sensorpush"]
             self.server_status_db = couch['server_status']
             self.suggestions_db = couch["suggestion_box"]
             self.worksets_db = couch["worksets"]
