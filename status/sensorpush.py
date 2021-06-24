@@ -81,9 +81,7 @@ class SensorpushDataHandler(SensorpushBaseHandler):
 
 
 class SensorpushHandler(SensorpushBaseHandler):
-    """ Serves a page which lists all flowcells with some brief info.
-    By default shows only flowcells form the last 6 months, use the parameter
-    'all' to show all flowcells.
+    """ Serves a page which lists all sensors with temperature info.
     """
 
     def get(self):
