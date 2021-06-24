@@ -5,10 +5,35 @@
   <div id="plots">
     {% for sensor in sensor_data.keys() %}
     <div class="row" id='{{ sensor }}'>
-        <div class
-          <h2>{{ sensor }}</h2>
-          <i class="far fa-sensor-alert"></i>
-        </span>
+        <div class="col-auto">
+          <h2>
+            {{ sensor }}
+            {% if (sensor_data[sensor]['intervals_lower'] != []) or (sensor_data[sensor]['intervals_higher'] != []) %}
+            <button class="btn btn-danger btn-lg ml-2" type="button" data-toggle="collapse" data-target="#intervals_{{sensor}}" aria-expanded="false" aria-controls="collapseExample">
+              Show warnings <i class="far fa-sensor-alert ml-2"></i>
+            </button>
+          {% end %}
+          </h2>
+          {% if (sensor_data[sensor]['intervals_lower'] != []) or (sensor_data[sensor]['intervals_higher'] != []) %}
+            <div class="collapse" id="intervals_{{sensor}}">
+              <div class="card card-body bg-light">
+                {% if sensor_data[sensor]['intervals_lower'] %}
+                  <h3>Intervals where temperature was too low:</h3>
+                  {% for interval in sensor_data[sensor]['intervals_lower'] %}
+                    <h5> {{ interval[0] }} - {{ interval[1] }} </h5>
+                  {% end %}
+                {% end %}
+                {% if sensor_data[sensor]['intervals_higher'] %}
+                  <h3>Intervals where temperature was too high:</h3>
+                  {% for interval in sensor_data[sensor]['intervals_higher'] %}
+                    <h5> {{ interval[0] }} - {{ interval[1] }} </h5>
+                  {% end %}
+                {% end %}
+              </div>
+            </div>
+          {% end %}
+          </div>
+        </div>
         <div class="sensorpush_plot" id="sensorpush_{{ sensor }}"></div>
     </div>
     {% end %}

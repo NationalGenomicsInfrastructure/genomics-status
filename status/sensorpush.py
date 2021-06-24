@@ -40,12 +40,15 @@ class SensorpushBaseHandler(SafeHandler):
                                     'limit_upper': [],
                                     'max_limit_upper': -300,
                                     'intervals_lower': [],
-                                    'intervals_upper': []
+                                    'intervals_higher': []
                                    }
             for sensor_daily_row in samples_view[[sensor, start_time_str]:[sensor, '9999']]:
                 _, timestamp = sensor_daily_row.key
                 doc = sensor_daily_row.value
                 sensor_data[sensor]['samples'] += doc['saved_samples']
+                sensor_data[sensor]['intervals_lower'] += doc['intervals_lower']
+                sensor_data[sensor]['intervals_higher'] += doc['intervals_higher']
+
                 min_val = 800
                 max_val = -300
                 for _, temp_val in doc['saved_samples']:
