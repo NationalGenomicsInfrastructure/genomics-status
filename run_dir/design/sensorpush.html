@@ -18,13 +18,13 @@
             <div class="collapse" id="intervals_{{sensor}}">
               <div class="card card-body bg-light">
                 {% if sensor_data[sensor]['intervals_lower'] %}
-                  <h3>Intervals where temperature was too low:</h3>
+                  <h3>Intervals where temperature was too low (Stockholm timezone):</h3>
                   {% for interval in sensor_data[sensor]['intervals_lower'] %}
                     <h5> {{ interval[0] }} - {{ interval[1] }} </h5>
                   {% end %}
                 {% end %}
                 {% if sensor_data[sensor]['intervals_higher'] %}
-                  <h3>Intervals where temperature was too high:</h3>
+                  <h3>Intervals where temperature was too high (Stockholm timezone):</h3>
                   {% for interval in sensor_data[sensor]['intervals_higher'] %}
                     <h5> {{ interval[0] }} - {{ interval[1] }} </h5>
                   {% end %}
