@@ -1013,8 +1013,17 @@ th.sort{
   align-items:center;
 }
 
-.bottom-rule{
-  position: running(bottomRuleRunning);
+.first_page_preview::before{
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  opacity: 25%;
+  background:
+    url('data:image/svg+xml;utf8,<svg style="transform:rotate(-45deg)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><text x="10" y="40" fill="red">Preview</text></svg>')
+    0 0/100% 40vh;
 }
 
 .md_textarea{
