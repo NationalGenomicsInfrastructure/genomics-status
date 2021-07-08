@@ -3,7 +3,7 @@ app.component('v-pricing-quote', {
      *
      * Add products from the table to create a quote and switch between price types.
      */
-    props: ['origin'],
+    props: ['origin', 'is_pricing_admin'],
     data() {
       return {
         md_message: '',
@@ -13,7 +13,8 @@ app.component('v-pricing-quote', {
         active_cost_labels: {},
         template_text_data: {},
         applProj: false,
-        noQCProj: false
+        noQCProj: false,
+        saved_agreement_data: {}
       }
     },
     computed: {
@@ -87,6 +88,9 @@ app.component('v-pricing-quote', {
             msg_display += '\n\n'+ first_page_text['specific_conditions']['full_cost_conditions'];
           }
           return marked(msg_display, { sanitize: true });
+        },
+        has_admin_control(){
+          return (this.origin === 'Agreement') && (this.is_pricing_admin==='True')
         }
     },
     created: function() {
@@ -113,7 +117,7 @@ app.component('v-pricing-quote', {
                     pdata = response.data
                     this.proj_data['ngi_project_id'] = proj_id + ', '+pdata['project_name']+ ' ('+pdata['order_details']['title']+')'
                     this.proj_data['user_and_affiliation'] = pdata['project_pi_name']+ ' / ' + pdata['affiliation']
-                    this.proj_data['project_name'] = pdata['project_name']
+                    this.proj_data['project_id'] = proj_id
                     if(pdata['type']==='Application'){
                       this.applProj = true
                     }
@@ -123,10 +127,20 @@ app.component('v-pricing-quote', {
                     this.add_to_md_text()
                 })
                 .catch(error => {
-                  console.log(error)
                     this.$root.error_messages.push('Unable to fetch project data, please try again or contact a system administrator.')
                 })
+                this.get_saved_agreement_data(proj_id)
             }
+        },
+        get_saved_agreement_data(proj_id){
+          axios
+              .get('/api/v1/get_agreement_doc/'+proj_id)
+              .then(response => {
+                  this.saved_agreement_data = response.data
+              })
+              .catch(error => {
+                  this.$root.error_messages.push('Unable to fetch agreement data, please try again or contact a system administrator.')
+              })
         },
         toggle_discontinued() {
             this.$root.show_discontinued = !this.$root.show_discontinued
@@ -134,6 +148,59 @@ app.component('v-pricing-quote', {
         reset_special_percentage() {
             this.$root.quote_special_percentage_label = ''
             this.$root.quote_special_percentage_value = 0
+        },
+        timestamp_to_date(timestamp) {
+          let date = new Date(parseInt(timestamp))
+          return date.toDateString() + ', ' + date.toLocaleTimeString(date)
+        },
+        load_saved_agreement(){
+          //Reset fields
+          this.applProj = false
+          this.noQCProj = false
+          this.$root.quote_special_additions = {}
+          this.active_cost_labels = {}
+          this.$root.quote_special_percentage_value = 0.0
+          this.$root.quote_special_percentage_label = ''
+
+          var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked");
+          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : "";
+          if(timestamp_val!==""){
+            var sel_data = this.saved_agreement_data['saved_agreements'][timestamp_val]
+            this.$root.price_type = sel_data['price_type']
+            if('special_addition' in sel_data){
+              this.$root.quote_special_additions = sel_data['special_addition']
+            }
+            if('special_percentage' in sel_data){
+              this.$root.quote_special_percentage_label = sel_data['special_percentage']['name']
+              this.$root.quote_special_percentage_value = sel_data['special_percentage']['value']
+            }
+            this.md_src_message = sel_data['agreement_summary']
+            if('agreement_conditions' in sel_data){
+              if(sel_data['agreement_conditions'].includes('application_conditions'))
+                this.applProj = true
+              if(sel_data['agreement_conditions'].includes('no-qc_conditions'))
+                this.noQCProj = true
+            }
+            //Make sure selected fields are displayed
+            this.add_to_md_text()
+            this.$root.quote_prod_ids = sel_data['products_included']
+          }
+        },
+        mark_agreement_signed(){
+          var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked");
+          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : "";
+          if(timestamp_val!==""){
+            proj_id = this.proj_data['project_id']
+            axios.post('/api/v1/mark_agreement_signed', {
+                proj_id: proj_id,
+                timestamp: timestamp_val
+            }).then(response => {
+                this.get_saved_agreement_data(proj_id)
+            })
+            .catch(error => {
+                this.$root.error_messages.push('Unable to mark agreement signed, please try again or contact a system administrator.')
+            })
+          }
         },
         fetch_latest_agreement_doc: function(){
           axios
@@ -156,9 +223,9 @@ app.component('v-pricing-quote', {
           }
         },
         init_text: function(){
-          this.md_src_message = '1. **Library preparation**:\n'+
-                                '1. **Sequencing**:\n'+
-                                '1. **Data processing**: Demultiplexing, quality control and raw data delivery on Uppmax/GRUS (validated method)\n'+
+          this.md_src_message = '1. **Library preparation**:  (accredited method)\n'+
+                                '1. **Sequencing**:  (accredited method)\n'+
+                                '1. **Data processing**: Demultiplexing, quality control and raw data delivery on Uppmax/GRUS (accredited method)\n'+
                                 '1. **Data analysis**: None'
         },
         add_to_md_text: function(){
@@ -181,8 +248,9 @@ app.component('v-pricing-quote', {
           newForm.appendTo("body");
           newForm.submit();
         },
-        generate_quote:  function (event) {
+        generate_quote:  function (type) {
           agreement_data = {}
+          agreement_data['type'] = type
           product_list = {}
           for (prod_id in this.$root.quote_prod_ids){
             product = this.$root.all_products[prod_id]
@@ -201,7 +269,7 @@ app.component('v-pricing-quote', {
           agreement_data['total_products_cost'] = Math.round(this.product_cost_sum[this.$root.price_type])
           agreement_data['total_cost'] = Math.round(this.quote_cost[this.$root.price_type])
           agreement_data['price_type'] = this.$root.price_type
-          if (this.any_special_addition){;
+          if (this.any_special_addition){
             agreement_data['special_addition'] =  this.active_cost_labels
           }
           if (this.any_special_percentage){
@@ -221,9 +289,15 @@ app.component('v-pricing-quote', {
           agreement_data['template_text'] = this.template_text_data
           agreement_data['origin'] = this.origin
           if(this.origin === 'Agreement'){
+            timestamp = Date.now()
+            this.proj_data['agreement_number'] = this.proj_data['project_id'] + '_'+ timestamp
             agreement_data['project_data'] = this.proj_data
+            agreement_data['products_included'] = this.$root.quote_prod_ids
           }
           this.submit_quote_form(agreement_data);
+          if(type === 'save'){
+            this.get_saved_agreement_data(this.proj_data['project_id'])
+          }
         }
     },
     template:
@@ -232,8 +306,11 @@ app.component('v-pricing-quote', {
           <h1 class="col-md-11 mb-3"><span id="page_title">Cost Calculator</span></h1>
         </div>
         <div class="row row-cols-lg-auto mb-3">
-          <div class="col">
-            <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote">Generate {{ this.origin }}</button>
+          <div class="col-1">
+            <button type="submit" class="btn btn-secondary" id="generate_quote_btn" v-on:click="generate_quote('preview')">Generate {{ this.origin }} Preview</button>
+          </div>
+          <div class="col-1" v-if="this.has_admin_control">
+            <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote('save')">Save and Generate {{ this.origin }}</button>
           </div>
         </div>
         <template v-if="this.$root.published_data_loading">
@@ -243,6 +320,24 @@ app.component('v-pricing-quote', {
           <template v-if="this.$root.any_errors">
             <v-pricing-error-display/>
           </template>
+          <div class="row" v-if="this.saved_agreement_data['saved_agreements']">
+            <h4 v-if="this.saved_agreement_data">Saved Agreements</h4>
+            <div class="col-3 ml-2 py-3">
+              <template v-for="(agreement, timestamp) in this.saved_agreement_data['saved_agreements']" :key="timestamp">
+                    <div class="form-check m-2">
+                      <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp">
+                      <label class="form-check-label" :for="timestamp">
+                      {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}}
+                      <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger far fa-file-signature fa-lg"> Signed</p>
+                      </label>
+                    </div>
+              </template>
+            </div>
+            <div class="col-2 align-self-center">
+              <button class="btn btn-primary m-1" @click="load_saved_agreement">Load</button>
+              <button class="btn btn-danger m-1" @click="mark_agreement_signed">Mark Signed</button>
+            </div>
+          </div>
           <div class="row">
             <div class="col-5 quote_lcol_header">
               <div class="form-radio" id="price_type_selector">

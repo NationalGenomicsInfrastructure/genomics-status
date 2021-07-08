@@ -3,7 +3,7 @@
 {% block stuff %}
 
 <div class="container-fluid" id="pricing_quote_main">
-  <v-pricing-quote origin="Quote"/>
+  <v-pricing-quote origin="Quote" is_pricing_admin="{{ user.is_pricing_admin }}"/>
 </div>
 
 {% end %}

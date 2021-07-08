@@ -1,6 +1,6 @@
 <div class="tab-pane fade " id="tab_agreements_content">
   <div class="container-fluid" id="pricing_quote_main" data-project="{{ project }}">
-    <v-pricing-quote origin="Agreement"/>
+    <v-pricing-quote origin="Agreement" is_pricing_admin="{{ user.is_pricing_admin }}"/>
   </div>
   <!-- development version, includes helpful console warnings -->
   <script src="https://unpkg.com/vue@next"></script>
