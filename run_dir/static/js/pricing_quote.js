@@ -322,7 +322,7 @@ app.component('v-pricing-quote', {
           </template>
           <div class="row" v-if="this.saved_agreement_data['saved_agreements']">
             <h4 v-if="this.saved_agreement_data">Saved Agreements</h4>
-            <div class="col-3 ml-2 py-3">
+            <div class="col-4 ml-2 py-3">
               <template v-for="(agreement, timestamp) in this.saved_agreement_data['saved_agreements']" :key="timestamp">
                     <div class="form-check m-2">
                       <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp">
