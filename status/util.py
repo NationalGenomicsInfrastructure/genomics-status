@@ -8,7 +8,6 @@ import time
 import copy
 from datetime import datetime, timedelta, date
 from dateutil import parser
-import dateutil.parser
 from collections import OrderedDict, Counter
 from operator import itemgetter
 

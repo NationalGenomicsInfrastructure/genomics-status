@@ -2,7 +2,6 @@ fill_updates_table = function(){
     // Get the most recent updates
     $.getJSON("/api/v1/last_updated?items=15", function(data) {
       var tbl_body = "";
-      var tbl_row = "";
       $.each(data, function(k1, summary) {
             var link = '';
             var linkend = '';
