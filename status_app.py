@@ -59,7 +59,7 @@ from status.statistics import YearApplicationsProjectHandler, YearApplicationsSa
 from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
 from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, \
-    UpdatedDocumentsDatahandler
+    UpdatedDocumentsDatahandler, PrioProjectsTableHandler
 from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b5
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
     WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler, ClosedWorksetsHandler
@@ -146,6 +146,7 @@ class Application(tornado.web.Application):
             ("/api/v1/pricing_publish_draft", PricingPublishDataHandler),
             ("/api/v1/pricing_reassign_lock", PricingReassignLockDataHandler),
             ("/api/v1/pricing_validate_draft", PricingValidateDraftDataHandler),
+            ("/api/v1/prio_projects", PrioProjectsTableHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
@@ -358,6 +359,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/pricing_products.html")
             tornado.autoreload.watch("design/pricing_quote.html")
             tornado.autoreload.watch("design/pricing_quote_tbody.html")
+            tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/project_samples.html")
             tornado.autoreload.watch("design/projects.html")
