@@ -342,16 +342,18 @@ class WorksetPoolsHandler(SafeHandler):
                     requeued =True
                 if project in pools[method]:
                     pools[method][project]['samples'].append((record[1], requeued))
+                    if parse(pools[method][project]['oldest_sample_queued_date']) > record[2]:
+                        pools[method][project]['oldest_sample_queued_date'] = record[2].isoformat()
                 else:
                     proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
                     total_num_samples = proj_doc['no_of_samples']
-                    date_queued = proj_doc['project_summary']['queued']
+                    oldest_sample_queued_date = record[2].isoformat()
                     projName = proj_doc['project_name']
                     protocol = proj_doc['details']['library_construction_method']
                     latest_running_note = self._get_latest_running_note(proj_doc['details']['running_notes'])
                     pools[method][project] = {'samples': [(record[1], requeued)], 'total_num_samples': total_num_samples,
-                                                'queued_date': date_queued, 'pname': projName,'protocol': protocol,
-                                                'latest_running_note': latest_running_note}
+                                                'oldest_sample_queued_date': oldest_sample_queued_date, 'pname': projName,
+                                                'protocol': protocol, 'latest_running_note': latest_running_note}
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(pools))
