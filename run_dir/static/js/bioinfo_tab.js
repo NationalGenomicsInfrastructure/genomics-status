@@ -830,13 +830,23 @@ $('#bioinfo-status-saveButton').click(function(e){
                     console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(sample_run_lane_statuses));
                 },
                 success: function(saved_data, textStatus, xhr) {
-                    var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="fa fa-check"></span></span>');
+                    var status = 'Changes saved ';
+                    if(saved_data['not_saved'].length>0){
+                      status = 'Not all changes saved in bulk update! Doc ids that failed to update are shown below.'
+                      var to_display = status
+                      saved_data['not_saved'].forEach((item, i) => {
+                        to_display += '<br>'+item
+                      });
+
+                      $('#save_error_display').html(to_display)
+                    }
+                    var success_msg = $('<span class="delivery-saved-status">'+status+'<span class="fa fa-check"></span></span>');
                     success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
                     $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
                     //$('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
                     $('table.table-bioinfo-status:visible').find("td.bioinfo-status-runstate span:contains('Delivered')").closest('tr').addClass('bioinfo-status-disabled');
                     $('tr.bioinfo-status-disabled td.datadelivered input:text').prop('disabled', true);
-                    updateSecondTable(saved_data);
+                    updateSecondTable(saved_data['saved_data']);
                 }
             });
             $('#bioinfo-confirm-dialog').modal('hide');
@@ -858,13 +868,23 @@ $('#bioinfo-status-saveButton').click(function(e){
                 console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(sample_run_lane_statuses));
               },
               success: function(saved_data, textStatus, xhr) {
-                var success_msg = $('<span class="delivery-saved-status">Changes saved <span class="fa fa-check"></span></span>');
+                var status = 'Changes saved ';
+                if(saved_data['not_saved'].length>0){
+                  status = 'Not all changes saved in bulk update! Doc ids that failed to update are shown below.'
+                  var to_display = status
+                  saved_data['not_saved'].forEach((item, i) => {
+                    to_display += '<br>'+item
+                  });
+
+                  $('#save_error_display').html(to_display)
+                }
+                var success_msg = $('<span class="delivery-saved-status">'+status+'<span class="fa fa-check"></span></span>');
                 success_msg.prependTo('.bioinfo-savespan').delay(1500).fadeOut(1500, function(){ $(this).remove(); });
                 $('#bioinfo-status-saveButton').removeClass('disabled').text('Save Changes');
                 //$('#bioinfo-history-dump').text(JSON.stringify(saved_data, null, '  '));
                 $('table.table-bioinfo-status:visible').find("td.bioinfo-status-runstate span:contains('Delivered')").closest('tr').addClass('bioinfo-status-disabled')
                 $('tr.bioinfo-status-disabled td.datadelivered input:text').prop('disabled', true);
-                updateSecondTable(saved_data);
+                updateSecondTable(saved_data['saved_data']);
             }
         });
     }
