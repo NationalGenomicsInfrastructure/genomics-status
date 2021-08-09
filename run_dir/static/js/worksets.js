@@ -126,7 +126,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
               }));
             tbl_row.append($('<td>').html(projval['samples'].length +' <span class="badge bg-secondary">'+ projval['total_num_samples']+'</span>'));
             sumGroups[key] = sumGroups[key] + projval['samples'].length;
-            var daysAndLabel = getDaysAndDateLabel(projval['queued_date'], 'both');
+            var daysAndLabel = getDaysAndDateLabel(projval['oldest_sample_queued_date'], 'both');
             tbl_row.append($('<td>').html('<span class="badge bg-'+daysAndLabel[1]+'">'+daysAndLabel[0]+'</span>'));
             tbl_row.append($('<td>').html('<div>'+has_requeued+'</div>'));
             tbl_row.append($('<td>').html(projval['protocol']));
