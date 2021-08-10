@@ -96,7 +96,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
     $('#workset_table_filter').show();
   }
   if($(this).attr('href')=='#tab_pending_samples_to_worksets'){
-    $("#samples_table_body").html('<tr><td colspan="7" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
+    $("#samples_table_body").html('<tr><td colspan="8" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
     return $.getJSON('/api/v1/workset_pools', function(data) {
       $("#samples_table_body").empty();
       var size = 0;
@@ -236,7 +236,7 @@ function init_listjs2() {
           api.column(groupColumn, {page:'current'} ).data().each( function ( group, i ) {
             if ( last !== group ) {
               $(rows).eq( i ).before(
-                  '<tr class="group"><td colspan="7">'+group+' (Total: '+sumGroups[group] +')</td></tr>'
+                  '<tr class="group"><td colspan="8">'+group+' (Total: '+sumGroups[group] +')</td></tr>'
               );
               last = group;
             }
