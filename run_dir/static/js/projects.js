@@ -223,7 +223,7 @@ function load_table(status, type, columns, dates) {
         var note = JSON.parse(latest_note.text());
         var ndate = undefined;
         for (key in note) { ndate = key; break; }
-        notedate = new Date(ndate);
+        notedate =  new Date(ndate.replace(' ', 'T'));
         latest_note.html('<div class="card">' +
             '<div class="card-header">'+
               note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
