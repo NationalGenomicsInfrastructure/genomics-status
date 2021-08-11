@@ -26,7 +26,7 @@ app.component('v-pricing-quote', {
         any_special_addition() {
             for ([index, label] of Object.entries(this.$root.quote_special_additions)){
               if(label.name!== ''){
-                this.active_cost_labels[index] = label;
+                this.active_cost_labels[index] = label
               }
             }
             return Object.keys(this.active_cost_labels).length > 0
@@ -40,9 +40,9 @@ app.component('v-pricing-quote', {
             cost_academic_sum = 0
             full_cost_sum = 0
             for ([prod_id, prod_count] of Object.entries(this.$root.quote_prod_ids)) {
-                cost_sum += prod_count * this.$root.productCost(prod_id)['cost'];
-                cost_academic_sum += prod_count * this.$root.productCost(prod_id)['cost_academic'];
-                full_cost_sum +=  prod_count * this.$root.productCost(prod_id)['full_cost'];
+                cost_sum += prod_count * this.$root.productCost(prod_id)['cost']
+                cost_academic_sum += prod_count * this.$root.productCost(prod_id)['cost_academic']
+                full_cost_sum +=  prod_count * this.$root.productCost(prod_id)['full_cost']
             }
 
             return {'cost': cost_sum,
@@ -76,18 +76,18 @@ app.component('v-pricing-quote', {
                     'full_cost': full_cost_sum.toFixed(2)}
         },
         compiledMarkdown() {
-          msg_display = this.md_src_message;
-          first_page_text = this.template_text_data.first_page_text;
+          msg_display = this.md_src_message
+          first_page_text = this.template_text_data.first_page_text
           if(this.applProj){
-            msg_display += '\n\n'+ first_page_text['specific_conditions']['application_conditions'];
+            msg_display += '\n\n'+ first_page_text['specific_conditions']['application_conditions']
           }
           if(this.noQCProj){
-            msg_display += '\n\n'+ first_page_text['specific_conditions']['no-qc_conditions'];
+            msg_display += '\n\n'+ first_page_text['specific_conditions']['no-qc_conditions']
           }
           if(this.$root.price_type==='full_cost'){
-            msg_display += '\n\n'+ first_page_text['specific_conditions']['full_cost_conditions'];
+            msg_display += '\n\n'+ first_page_text['specific_conditions']['full_cost_conditions']
           }
-          return marked(msg_display, { sanitize: true });
+          return marked(msg_display, { sanitize: true })
         },
         has_admin_control(){
           return (this.origin === 'Agreement') && (this.is_pricing_admin==='True')
@@ -99,12 +99,12 @@ app.component('v-pricing-quote', {
         this.fetch_latest_agreement_doc()
     },
     mounted: function () {
-        this.init_text();
-        this.get_project_specific_data();
+        this.init_text()
+        this.get_project_specific_data()
     },
     watch: {
         md_src_message() {
-            this.add_to_md_text();
+            this.add_to_md_text()
         }
     },
     methods: {
@@ -162,8 +162,8 @@ app.component('v-pricing-quote', {
           this.$root.quote_special_percentage_value = 0.0
           this.$root.quote_special_percentage_label = ''
 
-          var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked");
-          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : "";
+          var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
+          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : ""
           if(timestamp_val!==""){
             var sel_data = this.saved_agreement_data['saved_agreements'][timestamp_val]
             this.$root.price_type = sel_data['price_type']
@@ -176,10 +176,12 @@ app.component('v-pricing-quote', {
             }
             this.md_src_message = sel_data['agreement_summary']
             if('agreement_conditions' in sel_data){
-              if(sel_data['agreement_conditions'].includes('application_conditions'))
+              if(sel_data['agreement_conditions'].includes('application_conditions')){
                 this.applProj = true
-              if(sel_data['agreement_conditions'].includes('no-qc_conditions'))
+              }
+              if(sel_data['agreement_conditions'].includes('no-qc_conditions')){
                 this.noQCProj = true
+              }
             }
             //Make sure selected fields are displayed
             this.add_to_md_text()
@@ -187,8 +189,8 @@ app.component('v-pricing-quote', {
           }
         },
         mark_agreement_signed(){
-          var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked");
-          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : "";
+          var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
+          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : ""
           if(timestamp_val!==""){
             proj_id = this.proj_data['project_id']
             axios.post('/api/v1/mark_agreement_signed', {
@@ -213,13 +215,13 @@ app.component('v-pricing-quote', {
               })
         },
         add_cost_label: function(){
-          this.$root.quote_special_additions[this.cLabel_index] = { name: '', value: 0 };
-          this.cLabel_index++;
+          this.$root.quote_special_additions[this.cLabel_index] = { name: '', value: 0 }
+          this.cLabel_index++
         },
         remove_cost_label: function(index){
-          delete this.$root.quote_special_additions[index];
+          delete this.$root.quote_special_additions[index]
           if(this.active_cost_labels.hasOwnProperty(index)){
-            delete this.active_cost_labels[index];
+            delete this.active_cost_labels[index]
           }
         },
         init_text: function(){
@@ -229,7 +231,7 @@ app.component('v-pricing-quote', {
                                 '1. **Data analysis**: None'
         },
         add_to_md_text: function(){
-          this.md_message = this.compiledMarkdown;
+          this.md_message = this.compiledMarkdown
         },
         submit_quote_form: function(agreement_data){
           /* Submitting it in a form to get the generated quote doc to open in a new page/tab */
@@ -243,10 +245,10 @@ app.component('v-pricing-quote', {
                 'name': 'data',
                 'value': JSON.stringify(agreement_data),
                 'type': 'hidden'
-              }));
-          newForm.hide();
-          newForm.appendTo("body");
-          newForm.submit();
+              }))
+          newForm.hide()
+          newForm.appendTo("body")
+          newForm.submit()
         },
         generate_quote:  function (type) {
           agreement_data = {}
@@ -279,7 +281,7 @@ app.component('v-pricing-quote', {
           if(this.message !== ''){
             agreement_data['agreement_summary'] = this.md_src_message
           }
-          agreement_data['agreement_conditions'] = [];
+          agreement_data['agreement_conditions'] = []
           if(this.applProj){
             agreement_data['agreement_conditions'].push('application_conditions')
           }
@@ -294,7 +296,7 @@ app.component('v-pricing-quote', {
             agreement_data['project_data'] = this.proj_data
             agreement_data['products_included'] = this.$root.quote_prod_ids
           }
-          this.submit_quote_form(agreement_data);
+          this.submit_quote_form(agreement_data)
           if(type === 'save'){
             this.get_saved_agreement_data(this.proj_data['project_id'])
           }

@@ -642,7 +642,6 @@ class AgreementsDBHandler(SafeHandler):
         db.save(doc)
 
 
-
 class GenerateQuoteHandler(AgreementsDBHandler):
     """ Serves a built pricing quote page
 
