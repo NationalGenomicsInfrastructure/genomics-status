@@ -11,7 +11,6 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
 from status.projects import RunningNotesDataHandler
-from pathlib import Path
 import yaml
 
 class WorksetsDataHandler(SafeHandler):
@@ -304,9 +303,6 @@ class WorksetPoolsHandler(SafeHandler):
     """
     def get(self):
         import psycopg2
-        limsbackend_cred_loc = Path(self.settings['lims_backend_credential_location']).expanduser()
-        with limsbackend_cred_loc.open() as cred_file:
-            lims_conf = yaml.safe_load(cred_file)
 
         queues = {}
         queues['TruSeqRNAprep'] = '311'
@@ -322,8 +318,8 @@ class WorksetPoolsHandler(SafeHandler):
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
-        connection = psycopg2.connect(user=lims_conf['username'], host=lims_conf['url'],
-                                        database=lims_conf['db'], password=lims_conf['password'])
+        connection = psycopg2.connect(user=self.application.lims_conf['username'], host=self.application.lims_conf['url'],
+                                        database=self.application.lims_conf['db'], password=self.application.lims_conf['password'])
         cursor = connection.cursor()
         pools = {}
 
