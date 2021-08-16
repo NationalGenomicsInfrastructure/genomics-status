@@ -70,6 +70,7 @@ from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler,
 
 from zenpy import Zenpy
 from urllib.parse import urlsplit
+from pathlib import Path
 
 class Application(tornado.web.Application):
     def __init__(self, settings):
@@ -342,6 +343,11 @@ class Application(tornado.web.Application):
 
         # project summary - multiqc tab
         self.multiqc_path = settings.get('multiqc_path')
+
+        #lims backend credentials
+        limsbackend_cred_loc = Path(settings['lims_backend_credential_location']).expanduser()
+        with limsbackend_cred_loc.open() as cred_file:
+            self.lims_conf = yaml.safe_load(cred_file)
 
         # Setup the Tornado Application
 

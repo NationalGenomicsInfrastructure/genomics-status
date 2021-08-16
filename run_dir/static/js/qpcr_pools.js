@@ -6,10 +6,7 @@ Powers /qpcr_pools - template is run_dir/design/qpcr_pools.html
 
 $(document).ready(function() {
     // Load the data
-    //load_table();
-    //Temp disable to fix loading times
-    var colspan = $('#pools_table > thead > tr:first > th').length + 1;
-    $("#pools_table_body").html('<tr><td colspan="'+colspan+'"><em>Page under Renovation... Please visit later!</em></td></tr>');
+    load_table();
 });
 // Initialize sorting and searching javascript plugin
 
@@ -26,7 +23,7 @@ function load_table() {
           tbl_row.append($('<td>').html(flow));
           tbl_row.append($('<td class="expand-proj">').html(function() {
               var to_return = '<span class="fa fa-plus-square" aria-hidden="true"></span>';
-              to_return = to_return + container + ' <span class="badge">'+pools['samples'].length+'</span>';
+              to_return = to_return + container + ' <span class="badge bg-secondary">'+pools['samples'].length+'</span>';
               to_return = to_return + '<BR><span> \
               <table cellpadding="5" border="0" style="visibility:collapse;margin-bottom:0px;margin-top:5px;" align="right">';
               to_return = to_return + '<thead><tr class="darkth"><th>Sample</th><th>Well</th><th>Waiting (in days)</th></tr></thead>';
