@@ -33,6 +33,8 @@ class qPCRPoolsDataHandler(SafeHandler):
         queues['MiSeq'] = query.format(1002)
         #Queue = 1666, stepid in the query
         queues['NovaSeq'] = query.format(1666)
+        #Queue = 2102, stepid in the query
+        queues['NextSeq'] = query.format(2102)
         #Queue 41, but query is slightly different to use protocolid for Library Validation QC which is 8 and, also to exclude the controls
         queues['LibraryValidation'] = ("select  st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid "
                                         "from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm where "
