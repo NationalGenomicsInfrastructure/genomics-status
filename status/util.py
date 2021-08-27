@@ -5,7 +5,6 @@ import requests
 import os
 import sys
 import time
-import copy
 from datetime import datetime, timedelta, date
 from dateutil import parser
 from collections import OrderedDict, Counter
@@ -282,105 +281,6 @@ class PagedQCDataHandler(SafeHandler):
             sample_list.append(row.key)
 
         return sample_list
-        
-class PrioProjectsTableHandler(SafeHandler):
-    """Serves information about projects statuses.
-
-    Loaded through /api/v1/prio_projects"""
-
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        projects = OrderedDict()
-        def_dates_gen = { 'days_recep_ctrl' : ['open_date', 'queued'],
-                        'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
-                        'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
-                        'days_close' : ['all_raw_data_delivered', 'close_date']
-                        }
-
-        def_dates_summary = { 'days_prep_start' : ['queued', 'library_prep_start'],
-                            'days_seq_start' : [['qc_library_finished', 'queued'], 'sequencing_start_date'],
-                            'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
-                            'days_prep' : ['library_prep_start', 'qc_library_finished']
-                            }
- 
-        view = self.application.projects_db.view("project/summary_status", descending=True)
-        for row in view:
-           proj_id = row.key[1]
-           projects[proj_id] = row.value
-           if row.value['status_fields']['aborted'] != 'Aborted' and row.value['status_fields']['status'] != 'Closed':
-               pass
-           else:
-               for date_type, date in row.value['summary_dates'].items():
-                   projects[proj_id][date_type] = date
-
-               for key, value in def_dates_gen.items():
-                   start_date = value[0]
-                   end_date = value[1]
-                   projects[proj_id][key] = self._calculate_days_in_status(projects[proj_id].get(start_date),
-                                                                       projects[proj_id].get(end_date))
-
-               for key, value in def_dates_summary.items():
-                   if key == 'days_seq_start':
-
-                       if 'Library, By user' in projects[proj_id].get('library_construction_method', '-'):
-                           start_date = value[0][1]
-                       else:
-                           start_date = value[0][0]
-                   else:
-                       start_date = value[0]
-                       end_date = value[1]
-                   if key in ['days_prep', 'days_prep_start'] and 'Library, By user' in projects[proj_id].get('library_construction_method', '-'):
-                       projects[proj_id][key] = 0
-                   else:
-                       projects[proj_id][key] = self._calculate_days_in_status(projects[proj_id].get(start_date),
-                                                                            projects[proj_id].get(end_date))
-
-        statuses_dict = {}
-        for k,v in projects.items():
-            for k2,v2 in v.items(): 
-                if k2 == 'days_recep_ctrl':
-                    statuses_dict[k] = {k2: v2}
-                if k2 == 'days_prep_start': 
-                    statuses_dict[k].update({k2: v2})
-                if k2 == 'days_seq_start':
-                    statuses_dict[k].update({k2: v2})
-                if k2 == 'days_seq':
-                    statuses_dict[k].update({k2: v2})
-                if k2 == 'days_analysis':
-                    statuses_dict[k].update({k2: v2})
-                if k2 == 'days_data_delivery':
-                    statuses_dict[k].update({k2: v2})
-                if k2 == 'days_close':
-                    statuses_dict[k].update({k2: v2})
-
-        #Delete statuses with 0 days
-        days_dict = copy.deepcopy(statuses_dict)
-        for k,v in statuses_dict.items():
-            min_days = 0
-            for k2,v2 in v.items():
-                if v2 <= min_days:
-                    del days_dict[k][k2]
-
-        #Get list of projects with status and days containing only last status
-        table_data = [(k,k2,v2) for k,v in days_dict.items() for k2,v2 in v.items() if k2 in list(v.items())[-1]]
-        #Sort projects on number of days
-        table_data.sort(key=lambda x:x[2], reverse=True)
-        #Get top 20 projects
-        self.write(json.dumps(table_data[:20]))
-
-
-    def _calculate_days_in_status(self, start_date, end_date):
-        days = 0
-        if start_date:
-            if end_date:
-                delta = dateutil.parser.parse(end_date) - dateutil.parser.parse(start_date)
-            else:
-                delta = datetime.now() - dateutil.parser.parse(start_date)
-                days = delta.days
-        else:
-            days = 0
-        return days
-
 
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
     """ Serves up static files without any tornado caching.
