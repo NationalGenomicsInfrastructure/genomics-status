@@ -51,7 +51,6 @@ function fill_prioprojs_table() {
       $("#prio_projs_table_body").empty();
       $.each(data, function(num, project){
           check_value = Math.abs(project[2])
-          var tbl_row = '<tr>';
           switch(project[1]){
               case 'days_recep_ctrl':
                   day_color = check_value>7 ? check_value>14 ? 'text-danger': 'text-warning' :'text-success';
@@ -87,7 +86,6 @@ function fill_prioprojs_table() {
                   break;
               }
       });
-      $("#prio_projs_table_body").append('</tr>');
   });
 }
 
