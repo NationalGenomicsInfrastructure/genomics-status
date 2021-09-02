@@ -346,7 +346,7 @@ class WorksetPoolsHandler(SafeHandler):
                     oldest_sample_queued_date = record[2].isoformat()
                     projName = proj_doc['project_name']
                     protocol = proj_doc['details']['library_construction_method']
-                    queued_date = proj_doc['project_summary']['queued']
+                    queued_date = proj_doc.get('project_summary', {}).get('queued', 'NA')
                     latest_running_note = self._get_latest_running_note(proj_doc['details']['running_notes'])
                     pools[method][project] = {'samples': [(record[1], requeued)], 'total_num_samples': total_num_samples,
                                                 'oldest_sample_queued_date': oldest_sample_queued_date, 'pname': projName,
