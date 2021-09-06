@@ -1138,8 +1138,8 @@ class PrioProjectsTableHandler(SafeHandler):
         table_data = [(k,k2,v2) for k,v in days_dict.items() for k2,v2 in v.items() if k2 in list(v.items())[-1]]
         #Sort projects on number of days
         table_data.sort(key=lambda x:x[2], reverse=True)
-        #Get top 20 projects
-        self.write(json.dumps(table_data[:20]))
+        #Get top 15 projects
+        self.write(json.dumps(table_data[:15]))
 
 
     def _calculate_days_in_status(self, start_date, end_date):
