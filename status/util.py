@@ -4,11 +4,8 @@ import json
 import requests
 import os
 import sys
-import time
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 from dateutil import parser
-from collections import OrderedDict, Counter
-from operator import itemgetter
 
 
 #########################
@@ -194,7 +191,7 @@ class MainHandler(UnsafeHandler):
                 else:
                     server_status[server]['css_class'] = ''
         # sort by used space
-        server_status = sorted(server_status.items(), key = lambda item: item[1].get('used_percentage'), reverse=True)     
+        server_status = sorted(server_status.items(), key = lambda item: item[1].get('used_percentage'), reverse=True)
 
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=user, server_status=server_status))
@@ -281,6 +278,7 @@ class PagedQCDataHandler(SafeHandler):
             sample_list.append(row.key)
 
         return sample_list
+
 
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
     """ Serves up static files without any tornado caching.

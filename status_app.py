@@ -360,7 +360,6 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/pricing_quote.html")
             tornado.autoreload.watch("design/pricing_quote_tbody.html")
             tornado.autoreload.watch("design/proj_meta_compare.html")
-            tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/project_samples.html")
             tornado.autoreload.watch("design/projects.html")
             tornado.autoreload.watch("design/reads_total.html")
