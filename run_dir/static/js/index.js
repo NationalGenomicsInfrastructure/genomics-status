@@ -42,47 +42,47 @@ fill_updates_table = function(){
         } else {
             console.log('Last PSUL update check failed. Returned "'+data['status']+'"');
         }
-      });
+    });
 };
 
 function fill_prioprojs_table() {
-  //Get projects that have been waiting the longest
+  //Get projects that have been  the longest
   $.getJSON("api/v1/prio_projects", function(data) {
       $("#prio_projs_table_body").empty();
       $.each(data, function(num, project){
           check_value = Math.abs(project[2])
           switch(project[1]){
               case 'days_recep_ctrl':
-                  day_color = check_value>7 ? check_value>14 ? 'text-danger': 'text-warning' :'text-success';
-                  $(".recep").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days waiting: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
+                  day_color = check_value>7 ? check_value>14 ? 'text-danger': 'text-orange' :'text-success';
+                  $(".recep").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
                   break;
               case 'days_prep_start':
-                  day_color = check_value>7 ? check_value>10 ? 'text-danger': 'text-warning' :'text-success';
-                  $(".prep_start").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days waiting: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
+                  day_color = check_value>7 ? check_value>10 ? 'text-danger': 'text-orange' :'text-success';
+                  $(".prep_start").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
                   break;
               case 'days_prep':
-                  day_color = check_value>7 ? check_value>10 ? 'text-danger': 'text-warning' :'text-success';
-                  $(".in_prep").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days waiting: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
+                  day_color = check_value>7 ? check_value>10 ? 'text-danger': 'text-orange' :'text-success';
+                  $(".in_prep").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
                   break;
               case 'days_seq_start':
-                  day_color = check_value>7 ? check_value>14 ? 'text-danger': 'text-warning' :'text-success';
-                  $(".seq_start").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days waiting: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
+                  day_color = check_value>7 ? check_value>14 ? 'text-danger': 'text-orange' :'text-success';
+                  $(".seq_start").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
                   break;
               case 'days_seq':
-                  day_color = check_value>7 ? check_value>10 ? 'text-danger': 'text-warning' : 'text-success';
-                  $(".in_seq").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days waiting: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
+                  day_color = check_value>7 ? check_value>10 ? 'text-danger': 'text-orange' : 'text-success';
+                  $(".in_seq").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
                   break;
               case 'days_analysis':
-                  day_color = check_value>7 ? check_value>10 ? 'text-danger': 'text-warning' : 'text-success';
-                  $(".analysis").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days waiting: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
+                  day_color = check_value>7 ? check_value>10 ? 'text-danger': 'text-orange' : 'text-success';
+                  $(".analysis").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
                   break;
               case 'days_data_delivery':
-                  day_color = check_value>7 ? check_value>10 ? 'text-danger': 'text-warning' : 'text-success';
-                  $(".to_delivery").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days waiting: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
+                  day_color = check_value>7 ? check_value>10 ? 'text-danger': 'text-orange' : 'text-success';
+                  $(".to_delivery").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
                   break;
               case 'days_close':
-                  day_color = check_value>10 ? check_value>19 ? 'text-danger': 'text-warning' : 'text-success';
-                  $(".close").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days waiting: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
+                  day_color = check_value>10 ? check_value>19 ? 'text-danger': 'text-orange' : 'text-success';
+                  $(".close").append('<tr><td>'+'Project: '+'<a href="/project/'+project[0]+'">'+project[0]+'</a>'+', days: '+'<span class="'+day_color+'">'+check_value+'</span></td></tr>');
                   break;
           }
       });
