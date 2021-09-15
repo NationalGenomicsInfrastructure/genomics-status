@@ -1131,14 +1131,10 @@ class PrioProjectsTableHandler(SafeHandler):
         #Get list of projects with status and days containing only last status
         t_data = [(k,k2,v2) for k,v in projects.items() for k2,v2 in v.items() if k2 in list(v.items())[-1]]
         #Sort projects on number of days
-        t_data.sort(key=lambda x:(x[1], x[2]), reverse=True)
-        table_data = []
-        #Get top 15 projects in each status
-        for key in list(def_dates_rec_ctrl.keys())+list(def_dates_ongoing.keys()):
-            table_data = table_data + [item for item in t_data if item[1]==key][:15]
+        t_data.sort(key=lambda x:x[2], reverse=True)
 
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(table_data))
+        self.write(json.dumps(t_data[:26]))
 
     def _calculate_days_in_status(self, start_date, end_date):
         days = 0

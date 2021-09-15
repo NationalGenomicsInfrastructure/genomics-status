@@ -47,40 +47,21 @@
       <a class="text-decoration-none" href="/suggestion_box">suggestions page</a>! We're currently collecting feedback on
       how the homepage should look...</p>
 </div>
-
 <div class="row mt-5">
-  <div class="col-lg-12">	
-    <h3>Prioritized Projects:</h3>
-    <table class="table table-bordered" id="prio_projs_table">
-      <thead>
-        <tr class="darkth">
-          <th>In recep.ctrl:</th>
-          <th>To prep:</th>
-          <th>In prep:</th>
-          <th>To seq:</th>
-          <th>In seq:</th>
-          <th>In analysis:</th>
-          <th>In delivery:</th>
-          <th>To close:</th>
+  <div class="col-lg-6">	
+    <h3>Prioritized Projects</h3>
+    <table class="table table-bordered sortable" id="prio_projs_table">
+      <thead id="prio_projs_table_head">
+        <tr class="sticky darkth">
+          <th class="sort">Project:</th>
+          <th class="sort">Status:</th>
+          <th class="sort">Days waiting:</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td class='recep'></td>
-          <td class='prep_start'></td>
-          <td class='in_prep'></td>
-          <td class='seq_start'></td>
-          <td class='in_seq'></td>
-          <td class='analysis'></td>
-          <td class='to_delivery'></td>
-          <td class='close'></td>
-        </tr>
-      </tbody>
+      <tbody id="prio_projs_table_body"></tbody>
     </table>
   </div>
-</div>
 <!-- sparkline plots table -->
-<div class="row mt-5">
 	<div class="col-lg-6">
 		<h3>Server Status</h3>
 		<table class="table table-bordered table-disk-quotas">
@@ -105,6 +86,8 @@
       </tbody>
 		</table>
   </div>
+  </div>
+  <div class="row mt-5">
   <div class="col-lg-6">
 		<h3>Latest Updated Data</h3>
 		<table class="table table-bordered" id="update_table">
@@ -122,6 +105,7 @@
 </div>
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script type="text/javascript" src="/static/js/index.js?v={{ gs_globals['git_commit'] }}" id="indexpage-js-import"></script>
+<script src="/static/js/jquery.dataTables.min.js"></script>
 
 {% end %}
 

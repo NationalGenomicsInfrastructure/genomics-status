@@ -680,6 +680,30 @@ width:30%;
 .text-orange {
   color: #ff9933;
 }
+.text-recep {
+  color: #33cc33;
+}
+.text-prep-start {
+  color: #0000ff;
+}
+.text-prep {
+  color: #ff00ff;
+}
+.text-seq-start {
+  color: #990099;
+}
+.text-seq {
+  color: #cc0000;
+}
+.text-analysis {
+  color: #ff6600;
+}
+.text-delivery {
+  color: #999966;
+}
+.text-close {
+  color: #660066;
+}
 
 /**
  * Theme for jQRangeSlider
