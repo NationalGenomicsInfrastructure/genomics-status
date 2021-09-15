@@ -681,19 +681,19 @@ width:30%;
   color: #ff9933;
 }
 .text-recep {
-  color: #33cc33;
+  color: #009900;
 }
 .text-prep-start {
-  color: #0000ff;
+  color: #008080;
 }
 .text-prep {
-  color: #ff00ff;
+  color: #e60073;
 }
 .text-seq-start {
-  color: #990099;
+  color: #0000ff;
 }
 .text-seq {
-  color: #cc0000;
+  color: #660066;
 }
 .text-analysis {
   color: #ff6600;
@@ -702,7 +702,7 @@ width:30%;
   color: #999966;
 }
 .text-close {
-  color: #660066;
+  color: #800000;
 }
 
 /**

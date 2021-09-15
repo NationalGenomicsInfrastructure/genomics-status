@@ -110,7 +110,7 @@ function init_listjs() {
       "paging":false,
       "destroy": true,
       "info":false,
-      "order": [[ 0, "asc" ]]
+      "order": [[ 2, "desc" ]]
     });
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
