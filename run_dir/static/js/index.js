@@ -1,26 +1,4 @@
 fill_updates_table = function(){
-    // Get the most recent updates
-    $.getJSON("/api/v1/last_updated?items=15", function(data) {
-      var tbl_body = "";
-      $.each(data, function(k1, summary) {
-            var link = '';
-            var linkend = '';
-            if(summary[2] == 'Project information'){
-                link = '<a class="text-decoration-none" href="/project/'+summary[1]+'">';
-                linkend = '</a>';
-            } else if(summary[2] == 'Flowcell information'){
-                link = '<a class="text-decoration-none" href="/flowcells/'+summary[1]+'">';
-                linkend = '</a>';
-            }
-            tbl_row = '<tr>';
-        tbl_row += '<td>' + link + summary[2] + linkend + '</td>';
-        tbl_row += '<td>' + link + summary[1] + linkend + '</td>';
-        tbl_row += '<td>' + link + moment(summary[0]).format('HH:mm, MMM Do YYYY') + linkend + '</td>';
-        tbl_row += '</tr>';
-        $("#update_table").append(tbl_row);
-      })
-    });
-
     // Find out when the update scripts will next run
     $.getJSON('/api/v1/last_psul', function(data){
         var status = data['st']
