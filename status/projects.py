@@ -1086,7 +1086,7 @@ class PrioProjectsTableHandler(SafeHandler):
         for status in statuses:
             view_calls.append(view[[status, 'Z']:[status, '']])
         for row in itertools.chain.from_iterable(view_calls):
-            proj_name = row.value['project_name']
+            proj_id_name = row.key[1]+' '+row.value['project_name']
             proj_val = row.value
             for date_type, date in proj_val['summary_dates'].items():
                 proj_val[date_type] = date
@@ -1103,7 +1103,7 @@ class PrioProjectsTableHandler(SafeHandler):
                 end_date = value[1]
                 date_val = self._calculate_days_in_status(proj_val.get(start_date),
                                                                proj_val.get(end_date))
-                projects[proj_name] = { key: date_val }
+                projects[proj_id_name] = { key: date_val }
 
             if row.key[0] == 'ongoing':
                 for key, value in def_dates_ongoing.items():
@@ -1121,14 +1121,14 @@ class PrioProjectsTableHandler(SafeHandler):
                         date_val = self._calculate_days_in_status(proj_val.get(start_date),
                                                                        proj_val.get(end_date))
 
-                    projects[proj_name][key] = date_val
+                    projects[proj_id_name][key] = date_val
 
         #Delete statuses with 0 days
         for k,v in projects.items():
             min_days = 0
             for k2 in list(v):
-                  if v[k2] <= min_days:
-                        del projects[k][k2]
+                if v[k2] <= min_days:
+                    del projects[k][k2]
  
         #Get list of projects with status and days containing only last status
         t_data = [(k,k2,v2) for k,v in projects.items() for k2,v2 in v.items() if k2 in list(v.items())[-1]]
