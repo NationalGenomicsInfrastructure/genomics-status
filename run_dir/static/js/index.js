@@ -74,8 +74,8 @@ function fill_prioprojs_table() {
                   status = 'To close';
                   break;
           }
-          id_name = project[0].split(' ');
-          proj_id = id_name[0];
+          id_name = project[0].replace('(','').replace(')','').split(' ');
+          proj_id = id_name[1];
           var tbl_row = '<tr>'+'<td>'+'<a href="/project/'+proj_id+'">'+project[0]+'</a></td>'+
                         '<td>'+'<span class="'+stat_color+'">'+status+'</span></td>'+
                         '<td>'+'<span class="'+day_color+'">'+check_value+'</span></td></tr>';

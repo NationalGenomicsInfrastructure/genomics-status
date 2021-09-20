@@ -1086,7 +1086,7 @@ class PrioProjectsTableHandler(SafeHandler):
         for status in statuses:
             view_calls.append(view[[status, 'Z']:[status, '']])
         for row in itertools.chain.from_iterable(view_calls):
-            proj_id_name = row.key[1]+', '+row.value['project_name']
+            proj_id_name = row.value['project_name']+' ('+row.key[1]+')'
             proj_val = row.value
             for date_type, date in proj_val['summary_dates'].items():
                 proj_val[date_type] = date
