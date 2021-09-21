@@ -74,9 +74,12 @@ function fill_prioprojs_table() {
                   status = 'To close';
                   break;
           }
-          id_name = project[0].replace('(','').replace(')','').split(' ');
-          proj_id = id_name[1];
-          var tbl_row = '<tr>'+'<td>'+'<a href="/project/'+proj_id+'">'+project[0]+'</a></td>'+
+          project_library = project[0].split('|');
+          library = project_library[1];
+          name_id = project_library[0];
+          proj_id = project_library[0].replace('(','').replace(')','').split(' ');
+          var tbl_row = '<tr>'+'<td>'+'<a href="/project/'+proj_id+'">'+name_id+'</a></td>'+
+                        '<td>'+library+'</td>'+
                         '<td>'+'<span class="'+stat_color+'">'+status+'</span></td>'+
                         '<td>'+'<span class="'+day_color+'">'+check_value+'</span></td></tr>';
           $("#prio_projs_table_body").append(tbl_row);
@@ -90,7 +93,7 @@ function init_listjs() {
       "paging":false,
       "destroy": true,
       "info":false,
-      "order": [[ 2, "desc" ]]
+      "order": [[ 3, "desc" ]]
     });
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
