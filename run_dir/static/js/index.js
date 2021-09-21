@@ -77,8 +77,8 @@ function fill_prioprojs_table() {
           project_library = project[0].split('|');
           library = project_library[1];
           name_id = project_library[0];
-          proj_id = project_library[0].replace('(','').replace(')','').split(' ');
-          var tbl_row = '<tr>'+'<td>'+'<a href="/project/'+proj_id+'">'+name_id+'</a></td>'+
+          name_proj_id = project_library[0].replace('(','').replace(')','').split(' ');
+          var tbl_row = '<tr>'+'<td>'+'<a href="/project/'+name_proj_id[1]+'">'+name_id+'</a></td>'+
                         '<td>'+library+'</td>'+
                         '<td>'+'<span class="'+stat_color+'">'+status+'</span></td>'+
                         '<td>'+'<span class="'+day_color+'">'+check_value+'</span></td></tr>';
