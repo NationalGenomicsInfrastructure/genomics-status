@@ -19,6 +19,7 @@ $(document).ready(function() {
     load_links();
     load_charon_summary();
     setup_internal_costs_form();
+    load_last_update();
   });
 
   // Prevent traditional html submit function
@@ -86,6 +87,16 @@ $(document).ready(function() {
           window.open(this.href);
       return false;
         });
+    $('.copy_proj').click(function(){
+        var copyText = project;
+        document.addEventListener('copy', function(e) {
+            e.clipboardData.setData('text/plain', copyText);
+            e.preventDefault();
+        }, true);
+        document.execCommand('copy');
+        window.open(this.href);
+      return false;
+    });
   if(window.location.href.indexOf('#running_note_')!=-1){
     $('.nav-tabs a[href="#tab_running_notes_content"]').tab('show');
     setTimeout(function(){
@@ -1200,3 +1211,15 @@ $('#downloadImgsBtn').click(function(e){
   var download_api_url = '/api/v1/download_images/'+project+'/'+option;
   $('#chooseImgType').attr('action', download_api_url).attr('method', 'post');
 });
+
+function load_last_update(){
+  $.getJSON("/api/v1/last_updated", function(data){
+    $.each(data, function(k1, summary){
+        var p_id = summary[1];
+        var time = moment(summary[0]).format('HH:mm, MMM Do YYYY');
+        if (p_id == project){
+            $("#last_update").html('Updated last: '+time);
+        }
+    });
+  });
+}
