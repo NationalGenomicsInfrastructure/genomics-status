@@ -19,7 +19,7 @@ $(document).ready(function() {
     load_links();
     load_charon_summary();
     setup_internal_costs_form();
-    load_last_update();
+    load_last_modified();
   });
 
   // Prevent traditional html submit function
@@ -42,7 +42,6 @@ $(document).ready(function() {
     $('.email_link').attr('title', 'Copy to clipboard').tooltip('_fixTitle');
     $(e.trigger).parent().attr('title', 'Copied!').tooltip('_fixTitle').tooltip('show');
   });
-
 
   $('body').on('click', '.search-action', function(e) {
     // Stop the checkbox from firing if clicked, plus stop bubbling
@@ -1212,11 +1211,11 @@ $('#downloadImgsBtn').click(function(e){
   $('#chooseImgType').attr('action', download_api_url).attr('method', 'post');
 });
 
-function load_last_update(){
-  $.getJSON("/api/v1/last_updated", function(data){
+function load_last_modified(){
+  $.getJSON("/api/v1/last_modified_project", function(data){
     $.each(data, function(k1, summary){
-        var p_id = summary[1];
-        var time = moment(summary[0]).format('HH:mm, MMM Do YYYY');
+        var p_id = summary[0];
+        var time = moment(summary[1]).format('HH:mm, MMM Do YYYY');
         if (p_id == project){
             $("#last_update").html('Updated last: '+time);
         }
