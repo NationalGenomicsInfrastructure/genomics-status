@@ -1049,20 +1049,4 @@ class ProjectInternalCostsHandler(SafeHandler):
             self.set_status(200)
             self.set_header("Content-type", "application/json")
             self.write(self.request.body)
-
-class LastModifiedProjects(SafeHandler):
-    """ Handler for the last modified time of the last updated documents in the
-    databases Status gets data from, of each project.
-
-    Loaded through /api/v1/last_modified_project
-    """
-    def get(self):
-        mod_time = []
-        view = self.application.projects_db.view("project/summary", descending=True)
-        for row in view:
-            try:
-                mod_time.append((row.key[1], row.value['order_details']['modified']))
-            except KeyError:
-                mod_time.append((row.key[1], '-'))
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(mod_time))
+            
