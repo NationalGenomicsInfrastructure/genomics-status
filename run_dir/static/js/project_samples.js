@@ -19,6 +19,10 @@ $(document).ready(function() {
     load_links();
     load_charon_summary();
     setup_internal_costs_form();
+<<<<<<< HEAD
+=======
+    load_last_modified();
+>>>>>>> 10e902052ced9d790365bbdd686163a3c4be597e
   });
 
   // Prevent traditional html submit function
@@ -1214,4 +1218,18 @@ $('#downloadImgsBtn').click(function(e){
   $('#chooseImgType').attr('action', download_api_url).attr('method', 'post');
 });
 
+<<<<<<< HEAD
 
+=======
+function load_last_modified(){
+  $.getJSON("/api/v1/last_modified_project", function(data){
+    $.each(data, function(k1, summary){
+        var p_id = summary[0];
+        var time = moment(summary[1]).format('HH:mm, MMM Do YYYY');
+        if (p_id == project){
+            $("#last_update").html('Updated last: '+time);
+        }
+    });
+  });
+}
+>>>>>>> 10e902052ced9d790365bbdd686163a3c4be597e
