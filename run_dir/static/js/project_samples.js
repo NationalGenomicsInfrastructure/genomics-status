@@ -19,7 +19,6 @@ $(document).ready(function() {
     load_links();
     load_charon_summary();
     setup_internal_costs_form();
-    load_last_update();
   });
 
   // Prevent traditional html submit function
@@ -42,7 +41,6 @@ $(document).ready(function() {
     $('.email_link').attr('title', 'Copy to clipboard').tooltip('_fixTitle');
     $(e.trigger).parent().attr('title', 'Copied!').tooltip('_fixTitle').tooltip('show');
   });
-
 
   $('body').on('click', '.search-action', function(e) {
     // Stop the checkbox from firing if clicked, plus stop bubbling
@@ -520,7 +518,11 @@ function load_all_udfs(){
       else if (prettify(key) == 'customer_project_description'){
         $('#customer_project_description').html(make_markdown(value));
       }
-
+      // Add last modified time of project
+      else if (prettify(key) == 'modification_time'){
+        var time = moment(value).format('HH:mm, MMM Do YYYY');
+        $("#last_update").html('Updated last: '+time);
+      }
       // Everything else
       else {
 			  if(prettyobj(key).length > 0){
@@ -1212,14 +1214,4 @@ $('#downloadImgsBtn').click(function(e){
   $('#chooseImgType').attr('action', download_api_url).attr('method', 'post');
 });
 
-function load_last_update(){
-  $.getJSON("/api/v1/last_updated", function(data){
-    $.each(data, function(k1, summary){
-        var p_id = summary[1];
-        var time = moment(summary[0]).format('HH:mm, MMM Do YYYY');
-        if (p_id == project){
-            $("#last_update").html('Updated last: '+time);
-        }
-    });
-  });
-}
+
