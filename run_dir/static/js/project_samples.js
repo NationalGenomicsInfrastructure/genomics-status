@@ -184,12 +184,12 @@ function load_presets() {
 
     // Default presets
     for (var preset in default_presets) {
-      $('#default_preset_buttons').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-outline-dark">'+preset+'</button>');
+      $('#default_preset_buttons').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-outline-secondary">'+preset+'</button>');
     }
     // User presets, if there are any
     if (!jQuery.isEmptyObject(user_presets)) {
       for (var preset in user_presets) {
-        $('#user_presets_dropdown').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-outline-dark">'+preset+'</button>');
+        $('#user_presets_dropdown').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-outline-secondary">'+preset+'</button>');
       }
     }
     else {

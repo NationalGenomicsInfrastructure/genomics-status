@@ -24,31 +24,61 @@
     </div>
     <div class="bottom-rule"><hr></div>
 
-    <h2>Preliminary Quote</h2>
+    <h2>{%if data['origin']=='Agreement' %}
+      Agreement of commisioned activities
+      {% else %}
+      Preliminary Quote
+      {% end %}
+    </h2>
     Sequencing at Science for Life Laboratory is administered by the Royal Institute of Technology (KTH).
     <dl class="dl-horizontal-quote-details p-1">
+      {%if data['origin']=='Agreement' %}
+      <dt>NGI Project ID</dt>
+        <dd>{{ data['project_data']['ngi_project_id'] }}</dd>
+      <dt>User (name / affiliation)</dt>
+        <dd>{{ data['project_data']['user_and_affiliation'] }}</dd>
+      {% end %}
       <dt>Issue Date</dt>
         <dd>{{ data['date']}}</dd>
+      {%if data['origin']=='Agreement' %}
+      <dt>Agreement number</dt>
+        <dd> {{ data['agreement_number'] }}</dd>
+      {% end %}
       <dt>Issuer (name/email)</dt>
         <dd>{{ user.name }} / orders@ngisweden.se</dd>
       <dt>Agreement summary</dt>
         <dd> {% raw data['agreement_summary']%}
-          {%if data['project_type']=='ptype_app' %}
+          {%for condition in data['agreement_conditions']%}
           <div class="small pt-2 pr-2">
-            {% raw template_text['first_page_text']['application_conditions']%}
+            {% raw template_text['first_page_text']['specific_conditions'][condition]%}
           </div>
           {% end %}
           {%if data['price_type']=='full_cost' %}
           <div class="small pt-2 pr-2">
-            {% raw template_text['full_cost_conditions']%}
+            {% raw template_text['first_page_text']['specific_conditions']['full_cost_conditions']%}
           </div>
           {% end %}
         </dd>
     </dl>
 
     <dl class="dl-horizontal-quote-price">
-      <dt>Total cost in SEK ({% if data['price_type']=="cost_academic" %}Swedish academia{% else %}Industry and non-Swedish academia{% end %})</dt>
-        <dd> {{ data['total_cost'] }}</dd>
+      {% for category in data['price_breakup'] %}
+      <dt class="fw-normal">{{ category }}</dt>
+        <dd> {{ data['price_breakup'][category] }} SEK</dd>
+      {% end %}
+      {%if 'special_addition' in data %}
+        {%for label in data['special_addition'] %}
+      <dt class="fw-normal">{{ data['special_addition'][label]['name'] }}</dt>
+        <dd> {{ data['special_addition'][label]['value'] }} SEK</dd>
+        {% end %}
+      {% end %}
+      {%if 'special_percentage' in data %}
+      <dt class="fw-normal">{{ data['special_percentage']['name'] }}</dt>
+        <dd> -{{ data['special_percentage']['value'] }} %</dd>
+      {% end %}
+      <hr>
+      <dt>Total cost ({% if data['price_type']=="cost_academic" %}Swedish academia{% else %}Industry and non-Swedish academia{% end %})</dt>
+        <dd> {{ data['total_cost'] }} SEK</dd>
     </dl>
 
     <div class="small pb-3">{{ template_text['first_page_text']['coverage'] }}</div>

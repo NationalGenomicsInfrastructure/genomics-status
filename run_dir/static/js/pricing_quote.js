@@ -3,13 +3,17 @@ app.component('v-pricing-quote', {
      *
      * Add products from the table to create a quote and switch between price types.
      */
+    props: ['origin'],
     data() {
       return {
         md_message: '',
         md_src_message: '',
-        proj_type: 'ptype_prod',
+        proj_data: {},
         cLabel_index: 0,
-        active_cost_labels: {}
+        active_cost_labels: {},
+        template_text_data: {},
+        applProj: false,
+        noQCProj: false
       }
     },
     computed: {
@@ -71,28 +75,75 @@ app.component('v-pricing-quote', {
                     'full_cost': full_cost_sum.toFixed(2)}
         },
         compiledMarkdown() {
-          return marked(this.md_src_message, { sanitize: true });
+          msg_display = this.md_src_message;
+          first_page_text = this.template_text_data.first_page_text;
+          if(this.applProj){
+            msg_display += '\n\n'+ first_page_text['specific_conditions']['application_conditions'];
+          }
+          if(this.noQCProj){
+            msg_display += '\n\n'+ first_page_text['specific_conditions']['no-qc_conditions'];
+          }
+          if(this.$root.price_type==='full_cost'){
+            msg_display += '\n\n'+ first_page_text['specific_conditions']['full_cost_conditions'];
+          }
+          return marked(msg_display, { sanitize: true });
         }
     },
     created: function() {
         this.$root.fetchPublishedCostCalculator(true),
-        this.$root.fetchExchangeRates()
+        this.$root.fetchExchangeRates(),
+        this.fetch_latest_agreement_doc()
     },
     mounted: function () {
         this.init_text();
+        this.get_project_specific_data();
     },
     watch: {
         md_src_message() {
-            this.md_message = this.compiledMarkdown;
+            this.add_to_md_text();
         }
     },
     methods: {
+        get_project_specific_data() {
+          if(this.origin === 'Agreement'){
+            proj_id = document.querySelector('#pricing_quote_main').dataset.project
+            axios
+                .get('/api/v1/project_summary/'+proj_id)
+                .then(response => {
+                    pdata = response.data
+                    this.proj_data['ngi_project_id'] = proj_id + ', '+pdata['project_name']+ ' ('+pdata['order_details']['title']+')'
+                    this.proj_data['user_and_affiliation'] = pdata['project_pi_name']+ ' / ' + pdata['affiliation']
+                    this.proj_data['project_name'] = pdata['project_name']
+                    if(pdata['type']==='Application'){
+                      this.applProj = true
+                    }
+                    if(pdata['library_prep_option']==='No QC'){
+                      this.noQCProj = true
+                    }
+                    this.add_to_md_text()
+                })
+                .catch(error => {
+                  console.log(error)
+                    this.$root.error_messages.push('Unable to fetch project data, please try again or contact a system administrator.')
+                })
+            }
+        },
         toggle_discontinued() {
             this.$root.show_discontinued = !this.$root.show_discontinued
         },
         reset_special_percentage() {
             this.$root.quote_special_percentage_label = ''
             this.$root.quote_special_percentage_value = 0
+        },
+        fetch_latest_agreement_doc: function(){
+          axios
+              .get('/api/v1/get_agreement_template_text')
+              .then(response => {
+                  this.template_text_data = response.data
+              })
+              .catch(error => {
+                  this.$root.error_messages.push('Unable to fetch agreement template data, please try again or contact a system administrator.')
+              })
         },
         add_cost_label: function(){
           this.$root.quote_special_additions[this.cLabel_index] = { name: '', value: 0 };
@@ -110,63 +161,79 @@ app.component('v-pricing-quote', {
                                 '1. **Data processing**: Demultiplexing, quality control and raw data delivery on Uppmax/GRUS (validated method)\n'+
                                 '1. **Data analysis**: None'
         },
+        add_to_md_text: function(){
+          this.md_message = this.compiledMarkdown;
+        },
+        submit_quote_form: function(agreement_data){
+          /* Submitting it in a form to get the generated quote doc to open in a new page/tab */
+          var newForm = $('<form>', {
+            'action': '/generate_quote',
+            'target': '_blank',
+            'method': 'post',
+            'enctype':'text/plain',
+            'id': 'my_form'
+          }).append($('<input>', {
+                'name': 'data',
+                'value': JSON.stringify(agreement_data),
+                'type': 'hidden'
+              }));
+          newForm.hide();
+          newForm.appendTo("body");
+          newForm.submit();
+        },
         generate_quote:  function (event) {
+          agreement_data = {}
           product_list = {}
-          var no_prod_error = 'Please add Products to generate a quote!';
-          if(Object.keys(this.$root.quote_prod_ids).length > 0){
-            if(this.$root.any_errors)
-              this.$root.error_messages.pop()
-            for (prod_id in this.$root.quote_prod_ids){
-              product_list[prod_id] = this.$root.all_products[prod_id]
-              product_list[prod_id]['product_cost'] = this.$root.productCost(prod_id)[this.$root.price_type].toFixed(2)
+          for (prod_id in this.$root.quote_prod_ids){
+            product = this.$root.all_products[prod_id]
+            prod_cost = (this.$root.productCost(prod_id)[this.$root.price_type] * this.$root.quote_prod_ids[prod_id]).toFixed(2)
+            if(product['Category'] in product_list){
+              product_list[product['Category']] = (parseFloat(product_list[product['Category']]) + parseFloat(prod_cost)).toFixed(2)
             }
-            product_list['total_products_cost'] = this.product_cost_sum[this.$root.price_type].toFixed(2)
-            product_list['total_cost'] = this.quote_cost[this.$root.price_type]
-            product_list['price_type'] = this.$root.price_type
-            if (this.any_special_addition){;
-              product_list['special_addition'] =  this.active_cost_labels
+            else{
+              product_list[product['Category']] = prod_cost
             }
-            if (this.any_special_percentage){
-              var obj = {};
-              obj[this.$root.quote_special_percentage_label] = this.$root.this.$root.quote_special_percentage_value
-              product_list['special_percentage'] = obj
-            }
-            if(this.message !== ''){
-              product_list['agreement_summary'] = this.md_src_message
-            }
-            product_list['project_type'] = this.proj_type
-            /* Submitting it in a form to get the generated quote doc to open in a new page/tab */
-            var newForm = $('<form>', {
-              'action': '/generate_quote',
-              'target': '_blank',
-              'method': 'post',
-              'enctype':'text/plain'
-            }).append($('<input>', {
-                  'name': 'data',
-                  'value': JSON.stringify(product_list),
-                  'type': 'hidden'
-                }));
-            newForm.hide().appendTo("body").submit();
           }
-          else{
-            event.preventDefault();
-            var flag = 1;
-            if(this.$root.any_errors &&
-              this.$root.error_messages[this.$root.error_messages.length -1]===no_prod_error)
-              flag = 0;
-            if(flag)
-              this.$root.error_messages.push(no_prod_error);
+          for (category in product_list){
+            product_list[category] = Math.round(parseFloat(product_list[category]))
           }
+          agreement_data['price_breakup'] = product_list
+          agreement_data['total_products_cost'] = Math.round(this.product_cost_sum[this.$root.price_type])
+          agreement_data['total_cost'] = Math.round(this.quote_cost[this.$root.price_type])
+          agreement_data['price_type'] = this.$root.price_type
+          if (this.any_special_addition){;
+            agreement_data['special_addition'] =  this.active_cost_labels
+          }
+          if (this.any_special_percentage){
+            agreement_data['special_percentage'] = {'name': this.$root.quote_special_percentage_label,
+                                                     'value':  this.$root.quote_special_percentage_value}
+          }
+          if(this.message !== ''){
+            agreement_data['agreement_summary'] = this.md_src_message
+          }
+          agreement_data['agreement_conditions'] = [];
+          if(this.applProj){
+            agreement_data['agreement_conditions'].push('application_conditions')
+          }
+          if(this.noQCProj){
+            agreement_data['agreement_conditions'].push('no-qc_conditions')
+          }
+          agreement_data['template_text'] = this.template_text_data
+          agreement_data['origin'] = this.origin
+          if(this.origin === 'Agreement'){
+            agreement_data['project_data'] = this.proj_data
+          }
+          this.submit_quote_form(agreement_data);
         }
     },
     template:
         /*html*/`
-        <div class="row">
+        <div class="row" v-if="origin === 'Quote'">
           <h1 class="col-md-11 mb-3"><span id="page_title">Cost Calculator</span></h1>
         </div>
         <div class="row row-cols-lg-auto mb-3">
           <div class="col">
-            <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote">Generate Quote</button>
+            <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote">Generate {{ this.origin }}</button>
           </div>
         </div>
         <template v-if="this.$root.published_data_loading">
@@ -179,15 +246,15 @@ app.component('v-pricing-quote', {
           <div class="row">
             <div class="col-5 quote_lcol_header">
               <div class="form-radio" id="price_type_selector">
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac">
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac" @change="add_to_md_text">
                 <label class="form-check-label pl-1 pr-3" for="price_type_sweac">
                   Swedish academia
                 </label>
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="full_cost" id="price_type_industry">
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="full_cost" id="price_type_industry" @change="add_to_md_text">
                 <label class="form-check-label pl-1 pr-3" for="price_type_industry">
                   Industry and non-Swedish academia
                 </label>
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost" id="price_type_internal">
+                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost" id="price_type_internal" @change="add_to_md_text">
                 <label class="form-check-label pl-1 pr-3" for="price_type_internal">
                   Internal
                 </label>
@@ -245,16 +312,17 @@ app.component('v-pricing-quote', {
             </div>
           </div>
           <div class="p-2"> <h4>Enter markdown text for document</h4> </div>
-          <div class="row p-3">
-            <div class="form-radio" id="proj_type_selector">
-              <input class="form-check-input" type="radio" name="project_type" v-model="this.proj_type" value="ptype_prod" id="proj_type_prod">
-              <label class="form-check-label pl-1 pr-3" for="proj_type_prod">
-                Production
-                </label>
-              <input class="form-check-input" type="radio" name="project_type" v-model="this.proj_type" value="ptype_app" id="proj_type_application">
-              <label class="form-check-label pl-1 pr-3" for="proj_type_application">
-              Application
-              </label>
+          <div class="row m-2">
+            <label class="form-check-label p-1" for="template_text_btn_group"> Add project template text for: </label>
+            <div class="col">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="appCheck" v-model="applProj" @change="add_to_md_text">
+                <label class="form-check-label" for="appCheck">Applications</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="noQCCheck" v-model="noQCProj" @change="add_to_md_text">
+                <label class="form-check-label" for="noQCCheck">No-QC</label>
+              </div>
             </div>
           </div>
           <div class="row p-3">

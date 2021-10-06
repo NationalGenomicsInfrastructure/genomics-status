@@ -7,7 +7,7 @@ function display_undetermined(lane){
 // from runnin_notes.js
 // these vars are needed for load_running_notes(); -> it's js
 var notetype='flowcell';
-var flowcell=$('#flowcells-js').attr('data-flowcell'); // passing parameters to <script> from flowcell.html
+var flowcell_id_reference=$('#flowcells-js').attr('data-flowcell'); // passing parameters to <script> from flowcell.html
 load_running_notes();
 // from links.js
 load_links();
