@@ -1057,14 +1057,6 @@ class PrioProjectsTableHandler(SafeHandler):
     Loaded through /api/v1/prio_projects"""
 
     def get(self):
-        from collections.abc import Iterable
-        def flatten(l):
-            for el in l:
-                if isinstance(el, Iterable) and not isinstance(el, str):
-                    yield from flatten(el)
-                else:
-                    yield el
-
         projects = {}
         def_dates_rec_ctrl = { 'days_recep_ctrl' : ['open_date', 'queued']
                              }
@@ -1077,8 +1069,7 @@ class PrioProjectsTableHandler(SafeHandler):
                                'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
                                'days_close' : ['all_raw_data_delivered', 'close_date']
                              }
-
-        date_fields = list(flatten(def_dates_ongoing.values()))
+                             
         statuses = ['ongoing', 'reception control']
         view_calls = []
 
@@ -1129,7 +1120,7 @@ class PrioProjectsTableHandler(SafeHandler):
             for k2 in list(v):
                 if v[k2] <= min_days:
                     del projects[k][k2]
- 
+
         #Get list of projects with status and days containing only last status
         t_data = [(k,k2,v2) for k,v in projects.items() for k2,v2 in v.items() if k2 in list(v.items())[-1]]
         #Sort projects on number of days
