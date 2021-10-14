@@ -17,7 +17,8 @@ function generate_category_label(category){
         'User Communication': ['usr', 'people-arrows'],
         'Administration': ['danger', 'folder-open'],
         'Important': ['imp', 'exclamation-circle'],
-        'Deviation': ['devi', 'frown']
+        'Deviation': ['devi', 'frown'],
+        'Invoicing': ['inv', 'file-invoice-dollar']
     }
     // Remove the whitespace
     var category = category.trim()
