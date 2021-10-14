@@ -150,6 +150,7 @@ h1 small, h2 small, h3 small, h4 small{
 .bg-devi  {background-color: #a13a7e;}
 .bg-usr  {background-color: #ff6f00;}
 .bg-succe {background-color: #5cb85c;}
+.bg-inv {background-color: #8373A7;}
 
 .btn-xs {
   padding: 1px 5px;
@@ -183,6 +184,10 @@ h1 small, h2 small, h3 small, h4 small{
 .btn-dang{
   color: #fff;
   background-color: #d9534f;
+}
+.btn-inv{
+  color: #fff;
+  background-color: #8373A7;
 }
 
 .info-bg{
