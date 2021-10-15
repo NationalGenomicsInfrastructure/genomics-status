@@ -1079,7 +1079,6 @@ class PrioProjectsTableHandler(SafeHandler):
         for row in itertools.chain.from_iterable(view_calls):
             proj_id_name_lib = row.value['project_name']+' ('+row.key[1]+')'+'| '+row.value['details']['library_construction_method']
             proj_val = row.value
-            proj_id = row.key[1]
             for date_type, date in proj_val['summary_dates'].items():
                 proj_val[date_type] = date
             if row.key[0] == 'ongoing':
