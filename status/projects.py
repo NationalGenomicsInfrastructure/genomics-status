@@ -1117,6 +1117,7 @@ class PrioProjectsTableHandler(SafeHandler):
         #Delete statuses with 0 days
         for k,v in projects.items():
             min_days = 0
+            #turn v into list to avoid 'dictionary changed size during iteration'- error
             for k2 in list(v):
                 if v[k2] <= min_days:
                     del projects[k][k2]
