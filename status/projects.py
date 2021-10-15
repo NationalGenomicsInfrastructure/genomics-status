@@ -1079,6 +1079,7 @@ class PrioProjectsTableHandler(SafeHandler):
         for row in itertools.chain.from_iterable(view_calls):
             proj_id_name_lib = row.value['project_name']+' ('+row.key[1]+')'+'| '+row.value['details']['library_construction_method']
             proj_val = row.value
+            proj_id = row.key[1]
             for date_type, date in proj_val['summary_dates'].items():
                 proj_val[date_type] = date
             if row.key[0] == 'ongoing':
@@ -1122,7 +1123,10 @@ class PrioProjectsTableHandler(SafeHandler):
                     del projects[k][k2]
 
         #Get list of projects with status and days containing only last status
-        t_data = [(k,k2,v2) for k,v in projects.items() for k2,v2 in v.items() if k2 in list(v.items())[-1]]
+        t_data = []
+        for k,v in projects.items():
+            stat = list(v)[-1]
+            t_data.append((k, stat, v[stat]))
         #Sort projects on number of days
         t_data.sort(key=lambda x:x[2], reverse=True)
 
@@ -1136,8 +1140,6 @@ class PrioProjectsTableHandler(SafeHandler):
                 delta = dateutil.parser.parse(end_date) - dateutil.parser.parse(start_date)
             else:
                 delta = datetime.datetime.now() - dateutil.parser.parse(start_date)
-                days = delta.days
-        else:
-            days = 0
+            days = delta.days
         return days
 
