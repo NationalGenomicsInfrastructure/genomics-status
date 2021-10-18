@@ -43,7 +43,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, \
     ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
     ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler, \
-    ImagesDownloadHandler
+    ImagesDownloadHandler, PrioProjectsTableHandler
 from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
@@ -153,6 +153,7 @@ class Application(tornado.web.Application):
             ("/api/v1/pricing_publish_draft", PricingPublishDataHandler),
             ("/api/v1/pricing_reassign_lock", PricingReassignLockDataHandler),
             ("/api/v1/pricing_validate_draft", PricingValidateDraftDataHandler),
+            ("/api/v1/prio_projects", PrioProjectsTableHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
