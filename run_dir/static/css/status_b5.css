@@ -681,6 +681,35 @@ width:30%;
   cursor: pointer;
 }
 
+/*Text color prio projs table*/
+.text-orange {
+  color: #ff9933;
+}
+.text-recep {
+  color: #009900;
+}
+.text-prep-start {
+  color: #008080;
+}
+.text-prep {
+  color: #e60073;
+}
+.text-seq-start {
+  color: #0000ff;
+}
+.text-seq {
+  color: #660066;
+}
+.text-analysis {
+  color: #ff6600;
+}
+.text-delivery {
+  color: #999966;
+}
+.text-close {
+  color: #800000;
+}
+
 /**
  * Theme for jQRangeSlider
  * Inspired by http://cssdeck.com/item/381/itunes-10-storage-bar
