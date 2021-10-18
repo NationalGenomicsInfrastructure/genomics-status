@@ -1121,7 +1121,10 @@ class PrioProjectsTableHandler(SafeHandler):
             #turn v into list to avoid 'dictionary changed size during iteration'- error
             for k2 in list(v):
                 if v[k2] <= min_days:
-                    del projects[k][k2]
+                    if k2 == 'days_recep_ctrl':
+                        continue
+                    else:
+                        del projects[k][k2]
 
         #Get list of projects with status and days containing only last status
         t_data = []
