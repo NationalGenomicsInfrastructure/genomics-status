@@ -1077,10 +1077,7 @@ class PrioProjectsTableHandler(SafeHandler):
         for status in statuses:
             view_calls.append(view[[status, 'Z']:[status, '']])
         for row in itertools.chain.from_iterable(view_calls):
-            try:
-                proj_id_name_lib = row.value['project_name']+' ('+row.key[1]+')'+'| '+row.value['details']['library_construction_method']
-            except KeyError:
-                proj_id_name_lib = row.value['project_name']+' ('+row.key[1]+')'+'| '+'-'
+            proj_id_name_lib = row.value['project_name']+' ('+row.key[1]+')'+'| '+row.value['details'].get('library_construction_method', '-')
             proj_val = row.value
             for date_type, date in proj_val['summary_dates'].items():
                 proj_val[date_type] = date
