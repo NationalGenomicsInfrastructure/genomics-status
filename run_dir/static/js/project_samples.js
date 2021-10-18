@@ -42,7 +42,6 @@ $(document).ready(function() {
     $(e.trigger).parent().attr('title', 'Copied!').tooltip('_fixTitle').tooltip('show');
   });
 
-
   $('body').on('click', '.search-action', function(e) {
     // Stop the checkbox from firing if clicked, plus stop bubbling
     e.stopPropagation();
@@ -86,6 +85,16 @@ $(document).ready(function() {
           window.open(this.href);
       return false;
         });
+    $('.copy_proj').click(function(){
+        var copyText = project;
+        document.addEventListener('copy', function(e) {
+            e.clipboardData.setData('text/plain', copyText);
+            e.preventDefault();
+        }, true);
+        document.execCommand('copy');
+        window.open(this.href);
+      return false;
+    });
   if(window.location.href.indexOf('#running_note_')!=-1){
     $('.nav-tabs a[href="#tab_running_notes_content"]').tab('show');
     setTimeout(function(){
@@ -509,7 +518,11 @@ function load_all_udfs(){
       else if (prettify(key) == 'customer_project_description'){
         $('#customer_project_description').html(make_markdown(value));
       }
-
+      // Add last modified time of project
+      else if (prettify(key) == 'modification_time'){
+        var time = moment(value).format('HH:mm, MMM Do YYYY');
+        $("#last_update").html('Updated last: '+time);
+      }
       // Everything else
       else {
 			  if(prettyobj(key).length > 0){

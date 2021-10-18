@@ -682,6 +682,7 @@ class ProjectSamplesHandler(SafeHandler):
                               user=self.get_current_user(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
                               columns_sample = self.application.genstat_defaults.get('sample_columns'),
+                              lims_dashboard_url = self.application.settings['lims_dashboard_url'],
                               prettify = prettify_css_names,
                               worksets=worksets_view[project],
                               multiqc=multiqc,
