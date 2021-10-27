@@ -48,8 +48,9 @@
       how the homepage should look...</p>
 </div>
 <div class="row mt-5">
-  <div class="col-lg-9">
+  <div class="col-lg-8">
     <h3>Longest waiting projects</h3>
+    <div class="scroll-body">
     <table class="table table-bordered sortable" id="prio_projs_table">
       <thead id="prio_projs_table_head">
         <tr class="sticky darkth">
@@ -59,11 +60,12 @@
           <th class="sort">Days waiting:</th>
         </tr>
       </thead>
-      <tbody id="prio_projs_table_body" class="overflow-scroll"></tbody>
+      <tbody id="prio_projs_table_body"></tbody>
     </table>
+    </div>
   </div>
 <!-- sparkline plots table -->
-	<div class="col-lg-3">
+	<div class="col-lg-4">
 		<h3>Server Status</h3>
 		<table class="table table-bordered table-disk-quotas">
 			<thead>

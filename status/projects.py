@@ -1135,7 +1135,7 @@ class PrioProjectsTableHandler(SafeHandler):
         t_data.sort(key=lambda x:x[2], reverse=True)
 
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(t_data[:50]))
+        self.write(json.dumps(t_data[:36]))
 
     def _calculate_days_in_status(self, start_date, end_date):
         days = 0

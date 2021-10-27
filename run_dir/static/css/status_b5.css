@@ -237,6 +237,20 @@ tr.group, tr.group:hover, .dtrg-group {
  min-height: 50.5px;
 }
 
+.scroll-body {
+  overflow: auto;
+  height: 720px;
+}
+.scroll-body thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.scroll-body tbody th {
+  position: sticky;
+  left: 0;
+}
+
 /*Cards for running notes*/
 .running-note-card pre {
   max-width:400px;
