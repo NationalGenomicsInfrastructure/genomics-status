@@ -47,10 +47,25 @@
       <a class="text-decoration-none" href="/suggestion_box">suggestions page</a>! We're currently collecting feedback on
       how the homepage should look...</p>
 </div>
-
-<!-- sparkline plots table -->
 <div class="row mt-5">
-	<div class="col-lg-6">
+  <div class="col-lg-8">
+    <h3>Longest waiting projects</h3>
+    <div class="scroll-body">
+    <table class="table table-bordered sortable" id="prio_projs_table">
+      <thead id="prio_projs_table_head" style="position: sticky;">
+        <tr class="darkth">
+          <th class="sort">Project:</th>
+          <th class="sort">Library:</th>
+          <th class="sort">Status:</th>
+          <th class="sort">Days waiting:</th>
+        </tr>
+      </thead>
+      <tbody id="prio_projs_table_body"></tbody>
+    </table>
+    </div>
+  </div>
+<!-- sparkline plots table -->
+	<div class="col-lg-4">
 		<h3>Server Status</h3>
 		<table class="table table-bordered table-disk-quotas">
 			<thead>
@@ -74,23 +89,10 @@
       </tbody>
 		</table>
   </div>
-  <div class="col-lg-6">
-		<h3>Latest Updated Data</h3>
-		<table class="table table-bordered" id="update_table">
-			<thead>
-				<tr class="darkth">
-					<th>Type</th>
-					<th>Data</th>
-					<th>Update Time</th>
-				</tr>
-			</thead>
-			<tbody>
-      </tbody>
-		</table>
   </div>
-</div>
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script type="text/javascript" src="/static/js/index.js?v={{ gs_globals['git_commit'] }}" id="indexpage-js-import"></script>
+<script src="/static/js/jquery.dataTables.min.js"></script>
 
 {% end %}
 

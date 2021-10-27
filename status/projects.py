@@ -17,8 +17,8 @@ from email.mime.multipart import MIMEMultipart
 import markdown
 import slack
 import nest_asyncio
+import itertools
 
-#from itertools import ifilter
 from collections import defaultdict
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
@@ -33,6 +33,7 @@ from genologics.entities import Protocol
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
 from zenpy import Zenpy, ZenpyException
+
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 application_log=logging.getLogger("tornado.application")
@@ -166,19 +167,18 @@ class ProjectsBaseDataHandler(SafeHandler):
             except ValueError:
                 pass
 
-        if row.key[0] == 'open' and 'queued' in row.value:
+        if row.key[0] in ['review', 'ongoing', 'reception control'] and 'queued' in row.value:
             #Add days ongoing in production field
             now = datetime.datetime.now()
             queued = row.value['queued']
             diff = now - dateutil.parser.parse(queued)
             row.value['days_in_production'] = diff.days
-        elif row.key[0] == 'closed' and 'close_date' and 'queued' in row.value:
+        elif row.key[0] in ['aborted', 'closed'] and 'close_date' and 'queued' in row.value:
             #Days project was in production
             close = dateutil.parser.parse(row.value['close_date'])
             diff = close - dateutil.parser.parse(row.value['queued'])
             row.value['days_in_production'] = diff.days
-
-        if row.key[0] == 'open' and 'open_date' in row.value:
+        if row.key[0] in ['review', 'ongoing', 'reception control'] and 'open_date' in row.value:
             end_date = datetime.datetime.now()
             if 'queued' in row.value:
                 end_date =  dateutil.parser.parse(row.value['queued'])
@@ -248,13 +248,26 @@ class ProjectsBaseDataHandler(SafeHandler):
             end_open_date = self.get_argument('youngest_open_date', default_end_date)
             start_open_date = self.get_argument('oldest_open_date', self._get_two_year_from(end_open_date))
 
-        summary_view = self.application.projects_db.view("project/summary", descending=True)
+        summary_view = self.application.projects_db.view("project/summary_status", descending=True)
 
+        # view_calls collects http requests to statusdb for each status requested
+        view_calls = []
         if filter_projects[:1] != 'P':
-            if  filter_projects == 'closed':
-                summary_view = summary_view[["closed",'Z']:["closed",'']]
-            elif 'all' not in filter_projects and 'aborted' not in filter_projects and 'closed' not in filter_projects:
-                summary_view = summary_view[["open",'Z']:["open",'']]
+            if 'all' in filter_projects:
+                view_calls.append(summary_view)
+            else:
+                statusdb_statuses = set()
+                # Need special treatment for these as they are not actual statuses
+                if 'review' in filter_projects or 'open' in filter_projects:
+                    statusdb_statuses.add('ongoing')
+                    statusdb_statuses.add('reception control')
+                for status in filter_projects.split(','):
+                    status = status.replace('_', ' ')
+                    if status in ['aborted', 'closed', 'ongoing', 'pending', 'reception control']:
+                        statusdb_statuses.add(status)
+
+                for status in statusdb_statuses:
+                    view_calls.append(summary_view[[status, 'Z']:[status, '']])
 
         filtered_projects = []
 
@@ -268,7 +281,8 @@ class ProjectsBaseDataHandler(SafeHandler):
         # Filter aborted projects if not All projects requested: Aborted date has
         # priority over everything else.
         else:
-            for row in summary_view:
+            # Loop over each row from the different view calls
+            for row in itertools.chain.from_iterable(view_calls):
                 p_info=row.value
                 ptype=p_info['details'].get('type')
 
@@ -319,35 +333,35 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         final_projects = OrderedDict()
         for row in filtered_projects:
-            a=type(row)
             row = self.project_summary_data(row)
-            final_projects[row.key[1]] = row.value
+            proj_id = row.key[1]
+
+            final_projects[proj_id] = row.value
+            for date_type, date in row.value['summary_dates'].items():
+                final_projects[proj_id][date_type] = date
+
             for key, value in def_dates_gen.items():
                 start_date = value[0]
                 end_date = value[1]
-                final_projects[row.key[1]][key] = self._calculate_days_in_status(final_projects[row.key[1]].get(start_date),
-                                                                                    final_projects[row.key[1]].get(end_date))
+                final_projects[proj_id][key] = self._calculate_days_in_status(final_projects[proj_id].get(start_date),
+                                                                                    final_projects[proj_id].get(end_date))
 
-        # Include dates for each project:
-        for row in self.application.projects_db.view("project/summary_dates", descending=True, group_level=1):
-            if row.key[0] in final_projects:
-                for date_type, date in row.value.items():
-                    final_projects[row.key[0]][date_type] = date
+            for key, value in def_dates_summary.items():
+                if key == 'days_seq_start':
 
-                for key, value in def_dates_summary.items():
-                    if key == 'days_seq_start':
-                        if 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
-                             start_date = value[0][1]
-                        else:
-                            start_date = value[0][0]
+                    if 'by user' in final_projects[proj_id].get('library_construction_method', '-').lower():
+                        start_date = value[0][1]
                     else:
-                        start_date = value[0]
-                    end_date = value[1]
-                    if key in ['days_prep', 'days_prep_start'] and 'Library, By user' in final_projects[row.key[0]].get('library_construction_method', '-'):
-                        final_projects[row.key[0]][key] = '-'
-                    else:
-                        final_projects[row.key[0]][key] = self._calculate_days_in_status(final_projects[row.key[0]].get(start_date),
-                                                                                                final_projects[row.key[0]].get(end_date))
+                        start_date = value[0][0]
+                else:
+                    start_date = value[0]
+                end_date = value[1]
+                if key in ['days_prep', 'days_prep_start'] and 'by user' in final_projects[proj_id].get('library_construction_method', '-').lower():
+                    final_projects[proj_id][key] = '-'
+                else:
+                    final_projects[proj_id][key] = self._calculate_days_in_status(final_projects[proj_id].get(start_date),
+                                                                                            final_projects[proj_id].get(end_date))
+
         return final_projects
 
     def list_project_fields(self, undefined=False, project_list='all'):
@@ -378,7 +392,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             ProjectsBaseDataHandler.cached_search_list = [(row.key, row.value) for row in projects_view]
             ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
 
-        search_string = search_string.lower()
+        search_string = search_string.lower().strip()
 
         for row_key, row_value in ProjectsBaseDataHandler.cached_search_list:
             if search_string in row_key.lower() or search_string in row_value[0].lower() or (row_value[1] and search_string in row_value[1].lower()):
@@ -668,6 +682,7 @@ class ProjectSamplesHandler(SafeHandler):
                               user=self.get_current_user(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
                               columns_sample = self.application.genstat_defaults.get('sample_columns'),
+                              lims_dashboard_url = self.application.settings['lims_dashboard_url'],
                               prettify = prettify_css_names,
                               worksets=worksets_view[project],
                               multiqc=multiqc,
@@ -1035,3 +1050,100 @@ class ProjectInternalCostsHandler(SafeHandler):
             self.set_status(200)
             self.set_header("Content-type", "application/json")
             self.write(self.request.body)
+
+
+class PrioProjectsTableHandler(SafeHandler):
+    """Serves information about projects statuses.
+
+    Loaded through /api/v1/prio_projects"""
+
+    def get(self):
+        projects = {}
+        def_dates_rec_ctrl = { 'days_recep_ctrl' : ['open_date', 'queued']
+                             }
+        #dates in order
+        def_dates_ongoing = { 'days_prep_start' : ['queued', 'library_prep_start'],
+                               'days_prep' : ['library_prep_start', 'qc_library_finished'],
+                               'days_seq_start' : [['qc_library_finished', 'queued'], 'sequencing_start_date'],
+                               'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
+                               'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
+                               'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
+                               'days_close' : ['all_raw_data_delivered', 'close_date']
+                             }
+                             
+        statuses = ['ongoing', 'reception control']
+        view_calls = []
+
+        view = self.application.projects_db.view("project/summary_status", descending=True)
+        for status in statuses:
+            view_calls.append(view[[status, 'Z']:[status, '']])
+        for row in itertools.chain.from_iterable(view_calls):
+            proj_id_name_lib = row.value['project_name']+' ('+row.key[1]+')'+'| '+row.value['details'].get('library_construction_method', '-')
+            proj_val = row.value
+            for date_type, date in proj_val['summary_dates'].items():
+                proj_val[date_type] = date
+            if row.key[0] == 'ongoing':
+                for k, v in proj_val['project_summary'].items():
+                    proj_val[k] = v
+
+            is_fin_lib = False
+            if 'by user' in proj_val.get('library_construction_method', '-').lower():
+                is_fin_lib = True
+
+            for key, value in def_dates_rec_ctrl.items():
+                start_date = value[0]
+                end_date = value[1]
+                date_val = self._calculate_days_in_status(proj_val.get(start_date),
+                                                               proj_val.get(end_date))
+                projects[proj_id_name_lib] = { key: date_val }
+
+            if row.key[0] == 'ongoing':
+                for key, value in def_dates_ongoing.items():
+                    if key == 'days_seq_start':
+                        if is_fin_lib:
+                            start_date = value[0][1]
+                        else:
+                            start_date = value[0][0]
+                    else:
+                        start_date = value[0]
+                        end_date = value[1]
+                    if key in ['days_prep', 'days_prep_start'] and is_fin_lib:
+                        date_val = 0
+                    else:
+                        date_val = self._calculate_days_in_status(proj_val.get(start_date),
+                                                                       proj_val.get(end_date))
+
+                    projects[proj_id_name_lib][key] = date_val
+
+        #Delete statuses with 0 days
+        for k,v in projects.items():
+            min_days = 0
+            #turn v into list to avoid 'dictionary changed size during iteration'- error
+            for k2 in list(v):
+                if v[k2] <= min_days:
+                    if k2 == 'days_recep_ctrl':
+                        continue
+                    else:
+                        del projects[k][k2]
+
+        #Get list of projects with status and days containing only last status
+        t_data = []
+        for k,v in projects.items():
+            stat = list(v)[-1]
+            t_data.append((k, stat, v[stat]))
+        #Sort projects on number of days
+        t_data.sort(key=lambda x:x[2], reverse=True)
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(t_data[:50]))
+
+    def _calculate_days_in_status(self, start_date, end_date):
+        days = 0
+        if start_date:
+            if end_date:
+                delta = dateutil.parser.parse(end_date) - dateutil.parser.parse(start_date)
+            else:
+                delta = datetime.datetime.now() - dateutil.parser.parse(start_date)
+            days = delta.days
+        return days
+

@@ -1,73 +1,80 @@
-    <!-- RUNNING NOTES TAB -->
-    <div class="tab-pane fade" id="tab_running_notes_content">
-        <!-- add running note -->
-        <form action="" method="POST" id="running_notes_form" role="form">
-            <div class="card text-dark info-border mb-3 mt-3">
-                <div class="card-header info-bg">Add New Running Note</div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-7 form-inline">
-                          <label>Choose category:</label>
-                          <div class="btn-toolbar rn-categ mt-2" data-toggle="buttons">
-                             <button class="btn btn-sm btn-inf mr-2" value="Decision" data-toggle="tooltip" title="For when an executive decision has been made">Decision <span class="fa fa-thumbs-up"></span></button>
-                             <button class="btn btn-sm btn-succe mr-2" value="Lab" data-toggle="tooltip" title="For lab-related work">Lab <span class="fa fa-flask"></span></button>
-                             <button class="btn btn-sm btn-warn mr-2" value="Bioinformatics" data-toggle="tooltip" title="For all bioinformatics work">Bioinformatics <span class="fa fa-laptop-code"></span></button>
-                             <button class="btn btn-sm btn-usr mr-2" value="User Communication" data-toggle="tooltip" title="For notes influenced by user-contact">User Communication <span class="fa fa-people-arrows"></span></button>
-                             <button class="btn btn-sm btn-dang mr-2" value="Administration" data-toggle="tooltip" title="For notes involving documentation">Administration <span class="fa fa-folder-open"></span></button>
-                             <button class="btn btn-sm btn-imp mr-2" value="Important" data-toggle="tooltip" title="For when a note needs to be highlighted">Important <span class="fa fa-exclamation-circle"></span></button>
-                             <button class="btn btn-sm btn-devi" value="Deviation" data-toggle="tooltip" title="For notes about a deviation">Deviation <span class="fa fa-frown"</span></button>
-                          </div>
-                        </div>
+<!-- RUNNING NOTES TAB -->
+<div class="tab-pane fade" id="tab_running_notes_content">
+    <!-- add running note -->
+    <form action="" method="POST" id="running_notes_form" role="form">
+        <div class="card text-dark info-border mb-3 mt-3">
+            <div class="card-header info-bg">Add New Running Note</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-7 form-inline">
+                      <label>Choose category:</label>
+                      <div class="btn-toolbar rn-categ mt-2" data-toggle="buttons">
+                         <button class="btn btn-sm btn-inf mr-2" value="Decision" data-toggle="tooltip" title="For when an executive decision has been made">Decision <span class="fa fa-thumbs-up"></span></button>
+                         <button class="btn btn-sm btn-succe mr-2" value="Lab" data-toggle="tooltip" title="For lab-related work">Lab <span class="fa fa-flask"></span></button>
+                         <button class="btn btn-sm btn-warn mr-2" value="Bioinformatics" data-toggle="tooltip" title="For all bioinformatics work">Bioinformatics <span class="fa fa-laptop-code"></span></button>
+                         <button class="btn btn-sm btn-usr mr-2" value="User Communication" data-toggle="tooltip" title="For notes influenced by user-contact">User Communication <span class="fa fa-people-arrows"></span></button>
+                         <button class="btn btn-sm btn-dang mr-2" value="Administration" data-toggle="tooltip" title="For notes involving documentation">Administration <span class="fa fa-folder-open"></span></button>
+                         <button class="btn btn-sm btn-imp mr-2" value="Important" data-toggle="tooltip" title="For when a note needs to be highlighted">Important <span class="fa fa-exclamation-circle"></span></button>
+                         <button class="btn btn-sm btn-devi mr-2" value="Deviation" data-toggle="tooltip" title="For notes about a deviation">Deviation <span class="fa fa-frown"</span></button>
+                         <button class="btn btn-sm btn-inv" value="Invoice" data-toggle="tooltip" title="For notes about an invoice">Invoicing <span class="fa fa-file-invoice-dollar"</span></button>
+                      </div>
                     </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6 mt-4">
-                            <h4>Write Running Note</h4>
-                            <textarea rows="5" class="form-control" id="new_note_text" style="height:97px;"></textarea>
-                        </div>
-                        <div class="col-md-6 mt-4">
-                            <h4>Preview</h4>
-                            <div class="card" id="running_note_preview_card">
-                                <div class="card-header"><a class="text-decoration-none" href="#">{{ user.name }}</a> - <span class="todays_date">Date</span><span id="preview_category"> - Category</span></div>
-                                <div class="card-body" id="running_note_preview_body">
-                                    <p class="text-muted"><em>Nothing to preview..</em></p>
-                                </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6 mt-4">
+                        <h4>Write Running Note</h4>
+                        <textarea rows="5" class="form-control" id="new_note_text" style="height:97px;"></textarea>
+                    </div>
+                    <div class="col-md-6 mt-4">
+                        <h4>Preview</h4>
+                        <div class="card" id="running_note_preview_card">
+                            <div class="card-header"><a class="text-decoration-none" href="#">{{ user.name }}</a> - <span class="todays_date">Date</span><span id="preview_category"> - Category</span></div>
+                            <div class="card-body" id="running_note_preview_body">
+                                <p class="text-muted"><em>Nothing to preview..</em></p>
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 text-right">
-                            <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help">Markdown Help</button>
-                            <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
-                        </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 text-right">
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help">Markdown Help</button>
+                        <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
                     </div>
-                  </div>
+                </div>
               </div>
-        </form>
+          </div>
+    </form>
 
-        <!-- filter running notes -->
-        <div id="running_notes_filter" class="row" style="margin-bottom:12px;">
-          <div class="col-3 ml-2">
-            <label>Search :</label>
-            <input type="text" class="form-control" id="rn_search" />
-          </div>
-          <div class="col-2">
-            <label>Filter :</label>
-            <select class="form-select" id="rn_category">
-            <option>All</option>
-            <option>Workset</option>
-            <option>Flowcell</option>
-            <option>Decision</option>
-            <option>Bioinformatics</option>
-            <option>User Communication</option>
-            <option>Administration</option>
-            <option>Important</option>
-            <option>Deviation</option>
-            <option>Lab</option>
-            </select>
-          </div>
+    <!-- filter running notes -->
+    <div id="running_notes_filter" class="row" style="margin-bottom:12px;">
+      <div class="col-3 ml-2">
+        <label>Search :</label>
+        <input type="text" class="form-control" id="rn_search" />
+      </div>
+      <div class="col-2">
+        <label>Filter :</label>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary text-dark dropdown-toggle btn_count" type="button" id="rn_category" data-toggle="dropdown" aria-expanded="false"></button>
+            <ul class="dropdown-menu" aria-labelledby="rn_category">
+                <li><button class="dropdown-item" type="button">All</button></li>
+                <li><div class="dropdown-divider"></div></li>
+                <li><button class="dropdown-item" type="button">Workset</button></li>
+                <li><button class="dropdown-item" type="button">Flowcell</button></li>
+                <li><div class="dropdown-divider"></div></li>
+                <li><button class="dropdown-item" type="button">Decision</button></li>
+                <li><button class="dropdown-item" type="button">Lab</button></li>
+                <li><button class="dropdown-item" type="button">Bioinformatics</button></li>
+                <li><button class="dropdown-item" type="button">User Communication</button></li>
+                <li><button class="dropdown-item" type="button">Administration</button></li>
+                <li><button class="dropdown-item" type="button">Important</button></li>
+                <li><button class="dropdown-item" type="button">Invoicing</button></li>
+                <li><button class="dropdown-item" type="button">Deviation</button></li>
+            </ul>
         </div>
-        <!-- display running notes -->
-        <div id="running_notes_panels" class="mb-5"></div>
+      </div>
     </div>
-    <script src="/static/js/jquery.caretposition.js"></script>
-    <script src="/static/js/jquery.sew.js"></script>
+    <!-- display running notes -->
+    <div id="running_notes_panels" class="mb-5"></div>
+</div>
+<script src="/static/js/jquery.caretposition.js"></script>
+<script src="/static/js/jquery.sew.js"></script>

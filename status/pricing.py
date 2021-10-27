@@ -1,5 +1,6 @@
 import json
 import datetime
+import markdown
 
 import tornado.web
 from status.util import SafeHandler
@@ -602,3 +603,54 @@ class PricingQuoteHandler(PricingBaseHandler):
         t = self.application.loader.load('pricing_quote.html')
         self.write(t.generate(gs_globals=self.application.gs_globals,
                               user=self.get_current_user()))
+
+
+class GenerateQuoteHandler(SafeHandler):
+    """ Serves a built preliminary pricing quote page
+
+    Loaded through:
+        /generate_quote
+
+    """
+    def post(self):
+        quote_input = tornado.escape.json_decode(self.request.body.decode('utf-8').split('=')[1])
+        template_text = quote_input.pop('template_text')
+        template_text['appendices'] = markdown.markdown(template_text['appendices'], extensions=['sane_lists'])
+        for condition in template_text['first_page_text']['specific_conditions']:
+            template_text['first_page_text']['specific_conditions'][condition] = \
+                markdown.markdown(template_text['first_page_text']['specific_conditions'][condition])
+
+        quote_input['date'] = datetime.datetime.now().date().isoformat()
+        if quote_input['origin'] == 'Agreement':
+            quote_input['agreement_number'] = quote_input['project_data']['project_name']+'_'+datetime.datetime.now().date().strftime('%Y%m%d')
+
+        if 'agreement_summary' in quote_input.keys():
+            quote_input['agreement_summary'] = markdown.markdown(quote_input['agreement_summary'], extensions=['sane_lists'])
+        else:
+            quote_input['agreement_summary'] = markdown.markdown('1. **Library preparation**:\n 1. **Sequencing**: \n' \
+                                                            '1. **Data processing**:\n 1. **Data analysis**: ')
+
+        t = self.application.loader.load('agreement.html')
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(),
+                              data=quote_input, template_text=template_text))
+
+
+class AgreementTemplateTextHandler(SafeHandler):
+    """ Serves the agreement template text from statusdb
+
+    Loaded through:
+        /api/v1/get_agreement_template_text
+
+    """
+    def get(self):
+        response = self.fetch_latest_agreement_doc()
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(response))
+
+    def fetch_latest_agreement_doc(self):
+        db = self.application.agreement_templates_db
+        curr_rows = db.view('entire_document/by_version', descending=True, limit=1).rows
+        curr_doc = curr_rows[0].value
+        curr_doc.pop('_id')
+        curr_doc.pop('_rev')
+        return curr_doc

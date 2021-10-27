@@ -3,8 +3,8 @@ function get_link_url() {
     //URL for the notes
     if ('lims_step' in window && lims_step !== null){
         note_url='/api/v1/workset_links/' + lims_step
-    }else if ('flowcell' in window && flowcell!== null){
-        note_url='/api/v1/flowcell_links/' + flowcell;
+    }else if ('flowcell_id_reference' in window && flowcell_id_reference!== null){
+        note_url='/api/v1/flowcell_links/' + flowcell_id_reference;
     }else {
         note_url='/api/v1/links/' + project
     }

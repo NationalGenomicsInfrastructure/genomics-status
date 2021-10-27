@@ -4,9 +4,7 @@ import json
 import requests
 import os
 import sys
-import time
-import copy
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 from dateutil import parser
 
 
@@ -49,6 +47,14 @@ class User(object):
     def is_pricing_admin(self):
         return 'pricing_admin' in self.roles
 
+    @property
+    def is_sample_requirements_admin(self):
+        return 'sample_requirements_admin' in self.roles
+
+    @property
+    def is_any_admin(self):
+        return self.is_admin or self.is_pricing_admin or self.is_sample_requirements_admin
+
 
 class BaseHandler(tornado.web.RequestHandler):
     """Base Handler. Handlers should not inherit from this
@@ -56,6 +62,7 @@ class BaseHandler(tornado.web.RequestHandler):
     to make security status explicit.
 
     """
+
     def get(self):
         """ The GET method on this handler will be overwritten by all other handler.
 
@@ -69,7 +76,7 @@ class BaseHandler(tornado.web.RequestHandler):
         # Disables authentication if test mode to ease integration testing
         if self.application.test_mode:
             name = 'Testing User!'
-            roles = ['admin', 'pricing_admin']
+            roles = ['admin', 'pricing_admin', 'sample_requirements_admin']
             email = 'Testing User!'
         else:
             name = str(self.get_secure_cookie("user"), 'utf-8') if self.get_secure_cookie("user") else None

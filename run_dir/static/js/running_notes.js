@@ -8,16 +8,17 @@ $(function(){
 });
 
 function generate_category_label(category){
-     var cat_classes = {
+     cat_classes = {
         'Workset': ['primary', 'calendar-plus'],
         'Flowcell': ['success', 'grip-vertical'],
         'Decision': ['info', 'thumbs-up'],
-        'Lab': ['success', 'flask'],
+        'Lab': ['succe', 'flask'],
         'Bioinformatics': ['warning', 'laptop-code'],
         'User Communication': ['usr', 'people-arrows'],
         'Administration': ['danger', 'folder-open'],
         'Important': ['imp', 'exclamation-circle'],
-        'Deviation': ['devi', 'frown']
+        'Deviation': ['devi', 'frown'],
+        'Invoicing': ['inv', 'file-invoice-dollar']
     }
     // Remove the whitespace
     var category = category.trim()
@@ -35,8 +36,8 @@ function get_note_url() {
     // URL for the notes
     if ((typeof notetype !== 'undefined' && notetype == 'lims_step') || ('lims_step' in window && lims_step !== null)){
         note_url='/api/v1/workset_notes/' + lims_step;
-    } else if ((typeof notetype !== 'undefined' && notetype == 'flowcell') || ('flowcell' in window && flowcell!== null)){
-        note_url='/api/v1/flowcell_notes/' + flowcell;
+    } else if ((typeof notetype !== 'undefined' && notetype == 'flowcell') || ('flowcell_id_reference' in window && flowcell_id_reference!== null)){
+        note_url='/api/v1/flowcell_notes/' + flowcell_id_reference;
     } else {
         note_url='/api/v1/running_notes/' + project;
     }
@@ -84,7 +85,7 @@ function make_running_note(date, note){
   return '<div class="card mb-2 mx-2">' +
       '<div class="card-header '+panelClass+'" id="'+note_id+'">'+
         '<a class="text-decoration-none" href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-       '<a class="text-decoration-none" href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="card-body">'+noteText+'</div></div>';
+       '<a class="text-decoration-none" href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="card-body trunc-note">'+noteText+'</div></div>';
 }
 
 function load_running_notes(wait) {
@@ -99,6 +100,7 @@ function load_running_notes(wait) {
         $('#running_notes_panels').append(make_running_note(date, note));
       });
       check_img_sources($('#running_notes_panels img'));
+      count_cards();
     }
   }).fail(function( jqxhr, textStatus, error ) {
       try {
@@ -147,20 +149,51 @@ function filter_running_notes(search){
         }
     });
 }
+//Count rn's of each category and add badge with number to filter dropdown
+function count_cards(){
+    var cat_cards = {};
+    var all = 0;
+    $('#running_notes_panels').find('.badge').each(function(){
+        var label = $.trim($(this).text());
+        all++;
+        if (label){
+            if (label in cat_cards){
+                cat_cards[label]++;
+            }else{
+                cat_cards[label] = 1;
+            }
+        }
+    });
+    $('.btn_count').append('All <span class="badge bg-secondary">'+all+'</span>');
+    $('#rn_category').next().find('.dropdown-item').each(function(){
+        var label = $.trim($(this).text())
+        cat_cards['All'] = all;
+        if (!cat_cards[label]){
+            $(this).parent('li').addClass('d-none');
+        }else if (Object.keys(cat_classes).indexOf(label) != -1){
+            $(this).prepend('<span class="badge bg-'+cat_classes[label][0]+' mr-2">'+cat_cards[label]+'</span>');
+        }else{
+            $(this).prepend('<span class="badge bg-secondary mr-2">'+cat_cards[label]+'</span>');
+        }
+    });
+}
+
 //Filter notes
 $('#rn_search').keyup(function() {
     var search=$('#rn_search').val();
     filter_running_notes(search);
+    $('#rn_category').html('<span class="badge bg-secondary mr-2">'+
+    $('#running_notes_panels').find('.badge').length+'</span>All');
 });
 
-$(document).ready(function() {
-    $('#rn_category').change(function() {
-        var search=$('#rn_category :selected').text();
-        if (search == 'All'){
-            search='';
-        }
-        filter_running_notes(search);
-    });
+//Filter dropdown
+$('#rn_category ~ ul > li > button').on('click', function(){
+    $('#rn_category').html($(this).html());
+    var search = this.lastChild.textContent;
+    if (search.includes('All')){
+        search = '';
+    }
+    filter_running_notes(search);
 });
 
 // Update the category buttons
@@ -179,7 +212,7 @@ $(document).ready(function(){
       $('[data-toggle="tooltip"]').click(function (){
          $('[data-toggle="tooltip"]').tooltip("hide");
       });
-})
+});
 
 // Preview running notes
 $('#new_note_text').keyup(preview_running_notes);

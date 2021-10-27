@@ -149,6 +149,8 @@ h1 small, h2 small, h3 small, h4 small{
 .bg-imp  {background-color: #a62100;}
 .bg-devi  {background-color: #a13a7e;}
 .bg-usr  {background-color: #ff6f00;}
+.bg-succe {background-color: #5cb85c;}
+.bg-inv {background-color: #8373A7;}
 
 .btn-xs {
   padding: 1px 5px;
@@ -182,6 +184,10 @@ h1 small, h2 small, h3 small, h4 small{
 .btn-dang{
   color: #fff;
   background-color: #d9534f;
+}
+.btn-inv{
+  color: #fff;
+  background-color: #8373A7;
 }
 
 .info-bg{
@@ -231,6 +237,20 @@ tr.group, tr.group:hover, .dtrg-group {
  min-height: 50.5px;
 }
 
+.scroll-body {
+  overflow: auto; 
+  height: 720px; 
+}
+.scroll-body thead th { 
+  position: sticky; 
+  top: 0; 
+  z-index: 1; 
+}
+.scroll-body tbody th { 
+  position: sticky; 
+  left: 0; 
+}
+
 /*Cards for running notes*/
 .running-note-card pre {
   max-width:400px;
@@ -244,6 +264,20 @@ tr.group, tr.group:hover, .dtrg-group {
   font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
   margin:0;
   padding:0;
+}
+
+.trunc-note {
+  max-height: 400px;
+  overflow: scroll;
+}
+.trunc-note::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 7px;
+}
+.trunc-note::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(0,0,0,.5);
+  -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
 }
 
 /* Markdown text styles */
@@ -661,6 +695,35 @@ width:30%;
   cursor: pointer;
 }
 
+/*Text color prio projs table*/
+.text-orange {
+  color: #ff9933;
+}
+.text-recep {
+  color: #009900;
+}
+.text-prep-start {
+  color: #008080;
+}
+.text-prep {
+  color: #e60073;
+}
+.text-seq-start {
+  color: #0000ff;
+}
+.text-seq {
+  color: #660066;
+}
+.text-analysis {
+  color: #ff6600;
+}
+.text-delivery {
+  color: #999966;
+}
+.text-close {
+  color: #800000;
+}
+
 /**
  * Theme for jQRangeSlider
  * Inspired by http://cssdeck.com/item/381/itunes-10-storage-bar
@@ -932,4 +995,97 @@ th.sort{
   color: #0088cc;
   cursor: pointer;
   margin-right: 4px;
+}
+
+
+/*
+=== User Agreement ===
+*/
+
+@page {
+  size: A4;
+  margin-top: 165px;
+  text-align: justify;
+  text-justify: justify;
+  text-align-last: left;
+  orphans: 4;
+  widows: 4;
+
+  @top-left: {
+    content: element(titleImgRunning);
+  }
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    border-top:1px solid;
+    text-align-last: right;
+ }
+}
+
+.dl-horizontal-quote-details{
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.dl-horizontal-quote-details > dt{
+  float: left;
+  text-align: left;
+  width: 160px;
+
+}
+
+.dl-horizontal-quote-details> dd{
+  margin-left: 180px;
+  margin-bottom: 0px;
+  padding: .375rem .375rem;
+}
+
+.dl-horizontal-quote-price > dt{
+  float: left;
+  text-align: left;
+}
+
+.dl-horizontal-quote-price> dd{
+  margin-left: 180px;
+  margin-bottom: 0px;
+  text-align-last: right;
+}
+
+.dl-horizontal-quote-details> dd > p{
+  margin-bottom: 0.3rem !important;
+}
+
+.agreement-title-img {
+  position: running(titleImgRunning);
+  height: 90px;
+  width: auto;
+  display:flex;
+  align-items:center;
+}
+
+.bottom-rule{
+  position: running(bottomRuleRunning);
+}
+
+.md_textarea{
+  padding: 0.375rem 0.75rem;
+  width: 100%;
+  height: 140px;
+}
+
+.md_display_box {
+  display: inline-block;
+  width: 100%;
+  min-height: 93px;
+  vertical-align: top;
+  box-sizing: border-box;
+  padding: 1rem 1rem;
+}
+
+.border-header{
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+.darkth-quote > th { background-color: rgba(0, 0, 0, 0.15)!important; }
+
+.appendices {
+  break-before: page;
 }
