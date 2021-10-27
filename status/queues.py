@@ -66,8 +66,8 @@ class qPCRPoolsDataHandler(SafeHandler):
                     pools[method][container]['samples'].append({'name': record[1], 'well': value, 'queue_time': queue_time})
                     if project not in pools[method][container]['projects']:
                         proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
-                        library_type =  proj_doc['details']['library_construction_method']
-                        runmode = proj_doc['details']['sequencing_platform']
+                        library_type =  proj_doc['details'].get('library_construction_method', '')
+                        runmode = proj_doc['details'].get('sequencing_platform', '')
                         if library_type not in pools[method][container]['library_types']:
                             pools[method][container]['library_types'].append(library_type)
                         if runmode not in pools[method][container]['runmodes']:
@@ -139,10 +139,10 @@ class SequencingQueuesDataHandler(SafeHandler):
                 final_loading_conc = 'TBD'
                 if project not in pools[method]:
                     proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
-                    setup = proj_doc['details']['sequencing_setup']
+                    setup = proj_doc['details'].get('sequencing_setup','')
                     lanes = proj_doc['details'].get('sequence_units_ordered_(lanes)', '')
-                    librarytype = proj_doc['details']['library_construction_method']
-                    runmode = proj_doc['details']['sequencing_platform']
+                    librarytype = proj_doc['details'].get('library_construction_method', '')
+                    runmode = proj_doc['details'].get('sequencing_platform','')
                     name = proj_doc['project_name']
                     pools[method][project] = {
                                                'name': name,
