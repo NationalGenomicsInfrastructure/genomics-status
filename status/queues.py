@@ -75,8 +75,8 @@ class qPCRPoolsDataHandler(SafeHandler):
                         pools[method][container]['projects'].append(project)
                 else:
                     proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
-                    library_type =  proj_doc['details']['library_construction_method']
-                    runmode = proj_doc['details']['sequencing_platform']
+                    library_type =  proj_doc['details'].get('library_construction_method', '')
+                    runmode = proj_doc['details'].get('sequencing_platform', '')
                     pools[method][container] = {
                                                 'samples':[{'name': record[1], 'well': value, 'queue_time': queue_time}],
                                                 'library_types': [library_type],
