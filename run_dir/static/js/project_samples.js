@@ -521,7 +521,7 @@ function load_all_udfs(){
       // Add last modified time of project
       else if (prettify(key) == 'modification_time'){
         var time = moment(value).format('HH:mm, MMM Do YYYY');
-        $("#last_update").html('Last updated: '+time);
+        $("#last_update").html(time);
       }
       // Everything else
       else {

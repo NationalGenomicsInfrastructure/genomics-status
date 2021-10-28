@@ -241,14 +241,18 @@ tr.group, tr.group:hover, .dtrg-group {
   overflow: auto;
   height: 720px;
 }
+
 .scroll-body thead th {
-  position: sticky;
   top: 0;
   z-index: 1;
 }
+
 .scroll-body tbody th {
-  position: sticky;
   left: 0;
+}
+
+.scroll-body thead, tbody, tfoot, tr, td, th {
+  border-top-style: none!important;
 }
 
 /*Cards for running notes*/
