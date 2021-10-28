@@ -153,7 +153,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         # Handle the pending reviews:
         if 'pending_reviews' in row.value:
-            links = ', '.join(['<a class="text-decoration-none" href="{0}/clarity/work-complete/{1}">Review</a>'.format(BASEURI, rid) for rid in row.value['pending_reviews']])
+            links = ', '.join(['<a class="text-decoration-none" href="{0}/clarity/work-complete/{1}">{2} requested review from {3}</a>'.format(BASEURI, rid[0], rid[1], rid[2]) for rid in row.value['pending_reviews']])
             row.value['pending_reviews'] = links
 
         # Find the latest running note, return it as a separate field
@@ -1070,7 +1070,7 @@ class PrioProjectsTableHandler(SafeHandler):
                                'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
                                'days_close' : ['all_raw_data_delivered', 'close_date']
                              }
-                             
+
         statuses = ['ongoing', 'reception control']
         view_calls = []
 
@@ -1146,4 +1146,3 @@ class PrioProjectsTableHandler(SafeHandler):
                 delta = datetime.datetime.now() - dateutil.parser.parse(start_date)
             days = delta.days
         return days
-
