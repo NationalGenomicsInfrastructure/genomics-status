@@ -17,7 +17,6 @@ Description: Details page for a single project
   <small><span class="badge" id="project_status_alert"></span></small>
   <a href="#" class="btn btn-outline-dark btn-xs float-right" id="show_order_timeline" style="margin-top:20px;"><span id="show_orderdates_btn" style="display:none;">Show</span> <span id="hide_orderdates_btn">Hide</span> order dates on timeline</a>
 </h1>
-<h4><small><span id="last_update" class="float-right" style="margin-top:10px"></span></small></h4>
 
 <div class="project_timescale" id="project_timescale_production" style="visibility:hidden;"></div>
 <div class="project_timescale my-4" id="project_timescale_orderdates"></div>
@@ -36,6 +35,7 @@ Description: Details page for a single project
       <dt>Flowcell</dt>			        <dd><span id="flowcell">-</span></dd>
       <dt>Library Method</dt>				<dd id="library_construction_method">-</dd>
       <dt>Library Prep Option</dt>	<dd id="library_prep_option">-</dd>
+      <dt>Last updated:</dt>        <dd><span id="last_update"></dd>
 		</dl>
     <hr>
 
