@@ -251,7 +251,7 @@ tr.group, tr.group:hover, .dtrg-group {
   left: 0;
 }
 
-.scroll-body thead, tbody, tfoot, tr, td, th {
+.scroll-body tr {
   border-top-style: none!important;
 }
 
