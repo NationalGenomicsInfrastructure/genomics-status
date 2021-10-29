@@ -7,6 +7,7 @@ $(document).ready(function(){
     $('.fillbadgecolour').each(function(){
         $(this).addClass(categories[$(this).html().trim()]);
     });
+    $('.card-body').addClass('trunc-note');
 });
 
 $('.deliveries-page').on('click', '.runningNotesModalDeliveries_button', function(e){
