@@ -23,6 +23,7 @@ class BioinfoAnalysisHandler(SafeHandler):
         user = self.get_current_user()
         data = json.loads(self.request.body)
         saved_data = {}
+        to_save = []
         assert_project_id(project_id)
         # Fetching documents one by one generates too many requests to statusdb
         # Hopefully fetching all documents at once doesn't require too much memory
@@ -33,7 +34,6 @@ class BioinfoAnalysisHandler(SafeHandler):
                 cached_view[tuple(row.key)].append(row)
             else:
                 cached_view[tuple(row.key)] = [row]
-
         for run_id in data:
             ## why run_id is a string??
             project, sample, run, lane = run_id.split(',')
@@ -60,16 +60,24 @@ class BioinfoAnalysisHandler(SafeHandler):
                     original_doc['status'] = data[run_id]['sample_status']
                     if 'datadelivered' in data[run_id]:
                         original_doc['values'][timestamp]['datadelivered'] = data[run_id]['datadelivered']
-                    try:
-                        self.application.bioinfo_db.save(original_doc)
-                        saved_data[run_id] = original_doc['values'][timestamp] # the last one
-                    except Exception as err:
-                        self.set_status(400)
-                        self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
-                        return None
+
+                    to_save.append(original_doc)
+                    saved_data[run_id] = original_doc['values'][timestamp] # the last one
+
+        #couchdb bulk update
+        try:
+            save_result = self.application.bioinfo_db.update(to_save)
+        except Exception as err:
+            self.set_status(400)
+            self.finish('<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>'.format(traceback.format_exc()))
+            return None
+        neg_save_res = []
+        for res in save_result:
+            if not res[0]:
+                neg_save_res.append[res[1]]
         self.set_status(200)
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(saved_data))
+        self.write(json.dumps({'saved_data': saved_data, 'not_saved': neg_save_res}))
 
 
     def get(self, project_id):

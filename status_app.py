@@ -43,7 +43,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, \
     ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
     ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler, \
-    ImagesDownloadHandler
+    ImagesDownloadHandler, PrioProjectsTableHandler
 from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
@@ -70,6 +70,7 @@ from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler,
 
 from zenpy import Zenpy
 from urllib.parse import urlsplit
+from pathlib import Path
 
 class Application(tornado.web.Application):
     def __init__(self, settings):
@@ -152,6 +153,7 @@ class Application(tornado.web.Application):
             ("/api/v1/pricing_publish_draft", PricingPublishDataHandler),
             ("/api/v1/pricing_reassign_lock", PricingReassignLockDataHandler),
             ("/api/v1/pricing_validate_draft", PricingValidateDraftDataHandler),
+            ("/api/v1/prio_projects", PrioProjectsTableHandler),
             ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
             ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
             ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
@@ -342,6 +344,11 @@ class Application(tornado.web.Application):
 
         # project summary - multiqc tab
         self.multiqc_path = settings.get('multiqc_path')
+
+        #lims backend credentials
+        limsbackend_cred_loc = Path(settings['lims_backend_credential_location']).expanduser()
+        with limsbackend_cred_loc.open() as cred_file:
+            self.lims_conf = yaml.safe_load(cred_file)
 
         # Setup the Tornado Application
 

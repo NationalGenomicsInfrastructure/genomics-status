@@ -622,7 +622,7 @@ class GenerateQuoteHandler(SafeHandler):
 
         quote_input['date'] = datetime.datetime.now().date().isoformat()
         if quote_input['origin'] == 'Agreement':
-            quote_input['agreement_number'] = quote_input['project_name']+'_'+datetime.datetime.now().date().strftime('%Y%m%d')
+            quote_input['agreement_number'] = quote_input['project_data']['project_name']+'_'+datetime.datetime.now().date().strftime('%Y%m%d')
 
         if 'agreement_summary' in quote_input.keys():
             quote_input['agreement_summary'] = markdown.markdown(quote_input['agreement_summary'], extensions=['sane_lists'])

@@ -6,10 +6,7 @@ Powers /sequencing_queues - template is run_dir/design/sequencing_queues.html
 
 $(document).ready(function() {
     // Load the data
-    //load_table();
-    //Temp disable to fix loading times
-    var colspan = $('#queues_table > thead > tr:first > th').length + 1;
-    $("#queues_table_body").html('<tr><td colspan="'+colspan+'"><em>Page under Renovation... Please visit later!</em></td></tr>');
+    load_table();
 });
 // Initialize sorting and searching javascript plugin
 

@@ -9,7 +9,7 @@ function date_parse(data) {
   }
   return data;
 }
-/* Can't get this to work, potentially version incompatibilities?
+/* Can't get this to work, potentially version incompatibilities? maybe remove this?
 Highcharts.setOptions({
     time: {
         timezone: 'Europe/Stockholm'
