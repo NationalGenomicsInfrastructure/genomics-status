@@ -4,10 +4,10 @@
   <p>Showing data from last 4 weeks</p>
   <div id="plots">
     {% for sensor in sensor_data.keys() %}
-    <div class="row" id='{{ sensor }}'>
+    <div class="row" id='sensor_{{ sensor }}'>
         <div class="col-auto">
           <h2>
-            {{ sensor }}
+            {{ sensor_data[sensor]['sensor_name'] }}
             {% if (sensor_data[sensor]['intervals_lower'] != []) or (sensor_data[sensor]['intervals_higher'] != []) %}
             <button class="btn btn-danger btn-lg ml-2" type="button" data-toggle="collapse" data-target="#intervals_{{sensor}}" aria-expanded="false" aria-controls="collapseExample">
               Show warnings <i class="far fa-sensor-alert ml-2"></i>
