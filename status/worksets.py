@@ -325,10 +325,10 @@ class WorksetPoolsHandler(SafeHandler):
 
         for method in methods:
             pools[method] ={}
-            query = ('select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid '
-                            'from artifact art, stagetransition st where art.artifactid=st.artifactid and '
-                            'st.stageid in (select stageid from stage where stepid={}) and '
-                            'st.completedbyid is null and st.workflowrunid>0;'.format(queues[method]))
+            query = ("select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid "
+                            "from artifact art, stagetransition st where art.artifactid=st.artifactid and "
+                            "st.stageid in (select stageid from stage where stepid={}) and "
+                            "st.completedbyid is null and st.workflowrunid>0 and art.name not in ('lambda DNA');".format(queues[method]))
             cursor.execute(query)
             records = cursor.fetchall()
             for record in list(records):
