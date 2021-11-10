@@ -335,7 +335,7 @@ class WorksetPoolsHandler(SafeHandler):
             query = ("select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid "
                             "from artifact art, stagetransition st where art.artifactid=st.artifactid and "
                             "st.stageid in (select stageid from stage where stepid={}) and "
-                            "st.completedbyid is null and st.workflowrunid>0 and art.name not in {};".format(queues[method]), tuple(control_names))
+                            "st.completedbyid is null and st.workflowrunid>0 and art.name not in {};".format(queues[method], tuple(control_names)))
             cursor.execute(query)
             records = cursor.fetchall()
             for record in list(records):
