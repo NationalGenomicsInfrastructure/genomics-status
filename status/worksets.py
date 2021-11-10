@@ -315,6 +315,13 @@ class WorksetPoolsHandler(SafeHandler):
         queues['SMARTerPicoRNA'] = '1551'
         queues['ChromiumGenomev2'] = '1801'
 
+        control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
+                            'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
+                            'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
+                            'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
+                            'lambda DNA (qPCR)'
+                         ]
+
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
@@ -328,7 +335,7 @@ class WorksetPoolsHandler(SafeHandler):
             query = ("select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid "
                             "from artifact art, stagetransition st where art.artifactid=st.artifactid and "
                             "st.stageid in (select stageid from stage where stepid={}) and "
-                            "st.completedbyid is null and st.workflowrunid>0 and art.name not in ('lambda DNA');".format(queues[method]))
+                            "st.completedbyid is null and st.workflowrunid>0 and art.name not in {};".format(queues[method]), tuple(control_names))
             cursor.execute(query)
             records = cursor.fetchall()
             for record in list(records):
