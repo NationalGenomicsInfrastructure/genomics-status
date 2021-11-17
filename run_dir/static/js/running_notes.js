@@ -127,7 +127,6 @@ function preview_running_notes(){
     category = category ? ' - '+ category : category;
     $('#preview_category').html(category);
     var text = $('#new_note_text').val().trim();
-    text = $('<div>').text(text).html();
     if (text.length > 0) {
         $('#running_note_preview_body').html(make_markdown(text));
         check_img_sources($('#running_note_preview_body img'));
