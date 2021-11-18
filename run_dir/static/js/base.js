@@ -156,7 +156,7 @@ function auto_format(value, samples_table){
           (typeof value == 'string' && value == 'null') ||
           (typeof value == 'string' && value == 'nan') ||
           typeof value == 'undefined' || typeof value == 'null' || typeof value == 'NaN'){
-    returnstring = '<span class="badge bg-undefined sentenceCase">'+value+'</span> ';
+    returnstring = '-';
   }
 
   else {
@@ -248,10 +248,15 @@ function nice_numbers (count) {
 function auto_samples_cell (id, val){
   // Column returns an array
   if (val instanceof Array){
-    cell = '<td class="' + id + '">';
-    $.each(val, function(key, val){
-      cell += auto_format(val, true) + ' ';
-    });
+    if (val.length === 0){
+      cell = '<td class="' + id + '">' + '-';
+    }
+    else {
+      cell = '<td class="' + id + '">';
+      $.each(val, function(key, val){
+        cell += auto_format(val, true) + ' ';
+      });
+    }
     return cell + '</td>';
   }
 

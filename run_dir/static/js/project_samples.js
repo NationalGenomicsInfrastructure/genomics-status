@@ -749,6 +749,7 @@ function load_samples_table(colOrder) {
             }
 
         }
+
         else if (value[2] == "library-prep-columns" && info['library_prep'] !== undefined) {
 
             tbl_row += '<td class="' + column_id + '">';
@@ -787,6 +788,15 @@ function load_samples_table(colOrder) {
             $.each(libs, function(idx, library){
               info_library=info['library_prep'][library];
               if ('library_validation' in info_library) {
+                // Populate the library_validation object when undefined
+                if (Object.keys(info_library['library_validation']).length === 0) {
+                  info_library['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'prep_status': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
+                  // Populate additional empty fields
+                  if (!(info['prep_status'].length === 0 || info['prep_status'] == '-' && info['initial_qc']['initial_qc_status'] === undefined || info['initial_qc']['initial_qc_status'] == '-')){
+                    info.prep_status = '-<br>' + auto_format(info['prep_status'][0].toString());
+                    info['initial_qc'].initial_qc_status = '-<br>' + auto_format(info['initial_qc']['initial_qc_status'], true);
+                  }
+                }
                 // We only want to show up the LIMS process ID with the higher number (the last one)
                 var process_id = max_str(Object.keys(info_library['library_validation']));
                 var validation_data = info_library['library_validation'][process_id];
@@ -802,11 +812,16 @@ function load_samples_table(colOrder) {
 
                   // Remove the X from initial QC initials
                   else if(column_id == 'initials'){
-                    var sig = validation_data[column_id];
-                    if(sig.length == 3 && sig[2] == 'X'){
-                      sig = sig.substring(0,2);
+                    if(!(validation_data[column_id] == '-')){
+                      var sig = validation_data[column_id];
+                      if(sig.length == 3 && sig[2] == 'X'){
+                        sig = sig.substring(0,2);
+                      }
+                      tbl_row += '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
                     }
-                    tbl_row += '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
+                    else{
+                      tbl_row += '-<br>';
+                    }
                   }
 
                   // Everything else
