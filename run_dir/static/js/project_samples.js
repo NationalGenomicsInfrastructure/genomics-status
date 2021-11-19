@@ -792,9 +792,10 @@ function load_samples_table(colOrder) {
                 if (Object.keys(info_library['library_validation']).length === 0) {
                   info_library['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'prep_status': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
                   // Populate additional empty fields
-                  if (!(info['prep_status'].length === 0 || info['prep_status'] == '-' && info['initial_qc']['initial_qc_status'] === undefined || info['initial_qc']['initial_qc_status'] == '-')){
+                  if (!(info['prep_status'].length === 0 || info['prep_status'] == '-' && info['initial_qc']['initial_qc_status'] === undefined || info['initial_qc']['initial_qc_status'] == '-' && info['initial_qc']['failure_reason'] === undefined || info['initial_qc']['failure_reason'] == '-')){
                     info.prep_status = '-<br>' + auto_format(info['prep_status'][0].toString());
                     info['initial_qc'].initial_qc_status = '-<br>' + auto_format(info['initial_qc']['initial_qc_status'], true);
+                    info['initial_qc']['failure_reason'] = '-<br>' + info['initial_qc']['failure_reason'];
                   }
                 }
                 // We only want to show up the LIMS process ID with the higher number (the last one)
