@@ -795,7 +795,7 @@ function load_samples_table(colOrder) {
                   if (!(info['prep_status'].length === 0 || info['prep_status'] == '-' && info['initial_qc']['initial_qc_status'] === undefined || info['initial_qc']['initial_qc_status'] == '-' && info['initial_qc']['failure_reason'] === undefined || info['initial_qc']['failure_reason'] == '-')){
                     info.prep_status = '-<br>' + auto_format(info['prep_status'][0].toString());
                     info['initial_qc'].initial_qc_status = '-<br>' + auto_format(info['initial_qc']['initial_qc_status'], true);
-                    info['initial_qc']['failure_reason'] = '-<br>' + info['initial_qc']['failure_reason'];
+                    info['initial_qc']['failure_reason'] = '-<br>' + auto_format(info['initial_qc']['failure_reason'], true);
                   }
                 }
                 // We only want to show up the LIMS process ID with the higher number (the last one)
