@@ -265,7 +265,8 @@ var categories={ 'Workset': 'bg-primary',
                  'User Communication': 'bg-usr',
                  'Administration': 'bg-danger',
                  'Important': 'bg-imp',
-                 'Deviation': 'bg-devi' }
+                 'Deviation': 'bg-devi',
+                 'Invoicing': 'bg-inv' }
 
 // not using running_notes.js anymore
 // Insert new running note and reload the running notes table
