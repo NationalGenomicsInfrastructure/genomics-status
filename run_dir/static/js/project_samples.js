@@ -813,7 +813,7 @@ function load_samples_table(colOrder) {
 
                   // Remove the X from initial QC initials
                   else if(column_id == 'initials'){
-                    if(!(validation_data[column_id] == '-')){
+                    if(validation_data[column_id] !== '-'){
                       var sig = validation_data[column_id];
                       if(sig.length == 3 && sig[2] == 'X'){
                         sig = sig.substring(0,2);

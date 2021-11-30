@@ -248,15 +248,12 @@ function nice_numbers (count) {
 function auto_samples_cell (id, val){
   // Column returns an array
   if (val instanceof Array){
-    if (val.length === 0){
-      cell = '<td class="' + id + '">' + '-';
-    }
-    else {
-      cell = '<td class="' + id + '">';
-      $.each(val, function(key, val){
+    cell = '<td class="' + id + '">' 
+    if (val.length === 0)
+      cell = cell + '-';
+     $.each(val, function(key, val){
         cell += auto_format(val, true) + ' ';
-      });
-    }
+     });
     return cell + '</td>';
   }
 
