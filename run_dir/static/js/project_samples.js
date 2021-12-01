@@ -708,7 +708,6 @@ function load_samples_table(colOrder) {
 
         }
         else if (value[2] == "initial-qc-columns" && info['initial_qc'] !== undefined) {
-
             info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
 
             // Fragment Analyzer Image
@@ -742,12 +741,14 @@ function load_samples_table(colOrder) {
                               sig+'</span></td>';
             }
 
+            else if(column_id == 'initial_qc_status'){
+              tbl_row += '<td class="' + column_id +' align-middle'+ '">' + auto_format(info['initial_qc'][column_id], true) + ' </td>';
+            }
 
             // everything else
             else {
               tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
             }
-
         }
 
         else if (value[2] == "library-prep-columns" && info['library_prep'] !== undefined) {
@@ -790,12 +791,10 @@ function load_samples_table(colOrder) {
               if ('library_validation' in info_library) {
                 // Populate the library_validation object when undefined
                 if (Object.keys(info_library['library_validation']).length === 0) {
-                  info_library['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'prep_status': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
+                  info_library['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
                   // Populate additional empty fields
-                  if (!(info['prep_status'].length === 0 || info['prep_status'] == '-' && info['initial_qc']['initial_qc_status'] === undefined || info['initial_qc']['initial_qc_status'] == '-' && info['initial_qc']['failure_reason'] === undefined || info['initial_qc']['failure_reason'] == '-')){
+                  if (!(info['prep_status'].length === 0 || info['prep_status'] == '-')){
                     info.prep_status = '-<br>' + auto_format(info['prep_status'][0].toString());
-                    info['initial_qc'].initial_qc_status = '-<br>' + auto_format(info['initial_qc']['initial_qc_status'], true);
-                    info['initial_qc']['failure_reason'] = '-<br>' + auto_format(info['initial_qc']['failure_reason'], true);
                   }
                 }
                 // We only want to show up the LIMS process ID with the higher number (the last one)
