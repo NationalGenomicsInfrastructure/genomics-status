@@ -21,13 +21,29 @@ function generate_category_label(category){
         'Invoicing': ['inv', 'file-invoice-dollar']
     }
     // Remove the whitespace
-    var category = category.trim()
-    // Check if we recognise this category in the class object keys
-    if (Object.keys(cat_classes).indexOf(category) != -1){
-        cat_label = '<span class="badge bg-'+ cat_classes[category][0] +'">'+ category + '&nbsp;' + '<span class="fa fa-'+ cat_classes[category][1] +'">'+"</span></span>";
-    }else{
-    // Default button formatting
-        cat_label = '<span class="badge bg-secondary">'+ category +"</span>";
+    var categories = category.trim()
+    //Below can probably be simplified
+    var cat_label = '';
+    if (categories.includes('Workset')){
+      cat_label += '<span class="badge bg-'+cat_classes['Workset'][0]+'">'+'Workset '+'<span class="fa fa-'+cat_classes['Workset'][1]+'">'+'</span></span> ';
+    }if (categories.includes('Flowcell')){
+      cat_label += '<span class="badge bg-'+cat_classes['Flowcell'][0]+'">'+'Flowcell '+'<span class="fa fa-'+cat_classes['Flowcell'][1]+'">'+'</span></span> ';
+    }if (categories.includes('Decision')){
+      cat_label += '<span class="badge bg-'+cat_classes['Decision'][0]+'">'+'Decision '+'<span class="fa fa-'+cat_classes['Decision'][1]+'">'+'</span></span> ';
+    }if (categories.includes('Lab')){
+      cat_label += '<span class="badge bg-'+cat_classes['Lab'][0]+'">'+'Lab '+'<span class="fa fa-'+cat_classes['Lab'][1]+'">'+'</span></span> '; 
+    }if (categories.includes('Bioinformatics')){
+      cat_label += '<span class="badge bg-'+cat_classes['Bioinformatics'][0]+'">'+'Bioinformatics '+'<span class="fa fa-'+cat_classes['Bioinformatics'][1]+'">'+'</span></span> ';
+    }if (categories.includes('User') && categories.includes('Communication')){
+      cat_label += '<span class="badge bg-'+cat_classes['User Communication'][0]+'">'+'User Communication '+'<span class="fa fa-'+cat_classes['User Communication'][1]+'">'+'</span></span> ';
+    }if (categories.includes('Administration')){
+      cat_label += '<span class="badge bg-'+cat_classes['Administration'][0]+'">'+'Administration '+'<span class="fa fa-'+cat_classes['Administration'][1]+'">'+'</span></span> ';
+    }if (categories.includes('Important')){
+      cat_label += '<span class="badge bg-'+cat_classes['Important'][0]+'">'+'Important '+'<span class="fa fa-'+cat_classes['Important'][1]+'">'+'</span></span> ';
+    }if (categories.includes('Deviation')){
+      cat_label += '<span class="badge bg-'+cat_classes['Deviation'][0]+'">'+'Deviation '+'<span class="fa fa-'+cat_classes['Deviation'][1]+'">'+'</span></span> ';
+    }if (categories.includes('Invoicing')){
+      cat_label += '<span class="badge bg-'+cat_classes['Invoicing'][0]+'">'+'Invoicing '+'<span class="fa fa-'+cat_classes['Invoicing'][1]+'">'+'</span></span> ';
     }
     return cat_label;
 }
@@ -127,6 +143,7 @@ function preview_running_notes(){
     category = category ? ' - '+ category : category;
     $('#preview_category').html(category);
     var text = $('#new_note_text').val().trim();
+    text = $('<div>').text(text).html();
     if (text.length > 0) {
         $('#running_note_preview_body').html(make_markdown(text));
         check_img_sources($('#running_note_preview_body img'));
@@ -199,7 +216,9 @@ $('#rn_category ~ ul > li > button').on('click', function(){
 $('.rn-categ button').click(function(e){
     e.preventDefault();
     var was_selected = $(this).hasClass('active');
-    $('.rn-categ button').removeClass('active');
+    if(was_selected){
+        $(this).removeClass('active');
+    }
     if(!was_selected){
         $(this).addClass('active');
     }
