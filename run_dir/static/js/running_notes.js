@@ -20,31 +20,21 @@ function generate_category_label(category){
         'Deviation': ['devi', 'frown'],
         'Invoicing': ['inv', 'file-invoice-dollar']
     }
+    var cat_label = '';
     // Remove the whitespace
     var categories = category.trim()
-    //Below can probably be simplified
-    var cat_label = '';
-    if (categories.includes('Workset')){
-      cat_label += '<span class="badge bg-'+cat_classes['Workset'][0]+'">'+'Workset '+'<span class="fa fa-'+cat_classes['Workset'][1]+'">'+'</span></span> ';
-    }if (categories.includes('Flowcell')){
-      cat_label += '<span class="badge bg-'+cat_classes['Flowcell'][0]+'">'+'Flowcell '+'<span class="fa fa-'+cat_classes['Flowcell'][1]+'">'+'</span></span> ';
-    }if (categories.includes('Decision')){
-      cat_label += '<span class="badge bg-'+cat_classes['Decision'][0]+'">'+'Decision '+'<span class="fa fa-'+cat_classes['Decision'][1]+'">'+'</span></span> ';
-    }if (categories.includes('Lab')){
-      cat_label += '<span class="badge bg-'+cat_classes['Lab'][0]+'">'+'Lab '+'<span class="fa fa-'+cat_classes['Lab'][1]+'">'+'</span></span> '; 
-    }if (categories.includes('Bioinformatics')){
-      cat_label += '<span class="badge bg-'+cat_classes['Bioinformatics'][0]+'">'+'Bioinformatics '+'<span class="fa fa-'+cat_classes['Bioinformatics'][1]+'">'+'</span></span> ';
-    }if (categories.includes('User') && categories.includes('Communication')){
-      cat_label += '<span class="badge bg-'+cat_classes['User Communication'][0]+'">'+'User Communication '+'<span class="fa fa-'+cat_classes['User Communication'][1]+'">'+'</span></span> ';
-    }if (categories.includes('Administration')){
-      cat_label += '<span class="badge bg-'+cat_classes['Administration'][0]+'">'+'Administration '+'<span class="fa fa-'+cat_classes['Administration'][1]+'">'+'</span></span> ';
-    }if (categories.includes('Important')){
-      cat_label += '<span class="badge bg-'+cat_classes['Important'][0]+'">'+'Important '+'<span class="fa fa-'+cat_classes['Important'][1]+'">'+'</span></span> ';
-    }if (categories.includes('Deviation')){
-      cat_label += '<span class="badge bg-'+cat_classes['Deviation'][0]+'">'+'Deviation '+'<span class="fa fa-'+cat_classes['Deviation'][1]+'">'+'</span></span> ';
-    }if (categories.includes('Invoicing')){
-      cat_label += '<span class="badge bg-'+cat_classes['Invoicing'][0]+'">'+'Invoicing '+'<span class="fa fa-'+cat_classes['Invoicing'][1]+'">'+'</span></span> ';
-    }
+    var cat = categories.split(' ')
+    Object.values(cat).forEach(function(val){
+      if (cat.indexOf('User') != -1) { 
+        cat.splice(cat.indexOf('User'), 1);
+      }
+      if (val == 'Communication'){
+        val = 'User Communication';
+      }
+      if (Object.keys(cat_classes).indexOf(val) != -1){
+          cat_label += '<span class="badge bg-'+cat_classes[val][0]+'">'+val+'&nbsp;'+'<span class="fa fa-'+ cat_classes[val][1] +'">'+"</span></span> ";
+      }
+    });
     return cat_label;
 }
 
