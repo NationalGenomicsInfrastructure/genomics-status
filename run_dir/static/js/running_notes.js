@@ -124,7 +124,7 @@ function preview_running_notes(){
     $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
     var categories = []
     $('.rn-categ button.active').each(function() {
-      categories.push($(this).text());
+      categories.push($(this).text().trim());
     });
     var category = generate_category_label(categories.join());
     category = category ? ' - '+ category : category;
@@ -205,7 +205,7 @@ $('.rn-categ button').click(function(e){
     if(was_selected){
         $(this).removeClass('active');
     }
-    if(!was_selected){
+    else{
         $(this).addClass('active');
     }
     preview_running_notes();
