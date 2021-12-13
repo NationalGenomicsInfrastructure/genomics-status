@@ -126,7 +126,7 @@ function preview_running_notes(){
     $('.rn-categ button.active').each(function() {
       categories.push($(this).text());
     });
-    var category = generate_category_label(categories);
+    var category = generate_category_label(categories.join());
     category = category ? ' - '+ category : category;
     $('#preview_category').html(category);
     var text = $('#new_note_text').val().trim();
