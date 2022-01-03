@@ -63,7 +63,7 @@ Description: Shows a table with all flow cells.
                 </td>
                 <td class="start_date">{{ flowcells[onefc]["startdate"]}}</td>
                 <td class="run_mode">{{ flowcells[onefc].get('run_mode', '-') }}</td>
-                <td class="recipe">{{ flowcells[onefc].get('recipe', '-') }}<br>{{ flowcells[onefc].get('actual_recipe', '-') }}</td>
+                <td class="recipe">{{ flowcells[onefc].get('actual_recipe', '-') }}</td>
                 <td class="lane" class="text-center">
                      {% if 'lane_info' in flowcells[onefc] %}
                          {% for onelane in flowcells[onefc]['lane_info'] %}
