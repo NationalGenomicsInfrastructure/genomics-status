@@ -44,7 +44,6 @@ function load_table() {
           tbl_row.append($('<td>').html(function(){
             var to_return = '';
             $.each( pools['projects'], function(pid, pname){
-              console.log(pid, pname)
               to_return = to_return + '<div class="mult-pools-margin"><a class="text-decoration-none" href="/project/'+pid+'">'+pname+' ('+pid+') </a></div>'
             });
             return to_return;
