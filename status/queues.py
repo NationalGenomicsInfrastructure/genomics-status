@@ -72,7 +72,7 @@ class qPCRPoolsDataHandler(SafeHandler):
                             pools[method][container]['library_types'].append(library_type)
                         if runmode not in pools[method][container]['runmodes']:
                             pools[method][container]['runmodes'].append(runmode)
-                        pools[method][container]['projects'].append(project)
+                        pools[method][container]['projects'][project] = proj_doc['project_name']
                 else:
                     proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
                     library_type =  proj_doc['details'].get('library_construction_method', '')
@@ -81,7 +81,7 @@ class qPCRPoolsDataHandler(SafeHandler):
                                                 'samples':[{'name': record[1], 'well': value, 'queue_time': queue_time}],
                                                 'library_types': [library_type],
                                                 'runmodes': [runmode],
-                                                'projects': [project]
+                                                'projects': {project: proj_doc['project_name']}
                                                 }
 
         self.set_header("Content-type", "application/json")
