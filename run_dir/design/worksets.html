@@ -14,7 +14,6 @@ Description: Shows a table with all worksets.
   <div class="tabbable">
     <ul class="nav nav-tabs" role="tablist">
       <li class="nav-item" role="presentation"><a class="nav-link active" href="#tab_run_worksets" role="tab" data-toggle="tab" aria-selected="true">Worksets</a></li>
-      <li class="nav-item"><a class="nav-link" href="#tab_pending_samples_to_worksets" role="tab" data-toggle="tab">Samples pending for worksets</a></li>
       <li class="nav-item"><a class="nav-link" href="#tab_closed_worksets" role="tab" data-toggle="tab">Finished worksets</a></li>
     </ul>
     <div class="tab-content">
@@ -104,47 +103,7 @@ Description: Shows a table with all worksets.
             </tbody>
           </table>
         </div>
-      </div>
-      <div class="tab-pane fade" id="tab_pending_samples_to_worksets">
-        <div class="row">
-          <div class="col">
-            <h2 class="worksets_page_heading"> <small class="text-muted">All samples that are available to be added to a workset in LIMS.</small></h2>
-          </div>
-          <div class="col ml-auto gy-2">
-            <label class="btn btn-sm btn-outline-dark expand-all float-right"><span class="fa fa-plus-circle" aria-hidden="true"></span>Expand All</label>
-          </div>
-        </div>
-        <div id="samples-to-workset-list">
-          <table class="table table-hover table-striped table-bordered sortable" id="samples_table">
-            <thead id="samples_table_head">
-                <tr class="sticky darkth">
-                  <th></th>
-                  <th>Project</th>
-                  <th>Number of Samples (Total samples in project)</th>
-                  <th>Oldest sample (in days)</th>
-                  <th>Project Queue Date</th>
-                  <th>Has Requeued Samples</th>
-                  <th>Lab protocol</th>
-                  <th>Latest running note</th>
-                </tr>
-            </thead>
-            <tfoot id="samples_table_footer">
-              <tr class="darkth">
-                <th></th>
-                <th>Project</th>
-                <th>Number of Samples (Total samples in project)</th>
-                <th>Oldest sample (in days)</th>
-                <th>Project Queue Date</th>
-                <th>Has Requeued Samples</th>
-                <th>Lab protocol</th>
-                <th>Latest running note</th>
-              </tr>
-            </tfoot>
-            <tbody class="list" id="samples_table_body">
-            </tbody>
-          </table>
-        </div>
-      </div>
+      </div>  
       <div class="tab-pane fade" id="tab_closed_worksets">
        <h2 class="closed_ws_page_heading"><small class="text-muted">All worksets with projects closed for >1 year in StatusDB</small></h2>
        <tbody class="list" id="closed_ws_table_body">
