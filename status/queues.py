@@ -9,6 +9,7 @@ from genologics import lims
 from genologics.entities import Queue, Artifact, Container
 import xml.etree.ElementTree as ET
 import psycopg2
+from dateutil.parser import parse
 
 
 class qPCRPoolsDataHandler(SafeHandler):
