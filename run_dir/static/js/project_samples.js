@@ -42,7 +42,6 @@ $(document).ready(function() {
     $(e.trigger).parent().attr('title', 'Copied!').tooltip('_fixTitle').tooltip('show');
   });
 
-
   $('body').on('click', '.search-action', function(e) {
     // Stop the checkbox from firing if clicked, plus stop bubbling
     e.stopPropagation();
@@ -86,6 +85,16 @@ $(document).ready(function() {
           window.open(this.href);
       return false;
         });
+    $('.copy_proj').click(function(){
+        var copyText = project;
+        document.addEventListener('copy', function(e) {
+            e.clipboardData.setData('text/plain', copyText);
+            e.preventDefault();
+        }, true);
+        document.execCommand('copy');
+        window.open(this.href);
+      return false;
+    });
   if(window.location.href.indexOf('#running_note_')!=-1){
     $('.nav-tabs a[href="#tab_running_notes_content"]').tab('show');
     setTimeout(function(){
@@ -175,12 +184,12 @@ function load_presets() {
 
     // Default presets
     for (var preset in default_presets) {
-      $('#default_preset_buttons').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-outline-dark">'+preset+'</button>');
+      $('#default_preset_buttons').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-outline-secondary">'+preset+'</button>');
     }
     // User presets, if there are any
     if (!jQuery.isEmptyObject(user_presets)) {
       for (var preset in user_presets) {
-        $('#user_presets_dropdown').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-outline-dark">'+preset+'</button>');
+        $('#user_presets_dropdown').append('<button id="'+prettify(preset)+'" data-action="filterPresets" type="button" class="search-action btn btn-outline-secondary">'+preset+'</button>');
       }
     }
     else {
@@ -509,7 +518,11 @@ function load_all_udfs(){
       else if (prettify(key) == 'customer_project_description'){
         $('#customer_project_description').html(make_markdown(value));
       }
-
+      // Add last modified time of project
+      else if (prettify(key) == 'modification_time'){
+        var time = moment(value).format('HH:mm, MMM Do YYYY');
+        $("#last_update").html(time);
+      }
       // Everything else
       else {
 			  if(prettyobj(key).length > 0){
@@ -695,7 +708,6 @@ function load_samples_table(colOrder) {
 
         }
         else if (value[2] == "initial-qc-columns" && info['initial_qc'] !== undefined) {
-
             info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
 
             // Fragment Analyzer Image
@@ -729,13 +741,16 @@ function load_samples_table(colOrder) {
                               sig+'</span></td>';
             }
 
+            else if(column_id == 'initial_qc_status'){
+              tbl_row += '<td class="' + column_id +' align-middle'+ '">' + auto_format(info['initial_qc'][column_id], true) + ' </td>';
+            }
 
             // everything else
             else {
               tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
             }
-
         }
+
         else if (value[2] == "library-prep-columns" && info['library_prep'] !== undefined) {
 
             tbl_row += '<td class="' + column_id + '">';
@@ -774,6 +789,14 @@ function load_samples_table(colOrder) {
             $.each(libs, function(idx, library){
               info_library=info['library_prep'][library];
               if ('library_validation' in info_library) {
+                // Populate the library_validation object when undefined
+                if (Object.keys(info_library['library_validation']).length === 0) {
+                  info_library['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
+                  // Populate additional empty fields
+                  if (!(info['prep_status'].length === 0 || info['prep_status'] == '-')){
+                    info.prep_status = '-<br>' + auto_format(info['prep_status'][0].toString());
+                  }
+                }
                 // We only want to show up the LIMS process ID with the higher number (the last one)
                 var process_id = max_str(Object.keys(info_library['library_validation']));
                 var validation_data = info_library['library_validation'][process_id];
@@ -789,11 +812,16 @@ function load_samples_table(colOrder) {
 
                   // Remove the X from initial QC initials
                   else if(column_id == 'initials'){
-                    var sig = validation_data[column_id];
-                    if(sig.length == 3 && sig[2] == 'X'){
-                      sig = sig.substring(0,2);
+                    if(validation_data[column_id] !== '-'){
+                      var sig = validation_data[column_id];
+                      if(sig.length == 3 && sig[2] == 'X'){
+                        sig = sig.substring(0,2);
+                      }
+                      tbl_row += '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
                     }
-                    tbl_row += '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
+                    else{
+                      tbl_row += '-<br>';
+                    }
                   }
 
                   // Everything else

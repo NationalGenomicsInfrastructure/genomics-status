@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block stuff %}
+
+
+<div class="container-fluid" id="sample_requirements_main">
+  <div class="my-4">
+    <v-sample-requirements-view/>
+  </div>
+
+{% end %}
+
+{% block js %}
+
+<!-- development version, includes helpful console warnings -->
+<script src="https://unpkg.com/vue@next"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/sample_requirements.js?v={{ gs_globals['git_commit'] }}"></script>
+
+{% end %}

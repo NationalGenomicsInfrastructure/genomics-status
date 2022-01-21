@@ -178,6 +178,12 @@ function build_series(data, key, name, view_type, filter_inst_type){
         }else if (view_type == 'delivery_type'){
             if (data[d][1].delivery_type == null){
                 series_name = "Other/undefined";
+            }else if (data[d][1].delivery_type == "HDD with raw data"){
+                series_name = "HDD";
+            }else if (data[d][1].delivery_type == "GRUS with raw data"){
+                series_name = "GRUS";
+            }else if (data[d][1].delivery_type == "In-house"){
+                series_name = "In-house";
             }else{
                 series_name = data[d][1].delivery_type;
             }
@@ -256,6 +262,7 @@ function view_coloring(series_name){
         case "Application":
         case "total RNA":
         case "No BP bioinformatics":
+        case "In-house":
             return chroma('blue').hex();
         case "NextSeq":
         case "GRUS":

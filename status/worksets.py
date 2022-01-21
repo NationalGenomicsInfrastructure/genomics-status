@@ -11,7 +11,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
 from status.projects import RunningNotesDataHandler
-from genologics.entities import Queue, Artifact, Project
+import yaml
 
 class WorksetsDataHandler(SafeHandler):
     """returns basic worksets json
@@ -302,38 +302,68 @@ class WorksetPoolsHandler(SafeHandler):
     URL: /api/v1/workset_pools
     """
     def get(self):
-        limsg = lims.Lims(BASEURI, USERNAME, PASSWORD)
+        import psycopg2
+
         queues = {}
-        queues['TruSeqRNAprep'] = Queue(limsg, id='311')
-        queues['TruSeqSmallRNA'] = Queue(limsg, id='410')
-        queues['TruSeqDNAPCR_free'] = Queue(limsg, id='407')
-        queues['ThruPlex'] = Queue(limsg, id='451')
-        queues['Genotyping'] = Queue(limsg, id='901')
-        queues['RadSeq'] = Queue(limsg, id='1201')
-        queues['SMARTerPicoRNA'] = Queue(limsg, id='1551')
-        queues['ChromiumGenomev2'] = Queue(limsg, id='1801')
+        queues['TruSeqRNAprep'] = '311'
+        queues['TruSeqRNAprepV2'] = '2301'
+        queues['TruSeqSmallRNA'] = '410'
+        queues['TruSeqDNAPCR_free'] = '407'
+        queues['ThruPlex'] = '451'
+        queues['Genotyping'] = '901'
+        queues['RadSeq'] = '1201'
+        queues['SMARTerPicoRNA'] = '1551'
+        queues['ChromiumGenomev2'] = '1801'
+
+        control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
+                            'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
+                            'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
+                            'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
+                            'lambda DNA (qPCR)'
+                         ]
+
 
         methods = queues.keys()
+        projects = self.application.projects_db.view("project/project_id")
+        connection = psycopg2.connect(user=self.application.lims_conf['username'], host=self.application.lims_conf['url'],
+                                        database=self.application.lims_conf['db'], password=self.application.lims_conf['password'])
+        cursor = connection.cursor()
         pools = {}
 
         for method in methods:
             pools[method] ={}
-            for artifact in queues[method].artifacts:
-                name = artifact.name
-                project = artifact.name.split('_')[0]
+            query = ("select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid "
+                            "from artifact art, stagetransition st where art.artifactid=st.artifactid and "
+                            "st.stageid in (select stageid from stage where stepid={}) and "
+                            "st.completedbyid is null and st.workflowrunid>0 and art.name not in {};".format(queues[method], tuple(control_names)))
+            cursor.execute(query)
+            records = cursor.fetchall()
+            for record in list(records):
+                project = record[1].split('_')[0]
+                requeued = False
+                if record[3] is None:
+                    requeued =True
                 if project in pools[method]:
-                    pools[method][project]['samples'].append(name)
+                    pools[method][project]['samples'].append((record[1], requeued))
+                    if parse(pools[method][project]['oldest_sample_queued_date']) > record[2]:
+                        pools[method][project]['oldest_sample_queued_date'] = record[2].isoformat()
                 else:
-                    total_num_samples = limsg.get_sample_number(projectlimsid=project)
-                    proj = Project(limsg, id=project)
-                    try:
-                        date_queued = proj.udf['Queued'].strftime("%Y-%m-%d")
-                    except KeyError:
-                        # Queued should really be on a project at this point, but mistakes happen
-                        date_queued = None
-                    projName = proj.name
-                    pools[method][project] = {'total_num_samples': total_num_samples, 'queued_date': date_queued, 'pname': projName,
-                                                'samples': [name]}
+                    proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
+                    total_num_samples = proj_doc['no_of_samples']
+                    oldest_sample_queued_date = record[2].isoformat()
+                    projName = proj_doc['project_name']
+                    protocol = proj_doc['details']['library_construction_method']
+                    queued_date = proj_doc.get('project_summary', {}).get('queued', 'NA')
+                    latest_running_note = self._get_latest_running_note(proj_doc['details']['running_notes'])
+                    pools[method][project] = {'samples': [(record[1], requeued)], 'total_num_samples': total_num_samples,
+                                                'oldest_sample_queued_date': oldest_sample_queued_date, 'pname': projName,
+                                                'protocol': protocol, 'latest_running_note': latest_running_note,
+                                                'queued_date': queued_date }
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(pools))
+
+    def _get_latest_running_note(self, val):
+        notes = json.loads(val)
+        latest_note = { max(notes.keys()): notes[max(notes.keys())] }
+        return latest_note

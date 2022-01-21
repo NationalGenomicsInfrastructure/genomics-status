@@ -96,7 +96,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
     $('#workset_table_filter').show();
   }
   if($(this).attr('href')=='#tab_pending_samples_to_worksets'){
-    $("#samples_table_body").html('<tr><td colspan="4" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
+    $("#samples_table_body").html('<tr><td colspan="8" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
     return $.getJSON('/api/v1/workset_pools', function(data) {
       $("#samples_table_body").empty();
       var size = 0;
@@ -105,26 +105,45 @@ $(".tabbable").on("click", '[role="tab"]', function() {
         if(!($.isEmptyObject(value))){
           sumGroups[key] = 0;
           $.each(value, function(project, projval){
+            var has_requeued = 'No';
             var tbl_row = $('<tr>');
             tbl_row.append($('<td>').html(key));
             tbl_row.append($('<td class="expand-proj">').html(function() {
               var to_return = '<span class="fa fa-plus-circle" aria-hidden="true"></span>';
               to_return = to_return + '<a class="text-decoration-none" href="/project/'+project+'">'+projval['pname']+' ('+project+') </a>';
               to_return = to_return + '<span style="float:right; padding-right:50px;"><table border="0" style="visibility:collapse;">';
-              to_return = to_return + '<thead><tr class="darkth"><th>Samples</th></tr></thead>';
+              to_return = to_return + '<thead><tr class="darkth"><th>Samples</th><th>Requeued</th></tr></thead>';
               $.each(projval['samples'], function(i, sample){
                 to_return = to_return +
                 '<tr>'+
-                  '<td>'+sample+'</td>'+
+                  '<td>'+sample[0]+'</td>'+
+                  '<td>'+sample[1]+'</td>'+
                 '</tr>';
+                if(sample[1]===true) has_requeued='Yes';
                 });
                 to_return = to_return +'</table></span>';
                 return to_return;
               }));
             tbl_row.append($('<td>').html(projval['samples'].length +' <span class="badge bg-secondary">'+ projval['total_num_samples']+'</span>'));
             sumGroups[key] = sumGroups[key] + projval['samples'].length;
-            var daysAndLabel = getDaysAndDateLabel(projval['queued_date'], 'both');
+            var daysAndLabel = getDaysAndDateLabel(projval['oldest_sample_queued_date'], 'both');
             tbl_row.append($('<td>').html('<span class="badge bg-'+daysAndLabel[1]+'">'+daysAndLabel[0]+'</span>'));
+            tbl_row.append($('<td>').html(projval['queued_date']));
+            tbl_row.append($('<td>').html('<div>'+has_requeued+'</div>'));
+            tbl_row.append($('<td>').html(projval['protocol']));
+            if (projval['latest_running_note'] !== '') {
+              var note = projval['latest_running_note'];
+              var ndate = undefined;
+              for (date_key in note) { ndate = date_key; break; }
+              notedate = new Date(ndate);
+              tbl_row.append($('<td>').html('<div class="card running-note-card">' +
+              '<div class="card-header">'+
+                note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
+              '</div><div class="card-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>'));
+              }
+              else{
+
+              }
             $("#samples_table_body").append(tbl_row);
           });
         }
@@ -217,7 +236,7 @@ function init_listjs2() {
           api.column(groupColumn, {page:'current'} ).data().each( function ( group, i ) {
             if ( last !== group ) {
               $(rows).eq( i ).before(
-                  '<tr class="group"><td colspan="4">'+group+' (Total: '+sumGroups[group] +')</td></tr>'
+                  '<tr class="group"><td colspan="8">'+group+' (Total: '+sumGroups[group] +')</td></tr>'
               );
               last = group;
             }
