@@ -51,8 +51,7 @@ function make_running_note(date, note){
     date = new Date(date);
     if (note['note'] != undefined){
         if(date > new Date('2015-01-01')){
-          //Replace > and < in old versions of running notes saved on lims.
-          noteText = make_markdown(note['note'].replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
+          noteText = make_markdown(note['note']);
         } else {
           noteText = '<pre class="plaintext_running_note">'+make_project_links(note['note'])+'</pre>';
         }
@@ -226,6 +225,7 @@ $('#new_note_text').keyup(preview_running_notes);
 $("#running_notes_form").submit( function(e) {
     e.preventDefault();
     var text = $('#new_note_text').val().trim();
+    text = $('<div>').text(text).html();
     var categories = [];
     $('.rn-categ button.active').each(function() {
       categories.push($(this).text().trim());
