@@ -12,7 +12,7 @@ class SensorpushBaseHandler(SafeHandler):
 
 
         # A reasonable start time
-        start_time = datetime.datetime.now() - datetime.timedelta(weeks=4)
+        start_time = datetime.datetime.now() - datetime.timedelta(weeks=1)
         start_time_str = start_time.strftime('%Y-%m-%dT00:00:00')
 
         # Fetch all sensor names from the update two days ago
