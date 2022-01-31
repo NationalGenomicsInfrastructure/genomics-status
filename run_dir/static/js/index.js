@@ -128,21 +128,16 @@ function plot_sum_data(){
       for (i in timedata) {
         timedata[i][0] = Date.parse(timedata[i][0]);
       }
-      if (sensname.startsWith('K') || sensname == 'Test F36'){
-        var dp_frig = {
+      var dp_var = {
           name: sensname,
           data: timedata,
           lineWidth: 1
-        };
-        frig_series.push(dp_frig);
+      };
+      if (sensname.startsWith('K') || sensname == 'Test F36'){
+        frig_series.push(dp_var);
       }
       else if (sensname.startsWith('F') || sensname == 'TestF35'){
-        var dp_freez = {
-          name: sensname,
-          data: timedata,
-          lineWidth: 1
-        };
-        freez_series.push(dp_freez);
+        freez_series.push(dp_var);
       }
     });
 
@@ -208,10 +203,10 @@ function plot_sum_data(){
       series: freez_series
     });
  });
- // Add a loading spinner and delay to match the loading
- $('#loading_spinner').delay(1000).hide()
- $('#fridge_sum_plot').show();
- $('#freezer_sum_plot').show();
+ $('#loading_spinner').delay(1000).hide(function(){
+   $('#fridge_sum_plot').show();
+   $('#freezer_sum_plot').show();
+ });
 }
 
 $(document).ready(function(){
