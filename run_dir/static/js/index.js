@@ -208,11 +208,10 @@ function plot_sum_data(){
       series: freez_series
     });
  });
- // Add a loading spinner
- $('#loading_spinner').delay(1000).hide(function(){
-   $('#fridge_sum_plot').show();
-   $('#freezer_sum_plot').show();
- });
+ // Add a loading spinner and delay to match the loading
+ $('#loading_spinner').delay(1000).hide()
+ $('#fridge_sum_plot').show();
+ $('#freezer_sum_plot').show();
 }
 
 $(document).ready(function(){
