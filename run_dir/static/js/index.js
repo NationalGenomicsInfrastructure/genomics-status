@@ -125,7 +125,6 @@ function plot_sum_data(){
     $.each(data, function(id, sensordata){
       var timedata = sensordata.samples;
       var sensname = sensordata.sensor_name;
-      var sercolor = '';
       for (i in timedata) {
         timedata[i][0] = Date.parse(timedata[i][0]);
         date = new Date()
@@ -165,7 +164,7 @@ function plot_sum_data(){
               pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
           },
           plotBands: [{
-            color: '#ffaea4',
+            color: '#fdffd4',
             from: 2,
             width: 10,
             to: -17.78
@@ -211,6 +210,10 @@ function plot_sum_data(){
       series: freez_series
     });
  });
+ // Remove the loading text
+ $('#loading_spinner').hide();
+ $('#fridge_sum_plot').show();
+ $('#freezer_sum_plot').show();
 }
 
 $(document).ready(function(){
