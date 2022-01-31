@@ -126,41 +126,27 @@ function plot_sum_data(){
       var timedata = sensordata.samples;
       var sensname = sensordata.sensor_name;
       var sercolor = '';
-      var frig_series_data = [];
-      var freez_series_data = [];
       for (i in timedata) {
-        //Ett par rader jag testat
-        //timedata[i][0] = new Date(timedata[i][0]);
-        //date = new Date()
-        //current_time = new Date();
-        //var oneWeekAgo = new Date();
-        //oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        //timedata[i] = timedata[i].filter((t[0]) => ((t[0].getTime()) > (week_ago.getTime())))
-        //date.setTime(timedata[i][0])//
         timedata[i][0] = Date.parse(timedata[i][0]);
         date = new Date()
         date.setTime(timedata[i][0])
       }
       if (sensname.startsWith('K') || sensname == 'Test F36'){
-        frig_series_data = timedata;
+        var dp_frig = {
+          name: sensname,
+          data: timedata,
+          lineWidth: 1
+        };
+        frig_series.push(dp_frig);
       }
       else if (sensname.startsWith('F') || sensname == 'TestF35'){
-        freez_series_data = timedata;
+        var dp_freez = {
+          name: sensname,
+          data: timedata,
+          lineWidth: 1
+        };
+        freez_series.push(dp_freez);
       }
-      dp_frig = {
-        name: sensname,
-        data: frig_series_data,
-        color: '#aa0022',
-        lineWidth: 1
-      };
-      dp_freez = {
-        name: sensname,
-        data: freez_series_data,
-        color: '#077ccc',
-        lineWidth: 1
-      };
-      frig_series.push(dp_frig);
-      freez_series.push(dp_freez);
     });
 
     $('#fridge_sum_plot').highcharts({
@@ -169,7 +155,6 @@ function plot_sum_data(){
             backgroundColor: null
       },
       title: 'All refrigerators',
-      legend: { enabled: false },
       xAxis: {
           title: { text: 'Date' },
           type: 'datetime'
@@ -180,11 +165,17 @@ function plot_sum_data(){
               pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
           },
           plotBands: [{
-            color: 'orange',
+            color: '#ffaea4',
             from: 2,
             width: 10,
             to: -17.78
           }]
+      },
+      legend: {
+          title: {
+              text: 'Click to hide:',
+              align: 'center'
+          }
       },
       series: frig_series
     });
@@ -195,7 +186,6 @@ function plot_sum_data(){
             backgroundColor: null
        },
       title: 'All freezers',
-      legend: { enabled: false },
       xAxis: {
           title: { text: 'Date' },
           type: 'datetime'
@@ -206,11 +196,17 @@ function plot_sum_data(){
               pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
           },
           plotBands: [{
-            color: 'orange',
+            color: '#fdffd4',
             from: -10, 
             width: 10, 
             to: -33
           }]
+      },
+      legend: {
+          title: {
+              text: 'Click to hide:',
+              align: 'center'
+          }
       },
       series: freez_series
     });
