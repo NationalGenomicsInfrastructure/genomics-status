@@ -278,7 +278,7 @@ function view_coloring(series_name){
         case "Amplicon":
             return chroma('turquoise').hex();
         default:
-            return "#c3c3c3";
+            return "#ace600";
     }
 }
 function get_parameters(){
