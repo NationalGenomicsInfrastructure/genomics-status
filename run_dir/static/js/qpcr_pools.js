@@ -43,6 +43,13 @@ function load_table() {
           }));
           tbl_row.append($('<td>').html(function(){
             var to_return = '';
+            $.each( pools['projects'], function(pid, pname){
+              to_return = to_return + '<div class="mult-pools-margin"><a class="text-decoration-none" href="/project/'+pid+'">'+pname+' ('+pid+') </a></div>'
+            });
+            return to_return;
+          }));
+          tbl_row.append($('<td>').html(function(){
+            var to_return = '';
             $.each( pools['library_types'], function(i, library_type){
               to_return = to_return + '<div class="mult-pools-margin">'+ library_type +'</div>'
             });
