@@ -123,3 +123,17 @@ function getDaysAndDateLabel(date, option){
   }
    return [number_of_days, label];
 }
+
+// Copy project samples table to clipboard
+var clipboard = new Clipboard('#seq_copy_table');
+clipboard.on('success', function(e) {
+  e.clearSelection();
+  $('#seq_copy_table_btn').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
+  setTimeout(function(){
+    $('#seq_copy_table_btn').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
+  }, 2000);
+});
+
+$('#seq_copy_table_btn').on('click', function () {
+  $('#seq_copy_table').click();
+})
