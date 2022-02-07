@@ -191,10 +191,7 @@ class MainHandler(UnsafeHandler):
                 continue
             if server not in server_status:
                 server_status[server] = row.value
-                try:
-                    server_status[server]['instrument'] = instruments[server] or '-'
-                except KeyError:
-                    server_status[server]['instrument'] = '-'
+                server_status[server]['instrument'] = instruments.get(server, '-')
                 used_percentage = float(row.value.get('used_percentage', '0').replace('%',''))
                 if used_percentage > 60:
                     server_status[server]['css_class'] = 'q-warning'
