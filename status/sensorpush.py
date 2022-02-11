@@ -7,12 +7,9 @@ import datetime
 from status.util import SafeHandler
 
 class SensorpushBaseHandler(SafeHandler):
-    def get_samples(self):
-        """TODO: Should be able to take a start date parameter"""
-
-
+    def get_samples(self, start_days_ago=14):
         # A reasonable start time
-        start_time = datetime.datetime.now() - datetime.timedelta(weeks=1)
+        start_time = datetime.datetime.now() - datetime.timedelta(days=start_days_ago)
         start_time_str = start_time.strftime('%Y-%m-%dT00:00:00')
 
         # Fetch all sensor names from the update two days ago
@@ -79,7 +76,8 @@ class SensorpushDataHandler(SensorpushBaseHandler):
     """ Serves datapoints for last month of sensorpush temperatures """
 
     def get(self):
-        sensor_data = self.get_samples()
+        start_days_ago = int(self.get_argument("start_days_ago", default="14"))
+        sensor_data = self.get_samples(start_days_ago=start_days_ago)
         self.write(json.dumps(sensor_data))
 
 
