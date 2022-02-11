@@ -146,7 +146,9 @@ function plot_sum_data(){
             zoomType: 'x',
             backgroundColor: null
       },
-      title: 'All refrigerators',
+      title: {
+          text: 'All refrigerators'
+      },
       xAxis: {
           title: { text: 'Date' },
           type: 'datetime'
@@ -176,8 +178,10 @@ function plot_sum_data(){
       chart: {
             zoomType: 'x',
             backgroundColor: null
-       },
-      title: 'All freezers',
+      },
+      title: {
+           text: 'All freezers'
+      },
       xAxis: {
           title: { text: 'Date' },
           type: 'datetime'
