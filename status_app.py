@@ -293,7 +293,7 @@ class Application(tornado.web.Application):
         # It's important to check that this user exists!
         if not genstat_id:
             raise RuntimeError("genstat-defaults user not found on {}, please " \
-                               "make sure that the user is abailable with the " \
+                               "make sure that the user is available with the " \
                                "corresponding defaults information.".format(settings.get("couch_server", None)))
 
         # We need to get this database as OrderedDict, so the pv_columns doesn't

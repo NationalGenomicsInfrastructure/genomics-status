@@ -119,7 +119,7 @@ $('body').on('click', '.group', function(event) {
 });
 
 function plot_sum_data(){
-  $.getJSON("/api/v1/sensorpush", function(data) {
+  $.getJSON("/api/v1/sensorpush", {'start_days_ago': 1}, function(data) {
     var frig_series = [];
     var freez_series = [];
     $.each(data, function(id, sensordata){
@@ -206,10 +206,11 @@ function plot_sum_data(){
       },
       series: freez_series
     });
- });
- $('#loading_spinner').delay(1000).hide(function(){
-   $('#fridge_sum_plot').show();
-   $('#freezer_sum_plot').show();
+
+    $('#loading_spinner').hide(function(){
+      $('#fridge_sum_plot').show();
+      $('#freezer_sum_plot').show();
+    });
  });
 }
 

@@ -7,25 +7,17 @@ import datetime
 from status.util import SafeHandler
 
 class SensorpushBaseHandler(SafeHandler):
-    def get_samples(self):
-        """TODO: Should be able to take a start date parameter"""
-
-
+    def get_samples(self, start_days_ago=14):
         # A reasonable start time
-        start_time = datetime.datetime.now() - datetime.timedelta(weeks=1)
+        start_time = datetime.datetime.now() - datetime.timedelta(days=start_days_ago)
         start_time_str = start_time.strftime('%Y-%m-%dT00:00:00')
 
-        # Fetch all sensor names from the update two days ago
-        # this would be the most recent update that is "guaranteed" to be there.
-        # Could be failing if the script has been failing, go back 2 days at a time to find it.
-        two_days_ago = datetime.datetime.now() - datetime.timedelta(days=2)
-        while two_days_ago > start_time:
-            sensor_id_view = self.application.sensorpush_db.view('sensor_id/by_date', descending=True)
-            sensors = [row.value for row in sensor_id_view[two_days_ago.strftime('%Y-%m-%dT00:00:00')]]
-            if sensors == []:
-                two_days_ago -= datetime.timedelta(days=2)
-            else:
-                break
+        # Fetch all sensor names from the start day
+        # If a sensor is missing for that date, it won't be fetched
+        sensor_id_view = self.application.sensorpush_db.view('sensor_id/by_date', descending=True)
+        sensors = [row.value for row in sensor_id_view[start_time_str]]
+        if sensors == []:
+            return {}
 
         # Fetch samples from 1 month ago for each sensor
         samples_view = self.application.sensorpush_db.view('entire_document/by_sensor_id_and_date')
@@ -79,7 +71,8 @@ class SensorpushDataHandler(SensorpushBaseHandler):
     """ Serves datapoints for last month of sensorpush temperatures """
 
     def get(self):
-        sensor_data = self.get_samples()
+        start_days_ago = int(self.get_argument("start_days_ago", default="14"))
+        sensor_data = self.get_samples(start_days_ago=start_days_ago)
         self.write(json.dumps(sensor_data))
 
 
@@ -88,7 +81,7 @@ class SensorpushHandler(SensorpushBaseHandler):
     """
 
     def get(self):
-        sensor_data = self.get_samples()
+        sensor_data = self.get_samples(start_days_ago=28)
 
         t = self.application.loader.load("sensorpush.html")
         self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(), sensor_data=sensor_data))
