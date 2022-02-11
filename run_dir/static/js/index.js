@@ -125,27 +125,19 @@ function plot_sum_data(){
     $.each(data, function(id, sensordata){
       var timedata = sensordata.samples;
       var sensname = sensordata.sensor_name;
-      var sercolor = '';
       for (i in timedata) {
         timedata[i][0] = Date.parse(timedata[i][0]);
-        date = new Date()
-        date.setTime(timedata[i][0])
       }
-      if (sensname.startsWith('K') || sensname == 'Test F36'){
-        var dp_frig = {
+      var dp_var = {
           name: sensname,
           data: timedata,
           lineWidth: 1
-        };
-        frig_series.push(dp_frig);
+      };
+      if (sensname.startsWith('K') || sensname == 'Test F36'){
+        frig_series.push(dp_var);
       }
       else if (sensname.startsWith('F') || sensname == 'TestF35'){
-        var dp_freez = {
-          name: sensname,
-          data: timedata,
-          lineWidth: 1
-        };
-        freez_series.push(dp_freez);
+        freez_series.push(dp_var);
       }
     });
 
@@ -154,7 +146,9 @@ function plot_sum_data(){
             zoomType: 'x',
             backgroundColor: null
       },
-      title: 'All refrigerators',
+      title: {
+          text: 'All refrigerators'
+      },
       xAxis: {
           title: { text: 'Date' },
           type: 'datetime'
@@ -165,7 +159,7 @@ function plot_sum_data(){
               pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
           },
           plotBands: [{
-            color: '#ffaea4',
+            color: '#fdffd4',
             from: 2,
             width: 10,
             to: -17.78
@@ -184,8 +178,10 @@ function plot_sum_data(){
       chart: {
             zoomType: 'x',
             backgroundColor: null
-       },
-      title: 'All freezers',
+      },
+      title: {
+           text: 'All freezers'
+      },
       xAxis: {
           title: { text: 'Date' },
           type: 'datetime'
@@ -210,6 +206,10 @@ function plot_sum_data(){
       },
       series: freez_series
     });
+ });
+ $('#loading_spinner').delay(1000).hide(function(){
+   $('#fridge_sum_plot').show();
+   $('#freezer_sum_plot').show();
  });
 }
 

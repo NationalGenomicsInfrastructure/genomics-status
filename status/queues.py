@@ -9,6 +9,7 @@ from genologics import lims
 from genologics.entities import Queue, Artifact, Container
 import xml.etree.ElementTree as ET
 import psycopg2
+from dateutil.parser import parse
 
 
 class qPCRPoolsDataHandler(SafeHandler):
@@ -72,7 +73,7 @@ class qPCRPoolsDataHandler(SafeHandler):
                             pools[method][container]['library_types'].append(library_type)
                         if runmode not in pools[method][container]['runmodes']:
                             pools[method][container]['runmodes'].append(runmode)
-                        pools[method][container]['projects'].append(project)
+                        pools[method][container]['projects'][project] = proj_doc['project_name']
                 else:
                     proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
                     library_type =  proj_doc['details'].get('library_construction_method', '')
@@ -81,7 +82,7 @@ class qPCRPoolsDataHandler(SafeHandler):
                                                 'samples':[{'name': record[1], 'well': value, 'queue_time': queue_time}],
                                                 'library_types': [library_type],
                                                 'runmodes': [runmode],
-                                                'projects': [project]
+                                                'projects': {project: proj_doc['project_name']}
                                                 }
 
         self.set_header("Content-type", "application/json")
@@ -224,4 +225,84 @@ class SequencingQueuesHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("sequencing_queues.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user()))
+
+class WorksetQueuesDataHandler(SafeHandler):
+    """ Serves all the samples that need to be added to worksets in LIMS
+    URL: /api/v1/workset_queues
+    """
+    def get(self):
+
+        queues = {}
+        queues['TruSeqRNAprep'] = '311'
+        queues['TruSeqRNAprepV2'] = '2301'
+        queues['TruSeqSmallRNA'] = '410'
+        queues['TruSeqDNAPCR_free'] = '407'
+        queues['ThruPlex'] = '451'
+        queues['Genotyping'] = '901'
+        queues['RadSeq'] = '1201'
+        queues['SMARTerPicoRNA'] = '1551'
+        queues['ChromiumGenomev2'] = '1801'
+
+        control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
+                            'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
+                            'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
+                            'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
+                            'lambda DNA (qPCR)'
+                         ]
+
+
+        methods = queues.keys()
+        projects = self.application.projects_db.view("project/project_id")
+        connection = psycopg2.connect(user=self.application.lims_conf['username'], host=self.application.lims_conf['url'],
+                                        database=self.application.lims_conf['db'], password=self.application.lims_conf['password'])
+        cursor = connection.cursor()
+        pools = {}
+
+        for method in methods:
+            pools[method] ={}
+            query = ("select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid "
+                            "from artifact art, stagetransition st where art.artifactid=st.artifactid and "
+                            "st.stageid in (select stageid from stage where stepid={}) and "
+                            "st.completedbyid is null and st.workflowrunid>0 and art.name not in {};".format(queues[method], tuple(control_names)))
+            cursor.execute(query)
+            records = cursor.fetchall()
+            for record in list(records):
+                project = record[1].split('_')[0]
+                requeued = False
+                if record[3] is None:
+                    requeued =True
+                if project in pools[method]:
+                    pools[method][project]['samples'].append((record[1], requeued))
+                    if parse(pools[method][project]['oldest_sample_queued_date']) > record[2]:
+                        pools[method][project]['oldest_sample_queued_date'] = record[2].isoformat()
+                else:
+                    proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
+                    total_num_samples = proj_doc['no_of_samples']
+                    oldest_sample_queued_date = record[2].isoformat()
+                    projName = proj_doc['project_name']
+                    protocol = proj_doc['details']['library_construction_method']
+                    queued_date = proj_doc.get('project_summary', {}).get('queued', 'NA')
+                    latest_running_note = self._get_latest_running_note(proj_doc['details'].get('running_notes'))
+                    pools[method][project] = {'samples': [(record[1], requeued)], 'total_num_samples': total_num_samples,
+                                                'oldest_sample_queued_date': oldest_sample_queued_date, 'pname': projName,
+                                                'protocol': protocol, 'latest_running_note': latest_running_note,
+                                                'queued_date': queued_date }
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(pools))
+
+    def _get_latest_running_note(self, val):
+        if not val:
+            return ''
+        notes = json.loads(val)
+        latest_note = { max(notes.keys()): notes[max(notes.keys())] }
+        return latest_note
+
+class WorksetQueuesHandler(SafeHandler):
+    """ Serves a page with sequencing queues from LIMS listed
+    URL: /workset_queues
+    """
+    def get(self):
+        t = self.application.loader.load("workset_queues.html")
         self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user()))

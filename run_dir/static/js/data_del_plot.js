@@ -182,6 +182,8 @@ function build_series(data, key, name, view_type, filter_inst_type){
                 series_name = "HDD";
             }else if (data[d][1].delivery_type == "GRUS with raw data"){
                 series_name = "GRUS";
+            }else if (data[d][1].delivery_type == "In-house"){
+                series_name = "In-house";
             }else{
                 series_name = data[d][1].delivery_type;
             }
@@ -260,6 +262,7 @@ function view_coloring(series_name){
         case "Application":
         case "total RNA":
         case "No BP bioinformatics":
+        case "In-house":
             return chroma('blue').hex();
         case "NextSeq":
         case "GRUS":
@@ -278,7 +281,7 @@ function view_coloring(series_name){
         case "Amplicon":
             return chroma('turquoise').hex();
         default:
-            return "#c3c3c3";
+            return "#ace600";
     }
 }
 function get_parameters(){
