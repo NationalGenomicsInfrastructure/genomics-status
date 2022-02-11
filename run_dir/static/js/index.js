@@ -160,9 +160,9 @@ function plot_sum_data(){
           },
           plotBands: [{
             color: '#fdffd4',
-            from: 2,
+            from: 6,
             width: 10,
-            to: -17.78
+            to: 0
           }]
       },
       legend: {
