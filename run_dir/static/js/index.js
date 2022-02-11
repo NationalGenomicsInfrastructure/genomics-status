@@ -133,11 +133,11 @@ function plot_sum_data(){
           data: timedata,
           lineWidth: 1
       };
-      if (sensname.startsWith('K') || sensname == 'Test F36'){
-        frig_series.push(dp_var);
-      }
-      else if (sensname.startsWith('F') || sensname == 'TestF35'){
+      if (sensname.startsWith('F') || sensname == 'TestF35' || sensname == 'K06 A3590'){
         freez_series.push(dp_var);
+      }
+      else if (sensname.startsWith('K') || sensname == 'Test F36'){
+        frig_series.push(dp_var);
       }
     });
 
@@ -171,7 +171,14 @@ function plot_sum_data(){
               align: 'center'
           }
       },
-      series: frig_series
+      series: frig_series,
+      plotOptions: {
+         series: {
+             marker: {
+                enabledThreshold: 10
+             }
+         }
+      }
     });
 
     $('#freezer_sum_plot').highcharts({
@@ -204,7 +211,14 @@ function plot_sum_data(){
               align: 'center'
           }
       },
-      series: freez_series
+      series: freez_series,
+      plotOptions: {
+         series: {
+             marker: {
+                enabledThreshold: 10
+             }
+         }
+      }
     });
 
     $('#loading_spinner').hide(function(){
