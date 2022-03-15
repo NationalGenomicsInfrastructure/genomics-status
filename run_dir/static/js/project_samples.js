@@ -650,108 +650,110 @@ function load_samples_table(colOrder) {
     $.each(samples_data, function (sample, info) {
       size++;
       tbl_row = '<tr>';
-      $.each(cols, function(i, value){
-        var column_name = value[0];
-        var column_id = value[1];
-        if (value[2] == "basic-columns") {
-            info[column_id] = round_floats(info[column_id], 2);
+      // In order to split the sample by prep
+      if (info['library_prep'] !== undefined){
+        $.each(info['library_prep'], function(prep, prepinfo){
+          tbl_row += '<tr>';
+          $.each(cols, function(i, value){
+            var column_name = value[0];
+            var column_id = value[1];
+            if (value[2] == "basic-columns") {
+              info[column_id] = round_floats(info[column_id], 2);
 
-            // Scilife Sample Name
-            if (column_id == "scilife_name") {
-              if(info[column_id] == 'Unexpectedbarcode'){
-                tbl_row += '<td class="'+column_id+'"><span class="badge bg-danger" data-toggle="tooltip" title="These reads failed to demultiplex">'+
-                            info[column_id] + '</span></td>';
-              } else {
-                // TODO - Wire this up to the new QC page when it's ready
-                tbl_row += '<td class="'+column_id+'"><a class="text-decoration-none" target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
-                            'href="' + lims_uri + '/clarity/search?scope=Sample&query='+info[column_id]+'">'+
-                            info[column_id] + '</a></td>';
+              // Scilife Sample Name
+              if (column_id == "scilife_name") {
+                if(info[column_id] == 'Unexpectedbarcode'){
+                  tbl_row += '<td class="'+column_id+'"><span class="badge bg-danger" data-toggle="tooltip" title="These reads failed to demultiplex">'+
+                             info[column_id] + '</span></td>';
+                } else {
+                  // TODO - Wire this up to the new QC page when it's ready
+                  tbl_row += '<td class="'+column_id+'"><a class="text-decoration-none" target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
+                             'href="' + lims_uri + '/clarity/search?scope=Sample&query='+info[column_id]+'">'+
+                             info[column_id] + '</a></td>';
+                }
               }
-            }
 
-            // Sample run metrics is an array of links - link to flowcells page
-            else if (column_id == 'sample_run_metrics') {
-              tbl_row += '<td class="' + column_id + '">';
-              for (var i=0; i<info[column_id].length; i++) {
-                var fc = info[column_id][i];
-                // Remove the lane number and barcode - eg 6_FCID_GTGAAA
-                fc = fc.substring(2);
-                fc = fc.replace(/_[ACTG\-]+$/,'');
-                fc = fc.replace('_NoIndex', '');
-                tbl_row += '<samp class="nowrap"><a class="text-decoration-none" href="/flowcells/' + fc + '">' +
-                info[column_id][i] + '</a></samp><br>';
-              }
-              tbl_row += '</td>';
-            }
-
-            // Library prep is an array of *Objects*
-            else if (column_id == 'library_prep') {
-              tbl_row += '<td class="' + column_id + '">';
-              if (info[column_id] !== undefined) {
-                var libs = Object.keys(info[column_id]).sort();
-                $.each(libs, function(idx, prep){
-                  tbl_row += auto_format(prep, true) + ' ';
+              // Sample run metrics is an array of links - link to flowcells page
+              else if (column_id == 'sample_run_metrics') {
+                tbl_row += '<td class="' + column_id + '">';
+                $.each(prepinfo['sample_run_metrics'], function(fcrun){
+                    // Remove the lane number and barcode - eg 6_FCID_GTGAAA
+                    fc = fcrun.substring(2);
+                    fc = fc.replace(/_[ACTG\-]+$/,'');
+                    fc = fc.replace('_NoIndex', '');
+                    tbl_row += '<samp class="nowrap"><a class="text-decoration-none" href="/flowcells/' + fc + '">' +
+                               fcrun + '</a></samp><br>';
                 });
+                tbl_row += '</td>';
               }
-              tbl_row += '</td>';
-            }
 
-            // Make sure that 'million reads' has two decimal places
-            else if (column_id == 'total_reads_(m)' && typeof info[column_id] !== 'undefined'){
-              tbl_row += '<td class="' + column_id + ' text-right">' + Number(info[column_id]).toFixed(2) + '</td>';
-            }
+              // Library prep is an array of *Objects*
+              else if (column_id == 'library_prep') {
+                tbl_row += '<td class="' + column_id + '">';
+                tbl_row += auto_format(prep, true) + ' </td>';
+              }
 
-            // everything else
-            else {
-              tbl_row += auto_samples_cell(column_id, info[column_id]);
-            }
+              // Make sure that 'million reads' has two decimal places
+              else if (column_id == 'total_reads_(m)' && typeof info[column_id] !== 'undefined'){
+                tbl_row += '<td class="' + column_id + ' text-right">' + Number(info[column_id]).toFixed(2) + '</td>';
+              }
 
-        }
-        else if (value[2] == "initial-qc-columns" && info['initial_qc'] !== undefined) {
-            info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
+              // Split the preps
+              else if (column_id == 'prep_status'){
+                tbl_row += auto_samples_cell(column_id, prepinfo[column_id]);
+              }
 
-            // Fragment Analyzer Image
-            if (column_id == 'frag_an_image'){
+              // everything else
+              else {
+                tbl_row += auto_samples_cell(column_id, info[column_id]);
+              }
+
+          }
+          else if (value[2] == "initial-qc-columns" && info['initial_qc'] !== undefined) {
+              info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
+
+              // Fragment Analyzer Image
+              if (column_id == 'frag_an_image'){
                 tbl_row += '<td class="' + column_id + '">'+
                             '<span class="caliper_loading_spinner">'+
                               '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
                             '</span>'+
                             '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+info['initial_qc'][column_id]+'" data-imgtype="Initial QC Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>'+
                           '</td>';
-            }
+              }
 
-            // Caliper image
-            else if (column_id == 'caliper_image'){
+              // Caliper image
+              else if (column_id == 'caliper_image'){
                 tbl_row += '<td class="' + column_id + '">'+
                             '<span class="caliper_loading_spinner">'+
                               '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
                             '</span>'+
                             '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+info['initial_qc'][column_id]+'" data-imgtype="Initial QC Caliper Image" data-samplename="'+info['scilife_name']+'"></a>'+
                           '</td>';
-            }
-
-            // Remove the X from initial QC initials
-            else if(column_id == 'initials'){
-              var sig = info['initial_qc'][column_id];
-              if(sig && sig.length == 3 && sig[2] == 'X'){
-                sig = sig.substring(0,2);
               }
-              tbl_row += '<td class="'+column_id+'">'+
-                          '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+info['initial_qc'][column_id]+'">'+
+
+              // Remove the X from initial QC initials
+              else if(column_id == 'initials'){
+                var sig = info['initial_qc'][column_id];
+                if(sig && sig.length == 3 && sig[2] == 'X'){
+                  sig = sig.substring(0,2);
+                }
+                tbl_row += '<td class="'+column_id+'">'+
+                           '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+info['initial_qc'][column_id]+'">'+
                               sig+'</span></td>';
-            }
+              }
 
-            else if(column_id == 'initial_qc_status'){
-              tbl_row += '<td class="' + column_id +' align-middle'+ '">' + auto_format(info['initial_qc'][column_id], true) + ' </td>';
-            }
+              else if(column_id == 'initial_qc_status'){
+                tbl_row += '<td class="' + column_id +' align-middle'+ '">' + auto_format(info['initial_qc'][column_id], true) + ' </td>';
+              }
 
-            // everything else
-            else {
-              tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
-            }
-        }
+              // everything else
+              else {
+                tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
+              }
+          }
 
-        else if (value[2] == "library-prep-columns" && info['library_prep'] !== undefined) {
+          else if (value[2] == "library-prep-columns" && info['library_prep'] !== undefined) {
 
             tbl_row += '<td class="' + column_id + '">';
             var libs = Object.keys(info['library_prep']).sort();
@@ -781,9 +783,9 @@ function load_samples_table(colOrder) {
               }
             });
             tbl_row += '</td>';
-        }
+          }
 
-        else if (value[2] == "library-validation-columns" && info['library_prep'] !== undefined) {
+          else if (value[2] == "library-validation-columns" && info['library_prep'] !== undefined) {
             tbl_row += '<td class="' + column_id + '">';
             var libs = Object.keys(info['library_prep']).sort();
             $.each(libs, function(idx, library){
@@ -832,8 +834,8 @@ function load_samples_table(colOrder) {
               }
             });
             tbl_row += '</td>';
-        }
-        else if (value[2] == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
+          }
+          else if (value[2] == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
             tbl_row += '<td class="' + column_id + '">';
             var libs = Object.keys(info['library_prep']).sort();
             $.each(libs, function(idx, library){
@@ -849,8 +851,8 @@ function load_samples_table(colOrder) {
               }
             });
             tbl_row += '</td>';
-        }
-        else if (value[2] == "bioinfo-columns" && info['run_metrics_data'] !== undefined) {
+          }
+          else if (value[2] == "bioinfo-columns" && info['run_metrics_data'] !== undefined) {
             tbl_row += '<td class="' + column_id + '">';
             $.each(info['run_metrics_data'], function(rmd, rmid) {
               val=parseFloat(rmid[column_id])
@@ -866,16 +868,18 @@ function load_samples_table(colOrder) {
               tbl_row+='<br />';
             });
             tbl_row += '</td>';
-        }
+          }
 
-        // Details columns
-        else {
+          // Details columns
+          else {
             info['details'][column_id] = round_floats(info['details'][column_id], 2);
             tbl_row += auto_samples_cell(column_id, info['details'][column_id]);
-        }
+          }
+        });
       });
-      tbl_row += '</tr>';
-      tbl_body += tbl_row;
+    }
+    tbl_row += '</tr>';
+    tbl_body += tbl_row;
     });
 
     $("#samples_table_body").html(tbl_body);
