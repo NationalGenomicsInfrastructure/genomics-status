@@ -753,103 +753,90 @@ function load_samples_table(colOrder) {
               }
           }
 
-          else if (value[2] == "library-prep-columns" && info['library_prep'] !== undefined) {
-
+          else if (value[2] == "library-prep-columns") {
             tbl_row += '<td class="' + column_id + '">';
-            var libs = Object.keys(info['library_prep']).sort();
-            $.each(libs, function(idx, library){
-              info_library=info['library_prep'][library];
-              info_library[column_id] = round_floats(info_library[column_id], 2);
+            prepinfo[column_id] = round_floats(prepinfo[column_id], 2);
 
-              // Special case for workset_name, which is a link to Genstat workset page
-              if (column_id == "workset_name" && info_library[column_id]) {
-                tbl_row += '<samp class="nowrap" title="Open Workset" data-toggle="tooltip"><a class="text-decoration-none" href="/workset/';
-                tbl_row += info_library[column_id] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
-              }
+            // Special case for workset_name, which is a link to Genstat workset page
+            if (column_id == "workset_name" && prepinfo[column_id]) {
+              tbl_row += '<samp class="nowrap" title="Open Workset" data-toggle="tooltip"><a class="text-decoration-none" href="/workset/';
+              tbl_row += prepinfo[column_id] + '" target="_blank">' + prepinfo[column_id] + '</a></samp><br>';
+            }
 
-              // Special case for workset_setup, which is a link to the LIMS
-              else if (column_id == "workset_setup" && info_library[column_id]) {
-                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a class="text-decoration-none" href="' + lims_uri+ '/clarity/work-complete/';
-                tbl_row += info_library[column_id].split('-')[1] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
-              }
+            // Special case for workset_setup, which is a link to the LIMS
+            else if (column_id == "workset_setup" && prepinfo[column_id]) {
+              tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a class="text-decoration-none" href="' + lims_uri+ '/clarity/work-complete/';
+              tbl_row += prepinfo[column_id].split('-')[1] + '" target="_blank">' + prepinfo[column_id] + '</a></samp><br>';
+            }
 
-              // Make the reagent label use a samp tag
-              else if (column_id == "reagent_label" && info_library[column_id]) {
-                tbl_row += '<samp class="nowrap">' + info_library[column_id] + '</samp><br>';
-              }
+            // Make the reagent label use a samp tag
+            else if (column_id == "reagent_label" && prepinfo[column_id]) {
+              tbl_row += '<samp class="nowrap">' + prepinfo[column_id] + '</samp><br>';
+            }
 
-              else {
-                tbl_row += auto_format(info_library[column_id], true);
-              }
-            });
+            else {
+              tbl_row += auto_format(prepinfo[column_id], true);
+            }
             tbl_row += '</td>';
           }
 
-          else if (value[2] == "library-validation-columns" && info['library_prep'] !== undefined) {
+          else if (value[2] == "library-validation-columns") {
             tbl_row += '<td class="' + column_id + '">';
-            var libs = Object.keys(info['library_prep']).sort();
-            $.each(libs, function(idx, library){
-              info_library=info['library_prep'][library];
-              if ('library_validation' in info_library) {
-                // Populate the library_validation object when undefined
-                if (Object.keys(info_library['library_validation']).length === 0) {
-                  info_library['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
-                  // Populate additional empty fields
-                  if (!(info['prep_status'].length === 0 || info['prep_status'] == '-')){
-                    info.prep_status = '-<br>' + auto_format(info['prep_status'][0].toString());
-                  }
-                }
-                // We only want to show up the LIMS process ID with the higher number (the last one)
-                var process_id = max_str(Object.keys(info_library['library_validation']));
-                var validation_data = info_library['library_validation'][process_id];
-                if (validation_data) {
-                  validation_data[column_id] = round_floats(validation_data[column_id], 2);
-                  // Caliper column
-                  if(column_id == 'caliper_image'){
-                       tbl_row += '<span class="caliper_loading_spinner">'+
-                                     '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
-                                   '</span>'+
-                                   '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
-                  }
-
-                  // Remove the X from initial QC initials
-                  else if(column_id == 'initials'){
-                    if(validation_data[column_id] !== '-'){
-                      var sig = validation_data[column_id];
-                      if(sig.length == 3 && sig[2] == 'X'){
-                        sig = sig.substring(0,2);
-                      }
-                      tbl_row += '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
-                    }
-                    else{
-                      tbl_row += '-<br>';
-                    }
-                  }
-
-                  // Everything else
-                  else {
-                    tbl_row += auto_format(validation_data[column_id], true);
-                  }
+            if ('library_validation' in prepinfo) {
+              // Populate the library_validation object when undefined
+              if (Object.keys(prepinfo['library_validation']).length === 0) {
+                prepinfo['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
+                // Populate additional empty fields
+                if (!(info['prep_status'].length === 0 || info['prep_status'] == '-')){
+                  info.prep_status = '-<br>' + auto_format(info['prep_status'][0].toString());
                 }
               }
-            });
+              // We only want to show up the LIMS process ID with the higher number (the last one)
+              var process_id = max_str(Object.keys(prepinfo['library_validation']));
+              var validation_data = prepinfo['library_validation'][process_id];
+              if (validation_data) {
+                validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                // Caliper column
+                if(column_id == 'caliper_image'){
+                     tbl_row += '<span class="caliper_loading_spinner">'+
+                                '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                '</span>'+
+                                '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
+                }
+
+                // Remove the X from initial QC initials
+                else if(column_id == 'initials'){
+                  if(validation_data[column_id] !== '-'){
+                    var sig = validation_data[column_id];
+                    if(sig.length == 3 && sig[2] == 'X'){
+                      sig = sig.substring(0,2);
+                    }
+                    tbl_row += '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
+                  }
+                  else{
+                    tbl_row += '-<br>';
+                  }
+                }
+
+                // Everything else
+                else {
+                  tbl_row += auto_format(validation_data[column_id], true);
+                }
+              }
+            }
             tbl_row += '</td>';
           }
-          else if (value[2] == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
+          else if (value[2] == "pre-prep-library-validation-columns") {
             tbl_row += '<td class="' + column_id + '">';
-            var libs = Object.keys(info['library_prep']).sort();
-            $.each(libs, function(idx, library){
-              info_library=info['library_prep'][library];
-              if ('pre_prep_library_validation' in info_library) {
-                // We only want to show up the LIMS process ID with the higher number (the last one)
-                var process_id = max_str(Object.keys(info_library['pre_prep_library_validation']));
-                var validation_data = info_library['pre_prep_library_validation'][process_id];
-                if (validation_data) {
-                  validation_data[column_id] = round_floats(validation_data[column_id], 2);
-                  tbl_row += auto_format(validation_data[column_id]);
-                }
+            if ('pre_prep_library_validation' in prepinfo) {
+              // We only want to show up the LIMS process ID with the higher number (the last one)
+              var process_id = max_str(Object.keys(prepinfo['pre_prep_library_validation']));
+              var validation_data = prepinfo['pre_prep_library_validation'][process_id];
+              if (validation_data) {
+                validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                tbl_row += auto_format(validation_data[column_id]);
               }
-            });
+            }
             tbl_row += '</td>';
           }
           else if (value[2] == "bioinfo-columns" && info['run_metrics_data'] !== undefined) {
