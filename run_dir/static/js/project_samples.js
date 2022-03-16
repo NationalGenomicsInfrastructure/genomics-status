@@ -675,15 +675,21 @@ function load_samples_table(colOrder) {
 
               // Sample run metrics is an array of links - link to flowcells page
               else if (column_id == 'sample_run_metrics') {
+                console.log(prepinfo['sample_run_metrics'])
                 tbl_row += '<td class="' + column_id + '">';
-                $.each(prepinfo['sample_run_metrics'], function(fcrun){
-                    // Remove the lane number and barcode - eg 6_FCID_GTGAAA
-                    fc = fcrun.substring(2);
-                    fc = fc.replace(/_[ACTG\-]+$/,'');
-                    fc = fc.replace('_NoIndex', '');
-                    tbl_row += '<samp class="nowrap"><a class="text-decoration-none" href="/flowcells/' + fc + '">' +
-                               fcrun + '</a></samp><br>';
-                });
+                if (prepinfo['sample_run_metrics'] === undefined || Object.keys(prepinfo['sample_run_metrics']).length === 0){
+                  tbl_row += '-';
+                }
+                else {
+                  $.each(prepinfo['sample_run_metrics'], function(fcrun){
+                      // Remove the lane number and barcode - eg 6_FCID_GTGAAA
+                      fc = fcrun.substring(2);
+                      fc = fc.replace(/_[ACTG\-]+$/,'');
+                      fc = fc.replace('_NoIndex', '');
+                      tbl_row += '<samp class="nowrap"><a class="text-decoration-none" href="/flowcells/' + fc + '">' +
+                                 fcrun + '</a></samp><br>';
+                  });
+                }
                 tbl_row += '</td>';
               }
 
