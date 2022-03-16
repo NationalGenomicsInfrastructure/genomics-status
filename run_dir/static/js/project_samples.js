@@ -650,9 +650,39 @@ function load_samples_table(colOrder) {
     $.each(samples_data, function (sample, info) {
       size++;
       tbl_row = '<tr>';
-      // In order to split the sample by prep
-      if (info['library_prep'] !== undefined){
-        $.each(info['library_prep'], function(prep, prepinfo){
+      //If library prep is undefined, these fields are still relevant
+      if (info['library_prep'] === undefined){
+        $.each(cols, function(i, value){
+          var column_name = value[0];
+          var column_id = value[1];
+          if (column_id == 'start_date'){
+            tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
+          }
+          else if (info[column_id] === undefined || info[column_id] === null || Object.keys(info[column_id]).length === 0){
+            tbl_row += '<td class="'+column_id+'">'+'-</td>';
+          }
+          else{
+            if (column_id == "scilife_name") {
+              if(info[column_id] == 'Unexpectedbarcode'){
+                tbl_row += '<td class="'+column_id+'"><span class="badge bg-danger" data-toggle="tooltip" title="These reads failed to demultiplex">'+
+                           info[column_id] + '</span></td>';
+              } else {
+                tbl_row += '<td class="'+column_id+'"><a class="text-decoration-none" target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
+                           'href="' + lims_uri + '/clarity/search?scope=Sample&query='+info[column_id]+'">'+
+                           info[column_id] + '</a></td>';
+              }
+            }
+            else if (column_id == 'status_(manual)'){
+              tbl_row += auto_samples_cell(column_id, info[column_id]);
+            }
+            else {
+              tbl_row += '<td class="'+column_id+'">'+info[column_id]+'</td>';
+            }
+          }
+        });
+      }
+      // If library prep is not undefined, in order to split the sample by prep
+      $.each(info['library_prep'], function(prep, prepinfo){
           tbl_row += '<tr>';
           $.each(cols, function(i, value){
             var column_name = value[0];
@@ -857,7 +887,7 @@ function load_samples_table(colOrder) {
                   tbl_row += auto_format(val.toFixed(2));
                }
               }
-              tbl_row+='<br />';
+              tbl_row+='<br/>';
             });
             tbl_row += '</td>';
           }
@@ -869,9 +899,8 @@ function load_samples_table(colOrder) {
           }
         });
       });
-    }
-    tbl_row += '</tr>';
-    tbl_body += tbl_row;
+      tbl_row += '</tr>';
+      tbl_body += tbl_row;
     });
 
     $("#samples_table_body").html(tbl_body);
