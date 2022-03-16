@@ -675,7 +675,6 @@ function load_samples_table(colOrder) {
 
               // Sample run metrics is an array of links - link to flowcells page
               else if (column_id == 'sample_run_metrics') {
-                console.log(prepinfo['sample_run_metrics'])
                 tbl_row += '<td class="' + column_id + '">';
                 if (prepinfo['sample_run_metrics'] === undefined || Object.keys(prepinfo['sample_run_metrics']).length === 0){
                   tbl_row += '-';
