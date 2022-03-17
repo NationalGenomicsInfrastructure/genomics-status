@@ -108,6 +108,7 @@ $(document).ready(function() {
 
 // Initialize sorting and searching javascript plugin
 function init_listjs (no_items, columns) {
+  console.log(columns)
   column_names = new Array();
   $.each(columns, function(i, column_tuple){
     column_names.push(column_tuple[1]);
@@ -648,10 +649,10 @@ function load_samples_table(colOrder) {
     }
 
     $.each(samples_data, function (sample, info) {
-      size++;
       tbl_row = '<tr>';
       //If library prep is undefined, these fields are still relevant
       if (info['library_prep'] === undefined){
+        size++;
         $.each(cols, function(i, value){
           var column_name = value[0];
           var column_id = value[1];
@@ -683,6 +684,7 @@ function load_samples_table(colOrder) {
       }
       // If library prep is not undefined, in order to split the sample by prep
       $.each(info['library_prep'], function(prep, prepinfo){
+          size++;
           tbl_row += '<tr>';
           $.each(cols, function(i, value){
             var column_name = value[0];
