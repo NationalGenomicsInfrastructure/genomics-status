@@ -108,7 +108,6 @@ $(document).ready(function() {
 
 // Initialize sorting and searching javascript plugin
 function init_listjs (no_items, columns) {
-  console.log(columns)
   column_names = new Array();
   $.each(columns, function(i, column_tuple){
     column_names.push(column_tuple[1]);
