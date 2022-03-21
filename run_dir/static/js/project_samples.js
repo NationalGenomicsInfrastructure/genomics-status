@@ -648,6 +648,7 @@ function load_samples_table(colOrder) {
     }
 
     $.each(samples_data, function (sample, info) {
+      size++;
       tbl_row = '<tr>';
       //If library prep is undefined, these fields are still relevant
       if (info['library_prep'] === undefined){
