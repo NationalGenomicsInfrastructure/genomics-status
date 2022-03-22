@@ -647,9 +647,22 @@ function load_samples_table(colOrder) {
       return false;
     }
 
+    var last_sample='';
+    var stripe = false;
     $.each(samples_data, function (sample, info) {
       size++;
-      tbl_row = '<tr>';
+      //Add separate colors for samples
+      tbl_row = '<tr';
+      if(sample != last_sample){
+        if(!stripe){
+          tbl_row = tbl_row+ ' class="table-secondary">';
+          stripe = true;
+        }
+        else{
+          stripe = false;
+          tbl_row = tbl_row+'>'
+        }
+      }
       //If library prep is undefined, these fields are still relevant
       if (info['library_prep'] === undefined){
         size++;
@@ -682,10 +695,17 @@ function load_samples_table(colOrder) {
           }
         });
       }
-      // If library prep is not undefined, in order to split the sample by prep
+      tbl_row += '</tr>';
+      // If library prep is not undefined, in order to split the sample by prep, and add same color to preps of same sample
       $.each(info['library_prep'], function(prep, prepinfo){
           size++;
-          tbl_row += '<tr>';
+          tbl_row = '<tr';
+          if(!stripe){
+            tbl_row = tbl_row+ ' class="table-secondary">';
+          }
+          else{
+            tbl_row = tbl_row+'>'
+          }
           $.each(cols, function(i, value){
             var column_name = value[0];
             var column_id = value[1];
@@ -900,9 +920,10 @@ function load_samples_table(colOrder) {
             tbl_row += auto_samples_cell(column_id, info['details'][column_id]);
           }
         });
+        tbl_row += '</tr>';
+        tbl_body += tbl_row;
       });
-      tbl_row += '</tr>';
-      tbl_body += tbl_row;
+      last_sample = sample;
     });
 
     $("#samples_table_body").html(tbl_body);
