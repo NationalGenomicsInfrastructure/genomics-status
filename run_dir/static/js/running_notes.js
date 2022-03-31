@@ -20,15 +20,14 @@ function generate_category_label(category){
         'Deviation': ['devi', 'frown'],
         'Invoicing': ['inv', 'file-invoice-dollar']
     }
-    // Remove the whitespace
-    var category = category.trim()
-    // Check if we recognise this category in the class object keys
-    if (Object.keys(cat_classes).indexOf(category) != -1){
-        cat_label = '<span class="badge bg-'+ cat_classes[category][0] +'">'+ category + '&nbsp;' + '<span class="fa fa-'+ cat_classes[category][1] +'">'+"</span></span>";
-    }else{
-    // Default button formatting
-        cat_label = '<span class="badge bg-secondary">'+ category +"</span>";
-    }
+    var cat_label = '';
+    var categories = category.split(',')
+    Object.values(categories).forEach(function(val){
+      var cat = val.trim()
+      if (Object.keys(cat_classes).indexOf(cat) != -1){
+          cat_label += '<span class="badge bg-'+cat_classes[cat][0]+'">'+cat+'&nbsp;'+'<span class="fa fa-'+ cat_classes[cat][1] +'">'+"</span></span> ";
+      }
+    });
     return cat_label;
 }
 
@@ -52,7 +51,8 @@ function make_running_note(date, note){
     date = new Date(date);
     if (note['note'] != undefined){
         if(date > new Date('2015-01-01')){
-          noteText = make_markdown(note['note']);
+          //Replace > and < in old versions of running notes saved on lims.
+          noteText = make_markdown(note['note'].replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
         } else {
           noteText = '<pre class="plaintext_running_note">'+make_project_links(note['note'])+'</pre>';
         }
@@ -79,7 +79,7 @@ function make_running_note(date, note){
   }
   var printHyphen =category? ' - ': ' ';
   var panelClass='';
-  if (note['category'] == 'Important') {
+  if (note['category'].includes('Important')) {
     panelClass = 'card-important';
   }
   return '<div class="card mb-2 mx-2">' +
@@ -123,11 +123,14 @@ function load_running_notes(wait) {
 function preview_running_notes(){
     var now = new Date();
     $('.todays_date').text(now.toDateString() + ', ' + now.toLocaleTimeString());
-    var category = generate_category_label($('.rn-categ button.active').text());
+    var categories = []
+    $('.rn-categ button.active').each(function() {
+      categories.push($(this).text().trim());
+    });
+    var category = generate_category_label(categories.join());
     category = category ? ' - '+ category : category;
     $('#preview_category').html(category);
     var text = $('#new_note_text').val().trim();
-    text = $('<div>').text(text).html();
     if (text.length > 0) {
         $('#running_note_preview_body').html(make_markdown(text));
         check_img_sources($('#running_note_preview_body img'));
@@ -200,8 +203,10 @@ $('#rn_category ~ ul > li > button').on('click', function(){
 $('.rn-categ button').click(function(e){
     e.preventDefault();
     var was_selected = $(this).hasClass('active');
-    $('.rn-categ button').removeClass('active');
-    if(!was_selected){
+    if(was_selected){
+        $(this).removeClass('active');
+    }
+    else{
         $(this).addClass('active');
     }
     preview_running_notes();
@@ -221,8 +226,11 @@ $('#new_note_text').keyup(preview_running_notes);
 $("#running_notes_form").submit( function(e) {
     e.preventDefault();
     var text = $('#new_note_text').val().trim();
-    text = $('<div>').text(text).html();
-    var category = $('.rn-categ button.active').text();
+    var categories = [];
+    $('.rn-categ button.active').each(function() {
+      categories.push($(this).text().trim());
+    });
+    category = categories.join()
     if (text.length == 0) {
         alert("Error: No running note entered.");
         return false;

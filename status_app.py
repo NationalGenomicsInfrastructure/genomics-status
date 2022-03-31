@@ -45,7 +45,8 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler, \
     ImagesDownloadHandler, PrioProjectsTableHandler
 from status.nas_quotas import NASQuotasHandler
-from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler
+from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler, \
+    WorksetQueuesHandler, WorksetQueuesDataHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.sample_requirements import SampleRequirementsViewHandler, SampleRequirementsDataHandler, SampleRequirementsUpdateHandler, \
     SampleRequirementsDraftDataHandler, SampleRequirementsValidateDraftDataHandler, SampleRequirementsPreviewHandler, SampleRequirementsReassignLockDataHandler, \
@@ -66,7 +67,7 @@ from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandle
     UpdatedDocumentsDatahandler
 from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b5
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
-    WorksetsDataHandler, WorksetSearchHandler, WorksetPoolsHandler, ClosedWorksetsHandler
+    WorksetsDataHandler, WorksetSearchHandler, ClosedWorksetsHandler
 
 from zenpy import Zenpy
 from urllib.parse import urlsplit
@@ -208,7 +209,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
             ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
-            ("/api/v1/workset_pools", WorksetPoolsHandler),
+            ("/api/v1/workset_queues", WorksetQueuesDataHandler),
             ("/api/v1/closed_worksets", ClosedWorksetsHandler),
             ("/barcode", BarcodeHandler),
             ("/applications", ApplicationsHandler),
@@ -245,6 +246,7 @@ class Application(tornado.web.Application):
             ("/userpref", UserPrefPageHandler),
             ("/userpref_b5", UserPrefPageHandler_b5),
             ("/worksets", WorksetsHandler),
+            ("/workset_queues", WorksetQueuesHandler),
             ("/workset/([^/]*)$", WorksetHandler),
             (r'.*', BaseHandler)
         ]
@@ -291,7 +293,7 @@ class Application(tornado.web.Application):
         # It's important to check that this user exists!
         if not genstat_id:
             raise RuntimeError("genstat-defaults user not found on {}, please " \
-                               "make sure that the user is abailable with the " \
+                               "make sure that the user is available with the " \
                                "corresponding defaults information.".format(settings.get("couch_server", None)))
 
         # We need to get this database as OrderedDict, so the pv_columns doesn't

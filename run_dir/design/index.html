@@ -30,12 +30,6 @@
 	</div>
 	<div class="col-lg-2 col-sm-4 col-xs-6">
 		<div class="well">
-			  <h3><a href="https://ngi-dashboards.scilifelab.se/dbi/"><i class="fa fa-tachometer"></i></a></h3>
-			<p><a class="btn btn-primary btn-lg"  href="https://ngi-dashboards.scilifelab.se/dbi/">Internal Dashboard</a></p>
-		</div>
-	</div>
-	<div class="col-lg-2 col-sm-4 col-xs-6">
-		<div class="well">
 			  <h3><a href="https://ngi-dashboards.scilifelab.se/dbe/"><i class="fa fa-globe-europe"></i></a></h3>
 			<p><a class="btn btn-primary btn-lg"  href="https://ngi-dashboards.scilifelab.se/dbe/">External Dashboard</a></p>
 		</div>
@@ -47,13 +41,24 @@
       <a class="text-decoration-none" href="/suggestion_box">suggestions page</a>! We're currently collecting feedback on
       how the homepage should look...</p>
 </div>
+<h3>All freezers and refrigerators</h3>
+<p>Showing data from the last 24 hours</p>
+<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="fa fa-sync fa-spin"></span> Loading sensorpush plots...</div>
+<div class="row mt-5">
+  <div class="col-lg-6">
+    <div id="fridge_sum_plot"></div>
+  </div>
+  <div class="col-lg-6">
+    <div id="freezer_sum_plot"></div>
+  </div>
+</div>
 <div class="row mt-5">
   <div class="col-lg-8">
     <h3>Longest waiting projects</h3>
     <div class="scroll-body">
     <table class="table table-bordered sortable" id="prio_projs_table">
-      <thead id="prio_projs_table_head" style="position: sticky;">
-        <tr class="darkth">
+      <thead id="prio_projs_table_head">
+        <tr class="sticky darkth">
           <th class="sort">Project:</th>
           <th class="sort">Library:</th>
           <th class="sort">Status:</th>
