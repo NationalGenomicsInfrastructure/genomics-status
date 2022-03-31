@@ -78,7 +78,7 @@
                     {% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
                     </td>
                     <th>% bases > Q30:</th>
-                    {% set run_setup = flowcell.get('run_setup', '').split('x')[-1] %}
+                    {% set run_setup = flowcell.get('longer_read_length', '') %}
                     {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
                     {% if flowcell.get('run_mode', '') == 'HiSeq X' %}
                       {% set q30_threshold = 75.0 %}
