@@ -63,7 +63,7 @@ Description: Shows a table with all flow cells.
                 </td>
                 <td class="start_date">{{ flowcells[onefc]["startdate"]}}</td>
                 <td class="run_mode">{{ flowcells[onefc].get('run_mode', '-') }}</td>
-                <td class="recipe">{{ flowcells[onefc].get('actual_recipe', '-') }}</td>
+                <td class="recipe">{{ flowcells[onefc].get('actual_run_setup', '-') }}</td>
                 <td class="lane" class="text-center">
                      {% if 'lane_info' in flowcells[onefc] %}
                          {% for onelane in flowcells[onefc]['lane_info'] %}
@@ -110,7 +110,7 @@ Description: Shows a table with all flow cells.
                      {% if 'lane_info' in flowcells[onefc] %}
                          {% for onelane in flowcells[onefc]['lane_info'] %}
                              <samp style="max-width:50px;">{{ flowcells[onefc]['lane_info'][onelane].get('q30_bases', 'NA') }}</samp>
-                             {% set run_setup = flowcells[onefc].get('recipe', '').split('x')[-1] %}
+                             {% set run_setup = flowcells[onefc].get('longer_read_length', '') %}
                              {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
                              {% if flowcells[onefc].get('run_mode', '') == 'HiSeq X' %}
                                  {% set q30_threshold = 75.0 %}
