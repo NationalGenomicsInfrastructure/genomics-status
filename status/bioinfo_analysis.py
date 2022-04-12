@@ -192,7 +192,7 @@ class BioinfoAnalysisHandler(SafeHandler):
         project_type = project_info.get('details', {}).get('type') # Production or Application
 
         app_classes = {
-            'rnaseq': ['RNA-seq', 'RNA-seq (total RNA)', 'RNA-seq (RiboZero)', 'RNA-seq (mRNA)', 'stranded RNA-seq (total RNA)', 'cDNA', 'stranded RNA-seq (RiboZero)'],
+            'rnaseq': ['RNA-seq', 'RNA-seq (total RNA)', 'RNA-seq (RiboZero)', 'RNA-seq (mRNA)', 'stranded RNA-seq (total RNA)', 'cDNA', 'stranded RNA-seq (RiboZero)', 'RNA-seq (bulk)', 'RNA-seq (single cell)', 'RNA-seq (spatial)'],
             'exome': ['Exome capture'],
             'customCap': ['Custom capture'],
             'WGreseq': ['WG re-seq', 'WG re-seq (IGN)'],
