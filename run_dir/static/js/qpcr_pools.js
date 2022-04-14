@@ -79,7 +79,7 @@ function load_table() {
           //get average wait time for all samples in a pool.
           avg_wait_calc = avg_wait_calc/pools['samples'].length;
           var daysAndLabel = getDaysAndDateLabel(avg_wait_calc, 'label');
-          tbl_row.append($('<td>').html('<span class="badge bg-'+daysAndLabel[1]+'">'+(avg_wait_calc).toFixed(1)+'</span>'));
+          tbl_row.append($('<td>').html('<span class="alert alert-'+daysAndLabel[1]+' p-1">'+(avg_wait_calc).toFixed(1)+'</span>'));
           $("#pools_table_body").append(tbl_row);
         })
       }
