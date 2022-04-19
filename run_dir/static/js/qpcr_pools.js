@@ -57,15 +57,29 @@ function load_table() {
           }));
           tbl_row.append($('<td>').html(function(){
             var to_return = '';
-            $.each( pools['runmodes'], function(i, runmode){
-              to_return = to_return + '<div class="mult-pools-margin">'+ runmode +'</div>'
+            $.each( pools['sequencing_platforms'], function(i, seq_platform){
+              to_return = to_return + '<div class="mult-pools-margin">'+ seq_platform +'</div>'
+            });
+            return to_return;
+          }));
+          tbl_row.append($('<td>').html(function(){
+            var to_return = '';
+            $.each( pools['flowcells'], function(i, flowcell){
+              to_return = to_return + '<div class="mult-pools-margin">'+ flowcell +'</div>'
+            });
+            return to_return;
+          }));
+          tbl_row.append($('<td>').html(function(){
+            var to_return = '';
+            $.each( pools['proj_queue_dates'], function(i, queued_date){
+              to_return = to_return + '<div class="mult-pools-margin">'+ queued_date +'</div>'
             });
             return to_return;
           }));
           //get average wait time for all samples in a pool.
           avg_wait_calc = avg_wait_calc/pools['samples'].length;
           var daysAndLabel = getDaysAndDateLabel(avg_wait_calc, 'label');
-          tbl_row.append($('<td>').html('<span class="badge bg-'+daysAndLabel[1]+'">'+(avg_wait_calc).toFixed(1)+'</span>'));
+          tbl_row.append($('<td>').html('<span class="alert alert-'+daysAndLabel[1]+' p-1">'+(avg_wait_calc).toFixed(1)+'</span>'));
           $("#pools_table_body").append(tbl_row);
         })
       }
@@ -168,3 +182,19 @@ function getDaysAndDateLabel(date, option){
   }
    return [number_of_days, label];
 }
+
+// Copy project samples table to clipboard
+var clipboard = new Clipboard('#pools_copy_table');
+clipboard.on('success', function(e) {
+  e.clearSelection();
+  $('#pools_copy_table_btn').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
+  setTimeout(function(){
+    $('#pools_copy_table_btn').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
+  }, 2000);
+});
+
+$('#pools_copy_table_btn').on('click', function () {
+  $('.expand-all').click();
+  $('#pools_copy_table').click();
+  $('.expand-all').click();
+})
