@@ -11,7 +11,7 @@ $(document).ready(function() {
 // Initialize sorting and searching javascript plugin
 
 function load_table() {
-  $("#queues_table_body").html('<tr><td colspan="10" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
+  $("#queues_table_body").html('<tr><td colspan="12" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
   return $.getJSON('/api/v1/sequencing_queues', function(data) {
     $("#queues_table_body").empty();
     $.each(data, function(flow, projects) {
@@ -73,7 +73,7 @@ function init_listjs() {
         api.column(0, {page:'current'} ).data().each( function ( group, i ) {
           if ( last !== group ) {
             $(rows).eq( i ).before(
-                '<tr class="group"><td colspan="10">'+group+'</td></tr>'
+                '<tr class="group"><td colspan="12">'+group+'</td></tr>'
             );
             last = group;
           }
@@ -128,7 +128,7 @@ function getDaysAndDateLabel(date, option){
 }
 
 // Copy project samples table to clipboard
-var clipboard = new Clipboard('#seq_copy_table');
+var clipboard = new Clipboard('#seq_copy_table_btn');
 clipboard.on('success', function(e) {
   e.clearSelection();
   $('#seq_copy_table_btn').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
@@ -136,7 +136,3 @@ clipboard.on('success', function(e) {
     $('#seq_copy_table_btn').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
   }, 2000);
 });
-
-$('#seq_copy_table_btn').on('click', function () {
-  $('#seq_copy_table').click();
-})
