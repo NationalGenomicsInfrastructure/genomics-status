@@ -35,7 +35,10 @@ function load_table() {
           });
           tbl_row.append($('<td>').html(plates));
           tbl_row.append($('<td>').html(queuetimes));
-          tbl_row.append($('<td>').html(prinfo['runmode']));
+          tbl_row.append($('<td>').html(prinfo['proj_queue_date']));
+          tbl_row.append($('<td>').html(prinfo['sequencing_platform']));
+          tbl_row.append($('<td>').html(prinfo['flowcell']));
+          tbl_row.append($('<td>').html(prinfo['flowcell_option']));
           tbl_row.append($('<td>').html(prinfo['lanes']));
           tbl_row.append($('<td>').html(prinfo['setup']));
           tbl_row.append($('<td>').html(prinfo['final_loading_conc']));

@@ -147,13 +147,19 @@ class SequencingQueuesDataHandler(SafeHandler):
                     setup = proj_doc['details'].get('sequencing_setup','')
                     lanes = proj_doc['details'].get('sequence_units_ordered_(lanes)', '')
                     librarytype = proj_doc['details'].get('library_construction_method', '')
-                    runmode = proj_doc['details'].get('sequencing_platform','')
+                    sequencing_platform = proj_doc['details'].get('sequencing_platform','')
+                    flowcell = proj_doc['details'].get('flowcell', '')
+                    queued_date = proj_doc['details'].get('queued', '')
+                    flowcell_option = proj_doc['details'].get('flowcell_option', '')
                     name = proj_doc['project_name']
                     pools[method][project] = {
                                                'name': name,
                                                'setup': setup,
                                                'lanes': lanes,
-                                               'runmode': runmode,
+                                               'sequencing_platform': sequencing_platform,
+                                               'flowcell': flowcell,
+                                               'proj_queue_date': queued_date,
+                                               'flowcell_option': flowcell_option,
                                                'librarytype': librarytype,
                                                'plates': { container: {
                                                                        'queue_time': queue_time,
