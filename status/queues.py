@@ -322,3 +322,74 @@ class WorksetQueuesHandler(SafeHandler):
     def get(self):
         t = self.application.loader.load("workset_queues.html")
         self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user()))
+
+class LibraryPoolingQueuesDataHandler(SafeHandler):
+    """ Serves all the samples that need to be added to worksets in LIMS
+    URL: /api/v1/libpooling_queues
+    """
+    def get(self):
+
+        queues = {}
+        queues['MiSeq'] = '52'
+        queues['NovaSeq'] = '1652'
+        queues['NextSeq'] = '2104'
+
+        control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
+                            'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
+                            'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
+                            'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
+                            'lambda DNA (qPCR)'
+                         ]
+
+        methods = queues.keys()
+        projects = self.application.projects_db.view("project/project_id")
+        connection = psycopg2.connect(user=self.application.lims_conf['username'], host=self.application.lims_conf['url'],
+                                        database=self.application.lims_conf['db'], password=self.application.lims_conf['password'])
+        cursor = connection.cursor()
+        pools = {}
+
+        query = ('select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, s.projectid '
+                    'from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm '
+                    'where art.artifactid=st.artifactid and st.stageid in (select stageid from stage where stepid={}) and st.completedbyid is null and '
+                    'st.workflowrunid>0 and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and  s.processid=asm.processid and '
+                    'asm.artifactid=art.artifactid and art.name not in {} group by art.artifactid, st.lastmodifieddate, st.generatedbyid, ct.name, s.projectid;')
+        for method in methods:
+            pools[method] ={}
+            cursor.execute(query.format(queues[method], tuple(control_names)))
+            records = cursor.fetchall()
+            for record in list(records):
+                container = record[4]
+                name = record[1]
+                proj_and_samples = {}
+                project = 'P'+str(record[5])
+                if container in pools[method]:
+                    pools[method][container]['samples'].append({'name': record[1]})
+                    if project not in pools[method][container]['projects']:
+                        proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
+                        library_type =  proj_doc['details'].get('library_construction_method', '')
+                        queued_date = proj_doc['details'].get('queued', '')
+                        if library_type not in pools[method][container]['library_types']:
+                            pools[method][container]['library_types'].append(library_type)
+                        pools[method][container]['proj_queue_dates'].append(queued_date)
+                        pools[method][container]['projects'][project] = proj_doc['project_name']
+                else:
+                    proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
+                    library_type =  proj_doc['details'].get('library_construction_method', '')
+                    queued_date = proj_doc['details'].get('queued', '')
+                    pools[method][container] = {
+                                                'samples':[{'name': record[1]}],
+                                                'library_types': [library_type],
+                                                'proj_queue_dates': [queued_date],
+                                                'projects': {project: proj_doc['project_name']}
+                                                }
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(pools))
+
+class  LibraryPoolingQueuesHandler(SafeHandler):
+    """ Serves a page with sequencing queues from LIMS listed
+    URL: /libpooling_queues
+    """
+    def get(self):
+        t = self.application.loader.load("libpooling_queues.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user()))

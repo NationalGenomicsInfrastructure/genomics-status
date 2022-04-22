@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+<!--
+Template file: libpooling_queues.html
+URL: /libpooling_queues
+Title: List of Library pooling queues
+Description: Shows a table with all Library pooling queues.
+-->
+
+{% block stuff %}
+
+<div class="container-fluid" id="libpools_list">
+  <div id="pools_table_div">
+      <h1><span id="page_title">Library pooling queues</span>
+        <small class="text-muted">Showing all Library pooling queues</small>
+      </h1>
+      <button type="button" id="libpools_copy_table_btn" class="btn btn-outline-dark"><span class="fa fa-copy"></span> Copy table</button>
+      <button type="button" id="libpools_copy_table" class="btn d-none" data-clipboard-target="#libpools_table"></button>
+      <label class="btn btn-outline-dark expand-all float-right mb-2"><span class="fa fa-plus-square" aria-hidden="true"></span>Expand All</label>
+      <table class="table table-hover table-striped table-bordered sortable" id="libpools_table">
+        <thead>
+          <tr class="sticky darkth">
+            <th class="sort"></th>
+            <th class="sort">Container</th>
+            <th class="sort">Projects</th>
+            <th class="sort">Library Type</th>
+            <th class="sort">Project Queue Date</th>
+            <th class="sort">Avg. Waiting (in days)</th>
+          </tr>
+        </thead>
+        <tfoot>
+          <tr class="darkth">
+            <th class="sort"></th>
+            <th class="sort">Pool</th>
+            <th class="sort">Projects</th>
+            <th class="sort">Library Type</th>
+            <th class="sort">Project Queue Date</th>
+            <th class="sort">Avg. Waiting (in days)</th>
+          </tr>
+        </tfoot>
+        <tbody class="list" id="libpools_table_body">
+        </tbody>
+      </table>
+    </div>
+</div>
+
+<script src="/static/js/clipboard.min.js"></script>
+<script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/libpooling_queues.js?v={{ gs_globals['git_commit'] }}"></script>
+<script src="/static/js/jquery-ui.min.js"></script>
+
+{% end %}
