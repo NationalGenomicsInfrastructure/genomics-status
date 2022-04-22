@@ -118,11 +118,17 @@ class SequencingQueuesDataHandler(SafeHandler):
         #sequencing queues are currently taken as the following
         queues = {}
         #Miseq- Step 7: Denature, Dilute and load sample
-        queues['MiSeq'] = query.format(55)
+        queues['MiSeq: Denature, Dilute and Load Sample'] = '55'
         #NextSeq- Step 7: Load to Flowcell
-        queues['NextSeq'] = query.format(2109)
+        queues['NextSeq: Load to Flowcell'] = '2109'
         #Novaseq Step 11: Load to flow cell
-        queues['NovaSeq'] = query.format(1662)
+        queues['NovaSeq: Load to Flowcell'] = '1662'
+        #Novaseq Step 7: Define Run Format
+        queues['NovaSeq: Define Run Format'] = '1659'
+        #Novaseq Step 8: Make Bulk Pool for Novaseq Standard
+        queues['NovaSeq: Make Bulk Pool for Standard'] = '1655'
+        #Novaseq Step 10: Make Bulk Pool for Novaseq Xp
+        queues['NovaSeq : Make Bulk Pool for Xp'] = '1656'
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
@@ -132,8 +138,8 @@ class SequencingQueuesDataHandler(SafeHandler):
         pools = {}
         for method in methods:
             pools[method] ={}
-            query = queues[method]
-            cursor.execute(query)
+            queue_query = query.format(queues[method])
+            cursor.execute(queue_query)
             records = cursor.fetchall()
             for record in list(records):
                 queue_time = record[2].isoformat()
@@ -170,7 +176,7 @@ class SequencingQueuesDataHandler(SafeHandler):
                     if container not in pools[method][project]['plates']:
                         pools[method][project]['plates'][container] = {'queue_time' : queue_time}
 
-                if method is not 'NovaSeq':
+                if 'NovaSeq' not in method:
                     conc_rerun_query = ('select udfname, udfvalue from artifact_udf_view where udfname in {} '
                                         'and artifactid={}').format(tuple(['Concentration', 'Rerun', 'Pool Conc. (nM)']), record[0])
                     cursor.execute(conc_rerun_query)
@@ -180,11 +186,11 @@ class SequencingQueuesDataHandler(SafeHandler):
                             is_rerun = False if udf[1] == 'False' else True
                         else:
                             conc_qpcr = udf[1]
-                elif method is 'NovaSeq':
+                elif 'NovaSeq' in method:
                     rerun_query = ('select count(artifactid) from stagetransition '
-                                    'where stageid in (select stageid from stage where stepid=1662) '
+                                    'where stageid in (select stageid from stage where stepid={}) '
                                     'and artifactid={} group by artifactid')
-                    #The final loading conc is defined in the Define Run format stap whose stepid is 1659
+                    #The final loading conc is defined in the Define Run format step whose stepid is 1659
                     final_lconc_query = ('select udfname, udfvalue from artifact_udf_view where udfname in (\'Final Loading Concentration (pM)\') '
                                          'and artifactid in (select st.artifactid from stagetransition st, artifact_sample_map asm, sample, project '
                                          'where st.artifactid = asm.artifactid AND sample.processid = asm.processid and sample.projectid = project.projectid '
@@ -197,7 +203,7 @@ class SequencingQueuesDataHandler(SafeHandler):
 
                     #rerun
                     is_rerun = False
-                    cursor.execute(rerun_query.format(record[0]))
+                    cursor.execute(rerun_query.format(queues[method], record[0]))
                     rerun_res = cursor.fetchone()[0]
                     if rerun_res > 1:
                         is_rerun = True
