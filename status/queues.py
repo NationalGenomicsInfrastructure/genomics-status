@@ -118,17 +118,17 @@ class SequencingQueuesDataHandler(SafeHandler):
         #sequencing queues are currently taken as the following
         queues = {}
         #Miseq- Step 7: Denature, Dilute and load sample
-        queues['MiSeq'] = '55'
+        queues['MiSeq: Denature, Dilute and Load Sample'] = '55'
         #NextSeq- Step 7: Load to Flowcell
-        queues['NextSeq'] = '2109'
+        queues['NextSeq: Load to Flowcell'] = '2109'
         #Novaseq Step 11: Load to flow cell
-        queues['NovaSeq_load_to_flowcell'] = '1662'
+        queues['NovaSeq: Load to Flowcell'] = '1662'
         #Novaseq Step 7: Define Run Format
-        queues['NovaSeq_define_run_format'] = '1659'
+        queues['NovaSeq: Define Run Format'] = '1659'
         #Novaseq Step 8: Make Bulk Pool for Novaseq Standard
-        queues['NovaSeq_make_bulk_pool_standard'] = '1655'
+        queues['NovaSeq: Make Bulk Pool for Standard'] = '1655'
         #Novaseq Step 10: Make Bulk Pool for Novaseq Xp
-        queues['NovaSeq_make_bulk_pool_xp'] = '1656'
+        queues['NovaSeq : Make Bulk Pool for Xp'] = '1656'
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
