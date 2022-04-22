@@ -26,7 +26,7 @@ function load_table() {
               to_return = to_return + container + ' <span class="badge bg-secondary">'+pools['samples'].length+'</span>';
               to_return = to_return + '<BR><span> \
               <table cellpadding="5" border="0" style="visibility:collapse;margin-bottom:0px;margin-top:5px;" align="right">';
-              to_return = to_return + '<thead><tr class="darkth"><th>Sample</th>/tr></thead>';
+              to_return = to_return + '<thead><tr class="darkth"><th>Sample</th></tr></thead>';
               $.each(pools['samples'], function(pool, sample){
                 to_return = to_return +
                 '<tr>'+

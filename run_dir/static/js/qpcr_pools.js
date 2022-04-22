@@ -156,7 +156,7 @@ function init_listjs() {
 }
 
 $('body').on('click', '.group', function(event) {
-  $($("#samples_table").DataTable().column(0).header()).trigger("click")
+  $($("#pools_table").DataTable().column(0).header()).trigger("click")
 });
 
 function getDaysAndDateLabel(date, option){
