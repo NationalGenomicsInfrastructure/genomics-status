@@ -176,7 +176,7 @@ class SequencingQueuesDataHandler(SafeHandler):
                     if container not in pools[method][project]['plates']:
                         pools[method][project]['plates'][container] = {'queue_time' : queue_time}
 
-                if method is not 'NovaSeq':
+                if 'NovaSeq' not in method:
                     conc_rerun_query = ('select udfname, udfvalue from artifact_udf_view where udfname in {} '
                                         'and artifactid={}').format(tuple(['Concentration', 'Rerun', 'Pool Conc. (nM)']), record[0])
                     cursor.execute(conc_rerun_query)
