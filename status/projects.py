@@ -18,6 +18,7 @@ import markdown
 import slack
 import nest_asyncio
 import itertools
+import unicodedate
 
 from collections import defaultdict
 from collections import OrderedDict
@@ -766,7 +767,8 @@ class RunningNotesDataHandler(SafeHandler):
             RunningNotesDataHandler.notify_tagged_user(application, userTags, proj_ids, note, category, user, timestamp, 'userTag')
         ####
         ##Notify proj coordinators for all project running notes
-        proj_coord = '.'.join(doc['details'].get('project_coordinator','').lower().split())
+        proj_coord_with_accents = '.'.join(doc['details'].get('project_coordinator','').lower().split())
+        proj_coord = unicodedata.normalize('NFKD', proj_coord_with_accents).encode('ASCII', 'ignore'))
         if proj_coord and proj_coord not in userTags and proj_coord!=email.split('@')[0]:
             RunningNotesDataHandler.notify_tagged_user(application, [proj_coord], proj_ids, note, category, user, timestamp, 'creation')
         return newNote
