@@ -1,7 +1,7 @@
 /*
-File: qpcr_pools.js
-URL: /static/js/qpcr_pools.js
-Powers /qpcr_pools - template is run_dir/design/qpcr_pools.html
+File: libpooling_queues.js
+URL: /static/js/libpooling_queues.js
+Powers /libpooling_queues - template is run_dir/design/libpooling_queues.html
 */
 
 $(document).ready(function() {
@@ -11,10 +11,10 @@ $(document).ready(function() {
 // Initialize sorting and searching javascript plugin
 
 function load_table() {
-  var colspan = $('#pools_table > thead > tr:first > th').length + 1; // adding the first column
-  $("#pools_table_body").html('<tr><td colspan="'+colspan+'" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
-  return $.getJSON('/api/v1/qpcr_pools', function(data) {
-    $("#pools_table_body").empty();
+  var colspan = $('#libpools_table > thead > tr:first > th').length + 1; // adding the first column
+  $("#libpools_table_body").html('<tr><td colspan="'+colspan+'" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
+  return $.getJSON('/api/v1/libpooling_queues', function(data) {
+    $("#libpools_table_body").empty();
     $.each(data, function(flow, containers) {
       if(!($.isEmptyObject(containers))){
         $.each(containers, function(container, pools){
@@ -26,17 +26,12 @@ function load_table() {
               to_return = to_return + container + ' <span class="badge bg-secondary">'+pools['samples'].length+'</span>';
               to_return = to_return + '<BR><span> \
               <table cellpadding="5" border="0" style="visibility:collapse;margin-bottom:0px;margin-top:5px;" align="right">';
-              to_return = to_return + '<thead><tr class="darkth"><th>Sample</th><th>Well</th><th>Waiting (in days)</th></tr></thead>';
+              to_return = to_return + '<thead><tr class="darkth"><th>Sample</th></tr></thead>';
               $.each(pools['samples'], function(pool, sample){
-                var wait = getDaysAndDateLabel(sample['queue_time'], 'date')[0];
                 to_return = to_return +
                 '<tr>'+
                   '<td>'+sample['name']+'</td>'+
-                  '<td>'+sample['well']+'</td>'+
-                  '<td>'+wait+'</td>'+
                 '</tr>';
-                //use avg_wait_calc as a counter
-                avg_wait_calc = avg_wait_calc + wait;
                 });
                 to_return = to_return +'</table></span>';
               return to_return;
@@ -57,30 +52,12 @@ function load_table() {
           }));
           tbl_row.append($('<td>').html(function(){
             var to_return = '';
-            $.each( pools['sequencing_platforms'], function(i, seq_platform){
-              to_return = to_return + '<div class="mult-pools-margin">'+ seq_platform +'</div>'
-            });
-            return to_return;
-          }));
-          tbl_row.append($('<td>').html(function(){
-            var to_return = '';
-            $.each( pools['flowcells'], function(i, flowcell){
-              to_return = to_return + '<div class="mult-pools-margin">'+ flowcell +'</div>'
-            });
-            return to_return;
-          }));
-          tbl_row.append($('<td>').html(function(){
-            var to_return = '';
             $.each( pools['proj_queue_dates'], function(i, queued_date){
               to_return = to_return + '<div class="mult-pools-margin">'+ queued_date +'</div>'
             });
             return to_return;
           }));
-          //get average wait time for all samples in a pool.
-          avg_wait_calc = avg_wait_calc/pools['samples'].length;
-          var daysAndLabel = getDaysAndDateLabel(avg_wait_calc, 'label');
-          tbl_row.append($('<td>').html('<span class="alert alert-'+daysAndLabel[1]+' p-1">'+(avg_wait_calc).toFixed(1)+'</span>'));
-          $("#pools_table_body").append(tbl_row);
+          $("#libpools_table_body").append(tbl_row);
         })
       }
     })
@@ -90,12 +67,12 @@ function load_table() {
 
 function init_listjs() {
     // Setup - add a text input to each footer cell
-    $('#pools_table tfoot th').each( function () {
-      var title = $('#pools_table thead th').eq( $(this).index() ).text();
+    $('#libpools_table tfoot th').each( function () {
+      var title = $('#libpools_table thead th').eq( $(this).index() ).text();
       $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
     } );
 
-    var table = $('#pools_table').DataTable({
+    var table = $('#libpools_table').DataTable({
       "columnDefs": [
           { "visible": false, "targets": 0 }
       ],
@@ -109,7 +86,7 @@ function init_listjs() {
         api.column(0, {page:'current'} ).data().each( function ( group, i ) {
           if ( last !== group ) {
             $(rows).eq( i ).before(
-                '<tr class="group"><td colspan="'+$('#pools_table > thead > tr:first > th').length + 1+'">'+group+'</td></tr>'
+                '<tr class="group"><td colspan="'+$('#libpools_table > thead > tr:first > th').length + 1+'">'+group+'</td></tr>'
             );
             last = group;
           }
@@ -119,11 +96,11 @@ function init_listjs() {
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#pools_table_filter').addClass('form-inline float-right');
-    $("#pools_table_filter").appendTo("h1");
-    $('#pools_table_filter label input').appendTo($('#pools_table_filter'));
-    $('#pools_table_filter label').remove();
-    $("#pools_table_filter input").attr("placeholder", "Search..");
+    $('#libpools_table_filter').addClass('form-inline float-right');
+    $("#libpools_table_filter").appendTo("h1");
+    $('#libpools_table_filter label input').appendTo($('#libpools_table_filter'));
+    $('#libpools_table_filter label').remove();
+    $("#libpools_table_filter input").attr("placeholder", "Search..");
     // Apply the search
     table.columns().every( function () {
         var that = this;
@@ -147,54 +124,31 @@ function init_listjs() {
       var reqText = {'Expand All': ['Collapse All', 'visible', 'fa-plus-square', 'fa-minus-square'],
                       'Collapse All': ['Expand All', 'collapse', 'fa-minus-square', 'fa-plus-square']};
       $('.expand-all').find('.fa').removeClass(reqText[$('.expand-all').text()][2]);
-      $('#pools_table').find('tr').find('.fa').removeClass(reqText[$('.expand-all').text()][2]);
+      $('#libpools_table').find('tr').find('.fa').removeClass(reqText[$('.expand-all').text()][2]);
       $('.expand-all').find('.fa').addClass(reqText[$('.expand-all').text()][3]);
-      $('#pools_table').find('tr').find('.fa').addClass(reqText[$('.expand-all').text()][3]);
-      $('#pools_table').find('tr').find('table').css('visibility', reqText[$('.expand-all').text()][1]);
+      $('#libpools_table').find('tr').find('.fa').addClass(reqText[$('.expand-all').text()][3]);
+      $('#libpools_table').find('tr').find('table').css('visibility', reqText[$('.expand-all').text()][1]);
       $('.expand-all').contents().filter(function(){ return this.nodeType == 3; }).first().replaceWith(reqText[$('.expand-all').text()][0]);
     });
 }
 
 $('body').on('click', '.group', function(event) {
-  $($("#pools_table").DataTable().column(0).header()).trigger("click")
+  $($("#libpools_table").DataTable().column(0).header()).trigger("click")
 });
 
-function getDaysAndDateLabel(date, option){
-  var number_of_days = 0;
-  var label = '';
-  if( option=='date' || option=='both' ){
-    //calculate number of days from given date to current date
-    number_of_days = Math.floor(Math.abs(new Date() - new Date(date))/(1000*86400));
-  }
-  if (option=='label' || option=='both') {
-    if (option=='label'){
-      number_of_days = date;
-    }
-    if (number_of_days < 7){
-      label =  'success';
-    }
-    else if (number_of_days >= 7 && number_of_days < 14) {
-      label = 'warning';
-    }
-    else {
-      label = 'danger';
-    }
-  }
-   return [number_of_days, label];
-}
 
 // Copy project samples table to clipboard
-var clipboard = new Clipboard('#pools_copy_table');
+var clipboard = new Clipboard('#libpools_copy_table');
 clipboard.on('success', function(e) {
   e.clearSelection();
-  $('#pools_copy_table_btn').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
+  $('#libpools_copy_table_btn').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
   setTimeout(function(){
-    $('#pools_copy_table_btn').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
+    $('#libpools_copy_table_btn').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
   }, 2000);
 });
 
-$('#pools_copy_table_btn').on('click', function () {
+$('#libpools_copy_table_btn').on('click', function () {
   $('.expand-all').click();
-  $('#pools_copy_table').click();
+  $('#libpools_copy_table').click();
   $('.expand-all').click();
 })
