@@ -186,6 +186,7 @@ app.component('v-pricing-quote', {
             //Make sure selected fields are displayed
             this.add_to_md_text()
             this.$root.quote_prod_ids = sel_data['products_included']
+            this.$root.fetchExchangeRates(sel_data['exchange_rate_issued_date'])
           }
         },
         mark_agreement_signed(){
@@ -296,9 +297,10 @@ app.component('v-pricing-quote', {
             agreement_data['project_data'] = this.proj_data
             agreement_data['products_included'] = this.$root.quote_prod_ids
           }
+          agreement_data['exchange_rate_issued_date'] = this.$root.exch_rate_issued_at
           this.submit_quote_form(agreement_data)
           if(type === 'save'){
-            this.get_saved_agreement_data(this.proj_data['project_id'])
+            setTimeout(()=>{ this.get_saved_agreement_data(this.proj_data['project_id']) },1000)
           }
         }
     },
