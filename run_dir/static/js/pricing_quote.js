@@ -326,20 +326,21 @@ app.component('v-pricing-quote', {
           </template>
           <div class="row" v-if="this.saved_agreement_data['saved_agreements']">
             <h4 v-if="this.saved_agreement_data">Saved Agreements</h4>
-            <div class="col-4 ml-2 py-3">
+            <div class="col-2 align-self-center">
+              <button class="btn btn-primary m-1" @click="load_saved_agreement">Load</button>
+              <button class="btn btn-danger m-1" @click="mark_agreement_signed">Mark Signed</button>
+            </div>
+            <div class="col-6 ml-2 py-3">
               <template v-for="(agreement, timestamp) in this.saved_agreement_data['saved_agreements']" :key="timestamp">
                     <div class="form-check m-2">
                       <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp">
                       <label class="form-check-label" :for="timestamp">
                       {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}}
-                      <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger far fa-file-signature fa-lg"> Signed</p>
+                      <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger far fa-file-signature fa-lg fs-6">
+                        Marked Signed {{ this.saved_agreement_data['signed_by'] }}, {{ timestamp_to_date(this.saved_agreement_data['signed_at']) }}</p>
                       </label>
                     </div>
               </template>
-            </div>
-            <div class="col-2 align-self-center">
-              <button class="btn btn-primary m-1" @click="load_saved_agreement">Load</button>
-              <button class="btn btn-danger m-1" @click="mark_agreement_signed">Mark Signed</button>
             </div>
           </div>
           <div class="row">

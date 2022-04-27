@@ -636,6 +636,8 @@ class AgreementsDBHandler(SafeHandler):
         #for marking a saved agreement signed
         else:
             doc['signed'] = timestamp
+            doc['signed_by'] = self.get_current_user().name
+            doc['signed_at'] = int(datetime.datetime.now().timestamp()*1000)
 
         db = self.application.agreements_db
         #probably add a try-except here in the future
