@@ -22,32 +22,31 @@
         </table>
       </div>
     </div>
-    <div class="bottom-rule"><hr></div>
-
-    <h2>{%if data['origin']=='Agreement' %}
+    <div {%if data.get('type', '')=='preview' %} class="first_page_preview" {% end %}>
+      <h2>{%if data['origin']=='Agreement' %}
       Agreement of commisioned activities
       {% else %}
       Preliminary Quote
       {% end %}
-    </h2>
-    Sequencing at Science for Life Laboratory is administered by the Royal Institute of Technology (KTH).
-    <dl class="dl-horizontal-quote-details p-1">
+      </h2>
+      Sequencing at Science for Life Laboratory is administered by the Royal Institute of Technology (KTH).
+      <dl class="dl-horizontal-quote-details p-1">
       {%if data['origin']=='Agreement' %}
-      <dt>NGI Project ID</dt>
-        <dd>{{ data['project_data']['ngi_project_id'] }}</dd>
-      <dt>User (name / affiliation)</dt>
-        <dd>{{ data['project_data']['user_and_affiliation'] }}</dd>
+        <dt>NGI Project ID</dt>
+          <dd>{{ data['project_data']['ngi_project_id'] }}</dd>
+        <dt>User (name / affiliation)</dt>
+          <dd>{{ data['project_data']['user_and_affiliation'] }}</dd>
       {% end %}
-      <dt>Issue Date</dt>
-        <dd>{{ data['date']}}</dd>
+        <dt>Issue Date</dt>
+          <dd>{{ data['date']}}</dd>
       {%if data['origin']=='Agreement' %}
-      <dt>Agreement number</dt>
-        <dd> {{ data['agreement_number'] }}</dd>
+        <dt>Agreement number</dt>
+          <dd> {{ data['project_data']['agreement_number'] }}</dd>
       {% end %}
-      <dt>Issuer (name/email)</dt>
-        <dd>{{ user.name }} / orders@ngisweden.se</dd>
-      <dt>Agreement summary</dt>
-        <dd> {% raw data['agreement_summary']%}
+        <dt>Issuer (name/email)</dt>
+          <dd>{{ user.name }} / orders@ngisweden.se</dd>
+        <dt>Agreement summary</dt>
+          <dd> {% raw data['agreement_summary']%}
           {%for condition in data['agreement_conditions']%}
           <div class="small pt-2 pr-2">
             {% raw template_text['first_page_text']['specific_conditions'][condition]%}
@@ -58,33 +57,33 @@
             {% raw template_text['first_page_text']['specific_conditions']['full_cost_conditions']%}
           </div>
           {% end %}
-        </dd>
-    </dl>
+          </dd>
+      </dl>
 
-    <dl class="dl-horizontal-quote-price">
+      <dl class="dl-horizontal-quote-price">
       {% for category in data['price_breakup'] %}
-      <dt class="fw-normal">{{ category }}</dt>
-        <dd> {{ data['price_breakup'][category] }} SEK</dd>
+        <dt class="fw-normal">{{ category }}</dt>
+          <dd> {{ data['price_breakup'][category] }} SEK</dd>
       {% end %}
       {%if 'special_addition' in data %}
         {%for label in data['special_addition'] %}
-      <dt class="fw-normal">{{ data['special_addition'][label]['name'] }}</dt>
-        <dd> {{ data['special_addition'][label]['value'] }} SEK</dd>
+        <dt class="fw-normal">{{ data['special_addition'][label]['name'] }}</dt>
+          <dd> {{ data['special_addition'][label]['value'] }} SEK</dd>
         {% end %}
       {% end %}
       {%if 'special_percentage' in data %}
-      <dt class="fw-normal">{{ data['special_percentage']['name'] }}</dt>
-        <dd> -{{ data['special_percentage']['value'] }} %</dd>
+        <dt class="fw-normal">{{ data['special_percentage']['name'] }}</dt>
+          <dd> -{{ data['special_percentage']['value'] }} %</dd>
       {% end %}
-      <hr>
-      <dt>Total cost ({% if data['price_type']=="cost_academic" %}Swedish academia{% else %}Industry and non-Swedish academia{% end %})</dt>
-        <dd> {{ data['total_cost'] }} SEK</dd>
-    </dl>
-
-    <div class="small pb-3">{{ template_text['first_page_text']['coverage'] }}</div>
-    <div class="text-danger">{{ template_text['first_page_text']['conditions'] }}</div>
-    <div><b>Note: </b>{{ template_text['first_page_text']['note'] }}</div>
-    <div class="row py-3">
+        <hr>
+        <dt>Total cost ({% if data['price_type']=="cost_academic" %}Swedish academia{% else %}Industry and non-Swedish academia{% end %})</dt>
+          <dd> {{ data['total_cost'] }} SEK</dd>
+      </dl>
+    {%if data['origin']=='Agreement' %}
+      <div class="small pb-3">{{ template_text['first_page_text']['coverage'] }}</div>
+      <div class="text-danger">{{ template_text['first_page_text']['conditions'] }}</div>
+      <div><b>Note: </b>{{ template_text['first_page_text']['note'] }}</div>
+      <div class="row py-3">
         <table class="table-bordered border-header">
           <thead>
             <tr class="darkth-quote">
@@ -113,11 +112,15 @@
             </tr>
           </tbody>
         </table>
+      </div>
+      <div {%if data.get('type', '')=='preview' %} class="first_page_preview" {% end %}></div>
+    {% end %}
     </div>
-
+    {%if data['origin']=='Agreement' %}
     <div class="appendices">
       {% raw template_text['appendices'] %}
     </div>
+    {% end %}
     <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
   </body>
 </html>
