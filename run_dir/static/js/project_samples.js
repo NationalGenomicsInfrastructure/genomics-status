@@ -457,6 +457,8 @@ function load_all_udfs(){
       else if (prettify(key) == 'application'){
         if (value === null){
           $('#application').html('-');
+        } else {
+          $('#application').html(value);
         }
       }
 
