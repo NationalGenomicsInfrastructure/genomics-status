@@ -454,6 +454,12 @@ function load_all_udfs(){
         }
       }
 
+      else if (prettify(key) == 'application'){
+        if (value === null){
+          $('#application').html('-');
+        }
+      }
+
       // Hide the BP Date if no BP
       else if (prettify(key) == 'best_practice_bioinformatics' && value == 'No'){
         $('.bp-dates').hide();
