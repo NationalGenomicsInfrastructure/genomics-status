@@ -1179,7 +1179,7 @@ function load_charon_summary(){
           $('#charon-status-failed').text(data['failed']);
           $('#charon-status-runn').text(data['runn']);
           $('#charon-status-hge').text(data['hge']);
-          $('#charon-status-gdp').text(data['gdp'].toString().replace(/\'/," "));
+          $('#charon-status-gdp').text(data['gdp'].toString().replace(/\'/," ").replace(/,/g, ", "));
       }
   }).fail(function( jqxhr, textStatus, error ) {
       var err = textStatus + ", " + error;

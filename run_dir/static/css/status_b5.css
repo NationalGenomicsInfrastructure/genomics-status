@@ -432,7 +432,8 @@ pre {
 }
 
 .badge {
-  font-weight:normal;
+  font-weight: normal;
+  white-space: pre-line;
 }
 
 .dl-horizontal > dt{
