@@ -1181,7 +1181,7 @@ function load_charon_summary(){
           $('#charon-status-hge').text(data['hge']);
           var del_projs = '';
           data['gdp'].forEach(function(del_proj){
-              del_projs += '<span class="badge bg-secondary">'+del_proj+'</span>'+' ';
+              del_projs += '<span class="badge bg-secondary mr-1">'+del_proj+'</span>';
           });
           $('#charon-status-gdp').html(del_projs);
       }
