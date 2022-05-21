@@ -253,7 +253,7 @@
                             {% end %}
                           {% elif sample['barcode'] != 'unknown' and undetermined != "unknown" %}
                             {% set mismatch_ar.append(sum([sample['barcode'][i] != undetermined[i]
-                            and sample['barcode'][i] != 'N' and undetermined[i] != 'N' for i in range(len(min(code,undetermined,key=len))) ])) %}
+                            and sample['barcode'][i] != 'N' and undetermined[i] != 'N' for i in range(len(min(sample['barcode'],undetermined,key=len))) ])) %}
                           {% end %}
                         {% end %}
 
