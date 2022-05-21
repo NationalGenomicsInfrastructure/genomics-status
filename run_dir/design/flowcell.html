@@ -249,11 +249,11 @@
                           {% if sample.get('multi_barcode') %}
                             {% for code in sample.get('multi_barcode')  %}
                               {% set mismatch_ar.append(sum([code[i] != undetermined[i]
-                              and code[i] != 'N' and undetermined[i] != 'N' for i in range(len(undetermined)) ])) %}
+                              and code[i] != 'N' and undetermined[i] != 'N' for i in range(len(min(code,undetermined,key=len))) ])) %}
                             {% end %}
                           {% elif sample['barcode'] != 'unknown' and undetermined != "unknown" %}
                             {% set mismatch_ar.append(sum([sample['barcode'][i] != undetermined[i]
-                            and sample['barcode'][i] != 'N' and undetermined[i] != 'N' for i in range(len(undetermined)) ])) %}
+                            and sample['barcode'][i] != 'N' and undetermined[i] != 'N' for i in range(len(min(code,undetermined,key=len))) ])) %}
                           {% end %}
                         {% end %}
 
