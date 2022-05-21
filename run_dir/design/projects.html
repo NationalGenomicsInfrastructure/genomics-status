@@ -12,7 +12,7 @@ Description: Shows all presets configured for user and enables their selection.
 
 <h1 id="{{ projects }}" class="projects_page_heading">
   <span id="page_title">Projects</span>
-  <button type="submit" class="btn float-right btn-lg space-left btn-primary" id="loadTablebtn">Load Table</button>
+  <button type="submit" class="btn float-right btn-lg space-left btn-primary loadTablebtns" id="loadTablebtn">Load Table</button>
 </h1>
 <form id="Search-form" class="horizontal">
 
@@ -319,7 +319,8 @@ Description: Shows all presets configured for user and enables their selection.
           </div>
           <div class="row">
             <div class="col text-center m-3">
-                <button type="button" class="btn btn-primary" id="savePresetBtn" data-toggle="modal" data-target="#projectFieldsModal">Save as Preset</button>
+                <button type="button" class="btn btn-secondary" id="savePresetBtn" data-toggle="modal" data-target="#projectFieldsModal">Save as Preset</button>
+                <button type="button" class="btn btn-primary loadTablebtns" id="loadTablebtn2">Load Table</button>
             </div>
           </div>
         </div>

@@ -34,7 +34,8 @@ from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
     PricingQuoteHandler, PricingValidateDraftDataHandler, PricingPublishDataHandler, \
     PricingReassignLockDataHandler, PricingUpdateHandler, PricingPreviewHandler, \
-    PricingDataHandler, PricingDraftDataHandler, GenerateQuoteHandler, AgreementTemplateTextHandler
+    PricingDataHandler, PricingDraftDataHandler, GenerateQuoteHandler, AgreementTemplateTextHandler, \
+    AgreementDataHandler, AgreementMarkSignHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
     ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
@@ -46,7 +47,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ImagesDownloadHandler, PrioProjectsTableHandler
 from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler, \
-    WorksetQueuesHandler, WorksetQueuesDataHandler
+    WorksetQueuesHandler, WorksetQueuesDataHandler, LibraryPoolingQueuesHandler, LibraryPoolingQueuesDataHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.sample_requirements import SampleRequirementsViewHandler, SampleRequirementsDataHandler, SampleRequirementsUpdateHandler, \
     SampleRequirementsDraftDataHandler, SampleRequirementsValidateDraftDataHandler, SampleRequirementsPreviewHandler, SampleRequirementsReassignLockDataHandler, \
@@ -128,6 +129,7 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
             tornado.web.URLSpec("/api/v1/frag_an_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", FragAnImageHandler, name="FragAnImageHandler"),
+            ("/api/v1/get_agreement_doc/([^/]*)$", AgreementDataHandler),
             ("/api/v1/get_agreement_template_text", AgreementTemplateTextHandler),
             ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
@@ -146,9 +148,11 @@ class Application(tornado.web.Application):
             ("/api/v1/internal_costs/([^/]*)", ProjectInternalCostsHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
+            ("/api/v1/libpooling_queues", LibraryPoolingQueuesDataHandler),
             ("/api/v1/plot/samples_per_lane.png",
                 SamplesPerLanePlotHandler),
             ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
+            ("/api/v1/mark_agreement_signed", AgreementMarkSignHandler),
             ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
             ("/api/v1/pricing_exchange_rates", PricingExchangeRatesDataHandler),
             ("/api/v1/pricing_publish_draft", PricingPublishDataHandler),
@@ -223,6 +227,7 @@ class Application(tornado.web.Application):
             ("/generate_quote", GenerateQuoteHandler),
             ("/instrument_logs", InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
+            ("/libpooling_queues", LibraryPoolingQueuesHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/nas_quotas", NASQuotasHandler),
             ("/pools_qpcr", qPCRPoolsHandler),
@@ -259,6 +264,7 @@ class Application(tornado.web.Application):
         # Global connection to the database
         couch = Server(settings.get("couch_server", None))
         if couch:
+            self.agreements_db = couch["agreements"]
             self.agreement_templates_db = couch["agreement_templates"]
             self.analysis_db= couch["analysis"]
             self.application_categories_db = couch["application_categories"]

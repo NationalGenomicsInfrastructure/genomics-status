@@ -454,6 +454,12 @@ function load_all_udfs(){
         }
       }
 
+      else if (prettify(key) == 'application'){
+        if (value !== null){
+          $('#application').html(value);
+        }
+      }
+
       // Hide the BP Date if no BP
       else if (prettify(key) == 'best_practice_bioinformatics' && value == 'No'){
         $('.bp-dates').hide();
@@ -1173,7 +1179,11 @@ function load_charon_summary(){
           $('#charon-status-failed').text(data['failed']);
           $('#charon-status-runn').text(data['runn']);
           $('#charon-status-hge').text(data['hge']);
-          $('#charon-status-gdp').text(data['gdp'].toString().replace(/\'/," "));
+          var del_projs = '';
+          data['gdp'].forEach(function(del_proj){
+              del_projs += '<span class="badge bg-secondary mr-1">'+del_proj+'</span>';
+          });
+          $('#charon-status-gdp').html(del_projs);
       }
   }).fail(function( jqxhr, textStatus, error ) {
       var err = textStatus + ", " + error;

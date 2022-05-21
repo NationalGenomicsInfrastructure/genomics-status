@@ -36,13 +36,6 @@ class qPCRPoolsDataHandler(SafeHandler):
         queues['NovaSeq'] = query.format(1666)
         #Queue = 2102, stepid in the query
         queues['NextSeq'] = query.format(2102)
-        #Queue 41, but query is slightly different to use protocolid for Library Validation QC which is 8 and, also to exclude the controls
-        queues['LibraryValidation'] = ("select  st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid "
-                                        "from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm where "
-                                        "art.artifactid=st.artifactid and st.stageid in (select stageid from stage where membershipid in (select sectionid from workflowsection where protocolid=8)) "
-                                        "and st.workflowrunid>0 and st.completedbyid is null and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and s.processid=asm.processid "
-                                        "and asm.artifactid=art.artifactid and art.name not in {} "
-                                        "group by st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid;".format(tuple(qpcr_control_names)))
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
@@ -61,27 +54,38 @@ class qPCRPoolsDataHandler(SafeHandler):
                 value = chr(65+int(record[6])) + ':' + str(int(record[5])+1)
                 project = 'P'+str(record[7])
                 library_type = ''
-                runmode = ''
+                sequencing_platform = ''
+                flowcell = ''
+                queued_date = ''
 
                 if container in pools[method]:
                     pools[method][container]['samples'].append({'name': record[1], 'well': value, 'queue_time': queue_time})
                     if project not in pools[method][container]['projects']:
                         proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
                         library_type =  proj_doc['details'].get('library_construction_method', '')
-                        runmode = proj_doc['details'].get('sequencing_platform', '')
+                        sequencing_platform = proj_doc['details'].get('sequencing_platform', '')
+                        flowcell = proj_doc['details'].get('flowcell', '')
+                        queued_date = proj_doc['details'].get('queued', '')
                         if library_type not in pools[method][container]['library_types']:
                             pools[method][container]['library_types'].append(library_type)
-                        if runmode not in pools[method][container]['runmodes']:
-                            pools[method][container]['runmodes'].append(runmode)
+                        if sequencing_platform not in pools[method][container]['sequencing_platform']:
+                            pools[method][container]['sequencing_platforms'].append(sequencing_platform)
+                        if flowcell not in pools[method][container]['flowcells']:
+                            pools[method][container]['flowcells'].append(flowcell)
+                        pools[method][container]['proj_queue_dates'].append(queued_date)
                         pools[method][container]['projects'][project] = proj_doc['project_name']
                 else:
                     proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
                     library_type =  proj_doc['details'].get('library_construction_method', '')
-                    runmode = proj_doc['details'].get('sequencing_platform', '')
+                    sequencing_platform = proj_doc['details'].get('sequencing_platform', '')
+                    flowcell = proj_doc['details'].get('flowcell', '')
+                    queued_date = proj_doc['details'].get('queued', '')
                     pools[method][container] = {
                                                 'samples':[{'name': record[1], 'well': value, 'queue_time': queue_time}],
                                                 'library_types': [library_type],
-                                                'runmodes': [runmode],
+                                                'sequencing_platforms': [sequencing_platform],
+                                                'flowcells': [flowcell],
+                                                'proj_queue_dates': [queued_date],
                                                 'projects': {project: proj_doc['project_name']}
                                                 }
 
@@ -114,11 +118,17 @@ class SequencingQueuesDataHandler(SafeHandler):
         #sequencing queues are currently taken as the following
         queues = {}
         #Miseq- Step 7: Denature, Dilute and load sample
-        queues['MiSeq'] = query.format(55)
+        queues['MiSeq: Denature, Dilute and Load Sample'] = '55'
         #NextSeq- Step 7: Load to Flowcell
-        queues['NextSeq'] = query.format(2109)
+        queues['NextSeq: Load to Flowcell'] = '2109'
         #Novaseq Step 11: Load to flow cell
-        queues['NovaSeq'] = query.format(1662)
+        queues['NovaSeq: Load to Flowcell'] = '1662'
+        #Novaseq Step 7: Define Run Format
+        queues['NovaSeq: Define Run Format'] = '1659'
+        #Novaseq Step 8: Make Bulk Pool for Novaseq Standard
+        queues['NovaSeq: Make Bulk Pool for Standard'] = '1655'
+        #Novaseq Step 10: Make Bulk Pool for Novaseq Xp
+        queues['NovaSeq : Make Bulk Pool for Xp'] = '1656'
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
@@ -128,8 +138,8 @@ class SequencingQueuesDataHandler(SafeHandler):
         pools = {}
         for method in methods:
             pools[method] ={}
-            query = queues[method]
-            cursor.execute(query)
+            queue_query = query.format(queues[method])
+            cursor.execute(queue_query)
             records = cursor.fetchall()
             for record in list(records):
                 queue_time = record[2].isoformat()
@@ -143,13 +153,19 @@ class SequencingQueuesDataHandler(SafeHandler):
                     setup = proj_doc['details'].get('sequencing_setup','')
                     lanes = proj_doc['details'].get('sequence_units_ordered_(lanes)', '')
                     librarytype = proj_doc['details'].get('library_construction_method', '')
-                    runmode = proj_doc['details'].get('sequencing_platform','')
+                    sequencing_platform = proj_doc['details'].get('sequencing_platform','')
+                    flowcell = proj_doc['details'].get('flowcell', '')
+                    queued_date = proj_doc['details'].get('queued', '')
+                    flowcell_option = proj_doc['details'].get('flowcell_option', '')
                     name = proj_doc['project_name']
                     pools[method][project] = {
                                                'name': name,
                                                'setup': setup,
                                                'lanes': lanes,
-                                               'runmode': runmode,
+                                               'sequencing_platform': sequencing_platform,
+                                               'flowcell': flowcell,
+                                               'proj_queue_date': queued_date,
+                                               'flowcell_option': flowcell_option,
                                                'librarytype': librarytype,
                                                'plates': { container: {
                                                                        'queue_time': queue_time,
@@ -160,7 +176,7 @@ class SequencingQueuesDataHandler(SafeHandler):
                     if container not in pools[method][project]['plates']:
                         pools[method][project]['plates'][container] = {'queue_time' : queue_time}
 
-                if method is not 'NovaSeq':
+                if 'NovaSeq' not in method:
                     conc_rerun_query = ('select udfname, udfvalue from artifact_udf_view where udfname in {} '
                                         'and artifactid={}').format(tuple(['Concentration', 'Rerun', 'Pool Conc. (nM)']), record[0])
                     cursor.execute(conc_rerun_query)
@@ -170,11 +186,11 @@ class SequencingQueuesDataHandler(SafeHandler):
                             is_rerun = False if udf[1] == 'False' else True
                         else:
                             conc_qpcr = udf[1]
-                elif method is 'NovaSeq':
+                elif 'NovaSeq' in method:
                     rerun_query = ('select count(artifactid) from stagetransition '
-                                    'where stageid in (select stageid from stage where stepid=1662) '
+                                    'where stageid in (select stageid from stage where stepid={}) '
                                     'and artifactid={} group by artifactid')
-                    #The final loading conc is defined in the Define Run format stap whose stepid is 1659
+                    #The final loading conc is defined in the Define Run format step whose stepid is 1659
                     final_lconc_query = ('select udfname, udfvalue from artifact_udf_view where udfname in (\'Final Loading Concentration (pM)\') '
                                          'and artifactid in (select st.artifactid from stagetransition st, artifact_sample_map asm, sample, project '
                                          'where st.artifactid = asm.artifactid AND sample.processid = asm.processid and sample.projectid = project.projectid '
@@ -187,7 +203,7 @@ class SequencingQueuesDataHandler(SafeHandler):
 
                     #rerun
                     is_rerun = False
-                    cursor.execute(rerun_query.format(record[0]))
+                    cursor.execute(rerun_query.format(queues[method], record[0]))
                     rerun_res = cursor.fetchone()[0]
                     if rerun_res > 1:
                         is_rerun = True
@@ -305,4 +321,75 @@ class WorksetQueuesHandler(SafeHandler):
     """
     def get(self):
         t = self.application.loader.load("workset_queues.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user()))
+
+class LibraryPoolingQueuesDataHandler(SafeHandler):
+    """ Serves all the samples that need to be added to worksets in LIMS
+    URL: /api/v1/libpooling_queues
+    """
+    def get(self):
+
+        queues = {}
+        queues['MiSeq'] = '52'
+        queues['NovaSeq'] = '1652'
+        queues['NextSeq'] = '2104'
+
+        control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
+                            'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
+                            'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
+                            'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
+                            'lambda DNA (qPCR)'
+                         ]
+
+        methods = queues.keys()
+        projects = self.application.projects_db.view("project/project_id")
+        connection = psycopg2.connect(user=self.application.lims_conf['username'], host=self.application.lims_conf['url'],
+                                        database=self.application.lims_conf['db'], password=self.application.lims_conf['password'])
+        cursor = connection.cursor()
+        pools = {}
+
+        query = ('select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, s.projectid '
+                    'from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm '
+                    'where art.artifactid=st.artifactid and st.stageid in (select stageid from stage where stepid={}) and st.completedbyid is null and '
+                    'st.workflowrunid>0 and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and  s.processid=asm.processid and '
+                    'asm.artifactid=art.artifactid and art.name not in {} group by art.artifactid, st.lastmodifieddate, st.generatedbyid, ct.name, s.projectid;')
+        for method in methods:
+            pools[method] ={}
+            cursor.execute(query.format(queues[method], tuple(control_names)))
+            records = cursor.fetchall()
+            for record in list(records):
+                container = record[4]
+                name = record[1]
+                proj_and_samples = {}
+                project = 'P'+str(record[5])
+                if container in pools[method]:
+                    pools[method][container]['samples'].append({'name': record[1]})
+                    if project not in pools[method][container]['projects']:
+                        proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
+                        library_type =  proj_doc['details'].get('library_construction_method', '')
+                        queued_date = proj_doc['details'].get('queued', '')
+                        if library_type not in pools[method][container]['library_types']:
+                            pools[method][container]['library_types'].append(library_type)
+                        pools[method][container]['proj_queue_dates'].append(queued_date)
+                        pools[method][container]['projects'][project] = proj_doc['project_name']
+                else:
+                    proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
+                    library_type =  proj_doc['details'].get('library_construction_method', '')
+                    queued_date = proj_doc['details'].get('queued', '')
+                    pools[method][container] = {
+                                                'samples':[{'name': record[1]}],
+                                                'library_types': [library_type],
+                                                'proj_queue_dates': [queued_date],
+                                                'projects': {project: proj_doc['project_name']}
+                                                }
+
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(pools))
+
+class  LibraryPoolingQueuesHandler(SafeHandler):
+    """ Serves a page with sequencing queues from LIMS listed
+    URL: /libpooling_queues
+    """
+    def get(self):
+        t = self.application.loader.load("libpooling_queues.html")
         self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user()))

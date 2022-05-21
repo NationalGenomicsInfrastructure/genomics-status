@@ -735,7 +735,7 @@ function dealWithDatepickers(datepick, option){
     $('#'+datepick+'_end').children('input').val('');
   }
 }
-$('#loadTablebtn').click(function(e){
+$('.loadTablebtns').click(function(e){
   getTableParamsandLoad();
 });
 
