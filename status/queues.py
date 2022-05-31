@@ -383,7 +383,7 @@ class LibraryPoolingQueuesDataHandler(SafeHandler):
                     library_type =  proj_doc['details'].get('library_construction_method', '')
                     queued_date = proj_doc['details'].get('queued', '')
                     if not queued_date:
-                        queued_date = proj_doc['project_summary'].get('queued', '')
+                        queued_date = proj_doc.get('project_summary', {}).get('queued', '')
                     pools[method][container] = {
                                                 'samples':[{'name': record[1]}],
                                                 'library_types': [library_type],
