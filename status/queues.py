@@ -66,9 +66,11 @@ class qPCRPoolsDataHandler(SafeHandler):
                         sequencing_platform = proj_doc['details'].get('sequencing_platform', '')
                         flowcell = proj_doc['details'].get('flowcell', '')
                         queued_date = proj_doc['details'].get('queued', '')
+                        if not queued_date:
+                            queued_date = proj_doc['project_summary'].get('queued', '')
                         if library_type not in pools[method][container]['library_types']:
                             pools[method][container]['library_types'].append(library_type)
-                        if sequencing_platform not in pools[method][container]['sequencing_platform']:
+                        if sequencing_platform not in pools[method][container]['sequencing_platforms']:
                             pools[method][container]['sequencing_platforms'].append(sequencing_platform)
                         if flowcell not in pools[method][container]['flowcells']:
                             pools[method][container]['flowcells'].append(flowcell)
@@ -156,6 +158,8 @@ class SequencingQueuesDataHandler(SafeHandler):
                     sequencing_platform = proj_doc['details'].get('sequencing_platform','')
                     flowcell = proj_doc['details'].get('flowcell', '')
                     queued_date = proj_doc['details'].get('queued', '')
+                    if not queued_date:
+                        queued_date = proj_doc['project_summary'].get('queued', '')
                     flowcell_option = proj_doc['details'].get('flowcell_option', '')
                     name = proj_doc['project_name']
                     pools[method][project] = {
@@ -298,7 +302,9 @@ class WorksetQueuesDataHandler(SafeHandler):
                     oldest_sample_queued_date = record[2].isoformat()
                     projName = proj_doc['project_name']
                     protocol = proj_doc['details']['library_construction_method']
-                    queued_date = proj_doc.get('project_summary', {}).get('queued', 'NA')
+                    queued_date = proj_doc['details'].get('queued', '')
+                    if not queued_date:
+                        queued_date = proj_doc.get('project_summary', {}).get('queued', 'NA')
                     latest_running_note = self._get_latest_running_note(proj_doc['details'].get('running_notes'))
                     pools[method][project] = {'samples': [(record[1], requeued)], 'total_num_samples': total_num_samples,
                                                 'oldest_sample_queued_date': oldest_sample_queued_date, 'pname': projName,
@@ -376,6 +382,8 @@ class LibraryPoolingQueuesDataHandler(SafeHandler):
                     proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
                     library_type =  proj_doc['details'].get('library_construction_method', '')
                     queued_date = proj_doc['details'].get('queued', '')
+                    if not queued_date:
+                        queued_date = proj_doc.get('project_summary', {}).get('queued', '')
                     pools[method][container] = {
                                                 'samples':[{'name': record[1]}],
                                                 'library_types': [library_type],
