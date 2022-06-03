@@ -12,17 +12,19 @@ import psycopg2
 from dateutil.parser import parse
 
 
+control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
+                    'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
+                    'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
+                    'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
+                    'lambda DNA (qPCR)'
+                 ]
+
 class qPCRPoolsDataHandler(SafeHandler):
     """ Serves a page with qPCR queues from LIMS listed
     URL: /api/v1/qpcr_pools
     """
     def get(self):
-        qpcr_control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
-                                'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
-                                'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
-                                'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
-                                'lambda DNA (qPCR)'
-                              ]
+
         queues = {}
         #query for Miseq and NovaSeq
         query = ('select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid '
@@ -144,6 +146,8 @@ class SequencingQueuesDataHandler(SafeHandler):
             cursor.execute(queue_query)
             records = cursor.fetchall()
             for record in list(records):
+                if str(record[5]) in control_names:
+                    continue
                 queue_time = record[2].isoformat()
                 container = record[4]
                 proj_and_samples = {}
@@ -159,7 +163,7 @@ class SequencingQueuesDataHandler(SafeHandler):
                     flowcell = proj_doc['details'].get('flowcell', '')
                     queued_date = proj_doc['details'].get('queued', '')
                     if not queued_date:
-                        queued_date = proj_doc['project_summary'].get('queued', '')
+                        queued_date = proj_doc.get('project_summary', {}).get('queued', '')
                     flowcell_option = proj_doc['details'].get('flowcell_option', '')
                     name = proj_doc['project_name']
                     pools[method][project] = {
@@ -264,14 +268,6 @@ class WorksetQueuesDataHandler(SafeHandler):
         queues['SMARTerPicoRNA'] = '1551'
         queues['ChromiumGenomev2'] = '1801'
 
-        control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
-                            'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
-                            'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
-                            'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
-                            'lambda DNA (qPCR)'
-                         ]
-
-
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
         connection = psycopg2.connect(user=self.application.lims_conf['username'], host=self.application.lims_conf['url'],
@@ -339,13 +335,6 @@ class LibraryPoolingQueuesDataHandler(SafeHandler):
         queues['MiSeq'] = '52'
         queues['NovaSeq'] = '1652'
         queues['NextSeq'] = '2104'
-
-        control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
-                            'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
-                            'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
-                            'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
-                            'lambda DNA (qPCR)'
-                         ]
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
