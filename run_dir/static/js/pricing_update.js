@@ -611,7 +611,7 @@ app.component('v-component-form-part', {
                 <fieldset disabled class='col-md-1'>
                   <label class="form-label">
                     ID
-                    <input class="form-control" v-model.number="component['REF_ID']" type="number">
+                    <input class="form-control px-1" v-model.number="component['REF_ID']" type="number">
                   </label>
                 </fieldset>
                 <fieldset :disabled="!isNew" class="col-md-3">
