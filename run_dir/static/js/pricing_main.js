@@ -73,7 +73,11 @@ const vPricingMain = {
 
 
             for (category in prod_per_cat) {
-                sorted_products = prod_per_cat[category].sort(this.sortProducts)
+                if ( category == "New products" ) {
+                    sorted_products = prod_per_cat[category].sort(this.sortProductsByID)
+                } else {
+                    sorted_products = prod_per_cat[category].sort(this.sortProducts)
+                }
                 prod_per_cat[category] = sorted_products
             }
             return prod_per_cat
@@ -134,7 +138,11 @@ const vPricingMain = {
 
 
             for (category in comp_per_cat) {
-                sorted_components = comp_per_cat[category].sort(this.sortComponents)
+                if (category == 'New components') {
+                    sorted_components = comp_per_cat[category].sort(this.sortComponentsByID)
+                } else {
+                    sorted_components = comp_per_cat[category].sort(this.sortComponents)
+                }
                 comp_per_cat[category] = sorted_components
             }
 
@@ -489,12 +497,34 @@ const vPricingMain = {
                 return 0;
             }
         },
+        sortComponentsByID(firstComp, secondComp) {
+            // Comparison function used to sort components on ID within a category, used for 
+            // new components
+            if (firstComp['ID'] < secondComp['ID']) {
+                return -1;
+            } else if (firstComp['ID'] > secondComp['ID']) {
+                return 1;
+            } else {
+                return 0;
+            }
+        },
         sortProducts(firstProd, secondProd) {
             /* Comparison function used to sort products on name within each category
              */
             if (firstProd['Name'] < secondProd['Name']) {
                 return -1;
             } else if (firstProd['Name'] > secondProd['Name']) {
+                return 1;
+            } else {
+                return 0;
+            }
+        },
+        sortProductsByID(firstProd, secondProd) {
+            /* Comparison function used to sort products on name within each category
+             */
+            if (firstProd['ID'] < secondProd['ID']) {
+                return -1;
+            } else if (firstProd['ID'] > secondProd['ID']) {
                 return 1;
             } else {
                 return 0;

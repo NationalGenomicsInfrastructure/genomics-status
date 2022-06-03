@@ -357,27 +357,33 @@ app.component('v-product-form-part', {
               <fieldset disabled class='col-md-1'>
                 <label class="form-label">
                   ID
-                  <input class="form-control" v-model.number="product['REF_ID']" type="number">
+                  <input class="form-control px-1" v-model.number="product['REF_ID']" type="number">
                 </label>
               </fieldset>
-              <label class="form-label col-md-3">
-                Category
-                <input class="form-control" :list="'categoryOptions' + product_id" v-model.text="product['Category']" type="text" :disabled="discontinued">
-                <datalist :id="'categoryOptions' + product_id">
-                  <option v-for="category in categories">{{category}}</option>
-                </datalist>
-              </label>
-              <label class="form-label col-md-2">
-                Product Type
-                <input class="form-control" :list="'typeOptions' + product_id" v-model.text="product['Type']" type="text" :disabled="discontinued">
-                <datalist :id="'typeOptions' + product_id">
-                  <option v-for="type in types">{{type}}</option>
-                </datalist>
-              </label>
-              <label class="form-label col-md-6">
-                Product Name
-                <input class="form-control" v-model.text="product['Name']" type="text" :disabled="discontinued">
-              </label>
+              <fieldset :disabled="!isNew" class="col-md-3">
+                <label class="form-label col-md-12">
+                  Category
+                  <input class="form-control" :list="'categoryOptions' + product_id" v-model.text="product['Category']" type="text" :disabled="discontinued">
+                  <datalist :id="'categoryOptions' + product_id">
+                    <option v-for="category in categories">{{category}}</option>
+                  </datalist>
+                </label>
+              </fieldset>
+              <fieldset :disabled="!isNew" class="col-md-2">
+                <label class="form-label">
+                  Product Type
+                  <input class="form-control" :list="'typeOptions' + product_id" v-model.text="product['Type']" type="text" :disabled="discontinued">
+                  <datalist :id="'typeOptions' + product_id">
+                    <option v-for="type in types">{{type}}</option>
+                  </datalist>
+                </label>
+              </fieldset>
+              <fieldset :disabled="!isNew" class="col-md-6">
+                <label class="form-label col-md-12">
+                  Product Name
+                  <input class="form-control" v-model.text="product['Name']" type="text" :disabled="discontinued">
+                </label>
+              </fieldset>
             </div>
             <div class="row align-items-top my-2">
               <div class="col-md-6 component-list-input">
@@ -605,27 +611,33 @@ app.component('v-component-form-part', {
                 <fieldset disabled class='col-md-1'>
                   <label class="form-label">
                     ID
-                    <input class="form-control" v-model.number="component['REF_ID']" type="number">
+                    <input class="form-control px-1" v-model.number="component['REF_ID']" type="number">
                   </label>
                 </fieldset>
-                <label class="form-label col-md-3">
+                <fieldset :disabled="!isNew" class="col-md-3">
+                <label class="form-label col-md-12">
                   Category
                   <input class="form-control" :list="'compCategoryOptions' + component_id" v-model.text="component['Category']" type="text" :disabled="discontinued">
                   <datalist :id="'compCategoryOptions' + component_id">
                     <option v-for="category in categories">{{category}}</option>
                   </datalist>
                 </label>
-                <label class="form-label col-md-2">
+                </fieldset>
+                <fieldset :disabled="!isNew" class="col-md-2">
+                <label class="form-label">
                   Product Type
                   <input class="form-control" :list="'compTypeOptions' + component_id" v-model.text="component['Type']" type="text" :disabled="discontinued">
                   <datalist :id="'compTypeOptions' + component_id">
                     <option v-for="type in types">{{type}}</option>
                   </datalist>
                 </label>
-                <label class="form-label col-md-6">
+                </fieldset>
+                <fieldset :disabled="!isNew" class="col-md-6">
+                <label class="form-label col-md-12">
                   Component Name
                   <input class="form-control" v-model.text="component['Product name']" type="text" :disabled="discontinued">
                 </label>
+                </fieldset>
               </div>
               <div class="row my-1">
                 <label class="form-label col-md-2">
