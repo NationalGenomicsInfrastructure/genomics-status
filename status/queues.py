@@ -146,7 +146,7 @@ class SequencingQueuesDataHandler(SafeHandler):
             cursor.execute(queue_query)
             records = cursor.fetchall()
             for record in list(records):
-                if str(record[5]) in control_names:
+                if str(record[1]) in control_names:
                     continue
                 queue_time = record[2].isoformat()
                 container = record[4]
