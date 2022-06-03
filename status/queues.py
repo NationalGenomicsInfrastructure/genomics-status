@@ -201,7 +201,7 @@ class SequencingQueuesDataHandler(SafeHandler):
                                                }
                 else:
                     if container not in pool_groups[method][project]['plates']:
-                        pool_groups[method][project]['plates'][container] = {'queue_time' : queue_time}
+                        pool_groups[method][project]['plates'][container] = {'queue_time' : queue_time, 'pools': []}
                     pool_groups[method][project]['plates'][container]['pools'].append({'name':record[1], 'is_rerun': False})
 
                 #Get Pool Conc
@@ -218,7 +218,11 @@ class SequencingQueuesDataHandler(SafeHandler):
                         pcquery = pool_conc_query.format('Pool Conc. (nM)', record[0], record[1])
 
                 cursor.execute(pcquery)
-                pool_conc =  cursor.fetchone()[0]
+                row =  cursor.fetchone()
+                if row is None:
+                    pool_conc = ''
+                else:
+                    pool_conc = row[0]
 
                 if 'NovaSeq' not in method:
                     rerun_query = ('select udfname, udfvalue from artifact_udf_view where udfname = \'Rerun\' '
