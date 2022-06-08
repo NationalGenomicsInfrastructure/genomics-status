@@ -25,6 +25,15 @@ class qPCRPoolsDataHandler(SafeHandler):
     """
     def get(self):
 
+        unwanted_in_lib_val = [ "Illumina TruSeq PCR-free", "Illumina DNA PCR-free FLEX", "SMARTer ThruPLEX DNA-seq (small genome)",
+                                "SMARTer ThruPLEX DNA-seq (complex genome, metagenomes)", "SMARTer ThruPLEX DNA-seq (ChIP)",
+                                "Illumina TruSeq Stranded mRNA (polyA)", "Illumina TruSeq Stranded total RNA",
+                                "SMARTer Total Stranded RNA-seq, Pico input mammalian", "SMARTer Total Stranded RNA-seq, Pico input mammalian - V3",
+                                "Illumina TruSeq small RNA", "QIAseq miRNA low input", "Visium Spatial Gene Expression", "RAD-seq", "ATAC-seq",
+                                "Dovetail OmniC",  "Dovetail MicroC", "Arima HiC (standard)", "Arima HiC (low input)", "16S",
+                                "Amplicon indexing (without cleanup)", "Amplicon indexing (with cleanup)", "Special", "ONT ligation - DNA",
+                                "ONT PCR - DNA", "ONT cDNA PCR - RNA", "ONT direct cDNA - RNA", "ONT direct RNA - RNA"]
+
         queues = {}
         #query for Miseq and NovaSeq
         query = ('select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid '
@@ -38,6 +47,13 @@ class qPCRPoolsDataHandler(SafeHandler):
         queues['NovaSeq'] = query.format(1666)
         #Queue = 2102, stepid in the query
         queues['NextSeq'] = query.format(2102)
+        #Queue 41, but query is slightly different to use protocolid for Library Validation QC which is 8 and, also to exclude the controls
+        queues['LibraryValidation'] = ("select  st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid "
+                                        "from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm where "
+                                        "art.artifactid=st.artifactid and st.stageid in (select stageid from stage where membershipid in (select sectionid from workflowsection where protocolid=8)) "
+                                        "and st.workflowrunid>0 and st.completedbyid is null and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and s.processid=asm.processid "
+                                        "and asm.artifactid=art.artifactid and art.name not in {} "
+                                        "group by st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid;".format(tuple(control_names)))
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
@@ -65,6 +81,9 @@ class qPCRPoolsDataHandler(SafeHandler):
                     if project not in pools[method][container]['projects']:
                         proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
                         library_type =  proj_doc['details'].get('library_construction_method', '')
+                        if method =='LibraryValidation' and library_type in unwanted_in_lib_val:
+                            pools[method][container]['samples'].pop()
+                            continue
                         sequencing_platform = proj_doc['details'].get('sequencing_platform', '')
                         flowcell = proj_doc['details'].get('flowcell', '')
                         queued_date = proj_doc['details'].get('queued', '')
@@ -81,9 +100,13 @@ class qPCRPoolsDataHandler(SafeHandler):
                 else:
                     proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
                     library_type =  proj_doc['details'].get('library_construction_method', '')
+                    if method =='LibraryValidation' and library_type in unwanted_in_lib_val:
+                        continue
                     sequencing_platform = proj_doc['details'].get('sequencing_platform', '')
                     flowcell = proj_doc['details'].get('flowcell', '')
                     queued_date = proj_doc['details'].get('queued', '')
+                    if not queued_date:
+                        queued_date = proj_doc['project_summary'].get('queued', '')
                     pools[method][container] = {
                                                 'samples':[{'name': record[1], 'well': value, 'queue_time': queue_time}],
                                                 'library_types': [library_type],
