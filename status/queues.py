@@ -88,7 +88,7 @@ class qPCRPoolsDataHandler(SafeHandler):
                         flowcell = proj_doc['details'].get('flowcell', '')
                         queued_date = proj_doc['details'].get('queued', '')
                         if not queued_date:
-                            queued_date = proj_doc['project_summary'].get('queued', '')
+                            queued_date = proj_doc.get('project_summary', {}).get('queued', '')
                         if library_type not in pools[method][container]['library_types']:
                             pools[method][container]['library_types'].append(library_type)
                         if sequencing_platform not in pools[method][container]['sequencing_platforms']:
@@ -106,7 +106,7 @@ class qPCRPoolsDataHandler(SafeHandler):
                     flowcell = proj_doc['details'].get('flowcell', '')
                     queued_date = proj_doc['details'].get('queued', '')
                     if not queued_date:
-                        queued_date = proj_doc['project_summary'].get('queued', '')
+                        queued_date = proj_doc.get('project_summary', {}).get('queued', '')
                     pools[method][container] = {
                                                 'samples':[{'name': record[1], 'well': value, 'queue_time': queue_time}],
                                                 'library_types': [library_type],
