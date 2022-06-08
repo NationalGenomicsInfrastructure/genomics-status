@@ -48,12 +48,12 @@ class qPCRPoolsDataHandler(SafeHandler):
         #Queue = 2102, stepid in the query
         queues['NextSeq'] = query.format(2102)
         #Queue 41, but query is slightly different to use protocolid for Library Validation QC which is 8 and, also to exclude the controls
-        queues['LibraryValidation'] = ("select  st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid "
-                                        "from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm where "
+        queues['LibraryValidation'] = ("select  st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid, e.udfvalue "
+                                        "from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm, entity_udf_view e where "
                                         "art.artifactid=st.artifactid and st.stageid in (select stageid from stage where membershipid in (select sectionid from workflowsection where protocolid=8)) "
                                         "and st.workflowrunid>0 and st.completedbyid is null and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and s.processid=asm.processid "
-                                        "and asm.artifactid=art.artifactid and art.name not in {} "
-                                        "group by st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid;".format(tuple(control_names)))
+                                        "and asm.artifactid=art.artifactid and art.name not in {} and s.projectid=e.attachtoid and e.udfname=\'Library construction method\'"
+                                        "group by st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid, e.udfvalue;".format(tuple(control_names)))
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
@@ -79,11 +79,11 @@ class qPCRPoolsDataHandler(SafeHandler):
                 if container in pools[method]:
                     pools[method][container]['samples'].append({'name': record[1], 'well': value, 'queue_time': queue_time})
                     if project not in pools[method][container]['projects']:
-                        proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
-                        library_type =  proj_doc['details'].get('library_construction_method', '')
-                        if method =='LibraryValidation' and library_type in unwanted_in_lib_val:
+                        if method =='LibraryValidation' and record[8] in unwanted_in_lib_val:
                             pools[method][container]['samples'].pop()
                             continue
+                        proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
+                        library_type =  proj_doc['details'].get('library_construction_method', '')
                         sequencing_platform = proj_doc['details'].get('sequencing_platform', '')
                         flowcell = proj_doc['details'].get('flowcell', '')
                         queued_date = proj_doc['details'].get('queued', '')
@@ -98,10 +98,10 @@ class qPCRPoolsDataHandler(SafeHandler):
                         pools[method][container]['proj_queue_dates'].append(queued_date)
                         pools[method][container]['projects'][project] = proj_doc['project_name']
                 else:
+                    if method =='LibraryValidation' and record[8] in unwanted_in_lib_val:
+                        continue
                     proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
                     library_type =  proj_doc['details'].get('library_construction_method', '')
-                    if method =='LibraryValidation' and library_type in unwanted_in_lib_val:
-                        continue
                     sequencing_platform = proj_doc['details'].get('sequencing_platform', '')
                     flowcell = proj_doc['details'].get('flowcell', '')
                     queued_date = proj_doc['details'].get('queued', '')
