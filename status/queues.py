@@ -156,6 +156,9 @@ class SequencingQueuesDataHandler(SafeHandler):
         pool_conc_query_nextseq = ('select udfvalue from artifact_udf_view where udfname=\'{}\' '
                                     'and artifactid=(select artifactid from artifactstate '
                                     'where stateid=(select inputstatepostid from processiotracker where processid={} limit 1));')
+        rerun_query = ('select count(artifactid) from stagetransition '
+                        'where stageid in (select stageid from stage where stepid={}) '
+                        'and artifactid={} group by artifactid')
 
         #sequencing queues are currently taken as the following
         queues = {}
@@ -252,7 +255,15 @@ class SequencingQueuesDataHandler(SafeHandler):
                                         'and artifactid={}').format(record[0])
                     cursor.execute(rerun_query)
                     rerun_res = cursor.fetchone()
-                    is_rerun = False if rerun_res[1] == 'False' else True
+                    is_rerun = False
+                    if rerun_res[1]:
+                        is_rerun = ast.literal_eval(rerun_res[1])
+                    else:
+                        #When Proj coordinators queue samples, the field does not seem to be set
+                        cursor.execute(rerun_query.format(queues[method], record[0]))
+                        rerun_res = cursor.fetchone()[0]
+                        if rerun_res > 1:
+                            is_rerun = True
 
                     #Get qPCR conc
                     conc_qpcr = 0.0
@@ -265,9 +276,6 @@ class SequencingQueuesDataHandler(SafeHandler):
                             conc_qpcr = row[0]
 
                 elif 'NovaSeq' in method:
-                    rerun_query = ('select count(artifactid) from stagetransition '
-                                    'where stageid in (select stageid from stage where stepid={}) '
-                                    'and artifactid={} group by artifactid')
                     #The final loading conc is defined in the Define Run format step whose stepid is 1659
                     final_lconc_query = ('select udfname, udfvalue from artifact_udf_view where udfname in (\'Final Loading Concentration (pM)\') '
                                          'and artifactid in (select st.artifactid from stagetransition st, artifact_sample_map asm, sample, project '
