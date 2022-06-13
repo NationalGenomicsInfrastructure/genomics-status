@@ -10,7 +10,7 @@ from genologics.entities import Queue, Artifact, Container
 import xml.etree.ElementTree as ET
 import psycopg2
 from dateutil.parser import parse
-
+import ast
 
 control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
                     'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
