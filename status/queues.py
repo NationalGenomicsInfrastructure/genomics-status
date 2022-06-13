@@ -251,9 +251,9 @@ class SequencingQueuesDataHandler(SafeHandler):
                     pool_conc = row[0]
 
                 if 'NovaSeq' not in method:
-                    rerun_query = ('select udfname, udfvalue from artifact_udf_view where udfname = \'Rerun\' '
+                    non_novaseq_rerun_query = ('select udfname, udfvalue from artifact_udf_view where udfname = \'Rerun\' '
                                         'and artifactid={}').format(record[0])
-                    cursor.execute(rerun_query)
+                    cursor.execute(non_novaseq_rerun_query)
                     rerun_res = cursor.fetchone()
                     is_rerun = False
                     if rerun_res[1]:
