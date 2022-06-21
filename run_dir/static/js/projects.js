@@ -147,7 +147,7 @@ function load_table(status, type, columns, dates) {
     $("#project_table_body").empty();
     var size = 0;
     undefined_fields=[];
-    $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-outline-dark" data-clipboard-target="#project_table"><span class="fa fa-copy"></span> Copy table to clipboard</button>');
+    $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-outline-dark" data-clipboard-target="#project_table"><span class="fa fa-copy"></span> Copy table to clipboard</button><button type="button" id="filter_clear" class="btn btn-sm btn-outline-dark ml-2">Clear column filters</button>');
 
     $.each(data, function(project_id, summary_row) {
       $.each(summary_row, function(key,value){
@@ -325,7 +325,8 @@ function init_listjs(no_items, columns) {
           "paging":false,
           "destroy": true,
           "info":false,
-          "order": [[ 0, "desc" ]]
+          "order": [[ 0, "desc" ]],
+          stateSave: true
         });
     }
 
@@ -345,6 +346,12 @@ function init_listjs(no_items, columns) {
             .draw();
         } );
     } );
+
+    //Clears free text filtering and sorting of columns
+    $('#filter_clear').on('click', function(){
+        $('#project_table').DataTable().state.clear()
+    });
+
 }
 
 //Check or uncheck all fields from clicked category
