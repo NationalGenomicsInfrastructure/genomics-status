@@ -14,7 +14,8 @@ app.component('v-pricing-quote', {
         template_text_data: {},
         applProj: false,
         noQCProj: false,
-        saved_agreement_data: {}
+        saved_agreement_data: {},
+        loaded_version: ''
       }
     },
     computed: {
@@ -187,6 +188,7 @@ app.component('v-pricing-quote', {
             this.add_to_md_text()
             this.$root.quote_prod_ids = sel_data['products_included']
             this.$root.fetchExchangeRates(sel_data['exchange_rate_issued_date'])
+            this.loaded_version = 'Version: '+query_timestamp_radio.labels[0].textContent
           }
         },
         mark_agreement_signed(){
@@ -300,7 +302,9 @@ app.component('v-pricing-quote', {
           agreement_data['exchange_rate_issued_date'] = this.$root.exch_rate_issued_at
           this.submit_quote_form(agreement_data)
           if(type === 'save'){
-            setTimeout(()=>{ this.get_saved_agreement_data(this.proj_data['project_id']) },1000)
+            setTimeout(()=>{
+              this.get_saved_agreement_data(this.proj_data['project_id']) },1000)
+              this.loaded_version =  ''
           }
         }
     },
@@ -321,6 +325,9 @@ app.component('v-pricing-quote', {
           </template>
           <div class="row">
             <div class="col-5 quote_lcol_header">
+              <div class="fw-bold py-3">
+                Using cost calculator version {{ this.$root.published_cost_calculator["Version"] }} (published {{ new Date(this.$root.published_cost_calculator["Issued at"]).toLocaleString() }})
+              </div>
               <h4>Pricing Category</h4>
               <div class="form-radio" id="price_type_selector">
                 <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac" @change="add_to_md_text">
@@ -430,21 +437,22 @@ app.component('v-pricing-quote', {
               </div>
               <div class="row agreement_preview_style mt-5">
                 <h4>Preview</h4>
+                <div class="pb-2 text-muted" > {{ this.loaded_version }} </div>
                 <div class="md_display_box bg-white border" v-html="md_message"></div>
                 <template v-if="this.any_quote">
                   <div class="row py-2" id="current_quote">
                     <div class="col quote_lcol_header">
                       <h4>Added Products</h4>
-                      <div class="pl-1 bg-white">
-                      <span class="help-block">
-                        To use fractions of units, please use full stop and not decimal comma.
-                      </span>
                       <div id='product_warnings'></div>
                       <ul class="list-unstyled quote-product-list">
-                        <template v-for="(prod_count, prod_id) in this.$root.quote_prod_ids" :key="prod_id">
-                          <v-quote-list-product :product_id="prod_id" :product_count="prod_count"/>
-                        </template>
-                      </div>
+                        <div class="pl-1 bg-white">
+                          <span class="help-block">
+                            To use fractions of units, please use full stop and not decimal comma.
+                          </span>
+                          <template v-for="(prod_count, prod_id) in this.$root.quote_prod_ids" :key="prod_id">
+                            <v-quote-list-product :product_id="prod_id" :product_count="prod_count"/>
+                          </template>
+                        </div>
                         <template v-if="any_special_addition">
                           <li class="my-1 row d-flex align-items-center" v-for="(label, index) in this.active_cost_labels" :key="index" >
                             <span class="col-7 offset-2 text-muted">
