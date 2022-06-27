@@ -456,7 +456,7 @@ app.component('v-pricing-quote', {
                         <template v-if="any_special_addition">
                           <li class="my-1 row d-flex align-items-center" v-for="(label, index) in this.active_cost_labels" :key="index" >
                             <span class="col-7 offset-2 text-muted">
-                              <a class="mr-2" href='#' @click="remove_cost_label(index)"><i class="far fa-times-square fa-lg text-danger"></i></a>
+                              <a class="mr-2" href='#' @click="remove_cost_label(index)" @click.prevent="activeNews(1)"><i class="far fa-times-square fa-lg text-danger"></i></a>
                               {{ label.name }}
                             </span>
                             <span class="col-3 text-center">{{ label.value }} SEK</span>
@@ -465,7 +465,7 @@ app.component('v-pricing-quote', {
                         <template v-if="any_special_percentage">
                           <li class="my-1 row d-flex align-items-center">
                             <span class="col-7 offset-2 text-muted">
-                              <a class="mr-2" href='#' @click="reset_special_percentage"><i class="far fa-times-square fa-lg text-danger"></i></a>
+                              <a class="mr-2" href='#' @click="reset_special_percentage" @click.prevent="activeNews(1)"><i class="far fa-times-square fa-lg text-danger"></i></a>
                               Discount: {{this.$root.quote_special_percentage_label}}
                             </span>
                             <span class="col-3 text-center">- {{this.$root.quote_special_percentage_value}} %</span>
@@ -538,9 +538,9 @@ app.component('v-quote-list-product', {
         }
     },
     template: /*html*/`
-      <li class="my-1 row d-flex align-items-center">
+      <li class="my-1 py-1 row d-flex align-items-center">
         <div class="col-auto  pr-0">
-          <a href='#' @click="remove_from_quote"><i class="far fa-times-square fa-lg text-danger"></i></a>
+          <a href='#' @click="remove_from_quote" @click.prevent="activeNews(1)"><i class="far fa-times-square fa-lg text-danger"></i></a>
         </div>
         <div class="col-2">
           <input class="form-control" v-model="this.$root.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']" type=number>
