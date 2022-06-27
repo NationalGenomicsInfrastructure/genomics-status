@@ -117,7 +117,8 @@ app.component('v-pricing-quote', {
                 .then(response => {
                     pdata = response.data
                     this.proj_data['ngi_project_id'] = proj_id + ', '+pdata['project_name']+ ' ('+pdata['order_details']['title']+')'
-                    this.proj_data['user_and_affiliation'] = pdata['project_pi_name']+ ' / ' + pdata['affiliation']
+                    this.proj_data['pi_name'] = pdata['project_pi_name'] ? pdata['project_pi_name'] : ''
+                    this.proj_data['affiliation'] = pdata['affiliation']
                     this.proj_data['project_id'] = proj_id
                     if(pdata['type']==='Application'){
                       this.applProj = true
@@ -297,6 +298,7 @@ app.component('v-pricing-quote', {
             timestamp = Date.now()
             this.proj_data['agreement_number'] = this.proj_data['project_id'] + '_'+ timestamp
             agreement_data['project_data'] = this.proj_data
+            agreement_data['project_data']['user_and_affiliation'] = this.proj_data['pi_name']+ ' / ' + this.proj_data['affiliation']
             agreement_data['products_included'] = this.$root.quote_prod_ids
           }
           agreement_data['exchange_rate_issued_date'] = this.$root.exch_rate_issued_at
@@ -345,6 +347,11 @@ app.component('v-pricing-quote', {
               </div>
               <div class="row pt-2">
                 <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
+              </div>
+              <div>
+                <label for="pi_name" class="fw-bold pr-2">PI name</label>
+                <input type="text" id="pi_name" name="pi_name" v-model="proj_data['pi_name']">
+                <span v-if="!proj_data['pi_name'].length " class="text-danger pl-1">PI name is empty!</span>
               </div>
               <div class="p-2"> <h4>Agreement Summary</h4> </div>
               <div class="row mx-2">
@@ -424,8 +431,8 @@ app.component('v-pricing-quote', {
                           <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp">
                           <label class="form-check-label" :for="timestamp">
                           {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}}
-                          <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger far fa-file-signature fa-lg fs-6">
-                            Marked Signed {{ this.saved_agreement_data['signed_by'] }}, {{ timestamp_to_date(this.saved_agreement_data['signed_at']) }}</p>
+                          <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger fs-6">
+                          <i class="far fa-file-signature fa-lg"></i>  Marked Signed {{ this.saved_agreement_data['signed_by'] }}, {{ timestamp_to_date(this.saved_agreement_data['signed_at']) }}</p>
                           </label>
                         </div>
                   </template>
@@ -456,7 +463,7 @@ app.component('v-pricing-quote', {
                         <template v-if="any_special_addition">
                           <li class="my-1 row d-flex align-items-center" v-for="(label, index) in this.active_cost_labels" :key="index" >
                             <span class="col-7 offset-2 text-muted">
-                              <a class="mr-2" href='#' @click="remove_cost_label(index)"><i class="far fa-times-square fa-lg text-danger"></i></a>
+                              <a class="mr-2" href='#' @click="remove_cost_label(index)" @click.prevent="activeNews(1)"><i class="far fa-times-square fa-lg text-danger"></i></a>
                               {{ label.name }}
                             </span>
                             <span class="col-3 text-center">{{ label.value }} SEK</span>
@@ -465,7 +472,7 @@ app.component('v-pricing-quote', {
                         <template v-if="any_special_percentage">
                           <li class="my-1 row d-flex align-items-center">
                             <span class="col-7 offset-2 text-muted">
-                              <a class="mr-2" href='#' @click="reset_special_percentage"><i class="far fa-times-square fa-lg text-danger"></i></a>
+                              <a class="mr-2" href='#' @click="reset_special_percentage" @click.prevent="activeNews(1)"><i class="far fa-times-square fa-lg text-danger"></i></a>
                               Discount: {{this.$root.quote_special_percentage_label}}
                             </span>
                             <span class="col-3 text-center">- {{this.$root.quote_special_percentage_value}} %</span>
@@ -538,9 +545,9 @@ app.component('v-quote-list-product', {
         }
     },
     template: /*html*/`
-      <li class="my-1 row d-flex align-items-center">
+      <li class="my-1 py-1 row d-flex align-items-center">
         <div class="col-auto  pr-0">
-          <a href='#' @click="remove_from_quote"><i class="far fa-times-square fa-lg text-danger"></i></a>
+          <a href='#' @click="remove_from_quote" @click.prevent="activeNews(1)"><i class="far fa-times-square fa-lg text-danger"></i></a>
         </div>
         <div class="col-2">
           <input class="form-control" v-model="this.$root.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']" type=number>
