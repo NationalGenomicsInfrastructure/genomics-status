@@ -348,7 +348,7 @@ app.component('v-pricing-quote', {
               <div class="row pt-2">
                 <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
               </div>
-              <div>
+              <div v-if="origin === 'Agreement'">
                 <label for="pi_name" class="fw-bold pr-2">PI name</label>
                 <input type="text" id="pi_name" name="pi_name" v-model="proj_data['pi_name']">
                 <span v-if="!proj_data['pi_name'].length " class="text-danger pl-1">PI name is empty!</span>
