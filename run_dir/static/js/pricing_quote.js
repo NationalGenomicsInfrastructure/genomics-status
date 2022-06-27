@@ -14,7 +14,8 @@ app.component('v-pricing-quote', {
         template_text_data: {},
         applProj: false,
         noQCProj: false,
-        saved_agreement_data: {}
+        saved_agreement_data: {},
+        loaded_version: ''
       }
     },
     computed: {
@@ -187,6 +188,7 @@ app.component('v-pricing-quote', {
             this.add_to_md_text()
             this.$root.quote_prod_ids = sel_data['products_included']
             this.$root.fetchExchangeRates(sel_data['exchange_rate_issued_date'])
+            this.loaded_version = 'Version: '+query_timestamp_radio.labels[0].textContent
           }
         },
         mark_agreement_signed(){
@@ -300,7 +302,9 @@ app.component('v-pricing-quote', {
           agreement_data['exchange_rate_issued_date'] = this.$root.exch_rate_issued_at
           this.submit_quote_form(agreement_data)
           if(type === 'save'){
-            setTimeout(()=>{ this.get_saved_agreement_data(this.proj_data['project_id']) },1000)
+            setTimeout(()=>{
+              this.get_saved_agreement_data(this.proj_data['project_id']) },1000)
+              this.loaded_version =  ''
           }
         }
     },
@@ -309,13 +313,8 @@ app.component('v-pricing-quote', {
         <div class="row" v-if="origin === 'Quote'">
           <h1 class="col-md-11 mb-3"><span id="page_title">Cost Calculator</span></h1>
         </div>
-        <div class="row row-cols-lg-auto mb-3">
-          <div class="col-1">
-            <button type="submit" class="btn btn-secondary" id="generate_quote_btn" v-on:click="generate_quote('preview')">Generate {{ this.origin }} Preview</button>
-          </div>
-          <div class="col-1" v-if="this.has_admin_control">
-            <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote('save')">Save and Generate {{ this.origin }}</button>
-          </div>
+        <div class="row" v-if="origin === 'Agreement'">
+          <h1 class="col mb-3"><span id="page_title">Generate Agreement for {{ this.proj_data['ngi_project_id'] }}</span></h1>
         </div>
         <template v-if="this.$root.published_data_loading">
           <v-pricing-data-loading/>
@@ -324,27 +323,12 @@ app.component('v-pricing-quote', {
           <template v-if="this.$root.any_errors">
             <v-pricing-error-display/>
           </template>
-          <div class="row" v-if="this.saved_agreement_data['saved_agreements']">
-            <h4 v-if="this.saved_agreement_data">Saved Agreements</h4>
-            <div class="col-2 align-self-center">
-              <button class="btn btn-primary m-1" @click="load_saved_agreement">Load</button>
-              <button class="btn btn-danger m-1" @click="mark_agreement_signed">Mark Signed</button>
-            </div>
-            <div class="col-6 ml-2 py-3">
-              <template v-for="(agreement, timestamp) in this.saved_agreement_data['saved_agreements']" :key="timestamp">
-                    <div class="form-check m-2">
-                      <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp">
-                      <label class="form-check-label" :for="timestamp">
-                      {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}}
-                      <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger far fa-file-signature fa-lg fs-6">
-                        Marked Signed {{ this.saved_agreement_data['signed_by'] }}, {{ timestamp_to_date(this.saved_agreement_data['signed_at']) }}</p>
-                      </label>
-                    </div>
-              </template>
-            </div>
-          </div>
           <div class="row">
             <div class="col-5 quote_lcol_header">
+              <div class="fw-bold py-3">
+                Using cost calculator version {{ this.$root.published_cost_calculator["Version"] }} (published {{ new Date(this.$root.published_cost_calculator["Issued at"]).toLocaleString() }})
+              </div>
+              <h4>Pricing Category</h4>
               <div class="form-radio" id="price_type_selector">
                 <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac" @change="add_to_md_text">
                 <label class="form-check-label pl-1 pr-3" for="price_type_sweac">
@@ -359,7 +343,30 @@ app.component('v-pricing-quote', {
                   Internal
                 </label>
               </div>
-              <div class="row">
+              <div class="row pt-2">
+                <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
+              </div>
+              <div class="p-2"> <h4>Agreement Summary</h4> </div>
+              <div class="row mx-2">
+                <label class="form-check-label p-1" for="template_text_btn_group"> Add project template text for: </label>
+                <div class="col">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="appCheck" v-model="applProj" @change="add_to_md_text">
+                    <label class="form-check-label" for="appCheck">Applications</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="noQCCheck" v-model="noQCProj" @change="add_to_md_text">
+                    <label class="form-check-label" for="noQCCheck">No-QC</label>
+                  </div>
+                </div>
+              </div>
+              <div class="row py-3">
+                  <div id="pricing_freeformtext_editor">
+                    <textarea v-model="this.md_src_message" class="md_textarea"></textarea>
+                  </div>
+              </div>
+              <div class="row pt-3">
+                <h4 class="pb-0 mb-0">Non-Standard Costs</h4>
                 <div class="col-3 pt-2 d-flex align-items-center">
                   <button class="btn btn-sm btn-outline-primary" @click="add_cost_label"><i class="fa fa-plus fa-lg" aria-hidden="true"></i> Add Extra Cost</button>
                 </div>
@@ -384,7 +391,8 @@ app.component('v-pricing-quote', {
                   </div>
                 </div>
               </div>
-              <div class="row">
+              <div class="row pt-3">
+              <h4 class="pb-0 mb-0">Discount</h4>
                 <div class="col-2">
                   <label for='percentage_input' class="form-label">Percentage</label>
                   <input id='percentage_input' class="form-control" type="number" v-model.number="this.$root.quote_special_percentage_value">
@@ -407,91 +415,94 @@ app.component('v-pricing-quote', {
                 </template>
               </div>
             </div>
-            <div class="col-4 offset-2">
-              <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
-            </div>
-          </div>
-          <div class="p-2"> <h4>Enter markdown text for document</h4> </div>
-          <div class="row m-2">
-            <label class="form-check-label p-1" for="template_text_btn_group"> Add project template text for: </label>
-            <div class="col">
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="appCheck" v-model="applProj" @change="add_to_md_text">
-                <label class="form-check-label" for="appCheck">Applications</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="noQCCheck" v-model="noQCProj" @change="add_to_md_text">
-                <label class="form-check-label" for="noQCCheck">No-QC</label>
-              </div>
-            </div>
-          </div>
-          <div class="row p-3">
-            <div class="col-6">
-              <div id="pricing_freeformtext_editor">
-                <textarea v-model="this.md_src_message" class="md_textarea"></textarea>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="md_display_box border" v-html="md_message"></div>
-            </div>
-          </div>
-          <template v-if="this.any_quote">
-            <div class="row py-2" id="current_quote">
-              <div class="col-md-8 col-xl-6 quote_lcol_header">
-                <h3>Products</h3>
-                <span class="help-block">
-                  To use fractions of units, please use full stop and not decimal comma.
-                </span>
-                <div id='product_warnings'></div>
-                <ul class="list-unstyled quote-product-list">
-                  <template v-for="(prod_count, prod_id) in this.$root.quote_prod_ids" :key="prod_id">
-                    <v-quote-list-product :product_id="prod_id" :product_count="prod_count"/>
+            <div class="col-5 offset-1">
+              <div class="row" v-if="this.saved_agreement_data['saved_agreements']">
+                <h4 v-if="this.saved_agreement_data">Generated Agreements</h4>
+                <div class="col ml-2">
+                  <template v-for="(agreement, timestamp) in this.saved_agreement_data['saved_agreements']" :key="timestamp">
+                        <div class="form-check m-2">
+                          <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp">
+                          <label class="form-check-label" :for="timestamp">
+                          {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}}
+                          <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger far fa-file-signature fa-lg fs-6">
+                            Marked Signed {{ this.saved_agreement_data['signed_by'] }}, {{ timestamp_to_date(this.saved_agreement_data['signed_at']) }}</p>
+                          </label>
+                        </div>
                   </template>
-                  <li class="row border-top mr-2">
-                    <p class="text-end col-3 offset-9 pt-2 fw-bold">{{product_cost_sum[this.$root.price_type].toFixed(2)}} SEK</p>
-                  </li>
-                  <template v-if="any_special_addition">
-                    <li class="my-1 row d-flex align-items-center" v-for="(label, index) in this.active_cost_labels" :key="index" >
-                      <span class="col-9">
-                        <a class="mr-2" href='#' @click="remove_cost_label(index)"><i class="far fa-times-square fa-lg text-danger"></i></a>
-                        {{ label.name }}
-                      </span>
-                      <span class="col-2 float-right">{{ label.value }} SEK</span>
-                    </li>
-                  </template>
-                  <template v-if="any_special_percentage">
-                    <li class="my-1 row d-flex align-items-center">
-                      <span class="col-9">
-                        <a class="mr-2" href='#' @click="reset_special_percentage"><i class="far fa-times-square fa-lg text-danger"></i></a>
-                        {{this.$root.quote_special_percentage_label}}
-                      </span>
-                      <span class="col-2 float-right">- {{this.$root.quote_special_percentage_value}} %</span>
-                    </li>
-                  </template>
-                </ul>
+                  <div class="align-self-center">
+                    <button class="btn btn-primary m-1" @click="load_saved_agreement">Load</button>
+                    <button class="btn btn-danger m-1" @click="mark_agreement_signed">Mark Signed</button>
+                  </div>
+                </div>
+              </div>
+              <div class="row agreement_preview_style mt-5">
+                <h4>Preview</h4>
+                <div class="pb-2 text-muted" > {{ this.loaded_version }} </div>
+                <div class="md_display_box bg-white border" v-html="md_message"></div>
+                <template v-if="this.any_quote">
+                  <div class="row py-2" id="current_quote">
+                    <div class="col quote_lcol_header">
+                      <h4>Added Products</h4>
+                      <div id='product_warnings'></div>
+                      <ul class="list-unstyled quote-product-list">
+                        <div class="pl-1 bg-white">
+                          <span class="help-block">
+                            To use fractions of units, please use full stop and not decimal comma.
+                          </span>
+                          <template v-for="(prod_count, prod_id) in this.$root.quote_prod_ids" :key="prod_id">
+                            <v-quote-list-product :product_id="prod_id" :product_count="prod_count"/>
+                          </template>
+                        </div>
+                        <template v-if="any_special_addition">
+                          <li class="my-1 row d-flex align-items-center" v-for="(label, index) in this.active_cost_labels" :key="index" >
+                            <span class="col-7 offset-2 text-muted">
+                              <a class="mr-2" href='#' @click="remove_cost_label(index)"><i class="far fa-times-square fa-lg text-danger"></i></a>
+                              {{ label.name }}
+                            </span>
+                            <span class="col-3 text-center">{{ label.value }} SEK</span>
+                          </li>
+                        </template>
+                        <template v-if="any_special_percentage">
+                          <li class="my-1 row d-flex align-items-center">
+                            <span class="col-7 offset-2 text-muted">
+                              <a class="mr-2" href='#' @click="reset_special_percentage"><i class="far fa-times-square fa-lg text-danger"></i></a>
+                              Discount: {{this.$root.quote_special_percentage_label}}
+                            </span>
+                            <span class="col-3 text-center">- {{this.$root.quote_special_percentage_value}} %</span>
+                          </li>
+                        </template>
+                        <li class="row border-top border-dark border-2 mr-2">
+                          <div class="col-7 offset-2 pt-2 fw-bold">
+                            TOTAL
+                            <template v-if="this.$root.price_type == 'cost_academic'">
+                            (Swedish academia)
+                            </template>
+                            <template v-if="this.$root.price_type == 'full_cost'">
+                            (Industry and non-Swedish academia)
+                            </template>
+                            <template v-if="this.$root.price_type == 'cost'">
+                            (Internal projects)
+                            </template>
+                          </div>
+                          <p class="text-right col-3 pt-2 fw-bold pr-0">{{product_cost_sum[this.$root.price_type].toFixed(2)}} SEK</p>
+                        </li>
+                      </ul>
 
+                    </div>
+                  </div>
+                </template>
               </div>
-              <div class="col-md-4 col-xl-6 border-left">
-                <h3>Totals</h3>
-                <ul class="quote-totals-list list-unstyled">
-                  <dl class="quote_totals">
-                    <p :class="{'text-muted': (this.$root.price_type != 'cost_academic')}">
-                      <dt>Swedish academia:</dt>
-                      <dd class="quote_totals_val quote_sweac">{{quote_cost['cost_academic']}} SEK</dd>
-                    </p>
-                    <p :class="{'text-muted': (this.$root.price_type != 'full_cost')}">
-                      <dt>Industry and non-Swedish academia:</dt>
-                      <dd class="quote_totals_val quote_full">{{quote_cost['full_cost']}} SEK</dd>
-                    </p>
-                    <p :class="{'text-muted': (this.$root.price_type != 'cost')}">
-                      <dt>Internal projects:</dt>
-                      <dd class="quote_totals_val quote_internal">{{quote_cost['cost']}} SEK</dd>
-                    </p>
-                  </dl>
-                </ul>
+              <div class="row row-cols-lg-auto my-3 justify-content-end">
+                <div class="col-1">
+                  <button type="submit" class="btn btn-secondary" id="generate_quote_btn" v-on:click="generate_quote('preview')">Generate {{ this.origin }} Preview</button>
+                </div>
+                <div class="col-1 pr-0" v-if="this.has_admin_control">
+                  <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote('save')">Save and Generate {{ this.origin }}</button>
+                </div>
               </div>
             </div>
-          </template>
+          </div>
+
           <div class="products_chooseable_div">
             <div class="row" id="table_h_and_search">
               <h2 class="col mr-auto">Available Products</h2>
@@ -535,7 +546,7 @@ app.component('v-quote-list-product', {
           <input class="form-control" v-model="this.$root.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']" type=number>
         </div>
         <span class="col-7 quote_product_name">{{product.Name}}</span>
-        <span class="col-2">{{cost}} SEK</span>
+        <span class="col-auto">{{cost}} SEK</span>
       </li>
     `
 })
