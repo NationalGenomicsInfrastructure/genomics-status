@@ -117,7 +117,8 @@ app.component('v-pricing-quote', {
                 .then(response => {
                     pdata = response.data
                     this.proj_data['ngi_project_id'] = proj_id + ', '+pdata['project_name']+ ' ('+pdata['order_details']['title']+')'
-                    this.proj_data['user_and_affiliation'] = pdata['project_pi_name']+ ' / ' + pdata['affiliation']
+                    this.proj_data['pi_name'] = pdata['project_pi_name'] ? pdata['project_pi_name'] : ''
+                    this.proj_data['affiliation'] = pdata['affiliation']
                     this.proj_data['project_id'] = proj_id
                     if(pdata['type']==='Application'){
                       this.applProj = true
@@ -297,6 +298,7 @@ app.component('v-pricing-quote', {
             timestamp = Date.now()
             this.proj_data['agreement_number'] = this.proj_data['project_id'] + '_'+ timestamp
             agreement_data['project_data'] = this.proj_data
+            agreement_data['project_data']['user_and_affiliation'] = this.proj_data['pi_name']+ ' / ' + this.proj_data['affiliation']
             agreement_data['products_included'] = this.$root.quote_prod_ids
           }
           agreement_data['exchange_rate_issued_date'] = this.$root.exch_rate_issued_at
@@ -345,6 +347,11 @@ app.component('v-pricing-quote', {
               </div>
               <div class="row pt-2">
                 <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
+              </div>
+              <div>
+                <label for="pi_name" class="fw-bold pr-2">PI name</label>
+                <input type="text" id="pi_name" name="pi_name" v-model="proj_data['pi_name']">
+                <span v-if="!proj_data['pi_name'].length " class="text-danger pl-1">PI name is empty!</span>
               </div>
               <div class="p-2"> <h4>Agreement Summary</h4> </div>
               <div class="row mx-2">
