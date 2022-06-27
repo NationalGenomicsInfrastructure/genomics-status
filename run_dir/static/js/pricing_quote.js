@@ -431,8 +431,8 @@ app.component('v-pricing-quote', {
                           <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp">
                           <label class="form-check-label" :for="timestamp">
                           {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}}
-                          <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger far fa-file-signature fa-lg fs-6">
-                            Marked Signed {{ this.saved_agreement_data['signed_by'] }}, {{ timestamp_to_date(this.saved_agreement_data['signed_at']) }}</p>
+                          <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger fs-6">
+                          <i class="far fa-file-signature fa-lg"></i>  Marked Signed {{ this.saved_agreement_data['signed_by'] }}, {{ timestamp_to_date(this.saved_agreement_data['signed_at']) }}</p>
                           </label>
                         </div>
                   </template>
