@@ -12,6 +12,8 @@ import psycopg2
 from dateutil.parser import parse
 import ast
 
+#Control names can be found in the table controltype in the lims backend. Will continue to check against this list for now, should
+#consider incorporating a check against this table directly into the queries in the future
 control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
                     'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
                     'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
@@ -140,7 +142,8 @@ class SequencingQueuesDataHandler(SafeHandler):
                     'from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm '
                     'where art.artifactid=st.artifactid and st.stageid in (select stageid from stage where stepid={}) and st.completedbyid is null and '
                     'st.workflowrunid>0 and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and  s.processid=asm.processid and '
-                    'asm.artifactid=art.artifactid group by art.artifactid, st.lastmodifieddate, st.generatedbyid, ct.name, s.projectid;')
+                    'asm.artifactid=art.artifactid and s.name not in (select name from controltype) '
+                    'group by art.artifactid, st.lastmodifieddate, st.generatedbyid, ct.name, s.projectid;')
 
         #works for 2109, 1659
         #does not work for 1662, 1655, 1656
