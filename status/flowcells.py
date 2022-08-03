@@ -345,12 +345,13 @@ class FlowcellNotesDataHandler(SafeHandler):
                 lims_data = fc_doc.get('lims_data', {})
                 running_notes = lims_data.get('container_running_notes', {})
                 running_notes[str(datetime.datetime.now())] = newNote
+                lims_data['container_running_notes'] = running_notes
 
                 flowcell_link = "<a class='text-decoration-none' href='/flowcells/{0}'>{0}</a>".format(flowcell)
                 project_note = "#####*Running note posted on flowcell {}:*\n".format(flowcell_link)
                 project_note += note
 
-                fc_doc['lims_data']['container_running_notes'] = running_notes
+                fc_doc['lims_data'] = lims_data
                 self.application.x_flowcells_db.save(fc_doc)
                 #write running note to projects only if it has been saved successfully in FC
                 for project in projects:
