@@ -815,6 +815,13 @@ function load_samples_table(colOrder) {
                                    '</span>'+
                                    '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
                   }
+                  // Fragment Analyzer Image
+                  if (column_id == 'frag_an_image'){
+                      tbl_row += '<span class="caliper_loading_spinner">'+
+                                    '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                  '</span>'+
+                                  '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>';
+                  }
 
                   // Remove the X from initial QC initials
                   else if(column_id == 'initials'){
