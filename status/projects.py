@@ -505,6 +505,9 @@ class ProjectSamplesDataHandler(SafeHandler):
                     for agrId, libval in content["library_validation"].items():
                         if "caliper_image" in libval:
                             sample_data['library_prep'][lib_prep]['library_validation'][agrId]['caliper_image'] = self.reverse_url('CaliperImageHandler', project, sample, 'libval{0}'.format(lib_prep))
+                        if "frag_an_image" in libval:
+                            #Go grab the image from the sftp server
+                            sample_data['library_prep'][lib_prep]['library_validation'][agrId]['frag_an_image'] = self.reverse_url('FragAnImageHandler', project, sample, 'libval{0}'.format(lib_prep))
 
         if "details" in sample_data:
             for detail_key, detail_value in sample_data["details"].items():
@@ -622,9 +625,12 @@ class ImagesDownloadHandler(SafeHandler):
         import zipfile as zp
 
         name = ''
-        if type == 'frag_an':
+        if 'frag_an' in type:
             view = 'project/frag_an_links'
-            name = 'InitialQCFragmentAnalyser'
+            if 'libval' in type:
+                name = 'LibraryValidationFragmentAnalyser'
+            elif 'intial_qc' in type:
+                name = 'InitialQCFragmentAnalyser'
         else:
             view = 'project/caliper_links'
             if 'libval' in type:
@@ -649,9 +655,13 @@ class ImagesDownloadHandler(SafeHandler):
                     num_files +=1
                     for key in data[sample]:
                         img_file_name = sample + '.'
-                        if 'frag_an' in type and 'initial_qc' in key:
-                            img_file_name = img_file_name + 'png'
-                            zf.writestr(img_file_name, base64.b64decode(FragAnImageHandler.get_frag_an_image(data[sample][key])))
+                        if 'frag_an' in type:
+                            if 'initial_qc' in key:
+                                img_file_name = img_file_name + 'png'
+                                zf.writestr(img_file_name, base64.b64decode(FragAnImageHandler.get_frag_an_image(data[sample][key])))
+                            if 'libval' in key:
+                                img_file_name = img_file_name + key + '.'+ 'png'
+                                zf.writestr(img_file_name, base64.b64decode(FragAnImageHandler.get_frag_an_image(data[sample][key])))
                         elif 'caliper' in type:
                             checktype = type.split('_',1)[1]
                             if 'libval' in checktype:
