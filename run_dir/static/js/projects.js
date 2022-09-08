@@ -3,8 +3,7 @@ File: projects.js
 URL: /static/js/projects.js
 Powers /projects/ - template is run_dir/design/projects.html
 */
-
-// On page load
+var saved_filter={};
 $(function(){
 
   $('#pageInfo').on('click', function(){
@@ -34,8 +33,8 @@ $(function(){
       if(data!=null){
         setChangingDropdownValue($('#all_presets_dropdown'), data['origin'], data['preset']);
         if(data['origin']=='userdefined'){
-          $('#user_presets_dropdown').find(".btn").addClass('active');
-          setChangingDropdownValue($('#user_presets_dropdown'), data['origin'], data['preset']);
+          $('#user_presets_dropdown, #user_presets_dropdown_filter').find(".btn").addClass('active');
+          setChangingDropdownValue($('#user_presets_dropdown, #user_presets_dropdown_filter'), data['origin'], data['preset']);
           $('#formDeletePresetName').val(data['preset']);
           appendDeleteBtn(data['preset']);
           select_from_preset("users_presets_dropdown", data['preset']);
@@ -147,7 +146,7 @@ function load_table(status, type, columns, dates) {
     $("#project_table_body").empty();
     var size = 0;
     undefined_fields=[];
-    $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-outline-dark" data-clipboard-target="#project_table"><span class="fa fa-copy"></span> Copy table to clipboard</button><button type="button" id="filter_clear" class="btn btn-sm btn-outline-dark ml-2">Clear column filters</button>');
+    $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-outline-dark" data-clipboard-target="#project_table"><span class="fa fa-copy"></span> Copy table to clipboard</button><button type="button" class="btn btn-sm btn-outline-dark float-right" data-toggle="modal" data-target="#saveFilterModal">Save filtering/sorting to Preset</button>');
 
     $.each(data, function(project_id, summary_row) {
       $.each(summary_row, function(key,value){
@@ -326,7 +325,11 @@ function init_listjs(no_items, columns) {
           "destroy": true,
           "info":false,
           "order": [[ 0, "desc" ]],
-          stateSave: true
+          "stateSave": true,
+          "stateLoadCallback": function (settings) {
+          // read out the filter settings and apply
+              return saved_filter;
+            }
         });
     }
 
@@ -346,12 +349,6 @@ function init_listjs(no_items, columns) {
             .draw();
         } );
     } );
-
-    //Clears free text filtering and sorting of columns
-    $('#filter_clear').on('click', function(){
-        $('#project_table').DataTable().state.clear()
-    });
-
 }
 
 //Check or uncheck all fields from clicked category
@@ -404,15 +401,22 @@ function load_presets() {
     var userDefPresetsDropdown='<button id="inputPreset" class="btn btn-outline-dark dropdown-toggle wrapStyle" data-toggle="dropdown" type="button">\
       <i class="fa fa-user"></i> User defined Presets <span class="caret"></span></button>\
       <ul id="inputPresetul" class="dropdown-menu dropdown-menu-wide" role="menu" aria-labelledby="inputPreset">';
+
+    var userDefPresetsDropdownFilter='<button id="inputPresetFilter" class="btn btn-outline-dark dropdown-toggle wrapStyle dropDownFixedWidth" data-toggle="dropdown" type="button">\
+      <i class="fa fa-user"></i> User defined Presets <span class="caret"></span></button>\
+      <ul id="inputPresetFilterul" class="dropdown-menu dropdown-menu-wide" role="menu" aria-labelledby="inputPresetFilter">';
     // User presets, if there are any
     if (!jQuery.isEmptyObject(user_presets)) {
       for (var preset in user_presets) {
         userDefPresetsDropdown+='<li><a href="#" class="clickDropdownGetValue dropdown-item" style="cursor:pointer;" data-value="'+preset+'"> '+preset+'</a></li>';
+        userDefPresetsDropdownFilter+='<li><a href="#" class="clickDropdownGetValue dropdown-item" style="cursor:pointer;" data-value="'+preset+'"> '+preset+'</a></li>';
         allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue dropdown-item" style="cursor:pointer;" data-value="'+preset+'" data-origin="userdefined"">'+preset+'</a></li>';
       }
     }
     userDefPresetsDropdown+='</ul>';
+    userDefPresetsDropdownFilter+='</ul>';
     $('#user_presets_dropdown').append(userDefPresetsDropdown);
+    $('#user_presets_dropdown_filter').append(userDefPresetsDropdownFilter);
     allPresetsDropdownMod+='</ul>';
     $('#all_presets_dropdown').append(allPresetsDropdownMod);
 
@@ -428,6 +432,8 @@ function update_presets_onChange() {
     $('#inputStateAllul').remove();
     $('#inputPreset').remove();
     $('#inputPresetul').remove();
+    $('#inputPresetFilter').remove();
+    $('#inputPresetFilterul').remove();
     $('#default_preset_buttons').find('label').each(function(e){
       $(this).remove();
     })
@@ -505,6 +511,59 @@ $('body').on('click hidden.bs.dropdown', '.rBtngp2', function(event){
   read_current_filtering();
 });
 
+$('#saveFilterModal').on('show.bs.modal', function(e) {
+    if ($('#user_presets_dropdown .dropdown-toggle').hasClass('active')){
+      var preset = $('#user_presets_dropdown .dropdown-toggle').text();
+      $('#user_presets_dropdown_filter .dropdown-toggle').text(preset).addClass('disabled');
+    }
+    else if ($('#'+$('#default_preset_buttons').attr('for')).prop('checked', true)){
+      var preset = $("input[name='presetOptions']:checked").attr('data-value');
+      $('#user_presets_dropdown_filter .dropdown-toggle').text(preset).addClass('disabled');
+      $('#formFilterPresetName').prop('disabled', false);
+    }
+});
+
+$('#saveFilterBtn').click(function(e){
+  var presetFilterName = '';
+  if ($('#inputPreset').hasClass('active')){
+    //save to old usr def preset
+    presetFilterName = $('#user_presets_dropdown_filter .dropdown-toggle').text();
+  }
+  else {
+    //save new preset
+    presetFilterName=($.trim($('#formFilterPresetName').val())) + ' <span class="fa fa-filter-list"</span>';
+    if(presetFilterName=='Name...' || presetFilterName==''){
+      alert('Please enter a preset name!');
+      return;
+    }
+  }
+  var table_filter = $('#project_table').DataTable().state()
+  var userPage_api_url = "/api/v1/presets?savefilter="+$.trim(presetFilterName);
+  $.ajax({
+      type: 'POST',
+      dataType: 'json',
+      url: userPage_api_url,
+      data: JSON.stringify(table_filter),
+      error: function(xhr, textStatus, errorThrown) {
+        alert('There was an error in saving the preset: '+errorThrown);
+        $('#saveFilterBtn').removeClass('disabled').text('Apply');
+        console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(table_filter));
+      },
+      success: function(saved_data, textStatus, xhr) {
+        $('#saveFilterBtn').addClass('disabled').text('Saving...').delay(1500).queue(function(){ $('#saveFilterModal').modal('toggle'); $(this).removeClass('disabled').text('Save'); $(this).dequeue()});
+        setTimeout(function(){
+          $('#user_presets_dropdown_filter').find(".btn").addClass('active');
+          $('#user_presets_dropdown').find(".btn").addClass('active');
+          setChangingDropdownValue($('#user_presets_dropdown_filter'),'userdefined', presetFilterName);
+          setChangingDropdownValue($('#user_presets_dropdown'),'userdefined', presetFilterName);
+          $('#formDeletePresetName').val(presetFilterName);
+          appendDeleteBtn(presetFilterName);
+          select_from_preset("users_presets_dropdown", presetFilterName);
+        }, 100);
+      }
+    });
+});
+
 function read_current_filtering(){
   var columns = new Array();
   var preset;
@@ -565,13 +624,13 @@ function sel_from_ps(preset_type, preset, data){
   else if (preset_type == "users_presets_dropdown") {
     resetReorderFields();
     var choices = data['user'][preset];
+    var order="";
     for (column in choices) {
       if(column.indexOf('COLUMNS')!=-1){
         for (choice in choices[column]) {
           var column_id = 'allFields-'+column.toLowerCase().replace(/_/g, '-') + '-' + choice.replace(/\(|\)/g, '');
           $("#"+column_id).prop('checked', true);
         }
-        order="";
         if(choices['COLUMNORDER'])
           order=choices['COLUMNORDER'];
       }
@@ -594,6 +653,9 @@ function sel_from_ps(preset_type, preset, data){
           $('#inp_date_4').val(choices[column]['new_queue_date']);
           $('#inp_date_5').val(choices[column]['old_close_date']);
           $('#inp_date_6').val(choices[column]['new_close_date']);
+        }
+        if(column.indexOf('FILTER')!=-1){
+          saved_filter=choices[column];
         }
       }
     }
@@ -990,6 +1052,9 @@ $(document).keypress(function(e) {
   }
   if ($("#deleteModal").hasClass('in') && (e.keycode == 13 || e.which == 13)) {
     $("#deletePresetBtnModal").trigger('click');
+  }
+  if ($("#saveFilterModal").hasClass('in') && (e.keycode == 13 || e.which == 13)) {
+    $("#saveFilterBtn").trigger('click');
   }
 });
 

@@ -75,8 +75,15 @@ class PresetsHandler(SafeHandler):
             preset_name = self.get_argument('delete')
             del doc['userpreset'][preset_name]
 
+        if self.get_arguments('savefilter'):
+            preset_filter = self.get_argument('savefilter')
+            data = json.loads(self.request.body)
+            doc['userpreset']={ preset_filter:{'FILTER':data} }
+
         try:
-            self.application.gs_users_db.save(doc)
+            #don't save until PR done
+            print(doc['userpreset'])
+            #otherwise save with self.application.gs_users_db.save(doc)
         except Exception as e:
             self.set_status(400)
             self.write(e.message)
@@ -427,7 +434,7 @@ class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
     """
     def get(self):
         undefined = self.get_argument("undefined", "False")
-        undefined = (undefined.lower() == "true")
+        undefined = (undefined.lower() == "True")
         project_list = self.get_argument("project_list", "all")
         field_items = self.list_project_fields(undefined=undefined, project_list=project_list)
         self.write(json.dumps(list(field_items)))

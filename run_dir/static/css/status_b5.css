@@ -608,6 +608,23 @@ width:30%;
     min-width: 150px;
 }
 
+
+/*
+=== Projects page ===
+*/
+
+#saveFilterModal .modal-footer {
+  padding: 0.25em;
+}
+
+#user_presets_dropdown_filter > .btn {
+  text-align: left;
+}
+
+.dropDownFixedWidth {
+  width: 200px;
+}
+
 /*
 === Homepage ===
 */

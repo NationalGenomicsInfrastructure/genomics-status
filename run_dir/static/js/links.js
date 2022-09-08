@@ -27,7 +27,7 @@ function load_links() {
       $("#existing_links_projinfo").append('<tr><td>'+
       '<div><a class="pr-2"'+link_href+'>'+
         '<span style="font-size:18px;" class="fa fa-'+link_icon[link['type']]+'"></span></a>'+
-        '<span class="align-top"><a class="text-decoration-none" "'+link_href+'>'+link['title']+'</a>'
+        '<span class="align-top"><a class="text-decoration-none" "'+link_href+'target="_blank"'+'>'+link['title']+'</a>'
         +'</td><td>'+link['desc']+'<small> &nbsp;<a class="text-decoration-none" href="mailto:'+link['email']+'">'+link['user']+'</a>'+
         ' - '+date.toDateString()+'</span></td></tr>');
       $("#existing_links").append('<div class="link_wrapper"> \
