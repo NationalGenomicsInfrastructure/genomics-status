@@ -527,7 +527,7 @@ $('#saveFilterBtn').click(function(e){
   var presetFilterName = '';
   if ($('#inputPreset').hasClass('active')){
     //save to old usr def preset
-    presetFilterName = $('#user_presets_dropdown_filter .dropdown-toggle').text();
+    presetFilterName = ($('#user_presets_dropdown_filter .dropdown-toggle').text()) + ' <span class="fa fa-filter-list"</span>';
   }
   else {
     //save new preset
