@@ -78,12 +78,12 @@ class PresetsHandler(SafeHandler):
         if self.get_arguments('savefilter'):
             preset_filter = self.get_argument('savefilter')
             data = json.loads(self.request.body)
-            doc['userpreset']={ preset_filter:{'FILTER':data} }
+            if 'userpreset' in doc and preset_filter in doc['userpreset']:
+                doc['userpreset'][preset_filter]['FILTER'] = data
 
         try:
-            #don't save until PR done
             print(doc['userpreset'])
-            #otherwise save with self.application.gs_users_db.save(doc)
+            self.application.gs_users_db.save(doc)
         except Exception as e:
             self.set_status(400)
             self.write(e.message)
