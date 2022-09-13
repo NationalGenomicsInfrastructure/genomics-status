@@ -38,8 +38,8 @@ $(function(){
       if(data!=null){
         setChangingDropdownValue($('#all_presets_dropdown'), data['origin'], data['preset']);
         if(data['origin']=='userdefined'){
-          $('#user_presets_dropdown, #user_presets_dropdown_filter').find(".btn").addClass('active');
-          setChangingDropdownValue($('#user_presets_dropdown, #user_presets_dropdown_filter'), data['origin'], data['preset']);
+          $('#user_presets_dropdown').find(".btn").addClass('active');
+          setChangingDropdownValue($('#user_presets_dropdown'), data['origin'], data['preset']);
           $('#formDeletePresetName').val(data['preset']);
           appendDeleteBtn(data['preset']);
           select_from_preset("users_presets_dropdown", data['preset']);
@@ -331,7 +331,7 @@ function init_listjs(no_items, columns) {
           "info":false,
           "order": [[ 0, "desc" ]],
           "stateSave": true,
-          "stateLoadCallback": function (settings) {
+          "stateLoadCallback": function () {
           // read out the filter settings and apply
               return saved_filter;
             }
@@ -407,21 +407,15 @@ function load_presets() {
       <i class="fa fa-user"></i> User defined Presets <span class="caret"></span></button>\
       <ul id="inputPresetul" class="dropdown-menu dropdown-menu-wide" role="menu" aria-labelledby="inputPreset">';
 
-    var userDefPresetsDropdownFilter='<button id="inputPresetFilter" class="btn btn-outline-dark dropdown-toggle wrapStyle dropDownFixedWidth" data-toggle="dropdown" type="button">\
-      <i class="fa fa-user"></i> User defined Presets <span class="caret"></span></button>\
-      <ul id="inputPresetFilterul" class="dropdown-menu dropdown-menu-wide" role="menu" aria-labelledby="inputPresetFilter">';
     // User presets, if there are any
     if (!jQuery.isEmptyObject(user_presets)) {
       for (var preset in user_presets) {
         userDefPresetsDropdown+='<li><a href="#" class="clickDropdownGetValue dropdown-item" style="cursor:pointer;" data-value="'+preset+'"> '+preset+'</a></li>';
-        userDefPresetsDropdownFilter+='<li><a href="#" class="clickDropdownGetValue dropdown-item" style="cursor:pointer;" data-value="'+preset+'"> '+preset+'</a></li>';
         allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue dropdown-item" style="cursor:pointer;" data-value="'+preset+'" data-origin="userdefined"">'+preset+'</a></li>';
       }
     }
     userDefPresetsDropdown+='</ul>';
-    userDefPresetsDropdownFilter+='</ul>';
     $('#user_presets_dropdown').append(userDefPresetsDropdown);
-    $('#user_presets_dropdown_filter').append(userDefPresetsDropdownFilter);
     allPresetsDropdownMod+='</ul>';
     $('#all_presets_dropdown').append(allPresetsDropdownMod);
 
@@ -437,8 +431,6 @@ function update_presets_onChange() {
     $('#inputStateAllul').remove();
     $('#inputPreset').remove();
     $('#inputPresetul').remove();
-    $('#inputPresetFilter').remove();
-    $('#inputPresetFilterul').remove();
     $('#default_preset_buttons').find('label').each(function(e){
       $(this).remove();
     })
@@ -523,7 +515,7 @@ $(document).on('click', '#saveFilter', function() {
     //if user-defined preset selected, save to old preset
     presetFilterName=$('#user_presets_dropdown .dropdown-toggle').text();
     if (sort_preset !== presetFilterName){
-      //if selected preset does not match the loaded preset
+      //if selected preset does not match the loaded preset, otherwise in won't apply to the correct preset
       alert('Click "Load Table" to save to Preset');
     }
     else {
@@ -555,7 +547,9 @@ $(document).on('click', '#saveFilter', function() {
   }
   else if ($('input[name="presetOptions"]:checked')){
     //if default preset selected
-    alert('Please select a user-defined Preset'); } });
+    alert('Please select a user-defined Preset'); 
+  }
+});
 
 function read_current_filtering(){
   var columns = new Array();

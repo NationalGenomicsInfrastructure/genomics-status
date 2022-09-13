@@ -82,7 +82,6 @@ class PresetsHandler(SafeHandler):
                 doc['userpreset'][preset_filter]['FILTER'] = data
 
         try:
-            print(doc['userpreset'])
             self.application.gs_users_db.save(doc)
         except Exception as e:
             self.set_status(400)
