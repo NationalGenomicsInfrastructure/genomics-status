@@ -409,7 +409,6 @@ function load_presets() {
     var userDefPresetsDropdown='<button id="inputPreset" class="btn btn-outline-dark dropdown-toggle wrapStyle" data-toggle="dropdown" type="button">\
       <i class="fa fa-user"></i> User defined Presets <span class="caret"></span></button>\
       <ul id="inputPresetul" class="dropdown-menu dropdown-menu-wide" role="menu" aria-labelledby="inputPreset">';
-
     // User presets, if there are any
     if (!jQuery.isEmptyObject(user_presets)) {
       for (var preset in user_presets) {
@@ -519,7 +518,7 @@ $(document).on('click', '#saveFilter', function() {
     presetFilterName=$('#user_presets_dropdown .dropdown-toggle').text();
     if (sort_preset !== presetFilterName){
       //if selected preset does not match the loaded preset, otherwise in won't apply to the correct preset
-      alert('The selected Preset does not match the table, please click "Load Table" and apply the sorting/filtering again');
+      alert('The selected Preset does not match the table, please click "Load Table" and redo the sorting/filtering again to save it.');
     }
     else {
       //save
