@@ -9,6 +9,7 @@ var saved_filter={};
 //sorted/filtered preset to be saved
 var sort_preset='';
 
+// On page load
 $(function(){
 
   $('#pageInfo').on('click', function(){
