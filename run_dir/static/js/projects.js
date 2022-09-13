@@ -151,8 +151,11 @@ function load_table(status, type, columns, dates) {
     $("#project_table_body").empty();
     var size = 0;
     undefined_fields=[];
-    $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-outline-dark" data-clipboard-target="#project_table"><span class="fa fa-copy"></span> Copy table to clipboard</button><button type="submit" class="btn btn-sm btn-primary float-right" id="saveFilter">Save filtering/sorting to Preset</button>');
-
+    $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-outline-dark" data-clipboard-target="#project_table"><span class="fa fa-copy"></span> Copy table to clipboard</button>');
+    if ($('#user_presets_dropdown .dropdown-toggle').hasClass('active')){
+      //only add sorting/filtering save button if user-defined preset is loaded
+      $("#copyTable").append('<button type="submit" class="btn btn-sm btn-primary float-right" id="saveFilter">Save filtering/sorting to Preset</button>').html();
+    }
     $.each(data, function(project_id, summary_row) {
       $.each(summary_row, function(key,value){
         //this tracks the fields existing in our projects objects, but not present in the filter tab yet.
@@ -516,7 +519,7 @@ $(document).on('click', '#saveFilter', function() {
     presetFilterName=$('#user_presets_dropdown .dropdown-toggle').text();
     if (sort_preset !== presetFilterName){
       //if selected preset does not match the loaded preset, otherwise in won't apply to the correct preset
-      alert('Click "Load Table" to save to Preset');
+      alert('The selected Preset does not match the table, please click "Load Table" and apply the sorting/filtering again');
     }
     else {
       //save
@@ -529,18 +532,11 @@ $(document).on('click', '#saveFilter', function() {
         data: JSON.stringify(table_filter),
         error: function(xhr, textStatus, errorThrown) {
           alert('There was an error in saving the preset: '+errorThrown);
-          $('#saveFilter').removeClass('disabled').text('Apply');
+          $('#saveFilter').removeClass('disabled').text('Error saving');
           console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(table_filter));
         },
         success: function(saved_data, textStatus, xhr) {
           $('#saveFilter').addClass('disabled').text('Saving...').delay(1500).queue(function(){$(this).removeClass('disabled').text('Save filtering/sorting to Preset'); $(this).dequeue()});
-          setTimeout(function(){
-            $('#user_presets_dropdown').find(".btn").addClass('active');
-            setChangingDropdownValue($('#user_presets_dropdown'),'userdefined', presetFilterName);
-            $('#formDeletePresetName').val(presetFilterName);
-            appendDeleteBtn(presetFilterName);
-            select_from_preset("users_presets_dropdown", presetFilterName);
-          }, 100);
         }
       });
     }
@@ -795,6 +791,12 @@ function dealWithDatepickers(datepick, option){
 $('.loadTablebtns').click(function(e){
   if ($('#user_presets_dropdown .dropdown-toggle').hasClass('active')){
     sort_preset=$('#user_presets_dropdown .dropdown-toggle').text();
+  }
+  else if ($('input[name="presetOptions"]:checked')){
+    if ($('#saveFilter').length > 0){
+      //hide sorting/filtering save button if exists when default preset loaded
+      $("#saveFilter").hide();
+    }
   }
   getTableParamsandLoad();
 });
