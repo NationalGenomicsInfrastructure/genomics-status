@@ -34,12 +34,12 @@ function load_links() {
                                     <div class="container"> \
                                     <div class="row justify-content-center">  \
                                       <div class="col-1 pr-0"> \
-                                        <a class="float-right"'+link_href+'><i style="font-size:18px;" class="fa fa-'+link_icon[link['type']]+'"></i> \
+                                        <a class="float-right"'+link_href+' target="_blank"'+'><i style="font-size:18px;" class="fa fa-'+link_icon[link['type']]+'"></i> \
                                         </a> \
                                       </div> \
                                       <div class="col-9"> \
                                         <h4> \
-                                          <a class="text-decoration-none" "'+link_href+'>'+link['title']+'</a> \
+                                          <a class="text-decoration-none" "'+link_href+' target="_blank"''>'+link['title']+'</a> \
                                           <small> \
                                           <a class="text-decoration-none" href="mailto:'+link['email']+'">'+link['user']+'</a> - '+date.toDateString()+' \
                                           </small> \
