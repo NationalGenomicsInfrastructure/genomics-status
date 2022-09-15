@@ -25,7 +25,7 @@ function load_links() {
       date = date.replace(/\.\d{6}/, '');
       date = new Date(date);
       $("#existing_links_projinfo").append('<tr><td>'+
-      '<div><a class="pr-2"'+link_href+'>'+
+      '<div><a class="pr-2"'+link_href+' target="_blank">'+
         '<span style="font-size:18px;" class="fa fa-'+link_icon[link['type']]+'"></span></a>'+
         '<span class="align-top"><a class="text-decoration-none" "'+link_href+' target="_blank"'+'>'+link['title']+'</a>'
         +'</td><td>'+link['desc']+'<small> &nbsp;<a class="text-decoration-none" href="mailto:'+link['email']+'">'+link['user']+'</a>'+
