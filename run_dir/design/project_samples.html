@@ -480,17 +480,6 @@ Description: Details page for a single project
               </div>
               {% end %}
             </div>
-            <div class="col-sm-3" id="bioinfo-columns">
-              <h4 class="search-action" data-action="filterHeader">Bioinfo <input class="headingCheckbox" type="checkbox"></h4>
-              {% for col_display_name, col_name in columns_sample['BIOINFO_COLUMNS'].items() %}
-              <div class="form-check">
-                <input type="checkbox" class="form-check-input filterCheckbox" data-columngroup="bioinfo-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="bioinfo-columns-{{col_name}}">
-                <label class="form-check-label" for="bioinfo-columns-{{col_name}}">
-                  {{col_display_name}}
-                </label>
-              </div>
-              {% end %}
-            </div>
             <div class="col-sm-3" id="tissue-columns">
               <h4 class="search-action" data-action="filterHeader">Tissue <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['TISSUE_COLUMNS'].items() %}

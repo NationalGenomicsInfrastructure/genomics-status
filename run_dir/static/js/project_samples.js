@@ -863,23 +863,6 @@ function load_samples_table(colOrder) {
             });
             tbl_row += '</td>';
         }
-        else if (value[2] == "bioinfo-columns" && info['run_metrics_data'] !== undefined) {
-            tbl_row += '<td class="' + column_id + '">';
-            $.each(info['run_metrics_data'], function(rmd, rmid) {
-              val=parseFloat(rmid[column_id])
-              if (val === 'NaN'){
-                  tbl_row += auto_format(rmid[column_id]);
-              }else{
-               if(val % 1 === 0){
-                  tbl_row += auto_format(val);
-               }else{
-                  tbl_row += auto_format(val.toFixed(2));
-               }
-              }
-              tbl_row+='<br />';
-            });
-            tbl_row += '</td>';
-        }
 
         // Details columns
         else {
