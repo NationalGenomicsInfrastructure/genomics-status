@@ -1,8 +1,6 @@
 """ Handlers for sequencing project information.
 """
 import json
-import traceback
-
 import tornado.web
 import dateutil.parser
 import datetime
@@ -20,17 +18,12 @@ import nest_asyncio
 import itertools
 import unicodedata
 
-from collections import defaultdict
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
 from dateutil.relativedelta import relativedelta
 
 from genologics import lims
-from genologics.entities import Project
-from genologics.entities import Sample
-from genologics.entities import Process
-from genologics.entities import Artifact
-from genologics.entities import Protocol
+from genologics.entities import Project, Sample, Process, Artifact, Protocol
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
 from zenpy import Zenpy, ZenpyException
@@ -492,14 +485,12 @@ class ProjectSamplesDataHandler(SafeHandler):
         sample_data["sample_run_metrics"] = []
         sample_data["prep_status"] = []
         sample_data["prep_finished_date"] = []
-        sample_data["run_metrics_data"]={}
         if "library_prep" in sample_data:
             for lib_prep in sorted(sample_data["library_prep"]):
                 content=sample_data["library_prep"][lib_prep]
                 if "sample_run_metrics" in content:
                     for run, id in content["sample_run_metrics"].items():
                         sample_data["sample_run_metrics"].append(run)
-                        sample_data["run_metrics_data"][run]=self.get_sample_run_metrics(run)
                 if "prep_status" in content:
                     if content["prep_status"] == "PASSED":
                         sample_data["prep_status"].append(content["prep_status"])
@@ -538,17 +529,6 @@ class ProjectSamplesDataHandler(SafeHandler):
             sample_data = self.sample_data(sample_data, project, sample)
             output[sample] = sample_data
         return output
-
-    def get_sample_run_metrics(self, metrics_id):
-        data={}
-        metrics_view=self.application.samples_db.view('sample/INS_metrics')
-        if len(metrics_view[metrics_id].rows)>1:
-            application_log.warn("More than one metrics doc found for id {0}".format(metrics_id))
-
-        for row in metrics_view[metrics_id]:
-            data=row.value
-
-        return data
 
     def get(self, project):
         self.set_header("Content-type", "application/json")

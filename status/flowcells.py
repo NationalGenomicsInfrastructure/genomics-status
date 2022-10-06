@@ -227,24 +227,6 @@ class OldFlowcellsInfoDataHandler(SafeHandler):
         return flowcell_info
 
 
-class FlowcellDataHandler(SafeHandler):
-    """ Serves a list of sample runs in a flowcell.
-
-    Loaded through /api/v1/flowcells/([^/]*)$ url
-    """
-    def get(self, flowcell):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_sample_runs(flowcell)))
-
-    def list_sample_runs(self, flowcell):
-        sample_run_list = []
-        fc_view = self.application.samples_db.view("flowcell/name", reduce=False)
-        for row in fc_view[flowcell]:
-            sample_run_list.append(row.value)
-
-        return sample_run_list
-
-
 class FlowcellQCHandler(SafeHandler):
     """ Serves QC data for each lane in a given flowcell.
 

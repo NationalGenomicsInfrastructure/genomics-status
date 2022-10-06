@@ -56,21 +56,6 @@ class TestGet(object):
         r = requests.get(self.url + '/api/v1' + '/test/' + id)
         assert_true(r.ok)
 
-    def test_api_samples(self):
-        """ Testing:
-        '/api/v1/sample_info/([^/]*)$',
-        """
-        sample_id1 = self.test_items['samples']['sample_id1']
-        sample_id2 = self.test_items['samples']['sample_id2']
-
-        url = self.url + '/api/v1/'
-        urls = [url + 'sample_info/' + sample_id1,
-                url + 'sample_info/' + sample_id2]
-
-        error_pages = list(filter(lambda u: not requests.get(u).ok, urls))
-        assert_true(len(error_pages) == 0,
-                    msg=('Sample requests resulted in error {0} '.format(error_pages)))
-
     def test_api_misc(self):
         """ Testing:
         '/api/v1/project_summary/([^/]*)$'
