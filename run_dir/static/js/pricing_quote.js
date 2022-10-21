@@ -491,7 +491,7 @@ app.component('v-pricing-quote', {
                             (Internal projects)
                             </template>
                           </div>
-                          <p class="text-right col-3 pt-2 fw-bold pr-0">{{product_cost_sum[this.$root.price_type].toFixed(2)}} SEK</p>
+                          <p class="text-right col-3 pt-2 fw-bold pr-0">{{quote_cost[this.$root.price_type]}} SEK </p>
                         </li>
                       </ul>
 
