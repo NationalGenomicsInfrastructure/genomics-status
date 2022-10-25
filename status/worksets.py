@@ -67,7 +67,7 @@ class WorksetsHandler(SafeHandler):
         headers= [['Date Run', 'date_run'],['Workset Name', 'workset_name'], \
                  ['Projects (samples)','projects'],['Sequencing Setup', 'sequencing_setup'], \
                  ['Date finished', 'finish date'],['Operator', 'technician'], \
-                 ['Application', 'application'],['Library','library_method'], \
+                 ['Application', 'application'],['Library','library_method'],['Option','library_option'], \
                  ['Samples Passed', 'passed'],['Samples Failed', 'failed'] , \
                  ['Pending Samples', 'unknown'],['Total samples', 'total'], \
                  ['Latest workset note', 'Workset Notes'],['Closed Worksets', 'closed_ws']];
