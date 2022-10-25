@@ -37,8 +37,7 @@ from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRates
     PricingDataHandler, PricingDraftDataHandler, GenerateQuoteHandler, AgreementTemplateTextHandler, \
     AgreementDataHandler, AgreementMarkSignHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
-    DeliveredQuarterlyPlotHandler, ProducedMonthlyDataHandler, ProducedMonthlyPlotHandler, ProducedQuarterlyDataHandler, \
-    ProducedQuarterlyPlotHandler, ProductionCronjobsHandler
+    DeliveredQuarterlyPlotHandler, ProductionCronjobsHandler
 from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, \
@@ -52,10 +51,6 @@ from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.sample_requirements import SampleRequirementsViewHandler, SampleRequirementsDataHandler, SampleRequirementsUpdateHandler, \
     SampleRequirementsDraftDataHandler, SampleRequirementsValidateDraftDataHandler, SampleRequirementsPreviewHandler, SampleRequirementsReassignLockDataHandler, \
     SampleRequirementsPublishDataHandler
-from status.samples import SampleInfoDataHandler, SampleQCAlignmentDataHandler, SampleQCCoverageDataHandler, \
-    SampleQCDataHandler, SampleQCInsertSizesDataHandler, SampleQCSummaryDataHandler, \
-    SampleReadCountDataHandler, SampleRunDataHandler, SampleRunReadCountDataHandler, SamplesPerLaneDataHandler, \
-    SamplesPerLanePlotHandler
 from status.sensorpush import SensorpushDataHandler, SensorpushHandler
 from status.sequencing import InstrumentClusterDensityPlotHandler, InstrumentErrorratePlotHandler, InstrumentUnmatchedPlotHandler, \
     InstrumentYieldPlotHandler, InstrumentClusterDensityDataHandler, InstrumentErrorrateDataHandler, InstrumentUnmatchedDataHandler, \
@@ -64,7 +59,7 @@ from status.statistics import YearApplicationsProjectHandler, YearApplicationsSa
     ApplicationOpenProjectsHandler, ApplicationOpenSamplesHandler, WeekInstrumentTypeYieldHandler, StatsAggregationHandler, YearDeliverytimeApplicationHandler
 from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
-from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, PagedQCDataHandler, \
+from status.util import BaseHandler, DataHandler, LastPSULRunHandler, MainHandler, \
     UpdatedDocumentsDatahandler
 from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b5
 from status.worksets import WorksetHandler, WorksetsHandler, WorksetDataHandler, WorksetLinksHandler, WorksetNotesDataHandler, \
@@ -123,7 +118,6 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_demultiplex/([^/]*)$",
                 FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
-            # ("/api/v1/flowcells/([^/]*)$", FlowcellDataHandler),
             ("/api/v1/flowcell_notes/([^/]*)$", FlowcellNotesDataHandler),
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
@@ -149,9 +143,6 @@ class Application(tornado.web.Application):
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/libpooling_queues", LibraryPoolingQueuesDataHandler),
-            ("/api/v1/plot/samples_per_lane.png",
-                SamplesPerLanePlotHandler),
-            ("/api/v1/samples_per_lane", SamplesPerLaneDataHandler),
             ("/api/v1/mark_agreement_signed", AgreementMarkSignHandler),
             ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
             ("/api/v1/pricing_exchange_rates", PricingExchangeRatesDataHandler),
@@ -159,10 +150,6 @@ class Application(tornado.web.Application):
             ("/api/v1/pricing_reassign_lock", PricingReassignLockDataHandler),
             ("/api/v1/pricing_validate_draft", PricingValidateDraftDataHandler),
             ("/api/v1/prio_projects", PrioProjectsTableHandler),
-            ("/api/v1/produced_monthly", ProducedMonthlyDataHandler),
-            ("/api/v1/produced_monthly.png", ProducedMonthlyPlotHandler),
-            ("/api/v1/produced_quarterly", ProducedQuarterlyDataHandler),
-            ("/api/v1/produced_quarterly.png", ProducedQuarterlyPlotHandler),
             ("/api/v1/proj_staged/([^/]*)$", DataDeliveryHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project/([^/]*)$", ProjectSamplesDataHandler),
@@ -172,28 +159,15 @@ class Application(tornado.web.Application):
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
-            ("/api/v1/qc/([^/]*)$", SampleQCDataHandler),
             ("/api/v1/projectqc/([^/]*)$", ProjectQCDataHandler),
             ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
             ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
             ("/api/v1/links/([^/]*)$", LinksDataHandler),
-            ("/api/v1/sample_info/([^/]*)$", SampleInfoDataHandler),
-            ("/api/v1/sample_readcount/(\w+)?", SampleReadCountDataHandler),
-            ("/api/v1/sample_run_counts/(\w+)?",
-                SampleRunReadCountDataHandler),
-            ("/api/v1/sample_alignment/([^/]*)$",
-                SampleQCAlignmentDataHandler),
-            ("/api/v1/sample_coverage/([^/]*)$", SampleQCCoverageDataHandler),
-            ("/api/v1/sample_summary/([^/]*)$", SampleQCSummaryDataHandler),
-            ("/api/v1/sample_insert_sizes/([^/]*)$",
-                SampleQCInsertSizesDataHandler),
             ("/api/v1/sample_requirements", SampleRequirementsDataHandler),
             ("/api/v1/sample_requirements_publish_draft", SampleRequirementsPublishDataHandler),
             ("/api/v1/sample_requirements_validate_draft", SampleRequirementsValidateDraftDataHandler),
             ("/api/v1/sample_requirements_reassign_lock", SampleRequirementsReassignLockDataHandler),
-            ("/api/v1/samples/start/([^/]*)$", PagedQCDataHandler),
-            ("/api/v1/samples/([^/]*)$", SampleRunDataHandler),
             ("/api/v1/sequencing_queues", SequencingQueuesDataHandler),
             ("/api/v1/sensorpush", SensorpushDataHandler),
             ("/api/v1/stats",StatsAggregationHandler),
@@ -278,7 +252,6 @@ class Application(tornado.web.Application):
             self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
             self.projects_db = couch["projects"]
             self.sample_requirements_db = couch["sample_requirements"]
-            self.samples_db = couch["samples"]
             self.sensorpush_db = couch["sensorpush"]
             self.server_status_db = couch['server_status']
             self.suggestions_db = couch["suggestion_box"]

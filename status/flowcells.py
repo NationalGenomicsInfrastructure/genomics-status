@@ -12,6 +12,7 @@ from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 from status.util import SafeHandler
 from status.projects import RunningNotesDataHandler
+from status.flowcell import FlowcellHandler
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
@@ -226,24 +227,6 @@ class OldFlowcellsInfoDataHandler(SafeHandler):
         return flowcell_info
 
 
-class FlowcellDataHandler(SafeHandler):
-    """ Serves a list of sample runs in a flowcell.
-
-    Loaded through /api/v1/flowcells/([^/]*)$ url
-    """
-    def get(self, flowcell):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_sample_runs(flowcell)))
-
-    def list_sample_runs(self, flowcell):
-        sample_run_list = []
-        fc_view = self.application.samples_db.view("flowcell/name", reduce=False)
-        for row in fc_view[flowcell]:
-            sample_run_list.append(row.value)
-
-        return sample_run_list
-
-
 class FlowcellQCHandler(SafeHandler):
     """ Serves QC data for each lane in a given flowcell.
 
@@ -305,16 +288,15 @@ class FlowcellNotesDataHandler(SafeHandler):
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
-        try:
-            p=get_container_from_id(flowcell)
-        except (KeyError, IndexError) as e:
+        doc_id = FlowcellHandler.find_DB_entry(self, flowcell).id
+        if not doc_id:
+            self.write('{}')
+        fc_doc = self.application.x_flowcells_db[doc_id]
+        lims_data = fc_doc.get('lims_data')
+        if not lims_data:
             self.write('{}')
         else:
-            # Sorted running notes, by date
-            try:
-                running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
-            except (KeyError) as e:
-                running_notes = {}
+            running_notes = lims_data.get('container_running_notes', {})
             sorted_running_notes = OrderedDict()
             for k, v in sorted(running_notes.items(), key=lambda t: t[0], reverse=True):
                 sorted_running_notes[k] = v
@@ -335,21 +317,24 @@ class FlowcellNotesDataHandler(SafeHandler):
             self.finish('<html><body>No note parameters found</body></html>')
         else:
             newNote = {'user': user.name, 'email': user.email, 'note': note, 'category': category}
-            try:
-                p=get_container_from_id(flowcell)
-            except (KeyError, IndexError) as e:
+
+            doc_id = FlowcellHandler.find_DB_entry(self, flowcell).id
+            if not doc_id:
                 self.set_status(400)
                 self.write('Flowcell not found')
             else:
-                running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
+                fc_doc = self.application.x_flowcells_db[doc_id]
+                lims_data = fc_doc.get('lims_data', {})
+                running_notes = lims_data.get('container_running_notes', {})
                 running_notes[str(datetime.datetime.now())] = newNote
+                lims_data['container_running_notes'] = running_notes
 
                 flowcell_link = "<a class='text-decoration-none' href='/flowcells/{0}'>{0}</a>".format(flowcell)
                 project_note = "#####*Running note posted on flowcell {}:*\n".format(flowcell_link)
                 project_note += note
 
-                p.udf['Notes'] = json.dumps(running_notes)
-                p.put()
+                fc_doc['lims_data'] = lims_data
+                self.application.x_flowcells_db.save(fc_doc)
                 #write running note to projects only if it has been saved successfully in FC
                 for project in projects:
                     RunningNotesDataHandler.make_project_running_note(

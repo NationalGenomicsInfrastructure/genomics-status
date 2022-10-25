@@ -73,7 +73,11 @@ const vPricingMain = {
 
 
             for (category in prod_per_cat) {
-                sorted_products = prod_per_cat[category].sort(this.sortProducts)
+                if ( category == "New products" ) {
+                    sorted_products = prod_per_cat[category].sort(this.sortProductsByID)
+                } else {
+                    sorted_products = prod_per_cat[category].sort(this.sortProducts)
+                }
                 prod_per_cat[category] = sorted_products
             }
             return prod_per_cat
@@ -134,7 +138,11 @@ const vPricingMain = {
 
 
             for (category in comp_per_cat) {
-                sorted_components = comp_per_cat[category].sort(this.sortComponents)
+                if (category == 'New components') {
+                    sorted_components = comp_per_cat[category].sort(this.sortComponentsByID)
+                } else {
+                    sorted_components = comp_per_cat[category].sort(this.sortComponents)
+                }
                 comp_per_cat[category] = sorted_components
             }
 
@@ -489,12 +497,34 @@ const vPricingMain = {
                 return 0;
             }
         },
+        sortComponentsByID(firstComp, secondComp) {
+            // Comparison function used to sort components on ID within a category, used for
+            // new components
+            if (firstComp['ID'] < secondComp['ID']) {
+                return -1;
+            } else if (firstComp['ID'] > secondComp['ID']) {
+                return 1;
+            } else {
+                return 0;
+            }
+        },
         sortProducts(firstProd, secondProd) {
             /* Comparison function used to sort products on name within each category
              */
             if (firstProd['Name'] < secondProd['Name']) {
                 return -1;
             } else if (firstProd['Name'] > secondProd['Name']) {
+                return 1;
+            } else {
+                return 0;
+            }
+        },
+        sortProductsByID(firstProd, secondProd) {
+            /* Comparison function used to sort products on name within each category
+             */
+            if (firstProd['ID'] < secondProd['ID']) {
+                return -1;
+            } else if (firstProd['ID'] > secondProd['ID']) {
                 return 1;
             } else {
                 return 0;
@@ -581,12 +611,12 @@ app.component('v-exchange-rates', {
       /*html*/`
       <h4>Exchange rates</h4>
       <dl class="row">
-        <dt class="col-md-4 text-right">1 USD</dt>
-        <dd class="col-md-8"><span id='exch_rate_usd'>{{USD_in_SEK}}</span></dd>
-        <dt class="col-md-4 text-right">1 EUR</dt>
-        <dd class="col-md-8"><span id='exch_rate_eur'>{{EUR_in_SEK}}</span></dd>
-        <dt class="col-md-4 text-right">Issued at</dt>
-        <dd class="col-md-8"><span id='exch_rate_issued_at'>{{issued_at}}</span>
+        <dt class="col-md-2 text-right">1 USD</dt>
+        <dd class="col-md-10"><span id='exch_rate_usd'>{{USD_in_SEK}}</span></dd>
+        <dt class="col-md-2 text-right">1 EUR</dt>
+        <dd class="col-md-10"><span id='exch_rate_eur'>{{EUR_in_SEK}}</span></dd>
+        <dt class="col-md-2 text-right">Issued at</dt>
+        <dd class="col-md-10"><span id='exch_rate_issued_at'>{{issued_at}}</span>
           <a v-if="mutable" href="#" data-toggle="modal" data-target="#exch_rate_modal"> (Change)</a>
         </dd>
       </dl>
@@ -687,9 +717,6 @@ app.component('v-products-table', {
             <th class="sort" data-sort="alternative_components">Alternative Components</th>
             <th calss="sort" data-sort="full_cost_fee">Full Cost Fee</th>
             <th class="sort" data-sort="overhead">Overhead</th>
-            <th class="sort" data-sort="price_internal">Internal Price (SEK)</th>
-            <th class="sort" data-sort="price_academic">Academic</th>
-            <th class="sort" data-sort="full_cost">Full Cost</th>
             <th class="sort" data-sort="comment">Comment</th>
           </tr>
         </thead>
@@ -702,11 +729,8 @@ app.component('v-products-table', {
             <th class="sort" data-sort="name"><input class="form-control search search-query" type="text" placeholder="Search Name" /></th>
             <th class="sort" data-sort="components"><input class="form-control search search-query" type="text" placeholder="Search Components" /></th>
             <th class="sort" data-sort="alternative_components"><input class="form-control search search-query" type="text" placeholder="Search Alternative Components" /></th>
-            <th calss="sort" data-sort="full_cost_fee"><input class="form-control search search-query" type="text" placeholder="Search Alternative Components" /></th>
+            <th calss="sort" data-sort="full_cost_fee"><input class="form-control search search-query" type="text" placeholder="Search Full Cost Fee" /></th>
             <th class="sort" data-sort="overhead"><input class="form-control search search-query" type="text" placeholder="Search Overhead" /></th>
-            <th class="sort" data-sort="price_internal"><input class="form-control search search-query" type="text" placeholder="Search Internal Price (SEK)" /></th>
-            <th class="sort" data-sort="price_academic"><input class="form-control search search-query" type="text" placeholder="Search Academic Price" /></th>
-            <th class="sort" data-sort="full_cost"><input class="form-control search search-query" type="text" placeholder="Search Full Cost" /></th>
             <th class="sort" data-sort="comment"><input class="form-control search search-query" type="text" placeholder="Search Comment" /></th>
           </tr>
         </tfoot>
@@ -803,15 +827,6 @@ app.component('v-product-table-row', {
             <v-product-table-row-td td_key='Alternative Components' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Full cost fee' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Overhead' :row_changes="this.changes" :product_id="this.product_id"/>
-            <td class="price_internal">
-              {{cost['cost'].toFixed(2)}}
-            </td>
-            <td class="price_academic">
-              {{cost['cost_academic'].toFixed(2)}}
-            </td>
-            <td class="full_cost">
-              {{cost['full_cost'].toFixed(2)}}
-            </td>
             <v-product-table-row-td td_key='Comment' :row_changes="this.changes" :product_id="this.product_id"/>
           </tr>
         </template>

@@ -10,19 +10,32 @@ from genologics.entities import Queue, Artifact, Container
 import xml.etree.ElementTree as ET
 import psycopg2
 from dateutil.parser import parse
+import ast
 
+#Control names can be found in the table controltype in the lims backend. Will continue to check against this list for now, should
+#consider incorporating a check against this table directly into the queries in the future
+control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
+                    'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
+                    'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
+                    'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
+                    'lambda DNA (qPCR)'
+                 ]
 
 class qPCRPoolsDataHandler(SafeHandler):
     """ Serves a page with qPCR queues from LIMS listed
     URL: /api/v1/qpcr_pools
     """
     def get(self):
-        qpcr_control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
-                                'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
-                                'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
-                                'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
-                                'lambda DNA (qPCR)'
-                              ]
+
+        unwanted_in_lib_val = [ "Illumina TruSeq PCR-free", "Illumina DNA PCR-free FLEX", "SMARTer ThruPLEX DNA-seq (small genome)",
+                                "SMARTer ThruPLEX DNA-seq (complex genome, metagenomes)", "SMARTer ThruPLEX DNA-seq (ChIP)",
+                                "Illumina TruSeq Stranded mRNA (polyA)", "Illumina TruSeq Stranded total RNA",
+                                "SMARTer Total Stranded RNA-seq, Pico input mammalian", "SMARTer Total Stranded RNA-seq, Pico input mammalian - V3",
+                                "Illumina TruSeq small RNA", "QIAseq miRNA low input", "Visium Spatial Gene Expression", "RAD-seq", "ATAC-seq",
+                                "Dovetail OmniC",  "Dovetail MicroC", "Arima HiC (standard)", "Arima HiC (low input)", "16S",
+                                "Amplicon indexing (without cleanup)", "Amplicon indexing (with cleanup)", "Special", "ONT ligation - DNA",
+                                "ONT PCR - DNA", "ONT cDNA PCR - RNA", "ONT direct cDNA - RNA", "ONT direct RNA - RNA"]
+
         queues = {}
         #query for Miseq and NovaSeq
         query = ('select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid '
@@ -36,6 +49,13 @@ class qPCRPoolsDataHandler(SafeHandler):
         queues['NovaSeq'] = query.format(1666)
         #Queue = 2102, stepid in the query
         queues['NextSeq'] = query.format(2102)
+        #Queue 41, but query is slightly different to use protocolid for Library Validation QC which is 8 and, also to exclude the controls
+        queues['LibraryValidation'] = ("select  st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid, e.udfvalue "
+                                        "from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm, entity_udf_view e where "
+                                        "art.artifactid=st.artifactid and st.stageid in (select stageid from stage where membershipid in (select sectionid from workflowsection where protocolid=8)) "
+                                        "and st.workflowrunid>0 and st.completedbyid is null and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and s.processid=asm.processid "
+                                        "and asm.artifactid=art.artifactid and art.name not in {} and s.projectid=e.attachtoid and e.udfname=\'Library construction method\'"
+                                        "group by st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid, e.udfvalue;".format(tuple(control_names)))
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
@@ -61,13 +81,16 @@ class qPCRPoolsDataHandler(SafeHandler):
                 if container in pools[method]:
                     pools[method][container]['samples'].append({'name': record[1], 'well': value, 'queue_time': queue_time})
                     if project not in pools[method][container]['projects']:
+                        if method =='LibraryValidation' and record[8] in unwanted_in_lib_val:
+                            pools[method][container]['samples'].pop()
+                            continue
                         proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
                         library_type =  proj_doc['details'].get('library_construction_method', '')
                         sequencing_platform = proj_doc['details'].get('sequencing_platform', '')
                         flowcell = proj_doc['details'].get('flowcell', '')
                         queued_date = proj_doc['details'].get('queued', '')
                         if not queued_date:
-                            queued_date = proj_doc['project_summary'].get('queued', '')
+                            queued_date = proj_doc.get('project_summary', {}).get('queued', '')
                         if library_type not in pools[method][container]['library_types']:
                             pools[method][container]['library_types'].append(library_type)
                         if sequencing_platform not in pools[method][container]['sequencing_platforms']:
@@ -77,11 +100,15 @@ class qPCRPoolsDataHandler(SafeHandler):
                         pools[method][container]['proj_queue_dates'].append(queued_date)
                         pools[method][container]['projects'][project] = proj_doc['project_name']
                 else:
+                    if method =='LibraryValidation' and record[8] in unwanted_in_lib_val:
+                        continue
                     proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
                     library_type =  proj_doc['details'].get('library_construction_method', '')
                     sequencing_platform = proj_doc['details'].get('sequencing_platform', '')
                     flowcell = proj_doc['details'].get('flowcell', '')
                     queued_date = proj_doc['details'].get('queued', '')
+                    if not queued_date:
+                        queued_date = proj_doc.get('project_summary', {}).get('queued', '')
                     pools[method][container] = {
                                                 'samples':[{'name': record[1], 'well': value, 'queue_time': queue_time}],
                                                 'library_types': [library_type],
@@ -115,7 +142,26 @@ class SequencingQueuesDataHandler(SafeHandler):
                     'from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm '
                     'where art.artifactid=st.artifactid and st.stageid in (select stageid from stage where stepid={}) and st.completedbyid is null and '
                     'st.workflowrunid>0 and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and  s.processid=asm.processid and '
-                    'asm.artifactid=art.artifactid group by art.artifactid, st.lastmodifieddate, st.generatedbyid, ct.name, s.projectid;')
+                    'asm.artifactid=art.artifactid and s.name not in (select name from controltype) '
+                    'group by art.artifactid, st.lastmodifieddate, st.generatedbyid, ct.name, s.projectid;')
+
+        #works for 2109, 1659
+        #does not work for 1662, 1655, 1656
+        pool_conc_query = ('select udfvalue from artifact_udf_view where udfname=\'{}\' '
+                            'and artifactid in (select art.artifactid from artifact_sample_map asm, artifact art '
+                            'where processid=(select processid from artifact_sample_map where artifactid={} limit 1) '
+                            'and art.artifactid=asm.artifactid and art.name=\'{}\');')
+
+        qpcr_conc_query =  ('select aus.numeric0 from artifactudfstorage aus, artifact_ancestor_map aam, artifact art '
+                             'where aam.ancestorartifactid={} and aus.artifactid=aam.artifactid and aus.artifactid=art.artifactid '
+                             'and art.name=\'qPCR Measurement\' and aus.text0=\'nM\';')
+        #1662
+        pool_conc_query_nextseq = ('select udfvalue from artifact_udf_view where udfname=\'{}\' '
+                                    'and artifactid=(select artifactid from artifactstate '
+                                    'where stateid=(select inputstatepostid from processiotracker where processid={} limit 1));')
+        rerun_query = ('select count(artifactid) from stagetransition '
+                        'where stageid in (select stageid from stage where stepid={}) '
+                        'and artifactid={} group by artifactid')
 
         #sequencing queues are currently taken as the following
         queues = {}
@@ -137,20 +183,22 @@ class SequencingQueuesDataHandler(SafeHandler):
         connection = psycopg2.connect(user=self.application.lims_conf['username'], host=self.application.lims_conf['url'],
                                         database=self.application.lims_conf['db'], password=self.application.lims_conf['password'])
         cursor = connection.cursor()
-        pools = {}
+        pool_groups = {}
         for method in methods:
-            pools[method] ={}
+            pool_groups[method] ={}
             queue_query = query.format(queues[method])
             cursor.execute(queue_query)
             records = cursor.fetchall()
             for record in list(records):
+                if str(record[1]) in control_names:
+                    continue
                 queue_time = record[2].isoformat()
                 container = record[4]
                 proj_and_samples = {}
                 conc_qpcr = ''
                 project = 'P'+str(record[5])
                 final_loading_conc = 'TBD'
-                if project not in pools[method]:
+                if project not in pool_groups[method]:
                     proj_doc = self.application.projects_db.get(projects[project].rows[0].value)
                     setup = proj_doc['details'].get('sequencing_setup','')
                     lanes = proj_doc['details'].get('sequence_units_ordered_(lanes)', '')
@@ -159,10 +207,10 @@ class SequencingQueuesDataHandler(SafeHandler):
                     flowcell = proj_doc['details'].get('flowcell', '')
                     queued_date = proj_doc['details'].get('queued', '')
                     if not queued_date:
-                        queued_date = proj_doc['project_summary'].get('queued', '')
+                        queued_date = proj_doc.get('project_summary', {}).get('queued', '')
                     flowcell_option = proj_doc['details'].get('flowcell_option', '')
                     name = proj_doc['project_name']
-                    pools[method][project] = {
+                    pool_groups[method][project] = {
                                                'name': name,
                                                'setup': setup,
                                                'lanes': lanes,
@@ -173,27 +221,64 @@ class SequencingQueuesDataHandler(SafeHandler):
                                                'librarytype': librarytype,
                                                'plates': { container: {
                                                                        'queue_time': queue_time,
+                                                                       'pools': [{
+                                                                                  'name': record[1],
+                                                                                  'is_rerun': False
+                                                                                }]
                                                                        }
                                                            }
                                                }
                 else:
-                    if container not in pools[method][project]['plates']:
-                        pools[method][project]['plates'][container] = {'queue_time' : queue_time}
+                    if container not in pool_groups[method][project]['plates']:
+                        pool_groups[method][project]['plates'][container] = {'queue_time' : queue_time, 'pools': []}
+                    pool_groups[method][project]['plates'][container]['pools'].append({'name':record[1], 'is_rerun': False})
+
+                #Get Pool Conc
+                if 'Finished library' in librarytype:
+                    if method in ['1662']:
+                        pcquery = pool_conc_query_nextseq.format('Concentration', record[3])
+                    else:
+                        pcquery = pool_conc_query.format('Concentration', record[0], record[1])
+
+                else:
+                    if method in ['1662']:
+                        pcquery = pool_conc_query_nextseq.format('Pool Conc. (nM)', record[3])
+                    else:
+                        pcquery = pool_conc_query.format('Pool Conc. (nM)', record[0], record[1])
+
+                cursor.execute(pcquery)
+                row =  cursor.fetchone()
+                if row is None:
+                    pool_conc = ''
+                else:
+                    pool_conc = row[0]
 
                 if 'NovaSeq' not in method:
-                    conc_rerun_query = ('select udfname, udfvalue from artifact_udf_view where udfname in {} '
-                                        'and artifactid={}').format(tuple(['Concentration', 'Rerun', 'Pool Conc. (nM)']), record[0])
-                    cursor.execute(conc_rerun_query)
-                    conc_rerun_res = cursor.fetchall()
-                    for udf in list(conc_rerun_res):
-                        if udf[0] == 'Rerun':
-                            is_rerun = False if udf[1] == 'False' else True
+                    non_novaseq_rerun_query = ('select udfname, udfvalue from artifact_udf_view where udfname = \'Rerun\' '
+                                        'and artifactid={}').format(record[0])
+                    cursor.execute(non_novaseq_rerun_query)
+                    rerun_res = cursor.fetchone()
+                    is_rerun = False
+                    if rerun_res[1]:
+                        is_rerun = ast.literal_eval(rerun_res[1])
+                    else:
+                        #When Proj coordinators queue samples, the field does not seem to be set
+                        cursor.execute(rerun_query.format(queues[method], record[0]))
+                        rerun_res = cursor.fetchone()[0]
+                        if rerun_res > 1:
+                            is_rerun = True
+
+                    #Get qPCR conc
+                    conc_qpcr = 0.0
+                    if 'Finished library' not in librarytype or is_rerun:
+                        cursor.execute(qpcr_conc_query.format(record[0]))
+                        row = cursor.fetchone()
+                        if row is None:
+                            conc_qpcr = 'NA'
                         else:
-                            conc_qpcr = udf[1]
+                            conc_qpcr = row[0]
+
                 elif 'NovaSeq' in method:
-                    rerun_query = ('select count(artifactid) from stagetransition '
-                                    'where stageid in (select stageid from stage where stepid={}) '
-                                    'and artifactid={} group by artifactid')
                     #The final loading conc is defined in the Define Run format step whose stepid is 1659
                     final_lconc_query = ('select udfname, udfvalue from artifact_udf_view where udfname in (\'Final Loading Concentration (pM)\') '
                                          'and artifactid in (select st.artifactid from stagetransition st, artifact_sample_map asm, sample, project '
@@ -202,8 +287,6 @@ class SequencingQueuesDataHandler(SafeHandler):
                                          'from stagetransition st, stage s, artifact_sample_map asm, sample, project '
                                          'where st.stageid = s.stageid and s.stepid=1659 and st.artifactid = asm.artifactid and sample.processid = asm.processid '
                                          'and sample.projectid = project.projectid AND project.projectid = {pnum} group by st.completedbyid) group by st.artifactid)')
-                    conc_query = ('select udfname, udfvalue from artifact_udf_view where udfname in (\'Concentration\') '
-                                        'and artifactid={}')
 
                     #rerun
                     is_rerun = False
@@ -220,23 +303,23 @@ class SequencingQueuesDataHandler(SafeHandler):
                         final_loading_conc = flc_novaseq
 
                     #qPCR conc
-                    qpcr_conc_query = ('select art.artifactid, art.name from artifact_sample_map asm, artifact art '
-                                  'where processid=(select processid from artifact_sample_map where artifactid={} limit 1)'
-                                  'and art.artifactid=asm.artifactid and art.name=\'qPCR Measurement\';')
-                    cursor.execute(qpcr_conc_query.format(record[0]))
-                    c_res = cursor.fetchone()
-                    if c_res is None:
-                        conc_qpcr = 0.0
-                    else:
-                        cursor.execute(conc_query.format(c_res[0]))
-                        conc_qpcr = cursor.fetchone()[1]
+                    conc_qpcr = 0.0
+                    if 'Finished library' not in librarytype or is_rerun:
+                        cursor.execute(qpcr_conc_query.format(record[0]))
+                        row = cursor.fetchone()
+                        if row is None:
+                            conc_qpcr = 'NA'
+                        else:
+                            conc_qpcr = row[0]
 
-                pools[method][project]['final_loading_conc'] = final_loading_conc
-                pools[method][project]['plates'][container]['conc_pool_qpcr'] = conc_qpcr
-                pools[method][project]['plates'][container]['is_rerun'] = is_rerun
+
+                pool_groups[method][project]['final_loading_conc'] = final_loading_conc
+                pool_groups[method][project]['plates'][container]['conc_qpcr'] = conc_qpcr
+                pool_groups[method][project]['plates'][container]['pools'][-1]['is_rerun'] = is_rerun
+                pool_groups[method][project]['plates'][container]['conc_pool'] = pool_conc
 
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(pools))
+        self.write(json.dumps(pool_groups))
 
 
 class SequencingQueuesHandler(SafeHandler):
@@ -263,14 +346,6 @@ class WorksetQueuesDataHandler(SafeHandler):
         queues['RadSeq'] = '1201'
         queues['SMARTerPicoRNA'] = '1551'
         queues['ChromiumGenomev2'] = '1801'
-
-        control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
-                            'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
-                            'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
-                            'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
-                            'lambda DNA (qPCR)'
-                         ]
-
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
@@ -339,13 +414,6 @@ class LibraryPoolingQueuesDataHandler(SafeHandler):
         queues['MiSeq'] = '52'
         queues['NovaSeq'] = '1652'
         queues['NextSeq'] = '2104'
-
-        control_names = [ 'AM7852', 'E.Coli genDNA', 'Endogenous Positive Control', 'Exogenous Positive Control',
-                            'Human Brain Reference RNA', 'lambda DNA', 'mQ Negative Control', 'NA10860', 'NA11992',
-                            'NA11993', 'NA12878', 'NA12891', 'NA12892', 'No Amplification Control',
-                            'No Reverse Transcriptase Control', 'No Template Control', 'PhiX v3', 'Universal Human Reference RNA',
-                            'lambda DNA (qPCR)'
-                         ]
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")

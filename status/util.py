@@ -1,5 +1,4 @@
 import tornado.web
-import tornado.auth
 import json
 import requests
 import os
@@ -266,27 +265,6 @@ class UpdatedDocumentsDatahandler(SafeHandler):
 
         last = sorted(last, key=lambda tr: tr[0], reverse=True)
         return last[:num_items]
-
-class PagedQCDataHandler(SafeHandler):
-    """ Serves a list of 50 sample names following a given string
-    in alhabetical order.
-
-    loaded through /api/v1/samples/start/([^/]*)$
-    """
-    def get(self, startkey):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_samples(startkey)))
-
-    def list_samples(self, startkey):
-        sample_list = []
-        view = self.application.samples_db.view("names/samplename_run",
-                                                group_level=1,
-                                                limit=50,
-                                                startkey=startkey)
-        for row in view:
-            sample_list.append(row.key)
-
-        return sample_list
 
 
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):

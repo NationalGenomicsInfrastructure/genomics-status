@@ -1,8 +1,6 @@
 """ Handlers for sequencing project information.
 """
 import json
-import traceback
-
 import tornado.web
 import dateutil.parser
 import datetime
@@ -20,17 +18,12 @@ import nest_asyncio
 import itertools
 import unicodedata
 
-from collections import defaultdict
 from collections import OrderedDict
 from status.util import dthandler, SafeHandler
 from dateutil.relativedelta import relativedelta
 
 from genologics import lims
-from genologics.entities import Project
-from genologics.entities import Sample
-from genologics.entities import Process
-from genologics.entities import Artifact
-from genologics.entities import Protocol
+from genologics.entities import Project, Sample, Process, Artifact, Protocol
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
 from zenpy import Zenpy, ZenpyException
@@ -74,6 +67,12 @@ class PresetsHandler(SafeHandler):
         if self.get_arguments('delete'):
             preset_name = self.get_argument('delete')
             del doc['userpreset'][preset_name]
+
+        if self.get_arguments('savefilter'):
+            preset_filter = self.get_argument('savefilter')
+            data = json.loads(self.request.body)
+            if 'userpreset' in doc and preset_filter in doc['userpreset']:
+                doc['userpreset'][preset_filter]['FILTER'] = data
 
         try:
             self.application.gs_users_db.save(doc)
@@ -427,7 +426,7 @@ class ProjectsFieldsDataHandler(ProjectsBaseDataHandler):
     """
     def get(self):
         undefined = self.get_argument("undefined", "False")
-        undefined = (undefined.lower() == "true")
+        undefined = (undefined.lower() == "True")
         project_list = self.get_argument("project_list", "all")
         field_items = self.list_project_fields(undefined=undefined, project_list=project_list)
         self.write(json.dumps(list(field_items)))
@@ -473,7 +472,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             for date_row in date_result.rows:
                 for date_type, date in date_row.value.items():
                     summary_row.value[date_type] = date
-        summary_row.value['sourcedb_url'] = 'http://' + self.settings['couch_server'].split('@')[1]
+        summary_row.value['sourcedb_url'] = 'https://' + self.settings['couch_server'].split('@')[1]
         return summary_row.value
 
 
@@ -486,14 +485,12 @@ class ProjectSamplesDataHandler(SafeHandler):
         sample_data["sample_run_metrics"] = []
         sample_data["prep_status"] = []
         sample_data["prep_finished_date"] = []
-        sample_data["run_metrics_data"]={}
         if "library_prep" in sample_data:
             for lib_prep in sorted(sample_data["library_prep"]):
                 content=sample_data["library_prep"][lib_prep]
                 if "sample_run_metrics" in content:
                     for run, id in content["sample_run_metrics"].items():
                         sample_data["sample_run_metrics"].append(run)
-                        sample_data["run_metrics_data"][run]=self.get_sample_run_metrics(run)
                 if "prep_status" in content:
                     if content["prep_status"] == "PASSED":
                         sample_data["prep_status"].append(content["prep_status"])
@@ -505,6 +502,9 @@ class ProjectSamplesDataHandler(SafeHandler):
                     for agrId, libval in content["library_validation"].items():
                         if "caliper_image" in libval:
                             sample_data['library_prep'][lib_prep]['library_validation'][agrId]['caliper_image'] = self.reverse_url('CaliperImageHandler', project, sample, 'libval{0}'.format(lib_prep))
+                        if "frag_an_image" in libval:
+                            #Go grab the image from the sftp server
+                            sample_data['library_prep'][lib_prep]['library_validation'][agrId]['frag_an_image'] = self.reverse_url('FragAnImageHandler', project, sample, 'libval{0}'.format(lib_prep))
 
         if "details" in sample_data:
             for detail_key, detail_value in sample_data["details"].items():
@@ -529,17 +529,6 @@ class ProjectSamplesDataHandler(SafeHandler):
             sample_data = self.sample_data(sample_data, project, sample)
             output[sample] = sample_data
         return output
-
-    def get_sample_run_metrics(self, metrics_id):
-        data={}
-        metrics_view=self.application.samples_db.view('sample/INS_metrics')
-        if len(metrics_view[metrics_id].rows)>1:
-            application_log.warn("More than one metrics doc found for id {0}".format(metrics_id))
-
-        for row in metrics_view[metrics_id]:
-            data=row.value
-
-        return data
 
     def get(self, project):
         self.set_header("Content-type", "application/json")
@@ -622,9 +611,12 @@ class ImagesDownloadHandler(SafeHandler):
         import zipfile as zp
 
         name = ''
-        if type == 'frag_an':
+        if 'frag_an' in type:
             view = 'project/frag_an_links'
-            name = 'InitialQCFragmentAnalyser'
+            if 'libval' in type:
+                name = 'LibraryValidationFragmentAnalyser'
+            elif 'intial_qc' in type:
+                name = 'InitialQCFragmentAnalyser'
         else:
             view = 'project/caliper_links'
             if 'libval' in type:
@@ -649,9 +641,13 @@ class ImagesDownloadHandler(SafeHandler):
                     num_files +=1
                     for key in data[sample]:
                         img_file_name = sample + '.'
-                        if 'frag_an' in type and 'initial_qc' in key:
-                            img_file_name = img_file_name + 'png'
-                            zf.writestr(img_file_name, base64.b64decode(FragAnImageHandler.get_frag_an_image(data[sample][key])))
+                        if 'frag_an' in type:
+                            if 'initial_qc' in key:
+                                img_file_name = img_file_name + 'png'
+                                zf.writestr(img_file_name, base64.b64decode(FragAnImageHandler.get_frag_an_image(data[sample][key])))
+                            if 'libval' in key:
+                                img_file_name = img_file_name + key + '.'+ 'png'
+                                zf.writestr(img_file_name, base64.b64decode(FragAnImageHandler.get_frag_an_image(data[sample][key])))
                         elif 'caliper' in type:
                             checktype = type.split('_',1)[1]
                             if 'libval' in checktype:

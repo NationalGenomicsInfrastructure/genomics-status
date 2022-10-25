@@ -347,7 +347,7 @@ Description: Details page for a single project
           </div>
           </div>
 
-          <div class="col-12 p-2 d-inline-flex offset-1" >
+          <div class="col-12 p-2 d-inline-flex" >
            <button class="float-right btn btn-sm btn-primary" data-toggle="modal" data-target="#sampleFieldsModal">Filter Columns</button>
          </div>
 
@@ -480,17 +480,6 @@ Description: Details page for a single project
               </div>
               {% end %}
             </div>
-            <div class="col-sm-3" id="bioinfo-columns">
-              <h4 class="search-action" data-action="filterHeader">Bioinfo <input class="headingCheckbox" type="checkbox"></h4>
-              {% for col_display_name, col_name in columns_sample['BIOINFO_COLUMNS'].items() %}
-              <div class="form-check">
-                <input type="checkbox" class="form-check-input filterCheckbox" data-columngroup="bioinfo-columns" data-displayname="{{col_display_name}}" name="{{col_name}}" id="bioinfo-columns-{{col_name}}">
-                <label class="form-check-label" for="bioinfo-columns-{{col_name}}">
-                  {{col_display_name}}
-                </label>
-              </div>
-              {% end %}
-            </div>
             <div class="col-sm-3" id="tissue-columns">
               <h4 class="search-action" data-action="filterHeader">Tissue <input class="headingCheckbox" type="checkbox"></h4>
               {% for col_display_name, col_name in columns_sample['TISSUE_COLUMNS'].items() %}
@@ -536,7 +525,7 @@ Description: Details page for a single project
             <div class="form-group row">
                 <div class="form-group col-sm-6">
                   <div class="form-check">
-                    <input class="form-check-input" name="imgRadio" type="radio" id="imgCheck1" value="frag_an">
+                    <input class="form-check-input" name="imgRadio" type="radio" id="imgCheck1" value="frag_an_initial_qc">
                     <label class="form-check-label" for="imgCheck1">
                       Initial QC Fragment Analyser
                     </label>
@@ -551,6 +540,12 @@ Description: Details page for a single project
                     <input class="form-check-input" name="imgRadio" type="radio" id="imgCheck3" value="caliper_libval">
                     <label class="form-check-label" for="imgCheck3">
                       Library Validation Caliper
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" name="imgRadio" type="radio" id="imgCheck4" value="frag_an_libval">
+                    <label class="form-check-label" for="imgCheck3">
+                      Library Validation Fragment Analyser
                     </label>
                   </div>
                 </div>

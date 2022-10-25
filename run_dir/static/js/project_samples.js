@@ -815,6 +815,13 @@ function load_samples_table(colOrder) {
                                    '</span>'+
                                    '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
                   }
+                  // Fragment Analyzer Image
+                  if (column_id == 'frag_an_image'){
+                      tbl_row += '<span class="caliper_loading_spinner">'+
+                                    '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                  '</span>'+
+                                  '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>';
+                  }
 
                   // Remove the X from initial QC initials
                   else if(column_id == 'initials'){
@@ -853,23 +860,6 @@ function load_samples_table(colOrder) {
                   tbl_row += auto_format(validation_data[column_id]);
                 }
               }
-            });
-            tbl_row += '</td>';
-        }
-        else if (value[2] == "bioinfo-columns" && info['run_metrics_data'] !== undefined) {
-            tbl_row += '<td class="' + column_id + '">';
-            $.each(info['run_metrics_data'], function(rmd, rmid) {
-              val=parseFloat(rmid[column_id])
-              if (val === 'NaN'){
-                  tbl_row += auto_format(rmid[column_id]);
-              }else{
-               if(val % 1 === 0){
-                  tbl_row += auto_format(val);
-               }else{
-                  tbl_row += auto_format(val.toFixed(2));
-               }
-              }
-              tbl_row+='<br />';
             });
             tbl_row += '</td>';
         }
