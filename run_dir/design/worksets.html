@@ -73,7 +73,7 @@ Description: Shows a table with all worksets.
                              <samp style="max-width:50px;">{{ ws_data.get(onews).get('projects').get(onepj).get('sequencing_setup') }}</samp><br>
                          {% end %}
                          </td>
-                     {% elif onekey[1] in ['application', 'library_method'] %}
+                     {% elif onekey[1] in ['application', 'library_method', 'library_option'] %}
                          <td><samp style="max-width:50px;">
                          {% raw '</samp><hr style="margin:0;"><samp>'.join(ws_data[onews].get(onekey[1])) %}
                          </samp></td>
@@ -103,7 +103,7 @@ Description: Shows a table with all worksets.
             </tbody>
           </table>
         </div>
-      </div>  
+      </div>
       <div class="tab-pane fade" id="tab_closed_worksets">
        <h2 class="closed_ws_page_heading"><small class="text-muted">All worksets with projects closed for >1 year in StatusDB</small></h2>
        <tbody class="list" id="closed_ws_table_body">
