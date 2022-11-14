@@ -66,8 +66,8 @@ Description: Summing tool for the reads
                         {% if '_UD' not in d['fcp']  %}
                             {% if d['q30'] is not None and d['q30']>75 %}
                                 <td class="table-success myq30">{{ d['q30'] }}</td>
-                                <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}" {% if d['sample_status'] != 'Failed' %} checked {% end %} /></td>   
-                            {% elif d['q30'] is not None and d['q30']>30  %}
+                                <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}" {% if d['sample_status'] != 'Failed' %} checked {% end %} /></td>
+                            {% elif d['q30'] is not None and d['q30']>30 %}
                                 <td class="table-warning myq30">{{ d['q30'] }}</td>
                                 <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}"/></td>
                             {% else %}
