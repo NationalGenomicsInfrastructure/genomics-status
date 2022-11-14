@@ -422,13 +422,11 @@ class ReadsTotalHandler(SafeHandler):
                     data[row.key]=[]
                 data[row.key].append(row.value)
             #To check if sample is failed on lane level
-            for row in bioinfo_view:
-                if row.key[3] in data:
-                    for k,v in data.items():
-                        if k == row.key[3]:
-                            for fcl in v:
-                                if row.key[1] + ':' + row.key[2] == fcl['fcp']:
-                                    fcl['sample_status'] = row.value['sample_status']
+            for row in bioinfo_view[[query, None, None, None]:[f'{query}Z', 'ZZ', 'ZZ', 'ZZ']]:
+                    if row.key[3] in data:
+                        for fcl in data[row.key[3]]:
+                            if row.key[1] + ':' + row.key[2] == fcl['fcp']:
+                                fcl['sample_status'] = row.value['sample_status']
             for key in sorted(data.keys()):
                 ordereddata[key]=sorted(data[key], key=lambda d:d['fcp'])
             self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(), readsdata=ordereddata, query=query))
