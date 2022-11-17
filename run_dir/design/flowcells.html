@@ -10,177 +10,210 @@ Description: Shows a table with all flow cells.
 {% block stuff %}
 
 <div class="container-fluid" id="flowcell_list">
-  <div id="fc_table_div">
-      <h1><span id="page_title">Flowcells</span>
-          {% if all %}
-            <small class="text-muted">Showing all flowcells</small>
-            <a class="btn btn-outline-dark" href="/flowcells">Show last 6 months only</a>
-          {% else %}
-            <small class="text-muted">Showing flowcells from the last 6 months.</small>
-            <a class="btn btn-outline-dark" href="/flowcells?all=True">Show all</a>
-          {% end %}
-      </h1>
-      <table class="table table-striped table-bordered sortable" id="fc_table">
-        <thead>
-          <tr class="sticky darkth">
-            <th class="sort" data-sort="run_id">Run id</th>
-            <th class="sort" data-sort="start_date">Start date</th>
-            <th class="sort" data-sort="run_mode">Run mode</th>
-            <th class="sort" data-sort="recipe">Recipe</th>
-            <th class="sort" data-sort="lane">Lane</th>
-            <th class="sort" data-sort="project">Project</th>
-            <th class="sort" data-sort="pf_clusters">PF Clusters (M)</th>
-            <th class="sort" data-sort="q30_bases">% bases > Q30</th>
-            <th class="sort" data-sort="er_rate">PhiX error rate</th>
-            <th class="sort" data-sort="latest_running_note">Latest running note</th>
-          </tr>
-        </thead>
-        <tfoot>
-          <tr class='darkth'>
-            <th class="sort" data-sort="run_id">Run id</th>
-            <th class="sort" data-sort="start_date">Start date</th>
-            <th class="sort" data-sort="run_mode">Run mode</th>
-            <th class="sort" data-sort="recipe">Recipe</th>
-            <th class="sort" data-sort="lane">Lane</th>
-            <th class="sort" data-sort="project">Project</th>
-            <th class="sort" data-sort="pf_clusters">PF Clusters (M)</th>
-            <th class="sort" data-sort="q30_bases">% bases > Q30</th>
-            <th class="sort" data-sort="er_rate">PhiX error rate</th>
-            <th class="sort" data-sort="latest_running_note">Latest running note</th>
-          </tr>
-        </tfoot>
-        <tbody class="list">
-
-         {% for onefc in flowcells %}
-            <tr>
-                <td class="run_id">
-                    <a class="text-decoration-none" href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a>
-                    {% if flowcells.get(onefc).get('demultiplexing') == 'Done' %}
-                        <abbr title="Demultiplexing completed">&nbsp;<span class="fa fa-check-circle"></span></abbr>
+    <div class="tabbable">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation"><a class="nav-link active" href="#tab_flowcells" role="tab" data-toggle="tab" aria-selected="true">Flowcells</a></li>
+            <li class="nav-item"><a class="nav-link" href="#tab_ont" role="tab" data-toggle="tab">ONT</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab_flowcells">
+                <div id="fc_table_div">
+                <h1><span id="page_title">Flowcells</span>
+                    {% if all %}
+                        <small class="text-muted">Showing all flowcells</small>
+                        <a class="btn btn-outline-dark" href="/flowcells">Show last 6 months only</a>
                     {% else %}
-                        <abbr title="Ongoing">&nbsp;<span class="fa fa-hourglass-half"></span></abbr>
+                        <small class="text-muted">Showing flowcells from the last 6 months.</small>
+                        <a class="btn btn-outline-dark" href="/flowcells?all=True">Show all</a>
                     {% end %}
-                </td>
-                <td class="start_date">{{ flowcells[onefc]["startdate"]}}</td>
-                <td class="run_mode">{{ flowcells[onefc].get('run_mode', '-') }}</td>
-                <td class="recipe">{{ flowcells[onefc].get('actual_run_setup', '-') }}</td>
-                <td class="lane" class="text-center">
-                     {% if 'lane_info' in flowcells[onefc] %}
-                         {% for onelane in flowcells[onefc]['lane_info'] %}
-                             <samp style="max-width:50px;">{{ onelane }}</samp><br>
-                         {% end %}
+                </h1>
+                <table class="table table-striped table-bordered sortable" id="fc_table">
+                    <thead>
+                    <tr class="sticky darkth">
+                        <th class="sort" data-sort="run_id">Run id</th>
+                        <th class="sort" data-sort="start_date">Start date</th>
+                        <th class="sort" data-sort="run_mode">Run mode</th>
+                        <th class="sort" data-sort="recipe">Recipe</th>
+                        <th class="sort" data-sort="lane">Lane</th>
+                        <th class="sort" data-sort="project">Project</th>
+                        <th class="sort" data-sort="pf_clusters">PF Clusters (M)</th>
+                        <th class="sort" data-sort="q30_bases">% bases > Q30</th>
+                        <th class="sort" data-sort="er_rate">PhiX error rate</th>
+                        <th class="sort" data-sort="latest_running_note">Latest running note</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr class='darkth'>
+                        <th class="sort" data-sort="run_id">Run id</th>
+                        <th class="sort" data-sort="start_date">Start date</th>
+                        <th class="sort" data-sort="run_mode">Run mode</th>
+                        <th class="sort" data-sort="recipe">Recipe</th>
+                        <th class="sort" data-sort="lane">Lane</th>
+                        <th class="sort" data-sort="project">Project</th>
+                        <th class="sort" data-sort="pf_clusters">PF Clusters (M)</th>
+                        <th class="sort" data-sort="q30_bases">% bases > Q30</th>
+                        <th class="sort" data-sort="er_rate">PhiX error rate</th>
+                        <th class="sort" data-sort="latest_running_note">Latest running note</th>
+                    </tr>
+                    </tfoot>
+                    <tbody class="list">
+
+                    {% for onefc in flowcells %}
+                        <tr>
+                            <td class="run_id">
+                                <a class="text-decoration-none" href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a>
+                                {% if flowcells.get(onefc).get('demultiplexing') == 'Done' %}
+                                    <abbr title="Demultiplexing completed">&nbsp;<span class="fa fa-check-circle"></span></abbr>
+                                {% else %}
+                                    <abbr title="Ongoing">&nbsp;<span class="fa fa-hourglass-half"></span></abbr>
+                                {% end %}
+                            </td>
+                            <td class="start_date">{{ flowcells[onefc]["startdate"]}}</td>
+                            <td class="run_mode">{{ flowcells[onefc].get('run_mode', '-') }}</td>
+                            <td class="recipe">{{ flowcells[onefc].get('actual_run_setup', '-') }}</td>
+                            <td class="lane" class="text-center">
+                                {% if 'lane_info' in flowcells[onefc] %}
+                                    {% for onelane in flowcells[onefc]['lane_info'] %}
+                                        <samp style="max-width:50px;">{{ onelane }}</samp><br>
+                                    {% end %}
+                                {% end %}
+                            </td>
+                            <td class="project" class="text-center">
+                                {% if 'lane_info' in flowcells[onefc] %}
+                                    {% for lane_id, lane in flowcells[onefc]['lane_info'].items() %}
+                                        <samp style="max-width:50px;">
+                                        {% for i, proj_name in enumerate(lane['project_name']) %}
+                                            <a class="text-decoration-none" href="/project/{{ lane['project_id'][i] }}">{{ proj_name }}</a>
+                                            {% if i < len(lane['project_name'])-1 %}
+                                                {{ ";" }}
+                                            {% end %}
+                                        {% end %}
+                                        </samp><br>
+                                    {% end %}
+                                {% end %}
+                            </td>
+                            <td class="pf_clusters" class="text-center">
+                                {% if 'lane_info' in flowcells[onefc] %}
+                                    {% for lane_id, lane in flowcells[onefc]['lane_info'].items() %}
+                                        {% if lane.get('pf_clusters') %}
+                                            {% if int(lane.get('pf_clusters').replace(',',''))/1000000 >= 1 %}
+                                                <samp style="max-width:50px;">{{ int(int(lane.get('pf_clusters').replace(',',''))/1000000) }}</samp>
+                                            {% else %}
+                                                <samp style="max-width:50px;">{{ round(float(int(lane.get('pf_clusters').replace(',','')))/1000000,2) }}</samp>
+                                            {% end %}
+                                            {% set threshold = thresholds.get(flowcells[onefc].get('run_mode', ''), 0) %}
+                                            {% if int(lane.get('pf_clusters').replace(',',''))/1000000 >= threshold %}
+                                                <span class="fa fa-check-circle" style="color:green"></span><br>
+                                            {% else %}
+                                                <span class="fa fa-exclamation-triangle" style="color:orange"></span><br>
+                                            {% end %}
+                                        {% else %}
+                                            <samp style="max-width:50px;">{{ 'NA' }}</samp><br>
+                                        {% end %}
+                                    {% end %}
+                                {% end %}
+                            </td>
+                            <td class="q30_bases" class="text-center">
+                                {% if 'lane_info' in flowcells[onefc] %}
+                                    {% for onelane in flowcells[onefc]['lane_info'] %}
+                                        <samp style="max-width:50px;">{{ flowcells[onefc]['lane_info'][onelane].get('q30_bases', 'NA') }}</samp>
+                                        {% set run_setup = flowcells[onefc].get('longer_read_length', '') %}
+                                        {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
+                                        {% if flowcells[onefc].get('run_mode', '') == 'HiSeq X' %}
+                                            {% set q30_threshold = 75.0 %}
+                                        {% elif 'MiSeq' in flowcells[onefc].get('run_mode', '') %}
+                                            {% if run_setup >= 250 %}
+                                                {% set q30_threshold = 60.0 %}
+                                            {% elif run_setup >= 150 %}
+                                                {% set q30_threshold = 70.0 %}
+                                            {% elif run_setup >= 100 %}
+                                                {% set q30_threshold = 75.0 %}
+                                            {% elif run_setup < 100 %}
+                                                {% set q30_threshold = 80.0 %}
+                                            {% end %}
+                                        {% else %}
+                                            {% if run_setup >= 250 %}
+                                                {% set q30_threshold = 60.0 %}
+                                            {% elif run_setup >= 150 %}
+                                                {% set q30_threshold = 75.0 %}
+                                            {% elif run_setup >= 100 %}
+                                                {% set q30_threshold = 80.0 %}
+                                            {% elif run_setup < 100 %}
+                                                {% set q30_threshold = 85.0 %}
+                                            {% end %}
+                                        {% end %}
+                                        {% if flowcells[onefc]['lane_info'][onelane].get('q30_bases') %}
+                                            {% if float(flowcells[onefc]['lane_info'][onelane]['q30_bases']) >= q30_threshold %}
+                                                <span class="fa fa-check-circle" style="color:green"></span><br>
+                                            {% else %}
+                                                <span class="fa fa-exclamation-triangle" style="color:orange"></span><br>
+                                            {% end %}
+                                        {% else %}
+                                            <br>
+                                        {% end %}
+                                    {% end %}
+                                {% end %}
+                            </td>
+                            <td class="er_rate" class="text-center">
+                                {% if 'lane_info' in flowcells[onefc] %}
+                                    {% for onelane in flowcells[onefc]['lane_info'] %}
+                                        {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') %}
+                                            <samp style="max-width:50px;">{{ round(flowcells[onefc]['lane_info'][onelane].get('er_rate'),2) }}</samp>
+                                            {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') <= 2 %}
+                                                <span class="fa fa-check-circle" style="color:green"></span><br>
+                                            {% else %}
+                                                <span class="fa fa-exclamation-triangle" style="color:orange"></span><br>
+                                            {% end %}
+                                        {% else %}
+                                            <samp style="max-width:50px;">{{ 'NA' }}</samp><br>
+                                        {% end %}
+                                    {% end %}
+                                {% end %}
+                            </td>
+                            <td class="latest_running_note" class="text-center">
+                                {% if flowcells[onefc].get('running_notes') %}
+                                    {% set running_notes = flowcells[onefc].get('running_notes') %}
+                                    {% set latest_running_note_key = max(k for k, v in running_notes.items() if v != '') %}
+                                    <div class="card running-note-card">
+                                    <div class='card-header'>
+                                    <a class="text-decoration-none" href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"].encode().decode('unicode-escape')}}</a>  -  {{form_date(latest_running_note_key)}}
+                                    </div>
+                                    <div class='card-body' style='white-space: pre-line'>
+                                        {{running_notes[latest_running_note_key]['note']}}
+                                    </div>
+                                    </div>
+                                {% end %}
+                            </td>
+                        </tr>
                     {% end %}
-                </td>
-                <td class="project" class="text-center">
-                     {% if 'lane_info' in flowcells[onefc] %}
-                         {% for lane_id, lane in flowcells[onefc]['lane_info'].items() %}
-                             <samp style="max-width:50px;">
-                             {% for i, proj_name in enumerate(lane['project_name']) %}
-                                 <a class="text-decoration-none" href="/project/{{ lane['project_id'][i] }}">{{ proj_name }}</a>
-                                 {% if i < len(lane['project_name'])-1 %}
-                                     {{ ";" }}
-                                 {% end %}
-                             {% end %}
-                             </samp><br>
-                         {% end %}
-                    {% end %}
-                </td>
-                <td class="pf_clusters" class="text-center">
-                     {% if 'lane_info' in flowcells[onefc] %}
-                         {% for lane_id, lane in flowcells[onefc]['lane_info'].items() %}
-                             {% if lane.get('pf_clusters') %}
-                                 {% if int(lane.get('pf_clusters').replace(',',''))/1000000 >= 1 %}
-                                     <samp style="max-width:50px;">{{ int(int(lane.get('pf_clusters').replace(',',''))/1000000) }}</samp>
-                                 {% else %}
-                                     <samp style="max-width:50px;">{{ round(float(int(lane.get('pf_clusters').replace(',','')))/1000000,2) }}</samp>
-                                 {% end %}
-                                 {% set threshold = thresholds.get(flowcells[onefc].get('run_mode', ''), 0) %}
-                                 {% if int(lane.get('pf_clusters').replace(',',''))/1000000 >= threshold %}
-                                     <span class="fa fa-check-circle" style="color:green"></span><br>
-                                 {% else %}
-                                     <span class="fa fa-exclamation-triangle" style="color:orange"></span><br>
-                                 {% end %}
-                             {% else %}
-                                 <samp style="max-width:50px;">{{ 'NA' }}</samp><br>
-                             {% end %}
-                         {% end %}
-                    {% end %}
-                </td>
-                <td class="q30_bases" class="text-center">
-                     {% if 'lane_info' in flowcells[onefc] %}
-                         {% for onelane in flowcells[onefc]['lane_info'] %}
-                             <samp style="max-width:50px;">{{ flowcells[onefc]['lane_info'][onelane].get('q30_bases', 'NA') }}</samp>
-                             {% set run_setup = flowcells[onefc].get('longer_read_length', '') %}
-                             {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
-                             {% if flowcells[onefc].get('run_mode', '') == 'HiSeq X' %}
-                                 {% set q30_threshold = 75.0 %}
-                             {% elif 'MiSeq' in flowcells[onefc].get('run_mode', '') %}
-                                 {% if run_setup >= 250 %}
-                                     {% set q30_threshold = 60.0 %}
-                                 {% elif run_setup >= 150 %}
-                                     {% set q30_threshold = 70.0 %}
-                                 {% elif run_setup >= 100 %}
-                                     {% set q30_threshold = 75.0 %}
-                                 {% elif run_setup < 100 %}
-                                     {% set q30_threshold = 80.0 %}
-                                 {% end %}
-                             {% else %}
-                                 {% if run_setup >= 250 %}
-                                     {% set q30_threshold = 60.0 %}
-                                 {% elif run_setup >= 150 %}
-                                     {% set q30_threshold = 75.0 %}
-                                 {% elif run_setup >= 100 %}
-                                     {% set q30_threshold = 80.0 %}
-                                 {% elif run_setup < 100 %}
-                                     {% set q30_threshold = 85.0 %}
-                                 {% end %}
-                             {% end %}
-                             {% if flowcells[onefc]['lane_info'][onelane].get('q30_bases') %}
-                                 {% if float(flowcells[onefc]['lane_info'][onelane]['q30_bases']) >= q30_threshold %}
-                                     <span class="fa fa-check-circle" style="color:green"></span><br>
-                                 {% else %}
-                                     <span class="fa fa-exclamation-triangle" style="color:orange"></span><br>
-                                 {% end %}
-                             {% else %}
-                                 <br>
-                             {% end %}
-                         {% end %}
-                    {% end %}
-                </td>
-                <td class="er_rate" class="text-center">
-                     {% if 'lane_info' in flowcells[onefc] %}
-                         {% for onelane in flowcells[onefc]['lane_info'] %}
-                             {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') %}
-                                 <samp style="max-width:50px;">{{ round(flowcells[onefc]['lane_info'][onelane].get('er_rate'),2) }}</samp>
-                                 {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') <= 2 %}
-                                     <span class="fa fa-check-circle" style="color:green"></span><br>
-                                 {% else %}
-                                     <span class="fa fa-exclamation-triangle" style="color:orange"></span><br>
-                                 {% end %}
-                             {% else %}
-                                 <samp style="max-width:50px;">{{ 'NA' }}</samp><br>
-                             {% end %}
-                         {% end %}
-                    {% end %}
-                </td>
-                <td class="latest_running_note" class="text-center">
-                    {% if flowcells[onefc].get('running_notes') %}
-                        {% set running_notes = flowcells[onefc].get('running_notes') %}
-                        {% set latest_running_note_key = max(k for k, v in running_notes.items() if v != '') %}
-                        <div class="card running-note-card">
-                          <div class='card-header'>
-                          <a class="text-decoration-none" href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"].encode().decode('unicode-escape')}}</a>  -  {{form_date(latest_running_note_key)}}
-                          </div>
-                          <div class='card-body' style='white-space: pre-line'>
-                            {{running_notes[latest_running_note_key]['note']}}
-                          </div>
-                        </div>
-                    {% end %}
-                </td>
-            </tr>
-         {% end %}
-        </tbody>
-      </table>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="tab_ont">
+                <h2 class="closed_ws_page_heading"><small class="text-muted">All worksets with projects closed for >1 year in StatusDB</small></h2>
+                <tbody class="list" id="closed_ws_table_body">
+                 <table class="table table-striped table-bordered sortable" id="closed_ws_table">
+                   <thead id="closed_ws_table_head">
+                       <tr class="sticky darkth">
+                         <th>Date Run</th>
+                         <th>Workset Name</th>
+                         <th>Closed Projects</th>
+                       </tr>
+                   </thead>
+                   <tfoot id="closed_ws_table_footer">
+                       <tr class="darkth">
+                       <th>Date Run</th>
+                       <th>Workset Name</th>
+                       <th>Closed Projects</th>
+                       </tr>
+                   </tfoot>
+                   <tbody class="list" id="closed_ws_table_body">
+                 </tbody>
+                 </table>
+             </div>
+        </div>
+        
     </div>
 </div>
 
