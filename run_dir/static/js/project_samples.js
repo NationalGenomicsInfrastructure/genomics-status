@@ -454,6 +454,12 @@ function load_all_udfs(){
         }
       }
 
+      else if (prettify(key) == 'application'){
+        if (value !== null){
+          $('#application').html(value);
+        }
+      }
+
       // Hide the BP Date if no BP
       else if (prettify(key) == 'best_practice_bioinformatics' && value == 'No'){
         $('.bp-dates').hide();
@@ -849,16 +855,23 @@ function load_samples_table(colOrder) {
                 }
               }
               // We only want to show up the LIMS process ID with the higher number (the last one)
-              var process_id = max_str(Object.keys(prepinfo['library_validation']));
-              var validation_data = prepinfo['library_validation'][process_id];
+              var process_id = max_str(Object.keys(info_library['library_validation']));
+              var validation_data = info_library['library_validation'][process_id];
               if (validation_data) {
                 validation_data[column_id] = round_floats(validation_data[column_id], 2);
                 // Caliper column
                 if(column_id == 'caliper_image'){
                      tbl_row += '<span class="caliper_loading_spinner">'+
-                                '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                   '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                 '</span>'+
+                                 '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
+                }
+                // Fragment Analyzer Image
+                if (column_id == 'frag_an_image'){
+                    tbl_row += '<span class="caliper_loading_spinner">'+
+                                  '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
                                 '</span>'+
-                                '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
+                                '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>';
                 }
 
                 // Remove the X from initial QC initials
@@ -895,24 +908,6 @@ function load_samples_table(colOrder) {
               }
             }
             tbl_row += '</td>';
-          }
-          else if (value[2] == "bioinfo-columns" && info['run_metrics_data'] !== undefined) {
-            tbl_row += '<td class="' + column_id + '">';
-            $.each(info['run_metrics_data'], function(rmd, rmid) {
-              val=parseFloat(rmid[column_id])
-              if (val === 'NaN'){
-                  tbl_row += auto_format(rmid[column_id]);
-              }else{
-               if(val % 1 === 0){
-                  tbl_row += auto_format(val);
-               }else{
-                  tbl_row += auto_format(val.toFixed(2));
-               }
-              }
-              tbl_row+='<br/>';
-            });
-            tbl_row += '</td>';
-          }
 
           // Details columns
           else {
@@ -1221,7 +1216,11 @@ function load_charon_summary(){
           $('#charon-status-failed').text(data['failed']);
           $('#charon-status-runn').text(data['runn']);
           $('#charon-status-hge').text(data['hge']);
-          $('#charon-status-gdp').text(data['gdp'].toString().replace(/\'/," "));
+          var del_projs = '';
+          data['gdp'].forEach(function(del_proj){
+              del_projs += '<span class="badge bg-secondary mr-1">'+del_proj+'</span>';
+          });
+          $('#charon-status-gdp').html(del_projs);
       }
   }).fail(function( jqxhr, textStatus, error ) {
       var err = textStatus + ", " + error;

@@ -12,6 +12,7 @@ from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 from status.util import SafeHandler
 from status.projects import RunningNotesDataHandler
+from status.flowcell import FlowcellHandler
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
@@ -29,6 +30,7 @@ thresholds = {
     'NovaSeq S4': 2000,
     'NextSeq Mid' : 25,
     'NextSeq High' : 75,
+    'NextSeq 2000 P1' : 100,
     'NextSeq 2000 P2' : 400,
     'NextSeq 2000 P3' : 1100
 }
@@ -70,24 +72,6 @@ class FlowcellsHandler(SafeHandler):
 
             # Lanes were previously in the wrong order
             row.value['lane_info'] = OrderedDict(sorted(row.value['lane_info'].items()))
-            run_setup = sorted(row.value['reads'], key=lambda k: k['Number'])
-            run_setup_text = ''
-            read_count = 0
-            index_count = 0
-            for read in run_setup:
-                run_setup_text += read['NumCycles'] + 'nt'
-                if read['IsIndexedRead'] == 'N':
-                    read_count += 1
-                    run_setup_text += '(R' + str(read_count)
-                elif read['IsIndexedRead'] == 'Y':
-                    index_count += 1
-                    run_setup_text += '(I'+ str(index_count)
-                if run_setup.index(read) == len(run_setup)-1:
-                    run_setup_text += ')'
-                else:
-                    run_setup_text += ')-'
-            row.value['actual_recipe'] = run_setup_text
-
             temp_flowcells[row.key] = row.value
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
@@ -243,24 +227,6 @@ class OldFlowcellsInfoDataHandler(SafeHandler):
         return flowcell_info
 
 
-class FlowcellDataHandler(SafeHandler):
-    """ Serves a list of sample runs in a flowcell.
-
-    Loaded through /api/v1/flowcells/([^/]*)$ url
-    """
-    def get(self, flowcell):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_sample_runs(flowcell)))
-
-    def list_sample_runs(self, flowcell):
-        sample_run_list = []
-        fc_view = self.application.samples_db.view("flowcell/name", reduce=False)
-        for row in fc_view[flowcell]:
-            sample_run_list.append(row.value)
-
-        return sample_run_list
-
-
 class FlowcellQCHandler(SafeHandler):
     """ Serves QC data for each lane in a given flowcell.
 
@@ -322,16 +288,15 @@ class FlowcellNotesDataHandler(SafeHandler):
     """
     def get(self, flowcell):
         self.set_header("Content-type", "application/json")
-        try:
-            p=get_container_from_id(flowcell)
-        except (KeyError, IndexError) as e:
+        doc_id = FlowcellHandler.find_DB_entry(self, flowcell).id
+        if not doc_id:
+            self.write('{}')
+        fc_doc = self.application.x_flowcells_db[doc_id]
+        lims_data = fc_doc.get('lims_data')
+        if not lims_data:
             self.write('{}')
         else:
-            # Sorted running notes, by date
-            try:
-                running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
-            except (KeyError) as e:
-                running_notes = {}
+            running_notes = lims_data.get('container_running_notes', {})
             sorted_running_notes = OrderedDict()
             for k, v in sorted(running_notes.items(), key=lambda t: t[0], reverse=True):
                 sorted_running_notes[k] = v
@@ -352,21 +317,24 @@ class FlowcellNotesDataHandler(SafeHandler):
             self.finish('<html><body>No note parameters found</body></html>')
         else:
             newNote = {'user': user.name, 'email': user.email, 'note': note, 'category': category}
-            try:
-                p=get_container_from_id(flowcell)
-            except (KeyError, IndexError) as e:
+
+            doc_id = FlowcellHandler.find_DB_entry(self, flowcell).id
+            if not doc_id:
                 self.set_status(400)
                 self.write('Flowcell not found')
             else:
-                running_notes = json.loads(p.udf['Notes']) if 'Notes' in p.udf else {}
+                fc_doc = self.application.x_flowcells_db[doc_id]
+                lims_data = fc_doc.get('lims_data', {})
+                running_notes = lims_data.get('container_running_notes', {})
                 running_notes[str(datetime.datetime.now())] = newNote
+                lims_data['container_running_notes'] = running_notes
 
                 flowcell_link = "<a class='text-decoration-none' href='/flowcells/{0}'>{0}</a>".format(flowcell)
                 project_note = "#####*Running note posted on flowcell {}:*\n".format(flowcell_link)
                 project_note += note
 
-                p.udf['Notes'] = json.dumps(running_notes)
-                p.put()
+                fc_doc['lims_data'] = lims_data
+                self.application.x_flowcells_db.save(fc_doc)
                 #write running note to projects only if it has been saved successfully in FC
                 for project in projects:
                     RunningNotesDataHandler.make_project_running_note(
@@ -448,10 +416,18 @@ class ReadsTotalHandler(SafeHandler):
             self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(), readsdata=ordereddata, query=query))
         else:
             xfc_view = self.application.x_flowcells_db.view("samples/lane_clusters", reduce=False)
+            bioinfo_view = self.application.bioinfo_db.view("latest_data/sample_id")
             for row in xfc_view[query:"{}Z".format(query)]:
                 if not row.key in data:
                     data[row.key]=[]
                 data[row.key].append(row.value)
+            #To check if sample is failed on lane level
+            for row in bioinfo_view[[query, None, None, None]:[f'{query}Z', 'ZZ', 'ZZ', 'ZZ']]:
+                    if row.key[3] in data:
+                        for fcl in data[row.key[3]]:
+                            if row.key[1] + ':' + row.key[2] == fcl['fcp']:
+                                fcl['sample_status'] = row.value['sample_status']
+                                break # since the row is already found
             for key in sorted(data.keys()):
                 ordereddata[key]=sorted(data[key], key=lambda d:d['fcp'])
             self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(), readsdata=ordereddata, query=query))

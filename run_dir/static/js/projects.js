@@ -4,6 +4,11 @@ URL: /static/js/projects.js
 Powers /projects/ - template is run_dir/design/projects.html
 */
 
+//sorting/filtering filter
+var saved_filter={};
+//sorted/filtered preset to be saved
+var sort_preset='';
+
 // On page load
 $(function(){
 
@@ -148,7 +153,10 @@ function load_table(status, type, columns, dates) {
     var size = 0;
     undefined_fields=[];
     $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-outline-dark" data-clipboard-target="#project_table"><span class="fa fa-copy"></span> Copy table to clipboard</button>');
-
+    if ($('#user_presets_dropdown .dropdown-toggle').hasClass('active')){
+      //only add sorting/filtering save button if user-defined preset is loaded
+      $("#copyTable").append('<button type="submit" class="btn btn-sm btn-primary float-right" id="saveFilter">Save filtering/sorting to Preset</button>').html();
+    }
     $.each(data, function(project_id, summary_row) {
       $.each(summary_row, function(key,value){
         //this tracks the fields existing in our projects objects, but not present in the filter tab yet.
@@ -325,7 +333,12 @@ function init_listjs(no_items, columns) {
           "paging":false,
           "destroy": true,
           "info":false,
-          "order": [[ 0, "desc" ]]
+          "order": [[ 0, "desc" ]],
+          "stateSave": true,
+          "stateLoadCallback": function () {
+          // read out the filter settings and apply
+              return saved_filter;
+            }
         });
     }
 
@@ -498,6 +511,42 @@ $('body').on('click hidden.bs.dropdown', '.rBtngp2', function(event){
   read_current_filtering();
 });
 
+//Saving the filtering/sorting to user-defined preset
+$(document).on('click', '#saveFilter', function() {
+  var presetFilterName = '';
+  if ($('#user_presets_dropdown .dropdown-toggle').hasClass('active')){
+    //if user-defined preset selected, save to old preset
+    presetFilterName=$('#user_presets_dropdown .dropdown-toggle').text();
+    if (sort_preset !== presetFilterName){
+      //if selected preset does not match the loaded preset, otherwise in won't apply to the correct preset
+      alert('The selected Preset does not match the table, please click "Load Table" and redo the sorting/filtering again to save it.');
+    }
+    else {
+      //save
+      var table_filter = $('#project_table').DataTable().state()
+      var userPage_api_url = "/api/v1/presets?savefilter="+$.trim(presetFilterName);
+      $.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: userPage_api_url,
+        data: JSON.stringify(table_filter),
+        error: function(xhr, textStatus, errorThrown) {
+          alert('There was an error in saving the preset: '+errorThrown);
+          $('#saveFilter').removeClass('disabled').text('Error saving');
+          console.log(xhr); console.log(textStatus); console.log(errorThrown); console.log(JSON.stringify(table_filter));
+        },
+        success: function(saved_data, textStatus, xhr) {
+          $('#saveFilter').addClass('disabled').text('Saving...').delay(1500).queue(function(){$(this).removeClass('disabled').text('Save filtering/sorting to Preset'); $(this).dequeue()});
+        }
+      });
+    }
+  }
+  else if ($('input[name="presetOptions"]:checked')){
+    //if default preset selected
+    alert('Please select a user-defined Preset'); 
+  }
+});
+
 function read_current_filtering(){
   var columns = new Array();
   var preset;
@@ -558,13 +607,13 @@ function sel_from_ps(preset_type, preset, data){
   else if (preset_type == "users_presets_dropdown") {
     resetReorderFields();
     var choices = data['user'][preset];
+    var order="";
     for (column in choices) {
       if(column.indexOf('COLUMNS')!=-1){
         for (choice in choices[column]) {
           var column_id = 'allFields-'+column.toLowerCase().replace(/_/g, '-') + '-' + choice.replace(/\(|\)/g, '');
           $("#"+column_id).prop('checked', true);
         }
-        order="";
         if(choices['COLUMNORDER'])
           order=choices['COLUMNORDER'];
       }
@@ -587,6 +636,10 @@ function sel_from_ps(preset_type, preset, data){
           $('#inp_date_4').val(choices[column]['new_queue_date']);
           $('#inp_date_5').val(choices[column]['old_close_date']);
           $('#inp_date_6').val(choices[column]['new_close_date']);
+        }
+        if(column.indexOf('FILTER')!=-1){
+          //filter/sort to be saved to usr-def preset
+          saved_filter=choices[column];
         }
       }
     }
@@ -735,7 +788,16 @@ function dealWithDatepickers(datepick, option){
     $('#'+datepick+'_end').children('input').val('');
   }
 }
-$('#loadTablebtn').click(function(e){
+$('.loadTablebtns').click(function(e){
+  if ($('#user_presets_dropdown .dropdown-toggle').hasClass('active')){
+    sort_preset=$('#user_presets_dropdown .dropdown-toggle').text();
+  }
+  else if ($('input[name="presetOptions"]:checked')){
+    if ($('#saveFilter').length > 0){
+      //hide sorting/filtering save button if exists when default preset loaded
+      $("#saveFilter").hide();
+    }
+  }
   getTableParamsandLoad();
 });
 

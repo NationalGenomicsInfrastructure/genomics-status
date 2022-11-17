@@ -11,7 +11,7 @@ $(document).ready(function() {
 // Initialize sorting and searching javascript plugin
 
 function load_table() {
-  $("#queues_table_body").html('<tr><td colspan="10" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
+  $("#queues_table_body").html('<tr><td colspan="15" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
   return $.getJSON('/api/v1/sequencing_queues', function(data) {
     $("#queues_table_body").empty();
     $.each(data, function(flow, projects) {
@@ -21,25 +21,38 @@ function load_table() {
           tbl_row.append($('<td>').html(flow));
           tbl_row.append($('<td>').html('<a class="text-decoration-none" href="/project/'+project+'">'+prinfo['name']+' ('+project+') </a>'));
           var plates = [];
+          var pools = [];
           var queuetimes = [];
+          var pool_conc = [];
           var qpcrconc = [];
           $.each(prinfo['plates'], function(plate, values){
             var plate_value = '<div class="mult-pools-margin">'+plate+'</div>';
-            if (values['is_rerun']){
-              plate_value = '<div class="mult-pools-margin">'+plate+' <span class="badge bg-warning sentenceCase">Rerun</span></div>';
-            }
+            $.each(values['pools'], function(index, pool){
+              var pool_value = '<div class="mult-pools-margin">'+pool['name'];
+              if (pool['is_rerun']){
+                pool_value = pool_value + ' <span class="alert alert-warning sentenceCase p-1">Rerun</span>';
+              }
+              pool_value = pool_value + '</div>';
+              pools.push(pool_value)
+            })
             plates.push(plate_value);
             var daysAndLabel = getDaysAndDateLabel(values['queue_time'], 'both');
-            queuetimes.push('<div class="mult-pools-margin"><span class="badge bg-'+daysAndLabel[1]+'">'+daysAndLabel[0]+'</span></div>');
-            qpcrconc.push('<div class="mult-pools-margin">'+values['conc_pool_qpcr']+'</div>');
+            queuetimes.push('<div class="mult-pools-margin"><span class="alert alert-'+daysAndLabel[1]+' p-1">'+daysAndLabel[0]+'</span></div>');
+            qpcrconc.push('<div class="mult-pools-margin">'+values['conc_qpcr']+'</div>');
+            pool_conc.push('<div class="mult-pools-margin">'+values['conc_pool']+'</div>');
           });
+          tbl_row.append($('<td>').html(pools));
           tbl_row.append($('<td>').html(plates));
           tbl_row.append($('<td>').html(queuetimes));
-          tbl_row.append($('<td>').html(prinfo['runmode']));
+          tbl_row.append($('<td>').html(prinfo['proj_queue_date']));
+          tbl_row.append($('<td>').html(prinfo['sequencing_platform']));
+          tbl_row.append($('<td>').html(prinfo['flowcell']));
+          tbl_row.append($('<td>').html(prinfo['flowcell_option']));
           tbl_row.append($('<td>').html(prinfo['lanes']));
           tbl_row.append($('<td>').html(prinfo['setup']));
           tbl_row.append($('<td>').html(prinfo['final_loading_conc']));
           tbl_row.append($('<td>').html(qpcrconc));
+          tbl_row.append($('<td>').html(pool_conc));
           tbl_row.append($('<td>').html(prinfo['librarytype']));
           $("#queues_table_body").append(tbl_row);
         })
@@ -70,7 +83,7 @@ function init_listjs() {
         api.column(0, {page:'current'} ).data().each( function ( group, i ) {
           if ( last !== group ) {
             $(rows).eq( i ).before(
-                '<tr class="group"><td colspan="10">'+group+'</td></tr>'
+                '<tr class="group"><td colspan="14">'+group+'</td></tr>'
             );
             last = group;
           }
@@ -125,7 +138,7 @@ function getDaysAndDateLabel(date, option){
 }
 
 // Copy project samples table to clipboard
-var clipboard = new Clipboard('#seq_copy_table');
+var clipboard = new Clipboard('#seq_copy_table_btn');
 clipboard.on('success', function(e) {
   e.clearSelection();
   $('#seq_copy_table_btn').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
@@ -133,7 +146,3 @@ clipboard.on('success', function(e) {
     $('#seq_copy_table_btn').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
   }, 2000);
 });
-
-$('#seq_copy_table_btn').on('click', function () {
-  $('#seq_copy_table').click();
-})

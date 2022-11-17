@@ -605,8 +605,47 @@ class PricingQuoteHandler(PricingBaseHandler):
                               user=self.get_current_user()))
 
 
-class GenerateQuoteHandler(SafeHandler):
-    """ Serves a built preliminary pricing quote page
+class AgreementsDBHandler(SafeHandler):
+    """Base class that other handlers can inherit from to access the Agreements DB.
+
+    Implements logic that other classes can reuse
+    """
+
+    # _____________________________ FETCH METHODS _____________________________
+
+    def fetch_agreement(self, project_id):
+        db = self.application.agreements_db
+        rows = db.view('entire_document/project_id', descending=True, key=project_id, limit=1).rows
+        doc = {}
+        if len(rows)>0:
+            doc = rows[0].value
+        return doc
+
+    # ____________________________ UPDATE DOC METHODS ____________________
+
+    def update_agreementdoc(self, project_id, timestamp, save_info=None):
+        doc = self.fetch_agreement(project_id)
+        #for saving agreement info
+        if save_info:
+            if not doc:
+                doc['project_id'] = project_id
+            if 'saved_agreements' in doc:
+                doc['saved_agreements'][timestamp] = save_info
+            else:
+                doc['saved_agreements'] = { timestamp: save_info }
+        #for marking a saved agreement signed
+        else:
+            doc['signed'] = timestamp
+            doc['signed_by'] = self.get_current_user().name
+            doc['signed_at'] = int(datetime.datetime.now().timestamp()*1000)
+
+        db = self.application.agreements_db
+        #probably add a try-except here in the future
+        db.save(doc)
+
+
+class GenerateQuoteHandler(AgreementsDBHandler):
+    """ Serves a built pricing quote page
 
     Loaded through:
         /generate_quote
@@ -614,15 +653,31 @@ class GenerateQuoteHandler(SafeHandler):
     """
     def post(self):
         quote_input = tornado.escape.json_decode(self.request.body.decode('utf-8').split('=')[1])
+        quote_input['date'] = datetime.datetime.now().date().isoformat()
+        if quote_input['type']=='save':
+            save_info = {}
+            save_info['price_type'] = quote_input['price_type']
+            save_info['agreement_summary'] = quote_input['agreement_summary']
+            save_info['agreement_conditions'] = quote_input['agreement_conditions']
+            save_info['created_by'] = self.get_current_user().name
+            save_info['created_by_email'] = self.get_current_user().email
+            save_info['products_included'] = quote_input['products_included']
+            if 'special_addition' in quote_input:
+                save_info['special_addition'] =  quote_input['special_addition']
+            if 'special_percentage' in quote_input:
+                save_info['special_percentage'] = quote_input['special_percentage']
+            save_info['exchange_rate_issued_date'] = quote_input['exchange_rate_issued_date']
+
+            proj_id = quote_input['project_data']['project_id']
+            timestamp = quote_input['project_data']['agreement_number'].split('_')[1]
+            self.update_agreementdoc(proj_id, timestamp, save_info)
+
         template_text = quote_input.pop('template_text')
         template_text['appendices'] = markdown.markdown(template_text['appendices'], extensions=['sane_lists'])
         for condition in template_text['first_page_text']['specific_conditions']:
             template_text['first_page_text']['specific_conditions'][condition] = \
                 markdown.markdown(template_text['first_page_text']['specific_conditions'][condition])
 
-        quote_input['date'] = datetime.datetime.now().date().isoformat()
-        if quote_input['origin'] == 'Agreement':
-            quote_input['agreement_number'] = quote_input['project_data']['project_name']+'_'+datetime.datetime.now().date().strftime('%Y%m%d')
 
         if 'agreement_summary' in quote_input.keys():
             quote_input['agreement_summary'] = markdown.markdown(quote_input['agreement_summary'], extensions=['sane_lists'])
@@ -654,3 +709,29 @@ class AgreementTemplateTextHandler(SafeHandler):
         curr_doc.pop('_id')
         curr_doc.pop('_rev')
         return curr_doc
+
+
+class AgreementDataHandler(AgreementsDBHandler):
+    """ Serves the agreement data from statusdb
+
+    Loaded through:
+        /api/v1/get_agreement_doc/([^/]*)$
+
+    """
+    def get(self, project_id):
+        response = self.fetch_agreement(project_id)
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(response))
+
+class AgreementMarkSignHandler(AgreementsDBHandler):
+    """ Marks a saved agreement signed
+
+    Loaded through:
+        /api/v1/mark_agreement_signed
+
+    """
+    def post(self):
+        post_data = tornado.escape.json_decode(self.request.body)
+        self.update_agreementdoc(post_data['proj_id'], post_data['timestamp'])
+        self.set_header("Content-type", "application/json")
+        self.write({'message': 'Agreement Doc updated'})
