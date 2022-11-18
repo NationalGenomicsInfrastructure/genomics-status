@@ -393,6 +393,10 @@ function load_all_udfs(){
         }
       }
 
+      else if (prettify(key) == 'all_samples_destroyed'){
+        $('#all_samples_destroyed').text(value);
+      }
+
       // Make the project emails clickable and add labels.
       else if (prettify(key) == 'contact'){
         function elabel(text, label) {
@@ -843,71 +847,80 @@ function load_samples_table(colOrder) {
             tbl_row += '</td>';
           }
 
-          else if (value[2] == "library-validation-columns") {
+          else if (value[2] == "library-validation-columns" && info['library_prep'] !== undefined) {
             tbl_row += '<td class="' + column_id + '">';
-            if ('library_validation' in prepinfo) {
-              // Populate the library_validation object when undefined
-              if (Object.keys(prepinfo['library_validation']).length === 0) {
-                prepinfo['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
-                // Populate additional empty fields
-                if (!(info['prep_status'].length === 0 || info['prep_status'] == '-')){
-                  info.prep_status = '-<br>' + auto_format(info['prep_status'][0].toString());
+            var libs = Object.keys(info['library_prep']).sort();
+            $.each(libs, function(idx, library){
+              info_library=info['library_prep'][library];
+              if ('library_validation' in info_library) {
+                // Populate the library_validation object when undefined
+                if (Object.keys(info_library['library_validation']).length === 0) {
+                  prepinfo['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
+                  // Populate additional empty fields
+                  if (!(info['prep_status'].length === 0 || info['prep_status'] == '-')){
+                    info.prep_status = '-<br>' + auto_format(info['prep_status'][0].toString());
+                  }
                 }
-              }
-              // We only want to show up the LIMS process ID with the higher number (the last one)
-              var process_id = max_str(Object.keys(info_library['library_validation']));
-              var validation_data = info_library['library_validation'][process_id];
-              if (validation_data) {
-                validation_data[column_id] = round_floats(validation_data[column_id], 2);
-                // Caliper column
-                if(column_id == 'caliper_image'){
-                     tbl_row += '<span class="caliper_loading_spinner">'+
-                                   '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
-                                 '</span>'+
-                                 '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
-                }
-                // Fragment Analyzer Image
-                if (column_id == 'frag_an_image'){
-                    tbl_row += '<span class="caliper_loading_spinner">'+
-                                  '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
-                                '</span>'+
-                                '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>';
-                }
+                // We only want to show up the LIMS process ID with the higher number (the last one)
+                var process_id = max_str(Object.keys(info_library['library_validation']));
+                var validation_data = info_library['library_validation'][process_id];
+                if (validation_data) {
+                  validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                  // Caliper column
+                  if(column_id == 'caliper_image'){
+                      tbl_row += '<span class="caliper_loading_spinner">'+
+                                    '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                    '</span>'+
+                                    '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
+                  }
+                  // Fragment Analyzer Image
+                  if (column_id == 'frag_an_image'){
+                      tbl_row += '<span class="caliper_loading_spinner">'+
+                                    '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                    '</span>'+
+                                    '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>';
+                  }
 
-                // Remove the X from initial QC initials
-                else if(column_id == 'initials'){
-                  if(validation_data[column_id] !== '-'){
-                    var sig = validation_data[column_id];
-                    if(sig.length == 3 && sig[2] == 'X'){
-                      sig = sig.substring(0,2);
+                  // Remove the X from initial QC initials
+                  else if(column_id == 'initials'){
+                    if(validation_data[column_id] !== '-'){
+                      var sig = validation_data[column_id];
+                      if(sig.length == 3 && sig[2] == 'X'){
+                        sig = sig.substring(0,2);
+                      }
+                      tbl_row += '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
                     }
-                    tbl_row += '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
+                    else{
+                      tbl_row += '-<br>';
+                    }
                   }
-                  else{
-                    tbl_row += '-<br>';
-                  }
-                }
 
-                // Everything else
-                else {
-                  tbl_row += auto_format(validation_data[column_id], true);
+                  // Everything else
+                  else {
+                    tbl_row += auto_format(validation_data[column_id], true);
+                  }
                 }
               }
-            }
+              tbl_row += '</td>';
+            });
+          }
+          else if (value[2] == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
+            tbl_row += '<td class="' + column_id + '">';
+            var libs = Object.keys(info['library_prep']).sort();
+            $.each(libs, function(idx, library){
+              info_library=info['library_prep'][library];
+              if ('pre_prep_library_validation' in info_library) {
+                // We only want to show up the LIMS process ID with the higher number (the last one)
+                var process_id = max_str(Object.keys(info_library['pre_prep_library_validation']));
+                var validation_data = info_library['pre_prep_library_validation'][process_id];
+                if (validation_data) {
+                  validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                  tbl_row += auto_format(validation_data[column_id]);
+                }
+              }
+            });
             tbl_row += '</td>';
           }
-          else if (value[2] == "pre-prep-library-validation-columns") {
-            tbl_row += '<td class="' + column_id + '">';
-            if ('pre_prep_library_validation' in prepinfo) {
-              // We only want to show up the LIMS process ID with the higher number (the last one)
-              var process_id = max_str(Object.keys(prepinfo['pre_prep_library_validation']));
-              var validation_data = prepinfo['pre_prep_library_validation'][process_id];
-              if (validation_data) {
-                validation_data[column_id] = round_floats(validation_data[column_id], 2);
-                tbl_row += auto_format(validation_data[column_id]);
-              }
-            }
-            tbl_row += '</td>';
 
           // Details columns
           else {
