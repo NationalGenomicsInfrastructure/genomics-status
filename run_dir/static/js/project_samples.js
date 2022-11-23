@@ -393,10 +393,6 @@ function load_all_udfs(){
         }
       }
 
-      else if (prettify(key) == 'all_samples_destroyed'){
-       $('#all_samples_destroyed').text(value);
-      }
-
       // Make the project emails clickable and add labels.
       else if (prettify(key) == 'contact'){
         function elabel(text, label) {
