@@ -28,7 +28,7 @@ from status.deliveries import DeliveriesPageHandler
 from status.flowcell import FlowcellHandler
 from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandler, \
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
-    FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
+    FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler, ONTFlowcellsDataHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
@@ -112,6 +112,7 @@ class Application(tornado.web.Application):
             ("/api/v1/draft_cost_calculator", PricingDraftDataHandler),
             ("/api/v1/draft_sample_requirements", SampleRequirementsDraftDataHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
+            ("/api/v1/ont_flowcells", ONTFlowcellsDataHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
@@ -249,6 +250,7 @@ class Application(tornado.web.Application):
             self.gs_users_db = couch["gs_users"]
             self.instruments_db= couch["instruments"]
             self.instrument_logs_db = couch["instrument_logs"]
+            self.nanopore_runs_db = couch["nanopore_runs"]
             self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
             self.projects_db = couch["projects"]
             self.sample_requirements_db = couch["sample_requirements"]

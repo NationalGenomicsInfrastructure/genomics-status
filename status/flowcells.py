@@ -107,6 +107,22 @@ class FlowcellsDataHandler(SafeHandler):
         return OrderedDict(sorted(flowcells.items()))
 
 
+class ONTFlowcellsDataHandler(SafeHandler):
+    """ Serves brief information for each flowcell in the database.
+
+    Loaded through /api/v1/ont_flowcells url
+    """
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        flowcells = {}
+        fc_view = self.application.nanopore_runs_db.view("info/summary",
+                                                     descending=True)
+        for row in fc_view:
+            flowcells[row.key] = row.value
+
+        self.write(json.dumps(OrderedDict(sorted(flowcells.items()))))
+        
+
 class FlowcellsInfoDataHandler(SafeHandler):
     """ Serves brief information about a given flowcell.
 
