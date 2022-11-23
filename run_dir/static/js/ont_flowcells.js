@@ -5,16 +5,17 @@
 $(".tabbable").on("click", '[role="tab"]', function() {
 
     if($(this).attr('href')=='#tab_ont'){
-      $("#ont_fc_table_body").html('<tr><td colspan="3" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
+      $("#ont_fc_table_body").html('<tr><td colspan="4" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
       return $.getJSON('/api/v1/ont_flowcells', function(data) {
         $("#ont_fc_table_body").empty();
         $.each(data, function(key, value) {
           if(!($.isEmptyObject(value))){
             console.log(value)
             var tbl_row = $('<tr>');
-            tbl_row.append($('<td>').html(value['start_time']));
             tbl_row.append($('<td>').html(key));
+            tbl_row.append($('<td>').html(value['experiment_name']));
             tbl_row.append($('<td>').html(value['sample_name']));
+            tbl_row.append($('<td>').html(value['start_time']));
           $("#ont_fc_table_body").append(tbl_row);
         }
       });
