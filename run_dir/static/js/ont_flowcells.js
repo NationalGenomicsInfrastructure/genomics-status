@@ -15,7 +15,14 @@ $(".tabbable").on("click", '[role="tab"]', function() {
             tbl_row.append($('<td>').html(key));
             tbl_row.append($('<td>').html(value['experiment_name']));
             tbl_row.append($('<td>').html(value['sample_name']));
-            tbl_row.append($('<td>').html(value['start_time']));
+            tbl_row.append($('<td>').html(value['instrument']));
+            tbl_row.append($('<td>').html(value['position']));
+            tbl_row.append($('<td>').html(value['flow_cell_type']));
+            tbl_row.append($('<td>').html(value['flow_cell_id']));
+            tbl_row.append($('<td>').html(value['prep_kit']));
+            tbl_row.append($('<td>').html(value['barcoding_kit']));
+            tbl_row.append($('<td>').html(value['start_date']));
+            tbl_row.append($('<td>').html(value['end_date']));
           $("#ont_fc_table_body").append(tbl_row);
         }
       });
