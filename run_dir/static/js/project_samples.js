@@ -826,23 +826,6 @@ function load_samples_table(colOrder) {
                           tbl_row += '</td>';
                         });
                       }
-                      else if (value[2] == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
-                        tbl_row += '<td class="' + column_id + '">';
-                        var libs = Object.keys(info['library_prep']).sort();
-                        $.each(libs, function(idx, library){
-                          info_library=info['library_prep'][library];
-                          if ('pre_prep_library_validation' in info_library) {
-                            // We only want to show up the LIMS process ID with the higher number (the last one)
-                            var process_id = max_str(Object.keys(info_library['pre_prep_library_validation']));
-                            var validation_data = info_library['pre_prep_library_validation'][process_id];
-                            if (validation_data) {
-                              validation_data[column_id] = round_floats(validation_data[column_id], 2);
-                              tbl_row += auto_format(validation_data[column_id]);
-                            }
-                          }
-                        });
-                        tbl_row += '</td>';
-                      }
       });
       tbl_row += '</tr>';
       tbl_body += tbl_row;
