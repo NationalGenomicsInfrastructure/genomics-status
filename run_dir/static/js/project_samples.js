@@ -393,10 +393,6 @@ function load_all_udfs(){
         }
       }
 
-      else if (prettify(key) == 'all_samples_destroyed'){
-        $('#all_samples_destroyed').text(value);
-      }
-
       // Make the project emails clickable and add labels.
       else if (prettify(key) == 'contact'){
         function elabel(text, label) {
@@ -657,197 +653,416 @@ function load_samples_table(colOrder) {
       return false;
     }
 
-    var last_sample='';
+    var last_sample='';	
     var stripe = false;
     $.each(samples_data, function (sample, info) {
       size++;
-      //Add separate colors for samples
-      tbl_row = '<tr';
-      if(sample != last_sample){
-        if(!stripe){
-          tbl_row = tbl_row+ ' class="table-secondary">';
-          stripe = true;
-        }
-        else{
-          stripe = false;
-          tbl_row = tbl_row+'>'
-        }
-      }
-      //If library prep is undefined, these fields are still relevant
-      if (info['library_prep'] === undefined){
-        size++;
-        $.each(cols, function(i, value){
-          var column_name = value[0];
-          var column_id = value[1];
-          if (column_id == 'start_date'){
-            tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
+      tbl_row = '<tr>';
+      //VERY hot fix for the PC's, to split the preps of the library validation tab
+      if ($('#library_validation').hasClass('active')){
+          //Add separate colors for samples
+	        tbl_row = '<tr';
+	        if(sample != last_sample){
+		        if(!stripe){
+			        tbl_row = tbl_row+ ' class="table-secondary">';
+			        stripe = true;
+		        }
+		        else{
+			        stripe = false;
+			        tbl_row = tbl_row+'>'
+		        }
+	        }
+	        //If library prep is undefined, these fields are still relevant
+	        if (info['library_prep'] === undefined){
+		          size++;
+		          $.each(cols, function(i, value){
+			          var column_name = value[0];
+			          var column_id = value[1];
+			          if (column_id == 'start_date'){
+				          tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
+			          }
+			          else if (info[column_id] === undefined || info[column_id] === null || Object.keys(info[column_id]).length === 0){
+				          tbl_row += '<td class="'+column_id+'">'+'-</td>';
+			          }
+                else {
+                  if (column_id == "scilife_name") {
+                    if(info[column_id] == 'Unexpectedbarcode'){
+                      tbl_row += '<td class="'+column_id+'"><span class="badge bg-danger" data-toggle="tooltip" title="These reads failed to demultiplex">'+
+                      info[column_id] + '</span></td>';
+                    } else {
+                      tbl_row += '<td class="'+column_id+'"><a class="text-decoration-none" target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
+                      'href="' + lims_uri + '/clarity/search?scope=Sample&query='+info[column_id]+'">'+
+                      info[column_id] + '</a></td>';
+                    }
+                  }
+                  else if (column_id == 'status_(manual)'){
+                    tbl_row += auto_samples_cell(column_id, info[column_id]);
+                  }
+                  else {
+                    tbl_row += '<td class="'+column_id+'">'+info[column_id]+'</td>';
+                  }
+                }
+              });
+            }
+            tbl_row += '</tr>';
+            // If library prep is not undefined, in order to split the sample by prep, and add same color to preps of same sample
+            $.each(info['library_prep'], function(prep, prepinfo){
+              size++;
+              tbl_row = '<tr';
+              if(!stripe){
+                tbl_row = tbl_row+ ' class="table-secondary">';
+              }
+              else{
+                tbl_row = tbl_row+'>'
+              }
+              $.each(cols, function(i, value){
+                var column_name = value[0];
+                var column_id = value[1];
+                if (value[2] == "basic-columns") {
+                  info[column_id] = round_floats(info[column_id], 2);
+
+                  // Scilife Sample Name
+                  if (column_id == "scilife_name") {
+                    if(info[column_id] == 'Unexpectedbarcode'){
+                      tbl_row += '<td class="'+column_id+'"><span class="badge bg-danger" data-toggle="tooltip" title="These reads failed to demultiplex">'+
+                              info[column_id] + '</span></td>';
+                    } else {
+                      // TODO - Wire this up to the new QC page when it's ready
+                      tbl_row += '<td class="'+column_id+'"><a class="text-decoration-none" target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
+                            'href="' + lims_uri + '/clarity/search?scope=Sample&query='+info[column_id]+'">'+
+                            info[column_id] + '</a></td>';
+                          }
+                  }
+
+                // Sample run metrics is an array of links - link to flowcells page
+                else if (column_id == 'sample_run_metrics') {
+                  tbl_row += '<td class="' + column_id + '">';
+                  for (var i=0; i<info[column_id].length; i++) {
+                    var fc = info[column_id][i];
+                    // Remove the lane number and barcode - eg 6_FCID_GTGAAA
+                    fc = fc.substring(2);
+                    fc = fc.replace(/_[ACTG\-]+$/,'');
+                    fc = fc.replace('_NoIndex', '');
+                    tbl_row += '<samp class="nowrap"><a class="text-decoration-none" href="/flowcells/' + fc + '">' +
+                    info[column_id][i] + '</a></samp><br>';
+                  }
+                  tbl_row += '</td>';
+                }
+
+                // Library prep is an array of *Objects*
+                else if (column_id == 'library_prep') {
+                  tbl_row += '<td class="' + column_id + '">';
+                  tbl_row += auto_format(prep, true) + ' </td>';
+                }
+
+                // Make sure that 'million reads' has two decimal places
+                else if (column_id == 'total_reads_(m)' && typeof info[column_id] !== 'undefined'){
+                   tbl_row += '<td class="' + column_id + ' text-right">' + Number(info[column_id]).toFixed(2) + '</td>';
+                }
+
+                // Split the preps
+                else if (column_id == 'prep_status'){
+                  tbl_row += auto_samples_cell(column_id, prepinfo[column_id]);
+                }
+
+                // everything else
+                else {
+                  tbl_row += auto_samples_cell(column_id, info[column_id]);
+                }
+
+            }
+            else if (value[2] == "initial-qc-columns" && info['initial_qc'] !== undefined) {
+                info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
+
+                // Fragment Analyzer Image
+                if (column_id == 'frag_an_image'){
+                    tbl_row += '<td class="' + column_id + '">'+
+                              '<span class="caliper_loading_spinner">'+
+                                '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                              '</span>'+
+                              '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+info['initial_qc'][column_id]+'" data-imgtype="Initial QC Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>'+
+                            '</td>';
+                }
+
+                // Caliper image
+                else if (column_id == 'caliper_image'){
+                    tbl_row += '<td class="' + column_id + '">'+
+                              '<span class="caliper_loading_spinner">'+
+                                '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                              '</span>'+
+                              '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+info['initial_qc'][column_id]+'" data-imgtype="Initial QC Caliper Image" data-samplename="'+info['scilife_name']+'"></a>'+
+                            '</td>';
+                }
+
+                // Remove the X from initial QC initials
+                else if(column_id == 'initials'){
+                  var sig = info['initial_qc'][column_id];
+                  if(sig && sig.length == 3 && sig[2] == 'X'){
+                    sig = sig.substring(0,2);
+                  }
+                  tbl_row += '<td class="'+column_id+'">'+
+                            '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+info['initial_qc'][column_id]+'">'+
+                                sig+'</span></td>';
+                }
+
+                else if(column_id == 'initial_qc_status'){
+                  tbl_row += '<td class="' + column_id +' align-middle'+ '">' + auto_format(info['initial_qc'][column_id], true) + ' </td>';
+                }
+
+                // everything else
+                else {
+                  tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
+                }
+            }
+
+            else if (value[2] == "library-prep-columns") {
+                        tbl_row += '<td class="' + column_id + '">';
+                        prepinfo[column_id] = round_floats(prepinfo[column_id], 2);
+
+                        // Special case for workset_name, which is a link to Genstat workset page
+                        if (column_id == "workset_name" && prepinfo[column_id]) {
+                          tbl_row += '<samp class="nowrap" title="Open Workset" data-toggle="tooltip"><a class="text-decoration-none" href="/workset/';
+                          tbl_row += prepinfo[column_id] + '" target="_blank">' + prepinfo[column_id] + '</a></samp><br>';
+                        }
+
+                        // Special case for workset_setup, which is a link to the LIMS
+                        else if (column_id == "workset_setup" && prepinfo[column_id]) {
+                          tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a class="text-decoration-none" href="' + lims_uri+ '/clarity/work-complete/';
+                          tbl_row += prepinfo[column_id].split('-')[1] + '" target="_blank">' + prepinfo[column_id] + '</a></samp><br>';
+                        }
+
+                        // Make the reagent label use a samp tag
+                        else if (column_id == "reagent_label" && prepinfo[column_id]) {
+                          tbl_row += '<samp class="nowrap">' + prepinfo[column_id] + '</samp><br>';
+                        }
+
+                        else {
+                          tbl_row += auto_format(prepinfo[column_id], true);
+                        }
+                        tbl_row += '</td>';
+                      }
+
+                      else if (value[2] == "library-validation-columns" && info['library_prep'] !== undefined) {
+                        tbl_row += '<td class="' + column_id + '">';
+                        var libs = Object.keys(info['library_prep']).sort();
+                        $.each(libs, function(idx, library){
+                          info_library=info['library_prep'][library];
+                          if ('library_validation' in info_library) {
+                            // Populate the library_validation object when undefined
+                            if (Object.keys(info_library['library_validation']).length === 0) {
+                              prepinfo['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
+                              // Populate additional empty fields
+                              if (!(info['prep_status'].length === 0 || info['prep_status'] == '-')){
+                                info.prep_status = '-<br>' + auto_format(info['prep_status'][0].toString());
+                              }
+                            }
+                            // We only want to show up the LIMS process ID with the higher number (the last one)
+                            var process_id = max_str(Object.keys(info_library['library_validation']));
+                            var validation_data = info_library['library_validation'][process_id];
+                            if (validation_data) {
+                              validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                              // Caliper column
+                              if(column_id == 'caliper_image'){
+                                  tbl_row += '<span class="caliper_loading_spinner">'+
+                                                '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                                '</span>'+
+                                                '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
+                              }
+                              // Fragment Analyzer Image
+                              if (column_id == 'frag_an_image'){
+                                  tbl_row += '<span class="caliper_loading_spinner">'+
+                                                '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                                '</span>'+
+                                                '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>';
+                              }
+
+                              // Remove the X from initial QC initials
+                              else if(column_id == 'initials'){
+                                if(validation_data[column_id] !== '-'){
+                                  var sig = validation_data[column_id];
+                                  if(sig.length == 3 && sig[2] == 'X'){
+                                    sig = sig.substring(0,2);
+                                  }
+                                  tbl_row += '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
+                                }
+                                else{
+                                  tbl_row += '-<br>';
+                                }
+                              }
+
+                              // Everything else
+                              else {
+                                tbl_row += auto_format(validation_data[column_id], true);
+                              }
+                            }
+                          }
+                          tbl_row += '</td>';
+                        });
+                      }
+                      else if (value[2] == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
+                        tbl_row += '<td class="' + column_id + '">';
+                        var libs = Object.keys(info['library_prep']).sort();
+                        $.each(libs, function(idx, library){
+                          info_library=info['library_prep'][library];
+                          if ('pre_prep_library_validation' in info_library) {
+                            // We only want to show up the LIMS process ID with the higher number (the last one)
+                            var process_id = max_str(Object.keys(info_library['pre_prep_library_validation']));
+                            var validation_data = info_library['pre_prep_library_validation'][process_id];
+                            if (validation_data) {
+                              validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                              tbl_row += auto_format(validation_data[column_id]);
+                            }
+                          }
+                        });
+                        tbl_row += '</td>';
+                      }
+
+          // Details columns
+          else {
+              info['details'][column_id] = round_floats(info['details'][column_id], 2);
+              tbl_row += auto_samples_cell(column_id, info['details'][column_id]);
           }
-          else if (info[column_id] === undefined || info[column_id] === null || Object.keys(info[column_id]).length === 0){
-            tbl_row += '<td class="'+column_id+'">'+'-</td>';
-          }
-          else{
+      });
+      tbl_row += '</tr>';
+      tbl_body += tbl_row;
+    });
+    last_sample = sample;
+  }
+  else{
+    $.each(cols, function(i, value){
+        var column_name = value[0];
+        var column_id = value[1];
+        if (value[2] == "basic-columns") {
+            info[column_id] = round_floats(info[column_id], 2);
+
+            // Scilife Sample Name
             if (column_id == "scilife_name") {
               if(info[column_id] == 'Unexpectedbarcode'){
                 tbl_row += '<td class="'+column_id+'"><span class="badge bg-danger" data-toggle="tooltip" title="These reads failed to demultiplex">'+
-                           info[column_id] + '</span></td>';
+                            info[column_id] + '</span></td>';
               } else {
+                // TODO - Wire this up to the new QC page when it's ready
                 tbl_row += '<td class="'+column_id+'"><a class="text-decoration-none" target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
-                           'href="' + lims_uri + '/clarity/search?scope=Sample&query='+info[column_id]+'">'+
-                           info[column_id] + '</a></td>';
+                            'href="' + lims_uri + '/clarity/search?scope=Sample&query='+info[column_id]+'">'+
+                            info[column_id] + '</a></td>';
               }
             }
-            else if (column_id == 'status_(manual)'){
+
+            // Sample run metrics is an array of links - link to flowcells page
+            else if (column_id == 'sample_run_metrics') {
+              tbl_row += '<td class="' + column_id + '">';
+              for (var i=0; i<info[column_id].length; i++) {
+                var fc = info[column_id][i];
+                // Remove the lane number and barcode - eg 6_FCID_GTGAAA
+                fc = fc.substring(2);
+                fc = fc.replace(/_[ACTG\-]+$/,'');
+                fc = fc.replace('_NoIndex', '');
+                tbl_row += '<samp class="nowrap"><a class="text-decoration-none" href="/flowcells/' + fc + '">' +
+                info[column_id][i] + '</a></samp><br>';
+              }
+              tbl_row += '</td>';
+            }
+
+            // Library prep is an array of *Objects*
+            else if (column_id == 'library_prep') {
+              tbl_row += '<td class="' + column_id + '">';
+              if (info[column_id] !== undefined) {
+                var libs = Object.keys(info[column_id]).sort();
+                $.each(libs, function(idx, prep){
+                  tbl_row += auto_format(prep, true) + ' ';
+                });
+              }
+              tbl_row += '</td>';
+            }
+
+            // Make sure that 'million reads' has two decimal places
+            else if (column_id == 'total_reads_(m)' && typeof info[column_id] !== 'undefined'){
+              tbl_row += '<td class="' + column_id + ' text-right">' + Number(info[column_id]).toFixed(2) + '</td>';
+            }
+
+            // everything else
+            else {
               tbl_row += auto_samples_cell(column_id, info[column_id]);
             }
-            else {
-              tbl_row += '<td class="'+column_id+'">'+info[column_id]+'</td>';
-            }
-          }
-        });
-      }
-      tbl_row += '</tr>';
-      // If library prep is not undefined, in order to split the sample by prep, and add same color to preps of same sample
-      $.each(info['library_prep'], function(prep, prepinfo){
-          size++;
-          tbl_row = '<tr';
-          if(!stripe){
-            tbl_row = tbl_row+ ' class="table-secondary">';
-          }
-          else{
-            tbl_row = tbl_row+'>'
-          }
-          $.each(cols, function(i, value){
-            var column_name = value[0];
-            var column_id = value[1];
-            if (value[2] == "basic-columns") {
-              info[column_id] = round_floats(info[column_id], 2);
 
-              // Scilife Sample Name
-              if (column_id == "scilife_name") {
-                if(info[column_id] == 'Unexpectedbarcode'){
-                  tbl_row += '<td class="'+column_id+'"><span class="badge bg-danger" data-toggle="tooltip" title="These reads failed to demultiplex">'+
-                             info[column_id] + '</span></td>';
-                } else {
-                  // TODO - Wire this up to the new QC page when it's ready
-                  tbl_row += '<td class="'+column_id+'"><a class="text-decoration-none" target="_blank" data-toggle="tooltip" title="See this sample in the LIMS" '+
-                             'href="' + lims_uri + '/clarity/search?scope=Sample&query='+info[column_id]+'">'+
-                             info[column_id] + '</a></td>';
-                }
-              }
+        }
+        else if (value[2] == "initial-qc-columns" && info['initial_qc'] !== undefined) {
+            info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
 
-              // Sample run metrics is an array of links - link to flowcells page
-              else if (column_id == 'sample_run_metrics') {
-                tbl_row += '<td class="' + column_id + '">';
-                if (prepinfo['sample_run_metrics'] === undefined || Object.keys(prepinfo['sample_run_metrics']).length === 0){
-                  tbl_row += '-';
-                }
-                else {
-                  $.each(prepinfo['sample_run_metrics'], function(fcrun){
-                      // Remove the lane number and barcode - eg 6_FCID_GTGAAA
-                      fc = fcrun.substring(2);
-                      fc = fc.replace(/_[ACTG\-]+$/,'');
-                      fc = fc.replace('_NoIndex', '');
-                      tbl_row += '<samp class="nowrap"><a class="text-decoration-none" href="/flowcells/' + fc + '">' +
-                                 fcrun + '</a></samp><br>';
-                  });
-                }
-                tbl_row += '</td>';
-              }
-
-              // Library prep is an array of *Objects*
-              else if (column_id == 'library_prep') {
-                tbl_row += '<td class="' + column_id + '">';
-                tbl_row += auto_format(prep, true) + ' </td>';
-              }
-
-              // Make sure that 'million reads' has two decimal places
-              else if (column_id == 'total_reads_(m)' && typeof info[column_id] !== 'undefined'){
-                tbl_row += '<td class="' + column_id + ' text-right">' + Number(info[column_id]).toFixed(2) + '</td>';
-              }
-
-              // Split the preps
-              else if (column_id == 'prep_status'){
-                tbl_row += auto_samples_cell(column_id, prepinfo[column_id]);
-              }
-
-              // everything else
-              else {
-                tbl_row += auto_samples_cell(column_id, info[column_id]);
-              }
-
-          }
-          else if (value[2] == "initial-qc-columns" && info['initial_qc'] !== undefined) {
-              info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
-
-              // Fragment Analyzer Image
-              if (column_id == 'frag_an_image'){
+            // Fragment Analyzer Image
+            if (column_id == 'frag_an_image'){
                 tbl_row += '<td class="' + column_id + '">'+
                             '<span class="caliper_loading_spinner">'+
                               '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
                             '</span>'+
                             '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+info['initial_qc'][column_id]+'" data-imgtype="Initial QC Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>'+
                           '</td>';
-              }
+            }
 
-              // Caliper image
-              else if (column_id == 'caliper_image'){
+            // Caliper image
+            else if (column_id == 'caliper_image'){
                 tbl_row += '<td class="' + column_id + '">'+
                             '<span class="caliper_loading_spinner">'+
                               '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
                             '</span>'+
                             '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+info['initial_qc'][column_id]+'" data-imgtype="Initial QC Caliper Image" data-samplename="'+info['scilife_name']+'"></a>'+
                           '</td>';
-              }
+            }
 
-              // Remove the X from initial QC initials
-              else if(column_id == 'initials'){
-                var sig = info['initial_qc'][column_id];
-                if(sig && sig.length == 3 && sig[2] == 'X'){
-                  sig = sig.substring(0,2);
-                }
-                tbl_row += '<td class="'+column_id+'">'+
-                           '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+info['initial_qc'][column_id]+'">'+
+            // Remove the X from initial QC initials
+            else if(column_id == 'initials'){
+              var sig = info['initial_qc'][column_id];
+              if(sig && sig.length == 3 && sig[2] == 'X'){
+                sig = sig.substring(0,2);
+              }
+              tbl_row += '<td class="'+column_id+'">'+
+                          '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+info['initial_qc'][column_id]+'">'+
                               sig+'</span></td>';
-              }
-
-              else if(column_id == 'initial_qc_status'){
-                tbl_row += '<td class="' + column_id +' align-middle'+ '">' + auto_format(info['initial_qc'][column_id], true) + ' </td>';
-              }
-
-              // everything else
-              else {
-                tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
-              }
-          }
-
-          else if (value[2] == "library-prep-columns") {
-            tbl_row += '<td class="' + column_id + '">';
-            prepinfo[column_id] = round_floats(prepinfo[column_id], 2);
-
-            // Special case for workset_name, which is a link to Genstat workset page
-            if (column_id == "workset_name" && prepinfo[column_id]) {
-              tbl_row += '<samp class="nowrap" title="Open Workset" data-toggle="tooltip"><a class="text-decoration-none" href="/workset/';
-              tbl_row += prepinfo[column_id] + '" target="_blank">' + prepinfo[column_id] + '</a></samp><br>';
             }
 
-            // Special case for workset_setup, which is a link to the LIMS
-            else if (column_id == "workset_setup" && prepinfo[column_id]) {
-              tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a class="text-decoration-none" href="' + lims_uri+ '/clarity/work-complete/';
-              tbl_row += prepinfo[column_id].split('-')[1] + '" target="_blank">' + prepinfo[column_id] + '</a></samp><br>';
+            else if(column_id == 'initial_qc_status'){
+              tbl_row += '<td class="' + column_id +' align-middle'+ '">' + auto_format(info['initial_qc'][column_id], true) + ' </td>';
             }
 
-            // Make the reagent label use a samp tag
-            else if (column_id == "reagent_label" && prepinfo[column_id]) {
-              tbl_row += '<samp class="nowrap">' + prepinfo[column_id] + '</samp><br>';
-            }
-
+            // everything else
             else {
-              tbl_row += auto_format(prepinfo[column_id], true);
+              tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
             }
-            tbl_row += '</td>';
-          }
+        }
 
-          else if (value[2] == "library-validation-columns" && info['library_prep'] !== undefined) {
+        else if (value[2] == "library-prep-columns" && info['library_prep'] !== undefined) {
+
+            tbl_row += '<td class="' + column_id + '">';
+            var libs = Object.keys(info['library_prep']).sort();
+            $.each(libs, function(idx, library){
+              info_library=info['library_prep'][library];
+              info_library[column_id] = round_floats(info_library[column_id], 2);
+
+              // Special case for workset_name, which is a link to Genstat workset page
+              if (column_id == "workset_name" && info_library[column_id]) {
+                tbl_row += '<samp class="nowrap" title="Open Workset" data-toggle="tooltip"><a class="text-decoration-none" href="/workset/';
+                tbl_row += info_library[column_id] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
+              }
+
+              // Special case for workset_setup, which is a link to the LIMS
+              else if (column_id == "workset_setup" && info_library[column_id]) {
+                tbl_row += '<samp class="nowrap" title="Open in LIMS" data-toggle="tooltip"><a class="text-decoration-none" href="' + lims_uri+ '/clarity/work-complete/';
+                tbl_row += info_library[column_id].split('-')[1] + '" target="_blank">' + info_library[column_id] + '</a></samp><br>';
+              }
+
+              // Make the reagent label use a samp tag
+              else if (column_id == "reagent_label" && info_library[column_id]) {
+                tbl_row += '<samp class="nowrap">' + info_library[column_id] + '</samp><br>';
+              }
+
+              else {
+                tbl_row += auto_format(info_library[column_id], true);
+              }
+            });
+            tbl_row += '</td>';
+        }
+
+        else if (value[2] == "library-validation-columns" && info['library_prep'] !== undefined) {
             tbl_row += '<td class="' + column_id + '">';
             var libs = Object.keys(info['library_prep']).sort();
             $.each(libs, function(idx, library){
@@ -855,7 +1070,7 @@ function load_samples_table(colOrder) {
               if ('library_validation' in info_library) {
                 // Populate the library_validation object when undefined
                 if (Object.keys(info_library['library_validation']).length === 0) {
-                  prepinfo['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
+                  info_library['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
                   // Populate additional empty fields
                   if (!(info['prep_status'].length === 0 || info['prep_status'] == '-')){
                     info.prep_status = '-<br>' + auto_format(info['prep_status'][0].toString());
@@ -868,17 +1083,17 @@ function load_samples_table(colOrder) {
                   validation_data[column_id] = round_floats(validation_data[column_id], 2);
                   // Caliper column
                   if(column_id == 'caliper_image'){
-                      tbl_row += '<span class="caliper_loading_spinner">'+
-                                    '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
-                                    '</span>'+
-                                    '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
+                       tbl_row += '<span class="caliper_loading_spinner">'+
+                                     '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                   '</span>'+
+                                   '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
                   }
                   // Fragment Analyzer Image
                   if (column_id == 'frag_an_image'){
                       tbl_row += '<span class="caliper_loading_spinner">'+
                                     '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
-                                    '</span>'+
-                                    '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>';
+                                  '</span>'+
+                                  '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>';
                   }
 
                   // Remove the X from initial QC initials
@@ -901,10 +1116,10 @@ function load_samples_table(colOrder) {
                   }
                 }
               }
-              tbl_row += '</td>';
             });
-          }
-          else if (value[2] == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
+            tbl_row += '</td>';
+        }
+        else if (value[2] == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
             tbl_row += '<td class="' + column_id + '">';
             var libs = Object.keys(info['library_prep']).sort();
             $.each(libs, function(idx, library){
@@ -920,20 +1135,18 @@ function load_samples_table(colOrder) {
               }
             });
             tbl_row += '</td>';
-          }
+        }
 
-          // Details columns
-          else {
+        // Details columns
+        else {
             info['details'][column_id] = round_floats(info['details'][column_id], 2);
             tbl_row += auto_samples_cell(column_id, info['details'][column_id]);
-          }
-        });
-        tbl_row += '</tr>';
-        tbl_body += tbl_row;
-      });
-      last_sample = sample;
+        }
     });
-
+    tbl_row += '</tr>';
+    tbl_body += tbl_row;
+    }
+    });
     $("#samples_table_body").html(tbl_body);
 
     // Initialise the table sorting
