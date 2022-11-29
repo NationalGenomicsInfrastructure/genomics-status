@@ -664,12 +664,12 @@ function load_samples_table(colOrder) {
 	        tbl_row = '<tr';
 	        if(sample != last_sample){
 		        if(!stripe){
-			        tbl_row = tbl_row+ ' class="table-secondary">';
+			        tbl_row = tbl_row + ' class="table-secondary">';
 			        stripe = true;
 		        }
 		        else{
 			        stripe = false;
-			        tbl_row = tbl_row+'>'
+			        tbl_row = tbl_row + '>';
 		        }
 	        }
 	        //If library prep is undefined, these fields are still relevant
@@ -710,10 +710,10 @@ function load_samples_table(colOrder) {
               size++;
               tbl_row = '<tr';
               if(!stripe){
-                tbl_row = tbl_row+ ' class="table-secondary">';
+                tbl_row = tbl_row + ' class="table-secondary">';
               }
               else{
-                tbl_row = tbl_row+'>'
+                tbl_row = tbl_row +'>'
               }
               $.each(cols, function(i, value){
                 var column_name = value[0];
@@ -734,32 +734,34 @@ function load_samples_table(colOrder) {
                           }
                   }
 
-                // Library prep is an array of *Objects*
-                else if (column_id == 'library_prep') {
-                  tbl_row += '<td class="' + column_id + '">';
-                  tbl_row += auto_format(prep, true) + ' </td>';
+                  // Library prep is an array of *Objects*
+                  else if (column_id == 'library_prep') {
+                    tbl_row += '<td class="' + column_id + '">';
+                    tbl_row += auto_format(prep, true) + ' </td>';
+                  }
+
+                  // Split the preps
+                  else if (column_id == 'prep_status'){
+                    tbl_row += auto_samples_cell(column_id, prepinfo[column_id]);
+                  }
+
+                  // everything else
+                  else {
+                    tbl_row += auto_samples_cell(column_id, info[column_id]);
+                  }
+
+                }
+                else if (value[2] == "initial-qc-columns" && info['initial_qc'] !== undefined) {
+                  info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
+                  tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
                 }
 
-                // Split the preps
-                else if (column_id == 'prep_status'){
-                  tbl_row += auto_samples_cell(column_id, prepinfo[column_id]);
-                }
-
-                // everything else
-                else {
-                  tbl_row += auto_samples_cell(column_id, info[column_id]);
-                }
-
-            }
-             else if (value[2] == "initial-qc-columns" && info['initial_qc'] !== undefined) {
-                 info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
-                 tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
-            }
-
-            else if (value[2] == "library-prep-columns") {
+                else if (value[2] == "library-prep-columns") {
                         tbl_row += '<td class="' + column_id + '">';
                         prepinfo[column_id] = round_floats(prepinfo[column_id], 2);
-
+                        if (!prepinfo[column_id]){
+                          prepinfo[column_id] = '-';
+                        }
                         // Special case for workset_name, which is a link to Genstat workset page
                         if (column_id == "workset_name" && prepinfo[column_id]) {
                           tbl_row += '<samp class="nowrap" title="Open Workset" data-toggle="tooltip"><a class="text-decoration-none" href="/workset/';
@@ -783,55 +785,55 @@ function load_samples_table(colOrder) {
                         tbl_row += '</td>';
                       }
 
-                      else if (value[2] == "library-validation-columns" && info['library_prep'] !== undefined) {
-                        tbl_row += '<td class="' + column_id + '">';
-                        if ('library_validation' in prepinfo) {
-                          // Populate the library_validation object when undefined
-                          if (Object.keys(prepinfo['library_validation']).length === 0) {
+                else if (value[2] == "library-validation-columns" && info['library_prep'] !== undefined) {
+                  tbl_row += '<td class="' + column_id + '">';
+                  if ('library_validation' in prepinfo) {
+                  // Populate the library_validation object when undefined
+                    if (Object.keys(prepinfo['library_validation']).length === 0) {
                             prepinfo['library_validation']['-'] = { 'average_size_bp': "-", 'conc_units': "-", 'concentration': "-", 'finish_date': "-", 'initials': "-", 'size_(bp)': "-", 'start_date': "-", 'volume_(ul)': "-", 'well_location': "-"};
                             // Populate additional empty fields
                             if (!(info['prep_status'].length === 0 || info['prep_status'] == '-')){
                               info.prep_status = '-<br>' + auto_format(info['prep_status'][0].toString());
                             }
-                          }
-                          // We only want to show up the LIMS process ID with the higher number (the last one)
-                          var process_id = max_str(Object.keys(prepinfo['library_validation']));
-                          var validation_data = prepinfo['library_validation'][process_id];
-                          if (validation_data) {
-                            validation_data[column_id] = round_floats(validation_data[column_id], 2);
-                            // Remove the X from initial QC initials
-                            if(column_id == 'initials'){
-                              if(validation_data[column_id] !== '-'){
+                    }
+                    // We only want to show up the LIMS process ID with the higher number (the last one)
+                    var process_id = max_str(Object.keys(prepinfo['library_validation']));
+                    var validation_data = prepinfo['library_validation'][process_id];
+                    if (validation_data) {
+                      validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                      // Remove the X from initial QC initials
+                      if(column_id == 'initials'){
+                        if(validation_data[column_id] !== '-'){
                                 var sig = validation_data[column_id];
                                 if(sig.length == 3 && sig[2] == 'X'){
                                   sig = sig.substring(0,2);
                                 }
                                 tbl_row += '<span class="badge bg-secondary" data-toggle="tooltip" title="Original signature: '+validation_data[column_id]+'">'+sig+'</span><br>';
-                              }
-                              else{
-                                tbl_row += '-<br>';
-                              }
-                            }
-
-                            // Everything else
-                            else {
-                              tbl_row += auto_format(validation_data[column_id], true);
-                            }
-                          }
                         }
-                        tbl_row += '</td>';
+                        else{
+                          tbl_row += '-<br>';
+                        }
                       }
-      });
-      tbl_row += '</tr>';
-      tbl_body += tbl_row;
-    });
-    last_sample = sample;
-  }
-  else{
-    $.each(cols, function(i, value){
-        var column_name = value[0];
-        var column_id = value[1];
-        if (value[2] == "basic-columns") {
+
+                      // Everything else
+                      else {
+                        tbl_row += auto_format(validation_data[column_id], true);
+                      }
+                    }
+                  }
+                  tbl_row += '</td>';
+                }
+              });
+              tbl_row += '</tr>';
+              tbl_body += tbl_row;
+            });
+            last_sample = sample;
+      }
+      else{
+        $.each(cols, function(i, value){
+          var column_name = value[0];
+          var column_id = value[1];
+          if (value[2] == "basic-columns") {
             info[column_id] = round_floats(info[column_id], 2);
 
             // Scilife Sample Name
@@ -884,8 +886,8 @@ function load_samples_table(colOrder) {
               tbl_row += auto_samples_cell(column_id, info[column_id]);
             }
 
-        }
-        else if (value[2] == "initial-qc-columns" && info['initial_qc'] !== undefined) {
+          }
+          else if (value[2] == "initial-qc-columns" && info['initial_qc'] !== undefined) {
             info['initial_qc'][column_id] = round_floats(info['initial_qc'][column_id], 2);
 
             // Fragment Analyzer Image
@@ -927,9 +929,9 @@ function load_samples_table(colOrder) {
             else {
               tbl_row += auto_samples_cell(column_id, info['initial_qc'][column_id]);
             }
-        }
+          }
 
-        else if (value[2] == "library-prep-columns" && info['library_prep'] !== undefined) {
+          else if (value[2] == "library-prep-columns" && info['library_prep'] !== undefined) {
 
             tbl_row += '<td class="' + column_id + '">';
             var libs = Object.keys(info['library_prep']).sort();
@@ -959,9 +961,9 @@ function load_samples_table(colOrder) {
               }
             });
             tbl_row += '</td>';
-        }
+          }
 
-        else if (value[2] == "library-validation-columns" && info['library_prep'] !== undefined) {
+          else if (value[2] == "library-validation-columns" && info['library_prep'] !== undefined) {
             tbl_row += '<td class="' + column_id + '">';
             var libs = Object.keys(info['library_prep']).sort();
             $.each(libs, function(idx, library){
@@ -1017,8 +1019,8 @@ function load_samples_table(colOrder) {
               }
             });
             tbl_row += '</td>';
-        }
-        else if (value[2] == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
+          }
+          else if (value[2] == "pre-prep-library-validation-columns" && info['library_prep'] !== undefined) {
             tbl_row += '<td class="' + column_id + '">';
             var libs = Object.keys(info['library_prep']).sort();
             $.each(libs, function(idx, library){
@@ -1034,17 +1036,17 @@ function load_samples_table(colOrder) {
               }
             });
             tbl_row += '</td>';
-        }
+          }
 
-        // Details columns
-        else {
+          // Details columns
+          else {
             info['details'][column_id] = round_floats(info['details'][column_id], 2);
             tbl_row += auto_samples_cell(column_id, info['details'][column_id]);
-        }
-    });
-    tbl_row += '</tr>';
-    tbl_body += tbl_row;
-    }
+          }
+        });
+        tbl_row += '</tr>';
+        tbl_body += tbl_row;
+      }
     });
     $("#samples_table_body").html(tbl_body);
 
