@@ -4,6 +4,7 @@
 import tornado.web
 import json
 import datetime
+import pandas as pd
 from dateutil.relativedelta import relativedelta
 
 from genologics.entities import Container
@@ -107,6 +108,33 @@ class FlowcellsDataHandler(SafeHandler):
         return OrderedDict(sorted(flowcells.items()))
 
 
+def add_prefix(N:int, unit:str):
+    """ Convert integer to prefix string w. appropriate prefix
+    """
+    N = int(N)
+    d = {
+        1 : unit,
+        10**3 : "K"+unit,
+        10**6 : "M"+unit,
+        10**9 : "G"+unit,
+        10**12 : "T"+unit
+    }
+
+    for n, u in d.items():
+        if N > n*1000:
+            continue
+        else:
+            break
+    
+    if N > 1000:
+        new_N = round(N/n, 2)
+    else:
+        new_N = N
+
+    s = str(new_N) + " " + u
+    return s
+
+
 class ONTFlowcellsDataHandler(SafeHandler):
     """ Serves brief information for each flowcell in the database.
 
@@ -120,7 +148,20 @@ class ONTFlowcellsDataHandler(SafeHandler):
         for row in fc_view:
             flowcells[row.key] = row.value
 
-        self.write(json.dumps(OrderedDict(sorted(flowcells.items()))))
+        # dictionary -> pd.DataFrame
+        df = pd.DataFrame.from_dict(flowcells, orient="index")
+
+        df["basecalled_pass_bases_format"] = df.basecalled_pass_bases.apply(
+            lambda x : add_prefix(x, "b"))
+        df["basecalled_pass_read_count_format"] = df.basecalled_pass_read_count.apply(
+            lambda x : add_prefix(x, ""))
+        df["n50_format"] = df.n50.apply(
+            lambda x : add_prefix(x, "b"))
+
+        # pd.DataFrame -> dictionary
+        j = df.to_json(orient="index")
+
+        self.write(j)
         
 
 class FlowcellsInfoDataHandler(SafeHandler):
