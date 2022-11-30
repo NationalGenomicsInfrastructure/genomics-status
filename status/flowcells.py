@@ -164,7 +164,8 @@ class ONTFlowcellsDataHandler(SafeHandler):
         # Calculate new metrics
 
         df["basecalled_bases"] = df.basecalled_pass_bases + df.basecalled_fail_bases
-        df["accuracy"] = round(df.basecalled_pass_bases / df.basecalled_bases * 100, 2)
+        df["accuracy"] = round(df.basecalled_pass_bases / df.basecalled_bases * 100, 2).apply(
+            lambda x: str(x) + " %")
         # TODO yield per pore, fetch pore count from 1st MUX scan message, LIMS or QC
 
         # Format metrics
@@ -182,7 +183,7 @@ class ONTFlowcellsDataHandler(SafeHandler):
         for metric in metrics:
             
             new_name = "_".join([metric, "format"])
-            u = "" if "count" in metric else "b"
+            u = "" if "count" in metric else "bp"
             df[new_name] = df[metric].apply(lambda N : add_prefix(N=N, unit=u))
 
         # pd.DataFrame -> dictionary
