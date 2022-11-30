@@ -143,22 +143,50 @@ class ONTFlowcellsDataHandler(SafeHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
         flowcells = {}
-        fc_view = self.application.nanopore_runs_db.view("info/summary",
+        fc_view = self.application.nanopore_runs_db.view("info/all_stats",
                                                      descending=True)
         for row in fc_view:
             flowcells[row.key] = row.value
 
         # dictionary -> pd.DataFrame
         df = pd.DataFrame.from_dict(flowcells, orient="index")
+        # Change datatype to enable calculations
+        df = df.astype(dtype={
+            'read_count' : int,
+            'basecalled_pass_read_count' : int,
+            'basecalled_fail_read_count' : int,
+            'basecalled_pass_bases' : int,
+            'basecalled_fail_bases' : int,
+            'n50' : int,
+            'barcoding_kit' : str
+        })
 
-        df["basecalled_pass_bases_format"] = df.basecalled_pass_bases.apply(
-            lambda x : add_prefix(x, "b"))
-        df["basecalled_pass_read_count_format"] = df.basecalled_pass_read_count.apply(
-            lambda x : add_prefix(x, ""))
-        df["n50_format"] = df.n50.apply(
-            lambda x : add_prefix(x, "b"))
+        # Calculate new metrics
+
+        df["basecalled_bases"] = df.basecalled_pass_bases + df.basecalled_fail_bases
+        df["accuracy"] = round(df.basecalled_pass_bases / df.basecalled_bases * 100, 2)
+        # TODO yield per pore, fetch pore count from 1st MUX scan message, LIMS or QC
+
+        # Format metrics
+
+        metrics = [
+            "read_count",
+            "basecalled_pass_read_count",
+            "basecalled_fail_read_count",
+            "basecalled_bases",
+            "basecalled_pass_bases",
+            "basecalled_fail_bases",
+            "n50"
+        ]
+
+        for metric in metrics:
+            
+            new_name = "_".join([metric, "format"])
+            u = "" if "count" in metric else "b"
+            df[new_name] = df[metric].apply(lambda N : add_prefix(N=N, unit=u))
 
         # pd.DataFrame -> dictionary
+        df.replace("nan","", inplace = True)
         j = df.to_json(orient="index")
 
         self.write(j)
