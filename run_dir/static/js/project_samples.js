@@ -674,6 +674,13 @@ function load_samples_table(colOrder) {
 	        //If library prep is undefined, these fields are still relevant
 	        if (info['library_prep'] === undefined){
 		          size++;
+              tbl_row = '<tr';
+              if(!stripe){
+                tbl_row = tbl_row + ' class="table-secondary">';
+              }
+              else{
+                tbl_row = tbl_row +'>';
+              }
 		          $.each(cols, function(i, value){
 			          var column_name = value[0];
 			          var column_id = value[1];
@@ -703,6 +710,7 @@ function load_samples_table(colOrder) {
                 }
               });
               tbl_row += '</tr>';
+              tbl_body += tbl_row;
           }
           // If library prep is not undefined, in order to split the sample by prep, and add same color to preps of same sample
           $.each(info['library_prep'], function(prep, prepinfo){
@@ -824,9 +832,9 @@ function load_samples_table(colOrder) {
                 }
               });
               tbl_row += '</tr>';
+              tbl_body += tbl_row;
+              last_sample = sample;
           });
-          tbl_body += tbl_row;
-          last_sample = sample;
       }
       else{
         tbl_row = '<tr>';
