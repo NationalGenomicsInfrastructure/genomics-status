@@ -653,11 +653,10 @@ function load_samples_table(colOrder) {
       return false;
     }
 
-    var last_sample='';	
+    var last_sample='';
     var stripe = false;
     $.each(samples_data, function (sample, info) {
       size++;
-      tbl_row = '<tr>';
       //VERY hot fix for the PC's, to split the preps of the library validation tab
       if ($('#library_validation').hasClass('active')){
           //Add separate colors for samples
@@ -703,17 +702,17 @@ function load_samples_table(colOrder) {
                   }
                 }
               });
-            }
-            tbl_row += '</tr>';
-            // If library prep is not undefined, in order to split the sample by prep, and add same color to preps of same sample
-            $.each(info['library_prep'], function(prep, prepinfo){
+              tbl_row += '</tr>';
+          }
+          // If library prep is not undefined, in order to split the sample by prep, and add same color to preps of same sample
+          $.each(info['library_prep'], function(prep, prepinfo){
               size++;
               tbl_row = '<tr';
               if(!stripe){
                 tbl_row = tbl_row + ' class="table-secondary">';
               }
               else{
-                tbl_row = tbl_row +'>'
+                tbl_row = tbl_row +'>';
               }
               $.each(cols, function(i, value){
                 var column_name = value[0];
@@ -825,11 +824,12 @@ function load_samples_table(colOrder) {
                 }
               });
               tbl_row += '</tr>';
-              tbl_body += tbl_row;
-            });
-            last_sample = sample;
+          });
+          tbl_body += tbl_row;
+          last_sample = sample;
       }
       else{
+        tbl_row = '<tr>';
         $.each(cols, function(i, value){
           var column_name = value[0];
           var column_id = value[1];
