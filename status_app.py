@@ -25,11 +25,10 @@ from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandle
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
-from status.flowcell import FlowcellHandler
+from status.flowcell import FlowcellHandler, ONTFlowcellHandler
 from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandler, \
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
-    FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler, ONTFlowcellsDataHandler, \
-    ONTFlowcellHandler
+    FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler, ONTFlowcellsDataHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
