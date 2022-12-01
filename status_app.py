@@ -197,7 +197,6 @@ class Application(tornado.web.Application):
             ("/deliveries", DeliveriesPageHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/([^/]*)$", FlowcellHandler),
-            ("/flowcells/([^/]*)$", ONTFlowcellHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
             ("/generate_quote", GenerateQuoteHandler),
