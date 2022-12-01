@@ -109,3 +109,7 @@ class FlowcellHandler(SafeHandler):
                                   thresholds=thresholds,
                                   project_names=project_names,
                                   user=self.get_current_user()))
+
+class ONTFlowcellHandler(SafeHandler):
+    """ Serves a page which shows information for a given ONT flowcell.
+    """
