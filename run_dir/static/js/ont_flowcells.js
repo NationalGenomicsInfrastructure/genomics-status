@@ -27,7 +27,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
             // Append key and subsequent values from the data as html
 
             // Identifiers
-            tbl_row.append($('<td>').html(key));
+            tbl_row.append($('<td>').html(`<a class="text-decoration-none"  href="/flowcells">${key}</a>`));
             tbl_row.append($('<td>').html(value['start_date']));
             tbl_row.append($('<td>').html(value['experiment_name']));
             tbl_row.append($('<td>').html(value['sample_name']));
