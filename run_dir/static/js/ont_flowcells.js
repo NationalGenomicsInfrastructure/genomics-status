@@ -10,7 +10,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
       // Create the table body, initiated with a row equipped with loading spinners
       $("#ont_fc_table_body").html('<tr><td colspan="12" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
       
-      // Use the API linking to the Python script to fetch data from CouchDB and send the data into function() definied here-as
+      // Load the JSON data generated from the back-end Python code and send the data into function() definied here-as
       return $.getJSON('/api/v1/ont_flowcells', function(data) {
         
         // Clear the table body, if any
@@ -68,7 +68,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
       "destroy": true,
       "info":false,
       // Sort by the (n+1)th column, descending
-      "order": [[ 1, "desc" ]]
+      "order": [[ 0, "desc" ]]
     });
 
     //Add the bootstrap classes to the search thingy
