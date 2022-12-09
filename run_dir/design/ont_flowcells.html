@@ -6,7 +6,7 @@
        <tr class="sticky darkth">
         <th>Run name</th>
         <th>Start Date</th>
-        <th>Experiment Name</th>
+        <th>Project</th>
 
         <th>Flow Cell Type</th>
         <th>Flow Cell ID</th>
@@ -24,7 +24,7 @@
        <tr class="darkth">
         <th>Run name</th>
         <th>Start Date</th>
-        <th>Experiment Name</th>
+        <th>Project</th>
 
         <th>Flow Cell Type</th>
         <th>Flow Cell ID</th>
@@ -50,7 +50,11 @@
             {% end %}
         </td>
         <td class="start_date">{{ ont_flowcells[onefc]["start_date"] }}</td>
-        <td class="experiment_name">{{ ont_flowcells[onefc]["experiment_name"] }}</td>
+        <td class="project" class = "text-center">
+            <a class="text-decoration-none" href="/project/{{ ont_flowcells[onefc]['project'] }}">
+            {{ ont_flowcells[onefc]["project"] }}
+            </a>
+        </td>
 
         <td class="sample_name">{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
         <td class="sample_name">{{ ont_flowcells[onefc]["flow_cell_id"] }}</td>

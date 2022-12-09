@@ -4,6 +4,7 @@
 import tornado.web
 import json
 import datetime
+import re
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
@@ -82,64 +83,67 @@ class FlowcellsHandler(SafeHandler):
         fc_view = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
 
         for row in fc_view:
-            ont_flowcells[row.key] = row.value
+            d = row.value
+            for k in d:
+                try:
+                    d[k] = int(d[k])
+                except ValueError:
+                    pass
+            ont_flowcells[row.key] = d
 
-        # dictionary -> pd.DataFrame
-        df = pd.DataFrame.from_dict(ont_flowcells, orient="index")
+        for k, fc in ont_flowcells.items():
 
-        # Change datatype to enable calculations
-        df = df.astype(dtype={
-            'read_count' : int,
-            'basecalled_pass_read_count' : int,
-            'basecalled_fail_read_count' : int,
-            'basecalled_pass_bases' : int,
-            'basecalled_fail_bases' : int,
-            'n50' : int,
-            'barcoding_kit' : str
-        })
+            # Calculate new metrics
+            fc["basecalled_bases"] = fc["basecalled_pass_bases"] + fc["basecalled_fail_bases"]
+            fc["accuracy"] = str(
+                round(fc["basecalled_pass_bases"] / fc["basecalled_bases"] * 100, 2)
+                ) + " %"
 
-        # Calculate new metrics
-        df["basecalled_bases"] = df.basecalled_pass_bases + df.basecalled_fail_bases
-        df["accuracy"] = round(df.basecalled_pass_bases / df.basecalled_bases * 100, 2).apply(
-            lambda x: str(x) + " %"
-        )
-
-        # TODO yield per pore, fetch pore count from 1st MUX scan message, LIMS or QC
-
-        # Add prefix metrics
-        metrics = [
-            "read_count",
-            "basecalled_pass_read_count",
-            "basecalled_fail_read_count",
-            "basecalled_bases",
-            "basecalled_pass_bases",
-            "basecalled_fail_bases",
-            "n50"
-        ]
-        for metric in metrics:
-            # Readable metrics
-            unit = "" if "count" in metric else "bp"
-            df["_".join([metric, "str"])] = df[metric].apply(lambda N : add_prefix(N=N, unit=unit))
-
-            # Formatted metrics
-            if "count" in metric:
-                prefixed_unit = "M"
-                divby = 10**6
-            elif "n50" in metric:
-                prefixed_unit = "Kbp"
-                divby = 10**3
-            elif "bases" in metric:
-                prefixed_unit = "Gbp"
-                divby = 10**9
+            # Find project
+            query = re.compile("(p|P)\d{5}")
+            match = query.search(fc["experiment_name"])
+            if match:
+                fc["project"] = match.group(0).upper()
             else:
-                continue
-            df["_".join([metric, prefixed_unit])] = (df[metric] / divby).round(2)
+                fc["project"] = ""
+            
+            # TODO yield per pore, fetch pore count from 1st MUX scan message, LIMS or QC
 
-        # pd.DataFrame -> dictionary
-        df.replace("nan","", inplace = True)
-        d = df.to_dict(orient = "index")
+            # Add prefix metrics
+            metrics = [
+                "read_count",
+                "basecalled_pass_read_count",
+                "basecalled_fail_read_count",
+                "basecalled_bases",
+                "basecalled_pass_bases",
+                "basecalled_fail_bases",
+                "n50"
+            ]
+            for metric in metrics:
+                # Readable metrics
+                unit = "" if "count" in metric else "bp"
+                fc["_".join([metric, "str"])] = add_prefix(N=fc[metric], unit=unit)
 
-        return d
+                # Formatted metrics
+                if "count" in metric:
+                    prefixed_unit = "M"
+                    divby = 10**6
+                elif "n50" in metric:
+                    prefixed_unit = "Kbp"
+                    divby = 10**3
+                elif "bases" in metric:
+                    prefixed_unit = "Gbp"
+                    divby = 10**9
+                else:
+                    continue
+                fc["_".join([metric, prefixed_unit])] = round(fc[metric] / divby, 2)
+
+        # Use Pandas for column-wise operations
+        df = pd.DataFrame.from_dict(ont_flowcells, orient = "index")
+        df.fillna("", inplace = True)
+        ont_flowcells = df.to_dict(orient = "index")
+
+        return ont_flowcells
         
     def get(self):
         # Default is to NOT show all flowcells
