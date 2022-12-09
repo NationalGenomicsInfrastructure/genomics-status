@@ -25,10 +25,10 @@ from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandle
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
-from status.flowcell import FlowcellHandler, ONTFlowcellHandler
+from status.flowcell import FlowcellHandler
 from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandler, \
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
-    FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler, ONTFlowcellsDataHandler
+    FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
@@ -112,7 +112,6 @@ class Application(tornado.web.Application):
             ("/api/v1/draft_cost_calculator", PricingDraftDataHandler),
             ("/api/v1/draft_sample_requirements", SampleRequirementsDraftDataHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
-            ("/api/v1/ont_flowcells", ONTFlowcellsDataHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),

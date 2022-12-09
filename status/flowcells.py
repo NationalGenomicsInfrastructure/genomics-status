@@ -77,12 +77,77 @@ class FlowcellsHandler(SafeHandler):
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
+    def list_ont_flowcells(self):
+        ont_flowcells = OrderedDict()
+        fc_view = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
+
+        for row in fc_view:
+            ont_flowcells[row.key] = row.value
+
+        # dictionary -> pd.DataFrame
+        df = pd.DataFrame.from_dict(ont_flowcells, orient="index")
+
+        # Change datatype to enable calculations
+        df = df.astype(dtype={
+            'read_count' : int,
+            'basecalled_pass_read_count' : int,
+            'basecalled_fail_read_count' : int,
+            'basecalled_pass_bases' : int,
+            'basecalled_fail_bases' : int,
+            'n50' : int,
+            'barcoding_kit' : str
+        })
+
+        # Calculate new metrics
+        df["basecalled_bases"] = df.basecalled_pass_bases + df.basecalled_fail_bases
+        df["accuracy"] = round(df.basecalled_pass_bases / df.basecalled_bases * 100, 2).apply(
+            lambda x: str(x) + " %"
+        )
+
+        # TODO yield per pore, fetch pore count from 1st MUX scan message, LIMS or QC
+
+        # Add prefix metrics
+        metrics = [
+            "read_count",
+            "basecalled_pass_read_count",
+            "basecalled_fail_read_count",
+            "basecalled_bases",
+            "basecalled_pass_bases",
+            "basecalled_fail_bases",
+            "n50"
+        ]
+        for metric in metrics:
+            # Readable metrics
+            unit = "" if "count" in metric else "bp"
+            df["_".join([metric, "str"])] = df[metric].apply(lambda N : add_prefix(N=N, unit=unit))
+
+            # Formatted metrics
+            if "count" in metric:
+                prefixed_unit = "M"
+                divby = 10**6
+            elif "n50" in metric:
+                prefixed_unit = "Kbp"
+                divby = 10**3
+            elif "bases" in metric:
+                prefixed_unit = "Gbp"
+                divby = 10**9
+            else:
+                continue
+            df["_".join([metric, prefixed_unit])] = (df[metric] / divby).round(2)
+
+        # pd.DataFrame -> dictionary
+        df.replace("nan","", inplace = True)
+        d = df.to_dict(orient = "index")
+
+        return d
+        
     def get(self):
         # Default is to NOT show all flowcells
         all=self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
         fcs=self.list_flowcells(all=all)
-        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, form_date=formatDate, all=all))
+        ont_fcs=self.list_ont_flowcells()
+        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, ont_flowcells=ont_fcs, form_date=formatDate, all=all))
 
 
 class FlowcellsDataHandler(SafeHandler):
@@ -133,64 +198,6 @@ def add_prefix(N:int, unit:str):
 
     s = str(new_N) + " " + u
     return s
-
-
-class ONTFlowcellsDataHandler(SafeHandler):
-    """ Serves brief information for each flowcell in the database.
-
-    Loaded through /api/v1/ont_flowcells url
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        flowcells = {}
-        fc_view = self.application.nanopore_runs_db.view("info/all_stats",
-                                                     descending=True)
-        for row in fc_view:
-            flowcells[row.key] = row.value
-
-        # dictionary -> pd.DataFrame
-        df = pd.DataFrame.from_dict(flowcells, orient="index")
-        # Change datatype to enable calculations
-        df = df.astype(dtype={
-            'read_count' : int,
-            'basecalled_pass_read_count' : int,
-            'basecalled_fail_read_count' : int,
-            'basecalled_pass_bases' : int,
-            'basecalled_fail_bases' : int,
-            'n50' : int,
-            'barcoding_kit' : str
-        })
-
-        # Calculate new metrics
-
-        df["basecalled_bases"] = df.basecalled_pass_bases + df.basecalled_fail_bases
-        df["accuracy"] = round(df.basecalled_pass_bases / df.basecalled_bases * 100, 2).apply(
-            lambda x: str(x) + " %")
-        # TODO yield per pore, fetch pore count from 1st MUX scan message, LIMS or QC
-
-        # Format metrics
-
-        metrics = [
-            "read_count",
-            "basecalled_pass_read_count",
-            "basecalled_fail_read_count",
-            "basecalled_bases",
-            "basecalled_pass_bases",
-            "basecalled_fail_bases",
-            "n50"
-        ]
-
-        for metric in metrics:
-            
-            new_name = "_".join([metric, "format"])
-            u = "" if "count" in metric else "bp"
-            df[new_name] = df[metric].apply(lambda N : add_prefix(N=N, unit=u))
-
-        # pd.DataFrame -> dictionary
-        df.replace("nan","", inplace = True)
-        j = df.to_json(orient="index")
-
-        self.write(j)
         
 
 class FlowcellsInfoDataHandler(SafeHandler):
