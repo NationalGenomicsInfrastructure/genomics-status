@@ -109,9 +109,7 @@ class FlowcellsHandler(SafeHandler):
 
                 # Calculate new metrics
                 fc["basecalled_bases"] = fc["basecalled_pass_bases"] + fc["basecalled_fail_bases"]
-                fc["accuracy"] = str(
-                    round(fc["basecalled_pass_bases"] / fc["basecalled_bases"] * 100, 2)
-                    ) + " %"
+                fc["accuracy"] = round(fc["basecalled_pass_bases"] / fc["basecalled_bases"] * 100, 2)
                 
                 # TODO yield per pore, fetch pore count from 1st MUX scan message, LIMS or QC
 
