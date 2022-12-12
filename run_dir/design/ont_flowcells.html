@@ -56,16 +56,16 @@
             </a>
         </td>
 
-        <td class="sample_name">{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
-        <td class="sample_name">{{ ont_flowcells[onefc]["flow_cell_id"] }}</td>
+        <td class="flow_cell_type">{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
+        <td class="flow_cell_id">{{ ont_flowcells[onefc]["flow_cell_id"] }}</td>
 
-        <td class="sample_name">{{ ont_flowcells[onefc]["prep_kit"] }}</td>
-        <td class="sample_name">{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
+        <td class="prep_kit">{{ ont_flowcells[onefc]["prep_kit"] }}</td>
+        <td class="barcoding_kit">{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
 
-        <td class="sample_name">{{ ont_flowcells[onefc]["basecalled_pass_bases_Gbp"] }}</td>
-        <td class="sample_name">{{ ont_flowcells[onefc]["basecalled_pass_read_count_M"] }}</td>
-        <td class="sample_name">{{ ont_flowcells[onefc]["n50_Kbp"] }}</td>
-        <td class="sample_name">{{ ont_flowcells[onefc]["accuracy"] }}</td>
+        <td class="basecalled_pass_bases_Gbp">{{ ont_flowcells[onefc]["basecalled_pass_bases_Gbp"] }}</td>
+        <td class="basecalled_pass_read_count_M">{{ ont_flowcells[onefc]["basecalled_pass_read_count_M"] }}</td>
+        <td class="n50_Kbp">{{ ont_flowcells[onefc]["n50_Kbp"] }}</td>
+        <td class="accuracy">{{ ont_flowcells[onefc]["accuracy"] }}</td>
     </tr>
     {% end %}
     </tbody>
