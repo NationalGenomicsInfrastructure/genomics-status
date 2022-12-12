@@ -1,5 +1,6 @@
 from status.util import SafeHandler
 from datetime import datetime
+from collections import OrderedDict
 import pandas as pd
 import re
 
@@ -122,12 +123,12 @@ class ONTFlowcellHandler(SafeHandler):
     def __init__(self, application, request, **kwargs):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
-    def fetch_ont_flowcell(self, run):
+    def fetch_ont_flowcell(self, run_name):
 
         fc_view = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
 
         fc = {}
-        row = fc_view[run].rows[0]
+        row = fc_view[run_name].rows[0]
         fc["run_name"] = row.key
         d = row.value
         for k in d:
@@ -187,21 +188,33 @@ class ONTFlowcellHandler(SafeHandler):
                     continue
                 fc["_".join([metric, prefixed_unit])] = round(fc[metric] / divby, 2)
 
-            # Find project
-            query = re.compile("(p|P)\d{5}")
-            match = query.search(fc["experiment_name"])
-            if match:
-                fc["project"] = match.group(0).upper()
-            else:
-                fc["project"] = ""
+        # Find project
+        query = re.compile("(p|P)\d{5}")
+        match = query.search(fc["experiment_name"])
+        if match:
+            fc["project"] = match.group(0).upper()
+        else:
+            fc["project"] = ""
 
         return fc
+
+
+    def fetch_barcodes(self, run_name):
+
+        fc_view = self.application.nanopore_runs_db.view("info/barcodes", descending=True)
+        bcs = fc_view[run_name].rows[0].value
+
+        # df = pd.DataFrame.from_dict(bcs, orient = "index")
+
+        return bcs
+
 
     def get(self, ont_prefix, run_name):
 
         t = self.application.loader.load("ont_flowcell.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
                                 flowcell=self.fetch_ont_flowcell(run_name),
+                                barcodes=self.fetch_barcodes(run_name),
                                 user=self.get_current_user()))
 
 

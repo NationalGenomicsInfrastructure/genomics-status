@@ -5,12 +5,59 @@
     <h1>Flow Cell <span id="page_title">{{ flowcell.get('run_name') }}</span></h1>
     <table class="table table-bordered narrow-headers" id="fc_info">
       <tr class="darkth">
-        <th>Full Name:</th>
+      <!-- Run identifiers -->
+        <th>MinKNOW Experiment name:</th>
+        <td>{{ flowcell.get('experiment_name') }}</td>
+      </tr>
+      <tr class="darkth">
+        <th>MinKNOW Sample name:</th>
+        <td>{{ flowcell.get('sample_name') }}</td>
+      </tr>
+      <tr class="darkth">
+        <th>MinKNOW Run name:</th>
         <td>{{ flowcell.get('run_name') }}</td>
+      </tr>
+      <tr class="darkth">
+        <th>MinKNOW Run ID:</th>
+        <td>{{ flowcell.get('run_id') }}</td>
+      </tr>
+      <!-- Time and status -->
+      <tr class="darkth">
+        <th>Run status:</th>
+        <td>{{ flowcell.get('TACA_run_status') }}</td>
+      </tr>
+      <tr class="darkth">
+        <th>Start date:</th>
+        <td>{{ flowcell.get('start_date') }}</td>
+      </tr>
+      <tr class="darkth">
+        <th>End date:</th>
+        <td>{{ flowcell.get('end_date') }}</td>
+      </tr>
+      <!-- Hardware -->
+      <tr class="darkth">
+        <th>Instrument:</th>
+        <td>{{ flowcell.get('instrument') }}</td>
+      </tr>
+      <tr class="darkth">
+        <th>Position:</th>
+        <td>{{ flowcell.get('position') }}</td>
+      </tr>
+      <tr class="darkth">
+        <th>Flowcell type:</th>
+        <td>{{ flowcell.get('flow_cell_type') }}</td>
       </tr>
       <tr class="darkth">
         <th>Flowcell ID:</th>
         <td>{{ flowcell.get('flow_cell_id') }}</td>
+      </tr>
+      <tr class="darkth">
+        <th>Prep kit:</th>
+        <td>{{ flowcell.get('prep_kit') }}</td>
+      </tr>
+      <tr class="darkth">
+        <th>Barcoding kit:</th>
+        <td>{{ flowcell.get('barcoding_kit') }}</td>
       </tr>
     </table>
     <div class="tabbable mb-3">
