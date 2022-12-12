@@ -93,11 +93,59 @@ class FlowcellsHandler(SafeHandler):
 
         for k, fc in ont_flowcells.items():
 
-            # Calculate new metrics
-            fc["basecalled_bases"] = fc["basecalled_pass_bases"] + fc["basecalled_fail_bases"]
-            fc["accuracy"] = str(
-                round(fc["basecalled_pass_bases"] / fc["basecalled_bases"] * 100, 2)
-                ) + " %"
+            if fc["TACA_run_status"] == "ongoing":
+
+                fc["experiment_name"], fc["sample_name"], run_name = fc["TACA_run_path"].split("/")
+                
+                run_date, run_time, run_pos, run_fc, run_hash = run_name.split("_")
+
+                fc["start_date"] = run_date #format
+                fc["start_time"] = run_time #format
+                fc["position"] = run_pos
+                fc["flow_cell_id"] = run_fc
+                fc["run_id"] = run_hash #format
+
+            elif fc["TACA_run_status"] == "finished":
+
+                # Calculate new metrics
+                fc["basecalled_bases"] = fc["basecalled_pass_bases"] + fc["basecalled_fail_bases"]
+                fc["accuracy"] = str(
+                    round(fc["basecalled_pass_bases"] / fc["basecalled_bases"] * 100, 2)
+                    ) + " %"
+                
+                # TODO yield per pore, fetch pore count from 1st MUX scan message, LIMS or QC
+
+                # Add prefix metrics
+                metrics = [
+                    "read_count",
+                    "basecalled_pass_read_count",
+                    "basecalled_fail_read_count",
+                    "basecalled_bases",
+                    "basecalled_pass_bases",
+                    "basecalled_fail_bases",
+                    "n50"
+                ]
+                for metric in metrics:
+                    # Readable metrics
+                    unit = "" if "count" in metric else "bp"
+                    fc["_".join([metric, "str"])] = add_prefix(N=fc[metric], unit=unit)
+
+                    # Formatted metrics
+                    if "count" in metric:
+                        prefixed_unit = "M"
+                        divby = 10**6
+                    elif "n50" in metric:
+                        prefixed_unit = "Kbp"
+                        divby = 10**3
+                    elif "bases" in metric:
+                        prefixed_unit = "Gbp"
+                        divby = 10**9
+                    else:
+                        continue
+                    fc["_".join([metric, prefixed_unit])] = round(fc[metric] / divby, 2)
+                
+            else:
+                continue
 
             # Find project
             query = re.compile("(p|P)\d{5}")
@@ -106,37 +154,6 @@ class FlowcellsHandler(SafeHandler):
                 fc["project"] = match.group(0).upper()
             else:
                 fc["project"] = ""
-            
-            # TODO yield per pore, fetch pore count from 1st MUX scan message, LIMS or QC
-
-            # Add prefix metrics
-            metrics = [
-                "read_count",
-                "basecalled_pass_read_count",
-                "basecalled_fail_read_count",
-                "basecalled_bases",
-                "basecalled_pass_bases",
-                "basecalled_fail_bases",
-                "n50"
-            ]
-            for metric in metrics:
-                # Readable metrics
-                unit = "" if "count" in metric else "bp"
-                fc["_".join([metric, "str"])] = add_prefix(N=fc[metric], unit=unit)
-
-                # Formatted metrics
-                if "count" in metric:
-                    prefixed_unit = "M"
-                    divby = 10**6
-                elif "n50" in metric:
-                    prefixed_unit = "Kbp"
-                    divby = 10**3
-                elif "bases" in metric:
-                    prefixed_unit = "Gbp"
-                    divby = 10**9
-                else:
-                    continue
-                fc["_".join([metric, prefixed_unit])] = round(fc[metric] / divby, 2)
 
         # Use Pandas for column-wise operations
         df = pd.DataFrame.from_dict(ont_flowcells, orient = "index")
