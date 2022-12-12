@@ -14,7 +14,7 @@ from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 from status.util import SafeHandler
 from status.projects import RunningNotesDataHandler
-from status.flowcell import FlowcellHandler
+from status.flowcell import FlowcellHandler, add_prefix
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
@@ -192,33 +192,6 @@ class FlowcellsDataHandler(SafeHandler):
             flowcells[row.key] = row.value
 
         return OrderedDict(sorted(flowcells.items()))
-
-
-def add_prefix(N:int, unit:str):
-    """ Convert integer to prefix string w. appropriate prefix
-    """
-    N = int(N)
-    d = {
-        1 : unit,
-        10**3 : "K"+unit,
-        10**6 : "M"+unit,
-        10**9 : "G"+unit,
-        10**12 : "T"+unit
-    }
-
-    for n, u in d.items():
-        if N > n*1000:
-            continue
-        else:
-            break
-    
-    if N > 1000:
-        new_N = round(N/n, 2)
-    else:
-        new_N = N
-
-    s = str(new_N) + " " + u
-    return s
         
 
 class FlowcellsInfoDataHandler(SafeHandler):
@@ -262,6 +235,7 @@ class FlowcellsInfoDataHandler(SafeHandler):
                 if view.rows:
                     return view.rows[0].value
         return flowcell_info
+
 
 class FlowcellSearchHandler(SafeHandler):
     """ Searches Flowcells for text string
