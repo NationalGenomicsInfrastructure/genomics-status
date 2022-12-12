@@ -99,7 +99,7 @@ class FlowcellsHandler(SafeHandler):
                 
                 run_date, run_time, run_pos, run_fc, run_hash = run_name.split("_")
 
-                fc["start_date"] = run_date #format
+                fc["start_date"] = run_date # TODO format
                 fc["start_time"] = run_time #format
                 fc["position"] = run_pos
                 fc["flow_cell_id"] = run_fc
