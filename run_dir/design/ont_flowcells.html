@@ -9,7 +9,6 @@
         <th>Project</th>
 
         <th>Flow Cell Type</th>
-        <th>Flow Cell ID</th>
 
         <th>Prep Kit</th>
         <th>Barcoding Kit</th>
@@ -17,7 +16,7 @@
         <th>Passed Bases (Gbp)</th>
         <th>Passed Reads (M)</th>
         <th>N50 (Kbp)</th>
-        <th>Pass/Fail</th>
+        <th>Pass/Fail (%)</th>
        </tr>
    </thead>
    <tfoot id="ont_fc_table_footer">
@@ -27,7 +26,6 @@
         <th>Project</th>
 
         <th>Flow Cell Type</th>
-        <th>Flow Cell ID</th>
 
         <th>Prep Kit</th>
         <th>Barcoding Kit</th>
@@ -35,7 +33,7 @@
         <th>Passed Bases (Gbp)</th>
         <th>Passed Reads (M)</th>
         <th>N50 (Kbp)</th>
-        <th>Pass/Fail</th>
+        <th>Pass/Fail (%)</th>
        </tr>
    </tfoot>
     <tbody class="list" id="ont_fc_table_body">
@@ -57,7 +55,6 @@
         </td>
 
         <td class="flow_cell_type">{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
-        <td class="flow_cell_id">{{ ont_flowcells[onefc]["flow_cell_id"] }}</td>
 
         <td class="prep_kit">{{ ont_flowcells[onefc]["prep_kit"] }}</td>
         <td class="barcoding_kit">{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
