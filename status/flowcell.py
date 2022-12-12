@@ -120,9 +120,6 @@ class ONTFlowcellHandler(SafeHandler):
     """
 
     def __init__(self, application, request, **kwargs):
-        # to cache a list of project_names ->
-        # then we don't query statusdb each time when accessing the flowcell page
-        self._project_names = {}
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
     def fetch_ont_flowcell(self, run):
@@ -200,11 +197,11 @@ class ONTFlowcellHandler(SafeHandler):
 
         return fc
 
-    def get(self, run_name):
+    def get(self, ont_prefix, run_name):
 
         t = self.application.loader.load("ont_flowcell.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                                fc=self.fetch_ont_flowcell(run_name),
+                                flowcell=self.fetch_ont_flowcell(run_name),
                                 user=self.get_current_user()))
 
 

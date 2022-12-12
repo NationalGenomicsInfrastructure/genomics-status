@@ -92,6 +92,8 @@ class Application(tornado.web.Application):
         self.gs_globals['font_awesome_url'] = settings.get('font_awesome_url', None)
 
         handlers = [
+            # The tuples are on the form ("URI regex", "Backend request handler")
+            # The groups of the regex are the arguments of the handlers get() method
             ("/", MainHandler),
             ("/login", LoginHandler),
             ("/logout", LogoutHandler),
@@ -196,7 +198,7 @@ class Application(tornado.web.Application):
             ("/deliveries", DeliveriesPageHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/((?!ont_)[^/]*)$", FlowcellHandler),
-            ("/flowcells/((ont_)[^/]*)$", ONTFlowcellHandler),
+            ("/flowcells/(ont_)([^/]*)$", ONTFlowcellHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
             ("/generate_quote", GenerateQuoteHandler),
