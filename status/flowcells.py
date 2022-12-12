@@ -4,6 +4,7 @@
 import tornado.web
 import json
 import datetime
+import re
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
@@ -77,12 +78,97 @@ class FlowcellsHandler(SafeHandler):
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
+    def list_ont_flowcells(self):
+        ont_flowcells = OrderedDict()
+        fc_view = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
+
+        for row in fc_view:
+            d = row.value
+            for k in d:
+                try:
+                    d[k] = int(d[k])
+                except ValueError:
+                    pass
+            ont_flowcells[row.key] = d
+
+        for k, fc in ont_flowcells.items():
+
+            if fc["TACA_run_status"] == "ongoing":
+
+                fc["experiment_name"], fc["sample_name"], run_name = fc["TACA_run_path"].split("/")
+                
+                run_date, run_time, run_pos, run_fc, run_hash = run_name.split("_")
+
+                fc["start_date"] = run_date #format
+                fc["start_time"] = run_time #format
+                fc["position"] = run_pos
+                fc["flow_cell_id"] = run_fc
+                fc["run_id"] = run_hash #format
+
+            elif fc["TACA_run_status"] == "finished":
+
+                # Calculate new metrics
+                fc["basecalled_bases"] = fc["basecalled_pass_bases"] + fc["basecalled_fail_bases"]
+                fc["accuracy"] = str(
+                    round(fc["basecalled_pass_bases"] / fc["basecalled_bases"] * 100, 2)
+                    ) + " %"
+                
+                # TODO yield per pore, fetch pore count from 1st MUX scan message, LIMS or QC
+
+                # Add prefix metrics
+                metrics = [
+                    "read_count",
+                    "basecalled_pass_read_count",
+                    "basecalled_fail_read_count",
+                    "basecalled_bases",
+                    "basecalled_pass_bases",
+                    "basecalled_fail_bases",
+                    "n50"
+                ]
+                for metric in metrics:
+                    # Readable metrics
+                    unit = "" if "count" in metric else "bp"
+                    fc["_".join([metric, "str"])] = add_prefix(N=fc[metric], unit=unit)
+
+                    # Formatted metrics
+                    if "count" in metric:
+                        prefixed_unit = "M"
+                        divby = 10**6
+                    elif "n50" in metric:
+                        prefixed_unit = "Kbp"
+                        divby = 10**3
+                    elif "bases" in metric:
+                        prefixed_unit = "Gbp"
+                        divby = 10**9
+                    else:
+                        continue
+                    fc["_".join([metric, prefixed_unit])] = round(fc[metric] / divby, 2)
+                
+            else:
+                continue
+
+            # Find project
+            query = re.compile("(p|P)\d{5}")
+            match = query.search(fc["experiment_name"])
+            if match:
+                fc["project"] = match.group(0).upper()
+            else:
+                fc["project"] = ""
+
+        # Use Pandas for column-wise operations
+        df = pd.DataFrame.from_dict(ont_flowcells, orient = "index")
+        df.fillna("", inplace = True)
+        ont_flowcells = df.to_dict(orient = "index")
+
+        return ont_flowcells
+        
     def get(self):
         # Default is to NOT show all flowcells
         all=self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
         fcs=self.list_flowcells(all=all)
-        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, form_date=formatDate, all=all))
+        ont_fcs=self.list_ont_flowcells()
+        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, ont_flowcells=ont_fcs, form_date=formatDate, all=all))
 
 
 class FlowcellsDataHandler(SafeHandler):
@@ -133,64 +219,6 @@ def add_prefix(N:int, unit:str):
 
     s = str(new_N) + " " + u
     return s
-
-
-class ONTFlowcellsDataHandler(SafeHandler):
-    """ Serves brief information for each flowcell in the database.
-
-    Loaded through /api/v1/ont_flowcells url
-    """
-    def get(self):
-        self.set_header("Content-type", "application/json")
-        flowcells = {}
-        fc_view = self.application.nanopore_runs_db.view("info/all_stats",
-                                                     descending=True)
-        for row in fc_view:
-            flowcells[row.key] = row.value
-
-        # dictionary -> pd.DataFrame
-        df = pd.DataFrame.from_dict(flowcells, orient="index")
-        # Change datatype to enable calculations
-        df = df.astype(dtype={
-            'read_count' : int,
-            'basecalled_pass_read_count' : int,
-            'basecalled_fail_read_count' : int,
-            'basecalled_pass_bases' : int,
-            'basecalled_fail_bases' : int,
-            'n50' : int,
-            'barcoding_kit' : str
-        })
-
-        # Calculate new metrics
-
-        df["basecalled_bases"] = df.basecalled_pass_bases + df.basecalled_fail_bases
-        df["accuracy"] = round(df.basecalled_pass_bases / df.basecalled_bases * 100, 2).apply(
-            lambda x: str(x) + " %")
-        # TODO yield per pore, fetch pore count from 1st MUX scan message, LIMS or QC
-
-        # Format metrics
-
-        metrics = [
-            "read_count",
-            "basecalled_pass_read_count",
-            "basecalled_fail_read_count",
-            "basecalled_bases",
-            "basecalled_pass_bases",
-            "basecalled_fail_bases",
-            "n50"
-        ]
-
-        for metric in metrics:
-            
-            new_name = "_".join([metric, "format"])
-            u = "" if "count" in metric else "bp"
-            df[new_name] = df[metric].apply(lambda N : add_prefix(N=N, unit=u))
-
-        # pd.DataFrame -> dictionary
-        df.replace("nan","", inplace = True)
-        j = df.to_json(orient="index")
-
-        self.write(j)
         
 
 class FlowcellsInfoDataHandler(SafeHandler):

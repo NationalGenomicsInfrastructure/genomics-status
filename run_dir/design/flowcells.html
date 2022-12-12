@@ -215,8 +215,17 @@ function init_listjs() {
       var title = $('#fc_table thead th').eq( $(this).index() ).text();
       $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
     } );
+    $('#ont_fc_table tfoot th').each( function () {
+      var title = $('#ont_fc_table thead th').eq( $(this).index() ).text();
+      $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
+    } );
 
     var table = $('#fc_table').DataTable({
+      "paging":false,
+      "info":false,
+      "order": [[ 0, "desc" ]]
+    });
+    var table = $('#ont_fc_table').DataTable({
       "paging":false,
       "info":false,
       "order": [[ 0, "desc" ]]
