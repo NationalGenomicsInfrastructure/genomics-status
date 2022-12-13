@@ -80,16 +80,28 @@ class FlowcellsHandler(SafeHandler):
 
     def list_ont_flowcells(self):
         ont_flowcells = OrderedDict()
-        fc_view = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
+        view_all = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
+        view_status = self.application.nanopore_runs_db.view("info/run_status", descending=True)
 
-        for row in fc_view:
-            d = row.value
-            for k in d:
-                try:
-                    d[k] = int(d[k])
-                except ValueError:
-                    pass
-            ont_flowcells[row.key] = d
+        for row in view_status:
+
+            if row.value == "finished":
+                run_name = row.key.split("/")[-1]
+                d = view_all[run_name].rows[0].value
+                for k in d:
+                    try:
+                        d[k] = int(d[k])
+                    except ValueError:
+                        pass
+
+            elif row.value == "ongoing":
+                run_name = row.key.split("/")[-1]
+                d = {}
+                d["TACA_run_path"] = row.key
+                d["TACA_run_status"] = row.value
+
+            ont_flowcells[run_name] = d
+
 
         for k, fc in ont_flowcells.items():
 
@@ -99,7 +111,7 @@ class FlowcellsHandler(SafeHandler):
                 
                 run_date, run_time, run_pos, run_fc, run_hash = run_name.split("_")
 
-                fc["start_date"] = run_date # TODO format
+                fc["start_date"] = datetime.datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
                 fc["start_time"] = run_time #format
                 fc["position"] = run_pos
                 fc["flow_cell_id"] = run_fc
