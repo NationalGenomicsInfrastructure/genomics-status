@@ -82,6 +82,7 @@ class FlowcellsHandler(SafeHandler):
         ont_flowcells = OrderedDict()
         view_all = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
         view_status = self.application.nanopore_runs_db.view("info/run_status", descending=True)
+        view_project = self.application.projects_db.view("project/id_name_dates", descending=True)
 
         for row in view_status:
 
@@ -162,8 +163,10 @@ class FlowcellsHandler(SafeHandler):
             match = query.search(fc["experiment_name"])
             if match:
                 fc["project"] = match.group(0).upper()
+                fc["project_name"] = view_project[fc["project"]].rows[0].value["project_name"]
             else:
                 fc["project"] = ""
+                fc["project_name"] = ""
 
         # Use Pandas for column-wise operations
         df = pd.DataFrame.from_dict(ont_flowcells, orient = "index")
