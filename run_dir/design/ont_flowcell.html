@@ -7,57 +7,57 @@
       <tr class="darkth">
       <!-- Run identifiers -->
         <th>MinKNOW Experiment name:</th>
-        <td>{{ flowcell.get('experiment_name') }}</td>
+        <td>{{ display(flowcell.get('experiment_name')) }}</td>
       </tr>
       <tr class="darkth">
         <th>MinKNOW Sample name:</th>
-        <td>{{ flowcell.get('sample_name') }}</td>
+        <td>{{ display(flowcell.get('sample_name')) }}</td>
       </tr>
       <tr class="darkth">
         <th>MinKNOW Run name:</th>
-        <td>{{ flowcell.get('run_name') }}</td>
+        <td>{{ display(flowcell.get('run_name')) }}</td>
       </tr>
       <tr class="darkth">
         <th>MinKNOW Run ID:</th>
-        <td>{{ flowcell.get('run_id') }}</td>
+        <td>{{ display(flowcell.get('run_id')) }}</td>
       </tr>
       <!-- Time and status -->
       <tr class="darkth">
         <th>Run status:</th>
-        <td>{{ flowcell.get('TACA_run_status') }}</td>
+        <td>{{ display(flowcell.get('TACA_run_status')) }}</td>
       </tr>
       <tr class="darkth">
         <th>Start date:</th>
-        <td>{{ flowcell.get('start_date') }}</td>
+        <td>{{ display(flowcell.get('start_date')) }}</td>
       </tr>
       <tr class="darkth">
         <th>End date:</th>
-        <td>{{ flowcell.get('end_date') }}</td>
+        <td>{{ display(flowcell.get('end_date')) }}</td>
       </tr>
       <!-- Hardware -->
       <tr class="darkth">
         <th>Instrument:</th>
-        <td>{{ flowcell.get('instrument') }}</td>
+        <td>{{ display(flowcell.get('instrument')) }}</td>
       </tr>
       <tr class="darkth">
         <th>Position:</th>
-        <td>{{ flowcell.get('position') }}</td>
+        <td>{{ display(flowcell.get('position')) }}</td>
       </tr>
       <tr class="darkth">
         <th>Flowcell type:</th>
-        <td>{{ flowcell.get('flow_cell_type') }}</td>
+        <td>{{ display(flowcell.get('flow_cell_type')) }}</td>
       </tr>
       <tr class="darkth">
         <th>Flowcell ID:</th>
-        <td>{{ flowcell.get('flow_cell_id') }}</td>
+        <td>{{ display(flowcell.get('flow_cell_id')) }}</td>
       </tr>
       <tr class="darkth">
         <th>Prep kit:</th>
-        <td>{{ flowcell.get('prep_kit') }}</td>
+        <td>{{ display(flowcell.get('prep_kit')) }}</td>
       </tr>
       <tr class="darkth">
         <th>Barcoding kit:</th>
-        <td>{{ flowcell.get('barcoding_kit') }}</td>
+        <td>{{ display(flowcell.get('barcoding_kit')) }}</td>
       </tr>
     </table>
     <div class="tabbable mb-3">
@@ -90,17 +90,19 @@
                 </tr>
             </thead>
             <tbody>
-            {% for bc in barcodes %}
-            <tr>
-                <td class="bc_name">{{ barcodes[bc]["bc_name"] }}</td>
-                <td class="bc_alias">{{ barcodes[bc]["barcode_alias"] }}</td>
-                <td class="basecalled_pass_read_count">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_read_count"]).replace(',', ' ') }}</td>
-                <td class="basecalled_pass_read_count_pc">{{ barcodes[bc]["basecalled_pass_read_count_pc"] }}</td>
-                <td class="basecalled_pass_bases">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_bases"]).replace(',', ' ') }}</td>
-                <td class="basecalled_pass_bases_pc">{{ barcodes[bc]["basecalled_pass_bases_pc"] }}</td>
-                <td class="average_read_length_passed">{{ '{:,}'.format(barcodes[bc]["average_read_length_passed"]).replace(',', ' ') }}</td>
-                <td class="accuracy">{{ barcodes[bc]["accuracy"] }}</td>
-            </tr>
+            {% if barcodes %}
+              {% for bc in barcodes %}
+              <tr>
+                  <td class="bc_name">{{ barcodes[bc]["bc_name"] }}</td>
+                  <td class="bc_alias">{{ barcodes[bc]["barcode_alias"] }}</td>
+                  <td class="basecalled_pass_read_count">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_read_count"]).replace(',', ' ') }}</td>
+                  <td class="basecalled_pass_read_count_pc">{{ barcodes[bc]["basecalled_pass_read_count_pc"] }}</td>
+                  <td class="basecalled_pass_bases">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_bases"]).replace(',', ' ') }}</td>
+                  <td class="basecalled_pass_bases_pc">{{ barcodes[bc]["basecalled_pass_bases_pc"] }}</td>
+                  <td class="average_read_length_passed">{{ '{:,}'.format(barcodes[bc]["average_read_length_passed"]).replace(',', ' ') }}</td>
+                  <td class="accuracy">{{ barcodes[bc]["accuracy"] }}</td>
+              </tr>
+              {% end %} 
             {% end %}
             </tbody>
         </table>

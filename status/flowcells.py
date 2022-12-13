@@ -112,10 +112,10 @@ class FlowcellsHandler(SafeHandler):
                 run_date, run_time, run_pos, run_fc, run_hash = run_name.split("_")
 
                 fc["start_date"] = datetime.datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
-                fc["start_time"] = run_time #format
+                fc["start_time"] = run_time
                 fc["position"] = run_pos
                 fc["flow_cell_id"] = run_fc
-                fc["run_id"] = run_hash #format
+                fc["run_id"] = run_hash
 
             elif fc["TACA_run_status"] == "finished":
 

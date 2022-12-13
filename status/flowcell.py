@@ -125,25 +125,37 @@ class ONTFlowcellHandler(SafeHandler):
 
     def fetch_ont_flowcell(self, run_name):
 
-        fc_view = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
+        view_all = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
+        view_status = self.application.nanopore_runs_db.view("info/run_status", descending=True)
 
         fc = {}
-        row = fc_view[run_name].rows[0]
-        fc["run_name"] = row.key
-        d = row.value
-        for k in d:
-            try:
-                fc[k] = int(d[k])
-            except ValueError:
-                fc[k] = d[k]
+
+        row = [row for row in view_status.rows if run_name in row.key][0]
+
+        if row.value == "ongoing":
+            fc["TACA_run_path"] = row.key
+            fc["TACA_run_status"] = row.value
+
+        elif row.value == "finished":
+            run_name = row.key.split("/")[-1]
+
+            row = view_all[run_name].rows[0]
+            fc["run_name"] = row.key
+
+            d = row.value
+            for k in d:
+                try:
+                    fc[k] = int(d[k])
+                except ValueError:
+                    fc[k] = d[k]
 
         if fc["TACA_run_status"] == "ongoing":
 
-            fc["experiment_name"], fc["sample_name"], run_name = fc["TACA_run_path"].split("/")
+            fc["experiment_name"], fc["sample_name"], fc["run_name"] = fc["TACA_run_path"].split("/")
             
-            run_date, run_time, run_pos, run_fc, run_hash = run_name.split("_")
+            run_date, run_time, run_pos, run_fc, run_hash = fc["run_name"].split("_")
 
-            fc["start_date"] = run_date # TODO format
+            fc["start_date"] = datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
             fc["start_time"] = run_time #format
             fc["position"] = run_pos
             fc["flow_cell_id"] = run_fc
@@ -202,45 +214,50 @@ class ONTFlowcellHandler(SafeHandler):
     def fetch_barcodes(self, run_name):
 
         fc_view = self.application.nanopore_runs_db.view("info/barcodes", descending=True)
-        d = fc_view[run_name].rows[0].value
+        
+        if len(fc_view[run_name].rows) == 1:
+            d = fc_view[run_name].rows[0].value
 
-        bcs = {}
-        for bc in d:
-            bcs[bc] = {}
-            for k in d[bc]:
-                try:
-                    bcs[bc][k] = int(d[bc][k])
-                except ValueError:
-                    bcs[bc][k] = d[bc][k]
+            bcs = {}
+            for bc in d:
+                bcs[bc] = {}
+                for k in d[bc]:
+                    try:
+                        bcs[bc][k] = int(d[bc][k])
+                    except ValueError:
+                        bcs[bc][k] = d[bc][k]
 
 
-        # PANDAS TIME
-        df = pd.DataFrame.from_dict(bcs, orient = "index")
+            # PANDAS TIME
+            df = pd.DataFrame.from_dict(bcs, orient = "index")
 
-        # Turn barcode names into integer ID:s except for "unidentified"
-        df["bc_name"] = df.index
-        df["bc_id"] = pd.Series(df.index).apply(lambda x:int(x[-2:]) if "barcode" in x else x).values
-        df.set_index("bc_id", inplace=True)
+            # Turn barcode names into integer ID:s except for "unidentified"
+            df["bc_name"] = df.index
+            df["bc_id"] = pd.Series(df.index).apply(lambda x:int(x[-2:]) if "barcode" in x else x).values
+            df.set_index("bc_id", inplace=True)
 
-        # Start making column-wise formatting
-        df.loc[df.bc_name == df.barcode_alias, "barcode_alias"] = ""
-        df["basecalled_pass_read_count_pc"] = (df.basecalled_pass_read_count / sum(df.basecalled_pass_read_count)).apply(
-            lambda x: round(x*100, 2) if round(x*100, 2) > 0 else ""
-        )
-        df["basecalled_pass_bases_pc"] = (df.basecalled_pass_bases / sum(df.basecalled_pass_bases)).apply(
-            lambda x: round(x*100, 2) if round(x*100, 2) > 0 else ""
-        )
-        df["average_read_length_passed"] =  (df.basecalled_pass_bases / df.basecalled_pass_read_count).apply(
-            lambda x: int(round(x, 0))
-        )
-        df["accuracy"] =  (df.basecalled_pass_bases / (df.basecalled_pass_bases + df.basecalled_fail_bases)).apply(
-            lambda x: round(x*100, 2) if round(x*100, 2) > 0 else ""
-        )
+            # Start making column-wise formatting
+            df.loc[df.bc_name == df.barcode_alias, "barcode_alias"] = ""
+            df["basecalled_pass_read_count_pc"] = (df.basecalled_pass_read_count / sum(df.basecalled_pass_read_count)).apply(
+                lambda x: round(x*100, 2) if round(x*100, 2) > 0 else ""
+            )
+            df["basecalled_pass_bases_pc"] = (df.basecalled_pass_bases / sum(df.basecalled_pass_bases)).apply(
+                lambda x: round(x*100, 2) if round(x*100, 2) > 0 else ""
+            )
+            df["average_read_length_passed"] =  (df.basecalled_pass_bases / df.basecalled_pass_read_count).apply(
+                lambda x: int(round(x, 0))
+            )
+            df["accuracy"] =  (df.basecalled_pass_bases / (df.basecalled_pass_bases + df.basecalled_fail_bases)).apply(
+                lambda x: round(x*100, 2) if round(x*100, 2) > 0 else ""
+            )
 
-        # Return dict for easy Tornado templating
-        df.fillna("", inplace=True)
-        bcs = df.to_dict(orient="index")
-        return bcs
+            # Return dict for easy Tornado templating
+            df.fillna("", inplace=True)
+            bcs = df.to_dict(orient="index")
+            return bcs
+        
+        else:
+            return None
 
 
     def get(self, ont_prefix, run_name):
@@ -249,8 +266,14 @@ class ONTFlowcellHandler(SafeHandler):
         self.write(t.generate(gs_globals=self.application.gs_globals,
                                 flowcell=self.fetch_ont_flowcell(run_name),
                                 barcodes=self.fetch_barcodes(run_name),
+                                display=display,
                                 user=self.get_current_user()))
 
+def display(stat):
+    if stat:
+        return stat
+    else:
+        return ""
 
 def add_prefix(N:int, unit:str):
     """ Convert integer to prefix string w. appropriate prefix
