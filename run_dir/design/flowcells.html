@@ -232,12 +232,21 @@ function init_listjs() {
     });
 
     //Add the bootstrap classes to the search thingy
+
+    // Illumina
     $('div.dataTables_filter input').addClass('form-control search search-query');
     $('#fc_table_filter').addClass('form-inline float-right');
     $("#fc_table_filter").appendTo($('#page_title'));
     $('#fc_table_filter label input').appendTo($('#fc_table_filter'));
     $('#fc_table_filter label').remove();
     $("#fc_table_filter input").attr("placeholder", "Search..");
+    // ONT
+    $('#ont_fc_table_filter').addClass('form-inline float-right');
+    $("#ont_fc_table_filter").appendTo($('#ont_page_title'));
+    $('#ont_fc_table_filter label input').appendTo($('#ont_fc_table_filter'));
+    $('#ont_fc_table_filter label').remove();
+    $("#ont_fc_table_filter input").attr("placeholder", "Search..");
+
     // Apply the search
     table.columns().every( function () {
         var that = this;
