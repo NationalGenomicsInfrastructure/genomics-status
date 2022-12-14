@@ -5,35 +5,33 @@
    <thead id="ont_fc_table_head">
        <tr class="sticky darkth">
         <th>Run name</th>
-        <th>Start Date</th>
+        <th class="text-right">Start Date</th>
         <th>Project</th>
-
-        <th>Flow Cell Type</th>
 
         <th>Prep Kit</th>
         <th>Barcoding Kit</th>
+        <th>Flow Cell Type</th>
 
-        <th>Passed Bases (Gbp)</th>
-        <th>Passed Reads (M)</th>
-        <th>N50 (Kbp)</th>
-        <th>Pass/Fail (%)</th>
+        <th class="text-right">Yield (Gbp)</th>
+        <th class="text-right">Read count (M)</th>
+        <th class="text-right">N50 (Kbp)</th>
+        <th class="text-right">Pass/Fail (%)</th>
        </tr>
    </thead>
    <tfoot id="ont_fc_table_footer">
-       <tr class="darkth">
+       <tr class="sticky darkth">
         <th>Run name</th>
-        <th>Start Date</th>
+        <th class="text-right">Start Date</th>
         <th>Project</th>
-
-        <th>Flow Cell Type</th>
 
         <th>Prep Kit</th>
         <th>Barcoding Kit</th>
+        <th>Flow Cell Type</th>
 
-        <th>Passed Bases (Gbp)</th>
-        <th>Passed Reads (M)</th>
-        <th>N50 (Kbp)</th>
-        <th>Pass/Fail (%)</th>
+        <th class="text-right">Yield (Gbp)</th>
+        <th class="text-right">Read count (M)</th>
+        <th class="text-right">N50 (Kbp)</th>
+        <th class="text-right">Pass/Fail (%)</th>
        </tr>
    </tfoot>
     <tbody class="list" id="ont_fc_table_body">
@@ -47,22 +45,21 @@
                 <abbr title="Ongoing">&nbsp;<span class="fa fa-hourglass-half"></span></abbr>
             {% end %}
         </td>
-        <td class="start_date">{{ ont_flowcells[onefc]["start_date"] }}</td>
+        <td class="text-right">{{ ont_flowcells[onefc]["start_date"] }}</td>
         <td class="project" class = "text-center">
             <a class="text-decoration-none" href="/project/{{ ont_flowcells[onefc]['project'] }}">
             {{ ont_flowcells[onefc]["project_name"] }}
             </a>
         </td>
 
-        <td class="flow_cell_type">{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
+        <td>{{ ont_flowcells[onefc]["prep_kit"] }}</td>
+        <td>{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
+        <td>{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
 
-        <td class="prep_kit">{{ ont_flowcells[onefc]["prep_kit"] }}</td>
-        <td class="barcoding_kit">{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
-
-        <td class="basecalled_pass_bases_Gbp">{{ ont_flowcells[onefc]["basecalled_pass_bases_Gbp"] }}</td>
-        <td class="basecalled_pass_read_count_M">{{ ont_flowcells[onefc]["basecalled_pass_read_count_M"] }}</td>
-        <td class="n50_Kbp">{{ ont_flowcells[onefc]["n50_Kbp"] }}</td>
-        <td class="accuracy">{{ ont_flowcells[onefc]["accuracy"] }}</td>
+        <td class="text-right">{{ ont_flowcells[onefc]["basecalled_pass_bases_Gbp"] }}</td>
+        <td class="text-right">{{ ont_flowcells[onefc]["basecalled_pass_read_count_M"] }}</td>
+        <td class="text-right">{{ ont_flowcells[onefc]["n50_Kbp"] }}</td>
+        <td class="text-right">{{ ont_flowcells[onefc]["accuracy"] }}</td>
     </tr>
     {% end %}
     </tbody>
