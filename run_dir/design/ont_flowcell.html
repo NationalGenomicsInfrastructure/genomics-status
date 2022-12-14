@@ -115,42 +115,5 @@
 </div>
 
 <script src="/static/js/jquery.dataTables.min.js"></script>
-<!-- Table Sorting -->
-<script type="text/javascript">
-$( document ).ready(function() {
-  init_listjs();
-});
-// Initialize sorting and searching javascript plugin
-function init_listjs() {
-    // Setup - add a text input to each footer cell
-    $('#ont_barcodes tfoot th').each( function () {
-      var title = $('#ont_barcodes thead th').eq( $(this).index() ).text();
-      $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
-    } );
-    
-    var table = $('#ont_barcodes').DataTable({
-      "paging":false,
-      "info":false,
-      "order": [[ 0, "asc"  ]]
-    });
-
-    //Add the bootstrap classes to the search thingy
-    $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#fc_table_filter').addClass('form-inline float-right');
-    $("#fc_table_filter").appendTo("h1");
-    $('#fc_table_filter label input').appendTo($('#fc_table_filter'));
-    $('#fc_table_filter label').remove();
-    $("#fc_table_filter input").attr("placeholder", "Search..");
-    // Apply the search
-    table.columns().every( function () {
-        var that = this;
-        $( 'input', this.footer() ).on( 'keyup change', function () {
-            that
-            .search( this.value )
-            .draw();
-        } );
-    } );
-}
-</script>
 
 {% end %}
