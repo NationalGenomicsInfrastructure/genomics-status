@@ -286,11 +286,11 @@ function view_coloring(series_name){
             return chroma('purple').hex();
         case "Epigenetics":
         case "Production":
-            return chroma('red').hex();
+            return chroma('#CD3E10').hex();
         case "Amplicon":
             return chroma('turquoise').hex();
         case "Human":
-            return chroma('red').hex();
+            return chroma('#CD3E10').hex();
         default:
             return "#ace600";
     }
