@@ -75,32 +75,32 @@
     </div>
     <div class="tab-content">
       <div class="tab-pane fade show active" id="tab_flowcell_information">
-        <h3>Barcode information</h3>
+        <h3>Barcode information (passed)</h3>
         <table class="table table-bordered narrow-headers no-margin right_align_headers" id="ont_barcodes">
             <thead id="ont_fc_table_head">
                 <tr class="sticky darkth">
                     <th>Barcode</th>
                     <th>Alias</th>
-                    <th>Read count passed</th>
-                    <th>% Read count passed total</th>
-                    <th>Bases passed (bp)</th>
-                    <th>% Bases passed total</th>
-                    <th>Average read length passed (bp)</th>
-                    <th>% Pass / Fail</th>
+                    <th class="text-right">Read count</th>
+                    <th>% total</th>
+                    <th class="text-right">Bases (bp)</th>
+                    <th>% total</th>
+                    <th class="text-right">Avg. length (bp)</th>
+                    <th class="text-right">% Pass / Fail</th>
                 </tr>
             </thead>
             <tbody>
             {% if barcodes %}
               {% for bc in barcodes %}
               <tr>
-                  <td class="bc_name">{{ barcodes[bc]["bc_name"] }}</td>
-                  <td class="bc_alias">{{ barcodes[bc]["barcode_alias"] }}</td>
-                  <td class="basecalled_pass_read_count">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_read_count"]).replace(',', ' ') }}</td>
-                  <td class="basecalled_pass_read_count_pc">{{ barcodes[bc]["basecalled_pass_read_count_pc"] }}</td>
-                  <td class="basecalled_pass_bases">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_bases"]).replace(',', ' ') }}</td>
-                  <td class="basecalled_pass_bases_pc">{{ barcodes[bc]["basecalled_pass_bases_pc"] }}</td>
-                  <td class="average_read_length_passed">{{ '{:,}'.format(barcodes[bc]["average_read_length_passed"]).replace(',', ' ') }}</td>
-                  <td class="accuracy">{{ barcodes[bc]["accuracy"] }}</td>
+                  <td>{{ barcodes[bc]["bc_name"] }}</td>
+                  <td>{{ barcodes[bc]["barcode_alias"] }}</td>
+                  <td class="text-right">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_read_count"]).replace(',', ' ') }}</td>
+                  <td>{{ barcodes[bc]["basecalled_pass_read_count_pc"] }}</td>
+                  <td class="text-right">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_bases"]).replace(',', ' ') }}</td>
+                  <td>{{ barcodes[bc]["basecalled_pass_bases_pc"] }}</td>
+                  <td class="text-right">{{ '{:,}'.format(barcodes[bc]["average_read_length_passed"]).replace(',', ' ') }}</td>
+                  <td class="text-right">{{ barcodes[bc]["accuracy"] }}</td>
               </tr>
               {% end %} 
             {% end %}
