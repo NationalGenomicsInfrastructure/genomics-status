@@ -218,7 +218,16 @@ function build_series(data, key, name, view_type, filter_inst_type){
                 series_name = "Other/undefined";
             }
             view_color = view_coloring(series_name);
+        }else if (view_type == 'reference_genome'){
+            if (data[d][1].reference_genome == null){
+                series_name = "Other";
+            }else if (data[d][1].reference_genome.includes('Human')){
+                series_name = "Human";
+            }else {
+                series_name = "Other";
             }
+            view_color = view_coloring(series_name);
+        }
         if (!series.hasOwnProperty(series_name)){
             series[series_name] = {
                 name: series_name,
@@ -280,6 +289,8 @@ function view_coloring(series_name){
             return chroma('red').hex();
         case "Amplicon":
             return chroma('turquoise').hex();
+        case "Human":
+            return chroma('red').hex();
         default:
             return "#ace600";
     }
