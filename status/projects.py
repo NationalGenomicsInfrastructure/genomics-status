@@ -167,6 +167,15 @@ class ProjectsBaseDataHandler(SafeHandler):
             except ValueError:
                 pass
 
+        #Try to fetch a name for the contact field, not just an e-mail
+        if 'contact' in row.value:
+            if 'owner' in row.value['order_details'] and row.value['contact'] == row.value['order_details']['owner']['email']:
+                row.value['contact'] = str(row.value['order_details']['owner']['name']) + ': ' + str(row.value['order_details']['owner']['email'])
+            elif 'fields' in row.value['order_details'] and row.value['contact']  == row.value['order_details']['fields']['project_lab_email']:
+                row.value['contact'] = str(row.value['order_details']['fields']['project_lab_name']) + ': ' + str(row.value['order_details']['fields']['project_lab_email'])
+            elif 'fields' in row.value['order_details'] and row.value['contact']  == row.value['order_details']['fields']['project_pi_email']:
+                row.value['contact'] = str(row.value['order_details']['fields']['project_pi_name']) + ': ' + str(row.value['order_details']['fields']['project_pi_email'])
+
         if row.key[0] in ['review', 'ongoing', 'reception control'] and 'queued' in row.value:
             #Add days ongoing in production field
             now = datetime.datetime.now()
@@ -190,6 +199,9 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         if 'order_details' in row.value and 'fields' in row.value['order_details'] and 'project_pi_name' in row.value['order_details']['fields']:
             row.value['project_pi_name'] = row.value['order_details']['fields']['project_pi_name']
+            #if there is a PI e-mail, add it
+            if 'project_pi_email' in row.value['order_details']['fields'] and row.value['order_details']['fields']['project_pi_email'] is not None:
+                row.value['project_pi_name'] = row.value['project_pi_name'] + ': ' + row.value['order_details']['fields']['project_pi_email']
 
         return row
 
