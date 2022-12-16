@@ -170,9 +170,13 @@ class FlowcellsHandler(SafeHandler):
 
         # Use Pandas for column-wise operations
         df = pd.DataFrame.from_dict(ont_flowcells, orient = "index")
+
+        df["basecalled_pass_bases_Gbp_rank"] = (df.basecalled_pass_bases_Gbp.rank() / len(df) * 100).apply(lambda x: round(x,2))
+        df["n50_rank"] = (df.n50.rank() / len(df) * 100).apply(lambda x: round(x,2))
+        df["accuracy_rank"] = (df.accuracy.rank() / len(df) * 100).apply(lambda x: round(x,2))
+
         df.fillna("", inplace = True)
         ont_flowcells = df.to_dict(orient = "index")
-
         return ont_flowcells
         
     def get(self):
