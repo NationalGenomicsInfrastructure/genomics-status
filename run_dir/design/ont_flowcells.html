@@ -1,11 +1,11 @@
 
 
 <h1 class="ont_fc_page_heading" id="ont_page_title">ONT Flowcells</h1>
- <table class="table table-striped table-bordered sortable" id="ont_fc_table">
+ <table class="table table-bordered sortable" id="ont_fc_table">
    <thead id="ont_fc_table_head">
        <tr class="sticky darkth">
         <th>Run name</th>
-        <th class="text-right">Start Date</th>
+        <th>Start Date</th>
         <th>Project</th>
 
         <th>Prep Kit</th>
@@ -21,7 +21,7 @@
    <tfoot id="ont_fc_table_footer">
        <tr class="sticky darkth">
         <th>Run name</th>
-        <th class="text-right">Start Date</th>
+        <th>Start Date</th>
         <th>Project</th>
 
         <th>Prep Kit</th>
@@ -45,8 +45,8 @@
                 <abbr title="Ongoing">&nbsp;<span class="fa fa-hourglass-half"></span></abbr>
             {% end %}
         </td>
-        <td class="text-right">{{ ont_flowcells[onefc]["start_date"] }}</td>
-        <td class="project" class = "text-center">
+        <td>{{ ont_flowcells[onefc]["start_date"] }}</td>
+        <td class="project">
             <a class="text-decoration-none" href="/project/{{ ont_flowcells[onefc]['project'] }}">
             {{ ont_flowcells[onefc]["project_name"] }}
             </a>
@@ -56,9 +56,23 @@
         <td>{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
         <td>{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
 
-        <td class="text-right">{{ ont_flowcells[onefc]["basecalled_pass_bases_Gbp"] }}</td>
+        <td class="text-right
+        {% if ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 66.66 %}
+            table-success
+        {% elif ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 33.33 %}
+            table-warning
+        {% else %}
+            table-danger
+        {% end %}">{{ ont_flowcells[onefc]["basecalled_pass_bases_Gbp"] }}</td>
         <td class="text-right">{{ ont_flowcells[onefc]["basecalled_pass_read_count_M"] }}</td>
-        <td class="text-right">{{ ont_flowcells[onefc]["n50_Kbp"] }}</td>
+        <td class="text-right
+        {% if ont_flowcells[onefc]['n50_rank'] > 66.66 %}
+            table-success
+        {% elif ont_flowcells[onefc]['n50_rank'] > 33.33 %}
+            table-warning
+        {% else %}
+            table-danger
+        {% end %}">{{ ont_flowcells[onefc]["n50_Kbp"] }}</td>
         <td class="text-right">{{ ont_flowcells[onefc]["accuracy"] }}</td>
     </tr>
     {% end %}
