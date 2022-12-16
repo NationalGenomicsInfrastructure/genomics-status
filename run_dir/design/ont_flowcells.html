@@ -12,10 +12,10 @@
         <th>Barcoding Kit</th>
         <th>Flow Cell Type</th>
 
-        <th class="text-right">Yield (Gbp)</th>
-        <th class="text-right">Read count (M)</th>
-        <th class="text-right">N50 (Kbp)</th>
-        <th class="text-right">Pass/Fail (%)</th>
+        <th class="text-center">Yield (Gbp)</th>
+        <th class="text-center">Read count (M)</th>
+        <th class="text-center">N50 (Kbp)</th>
+        <th class="text-center">Pass/Fail (%)</th>
        </tr>
    </thead>
    <tfoot id="ont_fc_table_footer">
@@ -28,13 +28,13 @@
         <th>Barcoding Kit</th>
         <th>Flow Cell Type</th>
 
-        <th class="text-right">Yield (Gbp)</th>
-        <th class="text-right">Read count (M)</th>
-        <th class="text-right">N50 (Kbp)</th>
-        <th class="text-right">Pass/Fail (%)</th>
+        <th class="text-center">Yield (Gbp)</th>
+        <th class="text-center">Read count (M)</th>
+        <th class="text-center">N50 (Kbp)</th>
+        <th class="text-center">Pass/Fail (%)</th>
        </tr>
    </tfoot>
-    <tbody class="list" id="ont_fc_table_body">
+    <tbody class="list" style="vertical-align:middle" id="ont_fc_table_body">
     {% for onefc in ont_flowcells %}
     <tr>
         <td class="run_id">
@@ -56,24 +56,28 @@
         <td>{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
         <td>{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
 
-        <td class="text-right
-        {% if ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 66.66 %}
-            table-success
-        {% elif ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 33.33 %}
-            table-warning
-        {% else %}
-            table-danger
+        <td class="text-center
+        {% if ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] != '' %}
+            {% if ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 66.66 %}
+                table-success
+            {% elif ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 33.33 %}
+                table-warning
+            {% else %}
+                table-danger
+            {% end %}
         {% end %}">{{ ont_flowcells[onefc]["basecalled_pass_bases_Gbp"] }}</td>
-        <td class="text-right">{{ ont_flowcells[onefc]["basecalled_pass_read_count_M"] }}</td>
-        <td class="text-right
-        {% if ont_flowcells[onefc]['n50_rank'] > 66.66 %}
-            table-success
-        {% elif ont_flowcells[onefc]['n50_rank'] > 33.33 %}
-            table-warning
-        {% else %}
-            table-danger
+        <td class="text-center">{{ ont_flowcells[onefc]["basecalled_pass_read_count_M"] }}</td>
+        <td class="text-center
+        {% if ont_flowcells[onefc]['n50_rank'] != '' %}
+            {% if ont_flowcells[onefc]['n50_rank'] > 66.66 %}
+                table-success
+            {% elif ont_flowcells[onefc]['n50_rank'] > 33.33 %}
+                table-warning
+            {% else %}
+                table-danger
+            {% end %}
         {% end %}">{{ ont_flowcells[onefc]["n50_Kbp"] }}</td>
-        <td class="text-right">{{ ont_flowcells[onefc]["accuracy"] }}</td>
+        <td class="text-center">{{ ont_flowcells[onefc]["accuracy"] }}</td>
     </tr>
     {% end %}
     </tbody>
