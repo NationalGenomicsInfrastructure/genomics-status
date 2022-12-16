@@ -171,10 +171,11 @@ class ProjectsBaseDataHandler(SafeHandler):
         if 'contact' in row.value:
             if 'owner' in row.value['order_details'] and row.value['contact'] == row.value['order_details']['owner']['email']:
                 row.value['contact'] = str(row.value['order_details']['owner']['name']) + ': ' + str(row.value['order_details']['owner']['email'])
-            elif 'fields' in row.value['order_details'] and row.value['contact']  == row.value['order_details']['fields']['project_lab_email']:
-                row.value['contact'] = str(row.value['order_details']['fields']['project_lab_name']) + ': ' + str(row.value['order_details']['fields']['project_lab_email'])
-            elif 'fields' in row.value['order_details'] and row.value['contact']  == row.value['order_details']['fields']['project_pi_email']:
-                row.value['contact'] = str(row.value['order_details']['fields']['project_pi_name']) + ': ' + str(row.value['order_details']['fields']['project_pi_email'])
+            elif 'fields' in row.value['order_details']:
+                if row.value['contact']  == row.value['order_details']['fields']['project_lab_email']:
+                    row.value['contact'] = str(row.value['order_details']['fields']['project_lab_name']) + ': ' + str(row.value['order_details']['fields']['project_lab_email'])
+                elif row.value['contact']  == row.value['order_details']['fields']['project_pi_email']:
+                    row.value['contact'] = str(row.value['order_details']['fields']['project_pi_name']) + ': ' + str(row.value['order_details']['fields']['project_pi_email'])
 
         if row.key[0] in ['review', 'ongoing', 'reception control'] and 'queued' in row.value:
             #Add days ongoing in production field
