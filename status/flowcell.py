@@ -215,7 +215,7 @@ class ONTFlowcellHandler(SafeHandler):
 
         fc_view = self.application.nanopore_runs_db.view("info/barcodes", descending=True)
         
-        if len(fc_view[run_name].rows) == 1:
+        if len(fc_view[run_name].rows) == 1 and fc_view[run_name].rows[0].value:
             d = fc_view[run_name].rows[0].value
 
             bcs = {}
