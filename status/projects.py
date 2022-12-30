@@ -167,6 +167,17 @@ class ProjectsBaseDataHandler(SafeHandler):
             except ValueError:
                 pass
 
+        ord_det = row.value.get('order_details', {})
+        #Try to fetch a name for the contact field, not just an e-mail
+        if 'contact' in row.value and row.value.get('contact', ''):
+            if 'owner' in ord_det and row.value['contact'] == ord_det['owner']['email']:
+                row.value['contact'] = ord_det['owner']['name'] + ': ' + ord_det['owner']['email']
+            elif 'fields' in ord_det:
+                if row.value['contact']  == ord_det['fields']['project_lab_email']:
+                    row.value['contact'] = ord_det['fields']['project_lab_name'] + ': ' + ord_det['fields']['project_lab_email']
+                elif row.value['contact']  == ord_det['fields']['project_pi_email']:
+                    row.value['contact'] = ord_det['fields']['project_pi_name'] + ': ' + ord_det['fields']['project_pi_email']
+
         if row.key[0] in ['review', 'ongoing', 'reception control'] and 'queued' in row.value:
             #Add days ongoing in production field
             now = datetime.datetime.now()
@@ -188,8 +199,11 @@ class ProjectsBaseDataHandler(SafeHandler):
             else:
                 row.value['days_in_reception_control'] = diff
 
-        if 'order_details' in row.value and 'fields' in row.value['order_details'] and 'project_pi_name' in row.value['order_details']['fields']:
-            row.value['project_pi_name'] = row.value['order_details']['fields']['project_pi_name']
+        if ord_det and 'fields' in ord_det and 'project_pi_name' in ord_det['fields']:
+            row.value['project_pi_name'] = ord_det['fields']['project_pi_name']
+            #if there is a PI e-mail, add it
+            if 'project_pi_email' in ord_det['fields'] and ord_det['fields'].get('project_pi_email', ''):
+                row.value['project_pi_name'] = row.value['project_pi_name'] + ': ' + ord_det['fields']['project_pi_email']
 
         return row
 
