@@ -139,7 +139,7 @@ class ONTReportHandler(SafeHandler):
 
     def get(self, ont_prefix, run_name):
 
-        t = self.application.loader.load("ont_flowcell.html")
+        t = self.application.loader.load("ont_report.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
                                 report=self.fetch_ont_report(run_name),
                                 user=self.get_current_user()))
@@ -291,7 +291,7 @@ class ONTFlowcellHandler(SafeHandler):
 
     def get(self, ont_prefix, run_name):
 
-        t = self.application.loader.load("ont_report.html")
+        t = self.application.loader.load("ont_flowcell.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
                                 flowcell=self.fetch_ont_flowcell(run_name),
                                 barcodes=self.fetch_barcodes(run_name),
