@@ -7,6 +7,7 @@
         <th>Run name</th>
         <th>Start Date</th>
         <th>Project</th>
+        <th>Experiment name</th>
 
         <th>Prep Kit</th>
         <th>Barcoding Kit</th>
@@ -23,6 +24,7 @@
         <th>Run name</th>
         <th>Start Date</th>
         <th>Project</th>
+        <th>Experiment name</th>
 
         <th>Prep Kit</th>
         <th>Barcoding Kit</th>
@@ -51,7 +53,7 @@
             {{ ont_flowcells[onefc]["project_name"] }}
             </a>
         </td>
-
+        <td>{{ ont_flowcells[onefc]["experiment_name"] }}</td>
         <td>{{ ont_flowcells[onefc]["prep_kit"] }}</td>
         <td>{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
         <td>{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
