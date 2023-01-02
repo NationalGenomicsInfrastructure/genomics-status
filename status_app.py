@@ -25,7 +25,7 @@ from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandle
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
-from status.flowcell import FlowcellHandler, ONTFlowcellHandler
+from status.flowcell import FlowcellHandler, ONTFlowcellHandler, ONTReportHandler
 from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandler, \
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
@@ -199,6 +199,7 @@ class Application(tornado.web.Application):
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/((?!ont_)[^/]*)$", FlowcellHandler),
             ("/flowcells/(ont_)([^/]*)$", ONTFlowcellHandler),
+            ("/flowcells/(ont_)([^/]*)/report$", ONTReportHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
             ("/generate_quote", GenerateQuoteHandler),
