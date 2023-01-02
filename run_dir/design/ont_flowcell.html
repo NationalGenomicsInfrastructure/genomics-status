@@ -42,7 +42,10 @@
     <div class="tabbable mb-3">
       <ul class="nav nav-tabs">
         <li class="nav-item">
-          <a class="nav-link active" href="#tab_flowcell_information" role="tab" data-toggle="tab">Flowcell Information</a>
+          <a class="nav-link active" href="#tab_barcode_information" role="tab" data-toggle="tab">Barcode Information</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/flowcells/ont_{{ flowcell.get('run_name') }}/report" target="_blank">MinKNOW run report</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a>
@@ -53,7 +56,7 @@
       </ul>
     </div>
     <div class="tab-content">
-      <div class="tab-pane fade show active" id="tab_flowcell_information">
+      <div class="tab-pane fade show active" id="tab_barcode_information">
         <h3>Barcode information (passed)</h3>
         <table class="table table-bordered narrow-headers no-margin right_align_headers" id="ont_barcodes">
             <thead id="ont_fc_table_head">
