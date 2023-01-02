@@ -3,6 +3,7 @@ from datetime import datetime
 from collections import OrderedDict
 import pandas as pd
 import re
+import html
 
 
 thresholds = {
@@ -114,6 +115,34 @@ class FlowcellHandler(SafeHandler):
                                   thresholds=thresholds,
                                   project_names=project_names,
                                   user=self.get_current_user()))
+
+
+class ONTReportHandler(SafeHandler):
+    """ Serves a page showing the MinKNOW .html report of a given run
+    """
+
+    def __init__(self, application, request, **kwargs):
+        super(SafeHandler, self).__init__(application, request, **kwargs)
+
+    def fetch_ont_report(self, run_name):
+        """ Fetches the MinKNOW .html run report, saved as an escaped string in the
+        database run entry and returns the unescaped string which can be written as .html
+        """
+
+        view_report = self.application.nanopore_runs_db.view("info/minknow_report", descending=True)
+
+        row = [row for row in view_report.rows if run_name in row.key][0]
+
+        str_html = html.unescape(row.value)
+
+        return str_html
+
+    def get(self, ont_prefix, run_name):
+
+        t = self.application.loader.load("ont_flowcell.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                                report=self.fetch_ont_report(run_name),
+                                user=self.get_current_user()))
 
 
 class ONTFlowcellHandler(SafeHandler):
@@ -262,7 +291,7 @@ class ONTFlowcellHandler(SafeHandler):
 
     def get(self, ont_prefix, run_name):
 
-        t = self.application.loader.load("ont_flowcell.html")
+        t = self.application.loader.load("ont_report.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
                                 flowcell=self.fetch_ont_flowcell(run_name),
                                 barcodes=self.fetch_barcodes(run_name),
