@@ -130,19 +130,13 @@ class ONTReportHandler(SafeHandler):
         """
 
         view_report = self.application.nanopore_runs_db.view("info/minknow_report", descending=True)
-
         row = [row for row in view_report.rows if run_name in row.key][0]
-
         str_html = html.unescape(row.value)
 
         return str_html
 
     def get(self, ont_prefix, run_name):
-
-        t = self.application.loader.load("ont_report.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals,
-                                report=self.fetch_ont_report(run_name),
-                                user=self.get_current_user()))
+        self.write(open("test.html", "r").read())
 
 
 class ONTFlowcellHandler(SafeHandler):
