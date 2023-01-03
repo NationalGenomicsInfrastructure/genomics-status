@@ -136,7 +136,7 @@ class ONTReportHandler(SafeHandler):
         return str_html
 
     def get(self, ont_prefix, run_name):
-        self.write(open("test.html", "r").read())
+        self.write(self.fetch_ont_report(run_name))
 
 
 class ONTFlowcellHandler(SafeHandler):
@@ -260,13 +260,17 @@ class ONTFlowcellHandler(SafeHandler):
             df.set_index("bc_id", inplace=True)
 
             # Start making column-wise formatting
+
+            # If the barcode alias is redunant, remove it
             df.loc[df.bc_name == df.barcode_alias, "barcode_alias"] = ""
+
             df["basecalled_pass_read_count_pc"] = (df.basecalled_pass_read_count / sum(df.basecalled_pass_read_count)).apply(
                 lambda x: round(x*100, 2) if round(x*100, 2) > 0 else ""
             )
             df["basecalled_pass_bases_pc"] = (df.basecalled_pass_bases / sum(df.basecalled_pass_bases)).apply(
                 lambda x: round(x*100, 2) if round(x*100, 2) > 0 else ""
             )
+
             df["average_read_length_passed"] =  (df.basecalled_pass_bases / df.basecalled_pass_read_count).apply(
                 lambda x: int(round(x, 0))
             )
@@ -281,7 +285,12 @@ class ONTFlowcellHandler(SafeHandler):
         
         else:
             return None
+    
+    def fetch_args(self, run_name):
+        view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
+        row = [row for row in view_args.rows if run_name in row.key][0]
 
+        return row.value
 
     def get(self, ont_prefix, run_name):
 
@@ -289,6 +298,7 @@ class ONTFlowcellHandler(SafeHandler):
         self.write(t.generate(gs_globals=self.application.gs_globals,
                                 flowcell=self.fetch_ont_flowcell(run_name),
                                 barcodes=self.fetch_barcodes(run_name),
+                                args=self.fetch_args(run_name),
                                 display=display,
                                 user=self.get_current_user()))
 
