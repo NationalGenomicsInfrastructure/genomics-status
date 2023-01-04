@@ -173,14 +173,18 @@ class FlowcellsHandler(SafeHandler):
                 fc["project"] = ""
                 fc["project_name"] = ""
 
-        # Use Pandas for column-wise operations
+        # Use Pandas dataframe for column-wise operations, every db entry becomes a row
         df = pd.DataFrame.from_dict(ont_flowcells, orient = "index")
 
+        # Calculate ranks, to enable color coding
         df["basecalled_pass_bases_Gbp_rank"] = (df.basecalled_pass_bases_Gbp.rank() / len(df) * 100).apply(lambda x: round(x,2))
         df["n50_rank"] = (df.n50.rank() / len(df) * 100).apply(lambda x: round(x,2))
         df["accuracy_rank"] = (df.accuracy.rank() / len(df) * 100).apply(lambda x: round(x,2))
 
+        # Empty values are replaced with empty strings
         df.fillna("", inplace = True)
+
+        # Convert back to dictionary and return
         ont_flowcells = df.to_dict(orient = "index")
         return ont_flowcells
         

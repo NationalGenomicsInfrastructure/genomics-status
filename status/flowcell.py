@@ -251,32 +251,29 @@ class ONTFlowcellHandler(SafeHandler):
                         bcs[bc][k] = d[bc][k]
 
 
-            # PANDAS TIME
+            # Every barcode becomes a row in a dataframe for column-wise formatting
             df = pd.DataFrame.from_dict(bcs, orient = "index")
 
-            # Turn barcode names into integer ID:s except for "unidentified"
+            # The barcode names "barcode01", "barcode02", etc. are moved to their own column and the index is set to the barcode ID number
             df["bc_name"] = df.index
             df["bc_id"] = pd.Series(df.index).apply(lambda x:int(x[-2:]) if "barcode" in x else x).values
             df.set_index("bc_id", inplace=True)
 
-            # Start making column-wise formatting
+            # === Start making column-wise formatting ===
 
             # If the barcode alias is redunant, remove it
             df.loc[df.bc_name == df.barcode_alias, "barcode_alias"] = ""
 
+            # Calculate percentages, set empty if <0.01
             df["basecalled_pass_read_count_pc"] = (df.basecalled_pass_read_count / sum(df.basecalled_pass_read_count)).apply(
-                lambda x: round(x*100, 2) if round(x*100, 2) > 0 else ""
-            )
+                lambda x: round(x*100, 2) if round(x*100, 2) > 0 else "")
             df["basecalled_pass_bases_pc"] = (df.basecalled_pass_bases / sum(df.basecalled_pass_bases)).apply(
-                lambda x: round(x*100, 2) if round(x*100, 2) > 0 else ""
-            )
-
+                lambda x: round(x*100, 2) if round(x*100, 2) > 0 else "")
+            # Calculate new metrics
             df["average_read_length_passed"] =  (df.basecalled_pass_bases / df.basecalled_pass_read_count).apply(
-                lambda x: int(round(x, 0))
-            )
+                lambda x: int(round(x, 0)))
             df["accuracy"] =  (df.basecalled_pass_bases / (df.basecalled_pass_bases + df.basecalled_fail_bases)).apply(
-                lambda x: round(x*100, 2) if round(x*100, 2) > 0 else ""
-            )
+                lambda x: round(x*100, 2) if round(x*100, 2) > 0 else "")
 
             # Return dict for easy Tornado templating
             df.fillna("", inplace=True)
