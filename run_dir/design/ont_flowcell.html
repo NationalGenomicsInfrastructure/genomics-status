@@ -5,38 +5,50 @@
     <h1>Flow Cell <span id="page_title">{{ flowcell.get('run_name') }}</span></h1>
 
     <div class="row">
-      <hr>
-      <div class="col-md-4 borderRight">
-        <h4>MinKNOW identifiers</h4>
+
+      <div class="col-md-4 borderRight" style="width: 500px; margin-right: 120px">
+        <h4 style="margin-top: 20px;">MinKNOW identifiers</h4>
         <dl class="dl-horizontal">
-          <dt>Experiment name</dt>  <dd> {{ display(flowcell.get("experiment_name")) }} </dd>
-          <dt>Sample name</dt>		  <dd> {{ display(flowcell.get("sample_name")) }} </dd>
-          <dt>Run name</dt>	        <dd> {{ display(flowcell.get("run_name")) }} </dd>
-          <dt>Run ID</dt>		        <dd> {{ display(flowcell.get("run_id")) }} </dd>
+          <dt style="text-align: left;">Experiment name</dt>  <dd> {{ flowcell.get("experiment_name") }} </dd>
+          <dt style="text-align: left;">Sample name</dt>		  <dd> {{ flowcell.get("sample_name") }} </dd>
+          <dt style="text-align: left;">Run name</dt>	        <dd> {{ flowcell.get("run_name") }} </dd>
+          <dt style="text-align: left;">Run ID</dt>		        <dd> {{ flowcell.get("run_id") }} </dd>
         </dl>
-      </div>
-      <hr>
-      <div class="col-md-4 borderRight">
-        <h4>Hardware</h4>
+        <h4 style="margin-top: 20px;">Hardware</h4>
         <dl class="dl-horizontal">
-          <dt>Instrument</dt>       <dd> {{ display(flowcell.get("instrument")) }} </dd>
-          <dt>Position</dt>		      <dd> {{ display(flowcell.get("position")) }} </dd>
-          <dt>Flowcell type</dt>	  <dd> {{ display(flowcell.get("flow_cell_type")) }} </dd>
-          <dt>Flowcell ID</dt>		  <dd> {{ display(flowcell.get("flow_cell_id")) }} </dd>
-          <dt>Prep kit</dt>	        <dd> {{ display(flowcell.get("prep_kit")) }} </dd>
-          <dt>Barcoding kit</dt>		<dd> {{ display(flowcell.get("barcoding_kit")) }} </dd>
+          <dt style="text-align: left;">Instrument</dt>       <dd> {{ flowcell.get("instrument") }} </dd>
+          <dt style="text-align: left;">Position</dt>		      <dd> {{ flowcell.get("position") }} </dd>
+          <dt style="text-align: left;">Flowcell type</dt>	  <dd> {{ flowcell.get("flow_cell_type") }} </dd>
+          <dt style="text-align: left;">Flowcell ID</dt>		  <dd> {{ flowcell.get("flow_cell_id") }} </dd>
+          <dt style="text-align: left;">Prep kit</dt>	        <dd> {{ flowcell.get("prep_kit") }} </dd>
+          <dt style="text-align: left;">Barcoding kit</dt>		<dd> {{ flowcell.get("barcoding_kit") }} </dd>
         </dl>
-      </div>
-      <hr>
-      <div class="col-md-4 borderRight">
-        <h4>Time and status</h4>
+        <h4 style="margin-top: 20px;">Time and status</h4>
         <dl class="dl-horizontal">
-          <dt>Run status</dt>				<dd> {{ display(flowcell.get("TACA_run_status")) }} </dd>
-          <dt>Start date</dt>				<dd> {{ display(flowcell.get("start_date")) }} </dd>
-          <dt>End date</dt>					<dd> {{ display(flowcell.get("end_date")) }} </dd>
+          <dt style="text-align: left;">Run status</dt>				<dd> {{ flowcell.get("TACA_run_status") }} </dd>
+          <dt style="text-align: left;">Start date</dt>				<dd> {{ flowcell.get("start_date") }} </dd>
+          <dt style="text-align: left;">End date</dt>					<dd> {{ flowcell.get("end_date") }} </dd>
         </dl>
       </div>
 
+      <div class="col-md-4 borderRight" style="width: 500px; margin-left: 0px; margin-right: 0px">
+        <h4 style="margin-top: 20px;">MinKNOW arguments</h4>
+        <dl class="dl-horizontal">
+          {% for arg in args %}
+
+            {% if arg[1] == "key" %}
+              <dt style="text-align: left; width: 220px;">{{ arg[0] }}</dt>
+            {% elif arg[1] == "value" %}
+              <dd>{{ arg[0] }}</dd>
+            {% elif arg[1] == "header" %}
+              </dl>
+              <h5>{{ arg[0] }}</h5>
+              <dl class="dl-horizontal">
+            {% end %}
+
+          {% end %}
+        </dl>
+      </div>
     </div>
 
     <div class="tabbable mb-3">
@@ -45,19 +57,18 @@
           <a class="nav-link active" href="#tab_barcode_information" role="tab" data-toggle="tab">Barcode Information</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/flowcells/ont_{{ flowcell.get('run_name') }}/report" target="_blank">MinKNOW run report</a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link" href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#tab_links_content" role="tab" data-toggle="tab">Links</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/flowcells/ont_{{ flowcell.get('run_name') }}/report" target="_blank">MinKNOW run report</a>
+        </li>
       </ul>
     </div>
     <div class="tab-content">
       <div class="tab-pane fade show active" id="tab_barcode_information">
-        <h3>Barcode information (passed)</h3>
         <table class="table table-bordered narrow-headers no-margin right_align_headers" id="ont_barcodes">
             <thead id="ont_fc_table_head">
                 <tr class="sticky darkth">
@@ -89,13 +100,18 @@
             </tbody>
         </table>
       </div>
-      <div class="tab-pane fade" id="tab_running_notes_content">
-      </div>
-      <div class="tab-pane fade" id="tab_links_content">
-      </div>
+      <!-- FLOWCELL NOTES TAB -->
+      {% include "running_notes_tab.html" %}
+      <!-- LINK TAB -->
+      {% include "link_tab.html" %}
+      <!-- RUNNING NOTES HELP -->
+      {% include "running_notes_help.html" %}
     </div>
 </div>
 
 <script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('name') }}"></script>
 
 {% end %}

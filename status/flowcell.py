@@ -290,7 +290,47 @@ class ONTFlowcellHandler(SafeHandler):
         view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
         row = [row for row in view_args.rows if run_name in row.key][0]
 
-        return row.value
+        l = row.value
+
+        group = "([^\s=]+)"
+        patterns = {
+            re.compile(f"^--{group}={group}$") : "arg_pair",     # Simple pair
+            re.compile(f"^--{group}$") : "arg_key",              # Key OR header
+            re.compile(f"^(?!--){group}$") : "val",              # Value
+            re.compile(f"^(?!--){group}={group}$") : "pair"      # Follower pair
+        }
+
+        ll = []
+        for e in l:
+            for p in patterns:
+                match = re.match(p, e)
+                if match:
+                    ll.append([e, patterns[p]])
+        
+        for i in range(0, len(ll)):
+            if ll[i][1] == "arg_key" and ll[i+1][1] == "pair":
+                ll[i][1] = "arg_header"
+
+        entries = []
+        for row in ll:
+            if row[1] == "arg_pair":
+                k, v = row[0].split("--")[-1].split("=")
+                entries.append((k,"key"))
+                entries.append((v,"value"))
+            elif row[1] == "arg_key":
+                k = row[0].split("--")[-1]
+                entries.append((k,"key"))
+            elif row[1] == "val":
+                entries.append((row[0],"value"))
+            elif row[1] == "arg_header":
+                h = row[0].split("--")[-1]
+                entries.append((h,"header"))
+            elif row[1] == "pair":
+                k, v = row[0].split("=")
+                entries.append((k,"key"))
+                entries.append((v,"value"))
+
+        return entries
 
     def get(self, ont_prefix, run_name):
 
