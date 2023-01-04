@@ -159,11 +159,16 @@ class FlowcellsHandler(SafeHandler):
                 continue
 
             # Find project
+
             query = re.compile("(p|P)\d{5}")
             match = query.search(fc["experiment_name"])
             if match:
                 fc["project"] = match.group(0).upper()
-                fc["project_name"] = view_project[fc["project"]].rows[0].value["project_name"]
+                try:
+                    fc["project_name"] = view_project[fc["project"]].rows[0].value["project_name"]
+                except:
+                    # If the project ID can't fetch a project name, leave empty
+                    fc["project_name"] = ""
             else:
                 fc["project"] = ""
                 fc["project_name"] = ""
