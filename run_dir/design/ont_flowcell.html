@@ -7,14 +7,14 @@
     <div class="row">
 
       <div class="col-md-4 borderRight" style="width: 500px; margin-right: 120px">
-        <h4 style="margin-top: 20px;">MinKNOW identifiers</h4>
+        <h4 style="margin-top: 20px; margin-bottom: 20px;">MinKNOW identifiers</h4>
         <dl class="dl-horizontal">
           <dt style="text-align: left;">Experiment name</dt>  <dd> {{ flowcell.get("experiment_name") }} </dd>
           <dt style="text-align: left;">Sample name</dt>		  <dd> {{ flowcell.get("sample_name") }} </dd>
           <dt style="text-align: left;">Run name</dt>	        <dd> {{ flowcell.get("run_name") }} </dd>
           <dt style="text-align: left;">Run ID</dt>		        <dd> {{ flowcell.get("run_id") }} </dd>
         </dl>
-        <h4 style="margin-top: 20px;">Hardware</h4>
+        <h4 style="margin-top: 20px; margin-bottom: 20px;">Hardware</h4>
         <dl class="dl-horizontal">
           <dt style="text-align: left;">Instrument</dt>       <dd> {{ flowcell.get("instrument") }} </dd>
           <dt style="text-align: left;">Position</dt>		      <dd> {{ flowcell.get("position") }} </dd>
@@ -23,27 +23,36 @@
           <dt style="text-align: left;">Prep kit</dt>	        <dd> {{ flowcell.get("prep_kit") }} </dd>
           <dt style="text-align: left;">Barcoding kit</dt>		<dd> {{ flowcell.get("barcoding_kit") }} </dd>
         </dl>
-        <h4 style="margin-top: 20px;">Time and status</h4>
+        <h4 style="margin-top: 20px; margin-bottom: 20px;">Time and status</h4>
         <dl class="dl-horizontal">
           <dt style="text-align: left;">Run status</dt>				<dd> {{ flowcell.get("TACA_run_status") }} </dd>
           <dt style="text-align: left;">Start date</dt>				<dd> {{ flowcell.get("start_date") }} </dd>
           <dt style="text-align: left;">End date</dt>					<dd> {{ flowcell.get("end_date") }} </dd>
         </dl>
+        <h4 style="margin-top: 20px; margin-bottom: 20px;">Sequencing stats</h4>
+        <dl class="dl-horizontal">
+          <dt style="text-align: left;">Yield</dt>				    <dd> {{ flowcell.get("basecalled_pass_bases_str") }} </dd>
+          <dt style="text-align: left;">Read count</dt>				<dd> {{ flowcell.get("basecalled_pass_read_count_str") }} </dd>
+          <dt style="text-align: left;">N50</dt>				    	<dd> {{ flowcell.get("n50_str") }} </dd>
+          <dt style="text-align: left;">Pass/Fail</dt>		    <dd> {{ flowcell.get("accuracy") }} </dd>
+        </dl>
       </div>
 
-      <div class="col-md-4 borderRight" style="width: 500px; margin-left: 0px; margin-right: 0px">
-        <h4 style="margin-top: 20px;">MinKNOW arguments</h4>
+      <div class="col-md-4 borderRight" style="width: 600px; margin-left: 0px; margin-right: 0px">
+        <h4 style="margin-top: 20px; margin-bottom: 20px;">MinKNOW arguments</h4>
         <dl class="dl-horizontal">
-          {% for arg in args %}
+          {% for e in args %}
 
-            {% if arg[1] == "key" %}
-              <dt style="text-align: left; width: 220px;">{{ arg[0] }}</dt>
-            {% elif arg[1] == "value" %}
-              <dd>{{ arg[0] }}</dd>
-            {% elif arg[1] == "header" %}
+            {% if args[e] == "pair" %}
+              <dt style="font-weight: normal; text-align: left; width: 220px;">{{ e[0] }}</dt>
+              <dd>{{ e[1] }}</dd>
+            {% elif args[e] == "header" %}
               </dl>
-              <h5>{{ arg[0] }}</h5>
+              <p style="font-weight: bold;">{{ e }}</p>
               <dl class="dl-horizontal">
+            {% elif args[e] == "sub_pair" %}
+              <dt style="text-align: left; margin-left: 20px; font-weight: normal; width: 200px;">{{ e[0] }}</dt>
+              <dd>{{ e[1] }}</dd>
             {% end %}
 
           {% end %}
@@ -82,17 +91,17 @@
                     <th class="text-right">% Pass / Fail</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="list">
             {% if barcodes %}
               {% for bc in barcodes %}
               <tr>
                   <td>{{ barcodes[bc]["bc_name"] }}</td>
                   <td>{{ barcodes[bc]["barcode_alias"] }}</td>
-                  <td class="text-right">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_read_count"]).replace(',', ' ') }}</td>
+                  <td class="text-right">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_read_count"]) }}</td>
                   <td>{{ barcodes[bc]["basecalled_pass_read_count_pc"] }}</td>
-                  <td class="text-right">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_bases"]).replace(',', ' ') }}</td>
+                  <td class="text-right">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_bases"]) }}</td>
                   <td>{{ barcodes[bc]["basecalled_pass_bases_pc"] }}</td>
-                  <td class="text-right">{{ '{:,}'.format(barcodes[bc]["average_read_length_passed"]).replace(',', ' ') }}</td>
+                  <td class="text-right">{{ '{:,}'.format(barcodes[bc]["average_read_length_passed"]) }}</td>
                   <td class="text-right">{{ barcodes[bc]["accuracy"] }}</td>
               </tr>
               {% end %} 
@@ -110,8 +119,25 @@
 </div>
 
 <script src="/static/js/jquery.dataTables.min.js"></script>
-<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell.get('name') }}"></script>
-<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell.get('name') }}"></script>
-<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('name') }}"></script>
+<!-- Table Sorting -->
+<script type="text/javascript">
+$( document ).ready(function() {
+  init_listjs();
+  //Formatting for Running note card body
+  $(".running-note-card > .card-body").each(function(i){
+    $(this).html(make_markdown($(this).text()));
+  });
+});
+
+// Initialize sorting and searching javascript plugin
+function init_listjs() {
+    var table = $('#ont_barcodes').DataTable({
+      "searching":false,
+      "paging":false,
+      "info":false,
+      "order": [[ 0, "asc" ]]
+    });
+}
+</script>
 
 {% end %}

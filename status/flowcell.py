@@ -288,47 +288,37 @@ class ONTFlowcellHandler(SafeHandler):
     
     def fetch_args(self, run_name):
         view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
-        row = [row for row in view_args.rows if run_name in row.key][0]
-
-        l = row.value
+        l = [row for row in view_args.rows if run_name in row.key][0].value
 
         group = "([^\s=]+)"
-        patterns = {
-            re.compile(f"^--{group}={group}$") : "arg_pair",     # Simple pair
-            re.compile(f"^--{group}$") : "arg_key",              # Key OR header
-            re.compile(f"^(?!--){group}$") : "val",              # Value
-            re.compile(f"^(?!--){group}={group}$") : "pair"      # Follower pair
-        }
+        flag_pair = re.compile(f"^--{group}={group}$")
+        flag_key_or_header = re.compile(f"^--{group}$")
+        val = re.compile(f"^(?!--){group}$")
+        pair = re.compile(f"^(?!--){group}={group}$")
 
-        ll = []
-        for e in l:
-            for p in patterns:
-                match = re.match(p, e)
-                if match:
-                    ll.append([e, patterns[p]])
-        
-        for i in range(0, len(ll)):
-            if ll[i][1] == "arg_key" and ll[i+1][1] == "pair":
-                ll[i][1] = "arg_header"
-
-        entries = []
-        for row in ll:
-            if row[1] == "arg_pair":
-                k, v = row[0].split("--")[-1].split("=")
-                entries.append((k,"key"))
-                entries.append((v,"value"))
-            elif row[1] == "arg_key":
-                k = row[0].split("--")[-1]
-                entries.append((k,"key"))
-            elif row[1] == "val":
-                entries.append((row[0],"value"))
-            elif row[1] == "arg_header":
-                h = row[0].split("--")[-1]
-                entries.append((h,"header"))
-            elif row[1] == "pair":
-                k, v = row[0].split("=")
-                entries.append((k,"key"))
-                entries.append((v,"value"))
+        entries = {}
+        idxs_args = iter(zip(range(0, len(l)), l))
+        for (idx, arg) in idxs_args:
+            # Flag pair --> Tuple
+            if re.match(flag_pair, arg):
+                k, v = re.match(flag_pair, arg).groups()
+                entries[(k,v)]="pair"
+            # Flag single
+            elif re.match(flag_key_or_header, arg):
+                # If followed by pair --> Header
+                if re.match(pair, l[idx+1]):
+                    h = re.match(flag_key_or_header, arg).groups()[0]
+                    entries[h]="header"
+                # If followed by val --> Add both as tuple and skip ahead
+                elif re.match(val, l[idx+1]):
+                    k = re.match(flag_key_or_header, arg).groups()[0]
+                    v = re.match(val, l[idx+1]).groups()[0]
+                    entries[(k,v)]="pair"
+                    next(idxs_args)
+            # Pair 
+            elif re.match(pair, arg):
+                k, v = re.match(pair, arg).groups()
+                entries[(k,v)]="sub_pair"
 
         return entries
 
