@@ -87,8 +87,8 @@ class FlowcellsHandler(SafeHandler):
         for row in view_status:
 
             if row.value == "finished":
-                run_name = row.key.split("/")[-1]
-                d = view_all[run_name].rows[0].value
+                name = row.key.split("/")[-1]
+                d = view_all[name].rows[0].value
                 for k in d:
                     try:
                         d[k] = int(d[k])
@@ -96,21 +96,21 @@ class FlowcellsHandler(SafeHandler):
                         pass
 
             elif row.value == "ongoing":
-                run_name = row.key.split("/")[-1]
+                name = row.key.split("/")[-1]
                 d = {}
                 d["TACA_run_path"] = row.key
                 d["TACA_run_status"] = row.value
 
-            ont_flowcells[run_name] = d
+            ont_flowcells[name] = d
 
 
         for k, fc in ont_flowcells.items():
 
             if fc["TACA_run_status"] == "ongoing":
 
-                fc["experiment_name"], fc["sample_name"], run_name = fc["TACA_run_path"].split("/")
+                fc["experiment_name"], fc["sample_name"], name = fc["TACA_run_path"].split("/")
                 
-                run_date, run_time, run_pos, run_fc, run_hash = run_name.split("_")
+                run_date, run_time, run_pos, run_fc, run_hash = name.split("_")
 
                 fc["start_date"] = datetime.datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
                 fc["start_time"] = run_time

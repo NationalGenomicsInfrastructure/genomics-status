@@ -2,7 +2,7 @@
 {% block stuff %}
 {% import re %}
 <div id="page_content">
-    <h1>ONT run <span id="page_title">{{ flowcell.get('run_name') }}</span></h1>
+    <h1>ONT run <span id="page_title">{{ flowcell.get('name') }}</span></h1>
 
     <div class="row">
 
@@ -22,7 +22,7 @@
         <dl class="dl-horizontal">
           <dt style="text-align: left;">Experiment name</dt>  <dd> {{ flowcell.get("experiment_name") }} </dd>
           <dt style="text-align: left;">Sample name</dt>		  <dd> {{ flowcell.get("sample_name") }} </dd>
-          <dt style="text-align: left;">Run name</dt>	        <dd> {{ flowcell.get("run_name") }} </dd>
+          <dt style="text-align: left;">Run name</dt>	        <dd> {{ flowcell.get("name") }} </dd>
           <dt style="text-align: left;">Run ID</dt>		        <dd> {{ flowcell.get("run_id") }} </dd>
         </dl>
         <h4 style="margin-top: 20px; margin-bottom: 10px;">Hardware</h4>
@@ -78,7 +78,7 @@
           <a class="nav-link" href="#tab_links_content" role="tab" data-toggle="tab">Links</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/flowcells/{{ flowcell.get('run_name') }}/report" target="_blank">MinKNOW run report</a>
+          <a class="nav-link" href="/flowcells/{{ flowcell.get('name') }}/report" target="_blank">MinKNOW run report</a>
         </li>
       </ul>
     </div>
@@ -126,6 +126,7 @@
 
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell.get('name') }}"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('name') }}"></script>
 <script src="/static/js/jquery.dataTables.min.js"></script>
 
 <!-- Table Sorting -->

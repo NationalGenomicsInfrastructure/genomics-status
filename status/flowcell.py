@@ -123,19 +123,19 @@ class ONTReportHandler(SafeHandler):
     def __init__(self, application, request, **kwargs):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
-    def fetch_ont_report(self, run_name):
+    def fetch_ont_report(self, name):
         """ Fetches the MinKNOW .html run report, saved as an escaped string in the
         database run entry and returns the unescaped string which can be written as .html
         """
 
         view_report = self.application.nanopore_runs_db.view("info/minknow_report", descending=True)
-        row = [row for row in view_report.rows if run_name in row.key][0]
+        row = [row for row in view_report.rows if name in row.key][0]
         str_html = html.unescape(row.value)
 
         return str_html
 
-    def get(self, run_name):
-        self.write(self.fetch_ont_report(run_name))
+    def get(self, name):
+        self.write(self.fetch_ont_report(name))
 
 
 class ONTFlowcellHandler(SafeHandler):
@@ -145,7 +145,7 @@ class ONTFlowcellHandler(SafeHandler):
     def __init__(self, application, request, **kwargs):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
-    def fetch_ont_flowcell(self, run_name):
+    def fetch_ont_flowcell(self, name):
 
         view_all = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
         view_status = self.application.nanopore_runs_db.view("info/run_status", descending=True)
@@ -153,17 +153,17 @@ class ONTFlowcellHandler(SafeHandler):
 
         fc = {}
 
-        row = [row for row in view_status.rows if run_name in row.key][0]
+        row = [row for row in view_status.rows if name in row.key][0]
 
         if row.value == "ongoing":
             fc["TACA_run_path"] = row.key
             fc["TACA_run_status"] = row.value
 
         elif row.value == "finished":
-            run_name = row.key.split("/")[-1]
+            name = row.key.split("/")[-1]
 
-            row = view_all[run_name].rows[0]
-            fc["run_name"] = row.key
+            row = view_all[name].rows[0]
+            fc["name"] = row.key
 
             d = row.value
             for k in d:
@@ -174,9 +174,9 @@ class ONTFlowcellHandler(SafeHandler):
 
         if fc["TACA_run_status"] == "ongoing":
 
-            fc["experiment_name"], fc["sample_name"], fc["run_name"] = fc["TACA_run_path"].split("/")
+            fc["experiment_name"], fc["sample_name"], fc["name"] = fc["TACA_run_path"].split("/")
             
-            run_date, run_time, run_pos, run_fc, run_hash = fc["run_name"].split("_")
+            run_date, run_time, run_pos, run_fc, run_hash = fc["name"].split("_")
 
             fc["start_date"] = datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
             fc["start_time"] = run_time #format
@@ -240,12 +240,12 @@ class ONTFlowcellHandler(SafeHandler):
         return fc
 
 
-    def fetch_barcodes(self, run_name):
+    def fetch_barcodes(self, name):
 
         fc_view = self.application.nanopore_runs_db.view("info/barcodes", descending=True)
         
-        if len(fc_view[run_name].rows) == 1 and fc_view[run_name].rows[0].value:
-            d = fc_view[run_name].rows[0].value
+        if len(fc_view[name].rows) == 1 and fc_view[name].rows[0].value:
+            d = fc_view[name].rows[0].value
 
             bcs = {}
             for bc in d:
@@ -289,9 +289,9 @@ class ONTFlowcellHandler(SafeHandler):
         else:
             return None
     
-    def fetch_args(self, run_name):
+    def fetch_args(self, name):
         view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
-        l = [row for row in view_args.rows if run_name in row.key][0].value
+        l = [row for row in view_args.rows if name in row.key][0].value
 
         group = "([^\s=]+)"
         flag_pair = re.compile(f"^--{group}={group}$")
@@ -325,13 +325,13 @@ class ONTFlowcellHandler(SafeHandler):
 
         return entries
 
-    def get(self, run_name):
+    def get(self, name):
 
         t = self.application.loader.load("ont_flowcell.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                                flowcell=self.fetch_ont_flowcell(run_name),
-                                barcodes=self.fetch_barcodes(run_name),
-                                args=self.fetch_args(run_name),
+                                flowcell=self.fetch_ont_flowcell(name),
+                                barcodes=self.fetch_barcodes(name),
+                                args=self.fetch_args(name),
                                 display=display,
                                 user=self.get_current_user()))
 
