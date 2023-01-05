@@ -1,6 +1,5 @@
 from status.util import SafeHandler
 from datetime import datetime
-from collections import OrderedDict
 import pandas as pd
 import re
 import html
