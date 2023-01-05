@@ -13,9 +13,9 @@
         <th>Barcoding Kit</th>
         <th>Flow Cell Type</th>
 
-        <th class="text-center">Yield (Gbp)</th>
-        <th class="text-center">Read count (M)</th>
-        <th class="text-center">N50 (Kbp)</th>
+        <th class="text-center">Yield passed (Gbp)</th>
+        <th class="text-center">Read count passed (M)</th>
+        <th class="text-center">N50 passed (Kbp)</th>
         <th class="text-center">Pass/Fail (%)</th>
        </tr>
    </thead>
@@ -30,17 +30,17 @@
         <th>Barcoding Kit</th>
         <th>Flow Cell Type</th>
 
-        <th class="text-center">Yield (Gbp)</th>
-        <th class="text-center">Read count (M)</th>
-        <th class="text-center">N50 (Kbp)</th>
+        <th class="text-center">Yield passed (Gbp)</th>
+        <th class="text-center">Read count passed (M)</th>
+        <th class="text-center">N50 passed (Kbp)</th>
         <th class="text-center">Pass/Fail (%)</th>
        </tr>
    </tfoot>
     <tbody class="list" style="vertical-align:middle" id="ont_fc_table_body">
     {% for onefc in ont_flowcells %}
     <tr>
-        <td class="run_id">
-            <a class="text-decoration-none" href="/flowcells/{{ 'ont_' + onefc }}">{{ onefc }}</a>
+        <td>
+            <a class="text-decoration-none" href="/flowcells/{{ onefc }}">{{ onefc }}</a>
             {% if ont_flowcells.get(onefc).get('TACA_run_status') == 'finished' %}
                 <abbr title="Run completed">&nbsp;<span class="fa fa-check-circle"></span></abbr>
             {% else %}

@@ -135,7 +135,7 @@ class ONTReportHandler(SafeHandler):
 
         return str_html
 
-    def get(self, ont_prefix, run_name):
+    def get(self, run_name):
         self.write(self.fetch_ont_report(run_name))
 
 
@@ -150,6 +150,7 @@ class ONTFlowcellHandler(SafeHandler):
 
         view_all = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
         view_status = self.application.nanopore_runs_db.view("info/run_status", descending=True)
+        view_project = self.application.projects_db.view("project/id_name_dates", descending=True)
 
         fc = {}
 
@@ -228,8 +229,14 @@ class ONTFlowcellHandler(SafeHandler):
         match = query.search(fc["experiment_name"])
         if match:
             fc["project"] = match.group(0).upper()
+            try:
+                fc["project_name"] = view_project[fc["project"]].rows[0].value["project_name"]
+            except:
+                # If the project ID can't fetch a project name, leave empty
+                fc["project_name"] = ""
         else:
             fc["project"] = ""
+            fc["project_name"] = ""
 
         return fc
 
@@ -319,7 +326,7 @@ class ONTFlowcellHandler(SafeHandler):
 
         return entries
 
-    def get(self, ont_prefix, run_name):
+    def get(self, run_name):
 
         t = self.application.loader.load("ont_flowcell.html")
         self.write(t.generate(gs_globals=self.application.gs_globals,
