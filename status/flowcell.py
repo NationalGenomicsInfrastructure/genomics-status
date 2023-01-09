@@ -332,14 +332,7 @@ class ONTFlowcellHandler(SafeHandler):
                                 flowcell=self.fetch_ont_flowcell(name),
                                 barcodes=self.fetch_barcodes(name),
                                 args=self.fetch_args(name),
-                                display=display,
                                 user=self.get_current_user()))
-
-def display(stat):
-    if stat:
-        return stat
-    else:
-        return ""
 
 def add_prefix(N:int, unit:str):
     """ Convert integer to prefix string w. appropriate prefix
