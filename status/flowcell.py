@@ -242,23 +242,23 @@ class ONTFlowcellHandler(SafeHandler):
 
     def fetch_barcodes(self, name):
 
-        fc_view = self.application.nanopore_runs_db.view("info/barcodes", descending=True)
+        view_barcodes = self.application.nanopore_runs_db.view("info/barcodes", descending=True)
         
-        if len(fc_view[name].rows) == 1 and fc_view[name].rows[0].value:
-            run_barcodes = fc_view[name].rows[0].value
+        if view_barcodes[name].rows[0].value:
+            barcodes = view_barcodes[name].rows[0].value
 
-            run_barcodes_formatted = {}
-            for bc in run_barcodes:
-                run_barcodes_formatted[bc] = {}
-                for key in run_barcodes[bc]:
-                    if type(run_barcodes[bc][key]) == str and re.match("^\d*$", run_barcodes[bc][key]):
-                        run_barcodes_formatted[bc][key] = int(run_barcodes[bc][key])
+            barcodes_formatted = {}
+            for bc in barcodes:
+                barcodes_formatted[bc] = {}
+                for key in barcodes[bc]:
+                    if type(barcodes[bc][key]) == str and re.match("^\d*$", barcodes[bc][key]):
+                        barcodes_formatted[bc][key] = int(barcodes[bc][key])
                     else:
-                        run_barcodes_formatted[bc][key] = run_barcodes[bc][key]
+                        barcodes_formatted[bc][key] = barcodes[bc][key]
 
 
             # Every barcode becomes a row in a dataframe for column-wise formatting
-            df = pd.DataFrame.from_dict(run_barcodes_formatted, orient = "index")
+            df = pd.DataFrame.from_dict(barcodes_formatted, orient = "index")
 
             # The barcode names "barcode01", "barcode02", etc. are moved to their own column and the index is set to the barcode ID number
             df["bc_name"] = df.index
@@ -283,8 +283,8 @@ class ONTFlowcellHandler(SafeHandler):
 
             # Return dict for easy Tornado templating
             df.fillna("", inplace=True)
-            run_barcodes_formatted = df.to_dict(orient="index")
-            return run_barcodes_formatted
+            barcodes_formatted = df.to_dict(orient="index")
+            return barcodes_formatted
         
         else:
             return None
