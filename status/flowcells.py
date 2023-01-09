@@ -139,7 +139,7 @@ class FlowcellsHandler(SafeHandler):
                 for metric in metrics:
                     # Readable metrics
                     unit = "" if "count" in metric else "bp"
-                    fc["_".join([metric, "str"])] = add_prefix(N=fc[metric], unit=unit)
+                    fc["_".join([metric, "str"])] = add_prefix(input_int=fc[metric], unit=unit)
 
                     # Formatted metrics
                     if "count" in metric:

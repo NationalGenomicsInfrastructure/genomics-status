@@ -207,7 +207,7 @@ class ONTFlowcellHandler(SafeHandler):
             for metric in metrics:
                 # Readable metrics
                 unit = "" if "count" in metric else "bp"
-                fc["_".join([metric, "str"])] = add_prefix(N=fc[metric], unit=unit)
+                fc["_".join([metric, "str"])] = add_prefix(input_int=fc[metric], unit=unit)
 
                 # Formatted metrics
                 if "count" in metric:
@@ -334,11 +334,13 @@ class ONTFlowcellHandler(SafeHandler):
                                 args=self.fetch_args(name),
                                 user=self.get_current_user()))
 
-def add_prefix(N:int, unit:str):
+
+def add_prefix(input_int:int, unit:str):
     """ Convert integer to prefix string w. appropriate prefix
     """
-    N = int(N)
-    d = {
+    input_int = int(input_int)
+
+    dict_magnitude_to_unit = {
         1 : unit,
         10**3 : "K"+unit,
         10**6 : "M"+unit,
@@ -346,16 +348,16 @@ def add_prefix(N:int, unit:str):
         10**12 : "T"+unit
     }
 
-    for n, u in d.items():
-        if N > n*1000:
+    for magnitude, unit in dict_magnitude_to_unit.items():
+        if input_int > magnitude*1000:
             continue
         else:
             break
     
-    if N > 1000:
-        new_N = round(N/n, 2)
+    if input_int > 1000:
+        output_int = round(input_int/magnitude, 2)
     else:
-        new_N = N
+        output_int = input_int
 
-    s = str(new_N) + " " + u
-    return s
+    output_str = " ".join([str(output_int), unit])
+    return output_str
