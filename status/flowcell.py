@@ -166,10 +166,10 @@ class ONTFlowcellHandler(SafeHandler):
             fc["name"] = row.key
 
             for key in row.value:
-                # Convert values to integers, if possible
-                try:
+                # Convert digit-only strings to ints
+                if type(row.value[key]) == str and re.match("^\d*$", row.value[key]):
                     fc[key] = int(row.value[key])
-                except ValueError:
+                else:
                     fc[key] = row.value[key]
 
         if fc["TACA_run_status"] == "ongoing":
