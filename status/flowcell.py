@@ -165,12 +165,12 @@ class ONTFlowcellHandler(SafeHandler):
             row = view_all[name].rows[0]
             fc["name"] = row.key
 
-            d = row.value
-            for k in d:
+            for key in row.value:
+                # Convert values to integers, if possible
                 try:
-                    fc[k] = int(d[k])
+                    fc[key] = int(row.value[key])
                 except ValueError:
-                    fc[k] = d[k]
+                    fc[key] = row.value[key]
 
         if fc["TACA_run_status"] == "ongoing":
 
