@@ -199,6 +199,7 @@ Description: Shows a table with all flow cells.
 </div>
 
 <script src="/static/js/jquery.dataTables.min.js"></script>
+
 <!-- Table Sorting -->
 <script type="text/javascript">
 $( document ).ready(function() {
@@ -215,17 +216,8 @@ function init_listjs() {
       var title = $('#fc_table thead th').eq( $(this).index() ).text();
       $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
     } );
-    $('#ont_fc_table tfoot th').each( function () {
-      var title = $('#ont_fc_table thead th').eq( $(this).index() ).text();
-      $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
-    } );
 
     var table = $('#fc_table').DataTable({
-      "paging":false,
-      "info":false,
-      "order": [[ 0, "desc" ]]
-    });
-    var table = $('#ont_fc_table').DataTable({
       "paging":false,
       "info":false,
       "order": [[ 0, "desc" ]]
@@ -233,19 +225,12 @@ function init_listjs() {
 
     //Add the bootstrap classes to the search thingy
 
-    // Illumina
     $('div.dataTables_filter input').addClass('form-control search search-query');
     $('#fc_table_filter').addClass('form-inline float-right pt-1');
     $("#fc_table_filter").appendTo($('#page_title'));
     $('#fc_table_filter label input').appendTo($('#fc_table_filter'));
     $('#fc_table_filter label').remove();
     $("#fc_table_filter input").attr("placeholder", "Search..");
-    // ONT
-    $('#ont_fc_table_filter').addClass('form-inline float-right pt1');
-    $("#ont_fc_table_filter").appendTo($('#ont_page_title'));
-    $('#ont_fc_table_filter label input').appendTo($('#ont_fc_table_filter'));
-    $('#ont_fc_table_filter label').remove();
-    $("#ont_fc_table_filter input").attr("placeholder", "Search..");
 
     // Apply the search
     table.columns().every( function () {
@@ -258,6 +243,5 @@ function init_listjs() {
     } );
 }
 </script>
-
 
 {% end %}

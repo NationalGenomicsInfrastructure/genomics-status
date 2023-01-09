@@ -84,3 +84,42 @@
     {% end %}
     </tbody>
  </table>
+
+ <!-- Table Sorting -->
+<script type="text/javascript">
+$( document ).ready(function() {
+  init_listjs_ont();
+});
+// Initialize sorting and searching javascript plugin
+function init_listjs_ont() {
+    // Setup - add a text input to each footer cell
+    $('#ont_fc_table tfoot th').each( function () {
+      var title = $('#ont_fc_table thead th').eq( $(this).index() ).text();
+      $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
+    } );
+
+    var table = $('#ont_fc_table').DataTable({
+      "paging":false,
+      "info":false,
+      "order": [[ 0, "desc" ]]
+    });
+
+    //Add the bootstrap classes to the search thingy
+
+    $('#ont_fc_table_filter').addClass('form-inline float-right pt1');
+    $("#ont_fc_table_filter").appendTo($('#ont_page_title'));
+    $('#ont_fc_table_filter label input').appendTo($('#ont_fc_table_filter'));
+    $('#ont_fc_table_filter label').remove();
+    $("#ont_fc_table_filter input").attr("placeholder", "Search..");
+
+    // Apply the search
+    table.columns().every( function () {
+        var that = this;
+        $( 'input', this.footer() ).on( 'keyup change', function () {
+            that
+            .search( this.value )
+            .draw();
+        } );
+    } );
+}
+</script>
