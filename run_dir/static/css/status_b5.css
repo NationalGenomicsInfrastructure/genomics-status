@@ -435,6 +435,12 @@ pre {
   font-weight: normal;
 }
 
+.dl-ont > dt { 
+  float: left; 
+  text-align: left;
+  width: 160px;
+}
+
 .dl-horizontal > dt{
   float: left;
   text-align: right;
