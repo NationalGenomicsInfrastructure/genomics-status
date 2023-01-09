@@ -85,26 +85,25 @@ class FlowcellsHandler(SafeHandler):
         view_project = self.application.projects_db.view("project/id_name_dates", descending=True)
 
         for row in view_status:
+            name = row.key.split("/")[-1]
 
             if row.value == "finished":
-                name = row.key.split("/")[-1]
-                d = view_all[name].rows[0].value
-                for k in d:
+                db_entry = view_all[name].rows[0].value
+                for key in db_entry:
                     try:
-                        d[k] = int(d[k])
+                        db_entry[key] = int(db_entry[key])
                     except ValueError:
                         pass
 
             elif row.value == "ongoing":
-                name = row.key.split("/")[-1]
-                d = {}
-                d["TACA_run_path"] = row.key
-                d["TACA_run_status"] = row.value
+                db_entry = {}
+                db_entry["TACA_run_path"] = row.key
+                db_entry["TACA_run_status"] = row.value
 
-            ont_flowcells[name] = d
+            ont_flowcells[name] = db_entry
 
 
-        for k, fc in ont_flowcells.items():
+        for key, fc in ont_flowcells.items():
 
             if fc["TACA_run_status"] == "ongoing":
 
