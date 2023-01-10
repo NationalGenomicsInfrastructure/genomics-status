@@ -42,9 +42,9 @@
         <td>
             <a class="text-decoration-none" href="/flowcells/{{ onefc }}">{{ onefc }}</a>
             {% if ont_flowcells.get(onefc).get('TACA_run_status') == 'finished' %}
-                <abbr title="Run completed">&nbsp;<span class="fa fa-check-circle"></span></abbr>
+                <abbr title="Run completed"><span class="fa fa-check-circle"></span></abbr>
             {% else %}
-                <abbr title="Ongoing">&nbsp;<span class="fa fa-hourglass-half"></span></abbr>
+                <abbr title="Ongoing"><span class="fa fa-hourglass-half"></span></abbr>
             {% end %}
         </td>
         <td>{{ ont_flowcells[onefc]["start_date"] }}</td>
