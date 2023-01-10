@@ -1,5 +1,6 @@
 from status.util import SafeHandler
 from datetime import datetime
+import numpy as np
 import pandas as pd
 import re
 import html
@@ -117,12 +118,20 @@ class FlowcellHandler(SafeHandler):
 
 
 def fetch_ont_run_stats(view_all, view_project, run_name):
+    """ Inputs:
+    - The nanopore_runs database view "all_stats"
+    - The projects database view "id_name_dates"
+    - The nanopore run name
+
+    Outputs:
+    - A dictionary containing information pertaining to the run that has been transformed and/or formatted.
+    """
 
     db_entry = [row for row in view_all.rows if row.key == run_name][0]
     run_dict = db_entry.value
 
     for k, v in run_dict.items():
-        if type(v) == str and re.match("^\d*$", v):
+        if type(v) == str and re.match("^\d+$", v):
             run_dict[k] = int(run_dict[k])
         else:
             pass
@@ -229,25 +238,28 @@ class ONTFlowcellHandler(SafeHandler):
         return fetch_ont_run_stats(view_all, view_project, run_name)
 
 
-    def fetch_barcodes(self, name):
+    def fetch_barcodes(self, run_name):
+        """ Returns dictionary whose keys are barcode IDs and whose values are dicts containing 
+        barcode metrics from the last data acquisition snapshot of the MinKNOW reports.
+        """
+        import pdb
 
         view_barcodes = self.application.nanopore_runs_db.view("info/barcodes", descending=True)
-        
-        if view_barcodes[name].rows[0].value:
-            barcodes = view_barcodes[name].rows[0].value
+        barcodes_unformatted = view_barcodes[run_name].rows[0].value
+        barcodes = {}
 
-            barcodes_formatted = {}
-            for bc in barcodes:
-                barcodes_formatted[bc] = {}
-                for key in barcodes[bc]:
-                    if type(barcodes[bc][key]) == str and re.match("^\d*$", barcodes[bc][key]):
-                        barcodes_formatted[bc][key] = int(barcodes[bc][key])
+        if barcodes_unformatted:
+            for bc in barcodes_unformatted:
+                barcodes[bc] = {}
+                for k, v in barcodes_unformatted[bc].items():
+                    if type(v) == str and re.match("^\d+$", v):
+                        barcodes[bc][k] = int(v)
                     else:
-                        barcodes_formatted[bc][key] = barcodes[bc][key]
-
+                        barcodes[bc][k] = v
 
             # Every barcode becomes a row in a dataframe for column-wise formatting
-            df = pd.DataFrame.from_dict(barcodes_formatted, orient = "index")
+            df = pd.DataFrame.from_dict(barcodes, orient = "index")
+
 
             # The barcode names "barcode01", "barcode02", etc. are moved to their own column and the index is set to the barcode ID number
             df["bc_name"] = df.index
@@ -255,28 +267,37 @@ class ONTFlowcellHandler(SafeHandler):
             df.set_index("bc_id", inplace=True)
 
             # === Start making column-wise formatting ===
-
             # If the barcode alias is redunant, remove it
             df.loc[df.bc_name == df.barcode_alias, "barcode_alias"] = ""
 
-            # Calculate percentages, set empty if <0.01
-            df["basecalled_pass_read_count_pc"] = (df.basecalled_pass_read_count / sum(df.basecalled_pass_read_count)).apply(
-                lambda x: round(x*100, 2) if round(x*100, 2) > 0 else "")
-            df["basecalled_pass_bases_pc"] = (df.basecalled_pass_bases / sum(df.basecalled_pass_bases)).apply(
-                lambda x: round(x*100, 2) if round(x*100, 2) > 0 else "")
-            # Calculate new metrics
-            df["average_read_length_passed"] =  (df.basecalled_pass_bases / df.basecalled_pass_read_count).apply(
-                lambda x: int(round(x, 0)))
-            df["accuracy"] =  (df.basecalled_pass_bases / (df.basecalled_pass_bases + df.basecalled_fail_bases)).apply(
-                lambda x: round(x*100, 2) if round(x*100, 2) > 0 else "")
+            # Calculate percentages
+            df["basecalled_pass_read_count_pc"] = np.where(
+                sum(df.basecalled_pass_read_count) > 0,
+                round(df.basecalled_pass_read_count / sum(df.basecalled_pass_read_count) * 100, 2),
+                0)
+            df["basecalled_pass_bases_pc"] = np.where(
+                sum(df.basecalled_pass_bases) > 0,
+                round(df.basecalled_pass_bases / sum(df.basecalled_pass_bases) * 100, 2),
+                0)
+            df["average_read_length_passed"] =  np.where(
+                df.basecalled_pass_read_count > 0,
+                round(df.basecalled_pass_bases / df.basecalled_pass_read_count, 2),
+                0)
+            df["accuracy"] =  np.where(
+                df.basecalled_pass_bases + df.basecalled_fail_bases > 0,
+                round(df.basecalled_pass_bases / (df.basecalled_pass_bases + df.basecalled_fail_bases) * 100, 2),
+                0)
 
             # Return dict for easy Tornado templating
             df.fillna("", inplace=True)
-            barcodes_formatted = df.to_dict(orient="index")
-            return barcodes_formatted
-        
+
+            barcodes = df.to_dict(orient="index")
+
+            return barcodes
+
         else:
             return None
+
     
     def fetch_args(self, name):
         view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
