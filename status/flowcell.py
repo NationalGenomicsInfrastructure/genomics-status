@@ -129,6 +129,7 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
 
     db_entry = [row for row in view_all.rows if row.key == run_name][0]
     run_dict = db_entry.value
+    run_dict["run_name"] = run_name
 
     for k, v in run_dict.items():
         if type(v) == str and re.match("^\d+$", v):

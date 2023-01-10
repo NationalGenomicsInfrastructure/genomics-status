@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block stuff %}
 <div id="page_content">
-    <h1>ONT run <span id="page_title">{{ flowcell.get('name') }}</span></h1>
+    <h1>ONT run <span id="page_title">{{ flowcell.get('run_name') }}</span></h1>
 
     <div class="row">
 
@@ -73,13 +73,7 @@
         </li>
         {% end %}
         <li class="nav-item">
-          <a class="nav-link" href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#tab_links_content" role="tab" data-toggle="tab">Links</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/flowcells/{{ flowcell.get('name') }}/report" target="_blank">MinKNOW run report</a>
+          <a class="nav-link" href="/flowcells/{{ flowcell.get('run_name') }}/report" target="_blank">MinKNOW run report</a>
         </li>
       </ul>
     </div>
