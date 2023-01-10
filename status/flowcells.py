@@ -79,53 +79,50 @@ class FlowcellsHandler(SafeHandler):
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
     def list_ont_flowcells(self):
+
         ont_flowcells = OrderedDict()
         view_all = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
-        view_status = self.application.nanopore_runs_db.view("info/run_status", descending=True)
         view_project = self.application.projects_db.view("project/id_name_dates", descending=True)
 
-        for row in view_status:
-            name = row.key.split("/")[-1]
+        for db_entry in view_all:
 
-            if row.value == "finished":
-                db_entry = view_all[name].rows[0].value
-                for key in db_entry:
+            if db_entry.value["TACA_run_status"] == "finished":
+                run_dict = db_entry.value
+                for key in run_dict:
                     try:
-                        db_entry[key] = int(db_entry[key])
+                        run_dict[key] = int(run_dict[key])
                     except ValueError:
                         pass
 
-            elif row.value == "ongoing":
-                db_entry = {}
-                db_entry["TACA_run_path"] = row.key
-                db_entry["TACA_run_status"] = row.value
+            elif db_entry.value == "ongoing":
+                run_dict = {}
+                run_dict["TACA_run_path"] = db_entry.key
+                run_dict["TACA_run_status"] = db_entry.value
 
-            ont_flowcells[name] = db_entry
+            ont_flowcells[db_entry.key] = run_dict
 
+        for _, fc in ont_flowcells.items():
 
-        for key, fc in ont_flowcells.items():
-
+            # If run is ongoing, i.e. has no reports generated, extrapolate as much information as possible from file path
             if fc["TACA_run_status"] == "ongoing":
 
                 fc["experiment_name"], fc["sample_name"], name = fc["TACA_run_path"].split("/")
                 
-                run_date, run_time, run_pos, run_fc, run_hash = name.split("_")
-
+                run_date, fc["start_time"], fc["position"], fc["flow_cell_id"], fc["run_id"] = name.split("_")
                 fc["start_date"] = datetime.datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
-                fc["start_time"] = run_time
-                fc["position"] = run_pos
-                fc["flow_cell_id"] = run_fc
-                fc["run_id"] = run_hash
 
+            # If run is finished, i.e. reports are generated, produce new metrics
             elif fc["TACA_run_status"] == "finished":
 
                 # Calculate new metrics
                 fc["basecalled_bases"] = fc["basecalled_pass_bases"] + fc["basecalled_fail_bases"]
                 fc["accuracy"] = round(fc["basecalled_pass_bases"] / fc["basecalled_bases"] * 100, 2)
-                
-                # TODO yield per pore, fetch pore count from 1st MUX scan message, LIMS or QC
 
-                # Add prefix metrics
+                """ Convert metrics from integers to readable strings and appropriately scaled floats, e.g.
+                basecalled_pass_read_count =       int(    123 123 123 )
+                basecalled_pass_read_count_str =   str(    123.12 Mbp )
+                basecalled_pass_read_count_Gbp =   float(  0.123 )
+                """
                 metrics = [
                     "read_count",
                     "basecalled_pass_read_count",
@@ -136,29 +133,28 @@ class FlowcellsHandler(SafeHandler):
                     "n50"
                 ]
                 for metric in metrics:
-                    # Readable metrics
+                    # Readable metrics, i.e. strings w. appropriate units
                     unit = "" if "count" in metric else "bp"
                     fc["_".join([metric, "str"])] = add_prefix(input_int=fc[metric], unit=unit)
 
-                    # Formatted metrics
+                    # Formatted metrics, i.e. floats transformed to predetermined unit
                     if "count" in metric:
-                        prefixed_unit = "M"
+                        unit = "M"
                         divby = 10**6
                     elif "n50" in metric:
-                        prefixed_unit = "Kbp"
+                        unit = "Kbp"
                         divby = 10**3
                     elif "bases" in metric:
-                        prefixed_unit = "Gbp"
+                        unit = "Gbp"
                         divby = 10**9
                     else:
                         continue
-                    fc["_".join([metric, prefixed_unit])] = round(fc[metric] / divby, 2)
+                    fc["_".join([metric, unit])] = round(fc[metric] / divby, 2)
                 
             else:
                 continue
 
-            # Find project
-
+            # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
             query = re.compile("(p|P)\d{5}")
             match = query.search(fc["experiment_name"])
             if match:
