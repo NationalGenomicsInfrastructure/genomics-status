@@ -4,7 +4,6 @@
 import tornado.web
 import json
 import datetime
-import re
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
@@ -14,7 +13,7 @@ from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 from status.util import SafeHandler
 from status.projects import RunningNotesDataHandler
-from status.flowcell import FlowcellHandler, add_prefix
+from status.flowcell import FlowcellHandler, fetch_ont_run_stats
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
@@ -80,93 +79,13 @@ class FlowcellsHandler(SafeHandler):
 
     def list_ont_flowcells(self):
 
-        ont_flowcells = OrderedDict()
         view_all = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
         view_project = self.application.projects_db.view("project/id_name_dates", descending=True)
 
-        for db_entry in view_all:
+        ont_flowcells = OrderedDict()
 
-            if db_entry.value["TACA_run_status"] == "finished":
-                run_dict = db_entry.value
-                for key in run_dict:
-                    try:
-                        run_dict[key] = int(run_dict[key])
-                    except ValueError:
-                        pass
-
-            elif db_entry.value == "ongoing":
-                run_dict = {}
-                run_dict["TACA_run_path"] = db_entry.key
-                run_dict["TACA_run_status"] = db_entry.value
-
-            ont_flowcells[db_entry.key] = run_dict
-
-        for _, fc in ont_flowcells.items():
-
-            # If run is ongoing, i.e. has no reports generated, extrapolate as much information as possible from file path
-            if fc["TACA_run_status"] == "ongoing":
-
-                fc["experiment_name"], fc["sample_name"], name = fc["TACA_run_path"].split("/")
-                
-                run_date, fc["start_time"], fc["position"], fc["flow_cell_id"], fc["run_id"] = name.split("_")
-                fc["start_date"] = datetime.datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
-
-            # If run is finished, i.e. reports are generated, produce new metrics
-            elif fc["TACA_run_status"] == "finished":
-
-                # Calculate new metrics
-                fc["basecalled_bases"] = fc["basecalled_pass_bases"] + fc["basecalled_fail_bases"]
-                fc["accuracy"] = round(fc["basecalled_pass_bases"] / fc["basecalled_bases"] * 100, 2)
-
-                """ Convert metrics from integers to readable strings and appropriately scaled floats, e.g.
-                basecalled_pass_read_count =       int(    123 123 123 )
-                basecalled_pass_read_count_str =   str(    123.12 Mbp )
-                basecalled_pass_read_count_Gbp =   float(  0.123 )
-                """
-                metrics = [
-                    "read_count",
-                    "basecalled_pass_read_count",
-                    "basecalled_fail_read_count",
-                    "basecalled_bases",
-                    "basecalled_pass_bases",
-                    "basecalled_fail_bases",
-                    "n50"
-                ]
-                for metric in metrics:
-                    # Readable metrics, i.e. strings w. appropriate units
-                    unit = "" if "count" in metric else "bp"
-                    fc["_".join([metric, "str"])] = add_prefix(input_int=fc[metric], unit=unit)
-
-                    # Formatted metrics, i.e. floats transformed to predetermined unit
-                    if "count" in metric:
-                        unit = "M"
-                        divby = 10**6
-                    elif "n50" in metric:
-                        unit = "Kbp"
-                        divby = 10**3
-                    elif "bases" in metric:
-                        unit = "Gbp"
-                        divby = 10**9
-                    else:
-                        continue
-                    fc["_".join([metric, unit])] = round(fc[metric] / divby, 2)
-                
-            else:
-                continue
-
-            # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
-            query = re.compile("(p|P)\d{5}")
-            match = query.search(fc["experiment_name"])
-            if match:
-                fc["project"] = match.group(0).upper()
-                try:
-                    fc["project_name"] = view_project[fc["project"]].rows[0].value["project_name"]
-                except:
-                    # If the project ID can't fetch a project name, leave empty
-                    fc["project_name"] = ""
-            else:
-                fc["project"] = ""
-                fc["project_name"] = ""
+        for row in view_all.rows:
+            ont_flowcells[row.key] = fetch_ont_run_stats(view_all, view_project, row.key)
 
         # Use Pandas dataframe for column-wise operations, every db entry becomes a row
         df = pd.DataFrame.from_dict(ont_flowcells, orient = "index")
