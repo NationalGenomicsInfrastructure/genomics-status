@@ -67,9 +67,11 @@
 
     <div class="tabbable mb-3">
       <ul class="nav nav-tabs">
+        {% if barcodes %}
         <li class="nav-item">
           <a class="nav-link active" href="#tab_barcode_information" role="tab" data-toggle="tab">Barcode Information</a>
         </li>
+        {% end %}
         <li class="nav-item">
           <a class="nav-link" href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a>
         </li>
@@ -81,6 +83,7 @@
         </li>
       </ul>
     </div>
+    {% if barcodes %}
     <div class="tab-content">
       <div class="tab-pane fade show active" id="tab_barcode_information">
         <table class="table table-bordered narrow-headers no-margin right_align_headers" id="ont_barcodes">
@@ -97,7 +100,6 @@
                 </tr>
             </thead>
             <tbody class="list">
-            {% if barcodes %}
               {% for bc in barcodes %}
               <tr>
                   <td>{{ barcodes[bc]["bc_name"] }}</td>
@@ -110,11 +112,12 @@
                   <td class="text-right">{{ barcodes[bc]["accuracy"] }}</td>
               </tr>
               {% end %} 
-            {% end %}
+            
             </tbody>
         </table>
       </div>
     </div>
+    {% end %}
 </div>
 
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell.get('name') }}"></script>
