@@ -243,7 +243,6 @@ class ONTFlowcellHandler(SafeHandler):
         """ Returns dictionary whose keys are barcode IDs and whose values are dicts containing 
         barcode metrics from the last data acquisition snapshot of the MinKNOW reports.
         """
-        import pdb
 
         view_barcodes = self.application.nanopore_runs_db.view("info/barcodes", descending=True)
         barcodes_unformatted = view_barcodes[run_name].rows[0].value
