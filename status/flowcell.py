@@ -282,7 +282,7 @@ class ONTFlowcellHandler(SafeHandler):
                 0)
             df["average_read_length_passed"] =  np.where(
                 df.basecalled_pass_read_count > 0,
-                round(df.basecalled_pass_bases / df.basecalled_pass_read_count, 2),
+                round(df.basecalled_pass_bases / df.basecalled_pass_read_count, 2).astype(int),
                 0)
             df["accuracy"] =  np.where(
                 df.basecalled_pass_bases + df.basecalled_fail_bases > 0,
