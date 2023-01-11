@@ -6,11 +6,13 @@
     <div class="row">
 
       <div class="col-md-4 borderRight mr-2" style="width: 500px;">
-        <h4 class = "mt-3 mb-2">Project</h4>
-        <dl class="dl-ont">
-          <dt>Project ID</dt>				<dd><a href="/project/{{ flowcell.get('project') }}">{{ flowcell.get("project") }}</a></dd>
-          <dt>Project name</dt>	    <dd> {{ flowcell.get("project_name") }} </dd>
-        </dl>
+        {% if flowcell.get('project') %}
+          <h4 class = "mt-3 mb-2">Project</h4>
+          <dl class="dl-ont">
+            <dt>Project ID</dt>				<dd><a href="/project/{{ flowcell.get('project') }}">{{ flowcell.get("project") }}</a></dd>
+            <dt>Project name</dt>	    <dd> {{ flowcell.get("project_name") }} </dd>
+          </dl>
+        {% end %}
         <h4 class = "mt-3 mb-2">Time and status</h4>
         <dl class="dl-ont">
           <dt>Run status</dt>				<dd> {{ flowcell.get("TACA_run_status") }} </dd>
