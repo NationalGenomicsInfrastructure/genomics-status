@@ -78,6 +78,8 @@ class FlowcellsHandler(SafeHandler):
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
     def list_ont_flowcells(self):
+        """ Fetch dictionary of the form {ont_run_name : ont_run_stats_dict}
+        """
 
         view_all = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
         view_project = self.application.projects_db.view("project/id_name_dates", descending=True)
