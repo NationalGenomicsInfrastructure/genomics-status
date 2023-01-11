@@ -303,11 +303,12 @@ class ONTFlowcellHandler(SafeHandler):
         view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
         l = [row for row in view_args.rows if name in row.key][0].value
 
-        group = "([^\s=]+)"
-        flag_pair = re.compile(f"^--{group}={group}$")
-        flag_key_or_header = re.compile(f"^--{group}$")
-        val = re.compile(f"^(?!--){group}$")
-        pair = re.compile(f"^(?!--){group}={group}$")
+        group = "([^\s=]+)"                             # Text component of cmd argument
+        
+        flag_pair = re.compile(f"^--{group}={group}$")  # Double-dash argument with assignment
+        flag_key_or_header = re.compile(f"^--{group}$") # Double-dash argument w/o assignment
+        pair = re.compile(f"^(?!--){group}={group}$")   # Non-double-dash argument with assignment
+        val = re.compile(f"^(?!--){group}$")            # Non-double-dash argument w/o assignment
 
         entries = {}
         idxs_args = iter(zip(range(0, len(l)), l))
