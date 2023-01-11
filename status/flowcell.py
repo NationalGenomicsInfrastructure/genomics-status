@@ -1,5 +1,10 @@
 from status.util import SafeHandler
 from datetime import datetime
+import numpy as np
+import pandas as pd
+import re
+import html
+
 
 thresholds = {
     'HiSeq X': 320,
@@ -19,6 +24,7 @@ thresholds = {
     'NextSeq 2000 P2' : 400,
     'NextSeq 2000 P3' : 1100
 }
+
 
 class FlowcellHandler(SafeHandler):
     """ Serves a page which shows information for a given flowcell.
@@ -109,3 +115,260 @@ class FlowcellHandler(SafeHandler):
                                   thresholds=thresholds,
                                   project_names=project_names,
                                   user=self.get_current_user()))
+
+
+def fetch_ont_run_stats(view_all, view_project, run_name):
+    """ Inputs:
+    - The nanopore_runs database view "all_stats"
+    - The projects database view "id_name_dates"
+    - The nanopore run name
+
+    Outputs:
+    - A dictionary containing information pertaining to the run that has been transformed and/or formatted.
+    """
+
+    db_entry = [row for row in view_all.rows if row.key == run_name][0]
+    run_dict = db_entry.value
+    run_dict["run_name"] = run_name
+
+    for k, v in run_dict.items():
+        if type(v) == str and re.match("^\d+$", v):
+            run_dict[k] = int(run_dict[k])
+        else:
+            pass
+
+    # If run is ongoing, i.e. has no reports generated, extrapolate as much information as possible from file path
+    if run_dict["TACA_run_status"] == "ongoing":
+
+        run_dict["experiment_name"], run_dict["sample_name"], name = run_dict["TACA_run_path"].split("/")
+        
+        run_date, run_dict["start_time"], run_dict["position"], run_dict["flow_cell_id"], run_dict["run_id"] = name.split("_")
+        run_dict["start_date"] = datetime.datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
+
+    # If run is finished, i.e. reports are generated, produce new metrics
+    elif run_dict["TACA_run_status"] == "finished":
+
+        # Calculate new metrics
+        run_dict["basecalled_bases"] = run_dict["basecalled_pass_bases"] + run_dict["basecalled_fail_bases"]
+        run_dict["accuracy"] = round(run_dict["basecalled_pass_bases"] / run_dict["basecalled_bases"] * 100, 2)
+
+        """ Convert metrics from integers to readable strings and appropriately scaled floats, e.g.
+        basecalled_pass_read_count =       int(    123 123 123 )
+        basecalled_pass_read_count_str =   str(    123.12 Mbp )
+        basecalled_pass_read_count_Gbp =   float(  0.123 )
+        """
+        metrics = [
+            "read_count",
+            "basecalled_pass_read_count",
+            "basecalled_fail_read_count",
+            "basecalled_bases",
+            "basecalled_pass_bases",
+            "basecalled_fail_bases",
+            "n50"
+        ]
+        for metric in metrics:
+            # Readable metrics, i.e. strings w. appropriate units
+            unit = "" if "count" in metric else "bp"
+            run_dict["_".join([metric, "str"])] = add_prefix(input_int=run_dict[metric], unit=unit)
+
+            # Formatted metrics, i.e. floats transformed to predetermined unit
+            if "count" in metric:
+                unit = "M"
+                divby = 10**6
+            elif "n50" in metric:
+                unit = "Kbp"
+                divby = 10**3
+            elif "bases" in metric:
+                unit = "Gbp"
+                divby = 10**9
+            else:
+                continue
+            run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
+
+    # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
+    query = re.compile("(p|P)\d{5}")
+    match = query.search(run_dict["experiment_name"])
+    if match:
+        run_dict["project"] = match.group(0).upper()
+        try:
+            run_dict["project_name"] = view_project[run_dict["project"]].rows[0].value["project_name"]
+        except:
+            # If the project ID can't fetch a project name, leave empty
+            run_dict["project_name"] = ""
+    else:
+        run_dict["project"] = ""
+        run_dict["project_name"] = ""
+
+    return run_dict
+
+
+class ONTReportHandler(SafeHandler):
+    """ Serves a page showing the MinKNOW .html report of a given run
+    """
+
+    def __init__(self, application, request, **kwargs):
+        super(SafeHandler, self).__init__(application, request, **kwargs)
+
+    def fetch_ont_report(self, name):
+        """ Fetches the MinKNOW .html run report, saved as an escaped string in the
+        database run entry and returns the unescaped string which can be written as .html
+        """
+
+        view_report = self.application.nanopore_runs_db.view("info/minknow_report", descending=True)
+        row = [row for row in view_report.rows if name in row.key][0]
+        str_html = html.unescape(row.value)
+
+        return str_html
+
+    def get(self, name):
+        self.write(self.fetch_ont_report(name))
+
+
+class ONTFlowcellHandler(SafeHandler):
+    """ Serves a page which shows information for a given ONT flowcell.
+    """
+
+    def __init__(self, application, request, **kwargs):
+        super(SafeHandler, self).__init__(application, request, **kwargs)
+
+    def fetch_ont_flowcell(self, run_name):
+
+        view_all = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
+        view_project = self.application.projects_db.view("project/id_name_dates", descending=True)
+
+        return fetch_ont_run_stats(view_all, view_project, run_name)
+
+
+    def fetch_barcodes(self, run_name):
+        """ Returns dictionary whose keys are barcode IDs and whose values are dicts containing 
+        barcode metrics from the last data acquisition snapshot of the MinKNOW reports.
+        """
+
+        view_barcodes = self.application.nanopore_runs_db.view("info/barcodes", descending=True)
+        barcodes_unformatted = view_barcodes[run_name].rows[0].value
+        barcodes = {}
+
+        if barcodes_unformatted:
+            for bc in barcodes_unformatted:
+                barcodes[bc] = {}
+                for k, v in barcodes_unformatted[bc].items():
+                    if type(v) == str and re.match("^\d+$", v):
+                        barcodes[bc][k] = int(v)
+                    else:
+                        barcodes[bc][k] = v
+
+            # Every barcode becomes a row in a dataframe for column-wise formatting
+            df = pd.DataFrame.from_dict(barcodes, orient = "index")
+
+
+            # The barcode names "barcode01", "barcode02", etc. are moved to their own column and the index is set to the barcode ID number
+            df["bc_name"] = df.index
+            df["bc_id"] = pd.Series(df.index).apply(lambda x:int(x[-2:]) if "barcode" in x else x).values
+            df.set_index("bc_id", inplace=True)
+
+            # === Start making column-wise formatting ===
+            # If the barcode alias is redunant, remove it
+            df.loc[df.bc_name == df.barcode_alias, "barcode_alias"] = ""
+
+            # Calculate percentages
+            df["basecalled_pass_read_count_pc"] = np.where(
+                sum(df.basecalled_pass_read_count) > 0,
+                round(df.basecalled_pass_read_count / sum(df.basecalled_pass_read_count) * 100, 2),
+                0)
+            df["basecalled_pass_bases_pc"] = np.where(
+                sum(df.basecalled_pass_bases) > 0,
+                round(df.basecalled_pass_bases / sum(df.basecalled_pass_bases) * 100, 2),
+                0)
+            df["average_read_length_passed"] =  np.where(
+                df.basecalled_pass_read_count > 0,
+                round(df.basecalled_pass_bases / df.basecalled_pass_read_count, 2).astype(int),
+                0)
+            df["accuracy"] =  np.where(
+                df.basecalled_pass_bases + df.basecalled_fail_bases > 0,
+                round(df.basecalled_pass_bases / (df.basecalled_pass_bases + df.basecalled_fail_bases) * 100, 2),
+                0)
+
+            # Return dict for easy Tornado templating
+            df.fillna("", inplace=True)
+
+            barcodes = df.to_dict(orient="index")
+
+            return barcodes
+
+        else:
+            return None
+
+    
+    def fetch_args(self, name):
+        view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
+        l = [row for row in view_args.rows if name in row.key][0].value
+
+        group = "([^\s=]+)"                             # Text component of cmd argument
+        
+        flag_pair = re.compile(f"^--{group}={group}$")  # Double-dash argument with assignment
+        flag_key_or_header = re.compile(f"^--{group}$") # Double-dash argument w/o assignment
+        pair = re.compile(f"^(?!--){group}={group}$")   # Non-double-dash argument with assignment
+        val = re.compile(f"^(?!--){group}$")            # Non-double-dash argument w/o assignment
+
+        entries = {}
+        idxs_args = iter(zip(range(0, len(l)), l))
+        for (idx, arg) in idxs_args:
+            # Flag pair --> Tuple
+            if re.match(flag_pair, arg):
+                k, v = re.match(flag_pair, arg).groups()
+                entries[(k,v)]="pair"
+            # Flag single
+            elif re.match(flag_key_or_header, arg):
+                # If followed by pair --> Header
+                if re.match(pair, l[idx+1]):
+                    h = re.match(flag_key_or_header, arg).groups()[0]
+                    entries[h]="header"
+                # If followed by val --> Add both as tuple and skip ahead
+                elif re.match(val, l[idx+1]):
+                    k = re.match(flag_key_or_header, arg).groups()[0]
+                    v = re.match(val, l[idx+1]).groups()[0]
+                    entries[(k,v)]="pair"
+                    next(idxs_args)
+            # Pair 
+            elif re.match(pair, arg):
+                k, v = re.match(pair, arg).groups()
+                entries[(k,v)]="sub_pair"
+
+        return entries
+
+    def get(self, name):
+
+        t = self.application.loader.load("ont_flowcell.html")
+        self.write(t.generate(gs_globals=self.application.gs_globals,
+                                flowcell=self.fetch_ont_flowcell(name),
+                                barcodes=self.fetch_barcodes(name),
+                                args=self.fetch_args(name),
+                                user=self.get_current_user()))
+
+
+def add_prefix(input_int:int, unit:str):
+    """ Convert integer to prefix string w. appropriate prefix
+    """
+    input_int = int(input_int)
+
+    dict_magnitude_to_unit = {
+        1 : unit,
+        10**3 : "K"+unit,
+        10**6 : "M"+unit,
+        10**9 : "G"+unit,
+        10**12 : "T"+unit
+    }
+
+    for magnitude, unit in dict_magnitude_to_unit.items():
+        if input_int > magnitude*1000:
+            continue
+        else:
+            break
+    
+    if input_int > 1000:
+        output_int = round(input_int/magnitude, 2)
+    else:
+        output_int = input_int
+
+    output_str = " ".join([str(output_int), unit])
+    return output_str

@@ -14,3 +14,4 @@ Pipfile.lock
 run_dir/settings/
 *.swp
 *.orig
+run_dir/genosqlrc.yaml

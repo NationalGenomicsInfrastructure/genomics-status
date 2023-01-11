@@ -25,7 +25,7 @@ from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandle
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
-from status.flowcell import FlowcellHandler
+from status.flowcell import FlowcellHandler, ONTFlowcellHandler, ONTReportHandler
 from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandler, \
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
@@ -92,6 +92,8 @@ class Application(tornado.web.Application):
         self.gs_globals['font_awesome_url'] = settings.get('font_awesome_url', None)
 
         handlers = [
+            # The tuples are on the form ("URI regex", "Backend request handler")
+            # The groups of the regex are the arguments of the handlers get() method
             ("/", MainHandler),
             ("/login", LoginHandler),
             ("/logout", LogoutHandler),
@@ -195,7 +197,9 @@ class Application(tornado.web.Application):
             ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
             ("/deliveries", DeliveriesPageHandler),
             ("/flowcells", FlowcellsHandler),
-            ("/flowcells/([^/]*)$", FlowcellHandler),
+            ("/flowcells/(\d{6}_[^/]*)$", FlowcellHandler),         # Illumina run names start w. 6 digits
+            ("/flowcells/(\d{8}_[^/]*)$", ONTFlowcellHandler),      # ONT run names start w. 8
+            ("/flowcells/(\d{8}_[^/]*)/[^/]*$", ONTReportHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
             ("/generate_quote", GenerateQuoteHandler),
@@ -249,6 +253,7 @@ class Application(tornado.web.Application):
             self.gs_users_db = couch["gs_users"]
             self.instruments_db= couch["instruments"]
             self.instrument_logs_db = couch["instrument_logs"]
+            self.nanopore_runs_db = couch["nanopore_runs"]
             self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
             self.projects_db = couch["projects"]
             self.sample_requirements_db = couch["sample_requirements"]

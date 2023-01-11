@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block stuff %}
+<div id="page_content">
+    <h1>ONT run <span id="page_title">{{ flowcell.get('run_name') }}</span></h1>
+
+    <div class="row">
+
+      <div class="col-md-4 borderRight mr-2" style="width: 500px;">
+        <h4 class = "mt-3 mb-2">Project</h4>
+        <dl class="dl-ont">
+          <dt>Project ID</dt>				<dd><a href="/project/{{ flowcell.get('project') }}">{{ flowcell.get("project") }}</a></dd>
+          <dt>Project name</dt>	    <dd> {{ flowcell.get("project_name") }} </dd>
+        </dl>
+        <h4 class = "mt-3 mb-2">Time and status</h4>
+        <dl class="dl-ont">
+          <dt>Run status</dt>				<dd> {{ flowcell.get("TACA_run_status") }} </dd>
+          <dt>Start date</dt>				<dd> {{ flowcell.get("start_date") }} </dd>
+          <dt>End date</dt>					<dd> {{ flowcell.get("end_date") }} </dd>
+        </dl>
+        <h4 class = "mt-3 mb-2">MinKNOW identifiers</h4>
+        <dl class="dl-ont">
+          <dt>Experiment name</dt>  <dd> {{ flowcell.get("experiment_name") }} </dd>
+          <dt>Sample name</dt>		  <dd> {{ flowcell.get("sample_name") }} </dd>
+          <dt>Run name</dt>	        <dd> {{ flowcell.get("run_name") }} </dd>
+          <dt>Run ID</dt>		        <dd> {{ flowcell.get("run_id") }} </dd>
+        </dl>
+        <h4 class = "mt-3 mb-2">Hardware</h4>
+        <dl class="dl-ont">
+          <dt>Instrument</dt>       <dd> {{ flowcell.get("instrument") }} </dd>
+          <dt>Position</dt>		      <dd> {{ flowcell.get("position") }} </dd>
+          <dt>Flowcell type</dt>	  <dd> {{ flowcell.get("flow_cell_type") }} </dd>
+          <dt>Flowcell ID</dt>		  <dd> {{ flowcell.get("flow_cell_id") }} </dd>
+          <dt>Prep kit</dt>	        <dd> {{ flowcell.get("prep_kit") }} </dd>
+          <dt>Barcoding kit</dt>		<dd> {{ flowcell.get("barcoding_kit") }} </dd>
+        </dl>
+        <h4 class = "mt-3 mb-2">Sequencing stats</h4>
+        <dl class="dl-ont">
+          <dt>Yield passed</dt>				<dd> {{ flowcell.get("basecalled_pass_bases_str") }} </dd>
+          <dt>Read count passed</dt>	<dd> {{ flowcell.get("basecalled_pass_read_count_str") }} </dd>
+          <dt>N50 passed</dt>				  <dd> {{ flowcell.get("n50_str") }} </dd>
+          <dt>% Pass/Fail</dt>		      <dd> {{ flowcell.get("accuracy") }} </dd>
+        </dl>
+
+      </div>
+
+      <div class="col-md-4 borderRight ml-0 mr-0" style="width: 600px;">
+        <h4 class = "mt-3 mb-2">MinKNOW arguments</h4>
+        <dl class="dl-ont mb-0">
+          {% for e in args %}
+
+            {% if args[e] == "pair" %}
+              <dt class="text-start" style="width: 220px;">{{ e[0] }}</dt>
+              <dd>{{ e[1] }}</dd>
+            {% elif args[e] == "header" %}
+              </dl>
+              <p class ="mb-0 mt-0 fw-bold">{{ e }}</p>
+              <dl class="dl-ont mb-0">
+            {% elif args[e] == "sub_pair" %}
+              <dt class="fw-normal text-start"style="margin-left: 10px; width: 210px;">{{ e[0] }}</dt>
+              <dd>{{ e[1] }}</dd>
+            {% end %}
+
+          {% end %}
+        </dl>
+      </div>
+    </div>
+
+    <div class="tabbable mb-3">
+      <ul class="nav nav-tabs">
+        {% if barcodes %}
+        <li class="nav-item">
+          <a class="nav-link active" href="#tab_barcode_information" role="tab" data-toggle="tab">Barcode Information</a>
+        </li>
+        {% end %}
+        <li class="nav-item">
+          <a class="nav-link" href="/flowcells/{{ flowcell.get('run_name') }}/report" target="_blank">MinKNOW run report</a>
+        </li>
+      </ul>
+    </div>
+    {% if barcodes %}
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="tab_barcode_information">
+        <table class="table table-bordered narrow-headers no-margin right_align_headers" id="ont_barcodes">
+            <thead id="ont_fc_table_head">
+                <tr class="sticky darkth">
+                    <th>Barcode</th>
+                    <th>Alias</th>
+                    <th class="text-right">Read count passed</th>
+                    <th>% total</th>
+                    <th class="text-right">Yield passed (bp)</th>
+                    <th>% total</th>
+                    <th class="text-right" data-toggle="tooltip" title="Obtained by dividing yield by read count">Avg. length passed (bp)</th>
+                    <th class="text-right">% Pass / Fail</th>
+                </tr>
+            </thead>
+            <tbody>
+              {% for bc in barcodes %}
+              <tr>
+                  <td>{{ barcodes[bc]["bc_name"] }}</td>
+                  <td>{{ barcodes[bc]["barcode_alias"] }}</td>
+                  <td class="text-right">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_read_count"]) }}</td>
+                  <td>{{ barcodes[bc]["basecalled_pass_read_count_pc"] }}</td>
+                  <td class="text-right">{{ '{:,}'.format(barcodes[bc]["basecalled_pass_bases"]) }}</td>
+                  <td>{{ barcodes[bc]["basecalled_pass_bases_pc"] }}</td>
+                  <td class="text-right">{{ '{:,}'.format(barcodes[bc]["average_read_length_passed"]) }}</td>
+                  <td class="text-right">{{ barcodes[bc]["accuracy"] }}</td>
+              </tr>
+              {% end %} 
+            
+            </tbody>
+        </table>
+      </div>
+    </div>
+    {% end %}
+</div>
+
+<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/jquery.dataTables.min.js"></script>
+
+<!-- Table Sorting -->
+<script type="text/javascript">
+$( document ).ready(function() {
+  init_listjs();
+  //Formatting for Running note card body
+  $(".running-note-card > .card-body").each(function(i){
+    $(this).html(make_markdown($(this).text()));
+  });
+});
+
+// Initialize sorting and searching javascript plugin
+function init_listjs() {
+    var table = $('#ont_barcodes').DataTable({
+      "searching":false,
+      "paging":false,
+      "info":false,
+      "order": [[ 0, "asc" ]]
+    });
+}
+</script>
+
+{% end %}
