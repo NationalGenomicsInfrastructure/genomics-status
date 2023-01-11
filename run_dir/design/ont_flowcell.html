@@ -49,14 +49,14 @@
           {% for e in args %}
 
             {% if args[e] == "pair" %}
-              <dt style="text-align: left; width: 220px;">{{ e[0] }}</dt>
+              <dt class="text-start" style="width: 220px;">{{ e[0] }}</dt>
               <dd>{{ e[1] }}</dd>
             {% elif args[e] == "header" %}
               </dl>
-              <p class ="mb-0 mt-0" style="font-weight: bold;">{{ e }}</p>
+              <p class ="mb-0 mt-0 fw-bold">{{ e }}</p>
               <dl class="dl-ont mb-0">
             {% elif args[e] == "sub_pair" %}
-              <dt style="text-align: left; margin-left: 10px; font-weight: normal; width: 210px;">{{ e[0] }}</dt>
+              <dt class="fw-normal text-start"style="margin-left: 10px; width: 210px;">{{ e[0] }}</dt>
               <dd>{{ e[1] }}</dd>
             {% end %}
 
