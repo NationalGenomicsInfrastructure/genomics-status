@@ -604,7 +604,7 @@ function safeobj(s) {
 
 
 function load_table_head(columns){
-  var tbl_head = '<tr class="sticky darkth">';
+  var tbl_head = '<tr class="sticky darkth"><th>No:</th>';
   $.each(columns, function(i, column_tuple) {
     tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">';
 
@@ -1069,6 +1069,17 @@ function load_samples_table(colOrder) {
       console.log( "Couldn't load project samples: " + err );
   });
 }
+
+//Add the line numbers in the samples table
+var i = 1;
+$('.addRow').on('click', function() {
+    var tr = '<tr>' +
+        '<td>' + i + '</td>' +
+        '</tr>';
+    $('#samples_table_body').append(tr);
+    i++;
+});
+
 function update_caliper(){
   $.each($('.caliper-thumbnail'), function(){
     if($(this).hasClass('loading')){

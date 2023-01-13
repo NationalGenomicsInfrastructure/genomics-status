@@ -255,6 +255,20 @@ tr.group, tr.group:hover, .dtrg-group {
   border-top-style: none!important;
 }
 
+/*Line numbers for samples tab table*/
+
+#sample_table tbody {
+  counter-reset: row;
+}
+
+#sample_table tbody tr::before {
+  counter-increment: row;
+  content: counter(row);
+  padding-left: 20%;
+  padding-top: 15%;
+  display:inline-block;
+}
+
 /*Cards for running notes*/
 .running-note-card pre {
   max-width:400px;
