@@ -808,8 +808,22 @@ function load_samples_table(colOrder) {
                     var validation_data = prepinfo['library_validation'][process_id];
                     if (validation_data) {
                       validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                      // Caliper column
+                      if(column_id == 'caliper_image'){
+                        tbl_row += '<span class="caliper_loading_spinner">'+
+                                     '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                   '</span>'+
+                                   '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
+                      }
+                      // Fragment Analyzer Image
+                      else if (column_id == 'frag_an_image'){
+                          tbl_row += '<span class="caliper_loading_spinner">'+
+                                        '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                      '</span>'+
+                                      '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>';
+                      }
                       // Remove the X from initial QC initials
-                      if(column_id == 'initials'){
+                      else if(column_id == 'initials'){
                         if(validation_data[column_id] !== '-'){
                                 var sig = validation_data[column_id];
                                 if(sig.length == 3 && sig[2] == 'X'){
@@ -998,7 +1012,7 @@ function load_samples_table(colOrder) {
                                    '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
                   }
                   // Fragment Analyzer Image
-                  if (column_id == 'frag_an_image'){
+                  else if (column_id == 'frag_an_image'){
                       tbl_row += '<span class="caliper_loading_spinner">'+
                                     '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
                                   '</span>'+
