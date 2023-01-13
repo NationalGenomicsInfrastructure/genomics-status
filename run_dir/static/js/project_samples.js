@@ -604,7 +604,7 @@ function safeobj(s) {
 
 
 function load_table_head(columns){
-  var tbl_head = '<tr class="sticky darkth">';
+  var tbl_head = '<tr class="sticky darkth"><th>No:</th>';
   $.each(columns, function(i, column_tuple) {
     tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">';
 
