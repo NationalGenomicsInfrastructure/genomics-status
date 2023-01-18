@@ -142,8 +142,14 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
 
         run_dict["experiment_name"], run_dict["sample_name"], name = run_dict["TACA_run_path"].split("/")
         
-        run_date, run_dict["start_time"], run_dict["position"], run_dict["flow_cell_id"], run_dict["run_id"] = name.split("_")
-        run_dict["start_date"] = datetime.datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
+        run_date, run_dict["start_time"], instr_or_pos, run_dict["flow_cell_id"], run_dict["run_id"] = name.split("_")
+        run_dict["start_date"] = datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
+
+        # This part of the run name is either a position or an instrument ID depending on if its on PromethION or MinION
+        if re.match("[1-8][A-C]", instr_or_pos):
+            run_dict["position"] = instr_or_pos
+        else:
+            run_dict["instrument"] = instr_or_pos
 
     # If run is finished, i.e. reports are generated, produce new metrics
     elif run_dict["TACA_run_status"] == "finished":
@@ -245,10 +251,11 @@ class ONTFlowcellHandler(SafeHandler):
         """
 
         view_barcodes = self.application.nanopore_runs_db.view("info/barcodes", descending=True)
-        barcodes_unformatted = view_barcodes[run_name].rows[0].value
-        barcodes = {}
+        rows = view_barcodes[run_name].rows
 
-        if barcodes_unformatted:
+        barcodes = {}
+        if rows and rows[0].value:
+            barcodes_unformatted = rows[0].value
             for bc in barcodes_unformatted:
                 barcodes[bc] = {}
                 for k, v in barcodes_unformatted[bc].items():
@@ -293,46 +300,48 @@ class ONTFlowcellHandler(SafeHandler):
 
             barcodes = df.to_dict(orient="index")
 
-            return barcodes
+        return barcodes
 
-        else:
-            return None
 
-    
-    def fetch_args(self, name):
+    def fetch_args(self, run_name):
+
         view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
-        l = [row for row in view_args.rows if name in row.key][0].value
-
-        group = "([^\s=]+)"                             # Text component of cmd argument
-        
-        flag_pair = re.compile(f"^--{group}={group}$")  # Double-dash argument with assignment
-        flag_key_or_header = re.compile(f"^--{group}$") # Double-dash argument w/o assignment
-        pair = re.compile(f"^(?!--){group}={group}$")   # Non-double-dash argument with assignment
-        val = re.compile(f"^(?!--){group}$")            # Non-double-dash argument w/o assignment
+        rows = view_args[run_name].rows
 
         entries = {}
-        idxs_args = iter(zip(range(0, len(l)), l))
-        for (idx, arg) in idxs_args:
-            # Flag pair --> Tuple
-            if re.match(flag_pair, arg):
-                k, v = re.match(flag_pair, arg).groups()
-                entries[(k,v)]="pair"
-            # Flag single
-            elif re.match(flag_key_or_header, arg):
-                # If followed by pair --> Header
-                if re.match(pair, l[idx+1]):
-                    h = re.match(flag_key_or_header, arg).groups()[0]
-                    entries[h]="header"
-                # If followed by val --> Add both as tuple and skip ahead
-                elif re.match(val, l[idx+1]):
-                    k = re.match(flag_key_or_header, arg).groups()[0]
-                    v = re.match(val, l[idx+1]).groups()[0]
+        if rows:
+
+            args = rows[0].value
+
+            group = "([^\s=]+)"                             # Text component of cmd argument
+            
+            flag_pair = re.compile(f"^--{group}={group}$")  # Double-dash argument with assignment
+            flag_key_or_header = re.compile(f"^--{group}$") # Double-dash argument w/o assignment
+            pair = re.compile(f"^(?!--){group}={group}$")   # Non-double-dash argument with assignment
+            val = re.compile(f"^(?!--){group}$")            # Non-double-dash argument w/o assignment
+
+            idxs_args = iter(zip(range(0, len(args)), args))
+            for (idx, arg) in idxs_args:
+                # Flag pair --> Tuple
+                if re.match(flag_pair, arg):
+                    k, v = re.match(flag_pair, arg).groups()
                     entries[(k,v)]="pair"
-                    next(idxs_args)
-            # Pair 
-            elif re.match(pair, arg):
-                k, v = re.match(pair, arg).groups()
-                entries[(k,v)]="sub_pair"
+                # Flag single
+                elif re.match(flag_key_or_header, arg):
+                    # If followed by pair --> Header
+                    if re.match(pair, args[idx+1]):
+                        h = re.match(flag_key_or_header, arg).groups()[0]
+                        entries[h]="header"
+                    # If followed by val --> Add both as tuple and skip ahead
+                    elif re.match(val, args[idx+1]):
+                        k = re.match(flag_key_or_header, arg).groups()[0]
+                        v = re.match(val, args[idx+1]).groups()[0]
+                        entries[(k,v)]="pair"
+                        next(idxs_args)
+                # Pair 
+                elif re.match(pair, arg):
+                    k, v = re.match(pair, arg).groups()
+                    entries[(k,v)]="sub_pair"
 
         return entries
 
