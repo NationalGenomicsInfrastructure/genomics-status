@@ -263,6 +263,10 @@ tr.group, tr.group:hover, .dtrg-group {
   display: table-cell;
   font-weight: bold;
   padding: 0.5rem 0.5rem;
+  position: sticky;
+  top: 50px;
+  z-index: 100;
+  vertical-align: inherit;
 } 
 
 #sample_table tbody {
