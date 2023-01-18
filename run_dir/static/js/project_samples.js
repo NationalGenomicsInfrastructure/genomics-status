@@ -26,7 +26,6 @@ $(document).ready(function() {
     e.preventDefault();
   });
 
-
   // Copy project samples table to clipboard
   var clipboard = new Clipboard('#proj_samples_copy_table');
   clipboard.on('success', function(e) {
