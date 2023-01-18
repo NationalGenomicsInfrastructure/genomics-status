@@ -300,17 +300,15 @@ class ONTFlowcellHandler(SafeHandler):
 
             barcodes = df.to_dict(orient="index")
 
-            return barcodes
+        return barcodes
 
-        else:
-            return None
 
-    
     def fetch_args(self, run_name):
 
         view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
         rows = view_args[run_name].rows
 
+        entries = {}
         if rows:
 
             args = rows[0].value
@@ -322,7 +320,6 @@ class ONTFlowcellHandler(SafeHandler):
             pair = re.compile(f"^(?!--){group}={group}$")   # Non-double-dash argument with assignment
             val = re.compile(f"^(?!--){group}$")            # Non-double-dash argument w/o assignment
 
-            entries = {}
             idxs_args = iter(zip(range(0, len(args)), args))
             for (idx, arg) in idxs_args:
                 # Flag pair --> Tuple
@@ -346,10 +343,7 @@ class ONTFlowcellHandler(SafeHandler):
                     k, v = re.match(pair, arg).groups()
                     entries[(k,v)]="sub_pair"
 
-            return entries
-        
-        else:
-            return None
+        return entries
 
     def get(self, name):
 
