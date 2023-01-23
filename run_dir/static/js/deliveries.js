@@ -108,6 +108,40 @@ function collapseAll(a) {
     }
 };
 
+// filter projects by flowcell status
+$(".fc-status-checkbox").change(function() {
+    var sample_status = $(this).val();
+    var show = $(this).is(':checked');
+    if (show) {
+        // add/remove markers
+        var filtered_classes = $('div#filtered-classes').removeClass(sample_status).attr('class').split(/\s+/);
+        $('div#visible-classes').addClass(sample_status);
+        // if '', it fails on :not('.')
+        if (filtered_classes == '') {
+            // show projects that have sample_status class and don't have any filtered classes
+            $('div.delivery.'+sample_status+':not(.bioinfo-filtered)').show();
+        } else {
+            $('div.delivery:not(.bioinfo-filtered).'+sample_status+':not(.'+filtered_classes+')').show();
+        }
+        $('tr.bioinfo-fc:hidden:has(td span.bioinfo-status:contains('+sample_status+'))').show().removeClass('filtered')
+            .nextUntil('tr.bioinfo-fc', 'tr:hidden.expanded').show().removeClass('filtered')
+            .closest('div.delivery:not(.bioinfo-filtered)').show();
+    } else {
+        // add/remove markers
+        $('div#filtered-classes').addClass(sample_status);
+        var visible_classes = $('div#visible-classes').removeClass(sample_status).attr('class').split(/\s+/);
+        // the same, when it's the last one, fails on :not('.')
+        if (visible_classes == '') {
+            // hide projects which have sample status class and don't have any visible classes
+            $('div.delivery.'+sample_status).hide().addClass('status-filtered');
+        } else {
+            $('div.delivery.'+sample_status+':not(.'+visible_classes.join(', .')+')').hide().addClass('status-filtered');
+        }
+        // hide rows that have sample_status
+        $('div.delivery  table tbody tr.bioinfo-fc:has(td span.bioinfo-status:contains('+sample_status+'))').hide().addClass('filtered')
+            .nextUntil('tr.bioinfo-fc', 'tr.expanded').hide().addClass('filtered');
+    }
+});
 
 // filter projects by bioinfo responsible
 $(".bi-responsible-checkbox").change(function() {
@@ -122,6 +156,15 @@ $(".bi-responsible-checkbox").change(function() {
     }
 });
 
+// display all statuses
+$('.all-statuses').click(function() {
+    $('.fc-status-checkbox:not(:checked)').prop('checked', true).trigger('change');
+});
+
+// display none statuses
+$('.none-statuses').click(function(){
+    $('.fc-status-checkbox:checked').prop('checked', false).trigger('change');
+});
 
 // display all responsibles
 $('.all-responsibles').click(function() {
