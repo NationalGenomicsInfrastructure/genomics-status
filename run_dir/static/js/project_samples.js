@@ -61,12 +61,6 @@ $(document).ready(function() {
     }
   });
 
-  //Make this whole undefined fields non-sense optional
-  $('#undefined_fields_accordion').click(function(e) {
-    load_undefined_info();
-    $('#undefined_fields_accordion').off('click');
-  });
-
   //Show user communication tab. Loading
   $('#tab_communication').click(function (e) {
     load_tickets();
@@ -302,35 +296,6 @@ function load_tickets() {
   }
 }
 
-function load_undefined_info(){
-  $('#undefined_fields .card-body').append('<div id="undefined_spinner" class="text-center"><span class="fa fa-sync fa-spin"></span> <em>Loading undefined fields</em></div>');
-
-  $.getJSON("/api/v1/projects_fields?undefined=true", function(u_data) {
-    var found_undefs = [];
-    $.each(u_data, function(column_no, column) {
-      $("#undefined_project_info").append('<dt>' + column + '</dt><dd id="' + column + '"></dd>');
-      found_undefs.push(column);
-    });
-    // At this point we don't care about having to fetch project_summary for a second time
-    $.getJSON("/api/v1/project_summary/" + project, function (data) {
-      $.each(data, function(key, value) {
-        if(found_undefs.includes(key)) {
-          if(prettyobj(key).length > 0){
-            prettyobj(key).html(auto_format(value));
-          } else if(safeobj(key).length > 0){
-            safeobj(key).html(auto_format(value));
-          } else {
-          }
-        }
-      });
-    });
-    $('#undefined_spinner').hide();
-  }).fail(function( jqxhr, textStatus, error ) {
-    var err = textStatus + ", " + error;
-    console.log( "Couldn't load undefined fields: " + err );
-    $('#undefined_spinner').hide();
-  });
-}
 
 function load_all_udfs(){
   return $.getJSON("/api/v1/project_summary/" + project, function (data) {
@@ -483,22 +448,6 @@ function load_all_udfs(){
         value = value.replace(/\_/g, '\\_');
         $('#internal_costs').html(make_markdown(value));
         $('#textarea_internal_costs').html(value);
-      }
-
-      //Add connected projects if any
-      else if (key == 'project_xref'){
-        projs = '';
-        var conn_proj = value.split(',');
-        conn_proj.forEach(function(proj){
-           if (proj != project){
-              if (!projs.trim()){
-                 projs += '<a class="email_link" href="/project/'+proj+'">'+proj+'</a>';
-              }else{
-                 projs += ', '+'<a class="email_link" href="/project/'+proj+'">'+proj+'</a>';
-              }
-           }
-        });
-        $('#connected_projects').html(projs);
       }
 
       // Create the links for review and display the banner

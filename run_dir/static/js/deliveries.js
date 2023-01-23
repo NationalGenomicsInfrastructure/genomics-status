@@ -156,7 +156,6 @@ $(".bi-responsible-checkbox").change(function() {
     }
 });
 
-
 // display all statuses
 $('.all-statuses').click(function() {
     $('.fc-status-checkbox:not(:checked)').prop('checked', true).trigger('change');
