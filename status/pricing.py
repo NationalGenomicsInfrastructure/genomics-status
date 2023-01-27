@@ -667,6 +667,7 @@ class GenerateQuoteHandler(AgreementsDBHandler):
             if 'special_percentage' in quote_input:
                 save_info['special_percentage'] = quote_input['special_percentage']
             save_info['exchange_rate_issued_date'] = quote_input['exchange_rate_issued_date']
+            save_info['total_cost'] = quote_input['total_cost']
 
             proj_id = quote_input['project_data']['project_id']
             timestamp = quote_input['project_data']['agreement_number'].split('_')[1]

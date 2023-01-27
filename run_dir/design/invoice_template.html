@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <link rel="stylesheet" href="static/css/custom-bootstrap-5-alpha.css" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/status_b5.css?v={{ gs_globals['git_commit'] }}" rel="stylesheet">
+  </head>
+
+  <body class="p-0">
+    <div class="invoice-title-img">
+      <img class="align-middle" title="National Genomics Infrastructure" src="static/img/NGI-final.png" style="object-fit:contain;">
+    </div>
+      <h2> NGI invoice reference
+      </h2>
+       Created on {{ proj_specs['invoice_created'] }}
+      <hr>
+      <h3>Account</h3>
+      <hr>
+      <dl class="dl-horizontal-quote-details p-1">
+
+        <dt>Name</dt>
+          <dd>{{ account_dets['name'] }}</dd>
+        <dt>Number</dt>
+          <dd>{{ account_dets['number'] }} </dd>
+
+        <dt>Unit</dt>
+          <dd>{{ account_dets['unit'] }}</dd>
+
+        <dt>Contact</dt>
+          <dd> {{ account_dets['contact'] }}</dd>
+      </dl>
+
+      <h3>Contact</h3>
+      <hr>
+      <h4>Contact person</h4>
+      <dl>
+        <dt>Name</dt>
+          <dd>{{ contact_dets['name'] }} </dd>
+        <dt>Email</dt>
+          <dd>{{ contact_dets['email'] }}</dd>
+        <dt>Reference</dt>
+          <dd>{{ contact_dets['reference'] }} </dd>
+      </dl>
+      <h4>Billing Address</h4>
+        <dl>
+          <dt>Address</dt>
+            <dd>{{ contact_dets['invoice_address'] }} </dd>
+          <dt>Postal Code</dt>
+            <dd>{{ contact_dets['invoice_zip'] }}</dd>
+          <dt>City</dt>
+            <dd>{{ contact_dets['invoice_city'] }} </dd>
+          <dt>Country</dt>
+            <dd>{{ contact_dets['invoice_country'] }} </dd>
+        </dl>
+      <h3>Specification</h3>
+      <hr>
+      <h4>Projects</h4>
+      {{ proj_specs['id'] }}, {{ proj_specs['name'] }} ({{ proj_specs['cust_desc'] }})
+
+      <h4>Contracts</h4>
+      <dl>
+        <dt>Contract name</dt>
+          <dd> {{ proj_specs['contract_name'] }}
+        <dt>Contract summary</dt>
+          <dd> {% raw proj_specs['summary']%}</dd>
+        <dt>Comment</dt>
+          <dd> {{ proj_specs['comment'] }}</dd>
+      </dl>
+      <h4>Cost Calculation</h4>
+      <dl>
+        <dt>Total cost</dt>
+          <dd> {{ proj_specs['total_cost'] }}
+      </dl>
+  </body>
+</html>

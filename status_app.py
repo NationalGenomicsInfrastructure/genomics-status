@@ -30,6 +30,8 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
+from status.invoicing import InvoicingPageHandler, InvoiceSpecDateHandler, InvoicingPageDataHandler, GenerateInvoiceHandler, \
+    DeleteInvoiceHandler, SentInvoiceHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
     PricingQuoteHandler, PricingValidateDraftDataHandler, PricingPublishDataHandler, \
@@ -106,6 +108,7 @@ class Application(tornado.web.Application):
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
             ("/api/v1/charon_summary/([^/]*)$", CharonProjectHandler),
             ("/api/v1/cost_calculator", PricingDataHandler),
+            ("/api/v1/delete_invoice", DeleteInvoiceHandler),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
@@ -127,6 +130,9 @@ class Application(tornado.web.Application):
             tornado.web.URLSpec("/api/v1/frag_an_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", FragAnImageHandler, name="FragAnImageHandler"),
             ("/api/v1/get_agreement_doc/([^/]*)$", AgreementDataHandler),
             ("/api/v1/get_agreement_template_text", AgreementTemplateTextHandler),
+            ("/api/v1/get_sent_invoices", SentInvoiceHandler),
+            ("/api/v1/generate_invoice_spec", InvoiceSpecDateHandler),
+            ("/api/v1/invoice_spec_list", InvoicingPageDataHandler),
             ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
             ("/api/v1/instrument_cluster_density.png",
@@ -203,8 +209,10 @@ class Application(tornado.web.Application):
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
             ("/generate_quote", GenerateQuoteHandler),
+            ("/generate_invoice", GenerateInvoiceHandler),
             ("/instrument_logs", InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
+            ("/invoicing", InvoicingPageHandler),
             ("/libpooling_queues", LibraryPoolingQueuesHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/nas_quotas", NASQuotasHandler),
@@ -336,6 +344,10 @@ class Application(tornado.web.Application):
         with limsbackend_cred_loc.open() as cred_file:
             self.lims_conf = yaml.safe_load(cred_file)
 
+        order_portal_cred_loc = Path(settings['order_portal_credential_location']).expanduser()
+        with order_portal_cred_loc.open() as cred_file:
+            self.order_portal_conf = yaml.safe_load(cred_file)['order_portal']
+
         # Setup the Tornado Application
 
         settings["debug"]= True
@@ -361,6 +373,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
+            tornado.autoreload.watch("design/invoicing.html")
             tornado.autoreload.watch("design/barcode.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/nas_quotas.html")

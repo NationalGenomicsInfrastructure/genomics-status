@@ -117,7 +117,8 @@ app.component('v-pricing-quote', {
                 .then(response => {
                     pdata = response.data
                     this.proj_data['ngi_project_id'] = proj_id + ', '+pdata['project_name']+ ' ('+pdata['order_details']['title']+')'
-                    this.proj_data['pi_name'] = pdata['project_pi_name'] ? pdata['project_pi_name'] : ''
+                    pi_name = pdata['project_pi_name'] ? pdata['project_pi_name'] : ''
+                    this.proj_data['pi_name'] = pi_name.split(':')[0]
                     this.proj_data['affiliation'] = pdata['affiliation']
                     this.proj_data['project_id'] = proj_id
                     if(pdata['type']==='Application'){
@@ -189,7 +190,8 @@ app.component('v-pricing-quote', {
             this.add_to_md_text()
             this.$root.quote_prod_ids = sel_data['products_included']
             this.$root.fetchExchangeRates(sel_data['exchange_rate_issued_date'])
-            this.loaded_version = 'Version: '+query_timestamp_radio.labels[0].textContent
+            this.loaded_version = 'Version: '+query_timestamp_radio.labels[0].innerText.split('\n')[0] + ' \n' +
+                                  'Agreement_number: '+this.proj_data['project_id']+'_'+query_timestamp_radio.labels[0].attributes['for'].textContent
           }
         },
         mark_agreement_signed(){
@@ -208,6 +210,23 @@ app.component('v-pricing-quote', {
             })
           }
         },
+        generate_invoice_spec(){
+          var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
+          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : ""
+          if(timestamp_val!==""){
+            proj_id = this.proj_data['project_id']
+            axios.post('/api/v1/generate_invoice_spec', {
+                proj_id: proj_id,
+                timestamp: timestamp_val
+            }).then(response => {
+                this.get_saved_agreement_data(proj_id)
+            })
+            .catch(error => {
+                this.$root.error_messages.push('Unable to generate invoice spec, please try again or contact a system administrator.')
+            })
+          }
+        },
+
         fetch_latest_agreement_doc: function(){
           axios
               .get('/api/v1/get_agreement_template_text')
@@ -433,18 +452,21 @@ app.component('v-pricing-quote', {
                           {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}}
                           <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger fs-6">
                           <i class="far fa-file-signature fa-lg"></i>  Marked Signed {{ this.saved_agreement_data['signed_by'] }}, {{ timestamp_to_date(this.saved_agreement_data['signed_at']) }}</p>
+                          <p v-if="this.saved_agreement_data['invoice_spec_generated_for']===timestamp" aria-hidden="true" class="m-2 text-success fs-6">
+                          <i class="far fa-file-invoice fa-lg"></i>  Spec Generated {{ this.saved_agreement_data['invoice_spec_generated_by'] }}, {{ timestamp_to_date(this.saved_agreement_data['invoice_spec_generated_at']) }}</p>
                           </label>
                         </div>
                   </template>
                   <div class="align-self-center">
                     <button class="btn btn-primary m-1" @click="load_saved_agreement">Load</button>
                     <button class="btn btn-danger m-1" @click="mark_agreement_signed">Mark Signed</button>
+                    <button class="btn btn-success m-1" @click="generate_invoice_spec">Generate Invoice specification</button>
                   </div>
                 </div>
               </div>
               <div class="row agreement_preview_style mt-5">
                 <h4>Preview</h4>
-                <div class="pb-2 text-muted" > {{ this.loaded_version }} </div>
+                <div class="pb-2 text-muted" style="white-space: pre;"> {{ this.loaded_version }} </div>
                 <div class="md_display_box bg-white border" v-html="md_message"></div>
                 <template v-if="this.any_quote">
                   <div class="row py-2" id="current_quote">
