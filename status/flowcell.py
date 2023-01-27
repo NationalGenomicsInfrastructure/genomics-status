@@ -141,9 +141,9 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
     if run_dict["TACA_run_status"] == "ongoing":
 
         run_dict["experiment_name"], run_dict["sample_name"], name = run_dict["TACA_run_path"].split("/")
-        
+
         run_date, run_dict["start_time"], run_dict["position"], run_dict["flow_cell_id"], run_dict["run_id"] = name.split("_")
-        run_dict["start_date"] = datetime.datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
+        run_dict["start_date"] = datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
 
     # If run is finished, i.e. reports are generated, produce new metrics
     elif run_dict["TACA_run_status"] == "finished":
@@ -240,7 +240,7 @@ class ONTFlowcellHandler(SafeHandler):
 
 
     def fetch_barcodes(self, run_name):
-        """ Returns dictionary whose keys are barcode IDs and whose values are dicts containing 
+        """ Returns dictionary whose keys are barcode IDs and whose values are dicts containing
         barcode metrics from the last data acquisition snapshot of the MinKNOW reports.
         """
 
@@ -298,13 +298,13 @@ class ONTFlowcellHandler(SafeHandler):
         else:
             return None
 
-    
+
     def fetch_args(self, name):
         view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
         l = [row for row in view_args.rows if name in row.key][0].value
 
         group = "([^\s=]+)"                             # Text component of cmd argument
-        
+
         flag_pair = re.compile(f"^--{group}={group}$")  # Double-dash argument with assignment
         flag_key_or_header = re.compile(f"^--{group}$") # Double-dash argument w/o assignment
         pair = re.compile(f"^(?!--){group}={group}$")   # Non-double-dash argument with assignment
@@ -329,7 +329,7 @@ class ONTFlowcellHandler(SafeHandler):
                     v = re.match(val, l[idx+1]).groups()[0]
                     entries[(k,v)]="pair"
                     next(idxs_args)
-            # Pair 
+            # Pair
             elif re.match(pair, arg):
                 k, v = re.match(pair, arg).groups()
                 entries[(k,v)]="sub_pair"
@@ -364,7 +364,7 @@ def add_prefix(input_int:int, unit:str):
             continue
         else:
             break
-    
+
     if input_int > 1000:
         output_int = round(input_int/magnitude, 2)
     else:
