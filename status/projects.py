@@ -13,7 +13,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import markdown
-import slack
+import slack_sdk
 import nest_asyncio
 import itertools
 import unicodedata
@@ -812,7 +812,7 @@ class RunningNotesDataHandler(SafeHandler):
                 #Adding a slack IM to the tagged user with the running note
                 if option == 'Slack' or option == 'Both':
                     nest_asyncio.apply()
-                    client = slack.WebClient(token=application.slack_token)
+                    client = slack_sdk.WebClient(token=application.slack_token)
                     notification_text = '{} has {} in {}, {}!'.format(tagger, notf_text, project_id, project_name)
                     blocks = [
                         {

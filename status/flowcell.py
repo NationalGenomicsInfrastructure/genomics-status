@@ -246,7 +246,7 @@ class ONTFlowcellHandler(SafeHandler):
 
 
     def fetch_barcodes(self, run_name):
-        """ Returns dictionary whose keys are barcode IDs and whose values are dicts containing 
+        """ Returns dictionary whose keys are barcode IDs and whose values are dicts containing
         barcode metrics from the last data acquisition snapshot of the MinKNOW reports.
         """
 
@@ -373,7 +373,7 @@ def add_prefix(input_int:int, unit:str):
             continue
         else:
             break
-    
+
     if input_int > 1000:
         output_int = round(input_int/magnitude, 2)
     else:
