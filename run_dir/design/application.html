@@ -16,7 +16,7 @@ Description: Displays a list of Project Identifiers for a given application type
 <script>
 $.getJSON("/api/v1/application/{{ application }}", function(data) {
   $.each(data, function(k, project) {
-    $("#project_list").append('<li><a class="text-decoration-none" href="/projects/' + project + '">' + project + '</a></li>')
+    $("#project_list").append('<li><a class="text-decoration-none" href="/project/' + project + '">' + project + '</a></li>')
   })
 })
 </script>
