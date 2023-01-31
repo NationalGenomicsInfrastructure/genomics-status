@@ -497,12 +497,31 @@ pre {
   background-image: -o-linear-gradient(top, transparent, white);
 }
 
-/* Line at top of project page, can be colored or styled how one wishes */
-hr.style-rainbow {
-    border: 0;
-    height: 2px;
-    background: #0d6efd;
-    opacity: 1;
+/* Coloured timeline bar and dates */
+.rawdate { cursor: pointer;
+display: inline-block;
+width:30%;
+}
+
+/* Cool colour bar for project page */
+.project_timescale {
+	margin: 20px 0;
+	height:1px;
+	background:#eee;
+	position:relative;
+}
+.project_timescale .timelineTarget {
+	height:16px;
+	width:16px;
+  margin-left:-6px;
+	position:absolute;
+	top:-7px;
+  cursor:pointer;
+}
+.project_timescale .timelineTick {
+  width:3px;
+  height:10px;
+  margin:3px 6.5px;
 }
 
 .project_page_border_style {
