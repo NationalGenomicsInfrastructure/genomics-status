@@ -497,10 +497,12 @@ pre {
   background-image: -o-linear-gradient(top, transparent, white);
 }
 
-/* Coloured timeline bar and dates */
-.rawdate { cursor: pointer;
-display: inline-block;
-width:30%;
+/* Line at top of project page, can be colored or styled how one wishes */
+hr.style-rainbow {
+    border: 0;
+    height: 2px;
+    background: #0d6efd;
+    opacity: 1;
 }
 
 .project_page_border_style {
