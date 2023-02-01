@@ -1,3 +1,29 @@
+/* ########################################################################
+~~~~~ status_b5.css ~~~~~
+---- INTRODUCTON ----
+This is the main stylesheet for Genomics Status. It is used to define custom
+structure and design for the website. The site uses the Bootstrap 5 alpha framework
+for basic styling; this stylesheet is loaded after that and can override
+those settings. For more information about Bootstrap (including really good
+documentation), see http://getbootstrap.com/ - it can do most of the things
+that you were about to write yourself already.
+
+To keep this file organised, there are three main sections:
+Reusable Styles / Core Structure / Page-Specific Styles / Unit Styles
+Please keep the code organised.
+
+General notes - IDs should only be used for unique elements. Classes are
+nearly always better if used for design. Please avoid element type
+precursors (eg. use .class instead of div.class) where possible.
+Comment lots - try to make it obvious where styles are being used.
+ ######################################################################## */
+
+/* ########################################################################
+---- REUSABLE STYLES ----
+These classes are for general use across the website. They are used in
+multiple places and typically control typography, or other common elements.
+ ######################################################################## */
+
 body {
   padding-top: 60px;
 }
@@ -267,7 +293,7 @@ tr.group, tr.group:hover, .dtrg-group {
   top: 50px;
   z-index: 100;
   vertical-align: inherit;
-} 
+}
 
 #sample_table tbody {
   counter-reset: row;
@@ -461,8 +487,8 @@ pre {
   font-weight: normal;
 }
 
-.dl-ont > dt { 
-  float: left; 
+.dl-ont > dt {
+  float: left;
   text-align: left;
   width: 160px;
 }
