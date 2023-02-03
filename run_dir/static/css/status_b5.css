@@ -1166,3 +1166,13 @@ th.sort{
   border-radius: 0.5rem !important;
   padding: 10px 20px;
 }
+
+.dl-horizontal-invoicing > dt{
+  float: left;
+  text-align: left;
+}
+
+.dl-horizontal-invoicing > dd{
+  margin-left: 180px;
+  margin-bottom: 0px;
+}

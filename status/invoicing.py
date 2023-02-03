@@ -111,15 +111,19 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         from io import BytesIO
         import zipfile as zp
 
-        projects = self.request.arguments['projects'][0].decode('utf-8').split(',')
+        args = self.request.arguments['projects'][0].decode('utf-8')
+        if not args:
+            self.set_status(400)
+            return self.write("Error: No projects specified!")
+        projects = args.split(',')
 
-        fileName = 'invoices.zip'
+        fileName = f'invoices_{datetime.datetime.now().date()}.zip'
         buff = BytesIO()
         excel_buff = BytesIO()
         num_files = 0
         col_headers = ['Belopp', 'Kundnr', 'Artikeltext', 'Antal', 'Extra text1, max 60 tkn', 'Extra text2, max 60 tkn',
                 'Extra text3, max 60 tkn', 'Extra text4, max 60 tkn', 'Extra text5, max 60 tkn', 'Artikelnr', 'Batch_id', 'Ftg',
-                'Org', 'Proj', 'Fin/MP', 'Ver.text', 'Beställare, max 25 tkn', 'Attansv/Säljare']
+                'Org', 'Proj', 'Fin/MP', 'Ver.text', 'Beställare, max 25 tkn', 'Attansv/Säljare', 'Stängt Datum']
         data = []
         with zp.ZipFile(buff, "w") as zf:
             for proj_id in projects:
@@ -131,16 +135,17 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
 
                 row = [proj_specs['total_cost'], ' ', f'{proj_specs["id"]}, {proj_specs["name"]}', '1,00', f'({proj_specs["cust_desc"]})',
                         'Fakturaunderlag skickas till', contact_dets['email'], 'För fakturafrågor kontakta', 'support@ngisweden.se', 12345,
-                        ' ', '3F', 'ABCD', 12345, ' ', f'{proj_specs["id"]}, {proj_specs["name"]}', contact_dets['reference'], 'REFR']
+                        ' ', '3F', 'ABCD', 12345, ' ', f'{proj_specs["id"]}, {proj_specs["name"]}', contact_dets['reference'], 'REFR',
+                        proj_specs["close_date"]]
                 data.append(row)
 
                 proj_doc = get_proj_doc(self.application, proj_id)
                 proj_doc['invoice_spec_downloaded'] = int(datetime.datetime.now().timestamp()*1000)
                 self.application.projects_db.save(proj_doc)
-            df = pd.DataFrame(data, columns=col_headers, index=False)
-            df.to_excel(excel_buff)
+            df = pd.DataFrame(data, columns=col_headers)
+            df.to_excel(excel_buff, index=False)
             excel_buff.seek(0)
-            zf.writestr('test.xlsx', excel_buff.getvalue())
+            zf.writestr(f'invoices_{datetime.datetime.now().date()}.xlsx', excel_buff.getvalue())
 
         self.set_header('Content-Type', 'application/zip')
         self.set_header('Content-Disposition', 'attachment; filename={}'.format(fileName))
@@ -161,15 +166,14 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         account_dets['contact'] = 'Abcde Defge'
 
         contact_dets = {}
-        contact_dets['name'] = proj_doc['order_details']['owner']['name']
-        contact_dets['email'] = proj_doc['order_details']['owner']['email']
-        contact_dets['reference'] = proj_doc['details'].get('invoice_reference', '')
-        #order portal invoice Address as billing address
         order_url = f'{self.application.order_portal_conf["api_get_order_url"]}/{proj_doc["order_details"]["identifier"]}'
         headers = {"X-OrderPortal-API-key": self.application.order_portal_conf["api_token"]}
         response = requests.get(order_url, headers=headers)
         assert response.status_code == 200, (response.status_code, response.reason)
         fields = response.json()['fields']
+        contact_dets['name'] = fields['project_pi_name']
+        contact_dets['email'] = fields['project_pi_email']
+        contact_dets['reference'] = fields['project_invoice_ref']
         contact_dets['invoice_address'] = fields['address_invoice_address']
         contact_dets['invoice_zip'] = fields['address_invoice_zip']
         contact_dets['invoice_city'] = fields['address_invoice_city']
@@ -185,10 +189,8 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         invoiced_agreement = agreement_doc['saved_agreements'][agreement_doc['invoice_spec_generated_for']]
         proj_specs['summary'] = markdown.markdown(invoiced_agreement['agreement_summary'], extensions=['sane_lists'])
         proj_specs['comment'] = "Finished according to contract" #Customise?
-        try:
-            proj_specs['total_cost'] = invoiced_agreement['total_cost']
-        except:
-            import pdb; pdb.set_trace()
+        proj_specs['total_cost'] = "{:.2f}".format(invoiced_agreement['total_cost'])
+        proj_specs['close_date'] = proj_doc['close_date']
 
         return account_dets, contact_dets, proj_specs
 
@@ -200,11 +202,9 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         invoice_gen = invoice_template.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(),
                               account_dets=account_dets, contact_dets=contact_dets, proj_specs=proj_specs)
 
-        css = CSS(string='body { font-family: inherit!important; }')
+        css = CSS(string='body { font-family: Noto Serif!important; }')
         html=HTML(string=invoice_gen.decode('utf-8'), base_url=os.getcwd())
         pdfgen = html.write_pdf(stylesheets=[css])
-        with open('test.html', 'w') as file:
-            file.write(invoice_gen.decode('utf-8'))
         return invoice_gen.decode('utf-8'), pdfgen
 
 class DeleteInvoiceHandler(AgreementsDBHandler):

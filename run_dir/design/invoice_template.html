@@ -4,19 +4,24 @@
   <head>
     <link rel="stylesheet" href="static/css/custom-bootstrap-5-alpha.css" rel="stylesheet">
     <link rel="stylesheet" href="static/css/status_b5.css?v={{ gs_globals['git_commit'] }}" rel="stylesheet">
+    <style>
+      @page {
+          margin-top:5mm;
+      }
+    </style>
   </head>
 
   <body class="p-0">
     <div class="invoice-title-img">
-      <img class="align-middle" title="National Genomics Infrastructure" src="static/img/NGI-final.png" style="object-fit:contain;">
+      <img class="align-middle float-right" title="National Genomics Infrastructure" src="static/img/NGI-final.png" style="object-fit:contain; width:195px; height:57px;" >
     </div>
       <h2> NGI invoice reference
       </h2>
-       Created on {{ proj_specs['invoice_created'] }}
-      <hr>
-      <h3>Account</h3>
-      <hr>
-      <dl class="dl-horizontal-quote-details p-1">
+      <div style="0.95em;"> Created on {{ proj_specs['invoice_created'] }} </div>
+      <hr class="mt-1">
+      <h3 class="pt-3">Account</h3>
+      <hr class="mb-1">
+      <dl class="dl-horizontal-invoicing p-1">
 
         <dt>Name</dt>
           <dd>{{ account_dets['name'] }}</dd>
@@ -30,10 +35,10 @@
           <dd> {{ account_dets['contact'] }}</dd>
       </dl>
 
-      <h3>Contact</h3>
-      <hr>
+      <h3 class="pt-3">Contact</h3>
+      <hr class="mb-1">
       <h4>Contact person</h4>
-      <dl>
+      <dl class="dl-horizontal-invoicing" >
         <dt>Name</dt>
           <dd>{{ contact_dets['name'] }} </dd>
         <dt>Email</dt>
@@ -42,7 +47,7 @@
           <dd>{{ contact_dets['reference'] }} </dd>
       </dl>
       <h4>Billing Address</h4>
-        <dl>
+        <dl class="dl-horizontal-invoicing">
           <dt>Address</dt>
             <dd>{{ contact_dets['invoice_address'] }} </dd>
           <dt>Postal Code</dt>
@@ -52,13 +57,19 @@
           <dt>Country</dt>
             <dd>{{ contact_dets['invoice_country'] }} </dd>
         </dl>
-      <h3>Specification</h3>
-      <hr>
+      <h3 class="pt-3">Specification</h3>
+      <hr class="mb-1">
       <h4>Projects</h4>
-      {{ proj_specs['id'] }}, {{ proj_specs['name'] }} ({{ proj_specs['cust_desc'] }})
+
+      <dl class="dl-horizontal-invoicing" >
+        <dt>Name</dt>
+          <dd>{{ proj_specs['id'] }}, {{ proj_specs['name'] }} ({{ proj_specs['cust_desc'] }}) </dd>
+        <dt>Close Date</dt>
+          <dd> {{ proj_specs['close_date'] }} </dd>
+      </dl>
 
       <h4>Contracts</h4>
-      <dl>
+      <dl class="dl-horizontal-invoicing" >
         <dt>Contract name</dt>
           <dd> {{ proj_specs['contract_name'] }}
         <dt>Contract summary</dt>
@@ -67,9 +78,9 @@
           <dd> {{ proj_specs['comment'] }}</dd>
       </dl>
       <h4>Cost Calculation</h4>
-      <dl>
-        <dt>Total cost</dt>
-          <dd> {{ proj_specs['total_cost'] }}
+      <dl class="dl-horizontal-invoicing">
+        <dt class="mb-2 pb-2">Total cost</dt>
+          <dd class="mb-2 pb-2"> {{ proj_specs['total_cost'] }} </dd>
       </dl>
   </body>
 </html>
