@@ -184,9 +184,12 @@ class ProjectsBaseDataHandler(SafeHandler):
             queued = row.value['queued']
             diff = now - dateutil.parser.parse(queued)
             row.value['days_in_production'] = diff.days
-        elif row.key[0] in ['aborted', 'closed'] and 'close_date' and 'queued' in row.value:
+        elif row.key[0] in ['aborted', 'closed'] and 'queued' in row.value:
             #Days project was in production
-            close = dateutil.parser.parse(row.value['close_date'])
+            if 'close_date' in row.value:
+                close = dateutil.parser.parse(row.value['close_date'])
+            else:
+                close = dateutil.parser.parse(row.value['aborted'])
             diff = close - dateutil.parser.parse(row.value['queued'])
             row.value['days_in_production'] = diff.days
         if row.key[0] in ['review', 'ongoing', 'reception control'] and 'open_date' in row.value:
