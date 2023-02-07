@@ -99,7 +99,8 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         if len(self.request.arguments['project'])==1:
             proj_id = self.request.arguments['project'][0].decode('utf-8')
             agreement_doc = self.fetch_agreement(proj_id)
-            account_dets, contact_dets, proj_specs = self.get_invoice_data(proj_id, agreement_doc)
+            invoice_defaults = self.fetch_agreement('invoice_defaults')
+            account_dets, contact_dets, proj_specs = self.get_invoice_data(proj_id, agreement_doc, invoice_defaults)
 
             htmlgen, _ = self.generate_invoice_html_pdf(account_dets, contact_dets, proj_specs)
             self.write(htmlgen)
@@ -124,19 +125,20 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         col_headers = ['Belopp', 'Kundnr', 'Artikeltext', 'Antal', 'Extra text1, max 60 tkn', 'Extra text2, max 60 tkn',
                 'Extra text3, max 60 tkn', 'Extra text4, max 60 tkn', 'Extra text5, max 60 tkn', 'Artikelnr', 'Batch_id', 'Ftg',
                 'Org', 'Proj', 'Fin/MP', 'Ver.text', 'Beställare, max 25 tkn', 'Attansv/Säljare', 'Stängt Datum']
+        invoice_defaults = self.fetch_agreement('invoice_defaults')
         data = []
         with zp.ZipFile(buff, "w") as zf:
             for proj_id in projects:
                 agreement_doc = self.fetch_agreement(proj_id)
-                account_dets, contact_dets, proj_specs = self.get_invoice_data(proj_id, agreement_doc)
+                account_dets, contact_dets, proj_specs = self.get_invoice_data(proj_id, agreement_doc, invoice_defaults)
 
                 _, pdfgen = self.generate_invoice_html_pdf(account_dets, contact_dets, proj_specs)
                 zf.writestr(f'{proj_id}_invoice.pdf', pdfgen)
 
                 row = [proj_specs['total_cost'], ' ', f'{proj_specs["id"]}, {proj_specs["name"]}', '1,00', f'({proj_specs["cust_desc"]})',
-                        'Fakturaunderlag skickas till', contact_dets['email'], 'För fakturafrågor kontakta', 'support@ngisweden.se', 12345,
-                        ' ', '3F', 'ABCD', 12345, ' ', f'{proj_specs["id"]}, {proj_specs["name"]}', contact_dets['reference'], 'REFR',
-                        proj_specs["close_date"]]
+                        'Fakturaunderlag skickas till', contact_dets['email'], 'För fakturafrågor kontakta', 'support@ngisweden.se', ' ',
+                        ' ', ' ', account_dets['unit'], account_dets['number'], ' ', f'{proj_specs["id"]}, {proj_specs["name"]}', 
+                        contact_dets['reference'], account_dets['ansvarig'], proj_specs["close_date"]]
                 data.append(row)
 
                 proj_doc = get_proj_doc(self.application, proj_id)
@@ -154,16 +156,20 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         self.finish()
 
 
-    def get_invoice_data(self, proj_id, agreement_doc):
+    def get_invoice_data(self, proj_id, agreement_doc, inv_defs):
         """ Retrieve invoice data"""
 
         proj_doc = get_proj_doc(self.application, proj_id)
 
+        invoiced_agreement = agreement_doc['saved_agreements'][agreement_doc['invoice_spec_generated_for']]
+
         account_dets = {}
-        account_dets['name'] = 'AcctName'
-        account_dets['number'] = 12345
-        account_dets['unit'] = 'ABCD'
-        account_dets['contact'] = 'Abcde Defge'
+        account_dets['number'] = inv_defs['account_details']['accounts']['default']
+        if invoiced_agreement['price_type'] == 'full_cost':
+            account_dets['number'] = inv_defs['account_details']['accounts']['full_cost']
+        account_dets['unit'] = inv_defs['account_details']['unit']
+        account_dets['contact'] = inv_defs['account_details']['contact']
+        account_dets['ansvarig'] = inv_defs['account_details']['ansvarig']
 
         contact_dets = {}
         order_url = f'{self.application.order_portal_conf["api_get_order_url"]}/{proj_doc["order_details"]["identifier"]}'
@@ -186,7 +192,6 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         proj_specs['cust_desc'] = proj_doc["details"].get("customer_project_reference", "")
         proj_specs['invoice_created'] = datetime.datetime.fromtimestamp(agreement_doc['invoice_spec_generated_at']/1000.0).strftime("%Y-%m-%d")
         proj_specs['contract_name'] =f'{proj_id}_{agreement_doc["invoice_spec_generated_for"]}'
-        invoiced_agreement = agreement_doc['saved_agreements'][agreement_doc['invoice_spec_generated_for']]
         proj_specs['summary'] = markdown.markdown(invoiced_agreement['agreement_summary'], extensions=['sane_lists'])
         proj_specs['comment'] = "Finished according to contract" #Customise?
         proj_specs['total_cost'] = "{:.2f}".format(invoiced_agreement['total_cost'])

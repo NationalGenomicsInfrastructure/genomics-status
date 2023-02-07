@@ -23,8 +23,6 @@
       <hr class="mb-1">
       <dl class="dl-horizontal-invoicing p-1">
 
-        <dt>Name</dt>
-          <dd>{{ account_dets['name'] }}</dd>
         <dt>Number</dt>
           <dd>{{ account_dets['number'] }} </dd>
 
@@ -80,7 +78,10 @@
       <h4>Cost Calculation</h4>
       <dl class="dl-horizontal-invoicing">
         <dt class="mb-2 pb-2">Total cost</dt>
+        <!-- The following <p> is to make sure the cost shows up on Mac preview. It has a strange error not displaying
+        the last visible element, hence this workaround-->
           <dd class="mb-2 pb-2"> {{ proj_specs['total_cost'] }} </dd>
+          <p class="text-white p-0 m-0">End of Invoice</p>
       </dl>
   </body>
 </html>
