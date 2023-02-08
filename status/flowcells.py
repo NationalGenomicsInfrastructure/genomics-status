@@ -80,36 +80,38 @@ class FlowcellsHandler(SafeHandler):
     def list_ont_flowcells(self):
         """ Fetch dictionary of the form {ont_run_name : ont_run_stats_dict}
         """
+        try:
+            view_all = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
+            view_project = self.application.projects_db.view("project/id_name_dates", descending=True)
 
-        view_all = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
-        view_project = self.application.projects_db.view("project/id_name_dates", descending=True)
+            ont_flowcells = OrderedDict()
 
-        ont_flowcells = OrderedDict()
+            for row in view_all.rows:
+                ont_flowcells[row.key] = fetch_ont_run_stats(view_all, view_project, row.key)
 
-        for row in view_all.rows:
-            ont_flowcells[row.key] = fetch_ont_run_stats(view_all, view_project, row.key)
+            # Use Pandas dataframe for column-wise operations, every db entry becomes a row
+            df = pd.DataFrame.from_dict(ont_flowcells, orient = "index")
 
-        # Use Pandas dataframe for column-wise operations, every db entry becomes a row
-        df = pd.DataFrame.from_dict(ont_flowcells, orient = "index")
+            # Calculate ranks, to enable color coding
+            df["basecalled_pass_bases_Gbp_rank"] = (df.basecalled_pass_bases_Gbp.rank() / len(df) * 100).apply(lambda x: round(x,2))
+            df["n50_rank"] = (df.n50.rank() / len(df) * 100).apply(lambda x: round(x,2))
+            df["accuracy_rank"] = (df.accuracy.rank() / len(df) * 100).apply(lambda x: round(x,2))
 
-        # Calculate ranks, to enable color coding
-        df["basecalled_pass_bases_Gbp_rank"] = (df.basecalled_pass_bases_Gbp.rank() / len(df) * 100).apply(lambda x: round(x,2))
-        df["n50_rank"] = (df.n50.rank() / len(df) * 100).apply(lambda x: round(x,2))
-        df["accuracy_rank"] = (df.accuracy.rank() / len(df) * 100).apply(lambda x: round(x,2))
+            # Empty values are replaced with empty strings
+            df.fillna("", inplace = True)
 
-        # Empty values are replaced with empty strings
-        df.fillna("", inplace = True)
-
-        # Convert back to dictionary and return
-        ont_flowcells = df.to_dict(orient = "index")
-        return ont_flowcells
+            # Convert back to dictionary and return
+            ont_flowcells = df.to_dict(orient = "index")
+            return ont_flowcells
+        except:
+            return []
         
     def get(self):
         # Default is to NOT show all flowcells
         all=self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
         fcs=self.list_flowcells(all=all)
-        ont_fcs=[] #self.list_ont_flowcells()
+        ont_fcs=self.list_ont_flowcells()
         self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, ont_flowcells=ont_fcs, form_date=formatDate, all=all))
 
 
