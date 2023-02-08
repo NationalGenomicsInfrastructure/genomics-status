@@ -136,8 +136,8 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
                 zf.writestr(f'{proj_id}_invoice.pdf', pdfgen)
 
                 row = [proj_specs['total_cost'], ' ', f'{proj_specs["id"]}, {proj_specs["name"]}', '1,00', f'({proj_specs["cust_desc"]})',
-                        'Fakturaunderlag skickas till', contact_dets['email'], 'För fakturafrågor kontakta', 'support@ngisweden.se', ' ',
-                        ' ', ' ', account_dets['unit'], account_dets['number'], ' ', f'{proj_specs["id"]}, {proj_specs["name"]}', 
+                        account_dets['fakturaunderlag'], contact_dets['email'], account_dets['fakturafragor'], account_dets['support_email'],
+                        ' ', ' ', ' ', account_dets['unit'], account_dets['number'], ' ', f'{proj_specs["id"]}, {proj_specs["name"]}',
                         contact_dets['reference'], account_dets['ansvarig'], proj_specs["close_date"]]
                 data.append(row)
 
@@ -170,6 +170,9 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         account_dets['unit'] = inv_defs['account_details']['unit']
         account_dets['contact'] = inv_defs['account_details']['contact']
         account_dets['ansvarig'] = inv_defs['account_details']['ansvarig']
+        account_dets['fakturaunderlag'] = inv_defs['account_details']['fakturaunderlag']
+        account_dets['fakturafragor'] = inv_defs['account_details']['fakturafragor']
+        account_dets['support_email'] = inv_defs['account_details']['support_email']
 
         contact_dets = {}
         order_url = f'{self.application.order_portal_conf["api_get_order_url"]}/{proj_doc["order_details"]["identifier"]}'
@@ -208,7 +211,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
                               account_dets=account_dets, contact_dets=contact_dets, proj_specs=proj_specs)
 
         css = CSS(string='body { font-family: Noto Serif!important; }')
-        html=HTML(string=invoice_gen.decode('utf-8'), base_url=os.getcwd())
+        html = HTML(string=invoice_gen.decode('utf-8'), base_url=os.getcwd())
         pdfgen = html.write_pdf(stylesheets=[css])
         return invoice_gen.decode('utf-8'), pdfgen
 
