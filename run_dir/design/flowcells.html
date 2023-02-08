@@ -9,6 +9,13 @@ Description: Shows a table with all flow cells.
 
 {% block stuff %}
 
+{% if errors %}
+    <div class="alert alert-danger">
+        <p>The following run(s) were not possible to be processed:</p>    
+        {{", ".join(errors)}}
+    </div>
+{% end %}
+
 <div class="container-fluid" id="flowcell_list">
     <div class="tabbable">
         <ul class="nav nav-tabs" role="tablist">
