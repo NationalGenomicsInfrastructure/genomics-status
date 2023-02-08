@@ -109,7 +109,7 @@ class FlowcellsHandler(SafeHandler):
         all=self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
         fcs=self.list_flowcells(all=all)
-        ont_fcs=self.list_ont_flowcells()
+        ont_fcs=[] #self.list_ont_flowcells()
         self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, ont_flowcells=ont_fcs, form_date=formatDate, all=all))
 
 
