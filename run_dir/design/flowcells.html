@@ -9,6 +9,13 @@ Description: Shows a table with all flow cells.
 
 {% block stuff %}
 
+{% if errors %}
+    <div class="alert alert-danger">
+        <p>The following run(s) were not possible to be processed:</p>    
+        {{", ".join(errors)}}
+    </div>
+{% end %}
+
 <div class="container-fluid" id="flowcell_list">
     <div class="tabbable">
         <ul class="nav nav-tabs" role="tablist">
@@ -176,7 +183,7 @@ Description: Shows a table with all flow cells.
                                     {% set latest_running_note_key = max(k for k, v in running_notes.items() if v != '') %}
                                     <div class="card running-note-card">
                                     <div class='card-header'>
-                                    <a class="text-decoration-none" href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"].encode().decode('unicode-escape')}}</a>  -  {{form_date(latest_running_note_key)}}
+                                    <a class="text-decoration-none" href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"]}}</a>  -  {{form_date(latest_running_note_key)}}
                                     </div>
                                     <div class='card-body' style='white-space: pre-line'>
                                         {{running_notes[latest_running_note_key]['note']}}
