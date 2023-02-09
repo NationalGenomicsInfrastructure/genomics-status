@@ -60,6 +60,10 @@ class InvoiceSpecDateHandler(AgreementsDBHandler):
             /api/v1/generate_invoice_spec
     """
     def post(self):
+        if not self.get_current_user().is_proj_coord:
+            self.set_status(401)
+            return self.write("Error: You do not have the permissions for this operation!")
+
         post_data = tornado.escape.json_decode(self.request.body)
 
         proj_doc =  get_proj_doc(self.application, post_data['proj_id'])

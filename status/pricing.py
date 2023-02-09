@@ -736,6 +736,9 @@ class AgreementMarkSignHandler(AgreementsDBHandler):
     """
     def post(self):
         post_data = tornado.escape.json_decode(self.request.body)
+        if not self.get_current_user().is_proj_coord:
+            self.set_status(401)
+            return self.write("Error: You do not have the permissions for this operation!")
         self.update_agreementdoc(post_data['proj_id'], post_data['timestamp'])
         self.set_header("Content-type", "application/json")
         self.write({'message': 'Agreement Doc updated'})
