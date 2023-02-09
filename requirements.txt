@@ -1,7 +1,7 @@
 backports.ssl-match-hostname>=3.5.0.1
 CouchDB==1.1
 ecdsa>=0.13
-genologics>=0.3.16
+genologics @ https://github.com/SciLifeLab/genologics/archive/master.zip
 httplib2>=0.10.3
 logbook
 cffi
@@ -25,11 +25,3 @@ tornado>=6.0.2
 utils>=0.9.0
 weasyprint==52.5
 Zenpy
-#Install with conda first, pip requires gcc
-pandas>=1.3.2
-#conda install -c conda-forge psycopg2 # Install with conda
-#conda install -c conda-forge open-fonts
-#conda install -c anaconda pango=1.42.0
-#conda install -c conda-forge xorg-libxrender
-#conda install -c conda-forge xorg-libxext
-#conda install -c conda-forge xorg-libxau
