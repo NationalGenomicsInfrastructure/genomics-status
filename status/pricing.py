@@ -655,6 +655,9 @@ class GenerateQuoteHandler(AgreementsDBHandler):
         quote_input = tornado.escape.json_decode(self.request.body.decode('utf-8').split('=')[1])
         quote_input['date'] = datetime.datetime.now().date().isoformat()
         if quote_input['type']=='save':
+            if not self.get_current_user().is_proj_coord:
+                self.set_status(401)
+                return self.write("Error: You do not have the permissions for this operation!")
             save_info = {}
             save_info['price_type'] = quote_input['price_type']
             save_info['agreement_summary'] = quote_input['agreement_summary']

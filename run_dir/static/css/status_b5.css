@@ -1009,7 +1009,13 @@ td.alert-green{
 
 th.sort{
   cursor: pointer;
+}
 
+thead th.sort::before{
+  font-family: "Font Awesome 6 Pro";
+  font-weight: 400;
+  content: "\f884";
+  margin-right: 4px;
 }
 /* Deliveries page */
 .bi-fc-runningnote, .bi-project-note {

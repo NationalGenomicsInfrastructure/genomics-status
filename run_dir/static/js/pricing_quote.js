@@ -3,12 +3,12 @@ app.component('v-pricing-quote', {
      *
      * Add products from the table to create a quote and switch between price types.
      */
-    props: ['origin', 'is_pricing_admin'],
+    props: ['origin', 'is_proj_coord'],
     data() {
       return {
         md_message: '',
         md_src_message: '',
-        proj_data: {},
+        proj_data: {'pi_name':''},
         cLabel_index: 0,
         active_cost_labels: {},
         template_text_data: {},
@@ -91,7 +91,7 @@ app.component('v-pricing-quote', {
           return marked(msg_display, { sanitize: true })
         },
         has_admin_control(){
-          return (this.origin === 'Agreement') && (this.is_pricing_admin==='True')
+          return (this.origin === 'Agreement') && (this.is_proj_coord==='True')
         }
     },
     created: function() {
@@ -459,8 +459,8 @@ app.component('v-pricing-quote', {
                   </template>
                   <div class="align-self-center">
                     <button class="btn btn-primary m-1" @click="load_saved_agreement">Load</button>
-                    <button class="btn btn-danger m-1" @click="mark_agreement_signed">Mark Signed</button>
-                    <button class="btn btn-success m-1" @click="generate_invoice_spec">Generate Invoice specification</button>
+                    <button v-if="this.has_admin_control" class="btn btn-danger m-1" @click="mark_agreement_signed">Mark Signed</button>
+                    <button v-if="this.has_admin_control" class="btn btn-success m-1" @click="generate_invoice_spec">Generate Invoice specification</button>
                   </div>
                 </div>
               </div>

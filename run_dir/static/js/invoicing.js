@@ -15,13 +15,14 @@
       $("#invoicing_table_body").empty()
       $('#invoicing_table').DataTable().clear().destroy()
       $.each(data, function(key, value) {
-        var tbl_row = $('<tr>')
-        var checkbox_col = '<input class="form-check-input invoice_checkbox" type="checkbox" value="'+key+'" id="sel_invoices_'+key+'">'
+        let tbl_row = $('<tr>')
+        let checkbox_col = '<input class="form-check-input invoice_checkbox align-middle" type="checkbox" value="'+key+'" id="sel_invoices_'+key+'">'
         tbl_row.append($('<td class="mw-5 text-center">').html(checkbox_col))
-        tbl_row.append($('<td>').html('<a class="text-decoration-none" href="/project/'+key+'">'+key+'</a>'))
+        let project_row = '<a class="text-decoration-none" href="/project/'+key+'">'+key+'</a>'
+        project_row += '<button type="button" id='+key+' class="btn btn-sm btn-outline-dark view_invoice_btn float-right" data-toggle="modal" data-target="#displayInvoiceModal">View</button>'
+        tbl_row.append($('<td>').html(project_row))
         let date = new Date(parseInt(value['invoice_spec_generated']))
         tbl_row.append($('<td>').html(date.toDateString() + ', ' + date.toLocaleTimeString(date)));
-        tbl_row.append($('<td>').html("<button type='button' id="+key+" class='btn btn-outline-dark view_invoice_btn' data-toggle='modal' data-target='#displayInvoiceModal'>View</button>"))
         $("#invoicing_table_body").append(tbl_row)
       });
       // Initialise the Javascript sorting now that we know the number of rows
@@ -49,7 +50,7 @@
   function init_listjs(table_name) {
       // Setup - add a text input to each footer cell
       $('#'+table_name+' tfoot th.sort').each( function () {
-        var title = $('#'+table+' thead th').eq( $(this).index() ).text()
+        let title = $('#'+table+' thead th').eq( $(this).index() ).text()
         $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' )
       } );
 
@@ -128,9 +129,9 @@
       return $.getJSON('/api/v1/get_sent_invoices', function(data) {
         $("#sent_invoices_table_body").empty();
         $.each(data, function(key, value) {
-            var tbl_row = $('<tr>')
-            tbl_row.append($('<td>').html(key))
+            let tbl_row = $('<tr>')
             tbl_row.append($('<td>').html('<a class="text-decoration-none" href="/project/'+value+'">'+value+'</a>'))
+            tbl_row.append($('<td>').html(key))
           $("#sent_invoices_table_body").append(tbl_row)
       });
      init_listjs('sent_invoices_table');
