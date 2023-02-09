@@ -112,6 +112,10 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         from io import BytesIO
         import zipfile as zp
 
+        if not self.get_current_user().is_proj_coord:
+            self.set_status(401)
+            return self.write("Error: You do not have the permissions for this operation!")
+
         args = self.request.arguments['projects'][0].decode('utf-8')
         if not args:
             self.set_status(400)
