@@ -257,5 +257,5 @@ class SentInvoiceHandler(AgreementsDBHandler):
         view = self.application.projects_db.view("invoicing/spec_sent", startkey=six_months_ago)
         proj_list = {}
         for row in view:
-            proj_list[row.key] = row.value
+            proj_list[row.value] = row.key
         self.write(proj_list)
