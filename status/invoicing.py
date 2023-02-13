@@ -17,7 +17,7 @@ from status.pricing import AgreementsDBHandler
 logging.getLogger('fontTools').setLevel(logging.ERROR)
 logging.getLogger('weasyprint').setLevel(logging.ERROR)
 
-def get_proj_doc(app, proj_id):
+def get_proj_doc(app: tornado.web.Application, proj_id: str) -> dict:
 
     view = app.projects_db.view("project/project_id", startkey=proj_id, limit=1)
     proj_doc_id = view.rows[0].value
@@ -164,7 +164,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         self.finish()
 
 
-    def get_invoice_data(self, proj_id, agreement_doc, inv_defs):
+    def get_invoice_data(self, proj_id: str, agreement_doc: dict, inv_defs: dict) -> tuple[dict, dict, dict]:
         """ Retrieve invoice data"""
 
         proj_doc = get_proj_doc(self.application, proj_id)
@@ -211,7 +211,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         return account_dets, contact_dets, proj_specs
 
 
-    def generate_invoice_html_pdf(self, account_dets, contact_dets, proj_specs):
+    def generate_invoice_html_pdf(self, account_dets: dict, contact_dets: dict, proj_specs: dict) -> tuple[str, bytes]:
         """ Generate invoice html """
 
         invoice_template = self.application.loader.load('invoice_template.html')
