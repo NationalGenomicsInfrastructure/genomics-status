@@ -9,7 +9,7 @@ Description: Shows a table with projects that have had invoice specs generated b
 
 {% block stuff %}
 
-<div class="container-fluid" id="invoicing_list">
+<div class="d-flex justify-content-center" id="invoicing_list">
     <div class="tabbable">
       <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item" role="presentation"><a class="nav-link active" href="#tab_invoice_specs" role="tab" data-toggle="tab" aria-selected="true">Generate invoices</a></li>
@@ -21,7 +21,7 @@ Description: Shows a table with projects that have had invoice specs generated b
             <small class="text-muted">Showing projects that have invoice specs generated but not sent</small>
           </h2>
           <div id="invoicing_list">
-            <div class="row mb-2">
+            <div class="row mb-2 pt-3">
               <div class="col-auto mr-0 pr-0">
                 <form id="gen_invoice_form" class="form form-search" role="form" target="_blank">
                   <button type="submit" id="invoicing_generate_invoice_btn" class="btn btn-primary"><span class="fa fa-file-pdf"></span> Generate invoice</button>
@@ -31,26 +31,30 @@ Description: Shows a table with projects that have had invoice specs generated b
                 <button type="button" id="invoicing_delete_spec_btn" class="btn btn-outline-danger"><span class="fa fa-trash"></span> Delete Spec</button>
               </div>
             </div>
-            <table class="table table-hover table-striped table-bordered sortable" id="invoicing_table">
-              <thead>
-                <tr class="sticky darkth">
-                  <th class="mw-5 text-center">
-                      <input class="form-check-input" type="checkbox" value="" id="sel_all_invoices">
-                  </th>
-                  <th class="sort">Project</th>
-                  <th class="sort">Time of Generation</th>
-                </tr>
-              </thead>
-              <tfoot>
-                <tr class="darkth">
-                  <th></th>
-                  <th class="sort">Project</th>
-                  <th class="sort">Time of Generation</th>
-                </tr>
-              </tfoot>
-              <tbody id="invoicing_table_body">
-              </tbody>
-            </table>
+            <div class="row d-flex justify-content-center">
+              <div class="col">
+                <table class="table table-hover table-striped table-bordered sortable" id="invoicing_table">
+                  <thead>
+                    <tr class="sticky darkth">
+                      <th class="mw-5 text-center">
+                          <input class="form-check-input" type="checkbox" value="" id="sel_all_invoices">
+                      </th>
+                      <th class="sort">Project</th>
+                      <th class="sort">Time of Generation</th>
+                    </tr>
+                  </thead>
+                  <tfoot>
+                    <tr class="darkth">
+                      <th></th>
+                      <th class="sort">Project</th>
+                      <th class="sort">Time of Generation</th>
+                    </tr>
+                  </tfoot>
+                  <tbody id="invoicing_table_body">
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
         <div class="tab-pane fade" id="tab_sent_invoices">
@@ -58,22 +62,26 @@ Description: Shows a table with projects that have had invoice specs generated b
               <h2><span id="sent_invoices_tab_title">Sent invoices</span>
                 <small class="text-muted">Showing projects that have had invoice sent in the last 6 months</small>
               </h2>
-              <table class="table table-hover table-striped table-bordered sortable" id="sent_invoices_table">
-                <thead>
-                  <tr class="sticky darkth">
-                    <th class="sort">Project</th>
-                    <th class="sort">Date of Download</th>
-                  </tr>
-                </thead>
-                <tfoot>
-                  <tr class="darkth">
-                    <th class="sort">Project</th>
-                    <th class="sort">Date of Download</th>
-                  </tr>
-                </tfoot>
-                <tbody id="sent_invoices_table_body">
-                </tbody>
-              </table>
+              <div class="row pt-2 d-flex justify-content-center">
+                <div class="col">
+                  <table class="table table-hover table-striped table-bordered sortable" id="sent_invoices_table">
+                    <thead>
+                      <tr class="sticky darkth">
+                        <th class="sort">Project</th>
+                        <th class="sort">Date of Download</th>
+                      </tr>
+                    </thead>
+                    <tfoot>
+                      <tr class="darkth">
+                        <th class="sort">Project</th>
+                        <th class="sort">Date of Download</th>
+                      </tr>
+                    </tfoot>
+                    <tbody id="sent_invoices_table_body">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
       </div>
     </div>
