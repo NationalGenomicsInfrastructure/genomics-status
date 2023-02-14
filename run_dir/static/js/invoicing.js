@@ -19,7 +19,7 @@ function load_invoicing_table() {
       let checkbox_col = '<input class="form-check-input invoice_checkbox align-middle" type="checkbox" value="'+key+'" id="sel_invoices_'+key+'">'
       tbl_row.append($('<td class="mw-5 text-center">').html(checkbox_col))
       let project_row = '<a class="text-decoration-none" href="/project/'+key+'">'+key+'</a>'
-      project_row += '<button type="button" id='+key+' class="btn btn-sm btn-outline-dark view_invoice_btn float-right" data-toggle="modal" data-target="#displayInvoiceModal">View</button>'
+      project_row += '<button type="button" id='+key+' class="btn btn-sm btn-outline-dark view_invoice_btn float-right px-3" data-toggle="modal" data-target="#displayInvoiceModal">View</button>'
       tbl_row.append($('<td>').html(project_row))
       let date = new Date(parseInt(value['invoice_spec_generated']))
       tbl_row.append($('<td>').html(date.toDateString() + ', ' + date.toLocaleTimeString(date)));
@@ -135,7 +135,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
       $.each(data, function(key, value) {
           let tbl_row = $('<tr>')
           let project_row = '<a class="text-decoration-none" href="/project/'+key+'">'+key+'</a>'
-          project_row += '<button type="button" id='+key+' class="btn btn-sm btn-outline-dark view_invoice_btn float-right" data-toggle="modal" data-target="#displayInvoiceModal">View</button>'
+          project_row += '<button type="button" id='+key+' class="btn btn-sm btn-outline-dark view_invoice_btn float-right px-3" data-toggle="modal" data-target="#displayInvoiceModal">View</button>'
           tbl_row.append($('<td>').html(project_row))
           tbl_row.append($('<td>').html(value))
         $("#sent_invoices_table_body").append(tbl_row)
