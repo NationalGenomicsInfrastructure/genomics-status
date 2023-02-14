@@ -145,22 +145,29 @@ function load_table(status, type, columns, dates) {
   url=url+"&type="+type;
   //Current loaded fields :
   var fields= [];
-  $("#Filter .filterCheckbox").each(function() {
+  $("#allFields .colHeader").filter(":not(#undefined_columns)").find(".filterCheckbox").each(function() {
     fields.push($(this).attr('name'));
   });
   return $.getJSON(url, function(data) {
     $("#project_table_body").empty();
     var size = 0;
     undefined_fields=[];
+    loaded_undefined_fields=[]; // Undefined fields loaded from previous table load
+
+    $("#allFields .colHeader#undefined_columns .filterCheckbox").each(function() {
+      loaded_undefined_fields.push($(this).attr('name'));
+    });
+
     $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-outline-dark" data-clipboard-target="#project_table"><span class="fa fa-copy"></span> Copy table to clipboard</button>');
     if ($('#user_presets_dropdown .dropdown-toggle').hasClass('active')){
       //only add sorting/filtering save button if user-defined preset is loaded
       $("#copyTable").append('<button type="submit" class="btn btn-sm btn-primary float-right" id="saveFilter">Save filtering/sorting to Preset</button>').html();
     }
+
     $.each(data, function(project_id, summary_row) {
       $.each(summary_row, function(key,value){
         //this tracks the fields existing in our projects objects, but not present in the filter tab yet.
-        if ($.inArray(key, undefined_fields) == -1 && $.inArray(key, fields) == -1 ){
+        if ($.inArray(key, undefined_fields) == -1 && $.inArray(key, loaded_undefined_fields) == -1 && $.inArray(key, fields) == -1 ){
           undefined_fields.push(key);
         }
       });
@@ -240,7 +247,7 @@ function load_table(status, type, columns, dates) {
       }
       $("#project_table_body").append(tbl_row);
     });
-    load_undefined_columns(undefined_fields)
+    add_undefined_columns(undefined_fields)
 
     // Initialise the Javascript sorting now that we know the number of rows
     init_listjs(size, columns);
@@ -288,7 +295,7 @@ function load_table_head(columns){
 
 
 // Undefined columns handled here now
-function load_undefined_columns(cols) {
+function add_undefined_columns(cols) {
     var columns_html = "";
     $.each(cols, function(col_id, column) {
       $("#undefined_columns").append('<div class="checkbox">'+
