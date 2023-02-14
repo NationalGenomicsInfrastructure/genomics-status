@@ -71,14 +71,17 @@ function init_listjs(table_name) {
     });
     $('#'+table_name+'_filter label').remove();
     // Apply the search
-    table.columns().every( function () {
-        var that = this;
-        $( 'input', this.footer() ).on( 'keyup change', function () {
-            that
-            .search( this.value )
-            .draw();
-        } );
-    } );
+    if(table_name!=='invoicing_table'){
+      table.columns().every( function () {
+          var that = this;
+          console.log(this.footer())
+          $( 'input', this.footer() ).on( 'keyup change', function () {
+              that
+              .search( this.value )
+              .draw();
+          } );
+      } );
+    }
 }
 
 $('#sel_all_invoices').click(function(e){
