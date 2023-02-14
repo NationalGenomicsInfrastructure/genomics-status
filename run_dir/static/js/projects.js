@@ -991,17 +991,17 @@ function getTHeaderElem(elem){
 function resetReorderFields(){
   $("#tHeaderListul").empty();
   tHList="";
-  $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
+  $("#allColFields input").filter(".filterCheckbox:checked").each(function(i, elem){
      tHList += getTHeaderElem(elem);
    })
   $('#tHeaderListul').append(tHList);
 }
 
 function updateTableFields(order){
-  var selectedFields=$("#allColFields input[class='filterCheckbox']:checked");
+  var selectedFields=$("#allColFields input").filter(".filterCheckbox:checked");
   if(order==""){
     if(selectedFields.length>$('#tHeaderListul li').length){
-      $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
+      $("#allColFields input").filter(".filterCheckbox:checked").each(function(i, elem){
         if($('#tHeaderListul li[data-name="'+$(elem).prop('name')+'"]').length==0){
           $("#tHeaderListul").append(getTHeaderElem(elem));
         }
