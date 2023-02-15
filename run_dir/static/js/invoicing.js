@@ -22,7 +22,8 @@ function load_invoicing_table() {
       project_row += '<button type="button" id='+key+' class="btn btn-sm btn-outline-dark view_invoice_btn float-right px-3" data-toggle="modal" data-target="#displayInvoiceModal">View</button>'
       tbl_row.append($('<td>').html(project_row))
       let date = new Date(parseInt(value['invoice_spec_generated']))
-      tbl_row.append($('<td>').html(date.toLocaleDateString() + ', ' + date.toLocaleTimeString(date)));
+      console.log(date)
+      tbl_row.append($('<td>').html(date.toISOString().slice(0,10) + ', ' + date.toISOString().slice(11,19)));
       $("#invoicing_table_body").append(tbl_row)
     });
     // Initialise the Javascript sorting now that we know the number of rows
