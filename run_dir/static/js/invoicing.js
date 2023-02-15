@@ -22,7 +22,7 @@ function load_invoicing_table() {
       project_row += '<button type="button" id='+key+' class="btn btn-sm btn-outline-dark view_invoice_btn float-right px-3" data-toggle="modal" data-target="#displayInvoiceModal">View</button>'
       tbl_row.append($('<td>').html(project_row))
       let date = new Date(parseInt(value['invoice_spec_generated']))
-      tbl_row.append($('<td>').html(date.toDateString() + ', ' + date.toLocaleTimeString(date)));
+      tbl_row.append($('<td>').html(date.toLocaleDateString() + ', ' + date.toLocaleTimeString(date)));
       $("#invoicing_table_body").append(tbl_row)
     });
     // Initialise the Javascript sorting now that we know the number of rows
@@ -38,7 +38,7 @@ function get_invoice_data(e){
   $.ajax({
     type: 'GET',
     dataType: 'html',
-    url: '/generate_invoice',
+    url: '/api/v1/generate_invoice',
     data: { "project": e.target.id},
     error: function(xhr, textStatus, errorThrown) {
       $('#view_invoice').append('Invoice could not be retrieved: '+errorThrown);
@@ -103,7 +103,7 @@ $('#invoicing_generate_invoice_btn').click(function(e){
   })
   $("#sel_proj_form").remove()
   $("#gen_invoice_form").append("<input type='hidden' id='sel_proj_form' name='projects' value="+projs+">")
-  $('#gen_invoice_form').attr('action', '/generate_invoice').attr('method', 'post').delay(3000).queue(function(){load_invoicing_table()})
+  $('#gen_invoice_form').attr('action', '/api/v1/generate_invoice').attr('method', 'post').delay(3000).queue(function(){load_invoicing_table()})
 })
 
 $('#invoicing_delete_spec_btn').click(function(e){

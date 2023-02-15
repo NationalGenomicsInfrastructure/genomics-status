@@ -96,7 +96,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
     """ Generate the actual invoice document
 
         Loaded through:
-            /generate_invoice
+            /api/v1/generate_invoice
     """
 
     def get(self):
