@@ -1002,7 +1002,7 @@ function updateTableFields(order){
   var selectedFields=$("#allColFields input.filterCheckbox:checked");
   if(order==""){
     if(selectedFields.length>$('#tHeaderListul li').length){
-      $("#allColFields input").filter(".filterCheckbox:checked").each(function(i, elem){
+      $("#allColFields input.filterCheckbox:checked").each(function(i, elem){
         if($('#tHeaderListul li[data-name="'+$(elem).prop('name')+'"]').length==0){
           $("#tHeaderListul").append(getTHeaderElem(elem));
         }
