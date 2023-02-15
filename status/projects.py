@@ -177,8 +177,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                     row.value['contact'] = ord_det['fields']['project_lab_name'] + ': ' + ord_det['fields']['project_lab_email']
                 elif row.value['contact']  == ord_det['fields']['project_pi_email']:
                     row.value['contact'] = ord_det['fields']['project_pi_name'] + ': ' + ord_det['fields']['project_pi_email']
-
-        if row.key[0] in ['review', 'ongoing', 'reception control'] and 'queued' in row.value:
+        if row.key[0] in ['review', 'ongoing', 'reception control', 'open'] and 'queued' in row.value:
             #Add days ongoing in production field
             now = datetime.datetime.now()
             queued = row.value['queued']
