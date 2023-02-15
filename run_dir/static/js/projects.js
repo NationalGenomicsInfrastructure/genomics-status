@@ -145,18 +145,13 @@ function load_table(status, type, columns, dates) {
   url=url+"&type="+type;
   //Current loaded fields :
   var fields= [];
-  $("#allFields .colHeader").filter(":not(#undefined_columns)").find(".filterCheckbox").each(function() {
+  $("#allFields .filterCheckbox").each(function() {
     fields.push($(this).attr('name'));
   });
   return $.getJSON(url, function(data) {
     $("#project_table_body").empty();
     var size = 0;
     undefined_fields=[];
-    loaded_undefined_fields=[]; // Undefined fields loaded from previous table load
-
-    $("#allFields .colHeader#undefined_columns .filterCheckbox").each(function() {
-      loaded_undefined_fields.push($(this).attr('name'));
-    });
 
     $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-outline-dark" data-clipboard-target="#project_table"><span class="fa fa-copy"></span> Copy table to clipboard</button>');
     if ($('#user_presets_dropdown .dropdown-toggle').hasClass('active')){
@@ -167,7 +162,7 @@ function load_table(status, type, columns, dates) {
     $.each(data, function(project_id, summary_row) {
       $.each(summary_row, function(key,value){
         //this tracks the fields existing in our projects objects, but not present in the filter tab yet.
-        if ($.inArray(key, undefined_fields) == -1 && $.inArray(key, loaded_undefined_fields) == -1 && $.inArray(key, fields) == -1 ){
+        if ($.inArray(key, undefined_fields) == -1   && $.inArray(key, fields) == -1 ){
           undefined_fields.push(key);
         }
       });
