@@ -10,17 +10,17 @@ markdown
 nest_asyncio
 numpy>=1.12.1
 oauth2>=1.9.0.post1
-py-trello>=0.9.0
+py-trello
 pycryptodome>=3.6.1
 pyparsing>=2.2.0
 python-dateutil>=2.7.5
-psycopg2
+psycopg2 # Install with conda
 pytz>=2018.9
-PyYAML==5.1
+PyYAML
 requests>=2.14.2
 simplejson>=3.10.0
 six>=1.10.0
-slackclient
+slack_sdk
 tornado>=6.0.2
 utils>=0.9.0
 Zenpy

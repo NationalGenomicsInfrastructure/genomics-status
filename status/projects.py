@@ -13,7 +13,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import markdown
-import slack
+import slack_sdk
 import nest_asyncio
 import itertools
 import unicodedata
@@ -184,9 +184,12 @@ class ProjectsBaseDataHandler(SafeHandler):
             queued = row.value['queued']
             diff = now - dateutil.parser.parse(queued)
             row.value['days_in_production'] = diff.days
-        elif row.key[0] in ['aborted', 'closed'] and 'close_date' and 'queued' in row.value:
+        elif row.key[0] in ['aborted', 'closed'] and 'queued' in row.value:
             #Days project was in production
-            close = dateutil.parser.parse(row.value['close_date'])
+            if 'close_date' in row.value:
+                close = dateutil.parser.parse(row.value['close_date'])
+            else:
+                close = dateutil.parser.parse(row.value['aborted'])
             diff = close - dateutil.parser.parse(row.value['queued'])
             row.value['days_in_production'] = diff.days
         if row.key[0] in ['review', 'ongoing', 'reception control'] and 'open_date' in row.value:
@@ -812,7 +815,7 @@ class RunningNotesDataHandler(SafeHandler):
                 #Adding a slack IM to the tagged user with the running note
                 if option == 'Slack' or option == 'Both':
                     nest_asyncio.apply()
-                    client = slack.WebClient(token=application.slack_token)
+                    client = slack_sdk.WebClient(token=application.slack_token)
                     notification_text = '{} has {} in {}, {}!'.format(tagger, notf_text, project_id, project_name)
                     blocks = [
                         {

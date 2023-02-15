@@ -1,3 +1,29 @@
+/* ########################################################################
+~~~~~ status_b5.css ~~~~~
+---- INTRODUCTON ----
+This is the main stylesheet for Genomics Status. It is used to define custom
+structure and design for the website. The site uses the Bootstrap 5 alpha framework
+for basic styling; this stylesheet is loaded after that and can override
+those settings. For more information about Bootstrap (including really good
+documentation), see http://getbootstrap.com/ - it can do most of the things
+that you were about to write yourself already.
+
+To keep this file organised, there are three main sections:
+Reusable Styles / Core Structure / Page-Specific Styles / Unit Styles
+Please keep the code organised.
+
+General notes - IDs should only be used for unique elements. Classes are
+nearly always better if used for design. Please avoid element type
+precursors (eg. use .class instead of div.class) where possible.
+Comment lots - try to make it obvious where styles are being used.
+ ######################################################################## */
+
+/* ########################################################################
+---- REUSABLE STYLES ----
+These classes are for general use across the website. They are used in
+multiple places and typically control typography, or other common elements.
+ ######################################################################## */
+
 body {
   padding-top: 60px;
 }
@@ -38,10 +64,8 @@ tfoot {
   border: 1px solid #ccc;
   border: 1px solid rgba(0, 0, 0, 0.2);
   -webkit-border-radius: 8px;
-     -moz-border-radius: 8px;
           border-radius: 8px;
   -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
-     -moz-box-shadow: 0 5px 10px rgba(0,0,0,.2);
           box-shadow: 0 5px 10px rgba(0,0,0,.2);
 }
 .tt-suggestion {
@@ -257,6 +281,18 @@ tr.group, tr.group:hover, .dtrg-group {
 
 /*Line numbers for samples tab table*/
 
+#sample_table thead tr::before {
+  content: "No:";
+  background-color: #ddd!important;
+  display: table-cell;
+  font-weight: bold;
+  padding: 0.5rem 0.5rem;
+  position: sticky;
+  top: 50px;
+  z-index: 100;
+  vertical-align: inherit;
+}
+
 #sample_table tbody {
   counter-reset: row;
 }
@@ -449,8 +485,8 @@ pre {
   font-weight: normal;
 }
 
-.dl-ont > dt { 
-  float: left; 
+.dl-ont > dt {
+  float: left;
   text-align: left;
   width: 160px;
 }
@@ -710,7 +746,6 @@ width:30%;
   margin: 5px;
   padding: 5px;
   -webkit-border-radius: 4px;
-  -moz-border-radius: 4px;
   border-radius: 4px;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
   background-color: #ddd;
@@ -762,18 +797,15 @@ width:30%;
 .ui-rangeSlider-withArrows .ui-rangeSlider-container{
   margin: 0 15px;
   -webkit-box-shadow: inset 0px 4px 6px -2px RGBA(0,0,0,0.5);
-  -moz-box-shadow: inset 0px 4px 6px -2px RGBA(0,0,0,0.5);
   box-shadow: inset 0px 4px 6px -2px RGBA(0,0,0,0.5);
 }
 
 .ui-rangeSlider-noArrow .ui-rangeSlider-container{
-  -moz-border-radius: 4px;
   border-radius: 4px;
   border-left: solid 1px #515862;
   border-right: solid 1px #515862;
 
   -webkit-box-shadow: inset 0px 4px 6px -2px RGBA(0,0,0,0.5);
-  -moz-box-shadow: inset 0px 4px 6px -2px RGBA(0,0,0,0.5);
   box-shadow: inset 0px 4px 6px -2px RGBA(0,0,0,0.5);
 }
 
@@ -797,7 +829,6 @@ width:30%;
 
   box-shadow: inset 0px 4px 6px -2px RGBA(0,0,0,0.5);
   -webkit-box-shadow: inset 0px 4px 6px -2px RGBA(0,0,0,0.5);
-  -moz-box-shadow: inset 0px 4px 6px -2px RGBA(0,0,0,0.5);
   background: -moz-linear-gradient(top, #67707F 0%, #888DA0 100%);
   background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#67707F), color-stop(100%,#888DA0));
 }
@@ -853,14 +884,12 @@ width:30%;
   background: #68a1d6;
   height: 29px;
   margin:1px 0;
-  -moz-border-radius: 4px;
   border-radius: 4px;
   cursor:move;
   cursor:grab;
   cursor: -moz-grab;
 
   -webkit-box-shadow: inset 0 2px 6px RGBA(0,0,0,0.5);
-  -moz-box-shadow: inset 0 2px 6px RGBA(0,0,0,0.5);
   box-shadow: inset 0 2px 6px RGBA(0,0,0,0.5);;
  }
 
@@ -878,11 +907,9 @@ width:30%;
   padding: 5px 10px;
   bottom:40px;
 
-  -moz-border-radius: 4px;
   border-radius: 4px;
 
   -webkit-box-shadow: 0px 1px 0px #c2c5d6;
-  -moz-box-shadow: 0px 1px 0px #c2c5d6;
   box-shadow: 0px 1px 0px #c2c5d6;
 
   color:white;
@@ -995,7 +1022,6 @@ th.sort{
   border-left: 1px solid #fff;
   border-bottom: 1px solid #dedede;
   -webkit-border-radius: 5px 5px 0 0;
-     -moz-border-radius: 5px 5px 0 0;
           border-radius: 5px 5px 0 0;
   padding: 0 10px;
   margin-bottom: 25px;
