@@ -8,7 +8,7 @@ app.component('v-pricing-quote', {
       return {
         md_message: '',
         md_src_message: '',
-        proj_data: {'pi_name':''},
+        proj_data: {'pi_name':'', 'invoice_downloaded': ''},
         cLabel_index: 0,
         active_cost_labels: {},
         template_text_data: {},
@@ -92,6 +92,9 @@ app.component('v-pricing-quote', {
         },
         has_admin_control(){
           return (this.origin === 'Agreement') && (this.is_proj_coord==='True')
+        },
+        invoice_downloaded(){
+          return this.proj_data['invoice_downloaded']!==''? true:false
         }
     },
     created: function() {
@@ -121,6 +124,9 @@ app.component('v-pricing-quote', {
                     this.proj_data['pi_name'] = pi_name.split(':')[0]
                     this.proj_data['affiliation'] = pdata['affiliation']
                     this.proj_data['project_id'] = proj_id
+                    if('invoice_spec_downloaded' in pdata){
+                      this.proj_data['invoice_downloaded'] = pdata['invoice_spec_downloaded']
+                    }
                     if(pdata['type']==='Application'){
                       this.applProj = true
                     }
@@ -459,8 +465,8 @@ app.component('v-pricing-quote', {
                   </template>
                   <div class="align-self-center">
                     <button class="btn btn-primary m-1" @click="load_saved_agreement">Load</button>
-                    <button v-if="this.has_admin_control" class="btn btn-danger m-1" @click="mark_agreement_signed">Mark Signed</button>
-                    <button v-if="this.has_admin_control" class="btn btn-success m-1" @click="generate_invoice_spec">Generate Invoice specification</button>
+                    <button v-if="this.has_admin_control" class="btn btn-danger m-1" @click="mark_agreement_signed" :disabled="this.invoice_downloaded"> Mark Signed</button>
+                    <button v-if="this.has_admin_control" class="btn btn-success m-1" @click="generate_invoice_spec" :disabled="this.invoice_downloaded">Generate Invoice specification</button>
                   </div>
                 </div>
               </div>
@@ -526,7 +532,7 @@ app.component('v-pricing-quote', {
                   <button type="submit" class="btn btn-secondary" id="generate_quote_btn" v-on:click="generate_quote('preview')">Generate {{ this.origin }} Preview</button>
                 </div>
                 <div class="col-1 pr-0" v-if="this.has_admin_control">
-                  <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote('save')">Save and Generate {{ this.origin }}</button>
+                  <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote('save')" :disabled="this.invoice_downloaded"> Save and Generate {{ this.origin }}</button>
                 </div>
               </div>
             </div>
