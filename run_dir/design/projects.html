@@ -165,6 +165,9 @@ Description: Shows all presets configured for user and enables their selection.
                 <div class="card-header">
                   <h4 class="card-title">
                     Fields
+                    <button class="btn btn-outline-dark float-right" data-toggle="modal" type="button" data-target="#fieldsJsonModal">
+                      <i class="fa fa-wrench"></i> Definitions
+                    </button>
                   </h4>
                 </div>
                 <div id="collapse2" class="overflow-scroll">
@@ -369,7 +372,32 @@ Description: Shows all presets configured for user and enables their selection.
 
 </div> <!-- #page_content -->
 
-
+<!-- FIELDS DEFINITION JSON MODAL -->
+<div id="fieldsJsonModal" class="modal fade">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h4 class="modal-title">
+          <i class="fa fa-wrench mr-2" aria-hidden="true"></i>
+          Fields Definition JSON
+        </h4>
+        <button type="button" class="btn-close" data-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>
+          The available fields and categories as defined in StatusDB. 
+          Fields that do not match any of these keys (case sensitive) end up in the Undefined Fields category.
+        </p>
+        <pre>
+{{ columns_json }}
+        </pre>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-dismiss="modal" aria-hidden="true">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Settings FIELD MODAL -->
 <div id="settingsModal" class="modal fade">

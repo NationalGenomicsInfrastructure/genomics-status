@@ -710,10 +710,10 @@ class ProjectsHandler(SafeHandler):
     URL: /projects
     """
     def get(self, projects='all'):
-    #def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, projects=projects, user=self.get_current_user()))
+        columns_json = json.dumps(columns, indent=4)
+        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, columns_json=columns_json, projects=projects, user=self.get_current_user()))
 
 
 
