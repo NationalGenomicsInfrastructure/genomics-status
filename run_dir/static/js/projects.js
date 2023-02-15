@@ -158,11 +158,10 @@ function load_table(status, type, columns, dates) {
       //only add sorting/filtering save button if user-defined preset is loaded
       $("#copyTable").append('<button type="submit" class="btn btn-sm btn-primary float-right" id="saveFilter">Save filtering/sorting to Preset</button>').html();
     }
-
     $.each(data, function(project_id, summary_row) {
       $.each(summary_row, function(key,value){
         //this tracks the fields existing in our projects objects, but not present in the filter tab yet.
-        if ($.inArray(key, undefined_fields) == -1   && $.inArray(key, fields) == -1 ){
+        if ($.inArray(key, undefined_fields) == -1 && $.inArray(key, fields) == -1 ){
           undefined_fields.push(key);
         }
       });
@@ -993,14 +992,14 @@ function getTHeaderElem(elem){
 function resetReorderFields(){
   $("#tHeaderListul").empty();
   tHList="";
-  $("#allColFields input").filter(".filterCheckbox:checked").each(function(i, elem){
+  $("#allColFields input.filterCheckbox:checked").each(function(i, elem){
      tHList += getTHeaderElem(elem);
    })
   $('#tHeaderListul').append(tHList);
 }
 
 function updateTableFields(order){
-  var selectedFields=$("#allColFields input").filter(".filterCheckbox:checked");
+  var selectedFields=$("#allColFields input.filterCheckbox:checked");
   if(order==""){
     if(selectedFields.length>$('#tHeaderListul li').length){
       $("#allColFields input").filter(".filterCheckbox:checked").each(function(i, elem){
