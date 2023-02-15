@@ -998,7 +998,13 @@ td.alert-green{
 
 th.sort{
   cursor: pointer;
+}
 
+thead th.sort::before{
+  font-family: "Font Awesome 6 Pro";
+  font-weight: 400;
+  content: "\f884";
+  margin-right: 4px;
 }
 /* Deliveries page */
 .bi-fc-runningnote, .bi-project-note {
@@ -1153,4 +1159,14 @@ th.sort{
   background-color: #d6d5d5;
   border-radius: 0.5rem !important;
   padding: 10px 20px;
+}
+
+.dl-horizontal-invoicing > dt{
+  float: left;
+  text-align: left;
+}
+
+.dl-horizontal-invoicing > dd{
+  margin-left: 180px;
+  margin-bottom: 0px;
 }
