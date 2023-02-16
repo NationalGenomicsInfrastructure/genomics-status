@@ -1,4 +1,3 @@
-name: genstat
 dependencies:
   - python=3.9
   - anaconda::pango=1.42.0

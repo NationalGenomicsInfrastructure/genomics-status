@@ -598,12 +598,12 @@ width:30%;
 }
 
 .accordion-warning {
-  background-color: #fff3cd !important;
+  background-color: #e2e2e2 !important;
 }
 
 .accordion-default-header {
   color: #333;
-  background-color: rgba(0, 0, 0, 0.09);
+  background-color: #c1f8b7;
   border-color: #ddd;
   padding: 10px 15px;
 }
