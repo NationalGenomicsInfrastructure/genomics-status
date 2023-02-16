@@ -49,10 +49,14 @@ class BarcodeHandler(SafeHandler):
                         print_barcode(linesToPrint)
                 else: # file submitted is a text file
                     for line in linesToPrint.splitlines(): # split into the different lines of the text file
-                        createdLabel = make_barcode(line, match_barcode(line, False))
+                        if self.get_argument('print_file_with_barcode', '') : # is true when barcode box is ticked
+                            createdLabel = make_barcode(line, match_barcode(line, True))
+                        else:
+                            createdLabel = make_barcode(line, match_barcode(line, False))
                         createdLabel_joined = '\n'.join(createdLabel)
                         for _ in range(copies): # loops over copies to print
                             print_barcode(createdLabel_joined)
+                            print(createdLabel_joined)
             else:
                 print('no file was given')
 
