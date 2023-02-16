@@ -10,7 +10,7 @@
   {% for server, crontab in sorted(cronjobs.items(), key=lambda x:x[1].get('last_updated', ''), reverse=True) %}
     {% set two_month_ago=str(datetime.datetime.now() - datetime.timedelta(30*2))%}
     <div class="accordion-item accordion-item-prettify">
-			<div class="accordion-default-header {% if crontab.get('last_updated', '') < two_month_ago %} accordion-warning {% end %}">
+			<div class="accordion-default-header {% if crontab.get('last_updated', '') > two_month_ago %} accordion-active {% end %}">
         <h4 class="accordion-header">
           <a class="text-decoration-none text-dark collapsed"
 							role="button" data-toggle="collapse" data-target="#cronjobs_{{ server }}">
