@@ -145,13 +145,14 @@ function load_table(status, type, columns, dates) {
   url=url+"&type="+type;
   //Current loaded fields :
   var fields= [];
-  $("#Filter .filterCheckbox").each(function() {
+  $("#allFields .filterCheckbox").each(function() {
     fields.push($(this).attr('name'));
   });
   return $.getJSON(url, function(data) {
     $("#project_table_body").empty();
     var size = 0;
     undefined_fields=[];
+
     $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-outline-dark" data-clipboard-target="#project_table"><span class="fa fa-copy"></span> Copy table to clipboard</button>');
     if ($('#user_presets_dropdown .dropdown-toggle').hasClass('active')){
       //only add sorting/filtering save button if user-defined preset is loaded
@@ -240,7 +241,7 @@ function load_table(status, type, columns, dates) {
       }
       $("#project_table_body").append(tbl_row);
     });
-    load_undefined_columns(undefined_fields)
+    add_undefined_columns(undefined_fields)
 
     // Initialise the Javascript sorting now that we know the number of rows
     init_listjs(size, columns);
@@ -288,7 +289,7 @@ function load_table_head(columns){
 
 
 // Undefined columns handled here now
-function load_undefined_columns(cols) {
+function add_undefined_columns(cols) {
     var columns_html = "";
     $.each(cols, function(col_id, column) {
       $("#undefined_columns").append('<div class="checkbox">'+
@@ -991,17 +992,17 @@ function getTHeaderElem(elem){
 function resetReorderFields(){
   $("#tHeaderListul").empty();
   tHList="";
-  $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
+  $("#allColFields input.filterCheckbox:checked").each(function(i, elem){
      tHList += getTHeaderElem(elem);
    })
   $('#tHeaderListul').append(tHList);
 }
 
 function updateTableFields(order){
-  var selectedFields=$("#allColFields input[class='filterCheckbox']:checked");
+  var selectedFields=$("#allColFields input.filterCheckbox:checked");
   if(order==""){
     if(selectedFields.length>$('#tHeaderListul li').length){
-      $("#allColFields input[class='filterCheckbox']:checked").each(function(i, elem){
+      $("#allColFields input.filterCheckbox:checked").each(function(i, elem){
         if($('#tHeaderListul li[data-name="'+$(elem).prop('name')+'"]').length==0){
           $("#tHeaderListul").append(getTHeaderElem(elem));
         }
