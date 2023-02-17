@@ -18,7 +18,9 @@ function generate_category_label(category){
         'Administration': ['danger', 'folder-open'],
         'Important': ['imp', 'exclamation-circle'],
         'Deviation': ['devi', 'frown'],
-        'Invoicing': ['inv', 'file-invoice-dollar']
+        'Invoicing': ['inv', 'file-invoice-dollar'],
+        'Sticky': ['sticky', 'note-sticky']
+
     }
     var cat_label = '';
     var categories = category.split(',')
@@ -46,6 +48,7 @@ function get_note_url() {
 function make_running_note(date, note){
   try {
     var category = '';
+    var note_id = '';
     var date = date.replace(/-/g, '/');
     date = date.replace(/\.\d{6}/, '');
     date = new Date(date);
