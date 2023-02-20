@@ -177,8 +177,8 @@ class ProjectsBaseDataHandler(SafeHandler):
                     row.value['contact'] = ord_det['fields']['project_lab_name'] + ': ' + ord_det['fields']['project_lab_email']
                 elif row.value['contact']  == ord_det['fields']['project_pi_email']:
                     row.value['contact'] = ord_det['fields']['project_pi_name'] + ': ' + ord_det['fields']['project_pi_email']
-
-        if row.key[0] in ['review', 'ongoing', 'reception control'] and 'queued' in row.value:
+        # The status "open" is added here since this method is reused with only the statuses open/closed. 
+        if row.key[0] in ['review', 'ongoing', 'reception control', 'open'] and 'queued' in row.value:
             #Add days ongoing in production field
             now = datetime.datetime.now()
             queued = row.value['queued']
@@ -710,10 +710,10 @@ class ProjectsHandler(SafeHandler):
     URL: /projects
     """
     def get(self, projects='all'):
-    #def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, projects=projects, user=self.get_current_user()))
+        columns_json = json.dumps(columns, indent=4)
+        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, columns_json=columns_json, projects=projects, user=self.get_current_user()))
 
 
 

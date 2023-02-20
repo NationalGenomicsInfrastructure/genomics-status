@@ -54,6 +54,9 @@ class User(object):
     def is_any_admin(self):
         return self.is_admin or self.is_pricing_admin or self.is_sample_requirements_admin
 
+    @property
+    def is_proj_coord(self):
+        return 'proj_coord' in self.roles
 
 class BaseHandler(tornado.web.RequestHandler):
     """Base Handler. Handlers should not inherit from this
@@ -75,7 +78,7 @@ class BaseHandler(tornado.web.RequestHandler):
         # Disables authentication if test mode to ease integration testing
         if self.application.test_mode:
             name = 'Testing User!'
-            roles = ['admin', 'pricing_admin', 'sample_requirements_admin']
+            roles = ['admin', 'pricing_admin', 'sample_requirements_admin', 'proj_coord']
             email = 'Testing User!'
         else:
             name = str(self.get_secure_cookie("user"), 'utf-8') if self.get_secure_cookie("user") else None

@@ -655,6 +655,9 @@ class GenerateQuoteHandler(AgreementsDBHandler):
         quote_input = tornado.escape.json_decode(self.request.body.decode('utf-8').split('=')[1])
         quote_input['date'] = datetime.datetime.now().date().isoformat()
         if quote_input['type']=='save':
+            if not self.get_current_user().is_proj_coord:
+                self.set_status(401)
+                return self.write("Error: You do not have the permissions for this operation!")
             save_info = {}
             save_info['price_type'] = quote_input['price_type']
             save_info['agreement_summary'] = quote_input['agreement_summary']
@@ -667,6 +670,7 @@ class GenerateQuoteHandler(AgreementsDBHandler):
             if 'special_percentage' in quote_input:
                 save_info['special_percentage'] = quote_input['special_percentage']
             save_info['exchange_rate_issued_date'] = quote_input['exchange_rate_issued_date']
+            save_info['total_cost'] = quote_input['total_cost']
 
             proj_id = quote_input['project_data']['project_id']
             timestamp = quote_input['project_data']['agreement_number'].split('_')[1]
@@ -732,6 +736,9 @@ class AgreementMarkSignHandler(AgreementsDBHandler):
     """
     def post(self):
         post_data = tornado.escape.json_decode(self.request.body)
+        if not self.get_current_user().is_proj_coord:
+            self.set_status(401)
+            return self.write("Error: You do not have the permissions for this operation!")
         self.update_agreementdoc(post_data['proj_id'], post_data['timestamp'])
         self.set_header("Content-type", "application/json")
         self.write({'message': 'Agreement Doc updated'})
