@@ -44,7 +44,7 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, \
     ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
-    ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler, \
+    ProjMetaCompareHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler, \
     ImagesDownloadHandler, PrioProjectsTableHandler
 from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler, \
@@ -148,7 +148,6 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
-            ("/api/v1/internal_costs/([^/]*)", ProjectInternalCostsHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/libpooling_queues", LibraryPoolingQueuesDataHandler),
