@@ -45,7 +45,8 @@ function get_note_url() {
     return note_url;
 }
 
-function make_running_note(date, note){
+function make_running_note(date, note, sticky){
+  sticky = typeof sticky !== "undefined" ? sticky : false;
   try {
     var category = '';
     var note_id = '';
@@ -85,7 +86,11 @@ function make_running_note(date, note){
   if (note['category'].includes('Important')) {
     panelClass = 'card-important';
   }
-  return '<div class="card mb-2 mx-2">' +
+  var margin_if_not_sticky = "";
+  if(!sticky){
+    margin_if_not_sticky = "mx-2"
+  }
+  return '<div class="card mb-2 '+margin_if_not_sticky+'">' +
       '<div class="card-header '+panelClass+'" id="'+note_id+'">'+
         '<a class="text-decoration-none" href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
        '<a class="text-decoration-none" href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="card-body trunc-note">'+noteText+'</div></div>';
