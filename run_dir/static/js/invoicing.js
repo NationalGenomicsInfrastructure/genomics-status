@@ -6,6 +6,7 @@ Powers /invoicing - template is run_dir/design/invoicing.html
 
 $(document).ready(function() {
     // Load the data
+    document.title = 'Invoicing : Genomics Status';
     load_invoicing_table();
 });
 
@@ -18,7 +19,26 @@ function load_invoicing_table() {
       let tbl_row = $('<tr>')
       let checkbox_col = '<input class="form-check-input invoice_checkbox align-middle" type="checkbox" value="'+key+'" id="sel_invoices_'+key+'">'
       tbl_row.append($('<td class="mw-5 text-center">').html(checkbox_col))
-      let project_row = '<a class="text-decoration-none" href="/project/'+key+'">'+key+'</a>'
+      let badge_colour;
+      switch (value['project_status']) {
+        case 'Aborted':
+          badge_colour = 'bg-danger';
+          break;
+        case 'Closed':
+          badge_colour = 'bg-success';
+          break;
+        case 'Reception Control':
+          badge_colour = 'bg-secondary';
+          break;
+        case 'Ongoing':
+        case 'Pending':
+          badge_colour = 'bg-info';
+          break;
+        default:
+          badge_colour = 'bg-info';
+      }
+      let project_row = '<a class="text-decoration-none" href="/project/'+key+'">'+key+'('+value['project_name']+') '
+      +'<span class="badge '+badge_colour+'">'+value['project_status']+'</span></a>'
       project_row += '<button type="button" id='+key+' class="btn btn-sm btn-outline-dark view_invoice_btn float-right px-3" data-toggle="modal" data-target="#displayInvoiceModal">View</button>'
       tbl_row.append($('<td>').html(project_row))
       let date = new Date(parseInt(value['invoice_spec_generated']))

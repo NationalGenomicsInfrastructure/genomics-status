@@ -206,7 +206,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         proj_specs['summary'] = markdown.markdown(invoiced_agreement['agreement_summary'], extensions=['sane_lists'])
         proj_specs['comment'] = "Finished according to contract" #Customise?
         proj_specs['total_cost'] = "{:.2f}".format(invoiced_agreement['total_cost'])
-        proj_specs['close_date'] = proj_doc['close_date']
+        proj_specs['close_date'] = proj_doc.get('close_date', '-')
 
         return account_dets, contact_dets, proj_specs
 
