@@ -177,7 +177,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                     row.value['contact'] = ord_det['fields']['project_lab_name'] + ': ' + ord_det['fields']['project_lab_email']
                 elif row.value['contact']  == ord_det['fields']['project_pi_email']:
                     row.value['contact'] = ord_det['fields']['project_pi_name'] + ': ' + ord_det['fields']['project_pi_email']
-        # The status "open" is added here since this method is reused with only the statuses open/closed. 
+        # The status "open" is added here since this method is reused with only the statuses open/closed.
         if row.key[0] in ['review', 'ongoing', 'reception control', 'open'] and 'queued' in row.value:
             #Add days ongoing in production field
             now = datetime.datetime.now()
@@ -767,6 +767,8 @@ class RunningNotesDataHandler(SafeHandler):
         project_name = doc['project_name']
         proj_ids = [project, project_name]
         doc['details']['running_notes'] = json.dumps(running_notes)
+        if 'Sticky' in category:
+            doc['details']['latest_sticky_note'] = json.dumps({timestamp: newNote})
         application.projects_db.save(doc)
 
         #check if it was saved
@@ -1040,31 +1042,6 @@ class ProjectRNAMetaDataHandler(SafeHandler):
         self.set_status(200)
         self.set_header("Content-type", "application/json")
         self.write(data)
-
-
-class ProjectInternalCostsHandler(SafeHandler):
-    """Handler for the update of the project internal costs"""
-    def post(self, project_id):
-        try:
-            data = json.loads(self.request.body)
-            text = data.get('text', '')
-            p = Project(lims, id=project_id)
-            p.udf['Internal Costs'] = text
-            p.put()
-            view = self.application.projects_db.view("project/project_id")
-            for row in view[project_id]:
-                doc=self.application.projects_db.get(row.id)
-                doc['details']['internal_costs']=text
-                self.application.projects_db.save(doc)
-
-
-        except Exception as e:
-            self.set_status(400)
-            self.finish('<html><body><p>could not update Entity {} :</p><pre>{}</pre></body></html>'.format( project_id, e))
-        else:
-            self.set_status(200)
-            self.set_header("Content-type", "application/json")
-            self.write(self.request.body)
 
 
 class PrioProjectsTableHandler(SafeHandler):
