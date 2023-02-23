@@ -78,11 +78,26 @@
       </dl>
       <h4>Cost Calculation</h4>
       <dl class="dl-horizontal-invoicing">
-        <dt class="mb-2 pb-2">Total cost</dt>
+      {% for category in proj_specs['price_breakup'] %}
+        <dt class="fw-normal">{{ category }}</dt>
+          <dd> {{ proj_specs['price_breakup'][category] }} SEK</dd>
+      {% end %}
+      {%if 'special_addition' in proj_specs %}
+        {%for label in proj_specs['special_addition'] %}
+        <dt class="fw-normal">{{ proj_specs['special_addition'][label]['name'] }}</dt>
+          <dd> {{ proj_specs['special_addition'][label]['value'] }} SEK</dd>
+        {% end %}
+      {% end %}
+      {%if 'special_percentage' in proj_specs %}
+        <dt class="fw-normal">{{ proj_specs['special_percentage']['name'] }}</dt>
+          <dd> -{{ proj_specs['special_percentage']['value'] }} %</dd>
+      {% end %}
+        <hr>
         <!-- The following <p> is to make sure the cost shows up on Mac preview. It has a strange error not displaying
         the last visible element, hence this workaround-->
-          <dd class="mb-2 pb-2"> {{ proj_specs['total_cost'] }} </dd>
-          <p class="text-white p-0 m-0">End of Invoice</p>
+        <dt>Total cost</dt>
+        <dd class="mb-2 pb-2"> {{ proj_specs['total_cost'] }} SEK</dd>
+        <p class="text-white p-0 m-0">End of Invoice</p>
       </dl>
   </body>
 </html>

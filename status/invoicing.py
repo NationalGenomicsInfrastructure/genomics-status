@@ -206,6 +206,11 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         proj_specs['summary'] = markdown.markdown(invoiced_agreement['agreement_summary'], extensions=['sane_lists'])
         # TODO: Comment will be added in the future
         #proj_specs['comment'] = "Finished according to contract" #Customise?
+        proj_specs['price_breakup'] = invoiced_agreement['price_breakup']
+        if 'special_addition' in invoiced_agreement:
+            proj_specs['special_addition'] =  invoiced_agreement['special_addition']
+        if 'special_percentage' in invoiced_agreement:
+            proj_specs['special_percentage'] = invoiced_agreement['special_percentage']
         proj_specs['total_cost'] = "{:.2f}".format(invoiced_agreement['total_cost'])
         proj_specs['close_date'] = proj_doc.get('close_date', '-')
         proj_specs['invoice_created_by'] = agreement_doc["invoice_spec_generated_by"]

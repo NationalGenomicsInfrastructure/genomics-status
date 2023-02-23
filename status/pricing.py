@@ -701,6 +701,7 @@ class SaveQuoteHandler(AgreementsDBHandler):
             if 'special_percentage' in quote_input:
                 save_info['special_percentage'] = quote_input['special_percentage']
             save_info['exchange_rate_issued_date'] = quote_input['exchange_rate_issued_date']
+            save_info['price_breakup'] = quote_input['price_breakup']
             save_info['total_cost'] = quote_input['total_cost']
 
             proj_id = quote_input['project_data']['project_id']

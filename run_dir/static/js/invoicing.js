@@ -19,28 +19,11 @@ function load_invoicing_table() {
       let tbl_row = $('<tr>')
       let checkbox_col = '<input class="form-check-input invoice_checkbox align-middle" type="checkbox" value="'+key+'" id="sel_invoices_'+key+'">'
       tbl_row.append($('<td class="mw-5 text-center">').html(checkbox_col))
-      let badge_colour;
-      switch (value['project_status']) {
-        case 'Aborted':
-          badge_colour = 'bg-danger';
-          break;
-        case 'Closed':
-          badge_colour = 'bg-success';
-          break;
-        case 'Reception Control':
-          badge_colour = 'bg-secondary';
-          break;
-        case 'Ongoing':
-        case 'Pending':
-          badge_colour = 'bg-info';
-          break;
-        default:
-          badge_colour = 'bg-info';
-      }
+      let badge_colour = { "Aborted": "bg-danger", "Closed": "bg-success", "Reception Control": "bg-secondary", "Ongoing": "bg-info", "Pending": "bg-info"}
       let project_row = '<a class="text-decoration-none" href="/project/'+key+'">'+key+', '+value['project_name']+'</a>'
       project_row += '<button type="button" id='+key+' class="btn btn-sm btn-outline-dark view_invoice_btn float-right px-3" data-toggle="modal" data-target="#displayInvoiceModal">View</button>'
       tbl_row.append($('<td>').html(project_row))
-      tbl_row.append($('<td>').html('<span class="badge '+badge_colour+'">'+value['project_status']+'</span>'));
+      tbl_row.append($('<td>').html('<span class="badge '+badge_colour[value['project_status']]+'">'+value['project_status']+'</span>'));
       let date = new Date(parseInt(value['invoice_spec_generated']))
       tbl_row.append($('<td>').html(date.toISOString().slice(0,10) + ', ' + date.toISOString().slice(11,19)));
       $("#invoicing_table_body").append(tbl_row)
