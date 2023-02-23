@@ -121,7 +121,7 @@ def make_barcode(label, print_bc):
             ch_size = '10' # squeezes the text for long texts
             xpositionText = '440' # moves the text position because the bc is longer
             textHeight = '38'
-        formattedLabel.append('^FO{0},27^AFN,{1},{2}^FN1^FS'.format(xpositionText, textHight, ch_size)) # AF = assign font F, field number 1 (FN1), print text at position field origin (FO) rel. to home
+        formattedLabel.append('^FO{0},27^AFN,{1},{2}^FN1^FS'.format(xpositionText, textHeight, ch_size)) # AF = assign font F, field number 1 (FN1), print text at position field origin (FO) rel. to home
         formattedLabel.append('^FO80,17^BCN,70,N,N^FN2^FS') # BC=barcode 128, field number 2, normal orientation, height 70, no interpretation line.
     else:
         ch_size = '40'
