@@ -25,7 +25,7 @@ class BarcodeHandler(SafeHandler):
             - number of projects
         Separate labels will be printed for the range between plate number start and plate
         number end. Further, if more than one project is to be printed, the project number
-        increases by one and the choses plate numbers will be printed for the additional
+        increases by one and the chosen plate numbers will be printed for the additional
         projects
     """
     def get(self):
@@ -49,7 +49,10 @@ class BarcodeHandler(SafeHandler):
                         print_barcode(linesToPrint)
                 else: # file submitted is a text file
                     for line in linesToPrint.splitlines(): # split into the different lines of the text file
-                        createdLabel = make_barcode(line, match_barcode(line, False))
+                        if self.get_argument('print_with_barcode', '') : # is true when barcode box is ticked
+                            createdLabel = make_barcode(line, match_barcode(line, True))
+                        else:
+                            createdLabel = make_barcode(line, match_barcode(line, False))
                         createdLabel_joined = '\n'.join(createdLabel)
                         for _ in range(copies): # loops over copies to print
                             print_barcode(createdLabel_joined)
@@ -112,21 +115,23 @@ def make_barcode(label, print_bc):
     formattedLabel.append('^LH0,0') # label home position (label home = LH)
     if print_bc:
         ch_size = '20'
-        xpositionText = '360'
+        xpositionText = '360' 
+        textHeight = '50'
         if len(label) > 9:
             ch_size = '10' # squeezes the text for long texts
             xpositionText = '440' # moves the text position because the bc is longer
-        formattedLabel.append('^FO{0},35^AFN,60,{1}^FN1^FS'.format(xpositionText, ch_size)) # AF = assign font F, field number 1 (FN1), print text at position field origin (FO) rel. to home
-        formattedLabel.append('^FO80,35^BCN,70,N,N^FN2^FS') # BC=barcode 128, field number 2, normal orientation, height 70, no interpretation line.
+            textHeight = '38'
+        formattedLabel.append('^FO{0},27^AFN,{1},{2}^FN1^FS'.format(xpositionText, textHeight, ch_size)) # AF = assign font F, field number 1 (FN1), print text at position field origin (FO) rel. to home
+        formattedLabel.append('^FO80,17^BCN,70,N,N^FN2^FS') # BC=barcode 128, field number 2, normal orientation, height 70, no interpretation line.
     else:
         ch_size = '40'
-        yposition = '42'
+        yposition = '35'
         if len(label) > 32:
             ch_size = '24'
-            yposition = '50'
+            yposition = '40'
         elif len(label) < 20:
             ch_size = '50'
-            yposition = '35'
+            yposition = '30'
         # Scalable font ^A0N,32,32 should fit roughly 42 chars on our current labels
         formattedLabel.append('^FO20,{0}^A0N,{1},{1}^FB640,1,0,C,0^FN1^FS'.format(yposition, ch_size)) # FO = x,y relative field origin; A0N = scalable font height,width; FB = make into one line field block and center
     formattedLabel.append('^XZ') # end format
