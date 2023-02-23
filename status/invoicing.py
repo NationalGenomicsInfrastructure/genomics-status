@@ -204,9 +204,11 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         proj_specs['invoice_created'] = datetime.datetime.fromtimestamp(agreement_doc['invoice_spec_generated_at']/1000.0).strftime("%Y-%m-%d")
         proj_specs['contract_name'] =f'{proj_id}_{agreement_doc["invoice_spec_generated_for"]}'
         proj_specs['summary'] = markdown.markdown(invoiced_agreement['agreement_summary'], extensions=['sane_lists'])
-        proj_specs['comment'] = "Finished according to contract" #Customise?
+        # TODO: Comment will be added in the future
+        #proj_specs['comment'] = "Finished according to contract" #Customise?
         proj_specs['total_cost'] = "{:.2f}".format(invoiced_agreement['total_cost'])
         proj_specs['close_date'] = proj_doc.get('close_date', '-')
+        proj_specs['invoice_created_by'] = agreement_doc["invoice_spec_generated_by"]
 
         return account_dets, contact_dets, proj_specs
 

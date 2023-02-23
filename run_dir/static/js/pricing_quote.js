@@ -146,6 +146,9 @@ app.component('v-pricing-quote', {
               .get('/api/v1/get_agreement_doc/'+proj_id)
               .then(response => {
                   this.saved_agreement_data = response.data
+                  if(Object.keys(this.saved_agreement_data).includes('signed')){
+                    this.load_saved_agreement(this.saved_agreement_data['signed'])
+                  }
               })
               .catch(error => {
                   this.$root.error_messages.push('Unable to fetch agreement data, please try again or contact a system administrator.')
@@ -162,7 +165,7 @@ app.component('v-pricing-quote', {
           let date = new Date(parseInt(timestamp))
           return date.toDateString() + ', ' + date.toLocaleTimeString(date)
         },
-        load_saved_agreement(){
+        load_saved_agreement(signed_timestamp){
           //Reset fields
           this.applProj = false
           this.noQCProj = false
@@ -172,7 +175,7 @@ app.component('v-pricing-quote', {
           this.$root.quote_special_percentage_label = ''
 
           var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
-          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : ""
+          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : (signed_timestamp ? signed_timestamp : "")
           if(timestamp_val!==""){
             var sel_data = this.saved_agreement_data['saved_agreements'][timestamp_val]
             this.$root.price_type = sel_data['price_type']
@@ -196,8 +199,9 @@ app.component('v-pricing-quote', {
             this.add_to_md_text()
             this.$root.quote_prod_ids = sel_data['products_included']
             this.$root.fetchExchangeRates(sel_data['exchange_rate_issued_date'])
-            this.loaded_version = 'Version: '+query_timestamp_radio.labels[0].innerText.split('\n')[0] + ' \n' +
-                                  'Agreement_number: '+this.proj_data['project_id']+'_'+query_timestamp_radio.labels[0].attributes['for'].textContent
+            this.loaded_version = 'Version: '+ this.timestamp_to_date(this.saved_agreement_data['signed_at']) + ', ' +
+                                    this.saved_agreement_data['signed_by'] + ' \n' +
+                                    'Agreement_number: '+this.proj_data['project_id']+'_'+timestamp_val
           }
         },
         mark_agreement_signed(){
@@ -453,7 +457,7 @@ app.component('v-pricing-quote', {
                 <div class="col ml-2">
                   <template v-for="(agreement, timestamp) in this.saved_agreement_data['saved_agreements']" :key="timestamp">
                         <div class="form-check m-2">
-                          <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp">
+                          <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp" :checked="this.saved_agreement_data['signed']===timestamp">
                           <label class="form-check-label" :for="timestamp">
                           {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}}
                           <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger fs-6">

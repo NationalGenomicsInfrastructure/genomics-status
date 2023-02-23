@@ -15,9 +15,9 @@
     <div class="invoice-title-img">
       <img class="align-middle float-right" title="National Genomics Infrastructure" src="static/img/NGI-final.png" style="object-fit:contain; width:195px; height:57px;" >
     </div>
-      <h2> NGI invoice reference
+      <h2> NGI invoice specification
       </h2>
-      <div style="0.95em;"> Created on {{ proj_specs['invoice_created'] }} </div>
+      <div style="0.95em;"> Created on {{ proj_specs['invoice_created'] }} by {{ proj_specs['invoice_created_by'] }}</div>
       <hr class="mt-1">
       <h3 class="pt-3">Account</h3>
       <hr class="mb-1">
@@ -72,8 +72,9 @@
           <dd> {{ proj_specs['contract_name'] }}
         <dt>Contract summary</dt>
           <dd> {% raw proj_specs['summary']%}</dd>
-        <dt>Comment</dt>
-          <dd> {{ proj_specs['comment'] }}</dd>
+        <!-- TODO: Future enhancement -->
+        <!-- <dt>Comment</dt>
+          <dd>  proj_specs['comment'] </dd> -->
       </dl>
       <h4>Cost Calculation</h4>
       <dl class="dl-horizontal-invoicing">
