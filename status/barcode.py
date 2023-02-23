@@ -116,7 +116,7 @@ def make_barcode(label, print_bc):
     if print_bc:
         ch_size = '20'
         xpositionText = '360' 
-        textHight = '50'
+        textHeight = '50'
         if len(label) > 9:
             ch_size = '10' # squeezes the text for long texts
             xpositionText = '440' # moves the text position because the bc is longer
