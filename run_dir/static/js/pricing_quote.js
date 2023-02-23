@@ -173,8 +173,21 @@ app.component('v-pricing-quote', {
           this.active_cost_labels = {}
           this.$root.quote_special_percentage_value = 0.0
           this.$root.quote_special_percentage_label = ''
-
+          var timestamp_val = ""
+          var loaded_version = ""
           var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
+          if (query_timestamp_radio){
+            timestamp_val = query_timestamp_radio.value
+            loaded_version = query_timestamp_radio.labels[0].innerText.split('\n')[0]
+          }
+          else if(signed_timestamp){
+            timestamp_val = signed_timestamp
+            loaded_version = this.timestamp_to_date(this.saved_agreement_data['signed_at']) + ', ' + this.saved_agreement_data['signed_by']
+          }
+          else{
+            alert("No agreement selected")
+            return false
+          }
           var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : (signed_timestamp ? signed_timestamp : "")
           if(timestamp_val!==""){
             var sel_data = this.saved_agreement_data['saved_agreements'][timestamp_val]
@@ -199,8 +212,7 @@ app.component('v-pricing-quote', {
             this.add_to_md_text()
             this.$root.quote_prod_ids = sel_data['products_included']
             this.$root.fetchExchangeRates(sel_data['exchange_rate_issued_date'])
-            this.loaded_version = 'Version: '+ this.timestamp_to_date(this.saved_agreement_data['signed_at']) + ', ' +
-                                    this.saved_agreement_data['signed_by'] + ' \n' +
+            this.loaded_version = 'Version: '+ loaded_version + ' \n' +
                                     'Agreement_number: '+this.proj_data['project_id']+'_'+timestamp_val
           }
         },
@@ -266,22 +278,34 @@ app.component('v-pricing-quote', {
         add_to_md_text: function(){
           this.md_message = this.compiledMarkdown
         },
-        submit_quote_form: function(agreement_data){
-          /* Submitting it in a form to get the generated quote doc to open in a new page/tab */
-          var newForm = $('<form>', {
-            'action': '/generate_quote',
-            'target': '_blank',
-            'method': 'post',
-            'enctype':'text/plain',
-            'id': 'my_form'
-          }).append($('<input>', {
-                'name': 'data',
-                'value': JSON.stringify(agreement_data),
-                'type': 'hidden'
-              }))
-          newForm.hide()
-          newForm.appendTo("body")
-          newForm.submit()
+        submit_quote_form: function(agreement_data, type){
+          if(type!=='save'){
+            /* Submitting it in a form to get the generated quote doc to open in a new page/tab */
+            var newForm = $('<form>', {
+              'action': '/generate_quote',
+              'target': '_blank',
+              'method': 'post',
+              'enctype':'text/plain',
+              'id': 'my_form'
+            }).append($('<input>', {
+                  'name': 'data',
+                  'value': JSON.stringify(agreement_data),
+                  'type': 'hidden'
+                }))
+            newForm.hide()
+            newForm.appendTo("body")
+            newForm.submit()
+          }
+          else{
+            axios.post('/api/v1/save_quote', {
+                data: agreement_data,
+            }).then(response => {
+                alert(response['data']['message'])
+            })
+            .catch(error => {
+                this.$root.error_messages.push('Unable to save agreement, please try again or contact a system administrator.')
+            })
+          }
         },
         generate_quote:  function (type) {
           agreement_data = {}
@@ -324,14 +348,22 @@ app.component('v-pricing-quote', {
           agreement_data['template_text'] = this.template_text_data
           agreement_data['origin'] = this.origin
           if(this.origin === 'Agreement'){
-            timestamp = Date.now()
+            let timestamp = Date.now()
+            if(type === 'display'){
+              let query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
+              if(!query_timestamp_radio){
+                alert("No agreement selected")
+                return false
+              }
+              timestamp = query_timestamp_radio.value
+            }
             this.proj_data['agreement_number'] = this.proj_data['project_id'] + '_'+ timestamp
             agreement_data['project_data'] = this.proj_data
             agreement_data['project_data']['user_and_affiliation'] = this.proj_data['pi_name']+ ' / ' + this.proj_data['affiliation']
             agreement_data['products_included'] = this.$root.quote_prod_ids
           }
           agreement_data['exchange_rate_issued_date'] = this.$root.exch_rate_issued_at
-          this.submit_quote_form(agreement_data)
+          this.submit_quote_form(agreement_data, type)
           if(type === 'save'){
             setTimeout(()=>{
               this.get_saved_agreement_data(this.proj_data['project_id']) },1000)
@@ -468,7 +500,8 @@ app.component('v-pricing-quote', {
                         </div>
                   </template>
                   <div class="align-self-center">
-                    <button class="btn btn-primary m-1" @click="load_saved_agreement">Load</button>
+                    <button class="btn btn-primary m-1" @click="load_saved_agreement()">Load</button>
+                    <button v-if="this.has_admin_control" class="btn btn-secondary m-1" type="submit" v-on:click="generate_quote('display')" :disabled="this.invoice_downloaded" id="generate_quote_btn">Display Agreement</button>
                     <button v-if="this.has_admin_control" class="btn btn-danger m-1" @click="mark_agreement_signed" :disabled="this.invoice_downloaded"> Mark Signed</button>
                     <button v-if="this.has_admin_control" class="btn btn-success m-1" @click="generate_invoice_spec" :disabled="this.invoice_downloaded">Generate Invoice specification</button>
                   </div>
@@ -532,11 +565,11 @@ app.component('v-pricing-quote', {
                 </template>
               </div>
               <div class="row row-cols-lg-auto my-3 justify-content-end">
-                <div class="col-1">
+                <div class="col-1 pr-0">
                   <button type="submit" class="btn btn-secondary" id="generate_quote_btn" v-on:click="generate_quote('preview')">Generate {{ this.origin }} Preview</button>
                 </div>
                 <div class="col-1 pr-0" v-if="this.has_admin_control">
-                  <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote('save')" :disabled="this.invoice_downloaded"> Save and Generate {{ this.origin }}</button>
+                  <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote('save')" :disabled="this.invoice_downloaded"> Save Agreement</button>
                 </div>
               </div>
             </div>
