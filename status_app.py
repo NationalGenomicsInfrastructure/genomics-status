@@ -46,7 +46,6 @@ from status.projects import CaliperImageHandler, CharonProjectHandler, \
     ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
     ProjMetaCompareHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler, \
     ImagesDownloadHandler, PrioProjectsTableHandler
-from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler, \
     WorksetQueuesHandler, WorksetQueuesDataHandler, LibraryPoolingQueuesHandler, LibraryPoolingQueuesDataHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
@@ -214,7 +213,6 @@ class Application(tornado.web.Application):
             ("/invoicing", InvoicingPageHandler),
             ("/libpooling_queues", LibraryPoolingQueuesHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
-            ("/nas_quotas", NASQuotasHandler),
             ("/pools_qpcr", qPCRPoolsHandler),
             ("/pricing_preview", PricingPreviewHandler),
             ("/pricing_quote", PricingQuoteHandler),
@@ -375,7 +373,6 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/invoicing.html")
             tornado.autoreload.watch("design/barcode.html")
             tornado.autoreload.watch("design/link_tab.html")
-            tornado.autoreload.watch("design/nas_quotas.html")
             tornado.autoreload.watch("design/qpcr_pools.html")
             tornado.autoreload.watch("design/pricing_products.html")
             tornado.autoreload.watch("design/pricing_quote.html")
