@@ -91,6 +91,9 @@ class Application(tornado.web.Application):
             self.gs_globals['git_commit_full'] = 'unknown'
 
         self.gs_globals['font_awesome_url'] = settings.get('font_awesome_url', None)
+        self.gs_globals['prod'] = True
+        if 'dev' in settings.get('couch_server'):
+            self.gs_globals['prod'] = False
 
         handlers = [
             # The tuples are on the form ("URI regex", "Backend request handler")
