@@ -15,7 +15,8 @@ app.component('v-pricing-quote', {
         applProj: false,
         noQCProj: false,
         saved_agreement_data: {},
-        loaded_version: ''
+        loaded_version_desc: '',
+        loaded_timestamp: ''
       }
     },
     computed: {
@@ -188,8 +189,8 @@ app.component('v-pricing-quote', {
             alert("No agreement selected")
             return false
           }
-          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : (signed_timestamp ? signed_timestamp : "")
           if(timestamp_val!==""){
+            this.loaded_timestamp = timestamp_val
             var sel_data = this.saved_agreement_data['saved_agreements'][timestamp_val]
             this.$root.price_type = sel_data['price_type']
             if('special_addition' in sel_data){
@@ -212,7 +213,7 @@ app.component('v-pricing-quote', {
             this.add_to_md_text()
             this.$root.quote_prod_ids = sel_data['products_included']
             this.$root.fetchExchangeRates(sel_data['exchange_rate_issued_date'])
-            this.loaded_version = 'Version: '+ loaded_version + ' \n' +
+            this.loaded_version_desc = 'Version: '+ loaded_version + ' \n' +
                                     'Agreement_number: '+this.proj_data['project_id']+'_'+timestamp_val
           }
         },
@@ -367,7 +368,7 @@ app.component('v-pricing-quote', {
           if(type === 'save'){
             setTimeout(()=>{
               this.get_saved_agreement_data(this.proj_data['project_id']) },1000)
-              this.loaded_version =  ''
+              this.loaded_version_desc =  ''
           }
         }
     },
@@ -491,7 +492,7 @@ app.component('v-pricing-quote', {
                         <div class="form-check m-2">
                           <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp" :checked="this.saved_agreement_data['signed']===timestamp">
                           <label class="form-check-label" :for="timestamp">
-                          {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}}
+                          <div v-bind:class="{ 'fw-bold' : timestamp === this.loaded_timestamp}"> {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}} </div>
                           <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger fs-6">
                           <i class="far fa-file-signature fa-lg"></i>  Marked Signed {{ this.saved_agreement_data['signed_by'] }}, {{ timestamp_to_date(this.saved_agreement_data['signed_at']) }}</p>
                           <p v-if="this.saved_agreement_data['invoice_spec_generated_for']===timestamp" aria-hidden="true" class="m-2 text-success fs-6">
@@ -512,8 +513,8 @@ app.component('v-pricing-quote', {
                   <h4>Preview</h4>
                 </div>
                 <div class="card-body mx-2">
-                  <div class="pb-2 text-muted" style="white-space: pre;"> 
-                    {{ this.loaded_version }} 
+                  <div class="pb-2 text-muted" style="white-space: pre;">
+                    {{ this.loaded_version_desc }}
                   </div>
                   <div class="md_display_box bg-white border" v-html="md_message"></div>
                   <template v-if="this.any_quote">
@@ -544,7 +545,7 @@ app.component('v-pricing-quote', {
                           <template v-if="any_special_percentage">
                             <li class="row mt-4 mb-1 align-items-center">
                               <span class="col-1 pr-0 text-right">
-                                <a href='#' @click="reset_special_percentage" @click.prevent="activeNews(1)">  
+                                <a href='#' @click="reset_special_percentage" @click.prevent="activeNews(1)">
                                   <i class="far fa-times-square fa-lg text-danger"></i>
                                 </a>
                               </span>
@@ -578,7 +579,7 @@ app.component('v-pricing-quote', {
                       </div>
                     </div>
                   </template>
-                </div>                 
+                </div>
               </div>
               <div class="row row-cols-lg-auto my-3 justify-content-end">
                 <div class="col-1 pr-0">
