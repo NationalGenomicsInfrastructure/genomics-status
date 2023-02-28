@@ -16,7 +16,9 @@ app.component('v-pricing-quote', {
         noQCProj: false,
         saved_agreement_data: {},
         loaded_version_desc: '',
-        loaded_timestamp: ''
+        loaded_timestamp: '',
+        //added because the id wasn't displayed properly in loaded_version_desc otherwise
+        proj_id: ''
       }
     },
     computed: {
@@ -125,6 +127,7 @@ app.component('v-pricing-quote', {
                     this.proj_data['pi_name'] = pi_name.split(':')[0]
                     this.proj_data['affiliation'] = pdata['affiliation']
                     this.proj_data['project_id'] = proj_id
+                    this.proj_id = proj_id
                     if('invoice_spec_downloaded' in pdata){
                       this.proj_data['invoice_downloaded'] = pdata['invoice_spec_downloaded']
                     }
@@ -214,7 +217,7 @@ app.component('v-pricing-quote', {
             this.$root.quote_prod_ids = sel_data['products_included']
             this.$root.fetchExchangeRates(sel_data['exchange_rate_issued_date'])
             this.loaded_version_desc = 'Version: '+ loaded_version + ' \n' +
-                                    'Agreement_number: '+this.proj_data['project_id']+'_'+timestamp_val
+                                    'Agreement_number: '+this.proj_id+'_'+timestamp_val
           }
         },
         mark_agreement_signed(){
