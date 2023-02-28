@@ -77,27 +77,40 @@
           <dd>  proj_specs['comment'] </dd> -->
       </dl>
       <h4>Cost Calculation</h4>
-      <dl class="dl-horizontal-invoicing">
-      {% for category in proj_specs['price_breakup'] %}
-        <dt class="fw-normal">{{ category }}</dt>
-          <dd> {{ proj_specs['price_breakup'][category] }} SEK</dd>
-      {% end %}
-      {%if 'special_addition' in proj_specs %}
-        {%for label in proj_specs['special_addition'] %}
-        <dt class="fw-normal">{{ proj_specs['special_addition'][label]['name'] }}</dt>
-          <dd> {{ proj_specs['special_addition'][label]['value'] }} SEK</dd>
-        {% end %}
-      {% end %}
-      {%if 'special_percentage' in proj_specs %}
-        <dt class="fw-normal">{{ proj_specs['special_percentage']['name'] }}</dt>
-          <dd> -{{ proj_specs['special_percentage']['value'] }} %</dd>
-      {% end %}
-        <hr>
-        <!-- The following <p> is to make sure the cost shows up on Mac preview. It has a strange error not displaying
-        the last visible element, hence this workaround-->
-        <dt>Total cost</dt>
-        <dd class="mb-2 pb-2"> {{ proj_specs['total_cost'] }} SEK</dd>
-        <p class="text-white p-0 m-0">End of Invoice</p>
-      </dl>
+      <div class="row">
+        <div class="col-6">
+          <table class="table table-invoice-pricing">
+            <tbody>
+              {% for category in proj_specs['price_breakup'] %}
+              <tr>
+                <td>{{ category }}</td>
+                <td class="text-right">{{ proj_specs['price_breakup'][category] }} SEK</td>
+              </tr>
+              {% end %}
+              {%if 'special_addition' in proj_specs %}
+                {%for label in proj_specs['special_addition'] %}
+                  <tr>
+                    <td>{{ proj_specs['special_addition'][label]['name'] }}</td>
+                    <td class="text-right">{{ proj_specs['special_addition'][label]['value'] }} SEK</td>
+                  </tr>
+                {% end %}
+              {% end %}
+              {%if 'special_percentage' in proj_specs %}
+                <tr>
+                  <td>{{ proj_specs['special_percentage']['name'] }}</td>
+                  <td class="text-right">-{{ proj_specs['special_percentage']['value'] }} %</td>
+                </tr>
+              {% end %}
+              <tr class="border-top">
+                <td class="fw-bold pt-2 mt-2">Total cost</td>
+                <td class="text-right pt-2 mt-2">{{ proj_specs['total_cost'] }} SEK</td>
+              </tr>
+            </tbody>
+          </table>
+          <!-- The following <p> is to make sure the cost shows up on Mac preview. It has a strange error not displaying
+          the last visible element, hence this workaround-->
+          <p class="text-white p-0 m-0">End of Invoice</p>
+        </div>
+      </div>
   </body>
 </html>

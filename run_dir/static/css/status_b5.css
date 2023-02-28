@@ -1175,3 +1175,10 @@ thead th.sort::before{
   margin-left: 180px;
   margin-bottom: 0px;
 }
+
+.table-invoice-pricing tr td {
+  border: none;
+  border-bottom-width: 0px!important;
+  padding: 1px;
+  margin: 1px;
+}
