@@ -387,7 +387,7 @@ app.component('v-pricing-quote', {
             <v-pricing-error-display/>
           </template>
           <div class="row">
-            <div class="col-5 quote_lcol_header">
+            <div class="col-5 status_limit_width_large">
               <div class="fw-bold py-3">
                 Using cost calculator version {{ this.$root.published_cost_calculator["Version"] }} (published {{ new Date(this.$root.published_cost_calculator["Issued at"]).toLocaleString() }})
               </div>
@@ -445,7 +445,7 @@ app.component('v-pricing-quote', {
               <div class="row" v-for="(label, index) in this.$root.quote_special_additions" :key="index" :id="'cLabelRow_'+index">
                 <div class="col-2">
                   <label :for="'cost_label_val_'+ index" class="form-label">Cost </label>
-                  <input :id="'cost_label_val'+ index" class="form-control" v-model.number="label.value" type="number" >
+                  <input :id="'cost_label_val'+ index" class="form-control" v-model.number="label.value" type="number">
                 </div>
                 <div class="col-10">
                   <label :for="'cost_label_'+ index" class="form-label">Label</label>
@@ -483,7 +483,7 @@ app.component('v-pricing-quote', {
                 </template>
               </div>
             </div>
-            <div class="col-5 offset-1">
+            <div class="col-5 offset-1 status_limit_width_large">
               <div class="row" v-if="this.saved_agreement_data['saved_agreements']">
                 <h4 v-if="this.saved_agreement_data">Generated Agreements</h4>
                 <div class="col ml-2">
@@ -502,80 +502,96 @@ app.component('v-pricing-quote', {
                   <div class="align-self-center">
                     <button class="btn btn-primary m-1" @click="load_saved_agreement()">Load</button>
                     <button v-if="this.has_admin_control" class="btn btn-secondary m-1" type="submit" v-on:click="generate_quote('display')" :disabled="this.invoice_downloaded" id="generate_quote_btn">Display Agreement</button>
-                    <button v-if="this.has_admin_control" class="btn btn-danger m-1" @click="mark_agreement_signed" :disabled="this.invoice_downloaded"> Mark Signed</button>
-                    <button v-if="this.has_admin_control" class="btn btn-success m-1" @click="generate_invoice_spec" :disabled="this.invoice_downloaded">Generate Invoice specification</button>
+                    <button v-if="this.has_admin_control" class="btn btn-danger m-1" @click="mark_agreement_signed" :disabled="this.invoice_downloaded"><i class="far fa-file-signature fa-lg"></i> Mark Signed</button>
+                    <button v-if="this.has_admin_control" class="btn btn-success m-1" @click="generate_invoice_spec" :disabled="this.invoice_downloaded"><i class="far fa-file-invoice fa-lg"></i> Generate Invoice specification</button>
                   </div>
                 </div>
               </div>
-              <div class="row agreement_preview_style mt-5">
-                <h4>Preview</h4>
-                <div class="pb-2 text-muted" style="white-space: pre;"> {{ this.loaded_version }} </div>
-                <div class="md_display_box bg-white border" v-html="md_message"></div>
-                <template v-if="this.any_quote">
-                  <div class="row py-2" id="current_quote">
-                    <div class="col quote_lcol_header">
-                      <h4>Added Products</h4>
-                      <div id='product_warnings'></div>
-                      <ul class="list-unstyled quote-product-list">
-                        <div class="pl-1 bg-white">
+              <div class="card mt-5">
+                <div class="card-header">
+                  <h4>Preview</h4>
+                </div>
+                <div class="card-body mx-2">
+                  <div class="pb-2 text-muted" style="white-space: pre;"> 
+                    {{ this.loaded_version }} 
+                  </div>
+                  <div class="md_display_box bg-white border" v-html="md_message"></div>
+                  <template v-if="this.any_quote">
+                    <div class="pt-4" id="current_quote">
+                      <div class="col ">
+                        <h4>Added Products</h4>
+                        <div id='product_warnings'></div>
+                        <ul class="list-unstyled quote-product-list">
                           <span class="help-block">
                             To use fractions of units, please use full stop and not decimal comma.
                           </span>
                           <template v-for="(prod_count, prod_id) in this.$root.quote_prod_ids" :key="prod_id">
                             <v-quote-list-product :product_id="prod_id" :product_count="prod_count"/>
                           </template>
-                        </div>
-                        <template v-if="any_special_addition">
-                          <li class="my-1 row d-flex align-items-center" v-for="(label, index) in this.active_cost_labels" :key="index" >
-                            <span class="col-7 offset-2 text-muted">
-                              <a class="mr-2" href='#' @click="remove_cost_label(index)" @click.prevent="activeNews(1)"><i class="far fa-times-square fa-lg text-danger"></i></a>
-                              {{ label.name }}
-                            </span>
-                            <span class="col-3 text-center">{{ label.value }} SEK</span>
-                          </li>
-                        </template>
-                        <template v-if="any_special_percentage">
-                          <li class="my-1 row d-flex align-items-center">
-                            <span class="col-7 offset-2 text-muted">
-                              <a class="mr-2" href='#' @click="reset_special_percentage" @click.prevent="activeNews(1)"><i class="far fa-times-square fa-lg text-danger"></i></a>
-                              Discount: {{this.$root.quote_special_percentage_label}}
-                            </span>
-                            <span class="col-3 text-center">- {{this.$root.quote_special_percentage_value}} %</span>
-                          </li>
-                        </template>
-                        <li class="row border-top border-dark border-2 mr-2">
-                          <div class="col-7 offset-2 pt-2 fw-bold">
-                            TOTAL
-                            <template v-if="this.$root.price_type == 'cost_academic'">
-                            (Swedish academia)
-                            </template>
-                            <template v-if="this.$root.price_type == 'full_cost'">
-                            (Industry and non-Swedish academia)
-                            </template>
-                            <template v-if="this.$root.price_type == 'cost'">
-                            (Internal projects)
-                            </template>
+                          <template v-if="any_special_addition">
+                            <li class="row my-2 align-items-center" v-for="(label, index) in this.active_cost_labels" :key="index" >
+                              <span class="col-1 pr-0 text-right">
+                                <a href='#' @click="remove_cost_label(index)" @click.prevent="activeNews(1)">
+                                  <i class="far fa-times-square fa-lg text-danger"></i>
+                                </a>
+                              </span>
+                              <span class="col-6 offset-2">
+                                {{ label.name }}
+                              </span>
+                              <span class="col-3 text-right font-monospace">{{ label.value.toFixed(2) }} SEK</span>
+                            </li>
+                          </template>
+                          <template v-if="any_special_percentage">
+                            <li class="row mt-4 mb-1 align-items-center">
+                              <span class="col-1 pr-0 text-right">
+                                <a href='#' @click="reset_special_percentage" @click.prevent="activeNews(1)">  
+                                  <i class="far fa-times-square fa-lg text-danger"></i>
+                                </a>
+                              </span>
+                              <span class="col-6 offset-2">
+                                Discount: {{this.$root.quote_special_percentage_label}}
+                              </span>
+                              <span class="col-3 text-right font-monospace">- {{this.$root.quote_special_percentage_value}} %</span>
+                            </li>
+                          </template>
+                          <div class="row border-top border-2 ml-3">
+                            <!-- Empty border div so that we can use margin on it -->
                           </div>
-                          <p class="text-right col-3 pt-2 fw-bold pr-0">{{quote_cost[this.$root.price_type]}} SEK </p>
-                        </li>
-                      </ul>
-
+                          <li class="row">
+                            <div class="col-6 offset-3 pt-2 fw-bold">
+                              TOTAL
+                              <template v-if="this.$root.price_type == 'cost_academic'">
+                              (Swedish academia)
+                              </template>
+                              <template v-if="this.$root.price_type == 'full_cost'">
+                              (Industry and non-Swedish academia)
+                              </template>
+                              <template v-if="this.$root.price_type == 'cost'">
+                              (Internal projects)
+                              </template>
+                            </div>
+                            <p class="text-right col-3 pt-2 fw-bold font-monospace">
+                              {{quote_cost[this.$root.price_type]}} SEK
+                            </p>
+                          </li>
+                        </ul>
+                      </div>
                     </div>
-                  </div>
-                </template>
+                  </template>
+                </div>                 
               </div>
               <div class="row row-cols-lg-auto my-3 justify-content-end">
                 <div class="col-1 pr-0">
                   <button type="submit" class="btn btn-secondary" id="generate_quote_btn" v-on:click="generate_quote('preview')">Generate {{ this.origin }} Preview</button>
                 </div>
-                <div class="col-1 pr-0" v-if="this.has_admin_control">
+                <div class="col-1" v-if="this.has_admin_control">
                   <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote('save')" :disabled="this.invoice_downloaded"> Save Agreement</button>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="products_chooseable_div">
+          <div class="products_chooseable_div mt-4">
             <div class="row" id="table_h_and_search">
               <h2 class="col mr-auto">Available Products</h2>
             </div>
@@ -610,15 +626,15 @@ app.component('v-quote-list-product', {
         }
     },
     template: /*html*/`
-      <li class="my-1 py-1 row d-flex align-items-center">
-        <div class="col-auto  pr-0">
+      <li class="row my-1 py-0 align-items-center">
+        <div class="col-1 pr-0 text-right">
           <a href='#' @click="remove_from_quote" @click.prevent="activeNews(1)"><i class="far fa-times-square fa-lg text-danger"></i></a>
         </div>
         <div class="col-2">
-          <input class="form-control" v-model="this.$root.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']" type=number>
+          <input class="form-control py-1" v-model="this.$root.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']" type=number>
         </div>
-        <span class="col-7 quote_product_name">{{product.Name}}</span>
-        <span class="col-auto">{{cost}} SEK</span>
+        <span class="col-6 quote_product_name">{{product.Name}}</span>
+        <span class="col-3 text-right font-monospace">{{cost}} SEK</span>
       </li>
     `
 })
