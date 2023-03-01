@@ -23,7 +23,7 @@ function load_invoicing_table() {
       let project_row = '<a class="text-decoration-none" href="/project/'+key+'">'+key+', '+value['project_name']+'</a>'
       project_row += '<button type="button" id='+key+' class="btn btn-sm btn-outline-dark view_invoice_btn float-right px-3" data-toggle="modal" data-target="#displayInvoiceModal">View</button>'
       tbl_row.append($('<td>').html(project_row))
-      tbl_row.append($('<td>').html('<span class="badge '+badge_colour[value['project_status']]+'">'+value['project_status']+'</span>'));
+      tbl_row.append($('<td>').html('<h4 class="mb-0"><span class="badge '+badge_colour[value['project_status']]+'">'+value['project_status']+'</span></h4>'));
       let date = new Date(parseInt(value['invoice_spec_generated']))
       tbl_row.append($('<td>').html(date.toISOString().slice(0,10) + ', ' + date.toISOString().slice(11,19)));
       $("#invoicing_table_body").append(tbl_row)
