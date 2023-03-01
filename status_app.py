@@ -37,7 +37,7 @@ from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRates
     PricingQuoteHandler, PricingValidateDraftDataHandler, PricingPublishDataHandler, \
     PricingReassignLockDataHandler, PricingUpdateHandler, PricingPreviewHandler, \
     PricingDataHandler, PricingDraftDataHandler, GenerateQuoteHandler, AgreementTemplateTextHandler, \
-    AgreementDataHandler, AgreementMarkSignHandler
+    AgreementDataHandler, AgreementMarkSignHandler, SaveQuoteHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProductionCronjobsHandler
 from status.projects import CaliperImageHandler, CharonProjectHandler, \
@@ -178,6 +178,7 @@ class Application(tornado.web.Application):
             ("/api/v1/sample_requirements_publish_draft", SampleRequirementsPublishDataHandler),
             ("/api/v1/sample_requirements_validate_draft", SampleRequirementsValidateDraftDataHandler),
             ("/api/v1/sample_requirements_reassign_lock", SampleRequirementsReassignLockDataHandler),
+            ("/api/v1/save_quote", SaveQuoteHandler),
             ("/api/v1/sequencing_queues", SequencingQueuesDataHandler),
             ("/api/v1/sensorpush", SensorpushDataHandler),
             ("/api/v1/stats",StatsAggregationHandler),

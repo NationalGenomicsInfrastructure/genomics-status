@@ -98,7 +98,7 @@ input.quantity_updateable {
     width: 40px;
 }
 
-.quote_lcol_header {
+.status_limit_width_large {
     max-width: 800px;
 }
 
@@ -1174,4 +1174,11 @@ thead th.sort::before{
 .dl-horizontal-invoicing > dd{
   margin-left: 180px;
   margin-bottom: 0px;
+}
+
+.table-invoice-pricing tr td {
+  border: none;
+  border-bottom-width: 0px!important;
+  padding: 1px;
+  margin: 1px;
 }
