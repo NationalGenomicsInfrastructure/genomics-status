@@ -70,6 +70,9 @@ app.component('v-pricing-quote', {
             }
 
             if (this.any_special_percentage) {
+                cost_sum_discount = cost_sum * this.$root.quote_special_percentage_value/100
+                cost_academic_sum_discount = cost_academic_sum * this.$root.quote_special_percentage_value/100
+                full_cost_sum_discount = full_cost_sum * this.$root.quote_special_percentage_value/100
                 cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
                 cost_academic_sum *= (100 - this.$root.quote_special_percentage_value)/100
                 full_cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
@@ -77,7 +80,11 @@ app.component('v-pricing-quote', {
 
             return {'cost': cost_sum.toFixed(2),
                     'cost_academic': cost_academic_sum.toFixed(2),
-                    'full_cost': full_cost_sum.toFixed(2)}
+                    'full_cost': full_cost_sum.toFixed(2),
+                    'cost_discount': cost_sum_discount.toFixed(2),
+                    'cost_academic_discount': cost_academic_sum_discount.toFixed(2),
+                    'full_cost_discount': full_cost_sum_discount.toFixed(2)
+                  }
         },
         compiledMarkdown() {
           msg_display = this.md_src_message
@@ -331,6 +338,7 @@ app.component('v-pricing-quote', {
           agreement_data['price_breakup'] = product_list
           agreement_data['total_products_cost'] = Math.round(this.product_cost_sum[this.$root.price_type])
           agreement_data['total_cost'] = Math.round(this.quote_cost[this.$root.price_type])
+          agreement_data['total_cost_discount'] = Math.round(this.quote_cost[this.$root.price_type+'_discount'])
           agreement_data['price_type'] = this.$root.price_type
           if (this.any_special_addition){
             agreement_data['special_addition'] =  this.active_cost_labels
@@ -553,9 +561,9 @@ app.component('v-pricing-quote', {
                                 </a>
                               </span>
                               <span class="col-6 offset-2">
-                                Discount: {{this.$root.quote_special_percentage_label}}
+                                Discount: {{ this.$root.quote_special_percentage_label }}(-{{ this.$root.quote_special_percentage_value }}%)
                               </span>
-                              <span class="col-3 text-right font-monospace">- {{this.$root.quote_special_percentage_value}} %</span>
+                              <span class="col-3 text-right font-monospace">- {{ quote_cost[this.$root.price_type+"_discount"] }} SEK</span>
                             </li>
                           </template>
                           <div class="row border-top border-2 ml-3">

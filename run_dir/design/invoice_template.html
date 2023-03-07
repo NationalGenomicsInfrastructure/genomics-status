@@ -97,8 +97,8 @@
               {% end %}
               {%if 'special_percentage' in proj_specs %}
                 <tr>
-                  <td>{{ proj_specs['special_percentage']['name'] }}</td>
-                  <td class="text-right">-{{ proj_specs['special_percentage']['value'] }} %</td>
+                  <td>{{ proj_specs['special_percentage']['name'] }} (-{{ proj_specs['special_percentage']['value'] }}%)</td>
+                  <td class="text-right">- {{proj_specs['total_cost_discount']}} SEK</td>
                 </tr>
               {% end %}
               <tr class="border-top">
