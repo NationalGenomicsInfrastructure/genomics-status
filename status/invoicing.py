@@ -212,6 +212,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         if 'special_percentage' in invoiced_agreement:
             proj_specs['special_percentage'] = invoiced_agreement['special_percentage']
         proj_specs['total_cost'] = invoiced_agreement['total_cost']
+        proj_specs['total_cost_discount'] = invoiced_agreement['total_cost_discount']
         proj_specs['close_date'] = proj_doc.get('close_date', '-')
         proj_specs['invoice_created_by'] = agreement_doc["invoice_spec_generated_by"]
 

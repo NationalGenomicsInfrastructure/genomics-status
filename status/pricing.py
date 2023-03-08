@@ -703,6 +703,7 @@ class SaveQuoteHandler(AgreementsDBHandler):
             save_info['exchange_rate_issued_date'] = quote_input['exchange_rate_issued_date']
             save_info['price_breakup'] = quote_input['price_breakup']
             save_info['total_cost'] = quote_input['total_cost']
+            save_info['total_cost_discount'] = quote_input['total_cost_discount']
 
             proj_id = quote_input['project_data']['project_id']
             timestamp = quote_input['project_data']['agreement_number'].split('_')[1]
