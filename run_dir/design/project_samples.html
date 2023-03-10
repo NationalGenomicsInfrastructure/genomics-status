@@ -124,7 +124,23 @@ Description: Details page for a single project
     <li class="nav-item"><a class="nav-link" href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
     <li class="nav-item"><a class="nav-link" href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
     <li class="nav-item"><a class="nav-link" href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
-    <li class="nav-item"><a class="nav-link" {% if not multiqc %} disabled data-toggle="tooltip" data-html="true" data-placement="bottom" title="No MultiQC report available"{% else %} href="/multiqc_report/{{ project }}" {% end %} target="_blank" type="submit" class="btn">Open MultiQC report</a></li>
+    {% if not multiqc %}
+    <li class="nav-item" data-toggle="tooltip" data-html="true" data-placement="bottom" title="No MultiQC report available" ><a class="nav-link disabled">Open MultiQC reports</a></li>
+    {% else %}
+     <li class="nav-item dropdown">
+       <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Open MultiQC reports</a>
+       <div class="dropdown-menu">
+         {% for key in multiqc %}
+          {% if 'qc' in key %}
+            {% set rep_name = ' QC' %}
+          {% else %}
+            {% set rep_name = ' '+key.strip('_').capitalize() %}
+          {% end %}
+         <a class="dropdown-item" href="/multiqc_report/{{ project }}?type={{ key }}" target="_blank">Open{{ rep_name }} MultiQC report</a>
+         {% end %}
+       </div>
+     </li>
+    {% end %}
     <li class="nav-item"><a class="nav-link" href="/bioinfo/{{ project }}" target="_blank">Open bioinfo tab</a></li>
     <li class="nav-item"><a class="nav-link" href="#tab_agreements_content" role="tab" data-toggle="tab" id="tab_agreements">Agreements</a></li>
   </ul>

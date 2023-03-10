@@ -691,7 +691,7 @@ class ProjectSamplesHandler(SafeHandler):
         t = self.application.loader.load("project_samples.html")
         worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
         # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
-        multiqc = self.get_multiqc(project) or ''
+        multiqc = list(self.get_multiqc(project).keys())
         self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
                               user=self.get_current_user(),
                               columns = self.application.genstat_defaults.get('pv_columns'),

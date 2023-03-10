@@ -138,20 +138,22 @@ class BaseHandler(tornado.web.RequestHandler):
         view = self.application.projects_db.view('project/id_name_dates')
         rows = view[project_id].rows
         project_name = ''
+        multiqc_reports = {}
         # get only the first one
         for row in rows:
             project_name = row.value.get('project_name', '')
             break
 
         if project_name:
-            multiqc_name = '{}_multiqc_report.html'.format(project_name)
             multiqc_path = self.application.multiqc_path or ''
-            multiqc_path = os.path.join(multiqc_path, multiqc_name)
-            if os.path.exists(multiqc_path):
-                with open(multiqc_path, 'r', encoding='utf-8') as multiqc_file:
-                    html = multiqc_file.read()
-                    return html
-        return None
+            for type in ['_', '_qc_', '_pipeline_']:
+                multiqc_name = '{}{}multiqc_report.html'.format(project_name, type)
+                multiqc_file_path = os.path.join(multiqc_path, multiqc_name)
+                if os.path.exists(multiqc_file_path):
+                    with open(multiqc_file_path, 'r', encoding='utf-8') as multiqc_file:
+                        html = multiqc_file.read()
+                        multiqc_reports[type] = html
+        return multiqc_reports
 
 
 class SafeHandler(BaseHandler):
