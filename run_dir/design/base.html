@@ -45,64 +45,62 @@
           <li class="nav-item dropdown px-1">
             <a class="nav-link dropdown-toggle" id="nav_production_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Production</a>
             <div class="dropdown-menu" aria-labelledby="nav_production_dropdown">
-              <h6 class="dropdown-header">General stats</h6>
-              <a class="dropdown-item" href="/applications">Application Counts</a>
-              <a class="dropdown-item" href="/production/cronjobs">Cronjobs List</a>
-              <a class="dropdown-item" href="/flowcells_plot">Flowcells Trends</a>
-              <a class="dropdown-item" href="/data_delivered_plot">Data Delivered Trends</a>
-              <a class="dropdown-item" href="https://ngi-dashboards.scilifelab.se/dbe/">External Dashboard</a>
+              <h6 class="dropdown-header">Lists</h6>
+              <a class="dropdown-item" href="/deliveries">Deliveries</a>
+              <a class="dropdown-item" href="/flowcells">Flowcells</a>
+              <a class="dropdown-item" href="/projects">Projects</a>
+              <a class="dropdown-item" href="/worksets">Worksets</a>
               <div role="separator" class="dropdown-divider"></div>
-              <h6 class="dropdown-header">Tools</h6>
-              <a class="dropdown-item" href="/sensorpush">Sensorpush</a>
-              <a class="dropdown-item" href="/proj_meta">Compare Project Meta</a>
-              <a class="dropdown-item" href="/instrument_logs">View Instrument Logs</a>
+              <h6 class="dropdown-header">Queues</h6>
+              <a class="dropdown-item" href="/libpooling_queues">Library Pooling</a>
+              <a class="dropdown-item" href="/workset_queues">Pending for Workset</a>
+              <a class="dropdown-item" href="/pools_qpcr">qPCR</a>
+              <a class="dropdown-item" href="/sequencing_queues">Sequencing</a>
+            </div>
+          </li>
+          <li class="nav-item dropdown px-1">
+            <a class="nav-link dropdown-toggle" id="nav_tools_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Tools</a>
+            <div class="dropdown-menu" aria-labelledby="nav_tools_dropdown" role="menu">
               <a class="dropdown-item" href="/barcode">Barcode and Label printing</a>
+              <a class="dropdown-item" href="/proj_meta">Compare Project Meta</a>
               <a class="dropdown-item" href="/pricing_quote">Cost Calculator</a>
+              <a class="dropdown-item" href="/production/cronjobs">Cronjobs List</a>
+              <a class="dropdown-item" href="/instrument_logs">Instrument Logs</a>
               <a class="dropdown-item" href="/sample_requirements">Sample Requirements</a>
-              <a class="dropdown-item" href="https://genomics-plates.scilifelab.se/index.php">Plate Juggler</a>
-              {% if user and user.is_any_admin %}
-                <div role="separator" class="dropdown-divider"></div>
-                <h6 class="dropdown-header">Admin</h6>
-                {% if user and user.is_admin %}
-                <a class="dropdown-item" href="/user_management">User Management</a>
-                {% end %}
-              {% end %}
               <div role="separator" class="dropdown-divider"></div>
+              <h6 class="dropdown-header">External</h6>
+              <a class="dropdown-item" href="https://ngi-tower.scilifelab.se/orgs/NGI/workspaces/NGI-Stockholm/launchpad" target="_blank">Nextflow NGI Tower</a>
+              <a class="dropdown-item" href="https://genomics-plates.scilifelab.se/index.php">Plate Juggler</a>
               <a class="dropdown-item" href="http://lims-dashboard.scilifelab.se" target="_blank">Script Dashboard</a>
             </div>
           </li>
-          <li class="nav-item px-1"><a class="nav-link" href="/projects">Projects</a></li>
-          <li class="nav-item px-1"><a class="nav-link" href="/flowcells">Flowcells</a></li>
-          <li class="nav-item px-1"><a class="nav-link" href="/worksets">Worksets</a></li>
           <li class="nav-item dropdown px-1">
-            <a class="nav-link dropdown-toggle" id="nav_queues_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Queues</a>
-            <div class="dropdown-menu" aria-labelledby="nav_queues_dropdown" role="menu">
-              <a class="dropdown-item" href="/workset_queues">Pending for Workset queues</a>
-              <a class="dropdown-item" href="/pools_qpcr">qPCR</a>
-              <a class="dropdown-item" href="/sequencing_queues">Sequencing queues</a>
-              <a class="dropdown-item" href="/libpooling_queues">Library Pooling queues</a>
+            <a class="nav-link dropdown-toggle" id="nav_stats_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Statistics</a>
+            <div class="dropdown-menu" aria-labelledby="nav_stats_dropdown" role="menu">
+              <a class="dropdown-item" href="/applications">Application Counts</a>
+              <a class="dropdown-item" href="/data_delivered_plot">Data Delivered Trends</a>
+              <a class="dropdown-item" href="https://ngi-dashboards.scilifelab.se/dbe/">External Dashboard</a>
+              <a class="dropdown-item" href="/flowcells_plot">Flowcells Trends</a>
+              <a class="dropdown-item" href="/sensorpush">Sensorpush</a>
             </div>
           </li>
+          {% if user and user.is_any_admin %}
           <li class="nav-item dropdown px-1">
-            <a class="nav-link dropdown-toggle" id="nav_bioinfo_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Bioinfo</a>
-            <div class="dropdown-menu" aria-labelledby="nav_bioinfo_dropdown">
-               <a class="dropdown-item" href="/deliveries">Deliveries</a>
-               <a class="dropdown-item" href="https://ngi-tower.scilifelab.se/orgs/NGI/workspaces/NGI-Stockholm/launchpad" target="_blank">Nextflow NGI Tower</a>
+            <a class="nav-link dropdown-toggle" id="nav_admin_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Admin</a>
+            <div class="dropdown-menu" aria-labelledby="nav_admin_dropdown">
+              {% if user and user.is_sample_requirements_admin %}
+                <a class="dropdown-item" href="/sample_requirements_preview">Edit Sample Requirements</a>
+              {% end %}
+              {% if user and user.is_proj_coord %}
+                <a class="dropdown-item" href="/invoicing">Invoicing</a>
+              {% end %}
+              {% if user and user.is_pricing_admin %}
+                <a class="dropdown-item" href="/pricing_preview">New Cost Calculator</a>
+              {% end %}
+              {% if user and user.is_admin %}
+                <a class="dropdown-item" href="/user_management">User Management</a>
+              {% end %}
             </div>
-          </li>
-          {% if user and user.is_proj_coord %}
-          <li class="nav-item dropdown px-1">
-            <a class="nav-link dropdown-toggle" id="nav_pcAdmin_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">PC Admin</a>
-            <div class="dropdown-menu" aria-labelledby="nav_pcAdmin_dropdown">
-               <a class="dropdown-item" href="/invoicing">Invoicing</a>
-               {% if user and user.is_pricing_admin %}
-               <a class="dropdown-item" href="/pricing_preview">New Cost Calculator</a>
-               {% end %}
-               {% if user and user.is_sample_requirements_admin %}
-               <a class="dropdown-item" href="/sample_requirements_preview">Edit Sample Requirements</a>
-               {% end %}
-            </div>
-          </li>
           {% end %}
           <li class="nav-item px-1"><a class="nav-link" href="/suggestion_box">Suggestion Box</a></li>
           {% if user %}
