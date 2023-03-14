@@ -81,3 +81,114 @@ function plot_chart(title, plot_data, limit_lower, limit_upper, min_temp, max_te
         ]
     });
 };
+
+
+function plot_sum_data(){
+    $.getJSON("/api/v1/sensorpush", {'start_days_ago': 1}, function(data) {
+        var frig_series = [];
+        var freez_series = [];
+        $.each(data, function(id, sensordata){
+            var timedata = sensordata.samples;
+            var sensname = sensordata.sensor_name;
+            for (i in timedata) {
+            timedata[i][0] = Date.parse(timedata[i][0]);
+            }
+            var dp_var = {
+                name: sensname,
+                data: timedata,
+                lineWidth: 1
+            };
+            if (sensname.startsWith('F') || sensname == 'TestF35' || sensname == 'K06 A3590'){
+            freez_series.push(dp_var);
+            }
+            else if (sensname.startsWith('K') || sensname == 'Test F36'){
+            frig_series.push(dp_var);
+            }
+        });
+
+        $('#fridge_sum_plot').highcharts({
+            chart: {
+                zoomType: 'x',
+                backgroundColor: null
+            },
+            title: {
+                text: 'All refrigerators'
+            },
+            xAxis: {
+                title: { text: 'Date' },
+                type: 'datetime'
+            },
+            yAxis: {
+                title: { text: 'Temperature (C) of refrigerators' },
+                tooltip: {
+                    pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
+                },
+                plotBands: [{
+                color: '#fdffd4',
+                from: 6,
+                width: 10,
+                to: 0
+                }]
+            },
+            legend: {
+                title: {
+                    text: 'Click to hide:',
+                    align: 'center'
+                }
+            },
+            series: frig_series,
+            plotOptions: {
+            series: {
+                marker: {
+                    enabledThreshold: 10
+                }
+            }
+            }
+        });
+
+        $('#freezer_sum_plot').highcharts({
+            chart: {
+                zoomType: 'x',
+                backgroundColor: null
+            },
+            title: {
+                text: 'All freezers'
+            },
+            xAxis: {
+                title: { text: 'Date' },
+                type: 'datetime'
+            },
+            yAxis: {
+                title: { text: 'Temperature (C) of freezers' },
+                tooltip: {
+                    pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
+                },
+                plotBands: [{
+                color: '#fdffd4',
+                from: -10, 
+                width: 10, 
+                to: -33
+                }]
+            },
+            legend: {
+                title: {
+                    text: 'Click to hide:',
+                    align: 'center'
+                }
+            },
+            series: freez_series,
+            plotOptions: {
+            series: {
+                marker: {
+                    enabledThreshold: 10
+                }
+            }
+            }
+        });
+
+        $('#loading_spinner').hide(function(){
+            $('#fridge_sum_plot').show();
+            $('#freezer_sum_plot').show();
+        });
+    });
+};
