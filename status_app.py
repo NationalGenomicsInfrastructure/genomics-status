@@ -388,6 +388,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/rec_ctrl_view.html")
             tornado.autoreload.watch("design/running_notes_help.html")
             tornado.autoreload.watch("design/running_notes_tab.html")
+            tornado.autoreload.watch("design/sensorpush.html")
             tornado.autoreload.watch("design/suggestion_box.html")
             tornado.autoreload.watch("design/unauthorized.html")
             tornado.autoreload.watch("design/user_management.html")
