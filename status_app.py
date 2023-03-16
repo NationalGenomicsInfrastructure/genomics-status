@@ -52,7 +52,7 @@ from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.sample_requirements import SampleRequirementsViewHandler, SampleRequirementsDataHandler, SampleRequirementsUpdateHandler, \
     SampleRequirementsDraftDataHandler, SampleRequirementsValidateDraftDataHandler, SampleRequirementsPreviewHandler, SampleRequirementsReassignLockDataHandler, \
     SampleRequirementsPublishDataHandler
-from status.sensorpush import SensorpushDataHandler, SensorpushHandler
+from status.sensorpush import SensorpushDataHandler, SensorpushHandler, SensorpushWarningsDataHandler
 from status.sequencing import InstrumentClusterDensityPlotHandler, InstrumentErrorratePlotHandler, InstrumentUnmatchedPlotHandler, \
     InstrumentYieldPlotHandler, InstrumentClusterDensityDataHandler, InstrumentErrorrateDataHandler, InstrumentUnmatchedDataHandler, \
     InstrumentYieldDataHandler
@@ -181,6 +181,7 @@ class Application(tornado.web.Application):
             ("/api/v1/save_quote", SaveQuoteHandler),
             ("/api/v1/sequencing_queues", SequencingQueuesDataHandler),
             ("/api/v1/sensorpush", SensorpushDataHandler),
+            ("/api/v1/sensorpush_warnings", SensorpushWarningsDataHandler),
             ("/api/v1/stats",StatsAggregationHandler),
             ("/api/v1/stats/application_open_projects",ApplicationOpenProjectsHandler),
             ("/api/v1/stats/application_open_samples",ApplicationOpenSamplesHandler),
