@@ -4,7 +4,7 @@
 <div class="container-xxl">
   <div class="col-10 mb-5 mx-auto text-center">
     <h1 class="mt-4 display-1">Genomics Status</h1>
-    <p class="lead">Genomics status displays information on sequencing projects at the Stockholm node of National Genomics Infrastructure. <span id="updated-status"></span></p>
+    <p class="lead fs-3">Status page for the Stockholm node of National Genomics Infrastructure</p>
 
     {% if not user %}
 
@@ -13,22 +13,30 @@
     <p><a class="btn btn-primary btn-lg", href="/login">Log in</a></p>
 
     {% else %}
-    <div class="mb-4 mt-3">
+    <p class="lead" id="updated-status">
+    </p>
+    <div class="mb-5 mt-3">
       <a type="button" class="btn btn-primary btn-lg px-4 mr-3" href="/projects">Projects</a>
       <a type="button" class="btn btn-primary btn-lg px-4 mr-3" href="/flowcells">Flowcells</a>
       <a type="button" class="btn btn-primary btn-lg px-4 mr-3" href="/worksets">Worksets</a>
       <a type="button" class="btn btn-primary btn-lg px-4" href="/deliveries">Deliveries</a>
     </div>
-    <div class="alert alert-info">
-      <p class="mb-0" style="text-align:center;">Want to see something different here? Let us know on the
-        <a class="text-decoration-none" href="/suggestion_box">suggestions page</a>!
+    <div class="col-4 mx-auto">
+      <p class="lead fs-4">
+        <a class="text-decoration-none link-dark" href="/sensorpush">
+        <i class="fa-solid fa-temperature-snow mr-2"></i>
+        <span class="fw-bold">
+          Freezers are <span class="">OK!</span></a></span>
       </p>
     </div>
+    <p class="lead fs-3 mt-5">Want to see something different here? Let us know on the
+      <a class="text-decoration-none" href="/suggestion_box">suggestions page</a>
+    </p>
 
   </div>
 
   <div class="row pt-5">
-    <div class="col-lg-8">
+    <div class="col-lg-7">
       <h3>Longest waiting projects</h3>
       <div class="scroll-body">
         <table class="table table-bordered sortable" id="prio_projs_table">
@@ -45,7 +53,7 @@
       </div>
     </div>
 
-    <div class="col-lg-4">
+    <div class="col-lg-5">
       <h3>Server Status</h3>
       <table class="table table-bordered table-disk-quotas">
         <thead>

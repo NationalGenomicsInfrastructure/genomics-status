@@ -1,5 +1,5 @@
-fill_updates_table = function(){
-    // Find out when the update scripts will next run
+fill_last_updated_text = function(){
+    // Find out when the update script last ran
     $.getJSON('/api/v1/last_psul', function(data){
         var status = data['st']
         if(data['status'] == 'Success'){
@@ -14,12 +14,13 @@ fill_updates_table = function(){
               } else if(data['seconds'] > 0){
                   timestring = data['seconds']+' seconds';
               }
-              var text = 'The script to pull information from the LIMS last ran '+timestring+' ago.';
+              var text = '<i class="fa-solid fa-arrows-rotate mr-2"></i>The script to pull information from the LIMS last ran '+timestring+' ago.';
             }
-            $('#updated-status').html(text);
         } else {
             console.log('Last PSUL update check failed. Returned "'+data['status']+'"');
+            var text='<i class="fa-solid fa-circle-exclamation mr-2"></i>Unable to fetch status of PSUL'
         }
+        $('#updated-status').html(text);
     });
 };
 
@@ -119,6 +120,6 @@ $('body').on('click', '.group', function(event) {
 });
 
 $(document).ready(function(){
-    fill_updates_table();
+    fill_last_updated_text();
     fill_prioprojs_table();
 });
