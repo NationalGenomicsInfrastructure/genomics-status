@@ -2,8 +2,8 @@
 {% block stuff %}
   <h1 id="page_title" class="mb-5">Temperature info from Sensorpush</h1>
 
-  <div class="mb-5">
-    <h2>Summary for the last 24 hours</h2>
+  <div class="mb-5 py-5 text-center">
+    <h2 class="mb-4">Summary of the last 24 hours</h2>
     <div id="loading_spinner" style="text-align:center; margin:100px 0;">
       <span class="fa fa-sync fa-spin"></span> Loading summary plots...
     </div>
@@ -20,7 +20,7 @@
       </div>
     </div>
   </div>
-  <h2>Details for each sensor from the last 4 weeks</h2>
+  <h2 class="text-center">Details for each sensor from the last 4 weeks</h2>
   <div id="plots">
     {% for sensor in sensor_data.keys() %}
     <div class="row" id='sensor_{{ sensor }}'>
