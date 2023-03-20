@@ -35,12 +35,12 @@ $(function(){
     $('#page_content').show();
 
     //API call to get table on load
-    const queryString = window.location.search;
+    const queryString = window.location.search.slice(1);
     const urlParams = new URLSearchParams(queryString);
     const allowed_presets = ['Bioinformatics', 'Lab Ongoing', 'Rec Ctrl', 'Need Review', 'Order Status']
     if (urlParams.has('load_preset') && allowed_presets.includes(urlParams.get('load_preset'))) {
       preset = urlParams.get('load_preset')
-      $("#default_preset_buttons").find('input[data-value="'+preset+'"]').parent('.btn').addClass('active');
+      $("#default_preset_buttons").find('input[data-value="'+preset+'"]').prop('checked', true);
       select_from_preset("default_preset_buttons", preset);
       setTimeout(getTableParamsandLoad,300);
     } else {

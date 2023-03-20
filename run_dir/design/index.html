@@ -16,7 +16,13 @@
     <p class="lead" id="updated-status">
     </p>
     <div class="mb-5 mt-3">
-      <a type="button" class="btn btn-primary btn-lg px-4 mr-3" href="/projects">Projects</a>
+      <a type="button" class="btn btn-primary btn-lg px-4 mr-3 dropdown-toggle" id="projects_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  href="#">Projects</a>
+        <div class="dropdown-menu" aria-labelledby="projects_dropdown">
+          <a class="dropdown-item" href="/projects?load_preset=Lab%20Ongoing">Lab Ongoing Preset</a>
+          <a class="dropdown-item" href="/projects?load_preset=Rec%20Ctrl">Rec Ctrl Preset</a>
+          <a class="dropdown-item" href="/projects?load_preset=Bioinformatics">Bioinformatics Preset</a>
+          <a class="dropdown-item" href="/projects?load_preset=Need%20Review">Need Review Preset</a>
+        </div>
       <a type="button" class="btn btn-primary btn-lg px-4 mr-3" href="/flowcells">Flowcells</a>
       <a type="button" class="btn btn-primary btn-lg px-4 mr-3" href="/worksets">Worksets</a>
       <a type="button" class="btn btn-primary btn-lg px-4" href="/deliveries">Deliveries</a>
