@@ -35,12 +35,12 @@ $(function(){
     $('#page_content').show();
 
     //API call to get table on load
-    const queryString = window.location.search;
+    const queryString = window.location.search.slice(1);
     const urlParams = new URLSearchParams(queryString);
     const allowed_presets = ['Bioinformatics', 'Lab Ongoing', 'Rec Ctrl', 'Need Review', 'Order Status']
     if (urlParams.has('load_preset') && allowed_presets.includes(urlParams.get('load_preset'))) {
       preset = urlParams.get('load_preset')
-      $("#default_preset_buttons").find('input[data-value="'+preset+'"]').parent('.btn').addClass('active');
+      $("#default_preset_buttons").find('input[data-value="'+preset+'"]').prop('checked', true);
       select_from_preset("default_preset_buttons", preset);
       setTimeout(getTableParamsandLoad,300);
     } else {
@@ -591,29 +591,18 @@ function sel_from_ps(preset_type, preset, data){
   $('#default_preset_buttons button.active').removeClass('active');
   $('.filterCheckbox').prop('checked', false);
   if (preset_type == "default_preset_buttons") {
-    if(preset=='Lab Ongoing'){
       $('[name="statusOptions"').prop('checked', false)
       updateStatusBar1($('#statusOptOngoing'), 'defaultClick');
-    }
-    if(preset=='Rec Ctrl'){
-      $('[name="statusOptions"').prop('checked', false)
-      updateStatusBar1($('#statusOptRecCtrl'), 'defaultClick');
-    }
-    if(preset=='Need Review'){
-      $('[name="statusOptions"').prop('checked', false)
-      updateStatusBar1($('#statusOptNeedReview'), 'defaultClick');
-
-    }
-    var choices = data['default'][preset];
-    for (column in choices) {
-      if(column.indexOf('COLUMNS')!=-1){
-        for (choice in choices[column]) {
-          var column_id = 'allFields-'+column.toLowerCase().replace(/_/g, '-') + '-' + choice.replace(/\(|\)/g, '');
-          $("#"+column_id).prop('checked', true);
+      var choices = data['default'][preset];
+      for (column in choices) {
+        if(column.indexOf('COLUMNS')!=-1){
+          for (choice in choices[column]) {
+            var column_id = 'allFields-'+column.toLowerCase().replace(/_/g, '-') + '-' + choice.replace(/\(|\)/g, '');
+            $("#"+column_id).prop('checked', true);
+          }
         }
       }
-    }
-    resetReorderFields();
+  resetReorderFields();
   }
   else if (preset_type == "users_presets_dropdown") {
     resetReorderFields();
@@ -934,7 +923,6 @@ function get_current_selection(source){
     if($(getElem).data('displayname').indexOf("fa")>=0)
       columns[$(getElem).data('displayname')].push($(getElem).parent().text().match(/\(([^)]+)\)/)[1]);
   });
-
   return {
         status: status,
         type: type,

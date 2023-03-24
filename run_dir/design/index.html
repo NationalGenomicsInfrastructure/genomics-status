@@ -16,7 +16,20 @@
     <p class="lead" id="updated-status">
     </p>
     <div class="mb-5 mt-3">
-      <a type="button" class="btn btn-primary btn-lg px-4 mr-3" href="/projects">Projects</a>
+      <div class="btn-group" role="group">
+        <a type="button" class="btn btn-primary btn-lg" href="/projects">Projects</a>
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-primary btn-lg mr-3 dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/projects?load_preset=Lab%20Ongoing">Lab Ongoing Preset</a></li>
+            <li><a class="dropdown-item" href="/projects?load_preset=Rec%20Ctrl">Rec Ctrl Preset</a></li>
+            <li><a class="dropdown-item" href="/projects?load_preset=Bioinformatics">Bioinformatics Preset</a></li>
+            <li><a class="dropdown-item" href="/projects?load_preset=Need%20Review">Need Review Preset</a></li>
+            <li><a class="dropdown-item" href="/projects?load_preset=Order%20Status">Order Status Preset</a></li>
+          </ul>
+        </div>
+      </div>
       <a type="button" class="btn btn-primary btn-lg px-4 mr-3" href="/flowcells">Flowcells</a>
       <a type="button" class="btn btn-primary btn-lg px-4 mr-3" href="/worksets">Worksets</a>
       <a type="button" class="btn btn-primary btn-lg px-4" href="/deliveries">Deliveries</a>
