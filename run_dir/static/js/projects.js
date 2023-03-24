@@ -604,6 +604,16 @@ function sel_from_ps(preset_type, preset, data){
       updateStatusBar1($('#statusOptNeedReview'), 'defaultClick');
 
     }
+    if(preset=='Bioinformatics'){
+      $('[name="statusOptions"').prop('checked', false)
+      updateStatusBar1($('#statusOptNeedReview'), 'defaultClick');
+
+    }
+    if(preset=='Order Status'){
+      $('[name="statusOptions"').prop('checked', false)
+      updateStatusBar1($('#statusOptNeedReview'), 'defaultClick');
+
+    }
     var choices = data['default'][preset];
     for (column in choices) {
       if(column.indexOf('COLUMNS')!=-1){
@@ -934,7 +944,6 @@ function get_current_selection(source){
     if($(getElem).data('displayname').indexOf("fa")>=0)
       columns[$(getElem).data('displayname')].push($(getElem).parent().text().match(/\(([^)]+)\)/)[1]);
   });
-
   return {
         status: status,
         type: type,
