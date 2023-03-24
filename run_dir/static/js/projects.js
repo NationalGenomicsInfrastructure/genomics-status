@@ -591,18 +591,39 @@ function sel_from_ps(preset_type, preset, data){
   $('#default_preset_buttons button.active').removeClass('active');
   $('.filterCheckbox').prop('checked', false);
   if (preset_type == "default_preset_buttons") {
+    if(preset=='Lab Ongoing'){
       $('[name="statusOptions"').prop('checked', false)
       updateStatusBar1($('#statusOptOngoing'), 'defaultClick');
-      var choices = data['default'][preset];
-      for (column in choices) {
-        if(column.indexOf('COLUMNS')!=-1){
-          for (choice in choices[column]) {
-            var column_id = 'allFields-'+column.toLowerCase().replace(/_/g, '-') + '-' + choice.replace(/\(|\)/g, '');
-            $("#"+column_id).prop('checked', true);
-          }
+    }
+    if(preset=='Rec Ctrl'){
+      $('[name="statusOptions"').prop('checked', false)
+      updateStatusBar1($('#statusOptRecCtrl'), 'defaultClick');
+    }
+    if(preset=='Need Review'){
+      $('[name="statusOptions"').prop('checked', false)
+      updateStatusBar1($('#statusOptNeedReview'), 'defaultClick');
+
+    }
+    if(preset=='Bioinformatics'){
+      $('[name="statusOptions"').prop('checked', false)
+      updateStatusBar1($('#statusOptNeedReview'), 'defaultClick');
+
+    }
+    if(preset=='Order Status'){
+      $('[name="statusOptions"').prop('checked', false)
+      updateStatusBar1($('#statusOptNeedReview'), 'defaultClick');
+
+    }
+    var choices = data['default'][preset];
+    for (column in choices) {
+      if(column.indexOf('COLUMNS')!=-1){
+        for (choice in choices[column]) {
+          var column_id = 'allFields-'+column.toLowerCase().replace(/_/g, '-') + '-' + choice.replace(/\(|\)/g, '');
+          $("#"+column_id).prop('checked', true);
         }
       }
-  resetReorderFields();
+    }
+    resetReorderFields();
   }
   else if (preset_type == "users_presets_dropdown") {
     resetReorderFields();
