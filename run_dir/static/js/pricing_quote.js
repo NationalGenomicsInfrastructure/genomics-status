@@ -81,7 +81,7 @@ app.component('v-pricing-quote', {
                 cost_academic_sum *= (100 - this.$root.quote_special_percentage_value)/100
                 full_cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
             }
-            console.log(cost_sum+ cost_sum_discount)
+
             return {'cost': cost_sum.toFixed(2),
                     'cost_academic': cost_academic_sum.toFixed(2),
                     'full_cost': full_cost_sum.toFixed(2),
