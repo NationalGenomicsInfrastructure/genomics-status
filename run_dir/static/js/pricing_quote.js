@@ -59,9 +59,9 @@ app.component('v-pricing-quote', {
             cost_academic_sum = product_cost['cost_academic']
             full_cost_sum = product_cost['full_cost']
 
-            cost_sum_discount = cost_sum
-            cost_academic_sum_discount = cost_academic_sum
-            full_cost_sum_discount = full_cost_sum
+            cost_sum_discount = 0
+            cost_academic_sum_discount = 0
+            full_cost_sum_discount = 0
 
             if (this.any_special_addition) {
               for ([index, label] of Object.entries(this.active_cost_labels)){
@@ -81,7 +81,7 @@ app.component('v-pricing-quote', {
                 cost_academic_sum *= (100 - this.$root.quote_special_percentage_value)/100
                 full_cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
             }
-
+            console.log(cost_sum+ cost_sum_discount)
             return {'cost': cost_sum.toFixed(2),
                     'cost_academic': cost_academic_sum.toFixed(2),
                     'full_cost': full_cost_sum.toFixed(2),
