@@ -155,6 +155,18 @@ class BaseHandler(tornado.web.RequestHandler):
                         multiqc_reports[type] = html
         return multiqc_reports
 
+    @staticmethod
+    def get_user_details(app, user_email):
+        user_details={}
+        if user_email == 'Testing User!':
+            user_email=app.settings.get("username", None)+'@scilifelab.se'
+            user_details={'userpreset': {'Hardcoded One': {}}} # Just to show something locally
+        rows = app.gs_users_db.view('authorized/users', include_docs=True)[user_email].rows
+        if len(rows) == 1:
+            user_details=dict(rows[0].doc)
+
+        return user_details
+
 
 class SafeHandler(BaseHandler):
     """ All handlers that need authentication and authorization should inherit
@@ -217,17 +229,7 @@ class MainHandler(UnsafeHandler):
                               user=user, server_status=server_status,
                               presets=presets))
 
-    @staticmethod
-    def get_user_details(app, user_email):
-        user_details={}
-        if user_email == 'Testing User!':
-            user_email=app.settings.get("username", None)+'@scilifelab.se'
-            user_details={'userpreset': {'Hardcoded One': {}}}
-        rows = app.gs_users_db.view('authorized/users', include_docs=True)[user_email].rows
-        if len(rows) == 1:
-            user_details=dict(rows[0].doc)
 
-        return user_details
 
 def dthandler(obj):
     """ISO formatting for datetime to be used in JSON.

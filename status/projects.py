@@ -83,17 +83,6 @@ class PresetsHandler(SafeHandler):
         self.set_status(201)
         self.write({'success': 'success!!'})
 
-    @staticmethod
-    def get_user_details(app, user_email):
-        if user_email == 'Testing User!':
-            user_email=app.settings.get("username", None)+'@scilifelab.se'
-        user_details={}
-        rows = app.gs_users_db.view('authorized/users', include_docs=True)[user_email].rows
-        if len(rows) == 1:
-            user_details=dict(rows[0].doc)
-
-        return user_details
-
 class PresetsOnLoadHandler(PresetsHandler):
     """Handler to GET and POST/PUT personalized and default set of presets on loading
 
