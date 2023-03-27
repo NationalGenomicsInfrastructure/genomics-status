@@ -59,6 +59,10 @@ app.component('v-pricing-quote', {
             cost_academic_sum = product_cost['cost_academic']
             full_cost_sum = product_cost['full_cost']
 
+            cost_sum_discount = cost_sum
+            cost_academic_sum_discount = cost_academic_sum
+            full_cost_sum_discount = full_cost_sum
+
             if (this.any_special_addition) {
               for ([index, label] of Object.entries(this.active_cost_labels)){
                 if(label.value !== ''){
