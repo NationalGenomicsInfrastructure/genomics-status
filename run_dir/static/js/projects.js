@@ -79,40 +79,40 @@ $(function(){
         // Move this
         preset_button.prop('checked', true);
       }
-    })
 
 
-    if (on_load) {
-      setChangingDropdownValue($('#all_presets_dropdown'), preset_origin, preset_to_be_loaded);
-      if(preset_origin=='userdefined'){
-        $('#user_presets_dropdown').find(".btn").addClass('active');
-            setChangingDropdownValue($('#user_presets_dropdown'), preset_origin, preset_to_be_loaded);
-            $('#formDeletePresetName').val(preset_to_be_loaded);
-            appendDeleteBtn(preset_to_be_loaded);
-            select_from_preset("users_presets_dropdown", preset_to_be_loaded);
+      if (on_load) {
+        setChangingDropdownValue($('#all_presets_dropdown'), preset_origin, preset_to_be_loaded);
+        if(preset_origin=='userdefined'){
+          $('#user_presets_dropdown').find(".btn").addClass('active');
+              setChangingDropdownValue($('#user_presets_dropdown'), preset_origin, preset_to_be_loaded);
+              $('#formDeletePresetName').val(preset_to_be_loaded);
+              appendDeleteBtn(preset_to_be_loaded);
+              select_from_preset("users_presets_dropdown", preset_to_be_loaded);
+        }
+        else{
+          // Default presets
+          $('#formDeletePresetName').val('');
+          if(preset_to_be_loaded!='Choose Preset'){
+            $("#default_preset_to_be_loaded_buttons").find('input[data-value="'+preset+'"]').parent('.btn').addClass('active');
+            select_from_preset("default_preset_buttons", preset_to_be_loaded);
+          }
+          else {
+            $("#presetOpt-lab_ongoing").trigger("click");
+            select_from_preset("default_preset_buttons", 'Lab Ongoing');
+          }
+          updateStatusBar1($('#statusbtnBar1 :input[data-projects=all]'));
+        }
+        setTimeout(getTableParamsandLoad,300);
+
       }
       else{
-        // Default presets
-        $('#formDeletePresetName').val('');
-        if(preset_to_be_loaded!='Choose Preset'){
-          $("#default_preset_to_be_loaded_buttons").find('input[data-value="'+preset+'"]').parent('.btn').addClass('active');
-          select_from_preset("default_preset_buttons", preset_to_be_loaded);
-        }
-        else {
-          $("#presetOpt-lab_ongoing").trigger("click");
-          select_from_preset("default_preset_buttons", 'Lab Ongoing');
-        }
-        updateStatusBar1($('#statusbtnBar1 :input[data-projects=all]'));
+        $("#onLoadTableOff").trigger("click");
+        $("#presetOpt-lab_ongoing").trigger("click");
+        $("#statusOptAll").trigger("click");
+        select_from_preset("default_preset_buttons", 'Lab Ongoing');
       }
-      setTimeout(getTableParamsandLoad,300);
-
-    }
-    else{
-      $("#onLoadTableOff").trigger("click");
-      $("#presetOpt-lab_ongoing").trigger("click");
-      $("#statusOptAll").trigger("click");
-      select_from_preset("default_preset_buttons", 'Lab Ongoing');
-    }
+    });
   });
 
   // Prevent traditional html submit function
