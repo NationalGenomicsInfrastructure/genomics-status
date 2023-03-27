@@ -57,8 +57,7 @@ $(function(){
           else {
             $("#onLoadTableOff").trigger("click");
           }
-          preset_button = $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]')
-          preset_button.prop('checked', true);
+
 
         }
       })
@@ -78,9 +77,6 @@ $(function(){
 
         // Indicate a table will be loaded
         on_load = true
-
-        // Move this
-        preset_button.prop('checked', true);
       }
 
 
@@ -97,7 +93,7 @@ $(function(){
           // Default presets
           $('#formDeletePresetName').val('');
           if(preset_to_be_loaded!='Choose Preset'){
-            $("#default_preset_to_be_loaded_buttons").find('input[data-value="'+preset_to_be_loaded+'"]').parent('.btn').addClass('active');
+            $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]').parent('.btn').addClass('active');
             select_from_preset("default_preset_buttons", preset_to_be_loaded);
           }
           else {
