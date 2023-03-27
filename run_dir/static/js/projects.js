@@ -41,40 +41,47 @@ $(function(){
     var preset = 'Lab Ongoing';
     var preset_origin = 'default';
 
-    // Fetch user defined 'onload' preset
-    $.getJSON('/api/v1/presets/onloadcheck?action=load', function (data) {
-      if(data!=null){
-        // preset on load found
+
+    function fetch_user_onload_preset(){
+      // Fetch user defined 'onload' preset
+      $.getJSON('/api/v1/presets/onloadcheck?action=load', function (data) {
+        if(data!=null){
+          // preset on load found
+          on_load = true
+          preset_to_be_loaded = data['preset']
+          preset_origin = data['origin']
+          // Switch the settings 
+          if(data['loadtable']==true){
+            $("#onLoadTableOn").trigger("click");
+          }
+          else {
+            $("#onLoadTableOff").trigger("click");
+          }
+        }
+      })
+    }
+
+    $.when(fetch_user_onload_preset()).done(function() {
+      if (urlParams.has('load_preset')) {
+        // this takes precedence
+        preset_to_be_loaded = urlParams.get('load_preset')
+        preset_button = $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]')
+
+        if (preset_button.length > 0){
+          preset_origin = 'default'
+        } else {
+          preset_origin = 'userdefined'
+        }
+
+        // Indicate a table will be loaded
         on_load = true
-        preset_to_be_loaded = data['preset']
-        preset_origin = data['origin']
-        // Switch the settings 
-        if(data['loadtable']==true){
-          $("#onLoadTableOn").trigger("click");
-        }
-        else {
-          $("#onLoadTableOff").trigger("click");
-        }
+
+        // Move this
+        preset_button.prop('checked', true);
       }
     })
 
-    if (urlParams.has('load_preset')) {
-      // this takes precedence
-      preset_to_be_loaded = urlParams.get('load_preset')
-      preset_button = $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]')
 
-      if (preset_button.length > 0){
-        preset_origin = 'default'
-      } else {
-        preset_origin = 'userdefined'
-      }
-
-      // Indicate a table will be loaded
-      on_load = true
-
-      // Move this
-      preset_button.prop('checked', true);
-    }
     if (on_load) {
       setChangingDropdownValue($('#all_presets_dropdown'), preset_origin, preset_to_be_loaded);
       if(preset_origin=='userdefined'){
