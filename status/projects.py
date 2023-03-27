@@ -88,14 +88,10 @@ class PresetsHandler(SafeHandler):
         if user_email == 'Testing User!':
             user_email=app.settings.get("username", None)+'@scilifelab.se'
         user_details={}
-        headers = {"Accept": "application/json",
-                   "Authorization": "Basic " + "{}:{}".format(base64.b64encode(bytes(app.settings.get("username", None), 'ascii')),
-                   base64.b64encode(bytes(app.settings.get("password", None), 'ascii')))}
-        for row in app.gs_users_db.view('authorized/users'):
-            if row.get('key') == user_email:
-                user_url = "{}/gs_users/{}".format(app.settings.get("couch_server"), row.get('value'))
-                r = requests.get(user_url, headers=headers).content.rstrip()
-                user_details=json.loads(r);
+        rows = app.gs_users_db.view('authorized/users', include_docs=True)[user_email].rows
+        if len(rows) == 1:
+            user_details=dict(rows[0].doc)
+
         return user_details
 
 class PresetsOnLoadHandler(PresetsHandler):
