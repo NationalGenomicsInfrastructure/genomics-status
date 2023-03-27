@@ -37,57 +37,81 @@ $(function(){
     //API call to get table on load
     const queryString = window.location.search.slice(1);
     const urlParams = new URLSearchParams(queryString);
-    const allowed_presets = ['Bioinformatics', 'Lab Ongoing', 'Rec Ctrl', 'Need Review', 'Order Status']
-    if (urlParams.has('load_preset') && allowed_presets.includes(urlParams.get('load_preset'))) {
+    var on_load = false;
+    var preset = 'Lab Ongoing';
+    var preset_origin = 'default';
+
+    if (urlParams.has('load_preset')) {
       preset = urlParams.get('load_preset')
-      $("#default_preset_buttons").find('input[data-value="'+preset+'"]').prop('checked', true);
+      preset_button = $("#default_preset_buttons").find('input[data-value="'+preset+'"]')
+
+      if (preset_button.length > 0){
+        preset_origin = 'default'
+      } else {
+        preset_origin = 'userdefined'
+      }
+
+      // Indicate a table will be loaded
+      on_load = true
+
+      // Move this
+      preset_button.prop('checked', true);
       select_from_preset("default_preset_buttons", preset);
       setTimeout(getTableParamsandLoad,300);
     } else {
+      // Fetch user defined 'onload' preset
       $.getJSON('/api/v1/presets/onloadcheck?action=load', function (data) {
         if(data!=null){
-          setChangingDropdownValue($('#all_presets_dropdown'), data['origin'], data['preset']);
-          if(data['origin']=='userdefined'){
-            $('#user_presets_dropdown').find(".btn").addClass('active');
-            setChangingDropdownValue($('#user_presets_dropdown'), data['origin'], data['preset']);
-            $('#formDeletePresetName').val(data['preset']);
-            appendDeleteBtn(data['preset']);
-            select_from_preset("users_presets_dropdown", data['preset']);
-          }
-          else{
-            $('#formDeletePresetName').val('');
-            if(data['preset']!='Choose Preset'){
-              $("#default_preset_buttons").find('input[data-value="'+data['preset']+'"]').parent('.btn').addClass('active');
-              select_from_preset("default_preset_buttons", data['preset']);
-            }
-            else {
-              $("#presetOpt-lab_ongoing").trigger("click");
-              select_from_preset("default_preset_buttons", 'Lab Ongoing');
-            }
-            updateStatusBar1($('#statusbtnBar1 :input[data-projects=all]'));
-          }
-          if(data['loadtable']==true){
+          // preset on load found
+          on_load = true
+          preset = data['preset']
+          preset_origin = data['origin']
+        }
+      })
+    }
+    if (on_load) {
+      setChangingDropdownValue($('#all_presets_dropdown'), preset_origin, preset);
+      if(preset_origin=='userdefined'){
+        $('#user_presets_dropdown').find(".btn").addClass('active');
+            setChangingDropdownValue($('#user_presets_dropdown'), preset_origin, preset);
+            $('#formDeletePresetName').val(preset);
+            appendDeleteBtn(preset);
+            select_from_preset("users_presets_dropdown", preset);
+      }
+      else{
+        // Default presets
+        $('#formDeletePresetName').val('');
+        if(preset!='Choose Preset'){
+          $("#default_preset_buttons").find('input[data-value="'+preset+'"]').parent('.btn').addClass('active');
+          select_from_preset("default_preset_buttons", preset);
+        }
+        else {
+          $("#presetOpt-lab_ongoing").trigger("click");
+          select_from_preset("default_preset_buttons", 'Lab Ongoing');
+        }
+        updateStatusBar1($('#statusbtnBar1 :input[data-projects=all]'));
+      }
+      setTimeout(getTableParamsandLoad,300);
+        /*  if(data['loadtable']==true){
             $("#onLoadTableOn").trigger("click");
             setTimeout(getTableParamsandLoad,300);
           }
           else {
             $("#onLoadTableOff").trigger("click");
-          }
-        }
-        else{
-          $("#onLoadTableOff").trigger("click");
-          $("#presetOpt-lab_ongoing").trigger("click");
-          $("#statusOptAll").trigger("click");
-          select_from_preset("default_preset_buttons", 'Lab Ongoing');
-        }
-      })
+          } */
+    }
+    else{
+      $("#onLoadTableOff").trigger("click");
+      $("#presetOpt-lab_ongoing").trigger("click");
+      $("#statusOptAll").trigger("click");
+      select_from_preset("default_preset_buttons", 'Lab Ongoing');
     }
   });
 
   // Prevent traditional html submit function
   $('#Search-form').submit(function(event){event.preventDefault();});
 
-//Search filter for choose preset fields
+  //Search filter for choose preset fields
   $("#formSearchfields").on("keyup", function() {
     var value = $(this).val().toLowerCase();
     var arr =[];
