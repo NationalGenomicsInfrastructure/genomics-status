@@ -93,7 +93,8 @@ $(function(){
           // Default presets
           $('#formDeletePresetName').val('');
           if(preset_to_be_loaded!='Choose Preset'){
-            $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]').parent('.btn').addClass('active');
+            preset_button = $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]')
+            preset_button.prop('checked', true);
             select_from_preset("default_preset_buttons", preset_to_be_loaded);
           }
           else {
