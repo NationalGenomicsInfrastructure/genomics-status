@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+<!--
+Template file: invoicing.html
+URL: /invoicing
+Title: List projects that have had invoice specs generated but not sent and invoices sent in the last 6 months
+Description: Shows a table with projects that have had invoice specs generated but not sent and invoices sent in the last 6 months.
+-->
+
+{% block stuff %}
+
+<div class="container-xxl" id="invoicing_list">
+    <h1 class="my-4">Invoicing</h1>
+    <div class="tabbable" style="min-width:80%">
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><a class="nav-link active" href="#tab_invoice_specs" role="tab" data-toggle="tab" aria-selected="true">Generate invoices</a></li>
+        <li class="nav-item"><a class="nav-link" href="#tab_sent_invoices" role="tab" data-toggle="tab">Sent invoices in the last 6 months</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="tab_invoice_specs">
+          <h2 class="mt-3 mb-4"><span id="invoicing_tab_title">Generate invoices</span>
+            <small class="text-muted">Showing projects that have invoice specs generated but not sent</small>
+          </h2>
+          <div id="invoicing_list">
+            <div class="row mb-2 pt-3">
+              <div class="col-auto mr-0 pr-0">
+                <form id="gen_invoice_form" class="form form-search" role="form" target="_blank">
+                  <button type="submit" id="invoicing_generate_invoice_btn" class="btn btn-primary"><span class="fa fa-file-pdf"></span> Generate invoice</button>
+                </form>
+              </div>
+              <div class="col-auto pl-0 ml-1">
+                <button type="button" id="invoicing_delete_spec_btn" class="btn btn-outline-danger"><span class="fa fa-trash"></span> Delete Spec</button>
+              </div>
+            </div>
+            <table class="table table-hover table-striped table-bordered sortable" id="invoicing_table">
+              <thead>
+                <tr class="sticky darkth">
+                  <th class="mw-5 text-center">
+                      <input class="form-check-input" type="checkbox" value="" id="sel_all_invoices">
+                  </th>
+                  <th class="sort">Project</th>
+                  <th class="sort">Status</th>
+                  <th class="sort">Time of Generation</th>
+                </tr>
+              </thead>
+              <tbody id="invoicing_table_body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="tab_sent_invoices">
+          <div id="sent_invoices_table_div">
+              <h2 class="mt-3 mb-4"><span id="sent_invoices_tab_title">Sent invoices</span>
+                <small class="text-muted">Showing projects that have had invoice sent in the last 6 months</small>
+              </h2>
+              <div class="row pt-2 d-flex justify-content-center">
+                <div class="col">
+                  <table class="table table-hover table-striped table-bordered sortable" id="sent_invoices_table">
+                    <thead>
+                      <tr class="sticky darkth">
+                        <th class="sort">Project</th>
+                        <th class="sort">Date of Download</th>
+                      </tr>
+                    </thead>
+                    <tfoot>
+                      <tr class="darkth">
+                        <th class="sort">Project</th>
+                        <th class="sort">Date of Download</th>
+                      </tr>
+                    </tfoot>
+                    <tbody id="sent_invoices_table_body">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal to display invoices -->
+  <div id="displayInvoiceModal" class="modal fade">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4>Invoice</h4>
+          <button type="button" class="btn-close" data-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="view_invoice"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-sm btn-secondary" data-dismiss="modal" aria-hidden="true">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/invoicing.js?v={{ gs_globals['git_commit'] }}"></script>
+<script src="/static/js/jquery-ui.min.js"></script>
+
+{% end %}

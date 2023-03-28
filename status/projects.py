@@ -13,7 +13,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import markdown
-import slack
+import slack_sdk
 import nest_asyncio
 import itertools
 import unicodedata
@@ -167,15 +167,29 @@ class ProjectsBaseDataHandler(SafeHandler):
             except ValueError:
                 pass
 
-        if row.key[0] in ['review', 'ongoing', 'reception control'] and 'queued' in row.value:
+        ord_det = row.value.get('order_details', {})
+        #Try to fetch a name for the contact field, not just an e-mail
+        if 'contact' in row.value and row.value.get('contact', ''):
+            if 'owner' in ord_det and row.value['contact'] == ord_det['owner']['email']:
+                row.value['contact'] = ord_det['owner']['name'] + ': ' + ord_det['owner']['email']
+            elif 'fields' in ord_det:
+                if row.value['contact']  == ord_det['fields']['project_lab_email']:
+                    row.value['contact'] = ord_det['fields']['project_lab_name'] + ': ' + ord_det['fields']['project_lab_email']
+                elif row.value['contact']  == ord_det['fields']['project_pi_email']:
+                    row.value['contact'] = ord_det['fields']['project_pi_name'] + ': ' + ord_det['fields']['project_pi_email']
+        # The status "open" is added here since this method is reused with only the statuses open/closed.
+        if row.key[0] in ['review', 'ongoing', 'reception control', 'open'] and 'queued' in row.value:
             #Add days ongoing in production field
             now = datetime.datetime.now()
             queued = row.value['queued']
             diff = now - dateutil.parser.parse(queued)
             row.value['days_in_production'] = diff.days
-        elif row.key[0] in ['aborted', 'closed'] and 'close_date' and 'queued' in row.value:
+        elif row.key[0] in ['aborted', 'closed'] and 'queued' in row.value:
             #Days project was in production
-            close = dateutil.parser.parse(row.value['close_date'])
+            if 'close_date' in row.value:
+                close = dateutil.parser.parse(row.value['close_date'])
+            else:
+                close = dateutil.parser.parse(row.value['aborted'])
             diff = close - dateutil.parser.parse(row.value['queued'])
             row.value['days_in_production'] = diff.days
         if row.key[0] in ['review', 'ongoing', 'reception control'] and 'open_date' in row.value:
@@ -188,8 +202,11 @@ class ProjectsBaseDataHandler(SafeHandler):
             else:
                 row.value['days_in_reception_control'] = diff
 
-        if 'order_details' in row.value and 'fields' in row.value['order_details'] and 'project_pi_name' in row.value['order_details']['fields']:
-            row.value['project_pi_name'] = row.value['order_details']['fields']['project_pi_name']
+        if ord_det and 'fields' in ord_det and 'project_pi_name' in ord_det['fields']:
+            row.value['project_pi_name'] = ord_det['fields']['project_pi_name']
+            #if there is a PI e-mail, add it
+            if 'project_pi_email' in ord_det['fields'] and ord_det['fields'].get('project_pi_email', ''):
+                row.value['project_pi_name'] = row.value['project_pi_name'] + ': ' + ord_det['fields']['project_pi_email']
 
         return row
 
@@ -674,7 +691,7 @@ class ProjectSamplesHandler(SafeHandler):
         t = self.application.loader.load("project_samples.html")
         worksets_view = self.application.worksets_db.view("project/ws_name", descending=True)
         # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
-        multiqc = self.get_multiqc(project) or ''
+        multiqc = list(self.get_multiqc(project).keys())
         self.write(t.generate(gs_globals=self.application.gs_globals, project=project,
                               user=self.get_current_user(),
                               columns = self.application.genstat_defaults.get('pv_columns'),
@@ -693,10 +710,10 @@ class ProjectsHandler(SafeHandler):
     URL: /projects
     """
     def get(self, projects='all'):
-    #def get(self):
         t = self.application.loader.load("projects.html")
         columns = self.application.genstat_defaults.get('pv_columns')
-        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, projects=projects, user=self.get_current_user()))
+        columns_json = json.dumps(columns, indent=4)
+        self.write(t.generate(gs_globals=self.application.gs_globals, columns=columns, columns_json=columns_json, projects=projects, user=self.get_current_user()))
 
 
 
@@ -750,6 +767,8 @@ class RunningNotesDataHandler(SafeHandler):
         project_name = doc['project_name']
         proj_ids = [project, project_name]
         doc['details']['running_notes'] = json.dumps(running_notes)
+        if 'Sticky' in category:
+            doc['details']['latest_sticky_note'] = json.dumps({timestamp: newNote})
         application.projects_db.save(doc)
 
         #check if it was saved
@@ -798,7 +817,7 @@ class RunningNotesDataHandler(SafeHandler):
                 #Adding a slack IM to the tagged user with the running note
                 if option == 'Slack' or option == 'Both':
                     nest_asyncio.apply()
-                    client = slack.WebClient(token=application.slack_token)
+                    client = slack_sdk.WebClient(token=application.slack_token)
                     notification_text = '{} has {} in {}, {}!'.format(tagger, notf_text, project_id, project_name)
                     blocks = [
                         {
@@ -1023,31 +1042,6 @@ class ProjectRNAMetaDataHandler(SafeHandler):
         self.set_status(200)
         self.set_header("Content-type", "application/json")
         self.write(data)
-
-
-class ProjectInternalCostsHandler(SafeHandler):
-    """Handler for the update of the project internal costs"""
-    def post(self, project_id):
-        try:
-            data = json.loads(self.request.body)
-            text = data.get('text', '')
-            p = Project(lims, id=project_id)
-            p.udf['Internal Costs'] = text
-            p.put()
-            view = self.application.projects_db.view("project/project_id")
-            for row in view[project_id]:
-                doc=self.application.projects_db.get(row.id)
-                doc['details']['internal_costs']=text
-                self.application.projects_db.save(doc)
-
-
-        except Exception as e:
-            self.set_status(400)
-            self.finish('<html><body><p>could not update Entity {} :</p><pre>{}</pre></body></html>'.format( project_id, e))
-        else:
-            self.set_status(200)
-            self.set_header("Content-type", "application/json")
-            self.write(self.request.body)
 
 
 class PrioProjectsTableHandler(SafeHandler):

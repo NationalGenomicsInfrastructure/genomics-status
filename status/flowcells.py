@@ -4,6 +4,7 @@
 import tornado.web
 import json
 import datetime
+import pandas as pd
 from dateutil.relativedelta import relativedelta
 
 from genologics.entities import Container
@@ -12,7 +13,7 @@ from genologics.config import BASEURI, USERNAME, PASSWORD
 from collections import OrderedDict
 from status.util import SafeHandler
 from status.projects import RunningNotesDataHandler
-from status.flowcell import FlowcellHandler
+from status.flowcell import FlowcellHandler, fetch_ont_run_stats
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
@@ -76,12 +77,45 @@ class FlowcellsHandler(SafeHandler):
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
+    def list_ont_flowcells(self):
+        """ Fetch dictionary of the form {ont_run_name : ont_run_stats_dict}
+        """
+
+        view_all = self.application.nanopore_runs_db.view("info/all_stats", descending=True)
+        view_project = self.application.projects_db.view("project/id_name_dates", descending=True)
+
+        ont_flowcells = OrderedDict()
+
+        errors = []
+        for row in view_all.rows:
+            try:
+                ont_flowcells[row.key] = fetch_ont_run_stats(view_all, view_project, row.key)
+            except ValueError:
+                errors.append(row.key)
+
+        if ont_flowcells:
+            # Use Pandas dataframe for column-wise operations, every db entry becomes a row
+            df = pd.DataFrame.from_dict(ont_flowcells, orient = "index")
+
+            # Calculate ranks, to enable color coding
+            df["basecalled_pass_bases_Gbp_rank"] = (df.basecalled_pass_bases_Gbp.rank() / len(df) * 100).apply(lambda x: round(x,2))
+            df["n50_rank"] = (df.n50.rank() / len(df) * 100).apply(lambda x: round(x,2))
+            df["accuracy_rank"] = (df.accuracy.rank() / len(df) * 100).apply(lambda x: round(x,2))
+
+            # Empty values are replaced with empty strings
+            df.fillna("", inplace = True)
+
+            # Convert back to dictionary and return
+            ont_flowcells = df.to_dict(orient = "index")
+        return ont_flowcells, errors
+        
     def get(self):
         # Default is to NOT show all flowcells
-        all=self.get_argument("all", False)
+        all = self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
-        fcs=self.list_flowcells(all=all)
-        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, form_date=formatDate, all=all))
+        fcs = self.list_flowcells(all=all)
+        ont_fcs, errors = self.list_ont_flowcells()
+        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, ont_flowcells=ont_fcs, form_date=formatDate, all=all, errors=errors))
 
 
 class FlowcellsDataHandler(SafeHandler):
@@ -105,7 +139,7 @@ class FlowcellsDataHandler(SafeHandler):
             flowcells[row.key] = row.value
 
         return OrderedDict(sorted(flowcells.items()))
-
+        
 
 class FlowcellsInfoDataHandler(SafeHandler):
     """ Serves brief information about a given flowcell.
@@ -148,6 +182,7 @@ class FlowcellsInfoDataHandler(SafeHandler):
                 if view.rows:
                     return view.rows[0].value
         return flowcell_info
+
 
 class FlowcellSearchHandler(SafeHandler):
     """ Searches Flowcells for text string

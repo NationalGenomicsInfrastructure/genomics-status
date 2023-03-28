@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <link rel="stylesheet" href="static/css/custom-bootstrap-5-alpha.css" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/status_b5.css?v={{ gs_globals['git_commit'] }}" rel="stylesheet">
+    <style>
+      @page {
+          margin-top:5mm;
+      }
+    </style>
+  </head>
+
+  <body class="p-0">
+    <div class="invoice-title-img">
+      <img class="align-middle float-right" title="National Genomics Infrastructure" src="static/img/NGI-final.png" style="object-fit:contain; width:195px; height:57px;" >
+    </div>
+      <h2> NGI invoice specification
+      </h2>
+      <div style="0.95em;"> Created on {{ proj_specs['invoice_created'] }} by {{ proj_specs['invoice_created_by'] }}</div>
+      <hr class="mt-1">
+      <h3 class="pt-3">Account</h3>
+      <hr class="mb-1">
+      <dl class="dl-horizontal-invoicing p-1">
+
+        <dt>Number</dt>
+          <dd>{{ account_dets['number'] }} </dd>
+
+        <dt>Unit</dt>
+          <dd>{{ account_dets['unit'] }}</dd>
+
+        <dt>Contact</dt>
+          <dd> {{ account_dets['contact'] }}</dd>
+      </dl>
+
+      <h3 class="pt-3">Contact</h3>
+      <hr class="mb-1">
+      <h4>Contact person</h4>
+      <dl class="dl-horizontal-invoicing" >
+        <dt>Name</dt>
+          <dd>{{ contact_dets['name'] }} </dd>
+        <dt>Email</dt>
+          <dd>{{ contact_dets['email'] }}</dd>
+        <dt>Reference</dt>
+          <dd>{{ contact_dets['reference'] }} </dd>
+      </dl>
+      <h4>Billing Address</h4>
+        <dl class="dl-horizontal-invoicing">
+          <dt>Address</dt>
+            <dd>{{ contact_dets['invoice_address'] }} </dd>
+          <dt>Postal Code</dt>
+            <dd>{{ contact_dets['invoice_zip'] }}</dd>
+          <dt>City</dt>
+            <dd>{{ contact_dets['invoice_city'] }} </dd>
+          <dt>Country</dt>
+            <dd>{{ contact_dets['invoice_country'] }} </dd>
+        </dl>
+      <h3 class="pt-3">Specification</h3>
+      <hr class="mb-1">
+      <h4>Projects</h4>
+
+      <dl class="dl-horizontal-invoicing" >
+        <dt>Name</dt>
+          <dd>{{ proj_specs['id'] }}, {{ proj_specs['name'] }} ({{ proj_specs['cust_desc'] }}) </dd>
+        <dt>Close Date</dt>
+          <dd> {{ proj_specs['close_date'] }} </dd>
+      </dl>
+
+      <h4>Contracts</h4>
+      <dl class="dl-horizontal-invoicing" >
+        <dt>Contract name</dt>
+          <dd> {{ proj_specs['contract_name'] }}
+        <dt>Contract summary</dt>
+          <dd> {% raw proj_specs['summary']%}</dd>
+        <!-- TODO: Future enhancement -->
+        <!-- <dt>Comment</dt>
+          <dd>  proj_specs['comment'] </dd> -->
+      </dl>
+      <h4>Cost Calculation</h4>
+      <div class="row">
+        <div class="col-6">
+          <table class="table table-invoice-pricing">
+            <tbody>
+              {% for category in proj_specs['price_breakup'] %}
+              <tr>
+                <td>{{ category }}</td>
+                <td class="text-right">{{ proj_specs['price_breakup'][category] }} SEK</td>
+              </tr>
+              {% end %}
+              {%if 'special_addition' in proj_specs %}
+                {%for label in proj_specs['special_addition'] %}
+                  <tr>
+                    <td>{{ proj_specs['special_addition'][label]['name'] }}</td>
+                    <td class="text-right">{{ proj_specs['special_addition'][label]['value'] }} SEK</td>
+                  </tr>
+                {% end %}
+              {% end %}
+              {%if 'special_percentage' in proj_specs %}
+                <tr>
+                  <td>{{ proj_specs['special_percentage']['name'] }} (-{{ proj_specs['special_percentage']['value'] }}%)</td>
+                  <td class="text-right">- {{proj_specs['total_cost_discount']}} SEK</td>
+                </tr>
+              {% end %}
+              <tr class="border-top">
+                <td class="fw-bold pt-2 mt-2">Total cost</td>
+                <td class="text-right pt-2 mt-2">{{ proj_specs['total_cost'] }} SEK</td>
+              </tr>
+            </tbody>
+          </table>
+          <!-- The following <p> is to make sure the cost shows up on Mac preview. It has a strange error not displaying
+          the last visible element, hence this workaround-->
+          <p class="text-white p-0 m-0">End of Invoice</p>
+        </div>
+      </div>
+  </body>
+</html>

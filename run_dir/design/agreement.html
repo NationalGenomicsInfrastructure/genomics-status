@@ -4,11 +4,19 @@
   <head>
     <link rel="stylesheet" href="/static/css/custom-bootstrap-5-alpha.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/status_b5.css?v={{ gs_globals['git_commit'] }}" rel="stylesheet">
+    <title>{%if data['origin']=='Agreement' %}
+    Agreement
+    {% else %}
+    Preliminary Quote
+    {% end %} : Genomics Status
+    </title>
   </head>
 
   <body class="p-0">
     <div class="agreement-title-img">
-      <img class="align-middle" title="National Genomics Infrastructure" src="../../static/img/NGI-final.png" style="object-fit:contain;">
+      <div class="row">
+        <img class="align-middle pl-0" title="National Genomics Infrastructure" src="../../static/img/NGI-final.png" style="object-fit:contain; width:195px; height:57px;">
+      </div>
       <div class="row justify-content-md-center">
         <table class="table-bordered border-header">
           <thead>
@@ -72,8 +80,8 @@
         {% end %}
       {% end %}
       {%if 'special_percentage' in data %}
-        <dt class="fw-normal">{{ data['special_percentage']['name'] }}</dt>
-          <dd> -{{ data['special_percentage']['value'] }} %</dd>
+        <dt class="fw-normal">{{ data['special_percentage']['name'] }} (- {{ data['special_percentage']['value'] }}%) </dt>
+          <dd> - {{ data['total_cost_discount'] }} SEK</dd>
       {% end %}
         <hr>
         <dt>Total cost ({% if data['price_type']=="cost_academic" %}Swedish academia{% else %}Industry and non-Swedish academia{% end %})</dt>

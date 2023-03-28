@@ -653,24 +653,11 @@ class GenerateQuoteHandler(AgreementsDBHandler):
     """
     def post(self):
         quote_input = tornado.escape.json_decode(self.request.body.decode('utf-8').split('=')[1])
-        quote_input['date'] = datetime.datetime.now().date().isoformat()
-        if quote_input['type']=='save':
-            save_info = {}
-            save_info['price_type'] = quote_input['price_type']
-            save_info['agreement_summary'] = quote_input['agreement_summary']
-            save_info['agreement_conditions'] = quote_input['agreement_conditions']
-            save_info['created_by'] = self.get_current_user().name
-            save_info['created_by_email'] = self.get_current_user().email
-            save_info['products_included'] = quote_input['products_included']
-            if 'special_addition' in quote_input:
-                save_info['special_addition'] =  quote_input['special_addition']
-            if 'special_percentage' in quote_input:
-                save_info['special_percentage'] = quote_input['special_percentage']
-            save_info['exchange_rate_issued_date'] = quote_input['exchange_rate_issued_date']
-
-            proj_id = quote_input['project_data']['project_id']
-            timestamp = quote_input['project_data']['agreement_number'].split('_')[1]
-            self.update_agreementdoc(proj_id, timestamp, save_info)
+        if quote_input['type'] == 'display' and not self.get_current_user().is_proj_coord:
+            self.set_status(401)
+            return self.write("Error: You do not have the permissions for this operation!")
+        agreement_timestamp = int(quote_input['project_data']['agreement_number'].split('_')[1])
+        quote_input['date'] =  datetime.datetime.fromtimestamp(agreement_timestamp/1000).date().isoformat()
 
         template_text = quote_input.pop('template_text')
         template_text['appendices'] = markdown.markdown(template_text['appendices'], extensions=['sane_lists'])
@@ -689,6 +676,41 @@ class GenerateQuoteHandler(AgreementsDBHandler):
         self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(),
                               data=quote_input, template_text=template_text))
 
+class SaveQuoteHandler(AgreementsDBHandler):
+    """ Serves a built pricing quote page
+
+    Loaded through:
+        /api/v1/save_quote
+
+    """
+    def post(self):
+        if not self.get_current_user().is_proj_coord:
+            self.set_status(401)
+            return self.write("Error: You do not have the permissions for this operation!")
+        quote_input = tornado.escape.json_decode(self.request.body)['data']
+        if quote_input['type']=='save':
+            save_info = {}
+            save_info['price_type'] = quote_input['price_type']
+            save_info['agreement_summary'] = quote_input['agreement_summary']
+            save_info['agreement_conditions'] = quote_input['agreement_conditions']
+            save_info['created_by'] = self.get_current_user().name
+            save_info['created_by_email'] = self.get_current_user().email
+            save_info['products_included'] = quote_input['products_included']
+            if 'special_addition' in quote_input:
+                save_info['special_addition'] =  quote_input['special_addition']
+            if 'special_percentage' in quote_input:
+                save_info['special_percentage'] = quote_input['special_percentage']
+            save_info['exchange_rate_issued_date'] = quote_input['exchange_rate_issued_date']
+            save_info['price_breakup'] = quote_input['price_breakup']
+            save_info['total_cost'] = quote_input['total_cost']
+            save_info['total_cost_discount'] = quote_input['total_cost_discount']
+
+            proj_id = quote_input['project_data']['project_id']
+            timestamp = quote_input['project_data']['agreement_number'].split('_')[1]
+            self.update_agreementdoc(proj_id, timestamp, save_info)
+            self.set_header("Content-type", "application/json")
+            self.write({'message': 'Agreement Doc saved'})
+            self.finish()
 
 class AgreementTemplateTextHandler(SafeHandler):
     """ Serves the agreement template text from statusdb
@@ -731,6 +753,9 @@ class AgreementMarkSignHandler(AgreementsDBHandler):
 
     """
     def post(self):
+        if not self.get_current_user().is_proj_coord:
+            self.set_status(401)
+            return self.write("Error: You do not have the permissions for this operation!")
         post_data = tornado.escape.json_decode(self.request.body)
         self.update_agreementdoc(post_data['proj_id'], post_data['timestamp'])
         self.set_header("Content-type", "application/json")

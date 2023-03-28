@@ -18,7 +18,6 @@ $(document).ready(function() {
     load_running_notes();
     load_links();
     load_charon_summary();
-    setup_internal_costs_form();
   });
 
   // Prevent traditional html submit function
@@ -59,12 +58,6 @@ $(document).ready(function() {
         select_from_preset($(this).parent().attr('id'), $(this).text());
         break;
     }
-  });
-
-  //Make this whole undefined fields non-sense optional
-  $('#undefined_fields_accordion').click(function(e) {
-    load_undefined_info();
-    $('#undefined_fields_accordion').off('click');
   });
 
   //Show user communication tab. Loading
@@ -302,35 +295,6 @@ function load_tickets() {
   }
 }
 
-function load_undefined_info(){
-  $('#undefined_fields .card-body').append('<div id="undefined_spinner" class="text-center"><span class="fa fa-sync fa-spin"></span> <em>Loading undefined fields</em></div>');
-
-  $.getJSON("/api/v1/projects_fields?undefined=true", function(u_data) {
-    var found_undefs = [];
-    $.each(u_data, function(column_no, column) {
-      $("#undefined_project_info").append('<dt>' + column + '</dt><dd id="' + column + '"></dd>');
-      found_undefs.push(column);
-    });
-    // At this point we don't care about having to fetch project_summary for a second time
-    $.getJSON("/api/v1/project_summary/" + project, function (data) {
-      $.each(data, function(key, value) {
-        if(found_undefs.includes(key)) {
-          if(prettyobj(key).length > 0){
-            prettyobj(key).html(auto_format(value));
-          } else if(safeobj(key).length > 0){
-            safeobj(key).html(auto_format(value));
-          } else {
-          }
-        }
-      });
-    });
-    $('#undefined_spinner').hide();
-  }).fail(function( jqxhr, textStatus, error ) {
-    var err = textStatus + ", " + error;
-    console.log( "Couldn't load undefined fields: " + err );
-    $('#undefined_spinner').hide();
-  });
-}
 
 function load_all_udfs(){
   return $.getJSON("/api/v1/project_summary/" + project, function (data) {
@@ -479,26 +443,10 @@ function load_all_udfs(){
         $('#project_comment').html(make_markdown(value));
         check_img_sources($('#project_comment img'));
       }
-      else if (prettify(key) == 'internal_costs'){
-        value = value.replace(/\_/g, '\\_');
-        $('#internal_costs').html(make_markdown(value));
-        $('#textarea_internal_costs').html(value);
-      }
-
-      //Add connected projects if any
-      else if (key == 'project_xref'){
-        projs = '';
-        var conn_proj = value.split(',');
-        conn_proj.forEach(function(proj){
-           if (proj != project){
-              if (!projs.trim()){
-                 projs += '<a class="email_link" href="/project/'+proj+'">'+proj+'</a>';
-              }else{
-                 projs += ', '+'<a class="email_link" href="/project/'+proj+'">'+proj+'</a>';
-              }
-           }
-        });
-        $('#connected_projects').html(projs);
+      else if (prettify(key) == 'latest_sticky_note'){
+        let sticky_run_note = JSON.parse(value)
+        let date = Object.keys(sticky_run_note)[0]
+        $('#latest_sticky_note').html(make_running_note(date, sticky_run_note[date], true))
       }
 
       // Create the links for review and display the banner
@@ -808,8 +756,22 @@ function load_samples_table(colOrder) {
                     var validation_data = prepinfo['library_validation'][process_id];
                     if (validation_data) {
                       validation_data[column_id] = round_floats(validation_data[column_id], 2);
+                      // Caliper column
+                      if(column_id == 'caliper_image'){
+                        tbl_row += '<span class="caliper_loading_spinner">'+
+                                     '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                   '</span>'+
+                                   '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
+                      }
+                      // Fragment Analyzer Image
+                      else if (column_id == 'frag_an_image'){
+                          tbl_row += '<span class="caliper_loading_spinner">'+
+                                        '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
+                                      '</span>'+
+                                      '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Fragment Analyzer Image" data-samplename="'+info['scilife_name']+'"></a>';
+                      }
                       // Remove the X from initial QC initials
-                      if(column_id == 'initials'){
+                      else if(column_id == 'initials'){
                         if(validation_data[column_id] !== '-'){
                                 var sig = validation_data[column_id];
                                 if(sig.length == 3 && sig[2] == 'X'){
@@ -998,7 +960,7 @@ function load_samples_table(colOrder) {
                                    '<a id="caliper_thumbnail_'+info['scilife_name']+'" class="caliper-thumbnail loading" href="'+validation_data[column_id]+'" data-imgtype="Library Validation Caliper Image" data-samplename="'+info['scilife_name']+'"></a>';
                   }
                   // Fragment Analyzer Image
-                  if (column_id == 'frag_an_image'){
+                  else if (column_id == 'frag_an_image'){
                       tbl_row += '<span class="caliper_loading_spinner">'+
                                     '<span class="fa fa-sync fa-spin"></span>  Loading image..</span>'+
                                   '</span>'+
@@ -1360,44 +1322,6 @@ function load_charon_summary(){
   }).fail(function( jqxhr, textStatus, error ) {
       var err = textStatus + ", " + error;
       console.log( "Couldn't load charon data: " + err );
-  });
-}
-function setup_internal_costs_form(){
-  $('#internal_costs').click(function(e){
-      e.preventDefault();
-      $('#edit_internal_costs').show();
-      $(this).hide();
-      $(this).html($("#textarea_internal_costs").val());
-  });
-  $('#submit_internal_costs').click(function(e){
-    e.preventDefault();
-    var text=$("#textarea_internal_costs").val();
-    var url="/api/v1/internal_costs/" + project;
-    var object={'text' : text};
-    $.ajax({
-      type: 'POST',
-      url: url,
-      dataType: 'json',
-      data: JSON.stringify(object),
-      error: function(xhr, textStatus, errorThrown) {
-        alert('saving the internal costs failed : '+errorThrown);
-        console.log(xhr); console.log(textStatus); console.log(errorThrown);
-      },
-      success: function(saved_data, textStatus, xhr) {
-        $("#internal_costs").html(make_markdown(text));
-        $('#edit_internal_costs').hide();
-        $('#internal_costs').show();
-      }
-    });
-
-  });
-  $('#cancel_internal_costs').click(function(e){
-    e.preventDefault();
-    var text=$("#internal_costs").html();
-    $("#textarea_internal_costs").val(text);
-    $("#internal_costs").html(make_markdown(text));
-    $('#edit_internal_costs').hide();
-    $('#internal_costs').show();
   });
 }
 

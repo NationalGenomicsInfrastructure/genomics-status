@@ -25,26 +25,27 @@ from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandle
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
-from status.flowcell import FlowcellHandler
+from status.flowcell import FlowcellHandler, ONTFlowcellHandler, ONTReportHandler
 from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandler, \
     FlowcellNotesDataHandler, FlowcellQ30Handler, FlowcellQCHandler, FlowcellsDataHandler, FlowcellSearchHandler, \
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
+from status.invoicing import InvoicingPageHandler, InvoiceSpecDateHandler, InvoicingPageDataHandler, GenerateInvoiceHandler, \
+    DeleteInvoiceHandler, SentInvoiceHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
     PricingQuoteHandler, PricingValidateDraftDataHandler, PricingPublishDataHandler, \
     PricingReassignLockDataHandler, PricingUpdateHandler, PricingPreviewHandler, \
     PricingDataHandler, PricingDraftDataHandler, GenerateQuoteHandler, AgreementTemplateTextHandler, \
-    AgreementDataHandler, AgreementMarkSignHandler
+    AgreementDataHandler, AgreementMarkSignHandler, SaveQuoteHandler
 from status.production import DeliveredMonthlyDataHandler, DeliveredMonthlyPlotHandler, DeliveredQuarterlyDataHandler, \
     DeliveredQuarterlyPlotHandler, ProductionCronjobsHandler
 from status.projects import CaliperImageHandler, CharonProjectHandler, \
     LinksDataHandler, PresetsHandler, ProjectDataHandler, ProjectQCDataHandler, ProjectSamplesDataHandler, ProjectSamplesHandler, \
     ProjectsDataHandler, ProjectsFieldsDataHandler, ProjectsHandler, ProjectsSearchHandler, \
     ProjectTicketsDataHandler, RunningNotesDataHandler, RecCtrlDataHandler, \
-    ProjMetaCompareHandler, ProjectInternalCostsHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler, \
+    ProjMetaCompareHandler, ProjectRNAMetaDataHandler, FragAnImageHandler, PresetsOnLoadHandler, \
     ImagesDownloadHandler, PrioProjectsTableHandler
-from status.nas_quotas import NASQuotasHandler
 from status.queues import qPCRPoolsDataHandler, qPCRPoolsHandler, SequencingQueuesDataHandler, SequencingQueuesHandler, \
     WorksetQueuesHandler, WorksetQueuesDataHandler, LibraryPoolingQueuesHandler, LibraryPoolingQueuesDataHandler
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
@@ -90,8 +91,13 @@ class Application(tornado.web.Application):
             self.gs_globals['git_commit_full'] = 'unknown'
 
         self.gs_globals['font_awesome_url'] = settings.get('font_awesome_url', None)
+        self.gs_globals['prod'] = True
+        if 'dev' in settings.get('couch_server'):
+            self.gs_globals['prod'] = False
 
         handlers = [
+            # The tuples are on the form ("URI regex", "Backend request handler")
+            # The groups of the regex are the arguments of the handlers get() method
             ("/", MainHandler),
             ("/login", LoginHandler),
             ("/logout", LogoutHandler),
@@ -104,6 +110,7 @@ class Application(tornado.web.Application):
             tornado.web.URLSpec("/api/v1/caliper_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", CaliperImageHandler, name="CaliperImageHandler"),
             ("/api/v1/charon_summary/([^/]*)$", CharonProjectHandler),
             ("/api/v1/cost_calculator", PricingDataHandler),
+            ("/api/v1/delete_invoice", DeleteInvoiceHandler),
             ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
             ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
             ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
@@ -125,6 +132,10 @@ class Application(tornado.web.Application):
             tornado.web.URLSpec("/api/v1/frag_an_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", FragAnImageHandler, name="FragAnImageHandler"),
             ("/api/v1/get_agreement_doc/([^/]*)$", AgreementDataHandler),
             ("/api/v1/get_agreement_template_text", AgreementTemplateTextHandler),
+            ("/api/v1/get_sent_invoices", SentInvoiceHandler),
+            ("/api/v1/generate_invoice", GenerateInvoiceHandler),
+            ("/api/v1/generate_invoice_spec", InvoiceSpecDateHandler),
+            ("/api/v1/invoice_spec_list", InvoicingPageDataHandler),
             ("/api/v1/instrument_cluster_density",
                 InstrumentClusterDensityDataHandler),
             ("/api/v1/instrument_cluster_density.png",
@@ -139,7 +150,6 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
-            ("/api/v1/internal_costs/([^/]*)", ProjectInternalCostsHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/libpooling_queues", LibraryPoolingQueuesDataHandler),
@@ -168,6 +178,7 @@ class Application(tornado.web.Application):
             ("/api/v1/sample_requirements_publish_draft", SampleRequirementsPublishDataHandler),
             ("/api/v1/sample_requirements_validate_draft", SampleRequirementsValidateDraftDataHandler),
             ("/api/v1/sample_requirements_reassign_lock", SampleRequirementsReassignLockDataHandler),
+            ("/api/v1/save_quote", SaveQuoteHandler),
             ("/api/v1/sequencing_queues", SequencingQueuesDataHandler),
             ("/api/v1/sensorpush", SensorpushDataHandler),
             ("/api/v1/stats",StatsAggregationHandler),
@@ -195,15 +206,17 @@ class Application(tornado.web.Application):
             ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
             ("/deliveries", DeliveriesPageHandler),
             ("/flowcells", FlowcellsHandler),
-            ("/flowcells/([^/]*)$", FlowcellHandler),
+            ("/flowcells/(\d{6}_[^/]*)$", FlowcellHandler),         # Illumina run names start w. 6 digits
+            ("/flowcells/(\d{8}_[^/]*)$", ONTFlowcellHandler),      # ONT run names start w. 8
+            ("/flowcells/(\d{8}_[^/]*)/[^/]*$", ONTReportHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
             ("/generate_quote", GenerateQuoteHandler),
             ("/instrument_logs", InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
+            ("/invoicing", InvoicingPageHandler),
             ("/libpooling_queues", LibraryPoolingQueuesHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
-            ("/nas_quotas", NASQuotasHandler),
             ("/pools_qpcr", qPCRPoolsHandler),
             ("/pricing_preview", PricingPreviewHandler),
             ("/pricing_quote", PricingQuoteHandler),
@@ -249,6 +262,7 @@ class Application(tornado.web.Application):
             self.gs_users_db = couch["gs_users"]
             self.instruments_db= couch["instruments"]
             self.instrument_logs_db = couch["instrument_logs"]
+            self.nanopore_runs_db = couch["nanopore_runs"]
             self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
             self.projects_db = couch["projects"]
             self.sample_requirements_db = couch["sample_requirements"]
@@ -331,6 +345,10 @@ class Application(tornado.web.Application):
         with limsbackend_cred_loc.open() as cred_file:
             self.lims_conf = yaml.safe_load(cred_file)
 
+        order_portal_cred_loc = Path(settings['order_portal_credential_location']).expanduser()
+        with order_portal_cred_loc.open() as cred_file:
+            self.order_portal_conf = yaml.safe_load(cred_file)['order_portal']
+
         # Setup the Tornado Application
 
         settings["debug"]= True
@@ -356,9 +374,9 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
+            tornado.autoreload.watch("design/invoicing.html")
             tornado.autoreload.watch("design/barcode.html")
             tornado.autoreload.watch("design/link_tab.html")
-            tornado.autoreload.watch("design/nas_quotas.html")
             tornado.autoreload.watch("design/qpcr_pools.html")
             tornado.autoreload.watch("design/pricing_products.html")
             tornado.autoreload.watch("design/pricing_quote.html")

@@ -102,19 +102,9 @@ Description: Details page for a single project
     <h4>Project Coordinator Comment</h4>
     <p id="project_comment">-</p><hr>
 
-    <h4>Internal Costs</h4>
-    <p id="internal_costs">-</p>
-    <form id="edit_internal_costs" style="display:none;">
-    <div class="form-group">
-      <textarea id="textarea_internal_costs" class="form-control" rows="4" cols="10">
-      </textarea>
-    </div>
-    <div class="form-group text-right">
-        <button id="cancel_internal_costs" class="btn btn-secondary btn-sm">Cancel <span class="fa fa-times"></span></button>
-        <button id="submit_internal_costs" class="btn btn-primary btn-sm">Save <span class="fa fa-check"></span></button>
-    </div>
-    </form>
-        <hr>
+    <h4>Latest Sticky Note</h4>
+    <div id="latest_sticky_note">-</div>
+    <hr>
 
     <h4>User project description
       <small class="text-danger">Use with caution! <i class="fa fa-info-circle" data-toggle="tooltip" data-html="true" data-placement="left" title="This is the original user description of the project and may not reflect the final order."></i></small>
@@ -134,7 +124,23 @@ Description: Details page for a single project
     <li class="nav-item"><a class="nav-link" href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
     <li class="nav-item"><a class="nav-link" href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
     <li class="nav-item"><a class="nav-link" href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
-    <li class="nav-item"><a class="nav-link" {% if not multiqc %} disabled data-toggle="tooltip" data-html="true" data-placement="bottom" title="No MultiQC report available"{% else %} href="/multiqc_report/{{ project }}" {% end %} target="_blank" type="submit" class="btn">Open MultiQC report</a></li>
+    {% if not multiqc %}
+    <li class="nav-item" data-toggle="tooltip" data-html="true" data-placement="bottom" title="No MultiQC report available" ><a class="nav-link disabled">Open MultiQC reports</a></li>
+    {% else %}
+     <li class="nav-item dropdown">
+       <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Open MultiQC reports</a>
+       <div class="dropdown-menu">
+         {% for key in multiqc %}
+          {% if 'qc' in key %}
+            {% set rep_name = ' QC' %}
+          {% else %}
+            {% set rep_name = ' '+key.strip('_').capitalize() %}
+          {% end %}
+         <a class="dropdown-item" href="/multiqc_report/{{ project }}?type={{ key }}" target="_blank">Open{{ rep_name }} MultiQC report</a>
+         {% end %}
+       </div>
+     </li>
+    {% end %}
     <li class="nav-item"><a class="nav-link" href="/bioinfo/{{ project }}" target="_blank">Open bioinfo tab</a></li>
     <li class="nav-item"><a class="nav-link" href="#tab_agreements_content" role="tab" data-toggle="tab" id="tab_agreements">Agreements</a></li>
   </ul>
@@ -149,15 +155,11 @@ Description: Details page for a single project
 	              </tr>
             </thead>
             <tbody>
-              <tr><td>Disposal Of Samples</td><td id="disposal_of_any_remaining_samples"></td></tr>
               <tr><td>Bioinfo. Responsible</td><td id="bioinfo_responsible"></td></tr>
               <tr><td>BP Responsible</td><td id="bp_responsible"></td></tr>
-              <tr><td>Lab Responsible</td><td id="lab_responsible"></td></tr>
               <tr><td>Project Coordinator</td><td id="project_coordinator"></td></tr>
               <tr><td>E-mails</td><td id="contact"></td></tr>
-              <tr><td>Affiliation</td><td id="affiliation"></td></tr>
               <tr><td>Invoice Reference</td><td><code id="invoice_reference"></code></td></tr>
-              <tr><td>Connected Projects</td><td id="connected_projects"></td></tr>
             </tbody>
           </table>
         </div>
@@ -171,8 +173,6 @@ Description: Details page for a single project
             </thead>
             <tbody>
               <tr><td>Delivery Type</td><td><code id="delivery_type"></code></td></tr>
-              <tr><td>Source</td><td id="source"></td></tr>
-              <tr><td>Custom capture design</td><td id="custom_capture_design_id"></td></tr>
               <tr><td>Best Practice Bioinformatics</td><td id="best_practice_bioinformatics"></td></tr>
               <tr><td>Bioinfo Analysis</td><td id="bioinformatic_qc"></td></tr>
               <tr><td>Organism</td><td id="organism"></td></tr>
@@ -238,7 +238,6 @@ Description: Details page for a single project
               <tr><td>Passed Initial QC</td><td id='passed_initial_qc'></td></tr>
               <tr><td>Passed Library QC</td><td id='passed_library_qc'></td></tr>
               <tr><td>Lanes Started</td><td><span class="badge bg-secondary" id="lanes_sequenced"></span></td></tr>
-              <tr><td>Sequencing QC (Gdocs)</td><td><span class="badge bg-secondary" id='passed_seq_qc'></span></td></tr>
               <tr><td>Library re-preps (Genstat)</td><td><span class="badge bg-secondary" id='library_repreps'></span></td></tr>
             </tbody>
           </table>
@@ -291,31 +290,7 @@ Description: Details page for a single project
             </tbody>
           </table>
         </div>
-        <!-- Links table -->
-        <div class="col-sm-4">
-          <table id='links_tab' class="table table-bordered table-striped">
-            <thead>
-              <tr class="darkth"><th colspan="2">Links</th></tr>
-            </thead>
-            <tbody id="existing_links_projinfo">
-              <div ></div>
-            </tbody>
-          </table>
-        </div>
       </div>
-      <!-- Undefined Fields Table -->
-      <div id="undefined_fields_accordion" role="tablist" aria-multiselectable="true">
-        <div class="card">
-          <div class="card-header" role="tab" id="headingOne">
-            <h4 class="card-title my-1"><a class="text-decoration-none text-dark" data-toggle="collapse" data-parent="#undefined_fields_accordion" href="#undefined_fields">Undefined Fields</a></h4>
-          </div>
-          <div id="undefined_fields" class="collapse" role="tabpanel">
-            <div class="card-body">
-              <dl id="undefined_project_info" class="dl-horizontal dl-wide"></dl>
-             </div>
-            </div>
-          </div>
-        </div>
     </div>
 
     <!-- SAMPLES TAB -->
