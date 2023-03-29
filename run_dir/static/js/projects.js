@@ -41,6 +41,7 @@ $(function(){
     var preset_to_be_loaded = 'Lab Ongoing';
     var preset_origin = 'default';
 
+
     function fetch_user_onload_preset(){
       // Fetch user defined 'onload' preset
       return $.getJSON('/api/v1/presets/onloadcheck?action=load', function (data) {
@@ -66,6 +67,11 @@ $(function(){
           } else {
             $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]').prop('checked', true)
           }
+        } else {
+          // No preset saved to be selected automatically
+          $("#presetOpt-lab_ongoing").trigger("click");
+          $("#statusOptAll").trigger("click");
+          select_from_preset("default_preset_buttons", 'Lab Ongoing');
         }
       })
     }
@@ -89,6 +95,7 @@ $(function(){
       if (on_load) {
         if(preset_origin=='userdefined'){
           // Indicate which preset that is chosen
+          $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]').prop('checked', false)
           $('#user_presets_dropdown').find(".btn").addClass('active');
           setChangingDropdownValue($('#user_presets_dropdown'), preset_origin, preset_to_be_loaded);
           $('#formDeletePresetName').val(preset_to_be_loaded);
@@ -99,6 +106,7 @@ $(function(){
           // Default presets
           $('#formDeletePresetName').val('');
           $('#deletePresetBtn').remove();
+          $('#user_presets_dropdown').find(".btn").removeClass('active');
 
           if(preset_to_be_loaded!='Choose Preset'){
             $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]').prop('checked', true);
@@ -112,11 +120,6 @@ $(function(){
         }
         setTimeout(getTableParamsandLoad,300);
 
-      }
-      else{
-        $("#presetOpt-lab_ongoing").trigger("click");
-        $("#statusOptAll").trigger("click");
-        select_from_preset("default_preset_buttons", 'Lab Ongoing');
       }
     });
   });
