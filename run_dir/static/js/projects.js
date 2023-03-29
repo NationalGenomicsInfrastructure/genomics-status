@@ -46,7 +46,7 @@ $(function(){
       return $.getJSON('/api/v1/presets/onloadcheck?action=load', function (data) {
         if(data!=null){
           // preset on load found
-          on_load = true
+          on_load = data['loadtable']
           preset_to_be_loaded = data['preset']
           preset_origin = data['origin']
           // Switch the settings 
