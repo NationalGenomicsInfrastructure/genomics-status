@@ -1,0 +1,101 @@
+<div class="tab-pane fade " id="tab_fc_project_yields_content">
+  <h3>Project Yields Information</h3>
+  <div id="lanes">
+    {% for lane_number, lane in sorted(flowcell.get('lanedata', {}).items(), key=lambda x:x[0]) %}
+      <div id="lane_{{ lane_number }}" class="mb-5">
+        <h4>Lane {{ lane_number }}
+        </h4>
+        <table class="table table-bordered narrow-headers no-margin right_align_headers" id="summary_lane_{{ lane_number }}">
+          <tbody>
+            <tr class="darkth">
+              <th>Total yield (Mb):</th>
+              <td>{% for thousand in lane.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+              <th>Total clusters:</th> {% set threshold = thresholds.get(flowcell.get('run_mode', ''), 0) %}
+              <td class="text-left
+              {% if flowcell.get('run_mode') %}
+                {% if int(lane.get('clustersnb', '0').replace(',', '')) < threshold * 1000000 %} table-warning
+                {% else %} table-success {% end %}
+              {% end %}" data-toggle="tooltip" data-placement="bottom" data-html="true"
+              title="Threshold: {{ threshold }} million">
+              {% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
+              </td>
+              <th>% bases > Q30:</th>
+              {% set run_setup = flowcell.get('longer_read_length', '') %}
+              {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
+              {% if flowcell.get('run_mode', '') == 'HiSeq X' %}
+                {% set q30_threshold = 75.0 %}
+              {% elif 'MiSeq' in flowcell.get('run_mode', '') %}
+                {% if run_setup >= 250 %}
+                  {% set q30_threshold = 60.0 %}
+                {% elif run_setup >= 150 %}
+                  {% set q30_threshold = 70.0 %}
+                {% elif run_setup >= 100 %}
+                  {% set q30_threshold = 75.0 %}
+                {% elif run_setup < 100 %}
+                  {% set q30_threshold = 80.0 %}
+                {% end %}
+              {% else %}
+                {% if run_setup >= 250 %}
+                  {% set q30_threshold = 60.0 %}
+                {% elif run_setup >= 150 %}
+                  {% set q30_threshold = 75.0 %}
+                {% elif run_setup >= 100 %}
+                  {% set q30_threshold = 80.0 %}
+                {% elif run_setup < 100 %}
+                  {% set q30_threshold = 85.0 %}
+                {% end %}
+              {% end %}
+              {% set lane_q30 = lane.get('overthirty', 0.0) %}
+              {% try %}{% set lane_q30 = float(lane_q30) %}{% except %}{% end %}
+              <td class="text-left {% if lane_q30 < 40.0 %} table-danger
+                    {% elif lane_q30 < q30_threshold %} table-warning
+                    {% else %} table-success {% end %}" data-toggle="tooltip" data-placement="bottom"
+                  title="Threshold: {{ q30_threshold }}">{{ lane_q30 }}
+              </td>
+              <th>Mean Quality Score:</th>
+              <td class="text-left">{{ lane.get('mqs', 0) }}</td>
+              <th>% perfect barcode :</th>
+              <td class="text-left">{{ lane.get('perf', 0) }}</td>
+              {% if 'phix' in lane %}
+                <th>% Phix:</th>
+                <td class="text-left">{{ lane['phix'] }}</td>
+              {% end %}
+              {% if 'er_rate' in lane %}
+                <th>Err. rate</th>
+                <td class="text-left">{{ lane['er_rate'] }}</td>
+              {% end %}
+            </tr>
+          </tbody>
+        </table>
+        <br>
+        <!-- Lanewise header -->
+        <table class="table table-bordered" id="table_lane_{{ lane_number }}">
+          <tbody>
+            <tr class="darkth">
+              <th>Project Name</th>
+              <th class="text-right">Total clusters for project</th>
+              <th class="text-center">% <abbr title="BasePairs">Mean BP</abbr> > Q30</th>
+              <th class="text-center">Actual lane yield %</th>
+              <th class="text-center">Threshold lane yield %</th>
+            </tr>
+
+          <!--Primary project table -->
+          {% for project in fc_project_yields[lane_number] %}
+            {% set project_q30 = project.get('weighted_mean_q30', 0.0) %}
+            {% try %}{% set project_q30 = float(project_q30) %}{% except %}{% set project_q30 = 0.0 %}{% end %}
+            <tr>
+              <td>{{ project.get('modified_proj_name', '') }}</td>
+              <td class="text-right">{% for thousand in project['sum_project_lane_yield'].split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+              <td class="text-center {% if float(project_q30) < 40.0 %} table-danger
+                  {% elif project_q30 < q30_threshold %} table-warning
+                  {% else %} table-success {% end %}">{{ "{0:.2f}".format(float(project_q30)) }}</td>
+              <td class="text-center">{{ "{0:.2f}".format(float(project['proj_lane_percentage_actual'])) }}</td>
+              <td class="text-center">{{ "{0:.2f}".format(float(project['proj_lane_percentage_threshold'])) }}</td>
+            </tr>
+          {% end %}
+          </tbody>
+        </table>
+      </div>
+    {% end %}
+  </div>
+</div>
