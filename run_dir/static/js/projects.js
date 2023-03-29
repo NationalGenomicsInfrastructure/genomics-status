@@ -64,7 +64,9 @@ $(function(){
             setChangingDropdownValue($('#user_presets_dropdown'), preset_origin, preset_to_be_loaded);
             $('#formDeletePresetName').val(preset_to_be_loaded);
             appendDeleteBtn(preset_to_be_loaded);
+            select_from_preset("users_presets_dropdown", preset_to_be_loaded);
           } else {
+            select_from_preset("default_preset_buttons", preset_to_be_loaded);
             $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]').prop('checked', true)
           }
         } else {
@@ -95,7 +97,7 @@ $(function(){
       if (on_load) {
         if(preset_origin=='userdefined'){
           // Indicate which preset that is chosen
-          $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]').prop('checked', false)
+          $("#default_preset_buttons").find('input').prop('checked', false)
           $('#user_presets_dropdown').find(".btn").addClass('active');
           setChangingDropdownValue($('#user_presets_dropdown'), preset_origin, preset_to_be_loaded);
           $('#formDeletePresetName').val(preset_to_be_loaded);
