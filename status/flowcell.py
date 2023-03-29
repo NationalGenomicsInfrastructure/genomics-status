@@ -124,7 +124,7 @@ class FlowcellHandler(SafeHandler):
                     sum_project_lane_yield = sum(int(lane['clustersnb'].replace(',','')) for lane in lane_details if lane['Project']==proj)
                     weighted_mean_q30 = sum(int(lane['clustersnb'].replace(',',''))*float(lane['overthirty']) for lane in lane_details if lane['Project']==proj)/sum_project_lane_yield
                     proj_lane_percentage_actual = sum_project_lane_yield/total_lane_yield*100
-                    proj_lane_percentage_threshold = sum_project_lane_yield/threshold/1000000*100 if threshold else 0
+                    proj_lane_percentage_threshold = (sum_project_lane_yield/(threshold*1000000))*100 if threshold else 0
                     fc_project_yields_lane_list.append({'modified_proj_name'              :  modified_proj_name,
                                                         'sum_project_lane_yield'          :  format(sum_project_lane_yield, ","),
                                                         'weighted_mean_q30'               :  weighted_mean_q30,
