@@ -41,7 +41,6 @@ $(function(){
     var preset_to_be_loaded = 'Lab Ongoing';
     var preset_origin = 'default';
 
-
     function fetch_user_onload_preset(){
       // Fetch user defined 'onload' preset
       return $.getJSON('/api/v1/presets/onloadcheck?action=load', function (data) {
@@ -51,14 +50,13 @@ $(function(){
           preset_to_be_loaded = data['preset']
           preset_origin = data['origin']
           // Switch the settings 
+          setChangingDropdownValue($('#all_presets_dropdown'), preset_origin, preset_to_be_loaded);
           if(data['loadtable']==true){
             $("#onLoadTableOn").trigger("click");
           }
           else {
             $("#onLoadTableOff").trigger("click");
           }
-
-
         }
       })
     }
@@ -81,7 +79,6 @@ $(function(){
 
 
       if (on_load) {
-        setChangingDropdownValue($('#all_presets_dropdown'), preset_origin, preset_to_be_loaded);
         if(preset_origin=='userdefined'){
           $('#user_presets_dropdown').find(".btn").addClass('active');
               setChangingDropdownValue($('#user_presets_dropdown'), preset_origin, preset_to_be_loaded);
@@ -107,7 +104,6 @@ $(function(){
 
       }
       else{
-        $("#onLoadTableOff").trigger("click");
         $("#presetOpt-lab_ongoing").trigger("click");
         $("#statusOptAll").trigger("click");
         select_from_preset("default_preset_buttons", 'Lab Ongoing');
