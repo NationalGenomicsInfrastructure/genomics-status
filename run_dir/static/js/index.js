@@ -28,9 +28,9 @@ fill_sensorpush_status_field = function(){
     // Find status of sensorpush
     $.getJSON('/api/v1/sensorpush_warnings', function(data){
         if(data.length == 0){
-            var text = '<div class="alert alert-success"><a class="alert-link text-decoration-none" href="/sensorpush"><i class="fa-solid fa-temperature-snow fs-2 mr-3"></i><span class="fw-bold">Freezers and fridges are <span class="">OK!</span></a></span></div>'
+            var text = '<div class="alert alert-success"><a class="alert-link text-decoration-none" href="/sensorpush"><i class="fa-solid fa-temperature-snow fs-2 mr-3 align-middle"></i><span class="fw-bold">Freezers and fridges are <span class="">OK!</span></a></span></div>'
         } else {
-            var text='<div class="alert alert-danger"><a class="alert-link text-decoration-none" href="/sensorpush"><i class="fa-solid fs-2 fa-snowflake-droplets mr-3"></i><span class="fw-bold">'+data.length+' freezer(s) and/or fridge(s) have had warnings the last 24 hours</a></span></div>'
+            var text='<div class="alert alert-danger"><a class="alert-link text-decoration-none" href="/sensorpush"><i class="fa-solid fs-2 fa-snowflake-droplets mr-3 align-middle"></i><span class="fw-bold">'+data.length+' freezer(s) and/or fridge(s) have had warnings the last 24 hours</a></span></div>'
         }
         $('#sensorpush_status').html(text);
     });
