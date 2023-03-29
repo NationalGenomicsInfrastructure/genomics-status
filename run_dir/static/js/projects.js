@@ -57,6 +57,15 @@ $(function(){
           else {
             $("#onLoadTableOff").trigger("click");
           }
+          // Indicate which preset that is chosen
+          if(preset_origin=='userdefined'){
+            $('#user_presets_dropdown').find(".btn").addClass('active');
+            setChangingDropdownValue($('#user_presets_dropdown'), preset_origin, preset_to_be_loaded);
+            $('#formDeletePresetName').val(preset_to_be_loaded);
+            appendDeleteBtn(preset_to_be_loaded);
+          } else {
+            $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]').prop('checked', true)
+          }
         }
       })
     }
@@ -73,25 +82,26 @@ $(function(){
           preset_origin = 'userdefined'
         }
 
-        // Indicate a table will be loaded
+        // Presets from url params will always be loaded
         on_load = true
       }
 
-
       if (on_load) {
         if(preset_origin=='userdefined'){
+          // Indicate which preset that is chosen
           $('#user_presets_dropdown').find(".btn").addClass('active');
-              setChangingDropdownValue($('#user_presets_dropdown'), preset_origin, preset_to_be_loaded);
-              $('#formDeletePresetName').val(preset_to_be_loaded);
-              appendDeleteBtn(preset_to_be_loaded);
-              select_from_preset("users_presets_dropdown", preset_to_be_loaded);
+          setChangingDropdownValue($('#user_presets_dropdown'), preset_origin, preset_to_be_loaded);
+          $('#formDeletePresetName').val(preset_to_be_loaded);
+          appendDeleteBtn(preset_to_be_loaded);
+          select_from_preset("users_presets_dropdown", preset_to_be_loaded);
         }
         else{
           // Default presets
           $('#formDeletePresetName').val('');
+          $('#deletePresetBtn').remove();
+
           if(preset_to_be_loaded!='Choose Preset'){
-            preset_button = $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]')
-            preset_button.prop('checked', true);
+            $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]').prop('checked', true);
             select_from_preset("default_preset_buttons", preset_to_be_loaded);
           }
           else {
