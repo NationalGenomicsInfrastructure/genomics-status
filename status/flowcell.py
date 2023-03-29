@@ -114,7 +114,7 @@ class FlowcellHandler(SafeHandler):
                 fc_project_yields_lane_list = []
                 lane_details = entry.value['lane'][lane_nr]
                 total_lane_yield = int(entry.value['lanedata'][lane_nr]['clustersnb'].replace(',',''))
-                unique_projects = list(set(i['Project'] for i in lane_details))
+                unique_projects = list(set(lane['Project'] for lane in lane_details))
                 threshold = thresholds.get(entry.value.get('run_mode', ''), 0)
                 for proj in unique_projects:
                     if proj == 'default':
