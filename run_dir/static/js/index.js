@@ -27,7 +27,6 @@ fill_last_updated_text = function(){
 fill_sensorpush_status_field = function(){
     // Find status of sensorpush
     $.getJSON('/api/v1/sensorpush_warnings', function(data){
-        console.log(data);
         if(data.length == 0){
             var text = '<div class="alert alert-success"><a class="alert-link text-decoration-none" href="/sensorpush"><i class="fa-solid fa-temperature-snow fs-2 mr-3"></i><span class="fw-bold">Freezers and fridges are <span class="">OK!</span></a></span></div>'
         } else {
