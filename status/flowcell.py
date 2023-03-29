@@ -108,11 +108,36 @@ class FlowcellHandler(SafeHandler):
             entry.value['plist'] = self._get_project_list(entry.value)
             # list of project_names -> to create links to project page and bioinfo tab
             project_names = {project_name: self._get_project_id_by_name(project_name) for project_name in entry.value['plist']}
+            # Prepare a summary table for total project yields in each lane
+            fc_project_yields = dict()
+            for lane_nr in sorted(entry.value.get('lanedata').keys()):
+                fc_project_yields_lane_list = []
+                lane_details = entry.value['lane'][lane_nr]
+                total_lane_yield = int(entry.value['lanedata'][lane_nr]['clustersnb'].replace(',',''))
+                unique_projects = list(set(i['Project'] for i in lane_details))
+                threshold = thresholds.get(entry.value.get('run_mode', ''), 0)
+                for proj in unique_projects:
+                    if proj == 'default':
+                        modified_proj_name = 'undetermined'
+                    else:
+                        modified_proj_name = proj.replace('__','.')
+                    sum_project_lane_yield = sum(int(i['clustersnb'].replace(',','')) for i in lane_details if i['Project']==proj)
+                    weighted_mean_q30 = sum(int(i['clustersnb'].replace(',',''))*float(i['overthirty']) for i in lane_details if i['Project']==proj)/sum_project_lane_yield
+                    proj_lane_percentage_actual = sum_project_lane_yield/total_lane_yield*100
+                    proj_lane_percentage_threshold = sum_project_lane_yield/threshold/1000000*100 if threshold else 0
+                    fc_project_yields_lane_list.append({'modified_proj_name'              :  modified_proj_name,
+                                                        'sum_project_lane_yield'          :  format(sum_project_lane_yield, ","),
+                                                        'weighted_mean_q30'               :  weighted_mean_q30,
+                                                        'proj_lane_percentage_actual'     :  proj_lane_percentage_actual,
+                                                        'proj_lane_percentage_threshold'  :  proj_lane_percentage_threshold})
+                fc_project_yields[lane_nr] = sorted(fc_project_yields_lane_list, key=lambda d: d['modified_proj_name'])
+
             t = self.application.loader.load("flowcell.html")
             self.write(t.generate(gs_globals=self.application.gs_globals,
                                   flowcell=entry.value,
                                   flowcell_id=flowcell_id,
                                   thresholds=thresholds,
+                                  fc_project_yields=fc_project_yields,
                                   project_names=project_names,
                                   user=self.get_current_user()))
 
@@ -141,7 +166,7 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
     if run_dict["TACA_run_status"] == "ongoing":
 
         run_dict["experiment_name"], run_dict["sample_name"], name = run_dict["TACA_run_path"].split("/")
-        
+
         run_date, run_dict["start_time"], instr_or_pos, run_dict["flow_cell_id"], run_dict["run_id"] = name.split("_")
         run_dict["start_date"] = datetime.strptime(str(run_date), '%Y%m%d').strftime('%Y-%m-%d')
 
@@ -314,7 +339,7 @@ class ONTFlowcellHandler(SafeHandler):
             args = rows[0].value
 
             group = "([^\s=]+)"                             # Text component of cmd argument
-            
+
             flag_pair = re.compile(f"^--{group}={group}$")  # Double-dash argument with assignment
             flag_key_or_header = re.compile(f"^--{group}$") # Double-dash argument w/o assignment
             pair = re.compile(f"^(?!--){group}={group}$")   # Non-double-dash argument with assignment
@@ -338,7 +363,7 @@ class ONTFlowcellHandler(SafeHandler):
                         v = re.match(val, args[idx+1]).groups()[0]
                         entries[(k,v)]="pair"
                         next(idxs_args)
-                # Pair 
+                # Pair
                 elif re.match(pair, arg):
                     k, v = re.match(pair, arg).groups()
                     entries[(k,v)]="sub_pair"

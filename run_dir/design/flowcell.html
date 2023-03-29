@@ -47,6 +47,9 @@
           <a class="nav-link active" href="#tab_flowcell_information" role="tab" data-toggle="tab">Flowcell Information</a>
         </li>
         <li class="nav-item">
+          <a class="nav-link" href="#tab_fc_project_yields_content" role="tab" data-toggle="tab">Project Yields</a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link" href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a>
         </li>
         <li class="nav-item">
@@ -279,6 +282,8 @@
         </div>
       </div>
 
+      <!-- PROJECT YIELD TAB -->
+      {% include "fc_project_yields_tab.html" %}
       <!-- FLOWCELL NOTES TAB -->
       {% include "running_notes_tab.html" %}
       <!-- LINK TAB -->
