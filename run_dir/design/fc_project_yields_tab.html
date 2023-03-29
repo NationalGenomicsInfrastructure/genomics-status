@@ -88,9 +88,9 @@
               <td class="text-right">{% for thousand in project['sum_project_lane_yield'].split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
               <td class="text-center {% if float(project_q30) < 40.0 %} table-danger
                   {% elif project_q30 < q30_threshold %} table-warning
-                  {% else %} table-success {% end %}">{{ float("{0:.2f}".format(float(project_q30))) }}</td>
-              <td class="text-center">{{ float("{0:.2f}".format(float(project['proj_lane_percentage_actual']))) }}</td>
-              <td class="text-center">{{ float("{0:.2f}".format(float(project['proj_lane_percentage_threshold']))) }}</td>
+                  {% else %} table-success {% end %}">{{ "{0:.2f}".format(float(project_q30)) }}</td>
+              <td class="text-center">{{ "{0:.2f}".format(float(project['proj_lane_percentage_actual'])) }}</td>
+              <td class="text-center">{{ "{0:.2f}".format(float(project['proj_lane_percentage_threshold'])) }}</td>
             </tr>
           {% end %}
           </tbody>
