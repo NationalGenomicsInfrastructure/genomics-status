@@ -65,6 +65,11 @@
             <div id="lane_{{ lane_number }}" class="mb-5">
               <h4>Lane {{ lane_number }}
               </h4>
+              <button type="button" id="fc_copy_table_{{ lane_number }}" class="btn btn-sm btn-outline-dark mb-2 lane-copy" 
+                  data-clipboard-target="#table_lane_{{ lane_number }}">
+                  <span class="fa fa-copy"></span>
+                  Copy table
+              </button>
               <table class="table table-bordered narrow-headers no-margin right_align_headers" id="summary_lane_{{ lane_number }}">
                 <tbody>
                   <tr class="darkth">
@@ -296,4 +301,5 @@
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell.get('name') }}"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell.get('name') }}"></script>
 <script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/clipboard.min.js"></script>
 {% end %}
