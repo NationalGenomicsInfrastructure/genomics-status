@@ -10,7 +10,7 @@ $('.lane-copy').click(function(){
     var clipboard = new Clipboard(lane_btn);
     clipboard.on('success', function(e) {
         e.clearSelection();
-        $(lane_btn).addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+        $(lane_btn).addClass('active').html('<span class="fa fa-copy"></span> Copied!');
         setTimeout(function(){
         $(lane_btn).removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
         }, 2000);
