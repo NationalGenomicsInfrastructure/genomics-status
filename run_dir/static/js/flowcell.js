@@ -12,7 +12,7 @@ $('.lane-copy').click(function(){
         e.clearSelection();
         $(lane_btn).addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
         setTimeout(function(){
-        $(lane_btn).removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
+        $(lane_btn).removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
         }, 2000);
     });
 });
