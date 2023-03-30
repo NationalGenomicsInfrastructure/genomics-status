@@ -648,12 +648,12 @@ function sel_from_ps(preset_type, preset, data){
     }
     if(preset=='Bioinformatics'){
       $('[name="statusOptions"').prop('checked', false)
-      updateStatusBar1($('#statusOptNeedReview'), 'defaultClick');
+      updateStatusBar1($('#statusOptOngoing'), 'defaultClick');
 
     }
     if(preset=='Order Status'){
       $('[name="statusOptions"').prop('checked', false)
-      updateStatusBar1($('#statusOptNeedReview'), 'defaultClick');
+      updateStatusBar1($('#statusOptOngoing'), 'defaultClick');
 
     }
     var choices = data['default'][preset];
