@@ -155,6 +155,18 @@ class BaseHandler(tornado.web.RequestHandler):
                         multiqc_reports[type] = html
         return multiqc_reports
 
+    @staticmethod
+    def get_user_details(app, user_email):
+        user_details={}
+        if user_email == 'Testing User!':
+            user_email=app.settings.get("username", None)+'@scilifelab.se'
+            user_details={'userpreset': {'Hardcoded One': {}}} # Just to show something locally
+        rows = app.gs_users_db.view('authorized/users', include_docs=True)[user_email].rows
+        if len(rows) == 1:
+            user_details=dict(rows[0].doc)
+
+        return user_details
+
 
 class SafeHandler(BaseHandler):
     """ All handlers that need authentication and authorization should inherit
@@ -205,9 +217,19 @@ class MainHandler(UnsafeHandler):
                     server_status[server]['css_class'] = ''
         # sort by used space
         server_status = sorted(server_status.items(), key = lambda item: item[1].get('used_percentage'), reverse=True)
+        # Load presets to populate the projects links
+        presets_list = self.get_argument('presets_list', 'pv_presets')
+        user_details=self.get_user_details(self.application, self.get_current_user().email)
+        presets = {
+            "default": self.application.genstat_defaults.get(presets_list),
+            "user": user_details.get('userpreset')
+        }
 
         self.write(t.generate(gs_globals=self.application.gs_globals,
-                              user=user, server_status=server_status))
+                              user=user, server_status=server_status,
+                              presets=presets))
+
+
 
 def dthandler(obj):
     """ISO formatting for datetime to be used in JSON.
