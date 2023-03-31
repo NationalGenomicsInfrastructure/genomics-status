@@ -278,11 +278,10 @@ class ONTFlowcellHandler(SafeHandler):
             df.loc[df.bc_name == df.barcode_alias, "barcode_alias"] = ""
 
             # Calculate percentages
-            if sum(df.basecalled_pass_read_count) > 0:
-                df["basecalled_pass_read_count_pc"] = round(df.basecalled_pass_read_count / sum(df.basecalled_pass_read_count) * 100, 2)
-
-            if sum(df.basecalled_pass_bases) > 0:
-                df["basecalled_pass_bases_pc"] = round(df.basecalled_pass_bases / sum(df.basecalled_pass_bases) * 100, 2)
+            df["basecalled_pass_read_count_pc"] = round(df.basecalled_pass_read_count / sum(df.basecalled_pass_read_count) * 100, 2) \
+                if sum(df.basecalled_pass_read_count) > 0 else "-"
+            df["basecalled_pass_bases_pc"] = round(df.basecalled_pass_bases / sum(df.basecalled_pass_bases) * 100, 2) \
+                if sum(df.basecalled_pass_bases) > 0 else "-"
 
             df["average_read_length_passed"] = df.apply(
                 lambda x: \
