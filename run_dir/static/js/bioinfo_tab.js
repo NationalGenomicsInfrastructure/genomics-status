@@ -1168,9 +1168,6 @@ $('button.btn-reset-history-sample').on('click', function(e){
     $.each(bp_boxes, function(i, bp_box) {
         setParentStatus(bp_box);
     });
-    // don't forget about blast_wrapper (default = 'N/A')
-    var blast_wrapper = $(tr_id).find('td.blast_wrapper');
-    $(blast_wrapper).removeClass(bioinfo_qc_classes.join(' ')).addClass(bioinfo_qc_statuses['N/A']).text('N/A');
 
     // set values from the table
     if (sample_status != 'New') {

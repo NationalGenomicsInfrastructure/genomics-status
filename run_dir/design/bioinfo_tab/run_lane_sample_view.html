@@ -6,7 +6,7 @@
       <th colspan="3">Sample</th>
       <th colspan="3">Multiplex QC</th>
       <th colspan="2">Quality</th>
-      <th colspan="2">Contamination</th>
+      <th colspan="1">Contamination</th>
       {% if application == 'rnaseq' %}
         <th class="bioinfo-app-rnaseq" colspan="5">RNA-Seq</th>
       {% elif application == 'exome' %}
@@ -35,7 +35,6 @@
       <th class="bioinfo-status-th bioinfo-status-qc phixerrorrate">PhiX error rate</th>
       <th class="bioinfo-status-th bioinfo-status-qc basesq30">%bases >= Q30</th>
       <th class="bioinfo-status-th bioinfo-status-qc fastq_screen">fastq_screen</th>
-      <th class="bioinfo-status-th bioinfo-status-qc blast_wrapper">blast_wrapper</th>
       {% if application =='rnaseq' %}
         <th class="bioinfo-status-th bioinfo-status-bp rnaseq_alignment">Percent Aligned</th>
         <th class="bioinfo-status-th bioinfo-status-bp rnaseq_rrna">rRNA contamination</th>
@@ -84,7 +83,6 @@
           <td class="bioinfo-status-qc phixerrorrate unknown">?</td>
           <td class="bioinfo-status-qc basesq30 unknown">?</td>
           <td class="bioinfo-status-qc fastq_screen unknown">?</td>
-          <td class="bioinfo-status-qc blast_wrapper active">N/A</td>
           {% if application == 'rnaseq' %}
             <td class="bioinfo-status-bp rnaseq_alignment unknown">?</td>
             <td class="bioinfo-status-bp rnaseq_rrna unknown">?</td>
@@ -131,7 +129,6 @@
             <td class="bioinfo-status-qc phixerrorrate unknown">?</td>
             <td class="bioinfo-status-qc basesq30 unknown">?</td>
             <td class="bioinfo-status-qc fastq_screen unknown">?</td>
-            <td class="bioinfo-status-qc blast_wrapper active">N/A</td>
           {% if application == 'rnaseq' %}
             <td class="bioinfo-status-bp rnaseq_alignment unknown">?</td>
             <td class="bioinfo-status-bp rnaseq_rrna unknown">?</td>
@@ -184,8 +181,6 @@
                 {{ sample.get('qc', {}).get('basesq30', '?') }}</td>
               <td class="bioinfo-status-qc fastq_screen {{ qc_css.get(sample.get('qc', {}).get('fastq_screen', '?'), 'unknown') }}">
                 {{ sample.get('qc', {}).get('fastq_screen', '?') }}</td>
-              <td class="bioinfo-status-qc blast_wrapper {{ qc_css.get(sample.get('qc', {}).get('blast_wrapper', 'N/A'), 'active') }}">
-                {{ sample.get('qc', {}).get('blast_wrapper', 'N/A') }}</td>
               {% if application == 'rnaseq' %}
                 <td class="bioinfo-status-bp rnaseq_alignment {{ qc_css.get(sample.get('bp', {}).get('rnaseq_alignment', '?'), 'unknown') }}">
                   {{ sample.get('bp', {}).get('rnaseq_alignment', '?') }}</td>
