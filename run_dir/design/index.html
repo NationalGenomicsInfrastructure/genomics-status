@@ -1,78 +1,101 @@
 {% extends "base.html" %}
 
 {% block stuff %}
-<h1 class="mt-4" id="scilifelabgenomics-status">SciLifeLab Genomics - Status</h1>
+<div class="container-xxl">
+  <div class="col-10 mb-5 mx-auto text-center">
+    <h1 class="mt-4 display-1">Genomics Status</h1>
+    <p class="lead fs-3">Status page for the Stockholm node of National Genomics Infrastructure</p>
 
-{% if not user %}
+    {% if not user %}
 
-<h2> Get Access </h2>
-<p>To get access to the resources on this site, you first need to log in with the account given to you by your manager.</p>
-<p><a class="btn btn-primary btn-lg", href="/login">Log in</a></p>
+    <h2> Get Access </h2>
+    <p>To get access to the resources on this site, you first need to log in with the account given to you by your manager.</p>
+    <p><a class="btn btn-primary btn-lg", href="/login">Log in</a></p>
 
-{% else %}
+    {% else %}
+    <p class="lead" id="updated-status">
+    </p>
+    <div class="mb-5 mt-3">
+      <div class="btn-group" role="group">
+        <a type="button" class="btn btn-primary btn-lg" href="/projects">Projects</a>
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-primary btn-lg mr-3 dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+          </button>
+          <ul class="dropdown-menu">
+            <h6 class="dropdown-header">Default Presets</h6>
+            {% for preset_name in presets['default'].keys() %}
+              <li><a class="dropdown-item" href="/projects?load_preset={{preset_name}}">{{preset_name}}</a></li>
+            {% end %}
+            {% if presets['user'] %}
+              <div role="separator" class="dropdown-divider"></div>
+              <h6 class="dropdown-header">User Presets</h6>
+              {% for preset_name in presets['user'].keys() %}
+                <li><a class="dropdown-item" href="/projects?load_preset={{preset_name}}">{{preset_name}}</a></li>
+              {% end %}
+            {% end %}
+          </ul>
+        </div>
+      </div>
+      <a type="button" class="btn btn-primary btn-lg px-4 mr-3" href="/flowcells">Flowcells</a>
+      <a type="button" class="btn btn-primary btn-lg px-4 mr-3" href="/worksets">Worksets</a>
+      <a type="button" class="btn btn-primary btn-lg px-4" href="/deliveries">Deliveries</a>
+    </div>
+    <div class="col-8 fs-4 mx-auto" id="sensorpush_status">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+    <p class="lead fs-3 mt-5">Want to see something different here? Let us know on the
+      <a class="text-decoration-none" href="/suggestion_box">suggestions page.</a>
+    </p>
 
-<p>Genomics status displays information from multiple data sources. <span id="updated-status"></span></p>
-
-<div class="alert alert-info">
-    <p class="mb-0" style="text-align:center;">Want to see something different here? Let us know on the
-      <a class="text-decoration-none" href="/suggestion_box">suggestions page</a>! We're currently collecting feedback on
-      how the homepage should look...</p>
-</div>
-
-<h3>All freezers and refrigerators</h3>
-<p>Showing data from the last 24 hours</p>
-<div id="loading_spinner" style="text-align:center; margin:100px 0;"><span class="fa fa-sync fa-spin"></span> Loading sensorpush plots...</div>
-<div class="row mt-5">
-  <div class="col-lg-6">
-    <div id="fridge_sum_plot"></div>
   </div>
-  <div class="col-lg-6">
-    <div id="freezer_sum_plot"></div>
-  </div>
-</div>
-<div class="row mt-5">
-  <div class="col-lg-8">
-    <h3>Longest waiting projects</h3>
-    <div class="scroll-body">
-    <table class="table table-bordered sortable" id="prio_projs_table">
-      <thead id="prio_projs_table_head">
-        <tr class="sticky darkth">
-          <th class="sort">Project:</th>
-          <th class="sort">Library:</th>
-          <th class="sort">Status:</th>
-          <th class="sort">Days waiting:</th>
-        </tr>
-      </thead>
-      <tbody id="prio_projs_table_body"></tbody>
-    </table>
+
+  <div class="row pt-5">
+    <div class="col-lg-7">
+      <h3>Longest waiting projects</h3>
+      <div class="scroll-body">
+        <table class="table table-bordered sortable" id="prio_projs_table">
+          <thead id="prio_projs_table_head">
+            <tr class="sticky darkth">
+              <th class="sort">Project:</th>
+              <th class="sort">Library:</th>
+              <th class="sort">Status:</th>
+              <th class="sort">Days waiting:</th>
+            </tr>
+          </thead>
+          <tbody id="prio_projs_table_body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <h3>Server Status</h3>
+      <table class="table table-bordered table-disk-quotas">
+        <thead>
+          <tr class="darkth">
+            <th>Server</th>
+            <th>Instrument</th>
+            <th>Disk (Used / Quota)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for server, status in server_status %}
+          <tr>
+            <td>{{ server }}</td>
+            <td>{{ status.get('instrument') }}</td>
+            <td class="disk-quotas-highcharts {{ status.get('css_class') }}"><div class="wrapper"><span class="val" style="width:{{ status.get('used_percentage') }};">
+              <span>{{ status.get('space_used') }}</span></span>
+              <span class="percent float-right">{{ status.get('disk_size') }}</span></div>
+            </td>
+          </tr>
+          {% end %}
+        </tbody>
+      </table>
     </div>
   </div>
-<!-- sparkline plots table -->
-	<div class="col-lg-4">
-		<h3>Server Status</h3>
-		<table class="table table-bordered table-disk-quotas">
-			<thead>
-				<tr class="darkth">
-					<th>Server</th>
-					<th>Instrument</th>
-					<th>Disk (Used / Quota)</th>
-				</tr>
-			</thead>
-			<tbody>
-      {% for server, status in server_status %}
-      <tr>
-        <td>{{ server }}</td>
-        <td>{{ status.get('instrument') }}</td>
-        <td class="disk-quotas-highcharts {{ status.get('css_class') }}"><div class="wrapper"><span class="val" style="width:{{ status.get('used_percentage') }};">
-          <span>{{ status.get('space_used') }}</span></span>
-          <span class="percent float-right">{{ status.get('disk_size') }}</span></div>
-        </td>
-      </tr>
-      {% end %}
-      </tbody>
-		</table>
-  </div>
-  </div>
+</div>
+
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script type="text/javascript" src="/static/js/index.js?v={{ gs_globals['git_commit'] }}" id="indexpage-js-import"></script>
 <script src="/static/js/jquery.dataTables.min.js"></script>

@@ -1,5 +1,5 @@
-fill_updates_table = function(){
-    // Find out when the update scripts will next run
+fill_last_updated_text = function(){
+    // Find out when the update script last ran
     $.getJSON('/api/v1/last_psul', function(data){
         var status = data['st']
         if(data['status'] == 'Success'){
@@ -14,12 +14,25 @@ fill_updates_table = function(){
               } else if(data['seconds'] > 0){
                   timestring = data['seconds']+' seconds';
               }
-              var text = 'The script to pull information from the LIMS last ran '+timestring+' ago.';
+              var text = '<i class="fa-solid fa-arrows-rotate mr-2"></i>The script to pull information from the LIMS last ran '+timestring+' ago.';
             }
-            $('#updated-status').html(text);
         } else {
             console.log('Last PSUL update check failed. Returned "'+data['status']+'"');
+            var text='<i class="fa-solid fa-circle-exclamation mr-2"></i>Unable to fetch status of PSUL'
         }
+        $('#updated-status').html(text);
+    });
+};
+
+fill_sensorpush_status_field = function(){
+    // Find status of sensorpush
+    $.getJSON('/api/v1/sensorpush_warnings', function(data){
+        if(data.length == 0){
+            var text = '<div class="alert alert-success"><a class="alert-link text-decoration-none" href="/sensorpush"><i class="fa-solid fa-temperature-snow fs-2 mr-3 align-text-top"></i><span class="fw-bold">Freezers and fridges are <span class="">OK!</span></a></span></div>'
+        } else {
+            var text='<div class="alert alert-danger"><a class="alert-link text-decoration-none" href="/sensorpush"><i class="fa-solid fs-2 fa-snowflake-droplets mr-3 align-text-top"></i><span class="fw-bold">'+data.length+' freezer(s) and/or fridge(s) have had warnings the last 24 hours</a></span></div>'
+        }
+        $('#sensorpush_status').html(text);
     });
 };
 
@@ -78,7 +91,7 @@ function fill_prioprojs_table() {
           library = project_library[1];
           name_id = project_library[0];
           name_proj_id = project_library[0].replace('(','').replace(')','').split(' ');
-          var tbl_row = '<tr>'+'<td>'+'<a href="/project/'+name_proj_id[1]+'">'+name_id+'</a></td>'+
+          var tbl_row = '<tr>'+'<td>'+'<a href="/project/'+name_proj_id[1]+'">'+name_proj_id[1]+'</a></td>'+
                         '<td>'+library+'</td>'+
                         '<td>'+'<span class="'+stat_color+'">'+status+'</span></td>'+
                         '<td>'+'<span class="'+day_color+'">'+check_value+'</span></td></tr>';
@@ -118,118 +131,8 @@ $('body').on('click', '.group', function(event) {
   $($("#prio_projs_table").DataTable().column(0).header()).trigger("click")
 });
 
-function plot_sum_data(){
-  $.getJSON("/api/v1/sensorpush", {'start_days_ago': 1}, function(data) {
-    var frig_series = [];
-    var freez_series = [];
-    $.each(data, function(id, sensordata){
-      var timedata = sensordata.samples;
-      var sensname = sensordata.sensor_name;
-      for (i in timedata) {
-        timedata[i][0] = Date.parse(timedata[i][0]);
-      }
-      var dp_var = {
-          name: sensname,
-          data: timedata,
-          lineWidth: 1
-      };
-      if (sensname.startsWith('F') || sensname == 'TestF35' || sensname == 'K06 A3590'){
-        freez_series.push(dp_var);
-      }
-      else if (sensname.startsWith('K') || sensname == 'Test F36'){
-        frig_series.push(dp_var);
-      }
-    });
-
-    $('#fridge_sum_plot').highcharts({
-      chart: {
-            zoomType: 'x',
-            backgroundColor: null
-      },
-      title: {
-          text: 'All refrigerators'
-      },
-      xAxis: {
-          title: { text: 'Date' },
-          type: 'datetime'
-      },
-      yAxis: {
-          title: { text: 'Temperature (C) of refrigerators' },
-          tooltip: {
-              pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
-          },
-          plotBands: [{
-            color: '#fdffd4',
-            from: 6,
-            width: 10,
-            to: 0
-          }]
-      },
-      legend: {
-          title: {
-              text: 'Click to hide:',
-              align: 'center'
-          }
-      },
-      series: frig_series,
-      plotOptions: {
-         series: {
-             marker: {
-                enabledThreshold: 10
-             }
-         }
-      }
-    });
-
-    $('#freezer_sum_plot').highcharts({
-      chart: {
-            zoomType: 'x',
-            backgroundColor: null
-      },
-      title: {
-           text: 'All freezers'
-      },
-      xAxis: {
-          title: { text: 'Date' },
-          type: 'datetime'
-      },
-      yAxis: {
-          title: { text: 'Temperature (C) of freezers' },
-          tooltip: {
-              pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
-          },
-          plotBands: [{
-            color: '#fdffd4',
-            from: -10, 
-            width: 10, 
-            to: -33
-          }]
-      },
-      legend: {
-          title: {
-              text: 'Click to hide:',
-              align: 'center'
-          }
-      },
-      series: freez_series,
-      plotOptions: {
-         series: {
-             marker: {
-                enabledThreshold: 10
-             }
-         }
-      }
-    });
-
-    $('#loading_spinner').hide(function(){
-      $('#fridge_sum_plot').show();
-      $('#freezer_sum_plot').show();
-    });
- });
-}
-
 $(document).ready(function(){
-    fill_updates_table();
+    fill_last_updated_text();
+    fill_sensorpush_status_field();
     fill_prioprojs_table();
-    plot_sum_data();
 });

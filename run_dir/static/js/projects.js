@@ -35,21 +35,84 @@ $(function(){
     $('#page_content').show();
 
     //API call to get table on load
-    $.getJSON('/api/v1/presets/onloadcheck?action=load', function (data) {
-      if(data!=null){
-        setChangingDropdownValue($('#all_presets_dropdown'), data['origin'], data['preset']);
-        if(data['origin']=='userdefined'){
+    const queryString = window.location.search.slice(1);
+    const urlParams = new URLSearchParams(queryString);
+    var on_load = false;
+    var preset_to_be_loaded = 'Lab Ongoing';
+    var preset_origin = 'default';
+
+
+    function fetch_user_onload_preset(){
+      // Fetch user defined 'onload' preset
+      return $.getJSON('/api/v1/presets/onloadcheck?action=load', function (data) {
+        if(data!=null){
+          // preset on load found
+          on_load = data['loadtable']
+          preset_to_be_loaded = data['preset']
+          preset_origin = data['origin']
+          // Switch the settings 
+          setChangingDropdownValue($('#all_presets_dropdown'), preset_origin, preset_to_be_loaded);
+          if(data['loadtable']==true){
+            $("#onLoadTableOn").trigger("click");
+          }
+          else {
+            $("#onLoadTableOff").trigger("click");
+          }
+          // Indicate which preset that is chosen
+          if(preset_origin=='userdefined'){
+            $('#user_presets_dropdown').find(".btn").addClass('active');
+            setChangingDropdownValue($('#user_presets_dropdown'), preset_origin, preset_to_be_loaded);
+            $('#formDeletePresetName').val(preset_to_be_loaded);
+            appendDeleteBtn(preset_to_be_loaded);
+            select_from_preset("users_presets_dropdown", preset_to_be_loaded);
+          } else {
+            select_from_preset("default_preset_buttons", preset_to_be_loaded);
+            $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]').prop('checked', true)
+          }
+        } else {
+          // No preset saved to be selected automatically
+          $("#presetOpt-lab_ongoing").trigger("click");
+          $("#statusOptAll").trigger("click");
+          select_from_preset("default_preset_buttons", 'Lab Ongoing');
+        }
+      })
+    }
+
+    $.when(fetch_user_onload_preset()).done(function() {
+      if (urlParams.has('load_preset')) {
+        // this takes precedence
+        preset_to_be_loaded = urlParams.get('load_preset')
+        preset_button = $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]')
+
+        if (preset_button.length > 0){
+          preset_origin = 'default'
+        } else {
+          preset_origin = 'userdefined'
+        }
+
+        // Presets from url params will always be loaded
+        on_load = true
+      }
+
+      if (on_load) {
+        if(preset_origin=='userdefined'){
+          // Indicate which preset that is chosen
+          $("#default_preset_buttons").find('input').prop('checked', false)
           $('#user_presets_dropdown').find(".btn").addClass('active');
-          setChangingDropdownValue($('#user_presets_dropdown'), data['origin'], data['preset']);
-          $('#formDeletePresetName').val(data['preset']);
-          appendDeleteBtn(data['preset']);
-          select_from_preset("users_presets_dropdown", data['preset']);
+          setChangingDropdownValue($('#user_presets_dropdown'), preset_origin, preset_to_be_loaded);
+          $('#formDeletePresetName').val(preset_to_be_loaded);
+          appendDeleteBtn(preset_to_be_loaded);
+          select_from_preset("users_presets_dropdown", preset_to_be_loaded);
         }
         else{
+          // Default presets
           $('#formDeletePresetName').val('');
-          if(data['preset']!='Choose Preset'){
-            $("#default_preset_buttons").find('input[data-value="'+data['preset']+'"]').parent('.btn').addClass('active');
-            select_from_preset("default_preset_buttons", data['preset']);
+          $('#deletePresetBtn').remove();
+          $('#user_presets_dropdown').find(".btn").removeClass('active');
+
+          if(preset_to_be_loaded!='Choose Preset'){
+            $("#default_preset_buttons").find('input[data-value="'+preset_to_be_loaded+'"]').prop('checked', true);
+            select_from_preset("default_preset_buttons", preset_to_be_loaded);
           }
           else {
             $("#presetOpt-lab_ongoing").trigger("click");
@@ -57,27 +120,16 @@ $(function(){
           }
           updateStatusBar1($('#statusbtnBar1 :input[data-projects=all]'));
         }
-        if(data['loadtable']==true){
-          $("#onLoadTableOn").trigger("click");
-          setTimeout(getTableParamsandLoad,300);
-        }
-        else {
-          $("#onLoadTableOff").trigger("click");
-        }
+        setTimeout(getTableParamsandLoad,300);
+
       }
-      else{
-        $("#onLoadTableOff").trigger("click");
-        $("#presetOpt-lab_ongoing").trigger("click");
-        $("#statusOptAll").trigger("click");
-        select_from_preset("default_preset_buttons", 'Lab Ongoing');
-      }
-    })
+    });
   });
 
   // Prevent traditional html submit function
   $('#Search-form').submit(function(event){event.preventDefault();});
 
-//Search filter for choose preset fields
+  //Search filter for choose preset fields
   $("#formSearchfields").on("keyup", function() {
     var value = $(this).val().toLowerCase();
     var arr =[];
@@ -594,6 +646,16 @@ function sel_from_ps(preset_type, preset, data){
       updateStatusBar1($('#statusOptNeedReview'), 'defaultClick');
 
     }
+    if(preset=='Bioinformatics'){
+      $('[name="statusOptions"').prop('checked', false)
+      updateStatusBar1($('#statusOptOngoing'), 'defaultClick');
+
+    }
+    if(preset=='Order Status'){
+      $('[name="statusOptions"').prop('checked', false)
+      updateStatusBar1($('#statusOptOngoing'), 'defaultClick');
+
+    }
     var choices = data['default'][preset];
     for (column in choices) {
       if(column.indexOf('COLUMNS')!=-1){
@@ -924,7 +986,6 @@ function get_current_selection(source){
     if($(getElem).data('displayname').indexOf("fa")>=0)
       columns[$(getElem).data('displayname')].push($(getElem).parent().text().match(/\(([^)]+)\)/)[1]);
   });
-
   return {
         status: status,
         type: type,

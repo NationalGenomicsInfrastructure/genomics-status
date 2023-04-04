@@ -76,6 +76,19 @@ class SensorpushDataHandler(SensorpushBaseHandler):
         self.write(json.dumps(sensor_data))
 
 
+class SensorpushWarningsDataHandler(SensorpushBaseHandler):
+    def get(self):
+        start_days_ago = int(self.get_argument("start_days_ago", default="1"))
+        all_sensor_data = self.get_samples(start_days_ago=start_days_ago)
+        sensors_with_warnings = []
+
+        for sensor_id, sensor_data in all_sensor_data.items():
+            if any([sensor_data['intervals_lower'], sensor_data['intervals_higher']]):
+                sensors_with_warnings.append(sensor_data['sensor_name'])
+
+        self.write(json.dumps(sensors_with_warnings))
+
+
 class SensorpushHandler(SensorpushBaseHandler):
     """ Serves a page which lists all sensors with temperature info.
     """
