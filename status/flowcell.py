@@ -121,9 +121,12 @@ class FlowcellHandler(SafeHandler):
                         modified_proj_name = 'undetermined'
                     else:
                         modified_proj_name = proj.replace('__','.')
-                    sum_project_lane_yield = sum(int(lane['clustersnb'].replace(',','')) for lane in lane_details if lane['Project']==proj)
-                    weighted_mean_q30 = sum(int(lane['clustersnb'].replace(',',''))*float(lane['overthirty']) for lane in lane_details if lane['Project']==proj and lane['overthirty'])/sum_project_lane_yield
-                    proj_lane_percentage_obtained = sum_project_lane_yield/total_lane_yield*100
+                    sum_project_lane_yield = sum(int(lane['clustersnb'].replace(',','')) for lane in lane_details if lane['Project']==proj and lane['clustersnb'])
+                    if sum_project_lane_yield:
+                        weighted_mean_q30 = sum(int(lane['clustersnb'].replace(',',''))*float(lane['overthirty']) for lane in lane_details if lane['Project']==proj and lane['clustersnb'] and lane['overthirty'])/sum_project_lane_yield
+                    else:
+                        weighted_mean_q30 = 0
+                    proj_lane_percentage_obtained = (sum_project_lane_yield/total_lane_yield)*100 if total_lane_yield else 0
                     proj_lane_percentage_threshold = (sum_project_lane_yield/(threshold*1000000))*100 if threshold else 0
                     fc_project_yields_lane_list.append({'modified_proj_name'              :  modified_proj_name,
                                                         'sum_project_lane_yield'          :  format(sum_project_lane_yield, ","),
