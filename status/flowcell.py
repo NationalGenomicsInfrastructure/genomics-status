@@ -216,7 +216,7 @@ class ONTReportHandler(SafeHandler):
 
     def get(self, name):
         
-        reports_dir = "/var/local/minknow_reports"
+        reports_dir = self.application.minknow_path
         report_path = os.path.join(reports_dir, f"report_{name}.html")
 
         self.write(open(report_path,"r").read())

@@ -330,6 +330,9 @@ class Application(tornado.web.Application):
 
         # project summary - multiqc tab
         self.multiqc_path = settings.get('multiqc_path')
+        
+        # MinKNOW reports
+        self.minknow_path = settings.get('minknow_path')
 
         #lims backend credentials
         limsbackend_cred_loc = Path(settings['lims_backend_credential_location']).expanduser()
