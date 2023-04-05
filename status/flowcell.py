@@ -1,9 +1,8 @@
 from status.util import SafeHandler
 from datetime import datetime
-import numpy as np
 import pandas as pd
 import re
-import html
+import os
 
 
 thresholds = {
@@ -243,19 +242,12 @@ class ONTReportHandler(SafeHandler):
     def __init__(self, application, request, **kwargs):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
-    def fetch_ont_report(self, name):
-        """ Fetches the MinKNOW .html run report, saved as an escaped string in the
-        database run entry and returns the unescaped string which can be written as .html
-        """
-
-        view_report = self.application.nanopore_runs_db.view("info/minknow_report", descending=True)
-        row = [row for row in view_report.rows if name in row.key][0]
-        str_html = html.unescape(row.value)
-
-        return str_html
-
     def get(self, name):
-        self.write(self.fetch_ont_report(name))
+        
+        reports_dir = self.application.minknow_path
+        report_path = os.path.join(reports_dir, f"report_{name}.html")
+
+        self.write(open(report_path,"r").read())
 
 
 class ONTFlowcellHandler(SafeHandler):
