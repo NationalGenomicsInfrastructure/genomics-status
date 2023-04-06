@@ -117,7 +117,7 @@ function load_running_notes(wait) {
         $('#invoicing_notes').html('<div class="well">No running notes found.</div>');
       }
       else {
-        $('#invoicing_notes').append(make_running_note(inv_notes[0], inv_notes[1]));
+        $('#invoicing_notes').append(make_running_note(inv_notes[0], inv_notes[1], true));
       }
       check_img_sources($('#running_notes_panels img'));
       count_cards();

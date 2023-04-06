@@ -604,9 +604,9 @@ app.component('v-pricing-quote', {
                   <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote('save')" :disabled="this.invoice_downloaded"> Save Agreement</button>
                 </div>
               </div>
-              <div v-if="origin === 'Agreement'">
-                <h4 class="ml-2 mt-5 mb-3">Invoicing Running Notes</h4>
-                <div id="invoicing_notes">-</div>
+              <div v-if="origin === 'Agreement'" class="ml-n1 mt-5">
+                  <h4>Invoicing Running Notes</h4>
+                  <div id="invoicing_notes">-</div>
               </div>
             </div>
           </div>
