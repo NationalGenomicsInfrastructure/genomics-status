@@ -325,6 +325,12 @@ tr.group, tr.group:hover, .dtrg-group {
   padding:0;
 }
 
+/*From agreements tab*/
+#invoicing_notes {
+  max-height: 400px;
+  overflow: scroll;
+}
+
 .trunc-note {
   max-height: 400px;
   overflow: scroll;
