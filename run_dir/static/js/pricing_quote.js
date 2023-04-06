@@ -605,7 +605,7 @@ app.component('v-pricing-quote', {
                 </div>
               </div>
               <div v-if="origin === 'Agreement'">
-                <h4 class="mt-5 mb-3">Invoicing Running Notes</h4>
+                <h4 class="ml-2 mt-5 mb-3">Invoicing Running Notes</h4>
                 <div id="invoicing_notes">-</div>
               </div>
             </div>
