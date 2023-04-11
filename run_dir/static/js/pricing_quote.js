@@ -605,11 +605,17 @@ app.component('v-pricing-quote', {
                 </div>
               </div>
               <div v-if="origin === 'Agreement'" class="ml-n1 mt-5">
-                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#inv_rn" aria-expanded="false" aria-controls="inv_rn">
-                  Invoicing Running Notes
-                </button>
-                <div class="collapse border-top py-3" id="inv_rn">
-                  <div id="invoicing_notes"></div>
+                <div class="card mt-5">
+                  <div class="card-header">
+                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#inv_rn" aria-expanded="false" aria-controls="inv_rn">
+                      Invoicing Running Notes
+                    </button>
+                    <div class="collapse border-top py-3" id="inv_rn">
+                      <div class="card-body">
+                        <div id="invoicing_notes"></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
           </div>
