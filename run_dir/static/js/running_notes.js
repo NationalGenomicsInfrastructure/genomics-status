@@ -102,7 +102,7 @@ function load_running_notes(wait) {
   $("#running_notes_panels").empty();
   // From agreements tab
   $("#invoicing_notes").empty();
-  inv_notes = {};
+  inv_notes = false;
   return $.getJSON(note_url, function(data) {
     if(Object.keys(data).length == 0 || typeof data === 'undefined'){
       $('#running_notes_panels').html('<div class="well">No running notes found.</div>');
@@ -110,11 +110,11 @@ function load_running_notes(wait) {
       $.each(data, function(date, note) {
         $('#running_notes_panels').append(make_running_note(date, note));
         if(note['category'].includes('Invoicing')){
-          Object.assign(inv_notes, { date: date, note: note });
-          $('#invoicing_notes').append(make_running_note(inv_notes.date, inv_notes.note, true));
+          inv_notes = true;
+          $('#invoicing_notes').append(make_running_note(date, note, true));
         }
       });
-      if(Object.keys(inv_notes).length === 0){
+      if(!inv_notes){
         $('#invoicing_notes').html('<div class="well">No running notes found.</div>');
       }
       check_img_sources($('#running_notes_panels img'));
