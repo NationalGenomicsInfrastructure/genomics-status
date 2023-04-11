@@ -605,8 +605,19 @@ app.component('v-pricing-quote', {
                 </div>
               </div>
               <div v-if="origin === 'Agreement'" class="ml-n1 mt-5">
-                  <h4>Invoicing Running Notes</h4>
-                  <div id="invoicing_notes">-</div>
+                <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                <div>
+                  <div class="panel-heading" role="tab" id="headingOne">
+                    <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne" class="collapsed">
+                      Invoicing Running Notes
+                    </a>
+                  </div>
+                  <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+                    <div class="panel-body mt-3">
+                     <div id="invoicing_notes">-</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
