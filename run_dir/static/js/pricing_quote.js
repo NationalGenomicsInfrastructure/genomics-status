@@ -605,21 +605,13 @@ app.component('v-pricing-quote', {
                 </div>
               </div>
               <div v-if="origin === 'Agreement'" class="ml-n1 mt-5">
-                <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-                <div>
-                  <div class="panel-heading" role="tab" id="headingOne">
-                    <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne" class="collapsed">
-                      Invoicing Running Notes
-                    </a>
-                  </div>
-                  <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
-                    <div class="panel-body mt-3">
-                     <div id="invoicing_notes"></div>
-                    </div>
-                  </div>
+                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#inv_rn" aria-expanded="false" aria-controls="inv_rn">
+                  Invoicing Running Notes
+                </button>
+                <div class="collapse border-top py-3" id="inv_rn">
+                  <div id="invoicing_notes"></div>
                 </div>
               </div>
-            </div>
           </div>
 
           <div class="products_chooseable_div mt-4">
