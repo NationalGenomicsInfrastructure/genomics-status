@@ -1,9 +1,8 @@
 from status.util import SafeHandler
 from datetime import datetime
-import numpy as np
 import pandas as pd
 import re
-import html
+import os
 
 
 thresholds = {
@@ -121,14 +120,17 @@ class FlowcellHandler(SafeHandler):
                         modified_proj_name = 'undetermined'
                     else:
                         modified_proj_name = proj.replace('__','.')
-                    sum_project_lane_yield = sum(int(lane['clustersnb'].replace(',','')) for lane in lane_details if lane['Project']==proj)
-                    weighted_mean_q30 = sum(int(lane['clustersnb'].replace(',',''))*float(lane['overthirty']) for lane in lane_details if lane['Project']==proj)/sum_project_lane_yield
-                    proj_lane_percentage_actual = sum_project_lane_yield/total_lane_yield*100
+                    sum_project_lane_yield = sum(int(lane['clustersnb'].replace(',','')) for lane in lane_details if lane['Project']==proj and lane['clustersnb'])
+                    if sum_project_lane_yield:
+                        weighted_mean_q30 = sum(int(lane['clustersnb'].replace(',',''))*float(lane['overthirty']) for lane in lane_details if lane['Project']==proj and lane['clustersnb'] and lane['overthirty'])/sum_project_lane_yield
+                    else:
+                        weighted_mean_q30 = 0
+                    proj_lane_percentage_obtained = (sum_project_lane_yield/total_lane_yield)*100 if total_lane_yield else 0
                     proj_lane_percentage_threshold = (sum_project_lane_yield/(threshold*1000000))*100 if threshold else 0
                     fc_project_yields_lane_list.append({'modified_proj_name'              :  modified_proj_name,
                                                         'sum_project_lane_yield'          :  format(sum_project_lane_yield, ","),
                                                         'weighted_mean_q30'               :  weighted_mean_q30,
-                                                        'proj_lane_percentage_actual'     :  proj_lane_percentage_actual,
+                                                        'proj_lane_percentage_obtained'     :  proj_lane_percentage_obtained,
                                                         'proj_lane_percentage_threshold'  :  proj_lane_percentage_threshold})
                 fc_project_yields[lane_nr] = sorted(fc_project_yields_lane_list, key=lambda d: d['modified_proj_name'])
 
@@ -240,19 +242,12 @@ class ONTReportHandler(SafeHandler):
     def __init__(self, application, request, **kwargs):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
-    def fetch_ont_report(self, name):
-        """ Fetches the MinKNOW .html run report, saved as an escaped string in the
-        database run entry and returns the unescaped string which can be written as .html
-        """
-
-        view_report = self.application.nanopore_runs_db.view("info/minknow_report", descending=True)
-        row = [row for row in view_report.rows if name in row.key][0]
-        str_html = html.unescape(row.value)
-
-        return str_html
-
     def get(self, name):
-        self.write(self.fetch_ont_report(name))
+        
+        reports_dir = self.application.minknow_path
+        report_path = os.path.join(reports_dir, f"report_{name}.html")
+
+        self.write(open(report_path,"r").read())
 
 
 class ONTFlowcellHandler(SafeHandler):
@@ -303,22 +298,28 @@ class ONTFlowcellHandler(SafeHandler):
             df.loc[df.bc_name == df.barcode_alias, "barcode_alias"] = ""
 
             # Calculate percentages
-            df["basecalled_pass_read_count_pc"] = np.where(
-                sum(df.basecalled_pass_read_count) > 0,
-                round(df.basecalled_pass_read_count / sum(df.basecalled_pass_read_count) * 100, 2),
-                0)
-            df["basecalled_pass_bases_pc"] = np.where(
-                sum(df.basecalled_pass_bases) > 0,
-                round(df.basecalled_pass_bases / sum(df.basecalled_pass_bases) * 100, 2),
-                0)
-            df["average_read_length_passed"] =  np.where(
-                df.basecalled_pass_read_count > 0,
-                round(df.basecalled_pass_bases / df.basecalled_pass_read_count, 2).astype(int),
-                0)
-            df["accuracy"] =  np.where(
-                df.basecalled_pass_bases + df.basecalled_fail_bases > 0,
-                round(df.basecalled_pass_bases / (df.basecalled_pass_bases + df.basecalled_fail_bases) * 100, 2),
-                0)
+            df["basecalled_pass_read_count_pc"] = round(df.basecalled_pass_read_count / sum(df.basecalled_pass_read_count) * 100, 2) \
+                if sum(df.basecalled_pass_read_count) > 0 else "-"
+            df["basecalled_pass_bases_pc"] = round(df.basecalled_pass_bases / sum(df.basecalled_pass_bases) * 100, 2) \
+                if sum(df.basecalled_pass_bases) > 0 else "-"
+
+            df["average_read_length_passed"] = df.apply(
+                lambda x: \
+                    int(round(x["basecalled_pass_bases"] / x["basecalled_pass_read_count"], 0)) \
+                    if x["basecalled_pass_bases"] > 0 and x["basecalled_pass_read_count"] > 0 \
+                    else 0
+                ,
+                axis = 1
+            )
+
+            df["accuracy"] = df.apply(
+                lambda x: \
+                    round(x["basecalled_pass_bases"] / (x["basecalled_pass_bases"] + x["basecalled_fail_bases"]) * 100, 2) \
+                    if x["basecalled_pass_bases"] > 0 or x["basecalled_pass_read_count"] > 0 \
+                    else 0
+                ,
+                axis = 1
+            )
 
             # Return dict for easy Tornado templating
             df.fillna("", inplace=True)
