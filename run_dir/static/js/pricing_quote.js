@@ -614,7 +614,7 @@ app.component('v-pricing-quote', {
                   </div>
                   <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
                     <div class="panel-body mt-3">
-                     <div id="invoicing_notes">-</div>
+                     <div id="invoicing_notes"></div>
                     </div>
                   </div>
                 </div>
