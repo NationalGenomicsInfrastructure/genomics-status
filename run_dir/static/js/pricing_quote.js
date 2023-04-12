@@ -604,7 +604,20 @@ app.component('v-pricing-quote', {
                   <button type="submit" class="btn btn-primary" id="generate_quote_btn" v-on:click="generate_quote('save')" :disabled="this.invoice_downloaded"> Save Agreement</button>
                 </div>
               </div>
-            </div>
+              <div v-if="origin === 'Agreement'" class="ml-n1 mt-5">
+                <div class="card mt-5">
+                  <div class="card-header">
+                    <button class="btn" type="button" data-toggle="collapse" data-target="#inv_rn" aria-expanded="false" aria-controls="inv_rn">
+                      <h4>Invoicing Running Notes<i class="fa fa-caret-down ml-1" aria-hidden="true"></i></h4>
+                    </button>
+                  </div>
+                  <div class="collapse border-top py-3" id="inv_rn">
+                    <div class="card-body">
+                      <div id="invoicing_notes"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
           </div>
 
           <div class="products_chooseable_div mt-4">
@@ -616,7 +629,6 @@ app.component('v-pricing-quote', {
         </template>
         `
 })
-
 
 app.component('v-quote-list-product', {
     /* Display products which are added to the quote */
