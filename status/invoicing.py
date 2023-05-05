@@ -17,13 +17,31 @@ from status.pricing import AgreementsDBHandler
 logging.getLogger('fontTools').setLevel(logging.ERROR)
 logging.getLogger('weasyprint').setLevel(logging.ERROR)
 
-def get_proj_doc(app: tornado.web.Application, proj_id: str) -> dict:
+class InvoicingDataHandler(SafeHandler):
+    """Base class that other handlers can inherit from for methods to access invoicing data.
 
-    view = app.projects_db.view("project/project_id", startkey=proj_id, limit=1)
-    proj_doc_id = view.rows[0].value
-    proj_doc = app.projects_db.get(proj_doc_id)
+    Implements logic that other classes can reuse
+    """
 
-    return proj_doc
+    # _____________________________ FETCH METHODS _____________________________
+
+    def get_proj_doc(self, proj_id: str) -> dict:
+
+        view = self.application.projects_db.view("project/project_id", startkey=proj_id, limit=1)
+        proj_doc_id = view.rows[0].value
+        proj_doc = self.application.projects_db.get(proj_doc_id)
+
+        return proj_doc
+
+    def get_order_details(self, order_id: str) -> dict:
+        
+        order_url = f'{self.application.order_portal_conf["api_get_order_url"]}/{order_id}'
+        headers = {"X-OrderPortal-API-key": self.application.order_portal_conf["api_token"]}
+        response = requests.get(order_url, headers=headers)
+        assert response.status_code == 200, (response.status_code, response.reason)
+       
+        return response.json()['fields']
+
 
 class InvoicingPageHandler(SafeHandler):
     """ Serves the invoicing page
@@ -53,7 +71,7 @@ class InvoicingPageDataHandler(AgreementsDBHandler):
         self.write(proj_list)
 
 
-class InvoiceSpecDateHandler(AgreementsDBHandler):
+class InvoiceSpecDateHandler(AgreementsDBHandler, InvoicingDataHandler):
     """ Saves the date of Invoice Specification generation
 
         Loaded through:
@@ -66,7 +84,7 @@ class InvoiceSpecDateHandler(AgreementsDBHandler):
 
         post_data = tornado.escape.json_decode(self.request.body)
 
-        proj_doc =  get_proj_doc(self.application, post_data['proj_id'])
+        proj_doc =  self.get_proj_doc(post_data['proj_id'])
         agreement_doc = self.fetch_agreement(post_data['proj_id'])
 
         agreement_for_invoice_timestamp = post_data['timestamp']
@@ -92,7 +110,7 @@ class InvoiceSpecDateHandler(AgreementsDBHandler):
         self.write({'message': 'Invoice spec generated'})
 
 
-class GenerateInvoiceHandler(AgreementsDBHandler):
+class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
     """ Generate the actual invoice document
 
         Loaded through:
@@ -141,7 +159,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
                 account_dets, contact_dets, proj_specs = self.get_invoice_data(proj_id, agreement_doc, invoice_defaults)
 
                 _, pdfgen = self.generate_invoice_html_pdf(account_dets, contact_dets, proj_specs)
-                zf.writestr(f'{proj_id}_invoice.pdf', pdfgen)
+                zf.writestr(f'{proj_id}_invoice_specification.pdf', pdfgen)
 
                 row = [proj_specs['total_cost'], ' ', f'{proj_specs["id"]}, {proj_specs["name"]}', '1,00', f'({proj_specs["cust_desc"]})',
                         account_dets['fakturaunderlag'], contact_dets['email'], account_dets['fakturafragor'], account_dets['support_email'],
@@ -149,7 +167,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
                         contact_dets['reference'], account_dets['ansvarig'], proj_specs["close_date"]]
                 data.append(row)
 
-                proj_doc = get_proj_doc(self.application, proj_id)
+                proj_doc = self.get_proj_doc(proj_id)
                 proj_doc['invoice_spec_downloaded'] = int(datetime.datetime.now().timestamp()*1000)
                 self.application.projects_db.save(proj_doc)
             df = pd.DataFrame(data, columns=col_headers)
@@ -167,7 +185,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
     def get_invoice_data(self, proj_id: str, agreement_doc: dict, inv_defs: dict) -> tuple[dict, dict, dict]:
         """ Retrieve invoice data"""
 
-        proj_doc = get_proj_doc(self.application, proj_id)
+        proj_doc = self.get_proj_doc(proj_id)
 
         invoiced_agreement = agreement_doc['saved_agreements'][agreement_doc['invoice_spec_generated_for']]
 
@@ -183,11 +201,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         account_dets['support_email'] = inv_defs['account_details']['support_email']
 
         contact_dets = {}
-        order_url = f'{self.application.order_portal_conf["api_get_order_url"]}/{proj_doc["order_details"]["identifier"]}'
-        headers = {"X-OrderPortal-API-key": self.application.order_portal_conf["api_token"]}
-        response = requests.get(order_url, headers=headers)
-        assert response.status_code == 200, (response.status_code, response.reason)
-        fields = response.json()['fields']
+        fields = self.get_order_details(proj_doc["order_details"]["identifier"])
         contact_dets['name'] = fields['project_pi_name']
         contact_dets['email'] = fields['project_pi_email']
         contact_dets['reference'] = fields['project_invoice_ref']
@@ -231,7 +245,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler):
         pdfgen = html.write_pdf(stylesheets=[css])
         return invoice_gen.decode('utf-8'), pdfgen
 
-class DeleteInvoiceHandler(AgreementsDBHandler):
+class DeleteInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
     """ Delete generated invoice specs
 
         Loaded through:
@@ -241,7 +255,7 @@ class DeleteInvoiceHandler(AgreementsDBHandler):
     def delete(self):
         projs = json.loads(self.request.body)['projects']
         for proj_id in projs:
-            proj_doc = get_proj_doc(self.application, proj_id)
+            proj_doc = self.get_proj_doc(proj_id)
             proj_doc.pop('invoice_spec_generated')
 
             agreement_doc = self.fetch_agreement(proj_id)
@@ -267,3 +281,21 @@ class SentInvoiceHandler(AgreementsDBHandler):
         for row in view:
             proj_list[row.value] = row.key
         self.write(proj_list)
+
+class InvoicingOrderDetailsHandler(AgreementsDBHandler, InvoicingDataHandler):
+    """ Get order details needed for invoicing
+
+        Loaded through:
+            /api/v1/get_order_det_invoicing/([^/]*)
+    """
+
+    def get(self, order_id):
+        order_details = self.get_order_details(order_id)
+        contact_dets = {}
+        contact_dets['reference'] = order_details['project_invoice_ref']
+        contact_dets['invoice_address'] = order_details['address_invoice_address']
+        contact_dets['invoice_zip'] = order_details['address_invoice_zip']
+        contact_dets['invoice_city'] = order_details['address_invoice_city']
+        contact_dets['invoice_country'] = order_details['address_invoice_country']
+        self.set_header("Content-type", "application/json")
+        self.write(contact_dets)

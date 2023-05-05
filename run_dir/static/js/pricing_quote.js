@@ -8,7 +8,7 @@ app.component('v-pricing-quote', {
       return {
         md_message: '',
         md_src_message: '',
-        proj_data: {'pi_name':'', 'invoice_downloaded': ''},
+        proj_data: {'pi_name':'', 'invoice_downloaded': '', 'order_details':{}},
         cLabel_index: 0,
         active_cost_labels: {},
         template_text_data: {},
@@ -138,6 +138,8 @@ app.component('v-pricing-quote', {
                     this.proj_data['pi_name'] = pi_name.split(':')[0]
                     this.proj_data['affiliation'] = pdata['affiliation']
                     this.proj_data['project_id'] = proj_id
+                    this.proj_data['order_id'] = pdata['order_details']['identifier']
+                    this.get_order_details(this.proj_data['order_id'])
                     this.proj_id = proj_id
                     if('invoice_spec_downloaded' in pdata){
                       this.proj_data['invoice_downloaded'] = pdata['invoice_spec_downloaded']
@@ -155,6 +157,16 @@ app.component('v-pricing-quote', {
                 })
                 this.get_saved_agreement_data(proj_id)
             }
+        },
+        get_order_details(order_id){
+          axios
+              .get('/api/v1/get_order_det_invoicing/'+order_id)
+              .then(response => {
+                  this.proj_data['order_details'] = response.data
+              })
+              .catch(error => {
+                  this.$root.error_messages.push('Unable to fetch order data, please try again or contact a system administrator.')
+              })
         },
         get_saved_agreement_data(proj_id){
           axios
@@ -429,6 +441,19 @@ app.component('v-pricing-quote', {
                 <label for="pi_name" class="fw-bold pr-2">PI name</label>
                 <input type="text" id="pi_name" name="pi_name" v-model="proj_data['pi_name']">
                 <span v-if="!proj_data['pi_name'].length " class="text-danger pl-1">PI name is empty!</span>
+                <div class="pt-3"> <h4 class="mb-2">Invoicing details</h4> </div>
+                <dl class="dl-horizontal-invoicing">
+                <dt>Invoice Reference</dt>
+                  <dd>{{ this.proj_data['order_details']['reference'] }} </dd>
+                <dt>Address</dt>
+                  <dd>{{ this.proj_data['order_details']['invoice_address'] }} </dd>
+                <dt>Postal Code</dt>
+                  <dd>{{ this.proj_data['order_details']['invoice_zip'] }}</dd>
+                <dt>City</dt>
+                  <dd>{{ this.proj_data['order_details']['invoice_city'] }} </dd>
+                <dt>Country</dt>
+                  <dd>{{ this.proj_data['order_details']['invoice_country'] }} </dd>
+              </dl>
               </div>
               <div class="p-2"> <h4>Agreement Summary</h4> </div>
               <div class="row mx-2">
@@ -519,7 +544,36 @@ app.component('v-pricing-quote', {
                     <button class="btn btn-primary m-1" @click="load_saved_agreement()">Load</button>
                     <button v-if="this.has_admin_control" class="btn btn-secondary m-1" type="submit" v-on:click="generate_quote('display')" :disabled="this.invoice_downloaded" id="generate_quote_btn">Display Agreement</button>
                     <button v-if="this.has_admin_control" class="btn btn-danger m-1" @click="mark_agreement_signed" :disabled="this.invoice_downloaded"><i class="far fa-file-signature fa-lg"></i> Mark Signed</button>
-                    <button v-if="this.has_admin_control" class="btn btn-success m-1" @click="generate_invoice_spec" :disabled="this.invoice_downloaded"><i class="far fa-file-invoice fa-lg"></i> Generate Invoice specification</button>
+                    <button v-if="this.has_admin_control" class="btn btn-success m-1" data-toggle="modal" data-target="#confirm_submit_inv_spec"   :disabled="this.invoice_downloaded"><i class="far fa-file-invoice fa-lg"></i> Generate Invoice specification</button>
+                    <!-- Confirm Inv Spec submission Modal -->
+                    <div class="modal fade" id="confirm_submit_inv_spec" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                      <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h4 class="modal-title" id="myModalLabel">Verify Invoice Ref and Address</h4>
+                            <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body">
+                            <dl class="dl-horizontal-invoicing">
+                              <dt>Invoice Reference</dt>
+                                <dd>{{ this.proj_data['order_details']['reference'] }} </dd>
+                              <dt>Address</dt>
+                                <dd>{{ this.proj_data['order_details']['invoice_address'] }} </dd>
+                              <dt>Postal Code</dt>
+                                <dd>{{ this.proj_data['order_details']['invoice_zip'] }}</dd>
+                              <dt>City</dt>
+                                <dd>{{ this.proj_data['order_details']['invoice_city'] }} </dd>
+                              <dt>Country</dt>
+                                <dd>{{ this.proj_data['order_details']['invoice_country'] }} </dd>
+                            </dl>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button id='datepicker-btn' type="button" class="btn btn-primary" @click="generate_invoice_spec" data-dismiss="modal">Continue</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -627,7 +681,7 @@ app.component('v-pricing-quote', {
             <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="true"/>
           </div>
         </template>
-        `
+      `
 })
 
 app.component('v-quote-list-product', {
