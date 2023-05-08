@@ -82,12 +82,12 @@ app.component('v-pricing-quote', {
                 full_cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
             }
 
-            return {'cost': cost_sum.toFixed(2),
-                    'cost_academic': cost_academic_sum.toFixed(2),
-                    'full_cost': full_cost_sum.toFixed(2),
-                    'cost_discount': cost_sum_discount.toFixed(2),
-                    'cost_academic_discount': cost_academic_sum_discount.toFixed(2),
-                    'full_cost_discount': full_cost_sum_discount.toFixed(2)
+            return {'cost': Math.round(cost_sum),
+                    'cost_academic': Math.round(cost_academic_sum),
+                    'full_cost': Math.round(full_cost_sum),
+                    'cost_discount': Math.round(cost_sum_discount),
+                    'cost_academic_discount': Math.round(cost_academic_sum_discount),
+                    'full_cost_discount': Math.round(full_cost_sum_discount)
                   }
         },
         compiledMarkdown() {
@@ -696,7 +696,7 @@ app.component('v-quote-list-product', {
             return this.$root.productCost(this.product_id)
         },
         cost() {
-            return (this.product_count * this.productCost[this.$root.price_type]).toFixed(2)
+            return Math.round((this.product_count * this.productCost[this.$root.price_type]))
         },
         product_count() {
             return this.$root.quote_prod_ids[this.product_id]
