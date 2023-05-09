@@ -379,10 +379,10 @@ const vPricingMain = {
             axios
                 .get(url)
                 .then(response => {
-                    this.USD_in_SEK = response.data.USD_in_SEK
-                    this.EUR_in_SEK = response.data.EUR_in_SEK
+                    this.USD_in_SEK = response.data.USD_in_SEK.toFixed(2)
+                    this.EUR_in_SEK = response.data.EUR_in_SEK.toFixed(2)
                     date = new Date(Date.parse(response.data['Issued at']))
-                    this.exch_rate_issued_at = date.toISOString().substring(0, 10)
+                    this.exch_rate_issued_at = date.toLocaleDateString('se-SE')
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Unable to fetch exchange rates data, please try again or contact a system administrator.')
@@ -583,7 +583,7 @@ app.component('v-exchange-rates', {
           if (val === null) {
               return ""
           } else {
-              return val.toFixed(2)
+              return val
           }
       },
       EUR_in_SEK() {
@@ -591,7 +591,7 @@ app.component('v-exchange-rates', {
           if (val === null) {
               return ""
           } else {
-              return val.toFixed(2)
+              return val
           }
       }
   },
@@ -1144,7 +1144,6 @@ app.component('v-draft-validation-msgs-list', {
         scroll_to_on_page(event) {
             event.preventDefault();
             destination = event.target.dataset.scrollToLink
-            console.log(this.modal_id)
             scroll_to = function(dest) {
                 window.location.href = '#'
                 window.location.href = dest

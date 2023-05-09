@@ -8,7 +8,7 @@ app.component('v-pricing-quote', {
       return {
         md_message: '',
         md_src_message: '',
-        proj_data: {'pi_name':'', 'invoice_downloaded': '', 'order_details':{}},
+        proj_data: {'pi_name':'', 'affiliation':'', 'invoice_downloaded': '', 'order_details':{}},
         cLabel_index: 0,
         active_cost_labels: {},
         template_text_data: {},
@@ -117,7 +117,6 @@ app.component('v-pricing-quote', {
         this.fetch_latest_agreement_doc()
     },
     mounted: function () {
-        this.init_text()
         this.get_project_specific_data()
     },
     watch: {
@@ -281,6 +280,7 @@ app.component('v-pricing-quote', {
               .get('/api/v1/get_agreement_template_text')
               .then(response => {
                   this.template_text_data = response.data
+                  this.md_src_message = this.template_text_data.first_page_text.agreement_summary
               })
               .catch(error => {
                   this.$root.error_messages.push('Unable to fetch agreement template data, please try again or contact a system administrator.')
@@ -295,12 +295,6 @@ app.component('v-pricing-quote', {
           if(this.active_cost_labels.hasOwnProperty(index)){
             delete this.active_cost_labels[index]
           }
-        },
-        init_text: function(){
-          this.md_src_message = '1. **Library preparation**:  (accredited method)\n'+
-                                '1. **Sequencing**:  (accredited method)\n'+
-                                '1. **Data processing**: Demultiplexing, quality control and raw data delivery on Uppmax/GRUS (accredited method)\n'+
-                                '1. **Data analysis**: None'
         },
         add_to_md_text: function(){
           this.md_message = this.compiledMarkdown
@@ -438,9 +432,14 @@ app.component('v-pricing-quote', {
                 <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
               </div>
               <div v-if="origin === 'Agreement'">
-                <label for="pi_name" class="fw-bold pr-2">PI name</label>
+                <label for="pi_name" class="fw-bold pr-4">PI name</label>
                 <input type="text" id="pi_name" name="pi_name" v-model="proj_data['pi_name']">
                 <span v-if="!proj_data['pi_name'].length " class="text-danger pl-1">PI name is empty!</span>
+                <div>
+                  <label for="affiliation" class="fw-bold pr-2">Affiliation</label>
+                  <input type="text" id="affiliation" name="affiliation" v-model="proj_data['affiliation']">
+                  <span v-if="!proj_data['affiliation'].length " class="text-danger pl-1">Affiliation is empty!</span>
+                </div>
                 <div class="pt-3"> <h4 class="mb-2">Invoicing details</h4> </div>
                 <dl class="dl-horizontal-invoicing">
                 <dt>Invoice Reference</dt>
@@ -661,14 +660,10 @@ app.component('v-pricing-quote', {
               <div v-if="origin === 'Agreement'" class="ml-n1 mt-5">
                 <div class="card mt-5">
                   <div class="card-header">
-                    <button class="btn" type="button" data-toggle="collapse" data-target="#inv_rn" aria-expanded="false" aria-controls="inv_rn">
-                      <h4>Invoicing Running Notes<i class="fa fa-caret-down ml-1" aria-hidden="true"></i></h4>
-                    </button>
+                    <h4>Invoicing Running Notes</h4>
                   </div>
-                  <div class="collapse border-top py-3" id="inv_rn">
-                    <div class="card-body">
-                      <div id="invoicing_notes"></div>
-                    </div>
+                  <div class="card-body">
+                    <div id="invoicing_notes"></div>
                   </div>
                 </div>
               </div>
