@@ -379,8 +379,8 @@ const vPricingMain = {
             axios
                 .get(url)
                 .then(response => {
-                    this.USD_in_SEK = response.data.USD_in_SEK.toFixed(2)
-                    this.EUR_in_SEK = response.data.EUR_in_SEK.toFixed(2)
+                    this.USD_in_SEK = response.data.USD_in_SEK
+                    this.EUR_in_SEK = response.data.EUR_in_SEK
                     date = new Date(Date.parse(response.data['Issued at']))
                     this.exch_rate_issued_at = date.toLocaleDateString('se-SE')
                 })
@@ -583,7 +583,7 @@ app.component('v-exchange-rates', {
           if (val === null) {
               return ""
           } else {
-              return val
+              return val.toFixed(2)
           }
       },
       EUR_in_SEK() {
@@ -591,7 +591,7 @@ app.component('v-exchange-rates', {
           if (val === null) {
               return ""
           } else {
-              return val
+              return val.toFixed(2)
           }
       }
   },
