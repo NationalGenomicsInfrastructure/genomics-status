@@ -8,7 +8,7 @@ app.component('v-pricing-quote', {
       return {
         md_message: '',
         md_src_message: '',
-        proj_data: {'pi_name':'', 'invoice_downloaded': ''},
+        proj_data: {'pi_name':'', 'affiliation':'', 'invoice_downloaded': '', 'order_details':{}},
         cLabel_index: 0,
         active_cost_labels: {},
         template_text_data: {},
@@ -82,12 +82,12 @@ app.component('v-pricing-quote', {
                 full_cost_sum *= (100 - this.$root.quote_special_percentage_value)/100
             }
 
-            return {'cost': cost_sum.toFixed(2),
-                    'cost_academic': cost_academic_sum.toFixed(2),
-                    'full_cost': full_cost_sum.toFixed(2),
-                    'cost_discount': cost_sum_discount.toFixed(2),
-                    'cost_academic_discount': cost_academic_sum_discount.toFixed(2),
-                    'full_cost_discount': full_cost_sum_discount.toFixed(2)
+            return {'cost': Math.round(cost_sum),
+                    'cost_academic': Math.round(cost_academic_sum),
+                    'full_cost': Math.round(full_cost_sum),
+                    'cost_discount': Math.round(cost_sum_discount),
+                    'cost_academic_discount': Math.round(cost_academic_sum_discount),
+                    'full_cost_discount': Math.round(full_cost_sum_discount)
                   }
         },
         compiledMarkdown() {
@@ -117,7 +117,6 @@ app.component('v-pricing-quote', {
         this.fetch_latest_agreement_doc()
     },
     mounted: function () {
-        this.init_text()
         this.get_project_specific_data()
     },
     watch: {
@@ -138,6 +137,8 @@ app.component('v-pricing-quote', {
                     this.proj_data['pi_name'] = pi_name.split(':')[0]
                     this.proj_data['affiliation'] = pdata['affiliation']
                     this.proj_data['project_id'] = proj_id
+                    this.proj_data['order_id'] = pdata['order_details']['identifier']
+                    this.get_order_details(this.proj_data['order_id'])
                     this.proj_id = proj_id
                     if('invoice_spec_downloaded' in pdata){
                       this.proj_data['invoice_downloaded'] = pdata['invoice_spec_downloaded']
@@ -155,6 +156,16 @@ app.component('v-pricing-quote', {
                 })
                 this.get_saved_agreement_data(proj_id)
             }
+        },
+        get_order_details(order_id){
+          axios
+              .get('/api/v1/get_order_det_invoicing/'+order_id)
+              .then(response => {
+                  this.proj_data['order_details'] = response.data
+              })
+              .catch(error => {
+                  this.$root.error_messages.push('Unable to fetch order data, please try again or contact a system administrator.')
+              })
         },
         get_saved_agreement_data(proj_id){
           axios
@@ -269,6 +280,7 @@ app.component('v-pricing-quote', {
               .get('/api/v1/get_agreement_template_text')
               .then(response => {
                   this.template_text_data = response.data
+                  this.md_src_message = this.template_text_data.first_page_text.agreement_summary
               })
               .catch(error => {
                   this.$root.error_messages.push('Unable to fetch agreement template data, please try again or contact a system administrator.')
@@ -283,12 +295,6 @@ app.component('v-pricing-quote', {
           if(this.active_cost_labels.hasOwnProperty(index)){
             delete this.active_cost_labels[index]
           }
-        },
-        init_text: function(){
-          this.md_src_message = '1. **Library preparation**:  (accredited method)\n'+
-                                '1. **Sequencing**:  (accredited method)\n'+
-                                '1. **Data processing**: Demultiplexing, quality control and raw data delivery on Uppmax/GRUS (accredited method)\n'+
-                                '1. **Data analysis**: None'
         },
         add_to_md_text: function(){
           this.md_message = this.compiledMarkdown
@@ -426,9 +432,27 @@ app.component('v-pricing-quote', {
                 <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
               </div>
               <div v-if="origin === 'Agreement'">
-                <label for="pi_name" class="fw-bold pr-2">PI name</label>
+                <label for="pi_name" class="fw-bold pr-4">PI name</label>
                 <input type="text" id="pi_name" name="pi_name" v-model="proj_data['pi_name']">
                 <span v-if="!proj_data['pi_name'].length " class="text-danger pl-1">PI name is empty!</span>
+                <div>
+                  <label for="affiliation" class="fw-bold pr-2">Affiliation</label>
+                  <input type="text" id="affiliation" name="affiliation" v-model="proj_data['affiliation']">
+                  <span v-if="!proj_data['affiliation'].length " class="text-danger pl-1">Affiliation is empty!</span>
+                </div>
+                <div class="pt-3"> <h4 class="mb-2">Invoicing details</h4> </div>
+                <dl class="dl-horizontal-invoicing">
+                <dt>Invoice Reference</dt>
+                  <dd>{{ this.proj_data['order_details']['reference'] }} </dd>
+                <dt>Address</dt>
+                  <dd>{{ this.proj_data['order_details']['invoice_address'] }} </dd>
+                <dt>Postal Code</dt>
+                  <dd>{{ this.proj_data['order_details']['invoice_zip'] }}</dd>
+                <dt>City</dt>
+                  <dd>{{ this.proj_data['order_details']['invoice_city'] }} </dd>
+                <dt>Country</dt>
+                  <dd>{{ this.proj_data['order_details']['invoice_country'] }} </dd>
+              </dl>
               </div>
               <div class="p-2"> <h4>Agreement Summary</h4> </div>
               <div class="row mx-2">
@@ -519,7 +543,36 @@ app.component('v-pricing-quote', {
                     <button class="btn btn-primary m-1" @click="load_saved_agreement()">Load</button>
                     <button v-if="this.has_admin_control" class="btn btn-secondary m-1" type="submit" v-on:click="generate_quote('display')" :disabled="this.invoice_downloaded" id="generate_quote_btn">Display Agreement</button>
                     <button v-if="this.has_admin_control" class="btn btn-danger m-1" @click="mark_agreement_signed" :disabled="this.invoice_downloaded"><i class="far fa-file-signature fa-lg"></i> Mark Signed</button>
-                    <button v-if="this.has_admin_control" class="btn btn-success m-1" @click="generate_invoice_spec" :disabled="this.invoice_downloaded"><i class="far fa-file-invoice fa-lg"></i> Generate Invoice specification</button>
+                    <button v-if="this.has_admin_control" class="btn btn-success m-1" data-toggle="modal" data-target="#confirm_submit_inv_spec"   :disabled="this.invoice_downloaded"><i class="far fa-file-invoice fa-lg"></i> Generate Invoice specification</button>
+                    <!-- Confirm Inv Spec submission Modal -->
+                    <div class="modal fade" id="confirm_submit_inv_spec" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                      <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h4 class="modal-title" id="myModalLabel">Verify Invoice Ref and Address</h4>
+                            <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body">
+                            <dl class="dl-horizontal-invoicing">
+                              <dt>Invoice Reference</dt>
+                                <dd>{{ this.proj_data['order_details']['reference'] }} </dd>
+                              <dt>Address</dt>
+                                <dd>{{ this.proj_data['order_details']['invoice_address'] }} </dd>
+                              <dt>Postal Code</dt>
+                                <dd>{{ this.proj_data['order_details']['invoice_zip'] }}</dd>
+                              <dt>City</dt>
+                                <dd>{{ this.proj_data['order_details']['invoice_city'] }} </dd>
+                              <dt>Country</dt>
+                                <dd>{{ this.proj_data['order_details']['invoice_country'] }} </dd>
+                            </dl>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button id='datepicker-btn' type="button" class="btn btn-primary" @click="generate_invoice_spec" data-dismiss="modal">Continue</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -607,14 +660,10 @@ app.component('v-pricing-quote', {
               <div v-if="origin === 'Agreement'" class="ml-n1 mt-5">
                 <div class="card mt-5">
                   <div class="card-header">
-                    <button class="btn" type="button" data-toggle="collapse" data-target="#inv_rn" aria-expanded="false" aria-controls="inv_rn">
-                      <h4>Invoicing Running Notes<i class="fa fa-caret-down ml-1" aria-hidden="true"></i></h4>
-                    </button>
+                    <h4>Invoicing Running Notes</h4>
                   </div>
-                  <div class="collapse border-top py-3" id="inv_rn">
-                    <div class="card-body">
-                      <div id="invoicing_notes"></div>
-                    </div>
+                  <div class="card-body">
+                    <div id="invoicing_notes"></div>
                   </div>
                 </div>
               </div>
@@ -627,7 +676,7 @@ app.component('v-pricing-quote', {
             <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="true"/>
           </div>
         </template>
-        `
+      `
 })
 
 app.component('v-quote-list-product', {
@@ -642,7 +691,7 @@ app.component('v-quote-list-product', {
             return this.$root.productCost(this.product_id)
         },
         cost() {
-            return (this.product_count * this.productCost[this.$root.price_type]).toFixed(2)
+            return Math.round((this.product_count * this.productCost[this.$root.price_type]))
         },
         product_count() {
             return this.$root.quote_prod_ids[this.product_id]

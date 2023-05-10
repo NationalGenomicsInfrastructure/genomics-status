@@ -382,7 +382,7 @@ const vPricingMain = {
                     this.USD_in_SEK = response.data.USD_in_SEK
                     this.EUR_in_SEK = response.data.EUR_in_SEK
                     date = new Date(Date.parse(response.data['Issued at']))
-                    this.exch_rate_issued_at = date.toISOString().substring(0, 10)
+                    this.exch_rate_issued_at = date.toLocaleDateString('se-SE')
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Unable to fetch exchange rates data, please try again or contact a system administrator.')
@@ -715,8 +715,7 @@ app.component('v-products-table', {
             <th class="sort" data-sort="name">Name</th>
             <th class="sort" data-sort="components">Components</th>
             <th class="sort" data-sort="alternative_components">Alternative Components</th>
-            <th calss="sort" data-sort="full_cost_fee">Full Cost Fee</th>
-            <th class="sort" data-sort="overhead">Overhead</th>
+            <th calss="sort" data-sort="cost">Cost</th>
             <th class="sort" data-sort="comment">Comment</th>
           </tr>
         </thead>
@@ -729,8 +728,7 @@ app.component('v-products-table', {
             <th class="sort" data-sort="name"><input class="form-control search search-query" type="text" placeholder="Search Name" /></th>
             <th class="sort" data-sort="components"><input class="form-control search search-query" type="text" placeholder="Search Components" /></th>
             <th class="sort" data-sort="alternative_components"><input class="form-control search search-query" type="text" placeholder="Search Alternative Components" /></th>
-            <th calss="sort" data-sort="full_cost_fee"><input class="form-control search search-query" type="text" placeholder="Search Full Cost Fee" /></th>
-            <th class="sort" data-sort="overhead"><input class="form-control search search-query" type="text" placeholder="Search Overhead" /></th>
+            <th calss="sort" data-sort="cost"><input class="form-control search search-query" type="text" placeholder="Search Cost" /></th>
             <th class="sort" data-sort="comment"><input class="form-control search search-query" type="text" placeholder="Search Comment" /></th>
           </tr>
         </tfoot>
@@ -825,8 +823,7 @@ app.component('v-product-table-row', {
             <v-product-table-row-td td_key='Name' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Components' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Alternative Components' :row_changes="this.changes" :product_id="this.product_id"/>
-            <v-product-table-row-td td_key='Full cost fee' :row_changes="this.changes" :product_id="this.product_id"/>
-            <v-product-table-row-td td_key='Overhead' :row_changes="this.changes" :product_id="this.product_id"/>
+            <v-product-table-row-td td_key='Cost' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Comment' :row_changes="this.changes" :product_id="this.product_id"/>
           </tr>
         </template>
@@ -861,6 +858,10 @@ app.component('v-product-table-row-td',  {
         },
         product() {
             return this.$root.all_products[this.product_id]
+        },
+        cost() {
+            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
+            return this.$root.productCost(this.product_id)
         },
         tooltip_html() {
             if (this.is_changes) {
@@ -906,7 +907,23 @@ app.component('v-product-table-row-td',  {
             </template>
           </template>
           <template v-else>
-            <p>{{product[td_key]}}</p>
+            <template v-if="this.td_key == 'Cost'">
+                <ul class="list-group list-group-horizontal">
+                    <li class="list-group-item col-7">Academic</li>
+                    <li class="list-group-item col-4">{{ cost['cost_academic'].toFixed(2) }}</li>
+                </ul>
+                <ul class="list-group list-group-horizontal">
+                    <li class="list-group-item col-7">Industry and Non Swedish Academia</li>
+                    <li class="list-group-item col-4">{{ cost['full_cost'].toFixed(2)  }} </li>
+                </ul>
+                <ul class="list-group list-group-horizontal">
+                    <li class="list-group-item col-7">Internal</li>
+                    <li class="list-group-item col-4">{{ cost['cost'].toFixed(2) }}</li>
+                </ul>
+            </template>
+            <template v-else>
+                <p>{{product[td_key]}}</p>
+            </template>
           </template>
         </td>
         `
@@ -1127,7 +1144,6 @@ app.component('v-draft-validation-msgs-list', {
         scroll_to_on_page(event) {
             event.preventDefault();
             destination = event.target.dataset.scrollToLink
-            console.log(this.modal_id)
             scroll_to = function(dest) {
                 window.location.href = '#'
                 window.location.href = dest

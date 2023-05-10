@@ -31,7 +31,7 @@ from status.flowcells import FlowcellDemultiplexHandler, FlowcellLinksDataHandle
     FlowcellsHandler, FlowcellsInfoDataHandler, OldFlowcellsInfoDataHandler, ReadsTotalHandler
 from status.instruments import InstrumentLogsHandler, DataInstrumentLogsHandler, InstrumentNamesHandler
 from status.invoicing import InvoicingPageHandler, InvoiceSpecDateHandler, InvoicingPageDataHandler, GenerateInvoiceHandler, \
-    DeleteInvoiceHandler, SentInvoiceHandler
+    DeleteInvoiceHandler, SentInvoiceHandler, InvoicingOrderDetailsHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import PricingDateToVersionDataHandler, PricingExchangeRatesDataHandler, \
     PricingQuoteHandler, PricingValidateDraftDataHandler, PricingPublishDataHandler, \
@@ -132,6 +132,7 @@ class Application(tornado.web.Application):
             tornado.web.URLSpec("/api/v1/frag_an_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)", FragAnImageHandler, name="FragAnImageHandler"),
             ("/api/v1/get_agreement_doc/([^/]*)$", AgreementDataHandler),
             ("/api/v1/get_agreement_template_text", AgreementTemplateTextHandler),
+            ("/api/v1/get_order_det_invoicing/([^/]*)", InvoicingOrderDetailsHandler),
             ("/api/v1/get_sent_invoices", SentInvoiceHandler),
             ("/api/v1/generate_invoice", GenerateInvoiceHandler),
             ("/api/v1/generate_invoice_spec", InvoiceSpecDateHandler),
