@@ -135,7 +135,9 @@ app.component('v-pricing-quote', {
                     this.proj_data['ngi_project_id'] = proj_id + ', '+pdata['project_name']+ ' ('+pdata['order_details']['title']+')'
                     pi_name = pdata['project_pi_name'] ? pdata['project_pi_name'] : ''
                     this.proj_data['pi_name'] = pi_name.split(':')[0]
-                    this.proj_data['affiliation'] = pdata['affiliation']
+                    if(pdata['affiliation']){
+                      this.proj_data['affiliation'] = pdata['affiliation']
+                    }
                     this.proj_data['project_id'] = proj_id
                     this.proj_data['order_id'] = pdata['order_details']['identifier']
                     this.get_order_details(this.proj_data['order_id'])
