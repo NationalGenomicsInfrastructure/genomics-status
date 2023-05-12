@@ -431,14 +431,16 @@ function checkSampleStatus(td, no_recursion){
         var bp_done = $(td).parent().children('td.bioinfo-status-bp:contains("?")').length == 0;
 
         // qc_new when all the qc boxes contain '?'
-        var qc_new = $(td).parent().children('td.bioinfo-status-qc:contains("?")').length == 7;
+        var qc_new = $(td).parent().children('td.bioinfo-status-qc:contains("?")').length == 
+            $(td).parent().children('td.bioinfo-status-qc').length;
         // for bp length can be different depending on the application,
         // so compare the length of all boxes with length of boxes containing '?'
         var bp_new = $(td).parent().children('td.bioinfo-status-bp:contains("?")').length ==
             $(td).parent().children('td.bioinfo-status-bp').length;
 
         // failed if all qc boxes set to 'Fail'. Doesn't matter what is in BP
-        var qc_failed = $(td).parent().children('td.bioinfo-status-qc:contains("Fail")').length == 7;
+        var qc_failed = $(td).parent().children('td.bioinfo-status-qc:contains("Fail")').length == 
+            $(td).parent().children('td.bioinfo-status-qc').length;
 
         if (qc_failed) {
             new_status = 'Failed';
