@@ -18,7 +18,8 @@ app.component('v-pricing-quote', {
         loaded_version_desc: '',
         loaded_timestamp: '',
         //added because the id wasn't displayed properly in loaded_version_desc otherwise
-        proj_id: ''
+        proj_id: '',
+        agrm_save_success_msg:''
       }
     },
     computed: {
@@ -122,6 +123,13 @@ app.component('v-pricing-quote', {
     watch: {
         md_src_message() {
             this.add_to_md_text()
+        },
+        agrm_save_success_msg(newVal, oldVal) {
+          if(newVal!=''){
+            setTimeout(() => {
+              this.agrm_save_success_msg = ''
+            }, 2000);
+          }
         }
     },
     methods: {
@@ -242,6 +250,9 @@ app.component('v-pricing-quote', {
             this.$root.fetchExchangeRates(sel_data['exchange_rate_issued_date'])
             this.loaded_version_desc = 'Version: '+ loaded_version + ' \n' +
                                     'Agreement_number: '+this.proj_id+'_'+timestamp_val
+            if('template_text' in sel_data){
+              this.template_text_data = sel_data['template_text']
+            }
           }
         },
         mark_agreement_signed(){
@@ -323,7 +334,8 @@ app.component('v-pricing-quote', {
             axios.post('/api/v1/save_quote', {
                 data: agreement_data,
             }).then(response => {
-                alert(response['data']['message'])
+                this.agrm_save_success_msg = response['data']['message']
+                console.log(response['data']['message'])
             })
             .catch(error => {
                 this.$root.error_messages.push('Unable to save agreement, please try again or contact a system administrator.')
@@ -580,7 +592,7 @@ app.component('v-pricing-quote', {
               </div>
               <div class="card mt-5">
                 <div class="card-header">
-                  <h4>Preview</h4>
+                  <h4>Preview <small>Using template: {{this.template_text_data.doc_id}}-{{this.template_text_data.edition}}</small></h4>
                 </div>
                 <div class="card-body mx-2">
                   <div class="pb-2 text-muted" style="white-space: pre;">
@@ -652,6 +664,7 @@ app.component('v-pricing-quote', {
                 </div>
               </div>
               <div class="row row-cols-lg-auto my-3 justify-content-end">
+                <span v-if="this.agrm_save_success_msg!=''" class="text-success pt-2"><span class="fa fa-check"></span> {{ this.agrm_save_success_msg }}</span>
                 <div class="col-1 pr-0">
                   <button type="submit" class="btn btn-secondary" id="generate_quote_btn" v-on:click="generate_quote('preview')">Generate {{ this.origin }} Preview</button>
                 </div>
