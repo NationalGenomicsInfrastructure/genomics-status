@@ -74,7 +74,7 @@ class BioinfoAnalysisHandler(SafeHandler):
         neg_save_res = []
         for res in save_result:
             if not res[0]:
-                neg_save_res.append[res[1]]
+                neg_save_res.append(res[1])
         self.set_status(200)
         self.set_header("Content-type", "application/json")
         self.write(json.dumps({'saved_data': saved_data, 'not_saved': neg_save_res}))
