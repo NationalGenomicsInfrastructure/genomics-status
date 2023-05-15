@@ -382,7 +382,7 @@ const vPricingMain = {
                     this.USD_in_SEK = response.data.USD_in_SEK
                     this.EUR_in_SEK = response.data.EUR_in_SEK
                     date = new Date(Date.parse(response.data['Issued at']))
-                    this.exch_rate_issued_at = date.toLocaleDateString('se-SE')
+                    this.exch_rate_issued_at = date.toLocaleDateString('sv-SE')
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Unable to fetch exchange rates data, please try again or contact a system administrator.')
