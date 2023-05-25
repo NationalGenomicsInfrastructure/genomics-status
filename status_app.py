@@ -208,8 +208,8 @@ class Application(tornado.web.Application):
             ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
             ("/deliveries", DeliveriesPageHandler),
             ("/flowcells", FlowcellsHandler),
-            ("/flowcells/(\d{6}_[^/]*)$", FlowcellHandler),         # Illumina run names start w. 6 digits
-            ("/flowcells/(\d{8}_[^/]*)$", ONTFlowcellHandler),      # ONT run names start w. 8
+            ("/flowcells/(\d{6,8}_[^/]*)$", FlowcellHandler),
+            ("/flowcells_ont/(\d{8}_[^/]*)$", ONTFlowcellHandler),
             ("/flowcells/(\d{8}_[^/]*)/[^/]*$", ONTReportHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
