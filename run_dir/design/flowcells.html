@@ -80,6 +80,13 @@ Description: Shows a table with all flow cells.
                                 <tr>
                                     <td class="run_id">
                                         <a class="text-decoration-none" href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a>
+                                        {% if 'NovaSeqXPlus' in flowcells[onefc].get('run_mode', '') %}
+                                            {% comment NovaSeq X Plus needs special link since key is modified for summary view %}
+                                            <a class="text-decoration-none" href="/flowcells/{{ flowcells[onefc]['run id'] }}">{{ flowcells[onefc]["run id"] }}</a>
+                                        {% else %}
+                                            <a class="text-decoration-none" href="/flowcells/{{onefc}}">{{ flowcells[onefc]["run id"] }}</a>
+                                        {% end %}
+
                                         {% if flowcells.get(onefc).get('demultiplexing') == 'Done' %}
                                             <abbr title="Demultiplexing completed"><span class="fa fa-check-circle ml-2"></span></abbr>
                                         {% else %}
@@ -242,7 +249,7 @@ function init_listjs() {
     var table = $('#fc_table').DataTable({
       "paging":false,
       "info":false,
-      "order": [[ 0, "desc" ]]
+      "order": [[ 1, "desc" ]]
     });
 
     //Add the bootstrap classes to the search thingy
