@@ -4,10 +4,13 @@
  <table class="table table-bordered sortable" id="ont_fc_table">
    <thead id="ont_fc_table_head">
        <tr class="sticky darkth">
-        <th>Run name</th>
         <th>Start Date</th>
-        <th>Project</th>
+
+        <th>Run name</th>
+        <th>Sample name</th>
         <th>Experiment name</th>
+
+        <th>Project</th>
 
         <th>Prep Kit</th>
         <th>Barcoding Kit</th>
@@ -21,10 +24,13 @@
    </thead>
    <tfoot id="ont_fc_table_footer">
        <tr class="sticky darkth">
-        <th>Run name</th>
         <th>Start Date</th>
-        <th>Project</th>
+
+        <th>Run name</th>
+        <th>Sample name</th>
         <th>Experiment name</th>
+
+        <th>Project</th>
 
         <th>Prep Kit</th>
         <th>Barcoding Kit</th>
@@ -39,6 +45,8 @@
     <tbody class="align-middle" id="ont_fc_table_body">
     {% for onefc in ont_flowcells %}
     <tr>
+        <td>{{ ont_flowcells[onefc]["start_date"] }}</td>
+
         <td>
             <a class="text-decoration-none" href="/flowcells/{{ onefc }}">{{ onefc }}</a>
             {% if ont_flowcells.get(onefc).get('TACA_run_status') == 'finished' %}
@@ -47,13 +55,67 @@
                 <abbr title="Ongoing"><span class="fa fa-hourglass-half"></span></abbr>
             {% end %}
         </td>
-        <td>{{ ont_flowcells[onefc]["start_date"] }}</td>
+
+
+        {% if find_id(ont_flowcells[onefc]['sample_name'], 'sample') %}
+            <td class="sample">
+                <a class="text-decoration-none" href="
+                https://ngi-lims-
+                {% if gs_globals['prod'] %}
+                    prod
+                {% else %}
+                    stage
+                {% end %}
+                .scilifelab.se/clarity/search?scope=Sample&query=
+                {{ find_id(ont_flowcells[onefc]['sample_name'], 'sample') }}
+                ">
+                {{ ont_flowcells[onefc]["sample_name"] }}
+                </a>
+            </td>
+        {% elif find_id(ont_flowcells[onefc]['sample_name'], 'pool') %}
+            <td class="pool">
+                <a class="text-decoration-none" href="
+                https://ngi-lims-
+                {% if gs_globals['prod'] %}
+                    prod
+                {% else %}
+                    stage
+                {% end %}
+                    .scilifelab.se/clarity/search?scope=Sample&query=
+                {{ find_id(ont_flowcells[onefc]['sample_name'], 'pool') }}
+                ">
+                {{ ont_flowcells[onefc]["sample_name"] }}
+                </a>
+            </td>
+        {% else %}
+            <td>{{ ont_flowcells[onefc]["sample_name"] }}</td>
+        {% end %}
+
+        {% if find_id(ont_flowcells[onefc]['experiment_name'], 'step') %}
+            <td class="experiment">
+                <a class="text-decoration-none" href="
+                https://ngi-lims-
+                {% if gs_globals['prod'] %}
+                    prod
+                {% else %}
+                    stage
+                {% end %}
+                .scilifelab.se/clarity/work-complete/
+                {{ find_id(ont_flowcells[onefc]['experiment_name'], 'step')[-6:] }}
+                ">
+                {{ ont_flowcells[onefc]["experiment_name"] }}
+                </a>
+            </td>
+        {% else %}
+            <td>{{ ont_flowcells[onefc]["experiment_name"] }}</td>
+        {% end %}
+
         <td class="project">
             <a class="text-decoration-none" href="/project/{{ ont_flowcells[onefc]['project'] }}">
             {{ ont_flowcells[onefc]["project_name"] }}
             </a>
         </td>
-        <td>{{ ont_flowcells[onefc]["experiment_name"] }}</td>
+
         <td>{{ ont_flowcells[onefc]["prep_kit"] }}</td>
         <td>{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
         <td>{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>

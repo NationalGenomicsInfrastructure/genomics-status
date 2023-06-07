@@ -14,6 +14,7 @@ from collections import OrderedDict
 from status.util import SafeHandler
 from status.projects import RunningNotesDataHandler
 from status.flowcell import FlowcellHandler, fetch_ont_run_stats
+import re
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
@@ -39,6 +40,26 @@ thresholds = {
 def formatDate(date):
     datestr=datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f")
     return datestr.strftime("%a %b %d %Y, %I:%M:%S %p")
+
+
+def find_id(stringable, pattern_type: str) -> re.match:
+
+    string = str(stringable)
+
+    patterns = {
+        "project": re.compile("P\d{5,6}"),
+        "sample": re.compile("P\d{5,6}_\d{3}"),
+        "pool": re.compile("2-\d{6}"),
+        "step": re.compile("24-\d{6}"),
+    }
+
+    match = re.match(patterns[pattern_type], string)
+
+    if match:
+        return match.group()
+    else:
+        return None
+
 
 class FlowcellsHandler(SafeHandler):
     """ Serves a page which lists all flowcells with some brief info.
@@ -115,7 +136,19 @@ class FlowcellsHandler(SafeHandler):
         t = self.application.loader.load("flowcells.html")
         fcs = self.list_flowcells(all=all)
         ont_fcs, errors = self.list_ont_flowcells()
-        self.write(t.generate(gs_globals=self.application.gs_globals, thresholds=thresholds, user=self.get_current_user(), flowcells=fcs, ont_flowcells=ont_fcs, form_date=formatDate, all=all, errors=errors))
+        self.write(
+            t.generate(
+                gs_globals=self.application.gs_globals,
+                thresholds=thresholds,
+                user=self.get_current_user(),
+                flowcells=fcs,
+                ont_flowcells=ont_fcs,
+                form_date=formatDate,
+                find_id=find_id,
+                all=all,
+                errors=errors,
+            )
+        )
 
 
 class FlowcellsDataHandler(SafeHandler):
