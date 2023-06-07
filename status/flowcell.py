@@ -89,7 +89,11 @@ class FlowcellHandler(SafeHandler):
 
         if not entry:
             extra_message=""
-            flowcell_date = datetime.strptime(flowcell_id[0:6], "%y%m%d")
+            try:
+                flowcell_date = datetime.strptime(flowcell_id[0:6], "%y%m%d")
+            except ValueError:
+                # NovaSeq X Plus-like date
+                flowcell_date = datetime.strptime(flowcell_id[0:8], "%Y%m%d")
             first_xflowcell_record = datetime(2015,3,13)
             if first_xflowcell_record>flowcell_date:
                 extra_message = "Your flowcell is in an older database. It can still be accessed, contact your administrator."
