@@ -59,13 +59,31 @@
 
         {% if find_id(ont_flowcells[onefc]['sample_name'], 'sample') %}
             <td class="sample">
-                <a class="text-decoration-none" href="https://ngi-lims-prod.scilifelab.se/clarity/search?scope=Sample&query={{ find_id(ont_flowcells[onefc]['sample_name'], 'sample') }}">
+                <a class="text-decoration-none" href="
+                https://ngi-lims-
+                {% if gs_globals['prod'] %}
+                    prod
+                {% else %}
+                    stage
+                {% end %}
+                .scilifelab.se/clarity/search?scope=Sample&query=
+                {{ find_id(ont_flowcells[onefc]['sample_name'], 'sample') }}
+                ">
                 {{ ont_flowcells[onefc]["sample_name"] }}
                 </a>
             </td>
         {% elif find_id(ont_flowcells[onefc]['sample_name'], 'pool') %}
             <td class="pool">
-                <a class="text-decoration-none" href="https://ngi-lims-prod.scilifelab.se/clarity/search?scope=Sample&query={{ find_id(ont_flowcells[onefc]['sample_name'], 'pool') }}">
+                <a class="text-decoration-none" href="
+                https://ngi-lims-
+                {% if gs_globals['prod'] %}
+                    prod
+                {% else %}
+                    stage
+                {% end %}
+                    .scilifelab.se/clarity/search?scope=Sample&query=
+                {{ find_id(ont_flowcells[onefc]['sample_name'], 'pool') }}
+                ">
                 {{ ont_flowcells[onefc]["sample_name"] }}
                 </a>
             </td>
@@ -75,7 +93,16 @@
 
         {% if find_id(ont_flowcells[onefc]['experiment_name'], 'step') %}
             <td class="experiment">
-                <a class="text-decoration-none" href="https://ngi-lims-prod.scilifelab.se/clarity/work-complete/{{ find_id(ont_flowcells[onefc]['experiment_name'], 'step')[-6:] }}">
+                <a class="text-decoration-none" href="
+                https://ngi-lims-
+                {% if gs_globals['prod'] %}
+                    prod
+                {% else %}
+                    stage
+                {% end %}
+                .scilifelab.se/clarity/work-complete/
+                {{ find_id(ont_flowcells[onefc]['experiment_name'], 'step')[-6:] }}
+                ">
                 {{ ont_flowcells[onefc]["experiment_name"] }}
                 </a>
             </td>

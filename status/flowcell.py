@@ -219,7 +219,7 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
             run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
 
     # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
-    query = re.compile("(p|P)\d{5}")
+    query = re.compile("(p|P)\d{5,6}")
 
     # Search experiment and sample names for P-number to link to project
     match = query.search(run_dict["experiment_name"])
