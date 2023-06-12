@@ -47,8 +47,10 @@
                         <a class="text-decoration-none" href="/flowcells/{{ onefc }}">{{ onefc }}</a>
                         {% if ont_flowcells.get(onefc).get('TACA_run_status') == 'finished' %}
                             <abbr title="Run completed"><span class="fa fa-check-circle"></span></abbr>
-                        {% else %}
+                        {% elif ont_flowcells.get(onefc).get('TACA_run_status') == 'ongoing' %}
                             <abbr title="Ongoing"><span class="fa fa-hourglass-half"></span></abbr>
+                        {% elif ont_flowcells.get(onefc).get('TACA_run_status') == 'interrupted' %}
+                            <abbr title="Run interrupted"><span class="fa fa-file-dashed-line"></span></abbr>
                         {% end %}
                     </td>
                     <td class="sample_name">
