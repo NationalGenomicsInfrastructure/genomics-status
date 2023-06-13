@@ -165,7 +165,10 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
             pass
 
     # If run is ongoing, i.e. has no reports generated, extrapolate as much information as possible from file path
-    if run_dict["TACA_run_status"] == "ongoing":
+    if (
+        run_dict["TACA_run_status"] == "ongoing"
+        or run_dict["TACA_run_status"] == "interrupted"
+    ):
 
         run_dict["experiment_name"], run_dict["sample_name"], name = run_dict["TACA_run_path"].split("/")
 
