@@ -130,7 +130,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
               }]
           }
     };
-    serie=build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst,  color_type);
+    serie=build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
     toplot.series=serie[1];
     toplot.xAxis.categories = serie[0];
     $("#main_plot").highcharts(toplot);
@@ -265,7 +265,7 @@ function get_plot_data(search_string="", key, name, display_by, filter_inst_type
             //set the instrument filters
             update_instrument_filters();
             //plot the damn data
-            make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type);
+            make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type, plot_type);
         });
 }
 function color_by_instrument(instrument){
