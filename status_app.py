@@ -210,7 +210,7 @@ class Application(tornado.web.Application):
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/(\d{6,8}_[^/]*)$", FlowcellHandler),
             ("/flowcells_ont/(\d{8}_[^/]*)$", ONTFlowcellHandler),
-            ("/flowcells/(\d{8}_[^/]*)/[^/]*$", ONTReportHandler),
+            ("/flowcells_ont/(\d{8}_[^/]*)/[^/]*$", ONTReportHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
             ("/generate_quote", GenerateQuoteHandler),
