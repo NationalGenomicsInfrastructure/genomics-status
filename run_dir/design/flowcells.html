@@ -79,7 +79,6 @@ Description: Shows a table with all flow cells.
                             {% for onefc in flowcells %}
                                 <tr>
                                     <td class="run_id">
-                                        <a class="text-decoration-none" href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a>
                                         {% if 'NovaSeqXPlus' in flowcells[onefc].get('run_mode', '') %}
                                             {% comment NovaSeq X Plus needs special link since key is modified for summary view %}
                                             <a class="text-decoration-none" href="/flowcells/{{ flowcells[onefc]['run id'] }}">{{ flowcells[onefc]["run id"] }}</a>
