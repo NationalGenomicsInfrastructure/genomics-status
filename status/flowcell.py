@@ -113,7 +113,7 @@ class FlowcellHandler(SafeHandler):
             project_names = {project_name: self._get_project_id_by_name(project_name) for project_name in entry.value['plist']}
             # Prepare a summary table for total project yields in each lane
             fc_project_yields = dict()
-            for lane_nr in sorted(entry.value.get('lanedata').keys()):
+            for lane_nr in sorted(entry.value.get('lanedata', {}).keys()):
                 fc_project_yields_lane_list = []
                 lane_details = entry.value['lane'][lane_nr]
                 total_lane_yield = int(entry.value['lanedata'][lane_nr]['clustersnb'].replace(',',''))
