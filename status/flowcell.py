@@ -92,7 +92,7 @@ class FlowcellHandler(SafeHandler):
             try:
                 flowcell_date = datetime.strptime(flowcell_id[0:6], "%y%m%d")
             except ValueError:
-                # NovaSeq X Plus-like date
+                # NovaSeqXPlus-like date
                 flowcell_date = datetime.strptime(flowcell_id[0:8], "%Y%m%d")
             first_xflowcell_record = datetime(2015,3,13)
             if first_xflowcell_record>flowcell_date:
