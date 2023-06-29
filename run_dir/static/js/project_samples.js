@@ -321,7 +321,7 @@ function load_all_udfs(){
       if (prettify(key) == 'project_name'){
         let priority_badge = ""
         if(data['priority']==="High"){
-          priority_badge = "<span class='badge bg-imp'> Priority <span class='fa-solid fa-flag'></span></span>"
+          priority_badge = "<span class='badge bg-danger'> Priority <span class='fa-solid fa-flag'></span></span>"
         }
         if (!data['portal_id']) {
           project_title = project + ", " + data['project_name'] + " <small class='text-muted'>"+ priority_badge+" (" + data['customer_project_reference'] + " - no order in NGI portal)</small>";
