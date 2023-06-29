@@ -319,10 +319,14 @@ function load_all_udfs(){
 
       // Set the project name and status
       if (prettify(key) == 'project_name'){
+        let priority_badge = ""
+        if(data['priority']==="High"){
+          priority_badge = "<span class='badge bg-imp'> Priority <span class='fa-solid fa-flag'></span></span>"
+        }
         if (!data['portal_id']) {
-          project_title = project + ", " + data['project_name'] + " <small class='text-muted'>(" + data['customer_project_reference'] + " - no order in NGI portal)</small>";
+          project_title = project + ", " + data['project_name'] + " <small class='text-muted'>"+ priority_badge+" (" + data['customer_project_reference'] + " - no order in NGI portal)</small>";
         } else {
-          project_title = project + ", " + data['project_name'] + ' &nbsp; <small class="text-muted">NGI Portal: <a class="text-decoration-none" href="https://ngisweden.scilifelab.se/orders/order/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>';
+          project_title = project + ", " + data['project_name'] + ' &nbsp; <small class="text-muted">'+ priority_badge+' NGI Portal: <a class="text-decoration-none" href="https://ngisweden.scilifelab.se/orders/order/' + data['portal_id'] + '" target="_blank">' + data['customer_project_reference'] + '</a></small>';
         }
         prettyobj(key).html(project_title);
         prettyobj(key).attr('p_name', data['project_name']);
