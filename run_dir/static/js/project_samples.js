@@ -356,6 +356,7 @@ function load_all_udfs(){
           else {
             $("#project_status_alert").addClass("bg-info").text("Status unknown");
           }
+          $("#project_status_alert").addClass("align-text-top")
           // Hide the aborted dates
           $('.aborted-dates').hide();
         }
@@ -364,7 +365,7 @@ function load_all_udfs(){
       // Make the project emails clickable and add labels.
       else if (prettify(key) == 'contact'){
         function elabel(text, label) {
-          return '<span class="badge bg-'+label+' align-text-top">'+text+'</span>'
+          return '<span class="badge bg-'+label+'">'+text+'</span>'
         }
         function validateEmail(email) {
           var cap_email = null;
