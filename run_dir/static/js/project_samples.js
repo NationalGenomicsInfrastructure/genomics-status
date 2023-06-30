@@ -321,7 +321,7 @@ function load_all_udfs(){
       if (prettify(key) == 'project_name'){
         let priority_badge = ""
         if(data['priority']==="High"){
-          priority_badge = "<span class='badge bg-danger mr-2'> Priority <span class='fa-solid fa-flag'></span></span>"
+          priority_badge = "<span class='badge bg-danger mr-2 align-text-top'> Priority <span class='fa-solid fa-flag fa-sm'></span></span>"
         }
         if (!data['portal_id']) {
           project_title = project + ", " + data['project_name'] + " <small class='text-muted'>"+ priority_badge+" (" + data['customer_project_reference'] + " - no order in NGI portal)</small>";
@@ -364,7 +364,7 @@ function load_all_udfs(){
       // Make the project emails clickable and add labels.
       else if (prettify(key) == 'contact'){
         function elabel(text, label) {
-          return '<span class="badge bg-'+label+'">'+text+'</span>'
+          return '<span class="badge bg-'+label+' align-text-top">'+text+'</span>'
         }
         function validateEmail(email) {
           var cap_email = null;
