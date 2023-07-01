@@ -5,7 +5,7 @@
 // This was a little side project that got a little out of hand. Hopefully
 // the code isn't too unclear. It's purely JS and HTML, no Python here.
 //
-// How it works:
+// How it works ***TO BE UPDATED***:
 // - Either the page is prepopulated with project IDs, or the user types them in
 // - The data is retrieved for every project using the API using the
 //   load_projects_meta() function
@@ -21,6 +21,8 @@
 
 // Globals
 project_data = {};
+var id_tosave = [];
+var sel = '';
 key_min = {'base': {}, 'library_prep': {}, 'rna_meta' :{}};
 key_max = {'base': {}, 'library_prep': {}, 'rna_meta' :{}};
 xLogAxis = 'linear';
@@ -29,15 +31,52 @@ yLogAxis = 'linear';
 // Wait for page to load
 $(function(){
 
-    // Check to see if project ID box is filled on page load and submit if so.
-    if($('#projects_meta_input').val() !== ''){
-        load_projects_meta();
-    }
+    // AWESOME SEARCH BOX THINGY
+    // Plug in the typeahead search box
+    var projectSearch = new Bloodhound({
+      datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+      queryTokenizer: Bloodhound.tokenizers.whitespace,
+      remote: '/api/v1/project_search/%QUERY',
+      limit: 10
+    });
+    projectSearch.initialize();
 
-    // Load data when form is submitted
-    $('#project_chooser').submit(function(e){
-        e.preventDefault();
-        load_projects_meta();
+    $('.statdb-search .typeahead').typeahead({
+      minLength: 3,
+      highlight: true,
+    }, {
+      name: 'project-search',
+      displayKey: 'name',
+      source: projectSearch.ttAdapter(),
+      templates: {
+          empty: '<div class="empty-message">No projects found</div>'
+      }
+    }).bind('typeahead:selected', function(obj, datum, name) {
+        var proj_id = datum.url.split('/')[2];
+        $('#projects_meta_input').val('');
+        $('#badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="' + proj_id +  '">' + proj_id + ' x' + '</button>');
+        id_tosave.push(proj_id);
+        $("#badges > button").on("click", function() {
+            $('#projects_meta_input').val('');
+            var but_id = $("#"+$(this).attr('id'));
+            sel = but_id.text().split(' ')[0];
+            delete project_data[sel];
+            id_tosave = id_tosave.filter( function(el) {
+                return sel.indexOf(el) < 0;
+            });
+            load_projects_meta(id_tosave);
+            but_id.remove();
+        });
+        load_projects_meta(id_tosave);
+    });
+    // Show and hide a spinner on the ajax event
+    $('.statdb-search .input-spinner').hide();
+    $(document).ajaxSend(function(event, jqXHR, settings) {
+        $('.input-spinner').show();
+    });
+
+    $(document).ajaxComplete(function(event, jqXHR, settings) {
+        $('.statdb-search .input-spinner').hide();
     });
 
     // Select dropdown box is changed
@@ -101,8 +140,7 @@ $(function(){
 
 // Main function that fires when project IDs are filled in and the form
 // is submitted. Loads page.
-function load_projects_meta(){
-
+function load_projects_meta(id_tosave){
     // Destroy previous work
     // Clear previous results
     if($('#proj_meta_plot').highcharts()) {
@@ -114,20 +152,16 @@ function load_projects_meta(){
     $('#proj_meta_yvalue, #proj_meta_xvalue').prop('disabled', true).html('<option value="">[ select value ]</option>');
     $('#proj_meta_colvalue').prop('disabled', true).html('<option data-section="" value="">Project</option>');
 
-    // Collect the user supplied project IDs
-    var projects_str = $('#projects_meta_input').val();
-    var projects_raw = projects_str.split(/[\s+,;]/);
-
     // Clean up the user input
     var projects = [];
-    for (var i = 0; i < projects_raw.length; i++) {
-        var pid = projects_raw[i];
+    for (var i = 0; i < id_tosave.length; i++) {
+        var pid = id_tosave[i];
         pid = pid.replace(/[^P\d]/, '');
         if(/P\d{3,5}/.test(pid)){
             projects.push(pid);
         } else {
             $('#status_box').removeClass().addClass('alert alert-danger');
-            $('#status_box span').html('Error - project <code>'+projects_raw[i]+"</code> (<code>"+pid+"</code>) doesn't look like a project ID.");
+            $('#status_box span').html('Error - project <code>'+id_tosave[i]+"</code> (<code>"+pid+"</code>) doesn't look like a project ID.");
             return;
         }
     }
