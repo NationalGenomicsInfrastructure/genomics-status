@@ -89,6 +89,10 @@ tfoot {
   font-size: 1em;
 }
 
+#badges .badge:hover {
+  color: white;
+}
+
 /* Pricing */
 
 .quote_product_prices_line{
