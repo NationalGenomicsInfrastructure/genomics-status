@@ -17,6 +17,7 @@ thresholds = {
     'NovaSeq S1': 650,
     'NovaSeq S2': 1650,
     'NovaSeq S4': 2000,
+    'NovaSeqXPlus 10B': 1250, # Might need to be reviewed when we settle for a number in AM
     'NextSeq Mid' : 25,
     'NextSeq High' : 75,
     'NextSeq 2000 P1' : 100,
@@ -89,7 +90,11 @@ class FlowcellHandler(SafeHandler):
 
         if not entry:
             extra_message=""
-            flowcell_date = datetime.strptime(flowcell_id[0:6], "%y%m%d")
+            try:
+                flowcell_date = datetime.strptime(flowcell_id[0:6], "%y%m%d")
+            except ValueError:
+                # NovaSeqXPlus-like date
+                flowcell_date = datetime.strptime(flowcell_id[0:8], "%Y%m%d")
             first_xflowcell_record = datetime(2015,3,13)
             if first_xflowcell_record>flowcell_date:
                 extra_message = "Your flowcell is in an older database. It can still be accessed, contact your administrator."
@@ -109,7 +114,7 @@ class FlowcellHandler(SafeHandler):
             project_names = {project_name: self._get_project_id_by_name(project_name) for project_name in entry.value['plist']}
             # Prepare a summary table for total project yields in each lane
             fc_project_yields = dict()
-            for lane_nr in sorted(entry.value.get('lanedata').keys()):
+            for lane_nr in sorted(entry.value.get('lanedata', {}).keys()):
                 fc_project_yields_lane_list = []
                 lane_details = entry.value['lane'][lane_nr]
                 total_lane_yield = int(entry.value['lanedata'][lane_nr]['clustersnb'].replace(',',''))
