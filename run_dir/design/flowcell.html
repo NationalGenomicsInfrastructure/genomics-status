@@ -50,6 +50,9 @@
           <a class="nav-link" href="#tab_fc_project_yields_content" role="tab" data-toggle="tab">Project Yields</a>
         </li>
         <li class="nav-item">
+          <a class="nav-link" href="#tab_fc_sample_yields_content" role="tab" data-toggle="tab">Sample Yields</a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link" href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a>
         </li>
         <li class="nav-item">
@@ -65,7 +68,7 @@
             <div id="lane_{{ lane_number }}" class="mb-5">
               <h4>Lane {{ lane_number }}
               </h4>
-              <button type="button" id="fc_copy_table_{{ lane_number }}" class="btn btn-sm btn-outline-dark mb-2 lane-copy" 
+              <button type="button" id="fc_copy_table_{{ lane_number }}" class="btn btn-sm btn-outline-dark mb-2 lane-copy"
                   data-clipboard-target="#table_lane_{{ lane_number }}">
                   <span class="fa fa-copy"></span>
                   Copy table
@@ -289,6 +292,8 @@
 
       <!-- PROJECT YIELD TAB -->
       {% include "fc_project_yields_tab.html" %}
+      <!-- SAMPLE YIELD TAB -->
+      {% include "fc_sample_yields_tab.html" %}
       <!-- FLOWCELL NOTES TAB -->
       {% include "running_notes_tab.html" %}
       <!-- LINK TAB -->

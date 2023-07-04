@@ -112,13 +112,16 @@ class FlowcellHandler(SafeHandler):
             entry.value['plist'] = self._get_project_list(entry.value)
             # list of project_names -> to create links to project page and bioinfo tab
             project_names = {project_name: self._get_project_id_by_name(project_name) for project_name in entry.value['plist']}
-            # Prepare a summary table for total project yields in each lane
+            # Prepare summary table for total project/sample yields in each lane
             fc_project_yields = dict()
+            fc_sample_yields = dict()
             for lane_nr in sorted(entry.value.get('lanedata', {}).keys()):
                 fc_project_yields_lane_list = []
+                fc_sample_yields_lane_list = []
                 lane_details = entry.value['lane'][lane_nr]
                 total_lane_yield = int(entry.value['lanedata'][lane_nr]['clustersnb'].replace(',',''))
                 unique_projects = list(set(lane['Project'] for lane in lane_details))
+                unique_samples = list(set(lane['SampleName'] for lane in lane_details))
                 threshold = thresholds.get(entry.value.get('run_mode', ''), 0)
                 for proj in unique_projects:
                     if proj == 'default':
@@ -138,6 +141,32 @@ class FlowcellHandler(SafeHandler):
                                                         'proj_lane_percentage_obtained'     :  proj_lane_percentage_obtained,
                                                         'proj_lane_percentage_threshold'  :  proj_lane_percentage_threshold})
                 fc_project_yields[lane_nr] = sorted(fc_project_yields_lane_list, key=lambda d: d['modified_proj_name'])
+                for sample in unique_samples:
+                    if sample == 'Undetermined':
+                        modified_proj_name = 'default'
+                    else:
+                        modified_proj_name = ','.join(list(set([lane['Project'] for lane in lane_details if lane['SampleName']==sample and lane['Project']]))).replace('__','.')
+                        barcode_list = list(set([lane['barcode'] for lane in lane_details if lane['SampleName']==sample and lane['barcode']]))
+                        if len(barcode_list) < 2:
+                            sample_barcode = barcode_list[0]
+                        else:
+                            sample_barcode = 'multiple'
+                    sum_sample_lane_yield = sum(int(lane['clustersnb'].replace(',','')) for lane in lane_details if lane['SampleName']==sample and lane['clustersnb'])
+                    if sum_sample_lane_yield:
+                        weighted_mean_q30 = sum(int(lane['clustersnb'].replace(',',''))*float(lane['overthirty']) for lane in lane_details if lane['SampleName']==sample and lane['clustersnb'] and lane['overthirty'])/sum_sample_lane_yield
+                        weighted_mqs = sum(int(lane['clustersnb'].replace(',',''))*float(lane['mqs']) for lane in lane_details if lane['SampleName']==sample and lane['clustersnb'] and lane['mqs'])/sum_sample_lane_yield
+                    else:
+                        weighted_mean_q30 = 0
+                        weighted_mqs = 0
+                    sample_lane_percentage = (sum_sample_lane_yield/total_lane_yield)*100 if total_lane_yield else 0
+                    fc_sample_yields_lane_list.append({ 'modified_proj_name'      :  modified_proj_name,
+                                                        'sample_name'             :  sample,
+                                                        'sum_sample_lane_yield'   :  format(sum_sample_lane_yield, ","),
+                                                        'weighted_mean_q30'       :  weighted_mean_q30,
+                                                        'sample_barcode'          :  sample_barcode,
+                                                        'sample_lane_percentage'  :  sample_lane_percentage,
+                                                        'weighted_mqs'            :  weighted_mqs})
+                fc_sample_yields[lane_nr] = sorted(fc_sample_yields_lane_list, key=lambda d: (d['modified_proj_name'], d['modified_proj_name']))
 
             t = self.application.loader.load("flowcell.html")
             self.write(t.generate(gs_globals=self.application.gs_globals,
@@ -145,6 +174,7 @@ class FlowcellHandler(SafeHandler):
                                   flowcell_id=flowcell_id,
                                   thresholds=thresholds,
                                   fc_project_yields=fc_project_yields,
+                                  fc_sample_yields=fc_sample_yields,
                                   project_names=project_names,
                                   user=self.get_current_user()))
 
@@ -256,7 +286,7 @@ class ONTReportHandler(SafeHandler):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
     def get(self, name):
-        
+
         reports_dir = self.application.minknow_path
         report_path = os.path.join(reports_dir, f"report_{name}.html")
 
