@@ -144,6 +144,7 @@ class FlowcellHandler(SafeHandler):
                 for sample in unique_samples:
                     if sample == 'Undetermined':
                         modified_proj_name = 'default'
+                        sample_barcode = 'unknown'
                     else:
                         modified_proj_name = ','.join(list(set([lane['Project'] for lane in lane_details if lane['SampleName']==sample and lane['Project']]))).replace('__','.')
                         barcode_list = list(set([lane['barcode'] for lane in lane_details if lane['SampleName']==sample and lane['barcode']]))
