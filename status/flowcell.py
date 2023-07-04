@@ -167,7 +167,7 @@ class FlowcellHandler(SafeHandler):
                                                         'sample_barcode'          :  sample_barcode,
                                                         'sample_lane_percentage'  :  sample_lane_percentage,
                                                         'weighted_mqs'            :  weighted_mqs})
-                fc_sample_yields[lane_nr] = sorted(fc_sample_yields_lane_list, key=lambda d: (d['modified_proj_name'], d['modified_proj_name']))
+                fc_sample_yields[lane_nr] = sorted(fc_sample_yields_lane_list, key=lambda d: (d['modified_proj_name'], d['sample_name']))
 
             t = self.application.loader.load("flowcell.html")
             self.write(t.generate(gs_globals=self.application.gs_globals,
