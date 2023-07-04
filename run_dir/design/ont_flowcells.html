@@ -1,91 +1,146 @@
 
+<div id="ont_fc_table_div">
+    <h1>
+        <span id="ont_page_title">ONT flowcells</span>
+    </h1>
 
-<h1 class="ont_fc_page_heading" id="ont_page_title">ONT Flowcells</h1>
- <table class="table table-bordered sortable" id="ont_fc_table">
-   <thead id="ont_fc_table_head">
-       <tr class="sticky darkth">
-        <th>Run name</th>
-        <th>Start Date</th>
-        <th>Project</th>
-        <th>Experiment name</th>
+    <table class="table table-striped table-bordered sortable" id="ont_fc_table">
 
-        <th>Prep Kit</th>
-        <th>Barcoding Kit</th>
-        <th>Flow Cell Type</th>
+        <thead>
+            <tr class="sticky darkth">
+                <th class="sort" data-sort="start_date">Start Date</th>
+                <th class="sort" data-sort="run_name">Run name</th>
+                <th class="sort" data-sort="sample_name">Sample name</th>
+                <th class="sort" data-sort="experiment_name">Experiment name</th>
+                <th class="sort" data-sort="project">Project</th>
+                <th class="sort" data-sort="prep_kit">Prep Kit</th>
+                <th class="sort" data-sort="barcoding_kit">Barcoding Kit</th>
+                <th class="sort" data-sort="flow_cell_type">Flow_Cell Type</th>
+                <th class="sort" data-sort="basecalled_pass_bases_Gbp">Yield_passed_(Gbp)</th>
+                <th class="sort" data-sort="basecalled_pass_read_count_M">Read_count_passed_(M)</th>
+                <th class="sort" data-sort="n50_Kbp">N50_passed_(Kbp)</th>
+                <th class="sort" data-sort="accuracy">Pass/Fail (%)</th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr class="darkth">
+                <th class="sort" data-sort="start_date">Start Date</th>
+                <th class="sort" data-sort="run_name">Run name</th>
+                <th class="sort" data-sort="sample_name">Sample name</th>
+                <th class="sort" data-sort="experiment_name">Experiment name</th>
+                <th class="sort" data-sort="project">Project</th>
+                <th class="sort" data-sort="prep_kit">Prep Kit</th>
+                <th class="sort" data-sort="barcoding_kit">Barcoding Kit</th>
+                <th class="sort" data-sort="flow_cell_type">Flow_Cell Type</th>
+                <th class="sort" data-sort="basecalled_pass_bases_Gbp">Yield_passed_(Gbp)</th>
+                <th class="sort" data-sort="basecalled_pass_read_count_M">Read_count_passed_(M)</th>
+                <th class="sort" data-sort="n50_Kbp">N50_passed_(Kbp)</th>
+                <th class="sort" data-sort="accuracy">Pass/Fail (%)</th>
+            </tr>
+        </tfoot>
 
-        <th class="text-center">Yield passed (Gbp)</th>
-        <th class="text-center">Read count passed (M)</th>
-        <th class="text-center">N50 passed (Kbp)</th>
-        <th class="text-center">Pass/Fail (%)</th>
-       </tr>
-   </thead>
-   <tfoot id="ont_fc_table_footer">
-       <tr class="sticky darkth">
-        <th>Run name</th>
-        <th>Start Date</th>
-        <th>Project</th>
-        <th>Experiment name</th>
-
-        <th>Prep Kit</th>
-        <th>Barcoding Kit</th>
-        <th>Flow Cell Type</th>
-
-        <th class="text-center">Yield passed (Gbp)</th>
-        <th class="text-center">Read count passed (M)</th>
-        <th class="text-center">N50 passed (Kbp)</th>
-        <th class="text-center">Pass/Fail (%)</th>
-       </tr>
-   </tfoot>
-    <tbody class="align-middle" id="ont_fc_table_body">
-    {% for onefc in ont_flowcells %}
-    <tr>
-        <td>
-            <a class="text-decoration-none" href="/flowcells/{{ onefc }}">{{ onefc }}</a>
-            {% if ont_flowcells.get(onefc).get('TACA_run_status') == 'finished' %}
-                <abbr title="Run completed"><span class="fa fa-check-circle"></span></abbr>
-            {% else %}
-                <abbr title="Ongoing"><span class="fa fa-hourglass-half"></span></abbr>
+        <tbody class="list">
+            {% for onefc in ont_flowcells %}
+                <tr>
+                    <td class="start_date">{{ ont_flowcells[onefc]["start_date"] }}</td>
+                    <td class = run_name>
+                        <a class="text-decoration-none" href="/flowcells_ont/{{ onefc }}">{{ onefc }}</a>
+                        {% if ont_flowcells.get(onefc).get('TACA_run_status') == 'finished' %}
+                            <abbr title="Run completed"><span class="fa fa-check-circle"></span></abbr>
+                        {% elif ont_flowcells.get(onefc).get('TACA_run_status') == 'ongoing' %}
+                            <abbr title="Ongoing"><span class="fa fa-hourglass-half"></span></abbr>
+                        {% elif ont_flowcells.get(onefc).get('TACA_run_status') == 'interrupted' %}
+                            <abbr title="Run interrupted"><span class="fa fa-file-dashed-line"></span></abbr>
+                        {% end %}
+                    </td>
+                    <td class="sample_name">
+                        {% if find_id(ont_flowcells[onefc]['sample_name'], 'sample') %}
+                            <a class="text-decoration-none" href="
+                            https://ngi-lims-
+                            {% if gs_globals['prod'] %}
+                                prod
+                            {% else %}
+                                stage
+                            {% end %}
+                            .scilifelab.se/clarity/search?scope=Sample&query=
+                            {{ find_id(ont_flowcells[onefc]['sample_name'], 'sample') }}
+                            ">
+                            {{ ont_flowcells[onefc]["sample_name"] }}
+                            </a>
+                        {% elif find_id(ont_flowcells[onefc]['sample_name'], 'pool') %}
+                            <a class="text-decoration-none" href="
+                            https://ngi-lims-
+                            {% if gs_globals['prod'] %}
+                                prod
+                            {% else %}
+                                stage
+                            {% end %}
+                                .scilifelab.se/clarity/search?scope=Sample&query=
+                            {{ find_id(ont_flowcells[onefc]['sample_name'], 'pool') }}
+                            ">
+                            {{ ont_flowcells[onefc]["sample_name"] }}
+                            </a>
+                        {% else %}
+                            {{ ont_flowcells[onefc]["sample_name"] }}
+                        {% end %}
+                    </td>
+                    <td class="experiment_name">
+                        {% if find_id(ont_flowcells[onefc]['experiment_name'], 'step') %}
+                            <a class="text-decoration-none" href="
+                            https://ngi-lims-
+                            {% if gs_globals['prod'] %}
+                                prod
+                            {% else %}
+                                stage
+                            {% end %}
+                            .scilifelab.se/clarity/work-complete/
+                            {{ find_id(ont_flowcells[onefc]['experiment_name'], 'step')[-6:] }}
+                            ">
+                            {{ ont_flowcells[onefc]["experiment_name"] }}
+                            </a>
+                        {% else %}
+                            {{ ont_flowcells[onefc]["experiment_name"] }}
+                        {% end %}
+                    </td>
+                    <td class="project">
+                        <a class="text-decoration-none" href="/project/{{ ont_flowcells[onefc]['project'] }}">
+                        {{ ont_flowcells[onefc]["project_name"] }}
+                        </a>
+                    </td>
+                    <td class="prep_kit">{{ ont_flowcells[onefc]["prep_kit"] }}</td>
+                    <td class="barcoding_kit">{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
+                    <td class="flow_cell_type">{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
+                    <td class="basecalled_pass_bases_Gbp text-center
+                    {% if ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] != '' %}
+                        {% if ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 66.66 %}
+                            table-success
+                        {% elif ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 33.33 %}
+                            table-warning
+                        {% else %}
+                            table-danger
+                        {% end %}
+                    {% end %}">
+                        {{ ont_flowcells[onefc]["basecalled_pass_bases_Gbp"] }}
+                    </td>
+                    <td class="basecalled_pass_read_count_M text-center">{{ ont_flowcells[onefc]["basecalled_pass_read_count_M"] }}</td>
+                    <td class="n50_Kbp text-center
+                    {% if ont_flowcells[onefc]['n50_rank'] != '' %}
+                        {% if ont_flowcells[onefc]['n50_rank'] > 66.66 %}
+                            table-success
+                        {% elif ont_flowcells[onefc]['n50_rank'] > 33.33 %}
+                            table-warning
+                        {% else %}
+                            table-danger
+                        {% end %}
+                    {% end %}">{{ ont_flowcells[onefc]["n50_Kbp"] }}</td>
+                    <td class="accuracy text-center">{{ ont_flowcells[onefc]["accuracy"] }}</td>
+                </tr>
             {% end %}
-        </td>
-        <td>{{ ont_flowcells[onefc]["start_date"] }}</td>
-        <td class="project">
-            <a class="text-decoration-none" href="/project/{{ ont_flowcells[onefc]['project'] }}">
-            {{ ont_flowcells[onefc]["project_name"] }}
-            </a>
-        </td>
-        <td>{{ ont_flowcells[onefc]["experiment_name"] }}</td>
-        <td>{{ ont_flowcells[onefc]["prep_kit"] }}</td>
-        <td>{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
-        <td>{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
+        </tbody>
+    </table>
+</div>
 
-        <td class="text-center
-        {% if ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] != '' %}
-            {% if ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 66.66 %}
-                table-success
-            {% elif ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 33.33 %}
-                table-warning
-            {% else %}
-                table-danger
-            {% end %}
-        {% end %}">{{ ont_flowcells[onefc]["basecalled_pass_bases_Gbp"] }}</td>
-        <td class="text-center">{{ ont_flowcells[onefc]["basecalled_pass_read_count_M"] }}</td>
-        <td class="text-center
-        {% if ont_flowcells[onefc]['n50_rank'] != '' %}
-            {% if ont_flowcells[onefc]['n50_rank'] > 66.66 %}
-                table-success
-            {% elif ont_flowcells[onefc]['n50_rank'] > 33.33 %}
-                table-warning
-            {% else %}
-                table-danger
-            {% end %}
-        {% end %}">{{ ont_flowcells[onefc]["n50_Kbp"] }}</td>
-        <td class="text-center">{{ ont_flowcells[onefc]["accuracy"] }}</td>
-    </tr>
-    {% end %}
-    </tbody>
- </table>
-
- <!-- Table Sorting -->
+ <!-- ONT Table Sorting -->
 <script type="text/javascript">
 $( document ).ready(function() {
   init_listjs_ont();

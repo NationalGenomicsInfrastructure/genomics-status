@@ -1,9 +1,8 @@
 from status.util import SafeHandler
 from datetime import datetime
-import numpy as np
 import pandas as pd
 import re
-import html
+import os
 
 
 thresholds = {
@@ -18,6 +17,7 @@ thresholds = {
     'NovaSeq S1': 650,
     'NovaSeq S2': 1650,
     'NovaSeq S4': 2000,
+    'NovaSeqXPlus 10B': 1250, # Might need to be reviewed when we settle for a number in AM
     'NextSeq Mid' : 25,
     'NextSeq High' : 75,
     'NextSeq 2000 P1' : 100,
@@ -90,7 +90,11 @@ class FlowcellHandler(SafeHandler):
 
         if not entry:
             extra_message=""
-            flowcell_date = datetime.strptime(flowcell_id[0:6], "%y%m%d")
+            try:
+                flowcell_date = datetime.strptime(flowcell_id[0:6], "%y%m%d")
+            except ValueError:
+                # NovaSeqXPlus-like date
+                flowcell_date = datetime.strptime(flowcell_id[0:8], "%Y%m%d")
             first_xflowcell_record = datetime(2015,3,13)
             if first_xflowcell_record>flowcell_date:
                 extra_message = "Your flowcell is in an older database. It can still be accessed, contact your administrator."
@@ -110,7 +114,7 @@ class FlowcellHandler(SafeHandler):
             project_names = {project_name: self._get_project_id_by_name(project_name) for project_name in entry.value['plist']}
             # Prepare a summary table for total project yields in each lane
             fc_project_yields = dict()
-            for lane_nr in sorted(entry.value.get('lanedata').keys()):
+            for lane_nr in sorted(entry.value.get('lanedata', {}).keys()):
                 fc_project_yields_lane_list = []
                 lane_details = entry.value['lane'][lane_nr]
                 total_lane_yield = int(entry.value['lanedata'][lane_nr]['clustersnb'].replace(',',''))
@@ -166,7 +170,10 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
             pass
 
     # If run is ongoing, i.e. has no reports generated, extrapolate as much information as possible from file path
-    if run_dict["TACA_run_status"] == "ongoing":
+    if (
+        run_dict["TACA_run_status"] == "ongoing"
+        or run_dict["TACA_run_status"] == "interrupted"
+    ):
 
         run_dict["experiment_name"], run_dict["sample_name"], name = run_dict["TACA_run_path"].split("/")
 
@@ -220,8 +227,13 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
             run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
 
     # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
-    query = re.compile("(p|P)\d{5}")
+    query = re.compile("(p|P)\d{5,6}")
+
+    # Search experiment and sample names for P-number to link to project
     match = query.search(run_dict["experiment_name"])
+    if not match:
+        match = query.search(run_dict["sample_name"])
+
     if match:
         run_dict["project"] = match.group(0).upper()
         try:
@@ -243,19 +255,12 @@ class ONTReportHandler(SafeHandler):
     def __init__(self, application, request, **kwargs):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
-    def fetch_ont_report(self, name):
-        """ Fetches the MinKNOW .html run report, saved as an escaped string in the
-        database run entry and returns the unescaped string which can be written as .html
-        """
-
-        view_report = self.application.nanopore_runs_db.view("info/minknow_report", descending=True)
-        row = [row for row in view_report.rows if name in row.key][0]
-        str_html = html.unescape(row.value)
-
-        return str_html
-
     def get(self, name):
-        self.write(self.fetch_ont_report(name))
+        
+        reports_dir = self.application.minknow_path
+        report_path = os.path.join(reports_dir, f"report_{name}.html")
+
+        self.write(open(report_path,"r").read())
 
 
 class ONTFlowcellHandler(SafeHandler):

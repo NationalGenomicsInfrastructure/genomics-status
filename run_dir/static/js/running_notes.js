@@ -100,13 +100,21 @@ function load_running_notes(wait) {
   // Clear previously loaded notes, if so
   note_url = get_note_url();
   $("#running_notes_panels").empty();
+  // From agreements tab
+  $("#invoicing_notes").empty();
   return $.getJSON(note_url, function(data) {
     if(Object.keys(data).length == 0 || typeof data === 'undefined'){
       $('#running_notes_panels').html('<div class="well">No running notes found.</div>');
     } else {
       $.each(data, function(date, note) {
         $('#running_notes_panels').append(make_running_note(date, note));
+        if(note['category'].includes('Invoicing')){
+          $('#invoicing_notes').append(make_running_note(date, note, true));
+        }
       });
+      if($('#invoicing_notes').children().length === 0){
+        $('#invoicing_notes').html('<div class="well">No running notes found.</div>');
+      }
       check_img_sources($('#running_notes_panels img'));
       count_cards();
     }
@@ -121,7 +129,7 @@ function load_running_notes(wait) {
         var err = error+', '+textStatus;
         var debugging = '';
       }
-      $('#running_notes_panels').append('<div class="alert alert-danger">' +
+      $('#running_notes_panels, #invoicing_notes').append('<div class="alert alert-danger">' +
           '<h4>Error Loading Running Notes: '+err+'</h4>' +
           '<p>Apologies, running notes could not be loaded.' +
           'These problems are usually ' +

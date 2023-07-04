@@ -219,7 +219,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         def_dates_gen = { 'days_recep_ctrl' : ['open_date', 'queued'],
                           'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
-                          'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
+                          'days_data_delivery' : ['all_samples_sequenced', 'all_raw_data_delivered'],
                           'days_close' : ['all_raw_data_delivered', 'close_date']
                          }
 
@@ -1044,7 +1044,7 @@ class PrioProjectsTableHandler(SafeHandler):
                                'days_seq_start' : [['qc_library_finished', 'queued'], 'sequencing_start_date'],
                                'days_seq' : ['sequencing_start_date', 'all_samples_sequenced'],
                                'days_analysis' : ['all_samples_sequenced', 'best_practice_analysis_completed'],
-                               'days_data_delivery' : ['best_practice_analysis_completed', 'all_raw_data_delivered'],
+                               'days_data_delivery' : ['all_samples_sequenced', 'all_raw_data_delivered'],
                                'days_close' : ['all_raw_data_delivered', 'close_date']
                              }
 
