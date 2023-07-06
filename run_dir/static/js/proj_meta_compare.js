@@ -29,6 +29,49 @@ yLogAxis = 'linear';
 // Wait for page to load
 $(function(){
 
+    // AWESOME SEARCH BOX THINGY
+    // Plug in the typeahead search box
+    var projectSearch = new Bloodhound({
+      datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+      queryTokenizer: Bloodhound.tokenizers.whitespace,
+      remote: '/api/v1/project_search/%QUERY',
+      limit: 10
+    });
+    projectSearch.initialize();
+
+    $('.statdb-search .typeahead').typeahead({
+      minLength: 3,
+      highlight: true,
+    }, {
+      name: 'project-search',
+      displayKey: 'name',
+      source: projectSearch.ttAdapter(),
+      templates: {
+          empty: '<div class="empty-message">No projects found</div>'
+      }
+    }).bind('typeahead:selected', function(obj, datum, name) {
+        let proj_id = datum.url.split('/')[2];
+        $('#projects_meta_input').val('');
+        $('#del_pid_badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="' + proj_id +  '">' + proj_id + ' x' + '</button>');
+        id_tosave.push(proj_id);
+        $("#del_pid_badges > button").on("click", function() {
+            $('#projects_meta_input').val('');
+            let but_id = $("#"+$(this).attr('id'));
+            sel = but_id.text().split(' ')[0];
+            delete project_data[sel];
+            id_tosave = id_tosave.filter( function(el) {
+                return sel.indexOf(el) < 0;
+            });
+            load_projects_meta(id_tosave);
+            but_id.remove();
+        });
+        load_projects_meta(id_tosave);
+    });
+    // Show and hide a spinner on the ajax event
+    $('.statdb-search .input-spinner').hide();
+    $(document).ajaxSend(function(event, jqXHR, settings) {
+        $('.input-spinner').show();
+    });
     // Check to see if project ID box is filled on page load and submit if so.
     if($('#projects_meta_input').val() !== ''){
         load_projects_meta();
