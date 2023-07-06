@@ -5,7 +5,7 @@
 // This was a little side project that got a little out of hand. Hopefully
 // the code isn't too unclear. It's purely JS and HTML, no Python here.
 //
-// How it works:
+// How it works ***TO BE UPDATED***:
 // - Either the page is prepopulated with project IDs, or the user types them in
 // - The data is retrieved for every project using the API using the
 //   load_projects_meta() function
@@ -21,6 +21,8 @@
 
 // Globals
 project_data = {};
+var id_tosave = [];
+var sel = '';
 key_min = {'base': {}, 'library_prep': {}, 'rna_meta' :{}};
 key_max = {'base': {}, 'library_prep': {}, 'rna_meta' :{}};
 xLogAxis = 'linear';
@@ -144,7 +146,7 @@ $(function(){
 
 // Main function that fires when project IDs are filled in and the form
 // is submitted. Loads page.
-function load_projects_meta(){
+function load_projects_meta(id_tosave){
 
     // Destroy previous work
     // Clear previous results
@@ -157,20 +159,16 @@ function load_projects_meta(){
     $('#proj_meta_yvalue, #proj_meta_xvalue').prop('disabled', true).html('<option value="">[ select value ]</option>');
     $('#proj_meta_colvalue').prop('disabled', true).html('<option data-section="" value="">Project</option>');
 
-    // Collect the user supplied project IDs
-    var projects_str = $('#projects_meta_input').val();
-    var projects_raw = projects_str.split(/[\s+,;]/);
-
     // Clean up the user input
     var projects = [];
-    for (var i = 0; i < projects_raw.length; i++) {
-        var pid = projects_raw[i];
+    for (var i = 0; i < id_tosave.length; i++) {
+        var pid = id_tosave[i];
         pid = pid.replace(/[^P\d]/, '');
         if(/P\d{3,5}/.test(pid)){
             projects.push(pid);
         } else {
             $('#status_box').removeClass().addClass('alert alert-danger');
-            $('#status_box span').html('Error - project <code>'+projects_raw[i]+"</code> (<code>"+pid+"</code>) doesn't look like a project ID.");
+            $('#status_box span').html('Error - project <code>'+id_tosave[i]+"</code> (<code>"+pid+"</code>) doesn't look like a project ID.");
             return;
         }
     }

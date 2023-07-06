@@ -10,12 +10,11 @@ Description: Compare any meta value between multiple projects
 
 <h1>Project Meta Comparison Tool</h1>
 
-<form id="project_chooser">
+<form id="project_chooser" class="statdb-search" role="search"">
     <div class="row mb-3">
         <label for="projects_meta_input" class="col-form-label fw-bold">Choose Projects:</label>
         <div class="input-group">
-            <input type="text" class="form-control" id="projects_meta_input" placeholder="Project IDs, eg. P1234 P2345 P3456" value="{{ ' '.join(pids) }}">
-            <button class="btn btn-primary" type="submit">Load data</button>
+            <input type="text" style="width:300px;" class="form-control typeahead" id="projects_meta_input" placeholder="Project ID or project name:">
         </div>
     </div>
 </form>
@@ -94,6 +93,7 @@ Description: Compare any meta value between multiple projects
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
 <script type="text/javascript" src="/static/js/FileSaver.min.js"></script>
 <script type="text/javascript" src="/static/js/chroma.min.js" ></script>
+<script src="/static/js/typeahead.bundle.min.js?v={{ gs_globals['git_commit'] }}"></script>
 <script src="/static/js/clipboard.min.js"></script>
 <script type="text/javascript" src="/static/js/proj_meta_compare.js?v={{ gs_globals['git_commit'] }}" ></script>
 {% end %}
