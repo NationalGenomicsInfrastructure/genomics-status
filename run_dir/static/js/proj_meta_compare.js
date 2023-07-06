@@ -52,13 +52,13 @@ $(function(){
           empty: '<div class="empty-message">No projects found</div>'
       }
     }).bind('typeahead:selected', function(obj, datum, name) {
-        var proj_id = datum.url.split('/')[2];
+        let proj_id = datum.url.split('/')[2];
         $('#projects_meta_input').val('');
-        $('#badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="' + proj_id +  '">' + proj_id + ' x' + '</button>');
+        $('#del_pid_badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="' + proj_id +  '">' + proj_id + ' x' + '</button>');
         id_tosave.push(proj_id);
-        $("#badges > button").on("click", function() {
+        $("#del_pid_badges > button").on("click", function() {
             $('#projects_meta_input').val('');
-            var but_id = $("#"+$(this).attr('id'));
+            let but_id = $("#"+$(this).attr('id'));
             sel = but_id.text().split(' ')[0];
             delete project_data[sel];
             id_tosave = id_tosave.filter( function(el) {
