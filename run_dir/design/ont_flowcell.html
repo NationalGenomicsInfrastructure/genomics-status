@@ -76,7 +76,7 @@
         {% end %}
         {% if flowcell.get('TACA_run_status') == "finished" %}
           <li class="nav-item">
-            <a class="nav-link" href="/flowcells/{{ flowcell.get('run_name') }}/report" target="_blank">MinKNOW run report</a>
+            <a class="nav-link" href="/flowcells_ont/{{ flowcell.get('run_name') }}/report" target="_blank">MinKNOW run report</a>
           </li>
         {% end %}
       </ul>

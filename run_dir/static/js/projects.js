@@ -224,10 +224,17 @@ function load_table(status, type, columns, dates) {
           .addClass(column_tuple[1])
           .html(function(){
             if(column_tuple[1]=='delivery_projects' && !(typeof summary_row[column_tuple[1]] === "undefined")){
-              var txt='';
+              let txt='';
               $.each(summary_row[column_tuple[1]], function(i, item){
                 txt+=item+'<br/>';
               })
+              return txt;
+            }
+            else if(column_tuple[1]=='priority'){
+              let txt='';
+              if(summary_row[column_tuple[1]]==='High'){
+                txt = '<span class="badge bg-danger"> Priority <span class="fa-solid fa-flag fa-sm"></span></span>'
+              }
               return txt;
             }
             return summary_row[column_tuple[1]];

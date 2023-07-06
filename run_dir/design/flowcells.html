@@ -57,6 +57,7 @@ Description: Shows a table with all flow cells.
                                 <th class="sort" data-sort="pf_clusters">PF Clusters (M)</th>
                                 <th class="sort" data-sort="q30_bases">% bases > Q30</th>
                                 <th class="sort" data-sort="er_rate">PhiX error rate</th>
+                                <th class="sort" data-sort="pdc_archived">Archived</th>
                                 <th class="sort" data-sort="latest_running_note">Latest running note</th>
                             </tr>
                         </thead>
@@ -71,6 +72,7 @@ Description: Shows a table with all flow cells.
                                 <th class="sort" data-sort="pf_clusters">PF Clusters (M)</th>
                                 <th class="sort" data-sort="q30_bases">% bases > Q30</th>
                                 <th class="sort" data-sort="er_rate">PhiX error rate</th>
+                                <th class="sort" data-sort="pdc_archived">Archived</th>
                                 <th class="sort" data-sort="latest_running_note">Latest running note</th>
                             </tr>
                         </tfoot>
@@ -79,7 +81,13 @@ Description: Shows a table with all flow cells.
                             {% for onefc in flowcells %}
                                 <tr>
                                     <td class="run_id">
-                                        <a class="text-decoration-none" href="/flowcells/{{ onefc }}">{{ flowcells[onefc]["run id"] }}</a>
+                                        {% if 'NovaSeqXPlus' in flowcells[onefc].get('run_mode', '') %}
+                                            {% comment NovaSeqXPlus needs special link since key is modified for summary view %}
+                                            <a class="text-decoration-none" href="/flowcells/{{ flowcells[onefc]['run id'] }}">{{ flowcells[onefc]["run id"] }}</a>
+                                        {% else %}
+                                            <a class="text-decoration-none" href="/flowcells/{{onefc}}">{{ flowcells[onefc]["run id"] }}</a>
+                                        {% end %}
+
                                         {% if flowcells.get(onefc).get('demultiplexing') == 'Done' %}
                                             <abbr title="Demultiplexing completed"><span class="fa fa-check-circle ml-2"></span></abbr>
                                         {% else %}
@@ -188,6 +196,9 @@ Description: Shows a table with all flow cells.
                                             {% end %}
                                         {% end %}
                                     </td>
+                                    <td class="pdc_archived">
+                                        {{ flowcells[onefc].get('pdc_archived', '-') }}  
+                                    </td>
                                     <td class="latest_running_note" class="text-center">
                                         {% if flowcells[onefc].get('running_notes') %}
                                             {% set running_notes = flowcells[onefc].get('running_notes') %}
@@ -242,7 +253,7 @@ function init_listjs() {
     var table = $('#fc_table').DataTable({
       "paging":false,
       "info":false,
-      "order": [[ 0, "desc" ]]
+      "order": [[ 1, "desc" ]]
     });
 
     //Add the bootstrap classes to the search thingy
