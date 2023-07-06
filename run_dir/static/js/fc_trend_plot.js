@@ -207,7 +207,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
           }else if (data[d].instrument.indexOf('VH') != -1){
               series_name = "NextSeq 2000";
           }else if (data[d].instrument.indexOf('LH') != -1){
-              series_name = "NovaSeq XPlus";
+              series_name = "NovaSeq X Plus";
           }else{
               continue;
           }
