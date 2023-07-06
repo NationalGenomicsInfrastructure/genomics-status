@@ -186,7 +186,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 series_name = "NextSeq 2000";
                 }
             if (data[d].cver.includes('NovaSeqXPlus')){
-                series_name = "NovaSeq X Plus";
+                series_name = "NovaSeqXPlus";
                 }
                 col_color = color_by_chemistry(series_name);
         }else if (color_type == 'month'){
@@ -207,7 +207,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
           }else if (data[d].instrument.indexOf('VH') != -1){
               series_name = "NextSeq 2000";
           }else if (data[d].instrument.indexOf('LH') != -1){
-              series_name = "NovaSeq X Plus";
+              series_name = "NovaSeqXPlus";
           }else{
               continue;
           }
