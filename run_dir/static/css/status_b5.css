@@ -85,11 +85,11 @@ tfoot {
 
 /* Project Meta Comparison search badges */
 
-#badges .badge {
+#del_pid_badges .badge {
   font-size: 1em;
 }
 
-#badges .badge:hover {
+#del_pid_badges .badge:hover {
   color: white;
 }
 
