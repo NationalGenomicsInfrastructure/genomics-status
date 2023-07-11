@@ -136,6 +136,11 @@
 
     });
 
+    //Kind of works, flashes a bit
+    $(document).click(function() {
+        $('#projects_meta_input').val('');
+    });
+
     setTimeout(function() {
         def_graph_load();
         project_data = {};
@@ -454,17 +459,15 @@
                 type: yLogAxis,
             },
             legend: {
-                layout: 'vertical',
-                align: 'left',
-                verticalAlign: 'top',
-                y: 65
+                layout: 'horizontal',
+                align: 'right',
+                verticalAlign: 'top'
             },
             exporting: {
                 buttons: {
                     contextButton: {
                         align: 'left',
-                        x: 0,
-                        y: 30,
+                        y: 5,
                         verticalAlign: 'top'
                     }
                 }
@@ -555,7 +558,7 @@
 
 
 
-    /// Download all of the data
+    // Download all of the data
     function pmeta_download(){
 
         // Get the keys (headers)
