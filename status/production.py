@@ -14,28 +14,40 @@ from status.util import dthandler, SafeHandler
 
 
 class ProductionCronjobsHandler(SafeHandler):
-    """ Returns a JSON document with the Cronjobs database information
-    """
+    """Returns a JSON document with the Cronjobs database information"""
+
     def get(self):
         cronjobs = {}
-        servers = self.application.cronjobs_db.view('server/alias')
+        servers = self.application.cronjobs_db.view("server/alias")
         for server in servers.rows:
             doc = self.application.cronjobs_db.get(server.value)
-            cronjobs[server.key] =  {"last_updated": datetime.strftime(parser.parse(doc['Last updated']), '%Y-%m-%d %H:%M'),
-                                     'users': doc['users'], 'server': server.key}
+            cronjobs[server.key] = {
+                "last_updated": datetime.strftime(
+                    parser.parse(doc["Last updated"]), "%Y-%m-%d %H:%M"
+                ),
+                "users": doc["users"],
+                "server": server.key,
+            }
         template = self.application.loader.load("cronjobs.html")
-        self.write(template.generate(gs_globals=self.application.gs_globals,
-                                     cronjobs=cronjobs,
-                                     user=self.get_current_user()))
+        self.write(
+            template.generate(
+                gs_globals=self.application.gs_globals,
+                cronjobs=cronjobs,
+                user=self.get_current_user(),
+            )
+        )
 
+
+# Do these following work at all?
 class DeliveredMonthlyDataHandler(SafeHandler):
-    """ Gives the data for monthly delivered amount of basepairs.
+    """Gives the data for monthly delivered amount of basepairs.
 
     Loaded through /api/v1/delivered_monthly url
     """
+
     def get(self):
-        start_date = self.get_argument('start', '2012-01-01T00:00:00')
-        end_date = self.get_argument('end', None)
+        start_date = self.get_argument("start", "2012-01-01T00:00:00")
+        end_date = self.get_argument("end", None)
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.delivered(start_date, end_date), default=dthandler))
@@ -49,20 +61,23 @@ class DeliveredMonthlyDataHandler(SafeHandler):
         else:
             end_date = datetime.now()
 
-        view = self.application.projects_db.view("date/m_bp_delivered",
-                                                 group_level=3)
+        view = self.application.projects_db.view("date/m_bp_delivered", group_level=3)
 
         delivered = OrderedDict()
 
-        start = [start_date.year,
-                 (start_date.month - 1) // 3 + 1,
-                 start_date.month,
-                 start_date.day]
+        start = [
+            start_date.year,
+            (start_date.month - 1) // 3 + 1,
+            start_date.month,
+            start_date.day,
+        ]
 
-        end = [end_date.year,
-               (end_date.month - 1) // 3 + 1,
-               end_date.month,
-               end_date.day]
+        end = [
+            end_date.year,
+            (end_date.month - 1) // 3 + 1,
+            end_date.month,
+            end_date.day,
+        ]
 
         for row in view[start:end]:
             y = row.key[0]
@@ -73,13 +88,14 @@ class DeliveredMonthlyDataHandler(SafeHandler):
 
 
 class DeliveredMonthlyPlotHandler(DeliveredMonthlyDataHandler):
-    """ Gives a bar plot for monthly delivered amount of basepairs.
+    """Gives a bar plot for monthly delivered amount of basepairs.
 
     Loaded through /api/v1/delivered_monthly.png url
     """
+
     def get(self):
-        start_date = self.get_argument('start', '2012-01-01T00:00:00')
-        end_date = self.get_argument('end', None)
+        start_date = self.get_argument("start", "2012-01-01T00:00:00")
+        end_date = self.get_argument("end", None)
 
         delivered = self.delivered(start_date, end_date)
 
@@ -108,13 +124,14 @@ class DeliveredMonthlyPlotHandler(DeliveredMonthlyDataHandler):
 
 
 class DeliveredQuarterlyDataHandler(SafeHandler):
-    """ Gives the data for quarterly delivered amount of basepairs.
+    """Gives the data for quarterly delivered amount of basepairs.
 
     Loaded through /api/v1/delivered_quarterly url
     """
+
     def get(self):
-        start_date = self.get_argument('start', '2012-01-01T00:00:00')
-        end_date = self.get_argument('end', None)
+        start_date = self.get_argument("start", "2012-01-01T00:00:00")
+        end_date = self.get_argument("end", None)
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.delivered(start_date, end_date), default=dthandler))
@@ -128,20 +145,23 @@ class DeliveredQuarterlyDataHandler(SafeHandler):
         else:
             end_date = datetime.now()
 
-        view = self.application.projects_db.view("date/m_bp_delivered",
-                                                 group_level=2)
+        view = self.application.projects_db.view("date/m_bp_delivered", group_level=2)
 
         delivered = OrderedDict()
 
-        start = [start_date.year,
-                 (start_date.month - 1) // 3 + 1,
-                 start_date.month,
-                 start_date.day]
+        start = [
+            start_date.year,
+            (start_date.month - 1) // 3 + 1,
+            start_date.month,
+            start_date.day,
+        ]
 
-        end = [end_date.year,
-               (end_date.month - 1) // 3 + 1,
-               end_date.month,
-               end_date.day]
+        end = [
+            end_date.year,
+            (end_date.month - 1) // 3 + 1,
+            end_date.month,
+            end_date.day,
+        ]
 
         for row in view[start:end]:
             y = row.key[0]
@@ -152,13 +172,14 @@ class DeliveredQuarterlyDataHandler(SafeHandler):
 
 
 class DeliveredQuarterlyPlotHandler(DeliveredQuarterlyDataHandler):
-    """ Gives a bar plot for quarterly delivered amount of basepairs.
+    """Gives a bar plot for quarterly delivered amount of basepairs.
 
     Loaded through /api/v1/delivered_quarterly.png
     """
+
     def get(self):
-        start_date = self.get_argument('start', '2012-01-01T00:00:00')
-        end_date = self.get_argument('end', None)
+        start_date = self.get_argument("start", "2012-01-01T00:00:00")
+        end_date = self.get_argument("end", None)
 
         delivered = self.delivered(start_date, end_date)
 
