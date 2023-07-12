@@ -30,7 +30,6 @@
 
     // Wait for page to load
     $(function(){
-
         // AWESOME SEARCH BOX THINGY
         // Plug in the typeahead search box
         var projectSearch = new Bloodhound({
@@ -57,7 +56,6 @@
             $('#del_pid_badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="' + proj_id +  '">' + proj_id + ' x' + '</button>');
             id_tosave.push(proj_id);
             $("#del_pid_badges > button").on("click", function() {
-                $('#projects_meta_input').val('');
                 let but_id = $("#"+$(this).attr('id'));
                 sel = but_id.text().split(' ')[0];
                 delete project_data[sel];
@@ -68,6 +66,7 @@
                 but_id.remove();
             });
             load_projects_meta(id_tosave);
+            $("#projects_meta_input").typeahead('val', '');
         });
         // Show and hide a spinner on the ajax event
         $('.statdb-search .input-spinner').hide();
@@ -76,7 +75,8 @@
         });
         // Check to see if project ID box is filled on page load and submit if so.
         if($('#projects_meta_input').val() === ''){
-            load_projects_meta(['P10851', 'P10264']);
+            id_tosave.push('P10851', 'P10264');
+            load_projects_meta(id_tosave);
         }
 
         // Select dropdown box is changed
@@ -136,11 +136,6 @@
 
     });
 
-    //Kind of works, flashes a bit
-    $(document).click(function() {
-        $('#projects_meta_input').val('');
-    });
-
     setTimeout(function() {
         def_graph_load();
         project_data = {};
@@ -148,6 +143,17 @@
 
     //Setting default graph on load
     function def_graph_load(){
+        $('#del_pid_badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="P10851">P10851 x</button><button class="btn badge rounded-pill bg-secondary mx-1" id="P10264">P10264 x</button>');
+        $("#del_pid_badges > button").on("click", function() {
+            let but_id = $("#"+$(this).attr('id'));
+            sel = but_id.text().split(' ')[0];
+            delete project_data[sel];
+            id_tosave = id_tosave.filter( function(el) {
+                return sel.indexOf(el) < 0;
+            });
+            load_projects_meta(id_tosave);
+            but_id.remove();
+        });
         $('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue').prop('disabled', false).html('<option data-section="base" value="customer_conc">customer_conc</option>').prop('selected',true);
         plot_meta({'y': ['base', 'customer_conc'], 'x': ['base', 'customer_conc'],'color': ['base', 'customer_conc']})
     }
