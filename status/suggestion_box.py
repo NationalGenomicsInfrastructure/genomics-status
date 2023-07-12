@@ -1,8 +1,7 @@
 from collections import OrderedDict
 from datetime import datetime
-import tornado.web
 
-from trello import TrelloClient, Card
+from trello import TrelloClient
 from status.util import SafeHandler
 
 TITLE_TEMPLATE = "{title} ({area})"
@@ -22,47 +21,53 @@ DESCRIPTION_TEMPLATE = """
 {suggestion}
 """
 
+
 class SuggestionBoxHandler(SafeHandler):
-    """ Handles URL /suggestion_box
-    """
+    """Handles URL /suggestion_box"""
+
     def get(self):
-        """ Returns the Suggestion Box HTML template, as it is
-        """
+        """Returns the Suggestion Box HTML template, as it is"""
         t = self.application.loader.load("suggestion_box.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user()))
+        self.write(
+            t.generate(
+                gs_globals=self.application.gs_globals, user=self.get_current_user()
+            )
+        )
 
     def post(self):
-        """ Collect data from the HTML form to fill in a Trello card.
+        """Collect data from the HTML form to fill in a Trello card.
 
         That card will be uploaded to Suggestion Box board, on the corresponding
         list, determined by the "System" attribute given in the form.
         """
         # Get form data
         date = datetime.now()
-        title = self.get_argument('title')
-        area = self.get_argument('area')
-        system = self.get_argument('system')
-        importance = self.get_argument('importance')
-        difficulty = self.get_argument('difficulty')
+        title = self.get_argument("title")
+        area = self.get_argument("area")
+        system = self.get_argument("system")
+        importance = self.get_argument("importance")
+        difficulty = self.get_argument("difficulty")
         user = self.get_current_user()
-        description = self.get_argument('description')
-        suggestion = self.get_argument('suggestion')
+        description = self.get_argument("description")
+        suggestion = self.get_argument("suggestion")
 
-        client = TrelloClient(api_key = self.application.trello_api_key,
-                              api_secret = self.application.trello_api_secret,
-                              token = self.application.trello_token)
+        client = TrelloClient(
+            api_key=self.application.trello_api_key,
+            api_secret=self.application.trello_api_secret,
+            token=self.application.trello_token,
+        )
 
         # Get Suggestion Box board
         boards = client.list_boards()
         suggestion_box = None
         for b in boards:
-            if b.name == 'Suggestion Box':
+            if b.name == "Suggestion Box":
                 suggestion_box = client.get_board(b.id)
                 break
 
         # Get the board lists (which correspond to System in the form data) and
         # concretely get the list where the card will go
-        lists = b.all_lists()
+        lists = suggestion_box.all_lists()
         card_list = None
         for l in lists:
             if l.name == system:
@@ -71,29 +76,37 @@ class SuggestionBoxHandler(SafeHandler):
 
         # Create new card using the info from the form
         new_card = card_list.add_card(TITLE_TEMPLATE.format(title=title, area=area))
-        new_card.set_description(DESCRIPTION_TEMPLATE.format(date = date.ctime(),
-                                                             area=area,
-                                                             system=system,
-                                                             importance=importance,
-                                                             difficulty=difficulty,
-                                                             user=user.name,
-                                                             description=description,
-                                                             suggestion=suggestion))
+        new_card.set_description(
+            DESCRIPTION_TEMPLATE.format(
+                date=date.ctime(),
+                area=area,
+                system=system,
+                importance=importance,
+                difficulty=difficulty,
+                user=user.name,
+                description=description,
+                suggestion=suggestion,
+            )
+        )
 
         # Save the information of the card in the database
-        self.application.suggestions_db.create({'date': date.isoformat(),
-                                                'card_id': new_card.id,
-                                                'description': new_card.description,
-                                                'name': new_card.name,
-                                                'url': new_card.url,
-                                                'archived': False})
+        self.application.suggestions_db.create(
+            {
+                "date": date.isoformat(),
+                "card_id": new_card.id,
+                "description": new_card.description,
+                "name": new_card.name,
+                "url": new_card.url,
+                "archived": False,
+            }
+        )
 
         self.set_status(200)
 
 
 class SuggestionBoxDataHandler(SafeHandler):
-    """ Handles URL /api/v1/suggestions
-    """
+    """Handles URL /api/v1/suggestions"""
+
     def get(self):
         view = self.application.suggestions_db.view("date/info")
         self.set_header("Content-type", "application/json")
