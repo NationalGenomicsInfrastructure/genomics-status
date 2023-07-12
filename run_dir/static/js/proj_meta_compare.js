@@ -55,16 +55,7 @@
             $('#projects_meta_input').val('');
             $('#del_pid_badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="' + proj_id +  '">' + proj_id + ' x' + '</button>');
             id_tosave.push(proj_id);
-            $("#del_pid_badges > button").on("click", function() {
-                let but_id = $("#"+$(this).attr('id'));
-                sel = but_id.text().split(' ')[0];
-                delete project_data[sel];
-                id_tosave = id_tosave.filter( function(el) {
-                    return sel.indexOf(el) < 0;
-                });
-                load_projects_meta(id_tosave);
-                but_id.remove();
-            });
+            del_pid_btn();
             load_projects_meta(id_tosave);
             $("#projects_meta_input").typeahead('val', '');
         });
@@ -136,13 +127,7 @@
 
     });
 
-    setTimeout(function() {
-        def_graph_load();
-    }, 1000);
-
-    //Setting default graph on load
-    function def_graph_load(){
-        $('#del_pid_badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="P10851">P10851 x</button><button class="btn badge rounded-pill bg-secondary mx-1" id="P10264">P10264 x</button>');
+    function del_pid_btn() {
         $("#del_pid_badges > button").on("click", function() {
             let but_id = $("#"+$(this).attr('id'));
             sel = but_id.text().split(' ')[0];
@@ -153,6 +138,16 @@
             load_projects_meta(id_tosave);
             but_id.remove();
         });
+    }
+
+    setTimeout(function() {
+        def_graph_load();
+    }, 1000);
+
+    //Setting default graph on load
+    function def_graph_load(){
+        $('#del_pid_badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="P10851">P10851 x</button><button class="btn badge rounded-pill bg-secondary mx-1" id="P10264">P10264 x</button>');
+        del_pid_btn();
         $('#proj_meta_xvalue, #proj_meta_yvalue, #proj_meta_colvalue').val('customer_conc').trigger('click');
         plot_meta({'y': ['base', 'customer_conc'], 'x': ['base', 'customer_conc'],'color': ['base', 'customer_conc']})
     }
