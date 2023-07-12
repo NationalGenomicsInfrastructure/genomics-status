@@ -154,7 +154,6 @@
             load_projects_meta(id_tosave);
             but_id.remove();
         });
-        $('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue').prop('disabled', false).html('<option data-section="base" value="customer_conc">customer_conc</option>').prop('selected',true);
         plot_meta({'y': ['base', 'customer_conc'], 'x': ['base', 'customer_conc'],'color': ['base', 'customer_conc']})
     }
 
