@@ -138,7 +138,6 @@
 
     setTimeout(function() {
         def_graph_load();
-        project_data = {};
     }, 1000);
 
     //Setting default graph on load
