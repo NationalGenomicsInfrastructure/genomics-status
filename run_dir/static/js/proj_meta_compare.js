@@ -154,6 +154,7 @@
             load_projects_meta(id_tosave);
             but_id.remove();
         });
+        $('#proj_meta_xvalue, #proj_meta_yvalue, #proj_meta_colvalue').val('customer_conc').trigger('click');
         plot_meta({'y': ['base', 'customer_conc'], 'x': ['base', 'customer_conc'],'color': ['base', 'customer_conc']})
     }
 
