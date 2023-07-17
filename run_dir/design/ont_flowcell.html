@@ -5,7 +5,7 @@
 
     <div class="row">
 
-      <div class="col-md-4 borderRight mr-2" style="width: 600px">
+      <div class="col-md-4 borderRight mr-2">
         {% if flowcell.get('project') %}
           <h4 class = "mt-3 mb-2">Project</h4>
           <dl class="dl-ont">
@@ -40,7 +40,7 @@
           <dt>Yield passed</dt>				<dd> {{ flowcell.get("basecalled_pass_bases_str") }} </dd>
           <dt>Read count passed</dt>	<dd> {{ flowcell.get("basecalled_pass_read_count_str") }} </dd>
           <dt>N50 passed</dt>				  <dd> {{ flowcell.get("n50_str") }} </dd>
-          <dt>% Pass/Fail</dt>		      <dd> {{ flowcell.get("accuracy") }} </dd>
+          <dt>% Pass/Fail</dt>		    <dd> {{ flowcell.get("accuracy") }} </dd>
         </dl>
 
       </div>
@@ -48,19 +48,19 @@
       {% if args %}
         <div class="col-md-4 borderRight" style="width: 800px;">
           <h4 class = "mt-3 mb-2">MinKNOW arguments</h4>
-          <dl class="dl-ont">
+          <dl class="dl-ont-args mb-0">
             {% for e in args %}
 
-              {% if args[e] == "pair" %}
-                <dt>{{ e[0] }}</dt>
-                <dd>{{ e[1] }}</dd>
-              {% elif args[e] == "header" %}
+              {% if e["type"] == "pair" %}
+                <dt>{{ e["content"][0] }}</dt>
+                <dd>{{ e["content"][1] }}</dd>
+              {% elif e["type"] == "header" %}
                 </dl>
-                <p class ="mb-0 mt-0 fw-bold">{{ e }}</p>
-                <dl class="dl-ont">
-              {% elif args[e] == "sub_pair" %}
-                <dt class="fw-normal">{{ e[0] }}</dt>
-                <dd>{{ e[1] }}</dd>
+                <p class = "fw-bold mb-0">{{ e["content"] }}</p>
+                <dl class = "dl-ont-args mt-0 mb-0">
+              {% elif e["type"] == "sub_pair" %}
+                <dt class="fw-normal">{{ e["content"][0] }}</dt>
+                <dd>{{ e["content"][1] }}</dd>
               {% end %}
             {% end %}
           </dl>
