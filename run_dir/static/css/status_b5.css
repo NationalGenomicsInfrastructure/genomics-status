@@ -534,7 +534,23 @@ pre {
 .dl-ont > dt {
   float: left;
   text-align: left;
-  width: 160px;
+  width: 10rem;
+}
+
+.dl-ont > dd {
+  margin-left: 11rem;
+  margin-bottom: 0rem;
+}
+
+.dl-ont-args > dt {
+  float: left;
+  text-align: left;
+  width: 18rem;
+}
+
+.dl-ont-args > dd {
+  margin-left: 10rem;
+  margin-bottom: 0rem;
 }
 
 .dl-horizontal > dt{

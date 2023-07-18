@@ -511,47 +511,46 @@ class ONTFlowcellHandler(SafeHandler):
         view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
         rows = view_args[run_name].rows
 
-        entries = {}
+        entries = []
         if rows:
             args = rows[0].value
 
             group = "([^\s=]+)"  # Text component of cmd argument
 
-            flag_pair = re.compile(
-                f"^--{group}={group}$"
-            )  # Double-dash argument with assignment
-            flag_key_or_header = re.compile(
-                f"^--{group}$"
-            )  # Double-dash argument w/o assignment
-            pair = re.compile(
-                f"^(?!--){group}={group}$"
-            )  # Non-double-dash argument with assignment
-            val = re.compile(
-                f"^(?!--){group}$"
-            )  # Non-double-dash argument w/o assignment
+            # Double-dash argument with assignment
+            flag_pair = re.compile(f"^--{group}={group}$")
+
+            # Double-dash argument w/o assignment
+            flag_key_or_header = re.compile(f"^--{group}$")
+
+            # Non-double-dash argument with assignment
+            pair = re.compile(f"^(?!--){group}={group}$")
+
+            # Non-double-dash argument w/o assignment
+            val = re.compile(f"^(?!--){group}$")
 
             idxs_args = iter(zip(range(0, len(args)), args))
             for idx, arg in idxs_args:
                 # Flag pair --> Tuple
                 if re.match(flag_pair, arg):
                     k, v = re.match(flag_pair, arg).groups()
-                    entries[(k, v)] = "pair"
+                    entries.append({"type": "pair", "content": (k, v)})
                 # Flag single
                 elif re.match(flag_key_or_header, arg):
                     # If followed by pair --> Header
                     if re.match(pair, args[idx + 1]):
                         h = re.match(flag_key_or_header, arg).groups()[0]
-                        entries[h] = "header"
+                        entries.append({"type": "header", "content": h})
                     # If followed by val --> Add both as tuple and skip ahead
                     elif re.match(val, args[idx + 1]):
                         k = re.match(flag_key_or_header, arg).groups()[0]
                         v = re.match(val, args[idx + 1]).groups()[0]
-                        entries[(k, v)] = "pair"
+                        entries.append({"type": "pair", "content": (k, v)})
                         next(idxs_args)
                 # Pair
                 elif re.match(pair, arg):
                     k, v = re.match(pair, arg).groups()
-                    entries[(k, v)] = "sub_pair"
+                    entries.append({"type": "sub_pair", "content": (k, v)})
 
         return entries
 
