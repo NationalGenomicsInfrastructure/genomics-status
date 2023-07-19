@@ -327,8 +327,8 @@ tr.group, tr.group:hover, .dtrg-group {
 
 /*Line numbers for samples tab table*/
 
-#sample_table thead tr::before {
-  content: "No:";
+#sample_table thead tr::before,  #sample_table tfoot tr::before{
+  content: "";
   background-color: #ddd!important;
   display: table-cell;
   font-weight: bold;
@@ -337,6 +337,11 @@ tr.group, tr.group:hover, .dtrg-group {
   top: 50px;
   z-index: 100;
   vertical-align: inherit;
+  width: 4rem;
+}
+
+#sample_table thead tr::before {
+  content: "No:";
 }
 
 #sample_table tbody {
@@ -980,7 +985,6 @@ width:30%;
   cursor:col-resize;
 }
 
-.ui-editRangeSlider .ui-rangeSlider-label{}
 
 .ui-rangeSlider-label-inner{
 
