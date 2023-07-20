@@ -110,7 +110,7 @@ function init_datatable() {
       "paging":false,
       "destroy": true,
       "info":false,
-      "order": [[ 0, "desc" ]]
+      "order": [[ 0, "asc" ]]
     });
   //Add the bootstrap classes to the search thingy
   $('div.dataTables_filter input').addClass('form-control search search-query');
@@ -889,6 +889,9 @@ function load_samples_table(colOrder) {
               tbl_row += '<td class="' + column_id + ' text-right">' + Number(info[column_id]).toFixed(2) + '</td>';
             }
 
+            else if (column_id == 'customer_name' && typeof info[column_id] !== 'undefined'){
+              tbl_row += '<td class="' + column_id + '">' +  info[column_id] + '</td>';
+            }
             // everything else
             else {
               tbl_row += auto_samples_cell(column_id, info[column_id]);
