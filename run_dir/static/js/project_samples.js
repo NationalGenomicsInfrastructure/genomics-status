@@ -99,18 +99,35 @@ $(document).ready(function() {
   }
 });
 
-// Initialize sorting and searching javascript plugin
-function init_listjs (no_items, columns) {
-  column_names = new Array();
-  $.each(columns, function(i, column_tuple){
-    column_names.push(column_tuple[1]);
+function init_datatable() {
+  // Setup - add a text input to each footer cell
+  $('#sample_table tfoot th').each( function () {
+    var title = $('#sample_table thead th').eq( $(this).index() ).text();
+    $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
+  } );
+
+    var table = $('#sample_table').DataTable({
+      "paging":false,
+      "destroy": true,
+      "info":false,
+      "order": [[ 0, "asc" ]]
+    });
+  //Add the bootstrap classes to the search thingy
+  $('div.dataTables_filter input').addClass('form-control search search-query');
+  $('#sample_table_filter').addClass('form-inline');
+  $("#sample_table_filter").appendTo("#search_field");
+  $('#sample_table_filter label input').appendTo($('#sample_table_filter'));
+  $('#sample_table_filter label').remove();
+  $("#sample_table_filter input").attr("placeholder", "Search...");
+  // Apply the search
+  table.columns().every( function () {
+      var that = this;
+      $( 'input', this.footer() ).on( 'keyup change', function () {
+          that
+          .search( this.value )
+          .draw();
+      });
   });
-  var options = {
-    valueNames: column_names,
-    page: no_items /* Default is to show only 200 items at a time. */
-  };
-  var featureList = new List('tab_samples_content', options);
-  featureList.search($('#search_field').val());
 }
 
 ////////////////////////////////////
@@ -558,6 +575,7 @@ function safeobj(s) {
 
 function load_table_head(columns){
   var tbl_head = '<tr class="sticky darkth">';
+  var tbl_foot = $('<tr class="darkth">');
   $.each(columns, function(i, column_tuple) {
     tbl_head += '<th class="sort a" data-sort="' + column_tuple[1] + '">';
 
@@ -574,12 +592,31 @@ function load_table_head(columns){
     }
 
     tbl_head += '</th>';
+    tbl_foot.append($('<th>')
+      .text(function(){
+        if(column_tuple[0].indexOf('SciLife Sample Name')===0){
+          return 'Sample'
+        }
+        else if(column_tuple[0].indexOf('Prep Finished Date')===0){
+          return 'Prep Finished'
+        }
+        else{
+          return column_tuple[0]
+        }
+      })
+    );
   });
   tbl_head += '</tr>';
   $("#samples_table_head").html(tbl_head);
+  $("#samples_table_foot").html(tbl_foot);
 }
 
 function load_samples_table(colOrder) {
+  if ($.fn.dataTable.isDataTable( '#sample_table' )){
+    var dtbl= $('#sample_table').DataTable();
+    dtbl.destroy();
+    $("#sample_table_filter").remove();
+}
   // Load the table header and get the filters
   var cols = read_current_filtering(true);
   if(!jQuery.isEmptyObject(colOrder)){
@@ -598,7 +635,6 @@ function load_samples_table(colOrder) {
   // Print each sample
   $.getJSON("/api/v1/project/" + project, function (samples_data) {
     var tbl_body = "";
-    var size = 0;
 
     // No samples
     if(Object.getOwnPropertyNames(samples_data).length == 0){
@@ -609,7 +645,6 @@ function load_samples_table(colOrder) {
     var last_sample='';
     var stripe = false;
     $.each(samples_data, function (sample, info) {
-      size++;
       //VERY hot fix for the PC's, to split the preps of the library validation tab
       if ($('#library_validation').hasClass('active')){
           //Add separate colors for samples
@@ -626,7 +661,6 @@ function load_samples_table(colOrder) {
 	        }
 	        //If library prep is undefined, these fields are still relevant
 	        if (info['library_prep'] === undefined){
-		          size++;
               tbl_row = '<tr';
               if(!stripe){
                 tbl_row = tbl_row + ' class="table-secondary">';
@@ -667,7 +701,6 @@ function load_samples_table(colOrder) {
           }
           // If library prep is not undefined, in order to split the sample by prep, and add same color to preps of same sample
           $.each(info['library_prep'], function(prep, prepinfo){
-              size++;
               tbl_row = '<tr';
               if(!stripe){
                 tbl_row = tbl_row + ' class="table-secondary">';
@@ -704,7 +737,9 @@ function load_samples_table(colOrder) {
                   else if (column_id == 'prep_status'){
                     tbl_row += auto_samples_cell(column_id, prepinfo[column_id]);
                   }
-
+                  else if (column_id == 'customer_name' && typeof info[column_id] !== 'undefined'){
+                    tbl_row += '<td class="' + column_id + '">' +  info[column_id] + '</td>';
+                  }
                   // everything else
                   else {
                     tbl_row += auto_samples_cell(column_id, info[column_id]);
@@ -856,6 +891,9 @@ function load_samples_table(colOrder) {
               tbl_row += '<td class="' + column_id + ' text-right">' + Number(info[column_id]).toFixed(2) + '</td>';
             }
 
+            else if (column_id == 'customer_name' && typeof info[column_id] !== 'undefined'){
+              tbl_row += '<td class="' + column_id + '">' +  info[column_id] + '</td>';
+            }
             // everything else
             else {
               tbl_row += auto_samples_cell(column_id, info[column_id]);
@@ -1026,8 +1064,7 @@ function load_samples_table(colOrder) {
     $("#samples_table_body").html(tbl_body);
 
     // Initialise the table sorting
-    var columns = read_current_filtering(false);
-    init_listjs(size, columns);
+    init_datatable();
 
     // last step, update caliper images
     update_caliper();
