@@ -737,7 +737,9 @@ function load_samples_table(colOrder) {
                   else if (column_id == 'prep_status'){
                     tbl_row += auto_samples_cell(column_id, prepinfo[column_id]);
                   }
-
+                  else if (column_id == 'customer_name' && typeof info[column_id] !== 'undefined'){
+                    tbl_row += '<td class="' + column_id + '">' +  info[column_id] + '</td>';
+                  }
                   // everything else
                   else {
                     tbl_row += auto_samples_cell(column_id, info[column_id]);
