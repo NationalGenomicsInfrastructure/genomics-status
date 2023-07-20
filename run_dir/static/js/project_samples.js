@@ -106,17 +106,12 @@ function init_datatable() {
     $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
   } );
 
-  if ($.fn.dataTable.isDataTable( '#sample_table' )){
-    var table = $('#sample_table').DataTable();
-  }
-  else{
     var table = $('#sample_table').DataTable({
       "paging":false,
       "destroy": true,
       "info":false,
       "order": [[ 0, "desc" ]]
     });
-  }
   //Add the bootstrap classes to the search thingy
   $('div.dataTables_filter input').addClass('form-control search search-query');
   $('#sample_table_filter').addClass('form-inline');
@@ -617,6 +612,11 @@ function load_table_head(columns){
 }
 
 function load_samples_table(colOrder) {
+  if ($.fn.dataTable.isDataTable( '#sample_table' )){
+    var dtbl= $('#sample_table').DataTable();
+    dtbl.destroy();
+    $("#sample_table_filter").remove();
+}
   // Load the table header and get the filters
   var cols = read_current_filtering(true);
   if(!jQuery.isEmptyObject(colOrder)){
