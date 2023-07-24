@@ -840,6 +840,9 @@ function dealWithDatepickers(datepick, option){
     todayHighlight: true,
     weekStart: 1,
     daysOfWeekHighlighted: "0,6" });
+    let two_years_ago = new Date()
+    two_years_ago.setFullYear(two_years_ago.getFullYear() - 2);
+    $('#'+datepick+'_start').datepicker('update', two_years_ago);
 
     $('#'+datepick+'_end > .form-control').prop('disabled', false);
     $('#'+datepick+'_end').datepicker({autoclose: true,
@@ -848,6 +851,7 @@ function dealWithDatepickers(datepick, option){
     todayHighlight: true,
     weekStart: 1,
     daysOfWeekHighlighted: "0,6" });
+    $('#'+datepick+'_end').datepicker('update', new Date());
   }
   if(option=='remove'){
     $('#'+datepick+'_start > .form-control').prop('disabled', true);
