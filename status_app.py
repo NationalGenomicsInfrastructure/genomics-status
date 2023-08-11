@@ -34,7 +34,6 @@ from status.flowcell import FlowcellHandler, ONTFlowcellHandler, ONTReportHandle
 from status.flowcells import (
     FlowcellDemultiplexHandler,
     FlowcellLinksDataHandler,
-    FlowcellNotesDataHandler,
     FlowcellQ30Handler,
     FlowcellQCHandler,
     FlowcellsDataHandler,
@@ -96,7 +95,6 @@ from status.projects import (
     ProjectsHandler,
     ProjectsSearchHandler,
     ProjectTicketsDataHandler,
-    RunningNotesDataHandler,
     RecCtrlDataHandler,
     ProjMetaCompareHandler,
     ProjectRNAMetaDataHandler,
@@ -119,6 +117,7 @@ from status.queues import (
     LibraryPoolingQueuesDataHandler,
 )
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
+from status.running_notes import RunningNotesDataHandler, LatestStickyNoteHandler
 from status.sample_requirements import (
     SampleRequirementsViewHandler,
     SampleRequirementsDataHandler,
@@ -246,7 +245,6 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
             ("/api/v1/flowcell_demultiplex/([^/]*)$", FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
-            ("/api/v1/flowcell_notes/([^/]*)$", FlowcellNotesDataHandler),
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
@@ -278,6 +276,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
+            ("/api/v1/latest_sticky_run_note/([^/]*)", LatestStickyNoteHandler),
             ("/api/v1/libpooling_queues", LibraryPoolingQueuesDataHandler),
             ("/api/v1/mark_agreement_signed", AgreementMarkSignHandler),
             ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
@@ -414,6 +413,7 @@ class Application(tornado.web.Application):
             self.suggestions_db = couch["suggestion_box"]
             self.worksets_db = couch["worksets"]
             self.x_flowcells_db = couch["x_flowcells"]
+            self.running_notes_db = couch["running_notes"]
         else:
             print(settings.get("couch_server", None))
             raise IOError("Cannot connect to couchdb")

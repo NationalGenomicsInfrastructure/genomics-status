@@ -10,7 +10,7 @@ from collections import OrderedDict
 import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
-from status.projects import RunningNotesDataHandler
+from status.running_notes import RunningNotesDataHandler
 
 
 class WorksetsDataHandler(SafeHandler):
@@ -39,9 +39,11 @@ class WorksetsHandler(SafeHandler):
         half_a_year_ago = datetime.datetime.now() - relativedelta(months=6)
         ws_view = self.application.worksets_db.view("worksets/summary", descending=True)
 
-        def _get_latest_running_note(val):
-            notes = json.loads(val["Workset Notes"])
-            latest_note = {max(notes.keys()): notes[max(notes.keys())]}
+        def _get_latest_running_note(id, notes_db):
+            latest_note = {}
+            notes_list = notes_db.view(f'_partition/{id}/_all_docs', include_docs=True, descending=True, limit=1).rows
+            if notes_list:
+                latest_note = notes_list[0]
             return latest_note
 
         for row in ws_view:
@@ -49,20 +51,18 @@ class WorksetsHandler(SafeHandler):
                 result[row.key] = row.value
                 result[row.key].pop("_id", None)
                 result[row.key].pop("_rev", None)
-                if "Workset Notes" in row.value:
-                    result[row.key]["Workset Notes"] = _get_latest_running_note(
-                        row.value
-                    )
+                result[row.key]["Workset Notes"] = _get_latest_running_note(
+                    row.value["id"], self.application.running_notes_db
+                )       
             else:
                 try:
                     if parse(row.value["date_run"]) >= half_a_year_ago:
                         result[row.key] = row.value
                         result[row.key].pop("_id", None)
                         result[row.key].pop("_rev", None)
-                        if "Workset Notes" in row.value:
-                            result[row.key]["Workset Notes"] = _get_latest_running_note(
-                                row.value
-                            )
+                        result[row.key]["Workset Notes"] = _get_latest_running_note(
+                        row.value["id"], self.application.running_notes_db
+                    )
                 # Exception that date_run is not available
                 except TypeError:
                     continue

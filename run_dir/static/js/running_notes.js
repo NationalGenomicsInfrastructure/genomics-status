@@ -1,4 +1,12 @@
 $(function(){
+  if(typeof project!=='undefined'){
+    $.getJSON('/api/v1/latest_sticky_run_note/'+project, function (data) { 
+      //latest_sticky_note
+      let sticky_run_note = data 
+      let date = Object.keys(sticky_run_note)[0]
+      $('#latest_sticky_note').html(make_running_note(date, sticky_run_note[date], true))
+    })};
+
     return $.getJSON('/api/v1/user_management/users', function (data) {
       window.users=Object.keys(data)
         .map(n=>{
@@ -7,7 +15,7 @@ $(function(){
     });
 });
 
-function generate_category_label(category){
+function generate_category_label(categories){
      cat_classes = {
         'Workset': ['primary', 'calendar-plus'],
         'Flowcell': ['success', 'grip-vertical'],
@@ -23,7 +31,6 @@ function generate_category_label(category){
 
     }
     var cat_label = '';
-    var categories = category.split(',')
     Object.values(categories).forEach(function(val){
       var cat = val.trim()
       if (Object.keys(cat_classes).indexOf(cat) != -1){
@@ -35,14 +42,19 @@ function generate_category_label(category){
 
 function get_note_url() {
     // URL for the notes
-    if ((typeof notetype !== 'undefined' && notetype == 'lims_step') || ('lims_step' in window && lims_step !== null)){
-        note_url='/api/v1/workset_notes/' + lims_step;
-    } else if ((typeof notetype !== 'undefined' && notetype == 'flowcell') || ('flowcell_id_reference' in window && flowcell_id_reference!== null)){
-        note_url='/api/v1/flowcell_notes/' + flowcell_id_reference;
+    let note_id = '';
+    let note_type = '';
+    if ('lims_step' in window && lims_step !== null){
+      note_id = lims_step;
+      note_type = 'workset';
+    } else if ('flowcell_id_reference' in window && flowcell_id_reference!== null){
+      note_id = flowcell_id_reference;
+      note_type = 'flowcell';
     } else {
-        note_url='/api/v1/running_notes/' + project;
+      note_id = project;
+      note_type = 'project';
     }
-    return note_url;
+    return {url: '/api/v1/running_notes/' + note_id, note_type: note_type};
 }
 
 function make_running_note(date, note, sticky){
@@ -50,8 +62,6 @@ function make_running_note(date, note, sticky){
   try {
     var category = '';
     var note_id = '';
-    var date = date.replace(/-/g, '/');
-    date = date.replace(/\.\d{6}/, '');
     date = new Date(date);
     if (note['note'] != undefined){
         if(date > new Date('2015-01-01')){
@@ -73,8 +83,8 @@ function make_running_note(date, note, sticky){
         }
         note_id = 'running_note_'+page_to_link+'_'+(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(),
                    date.getUTCDate(), date.getHours(), date.getMinutes(), date.getSeconds())/1000);
-        if ('category' in note){
-            category=generate_category_label(note['category']);
+        if ('categories' in note){
+            category=generate_category_label(note['categories']);
         }
     }
   } catch(e){
@@ -83,7 +93,7 @@ function make_running_note(date, note, sticky){
   }
   var printHyphen =category? ' - ': ' ';
   var panelClass='';
-  if (note['category'].includes('Important')) {
+  if (note['categories'].includes('Important')) {
     panelClass = 'card-important';
   }
   var margin_if_not_sticky = "";
@@ -98,7 +108,7 @@ function make_running_note(date, note, sticky){
 
 function load_running_notes(wait) {
   // Clear previously loaded notes, if so
-  note_url = get_note_url();
+  const {note_url, note_type} = get_note_url();
   $("#running_notes_panels").empty();
   // From agreements tab
   $("#invoicing_notes").empty();
@@ -108,7 +118,7 @@ function load_running_notes(wait) {
     } else {
       $.each(data, function(date, note) {
         $('#running_notes_panels').append(make_running_note(date, note));
-        if(note['category'].includes('Invoicing')){
+        if(note['categories'].includes('Invoicing')){
           $('#invoicing_notes').append(make_running_note(date, note, true));
         }
       });
@@ -143,7 +153,7 @@ function preview_running_notes(){
     $('.rn-categ button.active').each(function() {
       categories.push($(this).text().trim());
     });
-    var category = generate_category_label(categories.join());
+    var category = generate_category_label(categories);
     category = category ? ' - '+ category : category;
     $('#preview_category').html(category);
     var text = $('#new_note_text').val().trim();
@@ -246,7 +256,6 @@ $("#running_notes_form").submit( function(e) {
     $('.rn-categ button.active').each(function() {
       categories.push($(this).text().trim());
     });
-    category = categories.join()
     if (text.length == 0) {
         alert("Error: No running note entered.");
         return false;
@@ -256,14 +265,21 @@ $("#running_notes_form").submit( function(e) {
           return false;
        }
     }
-
-    note_url = get_note_url()
+    const {note_url, note_type} = get_note_url()
+    if(["flowcell", "workset"].includes(note_type)){
+      if(note_type==="flowcell" && !categories.includes("Flowcell")){
+        categories.push("Flowcell")
+      }
+      else if(note_type==="workset" && !categories.includes("Workset")){
+        categories.push("Workset")
+      }
+    }
     $('#save_note_button').addClass('disabled').text('Submitting...');
     $.ajax({
       type: 'POST',
       url: note_url,
       dataType: 'json',
-      data: {"note": text, "category": category},
+      data: JSON.stringify({"note": text, "categories": categories, "note_type": note_type}),
       error: function(xhr, textStatus, errorThrown) {
         alert('Error: '+xhr['responseText']+' ('+errorThrown+')');
         $('#save_note_button').removeClass('disabled').text('Submit Running Note');
@@ -273,7 +289,7 @@ $("#running_notes_form").submit( function(e) {
       },
       success: function(data, textStatus, xhr) {
         // Manually check whether the running note has saved
-        note_url=get_note_url()
+        const {note_url, note_type} = get_note_url()
         $.getJSON(note_url, function(newdata) {
           var newNote = false;
           $.each(newdata, function(date, note) {
@@ -294,7 +310,7 @@ $("#running_notes_form").submit( function(e) {
             }
             // Create a new running note and slide it in..
             var now = new Date();
-            category=generate_category_label(category);
+            category=generate_category_label(categories);
             var printHyphen =category? ' - ': ' ';
             $('<div class="card mb-2 mx-2"><div class="card-header bg-success-table">'+
                   '<a class="text-decoration-none" href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
