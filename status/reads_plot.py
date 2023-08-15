@@ -17,7 +17,7 @@ class DataFlowcellYieldHandler(SafeHandler):
         else:
             first_term, second_term = search_string.split('-')
 
-        docs = [x.value for x in self.application.x_flowcells_db.view("plot/reads_yield")[first_term:second_term].rows]
+        docs = [x.value for x in self.application.x_flowcells_db.view("plot/reads_yield")[first_term:second_term+'ZZZZ'].rows]
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(docs))
