@@ -10,7 +10,7 @@ from collections import OrderedDict
 import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
-from status.running_notes import RunningNotesDataHandler
+from status.projects import RunningNotesDataHandler
 
 
 class WorksetsDataHandler(SafeHandler):
@@ -39,11 +39,9 @@ class WorksetsHandler(SafeHandler):
         half_a_year_ago = datetime.datetime.now() - relativedelta(months=6)
         ws_view = self.application.worksets_db.view("worksets/summary", descending=True)
 
-        def _get_latest_running_note(id, notes_db):
-            latest_note = {}
-            notes_list = notes_db.view(f'_partition/{id}/_all_docs', include_docs=True, descending=True, limit=1).rows
-            if notes_list:
-                latest_note = notes_list[0]
+        def _get_latest_running_note(val):
+            notes = json.loads(val["Workset Notes"])
+            latest_note = {max(notes.keys()): notes[max(notes.keys())]}
             return latest_note
 
         for row in ws_view:
@@ -51,18 +49,20 @@ class WorksetsHandler(SafeHandler):
                 result[row.key] = row.value
                 result[row.key].pop("_id", None)
                 result[row.key].pop("_rev", None)
-                result[row.key]["Workset Notes"] = _get_latest_running_note(
-                    row.value["id"], self.application.running_notes_db
-                )       
+                if "Workset Notes" in row.value:
+                    result[row.key]["Workset Notes"] = _get_latest_running_note(
+                        row.value
+                    )       
             else:
                 try:
                     if parse(row.value["date_run"]) >= half_a_year_ago:
                         result[row.key] = row.value
                         result[row.key].pop("_id", None)
                         result[row.key].pop("_rev", None)
-                        result[row.key]["Workset Notes"] = _get_latest_running_note(
-                        row.value["id"], self.application.running_notes_db
-                    )
+                        if "Workset Notes" in row.value:
+                            result[row.key]["Workset Notes"] = _get_latest_running_note(
+                                row.value
+                            )
                 # Exception that date_run is not available
                 except TypeError:
                     continue
@@ -302,24 +302,6 @@ class WorksetNotesDataHandler(SafeHandler):
 
             self.set_status(201)
             self.write(json.dumps(newNote))
-
-    def delete(self, workset):
-        note_id = self.get_argument("note_id")
-        p = Process(self.lims, id=workset)
-        p.get(force=True)
-        workset_notes = (
-            json.loads(p.udf["Workset Notes"]) if "Workset Notes" in p.udf else {}
-        )
-        try:
-            self.set_header("Content-type", "application/json")
-            del workset_notes[note_id]
-            p.udf["Workset Notes"] = json.dumps(workset_notes)
-            p.put()
-            self.set_status(201)
-            self.write(json.dumps(workset_notes))
-        except:
-            self.set_status(400)
-            self.finish("<html><body>No note found</body></html>")
 
 
 class WorksetLinksHandler(SafeHandler):

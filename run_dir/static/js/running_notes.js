@@ -50,18 +50,29 @@ function get_note_url() {
     } else if ('flowcell_id_reference' in window && flowcell_id_reference!== null){
       note_id = flowcell_id_reference;
       note_type = 'flowcell';
-    } else {
+      if((typeof $('#rn-js').data('flowcell-type') !== 'undefined') && ($('#rn-js').data('flowcell-type') ==='ont')){
+        note_type += '_ont';
+      }
+    }else {
       note_id = project;
       note_type = 'project';
     }
-    return {url: '/api/v1/running_notes/' + note_id, note_type: note_type};
+    let url_add = '';
+    if($('#library_construction_method').text().includes('ONT') || note_type=='flowcell_ont'){
+        url_add = 'new_'
+    }
+    return {url: `/api/v1/${url_add}running_notes/` + note_id, note_type: note_type};
 }
 
-function make_running_note(date, note, sticky){
+function make_running_note(date, note, sticky, version_flag){
   sticky = typeof sticky !== "undefined" ? sticky : false;
   try {
     var category = '';
     var note_id = '';
+    if(version_flag==='old'){
+      var date = date.replace(/-/g, '/');
+      date = date.replace(/\.\d{6}/, '');
+    }
     date = new Date(date);
     if (note['note'] != undefined){
         if(date > new Date('2015-01-01')){
@@ -83,8 +94,16 @@ function make_running_note(date, note, sticky){
         }
         note_id = 'running_note_'+page_to_link+'_'+(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(),
                    date.getUTCDate(), date.getHours(), date.getMinutes(), date.getSeconds())/1000);
-        if ('categories' in note){
-            category=generate_category_label(note['categories']);
+        
+        if ('categories' in note || 'category' in note){
+          var categories = []
+          if(version_flag==='old'){
+             categories = note['category'].split(',')
+          }
+          else{
+            categories = note['categories']
+          }
+          category=generate_category_label(categories);
         }
     }
   } catch(e){
@@ -93,7 +112,7 @@ function make_running_note(date, note, sticky){
   }
   var printHyphen =category? ' - ': ' ';
   var panelClass='';
-  if (note['categories'].includes('Important')) {
+  if (category.includes('Important')) {
     panelClass = 'card-important';
   }
   var margin_if_not_sticky = "";
@@ -108,18 +127,29 @@ function make_running_note(date, note, sticky){
 
 function load_running_notes(wait) {
   // Clear previously loaded notes, if so
-  const {note_url, note_type} = get_note_url();
+  const note_values = get_note_url();
+  let version_flag = 'old';
+  if (note_values.url.includes('new_')){
+    version_flag = 'new';
+  }
   $("#running_notes_panels").empty();
   // From agreements tab
   $("#invoicing_notes").empty();
-  return $.getJSON(note_url, function(data) {
+  return $.getJSON(note_values.url, function(data) {
     if(Object.keys(data).length == 0 || typeof data === 'undefined'){
       $('#running_notes_panels').html('<div class="well">No running notes found.</div>');
     } else {
       $.each(data, function(date, note) {
-        $('#running_notes_panels').append(make_running_note(date, note));
-        if(note['categories'].includes('Invoicing')){
-          $('#invoicing_notes').append(make_running_note(date, note, true));
+        $('#running_notes_panels').append(make_running_note(date, note, false, version_flag));
+        let categories = '';
+        if(version_flag==='old'){
+          categories = note['category']
+        }
+        else{
+          categories = note['categories']
+        }
+        if(categories.includes('Invoicing')){
+          $('#invoicing_notes').append(make_running_note(date, note, true, version_flag));
         }
       });
       if($('#invoicing_notes').children().length === 0){
@@ -265,21 +295,21 @@ $("#running_notes_form").submit( function(e) {
           return false;
        }
     }
-    const {note_url, note_type} = get_note_url()
-    if(["flowcell", "workset"].includes(note_type)){
-      if(note_type==="flowcell" && !categories.includes("Flowcell")){
+    const note_values = get_note_url()
+    if(["flowcell", "workset"].includes(note_values.note_type)){
+      if(note_values.note_type==="flowcell" && !categories.includes("Flowcell")){
         categories.push("Flowcell")
       }
-      else if(note_type==="workset" && !categories.includes("Workset")){
+      else if(note_values.note_type==="workset" && !categories.includes("Workset")){
         categories.push("Workset")
       }
     }
     $('#save_note_button').addClass('disabled').text('Submitting...');
     $.ajax({
       type: 'POST',
-      url: note_url,
+      url: note_values.url,
       dataType: 'json',
-      data: JSON.stringify({"note": text, "categories": categories, "note_type": note_type}),
+      data: JSON.stringify({"note": text, "categories": categories, "note_type": note_values.note_type}),
       error: function(xhr, textStatus, errorThrown) {
         alert('Error: '+xhr['responseText']+' ('+errorThrown+')');
         $('#save_note_button').removeClass('disabled').text('Submit Running Note');
@@ -289,12 +319,12 @@ $("#running_notes_form").submit( function(e) {
       },
       success: function(data, textStatus, xhr) {
         // Manually check whether the running note has saved
-        const {note_url, note_type} = get_note_url()
-        $.getJSON(note_url, function(newdata) {
+        const note_values = get_note_url()
+        $.getJSON(note_values.url, function(newdata) {
           var newNote = false;
           $.each(newdata, function(date, note) {
             if(data['note'] == note['note']){
-              newNote = make_running_note(date, note);
+              newNote = make_running_note(date, note, false);
             }
           });
           if(newNote){

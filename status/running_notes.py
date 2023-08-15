@@ -17,7 +17,7 @@ import tornado
 from status.util import SafeHandler
 
 
-class RunningNotesDataHandler(SafeHandler):
+class NEWRunningNotesDataHandler(SafeHandler): #TODO: Name to be changed when switching all run notes to new system
     """Serves all running notes from a given project.
     URL: /api/v1/running_notes/([^/]*)
     """
@@ -44,7 +44,6 @@ class RunningNotesDataHandler(SafeHandler):
         note = data.get("note", "")
         category = data.get("categories", [])
         note_type =  data.get("note_type", "")
-        import pdb; pdb.set_trace()
         user = self.get_current_user()
         if not note:
             self.set_status(400)
@@ -52,7 +51,7 @@ class RunningNotesDataHandler(SafeHandler):
                 "<html><body>No project id or note parameters found</body></html>"
             )
         else:
-            newNote = RunningNotesDataHandler.make_running_note(
+            newNote = NEWRunningNotesDataHandler.make_running_note(
                 self.application, partition_id, note, category, user.name, user.email, note_type
             )
             self.set_status(201)
@@ -74,6 +73,8 @@ class RunningNotesDataHandler(SafeHandler):
         elif note_type=="flowcell":
             #get connected projects from fc db
             connected_projects = application.x_flowcells_db.view('names/project_ids_list', key=partition_id).rows[0].value
+        elif note_type=="flowcell_ont":
+            connected_projects = application.nanopore_runs_db.view('names/project_ids_list', key=partition_id).rows[0].value
         newNote = {
             "_id": f'{partition_id}:{datetime.datetime.timestamp(created_time)}',
             "user": user,
@@ -86,13 +87,14 @@ class RunningNotesDataHandler(SafeHandler):
             "created_at_utc": created_time.isoformat(),
             "updated_at_utc": created_time.isoformat()
         }
-
+        #Save in running notes db
+        application.running_notes_db.save(newNote)
         #### Check and send mail to tagged users (for project running notes as flowcell and workset notes are copied over)
         if note_type=="project":
             pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
             userTags = [x[1] for x in pattern.findall(note)]
             if userTags:
-                RunningNotesDataHandler.notify_tagged_user(
+                NEWRunningNotesDataHandler.notify_tagged_user(
                     application,
                     userTags,
                     proj_ids,
@@ -114,7 +116,7 @@ class RunningNotesDataHandler(SafeHandler):
                 and proj_coord not in userTags
                 and proj_coord != email.split("@")[0]
             ):
-                RunningNotesDataHandler.notify_tagged_user(
+                NEWRunningNotesDataHandler.notify_tagged_user(
                     application,
                     [proj_coord],
                     proj_ids,
@@ -124,13 +126,13 @@ class RunningNotesDataHandler(SafeHandler):
                     created_time,
                     "creation",
                 )
-        if note_type in ["flowcell", "workset"]:
-            choose_link = {"flowcell": "flowcells","workset": "worksets", "ont_flowcell": "flowcells_ont"}
+        if note_type in ["flowcell", "workset", "flowcell_ont"]:
+            choose_link = {"flowcell": "flowcells","workset": "worksets", "flowcell_ont": "flowcells_ont"}
             link = f"<a class='text-decoration-none' href='/{choose_link[note_type]}/{partition_id}'>{partition_id}</a>"
-            project_note = f"#####*Running note posted on {note_type} {link}:*\n"
+            project_note = f"#####*Running note posted on {note_type.split('_')[0]} {link}:*\n"
             project_note += note
             for proj_id in connected_projects:
-                _ = RunningNotesDataHandler.make_running_note(
+                _ = NEWRunningNotesDataHandler.make_running_note(
                 application, proj_id, project_note, categories, user, email, "project", created_time
             )
         return newNote

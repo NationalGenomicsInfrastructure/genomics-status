@@ -80,12 +80,15 @@
             <a class="nav-link" href="/flowcells_ont/{{ flowcell.get('run_name') }}/report" target="_blank">MinKNOW run report</a>
           </li>
         {% end %}
+        <li class="nav-item">
+          <a class="nav-link" href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a>
+        </li>
       </ul>
     </div>
-    <button type="button" id="ont_copy_table" class="btn btn-sm btn-outline-dark mb-2" data-clipboard-target="#ont_barcodes"><span class="fa fa-copy"></span> Copy table</button>
-    {% if barcodes %}
     <div class="tab-content">
+    {% if barcodes %}
       <div class="tab-pane fade show active" id="tab_barcode_information">
+        <button type="button" id="ont_copy_table" class="btn btn-sm btn-outline-dark mb-2" data-clipboard-target="#ont_barcodes"><span class="fa fa-copy"></span> Copy table</button>
         <table class="table table-bordered narrow-headers no-margin right_align_headers" id="ont_barcodes">
             <thead id="ont_fc_table_head">
                 <tr class="sticky darkth">
@@ -116,13 +119,15 @@
             </tbody>
         </table>
       </div>
+      {% end %}
+    <!-- RUNNING NOTES TAB -->
+    {% include "running_notes_tab.html" %}
     </div>
-    {% end %}
 </div>
 
-<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ flowcell.get('name') }}"></script>
-<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell.get('name') }}"></script>
-<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-flowcell-type="ont"></script>
+<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell.get('run_name') }}"></script>
+<script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('run_name') }}"></script>
 <script src="/static/js/jquery.dataTables.min.js"></script>
 <script src="/static/js/clipboard.min.js"></script>
 

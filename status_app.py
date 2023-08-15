@@ -34,6 +34,7 @@ from status.flowcell import FlowcellHandler, ONTFlowcellHandler, ONTReportHandle
 from status.flowcells import (
     FlowcellDemultiplexHandler,
     FlowcellLinksDataHandler,
+    FlowcellNotesDataHandler,
     FlowcellQ30Handler,
     FlowcellQCHandler,
     FlowcellsDataHandler,
@@ -96,6 +97,7 @@ from status.projects import (
     ProjectsSearchHandler,
     ProjectTicketsDataHandler,
     RecCtrlDataHandler,
+    RunningNotesDataHandler,
     ProjMetaCompareHandler,
     ProjectRNAMetaDataHandler,
     FragAnImageHandler,
@@ -117,7 +119,7 @@ from status.queues import (
     LibraryPoolingQueuesDataHandler,
 )
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
-from status.running_notes import RunningNotesDataHandler, LatestStickyNoteHandler
+from status.running_notes import NEWRunningNotesDataHandler, LatestStickyNoteHandler #temp name
 from status.sample_requirements import (
     SampleRequirementsViewHandler,
     SampleRequirementsDataHandler,
@@ -245,6 +247,7 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
             ("/api/v1/flowcell_demultiplex/([^/]*)$", FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
+            ("/api/v1/flowcell_notes/([^/]*)$", FlowcellNotesDataHandler),
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
@@ -298,6 +301,7 @@ class Application(tornado.web.Application):
             ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
             ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
+            ("/api/v1/new_running_notes/([^/]*)$", NEWRunningNotesDataHandler),
             ("/api/v1/links/([^/]*)$", LinksDataHandler),
             ("/api/v1/sample_requirements", SampleRequirementsDataHandler),
             (
