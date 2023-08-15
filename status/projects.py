@@ -986,7 +986,6 @@ class RunningNotesDataHandler(SafeHandler):
         project_name = doc["project_name"]
         proj_ids = [project, project_name]
         doc["details"]["running_notes"] = json.dumps(running_notes)
-        import pdb; pdb.set_trace()
         if "Sticky" in category:
             doc["details"]["latest_sticky_note"] = json.dumps({timestamp: newNote})
         application.projects_db.save(doc)
