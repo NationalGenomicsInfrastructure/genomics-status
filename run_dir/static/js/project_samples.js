@@ -15,12 +15,7 @@ $(document).ready(function() {
     load_all_udfs();
     //load_samples_table();
     select_from_preset('default_preset_buttons', 'Default view');
-    //Temp fix for new run notes db
-    setTimeout(
-      function() 
-      {
-        load_running_notes();
-      }, 1500);
+    load_running_notes();
     load_links();
     load_charon_summary();
   });
