@@ -469,7 +469,6 @@ function update_chemistries_list(){
         }
     }
     window.current_chemistries_list.sort();
-    console.log(window.current_chemistries_list)
 }
 
 function update_instrument_list(){
