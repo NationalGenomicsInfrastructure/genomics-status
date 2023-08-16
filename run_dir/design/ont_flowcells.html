@@ -15,11 +15,29 @@
                 <th class="sort" data-sort="project">Project</th>
                 <th class="sort" data-sort="prep_kit">Prep Kit</th>
                 <th class="sort" data-sort="barcoding_kit">Barcoding Kit</th>
-                <th class="sort" data-sort="flow_cell_type">Flow_Cell Type</th>
-                <th class="sort" data-sort="basecalled_pass_bases_Gbp">Yield_passed_(Gbp)</th>
-                <th class="sort" data-sort="basecalled_pass_read_count_M">Read_count_passed_(M)</th>
-                <th class="sort" data-sort="n50_Kbp">N50_passed_(Kbp)</th>
-                <th class="sort" data-sort="accuracy">Pass/Fail (%)</th>
+                <th class="sort" data-sort="flow_cell_type">Flow Cell Type</th>
+                <th class="sort text-center" data-sort="flow_cell_qc">Flow cell QC</th>
+                <th class="sort text-center" data-sort="load_fmol">Loading (fmol)</th>
+                <th class="sort text-center" data-sort="reloadings">Reloadings</th>
+                <th class="sort text-center" data-sort="peak_pore_health">
+                    <abbr 
+                        data-toggle="tooltip" data-html="true" title="Highest fraction pores in states<br><em>(sequencing + available) / total</em>">Peak Pore Health (%)
+                    </abbr>
+                </th>
+                <th class="sort text-center" data-sort="peak_pore_efficacy">
+                    <abbr 
+                        data-toggle="tooltip" data-html="true" title="Highest fraction pores in states<br><em>sequencing / (sequencing + available)</em>">Peak Pore Efficacy (%)
+                    </abbr>
+                </th>
+                <th class="sort text-center" data-sort="t90">
+                    <abbr 
+                        data-toggle="tooltip" data-html="true" title="Timepoint at which 90% of the distribution of sequencing pores has been passed">T90 (h)
+                    </abbr>
+                </th>
+                <th class="sort text-center" data-sort="basecalled_pass_bases_Gbp">Yield Passed (Gbp)</th>
+                <th class="sort text-center" data-sort="basecalled_pass_read_count_M">Read Count Passed (M)</th>
+                <th class="sort text-center" data-sort="n50_Kbp">N50 Passed (Kbp)</th>
+                <th class="sort text-center" data-sort="accuracy">Pass/Fail (%)</th>
             </tr>
         </thead>
         <tfoot>
@@ -31,10 +49,16 @@
                 <th class="sort" data-sort="project">Project</th>
                 <th class="sort" data-sort="prep_kit">Prep Kit</th>
                 <th class="sort" data-sort="barcoding_kit">Barcoding Kit</th>
-                <th class="sort" data-sort="flow_cell_type">Flow_Cell Type</th>
-                <th class="sort" data-sort="basecalled_pass_bases_Gbp">Yield_passed_(Gbp)</th>
-                <th class="sort" data-sort="basecalled_pass_read_count_M">Read_count_passed_(M)</th>
-                <th class="sort" data-sort="n50_Kbp">N50_passed_(Kbp)</th>
+                <th class="sort" data-sort="flow_cell_type">Flow Cell Type</th>
+                <th class="sort" data-sort="flow_cell_qc">Flow cell QC</th>
+                <th class="sort" data-sort="load_fmol">Loading (fmol)</th>
+                <th class="sort" data-sort="reloadings">Reloadings</th>
+                <th class="sort" data-sort="peak_pore_health">Peak Pore Health (%)</th>
+                <th class="sort" data-sort="peak_pore_efficacy">Peak Pore Efficacy (%)</th>
+                <th class="sort" data-sort="t90">T90 (h)</th>
+                <th class="sort" data-sort="basecalled_pass_bases_Gbp">Yield Passed (Gbp)</th>
+                <th class="sort" data-sort="basecalled_pass_read_count_M">Read Count Passed (M)</th>
+                <th class="sort" data-sort="n50_Kbp">N50 Passed (Kbp)</th>
                 <th class="sort" data-sort="accuracy">Pass/Fail (%)</th>
             </tr>
         </tfoot>
@@ -110,7 +134,61 @@
                     <td class="prep_kit">{{ ont_flowcells[onefc]["prep_kit"] }}</td>
                     <td class="barcoding_kit">{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
                     <td class="flow_cell_type">{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
+
+                    <td class="flow_cell_qc text-center">
+                        {% try %}
+                            {{ ont_flowcells[onefc]["lims"]["pore_count_history"][0]["num_pores"] }} 
+                        {% except %}
+                            {% try %}
+                                {{ ont_flowcells[onefc]["lims"]["loading"][-1]["qc"] }} 
+                            {% except %}
+                                {{ "" }}
+                            {% end %}
+                        {% end %}
+                    </td>
+
+                    <td class="load_fmol text-center">
+                        {% try %}
+                            {{ ont_flowcells[onefc]["lims"]["loading"][-1]["load_fmol"] }} 
+                        {% except %}
+                            {{ "" }}
+                        {% end %}
+                    </td>
+
+                    <td class="reloadings text-center">
+                        {% try %}
+                            {{ len(ont_flowcells[onefc]["lims"]["reloading"][-1]["reload_fmols"]) }} 
+                        {% except %}
+                            {{ "" }}
+                        {% end %}
+                    </td>
+
+                    <td class="peak_pore_health text-center">
+                        {% try %}
+                            {{ ont_flowcells[onefc]["custom_metrics"]["peak_pore_health"] }} 
+                        {% except %}
+                            {{ "" }}
+                        {% end %}
+                    </td>
+
+                    <td class="peak_pore_efficacy text-center">
+                        {% try %}
+                            {{ ont_flowcells[onefc]["custom_metrics"]["peak_pore_efficacy"] }} 
+                        {% except %}
+                            {{ "" }}
+                        {% end %}
+                    </td>
+
+                    <td class="t90 text-center">
+                        {% try %}
+                            {{ ont_flowcells[onefc]["custom_metrics"]["t90"] }} 
+                        {% except %}
+                            {{ "" }}
+                        {% end %}
+                    </td>
+
                     <td class="basecalled_pass_bases_Gbp text-center
+
                     {% if ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] != '' %}
                         {% if ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 66.66 %}
                             table-success
