@@ -1,4 +1,3 @@
-
 import datetime
 import json
 import re
@@ -17,7 +16,9 @@ import tornado
 from status.util import SafeHandler
 
 
-class NEWRunningNotesDataHandler(SafeHandler): #TODO: Name to be changed when switching all run notes to new system
+class NEWRunningNotesDataHandler(
+    SafeHandler
+):  # TODO: Name to be changed when switching all run notes to new system
     """Serves all running notes from a given project.
     URL: /api/v1/running_notes/([^/]*)
     """
@@ -25,17 +26,28 @@ class NEWRunningNotesDataHandler(SafeHandler): #TODO: Name to be changed when sw
     def get(self, partitionid):
         self.set_header("Content-type", "application/json")
         running_notes_json = {}
-        running_notes_docs = self.application.running_notes_db.view(f'_partition/{partitionid}/_all_docs', include_docs=True)
+        running_notes_docs = self.application.running_notes_db.view(
+            f"_partition/{partitionid}/_all_docs", include_docs=True
+        )
         for row in running_notes_docs:
             running_note = row.doc
             note_contents = {}
-            for item in ['user', 'email', 'note', 'categories', 'created_at_utc', 'updated_at_utc']:
+            for item in [
+                "user",
+                "email",
+                "note",
+                "categories",
+                "created_at_utc",
+                "updated_at_utc",
+            ]:
                 note_contents[item] = running_note[item]
-            running_notes_json[note_contents['created_at_utc']] = note_contents
+            running_notes_json[note_contents["created_at_utc"]] = note_contents
 
         # Sorted running notes, by date
         sorted_running_notes = OrderedDict()
-        for k, v in sorted(running_notes_json.items(), key=lambda t: t[0], reverse=True):
+        for k, v in sorted(
+            running_notes_json.items(), key=lambda t: t[0], reverse=True
+        ):
             sorted_running_notes[k] = v
         self.write(sorted_running_notes)
 
@@ -43,7 +55,7 @@ class NEWRunningNotesDataHandler(SafeHandler): #TODO: Name to be changed when sw
         data = tornado.escape.json_decode(self.request.body)
         note = data.get("note", "")
         category = data.get("categories", [])
-        note_type =  data.get("note_type", "")
+        note_type = data.get("note_type", "")
         user = self.get_current_user()
         if not note:
             self.set_status(400)
@@ -52,14 +64,29 @@ class NEWRunningNotesDataHandler(SafeHandler): #TODO: Name to be changed when sw
             )
         else:
             newNote = NEWRunningNotesDataHandler.make_running_note(
-                self.application, partition_id, note, category, user.name, user.email, note_type
+                self.application,
+                partition_id,
+                note,
+                category,
+                user.name,
+                user.email,
+                note_type,
             )
             self.set_status(201)
             self.write(json.dumps(newNote))
 
     @staticmethod
-    def make_running_note(application, partition_id, note, categories, user, email, note_type, created_time = datetime.datetime.now(datetime.timezone.utc)):
-        if note_type=="project":
+    def make_running_note(
+        application,
+        partition_id,
+        note,
+        categories,
+        user,
+        email,
+        note_type,
+        created_time=datetime.datetime.now(datetime.timezone.utc),
+    ):
+        if note_type == "project":
             connected_projects = [partition_id]
             v = application.projects_db.view("project/project_id")
             for row in v[partition_id]:
@@ -70,13 +97,25 @@ class NEWRunningNotesDataHandler(SafeHandler): #TODO: Name to be changed when sw
             proj_coord_with_accents = ".".join(
                 doc["details"].get("project_coordinator", "").lower().split()
             )
-        elif note_type=="flowcell":
-            #get connected projects from fc db
-            connected_projects = application.x_flowcells_db.view('names/project_ids_list', key=partition_id).rows[0].value
-        elif note_type=="flowcell_ont":
-            connected_projects = application.nanopore_runs_db.view('names/project_ids_list', key=partition_id).rows[0].value
+        elif note_type == "flowcell":
+            # get connected projects from fc db
+            connected_projects = (
+                application.x_flowcells_db.view(
+                    "names/project_ids_list", key=partition_id
+                )
+                .rows[0]
+                .value
+            )
+        elif note_type == "flowcell_ont":
+            connected_projects = (
+                application.nanopore_runs_db.view(
+                    "names/project_ids_list", key=partition_id
+                )
+                .rows[0]
+                .value
+            )
         newNote = {
-            "_id": f'{partition_id}:{datetime.datetime.timestamp(created_time)}',
+            "_id": f"{partition_id}:{datetime.datetime.timestamp(created_time)}",
             "user": user,
             "email": email,
             "note": note,
@@ -85,12 +124,12 @@ class NEWRunningNotesDataHandler(SafeHandler): #TODO: Name to be changed when sw
             "parent": partition_id,
             "note_type": note_type,
             "created_at_utc": created_time.isoformat(),
-            "updated_at_utc": created_time.isoformat()
+            "updated_at_utc": created_time.isoformat(),
         }
-        #Save in running notes db
+        # Save in running notes db
         application.running_notes_db.save(newNote)
         #### Check and send mail to tagged users (for project running notes as flowcell and workset notes are copied over)
-        if note_type=="project":
+        if note_type == "project":
             pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
             userTags = [x[1] for x in pattern.findall(note)]
             if userTags:
@@ -127,14 +166,27 @@ class NEWRunningNotesDataHandler(SafeHandler): #TODO: Name to be changed when sw
                     "creation",
                 )
         if note_type in ["flowcell", "workset", "flowcell_ont"]:
-            choose_link = {"flowcell": "flowcells","workset": "worksets", "flowcell_ont": "flowcells_ont"}
+            choose_link = {
+                "flowcell": "flowcells",
+                "workset": "worksets",
+                "flowcell_ont": "flowcells_ont",
+            }
             link = f"<a class='text-decoration-none' href='/{choose_link[note_type]}/{partition_id}'>{partition_id}</a>"
-            project_note = f"#####*Running note posted on {note_type.split('_')[0]} {link}:*\n"
+            project_note = (
+                f"#####*Running note posted on {note_type.split('_')[0]} {link}:*\n"
+            )
             project_note += note
             for proj_id in connected_projects:
                 _ = NEWRunningNotesDataHandler.make_running_note(
-                application, proj_id, project_note, categories, user, email, "project", created_time
-            )
+                    application,
+                    proj_id,
+                    project_note,
+                    categories,
+                    user,
+                    email,
+                    "project",
+                    created_time,
+                )
         return newNote
 
     @staticmethod
@@ -152,7 +204,8 @@ class NEWRunningNotesDataHandler(SafeHandler): #TODO: Name to be changed when sw
             + str(
                 int(
                     (
-                        timestamp - datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
+                        timestamp
+                        - datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
                     ).total_seconds()
                 )
             )
@@ -300,7 +353,9 @@ class LatestStickyNoteHandler(SafeHandler):
 
     def get(self, partitionid):
         self.set_header("Content-type", "application/json")
-        latest_sticky_doc = self.application.running_notes_db.view('note_types/sticky_notes', partition=partitionid, descending=True, limit=1).rows
+        latest_sticky_doc = self.application.running_notes_db.view(
+            "note_types/sticky_notes", partition=partitionid, descending=True, limit=1
+        ).rows
         if latest_sticky_doc:
             latest_sticky_note = latest_sticky_doc[0].value
-            self.write({latest_sticky_note['created_at_utc'] : latest_sticky_note})
+            self.write({latest_sticky_note["created_at_utc"]: latest_sticky_note})

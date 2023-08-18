@@ -884,10 +884,12 @@ class ProjectSamplesHandler(SafeHandler):
         )
         # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
         multiqc = list(self.get_multiqc(project).keys())
-        #Temp until switch to new run notes db
-        lib_const_method = self.application.projects_db.view('project/lib_const_meth', key=project).rows
+        # Temp until switch to new run notes db
+        lib_const_method = self.application.projects_db.view(
+            "project/lib_const_meth", key=project
+        ).rows
         if lib_const_method:
-            is_ont_proj = ('ONT' in lib_const_method[0].value)
+            is_ont_proj = "ONT" in lib_const_method[0].value
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
@@ -900,7 +902,7 @@ class ProjectSamplesHandler(SafeHandler):
                 worksets=worksets_view[project],
                 multiqc=multiqc,
                 lims_uri=BASEURI,
-                is_ont_proj=is_ont_proj, #temp var TODO: remove when switching completely to new run notes db
+                is_ont_proj=is_ont_proj,  # temp var TODO: remove when switching completely to new run notes db
             )
         )
 
@@ -953,7 +955,7 @@ class RunningNotesDataHandler(SafeHandler):
         data = tornado.escape.json_decode(self.request.body)
         note = data.get("note", "")
         categories = data.get("categories", [])
-        category = ', '.join(categories)
+        category = ", ".join(categories)
         user = self.get_current_user()
         if not note:
             self.set_status(400)
