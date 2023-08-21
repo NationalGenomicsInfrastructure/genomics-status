@@ -1,12 +1,12 @@
 $(function(){
+  /*  Once projects are moved to new running notes db
   if(typeof project!=='undefined'){
-    if((typeof $('#rn-js').data('is-ont') !== 'undefined') && ($('#rn-js').data('is-ont') ==='True')){
       $.getJSON('/api/v1/latest_sticky_run_note/'+project, function (data) { 
         //latest_sticky_note
         let sticky_run_note = data 
         let date = Object.keys(sticky_run_note)[0]
         $('#latest_sticky_note').html(make_running_note(date, sticky_run_note[date], true))
-  })}};
+  })}; */
 
     return $.getJSON('/api/v1/user_management/users', function (data) {
       window.users=Object.keys(data)
@@ -59,7 +59,7 @@ function get_note_url() {
       note_type = 'project';
     }
     let url_add = '';
-    if(((typeof $('#rn-js').data('is-ont') !== 'undefined') && ($('#rn-js').data('is-ont') ==='True')) || note_type=='flowcell_ont'){
+    if(note_type=='flowcell_ont'){
         url_add = 'new_'
     }
     return {url: `/api/v1/${url_add}running_notes/` + note_id, note_type: note_type};

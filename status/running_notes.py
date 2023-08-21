@@ -15,6 +15,9 @@ import tornado
 
 from status.util import SafeHandler
 
+# Temp until project run notes are moved to new notes db
+from status.projects import RunningNotesDataHandler
+
 
 class NEWRunningNotesDataHandler(
     SafeHandler
@@ -177,15 +180,25 @@ class NEWRunningNotesDataHandler(
             )
             project_note += note
             for proj_id in connected_projects:
-                _ = NEWRunningNotesDataHandler.make_running_note(
+                #     _ = NEWRunningNotesDataHandler.make_running_note(
+                #         application,
+                #         proj_id,
+                #         project_note,
+                #         categories,
+                #         user,
+                #         email,
+                #         "project",
+                #         created_time,
+                #     )
+                """Temp until project run notes are moved to new notes db"""
+                category = ", ".join(categories)
+                RunningNotesDataHandler.make_project_running_note(
                     application,
                     proj_id,
                     project_note,
-                    categories,
+                    category,
                     user,
                     email,
-                    "project",
-                    created_time,
                 )
         return newNote
 
