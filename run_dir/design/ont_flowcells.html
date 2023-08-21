@@ -6,7 +6,7 @@
 
     <table class="table table-striped table-bordered sortable" id="ont_fc_table">
 
-        <thead>
+        <thead style="vertical-align: top">
             <tr class="sticky darkth">
                 <th class="sort" data-sort="start_date">Start Date</th>
                 <th class="sort" data-sort="run_name">Run name</th>
@@ -21,12 +21,12 @@
                 <th class="sort text-center" data-sort="reloadings">Reloadings</th>
                 <th class="sort text-center" data-sort="peak_pore_health">
                     <abbr 
-                        data-toggle="tooltip" data-html="true" title="Highest fraction pores in states<br><em>(sequencing + available) / total</em>">Peak Pore Health (%)
+                        data-toggle="tooltip" data-html="true" title="Highest fraction pores in states<br><em>(sequencing + available) / total</em><br>for the 1st hour of the run">Peak Pore Health (%)
                     </abbr>
                 </th>
                 <th class="sort text-center" data-sort="peak_pore_efficacy">
                     <abbr 
-                        data-toggle="tooltip" data-html="true" title="Highest fraction pores in states<br><em>sequencing / (sequencing + available)</em>">Peak Pore Efficacy (%)
+                        data-toggle="tooltip" data-html="true" title="Highest fraction pores in states<br><em>sequencing / (sequencing + available)</em><br>for the 1st hour of the run">Peak Pore Efficacy (%)
                     </abbr>
                 </th>
                 <th class="sort text-center" data-sort="t90">
@@ -42,24 +42,24 @@
         </thead>
         <tfoot>
             <tr class="darkth">
-                <th class="sort" data-sort="start_date">Start Date</th>
-                <th class="sort" data-sort="run_name">Run name</th>
-                <th class="sort" data-sort="sample_name">Sample name</th>
-                <th class="sort" data-sort="experiment_name">Experiment name</th>
-                <th class="sort" data-sort="project">Project</th>
-                <th class="sort" data-sort="prep_kit">Prep Kit</th>
-                <th class="sort" data-sort="barcoding_kit">Barcoding Kit</th>
-                <th class="sort" data-sort="flow_cell_type">Flow Cell Type</th>
-                <th class="sort" data-sort="flow_cell_qc">Flow cell QC</th>
-                <th class="sort" data-sort="load_fmol">Loading (fmol)</th>
-                <th class="sort" data-sort="reloadings">Reloadings</th>
-                <th class="sort" data-sort="peak_pore_health">Peak Pore Health (%)</th>
-                <th class="sort" data-sort="peak_pore_efficacy">Peak Pore Efficacy (%)</th>
-                <th class="sort" data-sort="t90">T90 (h)</th>
-                <th class="sort" data-sort="basecalled_pass_bases_Gbp">Yield Passed (Gbp)</th>
-                <th class="sort" data-sort="basecalled_pass_read_count_M">Read Count Passed (M)</th>
-                <th class="sort" data-sort="n50_Kbp">N50 Passed (Kbp)</th>
-                <th class="sort" data-sort="accuracy">Pass/Fail (%)</th>
+                <th class="sort searchable" data-sort="start_date">Start Date</th>
+                <th class="sort searchable" data-sort="run_name">Run name</th>
+                <th class="sort searchable" data-sort="sample_name">Sample name</th>
+                <th class="sort searchable" data-sort="experiment_name">Experiment name</th>
+                <th class="sort searchable" data-sort="project">Project</th>
+                <th class="sort searchable" data-sort="prep_kit">Prep Kit</th>
+                <th class="sort searchable" data-sort="barcoding_kit">Barcoding Kit</th>
+                <th class="sort searchable" data-sort="flow_cell_type">Flow Cell Type</th>
+                <th class="sort" data-sort="flow_cell_qc"></th>
+                <th class="sort" data-sort="load_fmol"></th>
+                <th class="sort" data-sort="reloadings"></th>
+                <th class="sort" data-sort="peak_pore_health"></th>
+                <th class="sort" data-sort="peak_pore_efficacy"></th>
+                <th class="sort" data-sort="t90"></th>
+                <th class="sort" data-sort="basecalled_pass_bases_Gbp"></th>
+                <th class="sort" data-sort="basecalled_pass_read_count_M"></th>
+                <th class="sort" data-sort="n50_Kbp"></th>
+                <th class="sort" data-sort="accuracy"></th>
             </tr>
         </tfoot>
 
@@ -165,7 +165,7 @@
 
                     <td class="peak_pore_health text-center">
                         {% try %}
-                            {{ ont_flowcells[onefc]["custom_metrics"]["peak_pore_health"] }} 
+                            {{ ont_flowcells[onefc]["pore_activity"]["peak_pore_health_pc"] }} 
                         {% except %}
                             {{ "" }}
                         {% end %}
@@ -173,7 +173,7 @@
 
                     <td class="peak_pore_efficacy text-center">
                         {% try %}
-                            {{ ont_flowcells[onefc]["custom_metrics"]["peak_pore_efficacy"] }} 
+                            {{ ont_flowcells[onefc]["pore_activity"]["peak_pore_efficacy_pc"] }} 
                         {% except %}
                             {{ "" }}
                         {% end %}
@@ -181,7 +181,7 @@
 
                     <td class="t90 text-center">
                         {% try %}
-                            {{ ont_flowcells[onefc]["custom_metrics"]["t90"] }} 
+                            {{ ont_flowcells[onefc]["pore_activity"]["t90_h"] }} 
                         {% except %}
                             {{ "" }}
                         {% end %}
@@ -226,15 +226,16 @@ $( document ).ready(function() {
 // Initialize sorting and searching javascript plugin
 function init_listjs_ont() {
     // Setup - add a text input to each footer cell
-    $('#ont_fc_table tfoot th').each( function () {
+    $('#ont_fc_table tfoot th.searchable').each( function () {
       var title = $('#ont_fc_table thead th').eq( $(this).index() ).text();
       $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
     } );
 
     var table = $('#ont_fc_table').DataTable({
-      "paging":false,
-      "info":false,
-      "order": [[ 0, "desc" ]]
+        "paging":false,
+        "info":false,
+        "order": [[ 0, "desc" ]],
+        "autoWidth": True
     });
 
     //Add the bootstrap classes to the search thingy
