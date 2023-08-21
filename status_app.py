@@ -96,8 +96,8 @@ from status.projects import (
     ProjectsHandler,
     ProjectsSearchHandler,
     ProjectTicketsDataHandler,
-    RunningNotesDataHandler,
     RecCtrlDataHandler,
+    RunningNotesDataHandler,
     ProjMetaCompareHandler,
     ProjectRNAMetaDataHandler,
     FragAnImageHandler,
@@ -119,6 +119,7 @@ from status.queues import (
     LibraryPoolingQueuesDataHandler,
 )
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
+from status.running_notes import NEWRunningNotesDataHandler, LatestStickyNoteHandler #temp name
 from status.sample_requirements import (
     SampleRequirementsViewHandler,
     SampleRequirementsDataHandler,
@@ -278,6 +279,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
+            ("/api/v1/latest_sticky_run_note/([^/]*)", LatestStickyNoteHandler),
             ("/api/v1/libpooling_queues", LibraryPoolingQueuesDataHandler),
             ("/api/v1/mark_agreement_signed", AgreementMarkSignHandler),
             ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
@@ -299,6 +301,7 @@ class Application(tornado.web.Application):
             ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
             ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
+            ("/api/v1/new_running_notes/([^/]*)$", NEWRunningNotesDataHandler),
             ("/api/v1/links/([^/]*)$", LinksDataHandler),
             ("/api/v1/sample_requirements", SampleRequirementsDataHandler),
             (
@@ -414,6 +417,7 @@ class Application(tornado.web.Application):
             self.suggestions_db = couch["suggestion_box"]
             self.worksets_db = couch["worksets"]
             self.x_flowcells_db = couch["x_flowcells"]
+            self.running_notes_db = couch["running_notes"]
         else:
             print(settings.get("couch_server", None))
             raise IOError("Cannot connect to couchdb")

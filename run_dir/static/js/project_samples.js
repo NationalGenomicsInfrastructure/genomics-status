@@ -466,9 +466,10 @@ function load_all_udfs(){
         check_img_sources($('#project_comment img'));
       }
       else if (prettify(key) == 'latest_sticky_note'){
+        // do nothing in the future: if we don't catch this the old projdb value will overwrite the run_note_db value
         let sticky_run_note = JSON.parse(value)
         let date = Object.keys(sticky_run_note)[0]
-        $('#latest_sticky_note').html(make_running_note(date, sticky_run_note[date], true))
+        $('#latest_sticky_note').html(make_running_note(date, sticky_run_note[date], true, 'old'))
       }
 
       // Create the links for review and display the banner

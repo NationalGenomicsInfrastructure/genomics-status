@@ -52,7 +52,7 @@ class WorksetsHandler(SafeHandler):
                 if "Workset Notes" in row.value:
                     result[row.key]["Workset Notes"] = _get_latest_running_note(
                         row.value
-                    )
+                    )       
             else:
                 try:
                     if parse(row.value["date_run"]) >= half_a_year_ago:
@@ -302,24 +302,6 @@ class WorksetNotesDataHandler(SafeHandler):
 
             self.set_status(201)
             self.write(json.dumps(newNote))
-
-    def delete(self, workset):
-        note_id = self.get_argument("note_id")
-        p = Process(self.lims, id=workset)
-        p.get(force=True)
-        workset_notes = (
-            json.loads(p.udf["Workset Notes"]) if "Workset Notes" in p.udf else {}
-        )
-        try:
-            self.set_header("Content-type", "application/json")
-            del workset_notes[note_id]
-            p.udf["Workset Notes"] = json.dumps(workset_notes)
-            p.put()
-            self.set_status(201)
-            self.write(json.dumps(workset_notes))
-        except:
-            self.set_status(400)
-            self.finish("<html><body>No note found</body></html>")
 
 
 class WorksetLinksHandler(SafeHandler):

@@ -945,8 +945,10 @@ class RunningNotesDataHandler(SafeHandler):
             self.write(sorted_running_notes)
 
     def post(self, project):
-        note = self.get_argument("note", "")
-        category = self.get_argument("category", "")
+        data = tornado.escape.json_decode(self.request.body)
+        note = data.get("note", "")
+        categories = data.get("categories", [])
+        category = ", ".join(categories)
         user = self.get_current_user()
         if not note:
             self.set_status(400)
