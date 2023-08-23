@@ -4,15 +4,19 @@ from status.util import SafeHandler
 
 
 class UserManagementHandler(SafeHandler):
-    """ Serves a page with users and roles listed, with the option to create new users
+    """Serves a page with users and roles listed, with the option to create new users
     URL: /user_management
     """
 
     def get(self):
         t = self.application.loader.load("user_management.html")
-        user_roles = self.application.gs_users_db.view("authorized/roles", reduce=False)
-        self.write(t.generate(gs_globals=self.application.gs_globals, user=self.get_current_user(),
-        roles=self.application.genstat_defaults['roles']))
+        self.write(
+            t.generate(
+                gs_globals=self.application.gs_globals,
+                user=self.get_current_user(),
+                roles=self.application.genstat_defaults["roles"],
+            )
+        )
 
 
 class UserManagementDataHandler(SafeHandler):
@@ -23,22 +27,24 @@ class UserManagementDataHandler(SafeHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
         view_result = {}
-        for row in self.application.gs_users_db.view('authorized/roles'):
+        for row in self.application.gs_users_db.view("authorized/roles"):
             view_result[row.key] = row.value
         self.write(view_result)
 
     def post(self):
         data = json.loads(self.request.body)
-        userToChange = data['username']
+        userToChange = data["username"]
 
-        view_result = self.application.gs_users_db.view('authorized/users', key=userToChange)
-        idtoChange = view_result.rows[0].value if view_result.rows else ''
-        action = self.get_argument('action')
+        view_result = self.application.gs_users_db.view(
+            "authorized/users", key=userToChange
+        )
+        idtoChange = view_result.rows[0].value if view_result.rows else ""
+        action = self.get_argument("action")
         if self.get_current_user().is_admin:
-            if action == 'create':
+            if action == "create":
                 if idtoChange:
                     self.set_status(409)
-                    self.write('User already exists!')
+                    self.write("User already exists!")
                 else:
                     try:
                         self.application.gs_users_db.save(data)
@@ -47,11 +53,11 @@ class UserManagementDataHandler(SafeHandler):
                         self.finish(e.message)
 
                     self.set_status(201)
-                    self.write({'success': 'success!!'})
+                    self.write({"success": "success!!"})
             else:
                 user_doc = self.application.gs_users_db.get(idtoChange)
-                if action == 'modify' and idtoChange:
-                    user_doc['roles'] = data['roles']
+                if action == "modify" and idtoChange:
+                    user_doc["roles"] = data["roles"]
                     try:
                         self.application.gs_users_db.save(user_doc)
                     except Exception as e:
@@ -59,9 +65,9 @@ class UserManagementDataHandler(SafeHandler):
                         self.finish(e.message)
 
                     self.set_status(201)
-                    self.write({'success': 'success!!'})
+                    self.write({"success": "success!!"})
 
-                elif action == 'delete' and idtoChange:
+                elif action == "delete" and idtoChange:
                     try:
                         self.application.gs_users_db.delete(user_doc)
                     except Exception as e:
@@ -69,10 +75,12 @@ class UserManagementDataHandler(SafeHandler):
                         self.finish(e.message)
 
                     self.set_status(201)
-                    self.write({'success': 'success!!'})
+                    self.write({"success": "success!!"})
                 else:
                     self.set_status(400)
-                    self.write('User not selected!')
+                    self.write("User not selected!")
         else:
             self.set_status(401)
-            self.finish('<html><body>Your user does not have permission to perform this operation!</body></html>')
+            self.finish(
+                "<html><body>Your user does not have permission to perform this operation!</body></html>"
+            )

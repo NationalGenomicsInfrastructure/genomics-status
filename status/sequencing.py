@@ -9,18 +9,18 @@ from dateutil import parser
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 import numpy as np
-import tornado.web
 
 from status.util import dthandler, SafeHandler
 
 
 def make_instrument_series_handler(couchdb_view_name):
-    """ Create a handler for a flowcell-instrument series of data for the
+    """Create a handler for a flowcell-instrument series of data for the
     given couchdb view.
 
     Loaded through:
     /api/v1/instrument_* urls
     """
+
     class InstrumentSeriesDataHandler(SafeHandler):
         def get(self):
             self.set_header("Content-type", "application/json")
@@ -32,7 +32,7 @@ def make_instrument_series_handler(couchdb_view_name):
             data = defaultdict(lambda: defaultdict(list))
             for row in view:
                 date = row.key[0]
-                if not date: # Handles null values
+                if not date:  # Handles null values
                     continue
                 instrument = row.key[1].upper()
                 data[instrument][date] += row.value
@@ -42,21 +42,21 @@ def make_instrument_series_handler(couchdb_view_name):
     return InstrumentSeriesDataHandler
 
 
-InstrumentClusterDensityDataHandler = make_instrument_series_handler("instrument/clusters_raw")
+InstrumentClusterDensityDataHandler = make_instrument_series_handler(
+    "instrument/clusters_raw"
+)
 
 
 class InstrumentClusterDensityPlotHandler(InstrumentClusterDensityDataHandler):
-    """ Gives a plot for series of cluster densities for instruments, over time.
+    """Gives a plot for series of cluster densities for instruments, over time.
     Loaded through /api/v1/instrument_cluster_density.png url
     """
+
     def get(self):
         data = self.data()
         data = [n for n in list(data.items()) if n[0] != "NA"]
 
-        fig, ax = plt.subplots(len(data), 1,
-                               sharex=True,
-                               sharey=True,
-                               figsize=(8, 16))
+        fig, ax = plt.subplots(len(data), 1, sharex=True, sharey=True, figsize=(8, 16))
 
         for i, (name, instrument) in enumerate(data):
             dts = []
@@ -79,13 +79,10 @@ class InstrumentClusterDensityPlotHandler(InstrumentClusterDensityDataHandler):
             c_ax = ax[i]
             c_ax.set_title(name)
             try:
-                c_ax.fill_between(dts, lower, upper,
-                                  alpha=0.33,
-                                  edgecolor='none')
-                c_ax.plot(dts, means, 'k-o',
-                          markerfacecolor='none',
-                          markersize=10,
-                          lw=2)
+                c_ax.fill_between(dts, lower, upper, alpha=0.33, edgecolor="none")
+                c_ax.plot(
+                    dts, means, "k-o", markerfacecolor="none", markersize=10, lw=2
+                )
 
             except ValueError:
                 continue
@@ -101,22 +98,22 @@ class InstrumentClusterDensityPlotHandler(InstrumentClusterDensityDataHandler):
         self.write(image_data)
 
 
-InstrumentErrorrateDataHandler = make_instrument_series_handler("instrument/error_rates")
+InstrumentErrorrateDataHandler = make_instrument_series_handler(
+    "instrument/error_rates"
+)
 
 
 class InstrumentErrorratePlotHandler(InstrumentErrorrateDataHandler):
-    """ Gives series for phiX error rates for instruments, over time.
+    """Gives series for phiX error rates for instruments, over time.
 
     Loaded through /api/v1/instrument_error_rates.png url
     """
+
     def get(self):
         data = self.data()
         data = [n for n in list(data.items()) if n[0] != "NA"]
 
-        fig, ax = plt.subplots(len(data), 1,
-                               sharex=True,
-                               sharey=True,
-                               figsize=(8, 16))
+        fig, ax = plt.subplots(len(data), 1, sharex=True, sharey=True, figsize=(8, 16))
 
         for i, (name, instrument) in enumerate(data):
             dts = []
@@ -137,13 +134,10 @@ class InstrumentErrorratePlotHandler(InstrumentErrorrateDataHandler):
             c_ax = ax[i]
             c_ax.set_title(name)
             try:
-                c_ax.fill_between(dts, lower, upper,
-                                  alpha=0.33,
-                                  edgecolor='none')
-                c_ax.plot(dts, means, 'k-o',
-                          markerfacecolor='none',
-                          markersize=10,
-                          lw=2)
+                c_ax.fill_between(dts, lower, upper, alpha=0.33, edgecolor="none")
+                c_ax.plot(
+                    dts, means, "k-o", markerfacecolor="none", markersize=10, lw=2
+                )
 
             except ValueError:
                 continue
@@ -163,18 +157,16 @@ InstrumentUnmatchedDataHandler = make_instrument_series_handler("instrument/unma
 
 
 class InstrumentUnmatchedPlotHandler(InstrumentUnmatchedDataHandler):
-    """ Gives series for unmatched reads for flowcell per instrument, over time.
+    """Gives series for unmatched reads for flowcell per instrument, over time.
 
     Loaded through /api/v1/instrument_unmatched.png
     """
+
     def get(self):
         data = self.data()
         data = [n for n in list(data.items()) if n[0] != "NA"]
 
-        fig, ax = plt.subplots(len(data), 1,
-                               sharex=True,
-                               sharey=True,
-                               figsize=(8, 16))
+        fig, ax = plt.subplots(len(data), 1, sharex=True, sharey=True, figsize=(8, 16))
 
         for i, (name, instrument) in enumerate(data):
             dts = []
@@ -194,13 +186,14 @@ class InstrumentUnmatchedPlotHandler(InstrumentUnmatchedDataHandler):
             c_ax = ax[i]
             c_ax.set_title(name)
             if len(dts) < 2:
-                two_dates = [datetime(2012, 8, 29, 0, 0),
-                             datetime(2012, 8, 30, 0, 0)]
+                two_dates = [datetime(2012, 8, 29, 0, 0), datetime(2012, 8, 30, 0, 0)]
                 c_ax.plot(two_dates, [0, 0])
 
             else:
-                c_ax.fill_between(dts, lower, upper, alpha=0.33, edgecolor='none')
-                c_ax.plot(dts, means, 'k-o', markerfacecolor='none', markersize=10, lw=2)
+                c_ax.fill_between(dts, lower, upper, alpha=0.33, edgecolor="none")
+                c_ax.plot(
+                    dts, means, "k-o", markerfacecolor="none", markersize=10, lw=2
+                )
 
         fig.tight_layout()
 
@@ -217,18 +210,16 @@ InstrumentYieldDataHandler = make_instrument_series_handler("instrument/yield")
 
 
 class InstrumentYieldPlotHandler(InstrumentYieldDataHandler):
-    """ Gives series for lane yields over instruments, by time.
+    """Gives series for lane yields over instruments, by time.
 
     Loaded through /api/v1/instrument_yield.png
     """
+
     def get(self):
         data = self.data()
         data = [n for n in list(data.items()) if n[0] != "NA"]
 
-        fig, ax = plt.subplots(len(data), 1,
-                               sharex=True,
-                               sharey=True,
-                               figsize=(8, 16))
+        fig, ax = plt.subplots(len(data), 1, sharex=True, sharey=True, figsize=(8, 16))
 
         for i, (name, instrument) in enumerate(data):
             dts = []
@@ -248,12 +239,13 @@ class InstrumentYieldPlotHandler(InstrumentYieldDataHandler):
             c_ax.set_title(name)
 
             if len(dts) < 2:
-                two_dates = [datetime(2012, 8, 29, 0, 0),
-                             datetime(2012, 8, 30, 0, 0)]
+                two_dates = [datetime(2012, 8, 29, 0, 0), datetime(2012, 8, 30, 0, 0)]
                 c_ax.plot(two_dates, [0, 0])
             else:
-                c_ax.fill_between(dts, lower, upper, alpha=0.33, edgecolor='none')
-                c_ax.plot(dts, means, 'k-o', markerfacecolor='none', markersize=10, lw=2)
+                c_ax.fill_between(dts, lower, upper, alpha=0.33, edgecolor="none")
+                c_ax.plot(
+                    dts, means, "k-o", markerfacecolor="none", markersize=10, lw=2
+                )
 
         fig.tight_layout()
 

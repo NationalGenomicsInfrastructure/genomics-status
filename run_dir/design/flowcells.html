@@ -34,7 +34,7 @@ Description: Shows a table with all flow cells.
             <div class="tab-pane fade show active" id="tab_flowcells">
 
                 <div id="fc_table_div">
-                    <h1><span id="page_title">Illumina flowcells</span>
+                    <h1><span id="illumina_page_title">Illumina flowcells</span>
                         {% if all %}
                             <small class="text-muted">Showing all flowcells</small>
                             <a class="btn btn-outline-dark" href="/flowcells">Show last 6 months only</a>
@@ -236,6 +236,7 @@ Description: Shows a table with all flow cells.
 <!-- Table Sorting -->
 <script type="text/javascript">
 $( document ).ready(function() {
+  document.title = 'Flowcells : Genomics Status';
   init_listjs();
   //Formatting for Running note card body
   $(".running-note-card > .card-body").each(function(i){
@@ -260,7 +261,7 @@ function init_listjs() {
 
     $('div.dataTables_filter input').addClass('form-control search search-query');
     $('#fc_table_filter').addClass('form-inline float-right pt-1');
-    $("#fc_table_filter").appendTo($('#page_title'));
+    $("#fc_table_filter").appendTo($('#illumina_page_title'));
     $('#fc_table_filter label input').appendTo($('#fc_table_filter'));
     $('#fc_table_filter label').remove();
     $("#fc_table_filter input").attr("placeholder", "Search..");

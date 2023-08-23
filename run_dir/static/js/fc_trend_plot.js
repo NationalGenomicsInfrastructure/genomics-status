@@ -154,7 +154,9 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             continue;
         }else if (data[d].instrument.indexOf('A') != -1 && filter_inst_type.includes('A')){
             continue;
-        }else if (data[d].instrument.indexOf('N') != -1 && filter_inst_type.includes('N')){
+        }else if (data[d].instrument.indexOf('VH') != -1 && filter_inst_type.includes('VH')){
+            continue;
+        }else if (data[d].instrument.indexOf('LH') != -1 && filter_inst_type.includes('LH')){
             continue;
         }
         // Set colours and the name of data series
@@ -180,13 +182,24 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             if (data[d].mode == '2'){
                 series_name = "MiSeq Nano";
                 }
-            if (data[d].cver.includes('High')){
-                series_name = "NextSeq High";
+            if (data[d].cver.includes('2000')){
+                series_name = "NextSeq 2000";
                 }
-            if (data[d].cver.includes('Mid')){
-                series_name = "NextSeq Mid";
+            if (data[d].cver.includes('10B')){
+                series_name = "10B";
                 }
-                col_color = color_by_chemistry(series_name);
+            if (data[d].cver.includes('1.5B')){
+                series_name = "1.5B";
+                }
+            if (data[d].cver.includes('25B')){
+                series_name = "25B";
+                }
+
+            if (series_name == 'MiSeq Nano'){
+                col_color = color_by_chemistry('nano');
+            }else{
+                col_color = color_by_chemistry(data[d].cver);
+            }
         }else if (color_type == 'month'){
             series_name = data[d].id.substr(0,4);
             col_color=color_by_month(data[d].id);
@@ -201,10 +214,12 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
           if (data[d].instrument.indexOf('M') != -1){
               series_name = "MiSeq";
           }else if (data[d].instrument.indexOf('A') != -1){
-              series_name = "NovaSeq";
-          }else if (data[d].instrument.indexOf('N') != -1){
-              series_name = "NextSeq";
-            }else{
+              series_name = "NovaSeq 6000";
+          }else if (data[d].instrument.indexOf('VH') != -1){
+              series_name = "NextSeq 2000";
+          }else if (data[d].instrument.indexOf('LH') != -1){
+              series_name = "NovaSeqXPlus";
+          }else{
               continue;
           }
         }
@@ -274,11 +289,13 @@ function color_by_instrument(instrument){
 
 function color_by_type(instrument){
     if (instrument.indexOf('M') != -1){
-        return current_color_schemes[0](2).hex();
+        return current_color_schemes[0](0).hex();
     }else if (instrument.indexOf('A') != -1){
+        return current_color_schemes[0](1).hex();
+    }else if (instrument.indexOf('VH') != -1){
+        return current_color_schemes[0](2).hex();
+    }else if (instrument.indexOf('LH') != -1){
         return current_color_schemes[0](3).hex();
-    }else if (instrument.indexOf('N') != -1){
-        return current_color_schemes[0](4).hex();
     }else{
       return "#c3c3c3";
     }
@@ -288,10 +305,9 @@ function color_by_month(id){
 }
 
 function color_by_chemistry(series_name){
-    col = {"S4":4, "S2":5, "S1":6, "SP":7, "MiSeq v2":8, "MiSeq v3":9, "MiSeq Nano":10, "NextSeq High":11, "NextSeq Mid":12};
-    //Not sure what this does, needs more investigation when time permits
-    var id = Math.round(window.current_chemistries_list.indexOf(series_name));
-	  return current_color_schemes[col[series_name]](id).hex();
+    version = window.current_plot_data[d].instrument.substr(0,1) + series_name;
+    var id = window.current_chemistries_list.indexOf(version);
+	return current_color_schemes[2](id).hex();
 }
 
 function get_parameters(){
@@ -433,29 +449,26 @@ function update_months_list(){
 }
 function update_color_schemes(){
     var inst_type_cs=chroma.scale(['#90ee90','#7866df','#ad00af','#ff0000']).domain([0, 3]);
-    var chem_cs=chroma.scale(['pink', 'lightblue']).domain([0, 2]);
     var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
+    var chem_cs = chroma.scale(['#ff00ae', '#0080ff', '#11ad11', '#ffb700', '#8400ff']).mode('lch').domain([0, window.current_chemistries_list.length-1])
     var month_cs=chroma.scale(['yellow', 'lightblue', 'pink', 'orange']).domain([0,window.current_months_list.length-1]);
-    var s4_cs=chroma.scale(['#ff00ae', '#0080ff']).domain([0, window.current_chemistries_list.length-1]);
-    var s2_cs=chroma.scale(['#0080ff', '#11ad11']).domain([0, window.current_chemistries_list.length-1]);
-    var s1_cs=chroma.scale(['#11ad11', '#00d5ff']).domain([0, window.current_chemistries_list.length-1]);
-    var sp_cs=chroma.scale(['#ffb700', '#ff00ae']).domain([0, window.current_chemistries_list.length-1]);
-    var v2_cs=chroma.scale(['#8400ff', '#ee00ff']).domain([0, window.current_chemistries_list.length-1]);
-    var v3_cs=chroma.scale(['#26807b', '#7fbde3']).domain([0, window.current_chemistries_list.length-1]);
-    var mi_nano=chroma.scale(['#ff9100', '#ffa600']).domain([0, window.current_chemistries_list.length-1]);
-    var nxt_hi=chroma.scale(['#00e6d2', '#00d0ff']).domain([0, window.current_chemistries_list.length-1]);
-    var nxt_mi=chroma.scale(['#d400ff', '#00c70d']).domain([0, window.current_chemistries_list.length-1]);
-    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs, s4_cs, s2_cs, s1_cs, sp_cs, v2_cs, v3_cs, mi_nano, nxt_hi, nxt_mi];
+    window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs];
 }
 function update_chemistries_list(){
     window.current_chemistries_list=[];
     var version="";
     for (d in window.current_plot_data){
-        version = window.current_plot_data[d].instrument.substr(0,1) + window.current_plot_data[d].cver;
+        if (window.current_plot_data[d].mode == '2'){
+            // MiSeq Nano is special (cver collides with MiSeq Version 2)
+            version = 'Mnano'
+        } else {
+            version = window.current_plot_data[d].instrument.substr(0,1) + window.current_plot_data[d].cver;
+        };
         if ( window.current_chemistries_list.indexOf(version) == -1){
             window.current_chemistries_list.push(version);
-            }
+        }
     }
+    window.current_chemistries_list.sort();
 }
 
 function update_instrument_list(){

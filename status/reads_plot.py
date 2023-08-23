@@ -1,37 +1,38 @@
 import json
 import datetime
 
-from status.util import dthandler, SafeHandler
-
-
-def filter_data(data, search=None):
-    if not search:
-        last_month = datetime.datetime.now()-datetime.timedelta(days=30)
-        first_term = last_month.isoformat()[2:10].replace('-','')
-        second_term = datetime.datetime.now().isoformat()[2:10].replace('-','')
-        search = "{}-{}".format(first_term, second_term)
-
-
-    searches=search.split('-')
-    return [d for d in data if d['id'][:6] >= searches[0] and d['id'][:6] <= searches[1]]
+from status.util import SafeHandler
 
 class DataFlowcellYieldHandler(SafeHandler):
-    """ Handles the api call to reads_plot data
+    """Handles the api call to reads_plot data
 
     Loaded through /api/v1/reads_plot/([^/]*)$
     """
+
     def get(self, search_string=None):
-        docs=filter_data([x.value for x in self.application.x_flowcells_db.view("plot/reads_yield")], search_string)
+        if search_string is None:
+            last_month = datetime.datetime.now() - datetime.timedelta(days=30)
+            first_term = last_month.isoformat()[2:10].replace("-", "")
+            second_term = datetime.datetime.now().isoformat()[2:10].replace("-", "")
+        else:
+            first_term, second_term = search_string.split('-')
+
+        docs = [x.value for x in self.application.x_flowcells_db.view("plot/reads_yield")[first_term:second_term+'ZZZZ'].rows]
+
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(docs))
 
-class  FlowcellPlotHandler(SafeHandler):
-    """ Handles the yield_plot page
+
+class FlowcellPlotHandler(SafeHandler):
+    """Handles the yield_plot page
 
     Loaded through /flowcell_plot/([^/]*)$
     """
+
     def get(self):
         t = self.application.loader.load("flowcell_trend_plot.html")
-        self.write(t.generate(gs_globals=self.application.gs_globals,
-                              user=self.get_current_user()))
-
+        self.write(
+            t.generate(
+                gs_globals=self.application.gs_globals, user=self.get_current_user()
+            )
+        )

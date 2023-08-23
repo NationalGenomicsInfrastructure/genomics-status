@@ -84,6 +84,47 @@ tfoot {
 .tt-hint { visibility:hidden; }
 
 
+/* Project meta comparison */
+
+#projects_meta_input {
+  display: block;
+  width: 700px;
+  margin: auto;
+}
+
+#project_chooser .input-group {
+  display: block;
+}
+
+#meta_key_selector {
+  width: 90%;
+  margin: auto;
+}
+
+#meta_key_selector label {
+  text-align: center;
+}
+
+#del_pid_badges .badge {
+  font-size: 1em;
+}
+
+#del_pid_badges .badge:hover {
+  color: white;
+}
+
+#plot_area {
+  margin-top: 3%;
+}
+
+#plot_area .col-sm-3 {
+  margin-top: 2.85%;
+}
+
+.meta_plot_cats {
+  color: #486da8;
+}
+
 /* Pricing */
 
 .quote_product_prices_line{
@@ -286,8 +327,8 @@ tr.group, tr.group:hover, .dtrg-group {
 
 /*Line numbers for samples tab table*/
 
-#sample_table thead tr::before {
-  content: "No:";
+#sample_table thead tr::before,  #sample_table tfoot tr::before{
+  content: "";
   background-color: #ddd!important;
   display: table-cell;
   font-weight: bold;
@@ -296,6 +337,11 @@ tr.group, tr.group:hover, .dtrg-group {
   top: 50px;
   z-index: 100;
   vertical-align: inherit;
+  width: 4rem;
+}
+
+#sample_table thead tr::before {
+  content: "No:";
 }
 
 #sample_table tbody {
@@ -493,7 +539,23 @@ pre {
 .dl-ont > dt {
   float: left;
   text-align: left;
-  width: 160px;
+  width: 10rem;
+}
+
+.dl-ont > dd {
+  margin-left: 11rem;
+  margin-bottom: 0rem;
+}
+
+.dl-ont-args > dt {
+  float: left;
+  text-align: left;
+  width: 18rem;
+}
+
+.dl-ont-args > dd {
+  margin-left: 10rem;
+  margin-bottom: 0rem;
 }
 
 .dl-horizontal > dt{
@@ -923,7 +985,6 @@ width:30%;
   cursor:col-resize;
 }
 
-.ui-editRangeSlider .ui-rangeSlider-label{}
 
 .ui-rangeSlider-label-inner{
 

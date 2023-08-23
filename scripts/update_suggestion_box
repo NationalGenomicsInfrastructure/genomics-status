@@ -12,37 +12,37 @@ import yaml
 import trello
 
 
-
 def main(config):
-
-    log_file = config.get('sb_log', None)
+    log_file = config.get("sb_log", None)
     if log_file is None:
         logging.error("No logfile found in config file. Exiting.")
         sys.exit(-1)
 
     # set logger object
-    logging.basicConfig(filename=log_file,
-                        level=logging.INFO,
-                        format='%(asctime)s %(levelname)s: %(message)s',
-                        datefmt="%Y-%m-%d %H:%M:%S")
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
     log = logging.getLogger(__name__)
 
     # Connect to Trello
-    api_key = config.get('trello').get('api_key')
-    api_secret = config.get('trello').get('api_secret')
-    token = config.get('trello').get('token')
+    api_key = config.get("trello").get("api_key")
+    api_secret = config.get("trello").get("api_secret")
+    token = config.get("trello").get("token")
     t_client = trello.TrelloClient(api_key=api_key, api_secret=api_secret, token=token)
 
     # Connect to StatusDB
-    s = couchdb.Server(config.get('couch_server'))
+    s = couchdb.Server(config.get("couch_server"))
 
     # Get list of stored suggestions
-    sb_database = s['suggestion_box']
-    cards_in_db = {row.key:row.value for row in sb_database.view('card/id').rows}
+    sb_database = s["suggestion_box"]
+    cards_in_db = {row.key: row.value for row in sb_database.view("card/id").rows}
 
     # Get list of cards in Suggestion Box board
     for b in t_client.list_boards():
-        if b.name == 'Suggestion Box':
+        if b.name == "Suggestion Box":
             sb_board = b
     all_cards = sb_board.all_cards()
 
@@ -51,9 +51,9 @@ def main(config):
         # There are some archived cards from the testing phase that are not on
         # the database but are still in Trello. They cannot be removed.
         if card.id in cards_in_db.keys():
-            log.info('Updating status of card {}...'.format(card.name))
+            log.info("Updating status of card {}...".format(card.name))
             doc = sb_database.get(cards_in_db[card.id])
-            doc['archived'] = card.closed
+            doc["archived"] = card.closed
             docs.append(doc)
     # Checking if someone has been naughty and moved cards from the suggestion box
     for dbcard_id in cards_in_db.keys():
@@ -64,24 +64,31 @@ def main(config):
             closed = tcard.closed
         except:
             # Trello-py might not give any exceptions if the card is not found
-            log.warning("Card {} in DB was not found Trello, it was likely deleted".format(dbcard_id))
+            log.warning(
+                "Card {} in DB was not found Trello, it was likely deleted".format(
+                    dbcard_id
+                )
+            )
             continue
-        log.info('Updating status of non-suggestion box card {}...'.format(tcard.name))
+        log.info("Updating status of non-suggestion box card {}...".format(tcard.name))
         doc = sb_database.get(cards_in_db[tcard.id])
-        doc['archived'] = closed
+        doc["archived"] = closed
         docs.append(doc)
 
     sb_database.update(docs)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('config', type=str, help="Path to settings.yaml file")
+    parser.add_argument("config", type=str, help="Path to settings.yaml file")
     args = parser.parse_args()
 
     try:
-        with open(args.config, 'r') as f:
+        with open(args.config, "r") as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
     except IOError:
-        raise IOError('Please make sure to specify a correct path to settings.yaml file')
+        raise IOError(
+            "Please make sure to specify a correct path to settings.yaml file"
+        )
 
     main(config)

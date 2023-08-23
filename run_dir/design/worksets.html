@@ -122,14 +122,14 @@ Description: Shows a table with all worksets.
               <th>Closed Projects</th>
               </tr>
           </tfoot>
-          <tbody class="list" id="closed_ws_table_body">
+          <tbody id="closed_ws_table_body">
         </tbody>
         </table>
     </div>
   </div>
 </div>
 <!-- #page_content -->
-<script src="/static/js/jquery.dataTables.min.js? }}"></script>
+<script src="/static/js/jquery.dataTables.min.js"></script>
 <script src="/static/js/worksets.js?v={{ gs_globals['git_commit'] }}" id="worksets-js" data-worksets="{{worksets}}"></script>
 <script src="/static/js/clipboard.min.js"></script>
 {% end %}
