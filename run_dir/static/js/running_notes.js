@@ -45,24 +45,30 @@ function get_note_url() {
     // URL for the notes
     let note_id = '';
     let note_type = '';
+    let url = '';
     if ('lims_step' in window && lims_step !== null){
       note_id = lims_step;
       note_type = 'workset';
+      url = '/api/v1/workset_notes/' + lims_step;
     } else if ('flowcell_id_reference' in window && flowcell_id_reference!== null){
       note_id = flowcell_id_reference;
       note_type = 'flowcell';
+      url='/api/v1/flowcell_notes/' + flowcell_id_reference;
       if((typeof $('#rn-js').data('flowcell-type') !== 'undefined') && ($('#rn-js').data('flowcell-type') ==='ont')){
         note_type += '_ont';
+        url='/api/v1/new_running_notes/' + flowcell_id_reference;
       }
     }else {
       note_id = project;
       note_type = 'project';
+      url='/api/v1/running_notes/' + project;
     }
-    let url_add = '';
-    if(note_type=='flowcell_ont'){
-        url_add = 'new_'
-    }
-    return {url: `/api/v1/${url_add}running_notes/` + note_id, note_type: note_type};
+    //let url_add = '';
+    //if(note_type=='flowcell_ont'){
+    //    url_add = 'new_'
+    //}
+    //return {url: `/api/v1/${url_add}running_notes/` + note_id, note_type: note_type};
+    return {url: url, note_type: note_type}; 
 }
 
 function make_running_note(date, note, sticky, version_flag){
