@@ -246,6 +246,7 @@ class FlowcellSearchHandler(SafeHandler):
 
     cached_fc_list = None
     cached_xfc_list = None
+    cached_ont_fc_list = None
     last_fetched = None
 
     def get(self, search_string):
@@ -269,6 +270,11 @@ class FlowcellSearchHandler(SafeHandler):
             xfc_view = self.application.x_flowcells_db.view("info/id", descending=True)
             FlowcellSearchHandler.cached_xfc_list = [row.key for row in xfc_view]
 
+            ont_fc_view = self.application.nanopore_runs_db.view(
+                "names/name", descending=True
+            )
+            FlowcellSearchHandler.cached_ont_fc_list = [row.key for row in ont_fc_view]
+
             FlowcellSearchHandler.last_fetched = datetime.datetime.now()
 
         search_string = search_string.lower()
@@ -281,6 +287,17 @@ class FlowcellSearchHandler(SafeHandler):
                         "url": "/flowcells/{}_{}".format(
                             splitted_fc[0], splitted_fc[-1]
                         ),
+                        "name": row_key,
+                    }
+                    flowcells.append(fc)
+            except AttributeError:
+                pass
+
+        for row_key in FlowcellSearchHandler.cached_ont_fc_list:
+            try:
+                if search_string in row_key.lower():
+                    fc = {
+                        "url": f"/flowcells_ont/{row_key}",
                         "name": row_key,
                     }
                     flowcells.append(fc)
