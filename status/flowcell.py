@@ -373,9 +373,9 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
     query = re.compile("(p|P)\d{5,6}")
 
     # Search experiment and sample names for P-number to link to project
-    match = query.search(run_dict["experiment_name"])
+    match = query.search(str(run_dict["experiment_name"]))
     if not match:
-        match = query.search(run_dict["sample_name"])
+        match = query.search(str(run_dict["sample_name"]))
 
     if match:
         run_dict["project"] = match.group(0).upper()
