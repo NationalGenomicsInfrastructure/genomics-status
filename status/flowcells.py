@@ -405,8 +405,8 @@ class FlowcellNotesDataHandler(SafeHandler):
 
     def post(self, flowcell):
         data = tornado.escape.json_decode(self.request.body)
-        note = data.get_argument("note", "")
-        categories = data.get_argument("categories", ["Flowcell"])
+        note = data.get("note", "")
+        categories = data.get("categories", ["Flowcell"])
         category = ", ".join(categories)
         if category == "":
             category = "Flowcell"

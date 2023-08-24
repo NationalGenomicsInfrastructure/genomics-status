@@ -243,8 +243,8 @@ class WorksetNotesDataHandler(SafeHandler):
 
     def post(self, workset):
         data = tornado.escape.json_decode(self.request.body)
-        note = data.get_argument("note", "")
-        categories = data.get_argument("categories", ["Workset"])
+        note = data.get("note", "")
+        categories = data.get("categories", ["Workset"])
         category = ", ".join(categories)
         user = self.get_current_user()
 
