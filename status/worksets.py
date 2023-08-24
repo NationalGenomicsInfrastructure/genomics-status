@@ -12,6 +12,8 @@ from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
 from status.projects import RunningNotesDataHandler
 
+import tornado
+
 
 class WorksetsDataHandler(SafeHandler):
     """returns basic worksets json
@@ -52,7 +54,7 @@ class WorksetsHandler(SafeHandler):
                 if "Workset Notes" in row.value:
                     result[row.key]["Workset Notes"] = _get_latest_running_note(
                         row.value
-                    )       
+                    )
             else:
                 try:
                     if parse(row.value["date_run"]) >= half_a_year_ago:
@@ -240,9 +242,11 @@ class WorksetNotesDataHandler(SafeHandler):
         self.write(sorted_workset_notes)
 
     def post(self, workset):
-        note = self.get_argument("note", "")
+        data = tornado.escape.json_decode(self.request.body)
+        note = data.get("note", "")
+        categories = data.get("categories", ["Workset"])
+        category = ", ".join(categories)
         user = self.get_current_user()
-        category = self.get_argument("category", "Workset")
 
         if category == "":
             category = "Workset"

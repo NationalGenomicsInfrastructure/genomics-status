@@ -14,6 +14,8 @@ from status.projects import RunningNotesDataHandler
 from status.flowcell import FlowcellHandler, fetch_ont_run_stats
 import re
 
+import tornado
+
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
 thresholds = {
@@ -402,9 +404,10 @@ class FlowcellNotesDataHandler(SafeHandler):
             self.write(sorted_running_notes)
 
     def post(self, flowcell):
-        note = self.get_argument("note", "")
-        category = self.get_argument("category", "Flowcell")
-
+        data = tornado.escape.json_decode(self.request.body)
+        note = data.get("note", "")
+        categories = data.get("categories", ["Flowcell"])
+        category = ", ".join(categories)
         if category == "":
             category = "Flowcell"
 
