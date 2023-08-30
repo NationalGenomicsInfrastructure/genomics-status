@@ -77,10 +77,6 @@ from status.pricing import (
     SaveQuoteHandler,
 )
 from status.production import (
-    DeliveredMonthlyDataHandler,
-    DeliveredMonthlyPlotHandler,
-    DeliveredQuarterlyDataHandler,
-    DeliveredQuarterlyPlotHandler,
     ProductionCronjobsHandler,
 )
 from status.projects import (
@@ -106,8 +102,6 @@ from status.projects import (
     PrioProjectsTableHandler,
 )
 
-# Not used, delete?
-from status.project_qc import ProjectQCDataHandler
 from status.queues import (
     qPCRPoolsDataHandler,
     qPCRPoolsHandler,
@@ -230,10 +224,6 @@ class Application(tornado.web.Application):
             ("/api/v1/charon_summary/([^/]*)$", CharonProjectHandler),
             ("/api/v1/cost_calculator", PricingDataHandler),
             ("/api/v1/delete_invoice", DeleteInvoiceHandler),
-            ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
-            ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
-            ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
-            ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
             tornado.web.URLSpec(
                 "/api/v1/download_images/(?P<project>[^/]+)/(?P<type>[^/]+)",
                 ImagesDownloadHandler,
@@ -297,7 +287,6 @@ class Application(tornado.web.Application):
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
-            ("/api/v1/projectqc/([^/]*)$", ProjectQCDataHandler),
             ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
             ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
