@@ -53,7 +53,7 @@
         }).bind('typeahead:selected', function(obj, datum, name) {
             let proj_id = datum.url.split('/')[2];
             $('#projects_meta_input').val('');
-            $('#del_pid_badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="' + proj_id +  '">' + proj_id + ' x' + '</button>');
+            $('#del_pid_badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="' + proj_id +  '">' + proj_id + '<i class="fa fa-solid fa-xmark ml-2"></i>' + '</button>');
             id_tosave.push(proj_id);
             del_pid_btn();
             load_projects_meta(id_tosave);
@@ -146,7 +146,7 @@
 
     //Setting default graph on load
     function def_graph_load(){
-        $('#del_pid_badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="P10851">P10851 x</button><button class="btn badge rounded-pill bg-secondary mx-1" id="P10264">P10264 x</button>');
+        $('#del_pid_badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="P10851">P10851<i class="fa fa-solid fa-xmark ml-2"></i></button><button class="btn badge rounded-pill bg-secondary mx-1" id="P10264">P10264<i class="fa fa-solid fa-xmark ml-2"></i></button>');
         del_pid_btn();
         $('#proj_meta_xvalue, #proj_meta_yvalue, #proj_meta_colvalue').val('customer_conc').trigger('click');
         plot_meta({'y': ['base', 'customer_conc'], 'x': ['base', 'customer_conc'],'color': ['base', 'customer_conc']})
