@@ -192,10 +192,22 @@ function make_project_links(s){
   // - $2 = Matches flowcell date - eg 150505
   // - $3 = Matches optional flowcell chunk - eg. _D00450_0168
   // - $4 = Matches remaining flowcell ID - eg. _AC6H3RANXX or _AC6H3RANXX-SDVLKCH
-  // - Not capture lookahead to make sure that we're not followed by any more word characters
+  // - Not capture lookahead to make sure that were not followed by any more word characters
   // Replaces with link to flowcell ID without internal chunk
   // Example: 150505_D00450_0168_AC6H3RANXX links to 150505_AC6H3RANXX
   s = s.replace(/([\W])(\d{6})(_(?:ST-)?\w{5,10}_\d{3,4})(_\w{8,12}(?:\-\w{3,8})?)(?!\w)/g, '$1<a class="text-decoration-none" href="/flowcells/$2$4">$2$3$4</a>');
+
+  // Searches for ONT FlowCell IDs and replaces with a link (modified from Illumina FCs)
+  // - $1 = Captures a non-word character (javascript can't do lookbehind)
+  // - $2 = Matches flowcell date - eg 20230621
+  // - $3 = Matches 4 digit chunk - eg. _1629
+  // - $4 = Matches remaining flowcell ID - eg. _MN19414 or _3G
+  // - $5 = Matches remaining flowcell ID - eg. _APT766 or _PAO31800
+  // - $6 = Matches remaining flowcell ID - eg. _494e1a8c
+  // - Not capture lookahead to make sure that were not followed by any more word characters
+  // Example: 20230621_1629_MN19414_APT766_494e1a8c or 20230815_1205_3G_PAO31800_201c040e
+  s = s.replace(/([\W])(\d{8})(_\d{4})(_\w{2,8})(_\w{6,8})(_\w{8})(?!\w)/g, '$1<a class="text-decoration-none" href="/flowcells_ont/$2$3$4$5$6">$2$3$4$5$6</a>');
+  
   return s;
 }
 function create_user_tags(s){
