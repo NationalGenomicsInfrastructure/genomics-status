@@ -134,13 +134,16 @@
                     <td class="prep_kit">{{ ont_flowcells[onefc]["prep_kit"] }}</td>
                     <td class="barcoding_kit">{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
                     <td class="flow_cell_type">{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
-
                     <td class="flow_cell_qc text-center">
                         {% try %}
-                            {{ ont_flowcells[onefc]["lims"]["pore_count_history"][0]["num_pores"] }} 
+                            {{ [e for e in ont_flowcells[onefc]["pore_count_history"] if e["type"] == "qc"][0]["num_pores"] }}
                         {% except %}
                             {% try %}
-                                {{ ont_flowcells[onefc]["lims"]["loading"][-1]["qc"] }} 
+                                {% if ont_flowcells[onefc]["lims"]["loading"][-1]["qc"] != "None" %}
+                                    {{ ont_flowcells[onefc]["lims"]["loading"][-1]["qc"] }}
+                                {% else %}
+                                    {{ "" }}
+                                {% end %}
                             {% except %}
                                 {{ "" }}
                             {% end %}
