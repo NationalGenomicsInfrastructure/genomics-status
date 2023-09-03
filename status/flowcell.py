@@ -292,11 +292,7 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
     run_dict = db_entry.value
     run_dict["run_name"] = run_name
 
-    for k, v in run_dict.items():
-        if type(v) == str and re.match("^\d+$", v):
-            run_dict[k] = int(run_dict[k])
-        else:
-            pass
+    walk_str2int(run_dict)
 
     # If run is ongoing, i.e. has no reports generated, extrapolate as much information as possible from file path
     if (
@@ -592,3 +588,18 @@ def add_prefix(input_int: int, unit: str):
 
     output_str = " ".join([str(output_int), unit])
     return output_str
+
+
+def walk_str2int(iterable):
+
+    if isinstance(iterable, (dict, list, tuple)):
+        for key, val in (
+            iterable.items() if isinstance(iterable, dict) else enumerate(iterable)
+        ):
+            if isinstance(val, (dict, list, tuple)):
+                walk_str2int(val)
+            else:
+                if isinstance(val, str) and re.match("^\d+$", val):
+                    iterable[key] = int(val)
+                else:
+                    continue
