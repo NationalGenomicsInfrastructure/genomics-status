@@ -591,15 +591,19 @@ def add_prefix(input_int: int, unit: str):
 
 
 def walk_str2int(iterable):
+    """This function recursively traverses a JSON-like tree of mutable iterables (dicts, lists)
+    and reassigns all list elements or dict values which are strings that can be intepreted as integers
+    to the int type"""
 
-    if isinstance(iterable, (dict, list, tuple)):
+    if isinstance(iterable, (dict, list)):
         for key, val in (
             iterable.items() if isinstance(iterable, dict) else enumerate(iterable)
         ):
-            if isinstance(val, (dict, list, tuple)):
+            if isinstance(val, str) and re.match("^\d+$", val):
+                iterable[key] = int(val)
+            elif isinstance(val, (dict, list)):
                 walk_str2int(val)
             else:
-                if isinstance(val, str) and re.match("^\d+$", val):
-                    iterable[key] = int(val)
-                else:
-                    continue
+                continue
+    else:
+        raise AssertionError("Invalid input")
