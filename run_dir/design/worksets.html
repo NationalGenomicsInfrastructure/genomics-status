@@ -32,14 +32,14 @@ Description: Shows a table with all worksets.
             <thead id="workset_table_head">
                 <tr class="sticky darkth">
                  {% for onekey in headers %}
-                    <th>{{ onekey[0] }}</th>
+                    <th class="sort">{{ onekey[0] }}</th>
                  {% end %}
                  </tr>
             </thead>
             <tfoot id="workset_table_footer">
-                <tr class="darkth">
+                <tr class="sticky darkth">
                  {% for onekey in headers %}
-                    <th>{{ onekey[0] }}</th>
+                    <th class="sort">{{ onekey[0] }}</th>
                  {% end %}
                  </tr>
             </tfoot>
@@ -110,16 +110,16 @@ Description: Shows a table with all worksets.
         <table class="table table-striped table-bordered sortable" id="closed_ws_table">
           <thead id="closed_ws_table_head">
               <tr class="sticky darkth">
-                <th>Date Run</th>
-                <th>Workset Name</th>
-                <th>Closed Projects</th>
+                <th class="sort">Date Run</th>
+                <th class="sort">Workset Name</th>
+                <th class="sort">Closed Projects</th>
               </tr>
           </thead>
           <tfoot id="closed_ws_table_footer">
               <tr class="darkth">
-              <th>Date Run</th>
-              <th>Workset Name</th>
-              <th>Closed Projects</th>
+              <th class="sort">Date Run</th>
+              <th class="sort">Workset Name</th>
+              <th class="sort">Closed Projects</th>
               </tr>
           </tfoot>
           <tbody id="closed_ws_table_body">
