@@ -81,6 +81,8 @@ class qPCRPoolsDataHandler(SafeHandler):
         queues["NovaSeq"] = query.format(1666)
         # Queue = 2102, stepid in the query
         queues["NextSeq"] = query.format(2102)
+        # Queue = 3055, stepid in the query
+        queues["NovaSeqXPlus"] = query.format(3055)
         # Queue 41, but query is slightly different to use protocolid for Library Validation QC which is 8 and, also to exclude the controls
         queues["LibraryValidation"] = (
             "select  st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid, e.udfvalue "
@@ -269,6 +271,8 @@ class SequencingQueuesDataHandler(SafeHandler):
         queues["NovaSeq: Make Bulk Pool for Standard"] = "1655"
         # Novaseq Step 10: Make Bulk Pool for Novaseq Xp
         queues["NovaSeq : Make Bulk Pool for Xp"] = "1656"
+        # NovaSeqXPlus Step 8:  Load to Flowcell (NovaSeqXPlus) v1.0
+        queues["NovaSeqXPlus : Load to Flowcell (NovaSeqXPlus) v1.0"] = "3058"
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
