@@ -140,7 +140,7 @@
                             {% set flowcell_history = ont_flowcells[onefc]["pore_count_history"] %}
                             {% set flowcell_history_qc = [e for e in flowcell_history if e["type"] == "qc"] %}
                             {{ flowcell_history_qc[0]["num_pores"] }}
-                        {% except %}
+                        {% except (KeyError, IndexError, TypeError) %}
                             {# Second-hand: Try to fetch the QC value from the manually entered LIMS field #}
                             {% try %}
                                 {% set last_loading = ont_flowcells[onefc]["lims"]["loading"][-1] %}
@@ -149,7 +149,7 @@
                                 {% else %}
                                     {{ "" }}
                                 {% end %}
-                            {% except %}
+                            {% except (KeyError, IndexError, TypeError) %}
                                 {{ "" }}
                             {% end %}
                         {% end %}
