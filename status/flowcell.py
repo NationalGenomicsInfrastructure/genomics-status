@@ -603,7 +603,5 @@ def walk_str2int(iterable):
                 iterable[key] = int(val)
             elif isinstance(val, (dict, list)):
                 walk_str2int(val)
-            else:
-                continue
     else:
         raise AssertionError("Invalid input")
