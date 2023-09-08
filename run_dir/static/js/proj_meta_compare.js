@@ -23,6 +23,7 @@
     project_data = {};
     var id_tosave = [];
     var sel = '';
+    count = 0;
     key_min = {'base': {}, 'library_prep': {}, 'rna_meta' :{}};
     key_max = {'base': {}, 'library_prep': {}, 'rna_meta' :{}};
     xLogAxis = 'linear';
@@ -51,6 +52,7 @@
             empty: '<div class="empty-message">No projects found</div>'
         }
         }).bind('typeahead:selected', function(obj, datum, name) {
+            count++;
             let proj_id = datum.url.split('/')[2];
             $('#projects_meta_input').val('');
             $('#del_pid_badges').append('<button class="btn badge rounded-pill bg-secondary mx-1" id="' + proj_id +  '">' + proj_id + '<i class="fa fa-solid fa-xmark ml-2"></i>' + '</button>');
@@ -161,11 +163,7 @@
         if($('#proj_meta_plot').highcharts()) {
             $('#proj_meta_plot').highcharts().destroy();
         }
-        $('#proj_meta_plot').html('<p class="text-center text-muted">Please select an X and a Y variable.</p>');
-        $('#proj_meta_correlation').text('?');
-        $('#projMeta_downloadAll, #projMeta_copyRaw').prop('disabled', true);
-        $('#proj_meta_yvalue, #proj_meta_xvalue').prop('disabled', true).html('<option value="">[ select value ]</option>');
-        $('#proj_meta_colvalue').prop('disabled', true).html('<option data-section="" value="">Project</option>');
+
 
         // Clean up the user input
         var projects = [];
@@ -313,7 +311,14 @@
                     }
                     group.appendTo($('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue'));
                 }
-
+                //If this is not the default plot
+                if (count > 0){
+                    plot_meta({'y': [$('#proj_meta_yvalue option:selected').data('section'),
+                        $('#proj_meta_yvalue').val()], 'x': [$('#proj_meta_xvalue option:selected').data('section'),
+                        $('#proj_meta_xvalue').val()],'color': [$('#proj_meta_colvalue option:selected').data('section'),
+                        $('#proj_meta_colvalue').val()]
+                    })
+                }
                 // Remove disabled states
                 $('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue, #projMeta_downloadAll, #projMeta_copyRaw').prop('disabled', false);
 
