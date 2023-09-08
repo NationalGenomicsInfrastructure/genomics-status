@@ -164,7 +164,6 @@
             $('#proj_meta_plot').highcharts().destroy();
         }
 
-
         // Clean up the user input
         var projects = [];
         for (var i = 0; i < id_tosave.length; i++) {
