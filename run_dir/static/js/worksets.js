@@ -43,7 +43,7 @@ function init_listjs() {
       "paging":false,
       "info":false,
       "order": [[ 0, "desc" ]],
-      dom: 'Bfrtip',
+      dom: 'Bfrti',
       buttons: [
         { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
         { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
