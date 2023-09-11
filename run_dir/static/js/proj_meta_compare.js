@@ -140,11 +140,7 @@
             load_projects_meta(id_tosave);
             but_id.remove();
             if (count == 0){
-                plot_meta({'y': [$('#proj_meta_yvalue option:selected').data('section'),
-                        $('#proj_meta_yvalue').val()], 'x': [$('#proj_meta_xvalue option:selected').data('section'),
-                        $('#proj_meta_xvalue').val()],'color': [$('#proj_meta_colvalue option:selected').data('section'),
-                        $('#proj_meta_colvalue').val()]
-                })
+                pre_plot_meta();
             }
         });
     }
@@ -160,6 +156,7 @@
         $('#proj_meta_xvalue, #proj_meta_yvalue, #proj_meta_colvalue').val('customer_conc').trigger('click');
         plot_meta({'y': ['base', 'customer_conc'], 'x': ['base', 'customer_conc'],'color': ['base', 'customer_conc']})
     }
+
 
     // Main function that fires when project IDs are filled in and the form
     // is submitted. Loads page.
@@ -319,11 +316,7 @@
                 }
                 //If this is not the default plot
                 if (count > 0){
-                    plot_meta({'y': [$('#proj_meta_yvalue option:selected').data('section'),
-                        $('#proj_meta_yvalue').val()], 'x': [$('#proj_meta_xvalue option:selected').data('section'),
-                        $('#proj_meta_xvalue').val()],'color': [$('#proj_meta_colvalue option:selected').data('section'),
-                        $('#proj_meta_colvalue').val()]
-                    })
+                    pre_plot_meta();
                 }
                 // Remove disabled states
                 $('#proj_meta_yvalue, #proj_meta_xvalue, #proj_meta_colvalue, #projMeta_downloadAll, #projMeta_copyRaw').prop('disabled', false);
@@ -332,7 +325,13 @@
         });
     }
 
-
+    function pre_plot_meta() {
+        plot_meta({'y': [$('#proj_meta_yvalue option:selected').data('section'),
+                        $('#proj_meta_yvalue').val()], 'x': [$('#proj_meta_xvalue option:selected').data('section'),
+                        $('#proj_meta_xvalue').val()],'color': [$('#proj_meta_colvalue option:selected').data('section'),
+                        $('#proj_meta_colvalue').val()]
+        })
+    }
 
     // Function to create new meta scatter plot.
     function plot_meta(keys){
