@@ -139,6 +139,13 @@
             });
             load_projects_meta(id_tosave);
             but_id.remove();
+            if (count == 0){
+                plot_meta({'y': [$('#proj_meta_yvalue option:selected').data('section'),
+                        $('#proj_meta_yvalue').val()], 'x': [$('#proj_meta_xvalue option:selected').data('section'),
+                        $('#proj_meta_xvalue').val()],'color': [$('#proj_meta_colvalue option:selected').data('section'),
+                        $('#proj_meta_colvalue').val()]
+                })
+            }
         });
     }
 
