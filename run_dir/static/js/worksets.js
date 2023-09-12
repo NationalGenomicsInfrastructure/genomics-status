@@ -42,7 +42,12 @@ function init_listjs() {
     var table = $('#workset_table').DataTable({
       "paging":false,
       "info":false,
-      "order": [[ 0, "desc" ]]
+      "order": [[ 0, "desc" ]],
+      dom: 'Bfrti',
+      buttons: [
+        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
+        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+      ]
     });
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
@@ -60,15 +65,8 @@ function init_listjs() {
             .draw();
         });
     });
-    // Copy workset table to clipboard
-    var clipboard = new Clipboard('#ws_copy_table');
-    clipboard.on('success', function(e) {
-      e.clearSelection();
-      $('#ws_copy_table').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
-      setTimeout(function(){
-      $('#ws_copy_table').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
-      }, 2000);
-    });
+    $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
+    $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 }
 
 function load_workset_notes(wait) {
