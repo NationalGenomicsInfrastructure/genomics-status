@@ -3,16 +3,17 @@
 
 import json
 import datetime
-import pandas as pd
+import re
+
 from dateutil.relativedelta import relativedelta
+from collections import OrderedDict
 
 from genologics import lims
 from genologics.config import BASEURI, USERNAME, PASSWORD
-from collections import OrderedDict
+import pandas as pd
+
 from status.util import SafeHandler
 from status.flowcell import FlowcellHandler, fetch_ont_run_stats
-import re
-
 from status.running_notes import LatestRunningNoteHandler
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)

@@ -7,19 +7,17 @@ import datetime
 import requests
 import base64
 import logging
-
 import itertools
 
 from collections import OrderedDict
-from status.util import dthandler, SafeHandler
 from dateutil.relativedelta import relativedelta
 
 from genologics import lims
 from genologics.entities import Project, Artifact
 from genologics.config import BASEURI, USERNAME, PASSWORD
-
 from zenpy import ZenpyException
 
+from status.util import dthandler, SafeHandler
 from status.running_notes import LatestRunningNoteHandler
 
 
