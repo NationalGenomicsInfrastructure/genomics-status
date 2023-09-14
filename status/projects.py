@@ -27,6 +27,8 @@ from genologics.config import BASEURI, USERNAME, PASSWORD
 
 from zenpy import ZenpyException
 
+from status.running_notes import LatestRunningNoteHandler
+
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 application_log = logging.getLogger("tornado.application")
@@ -156,19 +158,9 @@ class ProjectsBaseDataHandler(SafeHandler):
             row.value["pending_reviews"] = links
 
         # Find the latest running note, return it as a separate field
-        if "running_notes" in row.value:
-            try:
-                notes = json.loads(row.value["running_notes"])
-                # note_dates = {datetime obj: time string, ...}
-                note_dates = dict(
-                    zip(map(dateutil.parser.parse, notes.keys()), notes.keys())
-                )
-                latest_date = note_dates[max(list(note_dates))]
-                row.value["latest_running_note"] = json.dumps(
-                    {latest_date: notes[latest_date]}
-                )
-            except ValueError:
-                pass
+        latest_running_note = LatestRunningNoteHandler.get_latest_running_note(self.application, 'project', row.key[1])
+        if latest_running_note:
+            row.value["latest_running_note"] = json.dumps(latest_running_note)
 
         ord_det = row.value.get("order_details", {})
         # Try to fetch a name for the contact field, not just an e-mail
