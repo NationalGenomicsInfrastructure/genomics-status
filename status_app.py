@@ -92,7 +92,6 @@ from status.projects import (
     ProjectsSearchHandler,
     ProjectTicketsDataHandler,
     RecCtrlDataHandler,
-    #RunningNotesDataHandler,
     ProjMetaCompareHandler,
     ProjectRNAMetaDataHandler,
     FragAnImageHandler,
@@ -287,7 +286,6 @@ class Application(tornado.web.Application):
             ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
             ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
-            #("/api/v1/new_running_notes/([^/]*)$", NEWRunningNotesDataHandler),
             ("/api/v1/links/([^/]*)$", LinksDataHandler),
             ("/api/v1/sample_requirements", SampleRequirementsDataHandler),
             (

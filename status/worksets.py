@@ -45,7 +45,9 @@ class WorksetsHandler(SafeHandler):
                 result[row.key] = row.value
                 result[row.key].pop("_id", None)
                 result[row.key].pop("_rev", None)
-                latest_note = LatestRunningNoteHandler.get_latest_running_note(self.application, 'workset', row.value['id'])
+                latest_note = LatestRunningNoteHandler.get_latest_running_note(
+                    self.application, "workset", row.value["id"]
+                )
                 if latest_note:
                     result[row.key]["Latest Workset Notes"] = latest_note
             else:
@@ -54,7 +56,9 @@ class WorksetsHandler(SafeHandler):
                         result[row.key] = row.value
                         result[row.key].pop("_id", None)
                         result[row.key].pop("_rev", None)
-                        latest_note = LatestRunningNoteHandler.get_latest_running_note(self.application, 'workset', row.value['id'])
+                        latest_note = LatestRunningNoteHandler.get_latest_running_note(
+                            self.application, "workset", row.value["id"]
+                        )
                         if latest_note:
                             result[row.key]["Latest Workset Notes"] = latest_note
                 # Exception that date_run is not available
@@ -91,7 +95,7 @@ class WorksetsHandler(SafeHandler):
                 user=self.get_current_user(),
                 ws_data=ws_data,
                 headers=headers,
-                form_date = LatestRunningNoteHandler.formatDate,
+                form_date=LatestRunningNoteHandler.formatDate,
                 all=all,
             )
         )
@@ -144,7 +148,7 @@ class ClosedWorksetsHandler(SafeHandler):
                 if parse(row.value["date_run"]) <= a_year_ago:
                     flag = True
                     for project in row.value["projects"]:
-                        if project == 'Control':
+                        if project == "Control":
                             flag = False
                         else:
                             close_date_s = project_dates[project]["close_date"]

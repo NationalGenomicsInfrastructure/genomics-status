@@ -38,7 +38,6 @@ thresholds = {
 }
 
 
-
 def find_id(stringable, pattern_type: str) -> re.match:
     string = str(stringable)
 
@@ -100,7 +99,9 @@ class FlowcellsHandler(SafeHandler):
 
             # Lanes were previously in the wrong order
             row.value["lane_info"] = OrderedDict(sorted(row.value["lane_info"].items()))
-            latest_note = LatestRunningNoteHandler.get_latest_running_note(self.application, 'flowcell', row.key)
+            latest_note = LatestRunningNoteHandler.get_latest_running_note(
+                self.application, "flowcell", row.key
+            )
             if latest_note:
                 row.value["Latest Workset Notes"] = latest_note
             temp_flowcells[row.key] = row.value

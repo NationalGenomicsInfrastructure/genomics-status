@@ -68,10 +68,6 @@ function make_running_note(date, note, sticky){
   try {
     var category = '';
     var note_id = '';
-    //if(version_flag==='old'){
-    //  var date = date.replace(/-/g, '/');
-     // date = date.replace(/\.\d{6}/, '');
-    //}
     date = new Date(date);
     if (note['note'] != undefined){
         if(date > new Date('2015-01-01')){
@@ -95,13 +91,8 @@ function make_running_note(date, note, sticky){
                    date.getUTCDate(), date.getHours(), date.getMinutes(), date.getSeconds())/1000);
         
         if ('categories' in note || 'category' in note){
-          var categories = []
-          //if(version_flag==='old'){
-            // categories = note['category'].split(',')
-          //}
-          //else{
-            categories = note['categories']
-          //}
+          var categories = [];
+          categories = note['categories'];
           category=generate_category_label(categories);
         }
     }
