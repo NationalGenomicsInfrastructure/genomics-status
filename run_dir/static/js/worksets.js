@@ -69,23 +69,6 @@ function init_listjs() {
     $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 }
 
-function load_workset_notes(wait) {
-  // Clear previously loaded notes, if so
-  $("#workset_notes_panels").empty();
-  $.getJSON("/api/v1/workset_notes/" + worksets_page_type, function(data) {
-    $.each(data, function(date, note) {
-        noteText = make_markdown(note['note']);
-      $('#workset_notes_panels').append('<div class="panel panel-default">' +
-          '<div class="panel-heading">'+
-            '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-            date.toDateString() + ', ' + date.toLocaleTimeString(date)+
-          '</div><div class="panel-body">'+noteText+'</div></div>');
-    });
-  }).fail(function( jqxhr, textStatus, error ) {
-      var err = textStatus + ", " + error;
-      console.log( "Workset notes request failed: " + err );
-  });
-}
 var sumGroups = {};
 $(".tabbable").on("click", '[role="tab"]', function() {
   if($(this).attr('href')=='#tab_run_worksets'){
