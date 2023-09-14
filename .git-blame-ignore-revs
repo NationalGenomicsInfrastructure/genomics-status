@@ -1,0 +1,9 @@
+# Run black
+47d3f9d2da017cc317ff31f64c0b959e130bf27c
+# Apply black on more python files and delete unused files
+a239ef4dfcff9cd083352489b600009f35110cfe
+# Apply black on more python files and move some code around in project_qc
+2c0d115be62f93f365d703f3637c953afc4d2ca0
+# Apply black and remove some unused code
+69cdb2a5f3a161461314183dae17f5942be26af8
+
