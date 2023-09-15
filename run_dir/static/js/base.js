@@ -183,6 +183,10 @@ marked.setOptions({
   smartLists: true,
   smartypants: false
 });
+//Fix for the whole text getting inserted as heading ids and messing up the headings
+marked.Renderer.prototype.heading =function(text,level,raw){
+   return"<h"+level+'>'+text+"</h"+level+">\n"
+};
 function make_project_links(s){
   // Searches for P[\d+] and replaces with a link to the project page
   s = s.replace(/([\W])(P[\d]{3,5})(?!\w)/g, '$1<a class="text-decoration-none" href="/project/$2">$2</a>');

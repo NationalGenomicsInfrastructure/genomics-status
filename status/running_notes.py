@@ -16,9 +16,7 @@ import tornado
 from status.util import SafeHandler
 
 
-class RunningNotesDataHandler(
-    SafeHandler
-):
+class RunningNotesDataHandler(SafeHandler):
     """Serves all running notes from a given project.
     URL: /api/v1/running_notes/([^/]*)
     """
@@ -115,13 +113,13 @@ class RunningNotesDataHandler(
                 .value
             )
         elif note_type == "workset":
-            connected_projects = (
-                application.worksets_db.view(
-                    "worksets/projects_list", key=partition_id
-                )
+            values = (
+                application.worksets_db.view("worksets/project_list", key=partition_id)
                 .rows[0]
                 .value
             )
+            connected_projects = values["project_list"]
+            workset_name = values["name"]
         newNote = {
             "_id": f"{partition_id}:{datetime.datetime.timestamp(created_time)}",
             "user": user,
@@ -176,25 +174,28 @@ class RunningNotesDataHandler(
         if note_type in ["flowcell", "workset", "flowcell_ont"]:
             choose_link = {
                 "flowcell": "flowcells",
-                "workset": "worksets",
+                "workset": "workset",
                 "flowcell_ont": "flowcells_ont",
             }
-            link = f"<a class='text-decoration-none' href='/{choose_link[note_type]}/{partition_id}'>{partition_id}</a>"
+            link_id = partition_id
+            if note_type == "workset":
+                link_id = workset_name
+            link = f"<a class='text-decoration-none' href='/{choose_link[note_type]}/{link_id}'>{link_id}</a>"
             project_note = (
                 f"#####*Running note posted on {note_type.split('_')[0]} {link}:*\n"
             )
             project_note += note
             for proj_id in connected_projects:
-                    _ = RunningNotesDataHandler.make_running_note(
-                        application,
-                        proj_id,
-                        project_note,
-                        categories,
-                        user,
-                        email,
-                        "project",
-                        created_time,
-                    )
+                _ = RunningNotesDataHandler.make_running_note(
+                    application,
+                    proj_id,
+                    project_note,
+                    categories,
+                    user,
+                    email,
+                    "project",
+                    created_time,
+                )
         return newNote
 
     @staticmethod
@@ -370,17 +371,20 @@ class LatestStickyNoteHandler(SafeHandler):
 
 
 class LatestRunningNoteHandler(SafeHandler):
+    """Handler for methods related to running notes which are used in other classes"""
 
     @staticmethod
     def get_latest_running_note(app, note_type, partition_id):
         latest_note = {}
-        view = app.running_notes_db.view(f'latest_note_previews/{note_type}', reduce=True)
+        view = app.running_notes_db.view(
+            f"latest_note_previews/{note_type}", reduce=True
+        )
         if view[partition_id].rows:
             note = view[partition_id].rows[0].value
-            latest_note = {note['created_at_utc']: note}
+            latest_note = {note["created_at_utc"]: note}
         return latest_note
-    
+
     @staticmethod
     def formatDate(date):
-        datestr =  datetime.datetime.fromisoformat(date)
+        datestr = datetime.datetime.fromisoformat(date)
         return datestr.strftime("%a %b %d %Y, %I:%M:%S %p")
