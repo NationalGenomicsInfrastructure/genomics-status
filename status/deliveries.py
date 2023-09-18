@@ -144,9 +144,11 @@ class DeliveriesPageHandler(SafeHandler):
         for project_id in ongoing_deliveries:
             if project_id in summary_data and project_id in bioinfo_data:
                 project = summary_data[project_id]
-                #TODO:Rewrite everything deliveries.py does with running notes later
+                # TODO:Rewrite everything deliveries.py does with running notes later
                 running_notes = {}
-                running_notes_docs = self.application.running_notes_db.view(f"_partition/{project_id}/_all_docs", include_docs=True)
+                running_notes_docs = self.application.running_notes_db.view(
+                    f"_partition/{project_id}/_all_docs", include_docs=True
+                )
                 for row in running_notes_docs:
                     running_note = row.doc
                     note_contents = {}

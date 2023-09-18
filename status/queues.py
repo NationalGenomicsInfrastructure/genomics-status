@@ -536,7 +536,11 @@ class WorksetQueuesDataHandler(SafeHandler):
                         queued_date = proj_doc.get("project_summary", {}).get(
                             "queued", "NA"
                         )
-                    latest_running_note = LatestRunningNoteHandler.get_latest_running_note(self.application, "project", project)
+                    latest_running_note = (
+                        LatestRunningNoteHandler.get_latest_running_note(
+                            self.application, "project", project
+                        )
+                    )
                     pools[method][project] = {
                         "samples": [(record[1], requeued)],
                         "total_num_samples": total_num_samples,
