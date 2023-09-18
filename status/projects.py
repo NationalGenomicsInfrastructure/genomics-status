@@ -149,6 +149,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             row.value["pending_reviews"] = links
 
         # Find the latest running note, return it as a separate field
+        #TODO: Refactor to leverage new view and try get all running notes in a single call
         latest_running_note = LatestRunningNoteHandler.get_latest_running_note(
             self.application, "project", row.key[1]
         )
