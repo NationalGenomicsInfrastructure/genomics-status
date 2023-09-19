@@ -112,6 +112,9 @@ function init_listjs() {
             .draw();
         } );
     } );
+
+    $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
+    $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 }
 
 $('body').on('click', '.group', function(event) {
