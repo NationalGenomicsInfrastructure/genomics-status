@@ -14,7 +14,6 @@ Description: Shows a table with extant workset queues.
       <h1><span id="page_title">Workset queues</span>
         <small class="text-muted">All samples that are available to be added to a workset in LIMS.</small>
       </h1>
-      <button type="button" id="samples_copy_table_btn" class="btn btn-outline-dark"><span class="fa fa-copy"></span> Copy table</button>
       <button type="button" id="samples_copy_table" class="btn d-none" data-clipboard-target="#samples_table"></button>
       <label class="btn btn-outline-dark expand-all float-right mb-2"><span class="fa fa-plus-square" aria-hidden="true"></span>Expand All</label>
       <table class="table table-hover table-striped table-bordered sortable" id="samples_table">
@@ -48,8 +47,8 @@ Description: Shows a table with extant workset queues.
     </div>
 </div>
 
+<script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
 <script src="/static/js/clipboard.min.js"></script>
-<script src="/static/js/jquery.dataTables.min.js"></script>
 <script src="/static/js/workset_queues.js?v={{ gs_globals['git_commit'] }}"></script>
 <script src="/static/js/jquery-ui.min.js"></script>
 

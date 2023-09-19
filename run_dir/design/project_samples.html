@@ -302,10 +302,6 @@ Description: Details page for a single project
         <div class="form-group col-12 p-2">
           <div id="search_field"></div>
         </div>
-        &nbsp;
-        <div class="form-group col-12 p-2 d-inline-flex">
-        <button type="button" id="proj_samples_copy_table" class="btn btn-sm btn-outline-secondary" data-clipboard-target="#sample_table"><span class="fa fa-copy"></span> Copy table</button>
-        </div>
         <div class="btn-toolbar p-2" role="toolbar">
           <label class="col-form-label p-1">Column Presets:</label>
           <div class="btn-group btn-group-sm" id="default_preset_buttons">
@@ -566,7 +562,7 @@ Description: Details page for a single project
 </div>
 
 <!-- Javascript -->
-<script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
 <script src="/static/js/clipboard.min.js"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ project }}"></script>
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-project="{{project}}"></script>
