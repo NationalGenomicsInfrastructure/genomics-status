@@ -213,7 +213,7 @@ function load_table(status, type, columns, dates) {
     $.each(data, function(project_id, summary_row) {
       $.each(summary_row, function(key,value){
         //this tracks the fields existing in our projects objects, but not present in the filter tab yet.
-        if ($.inArray(key, undefined_fields) == -1 && $.inArray(key, fields) == -1 ){
+        if ($.inArray(key, undefined_fields) == -1 && $.inArray(key, fields) == -1 && key !== 'running_notes'){
           undefined_fields.push(key);
         }
       });
