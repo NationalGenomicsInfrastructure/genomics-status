@@ -147,6 +147,4 @@ $('body').on('click', '.group', function(event) {
 
 $('.dt-buttons > .buttons-copy').on('click', function () {
   $('.expand-all').click();
-  $('#libpools_copy_table').click();
-  $('.expand-all').click();
 })
