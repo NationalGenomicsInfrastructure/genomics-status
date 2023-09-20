@@ -104,6 +104,11 @@ function init_listjs() {
         "paging":false,
         "destroy": true,
         "info":false,
+        dom: 'Bfrti',
+        buttons: [
+          { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
+          { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+        ],
         "drawCallback": function ( settings ) {
           var api = this.api();
           var rows = api.rows( {page:'current'} ).nodes();
@@ -134,6 +139,8 @@ function init_listjs() {
             .draw();
         } );
     } );
+    $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
+    $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 }
 
 $('body').on('click', '.group', function(event) {
@@ -179,7 +186,7 @@ clipboard.on('success', function(e) {
   }, 2000);
 });
 
-$('#samples_copy_table_btn').on('click', function () {
+$('.dt-buttons > .buttons-copy').on('click', function () {
   $('.expand-all').click();
   $('#samples_copy_table').click();
   $('.expand-all').click();

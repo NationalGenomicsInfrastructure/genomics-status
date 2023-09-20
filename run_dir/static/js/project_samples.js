@@ -110,7 +110,12 @@ function init_datatable() {
       "paging":false,
       "destroy": true,
       "info":false,
-      "order": [[ 0, "asc" ]]
+      "order": [[ 0, "asc" ]],
+      dom: 'Bfrti',
+      buttons: [
+        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
+        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+      ]
     });
   //Add the bootstrap classes to the search thingy
   $('div.dataTables_filter input').addClass('form-control search search-query');
@@ -128,6 +133,8 @@ function init_datatable() {
           .draw();
       });
   });
+  $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
+  $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 }
 
 ////////////////////////////////////

@@ -79,6 +79,11 @@ function init_listjs() {
       "paging":false,
       "info":false,
       "order": [],
+      dom: 'Bfrti',
+      buttons: [
+        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
+        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+      ],
       "drawCallback": function ( settings ) {
         var api = this.api();
         var rows = api.rows( {page:'current'} ).nodes();
@@ -93,6 +98,9 @@ function init_listjs() {
         });
       }
     });
+
+    $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
+    $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
@@ -137,18 +145,6 @@ $('body').on('click', '.group', function(event) {
 });
 
 
-// Copy project samples table to clipboard
-var clipboard = new Clipboard('#libpools_copy_table');
-clipboard.on('success', function(e) {
-  e.clearSelection();
-  $('#libpools_copy_table_btn').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
-  setTimeout(function(){
-    $('#libpools_copy_table_btn').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
-  }, 2000);
-});
-
-$('#libpools_copy_table_btn').on('click', function () {
-  $('.expand-all').click();
-  $('#libpools_copy_table').click();
+$('.dt-buttons > .buttons-copy').on('click', function () {
   $('.expand-all').click();
 })
