@@ -386,5 +386,5 @@ class LatestRunningNoteHandler(SafeHandler):
 
     @staticmethod
     def formatDate(date):
-        datestr = datetime.datetime.fromisoformat(date)
-        return datestr.strftime("%a %b %d %Y, %I:%M:%S %p")
+        datestr = datetime.datetime.fromisoformat(date).astimezone()
+        return datestr.strftime("%a %b %d %Y, %H:%M:%S")
