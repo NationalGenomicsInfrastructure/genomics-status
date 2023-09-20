@@ -5,6 +5,8 @@ import psycopg2
 from dateutil.parser import parse
 import ast
 
+from status.running_notes import LatestRunningNoteHandler
+
 # Control names can be found in the table controltype in the lims backend. Will continue to check against this list for now, should
 # consider incorporating a check against this table directly into the queries in the future
 control_names = [
@@ -534,8 +536,10 @@ class WorksetQueuesDataHandler(SafeHandler):
                         queued_date = proj_doc.get("project_summary", {}).get(
                             "queued", "NA"
                         )
-                    latest_running_note = self._get_latest_running_note(
-                        proj_doc["details"].get("running_notes")
+                    latest_running_note = (
+                        LatestRunningNoteHandler.get_latest_running_note(
+                            self.application, "project", project
+                        )
                     )
                     pools[method][project] = {
                         "samples": [(record[1], requeued)],
@@ -549,13 +553,6 @@ class WorksetQueuesDataHandler(SafeHandler):
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(pools))
-
-    def _get_latest_running_note(self, val):
-        if not val:
-            return ""
-        notes = json.loads(val)
-        latest_note = {max(notes.keys()): notes[max(notes.keys())]}
-        return latest_note
 
 
 class WorksetQueuesHandler(SafeHandler):

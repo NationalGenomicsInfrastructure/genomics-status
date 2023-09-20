@@ -15,13 +15,8 @@ import tornado
 
 from status.util import SafeHandler
 
-# Temp until project run notes are moved to new notes db
-from status.projects import RunningNotesDataHandler
 
-
-class NEWRunningNotesDataHandler(
-    SafeHandler
-):  # TODO: Name to be changed when switching all run notes to new system
+class RunningNotesDataHandler(SafeHandler):
     """Serves all running notes from a given project.
     URL: /api/v1/running_notes/([^/]*)
     """
@@ -66,7 +61,7 @@ class NEWRunningNotesDataHandler(
                 "<html><body>No project id or note parameters found</body></html>"
             )
         else:
-            newNote = NEWRunningNotesDataHandler.make_running_note(
+            newNote = RunningNotesDataHandler.make_running_note(
                 self.application,
                 partition_id,
                 note,
@@ -117,6 +112,14 @@ class NEWRunningNotesDataHandler(
                 .rows[0]
                 .value
             )
+        elif note_type == "workset":
+            values = (
+                application.worksets_db.view("worksets/project_list", key=partition_id)
+                .rows[0]
+                .value
+            )
+            connected_projects = values["project_list"]
+            workset_name = values["name"]
         newNote = {
             "_id": f"{partition_id}:{datetime.datetime.timestamp(created_time)}",
             "user": user,
@@ -136,7 +139,7 @@ class NEWRunningNotesDataHandler(
             pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
             userTags = [x[1] for x in pattern.findall(note)]
             if userTags:
-                NEWRunningNotesDataHandler.notify_tagged_user(
+                RunningNotesDataHandler.notify_tagged_user(
                     application,
                     userTags,
                     proj_ids,
@@ -158,7 +161,7 @@ class NEWRunningNotesDataHandler(
                 and proj_coord not in userTags
                 and proj_coord != email.split("@")[0]
             ):
-                NEWRunningNotesDataHandler.notify_tagged_user(
+                RunningNotesDataHandler.notify_tagged_user(
                     application,
                     [proj_coord],
                     proj_ids,
@@ -171,34 +174,27 @@ class NEWRunningNotesDataHandler(
         if note_type in ["flowcell", "workset", "flowcell_ont"]:
             choose_link = {
                 "flowcell": "flowcells",
-                "workset": "worksets",
+                "workset": "workset",
                 "flowcell_ont": "flowcells_ont",
             }
-            link = f"<a class='text-decoration-none' href='/{choose_link[note_type]}/{partition_id}'>{partition_id}</a>"
+            link_id = partition_id
+            if note_type == "workset":
+                link_id = workset_name
+            link = f"<a class='text-decoration-none' href='/{choose_link[note_type]}/{link_id}'>{link_id}</a>"
             project_note = (
                 f"#####*Running note posted on {note_type.split('_')[0]} {link}:*\n"
             )
             project_note += note
             for proj_id in connected_projects:
-                #     _ = NEWRunningNotesDataHandler.make_running_note(
-                #         application,
-                #         proj_id,
-                #         project_note,
-                #         categories,
-                #         user,
-                #         email,
-                #         "project",
-                #         created_time,
-                #     )
-                """Temp until project run notes are moved to new notes db"""
-                category = ", ".join(categories)
-                RunningNotesDataHandler.make_project_running_note(
+                _ = RunningNotesDataHandler.make_running_note(
                     application,
                     proj_id,
                     project_note,
-                    category,
+                    categories,
                     user,
                     email,
+                    "project",
+                    created_time,
                 )
         return newNote
 
@@ -372,3 +368,23 @@ class LatestStickyNoteHandler(SafeHandler):
         if latest_sticky_doc:
             latest_sticky_note = latest_sticky_doc[0].value
             self.write({latest_sticky_note["created_at_utc"]: latest_sticky_note})
+
+
+class LatestRunningNoteHandler(SafeHandler):
+    """Handler for methods related to running notes which are used in other classes"""
+
+    @staticmethod
+    def get_latest_running_note(app, note_type, partition_id):
+        latest_note = {}
+        view = app.running_notes_db.view(
+            f"latest_note_previews/{note_type}", reduce=True
+        )
+        if view[partition_id].rows:
+            note = view[partition_id].rows[0].value
+            latest_note = {note["created_at_utc"]: note}
+        return latest_note
+
+    @staticmethod
+    def formatDate(date):
+        datestr = datetime.datetime.fromisoformat(date).astimezone()
+        return datestr.strftime("%a %b %d %Y, %H:%M:%S")

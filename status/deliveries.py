@@ -2,6 +2,7 @@ import json
 from collections import OrderedDict
 
 from status.util import SafeHandler
+from status.running_notes import LatestRunningNoteHandler
 
 from genologics.config import BASEURI, USERNAME, PASSWORD
 from genologics import lims
@@ -143,7 +144,24 @@ class DeliveriesPageHandler(SafeHandler):
         for project_id in ongoing_deliveries:
             if project_id in summary_data and project_id in bioinfo_data:
                 project = summary_data[project_id]
-                running_notes = json.loads(project["details"]["running_notes"])
+                # TODO:Rewrite everything deliveries.py does with running notes later
+                running_notes = {}
+                running_notes_docs = self.application.running_notes_db.view(
+                    f"_partition/{project_id}/_all_docs", include_docs=True
+                )
+                for row in running_notes_docs:
+                    running_note = row.doc
+                    note_contents = {}
+                    for item in [
+                        "user",
+                        "email",
+                        "note",
+                        "categories",
+                        "created_at_utc",
+                        "updated_at_utc",
+                    ]:
+                        note_contents[item] = running_note[item]
+                    running_notes[note_contents["created_at_utc"]] = note_contents
                 flowcells = bioinfo_data[project_id]
                 runs_bioinfo = {}
                 for flowcell_id in flowcells:
@@ -252,9 +270,7 @@ class DeliveriesPageHandler(SafeHandler):
                 )
                 latest_timestamp = max(list(running_notes))
                 latest_running_note = running_notes[latest_timestamp]
-                latest_running_note["timestamp"] = latest_timestamp[
-                    :-3
-                ]  # to get rid of milliseconds
+                latest_running_note["timestamp"] = latest_timestamp
                 # responsibles (needed for filters)
                 bioinfo_responsible = (
                     summary_data[project_id]
@@ -307,6 +323,7 @@ class DeliveriesPageHandler(SafeHandler):
                 project_status=project_status,
                 responsible_list=responsible_list,
                 lims_responsibles=lims_responsibles,
+                form_date=LatestRunningNoteHandler.formatDate,
                 user=self.get_current_user(),
             )
         )

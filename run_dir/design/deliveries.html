@@ -103,8 +103,8 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
             <dd>
               <div class="card">
                   <div class="card-header bi-project-note-header">
-                    <a class="text-decoration-none" href="#">{{ project['latest_running_note']['user'] }}</a> - <span class="todays_date">{{ project['latest_running_note']['timestamp'] }}</span>
-                      {% if project['latest_running_note']['category'] %} - {%for category in project['latest_running_note']['category'].split(',') %}<span class="badge fillbadgecolour"> {{ category }} </span> {% end %}{% end %}
+                    <a class="text-decoration-none" href="#">{{ project['latest_running_note']['user'] }}</a> - <span class="todays_date">{{ form_date(project['latest_running_note']['timestamp']) }}</span>
+                      {% if project['latest_running_note']['categories'] %} - {%for category in project['latest_running_note']['categories'] %}<span class="badge fillbadgecolour"> {{ category }} </span> {% end %}{% end %}
                   </div>
                   <div class="card-body bi-project-note-text">
                       <div class="running-note-body text-muted">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>
@@ -285,7 +285,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           {% for project_run_lane_sample, list_of_notes in running_notes.items() %}
             {% for timestamp, running_note in sorted(list_of_notes.items(), reverse=True) %}
               <div class="running-notes-panel card mb-2 mx-2 {{ running_note.get('category', '').replace(' ', '') }}" id="running-note-{{ project_run_lane_sample }}" style="display:none;">
-                <div class="card-header"><a class="text-decoration-none" href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ datetime.datetime.strptime(timestamp.rsplit('.')[0], '%Y-%m-%d %H:%M:%S').strftime('%a %b %d %Y, %H:%M:%S') }}
+                <div class="card-header"><a class="text-decoration-none" href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ form_date(timestamp) }}
                 {% if running_note.get('category') %} -
                   <span class="badge {{ categories.get(running_note.get('category'), 'All') }}"> {{ running_note.get('category') }}</span>
                 {% end %}

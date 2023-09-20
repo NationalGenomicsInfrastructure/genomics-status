@@ -1,12 +1,12 @@
 $(function(){
-  /*  Once projects are moved to new running notes db
+
   if(typeof project!=='undefined'){
       $.getJSON('/api/v1/latest_sticky_run_note/'+project, function (data) { 
         //latest_sticky_note
         let sticky_run_note = data 
         let date = Object.keys(sticky_run_note)[0]
         $('#latest_sticky_note').html(make_running_note(date, sticky_run_note[date], true))
-  })}; */
+  })};
 
     return $.getJSON('/api/v1/user_management/users', function (data) {
       window.users=Object.keys(data)
@@ -49,37 +49,25 @@ function get_note_url() {
     if ('lims_step' in window && lims_step !== null){
       note_id = lims_step;
       note_type = 'workset';
-      url = '/api/v1/workset_notes/' + lims_step;
     } else if ('flowcell_id_reference' in window && flowcell_id_reference!== null){
       note_id = flowcell_id_reference;
       note_type = 'flowcell';
-      url='/api/v1/flowcell_notes/' + flowcell_id_reference;
       if((typeof $('#rn-js').data('flowcell-type') !== 'undefined') && ($('#rn-js').data('flowcell-type') ==='ont')){
         note_type += '_ont';
-        url='/api/v1/new_running_notes/' + flowcell_id_reference;
       }
     }else {
       note_id = project;
       note_type = 'project';
-      url='/api/v1/running_notes/' + project;
     }
-    //let url_add = '';
-    //if(note_type=='flowcell_ont'){
-    //    url_add = 'new_'
-    //}
-    //return {url: `/api/v1/${url_add}running_notes/` + note_id, note_type: note_type};
+    url='/api/v1/running_notes/' + note_id;
     return {url: url, note_type: note_type}; 
 }
 
-function make_running_note(date, note, sticky, version_flag){
+function make_running_note(date, note, sticky){
   sticky = typeof sticky !== "undefined" ? sticky : false;
   try {
     var category = '';
     var note_id = '';
-    if(version_flag==='old'){
-      var date = date.replace(/-/g, '/');
-      date = date.replace(/\.\d{6}/, '');
-    }
     date = new Date(date);
     if (note['note'] != undefined){
         if(date > new Date('2015-01-01')){
@@ -103,13 +91,8 @@ function make_running_note(date, note, sticky, version_flag){
                    date.getUTCDate(), date.getHours(), date.getMinutes(), date.getSeconds())/1000);
         
         if ('categories' in note || 'category' in note){
-          var categories = []
-          if(version_flag==='old'){
-             categories = note['category'].split(',')
-          }
-          else{
-            categories = note['categories']
-          }
+          var categories = [];
+          categories = note['categories'];
           category=generate_category_label(categories);
         }
     }
@@ -135,10 +118,6 @@ function make_running_note(date, note, sticky, version_flag){
 function load_running_notes(wait) {
   // Clear previously loaded notes, if so
   const note_values = get_note_url();
-  let version_flag = 'old';
-  if (note_values.url.includes('new_')){
-    version_flag = 'new';
-  }
   $("#running_notes_panels").empty();
   // From agreements tab
   $("#invoicing_notes").empty();
@@ -147,16 +126,10 @@ function load_running_notes(wait) {
       $('#running_notes_panels').html('<div class="well">No running notes found.</div>');
     } else {
       $.each(data, function(date, note) {
-        $('#running_notes_panels').append(make_running_note(date, note, false, version_flag));
-        let categories = '';
-        if(version_flag==='old'){
-          categories = note['category']
-        }
-        else{
-          categories = note['categories']
-        }
+        $('#running_notes_panels').append(make_running_note(date, note, false));
+        let categories = note['categories']
         if(categories.includes('Invoicing')){
-          $('#invoicing_notes').append(make_running_note(date, note, true, version_flag));
+          $('#invoicing_notes').append(make_running_note(date, note, true));
         }
       });
       if($('#invoicing_notes').children().length === 0){
@@ -303,8 +276,8 @@ $("#running_notes_form").submit( function(e) {
        }
     }
     const note_values = get_note_url()
-    if(["flowcell", "workset"].includes(note_values.note_type)){
-      if(note_values.note_type==="flowcell" && !categories.includes("Flowcell")){
+    if(["flowcell", "workset", "flowcell_ont"].includes(note_values.note_type)){
+      if((note_values.note_type==="flowcell" || note_values.note_type==="flowcell_ont") && !categories.includes("Flowcell")){
         categories.push("Flowcell")
       }
       else if(note_values.note_type==="workset" && !categories.includes("Workset")){

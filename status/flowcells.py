@@ -3,18 +3,18 @@
 
 import json
 import datetime
-import pandas as pd
+import re
+
 from dateutil.relativedelta import relativedelta
+from collections import OrderedDict
 
 from genologics import lims
 from genologics.config import BASEURI, USERNAME, PASSWORD
-from collections import OrderedDict
-from status.util import SafeHandler
-from status.projects import RunningNotesDataHandler
-from status.flowcell import FlowcellHandler, fetch_ont_run_stats
-import re
+import pandas as pd
 
-import tornado
+from status.util import SafeHandler
+from status.flowcell import FlowcellHandler, fetch_ont_run_stats
+from status.running_notes import LatestRunningNoteHandler
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
@@ -37,11 +37,6 @@ thresholds = {
     "NextSeq 2000 P2": 400,
     "NextSeq 2000 P3": 1100,
 }
-
-
-def formatDate(date):
-    datestr = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f")
-    return datestr.strftime("%a %b %d %Y, %I:%M:%S %p")
 
 
 def find_id(stringable, pattern_type: str) -> re.match:
@@ -105,6 +100,11 @@ class FlowcellsHandler(SafeHandler):
 
             # Lanes were previously in the wrong order
             row.value["lane_info"] = OrderedDict(sorted(row.value["lane_info"].items()))
+            latest_note = LatestRunningNoteHandler.get_latest_running_note(
+                self.application, "flowcell", row.key
+            )
+            if latest_note:
+                row.value["Latest Workset Notes"] = latest_note
             temp_flowcells[row.key] = row.value
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
@@ -165,7 +165,7 @@ class FlowcellsHandler(SafeHandler):
                 user=self.get_current_user(),
                 flowcells=fcs,
                 ont_flowcells=ont_fcs,
-                form_date=formatDate,
+                form_date=LatestRunningNoteHandler.formatDate,
                 find_id=find_id,
                 all=all,
                 errors=errors,
@@ -396,87 +396,6 @@ class FlowcellQ30Handler(SafeHandler):
             lane_q30[row.key[2]] = row.value["sum"] / row.value["count"]
 
         return lane_q30
-
-
-class FlowcellNotesDataHandler(SafeHandler):
-    """Serves all running notes from a given flowcell.
-    It connects to LIMS to fetch and update Running Notes information.
-    URL: /api/v1/flowcell_notes/([^/]*)
-    """
-
-    def get(self, flowcell):
-        self.set_header("Content-type", "application/json")
-        doc_id = FlowcellHandler.find_DB_entry(self, flowcell).id
-        if not doc_id:
-            self.write("{}")
-        fc_doc = self.application.x_flowcells_db[doc_id]
-        lims_data = fc_doc.get("lims_data")
-        if not lims_data:
-            self.write("{}")
-        else:
-            running_notes = lims_data.get("container_running_notes", {})
-            sorted_running_notes = OrderedDict()
-            for k, v in sorted(running_notes.items(), key=lambda t: t[0], reverse=True):
-                sorted_running_notes[k] = v
-            self.write(sorted_running_notes)
-
-    def post(self, flowcell):
-        data = tornado.escape.json_decode(self.request.body)
-        note = data.get("note", "")
-        categories = data.get("categories", ["Flowcell"])
-        category = ", ".join(categories)
-        if category == "":
-            category = "Flowcell"
-
-        user = self.get_current_user()
-        flowcell_info = FlowcellsInfoDataHandler.get_flowcell_info(
-            self.application, flowcell
-        )
-        projects = flowcell_info["pid_list"]
-        if not note:
-            self.set_status(400)
-            self.finish("<html><body>No note parameters found</body></html>")
-        else:
-            newNote = {
-                "user": user.name,
-                "email": user.email,
-                "note": note,
-                "category": category,
-            }
-
-            doc_id = FlowcellHandler.find_DB_entry(self, flowcell).id
-            if not doc_id:
-                self.set_status(400)
-                self.write("Flowcell not found")
-            else:
-                fc_doc = self.application.x_flowcells_db[doc_id]
-                lims_data = fc_doc.get("lims_data", {})
-                running_notes = lims_data.get("container_running_notes", {})
-                running_notes[str(datetime.datetime.now())] = newNote
-                lims_data["container_running_notes"] = running_notes
-
-                flowcell_link = "<a class='text-decoration-none' href='/flowcells/{0}'>{0}</a>".format(
-                    flowcell
-                )
-                project_note = "#####*Running note posted on flowcell {}:*\n".format(
-                    flowcell_link
-                )
-                project_note += note
-
-                fc_doc["lims_data"] = lims_data
-                self.application.x_flowcells_db.save(fc_doc)
-                # write running note to projects only if it has been saved successfully in FC
-                for project in projects:
-                    RunningNotesDataHandler.make_project_running_note(
-                        self.application,
-                        project,
-                        project_note,
-                        category,
-                        user.name,
-                        user.email,
-                    )
-                self.set_status(201)
-                self.write(json.dumps(newNote))
 
 
 class FlowcellLinksDataHandler(SafeHandler):

@@ -10,9 +10,8 @@ from collections import OrderedDict
 import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
-from status.projects import RunningNotesDataHandler
 
-import tornado
+from status.running_notes import LatestRunningNoteHandler
 
 
 class WorksetsDataHandler(SafeHandler):
@@ -41,30 +40,27 @@ class WorksetsHandler(SafeHandler):
         half_a_year_ago = datetime.datetime.now() - relativedelta(months=6)
         ws_view = self.application.worksets_db.view("worksets/summary", descending=True)
 
-        def _get_latest_running_note(val):
-            notes = json.loads(val["Workset Notes"])
-            latest_note = {max(notes.keys()): notes[max(notes.keys())]}
-            return latest_note
-
         for row in ws_view:
             if all:
                 result[row.key] = row.value
                 result[row.key].pop("_id", None)
                 result[row.key].pop("_rev", None)
-                if "Workset Notes" in row.value:
-                    result[row.key]["Workset Notes"] = _get_latest_running_note(
-                        row.value
-                    )
+                latest_note = LatestRunningNoteHandler.get_latest_running_note(
+                    self.application, "workset", row.value["id"]
+                )
+                if latest_note:
+                    result[row.key]["Latest Workset Notes"] = latest_note
             else:
                 try:
                     if parse(row.value["date_run"]) >= half_a_year_ago:
                         result[row.key] = row.value
                         result[row.key].pop("_id", None)
                         result[row.key].pop("_rev", None)
-                        if "Workset Notes" in row.value:
-                            result[row.key]["Workset Notes"] = _get_latest_running_note(
-                                row.value
-                            )
+                        latest_note = LatestRunningNoteHandler.get_latest_running_note(
+                            self.application, "workset", row.value["id"]
+                        )
+                        if latest_note:
+                            result[row.key]["Latest Workset Notes"] = latest_note
                 # Exception that date_run is not available
                 except TypeError:
                     continue
@@ -89,7 +85,7 @@ class WorksetsHandler(SafeHandler):
             ["Samples Failed", "failed"],
             ["Pending Samples", "unknown"],
             ["Total samples", "total"],
-            ["Latest workset note", "Workset Notes"],
+            ["Latest workset note", "Latest Workset Notes"],
             ["Closed Worksets", "closed_ws"],
         ]
         self.write(
@@ -99,6 +95,7 @@ class WorksetsHandler(SafeHandler):
                 user=self.get_current_user(),
                 ws_data=ws_data,
                 headers=headers,
+                form_date=LatestRunningNoteHandler.formatDate,
                 all=all,
             )
         )
@@ -151,16 +148,19 @@ class ClosedWorksetsHandler(SafeHandler):
                 if parse(row.value["date_run"]) <= a_year_ago:
                     flag = True
                     for project in row.value["projects"]:
-                        close_date_s = project_dates[project]["close_date"]
-                        if close_date_s == "0000-00-00":
+                        if project == "Control":
                             flag = False
-                            break
-                        close_date = datetime.datetime.strptime(
-                            close_date_s, "%Y-%m-%d"
-                        )
-                        if close_date >= a_year_ago:
-                            flag = False
-                            break
+                        else:
+                            close_date_s = project_dates[project]["close_date"]
+                            if close_date_s == "0000-00-00":
+                                flag = False
+                                break
+                            close_date = datetime.datetime.strptime(
+                                close_date_s, "%Y-%m-%d"
+                            )
+                            if close_date >= a_year_ago:
+                                flag = False
+                                break
                     if flag:
                         result[row.key] = row.value
         self.set_header("Content-type", "application/json")
@@ -218,94 +218,6 @@ class WorksetSearchHandler(SafeHandler):
                 worksets.append(fc)
 
         return worksets
-
-
-class WorksetNotesDataHandler(SafeHandler):
-    """Serves all notes from a given workset.
-    It connects to LIMS to fetch and update Workset Notes information.
-    URL: /api/v1/workset_notes/([^/]*)
-    """
-
-    lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
-
-    def get(self, workset):
-        self.set_header("Content-type", "application/json")
-        p = Process(self.lims, id=workset)
-        p.get(force=True)
-        # Sorted running notes, by date
-        workset_notes = (
-            json.loads(p.udf["Workset Notes"]) if "Workset Notes" in p.udf else {}
-        )
-        sorted_workset_notes = OrderedDict()
-        for k, v in sorted(workset_notes.items(), key=lambda t: t[0], reverse=True):
-            sorted_workset_notes[k] = v
-        self.write(sorted_workset_notes)
-
-    def post(self, workset):
-        data = tornado.escape.json_decode(self.request.body)
-        note = data.get("note", "")
-        categories = data.get("categories", ["Workset"])
-        category = ", ".join(categories)
-        user = self.get_current_user()
-
-        if category == "":
-            category = "Workset"
-
-        workset_data = WorksetDataHandler.get_workset_data(self.application, workset)
-
-        projects = list(workset_data[workset]["projects"])
-        workset_name = workset_data[workset]["name"]
-
-        if not note:
-            self.set_status(400)
-            self.finish(
-                "<html><body>No workset id or note parameters found</body></html>"
-            )
-        else:
-            newNote = {
-                "user": user.name,
-                "email": user.email,
-                "note": note,
-                "category": category,
-            }
-            p = Process(self.lims, id=workset)
-            p.get(force=True)
-            workset_notes = (
-                json.loads(p.udf["Workset Notes"]) if "Workset Notes" in p.udf else {}
-            )
-            workset_notes[str(datetime.datetime.now())] = newNote
-            p.udf["Workset Notes"] = json.dumps(workset_notes)
-            p.put()
-
-            # Save the running note in statusdb per workset as well to be able
-            # to quickly show it in the worksets list
-            v = self.application.worksets_db.view("worksets/lims_id", key=workset)
-            doc_id = v.rows[0].id
-            doc = self.application.worksets_db.get(doc_id)
-            doc["Workset Notes"] = json.dumps(workset_notes)
-            self.application.worksets_db.save(doc)
-
-            workset_link = (
-                '<a class="text-decoration-none" href="/workset/{0}">{0}</a>'.format(
-                    workset_name
-                )
-            )
-            project_note = "#####*Running note posted on workset {}:*\n".format(
-                workset_link
-            )
-            project_note += note
-            for project_id in projects:
-                RunningNotesDataHandler.make_project_running_note(
-                    self.application,
-                    project_id,
-                    project_note,
-                    category,
-                    user.name,
-                    user.email,
-                )
-
-            self.set_status(201)
-            self.write(json.dumps(newNote))
 
 
 class WorksetLinksHandler(SafeHandler):
