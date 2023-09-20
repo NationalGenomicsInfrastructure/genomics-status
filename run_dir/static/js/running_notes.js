@@ -302,9 +302,11 @@ $("#running_notes_form").submit( function(e) {
         const note_values = get_note_url()
         $.getJSON(note_values.url, function(newdata) {
           var newNote = false;
+          var newNoteDate = null;
           $.each(newdata, function(date, note) {
             if(data['note'] == note['note']){
               newNote = make_running_note(date, note, false);
+              newNoteDate = date;
             }
           });
           if(newNote){
@@ -319,7 +321,7 @@ $("#running_notes_form").submit( function(e) {
               $('#running_notes_panels .well').slideUp(function(){ $(this).remove(); });
             }
             // Create a new running note and slide it in..
-            var now = new Date();
+            var now = new Date(newNoteDate);
             category=generate_category_label(categories);
             var printHyphen =category? ' - ': ' ';
             $('<div class="card mb-2 mx-2"><div class="card-header bg-success-table">'+
