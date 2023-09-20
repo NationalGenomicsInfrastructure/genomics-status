@@ -82,8 +82,10 @@ class RunningNotesDataHandler(SafeHandler):
         user,
         email,
         note_type,
-        created_time=datetime.datetime.now(datetime.timezone.utc),
+        created_time=None,
     ):
+        if not created_time:
+            created_time = datetime.datetime.now(datetime.timezone.utc)
         if note_type == "project":
             connected_projects = [partition_id]
             v = application.projects_db.view("project/project_id")
