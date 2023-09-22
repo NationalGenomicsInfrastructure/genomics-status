@@ -183,7 +183,7 @@ marked.setOptions({
   smartLists: true,
   smartypants: false
 });
-//Fix for status/running_notes.py whole text getting inserted as heading ids and messing up the headings
+//Fix for the whole text getting inserted as heading ids and messing up the headings
 marked.Renderer.prototype.heading =function(text,level,raw){
    return"<h"+level+'>'+text+"</h"+level+">\n"
 };
