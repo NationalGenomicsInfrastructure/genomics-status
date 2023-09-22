@@ -100,8 +100,12 @@ class FlowcellsHandler(SafeHandler):
 
             # Lanes were previously in the wrong order
             row.value["lane_info"] = OrderedDict(sorted(row.value["lane_info"].items()))
+            note_key = row.key
+            # NovaSeqXPlus has whole year in name
+            if "LH" in row.value["instrument"]:
+                note_key = f'{row.value["run id"].split("_")[0]}_{row.value["run id"].split("_")[-1]}'
             latest_note = LatestRunningNoteHandler.get_latest_running_note(
-                self.application, "flowcell", row.key
+                self.application, "flowcell", note_key
             )
             if latest_note:
                 row.value["Latest Workset Notes"] = latest_note
