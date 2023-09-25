@@ -91,23 +91,12 @@ app.component('v-lanes-ordered-item', {
     },
     methods: {
         fetchData(key) {
-            let key1 = this.key_array[0];
-            let key2 = this.key_array[1];
-            let key3 = this.key_array[2];
-            switch (this.key_level) {
-                case 1: {
-                    this.$root.fetchStatistics(key);
-                    break;
-                }
-                case 2: {
-                    this.$root.fetchStatistics(key1, key);
-                    break;
-                }
-                case 3: {
-                    this.$root.fetchStatistics(key1, key2, key);
-                    break;
-                }
+            let args = [];
+            for (let i = 0; i < this.key_level - 1; i++) {
+                args.push(this.key_array[i]);
             }
+            args.push(key);
+            this.$root.fetchStatistics(...args);
         },
         dumpData(key) {
             let key1 = this.key_array[0];
