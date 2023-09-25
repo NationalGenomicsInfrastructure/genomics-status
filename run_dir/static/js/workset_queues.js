@@ -175,10 +175,3 @@ function getDaysAndDateLabel(date, option){
   }
   return [number_of_days, label];
 }
-
-
-$('.dt-buttons > .buttons-copy').on('click', function () {
-  $('.expand-all').click();
-  $('#samples_copy_table').click();
-  $('.expand-all').click();
-})
