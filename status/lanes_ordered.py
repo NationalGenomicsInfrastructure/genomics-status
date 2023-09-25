@@ -23,14 +23,14 @@ class LanesOrderedDataHandler(SafeHandler):
 
         key_begin = [k for k in [key1,key2,key3] if k is not None]
         group_level = len(key_begin) + 1 
-        #import pdb; pdb.set_trace()
 
         if key_begin:
-            key_end = key_begin.append('ZZZ')
+            key_end = key_begin + ['ZZZ']
             view = self.application.projects_db.view("project/status_lanes_ordered", group_level=group_level, reduce=True)[key_begin:key_end]
         else:
             view = self.application.projects_db.view("project/status_lanes_ordered", group_level=group_level, reduce=True)
 
+        # import pdb; pdb.set_trace()
         data = {item['key'][group_level-1]: {'value': "{:0.2f}".format(item['value'])} for item in view.rows}
 
         self.set_header("Content-type", "application/json")
