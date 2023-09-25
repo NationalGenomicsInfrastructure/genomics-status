@@ -158,6 +158,8 @@ function init_listjs() {
       $('#pools_table').find('tr').find('table').css('visibility', reqText[$('.expand-all').text()][1]);
       $('.expand-all').contents().filter(function(){ return this.nodeType == 3; }).first().replaceWith(reqText[$('.expand-all').text()][0]);
     });
+    $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
+    $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 }
 
 $('body').on('click', '.group', function(event) {
