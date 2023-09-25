@@ -35,37 +35,19 @@ const vLanesOrderedMain = ({
                         switch (nr_of_keys) {
                             case 0: {
                                 for (let [my_key, value] of Object.entries(data)) {
-                                    if (my_key in this.statistics_data) {
-                                        console.log('Key ' + my_key + ' already exists, merging data')
-                                        this.statistics_data[my_key] = {
-                                            ...this.statistics_data[my_key],
-                                            ...value
-                                        };
-                                    } else {
-                                        this.statistics_data[my_key] = value;
+                                    this.statistics_data[my_key] = {
+                                        ...this.statistics_data[my_key],
+                                        ...value
                                     };
-                                };
-                                break;
-                            }
-                            case 1: {
-                                this.statistics_data[key1] = {
-                                    ...this.statistics_data[key1],
-                                    ...data
                                 }
                                 break;
                             }
-                            case 2: {
-                                this.statistics_data[key1][key2] = {
-                                    ...this.statistics_data[key1][key2],
-                                    ...data
+                            default: {
+                                let obj = this.statistics_data;
+                                for (let i = 1; i <= nr_of_keys; i++) {
+                                    obj = obj[my_arguments[i - 1]];
                                 }
-                                break;
-                            }
-                            case 3: {
-                                this.statistics_data[key1][key2][key3] = {
-                                    ...this.statistics_data[key1][key2][key3],
-                                    ...data
-                                }
+                                Object.assign(obj, data)
                                 break;
                             }
                         }
@@ -73,7 +55,6 @@ const vLanesOrderedMain = ({
                 })
                 .catch(error => {
                     console.log(error)
-                    this.error_messages.push('Unable to fetch statistics, please try again or contact a system administrator.')
                 })
         },
         fetchStatisticsDummy() {
