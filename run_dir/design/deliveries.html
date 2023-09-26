@@ -101,7 +101,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               <div class="card">
                   <div class="card-header bi-project-note-header">
                     <a class="text-decoration-none" href="#">{{ project['latest_running_note']['user'] }}</a> - <span class="todays_date">{{ form_date(project['latest_running_note']['created_at_utc']) }}</span>
-                      {% if project['latest_running_note']['categories'] %} - {%for category in project['latest_running_note']['categories'] %}<span class="fillbadgecolour"> {{ category }} </span> {% end %}{% end %}
+                      {% if project['latest_running_note']['categories'] %} - <span class="fillbadgecolour"> {{ project['latest_running_note']['categories'] }} </span> {% end %}
                   </div>
                   <div class="card-body bi-project-note-text">
                       <div class="running-note-body text-muted">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>

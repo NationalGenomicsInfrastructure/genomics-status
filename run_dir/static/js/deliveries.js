@@ -5,11 +5,10 @@ $(document).ready(function(){
         $(this).html( marked(raw_html) );
     });
     
-    $('.fillbadgecolour').each(function(){
+    $('.fillbadgecolour').html(function(){
         //from running_notes.js
-        let label = generate_category_label([$(this).html().trim()])
-        $(this).text('')
-        $(this).append(label);
+        let categories = JSON.parse($(this).text().replace(/'/g, '"'))
+        return generate_category_label(categories)
     });
     $('.card-body').addClass('trunc-note');
 });
