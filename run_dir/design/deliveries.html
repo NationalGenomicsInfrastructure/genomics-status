@@ -93,22 +93,17 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               <span class="button-reset-bioinfo-responsible fa fa-times text-muted" style="display:none;"></span>
           </small>
         </h3>
-        <div class="col-10 offset-1">
-          <dl class="dl-horizontal hide-incoming">
-            <dt>Latest running note:
-            </dt>
-            <dd>
-              <div class="card">
-                  <div class="card-header bi-project-note-header">
-                    <a class="text-decoration-none" href="#">{{ project['latest_running_note']['user'] }}</a> - <span class="todays_date">{{ form_date(project['latest_running_note']['created_at_utc']) }}</span>
-                      {% if project['latest_running_note']['categories'] %} - <span class="fillbadgecolour"> {{ project['latest_running_note']['categories'] }} </span> {% end %}
-                  </div>
-                  <div class="card-body bi-project-note-text">
-                      <div class="running-note-body text-muted">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>
-                  </div>
+        <div class="col-10 offset-1 pb-3">
+          <p class="mt-3 fw-bold">Latest running note:</p>
+          <div class="card">
+              <div class="card-header bi-project-note-header">
+                <a class="text-decoration-none" href="#">{{ project['latest_running_note']['user'] }}</a> - <span class="todays_date">{{ form_date(project['latest_running_note']['created_at_utc']) }}</span>
+                  {% if project['latest_running_note']['categories'] %} - <span class="fillbadgecolour"> {{ project['latest_running_note']['categories'] }} </span> {% end %}
               </div>
-            </dd>
-          </dl>
+              <div class="card-body bi-project-note-text">
+                  <div class="running-note-body text-muted">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>
+              </div>
+          </div>
         </div>
         <div class="col-10 offset-1">
           <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
