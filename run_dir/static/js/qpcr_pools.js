@@ -102,6 +102,11 @@ function init_listjs() {
       "paging":false,
       "info":false,
       "order": [],
+      dom: 'Bfrti',
+      buttons: [
+        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
+        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+      ],
       "drawCallback": function ( settings ) {
         var api = this.api();
         var rows = api.rows( {page:'current'} ).nodes();
@@ -153,6 +158,8 @@ function init_listjs() {
       $('#pools_table').find('tr').find('table').css('visibility', reqText[$('.expand-all').text()][1]);
       $('.expand-all').contents().filter(function(){ return this.nodeType == 3; }).first().replaceWith(reqText[$('.expand-all').text()][0]);
     });
+    $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
+    $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 }
 
 $('body').on('click', '.group', function(event) {
@@ -182,19 +189,3 @@ function getDaysAndDateLabel(date, option){
   }
    return [number_of_days, label];
 }
-
-// Copy project samples table to clipboard
-var clipboard = new Clipboard('#pools_copy_table');
-clipboard.on('success', function(e) {
-  e.clearSelection();
-  $('#pools_copy_table_btn').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
-  setTimeout(function(){
-    $('#pools_copy_table_btn').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
-  }, 2000);
-});
-
-$('#pools_copy_table_btn').on('click', function () {
-  $('.expand-all').click();
-  $('#pools_copy_table').click();
-  $('.expand-all').click();
-})
