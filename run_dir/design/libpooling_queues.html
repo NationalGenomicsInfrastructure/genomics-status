@@ -14,8 +14,6 @@ Description: Shows a table with all Library pooling queues.
       <h1><span id="page_title">Library pooling queues</span>
         <small class="text-muted">Showing all Library pooling queues</small>
       </h1>
-      <button type="button" id="libpools_copy_table_btn" class="btn btn-outline-dark"><span class="fa fa-copy"></span> Copy table</button>
-      <button type="button" id="libpools_copy_table" class="btn d-none" data-clipboard-target="#libpools_table"></button>
       <label class="btn btn-outline-dark expand-all float-right mb-2"><span class="fa fa-plus-square" aria-hidden="true"></span>Expand All</label>
       <table class="table table-hover table-striped table-bordered sortable" id="libpools_table">
         <thead>
@@ -42,7 +40,6 @@ Description: Shows a table with all Library pooling queues.
     </div>
 </div>
 
-<script src="/static/js/clipboard.min.js"></script>
 <script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
 <script src="/static/js/libpooling_queues.js?v={{ gs_globals['git_commit'] }}"></script>
 <script src="/static/js/jquery-ui.min.js"></script>

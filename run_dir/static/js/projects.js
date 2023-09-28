@@ -204,11 +204,9 @@ function load_table(status, type, columns, dates) {
     $("#project_table_body").empty();
     var size = 0;
     undefined_fields=[];
-
-    $("#copyTable").html('<hr><button type="button" id="proj_table_copy_results" class="btn btn-sm btn-outline-dark" data-clipboard-target="#project_table"><span class="fa fa-copy"></span> Copy table to clipboard</button>');
     if ($('#user_presets_dropdown .dropdown-toggle').hasClass('active')){
       //only add sorting/filtering save button if user-defined preset is loaded
-      $("#copyTable").append('<button type="submit" class="btn btn-sm btn-primary float-right" id="saveFilter">Save filtering/sorting to Preset</button>').html();
+      $("#copyTable").append('<button type="submit" class="btn btn-sm btn-primary mt-3 float-right" id="saveFilter">Save filtering/sorting to Preset</button>').html();
     }
     $.each(data, function(project_id, summary_row) {
       $.each(summary_row, function(key,value){
@@ -395,6 +393,11 @@ function init_listjs(no_items, columns) {
           "destroy": true,
           "info":false,
           "order": [[ 0, "desc" ]],
+          dom: 'Bfrti',
+          buttons: [
+            { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
+            { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+          ],
           "stateSave": true,
           "stateLoadCallback": function () {
           // read out the filter settings and apply
@@ -402,6 +405,8 @@ function init_listjs(no_items, columns) {
             }
         });
     }
+    $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
+    $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
@@ -1099,16 +1104,6 @@ function updateTableFields(order){
     $('#tHeaderListul').append(tHList);
   }
 }
-
-// Copy project table to clipboard
-var clipboard = new Clipboard('#proj_table_copy_results');
-clipboard.on('success', function(e) {
-  e.clearSelection();
-  $('#proj_table_copy_results').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
-  setTimeout(function(){
-    $('#proj_table_copy_results').removeClass('active').html('<span class="fa fa-copy"></span> Copy table to clipboard');
-  }, 2000);
-});
 
 $(document).keypress(function(e) {
   if ($("#settingsModal").hasClass('in') && (e.keycode == 13 || e.which == 13)) {

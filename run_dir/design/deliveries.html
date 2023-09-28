@@ -93,25 +93,17 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
               <span class="button-reset-bioinfo-responsible fa fa-times text-muted" style="display:none;"></span>
           </small>
         </h3>
-        <div class="col-10 offset-1">
-          <dl class="dl-horizontal hide-incoming">
-            <dt>Latest running note:
-              <br>
-              <button data-toggle="modal" data-target="#runningNotesModalDeliveries"
-                    class="btn btn-xs btn-outline-dark mt-1 runningNotesModalDeliveries_button project_runningNotes">See all</button>
-            </dt>
-            <dd>
-              <div class="card">
-                  <div class="card-header bi-project-note-header">
-                    <a class="text-decoration-none" href="#">{{ project['latest_running_note']['user'] }}</a> - <span class="todays_date">{{ form_date(project['latest_running_note']['timestamp']) }}</span>
-                      {% if project['latest_running_note']['categories'] %} - {%for category in project['latest_running_note']['categories'] %}<span class="badge fillbadgecolour"> {{ category }} </span> {% end %}{% end %}
-                  </div>
-                  <div class="card-body bi-project-note-text">
-                      <div class="running-note-body text-muted">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>
-                  </div>
+        <div class="col-10 offset-1 pb-3">
+          <p class="mt-3 fw-bold">Latest running note:</p>
+          <div class="card">
+              <div class="card-header bi-project-note-header">
+                <a class="text-decoration-none" href="#">{{ project['latest_running_note']['user'] }}</a> - <span class="todays_date">{{ form_date(project['latest_running_note']['created_at_utc']) }}</span>
+                  {% if project['latest_running_note']['categories'] %} - <span class="fillbadgecolour"> {{ project['latest_running_note']['categories'] }} </span> {% end %}
               </div>
-            </dd>
-          </dl>
+              <div class="card-body bi-project-note-text">
+                  <div class="running-note-body text-muted">{% autoescape None %} {{ project['latest_running_note']['note'] }}</div>
+              </div>
+          </div>
         </div>
         <div class="col-10 offset-1">
           <table class="table table-bordered table-bioinfo-status table-bioinfo-status-runview">
@@ -191,128 +183,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
   </div> <!-- .col-lg-6 -->
 </div>
 
-<!-- Running Notes Modal -->
-<div class="modal fade" id="runningNotesModalDeliveries" tabindex="-1" role="dialog" aria-labelledby="runningNotesModalDeliveries_title">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title" id="runningNotesModalDeliveries_title" data-project-id="">Running Notes</h3>
-        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"></span></button>
-      </div>
-      <div class="modal-body">
-
-        <!-- add running note -->
-        <form action="" method="POST" id="notes_form" role="form">
-            <div class="card text-dark info-border mb-3 mt-3">
-                <div class="card-header info-bg">Add New Running Note</div>
-                <div class="card-body">
-                  <div class="row">
-                      <div class="col-auto form-inline">
-                        <label>Choose category:</label>
-                        <div class="btn-toolbar rn-categ mt-2" data-toggle="buttons">
-                           <button class="btn btn-sm btn-inf mr-2" value="Decision" data-toggle="tooltip" title="For when an executive decision has been made">Decision <span class="fa fa-thumbs-up"></span></button>
-                           <button class="btn btn-sm btn-succe mr-2" value="Lab" data-toggle="tooltip" title="For lab-related work">Lab <span class="fa fa-flask"></span></button>
-                           <button class="btn btn-sm btn-warn mr-2" value="Bioinformatics" data-toggle="tooltip" title="For all bioinformatics work">Bioinformatics <span class="fa fa-laptop-code"></span></button>
-                           <button class="btn btn-sm btn-usr mr-2" value="User Communication" data-toggle="tooltip" title="For notes influenced by user-contact">User Communication <span class="fa fa-people-arrows"></span></button>
-                           <button class="btn btn-sm btn-dang mr-2" value="Administration" data-toggle="tooltip" title="For notes involving documentation">Administration <span class="fa fa-folder-open"></span></button>
-                           <button class="btn btn-sm btn-imp mr-2" value="Important" data-toggle="tooltip" title="For when a note needs to be highlighted">Important <span class="fa fa-exclamation-circle"></span></button>
-                           <button class="btn btn-sm btn-devi" value="Deviation" data-toggle="tooltip" title="For notes about a deviation">Deviation <span class="fa fa-frown"</span></button>
-                        </div>
-                      </div>
-                  </div>
-                    <div class="row mt-3">
-                        <div class="col-md-6">
-                            <h4>Write Running Note</h4>
-                            <textarea rows="5" class="form-control" id="new_note_text" style="height:97px;"></textarea>
-                        </div>
-                        <div class="col-md-6">
-                            <h4>Preview</h4>
-                            <div class="card" id="running_note_preview_panel">
-                                <div class="card-header">
-                                  <a class="text-decoration-none" href="#">{{ user.name }}</a> - <span class="todays_date">Date</span>
-                                  <span id="preview_category"> - Category</span>
-                                </div>
-                                <div class="card-body" id="running_note_preview_body">
-                                    <p class="text-muted"><em>Nothing to preview..</em></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                      <div class="col-md-6 text-right mt-2">
-                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help"><a>Markdown Help</a></button>
-                        <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
-                      </div>
-                    </div>
-                </div>
-            </div>
-        </form>
-
-        <!-- filter running notes -->
-        <div id="running_notes_filter" class="row" style="margin-bottom:12px;">
-          <div class="col-3 ml-2">
-            <label>Search :</label>
-            <input type="text" class="form-control" id="rn_search" />
-          </div>
-          <div class="col-2">
-            <label>Filter :</label>
-            <select class="form-select" id="rn_category">
-            <option>All</option>
-            <option>Workset</option>
-            <option>Flowcell</option>
-            <option>Decision</option>
-            <option>Bioinformatics</option>
-            <option>User Communication</option>
-            <option>Administration</option>
-            <option>Important</option>
-            <option>Deviation</option>
-            <option>Lab</option>
-            </select>
-          </div>
-        </div>
-        </div>
-
-        {% set categories={ 'Workset': 'bg-primary',
-                            'Flowcell': 'bg-success',
-                            'Meeting': 'bg-info',
-                            'Decision': 'bg-info',
-                            'User Communication': 'bg-danger',
-                            'Bioinformatics': 'bg-warning',
-                            'All': 'bg-secondary' } %}
-        <!-- display running notes -->
-        <!--on click will show only running notes for the selected project, and hide all the rest-->
-        <div id="running_notes_panels">
-          {% for project_run_lane_sample, list_of_notes in running_notes.items() %}
-            {% for timestamp, running_note in sorted(list_of_notes.items(), reverse=True) %}
-              <div class="running-notes-panel card mb-2 mx-2 {{ running_note.get('category', '').replace(' ', '') }}" id="running-note-{{ project_run_lane_sample }}" style="display:none;">
-                <div class="card-header"><a class="text-decoration-none" href="mailto:{{ running_note['email'] }}">{{ running_note['user'] }}</a> - {{ form_date(timestamp) }}
-                {% if running_note.get('category') %} -
-                  <span class="badge {{ categories.get(running_note.get('category'), 'All') }}"> {{ running_note.get('category') }}</span>
-                {% end %}
-                </div>
-                <div class="card-body">
-                  <div class="running-note-body">
-                    {{ running_note['note'] }}
-                  </div>
-                </div>
-              </div>
-            {% end %}
-          {% end %}
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Close</button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-<!-- RUNNING NOTES HELP -->
-{% include "running_notes_help.html" %}
-
 <!-- Javascript -->
 <script src="../static/js/deliveries.js" id="deliveries-js" data-user="{{ user.name }}"></script>
-<script src="/static/js/jquery.caretposition.js"></script>
-<script src="/static/js/jquery.sew.js"></script>
 <script src="../static/js/running_notes.js"></script>
 {% end %}
