@@ -13,6 +13,11 @@ $(document).ready(function() {
     $(".running-note-card > .card-body").each(function(i){
       $(this).html(make_markdown($(this).text()));
     });
+    $('.fillbadgecolour').html(function(){
+      let categories = JSON.parse($(this).text().replace(/'/g, '"'))
+      //from running_notes.js
+      return generate_category_label(categories)
+    })
 });
 
 function load_table() {

@@ -53,6 +53,7 @@ function load_table() {
             tbl_row.append($('<td>').html('<div class="card running-note-card">' +
             '<div class="card-header">'+
               note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
+              ' - '+ generate_category_label(note[ndate]['categories']) +
             '</div><div class="card-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>'));
             }
           else{

@@ -86,6 +86,7 @@ Description: Shows a table with all worksets.
                             <div class="card running-note-card">
                               <div class='card-header'>
                                 <a class="text-decoration-none" href='mailto:{{ workset_notes[latest_workset_note_key]["email"].encode("ascii","ignore")}}'>{{ workset_notes[latest_workset_note_key]["user"].encode("utf-8")}}</a>  -  {{ form_date(latest_workset_note_key) }}
+                                {% if workset_notes[latest_workset_note_key]['categories'] %} - <span class="fillbadgecolour"> {{ workset_notes[latest_workset_note_key]['categories'] }} </span> {% end %}
                               </div>
                               <div class='card-body' style='white-space: pre-line'>
                                 {{workset_notes[latest_workset_note_key]['note']}}
@@ -130,4 +131,5 @@ Description: Shows a table with all worksets.
 <!-- #page_content -->
 <script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
 <script src="/static/js/worksets.js?v={{ gs_globals['git_commit'] }}" id="worksets-js" data-worksets="{{worksets}}"></script>
+<script src="/static/js/running_notes.js"></script>
 {% end %}
