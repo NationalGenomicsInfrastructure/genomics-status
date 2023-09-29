@@ -76,27 +76,27 @@ function load_table() {
             });
             return to_return;
           }));
-          tbl_row.append($('<td>').html(function(){
-            var to_return = '';
-            $.each( pools['projects'], function(pid, pobj){
-              let note = pobj['latest_running_note'];
-              let ndate = undefined;
-              for (date_key in note) { ndate = date_key; break; }
-              notedate = new Date(ndate);
-              to_return = to_return + '<div class="card running-note-card">' +
-              '<div class="card-header">'+
-              note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
-              ' - '+ generate_category_label(note[ndate]['categories']) +
-            '</div><div class="card-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>';
-            });
-            return to_return;
-          }));
           //get average wait time for all samples in a pool.
           avg_wait_calc = avg_wait_calc/pools['samples'].length;
           var daysAndLabel = getDaysAndDateLabel(avg_wait_calc, 'label');
           tbl_row.append($('<td>').html('<span class="alert alert-'+daysAndLabel[1]+' p-1">'+(avg_wait_calc).toFixed(1)+'</span>'));
           $("#pools_table_body").append(tbl_row);
         })
+        tbl_row.append($('<td>').html(function(){
+          var to_return = '';
+          $.each( pools['projects'], function(pid, pobj){
+            let note = pobj['latest_running_note'];
+            let ndate = undefined;
+            for (date_key in note) { ndate = date_key; break; }
+            notedate = new Date(ndate);
+            to_return = to_return + '<div class="card running-note-card">' +
+            '<div class="card-header">'+
+            note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
+            ' - '+ generate_category_label(note[ndate]['categories']) +
+          '</div><div class="card-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>';
+          });
+          return to_return;
+        }));
       }
     })
     init_listjs();

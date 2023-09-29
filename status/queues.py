@@ -170,9 +170,10 @@ class qPCRPoolsDataHandler(SafeHandler):
                                 self.application, "project", project
                             )
                         )
-                        pools[method][container]["projects"][project] = {'name': proj_doc[
-                            "project_name"
-                        ], "latest_running_note": latest_running_note}
+                        pools[method][container]["projects"][project] = {
+                            "name": proj_doc["project_name"],
+                            "latest_running_note": latest_running_note,
+                        }
                 else:
                     if (
                         method == "LibraryValidation"
@@ -207,7 +208,12 @@ class qPCRPoolsDataHandler(SafeHandler):
                         "sequencing_platforms": [sequencing_platform],
                         "flowcells": [flowcell],
                         "proj_queue_dates": [queued_date],
-                        "projects": {project: {'name': proj_doc["project_name"], "latest_running_note": latest_running_note}},
+                        "projects": {
+                            project: {
+                                "name": proj_doc["project_name"],
+                                "latest_running_note": latest_running_note,
+                            }
+                        },
                     }
 
         self.set_header("Content-type", "application/json")
