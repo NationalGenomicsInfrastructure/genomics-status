@@ -27,6 +27,7 @@ Description: Shows a table with all qPCR pools.
             <th class="sort">Flowcell</th>
             <th class="sort">Project Queue Date</th>
             <th class="sort">Avg. Waiting (in days)</th>
+            <th class="sort">Latest Running Notes</th>
           </tr>
         </thead>
         <tfoot>
@@ -39,6 +40,7 @@ Description: Shows a table with all qPCR pools.
             <th class="sort">Flowcell</th>
             <th class="sort">Project Queue Date</th>
             <th class="sort">Avg. Waiting (in days)</th>
+            <th class="sort">Latest Running Notes</th>
           </tr>
         </tfoot>
         <tbody class="list" id="pools_table_body">
@@ -50,5 +52,6 @@ Description: Shows a table with all qPCR pools.
 <script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
 <script src="/static/js/qpcr_pools.js?v={{ gs_globals['git_commit'] }}"></script>
 <script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/js/running_notes.js"></script>
 
 {% end %}
