@@ -293,6 +293,7 @@ function load_table(status, type, columns, dates) {
         latest_note.html('<div class="card">' +
             '<div class="card-header">'+
               note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
+              ' - '+ generate_category_label(note[ndate]['categories']) +
             '</div><div class="card-body trunc-note">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
 
       }

@@ -1243,3 +1243,8 @@ thead th.sort::before{
   padding: 1px;
   margin: 1px;
 }
+
+.fillbadgecolour {
+  top: -.1em;
+  position: relative;
+}

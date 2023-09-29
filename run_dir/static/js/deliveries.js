@@ -4,27 +4,14 @@ $(document).ready(function(){
         var raw_html = $(this).html();
         $(this).html( marked(raw_html) );
     });
-    $('.fillbadgecolour').each(function(){
-        $(this).addClass(categories[$(this).html().trim()]);
+    
+    $('.fillbadgecolour').html(function(){
+        //from running_notes.js
+        let categories = JSON.parse($(this).text().replace(/'/g, '"'))
+        return generate_category_label(categories)
     });
     $('.card-body').addClass('trunc-note');
 });
-
-$('.deliveries-page').on('click', '.runningNotesModalDeliveries_button', function(e){
-    var button = $(this);
-    var project_id = $(button).parents('div.delivery').attr('id');
-    project_id = project_id.replace('bioinfo-delivery-project-', '');
-    // hopefully this will replace the project value in the running_notes.js
-    project = project_id;
-    var project_notes = $('.running-notes-panel[id^=running-note-'+project_id+']').show();
-    $('#runningNotesModalDeliveries_title').text('Running Notes for project '+project_id)
-            .attr('data-project-id', project_id); // add project_id to hide/show projects on click 'See All'
-});
-
-$('#runningNotesModalDeliveries').on('hidden.bs.modal', function (e) {
-  var running_notes = $('.running-notes-panel').hide();
-});
-
 
 // expand or collapse table
 $('.bioinfo-expand').click(function(e){
@@ -254,90 +241,4 @@ $('.button-save-bioinfo-responsible').click(function() {
     $(this).parent().find('.button-edit-bioinfo-responsible').show();
     $(this).parent().find('.button-save-bioinfo-responsible').hide();
     $(this).parent().find('.button-reset-bioinfo-responsible').hide();
-});
-
-var categories={ 'Workset': 'bg-primary',
-                 'Flowcell': 'bg-success',
-                 'Decision': 'bg-info',
-                 'Lab': 'bg-success',
-                 'Bioinformatics': 'bg-warning',
-                 'User Communication': 'bg-usr',
-                 'Administration': 'bg-danger',
-                 'Important': 'bg-imp',
-                 'Deviation': 'bg-devi',
-                 'Invoicing': 'bg-inv' }
-
-// not using running_notes.js anymore
-// Insert new running note and reload the running notes table
-$("#notes_form").submit( function(e) {
-    e.preventDefault();
-    // should be set when clicking the button 'See All'
-    var project_id = $('#runningNotesModalDeliveries_title').attr('data-project-id');
-    var text = $('#new_note_text').val().trim();
-    var category = $('.rn-categ button.active').text().trim();
-    if (text.length == 0) {
-        alert("Error: No running note entered.");
-        return false;
-    }
-    if (!$('.rn-categ button.active').text()) {
-       if (!confirm("Are you sure that you want to submit without choosing a category?")) {
-          return false;
-       }
-    }
-    note_url = '/api/v1/running_notes/' + project_id;
-    $('#save_note_button').addClass('disabled').text('Submitting..');
-    $.ajax({
-      type: 'POST',
-      method: 'POST',
-      url: note_url,
-      dataType: 'json',
-      data: {"note": text, "category": category},
-      error: function(xhr, textStatus, errorThrown) {
-        alert('Error: '+xhr['responseText']+' ('+errorThrown+')');
-        $('#save_note_button').removeClass('disabled').text('Submit Running Note');
-        console.log(xhr);
-        console.log(textStatus);
-        console.log(errorThrown);
-      },
-      success: function(data, textStatus, xhr) {
-        // Manually check whether the running note has saved - LIMS API always returns success
-        $.getJSON(note_url, function(newdata) {
-          var newNote = false;
-          $.each(newdata, function(date, note) {
-            if(data['note'] == note['note']){
-              newNote = make_running_note(date, note); // defined in running_notes.js
-            }
-          });
-          if(newNote){
-            // Clear the text box
-            $('#new_note_text').val('');
-            $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
-            $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
-            // Clear the 'no running notes found' box if it's there
-            if($('#running_notes_panels').html() == '<div class="well">No running notes found.</div>'){
-              $('#running_notes_panels .well').slideUp(function(){ $(this).remove(); });
-            }
-            // Create a new running note and slide it in..
-            var now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-            var category_span = " <span class='badge " + categories[category] + "'>"+category+"</span>";
-            $('<div class="running-notes-panel card mb-2 mx-2" id="running-note-'+project_id+'">\
-                <div class="card-header bg-success-table">'+
-                  '<a class="text-decoration-none" href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
-                  now + ' - ' + category_span +'</div>\
-                  <div class="card-body">'+make_markdown(data['note'])+'</div>\
-                </div>').hide().prependTo('#running_notes_panels').slideDown();
-            // Enable the submit button again
-            $('#save_note_button').removeClass('disabled').text('Submit Running Note');
-            // add latest running note
-            var user = $('#deliveries-js').data('user');
-            $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note-header').text(now + ' - ' + category + ' - ' + user);
-            $('#bioinfo-delivery-project-'+project_id).find('div.bi-project-note-text').html(marked(data['note']));
-          } else {
-            alert('Error - LIMS did not save your running note.');
-            // Enable the submit button again
-            $('#save_note_button').removeClass('disabled').text('Submit Running Note');
-          }
-        });
-      }
-    });
 });

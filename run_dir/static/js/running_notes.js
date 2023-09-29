@@ -1,5 +1,4 @@
 $(function(){
-
   if(typeof project!=='undefined'){
       $.getJSON('/api/v1/latest_sticky_run_note/'+project, function (data) { 
         //latest_sticky_note
@@ -203,7 +202,7 @@ function count_cards(){
             }
         }
     });
-    $('.btn_count').append('All <span class="badge bg-secondary">'+all+'</span>');
+    $('.btn_count').append('<span class="badge bg-secondary">'+all+'</span> All');
     $('#rn_category').next().find('.dropdown-item').each(function(){
         var label = $.trim($(this).text())
         cat_cards['All'] = all;
