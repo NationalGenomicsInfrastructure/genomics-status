@@ -49,7 +49,7 @@ const vLanesOrderedMain = ({
                                 for (let i = 1; i <= nr_of_keys; i++) {
                                     obj = obj[my_arguments[i - 1]];
                                 }
-                                Object.assign(obj, data)
+                                Object.assign(obj, data);
                                 break;
                             }
                         };
@@ -59,11 +59,12 @@ const vLanesOrderedMain = ({
                     console.log(error)
                 })
         },
-        setDefaults() {
+        async setDefaults() {
             this.statistics_data = {};
-            this.fetchStatistics();
-            this.fetchStatistics('ongoing');
-            this.fetchStatistics('pending');
+            /* axios.get returns a promise, so await will make sure these are run sequentially */
+            await this.fetchStatistics();
+            await this.fetchStatistics('ongoing');
+            await this.fetchStatistics('pending');
         },
     }
 })
@@ -78,13 +79,30 @@ app.component('v-lanes-ordered', {
     template:
         /* Using the html comment tag can enable html syntax highlighting in editors */
         /*html*/`
-        <h2>Lanes Ordered</h3>
-        <div class="row">
-        <div class="col-6">
-            <v-lanes-ordered-item :key_array="[]" :current_key="" :key_level="1" :local_data="this.$root.statistics_data"> </v-lanes-ordered-item>
+        <h1>Lanes Ordered</h1>
+        <div class="row mb-3">
+            <p>
+                Showing number of lanes ordered per status, sequencing platform and flowcell type of corresponding projects. <br>
+                The data is fetched from statusdb projects database which is mirrored from the LIMS.
+            </p>
+            <h5>Instructions:</h5>
+            <p>
+                <ul>
+                    <li>Click on the plus signs or the category label to expand a category.</li>
+                    <li>Click on the minus sign to collapse a category.</li>                
+                    <li>Click on a project to go to the projects' page.</li>
+                    <li>Click on the label of an expanded category to display it in the graph.</li> 
+                </ul>
+                <strong>Note:</strong> The ongoing category includes lanes already sequenced since the status 'ongoing' refers to the status of the project.
+            </p>
         </div>
-        <div class="col-6">
-          <v-lanes-ordered-chart :key_array="this.$root.in_focus"></v-lanes-ordered-chart>
+        <div class="row">
+            <div class="col-6 mb-5">
+                <v-lanes-ordered-item :key_array="[]" :current_key="" :key_level="1" :local_data="this.$root.statistics_data"> </v-lanes-ordered-item>
+            </div>
+            <div class="col-6">
+                <v-lanes-ordered-chart :key_array="this.$root.in_focus"></v-lanes-ordered-chart>
+            </div>
         </div>
         `
 });
@@ -211,7 +229,7 @@ app.component('v-lanes-ordered-chart', {
         },
         in_focus_pretty() {
             if (this.key_array[0] === null) {
-                return 'Default';
+                return 'Default (ongoing, pending and reception control)';
             }
             return this.key_array.filter(key => key !== null).join(' > ');
         }
@@ -253,7 +271,7 @@ app.component('v-lanes-ordered-chart', {
         });
     },
     // data-dummy is a hack because Vue doesn't update the canvas element otherwise
-    template: '<h3>Showing: {{this.in_focus_pretty}}</h3><div :data-dummy="local_data_values"><canvas ref="canvas"></canvas></div>'
+    template: '<h2>Showing: {{this.in_focus_pretty}}</h2><div :data-dummy="local_data_values"><canvas ref="canvas"></canvas></div>'
 });
 
 app.mount('#lanes_ordered_main');
