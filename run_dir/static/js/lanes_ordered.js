@@ -1,14 +1,14 @@
 const vLanesOrderedMain = ({
     data() {
         return {
-            fetched_keys: {},
-            statistics_data: {}
+            statistics_data: {},
+            in_focus: [null, null, null]
         }
     },
     methods: {
         fetchStatistics(key1, key2, key3) {
             let url = '/api/v1/lanes_ordered'
-            /* Iterate over the key arguments and abort at first null occurence */
+            /* Build the url, where only defined keys should be passed */
             let my_arguments = [key1, key2, key3];
             for (var i = 0; i < my_arguments.length; i++) {
                 let my_key = my_arguments[i];
@@ -33,6 +33,7 @@ const vLanesOrderedMain = ({
                     let data = response.data
                     if (data !== null) {
                         switch (nr_of_keys) {
+                            /* If no keys are defined, just replace the data */
                             case 0: {
                                 for (let [my_key, value] of Object.entries(data)) {
                                     this.statistics_data[my_key] = {
@@ -42,6 +43,7 @@ const vLanesOrderedMain = ({
                                 }
                                 break;
                             }
+                            /* If one or more keys are defined, merge the data */
                             default: {
                                 let obj = this.statistics_data;
                                 for (let i = 1; i <= nr_of_keys; i++) {
@@ -50,14 +52,15 @@ const vLanesOrderedMain = ({
                                 Object.assign(obj, data)
                                 break;
                             }
-                        }
+                        };
                     }
                 })
                 .catch(error => {
                     console.log(error)
                 })
         },
-        fetchStatisticsDummy() {
+        setDefaults() {
+            this.statistics_data = {};
             this.fetchStatistics();
             this.fetchStatistics('ongoing');
             this.fetchStatistics('pending');
@@ -70,13 +73,19 @@ const app = Vue.createApp(vLanesOrderedMain)
 app.component('v-lanes-ordered', {
     /* Lanes Ordered */
     mounted: function() {
-        this.$root.fetchStatisticsDummy();
+        this.$root.setDefaults();
     },
     template:
         /* Using the html comment tag can enable html syntax highlighting in editors */
         /*html*/`
         <h2>Lanes Ordered</h3>
-        <v-lanes-ordered-item :key_array="[]" :current_key="" :key_level="1" :local_data="this.$root.statistics_data"> </v-lanes-ordered-item>
+        <div class="row">
+        <div class="col-6">
+            <v-lanes-ordered-item :key_array="[]" :current_key="" :key_level="1" :local_data="this.$root.statistics_data"> </v-lanes-ordered-item>
+        </div>
+        <div class="col-6">
+          <v-lanes-ordered-chart :key_array="this.$root.in_focus"></v-lanes-ordered-chart>
+        </div>
         `
 });
 
@@ -84,19 +93,19 @@ app.component('v-lanes-ordered', {
 app.component('v-lanes-ordered-item', {
     props: ['key_array', 'current_key', 'key_level', 'local_data'],
     computed: {
-        /* local data keys without the key 'value' */
+        /* local data keys without the key 'value' sorted with highext value first*/
         local_data_keys() {
-            return Object.keys(this.local_data).filter(key => key !== 'value')
+            return Object.keys(this.local_data)
+                .filter(key => key !== 'value')
+                .sort((a, b) => this.local_data[b]['value'] - this.local_data[a]['value']);
         }
     },
     methods: {
-        fetchData(key) {
-            let args = [];
-            for (let i = 0; i < this.key_level - 1; i++) {
-                args.push(this.key_array[i]);
-            }
-            args.push(key);
-            this.$root.fetchStatistics(...args);
+        collapse(key) {
+            /* Change focus to the parent */
+            this.$root.in_focus = this.key_array.slice(0, this.key_level - 1);
+            /* Delete the children from the data tree */
+            this.dumpData(key);
         },
         dumpData(key) {
             let key1 = this.key_array[0];
@@ -113,22 +122,30 @@ app.component('v-lanes-ordered-item', {
             }
             switch (this.key_level) {
                 case 1: {
-                    console.log('Dumping data for key: ' + key)
                     // Delete everything except 'value' from statistics_data
                     dumpDataHelper(this.$root.statistics_data[key])
                     break;
                 }
                 case 2: {
-                    console.log('Dumping data for key1: ' + key1 + ' and ' + key)
                     dumpDataHelper(this.$root.statistics_data[key1][key])
                     break;
                 }
                 case 3: {
-                    console.log('Dumping data for key1: ' + key1 + ' and key2: ' + key2 + ' and ' + key)
                     dumpDataHelper(this.$root.statistics_data[key1][key2][key])
                     break;
                 }
             }
+        },
+        fetchData(key) {
+            let args = this.key_array.slice(0, this.key_level - 1);
+            args.push(key);
+            this.$root.fetchStatistics(...args);
+            this.$root.in_focus = args;
+        },
+        focus_on(key) {
+            let args = this.key_array.slice(0, this.key_level);
+            args.push(key);
+            this.$root.in_focus = args;
         },
         has_leaves(category) {
             return (Object.keys(this.local_data[category]).length > 1) && (this.key_level < 5)
@@ -139,25 +156,104 @@ app.component('v-lanes-ordered-item', {
         <template v-for="category in this.local_data_keys" :key="category">
             <div :class="has_leaves(category) ? 'ml-4 mb-4' : 'ml-4'">
                 <h3 class="mb-2">
-                <v-template v-if="has_leaves(category)">
-                    <a href="#" @click="dumpData(category)">
-                    <i class="fas fa-xs fa-minus mr-2"></i>{{category}}
-                    </a>
-                </v-template>
-                <v-template v-else>
-                    <a href="#" @click="fetchData(category)">
-                    <i class="fas fa-xs fa-plus mr-2"></i>{{category}}
-                    </a>
-                </v-template>
-                <span class="ml-3">{{this.local_data[category]['value']}}</span>
+                    <v-template v-if="key_level == 4">
+                        <a :href="'project/' + category">{{category}}</a> {{this.local_data[category]['value']}}
+                    </v-template>
+                    <v-template v-else>
+                        <v-template v-if="has_leaves(category)">
+                            <!-- If the category is expanded, show a collapse button -->
+                            <a href="#" @click="collapse(category)">
+                                <i class="fas fa-xs fa-minus mr-2"></i>
+                            </a>
+                            <!-- Clicking the category will only change focus of graph-->
+                            <a href="#" @click="focus_on(category)">
+                                {{category}}
+                            </a>
+                        </v-template>
+                        <v-template v-else>
+                            <a href="#" @click="fetchData(category)">
+                                <i class="fas fa-xs fa-plus mr-2"></i>{{category}}
+                            </a>
+                        </v-template>
+                    <span class="ml-3">{{this.local_data[category]['value']}}</span>
+                    </v-template>
                 </h3>
-                <template v-if="(Object.keys(this.local_data[category]).length > 1) && (key_level < 6)">
+                <template v-if="(Object.keys(this.local_data[category]).length > 1) && (key_level < 5)">
                     <v-lanes-ordered-item :key_array="this.key_array.concat(category)" :current_key="category" :key_level="key_level+1" :local_data="local_data[category]"></v-lanes-ordered-item>
                 </template>
             </div>
         </template>
-
         `
 })
+
+
+app.component('v-lanes-ordered-chart', {
+    props: ['key_array'],
+    computed: {
+        local_data() {
+            let value = this.$root.statistics_data;
+            for (const key of this.key_array) {
+                if (key === null) {
+                    break;
+                }
+                value = value[key];
+            }
+            return value;
+        },
+        /* local data keys without the key 'value' sorted with highext value first */
+        local_data_keys() {
+            return Object.keys(this.local_data)
+                .filter(key => key !== 'value')
+                .sort((a, b) => this.local_data[b]['value'] - this.local_data[a]['value']);
+        },
+        local_data_values() {
+            return this.local_data_keys.map(key => this.local_data[key].value);
+        },
+        in_focus_pretty() {
+            if (this.key_array[0] === null) {
+                return 'Default';
+            }
+            return this.key_array.filter(key => key !== null).join(' > ');
+        }
+    },
+    updated() {
+        if (this.chart) {
+            this.chart.destroy();
+        }
+        ctx = this.$refs.canvas.getContext('2d');
+        this.chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: this.local_data_keys,
+                datasets: [{
+                    label: 'Lanes Ordered',
+                    data: this.local_data_values,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 206, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(153, 102, 255, 0.5)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            const label = data.labels[tooltipItem.index] || '';
+                            const value = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+                            return label + ': ' + value;
+                        }
+                    }
+                }
+            }
+        });
+    },
+    // data-dummy is a hack because Vue doesn't update the canvas element otherwise
+    template: '<h3>Showing: {{this.in_focus_pretty}}</h3><div :data-dummy="local_data_values"><canvas ref="canvas"></canvas></div>'
+});
 
 app.mount('#lanes_ordered_main');
