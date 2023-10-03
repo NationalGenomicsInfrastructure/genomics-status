@@ -483,9 +483,6 @@ class ProjectsBaseDataHandler(SafeHandler):
             keys=list(final_projects.keys()),
         )
         for row in notes:
-            import pdb
-
-            pdb.set_trace()
             final_projects[row.key]["latest_running_note"] = json.dumps(
                 {row.value["created_at_utc"]: row.value}
             )
