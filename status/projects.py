@@ -148,14 +148,6 @@ class ProjectsBaseDataHandler(SafeHandler):
             )
             row.value["pending_reviews"] = links
 
-        # Find the latest running note, return it as a separate field
-        # TODO: Refactor to leverage new view and try get all running notes in a single call
-        latest_running_note = LatestRunningNoteHandler.get_latest_running_note(
-            self.application, "project", row.key[1]
-        )
-        if latest_running_note:
-            row.value["latest_running_note"] = json.dumps(latest_running_note)
-
         ord_det = row.value.get("order_details", {})
         # Try to fetch a name for the contact field, not just an e-mail
         if "contact" in row.value and row.value.get("contact", ""):
@@ -483,6 +475,17 @@ class ProjectsBaseDataHandler(SafeHandler):
                         final_projects[proj_id].get(end_date),
                     )
 
+        # Get Latest running note
+        notes = self.application.running_notes_db.view(
+            "latest_note_previews/project",
+            reduce=True,
+            group=True,
+            keys=list(final_projects.keys()),
+        )
+        for row in notes:
+            final_projects[row.key]["latest_running_note"] = json.dumps(
+                {row.value["created_at_utc"]: row.value}
+            )
         return final_projects
 
     def list_project_fields(self, undefined=False, project_list="all"):
