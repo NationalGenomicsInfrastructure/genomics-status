@@ -103,6 +103,7 @@ function init_datatable() {
       "info":false,
       "order": [[ 0, "asc" ]],
       dom: 'Bfrti',
+      colReorder: true,
       buttons: [
         { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
         { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
