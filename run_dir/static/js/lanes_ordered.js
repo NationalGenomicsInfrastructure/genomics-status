@@ -95,6 +95,9 @@ app.component('v-lanes-ordered', {
                 </ul>
                 <strong>Note:</strong> The ongoing category includes lanes already sequenced since the status 'ongoing' refers to the status of the project.
             </p>
+            <div class="my-3">
+                <button class="btn btn-primary btn-lg" @click="this.$root.setDefaults()">Reset Defaults</button>
+            </div>
         </div>
         <div class="row">
             <div class="col-6 mb-5">
@@ -271,7 +274,11 @@ app.component('v-lanes-ordered-chart', {
         });
     },
     // data-dummy is a hack because Vue doesn't update the canvas element otherwise
-    template: '<h2>Showing: {{this.in_focus_pretty}}</h2><div :data-dummy="local_data_values"><canvas ref="canvas"></canvas></div>'
+    template: /*html*/`
+        <h2>Showing: {{this.in_focus_pretty}}</h2>
+        <div :data-dummy="local_data_values">
+            <canvas ref="canvas"></canvas>
+        </div>`
 });
 
 app.mount('#lanes_ordered_main');
