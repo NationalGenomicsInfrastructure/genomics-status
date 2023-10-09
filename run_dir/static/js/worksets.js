@@ -10,7 +10,8 @@ var worksets_page_type = $('#worksets-js').attr('data-worksets');
 $(document).ready(function() {
     // Load the data
     load_table();
-    format_running_note();
+    //From running_note.js
+    format_latest_running_note();
 });
 
 function load_table() {
@@ -28,17 +29,7 @@ function load_table() {
         }
     init_listjs();
 }
-function format_running_note(){
-  //Formatting for Running note card body
-  $(".running-note-card > .card-body").each(function(i){
-      $(this).html(make_markdown($(this).text()));
-  });
-  $('.fillbadgecolour').html(function(){
-      let categories = JSON.parse($(this).text().replace(/'/g, '"'))
-      //from running_notes.js
-      return generate_category_label(categories)
-  })
-}
+
 // Initialize sorting and searching javascript plugin
 function init_listjs() {
     // Setup - add a text input to each footer cell
@@ -60,7 +51,8 @@ function init_listjs() {
     });
      //Keep markdown format when dragging around the columns
      table.on( 'column-reorder', function() {
-      format_running_note();
+      //from running_note.js
+      format_latest_running_note();
     });
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
