@@ -25,15 +25,6 @@ $(document).ready(function() {
     e.preventDefault();
   });
 
-  // Copy project samples table to clipboard
-  var clipboard = new Clipboard('#proj_samples_copy_table');
-  clipboard.on('success', function(e) {
-    e.clearSelection();
-    $('#proj_samples_copy_table').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
-    setTimeout(function(){
-      $('#proj_samples_copy_table').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
-    }, 2000);
-  });
   // Copy email address to clipboard and change the tooltip
   var email_clipboard = new Clipboard('.email_link a');
   email_clipboard.on('success', function(e) {
@@ -110,7 +101,12 @@ function init_datatable() {
       "paging":false,
       "destroy": true,
       "info":false,
-      "order": [[ 0, "asc" ]]
+      "order": [[ 0, "asc" ]],
+      dom: 'Bfrti',
+      buttons: [
+        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
+        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+      ]
     });
   //Add the bootstrap classes to the search thingy
   $('div.dataTables_filter input').addClass('form-control search search-query');
@@ -128,6 +124,8 @@ function init_datatable() {
           .draw();
       });
   });
+  $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
+  $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 }
 
 ////////////////////////////////////
@@ -467,9 +465,6 @@ function load_all_udfs(){
       }
       else if (prettify(key) == 'latest_sticky_note'){
         // do nothing in the future: if we don't catch this the old projdb value will overwrite the run_note_db value
-        let sticky_run_note = JSON.parse(value)
-        let date = Object.keys(sticky_run_note)[0]
-        $('#latest_sticky_note').html(make_running_note(date, sticky_run_note[date], true, 'old'))
       }
 
       // Create the links for review and display the banner

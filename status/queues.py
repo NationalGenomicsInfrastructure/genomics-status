@@ -5,6 +5,8 @@ import psycopg2
 from dateutil.parser import parse
 import ast
 
+from status.running_notes import LatestRunningNoteHandler
+
 # Control names can be found in the table controltype in the lims backend. Will continue to check against this list for now, should
 # consider incorporating a check against this table directly into the queries in the future
 control_names = [
@@ -81,6 +83,8 @@ class qPCRPoolsDataHandler(SafeHandler):
         queues["NovaSeq"] = query.format(1666)
         # Queue = 2102, stepid in the query
         queues["NextSeq"] = query.format(2102)
+        # Queue = 3055, stepid in the query
+        queues["NovaSeqXPlus"] = query.format(3055)
         # Queue 41, but query is slightly different to use protocolid for Library Validation QC which is 8 and, also to exclude the controls
         queues["LibraryValidation"] = (
             "select  st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid, e.udfvalue "
@@ -161,9 +165,15 @@ class qPCRPoolsDataHandler(SafeHandler):
                         if flowcell not in pools[method][container]["flowcells"]:
                             pools[method][container]["flowcells"].append(flowcell)
                         pools[method][container]["proj_queue_dates"].append(queued_date)
-                        pools[method][container]["projects"][project] = proj_doc[
-                            "project_name"
-                        ]
+                        latest_running_note = (
+                            LatestRunningNoteHandler.get_latest_running_note(
+                                self.application, "project", project
+                            )
+                        )
+                        pools[method][container]["projects"][project] = {
+                            "name": proj_doc["project_name"],
+                            "latest_running_note": latest_running_note,
+                        }
                 else:
                     if (
                         method == "LibraryValidation"
@@ -185,6 +195,11 @@ class qPCRPoolsDataHandler(SafeHandler):
                         queued_date = proj_doc.get("project_summary", {}).get(
                             "queued", ""
                         )
+                    latest_running_note = (
+                        LatestRunningNoteHandler.get_latest_running_note(
+                            self.application, "project", project
+                        )
+                    )
                     pools[method][container] = {
                         "samples": [
                             {"name": record[1], "well": value, "queue_time": queue_time}
@@ -193,7 +208,12 @@ class qPCRPoolsDataHandler(SafeHandler):
                         "sequencing_platforms": [sequencing_platform],
                         "flowcells": [flowcell],
                         "proj_queue_dates": [queued_date],
-                        "projects": {project: proj_doc["project_name"]},
+                        "projects": {
+                            project: {
+                                "name": proj_doc["project_name"],
+                                "latest_running_note": latest_running_note,
+                            }
+                        },
                     }
 
         self.set_header("Content-type", "application/json")
@@ -269,6 +289,8 @@ class SequencingQueuesDataHandler(SafeHandler):
         queues["NovaSeq: Make Bulk Pool for Standard"] = "1655"
         # Novaseq Step 10: Make Bulk Pool for Novaseq Xp
         queues["NovaSeq : Make Bulk Pool for Xp"] = "1656"
+        # NovaSeqXPlus Step 8:  Load to Flowcell (NovaSeqXPlus) v1.0
+        queues["NovaSeqXPlus : Load to Flowcell (NovaSeqXPlus) v1.0"] = "3058"
 
         methods = queues.keys()
         projects = self.application.projects_db.view("project/project_id")
@@ -530,8 +552,10 @@ class WorksetQueuesDataHandler(SafeHandler):
                         queued_date = proj_doc.get("project_summary", {}).get(
                             "queued", "NA"
                         )
-                    latest_running_note = self._get_latest_running_note(
-                        proj_doc["details"].get("running_notes")
+                    latest_running_note = (
+                        LatestRunningNoteHandler.get_latest_running_note(
+                            self.application, "project", project
+                        )
                     )
                     pools[method][project] = {
                         "samples": [(record[1], requeued)],
@@ -545,13 +569,6 @@ class WorksetQueuesDataHandler(SafeHandler):
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(pools))
-
-    def _get_latest_running_note(self, val):
-        if not val:
-            return ""
-        notes = json.loads(val)
-        latest_note = {max(notes.keys()): notes[max(notes.keys())]}
-        return latest_note
 
 
 class WorksetQueuesHandler(SafeHandler):

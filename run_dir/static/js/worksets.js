@@ -10,9 +10,8 @@ var worksets_page_type = $('#worksets-js').attr('data-worksets');
 $(document).ready(function() {
     // Load the data
     load_table();
-    $(".running-note-card > .card-body").each(function(i){
-      $(this).html(make_markdown($(this).text()));
-    });
+    //From running_note.js
+    format_latest_running_note();
 });
 
 function load_table() {
@@ -42,7 +41,18 @@ function init_listjs() {
     var table = $('#workset_table').DataTable({
       "paging":false,
       "info":false,
-      "order": [[ 0, "desc" ]]
+      "order": [[ 0, "desc" ]],
+      dom: 'Bfrti',
+      colReorder: true,
+      buttons: [
+        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
+        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+      ]
+    });
+     //Keep markdown format when dragging around the columns
+     table.on( 'column-reorder', function() {
+      //from running_note.js
+      format_latest_running_note();
     });
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
@@ -60,34 +70,10 @@ function init_listjs() {
             .draw();
         });
     });
-    // Copy workset table to clipboard
-    var clipboard = new Clipboard('#ws_copy_table');
-    clipboard.on('success', function(e) {
-      e.clearSelection();
-      $('#ws_copy_table').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
-      setTimeout(function(){
-      $('#ws_copy_table').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
-      }, 2000);
-    });
+    $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
+    $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 }
 
-function load_workset_notes(wait) {
-  // Clear previously loaded notes, if so
-  $("#workset_notes_panels").empty();
-  $.getJSON("/api/v1/workset_notes/" + worksets_page_type, function(data) {
-    $.each(data, function(date, note) {
-        noteText = make_markdown(note['note']);
-      $('#workset_notes_panels').append('<div class="panel panel-default">' +
-          '<div class="panel-heading">'+
-            '<a href="mailto:' + note['email'] + '">'+note['user']+'</a> - '+
-            date.toDateString() + ', ' + date.toLocaleTimeString(date)+
-          '</div><div class="panel-body">'+noteText+'</div></div>');
-    });
-  }).fail(function( jqxhr, textStatus, error ) {
-      var err = textStatus + ", " + error;
-      console.log( "Workset notes request failed: " + err );
-  });
-}
 var sumGroups = {};
 $(".tabbable").on("click", '[role="tab"]', function() {
   if($(this).attr('href')=='#tab_run_worksets'){

@@ -3,7 +3,6 @@ CouchDB==1.1
 ecdsa>=0.13
 genologics @ https://github.com/SciLifeLab/genologics/archive/master.zip
 httplib2>=0.10.3
-logbook
 cffi
 matplotlib>=2.0.0
 markdown

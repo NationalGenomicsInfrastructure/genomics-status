@@ -134,14 +134,22 @@
                     <td class="prep_kit">{{ ont_flowcells[onefc]["prep_kit"] }}</td>
                     <td class="barcoding_kit">{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
                     <td class="flow_cell_type">{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
-
                     <td class="flow_cell_qc text-center">
+                        {# First-hand: Try to fetch the QC value from the automatically collected instrument logs #}
                         {% try %}
-                            {{ ont_flowcells[onefc]["lims"]["pore_count_history"][0]["num_pores"] }} 
-                        {% except %}
+                            {% set flowcell_history = ont_flowcells[onefc]["pore_count_history"] %}
+                            {% set flowcell_history_qc = [e for e in flowcell_history if e["type"] == "qc"] %}
+                            {{ flowcell_history_qc[0]["num_pores"] }}
+                        {% except (KeyError, IndexError, TypeError) %}
+                            {# Second-hand: Try to fetch the QC value from the manually entered LIMS field #}
                             {% try %}
-                                {{ ont_flowcells[onefc]["lims"]["loading"][-1]["qc"] }} 
-                            {% except %}
+                                {% set last_loading = ont_flowcells[onefc]["lims"]["loading"][-1] %}
+                                {% if last_loading["qc"] != "None" %}
+                                    {{ last_loading["qc"] }}
+                                {% else %}
+                                    {{ "" }}
+                                {% end %}
+                            {% except (KeyError, IndexError, TypeError) %}
                                 {{ "" }}
                             {% end %}
                         {% end %}
@@ -235,7 +243,12 @@ function init_listjs_ont() {
         "paging":false,
         "info":false,
         "order": [[ 0, "desc" ]],
-        "autoWidth": True
+        "autoWidth":true,
+        dom: 'Bfrti',
+        buttons: [
+        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
+        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+      ]
     });
 
     //Add the bootstrap classes to the search thingy

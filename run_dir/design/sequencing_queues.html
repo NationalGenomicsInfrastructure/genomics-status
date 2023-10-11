@@ -14,7 +14,6 @@ Description: Shows a table with extant sequencing queues.
       <h1><span id="page_title">Sequencing queues</span>
         <small class="text-muted">Showing all sequencing queues</small>
       </h1>
-      <button type="button" id="seq_copy_table_btn" class="btn btn-outline-dark mb-2" data-clipboard-target="#queues_table"><span class="fa fa-copy"></span> Copy table</button>
       <table class="table table-hover table-striped table-bordered sortable" id="queues_table">
         <thead>
           <tr class="sticky darkth">
@@ -60,8 +59,7 @@ Description: Shows a table with extant sequencing queues.
     </div>
 </div>
 
-<script src="/static/js/clipboard.min.js"></script>
-<script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
 <script src="/static/js/sequencing_queues.js?v={{ gs_globals['git_commit'] }}"></script>
 <script src="/static/js/jquery-ui.min.js"></script>
 

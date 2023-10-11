@@ -34,7 +34,6 @@ from status.flowcell import FlowcellHandler, ONTFlowcellHandler, ONTReportHandle
 from status.flowcells import (
     FlowcellDemultiplexHandler,
     FlowcellLinksDataHandler,
-    FlowcellNotesDataHandler,
     FlowcellQ30Handler,
     FlowcellQCHandler,
     FlowcellsDataHandler,
@@ -77,10 +76,6 @@ from status.pricing import (
     SaveQuoteHandler,
 )
 from status.production import (
-    DeliveredMonthlyDataHandler,
-    DeliveredMonthlyPlotHandler,
-    DeliveredQuarterlyDataHandler,
-    DeliveredQuarterlyPlotHandler,
     ProductionCronjobsHandler,
 )
 from status.projects import (
@@ -97,7 +92,6 @@ from status.projects import (
     ProjectsSearchHandler,
     ProjectTicketsDataHandler,
     RecCtrlDataHandler,
-    RunningNotesDataHandler,
     ProjMetaCompareHandler,
     ProjectRNAMetaDataHandler,
     FragAnImageHandler,
@@ -106,8 +100,6 @@ from status.projects import (
     PrioProjectsTableHandler,
 )
 
-# Not used, delete?
-from status.project_qc import ProjectQCDataHandler
 from status.queues import (
     qPCRPoolsDataHandler,
     qPCRPoolsHandler,
@@ -119,7 +111,7 @@ from status.queues import (
     LibraryPoolingQueuesDataHandler,
 )
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
-from status.running_notes import NEWRunningNotesDataHandler, LatestStickyNoteHandler #temp name
+from status.running_notes import RunningNotesDataHandler, LatestStickyNoteHandler
 from status.sample_requirements import (
     SampleRequirementsViewHandler,
     SampleRequirementsDataHandler,
@@ -171,7 +163,6 @@ from status.worksets import (
     WorksetsHandler,
     WorksetDataHandler,
     WorksetLinksHandler,
-    WorksetNotesDataHandler,
     WorksetsDataHandler,
     WorksetSearchHandler,
     ClosedWorksetsHandler,
@@ -230,10 +221,6 @@ class Application(tornado.web.Application):
             ("/api/v1/charon_summary/([^/]*)$", CharonProjectHandler),
             ("/api/v1/cost_calculator", PricingDataHandler),
             ("/api/v1/delete_invoice", DeleteInvoiceHandler),
-            ("/api/v1/delivered_monthly", DeliveredMonthlyDataHandler),
-            ("/api/v1/delivered_monthly.png", DeliveredMonthlyPlotHandler),
-            ("/api/v1/delivered_quarterly", DeliveredQuarterlyDataHandler),
-            ("/api/v1/delivered_quarterly.png", DeliveredQuarterlyPlotHandler),
             tornado.web.URLSpec(
                 "/api/v1/download_images/(?P<project>[^/]+)/(?P<type>[^/]+)",
                 ImagesDownloadHandler,
@@ -247,7 +234,6 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
             ("/api/v1/flowcell_demultiplex/([^/]*)$", FlowcellDemultiplexHandler),
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
-            ("/api/v1/flowcell_notes/([^/]*)$", FlowcellNotesDataHandler),
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
@@ -297,11 +283,9 @@ class Application(tornado.web.Application):
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
-            ("/api/v1/projectqc/([^/]*)$", ProjectQCDataHandler),
             ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
             ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
-            ("/api/v1/new_running_notes/([^/]*)$", NEWRunningNotesDataHandler),
             ("/api/v1/links/([^/]*)$", LinksDataHandler),
             ("/api/v1/sample_requirements", SampleRequirementsDataHandler),
             (
@@ -342,7 +326,6 @@ class Application(tornado.web.Application):
             ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
             ("/api/v1/worksets", WorksetsDataHandler),
             ("/api/v1/workset_search/([^/]*)$", WorksetSearchHandler),
-            ("/api/v1/workset_notes/([^/]*)$", WorksetNotesDataHandler),
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/api/v1/workset_queues", WorksetQueuesDataHandler),
             ("/api/v1/closed_worksets", ClosedWorksetsHandler),

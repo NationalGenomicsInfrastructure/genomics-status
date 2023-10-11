@@ -200,12 +200,13 @@ Description: Shows a table with all flow cells.
                                         {{ flowcells[onefc].get('pdc_archived', '-') }}  
                                     </td>
                                     <td class="latest_running_note" class="text-center">
-                                        {% if flowcells[onefc].get('running_notes') %}
-                                            {% set running_notes = flowcells[onefc].get('running_notes') %}
-                                            {% set latest_running_note_key = max(k for k, v in running_notes.items() if v != '') %}
+                                        {% if flowcells[onefc].get('Latest Workset Notes') %}
+                                            {% set running_notes = flowcells[onefc].get('Latest Workset Notes') %}
+                                            {% set latest_running_note_key = list(running_notes.keys())[0] %}
                                             <div class="card running-note-card">
                                                 <div class='card-header'>
                                                 <a class="text-decoration-none" href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"]}}</a>  -  {{form_date(latest_running_note_key)}}
+                                                {% if running_notes[latest_running_note_key]['categories'] %} - <span class="fillbadgecolour"> {{ running_notes[latest_running_note_key]['categories'] }} </span> {% end %}
                                                 </div>
                                                 <div class='card-body' style='white-space: pre-line'>
                                                     {{running_notes[latest_running_note_key]['note']}}
@@ -231,18 +232,18 @@ Description: Shows a table with all flow cells.
     </div>
 </div>
 
-<script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
+<script src="/static/js/running_notes.js"></script>
 
 <!-- Table Sorting -->
 <script type="text/javascript">
 $( document ).ready(function() {
   document.title = 'Flowcells : Genomics Status';
   init_listjs();
-  //Formatting for Running note card body
-  $(".running-note-card > .card-body").each(function(i){
-    $(this).html(make_markdown($(this).text()));
-  });
+  //From running_note.js
+  format_latest_running_note();
 });
+
 // Initialize sorting and searching javascript plugin
 function init_listjs() {
     // Setup - add a text input to each footer cell
@@ -254,7 +255,18 @@ function init_listjs() {
     var table = $('#fc_table').DataTable({
       "paging":false,
       "info":false,
-      "order": [[ 1, "desc" ]]
+      "order": [[ 1, "desc" ]],
+      colReorder: true,
+      dom: 'Bfrti',
+      buttons: [
+        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
+        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+      ]
+    });
+    //Keep markdown format when dragging around the columns
+    table.on( 'column-reorder', function() {
+        //From running_note.js
+        format_latest_running_note();
     });
 
     //Add the bootstrap classes to the search thingy
@@ -275,6 +287,8 @@ function init_listjs() {
             .draw();
         } );
     } );
+    $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
+    $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 }
 </script>
 

@@ -1,12 +1,11 @@
 $(function(){
-  /*  Once projects are moved to new running notes db
   if(typeof project!=='undefined'){
       $.getJSON('/api/v1/latest_sticky_run_note/'+project, function (data) { 
         //latest_sticky_note
         let sticky_run_note = data 
         let date = Object.keys(sticky_run_note)[0]
         $('#latest_sticky_note').html(make_running_note(date, sticky_run_note[date], true))
-  })}; */
+  })};
 
     return $.getJSON('/api/v1/user_management/users', function (data) {
       window.users=Object.keys(data)
@@ -45,6 +44,7 @@ function get_note_url() {
     // URL for the notes
     let note_id = '';
     let note_type = '';
+    let url = '';
     if ('lims_step' in window && lims_step !== null){
       note_id = lims_step;
       note_type = 'workset';
@@ -58,22 +58,15 @@ function get_note_url() {
       note_id = project;
       note_type = 'project';
     }
-    let url_add = '';
-    if(note_type=='flowcell_ont'){
-        url_add = 'new_'
-    }
-    return {url: `/api/v1/${url_add}running_notes/` + note_id, note_type: note_type};
+    url='/api/v1/running_notes/' + note_id;
+    return {url: url, note_type: note_type}; 
 }
 
-function make_running_note(date, note, sticky, version_flag){
+function make_running_note(date, note, sticky){
   sticky = typeof sticky !== "undefined" ? sticky : false;
   try {
     var category = '';
     var note_id = '';
-    if(version_flag==='old'){
-      var date = date.replace(/-/g, '/');
-      date = date.replace(/\.\d{6}/, '');
-    }
     date = new Date(date);
     if (note['note'] != undefined){
         if(date > new Date('2015-01-01')){
@@ -97,13 +90,8 @@ function make_running_note(date, note, sticky, version_flag){
                    date.getUTCDate(), date.getHours(), date.getMinutes(), date.getSeconds())/1000);
         
         if ('categories' in note || 'category' in note){
-          var categories = []
-          if(version_flag==='old'){
-             categories = note['category'].split(',')
-          }
-          else{
-            categories = note['categories']
-          }
+          var categories = [];
+          categories = note['categories'];
           category=generate_category_label(categories);
         }
     }
@@ -129,10 +117,6 @@ function make_running_note(date, note, sticky, version_flag){
 function load_running_notes(wait) {
   // Clear previously loaded notes, if so
   const note_values = get_note_url();
-  let version_flag = 'old';
-  if (note_values.url.includes('new_')){
-    version_flag = 'new';
-  }
   $("#running_notes_panels").empty();
   // From agreements tab
   $("#invoicing_notes").empty();
@@ -141,16 +125,10 @@ function load_running_notes(wait) {
       $('#running_notes_panels').html('<div class="well">No running notes found.</div>');
     } else {
       $.each(data, function(date, note) {
-        $('#running_notes_panels').append(make_running_note(date, note, false, version_flag));
-        let categories = '';
-        if(version_flag==='old'){
-          categories = note['category']
-        }
-        else{
-          categories = note['categories']
-        }
+        $('#running_notes_panels').append(make_running_note(date, note, false));
+        let categories = note['categories']
         if(categories.includes('Invoicing')){
-          $('#invoicing_notes').append(make_running_note(date, note, true, version_flag));
+          $('#invoicing_notes').append(make_running_note(date, note, true));
         }
       });
       if($('#invoicing_notes').children().length === 0){
@@ -224,7 +202,7 @@ function count_cards(){
             }
         }
     });
-    $('.btn_count').append('All <span class="badge bg-secondary">'+all+'</span>');
+    $('.btn_count').append('<span class="badge bg-secondary">'+all+'</span> All');
     $('#rn_category').next().find('.dropdown-item').each(function(){
         var label = $.trim($(this).text())
         cat_cards['All'] = all;
@@ -297,8 +275,8 @@ $("#running_notes_form").submit( function(e) {
        }
     }
     const note_values = get_note_url()
-    if(["flowcell", "workset"].includes(note_values.note_type)){
-      if(note_values.note_type==="flowcell" && !categories.includes("Flowcell")){
+    if(["flowcell", "workset", "flowcell_ont"].includes(note_values.note_type)){
+      if((note_values.note_type==="flowcell" || note_values.note_type==="flowcell_ont") && !categories.includes("Flowcell")){
         categories.push("Flowcell")
       }
       else if(note_values.note_type==="workset" && !categories.includes("Workset")){
@@ -323,9 +301,11 @@ $("#running_notes_form").submit( function(e) {
         const note_values = get_note_url()
         $.getJSON(note_values.url, function(newdata) {
           var newNote = false;
+          var newNoteDate = null;
           $.each(newdata, function(date, note) {
             if(data['note'] == note['note']){
               newNote = make_running_note(date, note, false);
+              newNoteDate = date;
             }
           });
           if(newNote){
@@ -340,7 +320,7 @@ $("#running_notes_form").submit( function(e) {
               $('#running_notes_panels .well').slideUp(function(){ $(this).remove(); });
             }
             // Create a new running note and slide it in..
-            var now = new Date();
+            var now = new Date(newNoteDate);
             category=generate_category_label(categories);
             var printHyphen =category? ' - ': ' ';
             $('<div class="card mb-2 mx-2"><div class="card-header bg-success-table">'+
@@ -358,3 +338,15 @@ $("#running_notes_form").submit( function(e) {
     });
 });
 $('#new_note_text').on('focus',function(){$(this).sew({values:window.users})});
+
+//Used to format the Latest Running Note column
+function format_latest_running_note(){
+  //Formatting for Running note card body
+  $(".running-note-card > .card-body").each(function(i){
+      $(this).html(make_markdown($(this).text()));
+  });
+  $('.fillbadgecolour').html(function(){
+      let categories = JSON.parse($(this).text().replace(/'/g, '"'))
+      return generate_category_label(categories)
+  })
+}
