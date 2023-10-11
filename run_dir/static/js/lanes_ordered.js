@@ -10,13 +10,13 @@ const vLanesOrderedMain = ({
             let url = '/api/v1/lanes_ordered'
             /* Build the url, where only defined keys should be passed */
             let my_arguments = [key1, key2, key3];
-            for (var i = 0; i < my_arguments.length; i++) {
+            for (let i = 0; i < my_arguments.length; i++) {
                 let my_key = my_arguments[i];
                 let key_nr = i + 1;
                 // Break if my_key is undefined
                 var nr_of_keys = key_nr;
                 if (my_key === undefined) {
-                    var nr_of_keys = nr_of_keys - 1;
+                    nr_of_keys = nr_of_keys - 1;
                     break;
                 } else {
                     if (key_nr === 1) {
