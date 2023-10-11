@@ -35,7 +35,7 @@ thresholds = {
     "NextSeq High": 75,
     "NextSeq 2000 P1": 100,
     "NextSeq 2000 P2": 400,
-    "NextSeq 2000 P3": 1100,
+    "NextSeq 2000 P3": 550,
 }
 
 
