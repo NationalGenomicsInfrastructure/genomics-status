@@ -31,28 +31,26 @@ const vLanesOrderedMain = ({
                 .then(response => {
                     let data = response.data
                     if (data !== null) {
-                        switch (nr_of_keys) {
+                        if (nr_of_keys === 0) {
                             /* If no keys are defined, just replace the data */
-                            case 0: {
-                                for (let [my_key, value] of Object.entries(data)) {
-                                    this.statistics_data[my_key] = {
-                                        ...this.statistics_data[my_key],
-                                        ...value
-                                    };
-                                }
-                                break;
+                            for (let [my_key, value] of Object.entries(data)) {
+                                this.statistics_data[my_key] = {
+                                    ...this.statistics_data[my_key],
+                                    ...value
+                                };
                             }
+                        } else {
                             /* If one or more keys are defined, merge the data */
-                            default: {
-                                let obj = this.statistics_data;
-                                for (let i = 1; i <= nr_of_keys; i++) {
-                                    obj = obj[my_arguments[i - 1]];
-                                }
-                                Object.assign(obj, data);
-                                break;
+                            let obj = this.statistics_data;
+                            for (let i = 1; i <= nr_of_keys; i++) {
+                                if (!(my_arguments[i - 1] in obj)) {
+                                    obj[my_arguments[i-1]] = {};
+                                };
+                                obj = obj[my_arguments[i - 1]];
                             }
+                            Object.assign(obj, data);
                         };
-                    }
+                    };
                 })
                 .catch(error => {
                     console.log(error)
@@ -208,19 +206,21 @@ app.component('v-lanes-ordered-item', {
 
 
 app.component('v-lanes-ordered-chart', {
-    props: ['key_array'],
     computed: {
+        key_array() {
+            return this.$root.in_focus;
+        },
         local_data() {
             let value = this.$root.statistics_data;
-            for (const key of this.key_array) {
-                if (key === null) {
+            for (let key of this.key_array) {
+                if ((key === null) || !(key in value)) {
                     break;
                 }
                 value = value[key];
             }
             return value;
         },
-        /* local data keys without the key 'value' sorted with highext value first */
+        /* local data keys without the key 'value' sorted with highest value first */
         local_data_keys() {
             return Object.keys(this.local_data)
                 .filter(key => key !== 'value')
