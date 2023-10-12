@@ -42,11 +42,11 @@ const vLanesOrderedMain = ({
                         } else {
                             /* If one or more keys are defined, merge the data */
                             let obj = this.statistics_data;
-                            for (let i = 1; i <= nr_of_keys; i++) {
-                                if (!(my_arguments[i - 1] in obj)) {
-                                    obj[my_arguments[i-1]] = {};
+                            for (let i = 0; i < nr_of_keys; i++) {
+                                if (!(my_arguments[i] in obj)) {
+                                    obj[my_arguments[i]] = {};
                                 };
-                                obj = obj[my_arguments[i - 1]];
+                                obj = obj[my_arguments[i]];
                             }
                             Object.assign(obj, data);
                         };
