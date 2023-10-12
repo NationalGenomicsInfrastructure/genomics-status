@@ -176,7 +176,7 @@ app.component('v-lanes-ordered-item', {
             <div :class="has_leaves(category) ? 'ml-4 mb-4' : 'ml-4'">
                 <h3 class="mb-2">
                     <v-template v-if="key_level == 4">
-                        <a :href="'project/' + category">{{category}}</a> {{this.local_data[category]['value']}}
+                        <a :href="'project/' + category" target="_blank">{{category}}</a> {{this.local_data[category]['value']}}
                     </v-template>
                     <v-template v-else>
                         <v-template v-if="has_leaves(category)">
