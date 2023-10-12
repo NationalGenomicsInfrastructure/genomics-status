@@ -57,6 +57,7 @@ const vLanesOrderedMain = ({
                 })
         },
         async setDefaults() {
+            this.in_focus = [null, null, null];
             this.statistics_data = {};
             /* axios.get returns a promise, so await will make sure these are run sequentially */
             await this.fetchStatistics();
