@@ -102,7 +102,7 @@ app.component('v-lanes-ordered', {
                 <v-lanes-ordered-item :key_array="[]" :current_key="" :key_level="1" :local_data="this.$root.statistics_data"> </v-lanes-ordered-item>
             </div>
             <div class="col-6">
-                <v-lanes-ordered-chart :key_array="this.$root.in_focus"></v-lanes-ordered-chart>
+                <v-lanes-ordered-chart></v-lanes-ordered-chart>
             </div>
         </div>
         `
@@ -238,46 +238,48 @@ app.component('v-lanes-ordered-chart', {
         }
     },
     updated() {
-        if (this.chart) {
-            this.chart.destroy();
-        }
-        ctx = this.$refs.canvas.getContext('2d');
-        this.chart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: this.local_data_keys,
-                datasets: [{
-                    label: 'Lanes Ordered',
-                    data: this.local_data_values,
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.5)',
-                        'rgba(54, 162, 235, 0.5)',
-                        'rgba(255, 206, 86, 0.5)',
-                        'rgba(75, 192, 192, 0.5)',
-                        'rgba(153, 102, 255, 0.5)'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                tooltips: {
-                    callbacks: {
-                        label: function(tooltipItem, data) {
-                            const label = data.labels[tooltipItem.index] || '';
-                            const value = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
-                            return label + ': ' + value;
+        if (Object.keys(this.local_data).length !== 0){
+            if (this.chart) {
+                this.chart.destroy();
+            }
+            ctx = this.$refs.canvas.getContext('2d');
+            this.chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: this.local_data_keys,
+                    datasets: [{
+                        label: 'Lanes Ordered',
+                        data: this.local_data_values,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)',
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(153, 102, 255, 0.5)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    tooltips: {
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                const label = data.labels[tooltipItem.index] || '';
+                                const value = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+                                return label + ': ' + value;
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     },
     // data-dummy is a hack because Vue doesn't update the canvas element otherwise
     template: /*html*/`
         <h2>Showing: {{this.in_focus_pretty}}</h2>
         <div :data-dummy="local_data_values">
-            <canvas ref="canvas"></canvas>
+            <canvas style="height: 50rem;" ref="canvas"></canvas>
         </div>`
 });
 
