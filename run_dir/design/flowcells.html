@@ -200,8 +200,8 @@ Description: Shows a table with all flow cells.
                                         {{ flowcells[onefc].get('pdc_archived', '-') }}  
                                     </td>
                                     <td class="latest_running_note" class="text-center">
-                                        {% if flowcells[onefc].get('Latest Workset Notes') %}
-                                            {% set running_notes = flowcells[onefc].get('Latest Workset Notes') %}
+                                        {% if flowcells[onefc].get('latest_running_note') %}
+                                            {% set running_notes = flowcells[onefc].get('latest_running_note') %}
                                             {% set latest_running_note_key = list(running_notes.keys())[0] %}
                                             <div class="card running-note-card">
                                                 <div class='card-header'>

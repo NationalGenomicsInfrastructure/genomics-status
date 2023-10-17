@@ -83,6 +83,7 @@ class FlowcellsHandler(SafeHandler):
             xfc_view = self.application.x_flowcells_db.view(
                 "info/summary", descending=True, endkey=half_a_year_ago
             )
+        note_keys = []
         for row in xfc_view:
             try:
                 row.value["startdate"] = datetime.datetime.strptime(
@@ -104,12 +105,24 @@ class FlowcellsHandler(SafeHandler):
             # NovaSeqXPlus has whole year in name
             if "LH" in row.value["instrument"]:
                 note_key = f'{row.value["run id"].split("_")[0]}_{row.value["run id"].split("_")[-1]}'
-            latest_note = LatestRunningNoteHandler.get_latest_running_note(
-                self.application, "flowcell", note_key
-            )
-            if latest_note:
-                row.value["Latest Workset Notes"] = latest_note
+            note_keys.append(note_key)
             temp_flowcells[row.key] = row.value
+
+        notes = self.application.running_notes_db.view(
+            "latest_note_previews/flowcell",
+            reduce=True,
+            group=True,
+            keys=list(note_keys),
+        )
+        for row in notes:
+            key = row.key
+            if len(row.key.split("_")[0]) > 6:
+                elem = row.key.split("_")
+                elem[0] = elem[0][2:]
+                key = "_".join(elem)
+            temp_flowcells[key]["latest_running_note"] = {
+                row.value["created_at_utc"]: row.value
+            }
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
