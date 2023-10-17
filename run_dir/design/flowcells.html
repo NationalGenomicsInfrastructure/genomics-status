@@ -184,12 +184,8 @@ Description: Shows a table with all flow cells.
                                         {% if 'lane_info' in flowcells[onefc] %}
                                             {% for onelane in flowcells[onefc]['lane_info'] %}
                                                 {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') %}
-                                                    {% if 'MiSeq' in flowcells[onefc].get('run_mode', '') %}
-                                                        {% if run_setup > 150 %}
-                                                            {% set er_rate_threshold = 5 %}
-                                                        {% else %}
-                                                            {% set er_rate_threshold = 2 %}
-                                                        {% end %}
+                                                    {% if 'MiSeq' in flowcells[onefc].get('run_mode', '') and run_setup > 150 %}
+                                                        {% set er_rate_threshold = 5 %}
                                                     {% else %}
                                                         {% set er_rate_threshold = 2 %}
                                                     {% end %}
