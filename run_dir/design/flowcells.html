@@ -208,7 +208,7 @@ Description: Shows a table with all flow cells.
                                                 <a class="text-decoration-none" href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"]}}</a>  -  {{form_date(latest_running_note_key)}}
                                                 {% if running_notes[latest_running_note_key]['categories'] %} - <span class="fillbadgecolour"> {{ running_notes[latest_running_note_key]['categories'] }} </span> {% end %}
                                                 </div>
-                                                <div class='card-body' style='white-space: pre-line'>
+                                                <div class='card-body trunc-note-latest' style='white-space: pre-line'>
                                                     {{running_notes[latest_running_note_key]['note']}}
                                                 </div>
                                             </div>

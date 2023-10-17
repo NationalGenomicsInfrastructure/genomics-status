@@ -88,7 +88,7 @@ Description: Shows a table with all worksets.
                                 <a class="text-decoration-none" href='mailto:{{ workset_notes[latest_workset_note_key]["email"].encode("ascii","ignore")}}'>{{ workset_notes[latest_workset_note_key]["user"].encode("utf-8")}}</a>  -  {{ form_date(latest_workset_note_key) }}
                                 {% if workset_notes[latest_workset_note_key]['categories'] %} - <span class="fillbadgecolour"> {{ workset_notes[latest_workset_note_key]['categories'] }} </span> {% end %}
                               </div>
-                              <div class='card-body' style='white-space: pre-line'>
+                              <div class='card-body trunc-note-latest' style='white-space: pre-line'>
                                 {{workset_notes[latest_workset_note_key]['note']}}
                               </div>
                             </div>
