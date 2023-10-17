@@ -57,6 +57,7 @@ from status.invoicing import (
     SentInvoiceHandler,
     InvoicingOrderDetailsHandler,
 )
+from status.lanes_ordered import LanesOrderedHandler, LanesOrderedDataHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.pricing import (
     PricingDateToVersionDataHandler,
@@ -263,6 +264,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
+            ("/api/v1/lanes_ordered", LanesOrderedDataHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/latest_sticky_run_note/([^/]*)", LatestStickyNoteHandler),
@@ -344,6 +346,7 @@ class Application(tornado.web.Application):
             ("/instrument_logs", InstrumentLogsHandler),
             ("/instrument_logs/([^/]*)$", InstrumentLogsHandler),
             ("/invoicing", InvoicingPageHandler),
+            ("/lanes_ordered", LanesOrderedHandler),
             ("/libpooling_queues", LibraryPoolingQueuesHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
             ("/pools_qpcr", qPCRPoolsHandler),
@@ -522,6 +525,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcell_error.html")
             tornado.autoreload.watch("design/flowcell_trend_plot.html")
             tornado.autoreload.watch("design/flowcells.html")
+            tornado.autoreload.watch("design/lanes_ordered.html")
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/invoicing.html")
