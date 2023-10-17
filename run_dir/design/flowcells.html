@@ -11,7 +11,7 @@ Description: Shows a table with all flow cells.
 
 {% if errors %}
     <div class="alert alert-danger">
-        <p>The following run(s) were not possible to be processed:</p>    
+        <p>The following run(s) were not possible to be processed:</p>
         {{", ".join(errors)}}
     </div>
 {% end %}
@@ -184,8 +184,17 @@ Description: Shows a table with all flow cells.
                                         {% if 'lane_info' in flowcells[onefc] %}
                                             {% for onelane in flowcells[onefc]['lane_info'] %}
                                                 {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') %}
+                                                    {% if 'MiSeq' in flowcells[onefc].get('run_mode', '') %}
+                                                        {% if run_setup > 150 %}
+                                                            {% set er_rate_threshold = 5 %}
+                                                        {% else %}
+                                                            {% set er_rate_threshold = 2 %}
+                                                        {% end %}
+                                                    {% else %}
+                                                        {% set er_rate_threshold = 2 %}
+                                                    {% end %}
                                                     <samp style="max-width:50px;">{{ round(flowcells[onefc]['lane_info'][onelane].get('er_rate'),2) }}</samp>
-                                                    {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') <= 2 %}
+                                                    {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') <= er_rate_threshold %}
                                                         <span class="fa fa-check-circle" style="color:green"></span><br>
                                                     {% else %}
                                                         <span class="fa fa-exclamation-triangle" style="color:orange"></span><br>
@@ -197,7 +206,7 @@ Description: Shows a table with all flow cells.
                                         {% end %}
                                     </td>
                                     <td class="pdc_archived">
-                                        {{ flowcells[onefc].get('pdc_archived', '-') }}  
+                                        {{ flowcells[onefc].get('pdc_archived', '-') }}
                                     </td>
                                     <td class="latest_running_note" class="text-center">
                                         {% if flowcells[onefc].get('Latest Workset Notes') %}
@@ -228,7 +237,7 @@ Description: Shows a table with all flow cells.
             </div>
 
         </div>
-        
+
     </div>
 </div>
 
