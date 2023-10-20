@@ -677,7 +677,8 @@ app.component('v-products-table', {
             this.dataTable = $('#pricing_products_table').DataTable({
                 "paging":false,
                 "info":false,
-                "order": [[ 1, "asc" ]]
+                "order": [[ 1, "asc" ]],
+                colReorder: true
             });
 
             this.dataTable.columns().every(function() {

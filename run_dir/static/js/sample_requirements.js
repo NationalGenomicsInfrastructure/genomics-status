@@ -298,7 +298,8 @@ app.component('v-requirements-table', {
             this.dataTable = $('#sample_requirements_table').DataTable({
                 "paging":false,
                 "info":false,
-                "order": [[ 1, "asc" ]]
+                "order": [[ 1, "asc" ]],
+                colReorder: true
             });
 
             this.dataTable.columns().every(function() {
