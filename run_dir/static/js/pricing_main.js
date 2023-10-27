@@ -677,8 +677,7 @@ app.component('v-products-table', {
             this.dataTable = $('#pricing_products_table').DataTable({
                 "paging":false,
                 "info":false,
-                "order": [[ 1, "asc" ]],
-                colReorder: true
+                "order": [[ 1, "asc" ]]
             });
 
             this.dataTable.columns().every(function() {
@@ -804,7 +803,7 @@ app.component('v-product-table-row', {
     },
     methods: {
         add_to_quote(event) {
-            event.preventDefault();
+            event.preventDefault(); 
             if (!(this.product_id in this.$root.quote_prod_ids)) {
                 this.$root.quote_prod_ids[this.product_id] = 0
             }
