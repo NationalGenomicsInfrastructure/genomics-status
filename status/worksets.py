@@ -39,31 +39,37 @@ class WorksetsHandler(SafeHandler):
         result = {}
         half_a_year_ago = datetime.datetime.now() - relativedelta(months=6)
         ws_view = self.application.worksets_db.view("worksets/summary", descending=True)
+        workset_keys = {}
 
         for row in ws_view:
             if all:
                 result[row.key] = row.value
                 result[row.key].pop("_id", None)
                 result[row.key].pop("_rev", None)
-                latest_note = LatestRunningNoteHandler.get_latest_running_note(
-                    self.application, "workset", row.value["id"]
-                )
-                if latest_note:
-                    result[row.key]["Latest Workset Notes"] = latest_note
+                workset_keys[row.value["id"]] = row.key
             else:
                 try:
                     if parse(row.value["date_run"]) >= half_a_year_ago:
                         result[row.key] = row.value
                         result[row.key].pop("_id", None)
                         result[row.key].pop("_rev", None)
-                        latest_note = LatestRunningNoteHandler.get_latest_running_note(
-                            self.application, "workset", row.value["id"]
-                        )
-                        if latest_note:
-                            result[row.key]["Latest Workset Notes"] = latest_note
+                        workset_keys[row.value["id"]] = row.key
                 # Exception that date_run is not available
                 except TypeError:
                     continue
+
+        # Get Latest running note
+        notes = self.application.running_notes_db.view(
+            "latest_note_previews/workset",
+            reduce=True,
+            group=True,
+            keys=list(workset_keys.keys()),
+        )
+        for row in notes:
+            result[workset_keys[row.key]]["latest_running_note"] = {
+                row.value["created_at_utc"]: row.value
+            }
+
         return result
 
     def get(self):
@@ -85,7 +91,7 @@ class WorksetsHandler(SafeHandler):
             ["Samples Failed", "failed"],
             ["Pending Samples", "unknown"],
             ["Total samples", "total"],
-            ["Latest workset note", "Latest Workset Notes"],
+            ["Latest workset note", "latest_running_note"],
             ["Closed Worksets", "closed_ws"],
         ]
         self.write(
