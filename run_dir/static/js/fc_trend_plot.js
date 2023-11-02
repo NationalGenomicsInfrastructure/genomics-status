@@ -127,6 +127,16 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                         text: 'NovaSeq S4 threshold to pass',
                         align: 'right'
                     }
+                }, {
+                    color: '#8400ff',
+                    dashStyle: 'longdash',
+                    value: 2000000000,
+                    width: 1,
+                    zIndex: 1,
+                    label: {
+                        text: 'NovaSeqXPlus 10B threshold to pass',
+                        align: 'right'
+                    }
                 }]
             }
     };
