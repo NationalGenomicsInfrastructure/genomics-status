@@ -125,7 +125,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                     zIndex: 1,
                     label: {
                         text: 'NovaSeq S4 threshold to pass',
-                        align: 'right'
+                        align: 'left'
                     }
                 }, {
                     color: '#8400ff',
@@ -135,7 +135,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                     zIndex: 1,
                     label: {
                         text: 'NovaSeqXPlus 10B threshold to pass',
-                        align: 'left'
+                        align: 'right'
                     }
                 }]
             }
