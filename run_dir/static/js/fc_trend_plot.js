@@ -130,7 +130,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                 }, {
                     color: '#8400ff',
                     dashStyle: 'longdash',
-                    value: 2000000000,
+                    value: 8000000000,
                     width: 1,
                     zIndex: 1,
                     label: {
