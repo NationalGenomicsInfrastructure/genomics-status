@@ -78,139 +78,57 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         }
     };
 
-    //Styling the default view
-    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){
-        toplot.yAxis={
+    var thresholdColors = ['#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff'];
+    var thresholdLabels = [
+        'NovaSeq SP threshold to pass',
+        'NovaSeq S1 threshold to pass',
+        'NovaSeq S2 threshold to pass',
+        'NovaSeq S4 threshold to pass',
+        'NovaSeqXPlus 10B threshold to pass'
+    ];
+
+    function applyThresholds(thresholdValues) {
+        toplot.yAxis = {
             title: {
                 enabled: true,
                 text: 'Clusters',
             },
             labels: {
-                formatter: function() {
+                formatter: function () {
                     return this.value.toExponential(2);
                 }
             },
-            plotLines: [{
-                color: '#ffb700',
-                dashStyle: 'longdash',
-                value: 650000000,
-                width: 1,
-                label: {
-                    text: 'NovaSeq SP threshold to pass',
-                    align: 'right'
-                }
-                }, {
-                    color: '#ff00ae',
+            plotLines: thresholdValues.map(function (value, index) {
+                return {
+                    color: thresholdColors[index],
                     dashStyle: 'longdash',
-                    value: 1300000000,
+                    value: value,
                     width: 1,
                     label: {
-                        text: 'NovaSeq S1 threshold to pass',
+                        text: thresholdLabels[index],
                         align: 'right'
                     }
-                }, {
-                    color: '#0080ff',
-                    dashStyle: 'longdash',
-                    value: 3300000000,
-                    width: 1,
-                    label: {
-                        text: 'NovaSeq S2 threshold to pass',
-                        align: 'right'
-                    }
-                }, {
-                    color: '#11ad11',
-                    dashStyle: 'longdash',
-                    value: 8000000000,
-                    width: 1,
-                    zIndex: 1,
-                    label: {
-                        text: 'NovaSeq S4 threshold to pass',
-                        align: 'right'
-                    }
-                }, {
-                    color: '#8400ff',
-                    dashStyle: 'longdash',
-                    value: 10000000000,
-                    width: 1,
-                    zIndex: 1,
-                    label: {
-                        text: 'NovaSeqXPlus 10B threshold to pass',
-                        align: 'right'
-                    }
-                }]
-            }
-    };
+                };
+            })
+        };
+    }
 
-    //Styling the lane view
-    if (color_type == "chemver" && key == "total_clusters" && display_by == "lane"){
-        toplot.yAxis={
-            title: {
-                enabled: true,
-                text: 'Clusters',
-            },
-            labels: {
-                formatter: function() {
-                    return this.value.toExponential(2);
-                }
-            },
-            plotLines: [{
-                color: '#ffb700',
-                dashStyle: 'longdash',
-                value: 325000000,
-                width: 1,
-                label: {
-                    text: 'NovaSeq SP threshold to pass',
-                    align: 'right'
-                }
-                }, {
-                    color: '#ff00ae',
-                    dashStyle: 'longdash',
-                    value: 650000000,
-                    width: 1,
-                    label: {
-                        text: 'NovaSeq S1 threshold to pass',
-                        align: 'right'
-                    }
-                }, {
-                    color: '#0080ff',
-                    dashStyle: 'longdash',
-                    value: 1650000000,
-                    width: 1,
-                    label: {
-                        text: 'NovaSeq S2 threshold to pass',
-                        align: 'right'
-                    }
-                }, {
-                    color: '#11ad11',
-                    dashStyle: 'longdash',
-                    value: 2000000000,
-                    width: 1,
-                    zIndex: 1,
-                    label: {
-                        text: 'NovaSeq S4 threshold to pass',
-                        align: 'right'
-                    }
-                }, {
-                    color: '#8400ff',
-                    dashStyle: 'longdash',
-                    value: 1000000000,
-                    width: 1,
-                    zIndex: 1,
-                    label: {
-                        text: 'NovaSeqXPlus 10B threshold to pass',
-                        align: 'right'
-                    }
-                }]
-            }
-    };
+    // Styling the default view
+    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell") {
+        applyThresholds([650000000, 1300000000, 3300000000, 8000000000, 10000000000]);
+    }
 
-    serie=build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
-    toplot.series=serie[1];
+    // Styling the lane view
+    if (color_type == "chemver" && key == "total_clusters" && display_by == "lane") {
+        applyThresholds([325000000, 650000000, 1650000000, 2000000000, 1000000000]);
+    }
+
+    var serie = build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
+    toplot.series = serie[1];
     toplot.xAxis.categories = serie[0];
     $("#main_plot").highcharts(toplot);
-    window.current_plot_obj=toplot;
-
-}
+    window.current_plot_obj = toplot;
+}   
 
 function build_series(data, key, name, display_by, filter_inst_type, filter_inst, color_type){
 
