@@ -326,9 +326,13 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
         run_dict["basecalled_bases"] = (
             run_dict["basecalled_pass_bases"] + run_dict["basecalled_fail_bases"]
         )
-        run_dict["accuracy"] = round(
-            run_dict["basecalled_pass_bases"] / run_dict["basecalled_bases"] * 100, 2
-        )
+        #TODO, somewhat temporary bugfix
+        if run_dict["basecalled_pass_read_count"] <= 0:
+            run_dict["accuracy"] = 0
+        else:
+            run_dict["accuracy"] = round(
+                run_dict["basecalled_pass_bases"] / run_dict["basecalled_bases"] * 100, 2
+            )
 
         """ Convert metrics from integers to readable strings and appropriately scaled floats, e.g.
         basecalled_pass_read_count =       int(    123 123 123 )
