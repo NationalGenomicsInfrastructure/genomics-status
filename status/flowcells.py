@@ -4,6 +4,7 @@
 import json
 import datetime
 import re
+import logging
 
 from dateutil.relativedelta import relativedelta
 from collections import OrderedDict
@@ -13,8 +14,10 @@ from genologics.config import BASEURI, USERNAME, PASSWORD
 import pandas as pd
 
 from status.util import SafeHandler
-from status.flowcell import FlowcellHandler, fetch_ont_run_stats
+from status.flowcell import fetch_ont_run_stats
 from status.running_notes import LatestRunningNoteHandler
+
+application_log = logging.getLogger("tornado.application")
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
