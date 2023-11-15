@@ -5,7 +5,6 @@ import json
 import datetime
 import re
 import logging
-import traceback
 
 from dateutil.relativedelta import relativedelta
 from collections import OrderedDict
@@ -153,7 +152,7 @@ class FlowcellsHandler(SafeHandler):
                 )
             except Exception as e:
                 unfetched_runs.append(row.key)
-                application_log.error(f"Failed to fetch run {row.key}: {str(e)}\n{traceback.format_exc()}")
+                application_log.exception(f"Failed to fetch run {row.key}")
 
         if ont_flowcells:
             try:
@@ -177,7 +176,7 @@ class FlowcellsHandler(SafeHandler):
                 # Convert back to dictionary and return
                 ont_flowcells = df.to_dict(orient="index")
             except Exception as e:
-                application_log.error(f"Failed to compile ONT flowcell dataframe: {str(e)}\n{traceback.format_exc()}")
+                application_log.exception(f"Failed to compile ONT flowcell dataframe")
 
         return ont_flowcells, unfetched_runs
 
