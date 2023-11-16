@@ -104,6 +104,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                     dashStyle: 'longdash',
                     value: value,
                     width: 1,
+                    zIndex: 1,
                     label: {
                         text: thresholdLabels[index],
                         align: 'right'
