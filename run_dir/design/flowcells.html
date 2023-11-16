@@ -9,10 +9,10 @@ Description: Shows a table with all flow cells.
 
 {% block stuff %}
 
-{% if errors %}
+{% if unfetched_runs %}
     <div class="alert alert-danger">
         <p>The following run(s) were not possible to be processed:</p>
-        {{", ".join(errors)}}
+        {{", ".join(unfetched_runs)}}
     </div>
 {% end %}
 

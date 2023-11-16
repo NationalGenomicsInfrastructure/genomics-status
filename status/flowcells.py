@@ -4,6 +4,7 @@
 import json
 import datetime
 import re
+import logging
 
 from dateutil.relativedelta import relativedelta
 from collections import OrderedDict
@@ -13,8 +14,10 @@ from genologics.config import BASEURI, USERNAME, PASSWORD
 import pandas as pd
 
 from status.util import SafeHandler
-from status.flowcell import FlowcellHandler, fetch_ont_run_stats
+from status.flowcell import fetch_ont_run_stats
 from status.running_notes import LatestRunningNoteHandler
+
+application_log = logging.getLogger("tornado.application")
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
@@ -141,43 +144,48 @@ class FlowcellsHandler(SafeHandler):
 
         ont_flowcells = OrderedDict()
 
-        errors = []
+        unfetched_runs = []
         for row in view_all.rows:
             try:
                 ont_flowcells[row.key] = fetch_ont_run_stats(
                     view_all, view_project, row.key
                 )
-            except ValueError:
-                errors.append(row.key)
+            except Exception as e:
+                unfetched_runs.append(row.key)
+                application_log.exception(f"Failed to fetch run {row.key}")
 
         if ont_flowcells:
-            # Use Pandas dataframe for column-wise operations, every db entry becomes a row
-            df = pd.DataFrame.from_dict(ont_flowcells, orient="index")
+            try:
+                # Use Pandas dataframe for column-wise operations, every db entry becomes a row
+                df = pd.DataFrame.from_dict(ont_flowcells, orient="index")
 
-            # Calculate ranks, to enable color coding
-            df["basecalled_pass_bases_Gbp_rank"] = (
-                df.basecalled_pass_bases_Gbp.rank() / len(df) * 100
-            ).apply(lambda x: round(x, 2))
-            df["n50_rank"] = (df.n50.rank() / len(df) * 100).apply(
-                lambda x: round(x, 2)
-            )
-            df["accuracy_rank"] = (df.accuracy.rank() / len(df) * 100).apply(
-                lambda x: round(x, 2)
-            )
+                # Calculate ranks, to enable color coding
+                df["basecalled_pass_bases_Gbp_rank"] = (
+                    df.basecalled_pass_bases_Gbp.rank() / len(df) * 100
+                ).apply(lambda x: round(x, 2))
+                df["n50_rank"] = (df.n50.rank() / len(df) * 100).apply(
+                    lambda x: round(x, 2)
+                )
+                df["accuracy_rank"] = (df.accuracy.rank() / len(df) * 100).apply(
+                    lambda x: round(x, 2)
+                )
 
-            # Empty values are replaced with empty strings
-            df.fillna("", inplace=True)
+                # Empty values are replaced with empty strings
+                df.fillna("", inplace=True)
 
-            # Convert back to dictionary and return
-            ont_flowcells = df.to_dict(orient="index")
-        return ont_flowcells, errors
+                # Convert back to dictionary and return
+                ont_flowcells = df.to_dict(orient="index")
+            except Exception as e:
+                application_log.exception(f"Failed to compile ONT flowcell dataframe")
+
+        return ont_flowcells, unfetched_runs
 
     def get(self):
         # Default is to NOT show all flowcells
         all = self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
         fcs = self.list_flowcells(all=all)
-        ont_fcs, errors = self.list_ont_flowcells()
+        ont_fcs, unfetched_runs = self.list_ont_flowcells()
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
@@ -188,7 +196,7 @@ class FlowcellsHandler(SafeHandler):
                 form_date=LatestRunningNoteHandler.formatDate,
                 find_id=find_id,
                 all=all,
-                errors=errors,
+                unfetched_runs=unfetched_runs,
             )
         )
 

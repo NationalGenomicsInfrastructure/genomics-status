@@ -326,7 +326,7 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
         run_dict["basecalled_bases"] = (
             run_dict["basecalled_pass_bases"] + run_dict["basecalled_fail_bases"]
         )
-        #TODO, somewhat temporary bugfix
+
         if run_dict["basecalled_pass_read_count"] <= 0:
             run_dict["accuracy"] = 0
         else:
@@ -351,6 +351,10 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
         for metric in metrics:
             # Readable metrics, i.e. strings w. appropriate units
             unit = "" if "count" in metric else "bp"
+
+            if run_dict[metric] == "":
+                run_dict[metric] = 0
+
             run_dict["_".join([metric, "str"])] = add_prefix(
                 input_int=run_dict[metric], unit=unit
             )
