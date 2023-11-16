@@ -1,4 +1,5 @@
 const fill_last_updated_text = () => {
+    // Find out when the update script last ran
     $.getJSON('/api/v1/last_psul', (data) => {
         let text;
         if (data.status === 'Success') {
@@ -24,6 +25,7 @@ const fill_last_updated_text = () => {
 };
 
 const fill_sensorpush_status_field = () => {
+    // Find status of sensorpush
     $.getJSON('/api/v1/sensorpush_warnings', (data) => {
         let text;
         if (data.length === 0) {
@@ -40,6 +42,7 @@ const fill_sensorpush_status_field = () => {
 };
 
 const fill_prioprojs_table = () => {
+    //Get projects that have been waiting the longest
     $.getJSON("api/v1/prio_projects", (data) => {
         $("#prio_projs_table_body").empty();
         data.forEach((project) => {
@@ -63,7 +66,7 @@ const fill_prioprojs_table = () => {
                 `<td><span class="${dayColor}">${checkValue}</span></td></tr>`;
             $("#prio_projs_table_body").append(tblRow);
         });
-        initListjs();
+        init_listjs();
     });
 };
 
@@ -75,17 +78,17 @@ const init_listjs = () => {
         order: [[3, "desc"]],
         searching: false,
     });
-
+    //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
     $('#prio_projs_table_filter').addClass('form-inline float-right');
     $("#prio_projs_table_filter").appendTo("h1");
     $('#prio_projs_table_filter label input').appendTo($('#prio_projs_table_filter'));
     $('#prio_projs_table_filter label').remove();
     $("#prio_projs_table_filter input").attr("placeholder", "Search..");
-
-    table.columns().every(function () {
+    // Apply the search
+    table.columns().every(function() {
         const that = this;
-        $('input', this.footer()).on('keyup change', function () {
+        $('input', this.footer()).on('keyup change', function() {
             that.search(this.value).draw();
         });
     });
