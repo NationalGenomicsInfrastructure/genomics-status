@@ -242,6 +242,8 @@ class StatsAggregationHandler(UnsafeHandler):
                 self.cleaning,
             )
         for fa in self.nanopore_flowcell_aggregates:
+            # Use |= to merge the resulting dictionary with what's already 
+            # inside data[fa], | works as a union for dictionaries.
             data[fa] |= get_stats_data(
                 self.application.nanopore_runs_db,
                 self.nanopore_flowcell_aggregates[fa][0],
