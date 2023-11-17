@@ -221,6 +221,8 @@ class StatsAggregationHandler(UnsafeHandler):
             ),
         }
         self.flowcell_aggregates = {"bp_seq_per_week": ("dashboard/week_instr_bp", 2)}
+        self.nanopore_flowcell_aggregates = {"bp_seq_per_week": ("dashboard/week_instr_bp", 2)}
+
         self.cleaning = get_clean_application_keys(self)
 
     def get(self):
@@ -237,6 +239,15 @@ class StatsAggregationHandler(UnsafeHandler):
                 self.application.x_flowcells_db,
                 self.flowcell_aggregates[fa][0],
                 self.flowcell_aggregates[fa][1],
+                self.cleaning,
+            )
+        for fa in self.nanopore_flowcell_aggregates:
+            # Use |= to merge the resulting dictionary with what's already 
+            # inside data[fa], | works as a union for dictionaries.
+            data[fa] |= get_stats_data(
+                self.application.nanopore_runs_db,
+                self.nanopore_flowcell_aggregates[fa][0],
+                self.nanopore_flowcell_aggregates[fa][1],
                 self.cleaning,
             )
         self.set_header("Content-Type", "application/json")
