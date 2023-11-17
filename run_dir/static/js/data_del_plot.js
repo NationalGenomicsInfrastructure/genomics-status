@@ -17,94 +17,95 @@ function refresh_plot(){
 
 function make_plot(key, name, view_type, filter_inst_type){
 
-  function formatBytes(bytes){
-      if (bytes === 0) return '0 Bytes';
-      const k = 1024;
-      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-  function sumFilesize(series){
-      sum = 0
-      for (let i = 0; i < series.length; i++){
-          if (series[i].visible){
-              for (let j = 0; j < series[i].data.length; j++){
-                  sum += series[i].data[j].y
-              }
-          }
-      }
-      return formatBytes(sum);
-  }
-  var toplot = {
-      chart: {
-          type: 'scatter',
-          events: {
-              render: function(){
-                  this.setTitle({text: "File size of projects: " + sumFilesize(this.series)}, false, false)
-              }
-          }
-      },
-      yAxis: {
-          min : 0,
-          title : {
-              text : name
-          }
-      },
-      legend: {
-          title: {
-              text: 'Click to hide:',
-              align: 'center'
-          }
-      },
-      plotOptions : {
-          series : {
-              turboThreshold: 0,
-              point: {
-                  events: {
-                      click: function() {
-                          window.open(this.options.ownURL)
-                      }
-                  }
-              }
-          }
-      },
-      credits: {
-          enabled: false
-      },
-      xAxis: {
-          type: 'category',
-          labels: {
-              enabled: false,
-          },
-          title : {
-              text: 'Close Date'
-          },
-          categories: []
-      },
-      series: [{
-          name: name,
-          data: []
-      }],
-      title: {
-          text: function() { return name+' of projects, sum in bytes: ' +  sumFilesize(series, data, true); }
-      },
-      tooltip: {
-          shared: true,
-          useHTML: true,
-          headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{point.key}</small><br />',
-          pointFormatter: function () { return this.series.name + ', ' + this.pm + ': ' + '<b>' + formatBytes(this.y, true) + '</b>'},
-      },
-      exporting: {
-          csv: {
-              itemDelimiter: ';'
-          }
-      }
-  };
-  serie = build_series(window.current_plot_data, key, name, view_type, filter_inst_type);
-  toplot.series = serie[1];
-  toplot.xAxis.categories = serie[0];
-  $("#main_plot").highcharts(toplot);
-  window.current_plot_obj = toplot;
+    function formatBytes(bytes){
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    function sumFilesize(series){
+        sum = 0
+        for (let i = 0; i < series.length; i++){
+            if (series[i].visible){
+                for (let j = 0; j < series[i].data.length; j++){
+                    sum += series[i].data[j].y
+                }
+            }
+        }
+        return formatBytes(sum);
+    }
+
+    var toplot = {
+        chart: {
+            type: 'scatter',
+            events: {
+                render: function(){
+                    this.setTitle({text: "File size of projects: " + sumFilesize(this.series)}, false, false)
+                }
+            }
+        },
+        yAxis: {
+            min : 0,
+            title : {
+                text : name
+            }
+        },
+        legend: {
+            title: {
+                text: 'Click to hide:',
+                align: 'center'
+            }
+        },
+        plotOptions : {
+            series : {
+                turboThreshold: 0,
+                point: {
+                    events: {
+                        click: function() {
+                            window.open(this.options.ownURL)
+                        }
+                    }
+                }
+            }
+        },
+        credits: {
+            enabled: false
+        },
+        xAxis: {
+            type: 'category',
+            labels: {
+                enabled: false,
+            },
+            title : {
+                text: 'Close Date'
+            },
+            categories: []
+        },
+        series: [{
+            name: name,
+            data: []
+        }],
+        title: {
+            text: function() { return name+' of projects, sum in bytes: ' +  sumFilesize(series, data, true); }
+        },
+        tooltip: {
+            shared: true,
+            useHTML: true,
+            headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{point.key}</small><br />',
+            pointFormatter: function () { return this.series.name + ', ' + this.pm + ': ' + '<b>' + formatBytes(this.y, true) + '</b>'},
+        },
+        exporting: {
+            csv: {
+                itemDelimiter: ';'
+            }
+        }
+    };
+    serie = build_series(window.current_plot_data, key, name, view_type, filter_inst_type);
+    toplot.series = serie[1];
+    toplot.xAxis.categories = serie[0];
+    $("#main_plot").highcharts(toplot);
+    window.current_plot_obj = toplot;
 }
 
 function build_series(data, key, name, view_type, filter_inst_type){
@@ -117,14 +118,14 @@ function build_series(data, key, name, view_type, filter_inst_type){
         var project_name = data[d][1].project_name;
         var date_close = data[d][1].close_date;
         sequencing_platforms = ['NovaSeq', 'MiSeq', 'NextSeq', 'HiSeq'];	
-	      if (data[d][1].sequencing_platform == null && filter_inst_type.length > 0){
-	          continue;
-	      }
-	      for (var p in sequencing_platforms){
-	          if (data[d][1].sequencing_platform !== undefined && data[d][1].sequencing_platform.includes(p) && filter_inst_type.includes(p)){
-	              continue;
-	          }
-	      }
+	    if (data[d][1].sequencing_platform == null && filter_inst_type.length > 0){
+	        continue;
+	    }
+	    for (var p in sequencing_platforms){
+	        if (data[d][1].sequencing_platform !== undefined && data[d][1].sequencing_platform.includes(p) && filter_inst_type.includes(p)){
+	            continue;
+	        }
+	    }
         if (data[d][1].sequencing_platform == null){
             continue;
         }else if (data[d][1].sequencing_platform.includes('NovaSeq') && filter_inst_type.includes('NovaSeq')){
@@ -247,7 +248,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
         // Hackery to get a proper JS array for HCharts
         var proper_series = Object.values(series)
     }
-  return [categories, proper_series];
+    return [categories, proper_series];
 }
 
 function get_plot_data(key, name, view_type, search_string="", filter_inst_type){
@@ -312,10 +313,10 @@ function get_parameters(){
     }
     dp=$('#inp_date_2').val();
     if (dp != ''){
-       second_half = dp;
+        second_half = dp;
     }else{
-       second_date=new Date();
-       second_half=second_date.toISOString() + second_date.toISOString().substr(5,2) + second_date.toISOString().substr(8,2);
+        second_date=new Date();
+        second_half=second_date.toISOString() + second_date.toISOString().substr(5,2) + second_date.toISOString().substr(8,2);
     }
     search_string = first_half + '--' + second_half;
 
@@ -332,7 +333,7 @@ function get_parameters(){
 
     var types = [key, name, view_type, search_string, inst_type_filter];
     return types;
- }
+}
 
 function init_page_js(){
     $('#datepick1').datepicker({autoclose: true,
