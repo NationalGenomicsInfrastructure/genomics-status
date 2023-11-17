@@ -14,11 +14,11 @@ Description: Plots the data delivered.
 <p>The default view shows the total file size of all delivered data for a given project.</p>
 <div id="main_plot" style="height: 700px;">
 </div>
-<div id="control_container" style="margin-top:40px;">
-  <div class="row pb-4">
-    <div id="logs_date" class="col-md-6">
+<div id="control_container" class="mt-3">
+  <div class="row p-4 justify-items-center justify-content-center d-flex">
+    <div id="logs_date" class="col-md-5 align-self-center d-flex">
             <form class="row row-cols-lg-auto" id="logs_date_form">
-              <div class="col-12 align-self-center p-0 pl-3">
+              <div class="col-12 align-self-center justify-items-center justify-content-center p-0 pl-3 d-flex">
                 Select data delivered from:
               </div>
               <div class="col-12 p-1">
@@ -29,17 +29,17 @@ Description: Plots the data delivered.
               <div class="col-12 align-self-center p-0">
                 to
               </div>
-             <div class="col-12 p-1">
+              <div class="col-12 p-1">
                 <div class='input-group input-group-sm date' id='datepick2'>
-                     <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt"></span></span>
+                    <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt"></span></span>
                 </div>
-             </div>
-             <div class="col-12 p-1">
-               <button id="submit_interval" class="btn btn-primary">Search</button>
-             </div>
+              </div>
+              <div class="col-12 p-1">
+                <button id="submit_interval" class="btn btn-primary">Search</button>
+              </div>
             </form>
     </div>
-  <div class="col-md-3">
+  <div class="col-md-3 justify-items-center justify-content-center p-4 d-flex">
             <div id="view_select_div">
                 <form class='row row-cols-lg-auto' id="view_select_form" >
                   <div class="col-12 align-self-center p-0">
@@ -59,15 +59,15 @@ Description: Plots the data delivered.
                 </form>
             </div>
   </div>
-  <div class="col-md-3 align-self-center">
+  <div class="col-md-4 align-self-center justify-items-center justify-content-center p-4 d-flex">
             <div id="inst_type_filter_div">
-                 <form id="inst_type_filter_form">
-                     Filter by:
-                     <input id="filter_novaseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="NovaSeq" checked/> NovaSeq
-                     <input id="filter_miseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="MiSeq" checked/> MiSeq
-                     <input id="filter_nextseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="NextSeq" checked/> NextSeq
-                     <input id="filter_hiseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="HiSeq" checked/> HiSeq
-                 </form>
+                <form id="row inst_type_filter_form">
+                    Filter by:
+                    <input id="filter_novaseq_6000" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="NovaSeq 6000" checked/> NovaSeq6000
+                    <input id="filter_novaseqxplus" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="NovaSeq X Plus" checked/> NovaSeqXPlus
+                    <input id="filter_miseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="MiSeq" checked/> MiSeq
+                    <input id="filter_nextseq" class="filter_inst_type" type="checkbox" name="inst_type_filter" value="NextSeq" checked/> NextSeq
+                </form>
             </div>
   </div>
   </div>

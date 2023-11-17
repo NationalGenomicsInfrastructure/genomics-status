@@ -117,7 +117,8 @@ function build_series(data, key, name, view_type, filter_inst_type){
         var bioinfo_link="/bioinfo/"+data[d][0];
         var project_name = data[d][1].project_name;
         var date_close = data[d][1].close_date;
-        sequencing_platforms = ['NovaSeq', 'MiSeq', 'NextSeq', 'HiSeq'];	
+        sequencing_platforms = ['NovaSeq 6000', 'NovaSeq X Plus', 'MiSeq', 'NextSeq'];	
+        console.log(data[d][1].sequencing_platform)
 	    if (data[d][1].sequencing_platform == null && filter_inst_type.length > 0){
 	        continue;
 	    }
@@ -128,26 +129,28 @@ function build_series(data, key, name, view_type, filter_inst_type){
 	    }
         if (data[d][1].sequencing_platform == null){
             continue;
-        }else if (data[d][1].sequencing_platform.includes('NovaSeq') && filter_inst_type.includes('NovaSeq')){
+        }else if (data[d][1].sequencing_platform.includes('NovaSeq 6000') && filter_inst_type.includes('NovaSeq 6000')){
+            continue;
+        }else if (data[d][1].sequencing_platform.includes('NovaSeq X Plus') && filter_inst_type.includes('NovaSeq X Plus')){
             continue;
         }else if (data[d][1].sequencing_platform.includes('MiSeq') && filter_inst_type.includes('MiSeq')){
             continue;
         }else if (data[d][1].sequencing_platform.includes('NextSeq') && filter_inst_type.includes('NextSeq')){
             continue;
-        }else if (data[d][1].sequencing_platform.includes('HiSeq') && filter_inst_type.includes('HiSeq')){
-            continue;
-        }  
+        } 
         if (view_type == 'sequencing_platform'){
             if (data[d][1].sequencing_platform == null){
                 series_name = "Other/undefined";
-            }else if (data[d][1].sequencing_platform.includes('NovaSeq')){
-                series_name = "NovaSeq";
+            }else if (data[d][1].sequencing_platform.includes('NovaSeq 6000')){
+                series_name = "NovaSeq6000";
+            }else if (data[d][1].sequencing_platform.includes('NovaSeq X Plus')){
+                series_name = "NovaSeqXPlus";
             }else if (data[d][1].sequencing_platform.includes('MiSeq')){
                 series_name = "MiSeq";
             }else if (data[d][1].sequencing_platform.includes('NextSeq')){
                 series_name = "NextSeq";
             }else{
-                series_name = "HiSeq";
+                series_name = "Other/undefined";
             }
             view_color = view_coloring(series_name);
         }else if (view_type == 'application'){
@@ -260,7 +263,7 @@ function get_plot_data(key, name, view_type, search_string="", filter_inst_type)
 //Since we have been confused by the coloring in the past, I set a few default colors to re-use for simplicity.
 function view_coloring(series_name){
     switch(series_name){
-        case "NovaSeq":
+        case "NovaSeq6000":
         case "HDD":
         case "RNA-Seq":
         case "Finished Library":
@@ -280,6 +283,7 @@ function view_coloring(series_name){
         case "Tissue":
         case "Special":
             return chroma('green').hex();
+        case "NovaSeqXPlus":
         case "Metagenomics":
         case "Genomic DNA":
             return chroma('orange').hex();
