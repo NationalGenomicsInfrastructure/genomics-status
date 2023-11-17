@@ -14,9 +14,9 @@ Description: Plots the yield of recent flowcells.
 <p>The default view shows 1 year worth of flowcells. </p>
 <div id="main_plot" style="height: 700px;">
 </div>
-<div id="control_container mt-5">
-    <div class="row p-3">
-        <div id="logs_date" class="col-md-3 d-flex justify-content-center border border-secondary p-3 rounded-3">
+<div id="control_container" class="p-5">
+    <div class="row p-3 justify-content-center align-items-center">
+        <div id="logs_date" class="col-md-3 mx-4 justify-content-center align-items-center d-flex border border-secondary p-3 rounded-3">
           <form id="logs_date_form">
             <div class="row">
               <div class="col-10">
@@ -25,19 +25,19 @@ Description: Plots the yield of recent flowcells.
                     <input id="inp_date_1" type='text' class="form-control" /><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt"></span></span>
                 </div>
                 to
-               <div class='input-group input-group-sm date' id='datepick2'>
+                <div class='input-group input-group-sm date' id='datepick2'>
                 <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt"></span></span>
-               </div>
+                </div>
               </div>
-             <div class="col-2 d-flex justify-content-center align-self-center">
+              <div class="col-2 d-flex justify-content-center align-self-center">
               <button id="submit_interval" class="btn btn-primary btn-sm mt-3">Search</button>
-             </div>
+              </div>
             </div>
           </form>
         </div>
-        <div class="col-md-5 d-flex justify-content-center">
-          <div class="d-flex justify-content-center border border-secondary p-3 rounded-3 w-50">
-            <div id="display_type">
+        <div class="col-md-3 d-flex justify-content-center align-items-center mx-4">
+          <div class="d-flex justify-content-center align-items-center border border-secondary p-3 rounded-3">
+            <div id="display_type" class="px-4 py-4">
                 <form id="display_type_form">
                     Display type :
                     <div class='btn-group btn-group-sm' data-toggle="button" id='display_type_buttons'>
@@ -46,7 +46,7 @@ Description: Plots the yield of recent flowcells.
                     </div>
                 </form>
             </div>
-            <div id="plot_type" class="ml-3">
+            <div id="plot_type" class="px-4 py-4">
                 <form id="plot_type_form">
                     Plot type:
                         <div class='btn-group btn-group-sm' data-toggle="button" id='plot_type_buttons'>
@@ -57,8 +57,8 @@ Description: Plots the yield of recent flowcells.
             </div>
           </div>
         </div>
-        <div class="col-md-4 d-flex justify-content-center border border-secondary p-3 rounded-3">
-            <div id="key_select_div" class="mr-3">
+        <div class="col-md-3 d-flex justify-content-center align-items-center border border-secondary p-3 rounded-3 mx-4">
+            <div id="key_select_div" class="px-4 py-3">
                 <form id="key_select_form">
                     Display :
                     <select class="form-select" id="key_select">
@@ -71,8 +71,8 @@ Description: Plots the yield of recent flowcells.
                     </select>
                 </form>
             </div>
-            <div id="color_select_div">
-                <form id="color_select_form" >
+            <div id="color_select_div" class="px-4 py-3">
+                <form id="color_select_form">
                     Color by :
                     <select class="form-select" id="color_select">
                         <option class="color_option" value='chemver'>Chemistry Version</option>
@@ -84,14 +84,14 @@ Description: Plots the yield of recent flowcells.
             </div>
         </div>
     </div>
-    <div class="row my-3 pb-3 pr-3">
-      <div class="col-md-8 p-3" >
-          <div id="inst_filter_div" class="border border-secondary p-3 rounded-3" style="width: 70%">
+    <div class="row p-3 justify-content-center align-items-center">
+      <div class="row col-md-6 mx-1 p-3 justify-content-center align-items-center" >
+          <div id="inst_filter_div" class="border border-secondary p-3 rounded-3 justify-content-center align-items-center">
           </div>
       </div>
-        <div id="inst_type_filter_div" class="col-md-4 p-0 pt-3">
-          <div class="border border-secondary p-3 ml-1 rounded-3 pb-4">
-          <label class="mb-2 d-flex justify-content-center"> Include instrument types </label>
+        <div id="inst_type_filter_div" class="col-md-4 mx-1">
+          <div class="border border-secondary p-3 rounded-3 pb-4">
+          <label class="mb-2 d-flex justify-content-center align-items-center"> Include instrument types </label>
             <form class="d-flex justify-content-center pb-1" id="inst_type_filter_form">
               <div class="form-check form-check-inline">
                 <input class="form-check-input filter_inst_type" type="checkbox" id="filter_miseq" name="inst_type_filter" value="M">
