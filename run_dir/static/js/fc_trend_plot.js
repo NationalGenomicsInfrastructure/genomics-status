@@ -491,8 +491,41 @@ function update_instrument_filters(){
 		                }
 		            }
 		            if (my_inst_name==''){
-		                my_inst_name=my_inst_id;
-		            }
+                        switch (my_inst_id){
+                            case 'A01901':
+                                my_inst_name='Esther';
+                                break;
+                            case 'A00621':
+                                my_inst_name='Greta';
+                                break;
+                            case 'A00689':
+                                my_inst_name='Barbara';
+                                break;
+                            case 'A00187':
+                                my_inst_name='Ingrid';
+                                break;
+                            case 'A00001':
+                                my_inst_name='A00001';
+                                break;
+                            case 'M01320':
+                                my_inst_name='Bombur';
+                                break;
+                            case 'VH00203':
+                                my_inst_name='Jarda';
+                                break;
+                            case 'LH00202':
+                                my_inst_name='LH00202';
+                                break;
+                            case 'LH00188':
+                                my_inst_name='LH00188';
+                                break;
+                            case 'LH00217':
+                                my_inst_name='LH00217';
+                                break;
+                            default:
+                                my_inst_name=my_inst_id;
+                            }
+                    }
 		            html+=my_inst_name + "</li>";
                 html+=" ";
 	            }
