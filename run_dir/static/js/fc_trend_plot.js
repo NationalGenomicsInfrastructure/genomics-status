@@ -504,9 +504,6 @@ function update_instrument_filters(){
                             case 'A00187':
                                 my_inst_name='Ingrid';
                                 break;
-                            case 'A00001':
-                                my_inst_name='A00001';
-                                break;
                             case 'M01320':
                                 my_inst_name='Bombur';
                                 break;
@@ -514,13 +511,13 @@ function update_instrument_filters(){
                                 my_inst_name='Jarda';
                                 break;
                             case 'LH00202':
-                                my_inst_name='LH00202';
+                                my_inst_name='Ada';
                                 break;
                             case 'LH00188':
-                                my_inst_name='LH00188';
+                                my_inst_name='Karolina';
                                 break;
                             case 'LH00217':
-                                my_inst_name='LH00217';
+                                my_inst_name='Alice';
                                 break;
                             default:
                                 my_inst_name=my_inst_id;
