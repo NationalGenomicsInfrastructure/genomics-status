@@ -242,14 +242,22 @@ class StatsAggregationHandler(UnsafeHandler):
                 self.cleaning,
             )
         for fa in self.nanopore_flowcell_aggregates:
-            # Use |= to merge the resulting dictionary with what's already 
-            # inside data[fa], | works as a union for dictionaries.
-            data[fa] |= get_stats_data(
-                self.application.nanopore_runs_db,
-                self.nanopore_flowcell_aggregates[fa][0],
-                self.nanopore_flowcell_aggregates[fa][1],
-                self.cleaning,
+            nanopore_stats = get_stats_data(
+                    self.application.nanopore_runs_db,
+                    self.nanopore_flowcell_aggregates[fa][0],
+                    self.nanopore_flowcell_aggregates[fa][1],
+                    self.cleaning,
             )
+
+            # Use |= to merge the resulting dictionary with what's already
+            # inside data[fa][key], | works as a union for dictionaries.
+            # Doesn't work recursively though, so we have to do it for the bottom level only
+            for key, value in nanopore_stats.items():
+                if key in data[fa]:
+                    data[fa][key] |= value
+                else:
+                    data[fa][key] = value
+
         self.set_header("Content-Type", "application/json")
         self.set_status(200)
         self.write(json.dumps(data))
