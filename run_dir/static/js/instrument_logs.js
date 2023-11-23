@@ -63,8 +63,8 @@ const init_submit_button = () => {
         const loc = `/instrument_logs/${Math.round(first_date.getTime() / 1000)}-${Math.round(second_date.getTime() / 1000)}`;
         window.location.href = loc;
         });
-    };
+};
 
-    init_listjs();
-    init_datepickers();
-    init_submit_button();
+init_listjs();
+init_datepickers();
+init_submit_button();
