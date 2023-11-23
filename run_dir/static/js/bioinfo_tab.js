@@ -365,10 +365,10 @@ $('.table-bioinfo-status-runview').on('click', 'tr:not(.bioinfo-status-disabled)
     const fc_trs_to_change = $.map(lane_trs_to_change, (lane_tr) => {
         return $(lane_tr).attr('data-parent');
     });
-    const uniqueFcTrs = [...new Set(fc_trs_to_change)];
+    fc_trs_to_change = [...new Set(fc_trs_to_change)];
 
     // update on flowcell level
-    $.each(uniqueFcTrs, (i, fc_tr) => {
+    $.each(fc_trs_to_change, (i, fc_tr) => {
         const fc_td = $(fc_tr).children('td.' + td_class);
         aggregateTdStatus(fc_td, 'no_recursion');
         checkSampleStatus(fc_td, 'no_recursion');
@@ -419,9 +419,9 @@ function checkSampleStatus(td, no_recursion) {
     if (delivered !== '') {
         new_status = 'Delivered';
     } else {
-        // qc_done when none of the QC boxes contain '?'
+        // qc_done when none of the qc boxes contain '?'
         const qc_done = $(td).parent().children('td.bioinfo-status-qc:contains("?")').length === 0;
-        // same for BP
+        // same for bp
         const bp_done = $(td).parent().children('td.bioinfo-status-bp:contains("?")').length === 0;
 
         // qc_new when all the qc boxes contain '?'
@@ -486,7 +486,7 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
 
     const td_text = td.text().trim(); // '?'
     const td_class = bioinfo_qc_statuses[td_text]; // 'unknown'
-    const next_text = bioinfo_qc_values[(bioinfo_qc_values.indexOf(tdText) + 1) % bioinfo_qc_values.length]; // 'Pass'
+    const next_text = bioinfo_qc_values[(bioinfo_qc_values.indexOf(td_text) + 1) % bioinfo_qc_values.length]; // 'Pass'
     const next_class = bioinfo_qc_statuses[next_text]; // 'success'
 
     td.removeClass(td_class);
@@ -495,7 +495,7 @@ $('.table-bioinfo-status').on('click', 'tr:not(.bioinfo-status-disabled) td.bioi
 
     const child_trs = getAllChildTrs(td.parent());
     const column = td.attr('class').split(/\s+/)[1];
-    const child_tds = childTrs.children(`td.${column}`);
+    const child_tds = child_trs.children(`td.${column}`);
     if (child_tds.length !== 0) {
         child_tds.removeClass(bioinfo_qc_classes.join(' ')).addClass(next_class).text(next_text);
     }
@@ -616,8 +616,8 @@ function loadTable(view_table) {
 };
 
 function aggregateStatus(tr) {
-    // This one does not aggregate the rows if the project is delivered (because it is .bioinfo-status-disabled)
-    // var firstLevelChildren = $(tr).closest('table').find("tr:not(.bioinfo-status-disabled)[data-parent='#" + $(tr).attr('id') + "']");
+    // this one does not aggregate the rows if the project is delivered (because it is .bioinfo-status-disabled)
+    // var first_level_children = $(tr).closest('table').find("tr:not(.bioinfo-status-disabled)[data-parent='#" + $(tr).attr('id') + "']");
 
     // IMPORTANT!!!
     // this one does aggregate the delivered rows, but the behavior is not tested completely.
