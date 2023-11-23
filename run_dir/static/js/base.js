@@ -244,18 +244,18 @@ const make_markdown = (s) => {
 // Solution: wrap thousand groups in span elements that have margins
 const nice_numbers = (count) => {
   // Strip out the commas that are sometimes given server-side
-  const countString = count.toString().replace(/,/g, '');
+  count.toString().replace(/,/g, '');
   // loop through thousands from the end, wrapping in the span
   let parsed = '';
 
-  while (countString.match(/\d{3}$/)) {
-    const chunk = countString.match(/\d{3}$/)[0];
+  while (count.match(/\d{3}$/)) {
+    const chunk = count.match(/\d{3}$/)[0];
     parsed = `<span class="thousand_group">${chunk}</span>${parsed}`;
-    countString = countString.replace(/\d{3}$/, '');
+    count = count.replace(/\d{3}$/, '');
   }
 
   // Add on whatever is remaining in the string.
-  parsed = countString + parsed;
+  parsed = count + parsed;
   return parsed;
 };
 
