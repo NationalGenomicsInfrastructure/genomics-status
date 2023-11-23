@@ -46,24 +46,56 @@ const fill_prioprojs_table = () => {
     $.getJSON("api/v1/prio_projects", (data) => {
         $("#prio_projs_table_body").empty();
         data.forEach((project) => {
-            const checkValue = Math.abs(project[2]);
-            let dayColor = '';
-            let statColor = '';
+            const check_value = Math.abs(project[2]);
             let status = '';
             switch (project[1]) {
                 case 'days_recep_ctrl':
-                    dayColor = checkValue > 7 ? (checkValue > 14 ? 'text-danger' : 'text-orange') : 'text-success';
-                    statColor = 'text-recep';
+                    day_color = check_value > 7 ? (check_value > 14 ? 'text-danger' : 'text-orange') : 'text-success';
+                    day_color = 'text-recep';
                     status = 'In reception control';
                     break;
-                // Add cases for other values...
+                case 'days_prep_start':
+                    day_color = check_value > 7 ?  (check_value > 10 ? 'text-danger': 'text-orange') :'text-success';
+                    day_color = 'text-prep-start';
+                    status = 'To prep';
+                    break;
+                case 'days_prep':
+                    day_color = check_value > 7 ? (check_value > 10 ? 'text-danger': 'text-orange') :'text-success';
+                    stat_color = 'text-prep';
+                    status = 'In prep';
+                    break;
+                case 'days_seq_start':
+                    day_color = check_value > 7 ? (check_value > 10 ? 'text-danger': 'text-orange') :'text-success';
+                    stat_color = 'text_seq_start';
+                    status = 'To sequencing';
+                    break;
+                case 'days_seq':
+                    day_color = check_value > 7 ? (check_value > 10 ? 'text-danger': 'text-orange') : 'text-success';
+                    stat_color = 'text-seq';
+                    status = 'In sequencing';
+                    break;
+                case 'days_analysis':
+                    day_color = check_value > 7 ? (check_value > 10 ? 'text-danger': 'text-orange') : 'text-success';
+                    stat_color = 'text-analysis';
+                    status = 'In analysis';
+                    break;
+                case 'days_data_delivery':
+                    day_color = check_value > 7 ? (check_value > 10 ? 'text-danger': 'text-orange') : 'text-success';
+                    stat_color = 'text-delivery';
+                    status = 'In delivery';
+                    break;
+                case 'days_close':
+                    day_color = check_value > 7 ? (check_value > 10 ? 'text-danger': 'text-orange') : 'text-success';
+                    stat_color = 'text-close';
+                    status = 'To close';
+                    break;
             }
             const projectLibrary = project[0].split('|');
             const library = projectLibrary[1];
             const nameProjId = projectLibrary[0].replace('(', '').replace(')', '').split(' ');
             const tblRow = `<tr><td><a href="/project/${nameProjId[1]}">${nameProjId[1]}</a></td>` +
-                `<td>${library}</td><td><span class="${statColor}">${status}</span></td>` +
-                `<td><span class="${dayColor}">${checkValue}</span></td></tr>`;
+                `<td>${library}</td><td><span class="${stat_color}">${status}</span></td>` +
+                `<td><span class="${day_color}">${check_value}</span></td></tr>`;
             $("#prio_projs_table_body").append(tblRow);
         });
         init_listjs();
