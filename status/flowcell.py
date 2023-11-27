@@ -290,7 +290,13 @@ def get_view_val(key: str, view) -> Optional[dict]:
     else:
         raise AssertionError(f"Multiple matching rows found for key {key} in view {view.view.name}")
 
-def fetch_ont_run_stats(run_name: str, view_all_stats, view_project, view_mux_scans) -> dict:
+def fetch_ont_run_stats(
+        run_name: str,
+        view_all_stats,
+        view_project,
+        view_mux_scans,
+        view_pore_count_history,
+    ) -> dict:
     """Take a run name and different db views that uses run name as key.
     Return a dict containing all the relevant info to show on the flowcells page.
     """
@@ -382,13 +388,15 @@ def fetch_ont_run_stats(run_name: str, view_all_stats, view_project, view_mux_sc
             run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
 
     # If the last recorded thing happening to the flow cell as a QC
-    if run_dict["pore_count_history"][0]["type"] == "qc":
+    pore_count_history = get_view_val(run_name, view_pore_count_history)
+    if pore_count_history and len(pore_count_history) > 0 and pore_count_history[0]["type"] == "qc":
         
         # Calculate the mux diff
         mux_scans = get_view_val(run_name, view_mux_scans)
-        first_mux = int(mux_scans[0]["total_pores"])
-        qc = run_dict["pore_count_history"][0]["num_pores"]
-        run_dict["first_mux_loss_pc"] = round((qc - first_mux) / qc * 100, 2)
+        if mux_scans and len(mux_scans) > 0:
+            first_mux = int(mux_scans[0]["total_pores"])
+            qc = run_dict["pore_count_history"][0]["num_pores"]
+            run_dict["first_mux_loss_pc"] = round((qc - first_mux) / qc * 100, 2)
 
     # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
     query = re.compile("(p|P)\d{5,6}")
@@ -434,14 +442,27 @@ class ONTFlowcellHandler(SafeHandler):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
     def fetch_ont_flowcell(self, run_name):
-        view_all = self.application.nanopore_runs_db.view(
+        
+        view_all_stats = self.application.nanopore_runs_db.view(
             "info/all_stats", descending=True
         )
         view_project = self.application.projects_db.view(
             "project/id_name_dates", descending=True
         )
+        view_mux_scans = self.application.nanopore_runs_db.view(
+            "info/mux_scans", descending=True
+        )
+        view_pore_count_history = self.application.nanopore_runs_db.view(
+            "info/pore_count_history", descending=True
+        )
 
-        return fetch_ont_run_stats(view_all, view_project, run_name)
+        return fetch_ont_run_stats(
+                    run_name=run_name, 
+                    view_all_stats=view_all_stats, 
+                    view_project=view_project, 
+                    view_mux_scans=view_mux_scans,
+                    view_pore_count_history=view_pore_count_history,
+                )
 
     def fetch_barcodes(self, run_name):
         """Returns dictionary whose keys are barcode IDs and whose values are dicts containing

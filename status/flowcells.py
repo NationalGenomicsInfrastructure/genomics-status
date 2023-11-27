@@ -141,9 +141,11 @@ class FlowcellsHandler(SafeHandler):
         view_project = self.application.projects_db.view(
             "project/id_name_dates", descending=True
         )
-
         view_mux_scans = self.application.nanopore_runs_db.view(
             "info/mux_scans", descending=True
+        )
+        view_pore_count_history = self.application.nanopore_runs_db.view(
+            "info/pore_count_history", descending=True
         )
 
         ont_flowcells = OrderedDict()
@@ -156,6 +158,7 @@ class FlowcellsHandler(SafeHandler):
                     view_all_stats=view_all_stats, 
                     view_project=view_project, 
                     view_mux_scans=view_mux_scans,
+                    view_pore_count_history=view_pore_count_history,
                 )
             except Exception as e:
                 unfetched_runs.append(row.key)
