@@ -1,5 +1,6 @@
 from status.util import SafeHandler
 from datetime import datetime
+from typing import Optional
 import pandas as pd
 import re
 import os
@@ -277,20 +278,27 @@ class FlowcellHandler(SafeHandler):
                 )
             )
 
+def get_view_val(key: str, view) -> Optional[dict]:
+    """Get the value of a specified key from a view"""
 
-def fetch_ont_run_stats(view_all, view_project, run_name):
-    """Inputs:
-    - The nanopore_runs database view "all_stats"
-    - The projects database view "id_name_dates"
-    - The nanopore run name
+    matching_rows = [row for row in view.rows if row.key == key]
 
-    Outputs:
-    - A dictionary containing information pertaining to the run that has been transformed and/or formatted.
+    if len(matching_rows) == 1:
+        return matching_rows[0].value
+    elif len(matching_rows) == 0:
+        return None
+    else:
+        raise AssertionError(f"Multiple matching rows found for key {key} in view {view.view.name}")
+
+def fetch_ont_run_stats(run_name: str, view_all_stats, view_project, view_mux_scans) -> dict:
+    """Take a run name and different db views that uses run name as key.
+    Return a dict containing all the relevant info to show on the flowcells page.
     """
-
-    db_entry = [row for row in view_all.rows if row.key == run_name][0]
-    run_dict = db_entry.value
+    
+    run_dict = {}
     run_dict["run_name"] = run_name
+    all_stats = get_view_val(run_name, view_all_stats)
+    run_dict.update(all_stats)
 
     walk_str2int(run_dict)
 
@@ -372,6 +380,15 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
             else:
                 continue
             run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
+
+    # If the last recorded thing happening to the flow cell as a QC
+    if run_dict["pore_count_history"][0]["type"] == "qc":
+        
+        # Calculate the mux diff
+        mux_scans = get_view_val(run_name, view_mux_scans)
+        first_mux = int(mux_scans[0]["total_pores"])
+        qc = run_dict["pore_count_history"][0]["num_pores"]
+        run_dict["first_mux_loss_pc"] = round((qc - first_mux) / qc * 100, 2)
 
     # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
     query = re.compile("(p|P)\d{5,6}")
