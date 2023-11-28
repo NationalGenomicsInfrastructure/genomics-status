@@ -363,6 +363,11 @@ function get_parameters(){
 
         //color type
         var color_by=$("#color_select option:selected").val();
+        if (!(color_by === "inst")) {
+            $("#inst_filter_div").hide();
+        } else {
+            $("#inst_filter_div").show();
+        }
 
         var ret=[search_string, display_type, key, name, inst_type_filter, inst_filter, color_by, plot_type];
 
