@@ -135,20 +135,30 @@ class FlowcellsHandler(SafeHandler):
     def list_ont_flowcells(self):
         """Fetch dictionary of the form {ont_run_name : ont_run_stats_dict}"""
 
-        view_all = self.application.nanopore_runs_db.view(
+        view_all_stats = self.application.nanopore_runs_db.view(
             "info/all_stats", descending=True
         )
         view_project = self.application.projects_db.view(
             "project/id_name_dates", descending=True
         )
+        view_mux_scans = self.application.nanopore_runs_db.view(
+            "info/mux_scans", descending=True
+        )
+        view_pore_count_history = self.application.nanopore_runs_db.view(
+            "info/pore_count_history", descending=True
+        )
 
         ont_flowcells = OrderedDict()
 
         unfetched_runs = []
-        for row in view_all.rows:
+        for row in view_all_stats.rows:
             try:
                 ont_flowcells[row.key] = fetch_ont_run_stats(
-                    view_all, view_project, row.key
+                    run_name=row.key, 
+                    view_all_stats=view_all_stats, 
+                    view_project=view_project, 
+                    view_mux_scans=view_mux_scans,
+                    view_pore_count_history=view_pore_count_history,
                 )
             except Exception as e:
                 unfetched_runs.append(row.key)
