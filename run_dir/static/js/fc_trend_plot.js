@@ -365,8 +365,10 @@ function get_parameters(){
         var color_by=$("#color_select option:selected").val();
         if (!(color_by === "inst")) {
             $("#inst_filter_div").hide();
+            $("#inst_type_filter_div").removeClass("col-md-5").addClass("col-md-8");
         } else {
             $("#inst_filter_div").show();
+            $("#inst_type_filter_div").removeClass("col-md-8").addClass("col-md-5");
         }
 
         var ret=[search_string, display_type, key, name, inst_type_filter, inst_filter, color_by, plot_type];
