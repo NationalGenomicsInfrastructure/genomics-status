@@ -181,11 +181,7 @@
                     </td>
 
                     <td class="first_mux_loss text-center">
-                        {% try %}
-                            {{ ont_flowcells[onefc]["first_mux_loss_pc"] }} 
-                        {% except %}
-                            {{ "" }}
-                        {% end %}
+                        {{ ont_flowcells[onefc].get("first_mux_loss_pc", "") }} 
                     </td>
 
                     <td class="peak_pore_health text-center">
