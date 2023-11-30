@@ -78,6 +78,14 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         }
     };
 
+    function addBP() {
+        toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.bp_yield}</b>';
+    }
+
+    if (display_by == "flowcell") {
+        addBP();
+    }
+
     var thresholdColors = ['#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff'];
     var thresholdLabels = [
         'NovaSeq SP threshold to pass',
@@ -142,6 +150,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
         var col_color = "";
         var series_name = "";
         var flowcell_link="/flowcells/"+fcid;
+        var bp_yield = data[d].bp_yield;
         //Seq platform filter
         if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
             continue;
@@ -187,7 +196,6 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             if (data[d].cver.includes('25B')){
                 series_name = "25B";
                 }
-
             if (series_name == 'MiSeq Nano'){
                 col_color = color_by_chemistry('nano');
             }else{
@@ -244,7 +252,8 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             dp = {
                 y: data[d][key],
                 name: fcid,
-                ownURL: flowcell_link
+                ownURL: flowcell_link,
+                bp_yield: bp_yield
             };
             series[series_name].data.push(dp);
             categories.push(fcid);
@@ -276,6 +285,7 @@ function get_plot_data(search_string="", key, name, display_by, filter_inst_type
             make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type, plot_type);
         });
 }
+
 function color_by_instrument(instrument){
     return current_color_schemes[1](window.current_instrument_list.indexOf(instrument)).hex();
 }
