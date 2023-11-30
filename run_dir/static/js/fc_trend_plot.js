@@ -268,7 +268,11 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
 }
 
 function get_plot_data(search_string="", key, name, display_by, filter_inst_type, filter_inst, color_type){
+        //show loading screen before api call
+        show_loading();
         $.getJSON('/api/v1/flowcell_yield/'+search_string, function(data) {
+            //hide screen when data loaded
+            hide_loading();
             //update plot data
             window.current_plot_data=data;
             //update instrument list
@@ -578,4 +582,14 @@ function update_instrument_filters(){
             refresh_plot();
         });
     });
+}
+
+// Show loading spinner screen
+function show_loading() {
+    $("#loading").show();
+}
+
+// Hide loading spinner screen
+function hide_loading() {
+    $("#loading").hide();
 }
