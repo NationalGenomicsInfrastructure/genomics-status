@@ -17,7 +17,7 @@ class DataFlowcellYieldHandler(SafeHandler):
         else:
             first_term, second_term = search_string.split('-')
 
-        bp_list = self.calculate_fc_yield()
+        bp_list = self.calculate_fc_yield(first_term, second_term)
         plot_docs = [x.value for x in self.application.x_flowcells_db.view("plot/reads_yield")[first_term:second_term+'ZZZZ'].rows]
 
         for k in plot_docs:
@@ -28,10 +28,10 @@ class DataFlowcellYieldHandler(SafeHandler):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(plot_docs))
 
-    def calculate_fc_yield(self):
+    def calculate_fc_yield(self, first_term, second_term):
         bp_list = []
 
-        fc_sum_doc = [x for x in self.application.x_flowcells_db.view("info/summary2_full_id")]
+        fc_sum_doc = [x for x in self.application.x_flowcells_db.view("info/summary2_full_id")[first_term:second_term+'ZZZZ'].rows]
 
         for d in fc_sum_doc:
             fc_yield = 0
