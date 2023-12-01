@@ -21,12 +21,28 @@ function refresh_plot(){
 }
 
 function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type, plot_type){
+    function sumBPYield(series){
+        sum = 0
+        for (let i = 0; i < series.length; i++){
+            if (series[i].visible){
+                for (let j = 0; j < series[i].data.length; j++){
+                    sum += series[i].data[j].bp_yield
+                }
+            }
+        }
+        return sum.toFixed(2);
+    }
     var toplot={
         chart: {
-            type: plot_type
+            type: plot_type,
+            events: {
+                render: function(){
+                    this.setTitle({text: "Accumulated yield in Mbp: " + sumBPYield(this.series)}, false, false)
+                }
+            }
         },
         title: {
-            text : name+' of the recent flowcells'
+            text: function() { return name+' of the recent flowcells, yield sum in Mbp: ' +  sumBPYield(series, data, true); }
         },
         yAxis: {
             min : 0,

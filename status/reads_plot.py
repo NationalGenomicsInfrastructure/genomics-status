@@ -46,7 +46,8 @@ class DataFlowcellYieldHandler(SafeHandler):
                         bp = v.get('yield')
                         bp_no_float = float(bp.replace(',', '').replace('.', ''))
                         bp_no_int = int(bp_no_float) / 100000
-                        fc_yield += bp_no_int
+                        round_bp_no = round(bp_no_int, 2)
+                        fc_yield += round_bp_no
                         list_pair = (fc, fc_yield)
                         bp_list.append(list_pair)
 
