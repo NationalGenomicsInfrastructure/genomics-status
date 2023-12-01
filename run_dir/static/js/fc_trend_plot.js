@@ -21,17 +21,21 @@ function refresh_plot(){
 }
 
 function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type, plot_type){
-    function sumBPYield(series){
-        sum = 0
-        for (let i = 0; i < series.length; i++){
-            if (series[i].visible){
-                for (let j = 0; j < series[i].data.length; j++){
-                    sum += series[i].data[j].bp_yield
+    function sumBPYield(series) {
+        var sum = 0; 
+        if (series && Array.isArray(series)) {
+            for (let i = 0; i < series.length; i++) {
+                if (series[i] && series[i].visible && series[i].data && Array.isArray(series[i].data)) {
+                    for (let j = 0; j < series[i].data.length; j++) {
+                        if (series[i].data[j] && typeof series[i].data[j].bp_yield === 'number') {
+                            sum += series[i].data[j].bp_yield;
+                        }
+                    }
                 }
             }
-        }
+        }   
         return sum;
-    }
+    }    
     var toplot={
         chart: {
             type: plot_type,
