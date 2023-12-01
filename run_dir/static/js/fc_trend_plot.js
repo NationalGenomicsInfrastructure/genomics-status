@@ -37,7 +37,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             type: plot_type,
             events: {
                 render: function(){
-                    this.setTitle({text: "Accumulated yield in Mbp: " + (sumBPYield(this.series))}, false, false)
+                    this.setTitle({text: "Accumulated yield in Mbp: " + (sumBPYield(this.series)).toFixed(2)}, false, false)
                 }
             }
         },
