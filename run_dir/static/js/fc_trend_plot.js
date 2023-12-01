@@ -30,14 +30,14 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                 }
             }
         }
-        return sum.toFixed(2);
+        return sum;
     }
     var toplot={
         chart: {
             type: plot_type,
             events: {
                 render: function(){
-                    this.setTitle({text: "Accumulated yield in Mbp: " + sumBPYield(this.series)}, false, false)
+                    this.setTitle({text: "Accumulated yield in Mbp: " + (sumBPYield(this.series))}, false, false)
                 }
             }
         },
