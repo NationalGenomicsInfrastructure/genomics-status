@@ -22,7 +22,7 @@ function refresh_plot(){
 
 function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type, plot_type){
     function sumBPYield(series) {
-        var sum = 0; 
+        var sum = 0;
         if (series && Array.isArray(series)) {
             for (let i = 0; i < series.length; i++) {
                 if (series[i] && series[i].visible && series[i].data && Array.isArray(series[i].data)) {
@@ -41,7 +41,8 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             type: plot_type,
             events: {
                 render: function(){
-                    this.setTitle({text: "Accumulated yield in Mbp: " + (sumBPYield(this.series)).toFixed(2)}, false, false)
+                    var formatted_sum = (sumBPYield(this.series)).toLocaleString();
+                    this.setTitle({text: 'Accumulated yield in Mbp: ' + formatted_sum}, false, false);
                 }
             }
         },
@@ -99,7 +100,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
     };
 
     function addBP() {
-        toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.bp_yield}</b>';
+        toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.bp_yield:,.0f}</b>';
     }
 
     if (display_by == "flowcell") {
@@ -170,7 +171,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
         var col_color = "";
         var series_name = "";
         var flowcell_link="/flowcells/"+fcid;
-        var bp_yield = data[d].bp_yield;
+        var bp_yield = data[d].total_yield;
         //Seq platform filter
         if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
             continue;
