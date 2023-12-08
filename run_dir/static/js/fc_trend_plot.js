@@ -78,75 +78,58 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         }
     };
 
-    //Styling the default view
-    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){
-        toplot.yAxis={
+    var thresholdColors = ['#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff'];
+    var thresholdLabels = [
+        'NovaSeq SP threshold to pass',
+        'NovaSeq S1 threshold to pass',
+        'NovaSeq S2 threshold to pass',
+        'NovaSeq S4 threshold to pass',
+        'NovaSeqXPlus 10B threshold to pass'
+    ];
+
+    function applyThresholds(thresholdValues) {
+        toplot.yAxis = {
             title: {
                 enabled: true,
                 text: 'Clusters',
             },
             labels: {
-                formatter: function() {
+                formatter: function () {
                     return this.value.toExponential(2);
                 }
             },
-            plotLines: [{
-                color: '#ffb700',
-                dashStyle: 'longdash',
-                value: 650000000,
-                width: 1,
-                label: {
-                    text: 'NovaSeq SP threshold to pass',
-                    align: 'right'
-                }
-                }, {
-                    color: '#ff00ae',
+            plotLines: thresholdValues.map(function (value, index) {
+                return {
+                    color: thresholdColors[index],
                     dashStyle: 'longdash',
-                    value: 1300000000,
-                    width: 1,
-                    label: {
-                        text: 'NovaSeq S1 threshold to pass',
-                        align: 'right'
-                    }
-                }, {
-                    color: '#0080ff',
-                    dashStyle: 'longdash',
-                    value: 3300000000,
-                    width: 1,
-                    label: {
-                        text: 'NovaSeq S2 threshold to pass',
-                        align: 'right'
-                    }
-                }, {
-                    color: '#11ad11',
-                    dashStyle: 'longdash',
-                    value: 8000000000,
+                    value: value,
                     width: 1,
                     zIndex: 1,
                     label: {
-                        text: 'NovaSeq S4 threshold to pass',
-                        align: 'left'
-                    }
-                }, {
-                    color: '#8400ff',
-                    dashStyle: 'longdash',
-                    value: 8000000000,
-                    width: 1,
-                    zIndex: 1,
-                    label: {
-                        text: 'NovaSeqXPlus 10B threshold to pass',
+                        text: thresholdLabels[index],
                         align: 'right'
                     }
-                }]
-            }
-    };
-    serie=build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
-    toplot.series=serie[1];
+                };
+            })
+        };
+    }
+
+    // Styling the default view
+    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell") {
+        applyThresholds([650000000, 1300000000, 3300000000, 8000000000, 10000000000]);
+    }
+
+    // Styling the lane view
+    if (color_type == "chemver" && key == "total_clusters" && display_by == "lane") {
+        applyThresholds([325000000, 650000000, 1650000000, 2000000000, 1000000000]);
+    }
+
+    var serie = build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
+    toplot.series = serie[1];
     toplot.xAxis.categories = serie[0];
     $("#main_plot").highcharts(toplot);
-    window.current_plot_obj=toplot;
-
-}
+    window.current_plot_obj = toplot;
+}   
 
 function build_series(data, key, name, display_by, filter_inst_type, filter_inst, color_type){
 
@@ -380,6 +363,13 @@ function get_parameters(){
 
         //color type
         var color_by=$("#color_select option:selected").val();
+        if (!(color_by === "inst")) {
+            $("#inst_filter_div").hide();
+            $("#inst_type_filter_div").removeClass("col-md-5").addClass("col-md-8");
+        } else {
+            $("#inst_filter_div").show();
+            $("#inst_type_filter_div").removeClass("col-md-8").addClass("col-md-5");
+        }
 
         var ret=[search_string, display_type, key, name, inst_type_filter, inst_filter, color_by, plot_type];
 
@@ -508,8 +498,38 @@ function update_instrument_filters(){
 		                }
 		            }
 		            if (my_inst_name==''){
-		                my_inst_name=my_inst_id;
-		            }
+                        switch (my_inst_id){
+                            case 'A01901':
+                                my_inst_name='Esther';
+                                break;
+                            case 'A00621':
+                                my_inst_name='Greta';
+                                break;
+                            case 'A00689':
+                                my_inst_name='Barbara';
+                                break;
+                            case 'A00187':
+                                my_inst_name='Ingrid';
+                                break;
+                            case 'M01320':
+                                my_inst_name='Bombur';
+                                break;
+                            case 'VH00203':
+                                my_inst_name='Jarda';
+                                break;
+                            case 'LH00202':
+                                my_inst_name='Ada';
+                                break;
+                            case 'LH00188':
+                                my_inst_name='Karolina';
+                                break;
+                            case 'LH00217':
+                                my_inst_name='Alice';
+                                break;
+                            default:
+                                my_inst_name=my_inst_id;
+                            }
+                    }
 		            html+=my_inst_name + "</li>";
                 html+=" ";
 	            }
