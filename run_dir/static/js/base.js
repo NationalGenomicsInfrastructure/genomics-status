@@ -294,12 +294,12 @@ const formatDateTime = (d, printTime) => {
   if (typeof d.getMonth !== 'function') {
     d = new Date(d);
   }
-  const dd = d.getDate();
-  const mm = d.getMonth() + 1; // January is 0!
-  const ddFormatted = dd < 10 ? '0' + dd : dd;
-  const mmFormatted = mm < 10 ? '0' + mm : mm;
+  let dd = d.getDate();
+  let mm = d.getMonth() + 1; // January is 0!
+  dd = dd < 10 ? '0' + dd : dd;
+  mm = mm < 10 ? '0' + mm : mm;
 
-  let returnstring = `${d.getFullYear()}-${mmFormatted}-${ddFormatted}`;
+  let returnstring = `${d.getFullYear()}-${mm}-${dd}`;
 
   if (printTime) {
     returnstring += `, ${d.getHours()}:${d.getMinutes()}`;

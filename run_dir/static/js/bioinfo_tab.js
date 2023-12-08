@@ -1003,26 +1003,14 @@ const setParentSpanStatus = (span) => {
     let parent_status = "";
     if (statuses.length === 1) {
         parent_status = statuses[0];
-    } else if (statuses.indexOf('Sequencing') !== -1) {
-        parent_status = 'Sequencing';
-    } else if (statuses.indexOf('Demultiplexing') !== -1) {
-        parent_status = 'Demultiplexing';
-    } else if (statuses.indexOf('Transferring') !== -1) {
-        parent_status = 'Transferring';
-    } else if (statuses.indexOf('New') !== -1) {
-        parent_status = 'New';
-    } else if (statuses.indexOf('Failed') !== -1) {
-        parent_status = 'Failed';
-    } else if (statuses.indexOf('QC-ongoing') !== -1) {
-        parent_status = 'QC-ongoing';
-    } else if (statuses.indexOf('QC-done') !== -1) {
-        parent_status = 'QC-done';
-    } else if (statuses.indexOf('BP-ongoing') !== -1) {
-        parent_status = 'BP-ongoing';
-    } else if (statuses.indexOf('BP-done') !== -1) {
-        parent_status = 'BP-done';
-    } else if (statuses.indexOf('Delivered') !== -1) {
-        parent_status = 'Delivered';
+    } else {
+        const keywords = ['Sequencing', 'Demultiplexing', 'Transferring', 'New', 'Failed', 'QC-ongoing', 'QC-done', 'BP-ongoing', 'BP-done', 'Delivered'];
+        for (const keyword of keywords) {
+            if (statuses.indexOf(keyword) !== -1) {
+                parent_status = keyword;
+                break;
+            }
+        }
     }
 
     const parent_span = $(parent_tr).find('td.bioinfo-status-runstate span.badge');

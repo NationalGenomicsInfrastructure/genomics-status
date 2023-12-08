@@ -47,16 +47,18 @@ const fill_prioprojs_table = () => {
         $("#prio_projs_table_body").empty();
         data.forEach((project) => {
             const check_value = Math.abs(project[2]);
+            let day_color = '';
+            let stat_color = '';
             let status = '';
             switch (project[1]) {
                 case 'days_recep_ctrl':
                     day_color = check_value > 7 ? (check_value > 14 ? 'text-danger' : 'text-orange') : 'text-success';
-                    day_color = 'text-recep';
+                    stat_color = 'text-recep';
                     status = 'In reception control';
                     break;
                 case 'days_prep_start':
                     day_color = check_value > 7 ?  (check_value > 10 ? 'text-danger': 'text-orange') :'text-success';
-                    day_color = 'text-prep-start';
+                    stat_color = 'text-prep-start';
                     status = 'To prep';
                     break;
                 case 'days_prep':
