@@ -47,7 +47,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             }
         },
         title: {
-            text: function() { return name+' of the recent flowcells, yield sum in Mbp: ' +  sumBPYield(series, data, true); }
+            text: function() { return name+' of the recent flowcells, yield sum in Mbp: ' +  sumBPYield(series); }
         },
         yAxis: {
             min : 0,
@@ -99,12 +99,8 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         }
     };
 
-    function addBP() {
-        toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.bp_yield:,.0f}</b>';
-    }
-
     if (display_by == "flowcell") {
-        addBP();
+        toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.bp_yield:,.0f}</b>';
     }
 
     var thresholdColors = ['#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff'];
