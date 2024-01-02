@@ -80,8 +80,8 @@ function create_note_link(date){
 function make_running_note(date, note, sticky){
   sticky = typeof sticky !== "undefined" ? sticky : false;
   try {
-    let category = '';
-    let note_id = '';
+    var category = '';
+    var note_id = '';
     date = new Date(date);
     if (note['note'] != undefined){
         if(date > new Date('2015-01-01')){
