@@ -453,7 +453,7 @@ app.component('v-pricing-quote', {
               <div class="fw-bold py-3">
                 Using cost calculator version {{ this.$root.published_cost_calculator["Version"] }} (published {{ new Date(this.$root.published_cost_calculator["Issued at"]).toLocaleString() }})
               </div>
-              <div v-if="latest_cost_calculator && this.$root.published_cost_calculator['Version']!== latest_cost_calculator['Version']" class="alert alert-danger" role="alert">
+              <div v-if="this.origin === 'Agreement' && this.$root.published_cost_calculator['Version']!== latest_cost_calculator['Version']" class="alert alert-danger" role="alert">
                 The latest cost calculator version is {{ this.latest_cost_calculator["Version"] }} (published {{ new Date(this.latest_cost_calculator["Issued at"]).toLocaleString() }})
               </div>
               <h4>Pricing Category</h4>
