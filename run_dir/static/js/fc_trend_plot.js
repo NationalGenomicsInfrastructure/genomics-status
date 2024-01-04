@@ -1,4 +1,5 @@
 
+
 window.current_plot_data=null;
 window.current_plot_obj=null;
 window.current_color_schemes=null;
@@ -33,7 +34,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                     }
                 }
             }
-        }   
+        }
         return sum;
     }
     var toplot={
@@ -45,6 +46,9 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                     this.setTitle({text: 'Accumulated yield in Mbp: ' + formatted_sum}, false, false);
                 }
             }
+        },
+        title: {
+            text: function() { return name+' of the recent flowcells, yield sum in Mbp: ' +  sumBPYield(series); }
         },
         yAxis: {
             min : 0,
@@ -96,16 +100,8 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         }
     };
 
-    if (display_by === "flowcell") {
-        var instruments = ['A', 'M0', 'VH', 'LH'];
-        var filter_inst_check = Object.values(filter_inst_type);
-        if (instruments.every(function(inst) {
-            return filter_inst_check.indexOf(inst) !== -1;
-        })) {
-            toplot.tooltip.pointFormat = 'Reads passed: <b>{point.y}</b><br />Yield passed: <b>{point.yield_passed:,.0f}</b>';
-        } else {
-            toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.bp_yield:,.0f}</b>';
-        }
+    if (display_by == "flowcell") {
+        toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.bp_yield:,.0f}</b>';
     }
 
     var thresholdColors = ['#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff'];
@@ -169,16 +165,12 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
     for (d in data){
         var tmp=data[d].id.split('_');
         var fcid=tmp[0]+'_'+tmp[tmp.length-1];
-        var full_fcid = data[d].id;
         var col_color = "";
         var series_name = "";
         var flowcell_link="/flowcells/"+fcid;
-        var ont_fc_link = "/flowcells_ont/"+full_fcid;
         var bp_yield = data[d].total_yield;
         //Seq platform filter
-        if (data[d].instrument.indexOf('MN') != -1 && filter_inst_type.includes('MN')){
-                continue;
-        }else if (data[d].instrument.indexOf('M0') != -1 && filter_inst_type.includes('M0')){
+        if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
             continue;
         }else if (data[d].instrument.indexOf('A') != -1 && filter_inst_type.includes('A')){
             continue;
@@ -186,64 +178,44 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             continue;
         }else if (data[d].instrument.indexOf('LH') != -1 && filter_inst_type.includes('LH')){
             continue;
-        }else if (data[d].instrument.indexOf('Pr') != -1 && filter_inst_type.includes('Pr')){
-            continue;
         }
         // Set colours and the name of data series
         if (color_type=='chemver'){
             if (data[d].cver.includes('S4')){
                 series_name = "S4";
-                col_color = color_by_chemistry(series_name);
-            }
-            else if (data[d].cver.includes('S2')){
+                }
+            if (data[d].cver.includes('S2')){
                 series_name = "S2";
-                col_color = color_by_chemistry(series_name);
-            }
-            else if (data[d].cver.includes('S1')){
+                }
+            if (data[d].cver.includes('S1')){
                 series_name = "S1";
-                col_color = color_by_chemistry(series_name);
-            }
-            else if (data[d].cver.includes('SP')){
+                }
+            if (data[d].cver.includes('SP')){
                 series_name = "SP";
-                col_color = color_by_chemistry(series_name);
-            }
-            else if (data[d].cver.includes('Version2')){
+                }
+            if (data[d].cver.includes('Version2')){
                 series_name = "MiSeq v2";
-                col_color = '#00b7d4';
-            }
-            else if (data[d].cver.includes('Version3')){
+                }
+            if (data[d].cver.includes('Version3')){
                 series_name = "MiSeq v3";
-                col_color = '#a34929';
-            }
-            else if (data[d].mode == '2'){
+                }
+            if (data[d].mode == '2'){
                 series_name = "MiSeq Nano";
-            }
-            else if (data[d].cver.includes('2000')){
+                }
+            if (data[d].cver.includes('2000')){
                 series_name = "NextSeq 2000";
-                col_color = '#575757';
-            }
-            else if (data[d].cver.includes('10B')){
+                }
+            if (data[d].cver.includes('10B')){
                 series_name = "10B";
-                col_color = color_by_chemistry(series_name);
-            }
-            else if (data[d].cver.includes('1.5B')){
+                }
+            if (data[d].cver.includes('1.5B')){
                 series_name = "1.5B";
-                col_color = color_by_chemistry(series_name);
-            }
-            else if (data[d].cver.includes('25B')){
+                }
+            if (data[d].cver.includes('25B')){
                 series_name = "25B";
-                col_color = color_by_chemistry(series_name);
-            }
-            else if (series_name == 'MiSeq Nano'){
-                col_color = '#a84da8';
-            }
-            else if (data[d].cver.includes('19414')){
-                series_name = "MN19414";
-                col_color = '#0300bf';
-            }
-            else if (data[d].cver.includes('24')){
-                series_name = "PromethION 24";
-                col_color = '#f27d52';
+                }
+            if (series_name == 'MiSeq Nano'){
+                col_color = color_by_chemistry('nano');
             }else{
                 col_color = color_by_chemistry(data[d].cver);
             }
@@ -258,9 +230,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             }
         }else{
             col_color=color_by_type(data[d].instrument);
-            if (data[d].instrument.indexOf('MN') != -1){
-                series_name = "MN19414";
-            }else if (data[d].instrument.indexOf('M0') != -1){
+            if (data[d].instrument.indexOf('M') != -1){
                 series_name = "MiSeq";
             }else if (data[d].instrument.indexOf('A') != -1){
                 series_name = "NovaSeq 6000";
@@ -268,8 +238,6 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 series_name = "NextSeq 2000";
             }else if (data[d].instrument.indexOf('LH') != -1){
                 series_name = "NovaSeqXPlus";
-            }else if (data[d].instrument.indexOf('Pr') != -1){
-                series_name = "PromethION 24";
             }else{
                 continue;
             }
@@ -298,18 +266,6 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 series[series_name].data.push(dp);
                 categories.push(fcid_lane);
             }
-        }
-        if (series_name === 'PromethION 24' || series_name === 'MN19414'){
-            read_count_passed = data[d].read_count_passed;
-            yield_passed = data[d].yield_passed;
-            dp = {
-                y: read_count_passed,
-                name: fcid,
-                ownURL: ont_fc_link,
-                yield_passed: yield_passed
-            };
-            series[series_name].data.push(dp);
-            categories.push(fcid);
         }else{ // Flowcell display
             dp = {
                 y: data[d][key],
@@ -357,18 +313,14 @@ function color_by_instrument(instrument){
 }
 
 function color_by_type(instrument){
-    if (instrument.indexOf('MN') != -1){
+    if (instrument.indexOf('M') != -1){
         return current_color_schemes[0](0).hex();
-    }else if (instrument.indexOf('M0') != -1){
-        return current_color_schemes[0](1).hex();
     }else if (instrument.indexOf('A') != -1){
-        return current_color_schemes[0](2).hex();
+        return current_color_schemes[0](1).hex();
     }else if (instrument.indexOf('VH') != -1){
-        return current_color_schemes[0](3).hex();
+        return current_color_schemes[0](2).hex();
     }else if (instrument.indexOf('LH') != -1){
-        return current_color_schemes[0](4).hex();
-    }else if (instrument.indexOf('Pr') != -1){
-        return current_color_schemes[0](5).hex();
+        return current_color_schemes[0](3).hex();
     }else{
         return "#c3c3c3";
     }
@@ -528,9 +480,9 @@ function update_months_list(){
     }
 }
 function update_color_schemes(){
-    var inst_type_cs=chroma.scale(['#90ee90','#7866df','#ff0000','#ff9933', '#003399', '#339966']).domain([0, 5]);
+    var inst_type_cs=chroma.scale(['#90ee90','#7866df','#ad00af','#ff0000']).domain([0, 3]);
     var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
-    var chem_cs=chroma.scale(['#ff00ae', '#0080ff', '#11ad11', '#ffb700', '#8400ff']).domain([0, 4])
+    var chem_cs = chroma.scale(['#ff00ae', '#0080ff', '#11ad11', '#ffb700', '#8400ff', '#00b7d4', '#a34929', '#a84da8', '#575757', '#0300bf']).domain([0, 9])
     var month_cs=chroma.scale(['yellow', 'lightblue', 'pink', 'orange']).domain([0,window.current_months_list.length-1]);
     window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs];
 }
@@ -605,12 +557,6 @@ function update_instrument_filters(){
                                 break;
                             case 'LH00217':
                                 my_inst_name='Alice';
-                                break;
-                            case 'MN19414':
-                                my_inst_name='MN19414';
-                                break;
-                            case 'PromethION 24':
-                                my_inst_name='PromethION 24';
                                 break;
                             default:
                                 my_inst_name=my_inst_id;

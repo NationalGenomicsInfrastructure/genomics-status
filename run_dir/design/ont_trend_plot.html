@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+<!--
+Template file: ont_trend_plot.html
+URL: /ont_flowcells_plot/[timestamp1]-[timestamp]2
+Title: ONT flowcells trend plot
+Description: Plots the yield of recent ONT flowcells.
+-->
+
+{% block stuff %}
+
+<div id="page_content">
+<h1>ONT Flowcells Trend Plot</h1>
+<p>The default view shows 1 year worth of flowcells.</p>
+<div id="loading" style="text-align:center;margin-top:250px"><span class="fa fa-sync fa-spin"></span> Loading plot..</div>
+<div id="ont_main_plot" style="height: 700px;"></div>
+<div id="control_container" class="p-5">
+    <div class="row p-3 justify-content-center align-items-center">
+        <div id="logs_date" class="col-md-3 mx-4 justify-content-center align-items-center d-flex border border-secondary p-3 rounded-3">
+          <form id="logs_date_form">
+            <div class="row">
+              <div class="col-10">
+                Select flowcells from
+                <div class='input-group input-group-sm date' id='ont_datepick1'>
+                    <input id="ont_inp_date_1" type='text' class="form-control" /><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt"></span></span>
+                </div>
+                to
+                <div class='input-group input-group-sm date' id='ont_datepick2'>
+                <input id="ont_inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><span class="input-group-text fa fa-calendar-alt"></span></span>
+                </div>
+              </div>
+              <div class="col-2 d-flex justify-content-center align-self-center">
+              <button id="submit_interval" class="btn btn-primary btn-sm mt-3">Search</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="col-md-3 d-flex justify-content-center align-items-center mx-4">
+          <div class="d-flex justify-content-center align-items-center border border-secondary p-3 rounded-3">
+            <div id="plot_type" class="px-4 py-4">
+                <form id="plot_type_form">
+                    Plot type:
+                        <div class='btn-group btn-group-sm' data-toggle="button" id='plot_type_buttons'>
+                            <button id="plot_lines" aria-pressed="true" class="btn btn-outline-dark btn-sm active">Lines</button>
+                            <button id="plot_scatter" class="btn btn-outline-dark btn-sm">Scatter</button>
+                        </div>
+                </form>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 d-flex justify-content-center align-items-center border border-secondary p-3 rounded-3 mx-4">
+            <div id="color_select_div" class="px-4 py-3">
+                <form id="color_select_form">
+                    Color by :
+                    <select class="form-select" id="color_select">
+                        <option class="color_option" value='fcver'>Flowcell Type</option>
+                        <option class="color_option" value='inst'>Instrument Type</option>
+                        <option class="color_option" value='month'>Month</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="row p-3 justify-content-center align-items-center">
+        <div id="inst_type_filter_div" class="col-md-5 mx-1">
+          <div class="border border-secondary p-3 rounded-3 pb-4">
+          <label class="mb-2 d-flex justify-content-center align-items-center"> Include instrument types </label>
+            <form class="d-flex justify-content-center pb-1" id="inst_type_filter_form">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input filter_inst_type" type="checkbox" id="filter_promethion" name="filter_inst_type" value="P" checked>
+                <label class="form-check-label" for="filter_promethion">PromethION 24</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input filter_inst_type" type="checkbox" id="filter_mn19414" name="filter_inst_type" value="M" checked>
+                <label class="form-check-label" for="filter_mn19414">MN19414</label>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="/static/js/bootstrap-datepicker.min.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script type="text/javascript" src="/static/js/chroma.min.js" ></script>
+<script src="/static/js/ont_trend_plot.js?v={{ gs_globals['git_commit'] }}"></script>
+{% end %}
