@@ -75,7 +75,10 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
         tooltip: {
             useHTML: true,
             headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{point.key}</small><br />',
-            pointFormat: '{series.name} : <b>{point.y}</b>{point.read_count}<br>Basecalled Pass Bases: <b>{point.passed_bases:,.0f}</b>'
+            pointFormat: `{series.name} : <b>{point.y}</b>{point.read_count}<br>
+                            Basecalled Pass Bases: <b>{point.passed_bases:,.0f}</b><br>
+                            Basecalled Pass Read Count: <b>{point.passed_reads:,.0f}</b><br>
+                            Sample Name: <b>{point.sample_name}</b>`
         },
         credits: {
             enabled : false
@@ -116,10 +119,11 @@ function build_series(data, key, name, color_type, filter_inst_type){
         var series_name = "";
         var flowcell_link="/flowcells_ont/"+fcid;
         var read_count = parseInt(data[d].read_count);
-        //var passed_reads = parseInt(data[d].basecalled_pass_read_count); MAYBE NEED THIS?
+        var passed_reads = parseInt(data[d].basecalled_pass_read_count);
         var passed_bases = parseInt(data[d].basecalled_pass_bases);
         var fc_type = data[d].flow_cell_type;
         var instrument = data[d].instrument;
+        var sample_name = data[d].sample_name;
         //Instrument filter for MN19414 and PromethION
         if (typeof instrument === 'string' && filter_inst_type && ((instrument.indexOf('M') !== -1 
             && filter_inst_type.includes('M')) || (instrument.indexOf('P') !== -1 && filter_inst_type.includes('P')))) {
@@ -181,7 +185,9 @@ function build_series(data, key, name, color_type, filter_inst_type){
             y: read_count,
             name: fcid,
             ownURL: flowcell_link,
-            passed_bases: passed_bases
+            passed_bases: passed_bases,
+            passed_reads: passed_reads,
+            sample_name: sample_name
         };
         series[series_name].data.push(dp);
         categories.push(fcid);
