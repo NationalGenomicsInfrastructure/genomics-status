@@ -314,7 +314,7 @@ class DeliveriesPageHandler(SafeHandler):
                 number_of_samples=number_of_samples,
                 status_list=status_list,
                 project_status=project_status,
-                project_type_list=project_type_list
+                project_type_list=project_type_list,
                 responsible_list=responsible_list,
                 lims_responsibles=lims_responsibles,
                 form_date=LatestRunningNoteHandler.formatDate,
