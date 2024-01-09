@@ -122,6 +122,7 @@ class DeliveriesPageHandler(SafeHandler):
         number_of_samples = 0
         status_list = OrderedDict()
         project_status = {}
+        project_type_list = {}
         responsible_list = {}
         # Predefined statuses and order
         flowcell_statuses = [
@@ -251,6 +252,19 @@ class DeliveriesPageHandler(SafeHandler):
                         self.application, "project", project_id
                     ).values()
                 )[0]
+
+                # project type (needed for filters)
+                project_type = (
+                    summary_data[project_id]
+                    .get("details")
+                    .get("type")
+                    or "unknown"
+                )
+
+                if project_type not in project_type_list:
+                    project_type_list[project_type] = 0
+                project_type_list[project_type] += 1
+
                 # responsibles (needed for filters)
                 bioinfo_responsible = (
                     summary_data[project_id]
@@ -300,6 +314,7 @@ class DeliveriesPageHandler(SafeHandler):
                 number_of_samples=number_of_samples,
                 status_list=status_list,
                 project_status=project_status,
+                project_type_list=project_type_list
                 responsible_list=responsible_list,
                 lims_responsibles=lims_responsibles,
                 form_date=LatestRunningNoteHandler.formatDate,

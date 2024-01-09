@@ -4,7 +4,7 @@ $(document).ready(function(){
         var raw_html = $(this).html();
         $(this).html( marked(raw_html) );
     });
-    
+
     $('.fillbadgecolour').html(function(){
         //from running_notes.js
         let categories = JSON.parse($(this).text().replace(/'/g, '"'))
@@ -151,6 +151,16 @@ $('.all-statuses').click(function() {
 // display none statuses
 $('.none-statuses').click(function(){
     $('.fc-status-checkbox:checked').prop('checked', false).trigger('change');
+});
+
+// display all types
+$('.all-types').click(function() {
+    $('.proj-type-checkbox:not(:checked)').prop('checked', true).trigger('change');
+});
+
+// display none types
+$('.none-types').click(function(){
+    $('.proj-type-checkbox:checked').prop('checked', false).trigger('change');
 });
 
 // display all responsibles

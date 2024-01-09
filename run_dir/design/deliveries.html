@@ -54,6 +54,25 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 	        {% end %}
         {% end %}
       </div>
+      <div class="form col-md-4 type-filters">
+        <h4>Project type
+          <div class="btn-group">
+            <a href="#" class="btn btn-sm btn-outline-dark all-types">All</a>
+            <a href="#" class="btn btn-sm btn-outline-dark none-types">None</a>
+          </div>
+        </h4>
+        <div id="visible-classes" class="{{ ' '.join(project_type_list.keys()) }}"></div>
+        <div id="filtered-classes" class=""></div>
+        {% for type, number in project_type_list.items() %}
+	        {% if number != 0 %}
+	        <div class="chkbox mb-2">
+	          <label class="checkbox-inline">
+	            <input class="proj-type-checkbox mr-1" type="checkbox" value="{{ type }}" checked> {{ status }}
+	              <span class="badge rounded-pill bg-secondary"> {{ number }}</span></label>
+	        </div>
+	        {% end %}
+        {% end %}
+      </div>
       <div class="form col-md-4 responsible-filters">
         <h4>Bioinfo responsible
           <div class="btn-group">
