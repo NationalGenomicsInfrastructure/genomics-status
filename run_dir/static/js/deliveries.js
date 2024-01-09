@@ -130,6 +130,19 @@ $(".fc-status-checkbox").change(function() {
     }
 });
 
+// filter projects by project type
+$(".proj-type-checkbox").change(function() {
+    var project_type = $(this).val();
+    var show = $(this).is(':checked');
+    if (show) {
+        $('div.delivery:not(.status-filtered):hidden:has(h3 small span.bi-project-facility:contains('+project_type+'))')
+            .show().removeClass('bioinfo-filtered');
+    } else { // hide
+        $('div.delivery:visible:has(h3 small span.bi-project-facility:contains('+project_type+'))').hide()
+            .addClass('bioinfo-filtered');
+    }
+});
+
 // filter projects by bioinfo responsible
 $(".bi-responsible-checkbox").change(function() {
     var bioinfo_responsible = $(this).val();
