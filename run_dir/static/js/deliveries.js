@@ -136,10 +136,10 @@ $(".proj-type-checkbox").change(function() {
     var show = $(this).is(':checked');
     if (show) {
         $('div.delivery:not(.status-filtered):hidden:has(h3 small span.bi-project-facility:contains('+project_type+'))')
-            .show().removeClass('bioinfo-filtered');
+            .show().removeClass('proj-type-filtered');
     } else { // hide
         $('div.delivery:visible:has(h3 small span.bi-project-facility:contains('+project_type+'))').hide()
-            .addClass('bioinfo-filtered');
+            .addClass('proj-type-filtered');
     }
 });
 
