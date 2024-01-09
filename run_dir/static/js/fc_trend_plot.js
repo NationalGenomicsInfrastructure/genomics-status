@@ -21,17 +21,38 @@ function refresh_plot(){
 }
 
 function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type, plot_type){
+    function sumBPYield(series) {
+        var sum = 0;
+        if (series && Array.isArray(series)) {
+            for (let i = 0; i < series.length; i++) {
+                if (series[i] && series[i].visible && series[i].data && Array.isArray(series[i].data)) {
+                    for (let j = 0; j < series[i].data.length; j++) {
+                        if (series[i].data[j] && typeof series[i].data[j].bp_yield === 'number') {
+                            sum += series[i].data[j].bp_yield;
+                        }
+                    }
+                }
+            }
+        }   
+        return sum;
+    }    
     var toplot={
         chart: {
-            type: plot_type
+            type: plot_type,
+            events: {
+                render: function(){
+                    var formatted_sum = (sumBPYield(this.series)).toLocaleString();
+                    this.setTitle({text: 'Accumulated yield in Mbp: ' + formatted_sum}, false, false);
+                }
+            }
         },
         title: {
-            text : name+' of the recent flowcells'
+            text: function() { return name+' of the recent flowcells, yield sum in Mbp: ' +  sumBPYield(series); }
         },
         yAxis: {
             min : 0,
             title : {
-              text : name
+                text : name
             }
         },
         legend: {
@@ -44,11 +65,11 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             series : {
                 turboThreshold: 0,
                 point: {
-                  events: {
-                    click: function() {
-                      window.open(this.options.ownURL)
+                    events: {
+                        click: function() {
+                            window.open(this.options.ownURL)
+                        }
                     }
-                  }
                 }
             }
         },
@@ -72,71 +93,68 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             data:[]
         }],
         exporting: {
-          csv: {
-            itemDelimiter: ';'
-          }
+            csv: {
+                itemDelimiter: ';'
+            }
         }
     };
 
-    //Styling the default view
-    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell"){
-        toplot.yAxis={
+    if (display_by == "flowcell") {
+        toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.bp_yield:,.0f}</b>';
+    }
+
+    var thresholdColors = ['#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff'];
+    var thresholdLabels = [
+        'NovaSeq SP threshold to pass',
+        'NovaSeq S1 threshold to pass',
+        'NovaSeq S2 threshold to pass',
+        'NovaSeq S4 threshold to pass',
+        'NovaSeqXPlus 10B threshold to pass'
+    ];
+
+    function applyThresholds(thresholdValues) {
+        toplot.yAxis = {
             title: {
                 enabled: true,
                 text: 'Clusters',
             },
             labels: {
-              formatter: function() {
-                            return this.value.toExponential(2);
-                                  }
-                    },
-            plotLines: [{
-              color: '#bf8e11',
-              dashStyle: 'longdash',
-              value: 650000000,
-              width: 1,
-              label: {
-                  text: 'NovaSeq SP threshold to pass',
-                  align: 'right'
-              }
-              }, {
-              color: '#169c16',
-              dashStyle: 'longdash',
-              value: 1300000000,
-              width: 1,
-              label: {
-                    text: 'NovaSeq S1 threshold to pass',
-                    align: 'right'
-              }
-              }, {
-              color: '#176abd',
-              dashStyle: 'longdash',
-              value: 3300000000,
-              width: 1,
-              label: {
-                   text: 'NovaSeq S2 threshold to pass',
-                   align: 'right'
-              }
-              }, {
-              color: '#bf1789',
-              dashStyle: 'longdash',
-              value: 8000000000,
-              width: 1,
-              zIndex: 1,
-              label: {
-                   text: 'NovaSeq S4 threshold to pass',
-                   align: 'right'
-                 }
-              }]
-          }
-    };
-    serie=build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
-    toplot.series=serie[1];
+                formatter: function () {
+                    return this.value.toExponential(2);
+                }
+            },
+            plotLines: thresholdValues.map(function (value, index) {
+                return {
+                    color: thresholdColors[index],
+                    dashStyle: 'longdash',
+                    value: value,
+                    width: 1,
+                    zIndex: 1,
+                    label: {
+                        text: thresholdLabels[index],
+                        align: 'right'
+                    }
+                };
+            })
+        };
+    }
+
+    // Styling the default view
+    if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell") {
+        applyThresholds([650000000, 1300000000, 3300000000, 8000000000, 10000000000]);
+    }
+
+    // Styling the lane view
+    if (color_type == "chemver" && key == "total_clusters" && display_by == "lane") {
+        applyThresholds([325000000, 650000000, 1650000000, 2000000000, 1000000000]);
+    }
+
+    var serie = build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
+    toplot.series = serie[1];
     toplot.xAxis.categories = serie[0];
     $("#main_plot").highcharts(toplot);
-    window.current_plot_obj=toplot;
-
-}
+    window.current_plot_obj = toplot;
+}   
 
 function build_series(data, key, name, display_by, filter_inst_type, filter_inst, color_type){
 
@@ -149,6 +167,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
         var col_color = "";
         var series_name = "";
         var flowcell_link="/flowcells/"+fcid;
+        var bp_yield = data[d].total_yield;
         //Seq platform filter
         if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
             continue;
@@ -194,7 +213,6 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             if (data[d].cver.includes('25B')){
                 series_name = "25B";
                 }
-
             if (series_name == 'MiSeq Nano'){
                 col_color = color_by_chemistry('nano');
             }else{
@@ -210,18 +228,18 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 continue;
             }
         }else{
-          col_color=color_by_type(data[d].instrument);
-          if (data[d].instrument.indexOf('M') != -1){
-              series_name = "MiSeq";
-          }else if (data[d].instrument.indexOf('A') != -1){
-              series_name = "NovaSeq 6000";
-          }else if (data[d].instrument.indexOf('VH') != -1){
-              series_name = "NextSeq 2000";
-          }else if (data[d].instrument.indexOf('LH') != -1){
-              series_name = "NovaSeqXPlus";
-          }else{
-              continue;
-          }
+            col_color=color_by_type(data[d].instrument);
+            if (data[d].instrument.indexOf('M') != -1){
+                series_name = "MiSeq";
+            }else if (data[d].instrument.indexOf('A') != -1){
+                series_name = "NovaSeq 6000";
+            }else if (data[d].instrument.indexOf('VH') != -1){
+                series_name = "NextSeq 2000";
+            }else if (data[d].instrument.indexOf('LH') != -1){
+                series_name = "NovaSeqXPlus";
+            }else{
+                continue;
+            }
         }
         // Create series
         if (!series.hasOwnProperty(series_name)) {
@@ -251,7 +269,8 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             dp = {
                 y: data[d][key],
                 name: fcid,
-                ownURL: flowcell_link
+                ownURL: flowcell_link,
+                bp_yield: bp_yield
             };
             series[series_name].data.push(dp);
             categories.push(fcid);
@@ -266,7 +285,11 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
 }
 
 function get_plot_data(search_string="", key, name, display_by, filter_inst_type, filter_inst, color_type){
+        //show loading screen before api call
+        show_loading();
         $.getJSON('/api/v1/flowcell_yield/'+search_string, function(data) {
+            //hide screen when data loaded
+            hide_loading();
             //update plot data
             window.current_plot_data=data;
             //update instrument list
@@ -283,6 +306,7 @@ function get_plot_data(search_string="", key, name, display_by, filter_inst_type
             make_plot(key, name, display_by, filter_inst_type, filter_inst, color_type, plot_type);
         });
 }
+
 function color_by_instrument(instrument){
     return current_color_schemes[1](window.current_instrument_list.indexOf(instrument)).hex();
 }
@@ -297,7 +321,7 @@ function color_by_type(instrument){
     }else if (instrument.indexOf('LH') != -1){
         return current_color_schemes[0](3).hex();
     }else{
-      return "#c3c3c3";
+        return "#c3c3c3";
     }
 }
 function color_by_month(id){
@@ -312,69 +336,76 @@ function color_by_chemistry(series_name){
 
 function get_parameters(){
      //first, the search string
-     var search_string;
-     var m_d_y;
-     var first_half;
-     var first_date;
-     var second_half;
-     var second_date;
-     var dp=$('#inp_date_1').val();
-     if (dp != ''){
-         y_m_d=dp.split('-');
-         first_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
-     }else{
-         first_date=new Date();
-         first_date.setYear(first_date.getYear()-1);
-         first_half=first_date.toISOString().substr(2,2) + first_date.toISOString().substr(5,2) + first_date.toISOString().substr(8,2);
-     }
-     dp=$('#inp_date_2').val();
-     if (dp != ''){
-        y_m_d=dp.split('-');
-        second_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
-     }else{
-        second_date=new Date();
-        second_half=second_date.toISOString().substr(2,2) + second_date.toISOString().substr(5,2) + second_date.toISOString().substr(8,2);
-     }
-     search_string=first_half + '-' + second_half;
+        var search_string;
+        var m_d_y;
+        var first_half;
+        var first_date;
+        var second_half;
+        var second_date;
+        var dp=$('#inp_date_1').val();
+        if (dp != ''){
+            y_m_d=dp.split('-');
+            first_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
+        }else{
+            first_date=new Date();
+            first_date.setYear(first_date.getYear()-1);
+            first_half=first_date.toISOString().substr(2,2) + first_date.toISOString().substr(5,2) + first_date.toISOString().substr(8,2);
+        }
+        dp=$('#inp_date_2').val();
+        if (dp != ''){
+            y_m_d=dp.split('-');
+            second_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
+        }else{
+            second_date=new Date();
+            second_half=second_date.toISOString().substr(2,2) + second_date.toISOString().substr(5,2) + second_date.toISOString().substr(8,2);
+        }
+        search_string=first_half + '-' + second_half;
 
-     //then, the display type
-     var display_type;
-     if ($("#display_by_flowcell").hasClass('active')){
-         display_type='flowcell'
-     }else if($("#display_by_lane").hasClass('active')){
-         display_type='lane'
-     }
+        //then, the display type
+        var display_type;
+        if ($("#display_by_flowcell").hasClass('active')){
+            display_type='flowcell'
+        }else if($("#display_by_lane").hasClass('active')){
+            display_type='lane'
+        }
 
-     var plot_type;
-     if ($("#plot_lines").hasClass('active')){
-         plot_type='line'
-     }else if($("#plot_scatter").hasClass('active')){
-         plot_type='scatter'
-     }
-     //then, they key and name to display
-     var key = $( "#key_select_form option:selected" ).val();
-     var name= $( "#key_select_form option:selected" ).text();
+        var plot_type;
+        if ($("#plot_lines").hasClass('active')){
+            plot_type='line'
+        }else if($("#plot_scatter").hasClass('active')){
+            plot_type='scatter'
+        }
+        //then, they key and name to display
+        var key = $( "#key_select_form option:selected" ).val();
+        var name= $( "#key_select_form option:selected" ).text();
 
-     //The instrument_type_filter
-     var inst_type_filter=[];
-     $(".filter_inst_type").each(function(){
-         if (! $(this).prop("checked")){
-             inst_type_filter.push($(this).val());
-         }
-     });
-     //the instrument filter
-     var inst_filter=[];
-     $(".filter_insts.disabled").each(function(){
-         inst_filter.push($(this).attr('id').split('_')[2]);
-     });
+        //The instrument_type_filter
+        var inst_type_filter=[];
+        $(".filter_inst_type").each(function(){
+            if (! $(this).prop("checked")){
+                inst_type_filter.push($(this).val());
+            }
+        });
+        //the instrument filter
+        var inst_filter=[];
+        $(".filter_insts.disabled").each(function(){
+            inst_filter.push($(this).attr('id').split('_')[2]);
+        });
 
-     //color type
-     var color_by=$("#color_select option:selected").val();
+        //color type
+        var color_by=$("#color_select option:selected").val();
+        if (!(color_by === "inst")) {
+            $("#inst_filter_div").hide();
+            $("#inst_type_filter_div").removeClass("col-md-5").addClass("col-md-8");
+        } else {
+            $("#inst_filter_div").show();
+            $("#inst_type_filter_div").removeClass("col-md-8").addClass("col-md-5");
+        }
 
-     var ret=[search_string, display_type, key, name, inst_type_filter, inst_filter, color_by, plot_type];
+        var ret=[search_string, display_type, key, name, inst_type_filter, inst_filter, color_by, plot_type];
 
-     return ret;
- }
+        return ret;
+    }
 
 function init_page_js(){
     $('#datepick1').datepicker({autoclose: true,
@@ -389,14 +420,14 @@ function init_page_js(){
     todayHighlight: true,
     weekStart: 1,
     daysOfWeekHighlighted: "0,6" });
-     var my_date=new Date();
-     $('#inp_date_2').val(my_date.toISOString().substr(0,10));
-     my_date.setYear(my_date.getFullYear()-1);
-     $('#inp_date_1').val(my_date.toISOString().substr(0,10));
+        var my_date=new Date();
+        $('#inp_date_2').val(my_date.toISOString().substr(0,10));
+        my_date.setYear(my_date.getFullYear()-1);
+        $('#inp_date_1').val(my_date.toISOString().substr(0,10));
     $('#submit_interval').click(function(e){
-     e.preventDefault();
-     window.current_plot_data=null;
-     refresh_plot();
+        e.preventDefault();
+        window.current_plot_data=null;
+        refresh_plot();
     });
     $("#display_type_buttons .btn").click(function(e){
         e.preventDefault();
@@ -450,7 +481,7 @@ function update_months_list(){
 function update_color_schemes(){
     var inst_type_cs=chroma.scale(['#90ee90','#7866df','#ad00af','#ff0000']).domain([0, 3]);
     var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
-    var chem_cs = chroma.scale(['#ff00ae', '#0080ff', '#11ad11', '#ffb700', '#8400ff']).mode('lch').domain([0, window.current_chemistries_list.length-1])
+    var chem_cs = chroma.scale(['#ff00ae', '#0080ff', '#11ad11', '#ffb700', '#8400ff', '#00b7d4', '#a34929', '#a84da8', '#575757', '#0300bf']).domain([0, 9])
     var month_cs=chroma.scale(['yellow', 'lightblue', 'pink', 'orange']).domain([0,window.current_months_list.length-1]);
     window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs];
 }
@@ -493,18 +524,48 @@ function update_instrument_filters(){
 		            for (d in data){
 		                my_inst_name='';
 		                if(my_inst_id.indexOf(data[d].key)!= -1){
-			                   my_inst_name=data[d].value;
-			                   break;
-		                 }
-		             }
-		             if (my_inst_name==''){
-		                 my_inst_name=my_inst_id;
-		             }
-		             html+=my_inst_name + "</li>";
-                 html+=" ";
-	             }
+			                my_inst_name=data[d].value;
+			                break;
+		                }
+		            }
+		            if (my_inst_name==''){
+                        switch (my_inst_id){
+                            case 'A01901':
+                                my_inst_name='Esther';
+                                break;
+                            case 'A00621':
+                                my_inst_name='Greta';
+                                break;
+                            case 'A00689':
+                                my_inst_name='Barbara';
+                                break;
+                            case 'A00187':
+                                my_inst_name='Ingrid';
+                                break;
+                            case 'M01320':
+                                my_inst_name='Bombur';
+                                break;
+                            case 'VH00203':
+                                my_inst_name='Jarda';
+                                break;
+                            case 'LH00202':
+                                my_inst_name='Ada';
+                                break;
+                            case 'LH00188':
+                                my_inst_name='Karolina';
+                                break;
+                            case 'LH00217':
+                                my_inst_name='Alice';
+                                break;
+                            default:
+                                my_inst_name=my_inst_id;
+                            }
+                    }
+		            html+=my_inst_name + "</li>";
+                html+=" ";
+	            }
             else {
-		            html_hiseq+='<li class="filter_insts list-inline-item pl-1" id="inst_filter_'+my_inst_id+'"style="cursor:pointer;border-left: 5px solid '+color_by_instrument(my_inst_id)+';">';
+		        html_hiseq+='<li class="filter_insts list-inline-item pl-1" id="inst_filter_'+my_inst_id+'"style="cursor:pointer;border-left: 5px solid '+color_by_instrument(my_inst_id)+';">';
                 for (d in data){
                     my_inst_name='';
                     if(my_inst_id.indexOf(data[d].key)!= -1){
@@ -518,11 +579,11 @@ function update_instrument_filters(){
                 html_hiseq+=my_inst_name + "</li>";
                 html_hiseq+=" ";
             }
-	      }
+	    }
         html+="</ul>";
         html_hiseq+="</ul>";
         if(html_hiseq.indexOf("</li>") >= 0){
-           html+=html_hiseq
+            html+=html_hiseq
         }
         $("#inst_filter_div").html(html);
 
@@ -538,4 +599,14 @@ function update_instrument_filters(){
             refresh_plot();
         });
     });
+}
+
+// Show loading spinner screen
+function show_loading() {
+    $("#loading").show();
+}
+
+// Hide loading spinner screen
+function hide_loading() {
+    $("#loading").hide();
 }

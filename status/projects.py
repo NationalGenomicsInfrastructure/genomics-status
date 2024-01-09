@@ -311,6 +311,10 @@ class ProjectsBaseDataHandler(SafeHandler):
             "project/summary_status", descending=True
         )
 
+        projects_with_agreements = self.application.agreements_db.view(
+            "project/project_id", descending=True
+        )
+
         # view_calls collects http requests to statusdb for each status requested
         view_calls = []
         if filter_projects[:1] != "P":
@@ -474,6 +478,9 @@ class ProjectsBaseDataHandler(SafeHandler):
                         final_projects[proj_id].get(start_date),
                         final_projects[proj_id].get(end_date),
                     )
+
+            if len(projects_with_agreements[proj_id]) > 0:
+                final_projects[proj_id]["has_agreements"] = True
 
         # Get Latest running note
         notes = self.application.running_notes_db.view(

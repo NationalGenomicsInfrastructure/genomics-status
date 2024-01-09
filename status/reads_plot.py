@@ -19,6 +19,10 @@ class DataFlowcellYieldHandler(SafeHandler):
 
         docs = [x.value for x in self.application.x_flowcells_db.view("plot/reads_yield")[first_term:second_term+'ZZZZ'].rows]
 
+        for doc in docs:
+            fc_yield = int(doc.get('total_yield')) / 1000000
+            doc['total_yield'] = fc_yield
+
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(docs))
 
