@@ -23,8 +23,8 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
 
 <div id="page_content" class="deliveries-page">
   <div id="ongoing_deliveries">
-    <h1>Ongoing <span id="page_title">Deliveries</span></h1>
-    <div class="row">
+    <h1 class="mt-4">Ongoing <span id="page_title">Deliveries</span></h1>
+    <div class="row mt-5">
       <div class="form col-md-3">
         <h4>Number of</h4>
         <dl class="dl-horizontal">
@@ -91,7 +91,7 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
     </div>
 
     {% for project_id, project in sorted(deliveries.items()) %}
-      <div class="delivery {{ ' '.join(project_status.get(project_id, [])) }}" id="bioinfo-delivery-project-{{ project_id }}">
+      <div class="delivery {{ ' '.join(project_status.get(project_id, [])) }} mt-5" id="bioinfo-delivery-project-{{ project_id }}">
         {% if 'error' in project %}
           <h3><a href="project/'+pid+'" class="bi-project-id">'+pid+'</a></h3><div class="alert alert-danger"><strong>Error</strong> - could not find project information for {{ project_id }}</div>
         {% else %}
