@@ -4,7 +4,7 @@ $(document).ready(function(){
         var raw_html = $(this).html();
         $(this).html( marked(raw_html) );
     });
-    
+
     $('.fillbadgecolour').html(function(){
         //from running_notes.js
         let categories = JSON.parse($(this).text().replace(/'/g, '"'))
@@ -130,6 +130,19 @@ $(".fc-status-checkbox").change(function() {
     }
 });
 
+// filter projects by project type
+$(".proj-type-checkbox").change(function() {
+    var project_type = $(this).val();
+    var show = $(this).is(':checked');
+    if (show) {
+        $('div.delivery:not(.status-filtered):hidden:has(h3 small span.bi-project-facility:contains('+project_type+'))')
+            .show().removeClass('proj-type-filtered');
+    } else { // hide
+        $('div.delivery:visible:has(h3 small span.bi-project-facility:contains('+project_type+'))').hide()
+            .addClass('proj-type-filtered');
+    }
+});
+
 // filter projects by bioinfo responsible
 $(".bi-responsible-checkbox").change(function() {
     var bioinfo_responsible = $(this).val();
@@ -151,6 +164,16 @@ $('.all-statuses').click(function() {
 // display none statuses
 $('.none-statuses').click(function(){
     $('.fc-status-checkbox:checked').prop('checked', false).trigger('change');
+});
+
+// display all types
+$('.all-types').click(function() {
+    $('.proj-type-checkbox:not(:checked)').prop('checked', true).trigger('change');
+});
+
+// display none types
+$('.none-types').click(function(){
+    $('.proj-type-checkbox:checked').prop('checked', false).trigger('change');
 });
 
 // display all responsibles
