@@ -583,6 +583,8 @@ function load_table_head(columns){
       tbl_head += '<abbr data-toggle="tooltip" title="Latest Library Validation Caliper Image">Caliper Image</abbr>';
     } else if(column_tuple[0] == 'Million Reads Sequenced') {
       tbl_head += '<abbr data-toggle="tooltip" title="Reads passing application QC criteria. If paired end, this is read pairs.">Million Reads Sequenced</abbr>';
+    } else if (column_tuple[0] == 'Workset'){
+      tbl_head += 'Library Prep';
     } else {
       tbl_head += column_tuple[0];
     }
