@@ -124,7 +124,7 @@
                                 stage
                             {% end %}
                             .scilifelab.se/clarity/work/
-                            {{ find_id(ont_flowcells[onefc]['experiment_name'], 'step') }}
+                            {{ find_id(ont_flowcells[onefc]['experiment_name'], 'step').split('-')[-1] }}
                             ">
                             {{ ont_flowcells[onefc]["experiment_name"] }}
                             </a>
