@@ -86,7 +86,7 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
         xAxis: {
             type: 'category',
             labels: {
-                enabled: false,
+                enabled: true,
             },
             categories: []
         },
@@ -190,7 +190,8 @@ function build_series(data, key, name, color_type, filter_inst_type){
             sample_name: sample_name
         };
         series[series_name].data.push(dp);
-        categories.push(fcid);
+        var x_axis_date = fcid.substr(0, 4) + '-' + fcid.substr(4, 2) + '-' + fcid.substr(6, 2);
+        categories.push(x_axis_date);
         // Stupid hackery to get a proper JS array for HCharts
         var proper_series = []
         for (s in series) {
