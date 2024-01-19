@@ -35,13 +35,30 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
         }
         return sum;
     }
+    function formatSumReads(value) {
+        if (value >= 1e6) {
+            return (value / 1e6).toFixed(2) + ' M';
+        } else if (value >= 1e3) {
+            return (value / 1e3).toFixed(2) + ' K';
+        } else {
+            return value.toLocaleString();
+        }
+    }
+    function formatBases(bases) {
+        if (bases === 0) return '0 Bases';
+        const k = 1000;
+        const sizes = ['Bases', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        const i = Math.floor(Math.log(bases) / Math.log(k));
+        return parseFloat((bases / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
     var toplot={
         chart: {
             type: plot_type,
             events: {
                 render: function(){
-                    var formatted_sum = (sumReads(this.series)).toLocaleString();
-                    this.setTitle({text: 'Accumulated reads: ' + formatted_sum}, false, false);
+                    var sum_reads = sumReads(this.series);
+                    var formatted_sum = formatSumReads(sum_reads);
+                    this.setTitle({ text: 'Accumulated reads: ' + formatted_sum }, false, false);
                 }
             }
         },
@@ -75,10 +92,18 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
         tooltip: {
             useHTML: true,
             headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{point.key}</small><br />',
-            pointFormat: `{series.name} : <b>{point.y}</b>{point.read_count}<br>
-                            Basecalled Pass Bases: <b>{point.passed_bases:,.0f}</b><br>
-                            Basecalled Pass Read Count: <b>{point.passed_reads:,.0f}</b><br>
-                            Sample Name: <b>{point.sample_name}</b>`
+            formatter: function () {
+                const series_name = this.series.name || '';
+                const y_value = typeof this.y !== 'undefined' ? this.y : '';
+                const passed_bases = typeof this.point.passed_bases !== 'undefined' ? formatBases(this.point.passed_bases) : '';
+                const passed_reads = typeof this.point.passed_reads !== 'undefined' ? formatBases(this.point.passed_reads) : '';
+                const sample_name = this.point.sample_name || '';
+        
+                return `<b>${series_name}</b>: ${y_value}<br>
+                        Basecalled Pass Bases: ${passed_bases}<br>
+                        Basecalled Pass Read Count: ${passed_reads}<br>
+                        Sample Name: ${sample_name}`;
+            }
         },
         credits: {
             enabled : false
