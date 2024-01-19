@@ -412,7 +412,9 @@ const vPricingMain = {
             if (this.all_components !== null && this.all_products !== null) {
                 axios.post('/api/v1/pricing_validate_draft', {
                     components: this.all_components,
-                    products: this.all_products
+                    products: this.all_products, 
+                    //Will this break validation in the draft cost calculator?
+                    version: this.published_cost_calculator["Version"]
                 }).then(response => {
                     this.product_changes = response.data.changes['products']
                     this.component_changes = response.data.changes['components']
