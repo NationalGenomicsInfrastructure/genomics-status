@@ -86,13 +86,12 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
         xAxis: {
             type: 'datetime',
             labels: {
-                enabled: false
+                enabled: true,
+                formatter: function() {
+                    return Highcharts.dateFormat('%Y-%m-%d', this.value);
+                }
             },
-            dateTimeLabelFormats: {
-                day: '%Y-%m-%d',
-                week: '%Y-%m-%d',
-                month: '%Y-%m',
-            },
+            tickInterval: 10 * 24 * 3600 * 1000,
             categories: []
         },
         time: {
