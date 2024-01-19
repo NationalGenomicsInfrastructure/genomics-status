@@ -84,11 +84,19 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
             enabled : false
         },
         xAxis: {
-            type: 'category',
+            type: 'datetime',
             labels: {
-                enabled: true,
+                enabled: false
+            },
+            dateTimeLabelFormats: {
+                day: '%Y-%m-%d',
+                week: '%Y-%m-%d',
+                month: '%Y-%m',
             },
             categories: []
+        },
+        time: {
+            timezone: 'Europe/Stockholm',
         },
         series: [{
             name : name,
@@ -182,6 +190,7 @@ function build_series(data, key, name, color_type, filter_inst_type){
             series.length += 1;
         }
         dp = {
+            x: Date.parse(x_axis_date),
             y: read_count,
             name: fcid,
             ownURL: flowcell_link,
