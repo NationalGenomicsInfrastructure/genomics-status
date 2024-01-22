@@ -49,16 +49,25 @@ Description: Plots the yield of recent ONT flowcells.
           </div>
         </div>
         <div class="col-md-3 d-flex justify-content-center align-items-center border border-secondary p-3 rounded-3 mx-4">
-            <div id="color_select_div" class="px-4 py-3">
-                <form id="color_select_form">
-                    Color by :
-                    <select class="form-select" id="color_select">
-                        <option class="color_option" value='fcver'>Flowcell Type</option>
-                        <option class="color_option" value='inst'>Instrument Type</option>
-                        <option class="color_option" value='month'>Month</option>
-                    </select>
-                </form>
-            </div>
+          <div id="key_select_div" class="px-4 py-3">
+            <form id="key_select_form">
+                Display :
+                <select class="form-select" id="key_select">
+                    <option class="key_select_all" value='basecalled_pass_read_count' selected>Reads&nbsp;</option>
+                    <option class="key_select_all" value='basecalled_pass_bases'>Bases&nbsp;</option>
+                </select>
+            </form>
+          </div>
+          <div id="color_select_div" class="px-4 py-3">
+              <form id="color_select_form">
+                  Color by :
+                  <select class="form-select" id="color_select">
+                      <option class="color_option" value='fcver'>Flowcell Type</option>
+                      <option class="color_option" value='inst'>Instrument Type</option>
+                      <option class="color_option" value='month'>Month</option>
+                  </select>
+              </form>
+          </div>
         </div>
     </div>
     <div class="row p-3 justify-content-center align-items-center">

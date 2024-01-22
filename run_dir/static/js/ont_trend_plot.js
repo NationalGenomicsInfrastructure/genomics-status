@@ -21,7 +21,7 @@ function refresh_plot(){
 }
 
 function make_plot(key, name, filter_inst_type, color_type, plot_type){
-    function sumReads(series) {
+    function sum_values(series) {
         sum = 0
         for (let i = 0; i < series.length; i++){
             if (series[i].visible){
@@ -33,37 +33,23 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
                 }
             }
         }
-        return sum;
+        return format_value(sum);
     }
-    function formatSumReads(value) {
-        if (value >= 1e6) {
-            return (value / 1e6).toFixed(2) + ' M';
-        } else if (value >= 1e3) {
-            return (value / 1e3).toFixed(2) + ' K';
-        } else {
-            return value.toLocaleString();
-        }
-    }
-    function formatBases(bases) {
-        if (bases === 0) return '0 Bases';
+    function format_value(value) {
+        if (value === 0) return '0 ' + name;
         const k = 1000;
-        const sizes = ['Bases', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
-        const i = Math.floor(Math.log(bases) / Math.log(k));
-        return parseFloat((bases / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        const sizes = [name, 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
+        const i = Math.floor(Math.log(value) / Math.log(k));
+        return parseFloat((value / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
     var toplot={
         chart: {
             type: plot_type,
             events: {
                 render: function(){
-                    var sum_reads = sumReads(this.series);
-                    var formatted_sum = formatSumReads(sum_reads);
-                    this.setTitle({ text: 'Accumulated reads: ' + formatted_sum }, false, false);
+                    this.setTitle({ text: 'Accumulated ' + name.trim() + ': ' + sum_values(this.series)}, true);
                 }
             }
-        },
-        title: {
-            text: function() { return name+' of the recent flowcells, read sum: ' +  sumReads(series); }
         },
         yAxis: {
             min : 0,
@@ -90,20 +76,7 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
             }
         },
         tooltip: {
-            useHTML: true,
-            headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{point.key}</small><br />',
-            formatter: function () {
-                const series_name = this.series.name || '';
-                const y_value = typeof this.y !== 'undefined' ? this.y : '';
-                const passed_bases = typeof this.point.passed_bases !== 'undefined' ? formatBases(this.point.passed_bases) : '';
-                const passed_reads = typeof this.point.passed_reads !== 'undefined' ? formatBases(this.point.passed_reads) : '';
-                const sample_name = this.point.sample_name || '';
-        
-                return `<b>${series_name}</b>: ${y_value}<br>
-                        Basecalled Pass Bases: ${passed_bases}<br>
-                        Basecalled Pass Read Count: ${passed_reads}<br>
-                        Sample Name: ${sample_name}`;
-            }
+            useHTML: true
         },
         credits: {
             enabled : false
@@ -133,6 +106,38 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
         }
     };
 
+    if (key == "basecalled_pass_bases") {
+        toplot.tooltip.formatter = function () {
+                const name = this.point.name;
+                const color = this.point.color;
+                const series_name = this.series.name || '';
+                const y_value = typeof this.y !== 'undefined' ? this.y : '';
+                const passed_reads = typeof this.point.passed_reads !== 'undefined' ? format_value(this.point.passed_reads) : '';
+                const sample_name = this.point.sample_name || '';
+    
+                return `<span style="color: ${color}">\u25CF</span><small>${name}</small><br />
+                    <b>${series_name}</b>: ${y_value}<br>
+                    <b>Basecalled Pass Read Count:</b> ${passed_reads}<br>
+                    <b>Sample Name:</b> ${sample_name}`;
+        }
+    }
+
+    if (key == "basecalled_pass_read_count") {
+        toplot.tooltip.formatter = function () {
+            const name = this.point.name;
+            const color = this.point.color;
+            const series_name = this.series.name || '';
+            const y_value = typeof this.y !== 'undefined' ? this.y : '';
+            const passed_bases = typeof this.point.passed_bases !== 'undefined' ? format_value(this.point.passed_bases) : '';
+            const sample_name = this.point.sample_name || '';
+
+            return `<span style="color: ${color}">\u25CF</span><small>${name}</small><br />
+                <b>${series_name}</b>: ${y_value}<br>
+                Basecalled Pass Base Count: ${passed_bases}<br>
+                Sample Name: ${sample_name}`;
+        }
+    }
+
     var serie = build_series(window.current_plot_data, key, name, color_type, filter_inst_type);
     toplot.series = serie[1];
     toplot.xAxis.categories = serie[0];
@@ -150,7 +155,6 @@ function build_series(data, key, name, color_type, filter_inst_type){
         var col_color = "";
         var series_name = "";
         var flowcell_link="/flowcells_ont/"+fcid;
-        var read_count = parseInt(data[d].read_count);
         var passed_reads = parseInt(data[d].basecalled_pass_read_count);
         var passed_bases = parseInt(data[d].basecalled_pass_bases);
         var fc_type = data[d].flow_cell_type;
@@ -213,15 +217,25 @@ function build_series(data, key, name, color_type, filter_inst_type){
             };
             series.length += 1;
         }
-        dp = {
-            x: Date.parse(x_axis_date),
-            y: read_count,
-            name: fcid,
-            ownURL: flowcell_link,
-            passed_bases: passed_bases,
-            passed_reads: passed_reads,
-            sample_name: sample_name
-        };
+        if (key == 'basecalled_pass_bases'){//Base display
+            dp = {
+                x: Date.parse(x_axis_date),
+                y: passed_bases,
+                name: fcid,
+                ownURL: flowcell_link,
+                passed_reads: passed_reads,
+                sample_name: sample_name
+            };
+        }else{//Read display
+            dp = {
+                x: Date.parse(x_axis_date),
+                y: passed_reads,
+                name: fcid,
+                ownURL: flowcell_link,
+                passed_bases: passed_bases,
+                sample_name: sample_name
+            };
+        }
         series[series_name].data.push(dp);
         var x_axis_date = fcid.substr(0, 4) + '-' + fcid.substr(4, 2) + '-' + fcid.substr(6, 2);
         categories.push(x_axis_date);
@@ -314,9 +328,10 @@ function get_parameters(){
     }else if($("#plot_scatter").hasClass('active')){
         plot_type='scatter'
     }
-    //Keeping name for now, sometimes it's needed, but can be cleaned up for sure
-    var key = "Reads";
-    var name = "Reads";
+
+    //then, the key and name to display
+    var key = $( "#key_select_form option:selected" ).val();
+    var name = $( "#key_select_form option:selected" ).text();
 
     //The instrument type filter
     var filter_inst_type=[];
