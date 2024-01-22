@@ -47,7 +47,7 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
     function formatBases(bases) {
         if (bases === 0) return '0 Bases';
         const k = 1000;
-        const sizes = ['Bases', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        const sizes = ['Bases', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
         const i = Math.floor(Math.log(bases) / Math.log(k));
         return parseFloat((bases / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
