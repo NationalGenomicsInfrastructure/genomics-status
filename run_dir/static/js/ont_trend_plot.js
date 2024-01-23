@@ -133,8 +133,8 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
 
             return `<span style="color: ${color}">\u25CF</span><small>${name}</small><br />
                 <b>${series_name}</b>: ${y_value}<br>
-                Basecalled Pass Base Count: ${passed_bases}<br>
-                Sample Name: ${sample_name}`;
+                <b>Basecalled Pass Base Count:</b> ${passed_bases}<br>
+                <b>Sample Name:</b> ${sample_name}`;
         }
     }
 
