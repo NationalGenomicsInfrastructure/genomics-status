@@ -163,7 +163,7 @@ app.component('v-pricing-quote', {
                     this.add_to_md_text()
                     // Requires a wait to get the published_cost_calculator and only saved Agreements have the option to change cost calculator
                     // so this can be here
-                    this.latest_cost_calculator = this.$root.published_cost_calculator
+                    setTimeout(() => this.latest_cost_calculator = this.$root.published_cost_calculator, 500);
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Unable to fetch project data, please try again or contact a system administrator.')
