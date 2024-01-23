@@ -87,7 +87,8 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
                 enabled: true,
                 formatter: function() {
                     return Highcharts.dateFormat('%Y-%m-%d', this.value);
-                }
+                },
+                rotation: -45
             },
             tickInterval: 10 * 24 * 3600 * 1000,
             categories: []
