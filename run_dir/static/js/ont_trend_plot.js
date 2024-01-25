@@ -76,7 +76,22 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
             }
         },
         tooltip: {
-            useHTML: true
+            useHTML: true,
+            formatter: function() {
+                const name = this.point.name;
+                const color = this.point.color;
+                const series_name = this.series.name || '';
+                const y_value = typeof this.y !== 'undefined' ? this.y : '';
+                const passed_reads = typeof this.point.passed_reads !== 'undefined' ? format_value(this.point.passed_reads) : '';
+                const passed_bases = typeof this.point.passed_bases !== 'undefined' ? format_value(this.point.passed_bases) : '';
+                const sample_name = this.point.sample_name || '';
+    
+                return `<span style="color: ${color}">\u25CF</span><small>${name}</small><br />
+                    <b>${series_name}</b>: ${y_value}<br>
+                    <b>Basecalled Pass Read Count:</b> ${passed_reads}<br>
+                    <b>Basecalled Pass Base Count:</b> ${passed_bases}<br>
+                    <b>Sample Name:</b> ${sample_name}`;
+            }
         },
         credits: {
             enabled : false
@@ -106,38 +121,6 @@ function make_plot(key, name, filter_inst_type, color_type, plot_type){
             }
         }
     };
-
-    if (key == "basecalled_pass_bases") {
-        toplot.tooltip.formatter = function () {
-                const name = this.point.name;
-                const color = this.point.color;
-                const series_name = this.series.name || '';
-                const y_value = typeof this.y !== 'undefined' ? this.y : '';
-                const passed_reads = typeof this.point.passed_reads !== 'undefined' ? format_value(this.point.passed_reads) : '';
-                const sample_name = this.point.sample_name || '';
-    
-                return `<span style="color: ${color}">\u25CF</span><small>${name}</small><br />
-                    <b>${series_name}</b>: ${y_value}<br>
-                    <b>Basecalled Pass Read Count:</b> ${passed_reads}<br>
-                    <b>Sample Name:</b> ${sample_name}`;
-        }
-    }
-
-    if (key == "basecalled_pass_read_count") {
-        toplot.tooltip.formatter = function () {
-            const name = this.point.name;
-            const color = this.point.color;
-            const series_name = this.series.name || '';
-            const y_value = typeof this.y !== 'undefined' ? this.y : '';
-            const passed_bases = typeof this.point.passed_bases !== 'undefined' ? format_value(this.point.passed_bases) : '';
-            const sample_name = this.point.sample_name || '';
-
-            return `<span style="color: ${color}">\u25CF</span><small>${name}</small><br />
-                <b>${series_name}</b>: ${y_value}<br>
-                <b>Basecalled Pass Base Count:</b> ${passed_bases}<br>
-                <b>Sample Name:</b> ${sample_name}`;
-        }
-    }
 
     var serie = build_series(window.current_plot_data, key, name, color_type, filter_inst_type);
     toplot.series = serie[1];
@@ -224,6 +207,7 @@ function build_series(data, key, name, color_type, filter_inst_type){
                 y: passed_bases,
                 name: fcid,
                 ownURL: flowcell_link,
+                passed_bases: passed_bases,
                 passed_reads: passed_reads,
                 sample_name: sample_name
             };
@@ -233,6 +217,7 @@ function build_series(data, key, name, color_type, filter_inst_type){
                 y: passed_reads,
                 name: fcid,
                 ownURL: flowcell_link,
+                passed_reads: passed_reads,
                 passed_bases: passed_bases,
                 sample_name: sample_name
             };
