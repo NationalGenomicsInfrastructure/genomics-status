@@ -1,4 +1,5 @@
 
+
 window.current_plot_data=null;
 window.current_plot_obj=null;
 window.current_color_schemes=null;
@@ -33,9 +34,9 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                     }
                 }
             }
-        }   
+        }
         return sum;
-    }    
+    }
     var toplot={
         chart: {
             type: plot_type,
@@ -494,7 +495,7 @@ function update_chemistries_list(){
             version = 'Mnano'
         } else {
             version = window.current_plot_data[d].instrument.substr(0,1) + window.current_plot_data[d].cver;
-        };
+        }
         if ( window.current_chemistries_list.indexOf(version) == -1){
             window.current_chemistries_list.push(version);
         }
