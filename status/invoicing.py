@@ -79,6 +79,11 @@ class InvoicingPageDataHandler(AgreementsDBHandler):
 
         for row in view:
             proj_list[row.key] = row.value
+            agreement_data = self.fetch_agreement(row.key)
+            total_cost = agreement_data["saved_agreements"][
+                agreement_data["invoice_spec_generated_for"]
+            ]["total_cost"]
+            proj_list[row.key]["total_cost"] = total_cost
         self.write(proj_list)
 
 
@@ -358,15 +363,21 @@ class SentInvoiceHandler(AgreementsDBHandler):
     """
 
     def get(self):
-        six_months_ago = (datetime.datetime.now() - relativedelta(months=6)).strftime(
-            "%Y-%m-%d"
-        )
+        # Show all sent invoices for now.
+        # six_months_ago = (datetime.datetime.now() - relativedelta(months=6)).strftime(
+        #    "%Y-%m-%d"
+        # )
         view = self.application.projects_db.view(
-            "invoicing/spec_sent", startkey=six_months_ago
+            "invoicing/spec_sent",  # startkey=six_months_ago
         )
         proj_list = {}
         for row in view:
-            proj_list[row.value] = row.key
+            proj_list[row.value] = {"downloaded_date": row.key}
+            agreement_data = self.fetch_agreement(row.value)
+            total_cost = agreement_data["saved_agreements"][
+                agreement_data["invoice_spec_generated_for"]
+            ]["total_cost"]
+            proj_list[row.value]["total_cost"] = total_cost
         self.write(proj_list)
 
 
