@@ -1,5 +1,4 @@
 $(function(){
-
   if(typeof project!=='undefined'){
       $.getJSON('/api/v1/latest_sticky_run_note/'+project, function (data) { 
         //latest_sticky_note
@@ -203,7 +202,7 @@ function count_cards(){
             }
         }
     });
-    $('.btn_count').append('All <span class="badge bg-secondary">'+all+'</span>');
+    $('.btn_count').append('<span class="badge bg-secondary">'+all+'</span> All');
     $('#rn_category').next().find('.dropdown-item').each(function(){
         var label = $.trim($(this).text())
         cat_cards['All'] = all;
@@ -339,3 +338,15 @@ $("#running_notes_form").submit( function(e) {
     });
 });
 $('#new_note_text').on('focus',function(){$(this).sew({values:window.users})});
+
+//Used to format the Latest Running Note column
+function format_latest_running_note(){
+  //Formatting for Running note card body
+  $(".running-note-card > .card-body").each(function(i){
+      $(this).html(make_markdown($(this).text()));
+  });
+  $('.fillbadgecolour').html(function(){
+      let categories = JSON.parse($(this).text().replace(/'/g, '"'))
+      return generate_category_label(categories)
+  })
+}

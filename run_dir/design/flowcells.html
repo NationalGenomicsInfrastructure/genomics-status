@@ -9,10 +9,10 @@ Description: Shows a table with all flow cells.
 
 {% block stuff %}
 
-{% if errors %}
+{% if unfetched_runs %}
     <div class="alert alert-danger">
-        <p>The following run(s) were not possible to be processed:</p>    
-        {{", ".join(errors)}}
+        <p>The following run(s) were not possible to be processed:</p>
+        {{", ".join(unfetched_runs)}}
     </div>
 {% end %}
 
@@ -184,8 +184,13 @@ Description: Shows a table with all flow cells.
                                         {% if 'lane_info' in flowcells[onefc] %}
                                             {% for onelane in flowcells[onefc]['lane_info'] %}
                                                 {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') %}
+                                                    {% if 'MiSeq' in flowcells[onefc].get('run_mode', '') and run_setup > 150 %}
+                                                        {% set er_rate_threshold = 5 %}
+                                                    {% else %}
+                                                        {% set er_rate_threshold = 2 %}
+                                                    {% end %}
                                                     <samp style="max-width:50px;">{{ round(flowcells[onefc]['lane_info'][onelane].get('er_rate'),2) }}</samp>
-                                                    {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') <= 2 %}
+                                                    {% if flowcells[onefc]['lane_info'][onelane].get('er_rate') <= er_rate_threshold %}
                                                         <span class="fa fa-check-circle" style="color:green"></span><br>
                                                     {% else %}
                                                         <span class="fa fa-exclamation-triangle" style="color:orange"></span><br>
@@ -197,17 +202,18 @@ Description: Shows a table with all flow cells.
                                         {% end %}
                                     </td>
                                     <td class="pdc_archived">
-                                        {{ flowcells[onefc].get('pdc_archived', '-') }}  
+                                        {{ flowcells[onefc].get('pdc_archived', '-') }}
                                     </td>
                                     <td class="latest_running_note" class="text-center">
-                                        {% if flowcells[onefc].get('Latest Workset Notes') %}
-                                            {% set running_notes = flowcells[onefc].get('Latest Workset Notes') %}
+                                        {% if flowcells[onefc].get('latest_running_note') %}
+                                            {% set running_notes = flowcells[onefc].get('latest_running_note') %}
                                             {% set latest_running_note_key = list(running_notes.keys())[0] %}
                                             <div class="card running-note-card">
                                                 <div class='card-header'>
                                                 <a class="text-decoration-none" href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"]}}</a>  -  {{form_date(latest_running_note_key)}}
+                                                {% if running_notes[latest_running_note_key]['categories'] %} - <span class="fillbadgecolour"> {{ running_notes[latest_running_note_key]['categories'] }} </span> {% end %}
                                                 </div>
-                                                <div class='card-body' style='white-space: pre-line'>
+                                                <div class='card-body trunc-note-latest' style='white-space: pre-line'>
                                                     {{running_notes[latest_running_note_key]['note']}}
                                                 </div>
                                             </div>
@@ -227,22 +233,22 @@ Description: Shows a table with all flow cells.
             </div>
 
         </div>
-        
+
     </div>
 </div>
 
 <script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
+<script src="/static/js/running_notes.js"></script>
 
 <!-- Table Sorting -->
 <script type="text/javascript">
 $( document ).ready(function() {
   document.title = 'Flowcells : Genomics Status';
   init_listjs();
-  //Formatting for Running note card body
-  $(".running-note-card > .card-body").each(function(i){
-    $(this).html(make_markdown($(this).text()));
-  });
+  //From running_note.js
+  format_latest_running_note();
 });
+
 // Initialize sorting and searching javascript plugin
 function init_listjs() {
     // Setup - add a text input to each footer cell
@@ -255,11 +261,17 @@ function init_listjs() {
       "paging":false,
       "info":false,
       "order": [[ 1, "desc" ]],
+      colReorder: true,
       dom: 'Bfrti',
       buttons: [
         { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
         { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
       ]
+    });
+    //Keep markdown format when dragging around the columns
+    table.on( 'column-reorder', function() {
+        //From running_note.js
+        format_latest_running_note();
     });
 
     //Add the bootstrap classes to the search thingy

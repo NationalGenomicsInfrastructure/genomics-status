@@ -143,8 +143,3 @@ function init_listjs() {
 $('body').on('click', '.group', function(event) {
   $($("#libpools_table").DataTable().column(0).header()).trigger("click")
 });
-
-
-$('.dt-buttons > .buttons-copy').on('click', function () {
-  $('.expand-all').click();
-})

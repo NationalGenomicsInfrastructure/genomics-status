@@ -78,16 +78,17 @@ Description: Shows a table with all worksets.
                          </samp></td>
                      {% elif onekey[1] in ['passed', 'failed', 'unknown', 'total'] %}
                          <td>{{ ws_data[onews].get('samples', {}).get(onekey[1]) }}</td>
-                     {% elif onekey[1] == 'Latest Workset Notes'%}
+                     {% elif onekey[1] == 'latest_running_note'%}
                          <td class="latest_workset_note" class="text-center" style="min-width:400px">
-                         {% if ws_data[onews].get('Latest Workset Notes') %}
-                            {% set workset_notes = ws_data[onews].get('Latest Workset Notes') %}
+                         {% if ws_data[onews].get('latest_running_note') %}
+                            {% set workset_notes = ws_data[onews].get('latest_running_note') %}
                             {% set latest_workset_note_key = list(workset_notes.keys())[0] %}
                             <div class="card running-note-card">
                               <div class='card-header'>
                                 <a class="text-decoration-none" href='mailto:{{ workset_notes[latest_workset_note_key]["email"].encode("ascii","ignore")}}'>{{ workset_notes[latest_workset_note_key]["user"].encode("utf-8")}}</a>  -  {{ form_date(latest_workset_note_key) }}
+                                {% if workset_notes[latest_workset_note_key]['categories'] %} - <span class="fillbadgecolour"> {{ workset_notes[latest_workset_note_key]['categories'] }} </span> {% end %}
                               </div>
-                              <div class='card-body' style='white-space: pre-line'>
+                              <div class='card-body trunc-note-latest' style='white-space: pre-line'>
                                 {{workset_notes[latest_workset_note_key]['note']}}
                               </div>
                             </div>
@@ -130,4 +131,5 @@ Description: Shows a table with all worksets.
 <!-- #page_content -->
 <script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
 <script src="/static/js/worksets.js?v={{ gs_globals['git_commit'] }}" id="worksets-js" data-worksets="{{worksets}}"></script>
+<script src="/static/js/running_notes.js"></script>
 {% end %}

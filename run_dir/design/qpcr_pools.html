@@ -14,7 +14,6 @@ Description: Shows a table with all qPCR pools.
       <h1><span id="page_title">qPCR queues</span>
         <small class="text-muted">Showing all qPCR pools</small>
       </h1>
-      <button type="button" id="pools_copy_table_btn" class="btn btn-outline-dark"><span class="fa fa-copy"></span> Copy table</button>
       <button type="button" id="pools_copy_table" class="btn d-none" data-clipboard-target="#pools_table"></button>
       <label class="btn btn-outline-dark expand-all float-right mb-2"><span class="fa fa-plus-square" aria-hidden="true"></span>Expand All</label>
       <table class="table table-hover table-striped table-bordered sortable" id="pools_table">
@@ -28,6 +27,7 @@ Description: Shows a table with all qPCR pools.
             <th class="sort">Flowcell</th>
             <th class="sort">Project Queue Date</th>
             <th class="sort">Avg. Waiting (in days)</th>
+            <th class="sort">Latest Running Notes</th>
           </tr>
         </thead>
         <tfoot>
@@ -40,6 +40,7 @@ Description: Shows a table with all qPCR pools.
             <th class="sort">Flowcell</th>
             <th class="sort">Project Queue Date</th>
             <th class="sort">Avg. Waiting (in days)</th>
+            <th class="sort">Latest Running Notes</th>
           </tr>
         </tfoot>
         <tbody class="list" id="pools_table_body">
@@ -48,9 +49,9 @@ Description: Shows a table with all qPCR pools.
     </div>
 </div>
 
-<script src="/static/js/clipboard.min.js"></script>
 <script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
 <script src="/static/js/qpcr_pools.js?v={{ gs_globals['git_commit'] }}"></script>
 <script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/js/running_notes.js"></script>
 
 {% end %}

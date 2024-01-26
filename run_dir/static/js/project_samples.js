@@ -25,15 +25,6 @@ $(document).ready(function() {
     e.preventDefault();
   });
 
-  // Copy project samples table to clipboard
-  var clipboard = new Clipboard('#proj_samples_copy_table');
-  clipboard.on('success', function(e) {
-    e.clearSelection();
-    $('#proj_samples_copy_table').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
-    setTimeout(function(){
-      $('#proj_samples_copy_table').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
-    }, 2000);
-  });
   // Copy email address to clipboard and change the tooltip
   var email_clipboard = new Clipboard('.email_link a');
   email_clipboard.on('success', function(e) {

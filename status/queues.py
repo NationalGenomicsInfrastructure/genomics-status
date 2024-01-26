@@ -165,9 +165,15 @@ class qPCRPoolsDataHandler(SafeHandler):
                         if flowcell not in pools[method][container]["flowcells"]:
                             pools[method][container]["flowcells"].append(flowcell)
                         pools[method][container]["proj_queue_dates"].append(queued_date)
-                        pools[method][container]["projects"][project] = proj_doc[
-                            "project_name"
-                        ]
+                        latest_running_note = (
+                            LatestRunningNoteHandler.get_latest_running_note(
+                                self.application, "project", project
+                            )
+                        )
+                        pools[method][container]["projects"][project] = {
+                            "name": proj_doc["project_name"],
+                            "latest_running_note": latest_running_note,
+                        }
                 else:
                     if (
                         method == "LibraryValidation"
@@ -189,6 +195,11 @@ class qPCRPoolsDataHandler(SafeHandler):
                         queued_date = proj_doc.get("project_summary", {}).get(
                             "queued", ""
                         )
+                    latest_running_note = (
+                        LatestRunningNoteHandler.get_latest_running_note(
+                            self.application, "project", project
+                        )
+                    )
                     pools[method][container] = {
                         "samples": [
                             {"name": record[1], "well": value, "queue_time": queue_time}
@@ -197,7 +208,12 @@ class qPCRPoolsDataHandler(SafeHandler):
                         "sequencing_platforms": [sequencing_platform],
                         "flowcells": [flowcell],
                         "proj_queue_dates": [queued_date],
-                        "projects": {project: proj_doc["project_name"]},
+                        "projects": {
+                            project: {
+                                "name": proj_doc["project_name"],
+                                "latest_running_note": latest_running_note,
+                            }
+                        },
                     }
 
         self.set_header("Content-type", "application/json")

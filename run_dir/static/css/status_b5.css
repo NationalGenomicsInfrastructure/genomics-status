@@ -375,14 +375,22 @@ tr.group, tr.group:hover, .dtrg-group {
   max-height: 400px;
   overflow: scroll;
 }
-.trunc-note::-webkit-scrollbar {
+
+/* Force visible scrollbars in chrome. Not supported in Firefox */
+.trunc-note::-webkit-scrollbar, .trunc-note-latest::-webkit-scrollbar{
   -webkit-appearance: none;
   width: 7px;
 }
-.trunc-note::-webkit-scrollbar-thumb {
+/* Force visible scrollbars in chrome. Not supported in Firefox */
+.trunc-note::-webkit-scrollbar-thumb, .trunc-note-latest::-webkit-scrollbar-thumb {
   border-radius: 4px;
   background-color: rgba(0,0,0,.5);
   -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+.trunc-note-latest{
+  max-height: 250px;
+  overflow: scroll;
 }
 
 /* Markdown text styles */
@@ -1242,4 +1250,9 @@ thead th.sort::before{
   border-bottom-width: 0px!important;
   padding: 1px;
   margin: 1px;
+}
+
+.fillbadgecolour {
+  top: -.1em;
+  position: relative;
 }

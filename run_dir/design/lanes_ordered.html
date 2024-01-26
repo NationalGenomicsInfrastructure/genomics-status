@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+<!--
+Template file: lanes_ordered.html
+URL: /lanes_ordered
+Title: Statistics over flowcell lanes ordered.
+-->
+
+{% block stuff %}
+
+<div class="container" id="lanes_ordered_main">
+    <v-lanes-ordered/>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/js/vue.v3.2.47.global.prod.js"></script>
+<script src="/static/js/axios.v1.3.4.min.js"></script>
+<script src="/static/js/lanes_ordered.js"></script>
+
+{% end %}

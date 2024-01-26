@@ -4,6 +4,7 @@
 import json
 import datetime
 import re
+import logging
 
 from dateutil.relativedelta import relativedelta
 from collections import OrderedDict
@@ -13,8 +14,10 @@ from genologics.config import BASEURI, USERNAME, PASSWORD
 import pandas as pd
 
 from status.util import SafeHandler
-from status.flowcell import FlowcellHandler, fetch_ont_run_stats
+from status.flowcell import fetch_ont_run_stats
 from status.running_notes import LatestRunningNoteHandler
+
+application_log = logging.getLogger("tornado.application")
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
@@ -30,12 +33,12 @@ thresholds = {
     "NovaSeq S1": 650,
     "NovaSeq S2": 1650,
     "NovaSeq S4": 2000,
-    "NovaSeqXPlus 10B": 1250,  # Might need to be reviewed when we settle for a number in AM
+    "NovaSeqXPlus 10B": 1000,  # Might need to be reviewed when we settle for a number in AM
     "NextSeq Mid": 25,
     "NextSeq High": 75,
     "NextSeq 2000 P1": 100,
     "NextSeq 2000 P2": 400,
-    "NextSeq 2000 P3": 1100,
+    "NextSeq 2000 P3": 550,
 }
 
 
@@ -83,6 +86,7 @@ class FlowcellsHandler(SafeHandler):
             xfc_view = self.application.x_flowcells_db.view(
                 "info/summary", descending=True, endkey=half_a_year_ago
             )
+        note_keys = []
         for row in xfc_view:
             try:
                 row.value["startdate"] = datetime.datetime.strptime(
@@ -100,64 +104,98 @@ class FlowcellsHandler(SafeHandler):
 
             # Lanes were previously in the wrong order
             row.value["lane_info"] = OrderedDict(sorted(row.value["lane_info"].items()))
-            latest_note = LatestRunningNoteHandler.get_latest_running_note(
-                self.application, "flowcell", row.key
-            )
-            if latest_note:
-                row.value["Latest Workset Notes"] = latest_note
+            note_key = row.key
+            # NovaSeqXPlus has whole year in name
+            if "LH" in row.value["instrument"]:
+                note_key = f'{row.value["run id"].split("_")[0]}_{row.value["run id"].split("_")[-1]}'
+            note_keys.append(note_key)
             temp_flowcells[row.key] = row.value
+
+        notes = self.application.running_notes_db.view(
+            "latest_note_previews/flowcell",
+            reduce=True,
+            group=True,
+            keys=list(note_keys),
+        )
+        for row in notes:
+            key = row.key
+            # NovaSeqXPlus FCs have the complete year in the date as part of the name, which is shortened in
+            # some views in x_flowcells db but not in running_notes db. Hence why we require a sort of
+            # translation as below
+            if len(row.key.split("_")[0]) > 6:
+                elem = row.key.split("_")
+                elem[0] = elem[0][2:]
+                key = "_".join(elem)
+            temp_flowcells[key]["latest_running_note"] = {
+                row.value["created_at_utc"]: row.value
+            }
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
     def list_ont_flowcells(self):
         """Fetch dictionary of the form {ont_run_name : ont_run_stats_dict}"""
 
-        view_all = self.application.nanopore_runs_db.view(
+        view_all_stats = self.application.nanopore_runs_db.view(
             "info/all_stats", descending=True
         )
         view_project = self.application.projects_db.view(
             "project/id_name_dates", descending=True
         )
+        view_mux_scans = self.application.nanopore_runs_db.view(
+            "info/mux_scans", descending=True
+        )
+        view_pore_count_history = self.application.nanopore_runs_db.view(
+            "info/pore_count_history", descending=True
+        )
 
         ont_flowcells = OrderedDict()
 
-        errors = []
-        for row in view_all.rows:
+        unfetched_runs = []
+        for row in view_all_stats.rows:
             try:
                 ont_flowcells[row.key] = fetch_ont_run_stats(
-                    view_all, view_project, row.key
+                    run_name=row.key, 
+                    view_all_stats=view_all_stats, 
+                    view_project=view_project, 
+                    view_mux_scans=view_mux_scans,
+                    view_pore_count_history=view_pore_count_history,
                 )
-            except ValueError:
-                errors.append(row.key)
+            except Exception as e:
+                unfetched_runs.append(row.key)
+                application_log.exception(f"Failed to fetch run {row.key}")
 
         if ont_flowcells:
-            # Use Pandas dataframe for column-wise operations, every db entry becomes a row
-            df = pd.DataFrame.from_dict(ont_flowcells, orient="index")
+            try:
+                # Use Pandas dataframe for column-wise operations, every db entry becomes a row
+                df = pd.DataFrame.from_dict(ont_flowcells, orient="index")
 
-            # Calculate ranks, to enable color coding
-            df["basecalled_pass_bases_Gbp_rank"] = (
-                df.basecalled_pass_bases_Gbp.rank() / len(df) * 100
-            ).apply(lambda x: round(x, 2))
-            df["n50_rank"] = (df.n50.rank() / len(df) * 100).apply(
-                lambda x: round(x, 2)
-            )
-            df["accuracy_rank"] = (df.accuracy.rank() / len(df) * 100).apply(
-                lambda x: round(x, 2)
-            )
+                # Calculate ranks, to enable color coding
+                df["basecalled_pass_bases_Gbp_rank"] = (
+                    df.basecalled_pass_bases_Gbp.rank() / len(df) * 100
+                ).apply(lambda x: round(x, 2))
+                df["n50_rank"] = (df.n50.rank() / len(df) * 100).apply(
+                    lambda x: round(x, 2)
+                )
+                df["accuracy_rank"] = (df.accuracy.rank() / len(df) * 100).apply(
+                    lambda x: round(x, 2)
+                )
 
-            # Empty values are replaced with empty strings
-            df.fillna("", inplace=True)
+                # Empty values are replaced with empty strings
+                df.fillna("", inplace=True)
 
-            # Convert back to dictionary and return
-            ont_flowcells = df.to_dict(orient="index")
-        return ont_flowcells, errors
+                # Convert back to dictionary and return
+                ont_flowcells = df.to_dict(orient="index")
+            except Exception as e:
+                application_log.exception(f"Failed to compile ONT flowcell dataframe")
+
+        return ont_flowcells, unfetched_runs
 
     def get(self):
         # Default is to NOT show all flowcells
         all = self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
         fcs = self.list_flowcells(all=all)
-        ont_fcs, errors = self.list_ont_flowcells()
+        ont_fcs, unfetched_runs = self.list_ont_flowcells()
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
@@ -168,7 +206,7 @@ class FlowcellsHandler(SafeHandler):
                 form_date=LatestRunningNoteHandler.formatDate,
                 find_id=find_id,
                 all=all,
-                errors=errors,
+                unfetched_runs=unfetched_runs,
             )
         )
 

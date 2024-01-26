@@ -17,94 +17,95 @@ function refresh_plot(){
 
 function make_plot(key, name, view_type, filter_inst_type){
 
-  function formatBytes(bytes){
-      if (bytes === 0) return '0 Bytes';
-      const k = 1024;
-      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-  function sumFilesize(series){
-      sum = 0
-      for (let i = 0; i < series.length; i++){
-          if (series[i].visible){
-              for (let j = 0; j < series[i].data.length; j++){
-                  sum += series[i].data[j].y
-              }
-          }
-      }
-      return formatBytes(sum);
-  }
-  var toplot = {
-      chart: {
-          type: 'scatter',
-          events: {
-              render: function(){
-                  this.setTitle({text: "File size of projects: " + sumFilesize(this.series)}, false, false)
-              }
-          }
-      },
-      yAxis: {
-          min : 0,
-          title : {
-              text : name
-          }
-      },
-      legend: {
-          title: {
-              text: 'Click to hide:',
-              align: 'center'
-          }
-      },
-      plotOptions : {
-          series : {
-              turboThreshold: 0,
-              point: {
-                  events: {
-                      click: function() {
-                          window.open(this.options.ownURL)
-                      }
-                  }
-              }
-          }
-      },
-      credits: {
-          enabled: false
-      },
-      xAxis: {
-          type: 'category',
-          labels: {
-              enabled: false,
-          },
-          title : {
-              text: 'Close Date'
-          },
-          categories: []
-      },
-      series: [{
-          name: name,
-          data: []
-      }],
-      title: {
-          text: function() { return name+' of projects, sum in bytes: ' +  sumFilesize(series, data, true); }
-      },
-      tooltip: {
-          shared: true,
-          useHTML: true,
-          headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{point.key}</small><br />',
-          pointFormatter: function () { return this.series.name + ', ' + this.pm + ': ' + '<b>' + formatBytes(this.y, true) + '</b>'},
-      },
-      exporting: {
-          csv: {
-              itemDelimiter: ';'
-          }
-      }
-  };
-  serie = build_series(window.current_plot_data, key, name, view_type, filter_inst_type);
-  toplot.series = serie[1];
-  toplot.xAxis.categories = serie[0];
-  $("#main_plot").highcharts(toplot);
-  window.current_plot_obj = toplot;
+    function formatBytes(bytes){
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    function sumFilesize(series){
+        sum = 0
+        for (let i = 0; i < series.length; i++){
+            if (series[i].visible){
+                for (let j = 0; j < series[i].data.length; j++){
+                    sum += series[i].data[j].y
+                }
+            }
+        }
+        return formatBytes(sum);
+    }
+
+    var toplot = {
+        chart: {
+            type: 'scatter',
+            events: {
+                render: function(){
+                    this.setTitle({text: "File size of projects: " + sumFilesize(this.series)}, false, false)
+                }
+            }
+        },
+        yAxis: {
+            min : 0,
+            title : {
+                text : name
+            }
+        },
+        legend: {
+            title: {
+                text: 'Click to hide:',
+                align: 'center'
+            }
+        },
+        plotOptions : {
+            series : {
+                turboThreshold: 0,
+                point: {
+                    events: {
+                        click: function() {
+                            window.open(this.options.ownURL)
+                        }
+                    }
+                }
+            }
+        },
+        credits: {
+            enabled: false
+        },
+        xAxis: {
+            type: 'category',
+            labels: {
+                enabled: false,
+            },
+            title : {
+                text: 'Close Date'
+            },
+            categories: []
+        },
+        series: [{
+            name: name,
+            data: []
+        }],
+        title: {
+            text: function() { return name+' of projects, sum in bytes: ' +  sumFilesize(series, data, true); }
+        },
+        tooltip: {
+            shared: true,
+            useHTML: true,
+            headerFormat: '<span style="color:{point.color}">\u25CF</span><small>{point.key}</small><br />',
+            pointFormatter: function () { return this.series.name + ', ' + this.pm + ': ' + '<b>' + formatBytes(this.y, true) + '</b>'},
+        },
+        exporting: {
+            csv: {
+                itemDelimiter: ';'
+            }
+        }
+    };
+    serie = build_series(window.current_plot_data, key, name, view_type, filter_inst_type);
+    toplot.series = serie[1];
+    toplot.xAxis.categories = serie[0];
+    $("#main_plot").highcharts(toplot);
+    window.current_plot_obj = toplot;
 }
 
 function build_series(data, key, name, view_type, filter_inst_type){
@@ -116,37 +117,40 @@ function build_series(data, key, name, view_type, filter_inst_type){
         var bioinfo_link="/bioinfo/"+data[d][0];
         var project_name = data[d][1].project_name;
         var date_close = data[d][1].close_date;
-        sequencing_platforms = ['NovaSeq', 'MiSeq', 'NextSeq', 'HiSeq'];	
-	      if (data[d][1].sequencing_platform == null && filter_inst_type.length > 0){
-	          continue;
-	      }
-	      for (var p in sequencing_platforms){
-	          if (data[d][1].sequencing_platform !== undefined && data[d][1].sequencing_platform.includes(p) && filter_inst_type.includes(p)){
-	              continue;
-	          }
-	      }
+        sequencing_platforms = ['NovaSeq 6000', 'NovaSeq X Plus', 'MiSeq', 'NextSeq'];	
+        console.log(data[d][1].sequencing_platform)
+	    if (data[d][1].sequencing_platform == null && filter_inst_type.length > 0){
+	        continue;
+	    }
+	    for (var p in sequencing_platforms){
+	        if (data[d][1].sequencing_platform !== undefined && data[d][1].sequencing_platform.includes(p) && filter_inst_type.includes(p)){
+	            continue;
+	        }
+	    }
         if (data[d][1].sequencing_platform == null){
             continue;
-        }else if (data[d][1].sequencing_platform.includes('NovaSeq') && filter_inst_type.includes('NovaSeq')){
+        }else if (data[d][1].sequencing_platform.includes('NovaSeq 6000') && filter_inst_type.includes('NovaSeq 6000')){
+            continue;
+        }else if (data[d][1].sequencing_platform.includes('NovaSeq X Plus') && filter_inst_type.includes('NovaSeq X Plus')){
             continue;
         }else if (data[d][1].sequencing_platform.includes('MiSeq') && filter_inst_type.includes('MiSeq')){
             continue;
         }else if (data[d][1].sequencing_platform.includes('NextSeq') && filter_inst_type.includes('NextSeq')){
             continue;
-        }else if (data[d][1].sequencing_platform.includes('HiSeq') && filter_inst_type.includes('HiSeq')){
-            continue;
-        }  
+        } 
         if (view_type == 'sequencing_platform'){
             if (data[d][1].sequencing_platform == null){
                 series_name = "Other/undefined";
-            }else if (data[d][1].sequencing_platform.includes('NovaSeq')){
-                series_name = "NovaSeq";
+            }else if (data[d][1].sequencing_platform.includes('NovaSeq 6000')){
+                series_name = "NovaSeq6000";
+            }else if (data[d][1].sequencing_platform.includes('NovaSeq X Plus')){
+                series_name = "NovaSeqXPlus";
             }else if (data[d][1].sequencing_platform.includes('MiSeq')){
                 series_name = "MiSeq";
             }else if (data[d][1].sequencing_platform.includes('NextSeq')){
                 series_name = "NextSeq";
             }else{
-                series_name = "HiSeq";
+                series_name = "Other/undefined";
             }
             view_color = view_coloring(series_name);
         }else if (view_type == 'application'){
@@ -247,7 +251,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
         // Hackery to get a proper JS array for HCharts
         var proper_series = Object.values(series)
     }
-  return [categories, proper_series];
+    return [categories, proper_series];
 }
 
 function get_plot_data(key, name, view_type, search_string="", filter_inst_type){
@@ -259,7 +263,7 @@ function get_plot_data(key, name, view_type, search_string="", filter_inst_type)
 //Since we have been confused by the coloring in the past, I set a few default colors to re-use for simplicity.
 function view_coloring(series_name){
     switch(series_name){
-        case "NovaSeq":
+        case "NovaSeq6000":
         case "HDD":
         case "RNA-Seq":
         case "Finished Library":
@@ -279,6 +283,7 @@ function view_coloring(series_name){
         case "Tissue":
         case "Special":
             return chroma('green').hex();
+        case "NovaSeqXPlus":
         case "Metagenomics":
         case "Genomic DNA":
             return chroma('orange').hex();
@@ -312,10 +317,10 @@ function get_parameters(){
     }
     dp=$('#inp_date_2').val();
     if (dp != ''){
-       second_half = dp;
+        second_half = dp;
     }else{
-       second_date=new Date();
-       second_half=second_date.toISOString() + second_date.toISOString().substr(5,2) + second_date.toISOString().substr(8,2);
+        second_date=new Date();
+        second_half=second_date.toISOString() + second_date.toISOString().substr(5,2) + second_date.toISOString().substr(8,2);
     }
     search_string = first_half + '--' + second_half;
 
@@ -332,7 +337,7 @@ function get_parameters(){
 
     var types = [key, name, view_type, search_string, inst_type_filter];
     return types;
- }
+}
 
 function init_page_js(){
     $('#datepick1').datepicker({autoclose: true,

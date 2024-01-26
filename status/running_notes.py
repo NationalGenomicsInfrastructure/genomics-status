@@ -99,9 +99,16 @@ class RunningNotesDataHandler(SafeHandler):
             )
         elif note_type == "flowcell":
             # get connected projects from fc db
+            flowcell_date, flowcell_id = partition_id.split("_")
+            # If the date has 8 digits, use only the last 6 for lookup
+            if len(flowcell_date) == 8:
+                flowcell_date = flowcell_date[2:]
+
+            flowcell_lookup_id = flowcell_date + "_" + flowcell_id
+
             connected_projects = (
                 application.x_flowcells_db.view(
-                    "names/project_ids_list", key=partition_id
+                    "names/project_ids_list", key=flowcell_lookup_id
                 )
                 .rows[0]
                 .value

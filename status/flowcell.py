@@ -1,5 +1,6 @@
 from status.util import SafeHandler
 from datetime import datetime
+from typing import Optional
 import pandas as pd
 import re
 import os
@@ -17,12 +18,12 @@ thresholds = {
     "NovaSeq S1": 650,
     "NovaSeq S2": 1650,
     "NovaSeq S4": 2000,
-    "NovaSeqXPlus 10B": 1250,  # Might need to be reviewed when we settle for a number in AM
+    "NovaSeqXPlus 10B": 1000,  # Might need to be reviewed when we settle for a number in AM
     "NextSeq Mid": 25,
     "NextSeq High": 75,
     "NextSeq 2000 P1": 100,
     "NextSeq 2000 P2": 400,
-    "NextSeq 2000 P3": 1100,
+    "NextSeq 2000 P3": 550,
 }
 
 
@@ -277,20 +278,33 @@ class FlowcellHandler(SafeHandler):
                 )
             )
 
+def get_view_val(key: str, view) -> Optional[dict]:
+    """Get the value of a specified key from a view"""
 
-def fetch_ont_run_stats(view_all, view_project, run_name):
-    """Inputs:
-    - The nanopore_runs database view "all_stats"
-    - The projects database view "id_name_dates"
-    - The nanopore run name
+    matching_rows = [row for row in view.rows if row.key == key]
 
-    Outputs:
-    - A dictionary containing information pertaining to the run that has been transformed and/or formatted.
+    if len(matching_rows) == 1:
+        return matching_rows[0].value
+    elif len(matching_rows) == 0:
+        return None
+    else:
+        raise AssertionError(f"Multiple matching rows found for key {key} in view {view.view.name}")
+
+def fetch_ont_run_stats(
+        run_name: str,
+        view_all_stats,
+        view_project,
+        view_mux_scans,
+        view_pore_count_history,
+    ) -> dict:
+    """Take a run name and different db views that uses run name as key.
+    Return a dict containing all the relevant info to show on the flowcells page.
     """
-
-    db_entry = [row for row in view_all.rows if row.key == run_name][0]
-    run_dict = db_entry.value
+    
+    run_dict = {}
     run_dict["run_name"] = run_name
+    all_stats = get_view_val(run_name, view_all_stats)
+    run_dict.update(all_stats)
 
     walk_str2int(run_dict)
 
@@ -326,9 +340,13 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
         run_dict["basecalled_bases"] = (
             run_dict["basecalled_pass_bases"] + run_dict["basecalled_fail_bases"]
         )
-        run_dict["accuracy"] = round(
-            run_dict["basecalled_pass_bases"] / run_dict["basecalled_bases"] * 100, 2
-        )
+
+        if run_dict["basecalled_pass_read_count"] <= 0:
+            run_dict["accuracy"] = 0
+        else:
+            run_dict["accuracy"] = round(
+                run_dict["basecalled_pass_bases"] / run_dict["basecalled_bases"] * 100, 2
+            )
 
         """ Convert metrics from integers to readable strings and appropriately scaled floats, e.g.
         basecalled_pass_read_count =       int(    123 123 123 )
@@ -347,6 +365,10 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
         for metric in metrics:
             # Readable metrics, i.e. strings w. appropriate units
             unit = "" if "count" in metric else "bp"
+
+            if run_dict[metric] == "":
+                run_dict[metric] = 0
+
             run_dict["_".join([metric, "str"])] = add_prefix(
                 input_int=run_dict[metric], unit=unit
             )
@@ -364,6 +386,17 @@ def fetch_ont_run_stats(view_all, view_project, run_name):
             else:
                 continue
             run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
+
+    # If the last recorded thing happening to the flow cell as a QC
+    pore_count_history = get_view_val(run_name, view_pore_count_history)
+    if pore_count_history and len(pore_count_history) > 0 and pore_count_history[0]["type"] == "qc":
+        
+        # Calculate the mux diff
+        mux_scans = get_view_val(run_name, view_mux_scans)
+        if mux_scans and len(mux_scans) > 0:
+            first_mux = int(mux_scans[0]["total_pores"])
+            qc = run_dict["pore_count_history"][0]["num_pores"]
+            run_dict["first_mux_loss_pc"] = round((qc - first_mux) / qc * 100, 2)
 
     # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
     query = re.compile("(p|P)\d{5,6}")
@@ -409,14 +442,27 @@ class ONTFlowcellHandler(SafeHandler):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
     def fetch_ont_flowcell(self, run_name):
-        view_all = self.application.nanopore_runs_db.view(
+        
+        view_all_stats = self.application.nanopore_runs_db.view(
             "info/all_stats", descending=True
         )
         view_project = self.application.projects_db.view(
             "project/id_name_dates", descending=True
         )
+        view_mux_scans = self.application.nanopore_runs_db.view(
+            "info/mux_scans", descending=True
+        )
+        view_pore_count_history = self.application.nanopore_runs_db.view(
+            "info/pore_count_history", descending=True
+        )
 
-        return fetch_ont_run_stats(view_all, view_project, run_name)
+        return fetch_ont_run_stats(
+                    run_name=run_name, 
+                    view_all_stats=view_all_stats, 
+                    view_project=view_project, 
+                    view_mux_scans=view_mux_scans,
+                    view_pore_count_history=view_pore_count_history,
+                )
 
     def fetch_barcodes(self, run_name):
         """Returns dictionary whose keys are barcode IDs and whose values are dicts containing

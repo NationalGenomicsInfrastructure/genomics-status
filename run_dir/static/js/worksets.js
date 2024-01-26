@@ -10,9 +10,8 @@ var worksets_page_type = $('#worksets-js').attr('data-worksets');
 $(document).ready(function() {
     // Load the data
     load_table();
-    $(".running-note-card > .card-body").each(function(i){
-      $(this).html(make_markdown($(this).text()));
-    });
+    //From running_note.js
+    format_latest_running_note();
 });
 
 function load_table() {
@@ -44,10 +43,16 @@ function init_listjs() {
       "info":false,
       "order": [[ 0, "desc" ]],
       dom: 'Bfrti',
+      colReorder: true,
       buttons: [
         { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
         { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
       ]
+    });
+     //Keep markdown format when dragging around the columns
+     table.on( 'column-reorder', function() {
+      //from running_note.js
+      format_latest_running_note();
     });
     //Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');

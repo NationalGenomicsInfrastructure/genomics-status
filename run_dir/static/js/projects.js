@@ -293,7 +293,8 @@ function load_table(status, type, columns, dates) {
         latest_note.html('<div class="card">' +
             '<div class="card-header">'+
               note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
-            '</div><div class="card-body trunc-note">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
+              ' - '+ generate_category_label(note[ndate]['categories']) +
+            '</div><div class="card-body trunc-note-latest">'+make_markdown(note[ndate]['note'])+'</pre></div></div>');
 
       }
       $("#project_table_body").append(tbl_row);
@@ -1103,16 +1104,6 @@ function updateTableFields(order){
     $('#tHeaderListul').append(tHList);
   }
 }
-
-// Copy project table to clipboard
-var clipboard = new Clipboard('#proj_table_copy_results');
-clipboard.on('success', function(e) {
-  e.clearSelection();
-  $('#proj_table_copy_results').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
-  setTimeout(function(){
-    $('#proj_table_copy_results').removeClass('active').html('<span class="fa fa-copy"></span> Copy table to clipboard');
-  }, 2000);
-});
 
 $(document).keypress(function(e) {
   if ($("#settingsModal").hasClass('in') && (e.keycode == 13 || e.which == 13)) {

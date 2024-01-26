@@ -53,6 +53,7 @@ function load_table() {
             tbl_row.append($('<td>').html('<div class="card running-note-card">' +
             '<div class="card-header">'+
               note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
+              ' - '+ generate_category_label(note[ndate]['categories']) +
             '</div><div class="card-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>'));
             }
           else{
@@ -175,19 +176,3 @@ function getDaysAndDateLabel(date, option){
   }
   return [number_of_days, label];
 }
-
-// Copy project samples table to clipboard
-var clipboard = new Clipboard('#samples_copy_table');
-clipboard.on('success', function(e) {
-  e.clearSelection();
-  $('#samples_copy_table_btn').addClass('active').html('<span class="fa fa-copy"></span> Copied!');
-  setTimeout(function(){
-    $('#samples_copy_table_btn').removeClass('active').html('<span class="fa fa-copy"></span> Copy table');
-  }, 2000);
-});
-
-$('.dt-buttons > .buttons-copy').on('click', function () {
-  $('.expand-all').click();
-  $('#samples_copy_table').click();
-  $('.expand-all').click();
-})

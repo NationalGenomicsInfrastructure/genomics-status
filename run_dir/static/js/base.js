@@ -24,7 +24,7 @@ $(document).ready(function(){
   // Main navigation - #depreciated_header is the list separator
   // that describes the depreciated pages in the dropdown
   $('#depreciated_header').click(function(e){
-     e.preventDefault();
+      e.preventDefault();
   });
 
 
@@ -135,7 +135,7 @@ function auto_format(value, samples_table){
 
   // Put all unknowns into labels
   else if(value === true ||
-				  (typeof value == 'string' && (
+			  (typeof value == 'string' && (
             value == 'unknown'))){
     returnstring = '<span class="badge bg-secondary sentenceCase">'+value+'</span> ';
   }
@@ -185,7 +185,7 @@ marked.setOptions({
 });
 //Fix for the whole text getting inserted as heading ids and messing up the headings
 marked.Renderer.prototype.heading =function(text,level,raw){
-   return"<h"+level+'>'+text+"</h"+level+">\n"
+    return"<h"+level+'>'+text+"</h"+level+">\n"
 };
 function make_project_links(s){
   // Searches for P[\d+] and replaces with a link to the project page
@@ -199,7 +199,7 @@ function make_project_links(s){
   // - Not capture lookahead to make sure that were not followed by any more word characters
   // Replaces with link to flowcell ID without internal chunk
   // Example: 150505_D00450_0168_AC6H3RANXX links to 150505_AC6H3RANXX
-  s = s.replace(/([\W])(\d{6})(_(?:ST-)?\w{5,10}_\d{3,4})(_\w{8,12}(?:\-\w{3,8})?)(?!\w)/g, '$1<a class="text-decoration-none" href="/flowcells/$2$4">$2$3$4</a>');
+  s = s.replace(/([\W])(\d{6,8})(_(?:ST-)?\w{5,10}_\d{3,4})(_\w{8,12}(?:\-\w{3,8})?)(?!\w)/g, '$1<a class="text-decoration-none" href="/flowcells/$2$4">$2$3$4</a>');
 
   // Searches for ONT FlowCell IDs and replaces with a link (modified from Illumina FCs)
   // - $1 = Captures a non-word character (javascript can't do lookbehind)
@@ -267,9 +267,9 @@ function auto_samples_cell (id, val){
     cell = '<td class="' + id + '">' 
     if (val.length === 0)
       cell = cell + '-';
-     $.each(val, function(key, val){
+    $.each(val, function(key, val){
         cell += auto_format(val, true) + ' ';
-     });
+    });
     return cell + '</td>';
   }
 

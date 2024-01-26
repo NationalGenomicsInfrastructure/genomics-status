@@ -19,6 +19,11 @@
                 <th class="sort text-center" data-sort="flow_cell_qc">Flow cell QC</th>
                 <th class="sort text-center" data-sort="load_fmol">Loading (fmol)</th>
                 <th class="sort text-center" data-sort="reloadings">Reloadings</th>
+                <th class="sort text-center" data-sort="first_mux_loss">
+                    <abbr 
+                        data-toggle="tooltip" data-html="true" title="Fraction of pores lost between QC and first MUX scan">Initial Pore Loss (%)
+                    </abbr>
+                </th>
                 <th class="sort text-center" data-sort="peak_pore_health">
                     <abbr 
                         data-toggle="tooltip" data-html="true" title="Highest fraction pores in states<br><em>(sequencing + available) / total</em><br>for the 1st hour of the run">Peak Pore Health (%)
@@ -53,6 +58,7 @@
                 <th class="sort" data-sort="flow_cell_qc"></th>
                 <th class="sort" data-sort="load_fmol"></th>
                 <th class="sort" data-sort="reloadings"></th>
+                <th class="sort" data-sort="first_mux_loss"></th>
                 <th class="sort" data-sort="peak_pore_health"></th>
                 <th class="sort" data-sort="peak_pore_efficacy"></th>
                 <th class="sort" data-sort="t90"></th>
@@ -138,8 +144,11 @@
                         {# First-hand: Try to fetch the QC value from the automatically collected instrument logs #}
                         {% try %}
                             {% set flowcell_history = ont_flowcells[onefc]["pore_count_history"] %}
-                            {% set flowcell_history_qc = [e for e in flowcell_history if e["type"] == "qc"] %}
-                            {{ flowcell_history_qc[0]["num_pores"] }}
+                            {% if flowcell_history[0]["type"] == "qc" %}
+                                {{ flowcell_history[0]["num_pores"] }}
+                            {% else %}
+                                {{ "" }}
+                            {% end %}
                         {% except (KeyError, IndexError, TypeError) %}
                             {# Second-hand: Try to fetch the QC value from the manually entered LIMS field #}
                             {% try %}
@@ -169,6 +178,10 @@
                         {% except %}
                             {{ "" }}
                         {% end %}
+                    </td>
+
+                    <td class="first_mux_loss text-center">
+                        {{ ont_flowcells[onefc].get("first_mux_loss_pc", "") }} 
                     </td>
 
                     <td class="peak_pore_health text-center">
@@ -245,6 +258,7 @@ function init_listjs_ont() {
         "order": [[ 0, "desc" ]],
         "autoWidth":true,
         dom: 'Bfrti',
+        colReorder: true,
         buttons: [
         { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
         { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
