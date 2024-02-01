@@ -51,14 +51,17 @@ class User(object):
         return "sample_requirements_admin" in self.roles
 
     @property
-    def is_any_admin(self):
-        return (
-            self.is_admin or self.is_pricing_admin or self.is_sample_requirements_admin
-        )
-
-    @property
     def is_proj_coord(self):
         return "proj_coord" in self.roles
+
+    @property
+    def is_any_admin(self):
+        return (
+            self.is_admin
+            or self.is_pricing_admin
+            or self.is_sample_requirements_admin
+            or self.is_proj_coord
+        )
 
 
 class BaseHandler(tornado.web.RequestHandler):
