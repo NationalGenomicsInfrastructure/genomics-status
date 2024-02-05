@@ -56,7 +56,6 @@ class User(object):
             self.is_admin
             or self.is_pricing_admin
             or self.is_sample_requirements_admin
-            or self.is_proj_coord
         )
 
     @property
