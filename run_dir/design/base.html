@@ -49,6 +49,9 @@
               <a class="dropdown-item" href="/flowcells">Flowcells</a>
               <a class="dropdown-item" href="/projects">Projects</a>
               <a class="dropdown-item" href="/worksets">Worksets</a>
+              {% if user and (user.is_proj_coord or user.is_any_admin)%}
+              <a class="dropdown-item" href="/invoicing">Invoicing</a>
+              {% end %}
               <div role="separator" class="dropdown-divider"></div>
               <h6 class="dropdown-header">Queues</h6>
               <a class="dropdown-item" href="/libpooling_queues">Library Pooling</a>
@@ -91,9 +94,6 @@
             <div class="dropdown-menu" aria-labelledby="nav_admin_dropdown">
               {% if user and user.is_sample_requirements_admin %}
                 <a class="dropdown-item" href="/sample_requirements_preview">Edit Sample Requirements</a>
-              {% end %}
-              {% if user and user.is_proj_coord %}
-                <a class="dropdown-item" href="/invoicing">Invoicing</a>
               {% end %}
               {% if user and user.is_pricing_admin %}
                 <a class="dropdown-item" href="/pricing_preview">New Cost Calculator</a>
