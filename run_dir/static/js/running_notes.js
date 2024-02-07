@@ -40,7 +40,7 @@ function generate_category_label(categories){
     return cat_label;
 }
 
-function get_note_url() {
+function get_note_url(flowcell_id_reference) {
     // URL for the notes
     let note_id = '';
     let note_type = '';
@@ -48,8 +48,8 @@ function get_note_url() {
     if ('lims_step' in window && lims_step !== null){
       note_id = lims_step;
       note_type = 'workset';
-    } else if ('flowcell_id_reference' in window && flowcell_id_reference!== null){
-      note_id = flowcell_id_reference;
+    } else if (flowcell_id_reference !== undefined && 'flowcell_id_reference' in flowcell_id_reference){
+      note_id = flowcell_id_reference['flowcell_id_reference'];
       note_type = 'flowcell';
       if((typeof $('#rn-js').data('flowcell-type') !== 'undefined') && ($('#rn-js').data('flowcell-type') ==='ont')){
         note_type += '_ont';
@@ -118,9 +118,9 @@ function make_running_note(date, note, sticky){
        '<a class="text-decoration-none" href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="card-body trunc-note">'+noteText+'</div></div>';
 }
 
-function load_running_notes(wait) {
+function load_running_notes(flowcell_id_reference) {
   // Clear previously loaded notes, if so
-  const note_values = get_note_url();
+  const note_values = get_note_url(flowcell_id_reference);
   $("#running_notes_panels").empty();
   // From agreements tab
   $("#invoicing_notes").empty();
