@@ -31,8 +31,8 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
     date_run=wsdata['date_run'];
     $('#date_run').html(date_run);
     $('#span_lims_step').html('<a class="text-decoration-none" href="' + lims_uri + '/clarity/work-complete/'+lims_step.split("-")[1]+'">'+lims_step+'</a>');
-    load_running_notes();
-    load_links();
+    load_running_notes(workset_name);
+    load_links(workset_name);
 
     if(wsdata && wsdata.hasOwnProperty("projects")){
         $.each(wsdata.projects, function(project_id, project_data){

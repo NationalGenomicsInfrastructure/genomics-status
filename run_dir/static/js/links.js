@@ -1,18 +1,18 @@
 
-function get_link_url(flowcell_id_reference) {
+function get_link_url(reference) {
     //URL for the notes
     if ('lims_step' in window && lims_step !== null){
         note_url='/api/v1/workset_links/' + lims_step
-    }else if (flowcell_id_reference !== undefined && 'flowcell_id_reference' in flowcell_id_reference){
-        note_url='/api/v1/flowcell_links/' + flowcell_id_reference['flowcell_id_reference'];
+    }else if (reference !== undefined && 'flowcell_id_reference' in reference){
+        note_url='/api/v1/flowcell_links/' + reference['flowcell_id_reference'];
     }else {
         note_url='/api/v1/links/' + project
     }
     return note_url;
 }
 
-function load_links(flowcell_id_reference) {
-  link_url=get_link_url(flowcell_id_reference);
+function load_links(reference) {
+  link_url=get_link_url(reference);
   var link_icon = {'Deviation':'exclamation-circle text-danger', 'Other':'file text-primary'};
   $("#existing_links").empty();
   $("#existing_links_projinfo").empty();
@@ -70,7 +70,7 @@ $("#link_form").submit(function(e) {
     }).done(function(){
       //Clear form fields
       $('#new_link_type, #new_link_title, #new_link_url, #new_link_desc').val("");
-      load_links(flowcell_id_reference);
+      load_links(reference);
     }).fail(function( jqxhr, textStatus, error ) {
         var err = textStatus + ", " + error;
         console.log( "Couldn't insert link: " + err );
