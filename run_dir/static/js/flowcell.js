@@ -19,7 +19,8 @@ $('.lane-copy').click(() => {
 
 // from runnin_notes.js
 // these vars are needed for load_running_notes(); -> it's js
-const flowcell_id_reference = $('#flowcells-js').attr('data-flowcell'); // passing parameters to <script> from flowcell.html
-load_running_notes();
+const reference = $('#flowcells-js').attr('data-flowcell'); // passing parameters to <script> from flowcell.html
+load_running_notes({'flowcell_id_reference': reference});
 // from links.js
-load_links();
+load_links({'flowcell_id_reference': reference});
+get_link_url({'flowcell_id_reference': reference});

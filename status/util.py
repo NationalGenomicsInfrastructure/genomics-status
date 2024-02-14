@@ -53,7 +53,9 @@ class User(object):
     @property
     def is_any_admin(self):
         return (
-            self.is_admin or self.is_pricing_admin or self.is_sample_requirements_admin
+            self.is_admin
+            or self.is_pricing_admin
+            or self.is_sample_requirements_admin
         )
 
     @property

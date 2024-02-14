@@ -278,6 +278,7 @@ class FlowcellHandler(SafeHandler):
                 )
             )
 
+
 def get_view_val(key: str, view) -> Optional[dict]:
     """Get the value of a specified key from a view"""
 
@@ -288,19 +289,22 @@ def get_view_val(key: str, view) -> Optional[dict]:
     elif len(matching_rows) == 0:
         return None
     else:
-        raise AssertionError(f"Multiple matching rows found for key {key} in view {view.view.name}")
+        raise AssertionError(
+            f"Multiple matching rows found for key {key} in view {view.view.name}"
+        )
+
 
 def fetch_ont_run_stats(
-        run_name: str,
-        view_all_stats,
-        view_project,
-        view_mux_scans,
-        view_pore_count_history,
-    ) -> dict:
+    run_name: str,
+    view_all_stats,
+    view_project,
+    view_mux_scans,
+    view_pore_count_history,
+) -> dict:
     """Take a run name and different db views that uses run name as key.
     Return a dict containing all the relevant info to show on the flowcells page.
     """
-    
+
     run_dict = {}
     run_dict["run_name"] = run_name
     all_stats = get_view_val(run_name, view_all_stats)
@@ -345,7 +349,8 @@ def fetch_ont_run_stats(
             run_dict["accuracy"] = 0
         else:
             run_dict["accuracy"] = round(
-                run_dict["basecalled_pass_bases"] / run_dict["basecalled_bases"] * 100, 2
+                run_dict["basecalled_pass_bases"] / run_dict["basecalled_bases"] * 100,
+                2,
             )
 
         """ Convert metrics from integers to readable strings and appropriately scaled floats, e.g.
@@ -387,15 +392,32 @@ def fetch_ont_run_stats(
                 continue
             run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
 
-    # If the last recorded thing happening to the flow cell as a QC
+    # Try to get a flow cell QC value
+
+    # First-hand try to get the QC from the pore count history
     pore_count_history = get_view_val(run_name, view_pore_count_history)
-    if pore_count_history and len(pore_count_history) > 0 and pore_count_history[0]["type"] == "qc":
-        
+    if (
+        pore_count_history
+        and len(pore_count_history) > 0
+        and pore_count_history[0]["type"] == "qc"
+    ):
+        qc = run_dict["pore_count_history"][0]["num_pores"]
+    else:
+        # Second-hand try to get the QC from LIMS (now outdated)
+        try:
+            last_lims_qc = all_stats["lims"]["loading"][-1]["qc"]
+            if last_lims_qc != "None":
+                qc = last_lims_qc
+            else:
+                qc = None
+        except KeyError:
+            qc = None
+
+    if qc:
         # Calculate the mux diff
         mux_scans = get_view_val(run_name, view_mux_scans)
         if mux_scans and len(mux_scans) > 0:
             first_mux = int(mux_scans[0]["total_pores"])
-            qc = run_dict["pore_count_history"][0]["num_pores"]
             run_dict["first_mux_loss_pc"] = round((qc - first_mux) / qc * 100, 2)
 
     # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
@@ -442,7 +464,6 @@ class ONTFlowcellHandler(SafeHandler):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
     def fetch_ont_flowcell(self, run_name):
-        
         view_all_stats = self.application.nanopore_runs_db.view(
             "info/all_stats", descending=True
         )
@@ -457,12 +478,12 @@ class ONTFlowcellHandler(SafeHandler):
         )
 
         return fetch_ont_run_stats(
-                    run_name=run_name, 
-                    view_all_stats=view_all_stats, 
-                    view_project=view_project, 
-                    view_mux_scans=view_mux_scans,
-                    view_pore_count_history=view_pore_count_history,
-                )
+            run_name=run_name,
+            view_all_stats=view_all_stats,
+            view_project=view_project,
+            view_mux_scans=view_mux_scans,
+            view_pore_count_history=view_pore_count_history,
+        )
 
     def fetch_barcodes(self, run_name):
         """Returns dictionary whose keys are barcode IDs and whose values are dicts containing

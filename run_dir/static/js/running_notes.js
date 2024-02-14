@@ -40,26 +40,42 @@ function generate_category_label(categories){
     return cat_label;
 }
 
-function get_note_url() {
+function get_note_url(reference) {
     // URL for the notes
     let note_id = '';
     let note_type = '';
     let url = '';
-    if ('lims_step' in window && lims_step !== null){
-      note_id = lims_step;
+    if ('workset_reference' in reference && reference['workset_reference'] !== null){
+      note_id = reference['workset_reference'];
       note_type = 'workset';
-    } else if ('flowcell_id_reference' in window && flowcell_id_reference!== null){
-      note_id = flowcell_id_reference;
+    } else if (reference !== undefined && 'flowcell_id_reference' in reference){
+      note_id = reference['flowcell_id_reference'];
       note_type = 'flowcell';
+      //Change this soon to explicit parameter
       if((typeof $('#rn-js').data('flowcell-type') !== 'undefined') && ($('#rn-js').data('flowcell-type') ==='ont')){
         note_type += '_ont';
       }
-    }else {
-      note_id = project;
+    } else if (reference !== undefined && 'project_reference' in reference){
+      note_id = reference['project_reference'];
       note_type = 'project';
     }
     url='/api/v1/running_notes/' + note_id;
     return {url: url, note_type: note_type}; 
+}
+
+function create_note_link(date){
+  let page_to_link = '';
+  if(typeof project !== 'undefined'){
+    page_to_link = project;
+  }
+  else if (typeof flowcell!== 'undefined') {
+    page_to_link = flowcell;
+  }
+  else if(typeof workset_name !== 'undefined'){
+    page_to_link = workset_name
+  }
+  return 'running_note_'+page_to_link+'_'+(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(),
+             date.getUTCDate(), date.getHours(), date.getMinutes(), date.getSeconds())/1000);
 }
 
 function make_running_note(date, note, sticky){
@@ -76,18 +92,7 @@ function make_running_note(date, note, sticky){
           noteText = '<pre class="plaintext_running_note">'+make_project_links(note['note'])+'</pre>';
         }
         datestring = date.toDateString() + ', ' + date.toLocaleTimeString(date);
-        var page_to_link = '';
-        if(typeof project !== 'undefined'){
-          page_to_link = project;
-        }
-        else if (typeof flowcell!== 'undefined') {
-          page_to_link = flowcell;
-        }
-        else if(typeof workset_name !== 'undefined'){
-          page_to_link = workset_name
-        }
-        note_id = 'running_note_'+page_to_link+'_'+(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(),
-                   date.getUTCDate(), date.getHours(), date.getMinutes(), date.getSeconds())/1000);
+        note_id = create_note_link(date);
         
         if ('categories' in note || 'category' in note){
           var categories = [];
@@ -114,9 +119,9 @@ function make_running_note(date, note, sticky){
        '<a class="text-decoration-none" href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="card-body trunc-note">'+noteText+'</div></div>';
 }
 
-function load_running_notes(wait) {
+function load_running_notes(reference) {
   // Clear previously loaded notes, if so
-  const note_values = get_note_url();
+  const note_values = get_note_url(reference);
   $("#running_notes_panels").empty();
   // From agreements tab
   $("#invoicing_notes").empty();
@@ -300,8 +305,8 @@ $("#running_notes_form").submit( function(e) {
         // Manually check whether the running note has saved
         const note_values = get_note_url()
         $.getJSON(note_values.url, function(newdata) {
-          var newNote = false;
-          var newNoteDate = null;
+          let newNote = false;
+          let newNoteDate = null;
           $.each(newdata, function(date, note) {
             if(data['note'] == note['note']){
               newNote = make_running_note(date, note, false);
@@ -320,13 +325,14 @@ $("#running_notes_form").submit( function(e) {
               $('#running_notes_panels .well').slideUp(function(){ $(this).remove(); });
             }
             // Create a new running note and slide it in..
-            var now = new Date(newNoteDate);
+            const now = new Date(newNoteDate);
             category=generate_category_label(categories);
-            var printHyphen =category? ' - ': ' ';
+            const printHyphen = category? ' - ': ' ';
+            const note_id = create_note_link(now)
             $('<div class="card mb-2 mx-2"><div class="card-header bg-success-table">'+
                   '<a class="text-decoration-none" href="mailto:' + data['email'] + '">'+data['user']+'</a> - '+
-                  now.toDateString() + ', ' + now.toLocaleTimeString(now)+ printHyphen + category +
-                '</div><div class="card-body">'+make_markdown(data['note'])+
+                  '<a class="text-decoration-none" href="#'+note_id+'">' + now.toDateString() + ', ' + now.toLocaleTimeString(now)+ '</a>'+ 
+                  printHyphen + category + '</div><div class="card-body">'+make_markdown(data['note'])+
                 '</div></div>').hide().prependTo('#running_notes_panels').slideDown();
             check_img_sources($('#running_notes_panels img'));
           } else {

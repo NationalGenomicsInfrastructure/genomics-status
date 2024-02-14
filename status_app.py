@@ -112,6 +112,7 @@ from status.queues import (
     LibraryPoolingQueuesDataHandler,
 )
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
+from status.ont_plot import ONTFlowcellYieldHandler, ONTFlowcellPlotHandler
 from status.running_notes import RunningNotesDataHandler, LatestStickyNoteHandler
 from status.sample_requirements import (
     SampleRequirementsViewHandler,
@@ -238,6 +239,7 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
+            ("/api/v1/ont_plot/([^/]*)$", ONTFlowcellYieldHandler),
             tornado.web.URLSpec(
                 "/api/v1/frag_an_image/(?P<project>[^/]+)/(?P<sample>[^/]+)/(?P<step>[^/]+)",
                 FragAnImageHandler,
@@ -341,6 +343,7 @@ class Application(tornado.web.Application):
             ("/flowcells_ont/(\d{8}_[^/]*)$", ONTFlowcellHandler),
             ("/flowcells_ont/(\d{8}_[^/]*)/[^/]*$", ONTReportHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
+            ("/ont_flowcells_plot", ONTFlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
             ("/generate_quote", GenerateQuoteHandler),
             ("/instrument_logs", InstrumentLogsHandler),
@@ -524,6 +527,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcell.html")
             tornado.autoreload.watch("design/flowcell_error.html")
             tornado.autoreload.watch("design/flowcell_trend_plot.html")
+            tornado.autoreload.watch("design/ont_trend_plot.html")
             tornado.autoreload.watch("design/flowcells.html")
             tornado.autoreload.watch("design/lanes_ordered.html")
             tornado.autoreload.watch("design/index.html")

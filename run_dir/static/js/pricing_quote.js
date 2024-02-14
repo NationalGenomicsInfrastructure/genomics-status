@@ -19,7 +19,8 @@ app.component('v-pricing-quote', {
         loaded_timestamp: '',
         //added because the id wasn't displayed properly in loaded_version_desc otherwise
         proj_id: '',
-        agrm_save_success_msg:''
+        agrm_save_success_msg:'',
+        latest_cost_calculator: {}
       }
     },
     computed: {
@@ -160,6 +161,9 @@ app.component('v-pricing-quote', {
                       this.noQCProj = true
                     }
                     this.add_to_md_text()
+                    // Requires a wait to get the published_cost_calculator and only saved Agreements have the option to change cost calculator
+                    // so this can be here
+                    this.latest_cost_calculator = this.$root.published_cost_calculator
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Unable to fetch project data, please try again or contact a system administrator.')
@@ -199,7 +203,12 @@ app.component('v-pricing-quote', {
         },
         timestamp_to_date(timestamp) {
           let date = new Date(parseInt(timestamp))
-          return date.toDateString() + ', ' + date.toLocaleTimeString(date)
+          // A shorter dateformat
+          return new Intl.DateTimeFormat("en-UK", {
+            year: "numeric",
+            month: "short",
+            day: "2-digit",
+          }).format(date) + ', ' + date.toLocaleTimeString(date)
         },
         load_saved_agreement(signed_timestamp){
           //Reset fields
@@ -227,6 +236,22 @@ app.component('v-pricing-quote', {
           if(timestamp_val!==""){
             this.loaded_timestamp = timestamp_val
             var sel_data = this.saved_agreement_data['saved_agreements'][timestamp_val]
+            if('cost_calculator_version' in sel_data){
+              if(this.$root.published_cost_calculator["Version"]!==sel_data['cost_calculator_version']){
+                axios
+                  .get('/api/v1/cost_calculator', {
+                    params: { version:  sel_data['cost_calculator_version'] }
+                  })
+                  .then(response => {
+                    this.$root.published_cost_calculator = response.data.cost_calculator
+                    this.$root.all_products = response.data.cost_calculator.products
+                    this.$root.all_components = response.data.cost_calculator.components
+                  })
+                  .catch(error => {
+                    this.$root.error_messages.push('Unable to fetch used cost calculator data, please try again or contact a system administrator.')
+                  })
+              }
+            }
             this.$root.price_type = sel_data['price_type']
             if('special_addition' in sel_data){
               this.$root.quote_special_additions = sel_data['special_addition']
@@ -399,6 +424,7 @@ app.component('v-pricing-quote', {
             agreement_data['products_included'] = this.$root.quote_prod_ids
           }
           agreement_data['exchange_rate_issued_date'] = this.$root.exch_rate_issued_at
+          agreement_data['cost_calculator_version'] =  this.$root.published_cost_calculator["Version"]
           this.submit_quote_form(agreement_data, type)
           if(type === 'save'){
             setTimeout(()=>{
@@ -426,6 +452,9 @@ app.component('v-pricing-quote', {
             <div class="col-5 status_limit_width_large">
               <div class="fw-bold py-3">
                 Using cost calculator version {{ this.$root.published_cost_calculator["Version"] }} (published {{ new Date(this.$root.published_cost_calculator["Issued at"]).toLocaleString() }})
+              </div>
+              <div v-if="this.origin === 'Agreement' && this.latest_cost_calculator && this.$root.published_cost_calculator['Version']!== latest_cost_calculator['Version']" class="alert alert-danger" role="alert">
+                The latest cost calculator version is {{ this.latest_cost_calculator["Version"] }} (published {{ new Date(this.latest_cost_calculator["Issued at"]).toLocaleString() }})
               </div>
               <h4>Pricing Category</h4>
               <div class="form-radio" id="price_type_selector">
@@ -545,7 +574,7 @@ app.component('v-pricing-quote', {
                         <div class="form-check m-2">
                           <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp" :checked="this.saved_agreement_data['signed']===timestamp">
                           <label class="form-check-label" :for="timestamp">
-                          <div v-bind:class="{ 'fw-bold' : timestamp === this.loaded_timestamp}"> {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}} </div>
+                          <div v-bind:class="{ 'fw-bold' : timestamp === this.loaded_timestamp}"> {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}} ({{ agreement['total_cost'] }} SEK on cost calc v{{ agreement['cost_calculator_version'] }})</div>
                           <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger fs-6">
                           <i class="far fa-file-signature fa-lg"></i>  Marked Signed {{ this.saved_agreement_data['signed_by'] }}, {{ timestamp_to_date(this.saved_agreement_data['signed_at']) }}</p>
                           <p v-if="this.saved_agreement_data['invoice_spec_generated_for']===timestamp" aria-hidden="true" class="m-2 text-success fs-6">

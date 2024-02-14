@@ -11,7 +11,7 @@ $(document).ready(function() {
 });
 
 function load_invoicing_table() {
-  $("#invoicing_table_body").html('<tr><td colspan="4" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
+  $("#invoicing_table_body").html('<tr><td colspan="5" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
   return $.getJSON('/api/v1/invoice_spec_list', function(data) {
     $("#invoicing_table_body").empty()
     $('#invoicing_table').DataTable().clear().destroy()
@@ -24,8 +24,9 @@ function load_invoicing_table() {
       project_row += '<button type="button" id='+key+' class="btn btn-sm btn-outline-dark view_invoice_btn float-right px-3" data-toggle="modal" data-target="#displayInvoiceModal">View</button>'
       tbl_row.append($('<td>').html(project_row))
       tbl_row.append($('<td>').html('<h4 class="mb-0"><span class="badge '+badge_colour[value['project_status']]+'">'+value['project_status']+'</span></h4>'));
-      let date = new Date(parseInt(value['invoice_spec_generated']))
+      let date = new Date(parseInt(value['invoice_spec_generated']));
       tbl_row.append($('<td>').html(date.toISOString().slice(0,10) + ', ' + date.toISOString().slice(11,19)));
+      tbl_row.append($('<td>').html(value['total_cost'] + ' SEK' ));
       $("#invoicing_table_body").append(tbl_row)
     });
     // Initialise the Javascript sorting now that we know the number of rows
@@ -61,23 +62,31 @@ function init_listjs(table_name) {
       $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' )
     } );
 
-
-    var table = $('#'+table_name).DataTable({
-        "paging":false,
-        "destroy": true,
-        "info":false,
-        "columnDefs": [ {
-            "orderable": false,
-            "defaultContent": '',
-            "data": null
-        } ]
-    });
+    let options = {
+      "paging":false,
+      "destroy": true,
+      "info":false,
+      "columnDefs": [ {
+          "orderable": false,
+          "defaultContent": '',
+          "data": null,
+      } ],
+    }
+    if(table_name==='invoicing_table'){
+      options['columns'] = [
+        null,
+        { "width": "25%" },
+        null,
+        null,
+        null
+      ]
+    }
+    var table = $('#'+table_name).DataTable(options);
     $('#'+table_name+'_filter label').remove();
     // Apply the search
     if(table_name!=='invoicing_table'){
       table.columns().every( function () {
           var that = this;
-          console.log(this.footer())
           $( 'input', this.footer() ).on( 'keyup change', function () {
               that
               .search( this.value )
@@ -135,7 +144,7 @@ $(".tabbable").on("click", '[role="tab"]', function() {
     load_invoicing_table()
   }
   if($(this).attr('href')=='#tab_sent_invoices'){
-    $("#sent_invoices_table_body").html('<tr><td colspan="2" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
+    $("#sent_invoices_table_body").html('<tr><td colspan="3" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
     return $.getJSON('/api/v1/get_sent_invoices', function(data) {
       $("#sent_invoices_table_body").empty();
       $.each(data, function(key, value) {
@@ -143,7 +152,8 @@ $(".tabbable").on("click", '[role="tab"]', function() {
           let project_row = '<a class="text-decoration-none" href="/project/'+key+'">'+key+'</a>'
           project_row += '<button type="button" id='+key+' class="btn btn-sm btn-outline-dark view_invoice_btn float-right px-3" data-toggle="modal" data-target="#displayInvoiceModal">View</button>'
           tbl_row.append($('<td>').html(project_row))
-          tbl_row.append($('<td>').html(value))
+          tbl_row.append($('<td>').html(value['downloaded_date']))
+          tbl_row.append($('<td>').html(value['total_cost'] + ' SEK'))
         $("#sent_invoices_table_body").append(tbl_row)
     });
    init_listjs('sent_invoices_table');

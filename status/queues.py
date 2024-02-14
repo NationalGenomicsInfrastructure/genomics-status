@@ -127,10 +127,12 @@ class qPCRPoolsDataHandler(SafeHandler):
                         {"name": record[1], "well": value, "queue_time": queue_time}
                     )
                     if project not in pools[method][container]["projects"]:
-                        if (
-                            method == "LibraryValidation"
-                            and record[8] in unwanted_in_lib_val
+                        if method == "LibraryValidation" and (
+                            record[8] in unwanted_in_lib_val
+                            or project in ["P28910", "P28911"]
                         ):
+                            # We do not want the projects P28910, N.egative_00_00 and P28911, P.ositive_00_00
+                            # showing up in Library validation as instructed by the lab
                             pools[method][container]["samples"].pop()
                             continue
                         proj_doc = self.application.projects_db.get(
@@ -175,10 +177,12 @@ class qPCRPoolsDataHandler(SafeHandler):
                             "latest_running_note": latest_running_note,
                         }
                 else:
-                    if (
-                        method == "LibraryValidation"
-                        and record[8] in unwanted_in_lib_val
+                    if method == "LibraryValidation" and (
+                        record[8] in unwanted_in_lib_val
+                        or project in ["P28910", "P28911"]
                     ):
+                        # We do not want the projects P28910, N.egative_00_00 and P28911, P.ositive_00_00
+                        # showing up in Library validation as instructed by the lab
                         continue
                     proj_doc = self.application.projects_db.get(
                         projects[project].rows[0].value

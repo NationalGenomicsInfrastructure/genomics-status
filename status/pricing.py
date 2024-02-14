@@ -406,7 +406,8 @@ class PricingValidateDraftDataHandler(PricingBaseHandler):
 
     def post(self):
         draft_content = tornado.escape.json_decode(self.request.body)
-        published_doc = self.fetch_published_doc_version()
+        version = draft_content.get("version", None)
+        published_doc = self.fetch_published_doc_version(version=version)
 
         validator = PricingValidator(draft_content, published_doc)
         validator.validate()
@@ -622,7 +623,9 @@ class PricingDataHandler(PricingBaseHandler):
 
         if no version is specified, the most recent published one is returned.
         """
-        version = self.get_argument("version", None)
+        version = None
+        if self.request.query:
+            version = int(self.request.query.split("version=")[1])
 
         doc = self.fetch_published_doc_version(version)
 
@@ -859,6 +862,9 @@ class SaveQuoteHandler(AgreementsDBHandler):
                 save_info["special_percentage"] = quote_input["special_percentage"]
             save_info["exchange_rate_issued_date"] = quote_input[
                 "exchange_rate_issued_date"
+            ]
+            save_info["cost_calculator_version"] = quote_input[
+                "cost_calculator_version"
             ]
             save_info["price_breakup"] = quote_input["price_breakup"]
             save_info["total_cost"] = quote_input["total_cost"]
