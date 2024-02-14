@@ -303,8 +303,8 @@
     </div>
 </div>
 
-<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-flowcell-type="illumina"></script>
-<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ flowcell.get('name') }}"></script>
+<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-note-type="flowcell"></script>
+<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-link-type="flowcell"></script>
 <script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('name') }}"></script>
 <script src="/static/js/clipboard.min.js"></script>
 {% end %}
