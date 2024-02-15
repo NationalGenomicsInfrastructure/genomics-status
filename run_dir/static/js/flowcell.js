@@ -19,5 +19,7 @@ $('.lane-copy').click(() => {
 
 // from running_notes.js
 load_running_notes();
-// from links.js
-load_links();
+// from links.js, only load if links is included
+if($('#ln-js').length>0){
+    load_links();
+}
