@@ -5,8 +5,8 @@ const display_undetermined = (lane) => {
 };
 
 // Copy flowcell lane table to clipboard
-$('.lane-copy').click(() => {
-    const lane_btn = $(this).attr('id');
+$('.lane-copy').on('click', (event) => {
+    const lane_btn = '#' +$(event.currentTarget).attr('id');
     const clipboard = new Clipboard(lane_btn);
     clipboard.on('success', (e) => {
         e.clearSelection();
