@@ -40,24 +40,20 @@ function generate_category_label(categories){
     return cat_label;
 }
 
-function get_note_url(reference) {
+function get_note_url() {
     // URL for the notes
     let note_id = '';
     let note_type = '';
     let url = '';
-    if ('workset_reference' in reference && reference['workset_reference'] !== null){
-      note_id = reference['workset_reference'];
-      note_type = 'workset';
-    } else if (reference !== undefined && 'flowcell_id_reference' in reference){
-      note_id = reference['flowcell_id_reference'];
-      note_type = 'flowcell';
-      //Change this soon to explicit parameter
-      if((typeof $('#rn-js').data('flowcell-type') !== 'undefined') && ($('#rn-js').data('flowcell-type') ==='ont')){
-        note_type += '_ont';
-      }
-    } else if (reference !== undefined && 'project_reference' in reference){
-      note_id = reference['project_reference'];
-      note_type = 'project';
+    const note_id_reference = {  
+      'flowcell': $('#flowcells-js').attr('data-flowcell'), 
+      'flowcell_ont': $('#flowcells-js').attr('data-flowcell'), 
+      'workset': $('#workset-js').attr('data-workset-id'), 
+      'project': $('#projects-js').attr('data-project')
+    };
+    if(typeof $('#rn-js').data('note-type') !== 'undefined'){
+      note_type = $('#rn-js').data('note-type');
+      note_id = note_id_reference[note_type];
     }
     url='/api/v1/running_notes/' + note_id;
     return {url: url, note_type: note_type}; 
@@ -119,9 +115,9 @@ function make_running_note(date, note, sticky){
        '<a class="text-decoration-none" href="#'+note_id+'">' + datestring + '</a>' + printHyphen +category +'</div><div class="card-body trunc-note">'+noteText+'</div></div>';
 }
 
-function load_running_notes(reference) {
+function load_running_notes() {
   // Clear previously loaded notes, if so
-  const note_values = get_note_url(reference);
+  const note_values = get_note_url();
   $("#running_notes_panels").empty();
   // From agreements tab
   $("#invoicing_notes").empty();

@@ -15,8 +15,8 @@ $(document).ready(function() {
     load_all_udfs();
     //load_samples_table();
     select_from_preset('default_preset_buttons', 'Default view');
-    load_running_notes({'project_reference': project});
-    load_links({'project_reference': project});
+    load_running_notes();
+    load_links();
     load_charon_summary();
   });
 
