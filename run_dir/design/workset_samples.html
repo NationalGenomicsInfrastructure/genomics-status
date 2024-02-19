@@ -64,7 +64,7 @@ Description: Shows information about a specific workset
 
 </div>
 
-<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ workset_name }}"></script>
-<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-workset="{{ workset_name }}"></script>
+<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-link-type="workset"></script>
+<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-note-type="workset"></script>
 <script src="/static/js/workset_samples.js?v={{ gs_globals['git_commit'] }}" id="workset-js" data-workset="{{ workset_name }}" data-lims_uri="{{ lims_uri }}"></script>
 {% end %}
