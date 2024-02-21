@@ -396,5 +396,9 @@ class InvoicingOrderDetailsHandler(AgreementsDBHandler, InvoicingDataHandler):
         contact_dets["invoice_zip"] = order_details["address_invoice_zip"]
         contact_dets["invoice_city"] = order_details["address_invoice_city"]
         contact_dets["invoice_country"] = order_details["address_invoice_country"]
+        contact_dets["department"] = order_details["address_postal_department"] if order_details["address_postal_department"] else "-"
+        contact_dets["university"] = order_details["address_postal_university"] if order_details["address_postal_university"] else "-"
+        contact_dets["invoice_vat"] = order_details["invoice_vat"] if order_details["invoice_vat"] else "-"
+        contact_dets["invoice_organisation_number"] =  order_details["invoice_organisation_number"] if order_details["invoice_organisation_number"] else "-"
         self.set_header("Content-type", "application/json")
         self.write(contact_dets)

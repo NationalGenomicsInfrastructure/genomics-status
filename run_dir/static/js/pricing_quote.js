@@ -149,6 +149,7 @@ app.component('v-pricing-quote', {
                     }
                     this.proj_data['project_id'] = proj_id
                     this.proj_data['order_id'] = pdata['order_details']['identifier']
+                    this.proj_data['project_name'] = pdata['project_name']
                     this.get_order_details(this.proj_data['order_id'])
                     this.proj_id = proj_id
                     if('invoice_spec_downloaded' in pdata){
@@ -360,7 +361,6 @@ app.component('v-pricing-quote', {
                 data: agreement_data,
             }).then(response => {
                 this.agrm_save_success_msg = response['data']['message']
-                console.log(response['data']['message'])
             })
             .catch(error => {
                 this.$root.error_messages.push('Unable to save agreement, please try again or contact a system administrator.')
@@ -457,27 +457,26 @@ app.component('v-pricing-quote', {
                 The latest cost calculator version is {{ this.latest_cost_calculator["Version"] }} (published {{ new Date(this.latest_cost_calculator["Issued at"]).toLocaleString() }})
               </div>
               <h4>Pricing Category</h4>
-              <div class="form-radio" id="price_type_selector">
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac" @change="add_to_md_text">
-                <label class="form-check-label pl-1 pr-3" for="price_type_sweac">
-                  Swedish academia
-                </label>
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="full_cost" id="price_type_industry" @change="add_to_md_text">
-                <label class="form-check-label pl-1 pr-3" for="price_type_industry">
-                  Industry and non-Swedish academia
-                </label>
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost" id="price_type_internal" @change="add_to_md_text">
-                <label class="form-check-label pl-1 pr-3" for="price_type_internal">
-                  Internal
-                </label>
+              <div class="btn-group" role="group" aria-label="Radio buttons for selecting proce category" id="price_type_selector">
+                <input type="radio" class="btn-check" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac" @change="add_to_md_text">
+                <label class="btn btn-outline-primary" for="price_type_sweac">Swedish academia</label>
+
+                <input type="radio" class="btn-check" name="price_type" v-model="this.$root.price_type" value="full_cost" id="price_type_industry" @change="add_to_md_text">
+                <label class="btn btn-outline-primary" for="price_type_industry">Industry and non-Swedish academia</label>
+
+                <input type="radio" class="btn-check" name="price_type" v-model="this.$root.price_type" value="cost" id="price_type_internal" @change="add_to_md_text">
+                <label class="btn btn-outline-primary" for="price_type_internal">Internal</label>
               </div>
               <div class="row pt-2">
                 <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
               </div>
               <div v-if="origin === 'Agreement'">
-                <label for="pi_name" class="fw-bold pr-4">PI name</label>
-                <input type="text" id="pi_name" name="pi_name" v-model="proj_data['pi_name']">
-                <span v-if="!proj_data['pi_name'].length " class="text-danger pl-1">PI name is empty!</span>
+              <h4>PI Information</h4>
+                <div class="py-2">
+                  <label for="pi_name" class="fw-bold pr-4">PI name</label>
+                  <input type="text" id="pi_name" name="pi_name" v-model="proj_data['pi_name']">
+                  <span v-if="!proj_data['pi_name'].length " class="text-danger pl-1">PI name is empty!</span>
+                </div>
                 <div>
                   <label for="affiliation" class="fw-bold pr-2">Affiliation</label>
                   <input type="text" id="affiliation" name="affiliation" v-model="proj_data['affiliation']">
@@ -485,17 +484,25 @@ app.component('v-pricing-quote', {
                 </div>
                 <div class="pt-3"> <h4 class="mb-2">Invoicing details</h4> </div>
                 <dl class="dl-horizontal-invoicing">
-                <dt>Invoice Reference</dt>
-                  <dd>{{ this.proj_data['order_details']['reference'] }} </dd>
-                <dt>Address</dt>
-                  <dd>{{ this.proj_data['order_details']['invoice_address'] }} </dd>
-                <dt>Postal Code</dt>
-                  <dd>{{ this.proj_data['order_details']['invoice_zip'] }}</dd>
-                <dt>City</dt>
-                  <dd>{{ this.proj_data['order_details']['invoice_city'] }} </dd>
-                <dt>Country</dt>
-                  <dd>{{ this.proj_data['order_details']['invoice_country'] }} </dd>
-              </dl>
+                  <dt>Invoice Reference</dt>
+                    <dd>{{ this.proj_data['order_details']['reference'] }} </dd>
+                  <dt>University</dt>
+                    <dd>{{ this.proj_data['order_details']['university'] }} </dd>
+                  <dt>Department</dt>
+                    <dd>{{ this.proj_data['order_details']['department'] }} </dd>  
+                  <dt>Address</dt>
+                    <dd>{{ this.proj_data['order_details']['invoice_address'] }} </dd>
+                  <dt>Postal Code</dt>
+                    <dd>{{ this.proj_data['order_details']['invoice_zip'] }}</dd>
+                  <dt>City</dt>
+                    <dd>{{ this.proj_data['order_details']['invoice_city'] }} </dd>
+                  <dt>Country</dt>
+                    <dd>{{ this.proj_data['order_details']['invoice_country'] }} </dd>
+                  <dt>VAT Number</dt>
+                    <dd>{{ this.proj_data['order_details']['invoice_vat'] }} </dd>
+                  <dt>Organisation number</dt>
+                    <dd>{{ this.proj_data['order_details']['invoice_organisation_number'] }} </dd>
+                </dl>
               </div>
               <div class="p-2"> <h4>Agreement Summary</h4> </div>
               <div class="row mx-2">
@@ -599,6 +606,10 @@ app.component('v-pricing-quote', {
                             <dl class="dl-horizontal-invoicing">
                               <dt>Invoice Reference</dt>
                                 <dd>{{ this.proj_data['order_details']['reference'] }} </dd>
+                              <dt>University</dt>
+                                <dd>{{ this.proj_data['order_details']['university'] }} </dd>
+                              <dt>Department</dt>
+                                <dd>{{ this.proj_data['order_details']['department'] }} </dd>  
                               <dt>Address</dt>
                                 <dd>{{ this.proj_data['order_details']['invoice_address'] }} </dd>
                               <dt>Postal Code</dt>
@@ -607,6 +618,10 @@ app.component('v-pricing-quote', {
                                 <dd>{{ this.proj_data['order_details']['invoice_city'] }} </dd>
                               <dt>Country</dt>
                                 <dd>{{ this.proj_data['order_details']['invoice_country'] }} </dd>
+                              <dt>VAT Number</dt>
+                                <dd>{{ this.proj_data['order_details']['invoice_vat'] }} </dd>
+                              <dt>Organisation number</dt>
+                                <dd>{{ this.proj_data['order_details']['invoice_organisation_number'] }} </dd>
                             </dl>
                           </div>
                           <div class="modal-footer">
