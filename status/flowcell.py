@@ -340,57 +340,63 @@ def fetch_ont_run_stats(
 
     # If run is finished, i.e. reports are generated, produce new metrics
     elif run_dict["TACA_run_status"] == "finished":
-        # Calculate new metrics
-        run_dict["basecalled_bases"] = (
-            run_dict["basecalled_pass_bases"] + run_dict["basecalled_fail_bases"]
-        )
-
-        if run_dict["basecalled_pass_read_count"] <= 0:
-            run_dict["accuracy"] = 0
-        else:
-            run_dict["accuracy"] = round(
-                run_dict["basecalled_pass_bases"] / run_dict["basecalled_bases"] * 100,
-                2,
+        try:
+            # Calculate new metrics
+            run_dict["basecalled_bases"] = (
+                run_dict["basecalled_pass_bases"] + run_dict["basecalled_fail_bases"]
             )
 
-        """ Convert metrics from integers to readable strings and appropriately scaled floats, e.g.
-        basecalled_pass_read_count =       int(    123 123 123 )
-        basecalled_pass_read_count_str =   str(    123.12 Mbp )
-        basecalled_pass_read_count_Gbp =   float(  0.123 )
-        """
-        metrics = [
-            "read_count",
-            "basecalled_pass_read_count",
-            "basecalled_fail_read_count",
-            "basecalled_bases",
-            "basecalled_pass_bases",
-            "basecalled_fail_bases",
-            "n50",
-        ]
-        for metric in metrics:
-            # Readable metrics, i.e. strings w. appropriate units
-            unit = "" if "count" in metric else "bp"
-
-            if run_dict[metric] == "":
-                run_dict[metric] = 0
-
-            run_dict["_".join([metric, "str"])] = add_prefix(
-                input_int=run_dict[metric], unit=unit
-            )
-
-            # Formatted metrics, i.e. floats transformed to predetermined unit
-            if "count" in metric:
-                unit = "M"
-                divby = 10**6
-            elif "n50" in metric:
-                unit = "Kbp"
-                divby = 10**3
-            elif "bases" in metric:
-                unit = "Gbp"
-                divby = 10**9
+            if run_dict["basecalled_pass_read_count"] <= 0:
+                run_dict["accuracy"] = 0
             else:
-                continue
-            run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
+                run_dict["accuracy"] = round(
+                    run_dict["basecalled_pass_bases"]
+                    / run_dict["basecalled_bases"]
+                    * 100,
+                    2,
+                )
+
+            """ Convert metrics from integers to readable strings and appropriately scaled floats, e.g.
+            basecalled_pass_read_count =       int(    123 123 123 )
+            basecalled_pass_read_count_str =   str(    123.12 Mbp )
+            basecalled_pass_read_count_Gbp =   float(  0.123 )
+            """
+            metrics = [
+                "read_count",
+                "basecalled_pass_read_count",
+                "basecalled_fail_read_count",
+                "basecalled_bases",
+                "basecalled_pass_bases",
+                "basecalled_fail_bases",
+                "n50",
+            ]
+            for metric in metrics:
+                # Readable metrics, i.e. strings w. appropriate units
+                unit = "" if "count" in metric else "bp"
+
+                if run_dict[metric] == "":
+                    run_dict[metric] = 0
+
+                run_dict["_".join([metric, "str"])] = add_prefix(
+                    input_int=run_dict[metric], unit=unit
+                )
+
+                # Formatted metrics, i.e. floats transformed to predetermined unit
+                if "count" in metric:
+                    unit = "M"
+                    divby = 10**6
+                elif "n50" in metric:
+                    unit = "Kbp"
+                    divby = 10**3
+                elif "bases" in metric:
+                    unit = "Gbp"
+                    divby = 10**9
+                else:
+                    continue
+                run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
+        except KeyError:
+            # Probably a run w/o basecalling
+            pass
 
     # Try to get a flow cell QC value
 
@@ -418,7 +424,7 @@ def fetch_ont_run_stats(
         mux_scans = get_view_val(run_name, view_mux_scans)
         if mux_scans and len(mux_scans) > 0:
             first_mux = int(mux_scans[0]["total_pores"])
-            run_dict["first_mux_loss_pc"] = round((qc - first_mux) / qc * 100, 2)
+            run_dict["first_mux_vs_qc"] = round((first_mux / qc) * 100, 2)
 
     # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
     query = re.compile("(p|P)\d{5,6}")
