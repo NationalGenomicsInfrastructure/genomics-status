@@ -154,9 +154,9 @@ class FlowcellsHandler(SafeHandler):
         for row in view_all_stats.rows:
             try:
                 ont_flowcells[row.key] = fetch_ont_run_stats(
-                    run_name=row.key, 
-                    view_all_stats=view_all_stats, 
-                    view_project=view_project, 
+                    run_name=row.key,
+                    view_all_stats=view_all_stats,
+                    view_project=view_project,
                     view_mux_scans=view_mux_scans,
                     view_pore_count_history=view_pore_count_history,
                 )
@@ -168,17 +168,6 @@ class FlowcellsHandler(SafeHandler):
             try:
                 # Use Pandas dataframe for column-wise operations, every db entry becomes a row
                 df = pd.DataFrame.from_dict(ont_flowcells, orient="index")
-
-                # Calculate ranks, to enable color coding
-                df["basecalled_pass_bases_Gbp_rank"] = (
-                    df.basecalled_pass_bases_Gbp.rank() / len(df) * 100
-                ).apply(lambda x: round(x, 2))
-                df["n50_rank"] = (df.n50.rank() / len(df) * 100).apply(
-                    lambda x: round(x, 2)
-                )
-                df["accuracy_rank"] = (df.accuracy.rank() / len(df) * 100).apply(
-                    lambda x: round(x, 2)
-                )
 
                 # Empty values are replaced with empty strings
                 df.fillna("", inplace=True)
@@ -391,7 +380,7 @@ class FlowcellQCHandler(SafeHandler):
     def list_sample_runs(self, flowcell):
         lane_qc = OrderedDict()
         lane_view = self.application.flowcells_db.view("lanes/qc")
-        for row in lane_view[[flowcell, ""]:[flowcell, "Z"]]:
+        for row in lane_view[[flowcell, ""] : [flowcell, "Z"]]:
             lane_qc[row.key[1]] = row.value
 
         return lane_qc
@@ -410,7 +399,7 @@ class FlowcellDemultiplexHandler(SafeHandler):
     def lane_stats(self, flowcell):
         lane_qc = OrderedDict()
         lane_view = self.application.flowcells_db.view("lanes/demultiplex")
-        for row in lane_view[[flowcell, ""]:[flowcell, "Z"]]:
+        for row in lane_view[[flowcell, ""] : [flowcell, "Z"]]:
             lane_qc[row.key[1]] = row.value
 
         return lane_qc
@@ -430,7 +419,7 @@ class FlowcellQ30Handler(SafeHandler):
     def lane_q30(self, flowcell):
         lane_q30 = OrderedDict()
         lane_view = self.application.flowcells_db.view("lanes/gtq30", group_level=3)
-        for row in lane_view[[flowcell, ""]:[flowcell, "Z"]]:
+        for row in lane_view[[flowcell, ""] : [flowcell, "Z"]]:
             lane_q30[row.key[2]] = row.value["sum"] / row.value["count"]
 
         return lane_q30
@@ -529,7 +518,7 @@ class ReadsTotalHandler(SafeHandler):
                 data[row.key].append(row.value)
             # To check if sample is failed on lane level
             for row in bioinfo_view[
-                [query, None, None, None]:[f"{query}Z", "ZZ", "ZZ", "ZZ"]
+                [query, None, None, None] : [f"{query}Z", "ZZ", "ZZ", "ZZ"]
             ]:
                 if row.key[3] in data:
                     for fcl in data[row.key[3]]:
