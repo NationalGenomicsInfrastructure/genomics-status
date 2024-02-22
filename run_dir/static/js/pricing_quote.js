@@ -180,6 +180,16 @@ app.component('v-pricing-quote', {
               })
               .catch(error => {
                   this.$root.error_messages.push('Unable to fetch order data, please try again or contact a system administrator.')
+                  this.proj_data['order_details'] = { 'reference': '-', 
+                                                      'university': '-', 
+                                                      'department': '-', 
+                                                      'invoice_address': '-', 
+                                                      'invoice_zip': '-', 
+                                                      'invoice_city': '-', 
+                                                      'invoice_country': '-', 
+                                                      'invoice_vat': '-', 
+                                                      'invoice_organisation_number': '-'
+                                                    }
               })
         },
         get_saved_agreement_data(proj_id){
@@ -457,7 +467,7 @@ app.component('v-pricing-quote', {
                 The latest cost calculator version is {{ this.latest_cost_calculator["Version"] }} (published {{ new Date(this.latest_cost_calculator["Issued at"]).toLocaleString() }})
               </div>
               <h4>Pricing Category</h4>
-              <div class="btn-group" role="group" aria-label="Radio buttons for selecting proce category" id="price_type_selector">
+              <div class="btn-group py-3" role="group" aria-label="Radio buttons for selecting price category" id="price_type_selector">
                 <input type="radio" class="btn-check" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac" @change="add_to_md_text">
                 <label class="btn btn-outline-primary" for="price_type_sweac">Swedish academia</label>
 
@@ -508,11 +518,11 @@ app.component('v-pricing-quote', {
               <div class="row mx-2">
                 <label class="form-check-label p-1" for="template_text_btn_group"> Add project template text for: </label>
                 <div class="col">
-                  <div class="form-check form-check-inline">
+                  <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="appCheck" v-model="applProj" @change="add_to_md_text">
                     <label class="form-check-label" for="appCheck">Applications</label>
                   </div>
-                  <div class="form-check form-check-inline">
+                  <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="noQCCheck" v-model="noQCProj" @change="add_to_md_text">
                     <label class="form-check-label" for="noQCCheck">No-QC</label>
                   </div>
