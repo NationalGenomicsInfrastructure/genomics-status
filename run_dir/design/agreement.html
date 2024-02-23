@@ -83,7 +83,7 @@
           <dd> - {{ data['total_cost_discount'] }} SEK</dd>
       {% end %}
         <hr>
-        <dt>Total cost in SEK ({% if data['price_type']=="cost_academic" %}Swedish academia{% else %}Industry and non-Swedish academia{% end %}), VAT not included</dt>
+        <dt>Total cost in SEK ({% if data['price_type']=="cost_academic" %}Swedish academia{% elif data['price_type']=="full_cost" %}Industry and non-Swedish academia{% else %}Internal projects{% end %}), VAT not included</dt>
           <dd> {{ data['total_cost'] }} SEK</dd>
       </dl>
     {%if data['origin']=='Agreement' %}

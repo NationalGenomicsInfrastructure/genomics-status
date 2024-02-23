@@ -792,14 +792,21 @@ class GenerateQuoteHandler(AgreementsDBHandler):
             return self.write(
                 "Error: You do not have the permissions for this operation!"
             )
-        agreement_timestamp = int(
-            quote_input["project_data"]["agreement_number"].split("_")[1]
-        )
-        quote_input["date"] = (
-            datetime.datetime.fromtimestamp(agreement_timestamp / 1000)
-            .date()
-            .isoformat()
-        )
+        if quote_input["type"] == "preview" and "project_data" not in quote_input:
+            quote_input["date"] = (
+                datetime.datetime.now()
+                .date()
+                .isoformat()
+            )
+        else:
+            agreement_timestamp = int(
+                quote_input["project_data"]["agreement_number"].split("_")[1]
+            )
+            quote_input["date"] = (
+                datetime.datetime.fromtimestamp(agreement_timestamp / 1000)
+                .date()
+                .isoformat()
+            )
 
         template_text = quote_input.pop("template_text")
         template_text["appendices"] = markdown.markdown(
