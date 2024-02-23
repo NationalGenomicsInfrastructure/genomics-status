@@ -149,6 +149,7 @@ app.component('v-pricing-quote', {
                     }
                     this.proj_data['project_id'] = proj_id
                     this.proj_data['order_id'] = pdata['order_details']['identifier']
+                    this.proj_data['project_name'] = pdata['project_name']
                     this.get_order_details(this.proj_data['order_id'])
                     this.proj_id = proj_id
                     if('invoice_spec_downloaded' in pdata){
@@ -179,6 +180,16 @@ app.component('v-pricing-quote', {
               })
               .catch(error => {
                   this.$root.error_messages.push('Unable to fetch order data, please try again or contact a system administrator.')
+                  this.proj_data['order_details'] = { 'reference': '-', 
+                                                      'university': '-', 
+                                                      'department': '-', 
+                                                      'invoice_address': '-', 
+                                                      'invoice_zip': '-', 
+                                                      'invoice_city': '-', 
+                                                      'invoice_country': '-', 
+                                                      'invoice_vat': '-', 
+                                                      'invoice_organisation_number': '-'
+                                                    }
               })
         },
         get_saved_agreement_data(proj_id){
@@ -360,7 +371,6 @@ app.component('v-pricing-quote', {
                 data: agreement_data,
             }).then(response => {
                 this.agrm_save_success_msg = response['data']['message']
-                console.log(response['data']['message'])
             })
             .catch(error => {
                 this.$root.error_messages.push('Unable to save agreement, please try again or contact a system administrator.')
@@ -450,71 +460,87 @@ app.component('v-pricing-quote', {
           </template>
           <div class="row">
             <div class="col-5 status_limit_width_large">
-              <div class="fw-bold py-3">
+              <div class="fw-bold p-3 border border-secondary rounded-3 my-2">
                 Using cost calculator version {{ this.$root.published_cost_calculator["Version"] }} (published {{ new Date(this.$root.published_cost_calculator["Issued at"]).toLocaleString() }})
               </div>
               <div v-if="this.origin === 'Agreement' && this.latest_cost_calculator && this.$root.published_cost_calculator['Version']!== latest_cost_calculator['Version']" class="alert alert-danger" role="alert">
                 The latest cost calculator version is {{ this.latest_cost_calculator["Version"] }} (published {{ new Date(this.latest_cost_calculator["Issued at"]).toLocaleString() }})
               </div>
-              <h4>Pricing Category</h4>
-              <div class="form-radio" id="price_type_selector">
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac" @change="add_to_md_text">
-                <label class="form-check-label pl-1 pr-3" for="price_type_sweac">
-                  Swedish academia
-                </label>
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="full_cost" id="price_type_industry" @change="add_to_md_text">
-                <label class="form-check-label pl-1 pr-3" for="price_type_industry">
-                  Industry and non-Swedish academia
-                </label>
-                <input class="form-check-input" type="radio" name="price_type" v-model="this.$root.price_type" value="cost" id="price_type_internal" @change="add_to_md_text">
-                <label class="form-check-label pl-1 pr-3" for="price_type_internal">
-                  Internal
-                </label>
+              <div class="py-2">
+                <h4>Pricing Category</h4>
+                <div class="btn-group pb-2 ml-1" role="group" aria-label="Radio buttons for selecting price category" id="price_type_selector">
+                  <input type="radio" class="btn-check" name="price_type" v-model="this.$root.price_type" value="cost_academic" id="price_type_sweac" @change="add_to_md_text">
+                  <label class="btn btn-outline-primary" for="price_type_sweac">Swedish academia</label>
+
+                  <input type="radio" class="btn-check" name="price_type" v-model="this.$root.price_type" value="full_cost" id="price_type_industry" @change="add_to_md_text">
+                  <label class="btn btn-outline-primary" for="price_type_industry">Industry and non-Swedish academia</label>
+
+                  <input type="radio" class="btn-check" name="price_type" v-model="this.$root.price_type" value="cost" id="price_type_internal" @change="add_to_md_text">
+                  <label class="btn btn-outline-primary" for="price_type_internal">Internal</label>
+                </div>
               </div>
               <div class="row pt-2">
                 <v-exchange-rates :mutable="true" :issued_at="this.$root.exch_rate_issued_at"/>
               </div>
               <div v-if="origin === 'Agreement'">
-                <label for="pi_name" class="fw-bold pr-4">PI name</label>
-                <input type="text" id="pi_name" name="pi_name" v-model="proj_data['pi_name']">
-                <span v-if="!proj_data['pi_name'].length " class="text-danger pl-1">PI name is empty!</span>
-                <div>
-                  <label for="affiliation" class="fw-bold pr-2">Affiliation</label>
-                  <input type="text" id="affiliation" name="affiliation" v-model="proj_data['affiliation']">
-                  <span v-if="!proj_data['affiliation'].length " class="text-danger pl-1">Affiliation is empty!</span>
-                </div>
-                <div class="pt-3"> <h4 class="mb-2">Invoicing details</h4> </div>
-                <dl class="dl-horizontal-invoicing">
-                <dt>Invoice Reference</dt>
-                  <dd>{{ this.proj_data['order_details']['reference'] }} </dd>
-                <dt>Address</dt>
-                  <dd>{{ this.proj_data['order_details']['invoice_address'] }} </dd>
-                <dt>Postal Code</dt>
-                  <dd>{{ this.proj_data['order_details']['invoice_zip'] }}</dd>
-                <dt>City</dt>
-                  <dd>{{ this.proj_data['order_details']['invoice_city'] }} </dd>
-                <dt>Country</dt>
-                  <dd>{{ this.proj_data['order_details']['invoice_country'] }} </dd>
-              </dl>
-              </div>
-              <div class="p-2"> <h4>Agreement Summary</h4> </div>
-              <div class="row mx-2">
-                <label class="form-check-label p-1" for="template_text_btn_group"> Add project template text for: </label>
-                <div class="col">
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="appCheck" v-model="applProj" @change="add_to_md_text">
-                    <label class="form-check-label" for="appCheck">Applications</label>
+                <div class="py-2">
+                  <h4>PI Information</h4>
+                  <div class="form-floating mb-3 col-4 ml-1">
+                    <input type="text" class="form-control" id="pi_name" name="pi_name" v-model="proj_data['pi_name']" 
+                    :class="{'is-invalid': proj_data['pi_name'].length<=0}" placeholder="PI name is empty!">
+                    <label for="pi_name">PI name</label>
                   </div>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="noQCCheck" v-model="noQCProj" @change="add_to_md_text">
-                    <label class="form-check-label" for="noQCCheck">No-QC</label>
+                  <div class="form-floating mb-3 col-4 ml-1">
+                    <input type="text" class="form-control" id="affiliation" name="affiliation" v-model="proj_data['affiliation']" 
+                    :class="{'is-invalid': proj_data['affiliation'].length<=0}" placeholder="Affiliation is empty!">
+                    <label for="affiliation">Affiliation</label>          
                   </div>
                 </div>
+                <div class="py-2"> 
+                  <h4 class="mb-2">Invoicing details</h4> 
+                  <dl class="dl-horizontal-invoicing pl-1">
+                    <dt>Invoice Reference</dt>
+                      <dd>{{ this.proj_data['order_details']['reference'] }} </dd>
+                    <dt>University</dt>
+                      <dd>{{ this.proj_data['order_details']['university'] }} </dd>
+                    <dt>Department</dt>
+                      <dd>{{ this.proj_data['order_details']['department'] }} </dd>  
+                    <dt>Address</dt>
+                      <dd>{{ this.proj_data['order_details']['invoice_address'] }} </dd>
+                    <dt>Postal Code</dt>
+                      <dd>{{ this.proj_data['order_details']['invoice_zip'] }}</dd>
+                    <dt>City</dt>
+                      <dd>{{ this.proj_data['order_details']['invoice_city'] }} </dd>
+                    <dt>Country</dt>
+                      <dd>{{ this.proj_data['order_details']['invoice_country'] }} </dd>
+                    <dt>VAT Number</dt>
+                      <dd>{{ this.proj_data['order_details']['invoice_vat'] }} </dd>
+                    <dt>Organisation number</dt>
+                      <dd>{{ this.proj_data['order_details']['invoice_organisation_number'] }} </dd>
+                  </dl>
+                </div>
               </div>
-              <div class="row py-3">
-                  <div id="pricing_freeformtext_editor">
-                    <textarea v-model="this.md_src_message" class="md_textarea"></textarea>
+              <div class="py-2"> 
+                <h4>Agreement Summary</h4> 
+                <div class="row mx-2">
+                  <label class="form-check-label p-1" for="template_text_btn_group"> Add project template text for: </label>
+                  <div class="col pl-0">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="appCheck" v-model="applProj" @change="add_to_md_text">
+                      <label class="form-check-label" for="appCheck">Applications</label>
+                    </div>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="noQCCheck" v-model="noQCProj" @change="add_to_md_text">
+                      <label class="form-check-label" for="noQCCheck">No-QC</label>
+                    </div>
                   </div>
+                </div>
+                <div class="row pt-2">
+                    <div id="pricing_freeformtext_editor" class="form-floating pl-1 ml-3">
+                      <textarea v-model="this.md_src_message" class="form-control" id="pricing_freeformtext_editor_textarea" placeholder="Agreement Summary" style="height: 140px"></textarea>
+                      <label for="pricing_freeformtext_editor_textarea">Agreement Summary</label>
+                    </div>
+                </div>
               </div>
               <div class="row pt-3">
                 <h4 class="pb-0 mb-0">Non-Standard Costs</h4>
@@ -599,6 +625,10 @@ app.component('v-pricing-quote', {
                             <dl class="dl-horizontal-invoicing">
                               <dt>Invoice Reference</dt>
                                 <dd>{{ this.proj_data['order_details']['reference'] }} </dd>
+                              <dt>University</dt>
+                                <dd>{{ this.proj_data['order_details']['university'] }} </dd>
+                              <dt>Department</dt>
+                                <dd>{{ this.proj_data['order_details']['department'] }} </dd>  
                               <dt>Address</dt>
                                 <dd>{{ this.proj_data['order_details']['invoice_address'] }} </dd>
                               <dt>Postal Code</dt>
@@ -607,6 +637,10 @@ app.component('v-pricing-quote', {
                                 <dd>{{ this.proj_data['order_details']['invoice_city'] }} </dd>
                               <dt>Country</dt>
                                 <dd>{{ this.proj_data['order_details']['invoice_country'] }} </dd>
+                              <dt>VAT Number</dt>
+                                <dd>{{ this.proj_data['order_details']['invoice_vat'] }} </dd>
+                              <dt>Organisation number</dt>
+                                <dd>{{ this.proj_data['order_details']['invoice_organisation_number'] }} </dd>
                             </dl>
                           </div>
                           <div class="modal-footer">
