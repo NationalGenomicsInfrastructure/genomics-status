@@ -138,6 +138,7 @@ class FlowcellsHandler(SafeHandler):
         view_all_stats = self.application.nanopore_runs_db.view(
             "info/all_stats", descending=True
         )
+        view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
         view_project = self.application.projects_db.view(
             "project/id_name_dates", descending=True
         )
@@ -156,6 +157,7 @@ class FlowcellsHandler(SafeHandler):
                 ont_flowcells[row.key] = fetch_ont_run_stats(
                     run_name=row.key,
                     view_all_stats=view_all_stats,
+                    view_args=view_args,
                     view_project=view_project,
                     view_mux_scans=view_mux_scans,
                     view_pore_count_history=view_pore_count_history,

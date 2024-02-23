@@ -297,6 +297,7 @@ def get_view_val(key: str, view) -> Optional[dict]:
 def fetch_ont_run_stats(
     run_name: str,
     view_all_stats,
+    view_args,
     view_project,
     view_mux_scans,
     view_pore_count_history,
@@ -308,6 +309,7 @@ def fetch_ont_run_stats(
     run_dict = {}
     run_dict["run_name"] = run_name
     all_stats = get_view_val(run_name, view_all_stats)
+    args = get_view_val(run_name, view_args)
     run_dict.update(all_stats)
 
     walk_str2int(run_dict)
@@ -338,9 +340,10 @@ def fetch_ont_run_stats(
         else:
             run_dict["instrument"] = instr_or_pos
 
-    # If run is finished, i.e. reports are generated, produce new metrics
+    # If run is finished, i.e. reports are generated
     elif run_dict["TACA_run_status"] == "finished":
-        try:
+        # Only try to calculate new metrics if run had basecalling enabled
+        if "--base_calling=on" in args:
             # Calculate new metrics
             run_dict["basecalled_bases"] = (
                 run_dict["basecalled_pass_bases"] + run_dict["basecalled_fail_bases"]
@@ -394,12 +397,8 @@ def fetch_ont_run_stats(
                 else:
                     continue
                 run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
-        except KeyError:
-            # Probably a run w/o basecalling
-            pass
 
-    # Try to get a flow cell QC value
-
+    ## Try to get a flow cell QC value
     # First-hand try to get the QC from the pore count history
     pore_count_history = get_view_val(run_name, view_pore_count_history)
     if (
@@ -473,6 +472,7 @@ class ONTFlowcellHandler(SafeHandler):
         view_all_stats = self.application.nanopore_runs_db.view(
             "info/all_stats", descending=True
         )
+        view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
         view_project = self.application.projects_db.view(
             "project/id_name_dates", descending=True
         )
@@ -486,6 +486,7 @@ class ONTFlowcellHandler(SafeHandler):
         return fetch_ont_run_stats(
             run_name=run_name,
             view_all_stats=view_all_stats,
+            view_args=view_args,
             view_project=view_project,
             view_mux_scans=view_mux_scans,
             view_pore_count_history=view_pore_count_history,
