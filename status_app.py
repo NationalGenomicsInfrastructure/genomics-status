@@ -101,6 +101,10 @@ from status.projects import (
     PrioProjectsTableHandler,
 )
 
+from status.projects_status import (
+    ProjectsStatusHandler
+)
+
 from status.queues import (
     qPCRPoolsDataHandler,
     qPCRPoolsHandler,
@@ -360,6 +364,7 @@ class Application(tornado.web.Application):
             ("/project/([^/]*)$", ProjectSamplesHandler),
             ("/project/(P[^/]*)/([^/]*)$", ProjectSamplesHandler),
             ("/projects", ProjectsHandler),
+            ("/projects_status", ProjectsStatusHandler),
             ("/proj_meta", ProjMetaCompareHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
@@ -542,6 +547,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/project_samples.html")
             tornado.autoreload.watch("design/projects.html")
+            tornado.autoreload.watch("design/projects_status.html")
             tornado.autoreload.watch("design/reads_total.html")
             tornado.autoreload.watch("design/rec_ctrl_view.html")
             tornado.autoreload.watch("design/running_notes_help.html")
