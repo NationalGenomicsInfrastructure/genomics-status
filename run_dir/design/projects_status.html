@@ -8,5 +8,15 @@ Title: Projects Listing focusing on status
 
 
 {% block stuff %}
-<h1>Hello World!</h1>
+
+<div class="container-fluid" id="projects_status">
+    <h1>hello hello</h1>
+    <v-projects-status/>
+</div>
+
+<script src="/static/js/vue.v3.2.47.global.prod.js"></script>
+<script src="/static/js/axios.v1.3.4.min.js"></script>
+<script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
+<script src="/static/js/projects_status.js?v={{ gs_globals['git_commit'] }}"></script>
+
 {% end %}
