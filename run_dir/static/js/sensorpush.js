@@ -119,7 +119,7 @@ function plot_sum_data(){
                 type: 'datetime'
             },
             yAxis: {
-                title: { text: 'Temperature (C) of refridgerators' },
+                title: { text: 'Temperature (C) of refrigerators' },
                 tooltip: {
                     pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
                 },
