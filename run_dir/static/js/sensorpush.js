@@ -119,15 +119,15 @@ function plot_sum_data(){
                 type: 'datetime'
             },
             yAxis: {
-                title: { text: 'Temperature (C) of refrigerators' },
+                title: { text: 'Temperature (C) of refridgerators' },
                 tooltip: {
                     pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
                 },
                 plotBands: [{
-                color: '#fdffd4',
-                from: 6,
+                color: '#fff3cd',
+                from: 8,
                 width: 10,
-                to: 0
+                to: 2
                 }]
             },
             legend: {
@@ -164,7 +164,7 @@ function plot_sum_data(){
                     pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
                 },
                 plotBands: [{
-                color: '#fdffd4',
+                color: '#fff3cd',
                 from: -10, 
                 width: 10, 
                 to: -33
