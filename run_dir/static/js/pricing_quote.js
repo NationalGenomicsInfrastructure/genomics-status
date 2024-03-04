@@ -489,11 +489,13 @@ app.component('v-pricing-quote', {
                     <input type="text" class="form-control" id="pi_name" name="pi_name" v-model="proj_data['pi_name']" 
                     :class="{'is-invalid': proj_data['pi_name'].length<=0}" placeholder="PI name is empty!">
                     <label for="pi_name">PI name</label>
+                    <span v-if="!proj_data['pi_name'].length " class="text-danger pl-1">PI name is empty!</span>
                   </div>
                   <div class="form-floating mb-3 col-4 ml-1">
                     <input type="text" class="form-control" id="affiliation" name="affiliation" v-model="proj_data['affiliation']" 
                     :class="{'is-invalid': proj_data['affiliation'].length<=0}" placeholder="Affiliation is empty!">
-                    <label for="affiliation">Affiliation</label>          
+                    <label for="affiliation">Affiliation</label>    
+                    <span v-if="!proj_data['affiliation'].length " class="text-danger pl-1">Affiliation is empty!</span>    
                   </div>
                 </div>
                 <div class="py-2"> 
