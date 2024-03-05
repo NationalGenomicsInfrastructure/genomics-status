@@ -784,22 +784,39 @@ class GenerateQuoteHandler(AgreementsDBHandler):
         quote_input = tornado.escape.json_decode(
             self.request.body.decode("utf-8").split("=")[1]
         )
-        if (
-            quote_input["type"] == "display"
-            and not self.get_current_user().is_proj_coord
-        ):
-            self.set_status(401)
-            return self.write(
-                "Error: You do not have the permissions for this operation!"
+        current_user = self.get_current_user()
+        user_name = current_user.name
+        if quote_input["type"] == "preview" and "project_data" not in quote_input:
+            quote_input["date"] = datetime.datetime.now().date().isoformat()
+        else:
+            agreement_timestamp = quote_input["project_data"]["agreement_number"].split(
+                "_"
+            )[1]
+            quote_input["date"] = (
+                datetime.datetime.fromtimestamp(int(agreement_timestamp) / 1000)
+                .date()
+                .isoformat()
             )
-        agreement_timestamp = int(
-            quote_input["project_data"]["agreement_number"].split("_")[1]
-        )
-        quote_input["date"] = (
-            datetime.datetime.fromtimestamp(agreement_timestamp / 1000)
-            .date()
-            .isoformat()
-        )
+            if quote_input["type"] == "display":
+                if not current_user.is_proj_coord:
+                    self.set_status(401)
+                    return self.write(
+                        "Error: You do not have the permissions for this operation!"
+                    )
+                agreement_to_display = self.fetch_agreement(
+                    quote_input["project_data"]["project_id"]
+                )["saved_agreements"][agreement_timestamp]
+                user_name = agreement_to_display["created_by"]
+                for key in [
+                    "price_breakup",
+                    "total_cost",
+                    "total_cost_discount",
+                    "price_type",
+                    "agreement_summary",
+                    "agreement_conditions",
+                    "template_text",
+                ]:
+                    quote_input[key] = agreement_to_display[key]
 
         template_text = quote_input.pop("template_text")
         template_text["appendices"] = markdown.markdown(
@@ -812,21 +829,24 @@ class GenerateQuoteHandler(AgreementsDBHandler):
                 template_text["first_page_text"]["specific_conditions"][condition]
             )
 
-        if "agreement_summary" in quote_input.keys():
-            quote_input["agreement_summary"] = markdown.markdown(
-                quote_input["agreement_summary"], extensions=["sane_lists"]
+        if "agreement_summary" not in quote_input.keys():
+            default_agreement_summary = (
+                AgreementTemplateTextHandler.fetch_latest_agreement_doc(
+                    self.application.agreement_templates_db
+                )
             )
-        else:
-            quote_input["agreement_summary"] = markdown.markdown(
-                "1. **Library preparation**:\n 1. **Sequencing**: \n"
-                "1. **Data processing**:\n 1. **Data analysis**: "
-            )
+            quote_input["agreement_summary"] = default_agreement_summary[
+                "first_page_text"
+            ]["agreement_summary"]
+        quote_input["agreement_summary"] = markdown.markdown(
+            quote_input["agreement_summary"], extensions=["sane_lists"]
+        )
 
         t = self.application.loader.load("agreement.html")
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
-                user=self.get_current_user(),
+                user_name=user_name,
                 data=quote_input,
                 template_text=template_text,
             )
@@ -888,12 +908,13 @@ class AgreementTemplateTextHandler(SafeHandler):
     """
 
     def get(self):
-        response = self.fetch_latest_agreement_doc()
+        response = AgreementTemplateTextHandler.fetch_latest_agreement_doc(
+            self.application.agreement_templates_db
+        )
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(response))
 
-    def fetch_latest_agreement_doc(self):
-        db = self.application.agreement_templates_db
+    def fetch_latest_agreement_doc(db):
         curr_rows = db.view("entire_document/by_version", descending=True, limit=1).rows
         curr_doc = curr_rows[0].value
         curr_doc.pop("_id")

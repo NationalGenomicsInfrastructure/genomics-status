@@ -1,14 +1,25 @@
 
 function get_link_url() {
-    //URL for the notes
-    if ('lims_step' in window && lims_step !== null){
-        note_url='/api/v1/workset_links/' + lims_step
-    }else if ('flowcell_id_reference' in window && flowcell_id_reference!== null){
-        note_url='/api/v1/flowcell_links/' + flowcell_id_reference;
-    }else {
-        note_url='/api/v1/links/' + project
+  const link_id_reference = {  
+    'flowcell': $('#flowcells-js').attr('data-flowcell'), 
+    'flowcell_ont': $('#flowcells-js').attr('data-flowcell'), 
+    'workset': $('#workset-js').attr('data-workset-id'), 
+    'project': $('#projects-js').attr('data-project')
+  };
+  let link_url = '';
+  if(typeof $('#ln-js').data('link-type') !== 'undefined'){
+    const link_type = $('#ln-js').data('link-type');
+    const link_id = link_id_reference[link_type];
+     //URL for the links
+     if (link_type==="workset"){
+      link_url = '/api/v1/workset_links/' + link_id;
+     }else if (link_type==="flowcell"){
+      link_url = '/api/v1/flowcell_links/' + link_id;
+     }else if (link_type==="project"){
+      link_url='/api/v1/links/' + link_id;
     }
-    return note_url;
+  }
+  return link_url;
 }
 
 function load_links() {

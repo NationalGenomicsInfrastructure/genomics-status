@@ -28,6 +28,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
     wsdata= data[workset_name];
     //reused, needed as global
     lims_step=wsdata['id'];
+    $('#workset-js').attr('data-workset-id', lims_step);
     date_run=wsdata['date_run'];
     $('#date_run').html(date_run);
     $('#span_lims_step').html('<a class="text-decoration-none" href="' + lims_uri + '/clarity/work-complete/'+lims_step.split("-")[1]+'">'+lims_step+'</a>');

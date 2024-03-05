@@ -1,9 +1,25 @@
 {% extends "base.html" %}
 {% block stuff %}
-  <h1 id="page_title" class="mb-5">Temperature info from Sensorpush</h1>
+  <h1 id="page_title" class="mb-2">Temperature info from Sensorpush</h1>
 
   <div class="mb-5 py-5 text-center">
-    <h2 class="mb-4">Summary of the last 24 hours</h2>
+    <div class="col-6 mx-auto">
+      <div class="mb-5 alert alert-danger py-3">
+      <h3>Sensors with warnings the last 24h</h3>
+      {% for sensor in sensor_24h_data.keys() %}
+        {% if sensor_24h_data[sensor]['intervals_higher'] %}
+          <h5> <a href="#header_sensor_{{sensor}}">{{sensor_24h_data[sensor]['sensor_name']}}</a> (too high)</h5>
+        {% end %}
+      {% end %}
+      {% for sensor in sensor_24h_data.keys() %}
+        {% if sensor_24h_data[sensor]['intervals_lower'] %}
+            <h5> <a href="#header_sensor_{{sensor}}">{{sensor_24h_data[sensor]['sensor_name']}}</a> (too low)</h5>
+        {% end %}
+      {% end %}
+      </div>
+    </div>
+
+    <h2 class="my-4">Summary of the last 24 hours</h2>
     <div id="loading_spinner" style="text-align:center; margin:100px 0;">
       <span class="fa fa-sync fa-spin"></span> Loading summary plots...
     </div>
@@ -23,9 +39,9 @@
   <h2 class="text-center">Details for each sensor from the last 4 weeks</h2>
   <div id="plots">
     {% for sensor in sensor_data.keys() %}
-    <div class="row" id='sensor_{{ sensor }}'>
+    <div class="row">
         <div class="col-auto">
-          <h2>
+          <h2 id='header_sensor_{{ sensor }}'>
             {{ sensor_data[sensor]['sensor_name'] }}
             {% if (sensor_data[sensor]['intervals_lower'] != []) or (sensor_data[sensor]['intervals_higher'] != []) %}
             <button class="btn btn-danger btn-lg ml-2" type="button" data-toggle="collapse" data-target="#intervals_{{sensor}}" aria-expanded="false" aria-controls="collapseExample">

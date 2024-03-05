@@ -44,8 +44,12 @@
         <dt>Reference</dt>
           <dd>{{ contact_dets['reference'] }} </dd>
       </dl>
-      <h4>Billing Address</h4>
+      <h4>Billing Information</h4>
         <dl class="dl-horizontal-invoicing">
+          <dt>University</dt>
+            <dd>{{ contact_dets['university'] }} </dd>
+          <dt>Department</dt>
+            <dd>{{ contact_dets['department'] }} </dd> 
           <dt>Address</dt>
             <dd>{{ contact_dets['invoice_address'] }} </dd>
           <dt>Postal Code</dt>
@@ -54,6 +58,10 @@
             <dd>{{ contact_dets['invoice_city'] }} </dd>
           <dt>Country</dt>
             <dd>{{ contact_dets['invoice_country'] }} </dd>
+          <dt>VAT Number</dt>
+            <dd>{{ contact_dets['invoice_vat'] }} </dd>
+          <dt>Organisation number</dt>
+            <dd>{{ contact_dets['invoice_organisation_number'] }} </dd>
         </dl>
       <h3 class="pt-3">Specification</h3>
       <hr class="mb-1">
