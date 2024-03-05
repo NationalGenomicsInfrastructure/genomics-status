@@ -504,48 +504,63 @@ class ReadsTotalHandler(SafeHandler):
     """
 
     def get(self, query):
-        data = {}
-        ordereddata = OrderedDict()
         self.set_header("Content-type", "text/html")
-        t = self.application.loader.load("reads_total.html")
+        template = self.application.loader.load("reads_total.html")
 
-        if not query:
-            self.write(
-                t.generate(
-                    gs_globals=self.application.gs_globals,
-                    user=self.get_current_user(),
-                    readsdata=ordereddata,
-                    query=query,
-                )
+        data = self.retrieve_data(query)
+        ordered_data = self.order_data(data)
+
+        self.write(
+            template.generate(
+                gs_globals=self.application.gs_globals,
+                user=self.get_current_user(),
+                readsdata=ordered_data,
+                query=query,
             )
-        else:
-            xfc_view = self.application.x_flowcells_db.view(
-                "samples/lane_clusters", reduce=False
-            )
-            bioinfo_view = self.application.bioinfo_db.view("latest_data/sample_id")
-            for row in xfc_view[query : "{}Z".format(query)]:
-                if not row.key in data:
-                    data[row.key] = []
-                data[row.key].append(row.value)
-            # To check if sample is failed on lane level
-            for row in bioinfo_view[
-                [query, None, None, None]:[f"{query}Z", "ZZ", "ZZ", "ZZ"]
-            ]:
-                if row.key[3] in data:
-                    for fcl in data[row.key[3]]:
-                        if row.key[1] + ":" + row.key[2] == fcl["fcp"]:
-                            fcl["sample_status"] = row.value["sample_status"]
-                            break  # since the row is already found
-            for key in sorted(data.keys()):
-                ordereddata[key] = sorted(data[key], key=lambda d: d["fcp"])
-            self.write(
-                t.generate(
-                    gs_globals=self.application.gs_globals,
-                    user=self.get_current_user(),
-                    readsdata=ordereddata,
-                    query=query,
-                )
-            )
+        )
+
+    def retrieve_data(self, query):
+        xfc_view = self.application.x_flowcells_db.view("samples/lane_clusters", reduce=False)
+        bioinfo_view = self.application.bioinfo_db.view("latest_data/sample_id")
+        fc_view = self.application.x_flowcells_db.view("info/summary", descending=True)
+
+        data = {}
+        for row in xfc_view[query : f"{query}Z"]:
+            data.setdefault(row.key, []).append(row.value)
+        # To check if sample is failed on lane level
+        for row in bioinfo_view[[query, None, None, None]:[f"{query}Z", "ZZ", "ZZ", "ZZ"]]:
+            for fcl in data.get(row.key[3], []):
+                if row.key[1] + ":" + row.key[2] == fcl["fcp"]:
+                    fcl["sample_status"] = row.value["sample_status"]
+                    break
+        #To add correct threshold values
+        for row in fc_view:
+            for x, y in row.items():
+                for lane, dic in row.value["lane_info"].items():
+                    for key, value in data.items():
+                        for dicti in value:
+                            fcp_lane = ":" + lane
+                            if (
+                                query in dic["project_id"]
+                                and row.key[:6] in dicti["fcp"]
+                                and row.key[-5:] in dicti["fcp"]
+                                and fcp_lane in dicti["fcp"]
+                            ):
+                                for i, item in enumerate(data[key]):
+                                    if item == dicti:
+                                        item.update({
+                                            "run_mode": row.value["run_mode"],
+                                            "longer_read_length": row.value["longer_read_length"],
+                                        })
+                                        break
+
+        return data
+
+    def order_data(self, data):
+        ordered_data = OrderedDict()
+        for key in sorted(data.keys()):
+            ordered_data[key] = sorted(data[key], key=lambda d: d["fcp"])
+        return ordered_data
 
 
 # Functions

@@ -15,8 +15,8 @@ function plot_summary_chart(data, sample_names){
         },
         plotOptions: {
             column: { stacking: 'normal',
-                      borderWidth: 0,
-                      groupPadding: 0.1
+                        borderWidth: 0,
+                        groupPadding: 0.1
                     },
             series: {
                 cursor: 'pointer',
@@ -49,9 +49,8 @@ function update_all_totals(){
     var ar_samples = Array();
     var ar_clusters = Array();
     var data = [
-        { name: 'q30>75', data: [], color: '#78b560'},
-        { name: '75>q30>30', data: [], color: '#e8cd4c'},
-        { name: '30>q30', data: [], color: '#f28e8e'},
+        { name: 'q30&gt;threshold', data: [], color: '#78b560'},
+        { name: 'q30&lt;threshold', data: [], color: '#e8cd4c'},
         { name: 'Not Selected', data: [], color: '#dddddd' }
     ];
     $(".reads_table").each(function(){
@@ -59,6 +58,7 @@ function update_all_totals(){
         var unchecked = 0;
         var w_q30 = 0;
         var s_name = $(this).find(".sample_name").text();
+        var threshold = parseInt($(this).find(".threshold").text());
         $(this).find(".reads_data").each(function(){
             var count = parseInt($(this).find(".clusters").text());
             if ($(this).find(".reads_check").prop("checked") == true){
@@ -75,20 +75,14 @@ function update_all_totals(){
         }
         ar_samples.push(s_name);
         ar_clusters.push(checked);
-        if (w_q30>75){
+        if (w_q30 >= threshold){
             data[0].data.push(checked);
             data[1].data.push(0);
-            data[2].data.push(0);
-        }else if (w_q30>30){
+        }else {
             data[1].data.push(checked);
             data[0].data.push(0);
-            data[2].data.push(0);
-        }else{
-            data[2].data.push(checked);
-            data[0].data.push(0);
-            data[2].data.push(0);
         }
-        data[3].data.push(unchecked);
+        data[2].data.push(unchecked);
         $(this).find(".reads_total").text(checked);
     });
     create_summary_table(ar_samples, ar_clusters);

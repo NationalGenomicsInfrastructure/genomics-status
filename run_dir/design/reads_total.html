@@ -57,25 +57,55 @@ Description: Summing tool for the reads
                     <tr class="darkth">
                         <th><a class="text-decoration-none" href="/project/{{ sample.split('_')[0] }}">{{ sample }}</a></th>
                         <th>%&nbsp;&gt;&nbsp;q30</th>
+                        <th>Mode</th>
+                        <th>Threshold</th>
                         <th>Add</th>
                         <th>{% if "isHiseqX" in readsdata %}Cluster{% else %}Reads{% end %}</th>
                     </tr>
                 {% for d in readsdata[sample] %}
+                    {% set run_setup = d['longer_read_length'] %}
+                    {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
                     <tr class="reads_data">
                         <td class="flowcell"><a class="text-decoration-none" href="/flowcells/{{ d['fcp'].split('_')[0] }}_{{ d['fcp'].split('_')[-1].split(':')[0] }}">{{ d['fcp'] }}</a></td>
                         {% if '_UD' not in d['fcp']  %}
-                            {% if d['q30'] is not None and d['q30']>75 %}
-                                <td class="table-success myq30">{{ d['q30'] }}</td>
-                                <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}" {% if d.get('sample_status', '') != 'Failed' %} checked {% end %} /></td>
-                            {% elif d['q30'] is not None and d['q30']>30 %}
-                                <td class="table-warning myq30">{{ d['q30'] }}</td>
-                                <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}"/></td>
+                            {% if d['run_mode'] == 'HiSeq X' %}
+                                {% set q30_threshold = 75.0 %}
+                            {% elif 'MiSeq' in d['run_mode'] %}
+                                {% if run_setup >= 250 %}
+                                    {% set q30_threshold = 60.0 %}
+                                {% elif run_setup >= 150 %}
+                                    {% set q30_threshold = 70.0 %}
+                                {% elif run_setup >= 100 %}
+                                    {% set q30_threshold = 75.0 %}
+                                {% elif run_setup < 100 %}
+                                    {% set q30_threshold = 80.0 %}
+                                {% end %}
                             {% else %}
-                                <td class="table-danger myq30">{{ d['q30'] }}</td>
+                                {% if run_setup >= 250 %}
+                                    {% set q30_threshold = 60.0 %}
+                                {% elif run_setup >= 150 %}
+                                    {% set q30_threshold = 75.0 %}
+                                {% elif run_setup >= 100 %}
+                                    {% set q30_threshold = 80.0 %}
+                                {% elif run_setup < 100 %}
+                                    {% set q30_threshold = 85.0 %}
+                                {% end %}
+                            {% end %}
+                            {% if d['q30'] is not None and float(d['q30']) >= q30_threshold %}
+                                <td class="table-success myq30">{{ d['q30'] }}</td>
+                                <td>{{ run_setup }}</td>
+                                <td class="threshold">{{ q30_threshold }}</td>
+                                <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}" {% if d.get('sample_status', '') != 'Failed' %} checked {% end %} /></td>
+                            {% else %}
+                                <td class="table-warning myq30">{{ d['q30'] }}</td>
+                                <td>{{ run_setup }}</td>
+                                <td>{{ q30_threshold }}</td>
                                 <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}"/></td>
                             {% end %}
                         {% else %}
                             <td class="myq30">{{ d['q30'] }}</td>
+                            <td>{{ run_setup }}</td>
+                            <td>{{ q30_threshold }}</td>
                             <td><input type='checkbox' class="reads_check" data-sfc="{{ sample+'_'+d['fcp'] }}"/></td>
                         {% end %}
                         <td class="clusters">{{ d['cl'] }}</td>
@@ -83,6 +113,8 @@ Description: Summing tool for the reads
                 {% end %}
                     <tr class="darkth">
                         <th>Total</th>
+                        <th></th>
+                        <th></th>
                         <th></th>
                         <th class="sample_name">{{ sample }}</th>
                         <th id="{{ sample }}_total" class="reads_total"></th>
