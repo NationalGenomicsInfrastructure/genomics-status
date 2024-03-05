@@ -11,7 +11,11 @@ app.component('v-projects-status', {
     /*html*/`
     <div>
         <h1>Projects Status</h1>
-        <p>Hello from Vue</p>
+        <ul>
+            <li v-for="project in projects" :key="project">
+                {{ project }}
+            </li>
+        </ul>
     </div>`,
 })
 
