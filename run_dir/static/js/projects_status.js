@@ -3,7 +3,7 @@ const vProjectsStatus = {
         return {
             projects: [],
             sortBy: 'most_recent_date',
-            sortOrder: 'desc',
+            descending: true,
         }
     },
     computed: {
@@ -51,7 +51,7 @@ const vProjectsStatus = {
                 })
             )
 
-            if (this.sortOrder == 'desc') {
+            if (this.descending == true) {
                 tempProjects = Object.fromEntries(Object.entries(tempProjects).reverse())
             }
 
@@ -101,14 +101,29 @@ app.component('v-projects-status', {
     template:
     /*html*/`
     <div>
-        <template v-for="project in this.$root.orderedFilteredProjects" :key="project">
-            <div class="card">
+        <input type="checkbox" id="sort_desc_check" v-model="this.$root.descending" />
+        <label for="checkbox">
+            <template v-if=this.$root.descending>
+                Sort descending
+            </template>
+            <template v-else>
+                Sort ascending
+            </template>
+        </label>
+        <template v-for="(project, project_id) in this.$root.orderedFilteredProjects" :key="project">
+            <div class="card mb-3">
+                <div class="card-header">
+                <h2><a :href="'/project/' + project_id">{{ project_id }}, {{ project['project_name'] }}</a></h2>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">{{ project['project_name'] }}</h5>
                     <p> Dates: {{project['summary_dates']}}</p>
                     <p> Most recent date: {{this.$root.mostRecentDateArray(project)[0]}} : {{this.$root.mostRecentDateArray(project)[1]}}</p>
-                    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                    <a href="#" class="btn btn-primary">Go somewhere</a>
+                    <p> Status: {{ project['status'] }}</p>
+                    <p> Type: {{ project['type'] }}</p>
+                    <p> Sequencing Platform: {{ project['sequencing_platform'] }}</p>
+                    <p> Flowcell: {{ project['flowcell'] }}</p>
+                    <p> Sequencing Setup: {{ project['sequencing_setup'] }}</p>
+                    <p> Project Coordinator: {{ project['project_coordinator'] }}</p>
                 </div>
             </div>
         </template>
