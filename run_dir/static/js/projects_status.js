@@ -7,6 +7,7 @@ const vProjectsStatus = {
             status_filter: ['All'],
             type_filter: ['All'],
             project_coordinator_filter: ['All'],
+            search_value: '',
         }
     },
     computed: {
@@ -17,15 +18,6 @@ const vProjectsStatus = {
             }
 
             let tempProjects = Object.entries(this.all_projects)
-
-            // Process search input
-            if (this.searchValue != '' && this.searchValue) {
-                tempProjects = tempProjects.filter((item) => {
-                    return item.project_name
-                    .toUpperCase()
-                    .includes(this.searchValue.toUpperCase())
-                })
-            }
 
             // Process status filter
             if (!(this.status_filter.includes('All'))) {
@@ -45,6 +37,15 @@ const vProjectsStatus = {
             if (!(this.project_coordinator_filter.includes('All'))) {
                 tempProjects = tempProjects.filter(([project_id, project]) => {
                     return this.project_coordinator_filter.includes(project['project_coordinator'])
+                })
+            }
+
+            // Search filter
+            if (this.search_value != '' && this.search_value) {
+                tempProjects = tempProjects.filter(([project_id, project]) => {
+                    return JSON.stringify(project)
+                    .toUpperCase()
+                    .includes(this.search_value.toUpperCase())
                 })
             }
 
@@ -161,6 +162,23 @@ const vProjectsStatus = {
                 }
             }
             return projectCoordinatorCounts
+        },
+        allProjectCoordinatorsVisible() {
+            let projectCoordinators = []
+            let visible_projects = this.visibleProjects
+            for (let project in visible_projects) {
+                projectCoordinators.push(visible_projects[project]['project_coordinator'])
+            }
+            // Count the number of each project coordinator
+            let projectCoordinatorCounts = {}
+            for (let projectCoordinator of projectCoordinators) {
+                if (projectCoordinator in projectCoordinatorCounts) {
+                    projectCoordinatorCounts[projectCoordinator] += 1
+                } else {
+                    projectCoordinatorCounts[projectCoordinator] = 1
+                }
+            }
+            return projectCoordinatorCounts
         }
     },
     methods: {
@@ -219,6 +237,13 @@ const vProjectsStatus = {
             if (type in this.allTypesVisible) {
                 return this.allTypesVisible[type]
             }
+            return 0
+        },
+        nrWithProjectCoordinatorVisible(project_coordinator) {
+            if (project_coordinator in this.allProjectCoordinatorsVisible) {
+                return this.allProjectCoordinatorsVisible[project_coordinator]
+            }
+            return 0
         }
     }
 }
@@ -269,14 +294,21 @@ app.component('v-projects-status', {
                 <template v-for="(nr_with_project_coordinator, project_coordinator) in this.$root.allProjectCoordinators">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" :id="'project_coordinator_'+project_coordinator" :value="project_coordinator" v-model="this.$root.project_coordinator_filter"/>
-                        <label class="form-check-label" :for="'project_coordinator_' + project_coordinator">{{ project_coordinator }} ({{nr_with_project_coordinator}}/{{nr_with_project_coordinator}})</label>
+                        <label class="form-check-label" :for="'project_coordinator_' + project_coordinator">{{ project_coordinator }} ({{this.$root.nrWithProjectCoordinatorVisible(project_coordinator)}}/{{nr_with_project_coordinator}})</label>
                     </div>
                 </template>
             </div>
         </div>
 
         <div class="row">
+            <div class="col-6">
             <h4>Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects</h4>
+            </div>
+            <div class="col-4">
+                <div class="form-group">
+                    <input type="text" class="form-control" v-model="this.$root.search_value" placeholder="Search" />
+                </div>
+            </div>
         </div>
         <template v-for="(project, project_id) in this.$root.visibleProjects" :key="project">
             <div class="card mb-5">
