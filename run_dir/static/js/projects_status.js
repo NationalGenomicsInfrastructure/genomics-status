@@ -89,6 +89,20 @@ const vProjectsStatus = {
 
             let mostRecentKey = Object.keys(summaryDates).reduce((a, b) => summaryDates[a] > summaryDates[b] ? a : b);
             return [mostRecentKey, summaryDates[mostRecentKey]]
+        },
+        projectTypeColor(project) {
+            let type = project['type']
+            if (type == 'Application') {
+                return 'success'
+            } else if (type == 'Production') {
+                return 'primary'
+            } else if (type == 'Facility') {
+                return 'info'
+            } else if (type == 'Single-Cell') {
+                return 'warning'
+            } else {
+                return 'secondary'
+            }
         }
     }
 }
@@ -111,19 +125,27 @@ app.component('v-projects-status', {
             </template>
         </label>
         <template v-for="(project, project_id) in this.$root.orderedFilteredProjects" :key="project">
-            <div class="card mb-3">
+            <div class="card my-5">
                 <div class="card-header">
-                <h2><a :href="'/project/' + project_id">{{ project_id }}, {{ project['project_name'] }}</a></h2>
+                    <div class="d-flex justify-content-between">
+                        <h2 class="">
+                            <a :href="'/project/' + project_id">{{ project_id }}: {{ project['project_name'] }}</a>
+                        </h2>
+                        <h3 class="position-relative">
+                            <span :class="'badge bg-' + this.$root.projectTypeColor(project)">{{ project['type'] }}</span>
+                        </h3>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <p> Dates: {{project['summary_dates']}}</p>
-                    <p> Most recent date: {{this.$root.mostRecentDateArray(project)[0]}} : {{this.$root.mostRecentDateArray(project)[1]}}</p>
-                    <p> Status: {{ project['status'] }}</p>
-                    <p> Type: {{ project['type'] }}</p>
-                    <p> Sequencing Platform: {{ project['sequencing_platform'] }}</p>
-                    <p> Flowcell: {{ project['flowcell'] }}</p>
-                    <p> Sequencing Setup: {{ project['sequencing_setup'] }}</p>
-                    <p> Project Coordinator: {{ project['project_coordinator'] }}</p>
+                    <div class="row">
+                        <p> Dates: {{project['summary_dates']}}</p>
+                        <p> Most recent date: {{this.$root.mostRecentDateArray(project)[0]}} : {{this.$root.mostRecentDateArray(project)[1]}}</p>
+                        <p> Status: {{ project['status'] }}</p>
+                        <p> Sequencing Platform: {{ project['sequencing_platform'] }}</p>
+                        <p> Flowcell: {{ project['flowcell'] }}</p>
+                        <p> Sequencing Setup: {{ project['sequencing_setup'] }}</p>
+                        <p> Project Coordinator: {{ project['project_coordinator'] }}</p>
+                    </div>
                 </div>
             </div>
         </template>
