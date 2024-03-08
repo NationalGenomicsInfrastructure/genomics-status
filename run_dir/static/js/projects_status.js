@@ -332,6 +332,7 @@ app.component('v-projects-status', {
                         <p> Sequencing Setup: {{ project['sequencing_setup'] }}</p>
                         <p> Project Coordinator: {{ project['project_coordinator'] }}</p>
                     </div>
+                    <v-projects-running-notes :project="project"></v-projects-running-notes>
                 </div>
             </div>
         </template>
@@ -339,3 +340,73 @@ app.component('v-projects-status', {
 })
 
 app.mount('#projects_status')
+
+
+app.component('v-projects-running-notes', {
+    props: ['project'],
+    computed: {
+        latest_running_note() {
+            if ('latest_running_note' in this.project) {
+                let latest_running_note = JSON.parse(this.project['latest_running_note'])
+                return Object.values(latest_running_note)[0];
+            }
+            return undefined;
+        },
+        user() {
+            if (this.latest_running_note !== undefined) {
+                if ('user' in this.latest_running_note) {
+                    return this.latest_running_note['user']
+                }
+            }
+            return undefined
+        },
+        created_at_utc() {
+            if (this.latest_running_note !== undefined) {
+                if ('created_at_utc' in this.latest_running_note) {
+                    return this.latest_running_note['created_at_utc']
+                }
+            }
+            return undefined
+        },
+        categories() {
+            if (this.latest_running_note !== undefined) {
+                if ('categories' in this.latest_running_note) {
+                    return this.latest_running_note['categories']
+                }
+            }
+            return undefined
+        },
+        note() {
+            if (this.latest_running_note !== undefined) {
+                if ('note' in this.latest_running_note) {
+                    return this.latest_running_note['note']
+                }
+            }
+            return undefined
+        }
+    },
+    template:
+    /*html*/`
+    <div>
+        <div class="col-10 offset-1 pb-3">
+        <p class="mt-3 fw-bold">Latest running note:</p>
+        <div class="card">
+            <div class="card-header bi-project-note-header">
+                <a class="text-decoration-none" href="#">{{ this.user }}</a> - <span class="todays_date">{{ created_at_utc }}</span>
+                <template v-if="categories">
+                - <span class="fillbadgecolour"> {{ categories }} </span> 
+                </template>
+            </div>
+            <div class="card-body bi-project-note-text">
+                <div class="running-note-body text-muted"> {{ note }}</div>
+            </div>
+        </div>
+      </div>
+    </div>`,
+})
+
+/*
+
+
+        </div>
+*/
