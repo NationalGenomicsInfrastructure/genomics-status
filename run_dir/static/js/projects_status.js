@@ -97,7 +97,6 @@ const vProjectsStatus = {
             return statusCounts
         },
         allStatusesVisible() {
-
             let statuses = []
             let visible_projects = this.visibleProjects
             for (let project in visible_projects) {
@@ -136,7 +135,7 @@ const vProjectsStatus = {
             for (let project in visible_projects) {
                 types.push(visible_projects[project]['type'])
             }
-            // Count the number of each status
+            // Count the number of each type
             let typeCounts = {}
             for (let type of types) {
                 if (type in typeCounts) {
@@ -215,6 +214,11 @@ const vProjectsStatus = {
                 return this.allStatusesVisible[status]
             }
             return 0
+        },
+        nrWithTypeVisible(type) {
+            if (type in this.allTypesVisible) {
+                return this.allTypesVisible[type]
+            }
         }
     }
 }
@@ -253,7 +257,7 @@ app.component('v-projects-status', {
                 <template v-for="(nr_with_type, type) in this.$root.allTypes">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" :id="'type_filter_'+type" :value="type" v-model="this.$root.type_filter"/>
-                        <label class="form-check-label" :for="'type_filter_' + type">{{ type }} ({{this.$root.allTypesVisible[type]}}/{{nr_with_type}})</label>
+                        <label class="form-check-label" :for="'type_filter_' + type">{{ type }} ({{this.$root.nrWithTypeVisible(type)}}/{{nr_with_type}})</label>
                     </div>
                 </template>
             </div>
