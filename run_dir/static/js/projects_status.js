@@ -151,6 +151,10 @@ app.component('v-projects-status', {
 
         <label>All</label>
         <input type="checkbox" value="All" v-model="this.$root.status_filter"/>
+        <template v-for="(nr_with_status, status) in this.$root.allStatuses">
+            <label>{{ status }}</label>
+            <input type="checkbox" :value="status" v-model="this.$root.status_filter"/>
+        </template>
 
         <template v-for="(project, project_id) in this.$root.visibleProjects" :key="project">
             <div class="card my-5">
