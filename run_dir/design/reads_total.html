@@ -84,7 +84,7 @@ Description: Summing tool for the reads
                         {% if '_UD' not in d['fcp']  %}
                             {% if d['run_mode'] == 'HiSeq X' %}
                                 {% set q30_threshold = threshold_dict['HiSeq X'] %}
-                                {% elif 'MiSeq' in d['run_mode'] %}
+                            {% elif 'MiSeq' in d['run_mode'] %}
                                 {% if run_setup >= 250 %}
                                     {% set q30_threshold = threshold_dict['MiSeq'][250] %}
                                 {% elif run_setup >= 150 %}
@@ -93,7 +93,7 @@ Description: Summing tool for the reads
                                     {% set q30_threshold = threshold_dict['MiSeq'][75] %}
                                 {% elif run_setup < 100 %}
                                     {% set q30_threshold = threshold_dict['MiSeq']['default'] %}
-                                {% end %}   
+                                {% end %}
                             {% else %}
                                 {% if run_setup >= 250 %}
                                     {% set q30_threshold = threshold_dict['default'][250] %}
