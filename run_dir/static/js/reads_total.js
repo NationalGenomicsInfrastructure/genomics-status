@@ -76,11 +76,11 @@ function update_all_totals(){
         ar_samples.push(s_name);
         ar_clusters.push(checked);
         if (w_q30 >= threshold){
-            data[0].data.push(checked);
-            data[1].data.push(0);
-        }else {
             data[1].data.push(checked);
             data[0].data.push(0);
+        }else {
+            data[0].data.push(checked);
+            data[1].data.push(0);
         }
         data[2].data.push(unchecked);
         $(this).find(".reads_total").text(checked);
