@@ -5,6 +5,8 @@ const vProjectsStatus = {
             sortBy: 'most_recent_date',
             descending: true,
             status_filter: ['All'],
+            type_filter: ['All'],
+            project_coordinator_filter: ['All'],
         }
     },
     computed: {
@@ -29,6 +31,20 @@ const vProjectsStatus = {
             if (!(this.status_filter.includes('All'))) {
                 tempProjects = tempProjects.filter(([project_id, project]) => {
                     return this.status_filter.includes(project['status_fields']['status'])
+                })
+            }
+
+            // Project type filter
+            if (!(this.type_filter.includes('All'))) {
+                tempProjects = tempProjects.filter(([project_id, project]) => {
+                    return this.type_filter.includes(project['type'])
+                })
+            }
+
+            // Project coordinator filter
+            if (!(this.project_coordinator_filter.includes('All'))) {
+                tempProjects = tempProjects.filter(([project_id, project]) => {
+                    return this.project_coordinator_filter.includes(project['project_coordinator'])
                 })
             }
 
@@ -79,6 +95,73 @@ const vProjectsStatus = {
                 }
             }
             return statusCounts
+        },
+        allStatusesVisible() {
+
+            let statuses = []
+            let visible_projects = this.visibleProjects
+            for (let project in visible_projects) {
+                statuses.push(visible_projects[project]['status_fields']['status'])
+            }
+            // Count the number of each status
+            let statusCounts = {}
+            for (let status of statuses) {
+                if (status in statusCounts) {
+                    statusCounts[status] += 1
+                } else {
+                    statusCounts[status] = 1
+                }
+            }
+            return statusCounts
+        },
+        allTypes() {
+            let types = []
+            for (let project in this.all_projects) {
+                types.push(this.all_projects[project]['type'])
+            }
+            // Count the number of each status
+            let typeCounts = {}
+            for (let type of types) {
+                if (type in typeCounts) {
+                    typeCounts[type] += 1
+                } else {
+                    typeCounts[type] = 1
+                }
+            }
+            return typeCounts
+        },
+        allTypesVisible() {
+            let types = []
+            let visible_projects = this.visibleProjects
+            for (let project in visible_projects) {
+                types.push(visible_projects[project]['type'])
+            }
+            // Count the number of each status
+            let typeCounts = {}
+            for (let type of types) {
+                if (type in typeCounts) {
+                    typeCounts[type] += 1
+                } else {
+                    typeCounts[type] = 1
+                }
+            }
+            return typeCounts
+        },
+        allProjectCoordinators() {
+            let projectCoordinators = []
+            for (let project in this.all_projects) {
+                projectCoordinators.push(this.all_projects[project]['project_coordinator'])
+            }
+            // Count the number of each status
+            let projectCoordinatorCounts = {}
+            for (let projectCoordinator of projectCoordinators) {
+                if (projectCoordinator in projectCoordinatorCounts) {
+                    projectCoordinatorCounts[projectCoordinator] += 1
+                } else {
+                    projectCoordinatorCounts[projectCoordinator] = 1
+                }
+            }
+            return projectCoordinatorCounts
         }
     },
     methods: {
@@ -126,6 +209,12 @@ const vProjectsStatus = {
             } else {
                 return 'secondary'
             }
+        },
+        nrWithStatusVisible(status) {
+            if (status in this.allStatusesVisible) {
+                return this.allStatusesVisible[status]
+            }
+            return 0
         }
     }
 }
@@ -138,26 +227,55 @@ app.component('v-projects-status', {
     template:
     /*html*/`
     <div>
-        <input type="checkbox" id="sort_desc_check" v-model="this.$root.descending" />
-        <label for="checkbox">
-            <template v-if=this.$root.descending>
-                Sort descending
-            </template>
-            <template v-else>
-                Sort ascending
-            </template>
-        </label>
-        <p> All statuses: {{ this.$root.allStatuses }}</p>
+        <div class="row">
+            <div class="col-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="sort_desc_check" v-model="this.$root.descending" />
+                    <label class="form-check-label" for="sort_desc_check">Sort descending</label>
+                </div>
 
-        <label>All</label>
-        <input type="checkbox" value="All" v-model="this.$root.status_filter"/>
-        <template v-for="(nr_with_status, status) in this.$root.allStatuses">
-            <label>{{ status }}</label>
-            <input type="checkbox" :value="status" v-model="this.$root.status_filter"/>
-        </template>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="status_filter_all" value="All" v-model="this.$root.status_filter"/>
+                    <label class="form-check-label" for="status_filter_all">All</label>
+                </div>
+                <template v-for="(nr_with_status, status) in this.$root.allStatuses">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" :id="'status_filter_'+status" :value="status" v-model="this.$root.status_filter"/>
+                        <label class="form-check-label" :for="'status_filter_' + status">{{ status }} ({{this.$root.nrWithStatusVisible(status)}}/{{nr_with_status}})</label>
+                    </div>
+                </template>
+            </div>
+            <div class="col-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="type_filter_all" value="All" v-model="this.$root.type_filter"/>
+                    <label class="form-check-label" for="type_filter_all">All</label>
+                </div>
+                <template v-for="(nr_with_type, type) in this.$root.allTypes">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" :id="'type_filter_'+type" :value="type" v-model="this.$root.type_filter"/>
+                        <label class="form-check-label" :for="'type_filter_' + type">{{ type }} ({{this.$root.allTypesVisible[type]}}/{{nr_with_type}})</label>
+                    </div>
+                </template>
+            </div>
+            <div class="col-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="project_coordinator_all" value="All" v-model="this.$root.project_coordinator_filter"/>
+                    <label class="form-check-label" for="project_coordinator_all">All</label>
+                </div>
+                <template v-for="(nr_with_project_coordinator, project_coordinator) in this.$root.allProjectCoordinators">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" :id="'project_coordinator_'+project_coordinator" :value="project_coordinator" v-model="this.$root.project_coordinator_filter"/>
+                        <label class="form-check-label" :for="'project_coordinator_' + project_coordinator">{{ project_coordinator }} ({{nr_with_project_coordinator}}/{{nr_with_project_coordinator}})</label>
+                    </div>
+                </template>
+            </div>
+        </div>
 
+        <div class="row">
+            <h4>Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects</h4>
+        </div>
         <template v-for="(project, project_id) in this.$root.visibleProjects" :key="project">
-            <div class="card my-5">
+            <div class="card mb-5">
                 <div class="card-header">
                     <div class="d-flex justify-content-between">
                         <h2 class="">
@@ -177,7 +295,6 @@ app.component('v-projects-status', {
                         <p> Flowcell: {{ project['flowcell'] }}</p>
                         <p> Sequencing Setup: {{ project['sequencing_setup'] }}</p>
                         <p> Project Coordinator: {{ project['project_coordinator'] }}</p>
-                        <p> Project all: {{ project }}</p>
                     </div>
                 </div>
             </div>
