@@ -4,8 +4,10 @@ const vProjectsStatus = {
             all_projects: {},
             sortBy: 'most_recent_date',
             descending: true,
-            status_filter: ['All'],
-            type_filter: ['All'],
+            status_filter: [],
+            include_all_statuses: true,
+            type_filter: [],
+            include_all_types: true,
             project_coordinator_filter: [],
             include_all_project_coordinators: true,
             search_value: '',
@@ -21,14 +23,14 @@ const vProjectsStatus = {
             let tempProjects = Object.entries(this.all_projects)
 
             // Process status filter
-            if (!(this.status_filter.includes('All'))) {
+            if (!this.include_all_statuses) {
                 tempProjects = tempProjects.filter(([project_id, project]) => {
                     return this.status_filter.includes(project['status_fields']['status'])
                 })
             }
 
             // Project type filter
-            if (!(this.type_filter.includes('All'))) {
+            if (!this.include_all_types) {
                 tempProjects = tempProjects.filter(([project_id, project]) => {
                     return this.type_filter.includes(project['type'])
                 })
@@ -83,10 +85,10 @@ const vProjectsStatus = {
             return Object.fromEntries(tempProjects)
         },
         allStatuses() {
-            return this.itemCounts(this.all_projects, 'status')
+            return this.itemCounts(this.all_projects, ['status_fields', 'status'])
         },
         allStatusesVisible() {
-            return this.itemCounts(this.visibleProjects, 'status')
+            return this.itemCounts(this.visibleProjects, ['status_fields', 'status'])
         },
         allTypes() {
             return this.itemCounts(this.all_projects, 'type')
@@ -118,9 +120,17 @@ const vProjectsStatus = {
         },
         // Helper methods
         itemCounts(list, key) {
+            /* 
+                Returns a dictionary with the counts of each unique item in the list 
+                key is either a string with a key or an array with two keys
+            */
             let items = []
             for (let item in list) {
-                items.push(list[item][key])
+                if (key instanceof Array) {
+                    items.push(list[item][key[0]][key[1]])
+                } else {
+                    items.push(list[item][key])
+                }
             }
 
             let itemCounts = {}
@@ -201,25 +211,27 @@ app.component('v-projects-status', {
                         <label class="form-check-label" for="sort_desc_check">Sort descending</label>
                     </div>
 
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="status_filter_all" value="All" v-model="this.$root.status_filter"/>
-                        <label class="form-check-label" for="status_filter_all">All</label>
+                    <h4>Status</h4>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="status_all_switch" v-model="this.$root.include_all_statuses"/>
+                        <label class="form-check-label" for="status_all_switch">All</label>
                     </div>
                     <template v-for="(nr_with_status, status) in this.$root.allStatuses">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" :id="'status_filter_'+status" :value="status" v-model="this.$root.status_filter"/>
+                            <input class="form-check-input" type="checkbox" :id="'status_filter_'+status" :value="status" v-model="this.$root.status_filter" :disabled="this.$root.include_all_statuses"/>
                             <label class="form-check-label" :for="'status_filter_' + status">{{ status }} ({{this.$root.nrWithStatusVisible(status)}}/{{nr_with_status}})</label>
                         </div>
                     </template>
                 </div>
                 <div class="col-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="type_filter_all" value="All" v-model="this.$root.type_filter"/>
-                        <label class="form-check-label" for="type_filter_all">All</label>
+                    <h4>Type</h4>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="type_all_switch" v-model="this.$root.include_all_types">
+                        <label class="form-check-label" for="project_coordinator_all_switch">All</label>
                     </div>
                     <template v-for="(nr_with_type, type) in this.$root.allTypes">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" :id="'type_filter_'+type" :value="type" v-model="this.$root.type_filter"/>
+                            <input class="form-check-input" type="checkbox" :id="'type_filter_'+type" :value="type" v-model="this.$root.type_filter" :disabled="this.$root.include_all_types"/>
                             <label class="form-check-label" :for="'type_filter_' + type">{{ type }} ({{this.$root.nrWithTypeVisible(type)}}/{{nr_with_type}})</label>
                         </div>
                     </template>
@@ -241,7 +253,6 @@ app.component('v-projects-status', {
         </div>
 
         <div class="row mt-5 mb-2">
-            <h1>{{this.$root.include_all_project_coordinators}}</h1>
             <div class="col-8">
             <h4>Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects</h4>
             </div>
