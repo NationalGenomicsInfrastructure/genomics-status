@@ -344,6 +344,16 @@ app.mount('#projects_status')
 
 app.component('v-projects-running-notes', {
     props: ['project'],
+    methods: {
+        getRunningNoteProperty(key){
+            if (this.latest_running_note !== undefined) {
+                if (key in this.latest_running_note) {
+                    return this.latest_running_note[key]
+                }
+            }
+            return undefined
+        }
+    },
     computed: {
         latest_running_note() {
             if ('latest_running_note' in this.project) {
@@ -353,36 +363,16 @@ app.component('v-projects-running-notes', {
             return undefined;
         },
         user() {
-            if (this.latest_running_note !== undefined) {
-                if ('user' in this.latest_running_note) {
-                    return this.latest_running_note['user']
-                }
-            }
-            return undefined
+            return getRunningNoteProperty('user')
         },
         created_at_utc() {
-            if (this.latest_running_note !== undefined) {
-                if ('created_at_utc' in this.latest_running_note) {
-                    return this.latest_running_note['created_at_utc']
-                }
-            }
-            return undefined
+            return getRunningNoteProperty('created_at_utc')
         },
         categories() {
-            if (this.latest_running_note !== undefined) {
-                if ('categories' in this.latest_running_note) {
-                    return this.latest_running_note['categories']
-                }
-            }
-            return undefined
+            return getRunningNoteProperty('categories')
         },
         note() {
-            if (this.latest_running_note !== undefined) {
-                if ('note' in this.latest_running_note) {
-                    return this.latest_running_note['note']
-                }
-            }
-            return undefined
+            return getRunningNoteProperty('note')
         }
     },
     template:
@@ -394,7 +384,7 @@ app.component('v-projects-running-notes', {
             <div class="card-header bi-project-note-header">
                 <a class="text-decoration-none" href="#">{{ this.user }}</a> - <span class="todays_date">{{ created_at_utc }}</span>
                 <template v-if="categories">
-                - <span class="fillbadgecolour"> {{ categories }} </span> 
+                - <span class="fillbadgecolour"> {{ categories }} </span>
                 </template>
             </div>
             <div class="card-body bi-project-note-text">
@@ -404,9 +394,3 @@ app.component('v-projects-running-notes', {
       </div>
     </div>`,
 })
-
-/*
-
-
-        </div>
-*/
