@@ -268,36 +268,63 @@ app.component('v-projects-status', {
             </div>
         </div>
         <template v-for="(project, project_id) in this.$root.visibleProjects" :key="project">
-            <div class="card mb-5">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between">
-                        <h2 class="">
-                            <a :href="'/project/' + project_id">{{ project_id }}: {{ project['project_name'] }}</a>
-                        </h2>
-                        <h3 class="position-relative">
-                            <span :class="'badge bg-' + this.$root.projectTypeColor(project)">{{ project['type'] }}</span>
-                        </h3>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <p> Dates: {{project['summary_dates']}}</p>
-                        <p> Most recent date: {{this.$root.mostRecentDateArray(project)[0]}} : {{this.$root.mostRecentDateArray(project)[1]}}</p>
-                        <p> Status: {{ project['status_fields']['status'] }}</p>
-                        <p> Sequencing Platform: {{ project['sequencing_platform'] }}</p>
-                        <p> Flowcell: {{ project['flowcell'] }}</p>
-                        <p> Sequencing Setup: {{ project['sequencing_setup'] }}</p>
-                        <p> Project Coordinator: {{ project['project_coordinator'] }}</p>
-                    </div>
-                    <v-projects-running-notes :project="project"></v-projects-running-notes>
-                </div>
-            </div>
+            <v-project-card :project="project" :project_id="project_id"></v-project-card>
         </template>
     </div>`,
 })
 
 app.mount('#projects_status')
 
+
+app.component('v-project-card', {
+    props: ['project', 'project_id'],
+    computed: {
+        hasSummaryDates() {
+            return ('summary_dates' in this.project) && (Object.keys(this.project['summary_dates']).length > 0)
+        }
+    },
+    template: 
+    /*html*/`
+    <div class="card mb-5">
+        <div class="card-header">
+            <div class="d-flex justify-content-between">
+                <h2 class="">
+                    <a :href="'/project/' + project_id">{{ project_id }}: {{ project['project_name'] }}</a>
+                </h2>
+                <h3 class="position-relative">
+                    <span :class="'badge bg-' + this.$root.projectTypeColor(project)">{{ project['type'] }}</span>
+                </h3>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-6">
+                    <p> Most recent date: {{this.$root.mostRecentDateArray(project)[0]}} : {{this.$root.mostRecentDateArray(project)[1]}}</p>
+                    <p> Status: {{ project['status_fields']['status'] }}</p>
+                    <p> Sequencing Platform: {{ project['sequencing_platform'] }}</p>
+                    <p> Flowcell: {{ project['flowcell'] }}</p>
+                    <p> Sequencing Setup: {{ project['sequencing_setup'] }}</p>
+                    <p> Project Coordinator: {{ project['project_coordinator'] }}</p>
+                </div>
+                <div class="col-6">
+                    <h3>Project Timeline</h3>
+                    <dl class="dl-horizontal">
+                        <template v-if="hasSummaryDates">
+                            <template v-for="(date, date_name) in project['summary_dates']">
+                                <dt>{{ date_name }}</dt>
+                                <dd>{{ date }}</dd>
+                            </template>
+                        </template>
+                        <template v-else>
+                            <p>No dates available</p>
+                        </template>
+                    </dl>
+                </div>
+            </div>
+            <v-projects-running-notes :project="project"></v-projects-running-notes>
+        </div>
+    </div>`,
+})
 
 app.component('v-projects-running-notes', {
     props: ['project'],
