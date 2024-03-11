@@ -6,7 +6,8 @@ const vProjectsStatus = {
             descending: true,
             status_filter: ['All'],
             type_filter: ['All'],
-            project_coordinator_filter: ['All'],
+            project_coordinator_filter: [],
+            include_all_project_coordinators: true,
             search_value: '',
         }
     },
@@ -34,7 +35,7 @@ const vProjectsStatus = {
             }
 
             // Project coordinator filter
-            if (!(this.project_coordinator_filter.includes('All'))) {
+            if (!this.include_all_project_coordinators) {
                 tempProjects = tempProjects.filter(([project_id, project]) => {
                     return this.project_coordinator_filter.includes(project['project_coordinator'])
                 })
@@ -224,13 +225,14 @@ app.component('v-projects-status', {
                     </template>
                 </div>
                 <div class="col-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="project_coordinator_all" value="All" v-model="this.$root.project_coordinator_filter"/>
-                        <label class="form-check-label" for="project_coordinator_all">All</label>
+                    <h4>Project Coordinator</h4>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="project_coordinator_all_switch" v-model="this.$root.include_all_project_coordinators">
+                        <label class="form-check-label" for="project_coordinator_all_switch">All</label>
                     </div>
                     <template v-for="(nr_with_project_coordinator, project_coordinator) in this.$root.allProjectCoordinators">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" :id="'project_coordinator_'+project_coordinator" :value="project_coordinator" v-model="this.$root.project_coordinator_filter"/>
+                            <input class="form-check-input" type="checkbox" :id="'project_coordinator_'+project_coordinator" :value="project_coordinator" v-model="this.$root.project_coordinator_filter" :disabled="this.$root.include_all_project_coordinators"/>
                             <label class="form-check-label" :for="'project_coordinator_' + project_coordinator">{{ project_coordinator }} ({{this.$root.nrWithProjectCoordinatorVisible(project_coordinator)}}/{{nr_with_project_coordinator}})</label>
                         </div>
                     </template>
@@ -239,6 +241,7 @@ app.component('v-projects-status', {
         </div>
 
         <div class="row mt-5 mb-2">
+            <h1>{{this.$root.include_all_project_coordinators}}</h1>
             <div class="col-8">
             <h4>Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects</h4>
             </div>
