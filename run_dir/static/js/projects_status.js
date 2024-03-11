@@ -191,52 +191,55 @@ app.component('v-projects-status', {
     template:
     /*html*/`
     <div>
-        <div class="row">
-            <div class="col-4">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="sort_desc_check" v-model="this.$root.descending" />
-                    <label class="form-check-label" for="sort_desc_check">Sort descending</label>
-                </div>
+        <div class="card p-3">
+            <h3>Filters</h3>
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="sort_desc_check" v-model="this.$root.descending" />
+                        <label class="form-check-label" for="sort_desc_check">Sort descending</label>
+                    </div>
 
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="status_filter_all" value="All" v-model="this.$root.status_filter"/>
-                    <label class="form-check-label" for="status_filter_all">All</label>
-                </div>
-                <template v-for="(nr_with_status, status) in this.$root.allStatuses">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" :id="'status_filter_'+status" :value="status" v-model="this.$root.status_filter"/>
-                        <label class="form-check-label" :for="'status_filter_' + status">{{ status }} ({{this.$root.nrWithStatusVisible(status)}}/{{nr_with_status}})</label>
+                        <input class="form-check-input" type="checkbox" id="status_filter_all" value="All" v-model="this.$root.status_filter"/>
+                        <label class="form-check-label" for="status_filter_all">All</label>
                     </div>
-                </template>
-            </div>
-            <div class="col-4">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="type_filter_all" value="All" v-model="this.$root.type_filter"/>
-                    <label class="form-check-label" for="type_filter_all">All</label>
+                    <template v-for="(nr_with_status, status) in this.$root.allStatuses">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" :id="'status_filter_'+status" :value="status" v-model="this.$root.status_filter"/>
+                            <label class="form-check-label" :for="'status_filter_' + status">{{ status }} ({{this.$root.nrWithStatusVisible(status)}}/{{nr_with_status}})</label>
+                        </div>
+                    </template>
                 </div>
-                <template v-for="(nr_with_type, type) in this.$root.allTypes">
+                <div class="col-4">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" :id="'type_filter_'+type" :value="type" v-model="this.$root.type_filter"/>
-                        <label class="form-check-label" :for="'type_filter_' + type">{{ type }} ({{this.$root.nrWithTypeVisible(type)}}/{{nr_with_type}})</label>
+                        <input class="form-check-input" type="checkbox" id="type_filter_all" value="All" v-model="this.$root.type_filter"/>
+                        <label class="form-check-label" for="type_filter_all">All</label>
                     </div>
-                </template>
-            </div>
-            <div class="col-4">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="project_coordinator_all" value="All" v-model="this.$root.project_coordinator_filter"/>
-                    <label class="form-check-label" for="project_coordinator_all">All</label>
+                    <template v-for="(nr_with_type, type) in this.$root.allTypes">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" :id="'type_filter_'+type" :value="type" v-model="this.$root.type_filter"/>
+                            <label class="form-check-label" :for="'type_filter_' + type">{{ type }} ({{this.$root.nrWithTypeVisible(type)}}/{{nr_with_type}})</label>
+                        </div>
+                    </template>
                 </div>
-                <template v-for="(nr_with_project_coordinator, project_coordinator) in this.$root.allProjectCoordinators">
+                <div class="col-4">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" :id="'project_coordinator_'+project_coordinator" :value="project_coordinator" v-model="this.$root.project_coordinator_filter"/>
-                        <label class="form-check-label" :for="'project_coordinator_' + project_coordinator">{{ project_coordinator }} ({{this.$root.nrWithProjectCoordinatorVisible(project_coordinator)}}/{{nr_with_project_coordinator}})</label>
+                        <input class="form-check-input" type="checkbox" id="project_coordinator_all" value="All" v-model="this.$root.project_coordinator_filter"/>
+                        <label class="form-check-label" for="project_coordinator_all">All</label>
                     </div>
-                </template>
+                    <template v-for="(nr_with_project_coordinator, project_coordinator) in this.$root.allProjectCoordinators">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" :id="'project_coordinator_'+project_coordinator" :value="project_coordinator" v-model="this.$root.project_coordinator_filter"/>
+                            <label class="form-check-label" :for="'project_coordinator_' + project_coordinator">{{ project_coordinator }} ({{this.$root.nrWithProjectCoordinatorVisible(project_coordinator)}}/{{nr_with_project_coordinator}})</label>
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-6">
+        <div class="row mt-5 mb-2">
+            <div class="col-8">
             <h4>Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects</h4>
             </div>
             <div class="col-4">
