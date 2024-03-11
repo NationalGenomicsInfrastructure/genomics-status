@@ -101,6 +101,13 @@ const vProjectsStatus = {
         },
         allProjectCoordinatorsVisible() {
             return this.itemCounts(this.visibleProjects, 'project_coordinator')
+        },
+        sorting_icon() {
+            if (this.descending) {
+                return 'fa-arrow-down-wide-short'
+            } else {
+                return 'fa-arrow-up-wide-short '
+            }
         }
     },
     methods: {
@@ -190,6 +197,9 @@ const vProjectsStatus = {
             } else {
                 return 'secondary'
             }
+        },
+        toggleSorting() {
+            this.descending = !this.descending
         }
     }
 }
@@ -206,11 +216,6 @@ app.component('v-projects-status', {
             <h3>Filters</h3>
             <div class="row">
                 <div class="col-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="sort_desc_check" v-model="this.$root.descending" />
-                        <label class="form-check-label" for="sort_desc_check">Sort descending</label>
-                    </div>
-
                     <h4>Status</h4>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="status_all_switch" v-model="this.$root.include_all_statuses"/>
@@ -254,7 +259,7 @@ app.component('v-projects-status', {
 
         <div class="row mt-5 mb-2">
             <div class="col-8">
-            <h4>Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects</h4>
+            <h4><i :class="'fa-solid ' + this.$root.sorting_icon + ' mr-2'" @click="this.$root.toggleSorting"></i>Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects</h4>
             </div>
             <div class="col-4">
                 <div class="form-group">
