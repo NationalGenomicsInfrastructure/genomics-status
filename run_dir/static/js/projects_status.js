@@ -82,103 +82,22 @@ const vProjectsStatus = {
             return Object.fromEntries(tempProjects)
         },
         allStatuses() {
-            let statuses = []
-            for (let project in this.all_projects) {
-                statuses.push(this.all_projects[project]['status_fields']['status'])
-            }
-            // Count the number of each status
-            let statusCounts = {}
-            for (let status of statuses) {
-                if (status in statusCounts) {
-                    statusCounts[status] += 1
-                } else {
-                    statusCounts[status] = 1
-                }
-            }
-            return statusCounts
+            return this.itemCounts(this.all_projects, 'status')
         },
         allStatusesVisible() {
-            let statuses = []
-            let visible_projects = this.visibleProjects
-            for (let project in visible_projects) {
-                statuses.push(visible_projects[project]['status_fields']['status'])
-            }
-            // Count the number of each status
-            let statusCounts = {}
-            for (let status of statuses) {
-                if (status in statusCounts) {
-                    statusCounts[status] += 1
-                } else {
-                    statusCounts[status] = 1
-                }
-            }
-            return statusCounts
+            return this.itemCounts(this.visibleProjects, 'status')
         },
         allTypes() {
-            let types = []
-            for (let project in this.all_projects) {
-                types.push(this.all_projects[project]['type'])
-            }
-            // Count the number of each status
-            let typeCounts = {}
-            for (let type of types) {
-                if (type in typeCounts) {
-                    typeCounts[type] += 1
-                } else {
-                    typeCounts[type] = 1
-                }
-            }
-            return typeCounts
+            return this.itemCounts(this.all_projects, 'type')
         },
         allTypesVisible() {
-            let types = []
-            let visible_projects = this.visibleProjects
-            for (let project in visible_projects) {
-                types.push(visible_projects[project]['type'])
-            }
-            // Count the number of each type
-            let typeCounts = {}
-            for (let type of types) {
-                if (type in typeCounts) {
-                    typeCounts[type] += 1
-                } else {
-                    typeCounts[type] = 1
-                }
-            }
-            return typeCounts
+            return this.itemCounts(this.visibleProjects, 'type')
         },
         allProjectCoordinators() {
-            let projectCoordinators = []
-            for (let project in this.all_projects) {
-                projectCoordinators.push(this.all_projects[project]['project_coordinator'])
-            }
-            // Count the number of each status
-            let projectCoordinatorCounts = {}
-            for (let projectCoordinator of projectCoordinators) {
-                if (projectCoordinator in projectCoordinatorCounts) {
-                    projectCoordinatorCounts[projectCoordinator] += 1
-                } else {
-                    projectCoordinatorCounts[projectCoordinator] = 1
-                }
-            }
-            return projectCoordinatorCounts
+            return this.itemCounts(this.all_projects, 'project_coordinator')
         },
         allProjectCoordinatorsVisible() {
-            let projectCoordinators = []
-            let visible_projects = this.visibleProjects
-            for (let project in visible_projects) {
-                projectCoordinators.push(visible_projects[project]['project_coordinator'])
-            }
-            // Count the number of each project coordinator
-            let projectCoordinatorCounts = {}
-            for (let projectCoordinator of projectCoordinators) {
-                if (projectCoordinator in projectCoordinatorCounts) {
-                    projectCoordinatorCounts[projectCoordinator] += 1
-                } else {
-                    projectCoordinatorCounts[projectCoordinator] = 1
-                }
-            }
-            return projectCoordinatorCounts
+            return this.itemCounts(this.visibleProjects, 'project_coordinator')
         }
     },
     methods: {
@@ -197,6 +116,22 @@ const vProjectsStatus = {
                 })
         },
         // Helper methods
+        itemCounts(list, key) {
+            let items = []
+            for (let item in list) {
+                items.push(list[item][key])
+            }
+
+            let itemCounts = {}
+            for (let item of items) {
+                if (item in itemCounts) {
+                    itemCounts[item] += 1
+                } else {
+                    itemCounts[item] = 1
+                }
+            }
+            return itemCounts
+        },
         mostRecentDate(project) {
             let mostRecentKeyArray = this.mostRecentDateArray(project)
             return mostRecentKeyArray[1]
@@ -212,20 +147,6 @@ const vProjectsStatus = {
 
             let mostRecentKey = Object.keys(summaryDates).reduce((a, b) => summaryDates[a] > summaryDates[b] ? a : b);
             return [mostRecentKey, summaryDates[mostRecentKey]]
-        },
-        projectTypeColor(project) {
-            let type = project['type']
-            if (type == 'Application') {
-                return 'success'
-            } else if (type == 'Production') {
-                return 'primary'
-            } else if (type == 'Facility') {
-                return 'info'
-            } else if (type == 'Single-Cell') {
-                return 'warning'
-            } else {
-                return 'secondary'
-            }
         },
         nrWithStatusVisible(status) {
             if (status in this.allStatusesVisible) {
@@ -244,6 +165,20 @@ const vProjectsStatus = {
                 return this.allProjectCoordinatorsVisible[project_coordinator]
             }
             return 0
+        },
+        projectTypeColor(project) {
+            let type = project['type']
+            if (type == 'Application') {
+                return 'success'
+            } else if (type == 'Production') {
+                return 'primary'
+            } else if (type == 'Facility') {
+                return 'info'
+            } else if (type == 'Single-Cell') {
+                return 'warning'
+            } else {
+                return 'secondary'
+            }
         }
     }
 }
@@ -363,16 +298,16 @@ app.component('v-projects-running-notes', {
             return undefined;
         },
         user() {
-            return getRunningNoteProperty('user')
+            return this.getRunningNoteProperty('user')
         },
         created_at_utc() {
-            return getRunningNoteProperty('created_at_utc')
+            return this.getRunningNoteProperty('created_at_utc')
         },
         categories() {
-            return getRunningNoteProperty('categories')
+            return this.getRunningNoteProperty('categories')
         },
         note() {
-            return getRunningNoteProperty('note')
+            return this.getRunningNoteProperty('note')
         }
     },
     template:
