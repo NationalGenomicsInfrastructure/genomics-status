@@ -224,7 +224,6 @@ app.component('v-projects-status', {
     /*html*/`
     <div>
         <div class="card p-3">
-            <h3>Filters</h3>
             <div class="row">
                 <div class="col-4">
                     <h4>Status</h4>
@@ -318,11 +317,19 @@ app.component('v-project-card', {
         <div class="card-body">
             <div class="row">
                 <div class="col-6">
-                    <p> Most recent date: {{this.$root.mostRecentDateArray(project)[0]}} : {{this.$root.mostRecentDateArray(project)[1]}}</p>
-                    <p> Sequencing Platform: {{ project['sequencing_platform'] }}</p>
-                    <p> Flowcell: {{ project['flowcell'] }}</p>
-                    <p> Sequencing Setup: {{ project['sequencing_setup'] }}</p>
-                    <p> Project Coordinator: {{ project['project_coordinator'] }}</p>
+                    <dl class="row">
+                        <dt class="col-sm-3">Sequencing Platform:</dt>
+                        <dd class="col-sm-9">{{ project['sequencing_platform'] }}</dd>
+
+                        <dt class="col-sm-3">Flowcell:</dt>
+                        <dd class="col-sm-9">{{ project['flowcell'] }}</dd>
+
+                        <dt class="col-sm-3">Sequencing Setup:</dt>
+                        <dd class="col-sm-9">{{ project['sequencing_setup'] }}</dd>
+
+                        <dt class="col-sm-3">Project Coordinator:</dt>
+                        <dd class="col-sm-9">{{ project['project_coordinator'] }}</dd>
+                    </dl>
                 </div>
                 <div class="col-6">
                     <h3>Project Timeline</h3>
@@ -357,6 +364,36 @@ app.component('v-projects-running-notes', {
         }
     },
     computed: {
+        categories() {
+            return this.getRunningNoteProperty('categories')
+        },
+        categories_labels() {
+            if (this.categories == undefined) {
+                return ''
+            }
+            // The generate_category_label method is defined in running_notes.js
+            return generate_category_label(this.categories)
+        },
+        created_at_utc() {
+            return this.getRunningNoteProperty('created_at_utc')
+        },
+        formattedTimeStamp() {
+            // Get the timestamp from the running note
+            let timestamp = this.getRunningNoteProperty('created_at_utc');
+
+            // Create a new Date object using the timestamp
+            let date = new Date(timestamp);
+
+            // Format the date to a readable string in the local time zone
+            return date.toLocaleString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        },
+        formatted_note() {
+            if (this.note == undefined) {
+                return ''
+            }
+            // make_markdown is from an external package
+            return make_markdown(this.note)
+        },
         latest_running_note() {
             if ('latest_running_note' in this.project) {
                 let latest_running_note = JSON.parse(this.project['latest_running_note'])
@@ -364,35 +401,29 @@ app.component('v-projects-running-notes', {
             }
             return undefined;
         },
-        user() {
-            return this.getRunningNoteProperty('user')
-        },
-        created_at_utc() {
-            return this.getRunningNoteProperty('created_at_utc')
-        },
-        categories() {
-            return this.getRunningNoteProperty('categories')
-        },
         note() {
             return this.getRunningNoteProperty('note')
+        },
+        user() {
+            return this.getRunningNoteProperty('user')
         }
     },
     template:
     /*html*/`
-    <div>
-        <div class="col-10 offset-1 pb-3">
-        <p class="mt-3 fw-bold">Latest running note:</p>
-        <div class="card">
-            <div class="card-header bi-project-note-header">
-                <a class="text-decoration-none" href="#">{{ this.user }}</a> - <span class="todays_date">{{ created_at_utc }}</span>
-                <template v-if="categories">
-                - <span class="fillbadgecolour"> {{ categories }} </span>
-                </template>
-            </div>
-            <div class="card-body bi-project-note-text">
-                <div class="running-note-body text-muted"> {{ note }}</div>
+    <div v-if="latest_running_note">
+        <div class="col-6 pb-3">
+            <div class="card">
+                <div class="card-header bi-project-note-header">
+                    <span>{{ this.user }}</span> - <span class="todays_date">{{ formattedTimeStamp }}</span>
+                    <template v-if="categories">
+                    - <span v-html="categories_labels"/>
+                    </template>
+                </div>
+                <div class="card-body bi-project-note-text">
+                    <div class="running-note-body text-muted" v-html="formatted_note"/>
+                </div>
             </div>
         </div>
-      </div>
-    </div>`,
+    </div>
+    `,
 })
