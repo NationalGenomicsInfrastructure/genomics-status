@@ -3,6 +3,7 @@ const vProjectsStatus = {
         return {
             all_projects: {},
             sticky_running_notes: {},
+            error_messages: [],
             sortBy: 'most_recent_date',
             descending: true,
             status_filter: [],
@@ -121,12 +122,19 @@ const vProjectsStatus = {
                     if (data !== null) {
                         this.all_projects = data
                     }
+                    this.fetchStickyRunningNotes()
                 })
                 .catch(error => {
                     this.error_messages.push('Unable to fetch projects, please try again or contact a system administrator.')
                 })
         },
-        fetchStickyRunningNotes() {
+        async fetchStickyRunningNotes() {
+            const sleep = (delay) => new Promise((resolve) => setTimeout(resolve,delay))
+
+            if (Object.keys(this.all_projects).length === 0){
+                // Wait for projects to be fetched even though the request should already have returned
+                await sleep(1000);
+            }
             axios
                 .post('/api/v1/latest_sticky_run_note', {project_ids: Object.keys(this.all_projects)})
                 .then(response => {
@@ -277,11 +285,6 @@ app.component('v-projects-status', {
                             <label class="form-check-label" :for="'project_coordinator_' + project_coordinator">{{ project_coordinator }} ({{this.$root.nrWithProjectCoordinatorVisible(project_coordinator)}}/{{nr_with_project_coordinator}})</label>
                         </div>
                     </template>
-                </div>
-                <div class="m-3">
-                    <button role="button" class="btn btn-primary" @click="this.$root.fetchStickyRunningNotes">
-                        Fetch sticky running notes
-                    </button>
                 </div>
             </div>
         </div>
