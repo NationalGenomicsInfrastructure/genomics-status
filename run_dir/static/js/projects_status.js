@@ -346,13 +346,20 @@ app.component('v-project-card', {
                     </dl>
                 </div>
             </div>
-            <v-projects-running-notes :project="project"></v-projects-running-notes>
+            <div class="row">
+                <template v-if="project['latest_running_note']">
+                    <v-projects-running-notes :latest_running_note_obj="project['latest_running_note']" :sticky="false"></v-projects-running-notes>
+                </template>
+                <template v-if="project['latest_sticky_note']">
+                    <v-projects-running-notes :latest_running_note_obj="project['latest_sticky_note']" :sticky="true"></v-projects-running-notes>
+                </template>
+            </div>
         </div>
     </div>`,
 })
 
 app.component('v-projects-running-notes', {
-    props: ['project'],
+    props: ['latest_running_note_obj', 'sticky'],
     methods: {
         getRunningNoteProperty(key){
             if (this.latest_running_note !== undefined) {
@@ -379,7 +386,12 @@ app.component('v-projects-running-notes', {
         },
         formattedTimeStamp() {
             // Get the timestamp from the running note
-            let timestamp = this.getRunningNoteProperty('created_at_utc');
+            let timestamp;
+            if (this.sticky == true) {
+                timestamp = this.getRunningNoteProperty('timestamp');
+            } else {
+                timestamp = this.getRunningNoteProperty('created_at_utc');
+            }
 
             // Create a new Date object using the timestamp
             let date = new Date(timestamp);
@@ -395,11 +407,8 @@ app.component('v-projects-running-notes', {
             return make_markdown(this.note)
         },
         latest_running_note() {
-            if ('latest_running_note' in this.project) {
-                let latest_running_note = JSON.parse(this.project['latest_running_note'])
-                return Object.values(latest_running_note)[0];
-            }
-            return undefined;
+            let latest_running_note_json = JSON.parse(this.latest_running_note_obj)
+            return Object.values(latest_running_note_json)[0];
         },
         note() {
             return this.getRunningNoteProperty('note')
@@ -410,18 +419,16 @@ app.component('v-projects-running-notes', {
     },
     template:
     /*html*/`
-    <div v-if="latest_running_note">
-        <div class="col-6 pb-3">
-            <div class="card">
-                <div class="card-header bi-project-note-header">
-                    <span>{{ this.user }}</span> - <span class="todays_date">{{ formattedTimeStamp }}</span>
-                    <template v-if="categories">
-                    - <span v-html="categories_labels"/>
-                    </template>
-                </div>
-                <div class="card-body bi-project-note-text">
-                    <div class="running-note-body text-muted" v-html="formatted_note"/>
-                </div>
+    <div class="col-6 pb-3">
+        <div class="card">
+            <div class="card-header bi-project-note-header">
+                <span>{{ this.user }}</span> - <span class="todays_date">{{ formattedTimeStamp }}</span>
+                <template v-if="categories">
+                - <span v-html="categories_labels"/>
+                </template>
+            </div>
+            <div class="card-body bi-project-note-text">
+                <div class="running-note-body text-muted" v-html="formatted_note"/>
             </div>
         </div>
     </div>
