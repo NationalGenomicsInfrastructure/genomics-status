@@ -198,6 +198,17 @@ const vProjectsStatus = {
                 return 'secondary'
             }
         },
+        projectStatusColor(project) {
+            let status = project['status_fields']['status']
+            if (status == 'Pending') {
+                return 'secondary'
+            } else if (status == 'Reception Control') {
+                return 'info'
+            } else if (status == 'Ongoing') {
+                return 'primary'
+            }
+            return 'warning'
+        },
         toggleSorting() {
             this.descending = !this.descending
         }
@@ -285,22 +296,29 @@ app.component('v-project-card', {
     },
     template: 
     /*html*/`
+
     <div class="card mb-5">
         <div class="card-header">
             <div class="d-flex justify-content-between">
                 <h2 class="">
                     <a :href="'/project/' + project_id">{{ project_id }}: {{ project['project_name'] }}</a>
                 </h2>
-                <h3 class="position-relative">
-                    <span :class="'badge bg-' + this.$root.projectTypeColor(project)">{{ project['type'] }}</span>
-                </h3>
+                <div class="col-3">
+                    <div class="d-flex justify-content-end">
+                        <h3 class="mr-2">
+                        <span :class="'badge bg-' + this.$root.projectStatusColor(project)">{{ project['status_fields']['status'] }}</span>
+                        </h3>
+                        <h3 class="">
+                            <span :class="'badge bg-' + this.$root.projectTypeColor(project)">{{ project['type'] }}</span>
+                        </h3>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-6">
                     <p> Most recent date: {{this.$root.mostRecentDateArray(project)[0]}} : {{this.$root.mostRecentDateArray(project)[1]}}</p>
-                    <p> Status: {{ project['status_fields']['status'] }}</p>
                     <p> Sequencing Platform: {{ project['sequencing_platform'] }}</p>
                     <p> Flowcell: {{ project['flowcell'] }}</p>
                     <p> Sequencing Setup: {{ project['sequencing_setup'] }}</p>
