@@ -514,10 +514,25 @@ class ReadsTotalHandler(SafeHandler):
                 "samples/lane_clusters", reduce=False
             )
             bioinfo_view = self.application.bioinfo_db.view("latest_data/sample_id")
+            fc_view = self.application.x_flowcells_db.view(
+                "info/summary", descending=True
+            )
+
             for row in xfc_view[query : "{}Z".format(query)]:
                 if not row.key in data:
                     data[row.key] = []
+                # To add correct threshold values
+                fc_long_name = row.value["fcp"].split(":")[0]
+                fc_short_name = (
+                    fc_long_name.split("_")[0] + "_" + fc_long_name.split("_")[-1]
+                )
+                for info_row in fc_view[fc_short_name]:
+                    row.value["run_mode"] = info_row.value["run_mode"]
+                    row.value["longer_read_length"] = info_row.value[
+                        "longer_read_length"
+                    ]
                 data[row.key].append(row.value)
+
             # To check if sample is failed on lane level
             for row in bioinfo_view[
                 [query, None, None, None] : [f"{query}Z", "ZZ", "ZZ", "ZZ"]
