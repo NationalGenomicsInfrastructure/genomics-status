@@ -2,6 +2,7 @@ const vProjectsStatus = {
     data() {
         return {
             all_projects: {},
+            sticky_running_notes: {},
             sortBy: 'most_recent_date',
             descending: true,
             status_filter: [],
@@ -123,6 +124,19 @@ const vProjectsStatus = {
                 })
                 .catch(error => {
                     this.error_messages.push('Unable to fetch projects, please try again or contact a system administrator.')
+                })
+        },
+        fetchStickyRunningNotes() {
+            axios
+                .post('/api/v1/latest_sticky_run_note', {project_ids: Object.keys(this.all_projects)})
+                .then(response => {
+                    data = response.data
+                    if (data !== null) {
+                        this.sticky_running_notes = data
+                    }
+                })
+                .catch(error => {
+                    this.error_messages.push('Unable to fetch sticky running notes, please try again or contact a system administrator.')
                 })
         },
         // Helper methods
@@ -264,6 +278,11 @@ app.component('v-projects-status', {
                         </div>
                     </template>
                 </div>
+                <div class="m-3">
+                    <button role="button" class="btn btn-primary" @click="this.$root.fetchStickyRunningNotes">
+                        Fetch sticky running notes
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -350,8 +369,8 @@ app.component('v-project-card', {
                 <template v-if="project['latest_running_note']">
                     <v-projects-running-notes :latest_running_note_obj="project['latest_running_note']" :sticky="false"></v-projects-running-notes>
                 </template>
-                <template v-if="project['latest_sticky_note']">
-                    <v-projects-running-notes :latest_running_note_obj="project['latest_sticky_note']" :sticky="true"></v-projects-running-notes>
+                <template v-if="project_id in this.$root.sticky_running_notes">
+                    <v-projects-running-notes :latest_running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-projects-running-notes>
                 </template>
             </div>
         </div>
@@ -407,6 +426,10 @@ app.component('v-projects-running-notes', {
             return make_markdown(this.note)
         },
         latest_running_note() {
+            // Check if running note is an object
+            if (typeof this.latest_running_note_obj == 'object') {
+                return this.latest_running_note_obj
+            }
             let latest_running_note_json = JSON.parse(this.latest_running_note_obj)
             return Object.values(latest_running_note_json)[0];
         },
