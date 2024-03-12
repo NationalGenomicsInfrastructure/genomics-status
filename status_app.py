@@ -117,7 +117,7 @@ from status.queues import (
 )
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.ont_plot import ONTFlowcellYieldHandler, ONTFlowcellPlotHandler
-from status.running_notes import RunningNotesDataHandler, LatestStickyNoteHandler
+from status.running_notes import RunningNotesDataHandler, LatestStickyNoteHandler, LatestStickyNotesMultipleHandler
 from status.sample_requirements import (
     SampleRequirementsViewHandler,
     SampleRequirementsDataHandler,
@@ -274,6 +274,7 @@ class Application(tornado.web.Application):
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/latest_sticky_run_note/([^/]*)", LatestStickyNoteHandler),
+            ("/api/v1/latest_sticky_run_note", LatestStickyNotesMultipleHandler),
             ("/api/v1/libpooling_queues", LibraryPoolingQueuesDataHandler),
             ("/api/v1/mark_agreement_signed", AgreementMarkSignHandler),
             ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
