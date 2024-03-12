@@ -420,12 +420,13 @@ class Application(tornado.web.Application):
         genstat_id = ""
         user_id = ""
         user = settings.get("username", None)
-        for u in self.gs_users_db.view("authorized/users"):
-            if u.get("key") == "genstat-defaults":
-                genstat_id = u.get("value")
+
+        genstat_id_rows = self.gs_users_db.view("authorized/users")['genstat-defaults'].rows
+        for row in genstat_id_rows:
+            genstat_defaults_doc_id = row.get("value")
 
         # It's important to check that this user exists!
-        if not genstat_id:
+        if not genstat_defaults_doc_id:
             raise RuntimeError(
                 "genstat-defaults user not found on {}, please "
                 "make sure that the user is available with the "
@@ -433,24 +434,13 @@ class Application(tornado.web.Application):
                     settings.get("couch_server", None)
                 )
             )
+        elif len(genstat_id_rows) > 1:
+            # Not sure this can actually happen, but worth checking
+            raise RuntimeError(
+                "Multiple genstat-default users found in the database, please fix"
+            )
 
-        # We need to get this database as OrderedDict, so the pv_columns doesn't
-        # mess up
-        password = settings.get("password", None)
-        headers = {
-            "Accept": "application/json",
-            "Authorization": "Basic "
-            + "{}:{}".format(
-                base64.b64encode(bytes(user, "ascii")),
-                base64.b64encode(bytes(password, "ascii")),
-            ),
-        }
-        decoder = json.JSONDecoder(object_pairs_hook=OrderedDict)
-        user_url = "{}/gs_users/{}".format(settings.get("couch_server"), genstat_id)
-        json_user = (
-            requests.get(user_url, headers=headers).content.rstrip().decode("ascii")
-        )
-        self.genstat_defaults = decoder.decode(json_user)
+        self.genstat_defaults = self.gs_users_db[genstat_defaults_doc_id] 
 
         # Load private instrument listing
         self.instrument_list = settings.get("instruments")
