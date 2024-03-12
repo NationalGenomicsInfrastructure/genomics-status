@@ -529,24 +529,23 @@ class ReadsTotalHandler(SafeHandler):
                             break  # since the row is already found
             #To add correct threshold values
             for row in fc_view:
-                for x, y in row.items():
-                    for lane, dic in row.value["lane_info"].items():
-                        for key, value in data.items():
-                            for dicti in value:
-                                fcp_lane = ":" + lane
-                                if (
-                                    query in dic["project_id"]
-                                    and row.key[:6] in dicti["fcp"]
-                                    and row.key[-5:] in dicti["fcp"]
-                                    and fcp_lane in dicti["fcp"]
-                                ):
-                                    for i, item in enumerate(data[key]):
-                                        if item == dicti:
-                                            item.update({
-                                                "run_mode": row.value["run_mode"],
-                                                "longer_read_length": row.value["longer_read_length"],
-                                            })
-                                            break
+                for lane, lane_data in row.value["lane_info"].items():
+                    for key, value in data.items():
+                        for lane_info in value:
+                            fcp_lane = ":" + lane
+                            if (
+                                query in lane_data["project_id"]
+                                and row.key[:6] in lane_info["fcp"]
+                                and row.key[-5:] in lane_info["fcp"]
+                                and fcp_lane in lane_info["fcp"]
+                            ):
+                                for i, item in enumerate(data[key]):
+                                    if item == lane_info:
+                                        item.update({
+                                            "run_mode": row.value["run_mode"],
+                                            "longer_read_length": row.value["longer_read_length"],
+                                        })
+                                        break
             for key in sorted(data.keys()):
                 ordereddata[key] = sorted(data[key], key=lambda d: d["fcp"])
             self.write(
