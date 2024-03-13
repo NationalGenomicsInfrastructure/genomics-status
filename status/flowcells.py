@@ -523,8 +523,11 @@ class ReadsTotalHandler(SafeHandler):
                     data[row.key] = []
                 # To add correct threshold values
                 fc_long_name = row.value["fcp"].split(":")[0]
+                fc_date_run = fc_long_name.split("_")[0]
+                if len(fc_date_run) > 6:
+                    fc_date_run = fc_date_run[-6:]
                 fc_short_name = (
-                    fc_long_name.split("_")[0] + "_" + fc_long_name.split("_")[-1]
+                    fc_date_run + "_" + fc_long_name.split("_")[-1]
                 )
                 for info_row in fc_view[fc_short_name]:
                     row.value["run_mode"] = info_row.value["run_mode"]
