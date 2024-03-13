@@ -529,9 +529,6 @@ class ReadsTotalHandler(SafeHandler):
                 fc_short_name = (
                     fc_date_run + "_" + fc_long_name.split("_")[-1]
                 )
-                fc_short_name = (
-                    fc_long_name.split("_")[0] + "_" + fc_long_name.split("_")[-1]
-                )
                 for info_row in fc_view[fc_short_name]:
                     row.value["run_mode"] = info_row.value["run_mode"]
                     row.value["longer_read_length"] = info_row.value[
