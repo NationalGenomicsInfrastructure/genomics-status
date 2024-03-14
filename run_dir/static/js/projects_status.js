@@ -421,7 +421,7 @@ app.component('v-project-card', {
             <div class="row">
                 <h6>
                     <a class="" :href="'/project/' + project_id">
-                        Project page
+                        {{project_id}}
                         <i class="fa-solid fa-arrow-up-right-from-square"></i>
                     </a>
                 </h6>
@@ -429,11 +429,26 @@ app.component('v-project-card', {
                     <v-projects-running-notes :latest_running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-projects-running-notes>
                 </template>
                 <div>
-                    <span>{{ project['sequencing_platform'] }}</span>
-                    <span class="border border-light-subtle mx-1"></span>
-                    <span>{{ project['flowcell'] }}</span>
-                    <span class="border border-light-subtle mx-1"></span>
-                    <span>{{ project['sequencing_setup'] }}</span>
+                    <dt>Sequencing</dt>
+                    <dd>
+                        <span>{{ project['sequence_units_ordered_(lanes)'] }}</span>
+                        <span class="border border-light-subtle mx-1"></span>
+                        <span>{{ project['sequencing_platform'] }}</span>
+                        <span class="border border-light-subtle mx-1"></span>
+                        <span>{{ project['flowcell'] }}</span>
+                        <span class="border border-light-subtle mx-1"></span>
+                        <span>{{ project['sequencing_setup'] }}</span>
+                    </dd>
+                    <dt>Library Preparation</dt>
+                    <dd>
+                        <span>{{ project['sample_units_ordered']}}</span>
+                        <span class="border border-light-subtle mx-1"></span>
+                        <span>{{ project['sample_type']}}</span>
+                        <span class="border border-light-subtle mx-1"></span>
+                        <span>{{ project['library_construction_method'] }}</span>
+                        <span class="border border-light-subtle mx-1"></span>
+                        <span>{{ project['library_construction_option'] }}</span>
+                    </dd>
 
                     <dt>Project Coordinator:</dt>
                     <dd>{{ project['project_coordinator'] }}</dd>
