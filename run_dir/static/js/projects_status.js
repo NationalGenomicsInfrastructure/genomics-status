@@ -348,19 +348,31 @@ app.component('v-projects-status', {
             </div>
         </div>
         <template v-if="Object.keys(this.$root.visibleProjects).length == 0">
-            <p>No projects</p>
+            <template v-if="Object.keys(this.$root.all_projects).length == 0">
+                <div class="d-flex justify-content-center m-5">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h3 class="ml-2">Loading projects...</h3>
+                </div>
+            </template>
+            <template v-else>
+                <p>No projects</p>
+            </template>
         </template>
+
         <template v-else>
-            <div class="row mt-5 mb-2">
+
+            <div class="row mt-5 mb-4 border-bottom border-light-subtle">
                 <div class="col-8">
-                <h4>
-                    <i :class="'fa-solid ' + this.$root.sorting_icon + ' mr-2'" @click="this.$root.toggleSorting"></i>
-                    Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects in {{Object.keys(this.$root.allColumnValues).length}} columns
-                </h4>
+                    <h4 my-1>
+                        <i :class="'fa-solid ' + this.$root.sorting_icon + ' mr-2'" @click="this.$root.toggleSorting"></i>
+                        Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects in {{Object.keys(this.$root.allColumnValues).length}} columns
+                    </h4>
                 </div>
                 <div class="col-4">
                     <div class="form-group">
-                        <input type="text" class="form-control" v-model="this.$root.search_value" placeholder="Search" />
+                        <input type="text" class="form-control my-1" v-model="this.$root.search_value" placeholder="Search" />
                     </div>
                 </div>
             </div>
