@@ -7,13 +7,16 @@ const vProjectsStatus = {
             sortBy: 'most_recent_date',
             card_columns: 'application',
             descending: true,
+            search_value: '',
+            // Filters
             status_filter: [],
             include_all_statuses: true,
             type_filter: [],
             include_all_types: true,
             project_coordinator_filter: [],
             include_all_project_coordinators: true,
-            search_value: '',
+            application_filter: [],
+            include_all_applications: true,
         }
     },
     computed: {
@@ -24,6 +27,13 @@ const vProjectsStatus = {
             }
 
             let tempProjects = Object.entries(this.all_projects)
+
+            // Process application filter
+            if (!this.include_all_applications) {
+                tempProjects = tempProjects.filter(([project_id, project]) => {
+                    return this.application_filter.includes(project['application'])
+                })
+            }
 
             // Process status filter
             if (!this.include_all_statuses) {
@@ -100,6 +110,12 @@ const vProjectsStatus = {
                 }
             }
             return columnValues
+        },
+        allApplications() {
+            return this.itemCounts(this.all_projects, 'application')
+        },
+        allApplicationsVisible() {
+            return this.itemCounts(this.visibleProjects, 'application')
         },
         allStatuses() {
             return this.itemCounts(this.all_projects, ['status_fields', 'status'])
@@ -202,6 +218,12 @@ const vProjectsStatus = {
 
             let mostRecentKey = Object.keys(summaryDates).reduce((a, b) => summaryDates[a] > summaryDates[b] ? a : b);
             return [mostRecentKey, summaryDates[mostRecentKey]]
+        },
+        nrWithApplicationVisible(application) {
+            if (application in this.allApplicationsVisible) {
+                return this.allApplicationsVisible[application]
+            }
+            return 0
         },
         nrWithStatusVisible(status) {
             if (status in this.allStatusesVisible) {
@@ -306,6 +328,19 @@ app.component('v-projects-status', {
                         <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_project_coordinators')">
                             <input class="form-check-input" type="checkbox" :id="'project_coordinator_'+project_coordinator" :value="project_coordinator" v-model="this.$root.project_coordinator_filter" :disabled="this.$root.include_all_project_coordinators"/>
                             <label class="form-check-label" :for="'project_coordinator_' + project_coordinator">{{ project_coordinator }} ({{this.$root.nrWithProjectCoordinatorVisible(project_coordinator)}}/{{nr_with_project_coordinator}})</label>
+                        </div>
+                    </template>
+                </div>
+                <div class="col-4">
+                    <h4>Application</h4>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="application_all_switch" v-model="this.$root.include_all_applications">
+                        <label class="form-check-label" for="application_all_switch">All</label>
+                    </div>
+                    <template v-for="(nr_with_application, application) in this.$root.allApplications">
+                        <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_applications')">
+                            <input class="form-check-input" type="checkbox" :id="'application_filter_'+application" :value="application" v-model="this.$root.application_filter" :disabled="this.$root.include_all_applications"/>
+                            <label class="form-check-label" :for="'application_filter_' + application">{{ application }} ({{this.$root.nrWithApplicationVisible(application)}}/{{nr_with_application}})</label>
                         </div>
                     </template>
                 </div>
