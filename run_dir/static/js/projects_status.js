@@ -254,6 +254,14 @@ const vProjectsStatus = {
 const app = Vue.createApp(vProjectsStatus)
 
 app.component('v-projects-status', {
+    methods: {
+        selectFilterValue(event, include_all_key) {
+            /* A method to save a click on the 'All' switch when trying to filter */
+            if ((event.target.tagName == 'LABEL') || (event.target.tagName == 'INPUT')) {
+                this.$root[include_all_key] = false
+            }
+        }
+    },
     created: function() {
         this.$root.fetchProjects()
     },
@@ -269,7 +277,7 @@ app.component('v-projects-status', {
                         <label class="form-check-label" for="status_all_switch">All</label>
                     </div>
                     <template v-for="(nr_with_status, status) in this.$root.allStatuses">
-                        <div class="form-check">
+                        <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_statuses')">
                             <input class="form-check-input" type="checkbox" :id="'status_filter_'+status" :value="status" v-model="this.$root.status_filter" :disabled="this.$root.include_all_statuses"/>
                             <label class="form-check-label" :for="'status_filter_' + status">{{ status }} ({{this.$root.nrWithStatusVisible(status)}}/{{nr_with_status}})</label>
                         </div>
@@ -282,7 +290,7 @@ app.component('v-projects-status', {
                         <label class="form-check-label" for="project_coordinator_all_switch">All</label>
                     </div>
                     <template v-for="(nr_with_type, type) in this.$root.allTypes">
-                        <div class="form-check">
+                        <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_types')">
                             <input class="form-check-input" type="checkbox" :id="'type_filter_'+type" :value="type" v-model="this.$root.type_filter" :disabled="this.$root.include_all_types"/>
                             <label class="form-check-label" :for="'type_filter_' + type">{{ type }} ({{this.$root.nrWithTypeVisible(type)}}/{{nr_with_type}})</label>
                         </div>
@@ -295,7 +303,7 @@ app.component('v-projects-status', {
                         <label class="form-check-label" for="project_coordinator_all_switch">All</label>
                     </div>
                     <template v-for="(nr_with_project_coordinator, project_coordinator) in this.$root.allProjectCoordinators">
-                        <div class="form-check">
+                        <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_project_coordinators')">
                             <input class="form-check-input" type="checkbox" :id="'project_coordinator_'+project_coordinator" :value="project_coordinator" v-model="this.$root.project_coordinator_filter" :disabled="this.$root.include_all_project_coordinators"/>
                             <label class="form-check-label" :for="'project_coordinator_' + project_coordinator">{{ project_coordinator }} ({{this.$root.nrWithProjectCoordinatorVisible(project_coordinator)}}/{{nr_with_project_coordinator}})</label>
                         </div>
