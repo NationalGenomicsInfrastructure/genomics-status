@@ -5,7 +5,7 @@ const vProjectsStatus = {
             sticky_running_notes: {},
             error_messages: [],
             sortBy: 'most_recent_date',
-            card_columns: 'application',
+            card_columns: ['application'],
             descending: true,
             search_value: '',
             // Filters
@@ -102,7 +102,12 @@ const vProjectsStatus = {
             let columnValues = {}
             for (let project_id in this.visibleProjects) {
                 let project = this.visibleProjects[project_id]
-                let columnValue = project[this.card_columns]
+                let columnValue;
+                if (this.card_columns.length == 2) {
+                    columnValue = project[this.card_columns[0]][this.card_columns[1]]
+                } else {
+                    columnValue = project[this.card_columns[0]]
+                }
                 if (columnValue in columnValues) {
                     columnValues[columnValue].push(project_id)
                 } else {
@@ -345,6 +350,15 @@ app.component('v-projects-status', {
                         </div>
                     </template>
                 </div>
+                <div class="col">
+                    <label for="card_columns">Category to use as columns</label>
+                    <select id="card_columns" class="form-select" aria-label="Category to use as columns" v-model="this.$root.card_columns">
+                        <option :value="['application']">Application</option>
+                        <option :value="['type']">Type</option>
+                        <option :value="['project_coordinator']">Project Coordinator</option>
+                        <option :value="['status_fields', 'status']">Status</option>
+                    </select>
+                </div>
             </div>
         </div>
         <template v-if="Object.keys(this.$root.visibleProjects).length == 0">
@@ -362,7 +376,6 @@ app.component('v-projects-status', {
         </template>
 
         <template v-else>
-
             <div class="row mt-5 mb-4 border-bottom border-light-subtle">
                 <div class="col-8">
                     <h4 my-1>
