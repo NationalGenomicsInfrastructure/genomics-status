@@ -431,23 +431,23 @@ app.component('v-project-card', {
                 <div>
                     <dt>Sequencing</dt>
                     <dd>
-                        <span>{{ project['sequence_units_ordered_(lanes)'] }}</span>
+                        <v-project-tiny-info :project="project" :info_key="'sequence_units_ordered_(lanes)'"/>
                         <span class="border border-light-subtle mx-1"></span>
-                        <span>{{ project['sequencing_platform'] }}</span>
+                        <v-project-tiny-info :project="project" :info_key="'sequencing_platform'"/>
                         <span class="border border-light-subtle mx-1"></span>
-                        <span>{{ project['flowcell'] }}</span>
+                        <v-project-tiny-info :project="project" :info_key="'flowcell'"/>
                         <span class="border border-light-subtle mx-1"></span>
-                        <span>{{ project['sequencing_setup'] }}</span>
+                        <v-project-tiny-info :project="project" :info_key="'sequencing_setup'"/>
                     </dd>
                     <dt>Library Preparation</dt>
                     <dd>
-                        <span>{{ project['sample_units_ordered']}}</span>
+                        <v-project-tiny-info :project="project" :info_key="'sample_units_ordered'"/>
                         <span class="border border-light-subtle mx-1"></span>
-                        <span>{{ project['sample_type']}}</span>
+                        <v-project-tiny-info :project="project" :info_key="'sample_type'"/>
                         <span class="border border-light-subtle mx-1"></span>
-                        <span>{{ project['library_construction_method'] }}</span>
+                        <v-project-tiny-info :project="project" :info_key="'library_construction_method'"/>
                         <span class="border border-light-subtle mx-1"></span>
-                        <span>{{ project['library_construction_option'] }}</span>
+                        <v-project-tiny-info :project="project" :info_key="'library_construction_option'"/>
                     </dd>
 
                     <dt>Project Coordinator:</dt>
@@ -474,6 +474,31 @@ app.component('v-project-card', {
             </template>
         </div>
     </div>`,
+})
+
+app.component('v-project-tiny-info', {
+    props: ['project', 'info_key'],
+    computed: {
+        value() {
+            return this.project[this.info_key]
+        }
+    },
+    mounted() {
+        this.$nextTick(() => {
+            this.tooltip = new bootstrap.Tooltip(this.$el)
+        })
+    },
+    template: 
+    /*html*/`
+        <span data-toggle="tooltip" :data-title="info_key">
+            <template v-if="value">
+                {{ value }}
+            </template>
+            <template v-else>
+                NA
+            </template>
+        </span>
+    `
 })
 
 app.component('v-projects-running-notes', {
