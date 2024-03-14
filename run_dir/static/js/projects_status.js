@@ -5,6 +5,7 @@ const vProjectsStatus = {
             sticky_running_notes: {},
             error_messages: [],
             sortBy: 'most_recent_date',
+            card_columns: 'application',
             descending: true,
             status_filter: [],
             include_all_statuses: true,
@@ -85,6 +86,20 @@ const vProjectsStatus = {
             }
 
             return Object.fromEntries(tempProjects)
+        },
+        allColumnValues() {
+            /* Returns a dictionary with card column as key and the project_ids as values */
+            let columnValues = {}
+            for (let project_id in this.visibleProjects) {
+                let project = this.visibleProjects[project_id]
+                let columnValue = project[this.card_columns]
+                if (columnValue in columnValues) {
+                    columnValues[columnValue].push(project_id)
+                } else {
+                    columnValues[columnValue] = [project_id]
+                }
+            }
+            return columnValues
         },
         allStatuses() {
             return this.itemCounts(this.all_projects, ['status_fields', 'status'])
@@ -288,19 +303,39 @@ app.component('v-projects-status', {
                 </div>
             </div>
         </div>
-
-        <div class="row mt-5 mb-2">
-            <div class="col-8">
-            <h4><i :class="'fa-solid ' + this.$root.sorting_icon + ' mr-2'" @click="this.$root.toggleSorting"></i>Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects</h4>
-            </div>
-            <div class="col-4">
-                <div class="form-group">
-                    <input type="text" class="form-control" v-model="this.$root.search_value" placeholder="Search" />
+        <template v-if="Object.keys(this.$root.visibleProjects).length == 0">
+            <p>No projects</p>
+        </template>
+        <template v-else>
+            <div class="row mt-5 mb-2">
+                <div class="col-8">
+                <h4>
+                    <i :class="'fa-solid ' + this.$root.sorting_icon + ' mr-2'" @click="this.$root.toggleSorting"></i>
+                    Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects in {{Object.keys(this.$root.allColumnValues).length}} columns
+                </h4>
+                </div>
+                <div class="col-4">
+                    <div class="form-group">
+                        <input type="text" class="form-control" v-model="this.$root.search_value" placeholder="Search" />
+                    </div>
                 </div>
             </div>
-        </div>
-        <template v-for="(project, project_id) in this.$root.visibleProjects" :key="project">
-            <v-project-card :project="project" :project_id="project_id"></v-project-card>
+            <div class="project_status_board overflow-scroll">
+                <div class="row flex-nowrap">
+                    <template v-for="(project_ids_for_value, value) in this.$root.allColumnValues">
+                        <div class="col-4 col-xxl-3">
+                            <h2>{{ value }}</h2>
+                            <div class="row row-cols-1">
+                                <div class="col">
+                                    <template v-for="project_id in project_ids_for_value" :key="project_id">
+                                        <v-project-card v-if="project_id in this.$root.visibleProjects" :project_id="project_id"></v-project-card>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
         </template>
     </div>`,
 })
@@ -309,52 +344,59 @@ app.mount('#projects_status')
 
 
 app.component('v-project-card', {
-    props: ['project', 'project_id'],
+    props: ['project_id'],
     computed: {
         hasSummaryDates() {
             return ('summary_dates' in this.project) && (Object.keys(this.project['summary_dates']).length > 0)
+        },
+        project() {
+            return this.$root.all_projects[this.project_id]
         }
     },
     template: 
     /*html*/`
 
-    <div class="card mb-5">
+    <div class="card my-2">
         <div class="card-header">
-            <div class="d-flex justify-content-between">
-                <h2 class="">
-                    <a :href="'/project/' + project_id">{{ project_id }}: {{ project['project_name'] }}</a>
-                </h2>
+            <div class="d-flex justify-content-between align-center">
+                <h5 class="my-1">
+                    <a href='#' data-toggle="collapse" :data-target="'#collapse_' + project_id" aria-expanded="false" :aria-controls="'#collapse_' + project_id">
+                        {{ project['project_name'] }}
+                    </a>
+
+                </h5>
                 <div class="col-3">
                     <div class="d-flex justify-content-end">
-                        <h3 class="mr-2">
-                        <span :class="'badge bg-' + this.$root.projectStatusColor(project)">{{ project['status_fields']['status'] }}</span>
-                        </h3>
-                        <h3 class="">
-                            <span :class="'badge bg-' + this.$root.projectTypeColor(project)">{{ project['type'] }}</span>
-                        </h3>
+                        <h5 class="my-1">
+                            <span :class="'badge bg-' + this.$root.projectTypeColor(project)">{{ project['type'][0] }}</span>
+                        </h5>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="card-body">
+        <div :id="'collapse_' + project_id" class="collapse card-body">
             <div class="row">
-                <div class="col-6">
-                    <dl class="row">
-                        <dt class="col-sm-3">Sequencing Platform:</dt>
-                        <dd class="col-sm-9">{{ project['sequencing_platform'] }}</dd>
+                <h6>
+                    <a class="" :href="'/project/' + project_id">
+                        Project page
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+                </h6>
+                <template v-if="project_id in this.$root.sticky_running_notes">
+                    <v-projects-running-notes :latest_running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-projects-running-notes>
+                </template>
+                <div>
+                    <span>{{ project['sequencing_platform'] }}</span>
+                    <span class="border border-light-subtle mx-1"></span>
+                    <span>{{ project['flowcell'] }}</span>
+                    <span class="border border-light-subtle mx-1"></span>
+                    <span>{{ project['sequencing_setup'] }}</span>
 
-                        <dt class="col-sm-3">Flowcell:</dt>
-                        <dd class="col-sm-9">{{ project['flowcell'] }}</dd>
-
-                        <dt class="col-sm-3">Sequencing Setup:</dt>
-                        <dd class="col-sm-9">{{ project['sequencing_setup'] }}</dd>
-
-                        <dt class="col-sm-3">Project Coordinator:</dt>
-                        <dd class="col-sm-9">{{ project['project_coordinator'] }}</dd>
-                    </dl>
+                    <dt>Project Coordinator:</dt>
+                    <dd>{{ project['project_coordinator'] }}</dd>
                 </div>
-                <div class="col-6">
-                    <h3>Project Timeline</h3>
+                <div>
+                    <h5>Project Timeline</h5>
                     <dl class="dl-horizontal">
                         <template v-if="hasSummaryDates">
                             <template v-for="(date, date_name) in project['summary_dates']">
@@ -368,14 +410,10 @@ app.component('v-project-card', {
                     </dl>
                 </div>
             </div>
-            <div class="row">
-                <template v-if="project['latest_running_note']">
-                    <v-projects-running-notes :latest_running_note_obj="project['latest_running_note']" :sticky="false"></v-projects-running-notes>
-                </template>
-                <template v-if="project_id in this.$root.sticky_running_notes">
-                    <v-projects-running-notes :latest_running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-projects-running-notes>
-                </template>
-            </div>
+
+            <template v-if="project['latest_running_note']">
+                <v-projects-running-notes :latest_running_note_obj="project['latest_running_note']" :sticky="false"></v-projects-running-notes>
+            </template>
         </div>
     </div>`,
 })
@@ -445,8 +483,8 @@ app.component('v-projects-running-notes', {
     },
     template:
     /*html*/`
-    <div class="col-6 pb-3">
-        <div class="card">
+    <div class="pb-3">
+        <div class="card border border-alert">
             <div class="card-header bi-project-note-header">
                 <span>{{ this.user }}</span> - <span class="todays_date">{{ formattedTimeStamp }}</span>
                 <template v-if="categories">
