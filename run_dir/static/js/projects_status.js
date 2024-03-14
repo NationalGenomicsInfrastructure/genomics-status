@@ -291,8 +291,8 @@ app.component('v-projects-status', {
     /*html*/`
     <div>
         <div class="card p-3">
-            <div class="row">
-                <div class="col-4">
+            <div class="row row-cols-4">
+                <div class="col">
                     <h4>Status</h4>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="status_all_switch" v-model="this.$root.include_all_statuses"/>
@@ -305,11 +305,11 @@ app.component('v-projects-status', {
                         </div>
                     </template>
                 </div>
-                <div class="col-4">
+                <div class="col">
                     <h4>Type</h4>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="type_all_switch" v-model="this.$root.include_all_types">
-                        <label class="form-check-label" for="project_coordinator_all_switch">All</label>
+                        <label class="form-check-label" for="type_all_switch">All</label>
                     </div>
                     <template v-for="(nr_with_type, type) in this.$root.allTypes">
                         <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_types')">
@@ -318,7 +318,7 @@ app.component('v-projects-status', {
                         </div>
                     </template>
                 </div>
-                <div class="col-4">
+                <div class="col">
                     <h4>Project Coordinator</h4>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="project_coordinator_all_switch" v-model="this.$root.include_all_project_coordinators">
@@ -331,7 +331,7 @@ app.component('v-projects-status', {
                         </div>
                     </template>
                 </div>
-                <div class="col-4">
+                <div class="col">
                     <h4>Application</h4>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="application_all_switch" v-model="this.$root.include_all_applications">
