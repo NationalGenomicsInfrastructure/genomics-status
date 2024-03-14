@@ -65,31 +65,19 @@ const vProjectsStatus = {
                 })
             }
 
-            // Sort by most recent date
-            tempProjects = tempProjects.sort((a, b) => {
-                let proj_a = this.all_projects[a[0]]
-                let proj_b = this.all_projects[b[0]]
-
-                if (this.sortBy == 'most_recent_date') {
-                    /* First deal with missing dates */
-                    if ((this.mostRecentDate(proj_a) == undefined) && (this.mostRecentDate(proj_b) == undefined)) {
-                        return 0
-                    }
-                    if (this.mostRecentDate(proj_a) == undefined) {
-                        // Missing dates will be the most recent
+            if (this.sortBy == 'most_recent_date') {
+                tempProjects = this.sortOnMostRecentDate(tempProjects)
+            } else if (this.sortBy == 'project_id') {
+                // Sort on project_id
+                tempProjects = tempProjects.sort((a, b) => {
+                    if (a[0] > b[0]) {
                         return 1
-                    } else if (this.mostRecentDate(proj_b) == undefined){
-                        return -1
-                    }
-                    /* Then deal with actual dates */
-                    if (this.mostRecentDate(proj_a) > this.mostRecentDate(proj_b)) {
-                        return 1
-                    } else if (this.mostRecentDate(proj_a) < this.mostRecentDate(proj_b)) {
+                    } else if (a[0] < b[0]) {
                         return -1
                     }
                     return 0
-                };
-            })
+                })
+            }
 
             if (this.descending == true) {
                 tempProjects = tempProjects.reverse()
@@ -146,7 +134,7 @@ const vProjectsStatus = {
             } else {
                 return 'fa-arrow-up-wide-short '
             }
-        }
+        },
     },
     methods: {
         // Fetch methods
@@ -273,6 +261,34 @@ const vProjectsStatus = {
             }
             return 'warning'
         },
+        sortOnMostRecentDate(projects_to_be_sorted) {
+            // Sort by most recent date            
+            projects_to_be_sorted = projects_to_be_sorted.sort((a, b) => {
+                let proj_a = this.all_projects[a[0]]
+                let proj_b = this.all_projects[b[0]]
+
+                if (this.sortBy == 'most_recent_date') {
+                    /* First deal with missing dates */
+                    if ((this.mostRecentDate(proj_a) == undefined) && (this.mostRecentDate(proj_b) == undefined)) {
+                        return 0
+                    }
+                    if (this.mostRecentDate(proj_a) == undefined) {
+                        // Missing dates will be the most recent
+                        return 1
+                    } else if (this.mostRecentDate(proj_b) == undefined){
+                        return -1
+                    }
+                    /* Then deal with actual dates */
+                    if (this.mostRecentDate(proj_a) > this.mostRecentDate(proj_b)) {
+                        return 1
+                    } else if (this.mostRecentDate(proj_a) < this.mostRecentDate(proj_b)) {
+                        return -1
+                    }
+                    return 0
+                };
+            })
+            return projects_to_be_sorted
+        },
         toggleSorting() {
             this.descending = !this.descending
         }
@@ -351,12 +367,19 @@ app.component('v-projects-status', {
                     </template>
                 </div>
                 <div class="col">
-                    <label for="card_columns">Category to use as columns</label>
+                    <h4>Columns</h4>
                     <select id="card_columns" class="form-select" aria-label="Category to use as columns" v-model="this.$root.card_columns">
                         <option :value="['application']">Application</option>
                         <option :value="['type']">Type</option>
                         <option :value="['project_coordinator']">Project Coordinator</option>
                         <option :value="['status_fields', 'status']">Status</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <h4>Sort by</h4>
+                    <select id="sort_by" class="form-select" aria-label="Sort by" v-model="this.$root.sortBy">
+                        <option value="most_recent_date">Most recent date</option>
+                        <option value="project_id">Project ID</option>
                     </select>
                 </div>
             </div>
@@ -420,6 +443,9 @@ app.component('v-project-card', {
         },
         project() {
             return this.$root.all_projects[this.project_id]
+        },
+        project_comment() {
+            return make_markdown(this.project['project_comment'])
         }
     },
     template: 
@@ -429,7 +455,7 @@ app.component('v-project-card', {
         <div class="card-header">
             <div class="d-flex justify-content-between align-center">
                 <h5 class="my-1">
-                    <a href='#' data-toggle="collapse" :data-target="'#collapse_' + project_id" aria-expanded="false" :aria-controls="'#collapse_' + project_id">
+                    <a class="text-decoration-none" href='#' data-toggle="collapse" :data-target="'#collapse_' + project_id" aria-expanded="false" :aria-controls="'#collapse_' + project_id">
                         {{ project['project_name'] }}
                     </a>
 
@@ -451,6 +477,15 @@ app.component('v-project-card', {
                         <i class="fa-solid fa-arrow-up-right-from-square"></i>
                     </a>
                 </h6>
+                    <div>
+                        <div class="card mb-2">
+                            <div class="card-body pb-2">
+                                <h6 class="card-title">Project Comment</h5>
+                                <div class="text-muted" v-html="project_comment">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 <template v-if="project_id in this.$root.sticky_running_notes">
                     <v-projects-running-notes :latest_running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-projects-running-notes>
                 </template>
@@ -560,8 +595,28 @@ app.component('v-projects-running-notes', {
             // Create a new Date object using the timestamp
             let date = new Date(timestamp);
 
-            // Format the date to a readable string in the local time zone
-            return date.toLocaleString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            // Get the current date
+            let now = new Date();
+
+            // Calculate the difference in seconds
+            let diffInSeconds = Math.floor((now - date) / 1000);
+
+            if (diffInSeconds < 60) {
+                return 'Just now';
+            }
+
+            let diffInMinutes = Math.floor(diffInSeconds / 60);
+            if (diffInMinutes < 60) {
+                return `${diffInMinutes} minutes ago`;
+            }
+
+            let diffInHours = Math.floor(diffInMinutes / 60);
+            if (diffInHours < 24) {
+                return `${diffInHours} hours ago`;
+            }
+
+            let diffInDays = Math.floor(diffInHours / 24);
+            return `${diffInDays} days ago`;
         },
         formatted_note() {
             if (this.note == undefined) {
@@ -588,7 +643,7 @@ app.component('v-projects-running-notes', {
     template:
     /*html*/`
     <div class="pb-3">
-        <div class="card border border-alert">
+        <div class="card">
             <div class="card-header bi-project-note-header">
                 <span>{{ this.user }}</span> - <span class="todays_date">{{ formattedTimeStamp }}</span>
                 <template v-if="categories">
