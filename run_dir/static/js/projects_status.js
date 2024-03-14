@@ -289,7 +289,8 @@ app.component('v-projects-status', {
     },
     template:
     /*html*/`
-    <div>
+    <div class="mx-2">
+        <h1>Projects Status</h1>
         <div class="card p-3">
             <div class="row row-cols-4">
                 <div class="col">
@@ -529,12 +530,7 @@ app.component('v-projects-running-notes', {
         },
         formattedTimeStamp() {
             // Get the timestamp from the running note
-            let timestamp;
-            if (this.sticky == true) {
-                timestamp = this.getRunningNoteProperty('timestamp');
-            } else {
-                timestamp = this.getRunningNoteProperty('created_at_utc');
-            }
+            let timestamp = this.created_at_utc;
 
             // Create a new Date object using the timestamp
             let date = new Date(timestamp);
