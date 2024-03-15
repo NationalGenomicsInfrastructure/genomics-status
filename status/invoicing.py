@@ -282,6 +282,29 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
         contact_dets["invoice_zip"] = fields["address_invoice_zip"]
         contact_dets["invoice_city"] = fields["address_invoice_city"]
         contact_dets["invoice_country"] = fields["address_invoice_country"]
+        contact_dets["department"] = (
+            fields["address_postal_department"]
+            if "address_postal_department" in fields
+            and fields["address_postal_department"]
+            else "-"
+        )
+        contact_dets["university"] = (
+            fields["address_postal_university"]
+            if "address_postal_university" in fields
+            and fields["address_postal_university"]
+            else "-"
+        )
+        contact_dets["invoice_vat"] = (
+            fields["invoice_vat"]
+            if "invoice_vat" in fields and fields["invoice_vat"]
+            else "-"
+        )
+        contact_dets["invoice_organisation_number"] = (
+            fields["invoice_organisation_number"]
+            if "invoice_organisation_number" in fields
+            and fields["invoice_organisation_number"]
+            else "-"
+        )
 
         proj_specs = {}
 
@@ -396,5 +419,28 @@ class InvoicingOrderDetailsHandler(AgreementsDBHandler, InvoicingDataHandler):
         contact_dets["invoice_zip"] = order_details["address_invoice_zip"]
         contact_dets["invoice_city"] = order_details["address_invoice_city"]
         contact_dets["invoice_country"] = order_details["address_invoice_country"]
+        contact_dets["department"] = (
+            order_details["address_postal_department"]
+            if "address_postal_department" in order_details
+            and order_details["address_postal_department"]
+            else "-"
+        )
+        contact_dets["university"] = (
+            order_details["address_postal_university"]
+            if "address_postal_university" in order_details
+            and order_details["address_postal_university"]
+            else "-"
+        )
+        contact_dets["invoice_vat"] = (
+            order_details["invoice_vat"]
+            if "invoice_vat" in order_details and order_details["invoice_vat"]
+            else "-"
+        )
+        contact_dets["invoice_organisation_number"] = (
+            order_details["invoice_organisation_number"]
+            if "invoice_organisation_number" in order_details
+            and order_details["invoice_organisation_number"]
+            else "-"
+        )
         self.set_header("Content-type", "application/json")
         self.write(contact_dets)

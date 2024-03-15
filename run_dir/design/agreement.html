@@ -5,10 +5,10 @@
     <link rel="stylesheet" href="/static/css/custom-bootstrap-5-alpha.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/status_b5.css?v={{ gs_globals['git_commit'] }}" rel="stylesheet">
     <title>{%if data['origin']=='Agreement' %}
-    Agreement
+    {{ data['project_data']['project_name'] }}-{{ data['project_data']['agreement_number'] }}_agreement
     {% else %}
-    Preliminary Quote
-    {% end %} : Genomics Status
+    Preliminary Quote : Genomics Status
+    {% end %} 
     </title>
   </head>
   <body class="p-0">
@@ -51,7 +51,7 @@
           <dd> {{ data['project_data']['agreement_number'] }}</dd>
       {% end %}
         <dt>Issuer (name/email)</dt>
-          <dd>{{ user.name }} / orders@ngisweden.se</dd>
+          <dd>{{ user_name }} / orders@ngisweden.se</dd>
         <dt>Agreement summary</dt>
           <dd> {% raw data['agreement_summary']%}
           {%for condition in data['agreement_conditions']%}
@@ -83,7 +83,7 @@
           <dd> - {{ data['total_cost_discount'] }} SEK</dd>
       {% end %}
         <hr>
-        <dt>Total cost ({% if data['price_type']=="cost_academic" %}Swedish academia{% else %}Industry and non-Swedish academia{% end %})</dt>
+        <dt>Total cost in SEK ({% if data['price_type']=="cost_academic" %}Swedish academia{% elif data['price_type']=="full_cost" %}Industry and non-Swedish academia{% else %}Internal projects{% end %}), VAT not included</dt>
           <dd> {{ data['total_cost'] }} SEK</dd>
       </dl>
     {%if data['origin']=='Agreement' %}

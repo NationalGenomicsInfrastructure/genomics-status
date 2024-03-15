@@ -1,4 +1,5 @@
 
+
 window.current_plot_data=null;
 window.current_plot_obj=null;
 window.current_color_schemes=null;
@@ -33,9 +34,9 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                     }
                 }
             }
-        }   
+        }
         return sum;
-    }    
+    }
     var toplot={
         chart: {
             type: plot_type,
@@ -481,7 +482,7 @@ function update_months_list(){
 function update_color_schemes(){
     var inst_type_cs=chroma.scale(['#90ee90','#7866df','#ad00af','#ff0000']).domain([0, 3]);
     var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
-    var chem_cs = chroma.scale(['#ff00ae', '#0080ff', '#11ad11', '#ffb700', '#8400ff', '#00b7d4', '#a34929', '#a84da8', '#575757', '#0300bf']).domain([0, 9])
+    var chem_cs = chroma.scale(['#ff00ae', '#0080ff', '#11ad11', '#ffb700', '#e65c00', '#8400ff', '#00b7d4', '#a34929', '#a84da8', '#575757', '#0300bf']).domain([0, 10])
     var month_cs=chroma.scale(['yellow', 'lightblue', 'pink', 'orange']).domain([0,window.current_months_list.length-1]);
     window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs];
 }
@@ -494,7 +495,7 @@ function update_chemistries_list(){
             version = 'Mnano'
         } else {
             version = window.current_plot_data[d].instrument.substr(0,1) + window.current_plot_data[d].cver;
-        };
+        }
         if ( window.current_chemistries_list.indexOf(version) == -1){
             window.current_chemistries_list.push(version);
         }

@@ -19,9 +19,9 @@
                 <th class="sort text-center" data-sort="flow_cell_qc">Flow cell QC</th>
                 <th class="sort text-center" data-sort="load_fmol">Loading (fmol)</th>
                 <th class="sort text-center" data-sort="reloadings">Reloadings</th>
-                <th class="sort text-center" data-sort="first_mux_loss">
+                <th class="sort text-center" data-sort="first_mux_vs_qc">
                     <abbr 
-                        data-toggle="tooltip" data-html="true" title="Fraction of pores lost between QC and first MUX scan">Initial Pore Loss (%)
+                        data-toggle="tooltip" data-html="true" title="Number of pores found at first MUX scan compared to QC">1st MUX scan vs QC (%)
                     </abbr>
                 </th>
                 <th class="sort text-center" data-sort="peak_pore_health">
@@ -58,7 +58,7 @@
                 <th class="sort" data-sort="flow_cell_qc"></th>
                 <th class="sort" data-sort="load_fmol"></th>
                 <th class="sort" data-sort="reloadings"></th>
-                <th class="sort" data-sort="first_mux_loss"></th>
+                <th class="sort" data-sort="first_mux_vs_qc"></th>
                 <th class="sort" data-sort="peak_pore_health"></th>
                 <th class="sort" data-sort="peak_pore_efficacy"></th>
                 <th class="sort" data-sort="t90"></th>
@@ -124,7 +124,7 @@
                                 stage
                             {% end %}
                             .scilifelab.se/clarity/work/
-                            {{ find_id(ont_flowcells[onefc]['experiment_name'], 'step')[-6:] }}
+                            {{ find_id(ont_flowcells[onefc]['experiment_name'], 'step').split('-')[-1] }}
                             ">
                             {{ ont_flowcells[onefc]["experiment_name"] }}
                             </a>
@@ -181,7 +181,7 @@
                     </td>
 
                     <td class="first_mux_loss text-center">
-                        {{ ont_flowcells[onefc].get("first_mux_loss_pc", "") }} 
+                        {{ ont_flowcells[onefc].get("first_mux_vs_qc", "") }} 
                     </td>
 
                     <td class="peak_pore_health text-center">
@@ -208,30 +208,13 @@
                         {% end %}
                     </td>
 
-                    <td class="basecalled_pass_bases_Gbp text-center
-
-                    {% if ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] != '' %}
-                        {% if ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 66.66 %}
-                            table-success
-                        {% elif ont_flowcells[onefc]['basecalled_pass_bases_Gbp_rank'] > 33.33 %}
-                            table-warning
-                        {% else %}
-                            table-danger
-                        {% end %}
-                    {% end %}">
+                    <td class="basecalled_pass_bases_Gbp text-center">
                         {{ ont_flowcells[onefc]["basecalled_pass_bases_Gbp"] }}
                     </td>
                     <td class="basecalled_pass_read_count_M text-center">{{ ont_flowcells[onefc]["basecalled_pass_read_count_M"] }}</td>
-                    <td class="n50_Kbp text-center
-                    {% if ont_flowcells[onefc]['n50_rank'] != '' %}
-                        {% if ont_flowcells[onefc]['n50_rank'] > 66.66 %}
-                            table-success
-                        {% elif ont_flowcells[onefc]['n50_rank'] > 33.33 %}
-                            table-warning
-                        {% else %}
-                            table-danger
-                        {% end %}
-                    {% end %}">{{ ont_flowcells[onefc]["n50_Kbp"] }}</td>
+                    <td class="n50_Kbp text-center">
+                        {{ ont_flowcells[onefc]["n50_Kbp"] }}
+                    </td>
                     <td class="accuracy text-center">{{ ont_flowcells[onefc]["accuracy"] }}</td>
                 </tr>
             {% end %}

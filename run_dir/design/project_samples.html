@@ -28,15 +28,16 @@ Description: Details page for a single project
   <div class="col-md-4 borderRight">
     <h4>Key Project Information</h4>
     <dl class="dl-horizontal">
-      <dt>Type</dt>									<dd id="type">-</dd>
-      <dt>Application</dt>					<dd id="application">-</dd>
-      <dt>Sequencing Platform</dt>	<dd><span id="sequencing_platform">-</span></dd>
-      <dt>Sequencing Setup</dt>			<dd><span id="sequencing_setup">-</span></dd>
-      <dt>Flowcell</dt>			        <dd><span id="flowcell">-</span></dd>
-      <dt>Flowcell Option</dt>			<dd><span id="flowcell_option">-</span></dd>
-      <dt>Library Method</dt>				<dd id="library_construction_method">-</dd>
-      <dt>Library Prep Option</dt>	<dd id="library_prep_option">-</dd>
-      <dt>Last updated:</dt>        <dd><span id="last_update"></dd>
+      <dt>Type</dt>									    <dd id="type">-</dd>
+      <dt>Application</dt>					    <dd id="application">-</dd>
+      <dt>Sequencing Platform</dt>	    <dd><span id="sequencing_platform">-</span></dd>
+      <dt>Sequencing Setup</dt>			    <dd><span id="sequencing_setup">-</span></dd>
+      <dt>Flowcell</dt>			            <dd><span id="flowcell">-</span></dd>
+      <dt>Flowcell Option</dt>			    <dd><span id="flowcell_option">-</span></dd>
+      <dt>Library Method</dt>				    <dd id="library_construction_method">-</dd>
+      <dt>Library Prep Option</dt>	    <dd id="library_prep_option">-</dd>
+      <dt>BioAnalyzer Run Required</dt>	<dd id="bioanalyzer_run_required">-</dd>
+      <dt>Last updated:</dt>            <dd><span id="last_update"></dd>
 		</dl>
     <hr>
 
@@ -564,7 +565,7 @@ Description: Details page for a single project
 <!-- Javascript -->
 <script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
 <script src="/static/js/clipboard.min.js"></script>
-<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-workset="{{ project }}"></script>
-<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-project="{{project}}"></script>
+<script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-link-type="project"></script>
+<script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-note-type="project"></script>
 <script src="/static/js/project_samples.js?v={{ gs_globals['git_commit'] }}" id="projects-js" data-project="{{project}}" data-lims_uri="{{ lims_uri }}"></script>
 {% end %}

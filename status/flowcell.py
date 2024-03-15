@@ -297,6 +297,7 @@ def get_view_val(key: str, view) -> Optional[dict]:
 def fetch_ont_run_stats(
     run_name: str,
     view_all_stats,
+    view_args,
     view_project,
     view_mux_scans,
     view_pore_count_history,
@@ -308,6 +309,7 @@ def fetch_ont_run_stats(
     run_dict = {}
     run_dict["run_name"] = run_name
     all_stats = get_view_val(run_name, view_all_stats)
+    args = get_view_val(run_name, view_args)
     run_dict.update(all_stats)
 
     walk_str2int(run_dict)
@@ -338,62 +340,65 @@ def fetch_ont_run_stats(
         else:
             run_dict["instrument"] = instr_or_pos
 
-    # If run is finished, i.e. reports are generated, produce new metrics
+    # If run is finished, i.e. reports are generated
     elif run_dict["TACA_run_status"] == "finished":
-        # Calculate new metrics
-        run_dict["basecalled_bases"] = (
-            run_dict["basecalled_pass_bases"] + run_dict["basecalled_fail_bases"]
-        )
-
-        if run_dict["basecalled_pass_read_count"] <= 0:
-            run_dict["accuracy"] = 0
-        else:
-            run_dict["accuracy"] = round(
-                run_dict["basecalled_pass_bases"] / run_dict["basecalled_bases"] * 100,
-                2,
+        # Only try to calculate new metrics if run had basecalling enabled
+        if "--base_calling=on" in args:
+            # Calculate new metrics
+            run_dict["basecalled_bases"] = (
+                run_dict["basecalled_pass_bases"] + run_dict["basecalled_fail_bases"]
             )
 
-        """ Convert metrics from integers to readable strings and appropriately scaled floats, e.g.
-        basecalled_pass_read_count =       int(    123 123 123 )
-        basecalled_pass_read_count_str =   str(    123.12 Mbp )
-        basecalled_pass_read_count_Gbp =   float(  0.123 )
-        """
-        metrics = [
-            "read_count",
-            "basecalled_pass_read_count",
-            "basecalled_fail_read_count",
-            "basecalled_bases",
-            "basecalled_pass_bases",
-            "basecalled_fail_bases",
-            "n50",
-        ]
-        for metric in metrics:
-            # Readable metrics, i.e. strings w. appropriate units
-            unit = "" if "count" in metric else "bp"
-
-            if run_dict[metric] == "":
-                run_dict[metric] = 0
-
-            run_dict["_".join([metric, "str"])] = add_prefix(
-                input_int=run_dict[metric], unit=unit
-            )
-
-            # Formatted metrics, i.e. floats transformed to predetermined unit
-            if "count" in metric:
-                unit = "M"
-                divby = 10**6
-            elif "n50" in metric:
-                unit = "Kbp"
-                divby = 10**3
-            elif "bases" in metric:
-                unit = "Gbp"
-                divby = 10**9
+            if run_dict["basecalled_pass_read_count"] <= 0:
+                run_dict["accuracy"] = 0
             else:
-                continue
-            run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
+                run_dict["accuracy"] = round(
+                    run_dict["basecalled_pass_bases"]
+                    / run_dict["basecalled_bases"]
+                    * 100,
+                    2,
+                )
 
-    # Try to get a flow cell QC value
+            """ Convert metrics from integers to readable strings and appropriately scaled floats, e.g.
+            basecalled_pass_read_count =       int(    123 123 123 )
+            basecalled_pass_read_count_str =   str(    123.12 Mbp )
+            basecalled_pass_read_count_Gbp =   float(  0.123 )
+            """
+            metrics = [
+                "read_count",
+                "basecalled_pass_read_count",
+                "basecalled_fail_read_count",
+                "basecalled_bases",
+                "basecalled_pass_bases",
+                "basecalled_fail_bases",
+                "n50",
+            ]
+            for metric in metrics:
+                # Readable metrics, i.e. strings w. appropriate units
+                unit = "" if "count" in metric else "bp"
 
+                if run_dict[metric] == "":
+                    run_dict[metric] = 0
+
+                run_dict["_".join([metric, "str"])] = add_prefix(
+                    input_int=run_dict[metric], unit=unit
+                )
+
+                # Formatted metrics, i.e. floats transformed to predetermined unit
+                if "count" in metric:
+                    unit = "M"
+                    divby = 10**6
+                elif "n50" in metric:
+                    unit = "Kbp"
+                    divby = 10**3
+                elif "bases" in metric:
+                    unit = "Gbp"
+                    divby = 10**9
+                else:
+                    continue
+                run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
+
+    ## Try to get a flow cell QC value
     # First-hand try to get the QC from the pore count history
     pore_count_history = get_view_val(run_name, view_pore_count_history)
     if (
@@ -418,7 +423,7 @@ def fetch_ont_run_stats(
         mux_scans = get_view_val(run_name, view_mux_scans)
         if mux_scans and len(mux_scans) > 0:
             first_mux = int(mux_scans[0]["total_pores"])
-            run_dict["first_mux_loss_pc"] = round((qc - first_mux) / qc * 100, 2)
+            run_dict["first_mux_vs_qc"] = round((first_mux / qc) * 100, 2)
 
     # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
     query = re.compile("(p|P)\d{5,6}")
@@ -467,6 +472,7 @@ class ONTFlowcellHandler(SafeHandler):
         view_all_stats = self.application.nanopore_runs_db.view(
             "info/all_stats", descending=True
         )
+        view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
         view_project = self.application.projects_db.view(
             "project/id_name_dates", descending=True
         )
@@ -480,6 +486,7 @@ class ONTFlowcellHandler(SafeHandler):
         return fetch_ont_run_stats(
             run_name=run_name,
             view_all_stats=view_all_stats,
+            view_args=view_args,
             view_project=view_project,
             view_mux_scans=view_mux_scans,
             view_pore_count_history=view_pore_count_history,

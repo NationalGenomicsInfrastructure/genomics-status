@@ -46,10 +46,10 @@ def find_id(stringable, pattern_type: str) -> re.match:
     string = str(stringable)
 
     patterns = {
-        "project": re.compile("P\d{5,6}"),
-        "sample": re.compile("P\d{5,6}_\d{3}"),
-        "pool": re.compile("2-\d{6}"),
-        "step": re.compile("24-\d{6}"),
+        "project": re.compile("P[1-9]\d{4,}"),
+        "sample": re.compile("P\d+_[1-9]\d{2,3}"),
+        "pool": re.compile("2-[1-9]\d{4,}"),
+        "step": re.compile("24-[1-9]\d{4,}"),
     }
 
     match = re.match(patterns[pattern_type], string)
@@ -138,6 +138,7 @@ class FlowcellsHandler(SafeHandler):
         view_all_stats = self.application.nanopore_runs_db.view(
             "info/all_stats", descending=True
         )
+        view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
         view_project = self.application.projects_db.view(
             "project/id_name_dates", descending=True
         )
@@ -154,9 +155,10 @@ class FlowcellsHandler(SafeHandler):
         for row in view_all_stats.rows:
             try:
                 ont_flowcells[row.key] = fetch_ont_run_stats(
-                    run_name=row.key, 
-                    view_all_stats=view_all_stats, 
-                    view_project=view_project, 
+                    run_name=row.key,
+                    view_all_stats=view_all_stats,
+                    view_args=view_args,
+                    view_project=view_project,
                     view_mux_scans=view_mux_scans,
                     view_pore_count_history=view_pore_count_history,
                 )
@@ -168,17 +170,6 @@ class FlowcellsHandler(SafeHandler):
             try:
                 # Use Pandas dataframe for column-wise operations, every db entry becomes a row
                 df = pd.DataFrame.from_dict(ont_flowcells, orient="index")
-
-                # Calculate ranks, to enable color coding
-                df["basecalled_pass_bases_Gbp_rank"] = (
-                    df.basecalled_pass_bases_Gbp.rank() / len(df) * 100
-                ).apply(lambda x: round(x, 2))
-                df["n50_rank"] = (df.n50.rank() / len(df) * 100).apply(
-                    lambda x: round(x, 2)
-                )
-                df["accuracy_rank"] = (df.accuracy.rank() / len(df) * 100).apply(
-                    lambda x: round(x, 2)
-                )
 
                 # Empty values are replaced with empty strings
                 df.fillna("", inplace=True)
@@ -391,7 +382,7 @@ class FlowcellQCHandler(SafeHandler):
     def list_sample_runs(self, flowcell):
         lane_qc = OrderedDict()
         lane_view = self.application.flowcells_db.view("lanes/qc")
-        for row in lane_view[[flowcell, ""]:[flowcell, "Z"]]:
+        for row in lane_view[[flowcell, ""] : [flowcell, "Z"]]:
             lane_qc[row.key[1]] = row.value
 
         return lane_qc
@@ -410,7 +401,7 @@ class FlowcellDemultiplexHandler(SafeHandler):
     def lane_stats(self, flowcell):
         lane_qc = OrderedDict()
         lane_view = self.application.flowcells_db.view("lanes/demultiplex")
-        for row in lane_view[[flowcell, ""]:[flowcell, "Z"]]:
+        for row in lane_view[[flowcell, ""] : [flowcell, "Z"]]:
             lane_qc[row.key[1]] = row.value
 
         return lane_qc
@@ -430,7 +421,7 @@ class FlowcellQ30Handler(SafeHandler):
     def lane_q30(self, flowcell):
         lane_q30 = OrderedDict()
         lane_view = self.application.flowcells_db.view("lanes/gtq30", group_level=3)
-        for row in lane_view[[flowcell, ""]:[flowcell, "Z"]]:
+        for row in lane_view[[flowcell, ""] : [flowcell, "Z"]]:
             lane_q30[row.key[2]] = row.value["sum"] / row.value["count"]
 
         return lane_q30
@@ -523,13 +514,31 @@ class ReadsTotalHandler(SafeHandler):
                 "samples/lane_clusters", reduce=False
             )
             bioinfo_view = self.application.bioinfo_db.view("latest_data/sample_id")
+            fc_view = self.application.x_flowcells_db.view(
+                "info/summary", descending=True
+            )
+
             for row in xfc_view[query : "{}Z".format(query)]:
                 if not row.key in data:
                     data[row.key] = []
+                # To add correct threshold values
+                fc_long_name = row.value["fcp"].split(":")[0]
+                fc_date_run = fc_long_name.split("_")[0]
+                if len(fc_date_run) > 6:
+                    fc_date_run = fc_date_run[-6:]
+                fc_short_name = (
+                    fc_date_run + "_" + fc_long_name.split("_")[-1]
+                )
+                for info_row in fc_view[fc_short_name]:
+                    row.value["run_mode"] = info_row.value["run_mode"]
+                    row.value["longer_read_length"] = info_row.value[
+                        "longer_read_length"
+                    ]
                 data[row.key].append(row.value)
+
             # To check if sample is failed on lane level
             for row in bioinfo_view[
-                [query, None, None, None]:[f"{query}Z", "ZZ", "ZZ", "ZZ"]
+                [query, None, None, None] : [f"{query}Z", "ZZ", "ZZ", "ZZ"]
             ]:
                 if row.key[3] in data:
                     for fcl in data[row.key[3]]:
