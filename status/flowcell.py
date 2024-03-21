@@ -493,7 +493,7 @@ class ONTFlowcellHandler(SafeHandler):
             view_pore_count_history=view_pore_count_history,
         )
 
-    def fetch_barcodes(self, run_name):
+    def fetch_barcodes(self, run_name: str) -> dict:
         """Returns dictionary whose keys are barcode IDs and whose values are dicts containing
         barcode metrics from the last data acquisition snapshot of the MinKNOW reports.
         """
@@ -503,19 +503,13 @@ class ONTFlowcellHandler(SafeHandler):
         )
         rows = view_barcodes[run_name].rows
 
-        barcodes = {}
         if rows and rows[0].value:
-            barcodes_unformatted = rows[0].value
-            for bc in barcodes_unformatted:
-                barcodes[bc] = {}
-                for k, v in barcodes_unformatted[bc].items():
-                    if type(v) == str and re.match("^\d+$", v):
-                        barcodes[bc][k] = int(v)
-                    else:
-                        barcodes[bc][k] = v
+            # Load the barcode metrics into a pandas DataFrame
+            df = pd.DataFrame.from_dict(rows[0].value, orient="index")
 
-            # Every barcode becomes a row in a dataframe for column-wise formatting
-            df = pd.DataFrame.from_dict(barcodes, orient="index")
+            # Format a subset of all columns as integers
+            integer_columns = df.columns.drop("barcode_alias")
+            df[integer_columns] = df[integer_columns].fillna(0).astype(int)
 
             # The barcode names "barcode01", "barcode02", etc. are moved to their own column and the index is set to the barcode ID number
             df["bc_name"] = df.index
@@ -527,7 +521,7 @@ class ONTFlowcellHandler(SafeHandler):
             df.set_index("bc_id", inplace=True)
 
             # === Start making column-wise formatting ===
-            # If the barcode alias is redunant, remove it
+            # If the barcode alias is redundant, remove it
             df.loc[df.bc_name == df.barcode_alias, "barcode_alias"] = ""
 
             # Calculate percentages
@@ -667,8 +661,8 @@ def add_prefix(input_int: int, unit: str):
 
 def walk_str2int(iterable):
     """This function recursively traverses a JSON-like tree of mutable iterables (dicts, lists)
-    and reassigns all list elements or dict values which are strings that can be intepreted as integers
-    to the int type"""
+    and reassigns all list elements or dict values which are strings that can be interpreted as integers
+    to the int type."""
 
     if isinstance(iterable, (dict, list)):
         for key, val in (
