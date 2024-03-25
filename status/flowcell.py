@@ -570,7 +570,10 @@ class ONTFlowcellHandler(SafeHandler):
 
             barcodes = df.to_dict(orient="index")
 
-        return barcodes
+            return barcodes
+
+        else:
+            return None
 
     def fetch_args(self, run_name):
         view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
