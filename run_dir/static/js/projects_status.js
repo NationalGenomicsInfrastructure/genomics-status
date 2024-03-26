@@ -399,7 +399,7 @@ app.component('v-projects-status', {
         </template>
 
         <template v-else>
-            <div class="row mt-5 mb-4 border-bottom border-light-subtle">
+            <div class="row mt-5 border-bottom border-light-subtle">
                 <div class="col-8">
                     <h4 my-1>
                         <i :class="'fa-solid ' + this.$root.sorting_icon + ' mr-2'" @click="this.$root.toggleSorting"></i>
@@ -412,11 +412,11 @@ app.component('v-projects-status', {
                     </div>
                 </div>
             </div>
-            <div class="project_status_board overflow-scroll">
+            <div class="project_status_board overflow-scroll bg-white py-3">
                 <div class="row flex-nowrap">
                     <template v-for="(project_ids_for_value, value) in this.$root.allColumnValues">
-                        <div class="col-4 col-xxl-3">
-                            <h2>{{ value }}</h2>
+                        <div class="col-3 col-xxl-2 mx-3 pt-4 border bg-light rounded-3 align-self-start">
+                            <h3 my-4>{{ value }}</h3>
                             <div class="row row-cols-1">
                                 <div class="col">
                                     <template v-for="project_id in project_ids_for_value" :key="project_id">
@@ -452,10 +452,10 @@ app.component('v-project-card', {
     /*html*/`
 
     <div class="card my-2">
-        <div class="card-header">
-            <div class="d-flex justify-content-between align-center">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-center mb-3">
                 <h5 class="my-1">
-                    <a class="text-decoration-none" href='#' data-toggle="collapse" :data-target="'#collapse_' + project_id" aria-expanded="false" :aria-controls="'#collapse_' + project_id">
+                    <a class="text-decoration-none" href='#' data-toggle="modal" :data-target="'#modal_' + project_id" aria-expanded="false" :aria-controls="'#collapse_' + project_id">
                         {{ project['project_name'] }}
                     </a>
 
@@ -468,71 +468,93 @@ app.component('v-project-card', {
                     </div>
                 </div>
             </div>
-        </div>
-        <div :id="'collapse_' + project_id" class="collapse card-body">
             <div class="row">
-                <h6>
-                    <a class="" :href="'/project/' + project_id">
-                        {{project_id}}
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                    </a>
-                </h6>
-                    <div>
-                        <div class="card mb-2">
-                            <div class="card-body pb-2">
-                                <h6 class="card-title">Project Comment</h5>
-                                <div class="text-muted" v-html="project_comment">
+                <div class="">
+                    <template v-if="project_id in this.$root.sticky_running_notes">
+                        <v-projects-running-notes :latest_running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-projects-running-notes>
+                    </template>
+                </div>
+
+                <!-- Modal -->
+                <div class="modal fade" :id="'modal_' + project_id" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" :id="'modal_label_' + project_id">Modal title</h5>
+                                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <h6>
+                                    <a class="" :href="'/project/' + project_id">
+                                        {{project_id}}
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    </a>
+                                </h6>
+                                <div>
+                                    <div class="card mb-2">
+                                        <div class="card-body pb-2">
+                                            <h6 class="card-title">Project Comment</h5>
+                                            <div class="text-muted" v-html="project_comment">
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                                <div>
+                                    <dt>Sequencing</dt>
+                                    <dd>
+                                        <v-project-tiny-info :project="project" :info_key="'sequence_units_ordered_(lanes)'"/>
+                                        <span class="border border-light-subtle mx-1"></span>
+                                        <v-project-tiny-info :project="project" :info_key="'sequencing_platform'"/>
+                                        <span class="border border-light-subtle mx-1"></span>
+                                        <v-project-tiny-info :project="project" :info_key="'flowcell'"/>
+                                        <span class="border border-light-subtle mx-1"></span>
+                                        <v-project-tiny-info :project="project" :info_key="'sequencing_setup'"/>
+                                    </dd>
+                                    <dt>Library Preparation</dt>
+                                    <dd>
+                                        <v-project-tiny-info :project="project" :info_key="'sample_units_ordered'"/>
+                                        <span class="border border-light-subtle mx-1"></span>
+                                        <v-project-tiny-info :project="project" :info_key="'sample_type'"/>
+                                        <span class="border border-light-subtle mx-1"></span>
+                                        <v-project-tiny-info :project="project" :info_key="'library_construction_method'"/>
+                                        <span class="border border-light-subtle mx-1"></span>
+                                        <v-project-tiny-info :project="project" :info_key="'library_construction_option'"/>
+                                    </dd>
+                                    <dt>Reception Control</dt>
+                                    <dd>
+                
+                                    </dd>
+                                    <dt>Project Coordinator:</dt>
+                                    <dd>{{ project['project_coordinator'] }}</dd>
+                                </div>
+                                <div>
+                                    <h5>Project Timeline</h5>
+                                    <dl class="dl-horizontal">
+                                        <template v-if="hasSummaryDates">
+                                            <template v-for="(date, date_name) in project['summary_dates']">
+                                                <dt>{{ date_name }}</dt>
+                                                <dd>{{ date }}</dd>
+                                            </template>
+                                        </template>
+                                        <template v-else>
+                                            <p>No dates available</p>
+                                        </template>
+                                    </dl>
+                                </div>
+                                <template v-if="project['latest_running_note']">
+                                    <v-projects-running-notes :latest_running_note_obj="project['latest_running_note']" :sticky="false"></v-projects-running-notes>
+                                </template>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary">Save changes</button>
                             </div>
                         </div>
                     </div>
-                <template v-if="project_id in this.$root.sticky_running_notes">
-                    <v-projects-running-notes :latest_running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-projects-running-notes>
-                </template>
-                <div>
-                    <dt>Sequencing</dt>
-                    <dd>
-                        <v-project-tiny-info :project="project" :info_key="'sequence_units_ordered_(lanes)'"/>
-                        <span class="border border-light-subtle mx-1"></span>
-                        <v-project-tiny-info :project="project" :info_key="'sequencing_platform'"/>
-                        <span class="border border-light-subtle mx-1"></span>
-                        <v-project-tiny-info :project="project" :info_key="'flowcell'"/>
-                        <span class="border border-light-subtle mx-1"></span>
-                        <v-project-tiny-info :project="project" :info_key="'sequencing_setup'"/>
-                    </dd>
-                    <dt>Library Preparation</dt>
-                    <dd>
-                        <v-project-tiny-info :project="project" :info_key="'sample_units_ordered'"/>
-                        <span class="border border-light-subtle mx-1"></span>
-                        <v-project-tiny-info :project="project" :info_key="'sample_type'"/>
-                        <span class="border border-light-subtle mx-1"></span>
-                        <v-project-tiny-info :project="project" :info_key="'library_construction_method'"/>
-                        <span class="border border-light-subtle mx-1"></span>
-                        <v-project-tiny-info :project="project" :info_key="'library_construction_option'"/>
-                    </dd>
-
-                    <dt>Project Coordinator:</dt>
-                    <dd>{{ project['project_coordinator'] }}</dd>
-                </div>
-                <div>
-                    <h5>Project Timeline</h5>
-                    <dl class="dl-horizontal">
-                        <template v-if="hasSummaryDates">
-                            <template v-for="(date, date_name) in project['summary_dates']">
-                                <dt>{{ date_name }}</dt>
-                                <dd>{{ date }}</dd>
-                            </template>
-                        </template>
-                        <template v-else>
-                            <p>No dates available</p>
-                        </template>
-                    </dl>
                 </div>
             </div>
 
-            <template v-if="project['latest_running_note']">
-                <v-projects-running-notes :latest_running_note_obj="project['latest_running_note']" :sticky="false"></v-projects-running-notes>
-            </template>
+
         </div>
     </div>`,
 })
