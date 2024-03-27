@@ -146,17 +146,15 @@ class FlowcellHandler(SafeHandler):
                         if lane["Project"] == proj and lane["clustersnb"]
                     )
                     if sum_project_lane_yield:
-                        weighted_mean_q30 = (
-                            sum(
-                                int(lane["clustersnb"].replace(",", ""))
-                                * float(lane["overthirty"])
-                                for lane in lane_details
-                                if lane["Project"] == proj
-                                and lane["clustersnb"]
-                                and lane["overthirty"]
-                            )
-                            / sum_project_lane_yield
-                        )
+                        weighted_sum_q30 = 0
+                        sum_yield_with_zero_q30 = 0
+                        for lane in lane_details:
+                            if lane["Project"] == proj and lane["clustersnb"]:
+                                if lane["overthirty"]:
+                                    weighted_sum_q30 += int(lane["clustersnb"].replace(",", "")) * float(lane["overthirty"])
+                                else:
+                                    sum_yield_with_zero_q30 += int(lane["clustersnb"].replace(",", ""))
+                        weighted_mean_q30 = weighted_sum_q30 / (sum_project_lane_yield - sum_yield_with_zero_q30)
                     else:
                         weighted_mean_q30 = 0
                     proj_lane_percentage_obtained = (
