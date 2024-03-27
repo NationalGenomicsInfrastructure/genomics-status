@@ -217,28 +217,22 @@ class FlowcellHandler(SafeHandler):
                         if lane["SampleName"] == sample and lane["clustersnb"]
                     )
                     if sum_sample_lane_yield:
-                        weighted_mean_q30 = (
-                            sum(
-                                int(lane["clustersnb"].replace(",", ""))
-                                * float(lane["overthirty"])
-                                for lane in lane_details
-                                if lane["SampleName"] == sample
-                                and lane["clustersnb"]
-                                and lane["overthirty"]
-                            )
-                            / sum_sample_lane_yield
-                        )
-                        weighted_mqs = (
-                            sum(
-                                int(lane["clustersnb"].replace(",", ""))
-                                * float(lane["mqs"])
-                                for lane in lane_details
-                                if lane["SampleName"] == sample
-                                and lane["clustersnb"]
-                                and lane["mqs"]
-                            )
-                            / sum_sample_lane_yield
-                        )
+                        weighted_sum_q30 = 0
+                        weighted_sum_mqs = 0
+                        sum_yield_with_zero_q30 = 0
+                        sum_yield_with_zero_mqs = 0
+                        for lane in lane_details:
+                            if lane["SampleName"] == sample and lane["clustersnb"]:
+                                if lane["overthirty"]:
+                                    weighted_sum_q30 += int(lane["clustersnb"].replace(",", "")) * float(lane["overthirty"])
+                                else:
+                                    sum_yield_with_zero_q30 += int(lane["clustersnb"].replace(",", ""))
+                                if lane["mqs"]:
+                                    weighted_sum_mqs += int(lane["clustersnb"].replace(",", "")) * float(lane["mqs"])
+                                else:
+                                    sum_yield_with_zero_mqs += int(lane["clustersnb"].replace(",", ""))
+                        weighted_mean_q30 = weighted_sum_q30 / (sum_sample_lane_yield - sum_yield_with_zero_q30)
+                        weighted_mqs = weighted_sum_mqs / (sum_sample_lane_yield - sum_yield_with_zero_mqs)
                     else:
                         weighted_mean_q30 = 0
                         weighted_mqs = 0
