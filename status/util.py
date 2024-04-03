@@ -1,4 +1,5 @@
 import tornado.web
+import tornado.websocket
 import json
 import requests
 import os
@@ -219,6 +220,11 @@ class SafeHandler(BaseHandler):
 
 class UnsafeHandler(BaseHandler):
     pass
+
+
+class SafeSocketHandler(tornado.websocket.WebSocketHandler, SafeHandler):
+    def prepare(self):
+        super(SafeHandler, self).prepare()
 
 
 class MainHandler(UnsafeHandler):

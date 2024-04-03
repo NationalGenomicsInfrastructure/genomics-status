@@ -102,7 +102,8 @@ from status.projects import (
 )
 
 from status.projects_status import (
-    ProjectsStatusHandler
+    ProjectsStatusHandler,
+    ProjectStatusWebSocket
 )
 
 from status.queues import (
@@ -290,6 +291,7 @@ class Application(tornado.web.Application):
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
+            ("/api/v1/project_websocket", ProjectStatusWebSocket),
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
             ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
@@ -609,6 +611,8 @@ if __name__ == "__main__":
 
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
+
+    application.ioloop = ioloop
 
     # Start the IOLoop
     ioloop.start()
