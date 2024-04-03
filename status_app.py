@@ -59,6 +59,7 @@ from status.invoicing import (
 )
 from status.lanes_ordered import LanesOrderedHandler, LanesOrderedDataHandler
 from status.multiqc_report import MultiQCReportHandler
+from status.ngisweden_stats import NGISwedenHandler
 from status.pricing import (
     PricingDateToVersionDataHandler,
     PricingExchangeRatesDataHandler,
@@ -352,6 +353,7 @@ class Application(tornado.web.Application):
             ("/lanes_ordered", LanesOrderedHandler),
             ("/libpooling_queues", LibraryPoolingQueuesHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
+            ("/ngisweden_stats", NGISwedenHandler),
             ("/pools_qpcr", qPCRPoolsHandler),
             ("/pricing_preview", PricingPreviewHandler),
             ("/pricing_quote", PricingQuoteHandler),
@@ -535,6 +537,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/invoicing.html")
             tornado.autoreload.watch("design/barcode.html")
             tornado.autoreload.watch("design/link_tab.html")
+            tornado.autoreload.watch("design/ngisweden_stats.html")
             tornado.autoreload.watch("design/qpcr_pools.html")
             tornado.autoreload.watch("design/pricing_products.html")
             tornado.autoreload.watch("design/pricing_quote.html")
