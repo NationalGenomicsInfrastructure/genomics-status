@@ -110,6 +110,7 @@ from status.queues import (
     WorksetQueuesDataHandler,
     LibraryPoolingQueuesHandler,
     LibraryPoolingQueuesDataHandler,
+    SmartSeq3ProgressPageHandler,
 )
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.ont_plot import ONTFlowcellYieldHandler, ONTFlowcellPlotHandler
@@ -368,6 +369,7 @@ class Application(tornado.web.Application):
             ("/sample_requirements_update", SampleRequirementsUpdateHandler),
             ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
+            ("/smartseq3_progress", SmartSeq3ProgressPageHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/user_management", UserManagementHandler),
             ("/userpref", UserPrefPageHandler),

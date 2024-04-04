@@ -5,6 +5,9 @@ import psycopg2
 from dateutil.parser import parse
 import ast
 
+from genologics_sql import queries as geno_queries
+from genologics_sql import utils as geno_utils
+
 from status.running_notes import LatestRunningNoteHandler
 
 # Control names can be found in the table controltype in the lims backend. Will continue to check against this list for now, should
@@ -682,3 +685,74 @@ class LibraryPoolingQueuesHandler(SafeHandler):
                 gs_globals=self.application.gs_globals, user=self.get_current_user()
             )
         )
+
+
+class SmartSeq3ProgressPageHandler(SafeHandler):
+    """Serves a page with SmartSeq3 progress table with all samples in the workflow
+    URL: /smartseq3_progress
+    """
+
+    def get(self):
+        t = self.application.loader.load("smartseq3_progress.html")
+        self.write(
+            t.generate(
+                gs_globals=self.application.gs_globals, 
+                user=self.get_current_user(),
+                data=self.progress_data()
+            )
+        )
+
+    
+    def progress_data(self):
+
+        #TODO: Add Sample: Sample/Reagent Label
+        # Get all samples in the SmartSeq3 workflow
+        workflow_name = 'Smart-seq3 for NovaSeqXPlus v1.0'
+        sample_level_udfs_list = ['Sample Type', 'Sample Links', 'Cell Type', 'Tissue Type', 'Species Name', 'Comment']
+        project_level_udfs_list = ['Sequence units ordered (lanes)']
+        step_level_udfs_definition = {'Plates to Send': ['Sample plate sent date'],
+                                        'Plates Sent': ['Sample plate received date'],
+                                        'Lysis, RT and pre-Amp': ['PCR Cycles'],
+                                        'cDNA QC': ['Optimal Cycle Number']}
+        step_level_udfs_id = {}
+        samples_in_step_dict= {}
+        project_level_udfs = {}
+
+        geno_session = geno_utils.get_session()
+        workflow_steps=geno_queries.get_all_steps_for_workflow(geno_session, workflow_name)
+        
+        for stepname, stepid, protocolname, stepindex in workflow_steps:
+            samples_in_step_dict[stepid] = {'stepname': stepname, 
+                                            'protocolname': protocolname, 
+                                            'stepindex': stepindex,
+                                            'samples': {}}
+            #Different versions of the workflow will have different stepids for the same stepname
+            if stepname in step_level_udfs_definition:
+                step_level_udfs_id[stepid] = step_level_udfs_definition[stepname]
+        
+        # Get all the information for each sample in given workflow
+        samples = geno_queries.get_all_samples_in_a_workflow(geno_session, workflow_name)
+        for _, sample_name, sampleid, stepid, projectid, _ in samples:
+            sample_dict = {'projectid': projectid}
+            if projectid not in project_level_udfs:
+                query_res = geno_queries.get_udfs_from_project(geno_session, projectid, project_level_udfs_list)
+                proj_data = {}
+                for udfname, udfvalue, _, projectname in query_res:
+                    proj_data[udfname] = udfvalue
+                    #This is redundant
+                    proj_data['projectname'] = projectname
+                project_level_udfs[projectid] = proj_data
+            #Get sample level udfs
+            sample_level_udfs = geno_queries.get_udfs_from_sample(geno_session, sampleid, sample_level_udfs_list)
+            for udfname, udfvalue, _ in sample_level_udfs:
+                sample_dict[udfname] = udfvalue
+            
+            #Get udfs specific to a step
+            if stepid in step_level_udfs_id:
+                step_level_udfs = geno_queries.get_sample_udfs_from_step(geno_session, sampleid, stepid, step_level_udfs_id[stepid])
+                for udfname, udfvalue, _ in step_level_udfs:
+                    sample_dict[udfname] = udfvalue 
+
+            samples_in_step_dict[stepid]['samples'][sample_name] = sample_dict
+
+        return [samples_in_step_dict, project_level_udfs]
