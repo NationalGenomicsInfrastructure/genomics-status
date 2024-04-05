@@ -4,6 +4,7 @@ import json
 import requests
 import os
 import sys
+import urllib
 from datetime import datetime, timedelta
 from dateutil import parser
 
@@ -223,8 +224,18 @@ class UnsafeHandler(BaseHandler):
 
 
 class SafeSocketHandler(tornado.websocket.WebSocketHandler, SafeHandler):
+    @tornado.web.authenticated
     def prepare(self):
-        super(SafeHandler, self).prepare()
+        return super(tornado.websocket.WebSocketHandler, self).prepare()
+
+    def get_current_user(self):
+        return super(SafeHandler, self).get_current_user()
+
+    def check_origin(self, origin):
+        parsed_origin = urllib.parse.urlparse(origin)
+        if self.application.test_mode:
+            return True
+        return parsed_origin.netloc.endswith(".scilifelab.se")
 
 
 class MainHandler(UnsafeHandler):
