@@ -104,14 +104,15 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.bp_yield:,.0f}</b>';
     }
 
-    var thresholdColors = ['#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff', '#b81d2f'];
+    var thresholdColors = ['#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff', '#e65c00', '#1B9E97'];
     var thresholdLabels = [
         'NovaSeq SP threshold to pass',
         'NovaSeq S1 threshold to pass',
         'NovaSeq S2 threshold to pass',
         'NovaSeq S4 threshold to pass',
         'NovaSeqXPlus 10B threshold to pass',
-        'NovaSeqXPlus 1.5B threshold to pass'
+        'NovaSeqXPlus 1.5B threshold to pass',
+        'NovaSeqXPlus 25B threshold to pass'
     ];
 
     function applyThresholds(thresholdValues) {
@@ -143,12 +144,12 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
 
     // Styling the default view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell") {
-        applyThresholds([650000000, 1300000000, 3300000000, 8000000000, 10000000000, 1200000000]);
+        applyThresholds([650000000, 1300000000, 3300000000, 8000000000, 10000000000, 1200000000, 20000000000]);
     }
 
     // Styling the lane view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "lane") {
-        applyThresholds([325000000, 650000000, 1650000000, 2000000000, 1000000000, 600000000]);
+        applyThresholds([325000000, 650000000, 1650000000, 2000000000, 1000000000, 600000000, 2500000000]);
     }
 
     var serie = build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
