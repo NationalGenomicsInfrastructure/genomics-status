@@ -17,6 +17,8 @@ const vProjectsStatus = {
             include_all_project_coordinators: true,
             application_filter: [],
             include_all_applications: true,
+            websocket_message:'',
+            websocket: null,
         }
     },
     computed: {
@@ -171,6 +173,23 @@ const vProjectsStatus = {
                     this.error_messages.push('Unable to fetch sticky running notes, please try again or contact a system administrator.')
                 })
         },
+        setupWebsocket() {
+            // Taken from https://stackoverflow.com/a/10418013
+            let loc = window.location, new_uri;
+            if (loc.protocol === "https:") {
+                new_uri = "wss:";
+            } else {
+                new_uri = "ws:";
+            }
+            new_uri += "//" + loc.host;
+            new_uri += "/api/v1/project_websocket";
+            this.websocket = new WebSocket(new_uri);
+
+            this.websocket.onmessage = (event) => {
+                console.log(event.data);
+                this.websocket_message = event.data;
+            };
+        },
         // Helper methods
         itemCounts(list, key) {
             /* 
@@ -306,12 +325,17 @@ app.component('v-projects-status', {
         }
     },
     created: function() {
-        this.$root.fetchProjects()
+        this.$root.fetchProjects();
+        this.$root.setupWebsocket();
     },
     template:
     /*html*/`
     <div class="mx-2">
         <h1>Projects Status</h1>
+        <div>
+        <h2> This is from WebSocket </h2>
+        <p>{{ this.$root.websocket_message }}</p>
+        </div>
         <div class="card p-3">
             <div class="row row-cols-4">
                 <div class="col">
