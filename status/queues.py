@@ -722,12 +722,14 @@ class SmartSeq3ProgressPageDataHandler(SafeHandler):
 
         geno_session = geno_utils.get_session()
         workflow_steps=geno_queries.get_all_steps_for_workflow(geno_session, workflow_name)
+        stepid_to_stepindex = {}
         
         for stepname, stepid, protocolname, stepindex in workflow_steps:
             samples_in_step_dict[stepindex] = {'stepname': stepname, 
                                             'protocolname': protocolname, 
                                             'stepid': stepid,
                                             'samples': {}}
+            stepid_to_stepindex[stepid] = stepindex
             #Different versions of the workflow will have different stepids for the same stepname
             if stepname in step_level_udfs_definition:
                 step_level_udfs_id[stepid] = step_level_udfs_definition[stepname]
@@ -758,7 +760,7 @@ class SmartSeq3ProgressPageDataHandler(SafeHandler):
                 for udfname, udfvalue, _ in step_level_udfs:
                     sample_dict[udfname] = udfvalue 
 
-            samples_in_step_dict[stepindex]['samples'][sample_name] = sample_dict
+            samples_in_step_dict[stepid_to_stepindex[stepid]]['samples'][sample_name] = sample_dict
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps([samples_in_step_dict, project_level_udfs]))
