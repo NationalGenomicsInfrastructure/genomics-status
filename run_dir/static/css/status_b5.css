@@ -1256,7 +1256,7 @@ thead th.sort::before{
 .iframe-container {
     position: relative;
     width: 100%;
-    height: 100vh;
+    height: 1100px;
 }
 
 .iframe-container iframe {
