@@ -1,6 +1,6 @@
 export default {
     name: 'v-project-details',
-    props: ['project_id'],
+    props: ['project_id', 'as_modal'],
     data() {
         return {
             project_data: {},
@@ -23,11 +23,13 @@ export default {
     /*html*/`
         <div class="row">
             <div class="col-12">
-               <h1>
-                    <span id="project_name">{{project_id}}, {{project_data.project_name}}</span>
+                <div :class="{ 'modal-header': as_modal }">
+                    <h1 :class="{ 'modal-title': as_modal }" id="projectDetailsModalLabel">
+                    {{project_id}}, {{project_data.project_name}}
                     <span class="text-muted ml-4"><a class="badge rounded-pill bg-secondary text-decoration-none" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">{{project_data['customer_project_reference']}}</a></span>
-                    <small><span class="badge" id="project_status_alert"></span></small>
-
+                    </h1>
+                </div>
+                <small><span class="badge" id="project_status_alert"></span></small>
                     <a href="#" class="btn btn-outline-dark btn-xs float-right mt-4" id="show_order_timeline">
                         <span id="show_orderdates_btn" style="display:none;">Show</span>
                         <span id="hide_orderdates_btn">Hide</span> order dates on timeline

@@ -508,13 +508,9 @@ app.component('v-project-card', {
                 <div class="modal fade" :id="'modal_' + project_id" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-xl">
                         <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" :id="'modal_label_' + project_id">Modal title</h5>
-                                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-                            </div>
                             <div class="modal-body">
                                 <!-- This shows the project page -->
-                                <v-project-details :project_id="project_id"/>
+                                <v-project-details :project_id="project_id" :as_modal="true"/>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
