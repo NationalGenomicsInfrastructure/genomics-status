@@ -869,14 +869,14 @@ class ImagesDownloadHandler(SafeHandler):
         self.finish()
 
 
-class ProjectSamplesHandler(SafeHandler):
+class ProjectSamplesOldHandler(SafeHandler):
     """Serves a page which lists the samples of a given project, with some
     brief information for each sample.
     URL: /project/([^/]*)
     """
 
     def get(self, project):
-        t = self.application.loader.load("project_samples.html")
+        t = self.application.loader.load("project_samples_old.html")
         worksets_view = self.application.worksets_db.view(
             "project/ws_name", descending=True
         )
@@ -897,6 +897,22 @@ class ProjectSamplesHandler(SafeHandler):
             )
         )
 
+class ProjectSamplesHandler(SafeHandler):
+    """Serves a page which lists the samples of a given project, with some
+    brief information for each sample.
+    URL: /project_new/([^/]*)
+    """
+
+    def get(self, project_id):
+        t = self.application.loader.load("project_samples.html")
+        self.write(
+            t.generate(
+                gs_globals=self.application.gs_globals,
+                project_id=project_id,
+                user=self.get_current_user(),
+                lims_uri=BASEURI,
+            )
+        )
 
 class ProjectsHandler(SafeHandler):
     """Serves a page with project presets listed, along with some brief info.
