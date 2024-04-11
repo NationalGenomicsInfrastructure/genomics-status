@@ -1,3 +1,6 @@
+import vProjectDetails from './project_details_vue_component.js'
+import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
+
 const vProjectsStatus = {
     data() {
         return {
@@ -144,13 +147,14 @@ const vProjectsStatus = {
             axios
                 .get('/api/v1/projects?list=pending,reception_control,review,ongoing&type=All')
                 .then(response => {
-                    data = response.data
+                    let data = response.data
                     if (data !== null) {
                         this.all_projects = data
                     }
                     this.fetchStickyRunningNotes()
                 })
                 .catch(error => {
+                    console.log(error)
                     this.error_messages.push('Unable to fetch projects, please try again or contact a system administrator.')
                 })
         },
@@ -164,7 +168,7 @@ const vProjectsStatus = {
             axios
                 .post('/api/v1/latest_sticky_run_note', {project_ids: Object.keys(this.all_projects)})
                 .then(response => {
-                    data = response.data
+                    let data = response.data
                     if (data !== null) {
                         this.sticky_running_notes = data
                     }
@@ -174,6 +178,7 @@ const vProjectsStatus = {
                 })
         },
         setupWebsocket() {
+            /* This is still a proof of concept */
             // Taken from https://stackoverflow.com/a/10418013
             let loc = window.location, new_uri;
             if (loc.protocol === "https:") {
@@ -315,6 +320,8 @@ const vProjectsStatus = {
 }
 const app = Vue.createApp(vProjectsStatus)
 
+app.component('v-project-details', vProjectDetails)
+
 app.component('v-projects-status', {
     methods: {
         selectFilterValue(event, include_all_key) {
@@ -326,16 +333,11 @@ app.component('v-projects-status', {
     },
     created: function() {
         this.$root.fetchProjects();
-        this.$root.setupWebsocket();
     },
     template:
     /*html*/`
     <div class="mx-2">
         <h1>Projects Status</h1>
-        <div>
-        <h2> This is from WebSocket </h2>
-        <p>{{ this.$root.websocket_message }}</p>
-        </div>
         <div class="card p-3">
             <div class="row row-cols-4">
                 <div class="col">
@@ -469,7 +471,10 @@ app.component('v-project-card', {
             return this.$root.all_projects[this.project_id]
         },
         project_comment() {
-            return make_markdown(this.project['project_comment'])
+            if (this.project['project_comment'] == undefined) {
+                return ''
+            }
+            return marked.parse(this.project['project_comment'])
         }
     },
     template: 
@@ -501,73 +506,15 @@ app.component('v-project-card', {
 
                 <!-- Modal -->
                 <div class="modal fade" :id="'modal_' + project_id" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
+                    <div class="modal-dialog modal-xl">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" :id="'modal_label_' + project_id">Modal title</h5>
                                 <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                                <h6>
-                                    <a class="" :href="'/project/' + project_id">
-                                        {{project_id}}
-                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    </a>
-                                </h6>
-                                <div>
-                                    <div class="card mb-2">
-                                        <div class="card-body pb-2">
-                                            <h6 class="card-title">Project Comment</h5>
-                                            <div class="text-muted" v-html="project_comment">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <dt>Sequencing</dt>
-                                    <dd>
-                                        <v-project-tiny-info :project="project" :info_key="'sequence_units_ordered_(lanes)'"/>
-                                        <span class="border border-light-subtle mx-1"></span>
-                                        <v-project-tiny-info :project="project" :info_key="'sequencing_platform'"/>
-                                        <span class="border border-light-subtle mx-1"></span>
-                                        <v-project-tiny-info :project="project" :info_key="'flowcell'"/>
-                                        <span class="border border-light-subtle mx-1"></span>
-                                        <v-project-tiny-info :project="project" :info_key="'sequencing_setup'"/>
-                                    </dd>
-                                    <dt>Library Preparation</dt>
-                                    <dd>
-                                        <v-project-tiny-info :project="project" :info_key="'sample_units_ordered'"/>
-                                        <span class="border border-light-subtle mx-1"></span>
-                                        <v-project-tiny-info :project="project" :info_key="'sample_type'"/>
-                                        <span class="border border-light-subtle mx-1"></span>
-                                        <v-project-tiny-info :project="project" :info_key="'library_construction_method'"/>
-                                        <span class="border border-light-subtle mx-1"></span>
-                                        <v-project-tiny-info :project="project" :info_key="'library_construction_option'"/>
-                                    </dd>
-                                    <dt>Reception Control</dt>
-                                    <dd>
-                
-                                    </dd>
-                                    <dt>Project Coordinator:</dt>
-                                    <dd>{{ project['project_coordinator'] }}</dd>
-                                </div>
-                                <div>
-                                    <h5>Project Timeline</h5>
-                                    <dl class="dl-horizontal">
-                                        <template v-if="hasSummaryDates">
-                                            <template v-for="(date, date_name) in project['summary_dates']">
-                                                <dt>{{ date_name }}</dt>
-                                                <dd>{{ date }}</dd>
-                                            </template>
-                                        </template>
-                                        <template v-else>
-                                            <p>No dates available</p>
-                                        </template>
-                                    </dl>
-                                </div>
-                                <template v-if="project['latest_running_note']">
-                                    <v-projects-running-notes :latest_running_note_obj="project['latest_running_note']" :sticky="false"></v-projects-running-notes>
-                                </template>
+                                <!-- This shows the project page -->
+                                <v-project-details :project_id="project_id"/>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -668,8 +615,7 @@ app.component('v-projects-running-notes', {
             if (this.note == undefined) {
                 return ''
             }
-            // make_markdown is from an external package
-            return make_markdown(this.note)
+            return marked.parse(this.note)
         },
         latest_running_note() {
             // Check if running note is an object
