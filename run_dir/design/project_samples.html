@@ -10,8 +10,8 @@ Description: Project details
 
 {% block stuff %}
 
-<div id="project_details">
-    <v-project-details project_id="{{project_id}}" :as_modal="false"/>
+<div id="v_projects_main">
+    <v-project-details project_id="{{project_id}}" :single_project_mode="true"/>
 </div>
 {% end %}
 
@@ -20,7 +20,7 @@ Description: Project details
 <script src="/static/js/vue.v3.2.47.global.prod.js"></script>
 <script src="/static/js/axios.v1.3.4.min.js"></script>
 <script src="/static/js/running_notes.js"></script>
-<script type="module" src="/static/js/project_details_vue_component.js"></script>
-<script type="module" src="/static/js/project_samples.js"></script>
+<script type="module" src="/static/js/projects_main_vue.js"></script>
+
 
 {% end %}
