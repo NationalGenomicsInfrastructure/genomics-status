@@ -9,6 +9,7 @@ $('#get-project').on('click', function () {
     let project_id = $('#inputProj').val();
     $("#projid").text(project_id);
     $("#projidModal").text(project_id);
+    $('#udfs_div').html("");
     let url = '/api/v1/lims_project_data/' + project_id;
     return $.getJSON(url, function(data) {
         $('#project_name').val(data['name']);
