@@ -97,7 +97,7 @@ export const vProjectDetails = {
     name: 'v-project-details',
     // The single_project_mode is to be used when only a single project is used for the app
     // and the project cards are not shown
-    props: ['project_id', 'single_project_mode'],
+    props: ['project_id', 'as_modal', 'single_project_mode'],
     computed: {
         project_data() {
             return this.$root.project_details[this.project_id]
@@ -119,7 +119,7 @@ export const vProjectDetails = {
             <div class="col-12">
                 <div :class="{ 'modal-header': as_modal }">
                     <h1 :class="{ 'modal-title': as_modal }" id="projectDetailsModalLabel">
-                    {{project_id}}, {{project_data.project_name}}
+                    <a :href="'/project_new/' + project_id">{{project_id}}</a>, {{project_data.project_name}}
                     <span class="text-muted ml-4"><a class="badge rounded-pill bg-secondary text-decoration-none" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">{{project_data['customer_project_reference']}}</a></span>
                     </h1>
                 </div>
@@ -171,6 +171,14 @@ export const vProjectDetails = {
             <h2>Status</h2>
             <div class="col-4">
                 <h4>Reception Control</h4>
+                <dl class="row">
+                    <dt class="col-5 text-right">Number of samples ordered</dt> <dd class="col-7 mb-0">{{ project_data.sample_units_ordered }}</dd>
+                    <dt class="col-5 text-right">Number of lanes ordered</dt>   <dd class="col-7 mb-0">{{ project_data.lanes_ordered }}</dd>
+                    <dt class="col-5 text-right">Failed samples</dt>           <dd class="col-7 mb-0">{{ project_data.failed_samples }}</dd>
+                    <dt class="col-5 text-right">Passed samples</dt>           <dd class="col-7 mb-0">{{ project_data.passed_samples }}</dd>
+                    <dt class="col-5 text-right">Open date</dt>                <dd class="col-7 mb-0">{{ project_data.open_date }}</dd>
+                    <dt class="col-5 text-right">QC start date</dt>            <dd class="col-7 mb-0">{{ project_data.qc_start_date }}</dd>
+                </dl>
             </div>
             <div class="col-4">
                 <h4>Library QC</h4>
@@ -178,7 +186,34 @@ export const vProjectDetails = {
             <div class="col-4">
                 <h4>Sequencing and Bioinformatics</h4>
             </div>
-            <p>Project details: {{ this.project_data }}</p>
+            <!-- TABS -->
+            <div>
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="project-details-tab" data-toggle="tab" data-target="#project-details-pane" type="button" role="tab" aria-controls="project-details-pane" aria-selected="true">Project information</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="project-samples-tab" data-toggle="tab" data-target="#project-samples-pane" type="button" role="tab" aria-controls="project-samples-pane" aria-selected="false">Samples</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="project-running-notes-tab" data-toggle="tab" data-target="#project-running-notes-pane" type="button" role="tab" aria-controls="project-running-notes-pane" aria-selected="false" disabled>Running Notes</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="project-user-communication-tab" data-toggle="tab" data-target="#project-user-communication-pane" type="button" role="tab" aria-controls="project-user-communication-pane" aria-selected="false" disabled>User communication</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="project-links-tab" data-toggle="tab" data-target="#project-links-pane" type="button" role="tab" aria-controls="project-links-pane" aria-selected="false" disabled>Links</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="project-details-pane" role="tabpanel" aria-labelledby="project-details-tab" tabindex="0">Content 1</div>
+                    <div class="tab-pane fade" id="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-tab" tabindex="0">Content 2</div>
+                    <div class="tab-pane fade" id="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-tab" tabindex="0">Content 3</div>
+                    <div class="tab-pane fade" id="project-user-communication-pane" role="tabpanel" aria-labelledby="project-user-communication-tab" tabindex="0">Content 4</div>
+                    <div class="tab-pane fade" id="project-links-pane" role="tabpanel" aria-labelledby="project-links-tab" tabindex="0">Content 5</div>
+                </div>
+            </div>
+
         </div>
     `,
 }
