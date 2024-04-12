@@ -63,7 +63,7 @@ $('#get-project').on('click', function () {
 
 $('body').on('click', '#submitCloneProjBtn', function(event){
     $('#submitCloneProjBtn').addClass('disabled').text('Cloning...');
-    let project_id = $('#projid').val();
+    let project_id = $('#projid').text();
     $.ajax({
         type: 'POST',
         dataType: 'json',
