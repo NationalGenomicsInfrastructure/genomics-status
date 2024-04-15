@@ -101,6 +101,18 @@ export const vProjectDetails = {
     computed: {
         project_data() {
             return this.$root.project_details[this.project_id]
+        },
+        left_col_class() {
+            if (this.as_modal) {
+                return 'col-6'
+            }
+            return 'col-4'
+        },
+        right_col_class() {
+            if (this.as_modal) {
+                return 'col-6'
+            }
+            return 'col-8'
         }
     },
     created: function() {
@@ -117,11 +129,15 @@ export const vProjectDetails = {
     /*html*/`
         <div class="row" v-if='project_data'>
             <div class="col-12">
-                <div :class="{ 'modal-header': as_modal }">
-                    <h1 :class="{ 'modal-title': as_modal }" id="projectDetailsModalLabel">
-                    <a :href="'/project_new/' + project_id">{{project_id}}</a>, {{project_data.project_name}}
-                    <span class="text-muted ml-4"><a class="badge rounded-pill bg-secondary text-decoration-none" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">{{project_data['customer_project_reference']}}</a></span>
-                    </h1>
+                <div :class="{ 'modal-header': as_modal}">
+                    <div class="row">
+                        <h1 :class="{ 'modal-title': as_modal }" id="projectDetailsModalLabel" style="white-space: nowrap;">
+                            <a :href="'/project_new/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{project_id}}</a>, {{project_data.project_name}}
+                            <small class="text-muted ml-4">
+                                NGI Portal: <a class="text-decoration-none" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">{{project_data['customer_project_reference']}}</a>
+                            </small>
+                        </h1>
+                    </div>
                 </div>
                 <small><span class="badge" id="project_status_alert"></span></small>
                     <a href="#" class="btn btn-outline-dark btn-xs float-right mt-4" id="show_order_timeline">
@@ -134,37 +150,37 @@ export const vProjectDetails = {
             <div class="col-4">
                 <h4>Library preparation</h4>
                 <dl class="row">
-                    <dt class="col-5 text-right">Number of samples:</dt>                    <dd class="col-7 mb-0">{{ project_data.sample_units_ordered }}</dd>
-                    <dt class="col-5 text-right">Sample type:</dt>                          <dd class="col-7 mb-0">{{ project_data.sample_type }}</dd>
-                    <dt class="col-5 text-right">Library construction method:</dt>          <dd class="col-7 mb-0">{{ project_data.library_construction_method }}</dd>
-                    <dt class="col-5 text-right">Library prep option:</dt>                  <dd class="col-7 mb-0">{{ project_data.library_prep_option }}</dd>
-                    <dt class="col-5 text-right">Library type (ready-made libraries):</dt>  <dd class="col-7 mb-0">{{ project_data['library_type_(ready-made_libraries)'] }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Number of samples:</dt>                    <dd :class="'mb-0 ' + right_col_class">{{ project_data.sample_units_ordered }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Sample type:</dt>                          <dd :class="'mb-0 ' + right_col_class">{{ project_data.sample_type }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Library construction method:</dt>          <dd :class="'mb-0 ' + right_col_class">{{ project_data.library_construction_method }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Library prep option:</dt>                  <dd :class="'mb-0 ' + right_col_class">{{ project_data.library_prep_option }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Library type (ready-made libraries):</dt>  <dd :class="'mb-0 ' + right_col_class">{{ project_data['library_type_(ready-made_libraries)'] }}</dd>
                 </dl>
                 <h4>Sequencing</h4>
                 <dl class="row">
-                    <dt class="col-5 text-right">Number of lanes ordered:</dt>  <dd class="col-7 mb-0">{{ project_data.lanes_ordered }}</dd>
-                    <dt class="col-5 text-right">Sequencing platform:</dt>      <dd class="col-7 mb-0">{{ project_data.sequencing_platform }}</dd>
-                    <dt class="col-5 text-right">Flowcell:</dt>                 <dd class="col-7 mb-0">{{ project_data.flowcell }}</dd>
-                    <dt class="col-5 text-right">Flowcell option:</dt>          <dd class="col-7 mb-0">{{ project_data.flowcell_option }}</dd>
-                    <dt class="col-5 text-right">Sequencing setup:</dt>         <dd class="col-7 mb-0">{{ project_data.sequencing_setup }}</dd>
-                    <dt class="col-5 text-right">Custom primer:</dt>            <dd class="col-7 mb-0">{{ project_data.custom_primer }}</dd>
-                    <dt class="col-5 text-right">Low diversity:</dt>            <dd class="col-7 mb-0">{{ project_data.low_diversity }}</dd>
-                    <dt class="col-5 text-right">PhiX %:</dt>                   <dd class="col-7 mb-0">{{ project_data.phix_percentage }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Number of lanes ordered:</dt>  <dd :class="'mb-0 ' + right_col_class">{{ project_data.lanes_ordered }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Sequencing platform:</dt>      <dd :class="'mb-0 ' + right_col_class">{{ project_data.sequencing_platform }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Flowcell:</dt>                 <dd :class="'mb-0 ' + right_col_class">{{ project_data.flowcell }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Flowcell option:</dt>          <dd :class="'mb-0 ' + right_col_class">{{ project_data.flowcell_option }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Sequencing setup:</dt>         <dd :class="'mb-0 ' + right_col_class">{{ project_data.sequencing_setup }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Custom primer:</dt>            <dd :class="'mb-0 ' + right_col_class">{{ project_data.custom_primer }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Low diversity:</dt>            <dd :class="'mb-0 ' + right_col_class">{{ project_data.low_diversity }}</dd>
+                    <dt :class="'text-right ' + left_col_class">PhiX %:</dt>                   <dd :class="'mb-0 ' + right_col_class">{{ project_data.phix_percentage }}</dd>
                 </dl>
-            </div>
-            <div class="col-4">
-                <h4>Bioinformatics</h4>
-                <dl class="row">
-                    <dt class="col-5 text-right">Reference genome</dt>       <dd class="col-7 mb-0">{{ project_data.reference_genome }}</dd>
-                    <dt class="col-5 text-right">Organism</dt>               <dd class="col-7 mb-0">{{ project_data.organism }}</dd>
-                    <dt class="col-5 text-right">Best practice analysis</dt> <dd class="col-7 mb-0">{{ project_data.best_practice_bioinformatics }}</dd>
-                </dl>
+                </div>
+                <div class="col-4">
+                    <h4>Bioinformatics</h4>
+                    <dl class="row">
+                        <dt :class="'text-right ' + left_col_class">Reference genome</dt>       <dd :class="'mb-0 ' + right_col_class">{{ project_data.reference_genome }}</dd>
+                        <dt :class="'text-right ' + left_col_class">Organism</dt>               <dd :class="'mb-0 ' + right_col_class">{{ project_data.organism }}</dd>
+                        <dt :class="'text-right ' + left_col_class">Best practice analysis</dt> <dd :class="'mb-0 ' + right_col_class">{{ project_data.best_practice_bioinformatics }}</dd>
+                    </dl>
                 <h4>Links</h4>
-                <h3><span class="badge bg-secondary w-100 text-muted"><h3><a class="text-decoration-none" target="_blank" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">Order portal</a></h3></span>
+                <h3><span class="badge border border-secondary w-100 text-muted"><h3><a class="text-decoration-none" target="_blank" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">Order portal</a></h3></span>
                 
             </div>
             <div class="col-4">
-                <h2>Project comment</h2>
+                <h4>Project comment</h4>
                 <p>{{ project_data.project_comment }}</p>
             </div>
 
@@ -172,12 +188,12 @@ export const vProjectDetails = {
             <div class="col-4">
                 <h4>Reception Control</h4>
                 <dl class="row">
-                    <dt class="col-5 text-right">Number of samples ordered</dt> <dd class="col-7 mb-0">{{ project_data.sample_units_ordered }}</dd>
-                    <dt class="col-5 text-right">Number of lanes ordered</dt>   <dd class="col-7 mb-0">{{ project_data.lanes_ordered }}</dd>
-                    <dt class="col-5 text-right">Failed samples</dt>           <dd class="col-7 mb-0">{{ project_data.failed_samples }}</dd>
-                    <dt class="col-5 text-right">Passed samples</dt>           <dd class="col-7 mb-0">{{ project_data.passed_samples }}</dd>
-                    <dt class="col-5 text-right">Open date</dt>                <dd class="col-7 mb-0">{{ project_data.open_date }}</dd>
-                    <dt class="col-5 text-right">QC start date</dt>            <dd class="col-7 mb-0">{{ project_data.qc_start_date }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Number of samples ordered</dt> <dd :class="'mb-0 ' + right_col_class">{{ project_data.sample_units_ordered }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Number of lanes ordered</dt>   <dd :class="'mb-0 ' + right_col_class">{{ project_data.lanes_ordered }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Failed samples</dt>           <dd :class="'mb-0 ' + right_col_class">{{ project_data.failed_samples }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Passed samples</dt>           <dd :class="'mb-0 ' + right_col_class">{{ project_data.passed_samples }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Open date</dt>                <dd :class="'mb-0 ' + right_col_class">{{ project_data.open_date }}</dd>
+                    <dt :class="'text-right ' + left_col_class">QC start date</dt>            <dd :class="'mb-0 ' + right_col_class">{{ project_data.qc_start_date }}</dd>
                 </dl>
             </div>
             <div class="col-4">
@@ -277,11 +293,10 @@ export const vProjectCard = {
                         <div class="modal-content">
                             <div class="modal-body">
                                 <!-- This shows the project page -->
-                                <v-project-details :project_id="project_id" :single_project_mode="false"/>
+                                <v-project-details :project_id="project_id" :single_project_mode="false" :as_modal="true"/>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-primary">Save changes</button>
                             </div>
                         </div>
                     </div>
