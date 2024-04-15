@@ -15,7 +15,7 @@ Description: Page to clone an existing project by pulling data from LIMS and wri
         <span id="page_title">Clone Project</span> <small class="text-muted">Creates a project with the name '"existing_project_name"_CLONE' in LIMS by cloning an existing project by pulling data from LIMS</small>
       </h1>
     </div>
-  </div> user.is_any_admin
+  </div>
   {% if not (user.is_proj_coord or user.is_any_admin) %}
     <p>Sorry! Your user role does not allow you to view this page!</p>
   {% else %}
