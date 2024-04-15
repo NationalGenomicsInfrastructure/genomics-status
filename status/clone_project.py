@@ -38,7 +38,7 @@ class LIMSProjectCloningHandler(SafeHandler):
     
     def post(self, projectid):
         
-        if not self.get_current_user().is_proj_coord:
+        if not (self.get_current_user().is_proj_coord or self.get_current_user().is_any_admin):
             self.set_status(401)
             return self.write(
                 "Error: You do not have the permissions for this operation!"

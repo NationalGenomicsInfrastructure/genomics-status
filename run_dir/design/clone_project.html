@@ -4,7 +4,7 @@
 Template file: clone_project.html
 URL: /clone_project
 Title: Clone an existing project in LIMS
-Description: Page to clone an existing project by pulling data from LIMS, modifying it and writing it back using LIMS API.
+Description: Page to clone an existing project by pulling data from LIMS and writing it back using genologics API.
 -->
 
 {% block stuff %}
@@ -12,11 +12,11 @@ Description: Page to clone an existing project by pulling data from LIMS, modify
   <div class="row">
     <div class="col-10 offset-1">
       <h1 class="page_title my-4">
-        <span id="page_title">Clone Project</span> <small class="text-muted">Clone an existing project in LIMS</small>
+        <span id="page_title">Clone Project</span> <small class="text-muted">Creates a project with the name '"existing_project_name"_CLONE' in LIMS by cloning an existing project by pulling data from LIMS</small>
       </h1>
     </div>
-  </div>
-  {% if not user.is_proj_coord %}
+  </div> user.is_any_admin
+  {% if not (user.is_proj_coord or user.is_any_admin) %}
     <p>Sorry! Your user role does not allow you to view this page!</p>
   {% else %}
     <div class="row">
@@ -51,7 +51,7 @@ Description: Page to clone an existing project by pulling data from LIMS, modify
             <label for="client">Client</label>
         </div>
         </div>
-        <div class="fw-bold p-2"> Project UDFS </div>
+        <div class="fw-bold p-2">Copied Project UDFS</div>
         <div class="row" id="udfs_div"> </div>
     </div>
 
