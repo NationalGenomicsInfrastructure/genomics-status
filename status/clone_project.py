@@ -87,8 +87,14 @@ class LIMSProjectCloningHandler(SafeHandler):
             return proj_values
         
         else:
+            new_name = existing_project.name + '_CLONE'
+            check_if_new_name_exists = lims_instance.get_projects(name=new_name)
+
+            if check_if_new_name_exists:
+                return {'error': f'A project with the name {new_name} already exists'}
+            
             try:
-                new_project = Project.create(lims_instance, udfs=proj_values['udfs'], name=existing_project.name + '_CLONE',
+                new_project = Project.create(lims_instance, udfs=proj_values['udfs'], name=new_name,
                                                 researcher=existing_project.researcher)
             except requests.exceptions.HTTPError as e:
                 return {'error': e.message}
