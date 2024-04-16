@@ -115,7 +115,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         'NovaSeqXPlus 25B threshold to pass'
     ];
 
-    function applyThresholds(thresholdValues) {
+    function applyThresholds(thresholdValues, leftAlignedIndexes) {
         toplot.yAxis = {
             title: {
                 enabled: true,
@@ -127,6 +127,8 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                 }
             },
             plotLines: thresholdValues.map(function (value, index) {
+                var align = leftAlignedIndexes.includes(index) ? 'left' : 'right';
+                var labelX = align === 'left' ? -10 : null;
                 return {
                     color: thresholdColors[index],
                     dashStyle: 'longdash',
@@ -135,7 +137,8 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                     zIndex: 1,
                     label: {
                         text: thresholdLabels[index],
-                        align: 'right'
+                        align: align,
+                        x: labelX,
                     }
                 };
             })
@@ -144,12 +147,12 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
 
     // Styling the default view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell") {
-        applyThresholds([650000000, 1300000000, 3300000000, 8000000000, 10000000000, 1200000000, 20000000000]);
+        applyThresholds([650000000, 1300000000, 3300000000, 8000000000, 10000000000, 750000000, 3000000000], [0, 1, 2]);;
     }
 
     // Styling the lane view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "lane") {
-        applyThresholds([325000000, 650000000, 1650000000, 2000000000, 1000000000, 600000000, 2500000000]);
+        applyThresholds([325000000, 650000000, 1650000000, 2000000000, 1000000000, 375000000, 375000000], [0, 1, 2]);
     }
 
     var serie = build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
