@@ -25,6 +25,7 @@ from status.applications import (
     ApplicationsHandler,
 )
 from status.barcode import BarcodeHandler
+from status.clone_project import CloneProjectHandler, LIMSProjectCloningHandler
 from status.user_management import UserManagementHandler, UserManagementDataHandler
 from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
@@ -271,6 +272,7 @@ class Application(tornado.web.Application):
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/latest_sticky_run_note/([^/]*)", LatestStickyNoteHandler),
             ("/api/v1/libpooling_queues", LibraryPoolingQueuesDataHandler),
+            ("/api/v1/lims_project_data/([^/]*)$", LIMSProjectCloningHandler),
             ("/api/v1/mark_agreement_signed", AgreementMarkSignHandler),
             ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
             ("/api/v1/pricing_exchange_rates", PricingExchangeRatesDataHandler),
@@ -337,6 +339,7 @@ class Application(tornado.web.Application):
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
+            ("/clone_project", CloneProjectHandler),
             ("/deliveries", DeliveriesPageHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/(\d{6,8}_[^/]*)$", FlowcellHandler),
@@ -521,6 +524,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/bioinfo_tab/run_lane_sample_view.html")
             tornado.autoreload.watch("design/bioinfo_tab/sample_run_lane_view.html")
             tornado.autoreload.watch("design/cronjobs.html")
+            tornado.autoreload.watch("design/clone_project.html")
             tornado.autoreload.watch("design/data_delivered_plot.html")
             tornado.autoreload.watch("design/deliveries.html")
             tornado.autoreload.watch("design/error_page.html")
