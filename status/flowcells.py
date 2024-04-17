@@ -14,34 +14,12 @@ from genologics.config import BASEURI, USERNAME, PASSWORD
 import pandas as pd
 
 from status.util import SafeHandler
-from status.flowcell import fetch_ont_run_stats
+from status.flowcell import fetch_ont_run_stats, thresholds
 from status.running_notes import LatestRunningNoteHandler
 
 application_log = logging.getLogger("tornado.application")
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
-
-thresholds = {
-    "HiSeq X": 320,
-    "RapidHighOutput": 188,
-    "HighOutput": 143,
-    "RapidRun": 114,
-    "MiSeq Version3": 18,
-    "MiSeq Version2": 10,
-    "MiSeq Version2Nano": 0.75,
-    "NovaSeq SP": 325,
-    "NovaSeq S1": 650,
-    "NovaSeq S2": 1650,
-    "NovaSeq S4": 2000,
-    "NovaSeqXPlus 10B": 1000,
-    "NovaSeqXPlus 1.5B": 600,  # Might need to be reviewed when we settle for a number in AM
-    "NovaSeqXPlus 25B": 2500,  # Might need to be reviewed when we settle for a number in AM
-    "NextSeq Mid": 25,
-    "NextSeq High": 75,
-    "NextSeq 2000 P1": 100,
-    "NextSeq 2000 P2": 400,
-    "NextSeq 2000 P3": 550,
-}
 
 
 def find_id(stringable, pattern_type: str) -> re.match:
