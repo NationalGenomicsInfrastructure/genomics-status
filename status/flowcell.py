@@ -20,7 +20,7 @@ thresholds = {
     "NovaSeq S4": 2000,
     "NovaSeqXPlus 10B": 1000,
     "NovaSeqXPlus 1.5B": 750,  # Might need to be reviewed when we settle for a number in AM
-    "NovaSeqXPlus 25B": 3100,  # Might need to be reviewed when we settle for a number in AM
+    "NovaSeqXPlus 25B": 3000,  # Might need to be reviewed when we settle for a number in AM
     "NextSeq Mid": 25,
     "NextSeq High": 75,
     "NextSeq 2000 P1": 100,
