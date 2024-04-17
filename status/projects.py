@@ -536,6 +536,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 search_string in row_key.lower()
                 or search_string in row_value[0].lower()
                 or (row_value[1] and search_string in row_value[1].lower())
+                or (row_value[2] and search_string in row_value[2].lower())
             ):
                 project = {
                     "url": "/project/" + row_value[0],

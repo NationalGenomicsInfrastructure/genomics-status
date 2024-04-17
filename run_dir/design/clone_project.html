@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+<!--
+Template file: clone_project.html
+URL: /clone_project
+Title: Clone an existing project in LIMS
+Description: Page to clone an existing project by pulling data from LIMS and writing it back using genologics API.
+-->
+
+{% block stuff %}
+<div class="container-xxl">
+  <div class="row">
+    <div class="col-10 offset-1">
+      <h1 class="page_title my-4">
+        <span id="page_title">Clone Project</span> <small class="text-muted">Creates a project with the name '"existing_project_name"_CLONE' in LIMS by cloning an existing project by pulling data from LIMS</small>
+      </h1>
+    </div>
+  </div>
+  {% if not (user.is_proj_coord or user.is_any_admin) %}
+    <p>Sorry! Your user role does not allow you to view this page!</p>
+  {% else %}
+    <div class="row">
+        <div class="col-2 offset-4 pl-1">
+            <input type="text" class="form-control form-control-lg" id="inputProj">
+        </div>
+        <div class="col-4">
+        <div id="buttonsGoHere">
+            <button class="btn btn-primary btn mb-3" type="button" id="get-project">
+            <i class="fa fa-get-pocket my-2"></i> Get Project data
+            </button>
+            <button class="btn btn-success btn mb-3" data-toggle="modal" type="button" data-target="#cloneProjModal">
+                <i class="fa fa-copy my-2"></i> Clone project
+            </button>
+        </div>
+        </div>
+    </div>
+
+    <div id="projFieldsContainer" class="container-xl">
+        <h5>Showing data for <mark id="projid">No Project</mark></h5>
+        <div class="row">
+        <div class="form-floating mb-3 col-4 pl-0">
+            <input type="text" class="form-control" placeholder="Project name" id="project_name" disabled></input>
+            <label for="project_name">Project Name</label>
+        </div>
+        <div class="form-floating mb-3 col-4 pl-0">
+            <input type="text" class="form-control" placeholder="Account" id="account" disabled></input>
+            <label for="account">Account</label>
+        </div>
+        <div class="form-floating mb-3 col-4 pl-0">
+            <input type="text" class="form-control" placeholder="Client" id="client" disabled></input>
+            <label for="client">Client</label>
+        </div>
+        </div>
+        <div class="fw-bold p-2">Copied Project UDFS</div>
+        <div class="row" id="udfs_div"> </div>
+    </div>
+
+    <div id="cloneProjModal" class="modal fade">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+            <h4 class="modal-title"><i class="fa fa-copy mr-2"></i>Clone Project</h4>
+            <button type="button" class="btn-close" data-dismiss="modal"><span class="sr-only">Cancel</span></button>
+            </div>
+            <div class="modal-body">
+            <form id="cloneProjForm" class="form" role="form">
+                <p>Do you really want to clone this project in LIMS?</p>
+                <div id="projidModal" class="fw-bold">No project</div>
+            </form>
+            </div>
+            <div class="modal-footer">
+            <button class="btn btn-secondary" data-dismiss="modal" aria-hidden="true">Cancel</button>
+            <button class="btn btn-primary" type="button" id="submitCloneProjBtn">Clone</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script src="/static/js/clone_project.js?v={{ gs_globals['git_commit'] }}"></script>
+    <script src="/static/js/jquery-ui.min.js"></script>
+  {% end %}
+</div>
+{% end %}
