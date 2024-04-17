@@ -147,7 +147,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
 
     // Styling the default view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell") {
-        applyThresholds([650e6, 1300e6, 3300e6, 8000e6, 10000e6, 1500e6, 24000e6], [0, 1, 2]);
+        applyThresholds([650e6, 1300e6, 3300e6, 8000e6, 8000e6, 1500e6, 24000e6], [0, 1, 2]);
     }
 
     // Styling the lane view
