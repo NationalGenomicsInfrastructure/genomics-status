@@ -201,17 +201,20 @@ class ProjectsBaseDataHandler(SafeHandler):
             else:
                 row.value["days_in_reception_control"] = diff
 
-        if ord_det and "fields" in ord_det and "project_pi_name" in ord_det["fields"]:
-            row.value["project_pi_name"] = ord_det["fields"]["project_pi_name"]
-            # if there is a PI e-mail, add it
-            if "project_pi_email" in ord_det["fields"] and ord_det["fields"].get(
-                "project_pi_email", ""
-            ):
-                row.value["project_pi_name"] = (
-                    row.value["project_pi_name"]
-                    + ": "
-                    + ord_det["fields"]["project_pi_email"]
-                )
+        if ord_det and "fields" in ord_det:
+            if "project_pi_name" in ord_det["fields"]:
+                row.value["project_pi_name"] = ord_det["fields"]["project_pi_name"]
+                # if there is a PI e-mail, add it
+                if "project_pi_email" in ord_det["fields"] and ord_det["fields"].get(
+                    "project_pi_email", ""
+                ):
+                    row.value["project_pi_name"] = (
+                        row.value["project_pi_name"]
+                        + ": "
+                        + ord_det["fields"]["project_pi_email"]
+                    )
+            if "project_bx_email" in ord_det["fields"]:
+                row.value["project_bx_email"] = ord_det["fields"]["project_bx_email"]
 
         return row
 
