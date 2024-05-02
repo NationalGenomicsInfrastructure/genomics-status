@@ -407,10 +407,6 @@ function load_all_udfs(){
           if(!emails[bx]){emails[bx]=[elabel('Bioinfo', 'secondary')]} else {emails[bx].push(elabel('Bioinfo', 'secondary'))};
           var pi = validateEmail(data['order_details']['fields']['project_pi_email']);
           if(!emails[pi]){emails[pi]=[elabel('PI', 'info')]} else {emails[pi].push(elabel('PI', 'info'))};
-          if(data['snic_checked'] && data['snic_checked']['status']==false){
-            $("#grus_alert").show();
-            $("#grus_ids").text(pi);
-          }
         }
         catch(error) {
           console.log('Falling back to using doc["contact"]');
