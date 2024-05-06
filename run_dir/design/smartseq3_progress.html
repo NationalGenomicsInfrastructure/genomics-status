@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+<!--
+Template file: smartseq3_progress.html
+URL: /smartseq3_progress
+Title: Shows all samples in SmartSeq3 workflow
+Description: Page serving table with all samples in SmartSeq3 workflow
+-->
+
+{% block stuff %}
+
+<div class="container-fluid" id="smartseq3_progress_table">
+  <div id="progress_table_div">
+      <h1><span id="page_title">SmartSeq3 progress table</span>
+        <small class="text-muted">Showing all samples in the SmartSeq3 workflow</small>
+      </h1>
+      <table class="table table-hover table-striped table-bordered sortable" id="progress_table">
+        <thead>
+          <tr class="sticky darkth">
+            <th class="sort">Project</th>
+            <th class="sort">LIMS step name</th>
+            <th class="sort">Date sent</th>
+            <th class="sort">Date received</th>
+            <th class="sort">Sample name</th>
+            <th class="sort">Sample type</th>
+            <th class="sort">Validation plate</th>
+            <th class="sort">Cycle number used</th>
+            <th class="sort">Optimal cycle number</th>
+            <th class="sort">Cell Type</th>
+            <th class="sort">Tissue Type</th>
+            <th class="sort">Species Name</th>
+            <th class="sort">Index</th>
+            <th class="sort">Sequencing units</th>
+            <th class="sort">Comment from user</th>
+          </tr>
+        </thead>
+        <tfoot>
+          <tr class="darkth">
+            <th class="sort">Project</th>
+            <th class="sort">LIMS step name</th>
+            <th class="sort">Date sent</th>
+            <th class="sort">Date received</th>
+            <th class="sort">Sample name</th>
+            <th class="sort">Sample type</th>
+            <th class="sort">Validation plate</th>
+            <th class="sort">Cycle number used</th>
+            <th class="sort">Optimal cycle number</th>
+            <th class="sort">Cell Type</th>
+            <th class="sort">Tissue Type</th>
+            <th class="sort">Species Name</th>
+            <th class="sort">Index</th>
+            <th class="sort">Sequencing units</th>
+            <th class="sort">Comment from user</th>
+          </tr>
+        </tfoot>
+        <tbody id="progress_table_body">
+        </tbody>
+      </table>
+    </div>
+</div>
+
+<script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
+<script src="/static/js/smartseq3_progress.js?v={{ gs_globals['git_commit'] }}"></script>
+<script src="/static/js/jquery-ui.min.js"></script>
+
+{% end %}
