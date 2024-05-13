@@ -218,7 +218,15 @@ Description: Details page for a single project
         <div class="col-sm-4">
           <table class="table table-bordered table-striped">
             <thead>
-              <tr class="darkth"><th colspan="2">Sample Status</th></tr>
+              <tr class="darkth"><th colspan="2">Sample Status
+                <div class="dropdown d-inline-block float-right" id="project_summary_link_dropdown">
+                  <button class="btn btn-xs btn-light dropdown-toggle " type="button" data-toggle="dropdown" aria-expanded="false" id="proj_sum_button">
+                    Project Summary
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="proj_sum_button">
+                  </ul>
+                </div>
+              </th></tr>
             </thead>
             <tbody>
               <tr><td>Finished</td><td><span class="badge bg-success" id='finished_samples'></span></td></tr>
