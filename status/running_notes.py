@@ -144,8 +144,8 @@ class RunningNotesDataHandler(SafeHandler):
             "updated_at_utc": created_time.isoformat(),
         }
         # Save in running notes db
+        gen_log.info(f"Running note to be created with id {newNote['_id']} by {user} at {created_time.isoformat()}")
         application.running_notes_db.save(newNote)
-        gen_log.info(f"Running note created with id {newNote['_id']} by {user} at {created_time.isoformat()}")
         #### Check and send mail to tagged users (for project running notes as flowcell and workset notes are copied over)
         if note_type == "project":
             pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
