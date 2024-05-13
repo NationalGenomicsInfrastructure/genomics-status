@@ -491,6 +491,11 @@ function load_all_udfs(){
         var time = moment(value).format('HH:mm, MMM Do YYYY');
         $("#last_update").html(time);
       }
+      else if(prettify(key) == 'project_summary_links'){
+        value.forEach(function(summary){
+          $("#project_summary_link_dropdown>ul").append('<li><a class="dropdown-item" href="'+ lims_uri +summary[0]+'" target="_blank"> Created: '+summary[1]+'</a></li>');
+        });
+      }
       // Everything else
       else {
 			  if(prettyobj(key).length > 0){
