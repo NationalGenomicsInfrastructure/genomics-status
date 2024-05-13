@@ -3,6 +3,7 @@ import json
 import re
 import smtplib
 import unicodedata
+import logging
 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -84,6 +85,7 @@ class RunningNotesDataHandler(SafeHandler):
         note_type,
         created_time=None,
     ):
+        gen_log = logging.getLogger("tornado.general")
         if not created_time:
             created_time = datetime.datetime.now(datetime.timezone.utc)
         if note_type == "project":
@@ -142,6 +144,7 @@ class RunningNotesDataHandler(SafeHandler):
             "updated_at_utc": created_time.isoformat(),
         }
         # Save in running notes db
+        gen_log.info(f"Running note to be created with id {newNote['_id']} by {user} at {created_time.isoformat()}")
         application.running_notes_db.save(newNote)
         #### Check and send mail to tagged users (for project running notes as flowcell and workset notes are copied over)
         if note_type == "project":
@@ -205,7 +208,8 @@ class RunningNotesDataHandler(SafeHandler):
                     "project",
                     created_time,
                 )
-        return newNote
+        created_note =  application.running_notes_db.get(newNote["_id"])
+        return created_note
 
     @staticmethod
     def notify_tagged_user(
