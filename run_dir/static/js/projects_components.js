@@ -93,6 +93,37 @@ const vProjectsRunningNotes = {
     `,
 }
 
+export const vProjectDataField = {
+    name: 'v-project-data-field-tooltip',
+    // A single dt field with a dd field
+    props: ['field_name', 'project_data'],
+    computed: {
+        field_source() {
+            if (this.project_data['field_sources'] == undefined) {
+                return ''
+            }
+            return this.project_data['field_sources'][this.field_name]
+        },
+        data_value() {
+            if (this.field_name in this.project_data) {
+                return this.project_data[this.field_name]
+            } else {
+                return 'Not in data'
+            }
+        }
+    },
+    mounted: function() {
+        // Init bootstrap tooltip
+        this.$nextTick(function () {
+            this.tooltip = new bootstrap.Tooltip(this.$el);
+        })
+    },
+    template:
+    /*html*/`
+        <span data-toggle="tooltip" data-html="true" data-placement="right" :title="field_source">{{data_value}}</span>
+    `
+}
+
 export const vProjectDetails = {
     name: 'v-project-details',
     // The single_project_mode is to be used when only a single project is used for the app
@@ -102,21 +133,23 @@ export const vProjectDetails = {
         project_data() {
             return this.$root.project_details[this.project_id]
         },
+        project_samples() {
+            return this.$root.project_samples[this.project_id]
+        },
         left_col_class() {
             if (this.as_modal) {
-                return 'col-6'
+                return 'col-7'
             }
             return 'col-4'
         },
         right_col_class() {
             if (this.as_modal) {
-                return 'col-6'
+                return 'col-5'
             }
             return 'col-8'
         }
     },
     created: function() {
-        console.log('Single project created');
         if (this.single_project_mode && !this.$root.single_project_mode) {
             // Enable single project mode on app level
             this.$root.single_project_mode = true;
@@ -150,7 +183,7 @@ export const vProjectDetails = {
             <div class="col-4">
                 <h4>Library preparation</h4>
                 <dl class="row">
-                    <dt :class="'text-right ' + left_col_class">Number of samples:</dt>                    <dd :class="'mb-0 ' + right_col_class">{{ project_data.sample_units_ordered }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Sample units ordered:</dt>                    <dd :class="'mb-0 ' + right_col_class">{{ project_data.sample_units_ordered }}</dd>
                     <dt :class="'text-right ' + left_col_class">Sample type:</dt>                          <dd :class="'mb-0 ' + right_col_class">{{ project_data.sample_type }}</dd>
                     <dt :class="'text-right ' + left_col_class">Library construction method:</dt>          <dd :class="'mb-0 ' + right_col_class">{{ project_data.library_construction_method }}</dd>
                     <dt :class="'text-right ' + left_col_class">Library prep option:</dt>                  <dd :class="'mb-0 ' + right_col_class">{{ project_data.library_prep_option }}</dd>
@@ -158,6 +191,10 @@ export const vProjectDetails = {
                 </dl>
                 <h4>Sequencing</h4>
                 <dl class="row">
+                    <dt :class="'text-right ' + left_col_class">Number of lanes ordered:</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'sequence_units_ordered_(lanes)'" :project_data="project_data" :data_value="project_data['sequence_units_ordered_(lanes)']"></v-project-data-field-tooltip>
+                    </dd>
                     <dt :class="'text-right ' + left_col_class">Number of lanes ordered:</dt>  <dd :class="'mb-0 ' + right_col_class">{{ project_data.lanes_ordered }}</dd>
                     <dt :class="'text-right ' + left_col_class">Sequencing platform:</dt>      <dd :class="'mb-0 ' + right_col_class">{{ project_data.sequencing_platform }}</dd>
                     <dt :class="'text-right ' + left_col_class">Flowcell:</dt>                 <dd :class="'mb-0 ' + right_col_class">{{ project_data.flowcell }}</dd>
@@ -188,12 +225,23 @@ export const vProjectDetails = {
             <div class="col-4">
                 <h4>Reception Control</h4>
                 <dl class="row">
-                    <dt :class="'text-right ' + left_col_class">Number of samples ordered</dt> <dd :class="'mb-0 ' + right_col_class">{{ project_data.sample_units_ordered }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Number of lanes ordered</dt>   <dd :class="'mb-0 ' + right_col_class">{{ project_data.lanes_ordered }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Failed samples</dt>           <dd :class="'mb-0 ' + right_col_class">{{ project_data.failed_samples }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Passed samples</dt>           <dd :class="'mb-0 ' + right_col_class">{{ project_data.passed_samples }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Number of sample units ordered</dt> <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'sample_units_ordered'" :project_data="project_data" :data_value="project_data.sample_units_ordered"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Number of samples imported</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'no_samples'" :project_data="project_data" :data_value="project_data.no_samples"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Failed samples</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'failed_samples'" :project_data="project_data" :data_value="project_data.failed_samples"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Passed samples</dt>           
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'passed_initial_qc'" :project_data="project_data" :data_value="project_data.passed_initial_qc"></v-project-data-field-tooltip>
+                    </dd>
                     <dt :class="'text-right ' + left_col_class">Open date</dt>                <dd :class="'mb-0 ' + right_col_class">{{ project_data.open_date }}</dd>
-                    <dt :class="'text-right ' + left_col_class">QC start date</dt>            <dd :class="'mb-0 ' + right_col_class">{{ project_data.qc_start_date }}</dd>
+                    <dt :class="'text-right ' + left_col_class">QC start date</dt>            <dd :class="'mb-0 ' + right_col_class">{{ project_data.first_initial_qc_start_date }}</dd>
                 </dl>
             </div>
             <div class="col-4">
@@ -201,6 +249,7 @@ export const vProjectDetails = {
             </div>
             <div class="col-4">
                 <h4>Sequencing and Bioinformatics</h4>
+                <dt :class="'text-right ' + left_col_class">Number of lanes ordered</dt>   <dd :class="'mb-0 ' + right_col_class">{{ project_data["sequence_units_ordered_(lanes)"] }}</dd>
             </div>
             <!-- TABS -->
             <div>

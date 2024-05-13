@@ -1,10 +1,11 @@
-import {vProjectCards, vProjectDetails} from './projects_components.js'
+import {vProjectCards, vProjectDataField, vProjectDetails} from './projects_components.js'
 
 const vProjectsStatus = {
     data() {
         return {
             /* Common data */
             project_details: {},
+            project_samples: {},
             sticky_running_notes: {},
             error_messages: [],
             websocket_message:'',
@@ -158,6 +159,17 @@ const vProjectsStatus = {
                 })
                 .catch(error => {
                     this.error_messages.push('Error fetching project details for project ' + project_id + '. Please try again or contact a system administrator.');
+                    console.log(error);
+                });
+            axios
+                .get(`/api/v1/project/${project_id}`)
+                .then(response => {
+                    if (response.data !== null) {
+                        this.project_samples[project_id] = response.data;
+                    }
+                })
+                .catch(error => {
+                    this.error_messages.push('Error fetching sample details for project ' + project_id + '. Please try again or contact a system administrator.');
                     console.log(error);
                 });
         },
@@ -344,6 +356,7 @@ const vProjectsStatus = {
 }
 
 const app = Vue.createApp(vProjectsStatus)
+app.component('v-project-data-field-tooltip', vProjectDataField)
 app.component('v-projects-cards', vProjectCards)
 app.component('v-project-details', vProjectDetails)
 app.mount('#v_projects_main')
