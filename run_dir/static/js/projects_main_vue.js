@@ -1,4 +1,4 @@
-import {vProjectCards, vProjectDataField, vProjectDetails} from './projects_components.js'
+import {vProjectCards, vProjectDataField, vProjectDetails, vProjectsRunningNotes} from './projects_components.js'
 
 const vProjectsStatus = {
     data() {
@@ -174,10 +174,11 @@ const vProjectsStatus = {
                 });
         },
         async fetchStickyRunningNotes(project_id) {
+            let post_body;
             if (project_id !== undefined) {
-                let post_body = {project_ids: [project_id]}
+                post_body = {project_ids: [project_id]};
             } else {
-                let post_body = {project_ids: Object.keys(this.all_projects)}
+                post_body = {project_ids: Object.keys(this.all_projects)};
             }
             const sleep = (delay) => new Promise((resolve) => setTimeout(resolve,delay))
 
@@ -359,4 +360,5 @@ const app = Vue.createApp(vProjectsStatus)
 app.component('v-project-data-field-tooltip', vProjectDataField)
 app.component('v-projects-cards', vProjectCards)
 app.component('v-project-details', vProjectDetails)
+app.component('v-projects-running-notes', vProjectsRunningNotes)
 app.mount('#v_projects_main')

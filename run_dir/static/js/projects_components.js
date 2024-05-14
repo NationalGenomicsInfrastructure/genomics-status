@@ -1,4 +1,4 @@
-const vProjectsRunningNotes = {
+export const vProjectsRunningNotes = {
     props: ['latest_running_note_obj', 'sticky'],
     methods: {
         getRunningNoteProperty(key){
@@ -162,6 +162,7 @@ export const vProjectDetails = {
         }
         if (this.$root.single_project_mode) {
             this.$root.fetchProjectDetails(this.project_id);
+            this.$root.fetchStickyRunningNotes(this.project_id);
         }
     },
     template: 
@@ -270,6 +271,11 @@ export const vProjectDetails = {
             <div class="col-4">
                 <h4>Project comment</h4>
                 <p v-html="project_comment"></p>
+                <h4>Latest sticky note</h4>
+                <template v-if="project_id in this.$root.sticky_running_notes">
+                    <v-projects-running-notes :latest_running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-projects-running-notes>
+                </template>
+
             </div>
 
             <h2>Status</h2>
