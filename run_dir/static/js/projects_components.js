@@ -174,7 +174,7 @@ export const vProjectDetails = {
                         <h1 :class="{ 'modal-title': as_modal }" id="projectDetailsModalLabel" style="white-space: nowrap;">
                             <a :href="'/project_new/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{project_id}}</a>, {{project_data.project_name}}
                             <small class="text-muted ml-4">
-                                NGI Portal: <a class="text-decoration-none" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">{{project_data['customer_project_reference']}}</a>
+                                NGI Portal: <a class="text-decoration-none text-wrap" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">{{project_data['customer_project_reference']}}</a>
                             </small>
                         </h1>
                     </div>
