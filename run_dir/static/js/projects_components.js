@@ -136,17 +136,23 @@ export const vProjectDetails = {
         project_samples() {
             return this.$root.project_samples[this.project_id]
         },
+        project_comment() {
+            if (this.project_data['project_comment'] == undefined) {
+                return ''
+            }
+            return marked.parse(this.project_data['project_comment'])
+        },
         left_col_class() {
             if (this.as_modal) {
                 return 'col-7'
             }
-            return 'col-4'
+            return 'col-5'
         },
         right_col_class() {
             if (this.as_modal) {
                 return 'col-5'
             }
-            return 'col-8'
+            return 'col-7'
         }
     },
     created: function() {
@@ -183,11 +189,26 @@ export const vProjectDetails = {
             <div class="col-4">
                 <h4>Library preparation</h4>
                 <dl class="row">
-                    <dt :class="'text-right ' + left_col_class">Sample units ordered:</dt>                    <dd :class="'mb-0 ' + right_col_class">{{ project_data.sample_units_ordered }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Sample type:</dt>                          <dd :class="'mb-0 ' + right_col_class">{{ project_data.sample_type }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Library construction method:</dt>          <dd :class="'mb-0 ' + right_col_class">{{ project_data.library_construction_method }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Library prep option:</dt>                  <dd :class="'mb-0 ' + right_col_class">{{ project_data.library_prep_option }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Library type (ready-made libraries):</dt>  <dd :class="'mb-0 ' + right_col_class">{{ project_data['library_type_(ready-made_libraries)'] }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Sample units ordered:</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'sample_units_ordered'" :project_data="project_data" :data_value="project_data['sample_units_ordered']"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Sample type:</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'sample_type'" :project_data="project_data" :data_value="project_data['sample_type']"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Library construction method:</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'library_construction_method'" :project_data="project_data" :data_value="project_data['library_construction_method']"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Library prep option:</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'library_prep_option'" :project_data="project_data" :data_value="project_data['library_prep_option']"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Library type (ready-made libraries):</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'library_type_(ready-made_libraries)'" :project_data="project_data" :data_value="project_data['library_type_(ready-made_libraries)']"></v-project-data-field-tooltip>
+                    </dd>
                 </dl>
                 <h4>Sequencing</h4>
                 <dl class="row">
@@ -195,30 +216,60 @@ export const vProjectDetails = {
                     <dd :class="'mb-0 ' + right_col_class">
                         <v-project-data-field-tooltip :field_name="'sequence_units_ordered_(lanes)'" :project_data="project_data" :data_value="project_data['sequence_units_ordered_(lanes)']"></v-project-data-field-tooltip>
                     </dd>
-                    <dt :class="'text-right ' + left_col_class">Number of lanes ordered:</dt>  <dd :class="'mb-0 ' + right_col_class">{{ project_data.lanes_ordered }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Sequencing platform:</dt>      <dd :class="'mb-0 ' + right_col_class">{{ project_data.sequencing_platform }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Flowcell:</dt>                 <dd :class="'mb-0 ' + right_col_class">{{ project_data.flowcell }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Flowcell option:</dt>          <dd :class="'mb-0 ' + right_col_class">{{ project_data.flowcell_option }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Sequencing setup:</dt>         <dd :class="'mb-0 ' + right_col_class">{{ project_data.sequencing_setup }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Custom primer:</dt>            <dd :class="'mb-0 ' + right_col_class">{{ project_data.custom_primer }}</dd>
-                    <dt :class="'text-right ' + left_col_class">Low diversity:</dt>            <dd :class="'mb-0 ' + right_col_class">{{ project_data.low_diversity }}</dd>
-                    <dt :class="'text-right ' + left_col_class">PhiX %:</dt>                   <dd :class="'mb-0 ' + right_col_class">{{ project_data.phix_percentage }}</dd>
+                    <dt :class="'text-right ' + left_col_class">Sequencing platform:</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'sequencing_platform'" :project_data="project_data" :data_value="project_data['sequencing_platform']"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Flowcell:</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'flowcell'" :project_data="project_data" :data_value="project_data['flowcell']"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Flowcell option:</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'flowcell_option'" :project_data="project_data" :data_value="project_data['flowcell_option']"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Sequencing setup:</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'sequencing_setup'" :project_data="project_data" :data_value="project_data['sequencing_setup']"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Custom primer:</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'custom_primer'" :project_data="project_data" :data_value="project_data['custom_primer']"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Low diversity:</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'low_diversity'" :project_data="project_data" :data_value="project_data['low_diversity']"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">PhiX %:</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'phix_percentage'" :project_data="project_data" :data_value="project_data['phix_percentage']"></v-project-data-field-tooltip>
+                    </dd>
                 </dl>
                 </div>
                 <div class="col-4">
                     <h4>Bioinformatics</h4>
                     <dl class="row">
-                        <dt :class="'text-right ' + left_col_class">Reference genome</dt>       <dd :class="'mb-0 ' + right_col_class">{{ project_data.reference_genome }}</dd>
-                        <dt :class="'text-right ' + left_col_class">Organism</dt>               <dd :class="'mb-0 ' + right_col_class">{{ project_data.organism }}</dd>
-                        <dt :class="'text-right ' + left_col_class">Best practice analysis</dt> <dd :class="'mb-0 ' + right_col_class">{{ project_data.best_practice_bioinformatics }}</dd>
+                        <dt :class="'text-right ' + left_col_class">Reference genome</dt>
+                        <dd :class="'mb-0 ' + right_col_class">
+                            <v-project-data-field-tooltip :field_name="'reference_genome'" :project_data="project_data" :data_value="project_data['reference_genome']"></v-project-data-field-tooltip>
+                        </dd>
+                        <dt :class="'text-right ' + left_col_class">Organism</dt>
+                        <dd :class="'mb-0 ' + right_col_class">
+                            <v-project-data-field-tooltip :field_name="'organism'" :project_data="project_data" :data_value="project_data['organism']"></v-project-data-field-tooltip>
+                        </dd>
+                        <dt :class="'text-right ' + left_col_class">Best practice analysis</dt>
+                        <dd :class="'mb-0 ' + right_col_class">
+                            <v-project-data-field-tooltip :field_name="'best_practice_bioinformatics'" :project_data="project_data" :data_value="project_data['best_practice_bioinformatics']"></v-project-data-field-tooltip>
+                        </dd>
                     </dl>
                 <h4>Links</h4>
                 <h3><span class="badge border border-secondary w-100 text-muted"><h3><a class="text-decoration-none" target="_blank" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">Order portal</a></h3></span>
+                <h3 class="mt-2"><span class="badge border border-secondary w-100 text-muted"><h3><a class="text-decoration-none" target="_blank" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">Reports</a></h3></span>
                 
             </div>
             <div class="col-4">
                 <h4>Project comment</h4>
-                <p>{{ project_data.project_comment }}</p>
+                <p v-html="project_comment"></p>
             </div>
 
             <h2>Status</h2>
@@ -246,10 +297,61 @@ export const vProjectDetails = {
             </div>
             <div class="col-4">
                 <h4>Library QC</h4>
+                <dl class="row">
+                    <dt :class="'text-right ' + left_col_class">Number of samples in progress</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'in_progress'" :project_data="project_data" :data_value="project_data.in_progress"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Passed samples</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'passed_library_qc'" :project_data="project_data" :data_value="project_data.passed_library_qc"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Queue date</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'queued'" :project_data="project_data" :data_value="project_data.queued"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Library prep start</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'library_prep_start'" :project_data="project_data" :data_value="project_data.library_prep_start"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Library QC finished</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'qc_library_finished'" :project_data="project_data" :data_value="project_data.qc_library_finished"></v-project-data-field-tooltip>
+                    </dd>
+                </dl>
             </div>
             <div class="col-4">
                 <h4>Sequencing and Bioinformatics</h4>
-                <dt :class="'text-right ' + left_col_class">Number of lanes ordered</dt>   <dd :class="'mb-0 ' + right_col_class">{{ project_data["sequence_units_ordered_(lanes)"] }}</dd>
+                <dl class="row">
+                    <dt :class="'text-right ' + left_col_class">Number of lanes ordered</dt>  
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'sequence_units_ordered_(lanes)'" :project_data="project_data" :data_value="project_data['sequence_units_ordered_(lanes)']"></v-project-data-field-tooltip>    
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Number of lanes sequenced</dt> 
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'lanes_sequenced'" :project_data="project_data" :data_value="project_data.lanes_sequenced"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Sequencing start</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'sequencing_start_date'" :project_data="project_data" :data_value="project_data.sequencing_start_date"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">All samples sequenced</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'all_samples_sequenced'" :project_data="project_data" :data_value="project_data.all_samples_sequenced"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">All raw data delivered</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'all_raw_data_delivered'" :project_data="project_data" :data_value="project_data.all_raw_data_delivered"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Analysis completed</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'best_practice_analysis_completed'" :project_data="project_data" :data_value="project_data.best_practice_analysis_completed"></v-project-data-field-tooltip>
+                    </dd>
+                    <dt :class="'text-right ' + left_col_class">Close date</dt>
+                    <dd :class="'mb-0 ' + right_col_class">
+                        <v-project-data-field-tooltip :field_name="'close_date'" :project_data="project_data" :data_value="project_data.close_date"></v-project-data-field-tooltip>
+                    </dd>
+                </dl>
             </div>
             <!-- TABS -->
             <div>
@@ -271,7 +373,8 @@ export const vProjectDetails = {
                     </li>
                 </ul>
                 <div class="tab-content" id="myTabContent">
-                    <div class="tab-pane fade show active" id="project-details-pane" role="tabpanel" aria-labelledby="project-details-tab" tabindex="0">Content 1</div>
+                    <div class="tab-pane fade show active" id="project-details-pane" role="tabpanel" aria-labelledby="project-details-tab" tabindex="0">Content 1
+                    </div>
                     <div class="tab-pane fade" id="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-tab" tabindex="0">Content 2</div>
                     <div class="tab-pane fade" id="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-tab" tabindex="0">Content 3</div>
                     <div class="tab-pane fade" id="project-user-communication-pane" role="tabpanel" aria-labelledby="project-user-communication-tab" tabindex="0">Content 4</div>
@@ -295,12 +398,6 @@ export const vProjectCard = {
         },
         project() {
             return this.$root.all_projects[this.project_id]
-        },
-        project_comment() {
-            if (this.project['project_comment'] == undefined) {
-                return ''
-            }
-            return marked.parse(this.project['project_comment'])
         },
         project_name() {
             if ('project_name' in this.project) {

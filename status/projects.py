@@ -138,7 +138,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         if "details" in row.value:
             for detail_key, detail_value in row.value["details"].items():
                 row.value[detail_key] = detail_value
-                field_sources[detail_key] = "Project Level UDF"
+                field_sources[detail_key] = f"Project Level UDF: {detail_key}"
             row.value.pop("details", None)
 
         # Handle the pending reviews:
@@ -635,7 +635,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             for date_row in date_result.rows:
                 for date_type, date in date_row.value.items():
                     summary_row.value[date_type] = date
-                    field_sources[date_type] = "StatusDB view project/summary_dates"
+                    field_sources[date_type] = f"StatusDB view project/summary_dates"
 
         summary_row.value["_doc_id"] = summary_row.id
         field_sources["_doc_id"] = "StatusDB, inserted by Genomics Status (backend)"
