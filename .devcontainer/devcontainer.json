@@ -18,7 +18,7 @@
     },
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
-    "postCreateCommand": "pip3 install -e . && ln -s /root/conf/.genologicsrc /root/.genologicsrc",
+    "postCreateCommand": "pip3 install -e . && ln -s /root/conf/.genologicsrc /root/.genologicsrc && ln -s /root/conf/genosqlrc.yaml /root/.genosqlrc.yaml",
     // Configure tool-specific properties.
     // "customizations": {},
     // Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
