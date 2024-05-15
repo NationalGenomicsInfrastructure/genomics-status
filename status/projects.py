@@ -121,7 +121,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 d[value] = key
         return d
 
-    def  project_summary_data(self, row):
+    def project_summary_data(self, row):
         # the details key gives values containing multiple udfs on project level
         # and project_summary key gives 'temporary' udfs that will move to 'details'.
         # Include these as normal key:value pairs
