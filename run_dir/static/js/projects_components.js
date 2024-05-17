@@ -579,7 +579,7 @@ export const vProjectCards = {
     <div class="mx-2">
         <h1>Projects Status</h1>
         <div class="card p-3">
-            <div class="row row-cols-4">
+            <div class="row row-cols-5">
                 <div class="col">
                     <h4>Status</h4>
                     <div class="form-check form-switch">
@@ -633,12 +633,26 @@ export const vProjectCards = {
                     </template>
                 </div>
                 <div class="col">
+                    <h4>Library Construction Method</h4>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="library_construction_method_all_switch" v-model="this.$root.include_all_library_construction_methods">
+                        <label class="form-check-label" for="library_construction_method_all_switch">All</label>
+                    </div>
+                    <template v-for="(nr_with_library_construction_method, library_construction_method) in this.$root.allLibraryConstructionMethods">
+                        <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_library_construction_methods')">
+                            <input class="form-check-input" type="checkbox" :id="'library_construction_method_filter_'+library_construction_method" :value="library_construction_method" v-model="this.$root.library_construction_method_filter" :disabled="this.$root.include_all_library_construction_methods"/>
+                            <label class="form-check-label" :for="'library_construction_method_filter_' + library_construction_method">{{ library_construction_method }} ({{this.$root.nrWithLibraryConstructionMethodVisible(library_construction_method)}}/{{nr_with_library_construction_method}})</label>
+                        </div>
+                    </template>
+                </div>
+                <div class="col">
                     <h4>Columns</h4>
                     <select id="card_columns" class="form-select" aria-label="Category to use as columns" v-model="this.$root.card_columns">
                         <option :value="['application']">Application</option>
                         <option :value="['type']">Type</option>
                         <option :value="['project_coordinator']">Project Coordinator</option>
                         <option :value="['status_fields', 'status']">Status</option>
+                        <option :value="['library_construction_method']">Library Construction Method</option>
                     </select>
                 </div>
                 <div class="col">

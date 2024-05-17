@@ -25,6 +25,8 @@ const vProjectsStatus = {
             include_all_types: true,
             project_coordinator_filter: [],
             include_all_project_coordinators: true,
+            library_construction_method_filter: [],
+            include_all_library_construction_methods: true,
             application_filter: [],
             include_all_applications: true,
         }
@@ -64,6 +66,13 @@ const vProjectsStatus = {
             if (!this.include_all_project_coordinators) {
                 tempProjects = tempProjects.filter(([project_id, project]) => {
                     return this.project_coordinator_filter.includes(project['project_coordinator'])
+                })
+            }
+
+            // Library construction method filter
+            if (!this.include_all_library_construction_methods) {
+                tempProjects = tempProjects.filter(([project_id, project]) => {
+                    return this.library_construction_method_filter.includes(project['library_construction_method'])
                 })
             }
 
@@ -120,6 +129,12 @@ const vProjectsStatus = {
         },
         allApplicationsVisible() {
             return this.itemCounts(this.visibleProjects, 'application')
+        },
+        allLibraryConstructionMethods() {
+            return this.itemCounts(this.all_projects, 'library_construction_method')
+        },
+        allLibraryConstructionMethodsVisible() {
+            return this.itemCounts(this.visibleProjects, 'library_construction_method')
         },
         allStatuses() {
             return this.itemCounts(this.all_projects, ['status_fields', 'status'])
@@ -276,6 +291,12 @@ const vProjectsStatus = {
         nrWithApplicationVisible(application) {
             if (application in this.allApplicationsVisible) {
                 return this.allApplicationsVisible[application]
+            }
+            return 0
+        },
+        nrWithLibraryConstructionMethodVisible(library_construction_method) {
+            if (library_construction_method in this.allLibraryConstructionMethodsVisible) {
+                return this.allLibraryConstructionMethodsVisible[library_construction_method]
             }
             return 0
         },
