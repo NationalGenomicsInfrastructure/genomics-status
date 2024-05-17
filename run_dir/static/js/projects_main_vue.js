@@ -151,7 +151,7 @@ const vProjectsStatus = {
 
         fetchProjectDetails(project_id) {
             axios
-                .get(`/api/v1/project_summary/${project_id}`)
+                .get(`/api/v1/project_summary/${project_id}?view_with_sources=True`)
                 .then(response => {
                     if (response.data !== null) {
                         this.project_details[project_id] = response.data;

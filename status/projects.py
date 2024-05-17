@@ -612,12 +612,17 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
     def get(self, project):
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.project_info(project)))
+        view_with_sources = self.get_argument("view_with_sources", False)
+        self.write(json.dumps(self.project_info(project, view_with_sources=view_with_sources)))
 
-    def project_info(self, project):
-        view = self.application.projects_db.view("project/summary_with_sources")["open", project]
+    def project_info(self, project, view_with_sources=False):
+        if view_with_sources:
+            view_adress = "project/summary_with_sources"
+        else:
+            view_adress = "project/summary"
+        view = self.application.projects_db.view(view_adress)["open", project]
         if not view.rows:
-            view = self.application.projects_db.view("project/summary_with_sources")[
+            view = self.application.projects_db.view(view_adress)[
                 "closed", project
             ]
         if not len(view.rows) == 1:
