@@ -97,6 +97,18 @@ const vProjectsStatus = {
                     }
                     return 0
                 })
+            } else if (this.sortBy == 'status') {
+                // Sort on status
+                tempProjects = tempProjects.sort((a, b) => {
+                    let proj_a = this.all_projects[a[0]]
+                    let proj_b = this.all_projects[b[0]]
+                    if (proj_a['status_fields']['status'] > proj_b['status_fields']['status']) {
+                        return 1
+                    } else if (proj_a['status_fields']['status'] < proj_b['status_fields']['status']) {
+                        return -1
+                    }
+                    return 0
+                })
             }
 
             if (this.descending == true) {

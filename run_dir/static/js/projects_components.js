@@ -175,14 +175,15 @@ export const vProjectDetails = {
             <div class="row">
                 <div class="col-12">
                     <div :class="{ 'modal-header': as_modal}">
-                        <div class="row">
-                            <h1 :class="{ 'modal-title': as_modal }" id="projectDetailsModalLabel" style="white-space: nowrap;">
-                                <a :href="'/project_new/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{project_id}}</a>, {{project_data.project_name}}
-                                <small class="text-muted ml-4">
-                                    NGI Portal: <a class="text-decoration-none text-wrap" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">{{project_data['customer_project_reference']}}</a>
-                                </small>
-                            </h1>
-                        </div>
+                        <h1 :class="{ 'modal-title': as_modal, 'col': true }" id="projectDetailsModalLabel" style="white-space: nowrap;">
+                            <a :href="'/project_new/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{project_id}}</a>, {{project_data.project_name}}
+                            <small class="text-muted ml-4">
+                                NGI Portal: <a class="text-decoration-none text-wrap" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">{{project_data['customer_project_reference']}}</a>
+                            </small>
+                        </h1>
+                        <template v-if="as_modal">
+                            <button type="button" class="btn-close" data-dismiss="modal"></button>
+                        </template>
                     </div>
                     <small><span class="badge" id="project_status_alert"></span></small>
                         <a href="#" class="btn btn-outline-dark btn-xs float-right mt-4" id="show_order_timeline">
@@ -524,13 +525,14 @@ export const vProjectCard = {
                     </a>
 
                 </h5>
-                <div class="col-3">
+                <div class="col">
                     <div class="d-flex justify-content-end">
                         <h5 class="my-1">
                             <span :class="'badge bg-' + this.$root.projectTypeColor(project)">{{ project['type'][0] }}</span>
                         </h5>
                     </div>
                 </div>
+
             </div>
             <div class="row">
                 <div class="">
@@ -538,7 +540,15 @@ export const vProjectCard = {
                         <v-projects-running-notes :latest_running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-projects-running-notes>
                     </template>
                 </div>
-
+            </div>
+            <div class="col">
+                <div class="d-flex">
+                    <h5>
+                        <span :class="'badge bg-' + this.$root.projectStatusColor(project)">{{ project['status_fields']['status'] }}</span>
+                    </h5>
+                </div>
+            </div>
+            <div>
                 <!-- Modal -->
                 <div class="modal fade" :id="'modal_' + project_id" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-xl">
@@ -660,6 +670,7 @@ export const vProjectCards = {
                     <select id="sort_by" class="form-select" aria-label="Sort by" v-model="this.$root.sortBy">
                         <option value="most_recent_date">Most recent date</option>
                         <option value="project_id">Project ID</option>
+                        <option value="status">Status</option>
                     </select>
                 </div>
             </div>
