@@ -166,7 +166,6 @@ export const vProjectDetails = {
         }
         if (this.$root.single_project_mode) {
             this.$root.fetchProjectDetails(this.project_id);
-            this.$root.fetchStickyRunningNotes(this.project_id);
         }
     },
     template: 
@@ -494,7 +493,7 @@ export const vProjectDetails = {
 }
 
 export const vProjectCard = {
-    props: ['project_id'],
+    props: ['project_id', 'next_project_id', 'previous_project_id'],
     components: {
         vProjectsRunningNotes,
         vProjectDetails
@@ -520,7 +519,7 @@ export const vProjectCard = {
         <div class="card-body">
             <div class="d-flex justify-content-between align-center mb-3">
                 <h5 class="my-1">
-                    <a class="text-decoration-none" href='#' data-toggle="modal" :data-target="'#modal_' + project_id" aria-expanded="false" :aria-controls="'#collapse_' + project_id">
+                    <a class="text-decoration-none" href='#' data-toggle="modal" :data-target="'#modal_' + project_id" aria-expanded="false">
                         {{ project_name }}
                     </a>
 
@@ -550,7 +549,7 @@ export const vProjectCard = {
             </div>
             <div>
                 <!-- Modal -->
-                <div class="modal fade" :id="'modal_' + project_id" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal fade" :id="'modal_' + project_id" tabindex="-1" :data-next-project-id="next_project_id" :data-previous-project-id="previous_project_id" aria-labelledby="exampleModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-xl">
                         <div class="modal-content">
                             <div class="modal-body">
@@ -579,10 +578,58 @@ export const vProjectCards = {
             if ((event.target.tagName == 'LABEL') || (event.target.tagName == 'INPUT')) {
                 this.$root[include_all_key] = false
             }
+        },
+        findNextDivWithClass(element, className) {
+            while (element) {
+                element = element.nextElementSibling;
+                if (element && element.tagName === 'DIV' && element.classList.contains(className)) {
+                    return element;
+                }
+            }
+            return null;
+        },
+        changeModal(event, direction) {
+            // Check if modal is open
+            let open_modal_el = document.querySelector('.modal.show')
+            if (open_modal_el != null) {
+                let next_modal_project_id = null
+
+                if (direction == 'down') {
+                // Find next div with class modal
+                    next_modal_project_id = open_modal_el.getAttribute('data-next-project-id');
+                } else if (direction == 'up') {
+                    // Find previous div with class modal
+                    next_modal_project_id = open_modal_el.getAttribute('data-previous-project-id');
+                }
+
+                if (next_modal_project_id != null) {
+                    let open_modal = bootstrap.Modal.getInstance(open_modal_el)
+                    let next_modal_el = document.getElementById('modal_' + next_modal_project_id)
+
+                    open_modal.hide();
+                    let ref = 'project_card_' + next_modal_project_id
+                    this.$root.fetchProjectDetails(next_modal_project_id);
+                    this.$nextTick(() => {
+                        let next_modal = new bootstrap.Modal(next_modal_el, { focus: true})
+                        next_modal.show();
+                        next_modal_el.focus();
+                    })
+                }
+            }
+        },
+        handleKeyUp(event) {
+            if (event.key === 'j') {
+                this.changeModal(event, 'down')
+            } else if (event.key === 'k') {
+                this.changeModal(event, 'up')
+            }
         }
     },
     created: function() {
         this.$root.fetchProjects();
+    },
+    mounted: function() {
+        document.addEventListener('keyup', this.handleKeyUp);
     },
     template:
     /*html*/`
@@ -710,8 +757,8 @@ export const vProjectCards = {
                             <h3 my-4>{{ value }}</h3>
                             <div class="row row-cols-1">
                                 <div class="col">
-                                    <template v-for="project_id in project_ids_for_value" :key="project_id">
-                                        <v-project-card v-if="project_id in this.$root.visibleProjects" :project_id="project_id"></v-project-card>
+                                    <template v-for="(project_id, index) in project_ids_for_value" :key="project_id">
+                                        <v-project-card v-if="project_id in this.$root.visibleProjects" :project_id="project_id" :ref="'project_card_' + project_id" :next_project_id="project_ids_for_value[index + 1]" :previous_project_id="project_ids_for_value[index-1]"></v-project-card>
                                     </template>
                                 </div>
                             </div>

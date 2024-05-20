@@ -199,6 +199,7 @@ const vProjectsStatus = {
                     this.error_messages.push('Error fetching sample details for project ' + project_id + '. Please try again or contact a system administrator.');
                     console.log(error);
                 });
+            this.fetchStickyRunningNotes(project_id);
         },
         async fetchStickyRunningNotes(project_id) {
             let post_body;
