@@ -181,7 +181,7 @@ export const vProjectDetails = {
                             </small>
                         </h1>
                         <template v-if="as_modal">
-                            <button type="button" class="btn-close" data-dismiss="modal"></button>
+                            <button type="button" class="btn-close" @click="$emit('closeModal')"></button>
                         </template>
                     </div>
                     <small><span class="badge" id="project_status_alert"></span></small>
@@ -497,6 +497,11 @@ export const vProjectCard = {
     components: {
         vProjectsRunningNotes,
         vProjectDetails
+    },    
+    data: function() {
+        return {
+            modal: null
+        }
     },
     computed: {
         hasSummaryDates() {
@@ -512,6 +517,31 @@ export const vProjectCard = {
             return ''
         }
     },
+    methods: {
+        closeModal() {
+            return new Promise((resolve, reject) => {
+                // Remove modal-open class from body
+                this.$root.open_modal_card = this;
+
+                $(this.$el).on('hidden.bs.modal', function (e) {
+                    resolve();
+                });
+
+                this.modal.hide();
+            });
+        },
+        openModal() {
+            this.$nextTick(function () {
+                // Add modal-open class to body
+                this.$root.open_modal_card = this;
+                this.modal.show();
+            })
+        }
+    },
+    mounted: function() {
+        // Init bootstrap modal
+        this.modal = new bootstrap.Modal(this.$refs.modal);
+    },
     template: 
     /*html*/`
 
@@ -519,7 +549,7 @@ export const vProjectCard = {
         <div class="card-body">
             <div class="d-flex justify-content-between align-center mb-3">
                 <h5 class="my-1">
-                    <a class="text-decoration-none" href='#' data-toggle="modal" :data-target="'#modal_' + project_id" aria-expanded="false">
+                    <a class="text-decoration-none" href='#' @click=openModal>
                         {{ project_name }}
                     </a>
 
@@ -549,15 +579,15 @@ export const vProjectCard = {
             </div>
             <div>
                 <!-- Modal -->
-                <div class="modal fade" :id="'modal_' + project_id" tabindex="-1" :data-next-project-id="next_project_id" :data-previous-project-id="previous_project_id" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal fade" :id="'modal_' + project_id" tabindex="-1" ref="modal" :data-next-project-id="next_project_id" :data-previous-project-id="previous_project_id" aria-labelledby="exampleModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-xl">
                         <div class="modal-content">
                             <div class="modal-body">
                                 <!-- This shows the project page -->
-                                <v-project-details :project_id="project_id" :single_project_mode="false" :as_modal="true"/>
+                                <v-project-details :project_id="project_id" :single_project_mode="false" :as_modal="true" @close-modal="closeModal"/>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-secondary" @click="closeModal">Close</button>
                             </div>
                         </div>
                     </div>
@@ -590,30 +620,24 @@ export const vProjectCards = {
         },
         changeModal(event, direction) {
             // Check if modal is open
-            let open_modal_el = document.querySelector('.modal.show')
-            if (open_modal_el != null) {
+            let open_modal = this.$root.open_modal_card;
+            if (open_modal != null) {
                 let next_modal_project_id = null
 
                 if (direction == 'down') {
                 // Find next div with class modal
-                    next_modal_project_id = open_modal_el.getAttribute('data-next-project-id');
+                    next_modal_project_id = open_modal.next_project_id;
                 } else if (direction == 'up') {
                     // Find previous div with class modal
-                    next_modal_project_id = open_modal_el.getAttribute('data-previous-project-id');
+                    next_modal_project_id = open_modal.previous_project_id;
                 }
 
                 if (next_modal_project_id != null) {
-                    let open_modal = bootstrap.Modal.getInstance(open_modal_el)
-                    let next_modal_el = document.getElementById('modal_' + next_modal_project_id)
-
-                    open_modal.hide();
-                    let ref = 'project_card_' + next_modal_project_id
                     this.$root.fetchProjectDetails(next_modal_project_id);
-                    this.$nextTick(() => {
-                        let next_modal = new bootstrap.Modal(next_modal_el, { focus: true})
-                        next_modal.show();
-                        next_modal_el.focus();
-                    })
+                    let ref_name = 'project_card_' + next_modal_project_id;
+                    open_modal.closeModal().then(() => {
+                        this.$refs[ref_name][0].openModal();
+                    });
                 }
             }
         },

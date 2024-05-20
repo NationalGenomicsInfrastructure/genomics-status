@@ -18,6 +18,7 @@ const vProjectsStatus = {
             card_columns: ['application'],
             descending: true,
             search_value: '',
+            open_modal_card: null,
             // Filters
             status_filter: [],
             include_all_statuses: true,
