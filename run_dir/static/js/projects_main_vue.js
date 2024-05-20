@@ -219,7 +219,7 @@ const vProjectsStatus = {
                 .then(response => {
                     let data = response.data
                     if (data !== null) {
-                        this.sticky_running_notes = data
+                        this.sticky_running_notes = Object.assign({}, this.sticky_running_notes, data);
                     }
                 })
                 .catch(error => {
