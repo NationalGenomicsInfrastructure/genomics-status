@@ -129,6 +129,11 @@ export const vProjectDetails = {
     // The single_project_mode is to be used when only a single project is used for the app
     // and the project cards are not shown
     props: ['project_id', 'as_modal', 'single_project_mode'],
+    data: function() {
+        return {
+            active_tab: 'project-details-pane'
+        }
+    },
     computed: {
         project_data() {
             return this.$root.project_details[this.project_id]
@@ -157,6 +162,23 @@ export const vProjectDetails = {
             } else if (this.project_data['status'] == 'Pending') {
                 return 'bg-light text-dark'
             }
+        }
+    },
+    methods: {
+        switchTab(tab_name) {
+            // Check if disabled
+            if (this.$refs[tab_name].classList.contains('disabled')) {
+                return
+            }
+
+            // deactivate old tab
+            this.$refs[this.active_tab].classList.remove('show', 'active');
+            this.$refs[this.active_tab + '-btn'].classList.remove('active');
+
+            // Activate new tab
+            this.$refs[tab_name].classList.add('show', 'active');
+            this.$refs[tab_name + '-btn'].classList.add('active');
+            this.active_tab = tab_name;
         }
     },
     created: function() {
@@ -462,28 +484,27 @@ export const vProjectDetails = {
                 <div>
                     <ul class="nav nav-tabs" id="myTab" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="project-details-tab" data-toggle="tab" data-target="#project-details-pane" type="button" role="tab" aria-controls="project-details-pane" aria-selected="true">Project information</button>
+                            <button class="nav-link active" ref="project-details-pane-btn" @click="switchTab('project-details-pane')" type="button" role="tab" aria-controls="project-details-pane" aria-selected="true">Project information</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="project-samples-tab" data-toggle="tab" data-target="#project-samples-pane" type="button" role="tab" aria-controls="project-samples-pane" aria-selected="false">Samples</button>
+                            <button class="nav-link" ref="project-samples-pane-btn" @click="switchTab('project-samples-pane')" type="button" role="tab" aria-controls="project-samples-pane" aria-selected="false">Samples</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="project-running-notes-tab" data-toggle="tab" data-target="#project-running-notes-pane" type="button" role="tab" aria-controls="project-running-notes-pane" aria-selected="false" disabled>Running Notes</button>
+                            <button class="nav-link" ref="project-running-notes-pane-btn" @click="switchTab('project-running-notes-pane')" type="button" role="tab" aria-controls="project-running-notes-pane" aria-selected="false">Running Notes</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="project-user-communication-tab" data-toggle="tab" data-target="#project-user-communication-pane" type="button" role="tab" aria-controls="project-user-communication-pane" aria-selected="false" disabled>User communication</button>
+                            <button class="nav-link" ref="project-user-communication-pane-btn" @click="switchTab('project-user-communication-pane')" type="button" role="tab" aria-controls="project-user-communication-pane" aria-selected="false">User communication</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="project-links-tab" data-toggle="tab" data-target="#project-links-pane" type="button" role="tab" aria-controls="project-links-pane" aria-selected="false" disabled>Links</button>
+                            <button class="nav-link" ref="project-links-pane-btn" @click="switchTab('project-links-pane')" type="button" role="tab" aria-controls="project-links-pane" aria-selected="false">Links</button>
                         </li>
                     </ul>
                     <div class="tab-content" id="myTabContent">
-                        <div class="tab-pane fade show active" id="project-details-pane" role="tabpanel" aria-labelledby="project-details-tab" tabindex="0">Content 1
-                        </div>
-                        <div class="tab-pane fade" id="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-tab" tabindex="0">Content 2</div>
-                        <div class="tab-pane fade" id="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-tab" tabindex="0">Content 3</div>
-                        <div class="tab-pane fade" id="project-user-communication-pane" role="tabpanel" aria-labelledby="project-user-communication-tab" tabindex="0">Content 4</div>
-                        <div class="tab-pane fade" id="project-links-pane" role="tabpanel" aria-labelledby="project-links-tab" tabindex="0">Content 5</div>
+                        <div class="tab-pane fade show active" ref="project-details-pane" role="tabpanel" aria-labelledby="project-details-pane-btn" tabindex="0">Content 1</div>
+                        <div class="tab-pane fade" ref="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-pane-btn" tabindex="0">Content 2</div>
+                        <div class="tab-pane fade" ref="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-pane-btn" tabindex="0">Content 3</div>
+                        <div class="tab-pane fade" ref="project-user-communication-pane" role="tabpanel" aria-labelledby="project-user-communication-pane-btn" tabindex="0">Content 4</div>
+                        <div class="tab-pane fade" ref="project-links-pane" role="tabpanel" aria-labelledby="project-links-pane-btn" tabindex="0">Content 5</div>
                     </div>
                 </div>
 
