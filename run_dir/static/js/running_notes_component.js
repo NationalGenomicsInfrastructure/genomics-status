@@ -18,6 +18,21 @@ export const vRunningNotesTab = {
                 .catch(error => {
                     this.$root.error_messages.push('Unable to fetch running notes, please try again or contact a system administrator.')
                 })
+        },
+        toggleNewNoteForm() {
+            let new_note_form = this.$refs.new_note_form;
+            let new_note_caret = this.$refs.new_note_caret;
+
+            // Remove the show class if it exists
+            if (new_note_form.classList.contains('show')) {
+                new_note_form.classList.remove('show');
+                new_note_caret.classList.remove('fa-caret-down');
+                new_note_caret.classList.add('fa-caret-right');
+            } else {
+                new_note_form.classList.add('show');
+                new_note_caret.classList.remove('fa-caret-right');
+                new_note_caret.classList.add('fa-caret-down');
+            }
         }
     },
     mounted() {
@@ -26,8 +41,8 @@ export const vRunningNotesTab = {
     template: /*html*/`
     <form action="" method="POST" id="running_notes_form" role="form">
         <div class="card text-dark info-border mb-3 mt-3">
-            <div class="card-header info-bg">Add New Running Note</div>
-            <div class="card-body">
+        <div class="card-header info-bg" @click="toggleNewNoteForm()"><h5><i ref="new_note_caret" class="fas fa-caret-right fa-lg pr-2"></i>Add New Running Note</h5></div>
+        <div ref="new_note_form" class="card-body collapse">
                 <div class="row">
                     <div class="col form-inline">
                       <label>Choose category:</label>
