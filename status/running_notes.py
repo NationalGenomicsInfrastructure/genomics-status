@@ -17,7 +17,7 @@ from status.util import SafeHandler
 
 
 class RunningNotesDataHandler(SafeHandler):
-    """Serves all running notes from a given project.
+    """Serves all running notes from a given project, flowcell or other.
     URL: /api/v1/running_notes/([^/]*)
     """
 

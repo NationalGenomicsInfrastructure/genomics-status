@@ -1,98 +1,3 @@
-export const vProjectsRunningNotes = {
-    props: ['latest_running_note_obj', 'sticky'],
-    methods: {
-        getRunningNoteProperty(key){
-            if (this.latest_running_note !== undefined) {
-                if (key in this.latest_running_note) {
-                    return this.latest_running_note[key]
-                }
-            }
-            return undefined
-        }
-    },
-    computed: {
-        categories() {
-            return this.getRunningNoteProperty('categories')
-        },
-        categories_labels() {
-            if (this.categories == undefined) {
-                return ''
-            }
-            // The generate_category_label method is defined in running_notes.js
-            return generate_category_label(this.categories)
-        },
-        created_at_utc() {
-            return this.getRunningNoteProperty('created_at_utc')
-        },
-        formattedTimeStamp() {
-            // Get the timestamp from the running note
-            let timestamp = this.created_at_utc;
-
-            // Create a new Date object using the timestamp
-            let date = new Date(timestamp);
-
-            // Get the current date
-            let now = new Date();
-
-            // Calculate the difference in seconds
-            let diffInSeconds = Math.floor((now - date) / 1000);
-
-            if (diffInSeconds < 60) {
-                return 'Just now';
-            }
-
-            let diffInMinutes = Math.floor(diffInSeconds / 60);
-            if (diffInMinutes < 60) {
-                return `${diffInMinutes} minutes ago`;
-            }
-
-            let diffInHours = Math.floor(diffInMinutes / 60);
-            if (diffInHours < 24) {
-                return `${diffInHours} hours ago`;
-            }
-
-            let diffInDays = Math.floor(diffInHours / 24);
-            return `${diffInDays} days ago`;
-        },
-        formatted_note() {
-            if (this.note == undefined) {
-                return ''
-            }
-            return marked.parse(this.note)
-        },
-        latest_running_note() {
-            // Check if running note is an object
-            if (typeof this.latest_running_note_obj == 'object') {
-                return this.latest_running_note_obj
-            }
-            let latest_running_note_json = JSON.parse(this.latest_running_note_obj)
-            return Object.values(latest_running_note_json)[0];
-        },
-        note() {
-            return this.getRunningNoteProperty('note')
-        },
-        user() {
-            return this.getRunningNoteProperty('user')
-        }
-    },
-    template:
-    /*html*/`
-    <div class="pb-3">
-        <div class="card">
-            <div class="card-header bi-project-note-header">
-                <span>{{ this.user }}</span> - <span class="todays_date">{{ formattedTimeStamp }}</span>
-                <template v-if="categories">
-                - <span v-html="categories_labels"/>
-                </template>
-            </div>
-            <div class="card-body bi-project-note-text">
-                <div class="running-note-body text-muted" v-html="formatted_note"/>
-            </div>
-        </div>
-    </div>
-    `,
-}
-
 export const vProjectDataField = {
     name: 'v-project-data-field-tooltip',
     // A single dt field with a dd field
@@ -131,7 +36,7 @@ export const vProjectDetails = {
     props: ['project_id', 'as_modal', 'single_project_mode'],
     data: function() {
         return {
-            active_tab: 'project-details-pane'
+            active_tab: 'project-running-notes-pane'
         }
     },
     computed: {
@@ -140,6 +45,11 @@ export const vProjectDetails = {
         },
         project_data_exists() {
             return this.project_data != undefined
+        },
+        running_notes() {
+            if (this.project_id in this.$root.running_notes) {
+                return this.$root.running_notes[this.project_id]
+            }
         },
         project_samples() {
             return this.$root.project_samples[this.project_id]
@@ -347,7 +257,7 @@ export const vProjectDetails = {
                     <p v-html="project_comment"></p>
                     <h4>Latest sticky note</h4>
                     <template v-if="project_id in this.$root.sticky_running_notes">
-                        <v-projects-running-notes :latest_running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-projects-running-notes>
+                        <v-running-note-single :running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-running-note-single>
                     </template>
                     <template v-else>
                         <p>-</p>
@@ -484,13 +394,13 @@ export const vProjectDetails = {
                 <div>
                     <ul class="nav nav-tabs" id="myTab" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" ref="project-details-pane-btn" @click="switchTab('project-details-pane')" type="button" role="tab" aria-controls="project-details-pane" aria-selected="true">Project information</button>
+                            <button class="nav-link active" ref="project-running-notes-pane-btn" @click="switchTab('project-running-notes-pane')" type="button" role="tab" aria-controls="project-running-notes-pane" aria-selected="true">Running Notes</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" ref="project-details-pane-btn" @click="switchTab('project-details-pane')" type="button" role="tab" aria-controls="project-details-pane" aria-selected="false">Project information</button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" ref="project-samples-pane-btn" @click="switchTab('project-samples-pane')" type="button" role="tab" aria-controls="project-samples-pane" aria-selected="false">Samples</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" ref="project-running-notes-pane-btn" @click="switchTab('project-running-notes-pane')" type="button" role="tab" aria-controls="project-running-notes-pane" aria-selected="false">Running Notes</button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" ref="project-user-communication-pane-btn" @click="switchTab('project-user-communication-pane')" type="button" role="tab" aria-controls="project-user-communication-pane" aria-selected="false">User communication</button>
@@ -500,9 +410,11 @@ export const vProjectDetails = {
                         </li>
                     </ul>
                     <div class="tab-content" id="myTabContent">
-                        <div class="tab-pane fade show active" ref="project-details-pane" role="tabpanel" aria-labelledby="project-details-pane-btn" tabindex="0">Content 1</div>
+                        <div class="tab-pane fade show active" ref="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-pane-btn" tabindex="0">
+                            <v-running-notes-tab user='hello' :partition_id="project_id"></v-running-notes-tab>
+                        </div>
+                        <div class="tab-pane fade" ref="project-details-pane" role="tabpanel" aria-labelledby="project-details-pane-btn" tabindex="0">Content 1</div>
                         <div class="tab-pane fade" ref="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-pane-btn" tabindex="0">Content 2</div>
-                        <div class="tab-pane fade" ref="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-pane-btn" tabindex="0">Content 3</div>
                         <div class="tab-pane fade" ref="project-user-communication-pane" role="tabpanel" aria-labelledby="project-user-communication-pane-btn" tabindex="0">Content 4</div>
                         <div class="tab-pane fade" ref="project-links-pane" role="tabpanel" aria-labelledby="project-links-pane-btn" tabindex="0">Content 5</div>
                     </div>
@@ -514,11 +426,7 @@ export const vProjectDetails = {
 }
 
 export const vProjectCard = {
-    props: ['project_id', 'next_project_id', 'previous_project_id'],
-    components: {
-        vProjectsRunningNotes,
-        vProjectDetails
-    },    
+    props: ['project_id', 'next_project_id', 'previous_project_id'],  
     data: function() {
         return {
             modal: null
@@ -552,6 +460,7 @@ export const vProjectCard = {
             });
         },
         openModal() {
+            this.$root.fetchProjectDetails(this.project_id);
             this.$nextTick(function () {
                 // Add modal-open class to body
                 this.$root.open_modal_card = this;
@@ -565,8 +474,7 @@ export const vProjectCard = {
     },
     template: 
     /*html*/`
-
-    <div class="card my-2" @click=this.$root.fetchProjectDetails(this.project_id)>
+    <div class="card my-2">
         <div class="card-body">
             <div class="d-flex justify-content-between align-center mb-3">
                 <h5 class="my-1">
@@ -587,7 +495,7 @@ export const vProjectCard = {
             <div class="row">
                 <div class="">
                     <template v-if="project_id in this.$root.sticky_running_notes">
-                        <v-projects-running-notes :latest_running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-projects-running-notes>
+                        <v-running-note-single :running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-running-note-single>
                     </template>
                 </div>
             </div>
@@ -600,7 +508,7 @@ export const vProjectCard = {
             </div>
             <div>
                 <!-- Modal -->
-                <div class="modal fade" :id="'modal_' + project_id" tabindex="-1" ref="modal" :data-next-project-id="next_project_id" :data-previous-project-id="previous_project_id" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal" :id="'modal_' + project_id" tabindex="-1" ref="modal" :data-next-project-id="next_project_id" :data-previous-project-id="previous_project_id" aria-labelledby="exampleModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-xl">
                         <div class="modal-content">
                             <div class="modal-body">
@@ -654,7 +562,6 @@ export const vProjectCards = {
                 }
 
                 if (next_modal_project_id != null) {
-                    this.$root.fetchProjectDetails(next_modal_project_id);
                     let ref_name = 'project_card_' + next_modal_project_id;
                     open_modal.closeModal().then(() => {
                         this.$refs[ref_name][0].openModal();
@@ -663,6 +570,10 @@ export const vProjectCards = {
             }
         },
         handleKeyUp(event) {
+            // Check if typing in input
+            if ((event.target.tagName === 'INPUT') || (event.target.tagName === 'TEXTAREA')) {
+                return
+            }
             if (event.key === 'j') {
                 this.changeModal(event, 'down')
             } else if (event.key === 'k') {

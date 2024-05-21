@@ -1,4 +1,5 @@
-import {vProjectCards, vProjectDataField, vProjectDetails, vProjectsRunningNotes} from './projects_components.js'
+import {vProjectCards, vProjectDataField, vProjectDetails} from './projects_components.js'
+import { vRunningNotesTab, vRunningNoteSingle } from './running_notes_component.js'
 
 const vProjectsStatus = {
     data() {
@@ -7,6 +8,7 @@ const vProjectsStatus = {
             project_details: {},
             project_samples: {},
             sticky_running_notes: {},
+            running_notes: {},
             error_messages: [],
             websocket_message:'',
             websocket: null,
@@ -395,5 +397,6 @@ const app = Vue.createApp(vProjectsStatus)
 app.component('v-project-data-field-tooltip', vProjectDataField)
 app.component('v-projects-cards', vProjectCards)
 app.component('v-project-details', vProjectDetails)
-app.component('v-projects-running-notes', vProjectsRunningNotes)
+app.component('v-running-note-single', vRunningNoteSingle)
+app.component('v-running-notes-tab', vRunningNotesTab)
 app.mount('#v_projects_main')
