@@ -2,8 +2,10 @@ export const vRunningNotesTab = {
     props: ['user', 'partition_id'],
     data() {
         return {
-            running_notes: [],
             category_filter: 'All',
+            form_categories: [],
+            form_note_text: '',
+            running_notes: [],
             search_term: ''
         }
     },
@@ -27,6 +29,14 @@ export const vRunningNotesTab = {
             }
 
             return Object.fromEntries(running_notes_tmp)
+        },
+        new_note_obj() {
+            return {
+                note: this.form_note_text,
+                user: this.user.name,
+                categories: this.form_categories,
+                created_at_utc: new Date().toISOString()
+            }
         }
     },
     methods: {
@@ -60,56 +70,61 @@ export const vRunningNotesTab = {
         },
         setFilter(filter) {
             this.category_filter = filter
+        },
+        toggleFormCategory(category) {
+            if (this.form_categories.includes(category)) {
+                this.form_categories = this.form_categories.filter(item => item !== category);
+            } else {
+                this.form_categories.push(category);
+            }
         }
     },
     mounted() {
         this.fetchAllRunningNotes(this.partition_id);
     },
     template: /*html*/`
-    <form action="" method="POST" id="running_notes_form" role="form">
-        <div class="card text-dark info-border mb-3 mt-3">
-            <div class="card-header info-bg pt-3" @click="toggleNewNoteForm()"><h5><i ref="new_note_caret" class="fas fa-caret-right fa-lg pr-2"></i>Add New Running Note</h5></div>
-            <div ref="new_note_form" class="card-body collapse">
-                <div class="row">
-                    <div class="col form-inline">
-                      <label>Choose category:</label>
-                      <div class="mt-2" data-toggle="buttons">
-                         <button class="btn btn-sm btn-inf mr-2" value="Decision" data-toggle="tooltip" title="For when an executive decision has been made">Decision <span class="fa fa-thumbs-up"></span></button>
-                         <button class="btn btn-sm btn-succe mr-2" value="Lab" data-toggle="tooltip" title="For lab-related work">Lab <span class="fa fa-flask"></span></button>
-                         <button class="btn btn-sm btn-warn mr-2" value="Bioinformatics" data-toggle="tooltip" title="For all bioinformatics work">Bioinformatics <span class="fa fa-laptop-code"></span></button>
-                         <button class="btn btn-sm btn-usr mr-2" value="User Communication" data-toggle="tooltip" title="For notes influenced by user-contact">User Communication <span class="fa fa-people-arrows"></span></button>
-                         <button class="btn btn-sm btn-dang mr-2" value="Administration" data-toggle="tooltip" title="For notes involving documentation">Administration <span class="fa fa-folder-open"></span></button>
-                         <button class="btn btn-sm btn-imp mr-2" value="Important" data-toggle="tooltip" title="For when a note needs to be highlighted">Important <span class="fa fa-exclamation-circle"></span></button>
-                         <button class="btn btn-sm btn-devi mr-2" value="Deviation" data-toggle="tooltip" title="For notes about a deviation">Deviation <span class="fa fa-frown"></span></button>
-                         <button class="btn btn-sm btn-inv mr-2" value="Invoice" data-toggle="tooltip" title="For notes about an invoice">Invoicing <span class="fa fa-file-invoice-dollar"></span></button>
-                         <button class="btn btn-sm btn-sticky" value="Sticky" data-toggle="tooltip" title="For sticky notes">Sticky <span class="fa fa-note-sticky"></span></button>
-                      </div>
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6 mt-4">
-                        <h4>Write Running Note</h4>
-                        <textarea rows="5" class="form-control" id="new_note_text" style="height:97px;"></textarea>
-                    </div>
-                    <div class="col-md-6 mt-4">
-                        <h4>Preview</h4>
-                        <div class="card" id="running_note_preview_card">
-                            <div class="card-header"><a class="text-decoration-none" href="#">{{ user.name }}</a> - <span class="todays_date">Date</span><span id="preview_category"> - Category</span></div>
-                            <div class="card-body" id="running_note_preview_body">
-                                <p class="text-muted"><em>Nothing to preview..</em></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 text-right">
-                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help">Markdown Help</button>
-                        <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
+    <div class="card text-dark info-border mb-3 mt-3">
+        <div class="card-header info-bg pt-3" @click="toggleNewNoteForm()"><h5><i ref="new_note_caret" class="fas fa-caret-right fa-lg pr-2"></i>Add New Running Note</h5></div>
+        <div ref="new_note_form" class="card-body collapse">
+            <div class="row">
+                <div class="col form-inline">
+                    <label>Choose category:</label>
+                    <div class="mt-2" data-toggle="buttons">
+                        <button class="btn btn-sm btn-inf mr-2" value="Decision" data-toggle="tooltip" title="For when an executive decision has been made" @click="toggleFormCategory('Decision')">Decision <span class="fa fa-thumbs-up"></span></button>
+                        <button class="btn btn-sm btn-succe mr-2" value="Lab" data-toggle="tooltip" title="For lab-related work" @click="toggleFormCategory('Lab')">Lab <span class="fa fa-flask"></span></button>
+                        <button class="btn btn-sm btn-warn mr-2" value="Bioinformatics" data-toggle="tooltip" title="For all bioinformatics work" @click="toggleFormCategory('Bioinformatics')">Bioinformatics <span class="fa fa-laptop-code"></span></button>
+                        <button class="btn btn-sm btn-usr mr-2" value="User Communication" data-toggle="tooltip" title="For notes influenced by user-contact" @click="toggleFormCategory('User Communication')">User Communication <span class="fa fa-people-arrows"></span></button>
+                        <button class="btn btn-sm btn-dang mr-2" value="Administration" data-toggle="tooltip" title="For notes involving documentation" @click="toggleFormCategory('Administration')">Administration <span class="fa fa-folder-open"></span></button>
+                        <button class="btn btn-sm btn-imp mr-2" value="Important" data-toggle="tooltip" title="For when a note needs to be highlighted" @click="toggleFormCategory('Important')">Important <span class="fa fa-exclamation-circle"></span></button>
+                        <button class="btn btn-sm btn-devi mr-2" value="Deviation" data-toggle="tooltip" title="For notes about a deviation" @click="toggleFormCategory('Deviation')">Deviation <span class="fa fa-frown"></span></button>
+                        <button class="btn btn-sm btn-inv mr-2" value="Invoice" data-toggle="tooltip" title="For notes about an invoice" @click="toggleFormCategory('Invoice')">Invoicing <span class="fa fa-file-invoice-dollar"></span></button>
+                        <button class="btn btn-sm btn-sticky" value="Sticky" data-toggle="tooltip" title="For sticky notes" @click="toggleFormCategory('Sticky')">Sticky <span class="fa fa-note-sticky"></span></button>
                     </div>
                 </div>
             </div>
+            <div class="row mb-3">
+                <div class="col-md-6 mt-4">
+                    <h4>Write Running Note</h4>
+                    <textarea rows="5" class="form-control" v-model="form_note_text" style="height:97px;"></textarea>
+                </div>
+                <div class="col-md-6 mt-4">
+                    <h4>Preview</h4>
+                    <template v-if="form_note_text !== ''">
+                        <v-running-note-single :running_note_obj="new_note_obj"/>
+                    </template>
+                    <template v-else>
+                        <p class="text-muted"><em>Nothing to preview.</em></p>
+                    </template>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 text-right">
+                    <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help">Markdown Help</button>
+                    <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
+                </div>
+            </div>
         </div>
-    </form>
+    </div>
 
     <!-- filter running notes -->
     <div id="running_notes_filter" class="row" style="margin-bottom:12px;">
@@ -145,14 +160,14 @@ export const vRunningNotesTab = {
 
     <!-- display running notes -->
     <template v-for="running_note in visible_running_notes">
-        <v-running-note-single :running_note_obj="running_note" :sticky="false"/>
+        <v-running-note-single :running_note_obj="running_note"/>
     </template>
     `
 }
 
 
 export const vRunningNoteSingle = {
-    props: ['running_note_obj', 'sticky'],
+    props: ['running_note_obj'],
 
     computed: {
         categories() {
@@ -205,9 +220,6 @@ export const vRunningNoteSingle = {
             return marked.parse(this.note)
         },
         running_note() {
-            if (this.sticky) {
-                console.log("Got a sticky one!")
-            }
             if (this.running_note_obj == undefined) {
                 return undefined
             }
