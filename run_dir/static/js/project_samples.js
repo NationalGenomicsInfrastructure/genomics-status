@@ -864,11 +864,16 @@ function load_samples_table(colOrder) {
               for (var i=0; i<info[column_id].length; i++) {
                 var fc = info[column_id][i];
                 // Remove the lane number and barcode - eg 6_FCID_GTGAAA
-                fc = fc.substring(2);
-                fc = fc.replace(/_[ACTG\-]+$/,'');
-                fc = fc.replace('_NoIndex', '');
-                tbl_row += '<samp class="nowrap"><a class="text-decoration-none" href="/flowcells/' + fc + '">' +
-                info[column_id][i] + '</a></samp><br>';
+                if(make_project_links(' '+fc).includes('href="/flowcells_ont/')){
+                  tbl_row +=  '<samp class="nowrap">'+make_project_links(' '+fc)+ '</samp><br>';
+                }
+                else{
+                  fc = fc.substring(2);
+                  fc = fc.replace(/_[ACTG\-]+$/,'');
+                  fc = fc.replace('_NoIndex', '');
+                  tbl_row += '<samp class="nowrap"><a class="text-decoration-none" href="/flowcells/' + fc + '">' +
+                  info[column_id][i] + '</a></samp><br>';
+                }
               }
               tbl_row += '</td>';
             }
