@@ -98,8 +98,10 @@ export const vProjectDetails = {
         }
         if (this.$root.single_project_mode) {
             this.$root.fetchProjectDetails(this.project_id);
+            this.$root.fetchAllUsers();
         }
     },
+    emits: ['closeModal'],
     template: 
     /*html*/`
         <template v-if="project_data_exists">
@@ -121,7 +123,6 @@ export const vProjectDetails = {
                             <span id="show_orderdates_btn" style="display:none;">Show</span>
                             <span id="hide_orderdates_btn">Hide</span> order dates on timeline
                         </a>
-                    </h1>
                     <h2><span :class="'badge w-100 mt-3 ' + status_bg_class">{{project_data.status}}</span></h2>
                 </div>
                 <div class="col-4">
@@ -411,7 +412,7 @@ export const vProjectDetails = {
                     </ul>
                     <div class="tab-content" id="myTabContent">
                         <div class="tab-pane fade show active" ref="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-pane-btn" tabindex="0">
-                            <v-running-notes-tab user='hello' :partition_id="project_id"></v-running-notes-tab>
+                            <v-running-notes-tab user='TODO' :partition_id="project_id" :all_users="this.$root.all_users"></v-running-notes-tab>
                         </div>
                         <div class="tab-pane fade" ref="project-details-pane" role="tabpanel" aria-labelledby="project-details-pane-btn" tabindex="0">Content 1</div>
                         <div class="tab-pane fade" ref="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-pane-btn" tabindex="0">Content 2</div>
@@ -583,6 +584,7 @@ export const vProjectCards = {
     },
     created: function() {
         this.$root.fetchProjects();
+        this.$root.fetchAllUsers();
     },
     mounted: function() {
         document.addEventListener('keyup', this.handleKeyUp);

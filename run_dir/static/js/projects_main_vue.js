@@ -1,5 +1,7 @@
 import {vProjectCards, vProjectDataField, vProjectDetails} from './projects_components.js'
+import { getDropdownPosition } from './smart_suggestion.js';
 import { vRunningNotesTab, vRunningNoteSingle } from './running_notes_component.js'
+
 
 const vProjectsStatus = {
     data() {
@@ -12,7 +14,10 @@ const vProjectsStatus = {
             error_messages: [],
             websocket_message:'',
             websocket: null,
-            /* User to determine behaviour of the app depending on if it's a single project or multiple projects */
+            /* Used for tagging running notes. */
+            all_users: [],
+            current_user: '',
+            /* Used to determine behaviour of the app depending on if it's a single project or multiple projects */
             single_project_mode: false,
             /* Only used on project cards page */
             all_projects: {},
@@ -178,7 +183,6 @@ const vProjectsStatus = {
         },
     },
     methods: {
-
         fetchProjectDetails(project_id) {
             axios
                 .get(`/api/v1/project_summary/${project_id}?view_with_sources=True`)
@@ -263,7 +267,27 @@ const vProjectsStatus = {
                     this.error_messages.push('Unable to fetch projects, please try again or contact a system administrator.')
                 })
         },
+        fetchAllUsers() {
+            axios
+                .get('/api/v1/user_management/users')
+                .then(response => {
+                    let data = response.data
+                    if (data !== null) {
+                        this.all_users = Object.keys(data)
+                            .map(email=>{
+                                return email.split('@')[0]
+                            })
+                    }
+                })
+                .catch(error => {
+                    console.log(error)
+                    this.error_messages.push('Unable to fetch users, please try again or contact a system administrator.')
+                })
+        },
         // Helper methods
+        getDropdownPositionHelper(input, dropdownHeight) {
+            return getDropdownPosition(input, dropdownHeight)
+        },
         itemCounts(list, key) {
             /* 
                 Returns a dictionary with the counts of each unique item in the list 
