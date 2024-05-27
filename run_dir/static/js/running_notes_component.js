@@ -1,5 +1,5 @@
 export const vRunningNotesTab = {
-    props: ['user', 'partition_id', 'all_users'],
+    props: ['user', 'partition_id', 'all_users', 'note_type'],
     data() {
         return {
             category_filter: 'All',
@@ -19,7 +19,6 @@ export const vRunningNotesTab = {
             return {
                 note: this.form_note_text,
                 user: this.user.name,
-                text: 'Default text',
                 categories: this.form_categories,
                 created_at_utc: new Date().toISOString()
             }
@@ -85,6 +84,44 @@ export const vRunningNotesTab = {
         setFilter(filter) {
             this.category_filter = filter
         },
+        submitRunningNote() {
+            if (this.form_note_text === '') {
+                alert("Error: No running note entered.");
+                return
+            }
+            if (this.form_categories.length === 0) {
+                if (!confirm("Are you sure that you want to submit without choosing a category?")) {
+                    return
+                }
+            }
+
+            if(["flowcell", "workset", "flowcell_ont"].includes(this.note_type)){
+                if((this.note_type==="flowcell" || this.note_type==="flowcell_ont") && !this.form_categories.includes("Flowcell")){
+                  this.form_categories.push("Flowcell")
+                }
+                else if(this.note_type==="workset" && !this.form_categories.includes("Workset")){
+                  this.form_categories.push("Workset")
+                }
+            }
+
+            let post_body = {
+                note: this.form_note_text,
+                categories: this.form_categories,
+                note_type: this.note_type
+            }
+
+
+            axios
+                .post('/api/v1/running_notes/' + this.partition_id, post_body)
+                .then(response => {
+                    this.fetchAllRunningNotes(this.partition_id)
+                    this.form_note_text = ''
+                    this.form_categories = []
+                })
+                .catch(error => {
+                    alert('Unable to submit running note, please try again or contact a system administrator.')
+                })
+        },
         suggestTaggedUsers(event) {
             this.setCurrentPosition();
             let form_note_text_field = this.$refs.form_note_text_field;
@@ -149,6 +186,10 @@ export const vRunningNotesTab = {
         }
     },
     mounted() {
+        if ( !( ["flowcell", "workset", "flowcell_ont", "project"].includes(this.note_type))) {
+            alert("Error: Invalid note type given, will not fetch notes")
+            return
+        }
         this.fetchAllRunningNotes(this.partition_id);
     },
     template: /*html*/`
@@ -196,7 +237,7 @@ export const vRunningNotesTab = {
             <div class="row">
                 <div class="col-md-6 text-right">
                     <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help">Markdown Help</button>
-                    <button type="submit" class="btn btn-primary" id="save_note_button">Submit Running Note</button>
+                    <button type="submit" class="btn btn-primary" id="save_note_button" @click="submitRunningNote">Submit Running Note</button>
                 </div>
             </div>
         </div>
@@ -236,14 +277,14 @@ export const vRunningNotesTab = {
 
     <!-- display running notes -->
     <template v-for="running_note in visible_running_notes">
-        <v-running-note-single :running_note_obj="running_note"/>
+        <v-running-note-single :running_note_obj="running_note" :compact="False"/>
     </template>
     `
 }
 
 
 export const vRunningNoteSingle = {
-    props: ['running_note_obj'],
+    props: ['running_note_obj', 'compact'],
 
     computed: {
         categories() {
@@ -259,6 +300,10 @@ export const vRunningNoteSingle = {
             return this.getRunningNoteProperty('created_at_utc')
         },
         formattedTimeStamp() {
+            let date = new Date(this.created_at_utc);
+            return date.toDateString() + ', ' + date.toLocaleTimeString(date);
+        },
+        timestampAge() {
             // Get the timestamp from the running note
             let timestamp = this.created_at_utc;
 
@@ -352,6 +397,7 @@ export const vRunningNoteSingle = {
         <div class="card">
             <div class="card-header bi-project-note-header">
                 <span>{{ this.user }}</span> - <span class="todays_date">{{ formattedTimeStamp }}</span>
+                <span v-if="!compact"> - {{timestampAge}}</span>
                 <template v-if="categories">
                 - <span v-html="categories_labels"/>
                 </template>

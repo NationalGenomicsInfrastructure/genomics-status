@@ -258,7 +258,7 @@ export const vProjectDetails = {
                     <p v-html="project_comment"></p>
                     <h4>Latest sticky note</h4>
                     <template v-if="project_id in this.$root.sticky_running_notes">
-                        <v-running-note-single :running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-running-note-single>
+                        <v-running-note-single :running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true" :compact="True"></v-running-note-single>
                     </template>
                     <template v-else>
                         <p>-</p>
@@ -412,7 +412,7 @@ export const vProjectDetails = {
                     </ul>
                     <div class="tab-content" id="myTabContent">
                         <div class="tab-pane fade show active" ref="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-pane-btn" tabindex="0">
-                            <v-running-notes-tab user='TODO' :partition_id="project_id" :all_users="this.$root.all_users"></v-running-notes-tab>
+                            <v-running-notes-tab user='TODO' :partition_id="project_id" :all_users="this.$root.all_users" note_type="project"></v-running-notes-tab>
                         </div>
                         <div class="tab-pane fade" ref="project-details-pane" role="tabpanel" aria-labelledby="project-details-pane-btn" tabindex="0">Content 1</div>
                         <div class="tab-pane fade" ref="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-pane-btn" tabindex="0">Content 2</div>
@@ -496,7 +496,7 @@ export const vProjectCard = {
             <div class="row">
                 <div class="">
                     <template v-if="project_id in this.$root.sticky_running_notes">
-                        <v-running-note-single :running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true"></v-running-note-single>
+                        <v-running-note-single :running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true" :compact="False"></v-running-note-single>
                     </template>
                 </div>
             </div>
