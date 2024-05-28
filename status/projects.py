@@ -652,8 +652,10 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
         summary_row.value['field_sources'] = field_sources
 
         reports = {}
+        type_to_name = {'_': 'MultiQC', '_qc_': 'QC MultiQC', '_pipeline_': 'Pipeline MultiQC'}
         for report_type in self.get_multiqc(project).keys():
-            reports[type] = f"/multiqc_report/{project}?type={type}"
+            report_name = type_to_name.get(report_type, report_type)
+            reports[report_name] = f"/multiqc_report/{project}?type={report_type}"
         summary_row.value['reports'] = reports
 
         return summary_row.value
