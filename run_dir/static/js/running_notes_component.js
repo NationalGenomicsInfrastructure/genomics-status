@@ -78,7 +78,9 @@ export const vRunningNotesTab = {
         },
         openNewNoteForm() {
             let new_note_form = this.$refs.new_note_form;
-            if (new_note_form.classList.contains('show')) {
+            let new_note_caret = this.$refs.new_note_caret;
+
+            if (!new_note_form.classList.contains('show')) {
                 new_note_form.classList.add('show');
                 new_note_caret.classList.remove('fa-caret-right');
                 new_note_caret.classList.add('fa-caret-down');

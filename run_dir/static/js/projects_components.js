@@ -616,7 +616,7 @@ export const vProjectCards = {
     <div class="mx-2">
         <h1>Projects Status</h1>
         <div class="card p-3">
-            <div class="row row-cols-5">
+            <div class="row row-cols-6">
                 <div class="col">
                     <h4>Status</h4>
                     <div class="form-check form-switch">
@@ -683,11 +683,25 @@ export const vProjectCards = {
                     </template>
                 </div>
                 <div class="col">
+                    <h4>Lab Responsible</h4>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="lab_responsible_all_switch" v-model="this.$root.include_all_lab_responsibles">
+                        <label class="form-check-label" for="lab_responsible_all_switch">All</label>
+                    </div>
+                    <template v-for="(nr_with_lab_responsible, lab_responsible) in this.$root.allLabResponsibles">
+                        <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_lab_responsibles')">
+                            <input class="form-check-input" type="checkbox" :id="'lab_responsible_filter_'+lab_responsible" :value="lab_responsible" v-model="this.$root.lab_responsible_filter" :disabled="this.$root.include_all_lab_responsibles"/>
+                            <label class="form-check-label" :for="'lab_responsible_filter_' + lab_responsible">{{ lab_responsible }} ({{this.$root.nrWithLabResponsibleVisible(lab_responsible)}}/{{nr_with_lab_responsible}})</label>
+                        </div>
+                    </template>
+                </div>
+                <div class="col">
                     <h4>Columns</h4>
                     <select id="card_columns" class="form-select" aria-label="Category to use as columns" v-model="this.$root.card_columns">
                         <option :value="['application']">Application</option>
                         <option :value="['type']">Type</option>
                         <option :value="['project_coordinator']">Project Coordinator</option>
+                        <option :value="['lab_responsible']">Lab Responsible</option>
                         <option :value="['status_fields', 'status']">Status</option>
                         <option :value="['library_construction_method']">Library Construction Method</option>
                     </select>

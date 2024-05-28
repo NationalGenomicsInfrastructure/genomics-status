@@ -32,11 +32,13 @@ const vProjectsStatus = {
             type_filter: [],
             include_all_types: true,
             project_coordinator_filter: [],
+            lab_responsible_filter: [],
+            include_all_lab_responsibles: true,
             include_all_project_coordinators: true,
             library_construction_method_filter: [],
             include_all_library_construction_methods: true,
             application_filter: [],
-            include_all_applications: true,
+            include_all_applications: true
         }
     },
     computed: {
@@ -74,6 +76,19 @@ const vProjectsStatus = {
             if (!this.include_all_project_coordinators) {
                 tempProjects = tempProjects.filter(([project_id, project]) => {
                     return this.project_coordinator_filter.includes(project['project_coordinator'])
+                })
+            }
+
+            // Lab responsible filter
+            if (!this.include_all_lab_responsibles) {
+                tempProjects = tempProjects.filter(([project_id, project]) => {
+                    // Special case for undefined
+                    if (this.lab_responsible_filter.includes('undefined')) {
+                        if (project['lab_responsible'] == undefined) {
+                            return true
+                        }
+                    }
+                    return this.lab_responsible_filter.includes(project['lab_responsible'])
                 })
             }
 
@@ -173,6 +188,12 @@ const vProjectsStatus = {
         },
         allProjectCoordinatorsVisible() {
             return this.itemCounts(this.visibleProjects, 'project_coordinator')
+        },
+        allLabResponsibles() {
+            return this.itemCounts(this.all_projects, 'lab_responsible')
+        },
+        allLabResponsiblesVisible() {
+            return this.itemCounts(this.visibleProjects, 'lab_responsible')
         },
         sorting_icon() {
             if (this.descending) {
@@ -355,6 +376,12 @@ const vProjectsStatus = {
         nrWithProjectCoordinatorVisible(project_coordinator) {
             if (project_coordinator in this.allProjectCoordinatorsVisible) {
                 return this.allProjectCoordinatorsVisible[project_coordinator]
+            }
+            return 0
+        },
+        nrWithLabResponsibleVisible(lab_responsible) {
+            if (lab_responsible in this.allLabResponsiblesVisible) {
+                return this.allLabResponsiblesVisible[lab_responsible]
             }
             return 0
         },
