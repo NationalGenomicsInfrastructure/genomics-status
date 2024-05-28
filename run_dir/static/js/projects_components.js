@@ -89,6 +89,16 @@ export const vProjectDetails = {
             this.$refs[tab_name].classList.add('show', 'active');
             this.$refs[tab_name + '-btn'].classList.add('active');
             this.active_tab = tab_name;
+        },
+        pressEnter(event) {
+            // Check if typing in input
+            if ((event.target.tagName === 'INPUT') || (event.target.tagName === 'TEXTAREA')) {
+                return
+            }
+            // Open new running note form
+            if (this.active_tab == 'project-running-notes-pane') {
+                this.$refs['project-running-notes-pane-component'].toggleNewNoteForm()
+            }
         }
     },
     created: function() {
@@ -100,6 +110,9 @@ export const vProjectDetails = {
             this.$root.fetchProjectDetails(this.project_id);
             this.$root.fetchAllUsers();
         }
+    },
+    mounted: function() {
+        document.addEventListener('keyup', this.handleKeyUpDetails);
     },
     emits: ['closeModal'],
     template: 
@@ -412,7 +425,7 @@ export const vProjectDetails = {
                     </ul>
                     <div class="tab-content" id="myTabContent">
                         <div class="tab-pane fade show active" ref="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-pane-btn" tabindex="0">
-                            <v-running-notes-tab :user="this.user" :partition_id="project_id" :all_users="this.$root.all_users" note_type="project"></v-running-notes-tab>
+                            <v-running-notes-tab :user="this.user" ref="project-running-notes-pane-component" :partition_id="project_id" :all_users="this.$root.all_users" note_type="project"></v-running-notes-tab>
                         </div>
                         <div class="tab-pane fade" ref="project-details-pane" role="tabpanel" aria-labelledby="project-details-pane-btn" tabindex="0">Content 1</div>
                         <div class="tab-pane fade" ref="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-pane-btn" tabindex="0">Content 2</div>
@@ -467,6 +480,9 @@ export const vProjectCard = {
                 this.$root.open_modal_card = this;
                 this.modal.show();
             })
+        },
+        pressEnter(event) {
+            this.$refs.project_details_component.pressEnter(event);
         }
     },
     mounted: function() {
@@ -514,7 +530,7 @@ export const vProjectCard = {
                         <div class="modal-content">
                             <div class="modal-body">
                                 <!-- This shows the project page -->
-                                <v-project-details :project_id="project_id" :user="this.user" :single_project_mode="false" :as_modal="true" @close-modal="closeModal"/>
+                                <v-project-details :project_id="project_id" ref="project_details_component" :user="this.user" :single_project_mode="false" :as_modal="true" @close-modal="closeModal"/>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" @click="closeModal">Close</button>
@@ -580,6 +596,11 @@ export const vProjectCards = {
                 this.changeModal(event, 'down')
             } else if (event.key === 'k') {
                 this.changeModal(event, 'up')
+            } else if (event.key === 'Enter') {
+                let open_modal = this.$root.open_modal_card;
+                if (open_modal != null) {
+                    open_modal.pressEnter(event)
+                }
             }
         }
     },

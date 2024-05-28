@@ -76,6 +76,16 @@ export const vRunningNotesTab = {
                     this.$root.error_messages.push('Unable to fetch running notes, please try again or contact a system administrator.')
                 })
         },
+        openNewNoteForm() {
+            let new_note_form = this.$refs.new_note_form;
+            if (new_note_form.classList.contains('show')) {
+                new_note_form.classList.add('show');
+                new_note_caret.classList.remove('fa-caret-right');
+                new_note_caret.classList.add('fa-caret-down');
+                // focus on the textarea
+                this.$refs.form_note_text_field.focus();
+            }
+        },
         setCurrentPosition() {
             let textarea = this.$refs.form_note_text_field;
             if (textarea === undefined) {
@@ -177,9 +187,7 @@ export const vRunningNotesTab = {
                 new_note_caret.classList.remove('fa-caret-down');
                 new_note_caret.classList.add('fa-caret-right');
             } else {
-                new_note_form.classList.add('show');
-                new_note_caret.classList.remove('fa-caret-right');
-                new_note_caret.classList.add('fa-caret-down');
+                this.openNewNoteForm();
             }
         },
         toggleFormCategory(category) {
