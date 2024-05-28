@@ -246,7 +246,7 @@ export const vRunningNotesTab = {
                         <p class="text-muted"><em>Nothing to preview.</em></p>
                     </template>
                     <template v-else>
-                        <v-running-note-single :running_note_obj="new_note_obj"/>
+                        <v-running-note-single :running_note_obj="new_note_obj" :compact="false"/>
                     </template>
                 </div>
             </div>
@@ -302,7 +302,7 @@ export const vRunningNotesTab = {
 
     <!-- display running notes -->
     <template v-for="running_note in visible_running_notes">
-        <v-running-note-single :running_note_obj="running_note" :compact="False"/>
+        <v-running-note-single :running_note_obj="running_note" :compact="false"/>
     </template>
     `
 }
@@ -425,8 +425,10 @@ export const vRunningNoteSingle = {
         <div class="card">
             <div class="card-header bi-project-note-header">
                 <a class="text-decoration-none" :href="'mailto:' + this.email">{{this.user}}</a>
+                <template v-if="!compact">
                 - <span class="todays_date">{{ formattedTimeStamp }}</span>
-                <span v-if="!compact"> - {{timestampAge}}</span>
+                </template>
+                <span> - {{timestampAge}}</span>
                 <template v-if="categories">
                 - <span v-html="categories_labels"/>
                 </template>

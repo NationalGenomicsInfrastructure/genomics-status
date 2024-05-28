@@ -260,7 +260,7 @@ export const vProjectDetails = {
                         <h2 class="mt-2">
                             <button class="btn btn-lg w-100 btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">Reports</button>
                             <ul class="dropdown-menu w-100">
-                                <li><a class="dropdown-item" href="first adress">Report 1</a></li>
+                                <li v-for="report in project_data.reports"><a class="dropdown-item" :href="report.url">{{report.name}}</a></li>
                             </ul>
                         </h2>
                     </div>
@@ -271,7 +271,7 @@ export const vProjectDetails = {
                     <p v-html="project_comment"></p>
                     <h4>Latest sticky note</h4>
                     <template v-if="project_id in this.$root.sticky_running_notes">
-                        <v-running-note-single :running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true" :compact="True"></v-running-note-single>
+                        <v-running-note-single :running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true" :compact="true"></v-running-note-single>
                     </template>
                     <template v-else>
                         <p>-</p>
@@ -512,7 +512,7 @@ export const vProjectCard = {
             <div class="row">
                 <div class="">
                     <template v-if="project_id in this.$root.sticky_running_notes">
-                        <v-running-note-single :running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true" :compact="False"></v-running-note-single>
+                        <v-running-note-single :running_note_obj="this.$root.sticky_running_notes[project_id]" :sticky="true" :compact="true"></v-running-note-single>
                     </template>
                 </div>
             </div>

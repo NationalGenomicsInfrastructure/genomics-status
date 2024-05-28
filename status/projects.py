@@ -650,6 +650,8 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
         field_sources["sourcedb_url"] = "Genomics Status (backend)"
 
         summary_row.value['field_sources'] = field_sources
+
+        summary_row.value['reports'] = self.get_multiqc(project)
         return summary_row.value
 
 
