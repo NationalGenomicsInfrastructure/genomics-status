@@ -651,7 +651,11 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
         summary_row.value['field_sources'] = field_sources
 
-        summary_row.value['reports'] = self.get_multiqc(project)
+        reports = {}
+        for report_type in self.get_multiqc(project).keys():
+            reports[type] = f"/multiqc_report/{project}?type={type}"
+        summary_row.value['reports'] = reports
+
         return summary_row.value
 
 
