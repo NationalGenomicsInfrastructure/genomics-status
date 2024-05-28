@@ -8,7 +8,8 @@ export const vRunningNotesTab = {
             form_note_text: '',
             user_suggestions: [],
             running_notes: [],
-            search_term: ''
+            search_term: '',
+            submitting: false
         }
     },
     computed: {
@@ -18,7 +19,8 @@ export const vRunningNotesTab = {
         new_note_obj() {
             return {
                 note: this.form_note_text,
-                user: this.user.name,
+                user: this.user.user,
+                email: this.user.email,
                 categories: this.form_categories,
                 created_at_utc: new Date().toISOString()
             }
@@ -85,6 +87,7 @@ export const vRunningNotesTab = {
             this.category_filter = filter
         },
         submitRunningNote() {
+            this.submitting = true;
             if (this.form_note_text === '') {
                 alert("Error: No running note entered.");
                 return
@@ -117,9 +120,11 @@ export const vRunningNotesTab = {
                     this.fetchAllRunningNotes(this.partition_id)
                     this.form_note_text = ''
                     this.form_categories = []
+                    this.submitting = false
                 })
                 .catch(error => {
                     alert('Unable to submit running note, please try again or contact a system administrator.')
+                    this.submitting = false
                 })
         },
         suggestTaggedUsers(event) {
@@ -195,7 +200,8 @@ export const vRunningNotesTab = {
     template: /*html*/`
     <div class="card text-dark info-border mb-3 mt-3">
         <div class="card-header info-bg pt-3" @click="toggleNewNoteForm()"><h5><i ref="new_note_caret" class="fas fa-caret-right fa-lg pr-2"></i>Add New Running Note</h5></div>
-        <div ref="new_note_form" class="card-body collapse">
+        <form ref="new_note_form" class="card-body collapse">
+            <fieldset v-bind:disabled="submitting">
             <div class="row">
                 <div class="col form-inline">
                     <label>Choose category:</label>
@@ -237,10 +243,19 @@ export const vRunningNotesTab = {
             <div class="row">
                 <div class="col-md-6 text-right">
                     <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markdown_help">Markdown Help</button>
-                    <button type="submit" class="btn btn-primary" id="save_note_button" @click="submitRunningNote">Submit Running Note</button>
+                    <template v-if="submitting">
+                        <button class="btn btn-primary" type="button" disabled>
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Saving Running Note...
+                        </button>
+                    </template>
+                    <template v-else>
+                       <button type="submit" class="btn btn-primary" id="save_note_button" @click="submitRunningNote">Submit Running Note</button>
+                    </template>
                 </div>
             </div>
-        </div>
+            </fieldset>
+        </form>
     </div>
 
     <!-- filter running notes -->
@@ -351,6 +366,9 @@ export const vRunningNoteSingle = {
             let running_note_json = JSON.parse(this.running_note_obj)
             return Object.values(running_note_json)[0];
         },
+        email() {
+            return this.getRunningNoteProperty('email')
+        },
         note() {
             return this.getRunningNoteProperty('note')
         },
@@ -396,7 +414,8 @@ export const vRunningNoteSingle = {
     <div class="pb-3">
         <div class="card">
             <div class="card-header bi-project-note-header">
-                <span>{{ this.user }}</span> - <span class="todays_date">{{ formattedTimeStamp }}</span>
+                <a class="text-decoration-none" :href="'mailto:' + this.email">{{this.user}}</a>
+                - <span class="todays_date">{{ formattedTimeStamp }}</span>
                 <span v-if="!compact"> - {{timestampAge}}</span>
                 <template v-if="categories">
                 - <span v-html="categories_labels"/>

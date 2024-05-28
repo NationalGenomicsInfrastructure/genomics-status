@@ -10,7 +10,7 @@ Title: Projects Listing focusing on status
 {% block stuff %}
 
 <div id="v_projects_main">
-    <v-projects-cards/>
+    <v-projects-cards :user="{email: '{{user.email}}', user: '{{user.name}}'}"/>
 </div>
 {% end %}
 

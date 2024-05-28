@@ -33,7 +33,7 @@ export const vProjectDetails = {
     name: 'v-project-details',
     // The single_project_mode is to be used when only a single project is used for the app
     // and the project cards are not shown
-    props: ['project_id', 'as_modal', 'single_project_mode'],
+    props: ['project_id', 'as_modal', 'single_project_mode', 'user'],
     data: function() {
         return {
             active_tab: 'project-running-notes-pane'
@@ -412,7 +412,7 @@ export const vProjectDetails = {
                     </ul>
                     <div class="tab-content" id="myTabContent">
                         <div class="tab-pane fade show active" ref="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-pane-btn" tabindex="0">
-                            <v-running-notes-tab user='TODO' :partition_id="project_id" :all_users="this.$root.all_users" note_type="project"></v-running-notes-tab>
+                            <v-running-notes-tab :user="this.user" :partition_id="project_id" :all_users="this.$root.all_users" note_type="project"></v-running-notes-tab>
                         </div>
                         <div class="tab-pane fade" ref="project-details-pane" role="tabpanel" aria-labelledby="project-details-pane-btn" tabindex="0">Content 1</div>
                         <div class="tab-pane fade" ref="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-pane-btn" tabindex="0">Content 2</div>
@@ -427,7 +427,7 @@ export const vProjectDetails = {
 }
 
 export const vProjectCard = {
-    props: ['project_id', 'next_project_id', 'previous_project_id'],  
+    props: ['project_id', 'next_project_id', 'previous_project_id', 'user'],  
     data: function() {
         return {
             modal: null
@@ -514,7 +514,7 @@ export const vProjectCard = {
                         <div class="modal-content">
                             <div class="modal-body">
                                 <!-- This shows the project page -->
-                                <v-project-details :project_id="project_id" :single_project_mode="false" :as_modal="true" @close-modal="closeModal"/>
+                                <v-project-details :project_id="project_id" :user="this.user" :single_project_mode="false" :as_modal="true" @close-modal="closeModal"/>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" @click="closeModal">Close</button>
@@ -529,6 +529,7 @@ export const vProjectCard = {
 
 export const vProjectCards = {
     name: 'v-projects-cards',
+    props: ['user'],
     components: {
         vProjectCard
     },
@@ -716,7 +717,7 @@ export const vProjectCards = {
                             <div class="row row-cols-1">
                                 <div class="col">
                                     <template v-for="(project_id, index) in project_ids_for_value" :key="project_id">
-                                        <v-project-card v-if="project_id in this.$root.visibleProjects" :project_id="project_id" :ref="'project_card_' + project_id" :next_project_id="project_ids_for_value[index + 1]" :previous_project_id="project_ids_for_value[index-1]"></v-project-card>
+                                        <v-project-card v-if="project_id in this.$root.visibleProjects" :user="this.user" :project_id="project_id" :ref="'project_card_' + project_id" :next_project_id="project_ids_for_value[index + 1]" :previous_project_id="project_ids_for_value[index-1]"></v-project-card>
                                     </template>
                                 </div>
                             </div>
