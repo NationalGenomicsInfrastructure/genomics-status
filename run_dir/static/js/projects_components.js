@@ -260,9 +260,9 @@ export const vProjectDetails = {
                         <h2 class="mt-2">
                             <button class="btn btn-lg w-100 btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">Reports</button>
                             <ul class="dropdown-menu w-100">
-                                <li v-for="(report_name, report_url) in project_data.reports"><a class="dropdown-item" :href="report_url">{{report_name}}</a></li>
+                                <li v-for="(report_url, report_name) in project_data.reports"><a class="dropdown-item" :href="report_url">{{report_name}}</a></li>
                             </ul>
-                        </h2>
+                            </h2>
                     </div>
                     
                 </div>
