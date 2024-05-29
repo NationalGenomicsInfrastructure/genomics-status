@@ -653,7 +653,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
         reports = {}
         type_to_name = {'_': 'MultiQC', '_qc_': 'QC MultiQC', '_pipeline_': 'Pipeline MultiQC'}
-        for report_type in self.get_multiqc(project).keys():
+        for report_type in self.get_multiqc(project, read_file=False).keys():
             report_name = type_to_name.get(report_type, report_type)
             reports[report_name] = f"/multiqc_report/{project}?type={report_type}"
         summary_row.value['reports'] = reports

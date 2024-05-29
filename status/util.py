@@ -161,10 +161,11 @@ class BaseHandler(tornado.web.RequestHandler):
                 )
             )
 
-    def get_multiqc(self, project_id):
+    def get_multiqc(self, project_id, read_file=True):
         """
         Getting multiqc reports for requested project from the filesystem
         Returns a string containing html if report exists, otherwise None
+        If read_file is false, the value of the dictionary will be the path to the file
         """
         view = self.application.projects_db.view("project/id_name_dates")
         rows = view[project_id].rows
@@ -181,9 +182,12 @@ class BaseHandler(tornado.web.RequestHandler):
                 multiqc_name = "{}{}multiqc_report.html".format(project_name, type)
                 multiqc_file_path = os.path.join(multiqc_path, multiqc_name)
                 if os.path.exists(multiqc_file_path):
-                    with open(multiqc_file_path, "r", encoding="utf-8") as multiqc_file:
-                        html = multiqc_file.read()
-                        multiqc_reports[type] = html
+                    if read_file:
+                        with open(multiqc_file_path, "r", encoding="utf-8") as multiqc_file:
+                            html = multiqc_file.read()
+                            multiqc_reports[type] = html
+                    else:
+                        multiqc_reports[type] = multiqc_file_path
         return multiqc_reports
 
     @staticmethod
