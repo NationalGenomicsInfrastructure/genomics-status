@@ -253,18 +253,30 @@ export const vProjectDetails = {
                             </div>
                         </dl>
                     <h4>Links</h4>
-                    <h2>
-                        <button class="btn btn-lg w-100 btn-outline-primary" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">Order portal</button>
-                    </h2>
-                    <div class="dropdown">
-                        <h2 class="mt-2">
-                            <button class="btn btn-lg w-100 btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">Reports</button>
-                            <ul class="dropdown-menu w-100">
-                                <li v-for="(report_url, report_name) in project_data.reports"><a class="dropdown-item" :href="report_url">{{report_name}}</a></li>
-                            </ul>
-                            </h2>
+                    <div class="row mr-5">
+                        <div :class="{'col-7': !this.as_modal}">
+                            <div class="border p-3 rounded-3">
+                                <h3 class="row mb-0" v-if="project_data['portal_id'] !== undefined">
+                                    <a class="text-decoration-none" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']">
+                                        <span class="col-4">Order Portal</span>
+                                        <i class="col fa-sharp fa-regular fa-clipboard-list-check float-right"></i>
+                                    </a>
+                                </h3>
+                            </div>
+                            <template v-for="(report_url, report_name) in project_data.reports">
+                                <div class="mt-3 border p-3 rounded-3">
+                                    <h3 class="row mb-0">
+                                        <a class="text-decoration-none" :href="report_url">
+                                            <span class="col-4">{{report_name}}</span>
+                                            <template v-if="report_url.includes('multiqc_report')">
+                                                <img class="col-4 float-right" src="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png#gh-light-mode-only" alt="MultiQC" style="height: 1em; width: auto">
+                                            </template>
+                                        </a>
+                                    </h3>
+                                </div>
+                            </template>
+                        </div>
                     </div>
-                    
                 </div>
                 <div class="col-4">
                     <h4>Project comment</h4>
