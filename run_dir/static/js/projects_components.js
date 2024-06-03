@@ -257,9 +257,11 @@ export const vProjectDetails = {
                         <div :class="{'col-9': !this.as_modal}">
                             <div class="p-1 rounded-3">
                                 <h3 class="row mb-0" v-if="project_data['portal_id'] !== undefined">
-                                    <button class="btn btn-large badge text-primary border" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']">
-                                        <span class="col float-left">Order Portal</span>
-                                        <i class="col fa-sharp fa-regular fa-clipboard-list-check float-right"></i>
+                                    <button class="btn btn-large badge text-primary border">
+                                        <a :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']">
+                                            <span class="col float-left">Order Portal</span>
+                                            <i class="col fa-sharp fa-regular fa-clipboard-list-check float-right"></i>
+                                        </a>
                                     </button>
                                 </h3>
                             </div>
@@ -267,11 +269,13 @@ export const vProjectDetails = {
                                 <div class="mt-1 p-1 rounded-3">
                                     <h3 class="row mb-0">
                                         <button class="btn btn-large badge text-primary border" :href="report_url">
-                                            <span class="col float-left">{{report_name}}</span>
-                                            <template v-if="report_url.includes('multiqc_report')">
-                                                <img class="col-4 float-right" src="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png#gh-light-mode-only" alt="MultiQC" style="height: 1em; width: auto">
-                                            </template>
-                                        </a>
+                                            <a :href="report_url">
+                                                <span class="col float-left">{{report_name}}</span>
+                                                <template v-if="report_url.includes('multiqc_report')">
+                                                    <img class="col-4 float-right" src="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png#gh-light-mode-only" alt="MultiQC" style="height: 1em; width: auto">
+                                                </template>
+                                            </a>
+                                        </button>
                                     </h3>
                                 </div>
                             </template>
