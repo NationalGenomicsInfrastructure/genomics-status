@@ -254,7 +254,7 @@ export const vProjectDetails = {
                         </dl>
                     <h4>Links</h4>
                     <div class="row mr-5">
-                        <div :class="{'col-7': !this.as_modal}">
+                        <div :class="{'col-9': !this.as_modal}">
                             <div class="p-1 rounded-3">
                                 <h3 class="row mb-0" v-if="project_data['portal_id'] !== undefined">
                                     <button class="btn btn-large badge text-primary border" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']">
@@ -614,6 +614,21 @@ export const vProjectCards = {
                     open_modal.pressEnter(event)
                 }
             }
+        },
+        toggleCardFilterMenu(event) {
+            let filter_menu = this.$refs.filter_menu;
+            let filter_menu_caret = this.$refs.filter_menu_caret;
+
+            // Remove the show class if it exists
+            if (filter_menu.classList.contains('show')) {
+                filter_menu.classList.remove('show');
+                filter_menu_caret.classList.remove('fa-caret-down');
+                filter_menu_caret.classList.add('fa-caret-right');
+            } else {
+                filter_menu.classList.add('show');
+                filter_menu_caret.classList.remove('fa-caret-right');
+                filter_menu_caret.classList.add('fa-caret-down');
+            }
         }
     },
     created: function() {
@@ -627,106 +642,115 @@ export const vProjectCards = {
     /*html*/`
     <div class="mx-2">
         <h1>Projects Status</h1>
-        <div class="card p-3">
-            <div class="row row-cols-6">
-                <div class="col">
-                    <h4>Status</h4>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" id="status_all_switch" v-model="this.$root.include_all_statuses"/>
-                        <label class="form-check-label" for="status_all_switch">All</label>
-                    </div>
-                    <template v-for="(nr_with_status, status) in this.$root.allStatuses">
-                        <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_statuses')">
-                            <input class="form-check-input" type="checkbox" :id="'status_filter_'+status" :value="status" v-model="this.$root.status_filter" :disabled="this.$root.include_all_statuses"/>
-                            <label class="form-check-label" :for="'status_filter_' + status">{{ status }} ({{this.$root.nrWithStatusVisible(status)}}/{{nr_with_status}})</label>
-                        </div>
-                    </template>
-                </div>
-                <div class="col">
-                    <h4>Type</h4>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" id="type_all_switch" v-model="this.$root.include_all_types">
-                        <label class="form-check-label" for="type_all_switch">All</label>
-                    </div>
-                    <template v-for="(nr_with_type, type) in this.$root.allTypes">
-                        <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_types')">
-                            <input class="form-check-input" type="checkbox" :id="'type_filter_'+type" :value="type" v-model="this.$root.type_filter" :disabled="this.$root.include_all_types"/>
-                            <label class="form-check-label" :for="'type_filter_' + type">{{ type }} ({{this.$root.nrWithTypeVisible(type)}}/{{nr_with_type}})</label>
-                        </div>
-                    </template>
-                </div>
-                <div class="col">
-                    <h4>Project Coordinator</h4>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" id="project_coordinator_all_switch" v-model="this.$root.include_all_project_coordinators">
-                        <label class="form-check-label" for="project_coordinator_all_switch">All</label>
-                    </div>
-                    <template v-for="(nr_with_project_coordinator, project_coordinator) in this.$root.allProjectCoordinators">
-                        <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_project_coordinators')">
-                            <input class="form-check-input" type="checkbox" :id="'project_coordinator_'+project_coordinator" :value="project_coordinator" v-model="this.$root.project_coordinator_filter" :disabled="this.$root.include_all_project_coordinators"/>
-                            <label class="form-check-label" :for="'project_coordinator_' + project_coordinator">{{ project_coordinator }} ({{this.$root.nrWithProjectCoordinatorVisible(project_coordinator)}}/{{nr_with_project_coordinator}})</label>
-                        </div>
-                    </template>
-                </div>
-                <div class="col">
-                    <h4>Application</h4>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" id="application_all_switch" v-model="this.$root.include_all_applications">
-                        <label class="form-check-label" for="application_all_switch">All</label>
-                    </div>
-                    <template v-for="(nr_with_application, application) in this.$root.allApplications">
-                        <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_applications')">
-                            <input class="form-check-input" type="checkbox" :id="'application_filter_'+application" :value="application" v-model="this.$root.application_filter" :disabled="this.$root.include_all_applications"/>
-                            <label class="form-check-label" :for="'application_filter_' + application">{{ application }} ({{this.$root.nrWithApplicationVisible(application)}}/{{nr_with_application}})</label>
-                        </div>
-                    </template>
-                </div>
-                <div class="col">
-                    <h4>Library Construction Method</h4>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" id="library_construction_method_all_switch" v-model="this.$root.include_all_library_construction_methods">
-                        <label class="form-check-label" for="library_construction_method_all_switch">All</label>
-                    </div>
-                    <template v-for="(nr_with_library_construction_method, library_construction_method) in this.$root.allLibraryConstructionMethods">
-                        <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_library_construction_methods')">
-                            <input class="form-check-input" type="checkbox" :id="'library_construction_method_filter_'+library_construction_method" :value="library_construction_method" v-model="this.$root.library_construction_method_filter" :disabled="this.$root.include_all_library_construction_methods"/>
-                            <label class="form-check-label" :for="'library_construction_method_filter_' + library_construction_method">{{ library_construction_method }} ({{this.$root.nrWithLibraryConstructionMethodVisible(library_construction_method)}}/{{nr_with_library_construction_method}})</label>
-                        </div>
-                    </template>
-                </div>
-                <div class="col">
-                    <h4>Lab Responsible</h4>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" id="lab_responsible_all_switch" v-model="this.$root.include_all_lab_responsibles">
-                        <label class="form-check-label" for="lab_responsible_all_switch">All</label>
-                    </div>
-                    <template v-for="(nr_with_lab_responsible, lab_responsible) in this.$root.allLabResponsibles">
-                        <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_lab_responsibles')">
-                            <input class="form-check-input" type="checkbox" :id="'lab_responsible_filter_'+lab_responsible" :value="lab_responsible" v-model="this.$root.lab_responsible_filter" :disabled="this.$root.include_all_lab_responsibles"/>
-                            <label class="form-check-label" :for="'lab_responsible_filter_' + lab_responsible">{{ lab_responsible }} ({{this.$root.nrWithLabResponsibleVisible(lab_responsible)}}/{{nr_with_lab_responsible}})</label>
-                        </div>
-                    </template>
-                </div>
-                <div class="col">
-                    <h4>Columns</h4>
-                    <select id="card_columns" class="form-select" aria-label="Category to use as columns" v-model="this.$root.card_columns">
-                        <option :value="['application']">Application</option>
-                        <option :value="['type']">Type</option>
-                        <option :value="['project_coordinator']">Project Coordinator</option>
-                        <option :value="['lab_responsible']">Lab Responsible</option>
-                        <option :value="['status_fields', 'status']">Status</option>
-                        <option :value="['library_construction_method']">Library Construction Method</option>
-                    </select>
-                </div>
-                <div class="col">
-                    <h4>Sort by</h4>
-                    <select id="sort_by" class="form-select" aria-label="Sort by" v-model="this.$root.sortBy">
-                        <option value="most_recent_date">Most recent date</option>
-                        <option value="project_id">Project ID</option>
-                        <option value="status">Status</option>
-                    </select>
-                </div>
+        <div class="card">
+            <div class="card-header" @click="toggleCardFilterMenu">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-bars-filter"></i>
+                    <i ref="filter_menu_caret" class="fas fa-caret-right fa-lg ml-3 pr-2"></i>
+                    Filters
+                </h5>
             </div>
+            <form ref="filter_menu" class="card-body collapse">
+                <div class="row row-cols-6">
+                    <div class="col">
+                        <h4>Status</h4>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="status_all_switch" v-model="this.$root.include_all_statuses"/>
+                            <label class="form-check-label" for="status_all_switch">All</label>
+                        </div>
+                        <template v-for="(nr_with_status, status) in this.$root.allStatuses">
+                            <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_statuses')">
+                                <input class="form-check-input" type="checkbox" :id="'status_filter_'+status" :value="status" v-model="this.$root.status_filter" :disabled="this.$root.include_all_statuses"/>
+                                <label class="form-check-label" :for="'status_filter_' + status">{{ status }} ({{this.$root.nrWithStatusVisible(status)}}/{{nr_with_status}})</label>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="col">
+                        <h4>Type</h4>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="type_all_switch" v-model="this.$root.include_all_types">
+                            <label class="form-check-label" for="type_all_switch">All</label>
+                        </div>
+                        <template v-for="(nr_with_type, type) in this.$root.allTypes">
+                            <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_types')">
+                                <input class="form-check-input" type="checkbox" :id="'type_filter_'+type" :value="type" v-model="this.$root.type_filter" :disabled="this.$root.include_all_types"/>
+                                <label class="form-check-label" :for="'type_filter_' + type">{{ type }} ({{this.$root.nrWithTypeVisible(type)}}/{{nr_with_type}})</label>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="col">
+                        <h4>Project Coordinator</h4>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="project_coordinator_all_switch" v-model="this.$root.include_all_project_coordinators">
+                            <label class="form-check-label" for="project_coordinator_all_switch">All</label>
+                        </div>
+                        <template v-for="(nr_with_project_coordinator, project_coordinator) in this.$root.allProjectCoordinators">
+                            <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_project_coordinators')">
+                                <input class="form-check-input" type="checkbox" :id="'project_coordinator_'+project_coordinator" :value="project_coordinator" v-model="this.$root.project_coordinator_filter" :disabled="this.$root.include_all_project_coordinators"/>
+                                <label class="form-check-label" :for="'project_coordinator_' + project_coordinator">{{ project_coordinator }} ({{this.$root.nrWithProjectCoordinatorVisible(project_coordinator)}}/{{nr_with_project_coordinator}})</label>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="col">
+                        <h4>Application</h4>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="application_all_switch" v-model="this.$root.include_all_applications">
+                            <label class="form-check-label" for="application_all_switch">All</label>
+                        </div>
+                        <template v-for="(nr_with_application, application) in this.$root.allApplications">
+                            <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_applications')">
+                                <input class="form-check-input" type="checkbox" :id="'application_filter_'+application" :value="application" v-model="this.$root.application_filter" :disabled="this.$root.include_all_applications"/>
+                                <label class="form-check-label" :for="'application_filter_' + application">{{ application }} ({{this.$root.nrWithApplicationVisible(application)}}/{{nr_with_application}})</label>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="col">
+                        <h4>Library Construction Method</h4>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="library_construction_method_all_switch" v-model="this.$root.include_all_library_construction_methods">
+                            <label class="form-check-label" for="library_construction_method_all_switch">All</label>
+                        </div>
+                        <template v-for="(nr_with_library_construction_method, library_construction_method) in this.$root.allLibraryConstructionMethods">
+                            <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_library_construction_methods')">
+                                <input class="form-check-input" type="checkbox" :id="'library_construction_method_filter_'+library_construction_method" :value="library_construction_method" v-model="this.$root.library_construction_method_filter" :disabled="this.$root.include_all_library_construction_methods"/>
+                                <label class="form-check-label" :for="'library_construction_method_filter_' + library_construction_method">{{ library_construction_method }} ({{this.$root.nrWithLibraryConstructionMethodVisible(library_construction_method)}}/{{nr_with_library_construction_method}})</label>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="col">
+                        <h4>Lab Responsible</h4>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="lab_responsible_all_switch" v-model="this.$root.include_all_lab_responsibles">
+                            <label class="form-check-label" for="lab_responsible_all_switch">All</label>
+                        </div>
+                        <template v-for="(nr_with_lab_responsible, lab_responsible) in this.$root.allLabResponsibles">
+                            <div class="form-check" @click="(event) => selectFilterValue(event, 'include_all_lab_responsibles')">
+                                <input class="form-check-input" type="checkbox" :id="'lab_responsible_filter_'+lab_responsible" :value="lab_responsible" v-model="this.$root.lab_responsible_filter" :disabled="this.$root.include_all_lab_responsibles"/>
+                                <label class="form-check-label" :for="'lab_responsible_filter_' + lab_responsible">{{ lab_responsible }} ({{this.$root.nrWithLabResponsibleVisible(lab_responsible)}}/{{nr_with_lab_responsible}})</label>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="col">
+                        <h4>Columns</h4>
+                        <select id="card_columns" class="form-select" aria-label="Category to use as columns" v-model="this.$root.card_columns">
+                            <option :value="['application']">Application</option>
+                            <option :value="['type']">Type</option>
+                            <option :value="['project_coordinator']">Project Coordinator</option>
+                            <option :value="['lab_responsible']">Lab Responsible</option>
+                            <option :value="['status_fields', 'status']">Status</option>
+                            <option :value="['library_construction_method']">Library Construction Method</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <h4>Sort by</h4>
+                        <select id="sort_by" class="form-select" aria-label="Sort by" v-model="this.$root.sortBy">
+                            <option value="most_recent_date">Most recent date</option>
+                            <option value="project_id">Project ID</option>
+                            <option value="status">Status</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
         </div>
         <template v-if="Object.keys(this.$root.visibleProjects).length == 0">
             <template v-if="Object.keys(this.$root.all_projects).length == 0">
