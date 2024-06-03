@@ -255,18 +255,18 @@ export const vProjectDetails = {
                     <h4>Links</h4>
                     <div class="row mr-5">
                         <div :class="{'col-7': !this.as_modal}">
-                            <div class="border p-3 rounded-3">
+                            <div class="p-3 rounded-3">
                                 <h3 class="row mb-0" v-if="project_data['portal_id'] !== undefined">
-                                    <button class="btn btn-large badge text-success text-decoration-none" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']">
+                                    <button class="btn btn-large badge text-primary border" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']">
                                         <span class="col-4">Order Portal</span>
                                         <i class="col fa-sharp fa-regular fa-clipboard-list-check float-right"></i>
                                     </button>
                                 </h3>
                             </div>
                             <template v-for="(report_url, report_name) in project_data.reports">
-                                <div class="mt-3 border p-3 rounded-3">
+                                <div class="mt-3 p-3 rounded-3">
                                     <h3 class="row mb-0">
-                                        <a class="text-decoration-none" :href="report_url">
+                                        <button class="btn btn-large badge text-primary border" :href="report_url">
                                             <span class="col-4">{{report_name}}</span>
                                             <template v-if="report_url.includes('multiqc_report')">
                                                 <img class="col-4 float-right" src="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png#gh-light-mode-only" alt="MultiQC" style="height: 1em; width: auto">
