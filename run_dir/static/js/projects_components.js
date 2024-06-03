@@ -255,7 +255,7 @@ export const vProjectDetails = {
                     <h4>Links</h4>
                     <div class="row mr-5">
                         <div :class="{'col-7': !this.as_modal}">
-                            <div class="p-3 rounded-3">
+                            <div class="p-1 rounded-3">
                                 <h3 class="row mb-0" v-if="project_data['portal_id'] !== undefined">
                                     <button class="btn btn-large badge text-primary border" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']">
                                         <span class="col-4">Order Portal</span>
@@ -264,7 +264,7 @@ export const vProjectDetails = {
                                 </h3>
                             </div>
                             <template v-for="(report_url, report_name) in project_data.reports">
-                                <div class="mt-3 p-3 rounded-3">
+                                <div class="mt-1 p-1 rounded-3">
                                     <h3 class="row mb-0">
                                         <button class="btn btn-large badge text-primary border" :href="report_url">
                                             <span class="col-4">{{report_name}}</span>
