@@ -331,6 +331,15 @@ const vProjectsStatus = {
                     itemCounts[item] = 1
                 }
             }
+            // Convert the itemCounts object to an array of [key, value] pairs
+            let sortedItemCounts = Object.entries(itemCounts);
+
+            // Sort the array by the keys (i.e., the first element of each pair)
+            sortedItemCounts.sort((a, b) => a[0].localeCompare(b[0]));
+
+            // Convert the array back to an object
+            itemCounts = Object.fromEntries(sortedItemCounts);
+
             return itemCounts
         },
         mostRecentDate(project) {
