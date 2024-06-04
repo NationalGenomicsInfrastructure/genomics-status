@@ -120,7 +120,7 @@ export const vProjectDetails = {
         <template v-if="project_data_exists">
             <div class="row">
                 <div class="col-12">
-                    <div :class="{ 'modal-header': as_modal}">
+                    <div :class="{ 'modal-header border-bottom-0 pb-0': as_modal}">
                         <h1 :class="{ 'modal-title': as_modal, 'col': true }" id="projectDetailsModalLabel" style="white-space: nowrap;">
                             <a :href="'/project_new/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{project_id}}</a>, {{project_data.project_name}}
                             <small class="text-muted ml-4">
@@ -132,11 +132,7 @@ export const vProjectDetails = {
                         </template>
                     </div>
                     <small><span class="badge" id="project_status_alert"></span></small>
-                        <a href="#" class="btn btn-outline-dark btn-xs float-right mt-4" id="show_order_timeline">
-                            <span id="show_orderdates_btn" style="display:none;">Show</span>
-                            <span id="hide_orderdates_btn">Hide</span> order dates on timeline
-                        </a>
-                    <h2><span :class="'badge w-100 mt-3 ' + status_bg_class">{{project_data.status}}</span></h2>
+                    <h2><span :class="'badge w-100 mt-1 mb-4 ' + status_bg_class">{{project_data.status}}</span></h2>
                 </div>
                 <div class="col-4">
                     <h4>Library preparation</h4>
@@ -253,7 +249,7 @@ export const vProjectDetails = {
                             </div>
                         </dl>
                     <h4>Links</h4>
-                    <div class="row mr-5">
+                    <div class="row mr-2">
                         <div :class="{'col-9': !this.as_modal}">
                             <div class="p-1 rounded-3">
                                 <h3 class="row mb-0" v-if="project_data['portal_id'] !== undefined">
