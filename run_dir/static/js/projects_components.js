@@ -730,25 +730,7 @@ export const vProjectCards = {
                             </div>
                         </template>
                     </div>
-                    <div class="col">
-                        <h4>Columns</h4>
-                        <select id="card_columns" class="form-select" aria-label="Category to use as columns" v-model="this.$root.card_columns">
-                            <option :value="['application']">Application</option>
-                            <option :value="['type']">Type</option>
-                            <option :value="['project_coordinator']">Project Coordinator</option>
-                            <option :value="['lab_responsible']">Lab Responsible</option>
-                            <option :value="['status_fields', 'status']">Status</option>
-                            <option :value="['library_construction_method']">Library Construction Method</option>
-                        </select>
-                    </div>
-                    <div class="col">
-                        <h4>Sort by</h4>
-                        <select id="sort_by" class="form-select" aria-label="Sort by" v-model="this.$root.sortBy">
-                            <option value="most_recent_date">Most recent date</option>
-                            <option value="project_id">Project ID</option>
-                            <option value="status">Status</option>
-                        </select>
-                    </div>
+
                 </div>
             </form>
         </div>
@@ -767,19 +749,40 @@ export const vProjectCards = {
         </template>
 
         <template v-else>
-            <div class="row mt-5 border-bottom border-light-subtle">
-                <div class="col-8">
+            <div class="row mt-5 pb-2 border-bottom border-light-subtle">
+                <div class="col-2 align-self-end">
                     <h4 my-1>
                         <i :class="'fa-solid ' + this.$root.sorting_icon + ' mr-2'" @click="this.$root.toggleSorting"></i>
                         Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects in {{Object.keys(this.$root.allColumnValues).length}} columns
                     </h4>
                 </div>
-                <div class="col-4">
-                    <div class="form-group">
-                        <input type="text" class="form-control my-1" v-model="this.$root.search_value" placeholder="Search" />
+                <div class="col-2 form-floating">
+                    <select id="card_columns" class="form-select" aria-label="Category to use as columns" v-model="this.$root.card_columns">
+                        <option :value="['application']">Application</option>
+                        <option :value="['type']">Type</option>
+                        <option :value="['project_coordinator']">Project Coordinator</option>
+                        <option :value="['lab_responsible']">Lab Responsible</option>
+                        <option :value="['status_fields', 'status']">Status</option>
+                        <option :value="['library_construction_method']">Library Construction Method</option>
+                    </select>
+                    <label for="card_columns" class="ml-2">Columns</label>
+                </div>
+                <div class="col-2 form-floating">
+                    <select id="sort_by" class="form-select" aria-label="Sort by" v-model="this.$root.sortBy">
+                        <option value="most_recent_date">Most recent date</option>
+                        <option value="project_id">Project ID</option>
+                        <option value="status">Status</option>
+                    </select>
+                    <label for="sort_by" class="ml-2">Sort by</label>
+                </div>
+                <div class="col-2 offset-4">
+                    <div class="form-floating">
+                        <input type="text" class="form-control form-control-lg" v-model="this.$root.search_value"/>
+                        <label for="search">Search</label>
                     </div>
                 </div>
             </div>
+
             <div class="project_status_board overflow-scroll bg-white py-3">
                 <div class="row flex-nowrap">
                     <template v-for="(project_ids_for_value, value) in this.$root.allColumnValues">
