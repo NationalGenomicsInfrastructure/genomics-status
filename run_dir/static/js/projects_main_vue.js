@@ -32,8 +32,8 @@ const vProjectsStatus = {
             type_filter: [],
             include_all_types: true,
             project_coordinator_filter: [],
-            lab_responsible_filter: [],
             include_all_lab_responsibles: true,
+            lab_responsible_filter: [],
             include_all_project_coordinators: true,
             library_construction_method_filter: [],
             include_all_library_construction_methods: true,
@@ -194,6 +194,29 @@ const vProjectsStatus = {
         },
         allLabResponsiblesVisible() {
             return this.itemCounts(this.visibleProjects, 'lab_responsible')
+        },
+        currentActiveFilters() {
+            // List the currently active filters for display purposes
+            let activeFilters = []
+            if (!this.include_all_applications) {
+                activeFilters.push(['Application', this.application_filter])
+            }
+            if (!this.include_all_statuses) {
+                activeFilters.push(['Status', this.status_filter])
+            }
+            if (!this.include_all_types) {
+                activeFilters.push(['Type', this.type_filter])
+            }
+            if (!this.include_all_project_coordinators) {
+                activeFilters.push(['Project Coordinator', this.project_coordinator_filter])
+            }
+            if (!this.include_all_lab_responsibles) {
+                activeFilters.push(['Lab Responsible', this.lab_responsible_filter])
+            }
+            if (!this.include_all_library_construction_methods) {
+                activeFilters.push(['Library Construction Method', this.library_construction_method_filter])
+            }
+            return activeFilters
         },
         sorting_icon() {
             if (this.descending) {

@@ -643,7 +643,7 @@ export const vProjectCards = {
     <div class="mx-2">
         <h1>Projects Status</h1>
         <div class="card">
-            <div class="card-header" @click="toggleCardFilterMenu">
+            <div class="card-header py-3" @click="toggleCardFilterMenu">
                 <h5 class="mb-0">
                     <i class="fa-solid fa-bars-filter"></i>
                     <i ref="filter_menu_caret" class="fas fa-caret-right fa-lg ml-3 pr-2"></i>
@@ -734,6 +734,50 @@ export const vProjectCards = {
                 </div>
             </form>
         </div>
+        <div class="row row-cols-auto" v-if="this.$root.currentActiveFilters.length > 0">
+            <div class="col mr-4" v-for="(filter_tuple, index) in this.$root.currentActiveFilters">
+                <div>
+                    <h5>{{filter_tuple[0]}}</h5>
+
+                    <button type="button mr-2" class="btn btn-primary position-relative m-1" v-for="item1 in filter_tuple[1]">
+                        {{item1}}
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-5 pb-2 border-bottom border-light-subtle">
+            <div class="col-2 align-self-end">
+                <h4 my-1>
+                    <i :class="'fa-solid ' + this.$root.sorting_icon + ' mr-2'" @click="this.$root.toggleSorting"></i>
+                    Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects in {{Object.keys(this.$root.allColumnValues).length}} columns
+                </h4>
+            </div>
+            <div class="col-2 form-floating">
+                <select id="card_columns" class="form-select" aria-label="Category to use as columns" v-model="this.$root.card_columns">
+                    <option :value="['application']">Application</option>
+                    <option :value="['type']">Type</option>
+                    <option :value="['project_coordinator']">Project Coordinator</option>
+                    <option :value="['lab_responsible']">Lab Responsible</option>
+                    <option :value="['status_fields', 'status']">Status</option>
+                    <option :value="['library_construction_method']">Library Construction Method</option>
+                </select>
+                <label for="card_columns" class="ml-2">Columns</label>
+            </div>
+            <div class="col-2 form-floating">
+                <select id="sort_by" class="form-select" aria-label="Sort by" v-model="this.$root.sortBy">
+                    <option value="most_recent_date">Most recent date</option>
+                    <option value="project_id">Project ID</option>
+                    <option value="status">Status</option>
+                </select>
+                <label for="sort_by" class="ml-2">Sort by</label>
+            </div>
+            <div class="col-2 offset-4">
+                <div class="form-floating">
+                    <input type="text" class="form-control form-control-lg" v-model="this.$root.search_value"/>
+                    <label for="search">Search</label>
+                </div>
+            </div>
+        </div>
         <template v-if="Object.keys(this.$root.visibleProjects).length == 0">
             <template v-if="Object.keys(this.$root.all_projects).length == 0">
                 <div class="d-flex justify-content-center m-5">
@@ -744,45 +788,11 @@ export const vProjectCards = {
                 </div>
             </template>
             <template v-else>
-                <p>No projects</p>
+                <h3 class="m-3">No projects</h3>
             </template>
         </template>
 
         <template v-else>
-            <div class="row mt-5 pb-2 border-bottom border-light-subtle">
-                <div class="col-2 align-self-end">
-                    <h4 my-1>
-                        <i :class="'fa-solid ' + this.$root.sorting_icon + ' mr-2'" @click="this.$root.toggleSorting"></i>
-                        Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects in {{Object.keys(this.$root.allColumnValues).length}} columns
-                    </h4>
-                </div>
-                <div class="col-2 form-floating">
-                    <select id="card_columns" class="form-select" aria-label="Category to use as columns" v-model="this.$root.card_columns">
-                        <option :value="['application']">Application</option>
-                        <option :value="['type']">Type</option>
-                        <option :value="['project_coordinator']">Project Coordinator</option>
-                        <option :value="['lab_responsible']">Lab Responsible</option>
-                        <option :value="['status_fields', 'status']">Status</option>
-                        <option :value="['library_construction_method']">Library Construction Method</option>
-                    </select>
-                    <label for="card_columns" class="ml-2">Columns</label>
-                </div>
-                <div class="col-2 form-floating">
-                    <select id="sort_by" class="form-select" aria-label="Sort by" v-model="this.$root.sortBy">
-                        <option value="most_recent_date">Most recent date</option>
-                        <option value="project_id">Project ID</option>
-                        <option value="status">Status</option>
-                    </select>
-                    <label for="sort_by" class="ml-2">Sort by</label>
-                </div>
-                <div class="col-2 offset-4">
-                    <div class="form-floating">
-                        <input type="text" class="form-control form-control-lg" v-model="this.$root.search_value"/>
-                        <label for="search">Search</label>
-                    </div>
-                </div>
-            </div>
-
             <div class="project_status_board overflow-scroll bg-white py-3">
                 <div class="row flex-nowrap">
                     <template v-for="(project_ids_for_value, value) in this.$root.allColumnValues">
