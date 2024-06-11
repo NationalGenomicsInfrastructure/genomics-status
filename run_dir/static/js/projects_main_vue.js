@@ -27,18 +27,50 @@ const vProjectsStatus = {
             search_value: '',
             open_modal_card: null,
             // Filters
-            status_filter: [],
-            include_all_statuses: true,
-            type_filter: [],
-            include_all_types: true,
-            project_coordinator_filter: [],
-            include_all_lab_responsibles: true,
-            lab_responsible_filter: [],
-            include_all_project_coordinators: true,
-            library_construction_method_filter: [],
-            include_all_library_construction_methods: true,
-            application_filter: [],
-            include_all_applications: true
+            all_filters: {
+                'application': {
+                    'title': 'Application',
+                    'key': 'application',
+                    'secondary_key': null,
+                    'filter_values': [],
+                    'include_all': true
+                },
+                'lab_responsible': {
+                    'title': 'Lab Responsible',
+                    'key': 'lab_responsible',
+                    'secondary_key': null,
+                    'filter_values': [],
+                    'include_all': true
+                },
+                'library_construction_method': {
+                    'title': 'Library Construction Method',
+                    'key': 'library_construction_method',
+                    'secondary_key': null,
+                    'filter_values': [],
+                    'include_all': true
+                },
+                'status': {
+                    'title': 'Status',
+                    'key': 'status',
+                    'secondary_key': 'status_fields',
+                    'filter_values': [],
+                    'include_all': true
+                },
+                'type': {
+                    'title': 'Type',
+                    'key': 'type',
+                    'secondary_key': null,
+                    'filter_values': [],
+                    'include_all': true
+                },
+                'project_coordinator': {
+                    'title': 'Project Coordinator',
+                    'key': 'project_coordinator',
+                    'secondary_key': null,
+                    'filter_values': [],
+                    'include_all': true
+                }
+            }
         }
     },
     computed: {
@@ -46,57 +78,39 @@ const vProjectsStatus = {
         visibleProjects() {
             /* Filters and sorts the projects */
             if (Object.keys(this.all_projects).length == 0) {
+                // No need to filter if there are no projects
                 return this.all_projects
             }
 
             let tempProjects = Object.entries(this.all_projects)
 
-            // Process application filter
-            if (!this.include_all_applications) {
-                tempProjects = tempProjects.filter(([project_id, project]) => {
-                    return this.application_filter.includes(project['application'])
-                })
-            }
+            // Filter on all filters
+            for (let filter in this.all_filters) {
+                let filter_values = this.all_filters[filter]['filter_values']
+                let include_all = this.all_filters[filter]['include_all']
 
-            // Process status filter
-            if (!this.include_all_statuses) {
-                tempProjects = tempProjects.filter(([project_id, project]) => {
-                    return this.status_filter.includes(project['status_fields']['status'])
-                })
-            }
+                if (include_all == false) {
+                    tempProjects = tempProjects.filter(([project_id, project]) => {
+                        let key = this.all_filters[filter]['key']
+                        let secondary_key = this.all_filters[filter]['secondary_key']
+                        let project_value = null
 
-            // Project type filter
-            if (!this.include_all_types) {
-                tempProjects = tempProjects.filter(([project_id, project]) => {
-                    return this.type_filter.includes(project['type'])
-                })
-            }
-
-            // Project coordinator filter
-            if (!this.include_all_project_coordinators) {
-                tempProjects = tempProjects.filter(([project_id, project]) => {
-                    return this.project_coordinator_filter.includes(project['project_coordinator'])
-                })
-            }
-
-            // Lab responsible filter
-            if (!this.include_all_lab_responsibles) {
-                tempProjects = tempProjects.filter(([project_id, project]) => {
-                    // Special case for undefined
-                    if (this.lab_responsible_filter.includes('undefined')) {
-                        if (project['lab_responsible'] == undefined) {
-                            return true
+                        // Allowing nested keys up to a depth of 2
+                        if (secondary_key == null) {
+                            project_value = project[key]
+                        } else {
+                            project_value = project[secondary_key][key]
                         }
-                    }
-                    return this.lab_responsible_filter.includes(project['lab_responsible'])
-                })
-            }
 
-            // Library construction method filter
-            if (!this.include_all_library_construction_methods) {
-                tempProjects = tempProjects.filter(([project_id, project]) => {
-                    return this.library_construction_method_filter.includes(project['library_construction_method'])
-                })
+                        // Special case for undefined
+                        if (filter_values.includes('undefined')) {
+                            if (project_value == undefined) {
+                                return true
+                            }
+                        }
+                        return filter_values.includes(project_value)
+                    })
+                }
             }
 
             // Search filter
@@ -159,62 +173,23 @@ const vProjectsStatus = {
             }
             return columnValues
         },
-        allApplications() {
-            return this.itemCounts(this.all_projects, 'application')
-        },
-        allApplicationsVisible() {
-            return this.itemCounts(this.visibleProjects, 'application')
-        },
-        allLibraryConstructionMethods() {
-            return this.itemCounts(this.all_projects, 'library_construction_method')
-        },
-        allLibraryConstructionMethodsVisible() {
-            return this.itemCounts(this.visibleProjects, 'library_construction_method')
-        },
-        allStatuses() {
-            return this.itemCounts(this.all_projects, ['status_fields', 'status'])
-        },
-        allStatusesVisible() {
-            return this.itemCounts(this.visibleProjects, ['status_fields', 'status'])
-        },
-        allTypes() {
-            return this.itemCounts(this.all_projects, 'type')
-        },
-        allTypesVisible() {
-            return this.itemCounts(this.visibleProjects, 'type')
-        },
-        allProjectCoordinators() {
-            return this.itemCounts(this.all_projects, 'project_coordinator')
-        },
-        allProjectCoordinatorsVisible() {
-            return this.itemCounts(this.visibleProjects, 'project_coordinator')
-        },
-        allLabResponsibles() {
-            return this.itemCounts(this.all_projects, 'lab_responsible')
-        },
-        allLabResponsiblesVisible() {
-            return this.itemCounts(this.visibleProjects, 'lab_responsible')
-        },
         currentActiveFilters() {
             // List the currently active filters for display purposes
-            let activeFilters = []
-            if (!this.include_all_applications) {
-                activeFilters.push(['Application', this.application_filter])
-            }
-            if (!this.include_all_statuses) {
-                activeFilters.push(['Status', this.status_filter])
-            }
-            if (!this.include_all_types) {
-                activeFilters.push(['Type', this.type_filter])
-            }
-            if (!this.include_all_project_coordinators) {
-                activeFilters.push(['Project Coordinator', this.project_coordinator_filter])
-            }
-            if (!this.include_all_lab_responsibles) {
-                activeFilters.push(['Lab Responsible', this.lab_responsible_filter])
-            }
-            if (!this.include_all_library_construction_methods) {
-                activeFilters.push(['Library Construction Method', this.library_construction_method_filter])
+            let activeFilters = {}
+            for (let filter_key in this.all_filters) {
+                let filter_values = this.all_filters[filter_key]['filter_values']
+                let include_all = this.all_filters[filter_key]['include_all']
+                // We might need to handle an edge case where the filter_values are empty
+                if (include_all == false) {
+                    for (let value of filter_values) {
+                        // Check if filter is added to the activeFilters
+                        if (activeFilters[filter_key] == undefined) {
+                            activeFilters[filter_key] = [value]
+                        } else {
+                            activeFilters[filter_key].push([value])
+                        }
+                    }
+                }
             }
             return activeFilters
         },
@@ -224,7 +199,7 @@ const vProjectsStatus = {
             } else {
                 return 'fa-arrow-up-wide-short '
             }
-        },
+        }
     },
     methods: {
         fetchProjectDetails(project_id) {
@@ -329,41 +304,53 @@ const vProjectsStatus = {
                 })
         },
         // Helper methods
+        allValues(filter_name){
+            return this.itemCounts(this.all_projects, filter_name)
+        },
+        allVisibleValues(filter_name){
+            return this.itemCounts(this.visibleProjects, filter_name)
+        },
         getDropdownPositionHelper(input, dropdownHeight) {
             return getDropdownPosition(input, dropdownHeight)
         },
-        itemCounts(list, key) {
+        itemCounts(list, filter_name) {
             /* 
                 Returns a dictionary with the counts of each unique item in the list 
                 key is either a string with a key or an array with two keys
             */
             let items = []
+            let filter_key = this.all_filters[filter_name]['key']
+            let secondary_key = this.all_filters[filter_name]['secondary_key']
+
+            if (Object.keys(list).length == 0) {
+                return {}
+            }
+
             for (let item in list) {
-                if (key instanceof Array) {
-                    items.push(list[item][key[0]][key[1]])
+                if (secondary_key != null) {
+                    items.push(list[item][secondary_key][filter_key])
                 } else {
-                    items.push(list[item][key])
+                    items.push(list[item][filter_key])
                 }
             }
 
-            let itemCounts = {}
+            let counts = {}
             for (let item of items) {
-                if (item in itemCounts) {
-                    itemCounts[item] += 1
+                if (item in counts) {
+                    counts[item] += 1
                 } else {
-                    itemCounts[item] = 1
+                    counts[item] = 1
                 }
             }
             // Convert the itemCounts object to an array of [key, value] pairs
-            let sortedItemCounts = Object.entries(itemCounts);
+            let sortedCounts = Object.entries(counts);
 
             // Sort the array by the keys (i.e., the first element of each pair)
-            sortedItemCounts.sort((a, b) => a[0].localeCompare(b[0]));
+            sortedCounts.sort((a, b) => a[0].localeCompare(b[0]));
 
             // Convert the array back to an object
-            itemCounts = Object.fromEntries(sortedItemCounts);
-
-            return itemCounts
+            counts = Object.fromEntries(sortedCounts);
+            return counts
         },
         mostRecentDate(project) {
             let mostRecentKeyArray = this.mostRecentDateArray(project)
@@ -381,41 +368,12 @@ const vProjectsStatus = {
             let mostRecentKey = Object.keys(summaryDates).reduce((a, b) => summaryDates[a] > summaryDates[b] ? a : b);
             return [mostRecentKey, summaryDates[mostRecentKey]]
         },
-        nrWithApplicationVisible(application) {
-            if (application in this.allApplicationsVisible) {
-                return this.allApplicationsVisible[application]
+        nrVisibleWith(filter_name, filter_value){
+            if (filter_value in this.allVisibleValues(filter_name)) {
+                return this.allVisibleValues(filter_name)[filter_value]
+            } else {
+                return 0
             }
-            return 0
-        },
-        nrWithLibraryConstructionMethodVisible(library_construction_method) {
-            if (library_construction_method in this.allLibraryConstructionMethodsVisible) {
-                return this.allLibraryConstructionMethodsVisible[library_construction_method]
-            }
-            return 0
-        },
-        nrWithStatusVisible(status) {
-            if (status in this.allStatusesVisible) {
-                return this.allStatusesVisible[status]
-            }
-            return 0
-        },
-        nrWithTypeVisible(type) {
-            if (type in this.allTypesVisible) {
-                return this.allTypesVisible[type]
-            }
-            return 0
-        },
-        nrWithProjectCoordinatorVisible(project_coordinator) {
-            if (project_coordinator in this.allProjectCoordinatorsVisible) {
-                return this.allProjectCoordinatorsVisible[project_coordinator]
-            }
-            return 0
-        },
-        nrWithLabResponsibleVisible(lab_responsible) {
-            if (lab_responsible in this.allLabResponsiblesVisible) {
-                return this.allLabResponsiblesVisible[lab_responsible]
-            }
-            return 0
         },
         projectTypeColor(project) {
             let type = project['type']
