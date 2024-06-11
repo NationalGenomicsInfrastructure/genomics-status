@@ -420,15 +420,15 @@ class InvoicingOrderDetailsHandler(AgreementsDBHandler, InvoicingDataHandler):
         contact_dets["invoice_city"] = order_details["address_invoice_city"]
         contact_dets["invoice_country"] = order_details["address_invoice_country"]
         contact_dets["department"] = (
-            order_details["address_postal_department"]
-            if "address_postal_department" in order_details
-            and order_details["address_postal_department"]
+            order_details["address_invoice_department"]
+            if "address_invoice_department" in order_details
+            and order_details["address_invoice_department"]
             else "-"
         )
         contact_dets["university"] = (
-            order_details["address_postal_university"]
-            if "address_postal_university" in order_details
-            and order_details["address_postal_university"]
+            order_details["address_invoice_university"]
+            if "address_invoice_university" in order_details
+            and order_details["address_invoice_university"]
             else "-"
         )
         contact_dets["invoice_vat"] = (
