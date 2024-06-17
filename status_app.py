@@ -102,9 +102,9 @@ from status.projects import (
     PrioProjectsTableHandler,
 )
 
-from status.projects_status import (
-    ProjectsStatusHandler,
-    ProjectStatusWebSocket
+from status.project_cards import (
+    ProjectCardsHandler,
+    ProjectCardsWebSocket
 )
 
 from status.queues import (
@@ -292,7 +292,7 @@ class Application(tornado.web.Application):
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
-            ("/api/v1/project_websocket", ProjectStatusWebSocket),
+            ("/api/v1/project_websocket", ProjectCardsWebSocket),
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
             ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
@@ -368,7 +368,7 @@ class Application(tornado.web.Application):
             ("/project/([^/]*)$", ProjectSamplesOldHandler),
             ("/project_new/([^/]*)$", ProjectSamplesHandler),
             ("/projects", ProjectsHandler),
-            ("/projects_status", ProjectsStatusHandler),
+            ("/project_cards", ProjectCardsHandler),
             ("/proj_meta", ProjMetaCompareHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
@@ -541,7 +541,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/project_samples.html")
             tornado.autoreload.watch("design/projects.html")
-            tornado.autoreload.watch("design/projects_status.html")
+            tornado.autoreload.watch("design/project_cards.html")
             tornado.autoreload.watch("design/reads_total.html")
             tornado.autoreload.watch("design/rec_ctrl_view.html")
             tornado.autoreload.watch("design/running_notes_help.html")

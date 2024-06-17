@@ -439,10 +439,10 @@ export const vProjectDetails = {
                         <div class="tab-pane fade show active" ref="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-pane-btn" tabindex="0">
                             <v-running-notes-tab :user="this.user" ref="project-running-notes-pane-component" :partition_id="project_id" :all_users="this.$root.all_users" note_type="project"></v-running-notes-tab>
                         </div>
-                        <div class="tab-pane fade" ref="project-details-pane" role="tabpanel" aria-labelledby="project-details-pane-btn" tabindex="0">Content 1</div>
-                        <div class="tab-pane fade" ref="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-pane-btn" tabindex="0">Content 2</div>
-                        <div class="tab-pane fade" ref="project-user-communication-pane" role="tabpanel" aria-labelledby="project-user-communication-pane-btn" tabindex="0">Content 4</div>
-                        <div class="tab-pane fade" ref="project-links-pane" role="tabpanel" aria-labelledby="project-links-pane-btn" tabindex="0">Content 5</div>
+                        <div class="tab-pane fade" ref="project-details-pane" role="tabpanel" aria-labelledby="project-details-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
+                        <div class="tab-pane fade" ref="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
+                        <div class="tab-pane fade" ref="project-user-communication-pane" role="tabpanel" aria-labelledby="project-user-communication-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
+                        <div class="tab-pane fade" ref="project-links-pane" role="tabpanel" aria-labelledby="project-links-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
                     </div>
                 </div>
 
@@ -657,7 +657,7 @@ export const vProjectCards = {
     template:
     /*html*/`
     <div class="mx-2">
-        <h1>Projects Status</h1>
+        <h1>Project Cards</h1>
         <div class="card">
             <div class="card-header py-3" @click="toggleCardFilterMenu">
                 <h5 class="mb-0">

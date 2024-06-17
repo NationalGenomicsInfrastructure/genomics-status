@@ -2,10 +2,10 @@ from status.util import SafeHandler, SafeSocketHandler
 import random
 import logging
 
-class ProjectsStatusHandler(SafeHandler):
+class ProjectCardsHandler(SafeHandler):
 
     def get(self):
-        t = self.application.loader.load("projects_status.html")
+        t = self.application.loader.load("project_cards.html")
 
         self.write(
             t.generate(
@@ -14,7 +14,7 @@ class ProjectsStatusHandler(SafeHandler):
             )
         )
 
-class ProjectStatusWebSocket(SafeSocketHandler):
+class ProjectCardsWebSocket(SafeSocketHandler):
     number = 2
 
     def open(self):
