@@ -21,8 +21,8 @@ const vProjectsStatus = {
             single_project_mode: false,
             /* Only used on project cards page */
             all_projects: {},
-            sortBy: 'most_recent_date',
-            card_columns: ['application'],
+            sortBy: 'status',
+            card_columns: ['library_construction_method'],
             descending: true,
             search_value: '',
             open_modal_card: null,

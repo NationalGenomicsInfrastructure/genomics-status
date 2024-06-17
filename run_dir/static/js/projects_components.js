@@ -251,9 +251,9 @@ export const vProjectDetails = {
                     <h4>Links</h4>
                     <div class="row mr-2">
                         <div :class="{'col-9': !this.as_modal}">
-                            <div class="p-1 rounded-3">
+                            <div class="rounded-3">
                                 <h3 class="row mb-0" v-if="project_data['portal_id'] !== undefined">
-                                    <button class="btn btn-large badge text-primary border">
+                                    <button class="btn btn-large badge text-primary border py-3">
                                         <a :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']">
                                             <span class="col float-left">Order Portal</span>
                                             <i class="col fa-sharp fa-regular fa-clipboard-list-check float-right"></i>
@@ -678,6 +678,19 @@ export const vProjectCards = {
                             <div class="form-check" @click="(event) => selectFilterValue(event, 'status', status)">
                                 <input class="form-check-input" type="checkbox" :id="'status_filter_'+status" :value="status" v-model="this.$root.all_filters['status']['filter_values']" :disabled="this.$root.all_filters['status']['include_all']"/>
                                 <label class="form-check-label" :for="'status_filter_' + status">{{ status }} ({{this.$root.nrVisibleWith('status', status)}}/{{nr_with_status}})</label>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="col">
+                        <h4>Type</h4>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="type_all_switch" v-model="this.$root.all_filters['type']['include_all']"/>
+                            <label class="form-check-label" for="type_all_switch">All</label>
+                        </div>
+                        <template v-for="(nr_with_type, type) in this.$root.allValues('type')">
+                            <div class="form-check" @click="(event) => selectFilterValue(event, 'type', type)">
+                                <input class="form-check-input" type="checkbox" :id="'type_filter_'+type" :value="type" v-model="this.$root.all_filters['type']['filter_values']" :disabled="this.$root.all_filters['type']['include_all']"/>
+                                <label class="form-check-label" :for="'type_filter_' + type">{{ type }} ({{this.$root.nrVisibleWith('type', type)}}/{{nr_with_type}})</label>
                             </div>
                         </template>
                     </div>
