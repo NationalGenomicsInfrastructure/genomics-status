@@ -18,7 +18,9 @@ thresholds = {
     "NovaSeq S1": 650,
     "NovaSeq S2": 1650,
     "NovaSeq S4": 2000,
-    "NovaSeqXPlus 10B": 1000,  # Might need to be reviewed when we settle for a number in AM
+    "NovaSeqXPlus 10B": 1000,
+    "NovaSeqXPlus 1.5B": 750,  # Might need to be reviewed when we settle for a number in AM
+    "NovaSeqXPlus 25B": 3000,  # Might need to be reviewed when we settle for a number in AM
     "NextSeq Mid": 25,
     "NextSeq High": 75,
     "NextSeq 2000 P1": 100,
@@ -145,17 +147,15 @@ class FlowcellHandler(SafeHandler):
                         if lane["Project"] == proj and lane["clustersnb"]
                     )
                     if sum_project_lane_yield:
-                        weighted_mean_q30 = (
-                            sum(
-                                int(lane["clustersnb"].replace(",", ""))
-                                * float(lane["overthirty"])
-                                for lane in lane_details
-                                if lane["Project"] == proj
-                                and lane["clustersnb"]
-                                and lane["overthirty"]
-                            )
-                            / sum_project_lane_yield
-                        )
+                        weighted_sum_q30 = 0
+                        sum_yield_with_zero_q30 = 0
+                        for lane in lane_details:
+                            if lane["Project"] == proj and lane["clustersnb"]:
+                                if lane["overthirty"]:
+                                    weighted_sum_q30 += int(lane["clustersnb"].replace(",", "")) * float(lane["overthirty"])
+                                else:
+                                    sum_yield_with_zero_q30 += int(lane["clustersnb"].replace(",", ""))
+                        weighted_mean_q30 = weighted_sum_q30 / (sum_project_lane_yield - sum_yield_with_zero_q30)
                     else:
                         weighted_mean_q30 = 0
                     proj_lane_percentage_obtained = (
@@ -218,28 +218,22 @@ class FlowcellHandler(SafeHandler):
                         if lane["SampleName"] == sample and lane["clustersnb"]
                     )
                     if sum_sample_lane_yield:
-                        weighted_mean_q30 = (
-                            sum(
-                                int(lane["clustersnb"].replace(",", ""))
-                                * float(lane["overthirty"])
-                                for lane in lane_details
-                                if lane["SampleName"] == sample
-                                and lane["clustersnb"]
-                                and lane["overthirty"]
-                            )
-                            / sum_sample_lane_yield
-                        )
-                        weighted_mqs = (
-                            sum(
-                                int(lane["clustersnb"].replace(",", ""))
-                                * float(lane["mqs"])
-                                for lane in lane_details
-                                if lane["SampleName"] == sample
-                                and lane["clustersnb"]
-                                and lane["mqs"]
-                            )
-                            / sum_sample_lane_yield
-                        )
+                        weighted_sum_q30 = 0
+                        weighted_sum_mqs = 0
+                        sum_yield_with_zero_q30 = 0
+                        sum_yield_with_zero_mqs = 0
+                        for lane in lane_details:
+                            if lane["SampleName"] == sample and lane["clustersnb"]:
+                                if lane["overthirty"]:
+                                    weighted_sum_q30 += int(lane["clustersnb"].replace(",", "")) * float(lane["overthirty"])
+                                else:
+                                    sum_yield_with_zero_q30 += int(lane["clustersnb"].replace(",", ""))
+                                if lane["mqs"]:
+                                    weighted_sum_mqs += int(lane["clustersnb"].replace(",", "")) * float(lane["mqs"])
+                                else:
+                                    sum_yield_with_zero_mqs += int(lane["clustersnb"].replace(",", ""))
+                        weighted_mean_q30 = weighted_sum_q30 / (sum_sample_lane_yield - sum_yield_with_zero_q30)
+                        weighted_mqs = weighted_sum_mqs / (sum_sample_lane_yield - sum_yield_with_zero_mqs)
                     else:
                         weighted_mean_q30 = 0
                         weighted_mqs = 0
@@ -492,7 +486,7 @@ class ONTFlowcellHandler(SafeHandler):
             view_pore_count_history=view_pore_count_history,
         )
 
-    def fetch_barcodes(self, run_name):
+    def fetch_barcodes(self, run_name: str) -> dict:
         """Returns dictionary whose keys are barcode IDs and whose values are dicts containing
         barcode metrics from the last data acquisition snapshot of the MinKNOW reports.
         """
@@ -502,19 +496,13 @@ class ONTFlowcellHandler(SafeHandler):
         )
         rows = view_barcodes[run_name].rows
 
-        barcodes = {}
         if rows and rows[0].value:
-            barcodes_unformatted = rows[0].value
-            for bc in barcodes_unformatted:
-                barcodes[bc] = {}
-                for k, v in barcodes_unformatted[bc].items():
-                    if type(v) == str and re.match("^\d+$", v):
-                        barcodes[bc][k] = int(v)
-                    else:
-                        barcodes[bc][k] = v
+            # Load the barcode metrics into a pandas DataFrame
+            df = pd.DataFrame.from_dict(rows[0].value, orient="index")
 
-            # Every barcode becomes a row in a dataframe for column-wise formatting
-            df = pd.DataFrame.from_dict(barcodes, orient="index")
+            # Format a subset of all columns as integers
+            integer_columns = df.columns.drop("barcode_alias")
+            df[integer_columns] = df[integer_columns].fillna(0).astype(int)
 
             # The barcode names "barcode01", "barcode02", etc. are moved to their own column and the index is set to the barcode ID number
             df["bc_name"] = df.index
@@ -526,7 +514,7 @@ class ONTFlowcellHandler(SafeHandler):
             df.set_index("bc_id", inplace=True)
 
             # === Start making column-wise formatting ===
-            # If the barcode alias is redunant, remove it
+            # If the barcode alias is redundant, remove it
             df.loc[df.bc_name == df.barcode_alias, "barcode_alias"] = ""
 
             # Calculate percentages
@@ -575,7 +563,10 @@ class ONTFlowcellHandler(SafeHandler):
 
             barcodes = df.to_dict(orient="index")
 
-        return barcodes
+            return barcodes
+
+        else:
+            return None
 
     def fetch_args(self, run_name):
         view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
@@ -666,8 +657,8 @@ def add_prefix(input_int: int, unit: str):
 
 def walk_str2int(iterable):
     """This function recursively traverses a JSON-like tree of mutable iterables (dicts, lists)
-    and reassigns all list elements or dict values which are strings that can be intepreted as integers
-    to the int type"""
+    and reassigns all list elements or dict values which are strings that can be interpreted as integers
+    to the int type."""
 
     if isinstance(iterable, (dict, list)):
         for key, val in (

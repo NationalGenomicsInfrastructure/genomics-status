@@ -407,10 +407,6 @@ function load_all_udfs(){
           if(!emails[bx]){emails[bx]=[elabel('Bioinfo', 'secondary')]} else {emails[bx].push(elabel('Bioinfo', 'secondary'))};
           var pi = validateEmail(data['order_details']['fields']['project_pi_email']);
           if(!emails[pi]){emails[pi]=[elabel('PI', 'info')]} else {emails[pi].push(elabel('PI', 'info'))};
-          if(data['snic_checked'] && data['snic_checked']['status']==false){
-            $("#grus_alert").show();
-            $("#grus_ids").text(pi);
-          }
         }
         catch(error) {
           console.log('Falling back to using doc["contact"]');
@@ -494,6 +490,11 @@ function load_all_udfs(){
       else if (prettify(key) == 'modification_time'){
         var time = moment(value).format('HH:mm, MMM Do YYYY');
         $("#last_update").html(time);
+      }
+      else if(prettify(key) == 'project_summary_links'){
+        value.forEach(function(summary){
+          $("#project_summary_link_dropdown>ul").append('<li><a class="dropdown-item" href="'+ lims_uri +summary[0]+'" target="_blank"> Created: '+summary[1]+'</a></li>');
+        });
       }
       // Everything else
       else {
@@ -863,11 +864,16 @@ function load_samples_table(colOrder) {
               for (var i=0; i<info[column_id].length; i++) {
                 var fc = info[column_id][i];
                 // Remove the lane number and barcode - eg 6_FCID_GTGAAA
-                fc = fc.substring(2);
-                fc = fc.replace(/_[ACTG\-]+$/,'');
-                fc = fc.replace('_NoIndex', '');
-                tbl_row += '<samp class="nowrap"><a class="text-decoration-none" href="/flowcells/' + fc + '">' +
-                info[column_id][i] + '</a></samp><br>';
+                if(make_project_links(' '+fc).includes('href="/flowcells_ont/')){
+                  tbl_row +=  '<samp class="nowrap">'+make_project_links(' '+fc)+ '</samp><br>';
+                }
+                else{
+                  fc = fc.substring(2);
+                  fc = fc.replace(/_[ACTG\-]+$/,'');
+                  fc = fc.replace('_NoIndex', '');
+                  tbl_row += '<samp class="nowrap"><a class="text-decoration-none" href="/flowcells/' + fc + '">' +
+                  info[column_id][i] + '</a></samp><br>';
+                }
               }
               tbl_row += '</td>';
             }

@@ -14,32 +14,12 @@ from genologics.config import BASEURI, USERNAME, PASSWORD
 import pandas as pd
 
 from status.util import SafeHandler
-from status.flowcell import fetch_ont_run_stats
+from status.flowcell import fetch_ont_run_stats, thresholds
 from status.running_notes import LatestRunningNoteHandler
 
 application_log = logging.getLogger("tornado.application")
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
-
-thresholds = {
-    "HiSeq X": 320,
-    "RapidHighOutput": 188,
-    "HighOutput": 143,
-    "RapidRun": 114,
-    "MiSeq Version3": 18,
-    "MiSeq Version2": 10,
-    "MiSeq Version2Nano": 0.75,
-    "NovaSeq SP": 325,
-    "NovaSeq S1": 650,
-    "NovaSeq S2": 1650,
-    "NovaSeq S4": 2000,
-    "NovaSeqXPlus 10B": 1000,  # Might need to be reviewed when we settle for a number in AM
-    "NextSeq Mid": 25,
-    "NextSeq High": 75,
-    "NextSeq 2000 P1": 100,
-    "NextSeq 2000 P2": 400,
-    "NextSeq 2000 P3": 550,
-}
 
 
 def find_id(stringable, pattern_type: str) -> re.match:
@@ -514,10 +494,28 @@ class ReadsTotalHandler(SafeHandler):
                 "samples/lane_clusters", reduce=False
             )
             bioinfo_view = self.application.bioinfo_db.view("latest_data/sample_id")
+            fc_view = self.application.x_flowcells_db.view(
+                "info/summary", descending=True
+            )
+
             for row in xfc_view[query : "{}Z".format(query)]:
                 if not row.key in data:
                     data[row.key] = []
+                # To add correct threshold values
+                fc_long_name = row.value["fcp"].split(":")[0]
+                fc_date_run = fc_long_name.split("_")[0]
+                if len(fc_date_run) > 6:
+                    fc_date_run = fc_date_run[-6:]
+                fc_short_name = (
+                    fc_date_run + "_" + fc_long_name.split("_")[-1]
+                )
+                for info_row in fc_view[fc_short_name]:
+                    row.value["run_mode"] = info_row.value["run_mode"]
+                    row.value["longer_read_length"] = info_row.value[
+                        "longer_read_length"
+                    ]
                 data[row.key].append(row.value)
+
             # To check if sample is failed on lane level
             for row in bioinfo_view[
                 [query, None, None, None] : [f"{query}Z", "ZZ", "ZZ", "ZZ"]

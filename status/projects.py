@@ -213,18 +213,22 @@ class ProjectsBaseDataHandler(SafeHandler):
                 row.value["days_in_reception_control"] = diff
             field_sources["days_in_reception_control"] = "Number of days between open date and queue date. If not queued yet, days between open date and today. Calculated by Genomics Status (backend)"
 
-        if ord_det and "fields" in ord_det and "project_pi_name" in ord_det["fields"]:
-            row.value["project_pi_name"] = ord_det["fields"]["project_pi_name"]
-            # if there is a PI e-mail, add it
-            if "project_pi_email" in ord_det["fields"] and ord_det["fields"].get(
-                "project_pi_email", ""
-            ):
-                row.value["project_pi_name"] = (
-                    row.value["project_pi_name"]
-                    + ": "
-                    + ord_det["fields"]["project_pi_email"]
-                )
+        if ord_det and "fields" in ord_det:
+            if "project_pi_name" in ord_det["fields"]:
+                row.value["project_pi_name"] = ord_det["fields"]["project_pi_name"]
+                # if there is a PI e-mail, add it
+                if "project_pi_email" in ord_det["fields"] and ord_det["fields"].get(
+                    "project_pi_email", ""
+                ):
+                    row.value["project_pi_name"] = (
+                        row.value["project_pi_name"]
+                        + ": "
+                        + ord_det["fields"]["project_pi_email"]
+                    )
             field_sources["project_pi_name"] = "PI Email, from Order Portal, formatted by Genomics Status (backend)"
+            if "project_bx_email" in ord_det["fields"]:
+                row.value["project_bx_email"] = ord_det["fields"]["project_bx_email"]
+            field_sources["project_bx_email"] = "Email to project bioinformatics responsible, from Order Portal"
 
         return row, field_sources
 
@@ -551,10 +555,12 @@ class ProjectsBaseDataHandler(SafeHandler):
                 search_string in row_key.lower()
                 or search_string in row_value[0].lower()
                 or (row_value[1] and search_string in row_value[1].lower())
+                or search_string in f'{row_value[0]}, {row_key}'.lower()
+                or (row_value[2] and search_string in row_value[2].lower())
             ):
                 project = {
                     "url": "/project/" + row_value[0],
-                    "name": "{} ({})".format(row_key, row_value[0]),
+                    "name": f"{row_value[0]}, {row_key}"
                 }
                 projects.append(project)
 

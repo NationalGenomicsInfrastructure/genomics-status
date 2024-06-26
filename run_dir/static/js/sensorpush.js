@@ -124,10 +124,10 @@ function plot_sum_data(){
                     pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
                 },
                 plotBands: [{
-                color: '#fdffd4',
-                from: 6,
+                color: '#f0f0f0',
+                from: 8,
                 width: 10,
-                to: 0
+                to: 2
                 }]
             },
             legend: {
@@ -164,7 +164,7 @@ function plot_sum_data(){
                     pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
                 },
                 plotBands: [{
-                color: '#fdffd4',
+                color: '#f0f0f0',
                 from: -10, 
                 width: 10, 
                 to: -33

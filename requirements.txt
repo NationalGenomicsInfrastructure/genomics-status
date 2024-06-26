@@ -2,6 +2,7 @@ backports.ssl-match-hostname>=3.5.0.1
 CouchDB==1.1
 ecdsa>=0.13
 genologics @ https://github.com/SciLifeLab/genologics/archive/master.zip
+genologics_sql @ https://github.com/SciLifeLab/genologics_sql/archive/master.zip
 httplib2>=0.10.3
 cffi
 matplotlib>=2.0.0

@@ -25,6 +25,7 @@ from status.applications import (
     ApplicationsHandler,
 )
 from status.barcode import BarcodeHandler
+from status.clone_project import CloneProjectHandler, LIMSProjectCloningHandler
 from status.user_management import UserManagementHandler, UserManagementDataHandler
 from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
@@ -59,6 +60,7 @@ from status.invoicing import (
 )
 from status.lanes_ordered import LanesOrderedHandler, LanesOrderedDataHandler
 from status.multiqc_report import MultiQCReportHandler
+from status.ngisweden_stats import NGISwedenHandler
 from status.pricing import (
     PricingDateToVersionDataHandler,
     PricingExchangeRatesDataHandler,
@@ -116,6 +118,8 @@ from status.queues import (
     WorksetQueuesDataHandler,
     LibraryPoolingQueuesHandler,
     LibraryPoolingQueuesDataHandler,
+    SmartSeq3ProgressPageHandler,
+    SmartSeq3ProgressPageDataHandler,
 )
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
 from status.ont_plot import ONTFlowcellYieldHandler, ONTFlowcellPlotHandler
@@ -278,6 +282,7 @@ class Application(tornado.web.Application):
             ("/api/v1/latest_sticky_run_note/([^/]*)", LatestStickyNoteHandler),
             ("/api/v1/latest_sticky_run_note", LatestStickyNotesMultipleHandler),
             ("/api/v1/libpooling_queues", LibraryPoolingQueuesDataHandler),
+            ("/api/v1/lims_project_data/([^/]*)$", LIMSProjectCloningHandler),
             ("/api/v1/mark_agreement_signed", AgreementMarkSignHandler),
             ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
             ("/api/v1/pricing_exchange_rates", PricingExchangeRatesDataHandler),
@@ -316,6 +321,7 @@ class Application(tornado.web.Application):
             ("/api/v1/sequencing_queues", SequencingQueuesDataHandler),
             ("/api/v1/sensorpush", SensorpushDataHandler),
             ("/api/v1/sensorpush_warnings", SensorpushWarningsDataHandler),
+            ("/api/v1/smartseq3_progress", SmartSeq3ProgressPageDataHandler),
             ("/api/v1/stats", StatsAggregationHandler),
             ("/api/v1/stats/application_open_projects", ApplicationOpenProjectsHandler),
             ("/api/v1/stats/application_open_samples", ApplicationOpenSamplesHandler),
@@ -345,6 +351,7 @@ class Application(tornado.web.Application):
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
+            ("/clone_project", CloneProjectHandler),
             ("/deliveries", DeliveriesPageHandler),
             ("/flowcells", FlowcellsHandler),
             ("/flowcells/(\d{6,8}_[^/]*)$", FlowcellHandler),
@@ -360,6 +367,7 @@ class Application(tornado.web.Application):
             ("/lanes_ordered", LanesOrderedHandler),
             ("/libpooling_queues", LibraryPoolingQueuesHandler),
             ("/multiqc_report/([^/]*)$", MultiQCReportHandler),
+            ("/ngisweden_stats", NGISwedenHandler),
             ("/pools_qpcr", qPCRPoolsHandler),
             ("/pricing_preview", PricingPreviewHandler),
             ("/pricing_quote", PricingQuoteHandler),
@@ -377,6 +385,7 @@ class Application(tornado.web.Application):
             ("/sample_requirements_update", SampleRequirementsUpdateHandler),
             ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
+            ("/smartseq3_progress", SmartSeq3ProgressPageHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/user_management", UserManagementHandler),
             ("/userpref", UserPrefPageHandler),
@@ -520,6 +529,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/bioinfo_tab/run_lane_sample_view.html")
             tornado.autoreload.watch("design/bioinfo_tab/sample_run_lane_view.html")
             tornado.autoreload.watch("design/cronjobs.html")
+            tornado.autoreload.watch("design/clone_project.html")
             tornado.autoreload.watch("design/data_delivered_plot.html")
             tornado.autoreload.watch("design/deliveries.html")
             tornado.autoreload.watch("design/error_page.html")
@@ -534,6 +544,7 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/invoicing.html")
             tornado.autoreload.watch("design/barcode.html")
             tornado.autoreload.watch("design/link_tab.html")
+            tornado.autoreload.watch("design/ngisweden_stats.html")
             tornado.autoreload.watch("design/qpcr_pools.html")
             tornado.autoreload.watch("design/pricing_products.html")
             tornado.autoreload.watch("design/pricing_quote.html")

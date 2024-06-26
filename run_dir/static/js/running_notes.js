@@ -124,6 +124,7 @@ function load_running_notes() {
   return $.getJSON(note_values.url, function(data) {
     if(Object.keys(data).length == 0 || typeof data === 'undefined'){
       $('#running_notes_panels').html('<div class="well">No running notes found.</div>');
+      $("#invoicing_notes").html('<div class="well">No invoicing running notes found.</div>');
     } else {
       $.each(data, function(date, note) {
         $('#running_notes_panels').append(make_running_note(date, note, false));
@@ -133,7 +134,7 @@ function load_running_notes() {
         }
       });
       if($('#invoicing_notes').children().length === 0){
-        $('#invoicing_notes').html('<div class="well">No running notes found.</div>');
+        $('#invoicing_notes').html('<div class="well">No invoicing running notes found.</div>');
       }
       check_img_sources($('#running_notes_panels img'));
       count_cards();

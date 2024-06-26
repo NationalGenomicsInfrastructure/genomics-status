@@ -114,6 +114,7 @@ class SensorpushHandler(SensorpushBaseHandler):
 
     def get(self):
         sensor_data = self.get_samples(start_days_ago=28)
+        sensor_24h_data = self.get_samples(start_days_ago=1)
 
         t = self.application.loader.load("sensorpush.html")
         self.write(
@@ -121,5 +122,6 @@ class SensorpushHandler(SensorpushBaseHandler):
                 gs_globals=self.application.gs_globals,
                 user=self.get_current_user(),
                 sensor_data=sensor_data,
+                sensor_24h_data=sensor_24h_data,
             )
         )

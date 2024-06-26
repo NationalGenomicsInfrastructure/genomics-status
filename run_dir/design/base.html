@@ -61,6 +61,7 @@
               <a class="dropdown-item" href="/workset_queues">Pending for Workset</a>
               <a class="dropdown-item" href="/pools_qpcr">qPCR</a>
               <a class="dropdown-item" href="/sequencing_queues">Sequencing</a>
+              <a class="dropdown-item" href="/smartseq3_progress">SmartSeq3 Progress</a>
             </div>
           </li>
           <li class="nav-item dropdown px-1">
@@ -72,6 +73,9 @@
               <a class="dropdown-item" href="/production/cronjobs">Cronjobs</a>
               <a class="dropdown-item" href="/instrument_logs">Instrument Logs</a>
               <a class="dropdown-item" href="/sample_requirements">Sample Requirements</a>
+              {% if user and (user.is_proj_coord or user.is_any_admin)%}
+              <a class="dropdown-item" href="/clone_project">Clone Project in LIMS</a>
+              {% end %}
               <div role="separator" class="dropdown-divider"></div>
               <h6 class="dropdown-header">External</h6>
               <a class="dropdown-item" href="https://ngi-tower.scilifelab.se/orgs/NGI/workspaces/NGI-Stockholm/launchpad" target="_blank">Seqera Platform</a>
@@ -89,6 +93,7 @@
               <a class="dropdown-item" href="/ont_flowcells_plot">ONT Flowcells Trends</a>
               <a class="dropdown-item" href="/sensorpush">Sensorpush</a>
               <a class="dropdown-item" href="/lanes_ordered">Lanes Ordered</a>
+              <a class="dropdown-item" href="/ngisweden_stats">NGI Sweden Website Statistics</a>
             </div>
           </li>
           {% if user and user.is_any_admin %}

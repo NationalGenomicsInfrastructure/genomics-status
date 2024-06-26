@@ -104,16 +104,18 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.bp_yield:,.0f}</b>';
     }
 
-    var thresholdColors = ['#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff'];
+    var thresholdColors = ['#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff', '#e65c00', '#1B9E97'];
     var thresholdLabels = [
         'NovaSeq SP threshold to pass',
         'NovaSeq S1 threshold to pass',
         'NovaSeq S2 threshold to pass',
         'NovaSeq S4 threshold to pass',
-        'NovaSeqXPlus 10B threshold to pass'
+        'NovaSeqXPlus 10B threshold to pass',
+        'NovaSeqXPlus 1.5B threshold to pass',
+        'NovaSeqXPlus 25B threshold to pass'
     ];
 
-    function applyThresholds(thresholdValues) {
+    function applyThresholds(thresholdValues, leftAlignedIndexes) {
         toplot.yAxis = {
             title: {
                 enabled: true,
@@ -125,6 +127,8 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                 }
             },
             plotLines: thresholdValues.map(function (value, index) {
+                var align = leftAlignedIndexes.includes(index) ? 'left' : 'right';
+                var labelX = align === 'left' ? -10 : null;
                 return {
                     color: thresholdColors[index],
                     dashStyle: 'longdash',
@@ -133,7 +137,8 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                     zIndex: 1,
                     label: {
                         text: thresholdLabels[index],
-                        align: 'right'
+                        align: align,
+                        x: labelX,
                     }
                 };
             })
@@ -142,12 +147,12 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
 
     // Styling the default view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell") {
-        applyThresholds([650000000, 1300000000, 3300000000, 8000000000, 10000000000]);
+        applyThresholds([650e6, 1300e6, 3300e6, 8000e6, 8000e6, 1500e6, 24000e6], [0, 1, 2]);
     }
 
     // Styling the lane view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "lane") {
-        applyThresholds([325000000, 650000000, 1650000000, 2000000000, 1000000000]);
+        applyThresholds([325e6, 650e6, 1650e6, 2000e6, 1000e6, 750e6, 3000e6], [0, 1, 2]);
     }
 
     var serie = build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
@@ -155,7 +160,7 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
     toplot.xAxis.categories = serie[0];
     $("#main_plot").highcharts(toplot);
     window.current_plot_obj = toplot;
-}   
+}
 
 function build_series(data, key, name, display_by, filter_inst_type, filter_inst, color_type){
 
@@ -482,7 +487,7 @@ function update_months_list(){
 function update_color_schemes(){
     var inst_type_cs=chroma.scale(['#90ee90','#7866df','#ad00af','#ff0000']).domain([0, 3]);
     var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
-    var chem_cs = chroma.scale(['#ff00ae', '#0080ff', '#11ad11', '#ffb700', '#8400ff', '#00b7d4', '#a34929', '#a84da8', '#575757', '#0300bf']).domain([0, 9])
+    var chem_cs = chroma.scale(['#ff00ae', '#0080ff', '#11ad11', '#ffb700', '#e65c00', '#8400ff', '#1B9E97', '#00b7d4', '#a34929', '#a84da8', '#575757', '#0300bf']).domain([0, 11])
     var month_cs=chroma.scale(['yellow', 'lightblue', 'pink', 'orange']).domain([0,window.current_months_list.length-1]);
     window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs];
 }

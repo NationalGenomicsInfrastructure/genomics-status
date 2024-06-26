@@ -51,7 +51,7 @@
           <dd> {{ data['project_data']['agreement_number'] }}</dd>
       {% end %}
         <dt>Issuer (name/email)</dt>
-          <dd>{{ user.name }} / orders@ngisweden.se</dd>
+          <dd>{{ user_name }} / orders@ngisweden.se</dd>
         <dt>Agreement summary</dt>
           <dd> {% raw data['agreement_summary']%}
           {%for condition in data['agreement_conditions']%}
