@@ -122,16 +122,20 @@ export const vProjectDetails = {
                 <div class="col-12">
                     <div :class="{ 'modal-header border-bottom-0 pb-0': as_modal}">
                         <h1 :class="{ 'modal-title': as_modal, 'col': true }" id="projectDetailsModalLabel" style="white-space: nowrap;">
-                            <a :href="'/project_new/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{project_id}}</a>, {{project_data.project_name}}
+                            {{project_id}}, {{project_data.project_name}}
                             <small class="text-muted ml-4">
-                                NGI Portal: <a class="text-decoration-none text-wrap" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">{{project_data['customer_project_reference']}}</a>
+                            NGI Portal: <a class="text-decoration-none text-wrap" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">{{project_data['customer_project_reference']}}</a>
                             </small>
                         </h1>
                         <template v-if="as_modal">
                             <button type="button" class="btn-close" @click="$emit('closeModal')"></button>
                         </template>
                     </div>
-                    <small><span class="badge" id="project_status_alert"></span></small>
+                    <h3 :class="{'mt-3': true, 'ml-3': as_modal}">
+                        <a :href="'/project/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+                            <i class="fa-regular fa-arrow-up-right-from-square"></i> Old Project Page
+                        </a>
+                    </h3>
                     <h2><span :class="'badge w-100 mt-1 mb-4 ' + status_bg_class">{{project_data.status}}</span></h2>
                 </div>
                 <div class="col-4">
