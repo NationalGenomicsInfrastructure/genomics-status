@@ -168,3 +168,9 @@ Handlers that inherit from ```tornado.web.RequestHandler``` should implement at 
 Tornado templates are a good way to generate dynamic pages server side. The advantage of templates is that you can embeed python code in them. [The official documentation](http://www.tornadoweb.org/en/stable/template.html) is good enough to learn how they work.
 
 On Genomics Status, templates are located in `status/run_dir/design`
+
+
+TODO:
+    - [ ] Fix links to old project page vs new project page
+    - [ ] Add link to project cards from menu and front page
+    
