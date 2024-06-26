@@ -99,6 +99,26 @@ export const vProjectDetails = {
             if (this.active_tab == 'project-running-notes-pane') {
                 this.$refs['project-running-notes-pane-component'].toggleNewNoteForm()
             }
+        },
+        copy_to_clipboard(event, text) {
+            // Copy text to clipboard
+            navigator.clipboard.writeText(text).then(function() {
+                console.log('Async: Copying to clipboard was successful!');
+                // Show a tooltip
+                let tooltip = new bootstrap.Tooltip(event.target, {
+                    title: 'Copied!',
+                    trigger: 'manual'
+                });
+                tooltip.show();
+                setTimeout(() => {
+                    tooltip.hide();
+                }, 1000)
+            }, function(err) {
+                console.error('Async: Could not copy text: ', err);
+            });
+        },
+        copy_orderportal_title(event) {
+            this.copy_to_clipboard(event, this.project_data['customer_project_reference'])
         }
     },
     created: function() {
@@ -124,7 +144,7 @@ export const vProjectDetails = {
                         <h1 :class="{ 'modal-title': as_modal, 'col': true }" id="projectDetailsModalLabel" style="white-space: nowrap;">
                             {{project_id}}, {{project_data.project_name}}
                             <small class="text-muted ml-4">
-                            NGI Portal: <a class="text-decoration-none text-wrap" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">{{project_data['customer_project_reference']}}</a>
+                            NGI Portal: <a class="text-decoration-none text-wrap" :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" target="_blank">{{project_data['customer_project_reference']}}</a><a class="ml-2" target="_blank" @click="copy_orderportal_title" style="cursor: pointer;"><i class="fa-regular fa-copy"></i></a>
                             </small>
                         </h1>
                         <template v-if="as_modal">
