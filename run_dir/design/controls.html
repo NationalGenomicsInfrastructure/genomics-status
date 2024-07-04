@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+<!--
+Template file: controls.html
+URL: /controls/
+Title: Controls
+Description: Overview of positive and negative controls
+-->
+
+{% block stuff %}
+<div class="row">
+    <h1><span id="page_title">Positive and Negative Controls</span></h1>
+</div>
+  <div id="page_content" >
+    <div class="tabbable">
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><a class="nav-link active" href="#tab_negative_controls" role="tab" data-toggle="tab" aria-selected="true">Negative Controls</a></li>
+        <li class="nav-item"><a class="nav-link" href="#tab_positive_controls" role="tab" data-toggle="tab">Positive Controls</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="tab_negative_controls">
+          <h2 class="negative_controls_heading"><small class="text-muted">all negative controls</small></h2>
+          <div id="neg_control-list">
+            &nbsp;
+            <table class="table table-striped table-bordered sortable" id="negative_controls_table">
+              <thead id="negative_controls_table_head">
+                <tr class="sticky darkth">
+                 {% for onekey in headers %}
+                    <th class="sort">{{ onekey[0] }}</th>
+                 {% end %}
+                 </tr>
+              </thead>
+              <tfoot id="workset_table_footer">
+                <tr class="sticky darkth">
+                  {% for onekey in headers %}
+                     <th class="sort">{{ onekey[0] }}</th>
+                  {% end %}
+                  </tr>
+              </tfoot>
+              <tbody id="negative_controls_table_body"></tbody>
+                {% for control in negative_control_data%}
+                <tr>
+                  {% for onekey in headers %}
+                    {% if onekey[1] == 'project' %}
+                    <td>
+                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
+                    </td>
+                    {% elif onekey[1] == 'sample_id' %}
+                    <td>
+                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
+                    </td>
+                    {% elif onekey[1] == 'customer_name' %}
+                    <td>
+                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
+                    </td>
+                    {% elif onekey[1] == 'workset_name' %}
+                    <td>
+                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
+                    </td>
+                    {% elif onekey[1] == 'sequenced_fc' %}
+                    <td>
+                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
+                    </td>
+                    {%end%}
+                    {%end%}
+                </tr>
+                {%end%}
+            </table>
+          </div>
+        </div>
+    </div>
+  </div> 
+</div>
+{% end %}

@@ -25,6 +25,7 @@ from status.applications import (
     ApplicationsHandler,
 )
 from status.barcode import BarcodeHandler
+from status.controls import ControlsHandler
 from status.clone_project import CloneProjectHandler, LIMSProjectCloningHandler
 from status.user_management import UserManagementHandler, UserManagementDataHandler
 from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
@@ -340,6 +341,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_queues", WorksetQueuesDataHandler),
             ("/api/v1/closed_worksets", ClosedWorksetsHandler),
             ("/barcode", BarcodeHandler),
+            ("/controls", ControlsHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
@@ -524,11 +526,13 @@ class Application(tornado.web.Application):
         if options["develop"]:
             tornado.autoreload.watch("design/application.html")
             tornado.autoreload.watch("design/applications.html")
+            tornado.autoreload.watch("design/barcode.html")
             tornado.autoreload.watch("design/base.html")
             tornado.autoreload.watch("design/base_b5.html")
             tornado.autoreload.watch("design/bioinfo_tab.html")
             tornado.autoreload.watch("design/bioinfo_tab/run_lane_sample_view.html")
             tornado.autoreload.watch("design/bioinfo_tab/sample_run_lane_view.html")
+            tornado.autoreload.watch("design/controls.html")
             tornado.autoreload.watch("design/cronjobs.html")
             tornado.autoreload.watch("design/clone_project.html")
             tornado.autoreload.watch("design/data_delivered_plot.html")
@@ -537,15 +541,14 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcell.html")
             tornado.autoreload.watch("design/flowcell_error.html")
             tornado.autoreload.watch("design/flowcell_trend_plot.html")
-            tornado.autoreload.watch("design/ont_trend_plot.html")
             tornado.autoreload.watch("design/flowcells.html")
-            tornado.autoreload.watch("design/lanes_ordered.html")
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/invoicing.html")
-            tornado.autoreload.watch("design/barcode.html")
+            tornado.autoreload.watch("design/lanes_ordered.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/ngisweden_stats.html")
+            tornado.autoreload.watch("design/ont_trend_plot.html")
             tornado.autoreload.watch("design/qpcr_pools.html")
             tornado.autoreload.watch("design/pricing_products.html")
             tornado.autoreload.watch("design/pricing_quote.html")
