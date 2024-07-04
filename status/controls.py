@@ -1,14 +1,6 @@
 """Handlers related to test for controls
 """
-from __future__ import print_function
-import subprocess
-import tornado.web
-import json
-from datetime import datetime
-from dateutil import parser
-from collections import Counter
 from status.util import SafeHandler
-import re
 
 class ControlsHandler(SafeHandler):
 
@@ -18,13 +10,9 @@ class ControlsHandler(SafeHandler):
         neg_control_data = self.find_control_data('negative control')
         pos_control_data = self.find_control_data('positive control')
 
-        #print(neg_control_data)
-
         negative_control_data = self.add_workset_project(neg_control_data, ws_data, ws_name_data)
         positive_control_data = self.add_workset_project(pos_control_data, ws_data, ws_name_data)
 
-        #print(positive_control_data)
-        #print(negative_control_data)
         headers = [
             ['Project', 'project'],
             ['Sample ID', 'sample_id'],
@@ -33,7 +21,7 @@ class ControlsHandler(SafeHandler):
             ['Workset Projects', 'workset_projects'],
             ['Flowcell(s)', 'sequenced_fc'],
         ]
-        #print(headers)
+
         self.write( #anything in here is used to create the html. In essence, anything listed here can be accessed in /controls.html
             t.generate(
                 gs_globals=self.application.gs_globals, user=self.get_current_user(),
@@ -45,7 +33,7 @@ class ControlsHandler(SafeHandler):
         )
 
     def find_control_data(self, control_type):
-        """Find control data from the database
+        """Find control data from the couchDB from project/controls view
         """
         from collections import defaultdict
         result = {}
@@ -74,6 +62,9 @@ class ControlsHandler(SafeHandler):
         """get projects for each workset and return a dictionary:
         {workset_id, workset_name: [project1, project2, ...]}
         be aware that the workset_id and workset_name are concatenated in the key and that workset_id may not be present in the workset document
+
+        and additional dictionary with only the workset name as key is also returned and can be used in cases were no workset_id is present in the control data:
+        {workset_name: [project1, project2, ...]}
         """
         result = {}
         result_just_ws_name = {}
@@ -97,7 +88,6 @@ class ControlsHandler(SafeHandler):
             if control_ws_id_name in workset_data:
                 control_data[control]["workset_projects"] = ", ".join(workset_data[control_ws_id_name])
             else: #if the sample doesn't have a workset_id I only use the workset name to retrieve the projects of the workset
-                print(workset_name_data[control_data[control]["workset_name"]])
                 control_data[control]["workset_projects"] = " ".join(["*", ", ".join(workset_name_data[control_data[control]["workset_name"]])]) # asterisk indicates that workset name only is used to retrieve workset projects
         return control_data
             
