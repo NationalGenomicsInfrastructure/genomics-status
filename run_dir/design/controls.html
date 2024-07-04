@@ -67,6 +67,57 @@ Description: Overview of positive and negative controls
             </table>
           </div>
         </div>
+      <div class="tab-pane fade" id="tab_positive_controls">
+        <h2 class="positive_controls_heading"><small class="text-muted">all positive controls</small></h2>
+        <div id="neg_control-list">
+          &nbsp;
+          <table class="table table-striped table-bordered sortable" id="positive_controls_table">
+            <thead id="positive_controls_table_head">
+              <tr class="sticky darkth">
+                {% for onekey in headers %}
+                  <th class="sort">{{ onekey[0] }}</th>
+                {% end %}
+              </tr>
+            </thead>
+            <tfoot id="workset_table_footer">
+              <tr class="sticky darkth">
+                {% for onekey in headers %}
+                  <th class="sort">{{ onekey[0] }}</th>
+                {% end %}
+              </tr>
+            </tfoot>
+            <tbody id="positive_controls_table_body"></tbody>
+              {% for control in positive_control_data%}
+              <tr>
+                {% for onekey in headers %}
+                  {% if onekey[1] == 'project' %}
+                  <td>
+                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
+                  </td>
+                  {% elif onekey[1] == 'sample_id' %}
+                  <td>
+                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
+                  </td>
+                  {% elif onekey[1] == 'customer_name' %}
+                  <td>
+                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
+                  </td>
+                  {% elif onekey[1] == 'workset_name' %}
+                  <td>
+                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
+                  </td>
+                  {% elif onekey[1] == 'sequenced_fc' %}
+                  <td>
+                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
+                  </td>
+                  {%end%}
+                  {%end%}
+              </tr>
+              {%end%}
+          </table>
+        </div>
+        </div>
+      </div>
     </div>
   </div> 
 </div>
