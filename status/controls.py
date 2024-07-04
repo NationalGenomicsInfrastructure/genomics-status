@@ -17,6 +17,7 @@ class ControlsHandler(SafeHandler):
             ['Project', 'project'],
             ['Sample ID', 'sample_id'],
             ['Sample Name', 'customer_name'],
+            ['Sample Status', 'status_manual'],
             ['Workset', 'workset_name'],
             ['Workset Projects', 'workset_projects'],
             ['Flowcell(s)', 'sequenced_fc'],
@@ -48,6 +49,10 @@ class ControlsHandler(SafeHandler):
                 if "workset_name" in cont_proj.value[cont_sample]:
                     result[cont_sample]["project"] = cont_proj.key[1]
                     result[cont_sample]["sample_id"] = cont_sample
+                    if "status_manual" in cont_proj.value[cont_sample]:
+                        result[cont_sample]["status_manual"] = cont_proj.value[cont_sample]["status_manual"]
+                    else:
+                        result[cont_sample]["status_manual"] = "* In Progress" # asterisk indicates that the status in LIMS is not set, the sample has a workset and so MUST be at least "In Progress"
                     result[cont_sample]["customer_name"] = cont_proj.value[cont_sample]["customer_name"]
                     result[cont_sample]["workset_name"] = cont_proj.value[cont_sample]["workset_name"]
                     if not "workset_id" in cont_proj.value[cont_sample]:
@@ -88,7 +93,7 @@ class ControlsHandler(SafeHandler):
             if control_ws_id_name in workset_data:
                 control_data[control]["workset_projects"] = ", ".join(workset_data[control_ws_id_name])
             else: #if the sample doesn't have a workset_id I only use the workset name to retrieve the projects of the workset
-                control_data[control]["workset_projects"] = " ".join(["*", ", ".join(workset_name_data[control_data[control]["workset_name"]])]) # asterisk indicates that workset name only is used to retrieve workset projects
+                control_data[control]["workset_projects"] = " ".join(["**", ", ".join(workset_name_data[control_data[control]["workset_name"]])]) # asterisk indicates that workset name only is used to retrieve workset projects
         return control_data
             
 
