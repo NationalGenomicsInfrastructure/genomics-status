@@ -64,6 +64,10 @@ Description: Overview of positive and negative controls
                     <td>
                       <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
                     </td>
+                    {% elif onekey[1] == 'prep_status' %}
+                    <td>
+                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
+                    </td>
                     {% elif onekey[1] == 'sequenced_fc' %}
                     <td>
                       <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
@@ -119,6 +123,10 @@ Description: Overview of positive and negative controls
                     <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
                   </td>
                   {% elif onekey[1] == 'workset_projects' %}
+                  <td>
+                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
+                  </td>
+                  {% elif onekey[1] == 'prep_status' %}
                   <td>
                     <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
                   </td>

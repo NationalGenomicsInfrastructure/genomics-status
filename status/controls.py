@@ -20,6 +20,7 @@ class ControlsHandler(SafeHandler):
             ['Sample Status', 'status_manual'],
             ['Workset', 'workset_name'],
             ['Workset Projects', 'workset_projects'],
+            ['Sample Prep Status', 'prep_status'],
             ['Flowcell(s)', 'sequenced_fc'],
         ]
 
@@ -59,8 +60,12 @@ class ControlsHandler(SafeHandler):
                         result[cont_sample]["workset_id"] = "NA"
                     else:
                         result[cont_sample]["workset_id"] = cont_proj.value[cont_sample]["workset_id"]
+                    if "prep_status" in cont_proj.value[cont_sample]:
+                        result[cont_sample]["prep_status"] = cont_proj.value[cont_sample]["prep_status"]
+                    else:
+                        result[cont_sample]["prep_status"] = "" 
                     result[cont_sample]["sequenced_fc"] = ", ".join(cont_proj.value[cont_sample]["sequenced_fc"])
-        
+        print(result)
         return result
     
     def worksets_data(self):
