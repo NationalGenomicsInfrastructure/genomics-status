@@ -58,19 +58,28 @@ Description: Overview of positive and negative controls
                     </td>
                     {% elif onekey[1] == 'workset_name' %}
                     <td>
-                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
+                      <a href="/workset/{{ negative_control_data[control].get(onekey[0]) }}" style="color:#000000;">{{ negative_control_data[control].get(onekey[1]) }}</a>
                     </td>
                     {% elif onekey[1] == 'workset_projects' %}
-                    <td>
-                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
-                    </td>
+                      <td>
+                        {% if negative_control_data.get(control).get('ws_name_used_only') %} <!-- labels if projects have been retrieved based on the workset name only -->
+                          <span class="label label-date sentenceCase">**</span>
+                        {%end%}
+                        {% for i in range(0,len(negative_control_data.get(control).get(onekey[1]).get('ws_project_names'))) %}
+                          <a href="/project/{{ negative_control_data.get(control).get(onekey[1]).get('ws_project_numbers')[i] }}" class="text-success text-decoration-none" data-toggle="tooltip" title="Status"><i class="fa fa-folder-open">&nbsp;</i> {{ negative_control_data.get(control).get(onekey[1]).get('ws_project_names')[i] }} </a>                     
+                          &nbsp;<br>
+                        {%end%}
+                      </td>
                     {% elif onekey[1] == 'prep_status' %}
                     <td>
                       <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
                     </td>
                     {% elif onekey[1] == 'sequenced_fc' %}
                     <td>
-                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
+                      {% for fc in negative_control_data.get(control).get(onekey[1]) %}
+                        <a href="/flowcells/{{fc}}" style="color:#2856E5;text-decoration: none;"><i class="fa fa-folder-open">&nbsp;</i> {{ fc }} </a>                     
+                        <br>
+                      {%end%}
                     </td>
                     {%end%}
                     {%end%}
@@ -120,19 +129,28 @@ Description: Overview of positive and negative controls
                   </td>
                   {% elif onekey[1] == 'workset_name' %}
                   <td>
-                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
+                    <a href="/workset/{{ positive_control_data[control].get(onekey[1]) }}" style="color:#000000;">{{ positive_control_data[control].get(onekey[1]) }}</a>
                   </td>
                   {% elif onekey[1] == 'workset_projects' %}
-                  <td>
-                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
-                  </td>
+                    <td>
+                      {% if positive_control_data.get(control).get('ws_name_used_only') %} <!-- labels if projects have been retrieved based on the workset name only -->
+                        <span class="label label-date sentenceCase">**</span>
+                      {%end%}
+                      {% for i in range(0,len(positive_control_data.get(control).get(onekey[1]).get('ws_project_names'))) %}
+                          <a href="/project/{{ positive_control_data.get(control).get(onekey[1]).get('ws_project_numbers')[i] }}" class="text-success text-decoration-none" data-toggle="tooltip" title="Status"><i class="fa fa-folder-open">&nbsp;</i> {{ positive_control_data.get(control).get(onekey[1]).get('ws_project_names')[i] }} </a>                     
+                          &nbsp;<br>
+                        {%end%}
+                    </td>
                   {% elif onekey[1] == 'prep_status' %}
                   <td>
                     <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
                   </td>
                   {% elif onekey[1] == 'sequenced_fc' %}
                   <td>
-                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
+                    {% for fc in positive_control_data.get(control).get(onekey[1]) %}
+                      <a href="/flowcells/{{fc}}" style="color:#2856E5;text-decoration: none;"><i class="fa fa-folder-open">&nbsp;</i> {{ fc }} </a>                     
+                      <br>
+                    {%end%}
                   </td>
                   {%end%}
                   {%end%}

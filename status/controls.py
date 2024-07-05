@@ -12,7 +12,7 @@ class ControlsHandler(SafeHandler):
 
         negative_control_data = self.add_workset_project(neg_control_data, ws_data, ws_name_data)
         positive_control_data = self.add_workset_project(pos_control_data, ws_data, ws_name_data)
-
+        #print(negative_control_data)
         headers = [
             ['Project', 'project'],
             ['Sample ID', 'sample_id'],
@@ -20,7 +20,7 @@ class ControlsHandler(SafeHandler):
             ['Sample Status', 'status_manual'],
             ['Workset', 'workset_name'],
             ['Workset Projects', 'workset_projects'],
-            ['Sample Prep Status', 'prep_status'],
+            ['Library Prep Status', 'prep_status'],
             ['Flowcell(s)', 'sequenced_fc'],
         ]
 
@@ -64,8 +64,7 @@ class ControlsHandler(SafeHandler):
                         result[cont_sample]["prep_status"] = cont_proj.value[cont_sample]["prep_status"]
                     else:
                         result[cont_sample]["prep_status"] = "" 
-                    result[cont_sample]["sequenced_fc"] = ", ".join(cont_proj.value[cont_sample]["sequenced_fc"])
-        print(result)
+                    result[cont_sample]["sequenced_fc"] = cont_proj.value[cont_sample]["sequenced_fc"]
         return result
     
     def worksets_data(self):
@@ -82,12 +81,18 @@ class ControlsHandler(SafeHandler):
 
         for ws in ws_view:
             ws_id_name = [ws.value["id"], ws.key]
-            ws_projects = []
-            for project in ws.value["projects"]:
-                ws_projects.append(ws.value["projects"][project]["project_name"])
+            dic_ws_project_names = {}
+            ws_project_names = []
+            ws_project_number = []
+
+            for project_id in ws.value["projects"]:
+                ws_project_names.append(ws.value["projects"][project_id]["project_name"])   # ordered list
+                ws_project_number.append(project_id)                                        # same order as project names
             
-            result[", ".join(ws_id_name)] = ws_projects
-            result_just_ws_name[ws.key] = ws_projects
+            dic_ws_project_names["ws_project_names"] = ws_project_names
+            dic_ws_project_names["ws_project_numbers"] = ws_project_number
+            result[", ".join(ws_id_name)] = dic_ws_project_names
+            result_just_ws_name[ws.key] = dic_ws_project_names
         return result, result_just_ws_name
     
     def add_workset_project(self, control_data, workset_data, workset_name_data):
@@ -96,9 +101,10 @@ class ControlsHandler(SafeHandler):
         for control in control_data:
             control_ws_id_name = ", ".join([control_data[control]["workset_id"], control_data[control]["workset_name"]])
             if control_ws_id_name in workset_data:
-                control_data[control]["workset_projects"] = ", ".join(workset_data[control_ws_id_name])
-            else: #if the sample doesn't have a workset_id I only use the workset name to retrieve the projects of the workset
-                control_data[control]["workset_projects"] = " ".join(["**", ", ".join(workset_name_data[control_data[control]["workset_name"]])]) # asterisk indicates that workset name only is used to retrieve workset projects
+                control_data[control]["workset_projects"] = workset_data[control_ws_id_name]
+            else: #if the sample doesn't have a workset_id I only use the workset name to retrieve the projects of the workset, this will be marked with an asterisk in the html
+                control_data[control]["workset_projects"] = workset_name_data[control_data[control]["workset_name"]] 
+                control_data[control]["ws_name_used_only"] = True # this is used in the html to mark the workset with an asterisk
         return control_data
             
 
