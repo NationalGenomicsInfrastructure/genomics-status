@@ -7,20 +7,18 @@ Description: Overview of positive and negative controls
 -->
 
 {% block stuff %}
-<div class="row">
-    <h1><span id="page_title">Positive and Negative Controls</span></h1>
+<h1 class="worksets_page_heading"><span id="page_title">Positive and Negative Controls</span></h1>
 </div>
   <div id="page_content" >
     <div class="tabbable">
       <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><a class="nav-link active" href="#tab_negative_controls" role="tab" data-toggle="tab" aria-selected="true">Negative Controls</a></li>
+        <li class="nav-item"><a class="nav-link" href="#tab_negative_controls" role="tab" data-toggle="tab">Negative Controls</a></li>
         <li class="nav-item"><a class="nav-link" href="#tab_positive_controls" role="tab" data-toggle="tab">Positive Controls</a></li>
       </ul>
       <div class="tab-content">
         <div class="tab-pane fade show active" id="tab_negative_controls">
           <h2 class="negative_controls_heading"><small class="text-muted">all negative controls with worksets</small></h2>
           <div id="neg_control-list">
-            &nbsp;
             <table class="table table-striped table-bordered sortable" id="negative_controls_table">
               <thead id="negative_controls_table_head">
                 <tr class="sticky darkth">
@@ -29,8 +27,8 @@ Description: Overview of positive and negative controls
                  {% end %}
                  </tr>
               </thead>
-              <tfoot id="workset_table_footer">
-                <tr class="sticky darkth">
+              <tfoot id="negative_controls_table_footer">
+                <tr class="darkth">
                   {% for onekey in headers %}
                      <th class="sort">{{ onekey[0] }}</th>
                   {% end %}
@@ -88,7 +86,7 @@ Description: Overview of positive and negative controls
             </table>
           </div>
         </div>
-      <div class="tab-pane fade" id="tab_positive_controls">
+      <div class="tab-pane fade show active" id="tab_positive_controls">
         <h2 class="positive_controls_heading"><small class="text-muted">all positive controls with worksets</small></h2>
         <div id="neg_control-list">
           &nbsp;
@@ -101,7 +99,7 @@ Description: Overview of positive and negative controls
               </tr>
             </thead>
             <tfoot id="workset_table_footer">
-              <tr class="sticky darkth">
+              <tr class="darkth">
                 {% for onekey in headers %}
                   <th class="sort">{{ onekey[0] }}</th>
                 {% end %}
@@ -163,4 +161,62 @@ Description: Overview of positive and negative controls
     </div>
   </div> 
 </div>
+
+<script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
+<script src="/static/js/running_notes.js"></script>
+
+<!-- Table Sorting -->
+<script type="text/javascript">
+  $( document ).ready(function() {
+    document.title = 'something else';
+    init_listjs_controls();
+    format_latest_running_note();
+  });
+
+// Initialize sorting and searching javascript plugin
+function init_listjs_controls() {
+    // Setup - add a text input to each footer cell
+    $('#negative_controls_table tfoot th').each( function () {
+      var title = $('#negative_controls_table thead th').eq( $(this).index() ).text();
+      $(this).html( '<input size=10 type="text" placeholder="'+title+'" />' );
+    } );
+
+    var table = $('#negative_controls_table').DataTable({
+        "paging":false,
+        "info":false,
+        "order": [[ 0, "desc" ]],
+        "autoWidth":true,
+        dom: 'Bfrti',
+        colReorder: true,
+        buttons: [
+        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
+        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+      ]
+    });
+
+    //console.log(table);
+    //Add the bootstrap classes to the search thingy
+
+    $('div.dataTables_filter input').addClass('form-control search search-query');
+    $('#negative_controls_table_filter').addClass('form-inline float-right pt-1');
+    $("#negative_controls_table_filter").appendTo($('#neg_control-list'));
+    $('#negative_controls_table label input').appendTo($('#negative_controls_table'));
+    $('#negative_controls_table label').remove();
+    $("#negative_controls_table input").attr("placeholder", "Search...");
+
+    // Apply the search
+    table.columns().every( function () {
+        var that = this;
+        $( 'input', this.footer() ).on( 'keyup change', function () {
+            that
+            .search( this.value )
+            .draw();
+        } );
+    } );
+    $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
+    $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
+}
+</script>
+
+
 {% end %}
