@@ -164,27 +164,26 @@ Description: Overview of positive and negative controls
 </div>
 
 <script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
-<script src="/static/js/running_notes.js"></script>
 
 <!-- Table Sorting -->
 <script type="text/javascript">
   $( document ).ready(function() {
     document.title = 'something else';
-    init_listjs_controls();
-    format_latest_running_note();
-  });
+    init_listjs_controls('negative_controls_table');
+});
 
 // Initialize sorting and searching javascript plugin 
-function init_listjs_controls() {
+function init_listjs_controls(table_name) {
     // Setup - add a text input to each footer cell
-    $('#negative_controls_table tfoot th').each( function () {
-      var title = $('#negative_controls_table thead th').eq( $(this).index() ).text();
+    $('#'+table_name+' tfoot th').each( function () {
+      var title = $('#'+table_name+' thead th').eq( $(this).index() ).text();
       $(this).html( '<input size=10 type="text" placeholder="'+title+'" />' );
     } );
 
-    var table = $('#negative_controls_table').DataTable({
+    var table = $('#'+table_name).DataTable({
       "paging":false,
       "info":false,
+      "destroy": true,
       "order": [[ 1, "desc" ]],
       colReorder: true,
       dom: 'Bfrti',
@@ -196,12 +195,15 @@ function init_listjs_controls() {
 
     //console.log(table);
     //Add the bootstrap classes to the search thingy
-    //$('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#negative_controls_table_filter').addClass('form-inline float-right pt-1');
-    $("#negative_controls_table_filter").appendTo($('#neg_control-list'));
-    $('#negative_controls_table_filter label input').appendTo($('#negative_controls_table_filter'));
-    $('#negative_controls_table_filter label').remove();
-    $("#negative_controls_table_filter input").attr("placeholder", "Search...");
+    if (!table_name || table_name == "negative_controls_table"){ list_name = "#neg_control-list"; }
+    else if(table_name == "positive_controls_table"){ list_name = "#pos_control-list"; }
+
+    $('div.dataTables_filter input').addClass('form-control search search-query');
+    $('#'+table_name+'_filter').addClass('form-inline float-right pt-1');
+    $('#'+table_name+'_filter').appendTo($(list_name));
+    $('#'+table_name+'_filter label input').appendTo($('#'+table_name+'_filter'));
+    $('#'+table_name+'_filter label').remove();
+    $('#'+table_name+'_filter input').attr("placeholder", "Search...");
 
     // Apply the search
     table.columns().every( function () {
@@ -215,7 +217,16 @@ function init_listjs_controls() {
     $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
     $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 }
+
+//find the correct tab information
+$(".tabbable").on("click", '[role="tab"]', function() {
+    if($(this).attr('href')=='#tab_negative_controls'){
+      table_name = 'negative_controls_table';
+    }
+    if($(this).attr('href')=='#tab_positive_controls'){
+      table_name = 'positive_controls_table';
+    }
+    init_listjs_controls(table_name);
+  });
 </script>
-
-
 {% end %}
