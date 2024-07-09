@@ -69,9 +69,16 @@ Description: Overview of positive and negative controls
                         {%end%}
                       </td>
                     {% elif onekey[1] == 'prep_status' %}
-                    <td>
-                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
-                    </td>
+                      {% if negative_control_data[control].get(onekey[1]) == "PASSED" %}
+                        <td>
+                          <span class="badge bg-success">{{ negative_control_data[control].get(onekey[1]) }}</span>
+                        </td>
+                      {% else %}
+                        <td>
+                          <span class="badge bg-danger">{{ negative_control_data[control].get(onekey[1]) }}</span>
+                        </td>
+                      {%end%}
+
                     {% elif onekey[1] == 'sequenced_fc' %}
                     <td>
                       {% for fc in negative_control_data.get(control).get(onekey[1]) %}
@@ -141,9 +148,15 @@ Description: Overview of positive and negative controls
                         {%end%}
                     </td>
                   {% elif onekey[1] == 'prep_status' %}
-                  <td>
-                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
-                  </td>
+                    {% if positive_control_data[control].get(onekey[1]) == "PASSED" %}
+                      <td>
+                        <span class="badge bg-success">{{ positive_control_data[control].get(onekey[1]) }}</span>
+                      </td>
+                    {% else %}
+                      <td>
+                        <span class="badge bg-danger">{{ positive_control_data[control].get(onekey[1]) }}</span>
+                      </td>
+                    {%end%}
                   {% elif onekey[1] == 'sequenced_fc' %}
                   <td>
                     {% for fc in positive_control_data.get(control).get(onekey[1]) %}
@@ -193,7 +206,6 @@ function init_listjs_controls(table_name) {
       ]
     });
 
-    //console.log(table);
     //Add the bootstrap classes to the search thingy
     if (!table_name || table_name == "negative_controls_table"){ list_name = "#neg_control-list"; }
     else if(table_name == "positive_controls_table"){ list_name = "#pos_control-list"; }
