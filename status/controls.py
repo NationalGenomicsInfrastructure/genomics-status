@@ -1,6 +1,10 @@
 """Handlers related to test for controls
 """
 from status.util import SafeHandler
+from genologics import lims
+from genologics.config import BASEURI, USERNAME, PASSWORD
+
+lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
 class ControlsHandler(SafeHandler):
 
@@ -30,6 +34,7 @@ class ControlsHandler(SafeHandler):
                 positive_control_data = positive_control_data, 
                 headers=headers,
                 ws_data = ws_data,
+                lims_uri=BASEURI,
             )
         )
 
