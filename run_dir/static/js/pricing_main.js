@@ -711,12 +711,9 @@ app.component('v-products-table', {
         <thead class="table-light">
           <tr class="sticky">
             <th v-if="quotable">Quoting</th>
-            <th class="sort" data-sort="id">ID</th>
             <th class="sort" data-sort="category">Category</th>
             <th class="sort" data-sort="type">Type</th>
             <th class="sort" data-sort="name">Name</th>
-            <th class="sort" data-sort="components">Components</th>
-            <th class="sort" data-sort="alternative_components">Alternative Components</th>
             <th calss="sort" data-sort="cost">Cost</th>
             <th class="sort" data-sort="comment">Comment</th>
           </tr>
@@ -724,12 +721,9 @@ app.component('v-products-table', {
         <tfoot class="table-light">
           <tr>
             <th v-if="quotable"></th>
-            <th class="sort" data-sort="id"><input class="form-control search search-query" type="text" placeholder="Search ID" /></th>
             <th class="sort" data-sort="category"><input class="form-control search search-query" type="text" placeholder="Search Category" /></th>
             <th class="sort" data-sort="type"><input class="form-control search search-query" type="text" placeholder="Search Type" /></th>
             <th class="sort" data-sort="name"><input class="form-control search search-query" type="text" placeholder="Search Name" /></th>
-            <th class="sort" data-sort="components"><input class="form-control search search-query" type="text" placeholder="Search Components" /></th>
-            <th class="sort" data-sort="alternative_components"><input class="form-control search search-query" type="text" placeholder="Search Alternative Components" /></th>
             <th calss="sort" data-sort="cost"><input class="form-control search search-query" type="text" placeholder="Search Cost" /></th>
             <th class="sort" data-sort="comment"><input class="form-control search search-query" type="text" placeholder="Search Comment" /></th>
           </tr>
@@ -819,12 +813,9 @@ app.component('v-product-table-row', {
               <a href="#" class="button add-to-quote" :data-product-id="product['REF_ID']" @click="add_to_quote"><i class="far fa-plus-square fa-lg"></i></a>
               <span>({{quote_count}})</span>
             </td>
-            <v-product-table-row-td td_key='REF_ID' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Category' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Type' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Name' :row_changes="this.changes" :product_id="this.product_id"/>
-            <v-product-table-row-td td_key='Components' :row_changes="this.changes" :product_id="this.product_id"/>
-            <v-product-table-row-td td_key='Alternative Components' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Cost' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Comment' :row_changes="this.changes" :product_id="this.product_id"/>
           </tr>
