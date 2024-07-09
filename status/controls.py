@@ -12,7 +12,6 @@ class ControlsHandler(SafeHandler):
 
         negative_control_data = self.add_workset_project(neg_control_data, ws_data, ws_name_data)
         positive_control_data = self.add_workset_project(pos_control_data, ws_data, ws_name_data)
-        #print(negative_control_data)
         headers = [
             ['Project', 'project'],
             ['Sample ID', 'sample_id'],
