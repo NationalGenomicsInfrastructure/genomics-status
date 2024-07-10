@@ -1,4 +1,5 @@
-"""Handlers related to test for controls
+"""
+    Handler related to Controls page
 """
 from status.util import SafeHandler
 from genologics import lims
@@ -10,12 +11,18 @@ class ControlsHandler(SafeHandler):
 
     def get(self):
         t = self.application.loader.load('controls.html')
+
+        # get information from databases
         ws_data, ws_name_data = self.worksets_data()
         neg_control_data = self.find_control_data('negative control')
         pos_control_data = self.find_control_data('positive control')
 
-        negative_control_data = self.add_workset_project(neg_control_data, ws_data, ws_name_data)
-        positive_control_data = self.add_workset_project(pos_control_data, ws_data, ws_name_data)
+        # create a dictionary with all control data in the correct format
+        all_control_data = {}
+        all_control_data["negative"] = self.add_workset_project(neg_control_data, ws_data, ws_name_data)
+        all_control_data["positive"] = self.add_workset_project(pos_control_data, ws_data, ws_name_data)
+
+        # define headers for controls.html
         headers = [
             ['Project', 'project'],
             ['Sample ID', 'sample_id'],
@@ -27,11 +34,11 @@ class ControlsHandler(SafeHandler):
             ['Flowcell(s)', 'sequenced_fc'],
         ]
 
-        self.write( #anything in here is used to create the html. In essence, anything listed here can be accessed in /controls.html
+        #anything in here is used to create the .html page. In essence, anything listed here can be accessed in /controls.html
+        self.write( 
             t.generate(
                 gs_globals=self.application.gs_globals, user=self.get_current_user(),
-                negative_control_data = negative_control_data, # control_data is a dictionary with the control data, it can be called in the html with the name before the equal sign
-                positive_control_data = positive_control_data, 
+                all_control_data = all_control_data, # control_data is a dictionary with the control data, it can be called in the html with the name before the equal sign
                 headers=headers,
                 ws_data = ws_data,
                 lims_uri=BASEURI,

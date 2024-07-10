@@ -16,161 +16,75 @@ Description: Overview of positive and negative controls
         <li class="nav-item"><a class="nav-link" href="#tab_positive_controls" role="tab" data-toggle="tab">Positive Controls</a></li>
       </ul>
       <div class="tab-content">
-        <div class="tab-pane fade show active" id="tab_negative_controls">
-          <h2 class="negative_controls_heading"><small class="text-muted">All negative controls with initiated worksets</small></h2>
-          <div id="neg_control-list">
-            <table class="table table-striped table-bordered sortable" id="negative_controls_table">
-              <thead id="negative_controls_table_head">
-                <tr class="sticky darkth">
-                 {% for onekey in headers %}
-                    <th class="sort">{{ onekey[0] }}</th>
-                 {% end %}
-                 </tr>
-              </thead>
-              <tfoot id="negative_controls_table_footer">
-                <tr class="darkth">
+        <!-- loop through the two control types -->
+        {% for control_type in ["negative", "positive"] %} 
+          <!-- adding data to specific tabs -->
+          <div class="tab-pane fade show active" id="tab_{{ control_type }}_controls"> 
+            <h2 class="{{ control_type }}_controls_heading"><small class="text-muted">All {{ control_type }} controls with initiated worksets</small></h2>
+            <div id="{{ control_type }}_control-list">
+              <!-- creating the data table -->
+              <table class="table table-striped table-bordered sortable" id="{{ control_type }}_controls_table">
+                <thead id="{{ control_type }}_controls_table_head">
+                  <tr class="sticky darkth">
                   {% for onekey in headers %}
-                     <th class="sort">{{ onekey[0] }}</th>
+                      <th class="sort">{{ onekey[0] }}</th>
                   {% end %}
                   </tr>
-              </tfoot>
-              <tbody id="negative_controls_table_body">
-                {% for control in negative_control_data%}
-                <tr>
-                  {% for onekey in headers %}
-                    {% if onekey[1] == 'project' %}
-                    <td>
-                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
-                    </td>
-                    {% elif onekey[1] == 'sample_id' %}
-                    <td>
-                      <a href="{{ lims_uri }}/clarity/search?scope=Sample&query={{ negative_control_data[control].get(onekey[1]) }}">{{ negative_control_data[control].get(onekey[1])}}</a>
-                    </td>
-                    {% elif onekey[1] == 'customer_name' %}
-                    <td>
-                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
-                    </td>
-                    {% elif onekey[1] == 'status_manual' %}
-                    <td>
-                      <span class="label label-date sentenceCase">{{ negative_control_data[control].get(onekey[1]) }}</span>
-                    </td>
-                    {% elif onekey[1] == 'workset_name' %}
-                    <td>
-                      <a href="/workset/{{ negative_control_data[control].get(onekey[0]) }}" style="color:#000000;">{{ negative_control_data[control].get(onekey[1]) }}</a>
-                    </td>
-                    {% elif onekey[1] == 'workset_projects' %}
-                      <td>
-                        {% if negative_control_data.get(control).get('ws_name_used_only') %} <!-- labels if projects have been retrieved based on the workset name only -->
-                          <span class="label label-date sentenceCase">**</span>
-                        {%end%}
-                        {% for i in range(0,len(negative_control_data.get(control).get(onekey[1]).get('ws_project_names'))) %}
-                          <a href="/project/{{ negative_control_data.get(control).get(onekey[1]).get('ws_project_numbers')[i] }}" class="text-success text-decoration-none" data-toggle="tooltip" title="Status"><i class="fa fa-folder-open">&nbsp;</i> {{ negative_control_data.get(control).get(onekey[1]).get('ws_project_names')[i] }} </a>                     
-                          &nbsp;<br>
-                        {%end%}
-                      </td>
-                    {% elif onekey[1] == 'prep_status' %}
-                      {% if negative_control_data[control].get(onekey[1]) == "PASSED" %}
+                </thead>
+                <!-- footer content to be replaced by search boxes -->
+                <tfoot id="{{ control_type }}_controls_table_footer">
+                  <tr class="darkth">
+                    {% for onekey in headers %}
+                      <th class="sort">{{ onekey[0] }}</th>
+                    {% end %}
+                  </tr>
+                </tfoot>
+                <!-- filling the data table with control sample info -->
+                <tbody id="{{ control_type }}_controls_table_body">
+                  {% for control in all_control_data[control_type]%}
+                  <tr>
+                    {% for onekey in headers %}
+                      {% if onekey[1] == 'project' %}
+                        <td><span class="label label-date sentenceCase">{{ all_control_data[control_type][control].get(onekey[1]) }}</span></td>
+                      {% elif onekey[1] == 'sample_id' %}
+                        <td><a href="{{ lims_uri }}/clarity/search?scope=Sample&query={{ all_control_data[control_type][control].get(onekey[1]) }}">{{ all_control_data[control_type][control].get(onekey[1])}}</a></td>
+                      {% elif onekey[1] == 'customer_name' %} <!-- equals sample name -->
+                        <td><span class="label label-date sentenceCase">{{ all_control_data[control_type][control].get(onekey[1]) }}</span></td>
+                      {% elif onekey[1] == 'status_manual' %}
+                        <td><span class="label label-date sentenceCase">{{ all_control_data[control_type][control].get(onekey[1]) }}</span></td>
+                      {% elif onekey[1] == 'workset_name' %}
+                        <td><a href="/workset/{{ all_control_data[control_type][control].get(onekey[1]) }}" style="color:#000000;">{{ all_control_data[control_type][control].get(onekey[1]) }}</a></td>
+                      {% elif onekey[1] == 'workset_projects' %}
                         <td>
-                          <span class="badge bg-success">{{ negative_control_data[control].get(onekey[1]) }}</span>
+                          {% if all_control_data[control_type].get(control).get('ws_name_used_only') %} <!-- labels if projects have been retrieved based on the workset name only -->
+                            <span class="label label-date sentenceCase">**</span>
+                          {%end%}
+                          {% for i in range(0,len(all_control_data[control_type].get(control).get(onekey[1]).get('ws_project_names'))) %}
+                            <a href="/project/{{ all_control_data[control_type].get(control).get(onekey[1]).get('ws_project_numbers')[i] }}" class="text-success text-decoration-none" data-toggle="tooltip" title="Status"><i class="fa fa-folder-open">&nbsp;</i> {{ all_control_data[control_type].get(control).get(onekey[1]).get('ws_project_names')[i] }} </a>                     
+                            &nbsp;<br>
+                          {%end%}
                         </td>
-                      {% else %}
+                      {% elif onekey[1] == 'prep_status' %}
+                        {% if all_control_data[control_type][control].get(onekey[1]) == "PASSED" %}
+                          <td><span class="badge bg-success">{{ all_control_data[control_type][control].get(onekey[1]) }}</span></td>
+                        {% else %}
+                          <td><span class="badge bg-danger">{{ all_control_data[control_type][control].get(onekey[1]) }}</span></td>
+                        {%end%}
+                      {% elif onekey[1] == 'sequenced_fc' %}
                         <td>
-                          <span class="badge bg-danger">{{ negative_control_data[control].get(onekey[1]) }}</span>
+                          {% for fc in all_control_data[control_type].get(control).get(onekey[1]) %}
+                            <a href="/flowcells/{{fc}}" style="color:#2856E5;text-decoration: none;"><i class="fa fa-folder-open">&nbsp;</i> {{ fc }} </a>                     
+                          {%end%}
                         </td>
                       {%end%}
-
-                    {% elif onekey[1] == 'sequenced_fc' %}
-                    <td>
-                      {% for fc in negative_control_data.get(control).get(onekey[1]) %}
-                        <a href="/flowcells/{{fc}}" style="color:#2856E5;text-decoration: none;"><i class="fa fa-folder-open">&nbsp;</i> {{ fc }} </a>                     
-                        <br>
-                      {%end%}
-                    </td>
                     {%end%}
-                    {%end%}
-                </tr>
-                {%end%}
-              </tbody>
-            </table>
+                  </tr>
+                  {%end%}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      <div class="tab-pane fade" id="tab_positive_controls">
-        <h2 class="positive_controls_heading"><small class="text-muted">All positive controls with initiated worksets</small></h2>
-        <div id="pos_control-list">
-          &nbsp;
-          <table class="table table-striped table-bordered sortable" id="positive_controls_table">
-            <thead id="positive_controls_table_head">
-              <tr class="sticky darkth">
-                {% for onekey in headers %}
-                  <th class="sort">{{ onekey[0] }}</th>
-                {% end %}
-              </tr>
-            </thead>
-            <tfoot id="positive_controls_table_footer">
-              <tr class="darkth">
-                {% for onekey in headers %}
-                  <th class="sort">{{ onekey[0] }}</th>
-                {% end %}
-              </tr>
-            </tfoot>
-            <tbody id="positive_controls_table_body">
-              {% for control in positive_control_data%}
-              <tr>
-                {% for onekey in headers %}
-                  {% if onekey[1] == 'project' %}
-                  <td>
-                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
-                  </td>
-                  {% elif onekey[1] == 'sample_id' %}
-                  <td>
-                    <a href="{{ lims_uri }}/clarity/search?scope=Sample&query={{ positive_control_data[control].get(onekey[1]) }}">{{ positive_control_data[control].get(onekey[1])}}</a>
-                  </td>
-                  {% elif onekey[1] == 'customer_name' %}
-                  <td>
-                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
-                  </td>
-                  {% elif onekey[1] == 'status_manual' %}
-                  <td>
-                    <span class="label label-date sentenceCase">{{ positive_control_data[control].get(onekey[1]) }}</span>
-                  </td>
-                  {% elif onekey[1] == 'workset_name' %}
-                  <td>
-                    <a href="/workset/{{ positive_control_data[control].get(onekey[1]) }}" style="color:#000000;">{{ positive_control_data[control].get(onekey[1]) }}</a>
-                  </td>
-                  {% elif onekey[1] == 'workset_projects' %}
-                    <td>
-                      {% if positive_control_data.get(control).get('ws_name_used_only') %} <!-- labels if projects have been retrieved based on the workset name only -->
-                        <span class="label label-date sentenceCase">**</span>
-                      {%end%}
-                      {% for i in range(0,len(positive_control_data.get(control).get(onekey[1]).get('ws_project_names'))) %}
-                          <a href="/project/{{ positive_control_data.get(control).get(onekey[1]).get('ws_project_numbers')[i] }}" class="text-success text-decoration-none" data-toggle="tooltip" title="Status"><i class="fa fa-folder-open">&nbsp;</i> {{ positive_control_data.get(control).get(onekey[1]).get('ws_project_names')[i] }} </a>                     
-                          &nbsp;<br>
-                        {%end%}
-                    </td>
-                  {% elif onekey[1] == 'prep_status' %}
-                    {% if positive_control_data[control].get(onekey[1]) == "PASSED" %}
-                      <td>
-                        <span class="badge bg-success">{{ positive_control_data[control].get(onekey[1]) }}</span>
-                      </td>
-                    {% else %}
-                      <td>
-                        <span class="badge bg-danger">{{ positive_control_data[control].get(onekey[1]) }}</span>
-                      </td>
-                    {%end%}
-                  {% elif onekey[1] == 'sequenced_fc' %}
-                  <td>
-                    {% for fc in positive_control_data.get(control).get(onekey[1]) %}
-                      <a href="/flowcells/{{fc}}" style="color:#2856E5;text-decoration: none;"><i class="fa fa-folder-open">&nbsp;</i> {{ fc }} </a>                     
-                      <br>
-                    {%end%}
-                  </td>
-                  {%end%}
-                  {%end%}
-              </tr>
-              {%end%}
-          </table>
-        </div>
-        </div>
+        {%end%}
       </div>
     </div>
   </div> 
@@ -207,10 +121,9 @@ function init_listjs_controls(table_name) {
     });
 
     //Add the bootstrap classes to the search thingy
-    if (!table_name || table_name == "negative_controls_table"){ list_name = "#neg_control-list"; }
-    else if(table_name == "positive_controls_table"){ list_name = "#pos_control-list"; }
+    if (!table_name || table_name == "negative_controls_table"){ list_name = "#negative_control-list"; }
+    else if(table_name == "positive_controls_table"){ list_name = "#positive_control-list"; }
 
-    $('div.dataTables_filter input').addClass('form-control search search-query');
     $('#'+table_name+'_filter').addClass('form-inline float-right pt-1');
     $('#'+table_name+'_filter').appendTo($(list_name));
     $('#'+table_name+'_filter label input').appendTo($('#'+table_name+'_filter'));
@@ -226,6 +139,7 @@ function init_listjs_controls(table_name) {
             .draw();
         } );
     } );
+    
     $(".dt-buttons > .buttons-copy").prepend("<span class='mr-1 fa fa-copy'>");
     $(".dt-buttons > .buttons-excel").prepend("<span class='mr-1 fa fa-file-excel'>");
 }
