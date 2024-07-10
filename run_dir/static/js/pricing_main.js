@@ -816,7 +816,7 @@ app.component('v-product-table-row', {
             <v-product-table-row-td td_key='Category' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Type' :row_changes="this.changes" :product_id="this.product_id"/>
             <v-product-table-row-td td_key='Name' :row_changes="this.changes" :product_id="this.product_id"/>
-            <v-product-table-row-td td_key='Cost' :row_changes="this.changes" :product_id="this.product_id"/>
+            <v-product-table-row-td td_key='Cost' :row_changes="this.changes" :product_id="this.product_id" :quotable="quotable"/>
             <v-product-table-row-td td_key='Comment' :row_changes="this.changes" :product_id="this.product_id"/>
           </tr>
         </template>
@@ -825,7 +825,7 @@ app.component('v-product-table-row', {
 
 app.component('v-product-table-row-td',  {
     /* Indivudal <td> for product table (not all of them) */
-    props: ['td_key', 'row_changes', 'product_id'],
+    props: ['td_key', 'row_changes', 'product_id', 'quotable'],
     data() {
         return { tooltip: null }
     },
@@ -901,15 +901,15 @@ app.component('v-product-table-row-td',  {
           </template>
           <template v-else>
             <template v-if="this.td_key == 'Cost'">
-                <ul class="list-group list-group-horizontal">
+                <ul v-if="quotable===false || this.$root.price_type ==='cost_academic'" class="list-group list-group-horizontal">
                     <li class="list-group-item col-7">Academic</li>
                     <li class="list-group-item col-4">{{ cost['cost_academic'].toFixed(2) }}</li>
                 </ul>
-                <ul class="list-group list-group-horizontal">
+                <ul v-if="quotable===false || this.$root.price_type ==='full_cost'" class="list-group list-group-horizontal">
                     <li class="list-group-item col-7">Industry and Non Swedish Academia</li>
                     <li class="list-group-item col-4">{{ cost['full_cost'].toFixed(2)  }} </li>
                 </ul>
-                <ul class="list-group list-group-horizontal">
+                <ul v-if="quotable===false || this.$root.price_type ==='cost'" class="list-group list-group-horizontal">
                     <li class="list-group-item col-7">Internal</li>
                     <li class="list-group-item col-4">{{ cost['cost'].toFixed(2) }}</li>
                 </ul>
