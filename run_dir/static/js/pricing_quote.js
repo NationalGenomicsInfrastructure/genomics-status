@@ -116,7 +116,7 @@ app.component('v-pricing-quote', {
     created: function() {
         this.$root.fetchPublishedCostCalculator(true),
         this.$root.fetchExchangeRates(),
-        this.fetch_latest_agreement_doc()
+        this.fetch_latest_agreement_template_doc()
     },
     mounted: function () {
         this.get_project_specific_data()
@@ -200,6 +200,13 @@ app.component('v-pricing-quote', {
                   if(Object.keys(this.saved_agreement_data).includes('signed')){
                     this.load_saved_agreement(this.saved_agreement_data['signed'])
                   }
+                  else{
+                    if('saved_agreements' in this.saved_agreement_data){
+                      let timestamps = Object.keys(this.saved_agreement_data['saved_agreements'])
+                      //Load latest saved agreement
+                      this.load_saved_agreement(timestamps.reduce((a,b) => a > b ? a : b))
+                    }
+                  }
               })
               .catch(error => {
                   this.$root.error_messages.push('Unable to fetch agreement data, please try again or contact a system administrator.')
@@ -221,7 +228,7 @@ app.component('v-pricing-quote', {
             day: "2-digit",
           }).format(date) + ', ' + date.toLocaleTimeString(date)
         },
-        load_saved_agreement(signed_timestamp){
+        load_saved_agreement(timestamp_selected){
           //Reset fields
           this.applProj = false
           this.noQCProj = false
@@ -236,9 +243,11 @@ app.component('v-pricing-quote', {
             timestamp_val = query_timestamp_radio.value
             loaded_version = query_timestamp_radio.labels[0].innerText.split('\n')[0]
           }
-          else if(signed_timestamp){
-            timestamp_val = signed_timestamp
-            loaded_version = this.timestamp_to_date(this.saved_agreement_data['signed_at']) + ', ' + this.saved_agreement_data['signed_by']
+          else if(timestamp_selected){
+            timestamp_val = timestamp_selected
+            agreement_selected =  this.saved_agreement_data['saved_agreements'][timestamp_selected]
+            loaded_version = this.timestamp_to_date(timestamp_selected) + ', ' + agreement_selected['created_by'] +
+                              ' ('+ agreement_selected['total_cost']+' SEK on cost calc v'+ agreement_selected['cost_calculator_version']+')'
           }
           else{
             alert("No agreement selected")
@@ -324,7 +333,7 @@ app.component('v-pricing-quote', {
           }
         },
 
-        fetch_latest_agreement_doc: function(){
+        fetch_latest_agreement_template_doc: function(){
           axios
               .get('/api/v1/get_agreement_template_text')
               .then(response => {
@@ -600,7 +609,7 @@ app.component('v-pricing-quote', {
                 <div class="col ml-2">
                   <template v-for="(agreement, timestamp) in this.saved_agreement_data['saved_agreements']" :key="timestamp">
                         <div class="form-check m-2">
-                          <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp" :checked="this.saved_agreement_data['signed']===timestamp">
+                          <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp" :checked="this.loaded_timestamp===timestamp">
                           <label class="form-check-label" :for="timestamp">
                           <div v-bind:class="{ 'fw-bold' : timestamp === this.loaded_timestamp}"> {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}} ({{ agreement['total_cost'] }} SEK on cost calc v{{ agreement['cost_calculator_version'] }})</div>
                           <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger fs-6">
