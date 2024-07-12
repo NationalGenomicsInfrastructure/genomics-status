@@ -278,12 +278,13 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
         account_dets["fakturaunderlag"] = inv_defs["account_details"]["fakturaunderlag"]
         account_dets["fakturafragor"] = inv_defs["account_details"]["fakturafragor"]
         account_dets["support_email"] = inv_defs["account_details"]["support_email"]
-        account_dets["artikelnr"] = inv_defs["account_details"]["artikelnr"]
-        account_dets["ftg"] = inv_defs["account_details"]["ftg"]
+        account_dets["artikelnr"] = inv_defs["account_details"].get("artikelnr", "")
+        account_dets["ftg"] = inv_defs["account_details"].get("ftg", "")
 
         contact_dets = {}
         fields = self.get_order_details(proj_doc["order_details"]["identifier"])
         contact_dets["name"] = fields["project_pi_name"]
+        contact_dets["email"] = fields["project_pi_email"]
         contact_dets["reference"] = fields["project_invoice_ref"]
         contact_dets["invoice_address"] = fields["address_invoice_address"]
         contact_dets["invoice_zip"] = fields["address_invoice_zip"]
