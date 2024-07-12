@@ -8,7 +8,7 @@ app.component('v-pricing-quote', {
       return {
         md_message: '',
         md_src_message: '',
-        proj_data: {'pi_name':'', 'affiliation':'', 'invoice_downloaded': '', 'order_details':{}},
+        proj_data: {'pi_name':'', 'affiliation':'', 'invoice_downloaded': '', 'order_details':{}, 'invoice_generated': ''},
         cLabel_index: 0,
         active_cost_labels: {},
         template_text_data: {},
@@ -111,6 +111,9 @@ app.component('v-pricing-quote', {
         },
         invoice_downloaded(){
           return this.proj_data['invoice_downloaded']!==''? true:false
+        },
+        invoice_invalidated(){
+          return this.proj_data['invoice_generated']==='NA'? true:false
         }
     },
     created: function() {
@@ -154,6 +157,9 @@ app.component('v-pricing-quote', {
                     this.proj_id = proj_id
                     if('invoice_spec_downloaded' in pdata){
                       this.proj_data['invoice_downloaded'] = pdata['invoice_spec_downloaded']
+                    }
+                    if('invoice_spec_generated' in pdata){
+                      this.proj_data['invoice_generated'] = pdata['invoice_spec_generated']
                     }
                     if(pdata['type']==='Application'){
                       this.applProj = true
@@ -316,16 +322,25 @@ app.component('v-pricing-quote', {
             })
           }
         },
-        generate_invoice_spec(){
-          var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
-          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : ""
+        generate_invoice_spec(action_type){
+          let timestamp_val = ""
+          if(action_type === 'generate'){
+            let query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
+            timestamp_val= query_timestamp_radio ? query_timestamp_radio.value : ""
+          }
+          else if(action_type === 'invalidate'){
+            timestamp_val = "NA"
+          }
           if(timestamp_val!==""){
             proj_id = this.proj_data['project_id']
             axios.post('/api/v1/generate_invoice_spec', {
                 proj_id: proj_id,
-                timestamp: timestamp_val
+                timestamp: timestamp_val,
+                action_type: action_type
             }).then(response => {
-                this.get_saved_agreement_data(proj_id)
+                if(action_type === 'generate' && response.data['message']==='Invoice spec generated'){
+                  this.get_saved_agreement_data(proj_id)
+                }
             })
             .catch(error => {
                 this.$root.error_messages.push('Unable to generate invoice spec, please try again or contact a system administrator.')
@@ -604,6 +619,32 @@ app.component('v-pricing-quote', {
               </div>
             </div>
             <div class="col-5 offset-1 status_limit_width_large">
+              <div class="row justify-content-end">
+                <div class="col-auto">
+                  <div class="fw-bold p-2 border border-secondary rounded-3 my-2">
+                   <span v-if="this.invoice_invalidated"> No</span> Invoicing Required <button v-if="this.has_admin_control" class="btn btn-warning m-1" data-toggle="modal" data-target="#confirm_invalidate_inv_spec" :disabled="this.invoice_invalidated">
+                   <i class="far fa-ban fa-lg"></i> No</button>
+                  </div>
+                </div>
+                <!-- Confirm Inv invalidation Modal -->
+                <div class="modal fade" id="confirm_invalidate_inv_spec" tabindex="-1" role="dialog" aria-labelledby="invalidate_inv_spec_label">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h4 class="modal-title" id="invalidate_inv_spec_label">Confirm invoice invalidation</h4>
+                        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        Confirm that no invoicing is required for this project.
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button id='invalidate-inv-gen-btn' type="button" class="btn btn-primary" @click="generate_invoice_spec('invalidate')" data-dismiss="modal">Continue</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="row" v-if="this.saved_agreement_data['saved_agreements']">
                 <h4 v-if="this.saved_agreement_data">Generated Agreements</h4>
                 <div class="col ml-2">
@@ -623,7 +664,7 @@ app.component('v-pricing-quote', {
                     <button class="btn btn-primary m-1" @click="load_saved_agreement()">Load</button>
                     <button v-if="this.has_admin_control" class="btn btn-secondary m-1" type="submit" v-on:click="generate_quote('display')" :disabled="this.invoice_downloaded" id="generate_quote_btn">Display Agreement</button>
                     <button v-if="this.has_admin_control" class="btn btn-danger m-1" @click="mark_agreement_signed" :disabled="this.invoice_downloaded"><i class="far fa-file-signature fa-lg"></i> Mark Signed</button>
-                    <button v-if="this.has_admin_control" class="btn btn-success m-1" data-toggle="modal" data-target="#confirm_submit_inv_spec"   :disabled="this.invoice_downloaded"><i class="far fa-file-invoice fa-lg"></i> Generate Invoice specification</button>
+                    <button v-if="this.has_admin_control" class="btn btn-success m-1" data-toggle="modal" data-target="#confirm_submit_inv_spec" :disabled="this.invoice_downloaded"><i class="far fa-file-invoice fa-lg"></i> Generate Invoice specification</button>
                     <!-- Confirm Inv Spec submission Modal -->
                     <div class="modal fade" id="confirm_submit_inv_spec" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
                       <div class="modal-dialog" role="document">
@@ -656,7 +697,7 @@ app.component('v-pricing-quote', {
                           </div>
                           <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button id='datepicker-btn' type="button" class="btn btn-primary" @click="generate_invoice_spec" data-dismiss="modal">Continue</button>
+                            <button id='generate_invoice_spec-btn' type="button" class="btn btn-primary" @click="generate_invoice_spec('generate')" data-dismiss="modal">Continue</button>
                           </div>
                         </div>
                       </div>
