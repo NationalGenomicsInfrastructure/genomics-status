@@ -407,16 +407,9 @@ app.component('v-pricing-quote', {
           product_list = {}
           for (prod_id in this.$root.quote_prod_ids){
             product = this.$root.all_products[prod_id]
-            prod_cost = (this.$root.productCost(prod_id)[this.$root.price_type] * this.$root.quote_prod_ids[prod_id]).toFixed(2)
-            if(product['Category'] in product_list){
-              product_list[product['Category']] = (parseFloat(product_list[product['Category']]) + parseFloat(prod_cost)).toFixed(2)
-            }
-            else{
-              product_list[product['Category']] = prod_cost
-            }
-          }
-          for (category in product_list){
-            product_list[category] = Math.round(parseFloat(product_list[category]))
+            prod_name = product['Name']+' ('+this.$root.quote_prod_ids[prod_id]+')'
+            prod_cost = Math.round((this.$root.productCost(prod_id)[this.$root.price_type] * this.$root.quote_prod_ids[prod_id]).toFixed(2))
+            product_list[prod_name] = prod_cost
           }
           agreement_data['price_breakup'] = product_list
           agreement_data['total_products_cost'] = Math.round(this.product_cost_sum[this.$root.price_type])
