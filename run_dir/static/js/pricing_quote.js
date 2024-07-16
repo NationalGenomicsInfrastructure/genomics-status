@@ -114,7 +114,10 @@ app.component('v-pricing-quote', {
         },
         invoice_invalidated(){
           return this.proj_data['invoice_generated']==='NA'? true:false
-        }
+        },
+        invoice_generated(){
+          return this.proj_data['invoice_generated']!==''? true:false
+        },
     },
     created: function() {
         this.$root.fetchPublishedCostCalculator(true),
@@ -615,7 +618,8 @@ app.component('v-pricing-quote', {
               <div class="row justify-content-end">
                 <div class="col-auto">
                   <div class="fw-bold p-2 border border-secondary rounded-3 my-2">
-                   <span v-if="this.invoice_invalidated"> No</span> Invoicing Required <button v-if="this.has_admin_control" class="btn btn-warning m-1" data-toggle="modal" data-target="#confirm_invalidate_inv_spec" :disabled="this.invoice_invalidated">
+                   <span v-if="this.invoice_invalidated"> No</span> Invoicing Required 
+                   <button v-if="this.has_admin_control" class="btn btn-warning m-1" data-toggle="modal" data-target="#confirm_invalidate_inv_spec" :disabled="this.invoice_invalidated || this.invoice_generated">
                    <i class="far fa-ban fa-lg"></i> No</button>
                   </div>
                 </div>
