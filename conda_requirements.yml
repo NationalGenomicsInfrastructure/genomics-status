@@ -1,5 +1,5 @@
 dependencies:
-  - python=3.9
+  - python=3.12
   - anaconda::pango>=1.42.0
   - anaconda::pandas>=1.3.2
   - conda-forge::psycopg2
