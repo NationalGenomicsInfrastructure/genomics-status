@@ -31,8 +31,8 @@ function init_listjs_controls(table_name) {
   });
 
   //Add the bootstrap classes to the search boxes
-  if (!table_name || table_name == "negative_controls_table"){ list_name = "#negative_control-list"; }
-  else if(table_name == "positive_controls_table"){ list_name = "#positive_control-list"; }
+  if (!table_name || table_name == "negative_controls_table"){ list_name = "#negative_controls_heading"; }
+  else if(table_name == "positive_controls_table"){ list_name = "#positive_controls_heading"; }
 
   $('#'+table_name+'_filter').addClass('form-inline float-right pt-1');
   $('#'+table_name+'_filter').appendTo($(list_name));

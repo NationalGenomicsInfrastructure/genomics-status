@@ -22,6 +22,7 @@ class ControlsHandler(SafeHandler):
         all_control_data["negative"] = self.add_workset_project(neg_control_data, ws_data, ws_name_data)
         all_control_data["positive"] = self.add_workset_project(pos_control_data, ws_data, ws_name_data)
 
+        #import pdb; pdb.set_trace()
         # define headers for controls.html
         headers = [
             ['Project', 'project'],
@@ -55,33 +56,36 @@ class ControlsHandler(SafeHandler):
         all_cont_proj = controls_view[[control_type,'']:[control_type,"Z"]]
         for cont_proj in all_cont_proj:
             for cont_sample in cont_proj.value:
-                result[cont_sample]["customer_name"] = cont_proj.value[cont_sample]["customer_name"]
-                if "status_manual" in cont_proj.value[cont_sample]:
-                    result[cont_sample]["status_manual"] = cont_proj.value[cont_sample]["status_manual"]
-                else:
-                    result[cont_sample]["status_manual"] = "* In Progress" # asterisk indicates that the status in LIMS is not set, the sample has a workset and so MUST be at least "In Progress"
+                for workset in cont_proj.value[cont_sample]:
+                    #if workset == '24-952364':  #24-958480 24-952364
+                    #    import pdb; pdb.set_trace()
+                    if workset != "no_workset":
+                        result[workset]["sample_id"] = cont_sample
+                        result[workset]["customer_name"] = cont_proj.value[cont_sample][workset]["customer_name"]
+                        if "status_manual" in cont_proj.value[cont_sample][workset]:
+                            result[workset]["status_manual"] = cont_proj.value[cont_sample][workset]["status_manual"]
+                        else:
+                            result[workset]["status_manual"] = "* In Progress" # asterisk indicates that the status in LIMS is not set, the sample has a workset and so MUST be at least "In Progress"
                 # passed_sequencing_qc
                 # app_qc
-                result[cont_sample]["project"] = cont_proj.key[1]
-                result[cont_sample]["sample_id"] = cont_sample
+                        result[workset]["project"] = cont_proj.key[1]
+                
+                #if workset == '24-958480': 
+                    #import pdb; pdb.set_trace()
 
-                if "library_preps" in cont_proj.value[cont_sample]:
-                    prep_result = {}
-                    for library_prep in cont_proj.value[cont_sample]["library_preps"]:   
-                        
-                        worksets_in_prep = {}
-                        worksets_in_prep["workset_name"] = cont_proj.value[cont_sample]["library_preps"][library_prep]["workset_name"]
-                        if not "workset_id" in cont_proj.value[cont_sample]["library_preps"][library_prep]:
-                            worksets_in_prep["workset_id"] = "NA"
+                    
+                    #import pdb; pdb.set_trace()    
+                        result[workset]["workset_name"] = cont_proj.value[cont_sample][workset]["workset_name"]
+                        if not "workset_id" in cont_proj.value[cont_sample][workset]:
+                           result[workset]["workset_id"] = "NA"
                         else:
-                            worksets_in_prep["workset_id"] = cont_proj.value[cont_sample]["library_preps"][library_prep]["workset_id"]
-                        if "prep_status" in cont_proj.value[cont_sample]["library_preps"][library_prep]:
-                            worksets_in_prep["prep_status"] = cont_proj.value[cont_sample]["library_preps"][library_prep]["prep_status"]
-                        else:
-                            worksets_in_prep["prep_status"] = "" 
-                        worksets_in_prep["sequenced_fc"] = cont_proj.value[cont_sample]["library_preps"][library_prep]["sequenced_fc"]
-                        prep_result[library_prep] = worksets_in_prep
-                    result[cont_sample]["library_preps"] = prep_result
+                            result[workset]["workset_id"] = cont_proj.value[cont_sample][workset]["workset_id"]
+                        if "prep_status" in cont_proj.value[cont_sample][workset]:
+                            result[workset]["prep_status"] = cont_proj.value[cont_sample][workset]["prep_status"]
+                        else:                            
+                            result[workset]["prep_status"] = "" 
+                        result[workset]["sequenced_fc"] = cont_proj.value[cont_sample][workset]["sequenced_fc"]
+        #print(result)
         return result
     
     def worksets_data(self):
@@ -107,17 +111,18 @@ class ControlsHandler(SafeHandler):
         """
         for control in control_data:
             #import pdb; pdb.set_trace()
-            for library_prep in control_data[control]["library_preps"]:
-                control_ws_id_name = ", ".join([control_data[control]["library_preps"][library_prep]["workset_id"], control_data[control]["library_preps"][library_prep]["workset_name"]])
+            if control != "no_workset":
+                if "workset_id" in control_data[control]:
+                    control_ws_id_name = ", ".join([control_data[control]["workset_id"], control_data[control]["workset_name"]])
+                else:
+                    print("No workset_id in control data")
                 if control_ws_id_name in workset_data:
-                    control_data[control]["library_preps"][library_prep]["workset_projects"] = workset_data[control_ws_id_name]
-                    #import pdb; pdb.set_trace()
-                elif control_data[control]["library_preps"][library_prep]["workset_name"] in workset_name_data: #if the sample doesn't have a workset_id I only use the workset name to retrieve the projects of the workset, this will be marked with an asterisk in the html
-                    control_data[control]["library_preps"][library_prep]["workset_projects"] = workset_name_data[control_data[control]["library_preps"][library_prep]["workset_name"]] 
+                    control_data[control]["workset_projects"] = workset_data[control_ws_id_name]
+                elif control in workset_name_data: #if the sample doesn't have a workset_id I only use the workset name to retrieve the projects of the workset, this will be marked with an asterisk in the html
+                    control_data[control]["workset_projects"] = workset_name_data[control_data[control]["workset_name"]] 
                     control_data[control]["ws_name_used_only"] = True # this is used in the html to mark the workset with an asterisk
                 else:
                     control_data[control]["ws_not_found"] = True 
-        print(control_data)
         return control_data
             
 
