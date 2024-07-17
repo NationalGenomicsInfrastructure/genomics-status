@@ -576,7 +576,7 @@ class ONTFlowcellHandler(SafeHandler):
         if rows:
             args = rows[0].value
 
-            group = "([^\s=]+)"  # Text component of cmd argument
+            group = r"([^\s=]+)"  # Text component of cmd argument
 
             # Double-dash argument with assignment
             flag_pair = re.compile(f"^--{group}={group}$")
@@ -664,7 +664,7 @@ def walk_str2int(iterable):
         for key, val in (
             iterable.items() if isinstance(iterable, dict) else enumerate(iterable)
         ):
-            if isinstance(val, str) and re.match("^\d+$", val):
+            if isinstance(val, str) and re.match(r"^\d+$", val):
                 iterable[key] = int(val)
             elif isinstance(val, (dict, list)):
                 walk_str2int(val)

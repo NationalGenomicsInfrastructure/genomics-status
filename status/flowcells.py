@@ -26,10 +26,10 @@ def find_id(stringable, pattern_type: str) -> re.match:
     string = str(stringable)
 
     patterns = {
-        "project": re.compile("P[1-9]\d{4,}"),
-        "sample": re.compile("P\d+_[1-9]\d{2,3}"),
-        "pool": re.compile("2-[1-9]\d{4,}"),
-        "step": re.compile("24-[1-9]\d{4,}"),
+        "project": re.compile(r"P[1-9]\d{4,}"),
+        "sample": re.compile(r"P\d+_[1-9]\d{2,3}"),
+        "pool": re.compile(r"2-[1-9]\d{4,}"),
+        "step": re.compile(r"24-[1-9]\d{4,}"),
     }
 
     match = re.match(patterns[pattern_type], string)
