@@ -47,7 +47,7 @@ class BarcodeHandler(SafeHandler):
                 # retrieve file and transform the contained text to string format with utf-8 encoding
                 linesToPrint = str(file_for_printing[0]["body"], encoding="utf-8")
                 # check if file is already a label format file
-                if re.compile("^\^XA").search(linesToPrint):
+                if re.compile(r"^\^XA").search(linesToPrint):
                     for _ in range(copies):  # loops over copies to print
                         print_barcode(linesToPrint)
                 else:  # file submitted is a text file
@@ -186,7 +186,7 @@ def make_barcode(label, print_bc):
 
 def match_barcode(string_to_match, default_value):
     # identifies plate IDs as created by LIMS and returns boolean
-    if re.compile("\d{2}-\d{6}").search(string_to_match):
+    if re.compile(r"\d{2}-\d{6}").search(string_to_match):
         isbarcode = True
     else:
         isbarcode = default_value

@@ -420,7 +420,7 @@ def fetch_ont_run_stats(
             run_dict["first_mux_vs_qc"] = round((first_mux / qc) * 100, 2)
 
     # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
-    query = re.compile("(p|P)\d{5,6}")
+    query = re.compile(r"(p|P)\d{5,6}")
 
     # Search experiment and sample names for P-number to link to project
     match = query.search(str(run_dict["experiment_name"]))
