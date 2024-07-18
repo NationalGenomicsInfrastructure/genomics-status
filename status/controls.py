@@ -22,7 +22,6 @@ class ControlsHandler(SafeHandler):
         all_control_data["negative"] = self.add_workset_project(neg_control_data, ws_data, ws_name_data)
         all_control_data["positive"] = self.add_workset_project(pos_control_data, ws_data, ws_name_data)
 
-        #import pdb; pdb.set_trace()
         # define headers for controls.html
         headers = [
             ['Project', 'project'],
@@ -56,25 +55,15 @@ class ControlsHandler(SafeHandler):
         all_cont_proj = controls_view[[control_type,'']:[control_type,"Z"]]
         for cont_proj in all_cont_proj:
             for cont_sample in cont_proj.value:
-                for workset in cont_proj.value[cont_sample]:
-                    #if workset == '24-952364':  #24-958480 24-952364
-                    #    import pdb; pdb.set_trace()
+                for workset in cont_proj.value[cont_sample]: # here we create one entry in result for each workset, this will be one line in the controls table
                     if workset != "no_workset":
                         result[workset]["sample_id"] = cont_sample
                         result[workset]["customer_name"] = cont_proj.value[cont_sample][workset]["customer_name"]
-                        if "status_manual" in cont_proj.value[cont_sample][workset]:
+                        if "status_manual" in cont_proj.value[cont_sample][workset]: # status originates from LIMS project overview, is often not set for controls
                             result[workset]["status_manual"] = cont_proj.value[cont_sample][workset]["status_manual"]
                         else:
                             result[workset]["status_manual"] = "* In Progress" # asterisk indicates that the status in LIMS is not set, the sample has a workset and so MUST be at least "In Progress"
-                # passed_sequencing_qc
-                # app_qc
                         result[workset]["project"] = cont_proj.key[1]
-                
-                #if workset == '24-958480': 
-                    #import pdb; pdb.set_trace()
-
-                    
-                    #import pdb; pdb.set_trace()    
                         result[workset]["workset_name"] = cont_proj.value[cont_sample][workset]["workset_name"]
                         if not "workset_id" in cont_proj.value[cont_sample][workset]:
                            result[workset]["workset_id"] = "NA"
@@ -85,16 +74,16 @@ class ControlsHandler(SafeHandler):
                         else:                            
                             result[workset]["prep_status"] = "" 
                         result[workset]["sequenced_fc"] = cont_proj.value[cont_sample][workset]["sequenced_fc"]
-        #print(result)
         return result
     
     def worksets_data(self):
         """retrieves projects for each workset and return a dictionary:
-        {[workset_id, workset_name]: [project1, project2, ...]}
-        be aware that the workset_id and workset_name are concatenated in the key and that workset_id may not be present in the workset document
+        {[workset_id, workset_name]: {'ws_project_names':[P.roject_00_01, P.roject_00_02, ...], 'ws_project_numbers':[P12346, P23456, ...]}}
+        be aware that the workset_id and workset_name are concatenated in the key and that workset_id may not be present in the workset document.
+        The project names and project numbers are in the same order.
 
-        and additional dictionary with only the workset name as key is also returned and can be used in cases were no workset_id is present in the control data:
-        {workset_name: [project1, project2, ...]}
+        an additional dictionary with only the workset name as key is also returned and can be used in cases were no workset_id is present in the control data:
+        {workset_name: {'ws_project_names':[P.roject_00_01, P.roject_00_02, ...], 'ws_project_numbers':[P12346, P23456, ...]}}
         """
         result = {}
         result_just_ws_name = {}
@@ -103,24 +92,19 @@ class ControlsHandler(SafeHandler):
         for ws in controls_ws_view:
             result[", ".join(ws.key)] = ws.value
             result_just_ws_name[ws.key[1]] = ws.value
-
         return result, result_just_ws_name
     
     def add_workset_project(self, control_data, workset_data, workset_name_data):
         """Add workset projects to each control in the control_data dictionary
         """
         for control in control_data:
-            #import pdb; pdb.set_trace()
             if control != "no_workset":
                 if "workset_id" in control_data[control]:
                     control_ws_id_name = ", ".join([control_data[control]["workset_id"], control_data[control]["workset_name"]])
-                else:
-                    print("No workset_id in control data")
                 if control_ws_id_name in workset_data:
                     control_data[control]["workset_projects"] = workset_data[control_ws_id_name]
-                elif control in workset_name_data: #if the sample doesn't have a workset_id I only use the workset name to retrieve the projects of the workset, this will be marked with an asterisk in the html
+                elif control in workset_name_data: #if the sample doesn't have a workset_id I only use the workset name to retrieve the projects of the workset
                     control_data[control]["workset_projects"] = workset_name_data[control_data[control]["workset_name"]] 
-                    control_data[control]["ws_name_used_only"] = True # this is used in the html to mark the workset with an asterisk
                 else:
                     control_data[control]["ws_not_found"] = True 
         return control_data
