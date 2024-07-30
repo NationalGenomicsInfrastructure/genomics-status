@@ -5,8 +5,6 @@ from status.util import SafeHandler
 from genologics import lims
 from genologics.config import BASEURI, USERNAME, PASSWORD
 
-lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
-
 class ControlsHandler(SafeHandler):
 
     def get(self):
@@ -14,13 +12,9 @@ class ControlsHandler(SafeHandler):
 
         # get information from databases
         ws_data, ws_name_data = self.worksets_data()
-        neg_control_data = self.find_control_data('negative control')
-        pos_control_data = self.find_control_data('positive control')
-
-        # create a dictionary with all control data in the correct format
         all_control_data = {}
-        all_control_data["negative"] = self.add_workset_project(neg_control_data, ws_data, ws_name_data)
-        all_control_data["positive"] = self.add_workset_project(pos_control_data, ws_data, ws_name_data)
+        for control_data_type in ['negative', 'positive']:
+            all_control_data[control_data_type] = self.collect_control_info(control_data_type, ws_data, ws_name_data)
 
         # define headers for controls.html
         headers = [
@@ -94,9 +88,12 @@ class ControlsHandler(SafeHandler):
             result_just_ws_name[ws.key[1]] = ws.value
         return result, result_just_ws_name
     
-    def add_workset_project(self, control_data, workset_data, workset_name_data):
-        """Add workset projects to each control in the control_data dictionary
+    def collect_control_info(self, control_type, workset_data, workset_name_data):
         """
+            - Get control data from couchDB via the function find_control_data
+            - Add workset projects to each control in the control_data dictionary
+        """
+        control_data = self.find_control_data(control_type+" control")
         for control in control_data:
             if control != "no_workset":
                 if "workset_id" in control_data[control]:
