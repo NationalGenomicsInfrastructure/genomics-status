@@ -72,12 +72,11 @@ class ControlsHandler(SafeHandler):
     
     def worksets_data(self):
         """retrieves projects for each workset and return a dictionary:
-        {[workset_id, workset_name]: {'ws_project_names':[P.roject_00_01, P.roject_00_02, ...], 'ws_project_numbers':[P12346, P23456, ...]}}
+        {"P.roject_00_01": "P12346" , "P.roject_00_02": "P23456", ...}
         be aware that the workset_id and workset_name are concatenated in the key and that workset_id may not be present in the workset document.
-        The project names and project numbers are in the same order.
 
         an additional dictionary with only the workset name as key is also returned and can be used in cases were no workset_id is present in the control data:
-        {workset_name: {'ws_project_names':[P.roject_00_01, P.roject_00_02, ...], 'ws_project_numbers':[P12346, P23456, ...]}}
+        {"P.roject_00_01": "P12346" , "P.roject_00_02": "P23456", ...}
         """
         result = {}
         result_just_ws_name = {}
