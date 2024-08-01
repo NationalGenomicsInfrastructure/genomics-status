@@ -15,7 +15,6 @@ class ControlsHandler(SafeHandler):
         all_control_data = {}
         for control_data_type in ['negative', 'positive']:
             all_control_data[control_data_type] = self.collect_control_info(control_data_type, ws_data, ws_name_data)
-        #import pdb; pdb.set_trace()
         
         # define headers for controls.html
         headers = [
