@@ -59,10 +59,10 @@ class ControlsHandler(SafeHandler):
                             result[workset]["status_manual"] = "* In Progress" # asterisk indicates that the status in LIMS is not set, the sample has a workset and so MUST be at least "In Progress"
                         result[workset]["project"] = cont_proj.key[1]
                         result[workset]["workset_name"] = cont_proj.value[cont_sample][workset]["workset_name"]
-                        if not "workset_id" in cont_proj.value[cont_sample][workset]:
-                           result[workset]["workset_id"] = "NA"
-                        else:
+                        if "workset_id" in cont_proj.value[cont_sample][workset]:
                             result[workset]["workset_id"] = cont_proj.value[cont_sample][workset]["workset_id"]
+                        else:
+                            result[workset]["workset_id"] = "NA"
                         if "prep_status" in cont_proj.value[cont_sample][workset]:
                             result[workset]["prep_status"] = cont_proj.value[cont_sample][workset]["prep_status"]
                         else:                            
