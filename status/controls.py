@@ -15,7 +15,7 @@ class ControlsHandler(SafeHandler):
         all_control_data = {}
         for control_data_type in ['negative', 'positive']:
             all_control_data[control_data_type] = self.collect_control_info(control_data_type, ws_data, ws_name_data)
-
+        
         # define headers for controls.html
         headers = [
             ['Project', 'project'],
@@ -51,23 +51,24 @@ class ControlsHandler(SafeHandler):
             for cont_sample in cont_proj.value:
                 for workset in cont_proj.value[cont_sample]: # here we create one entry in result for each workset, this will be one line in the controls table
                     if workset != "no_workset":
-                        result[workset]["sample_id"] = cont_sample
-                        result[workset]["customer_name"] = cont_proj.value[cont_sample][workset]["customer_name"]
+                        workset_sample_id = workset+cont_sample
+                        result[workset_sample_id]["sample_id"] = cont_sample
+                        result[workset_sample_id]["customer_name"] = cont_proj.value[cont_sample][workset]["customer_name"]
                         if "status_manual" in cont_proj.value[cont_sample][workset]: # status originates from LIMS project overview, is often not set for controls
-                            result[workset]["status_manual"] = cont_proj.value[cont_sample][workset]["status_manual"]
+                            result[workset_sample_id]["status_manual"] = cont_proj.value[cont_sample][workset]["status_manual"]
                         else:
-                            result[workset]["status_manual"] = "* In Progress" # asterisk indicates that the status in LIMS is not set, the sample has a workset and so MUST be at least "In Progress"
-                        result[workset]["project"] = cont_proj.key[1]
-                        result[workset]["workset_name"] = cont_proj.value[cont_sample][workset]["workset_name"]
+                            result[workset_sample_id]["status_manual"] = "* In Progress" # asterisk indicates that the status in LIMS is not set, the sample has a workset and so MUST be at least "In Progress"
+                        result[workset_sample_id]["project"] = cont_proj.key[1]
+                        result[workset_sample_id]["workset_name"] = cont_proj.value[cont_sample][workset]["workset_name"]
                         if "workset_id" in cont_proj.value[cont_sample][workset]:
-                            result[workset]["workset_id"] = cont_proj.value[cont_sample][workset]["workset_id"]
+                            result[workset_sample_id]["workset_id"] = cont_proj.value[cont_sample][workset]["workset_id"]
                         else:
-                            result[workset]["workset_id"] = "NA"
+                            result[workset_sample_id]["workset_id"] = "NA"
                         if "prep_status" in cont_proj.value[cont_sample][workset]:
-                            result[workset]["prep_status"] = cont_proj.value[cont_sample][workset]["prep_status"]
+                            result[workset_sample_id]["prep_status"] = cont_proj.value[cont_sample][workset]["prep_status"]
                         else:                            
-                            result[workset]["prep_status"] = "" 
-                        result[workset]["sequenced_fc"] = cont_proj.value[cont_sample][workset]["sequenced_fc"]
+                            result[workset_sample_id]["prep_status"] = "" 
+                        result[workset_sample_id]["sequenced_fc"] = cont_proj.value[cont_sample][workset]["sequenced_fc"]
         return result
     
     def worksets_data(self):
@@ -102,7 +103,7 @@ class ControlsHandler(SafeHandler):
                 elif control in workset_name_data: #if the sample doesn't have a workset_id I only use the workset name to retrieve the projects of the workset
                     control_data[control]["workset_projects"] = workset_name_data[control_data[control]["workset_name"]] 
                 else:
-                    control_data[control]["ws_not_found"] = True 
+                    control_data[control]["ws_not_found"] = True
         return control_data
             
 
