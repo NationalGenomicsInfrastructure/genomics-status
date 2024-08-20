@@ -9,55 +9,88 @@ Description: Shows instrument logs for the given period.default is one week.
 
 {% block stuff %}
 
-<div id="page_content">
-<h1>Instrument Logs</h1>
-<div id="logs_date" style="margin-bottom:15px;">
-    <p>The default view shows 1 week worth of logs. You can customise the range here :</p>
-    <form class="row row-cols-lg-auto" id="logs_date_form">
-        <div class='col-12'>
-          Select logs from
+<div id="page_content" class="container-fluid">
+ <h1>Instrument Logs</h1>
+  <div class="tabbable">
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item" role="presentation">
+          <a class="nav-link active" href="#tab_bravos" role="tab" data-toggle="tab" aria-selected="true">Bravos</a>
+      </li>
+      <li class="nav-item">
+          <a class="nav-link" href="#tab_biomeks" role="tab" data-toggle="tab">Biomeks</a>
+      </li>
+    </ul>
+    <div class="tab-content">
+      <!-- Bravo logs tab -->
+      <div class="tab-pane fade show active" id="tab_bravos">
+        <div id="logs_date" style="margin-bottom:15px;">
+            <p>The default view shows 1 week worth of logs. You can customise the range here :</p>
+            <form class="row row-cols-lg-auto" id="logs_date_form">
+                <div class='col-12'>
+                  Select logs from
+                </div>
+                <div class='col-12'>
+                  <div class='input-group input-group-sm date' id='datepick1'>
+                    <input id="inp_date_1" type='text' class="form-control" /><span class="input-group-addon"><i class="input-group-text fa fa-calendar-alt"></i></span>
+                  </div>
+                </div>
+            to
+            <div class='col-12'>
+              <div class='input-group input-group-sm date' id='datepick2'>
+                <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><i class="input-group-text fa fa-calendar-alt"></i></span>
+              </div>
+            </div>
+            <button id="submit_interval" class="btn btn-primary btn-sm">Search</button>
+            <div class='col-12 ml-auto' id='instrument_logs_table_filter_col'></div>
+            </form>
         </div>
-        <div class='col-12'>
-          <div class='input-group input-group-sm date' id='datepick1'>
-            <input id="inp_date_1" type='text' class="form-control" /><span class="input-group-addon"><i class="input-group-text fa fa-calendar-alt"></i></span>
-          </div>
+        <div id="main_table">
+          <table class="table table-bordered narrow-headers" id="instrument_logs_table">
+              <thead>
+                <tr class="sticky darkth">
+                  <th class="col-md-1">Date</th>
+                  <th class="col-md-1">Instrument</th>
+                  <th class="col-md-10">Message</th>
+                </tr>
+              </thead>
+              <tfoot>
+                <tr class="darkth">
+                  <th class="col-md-1">Date</th>
+                  <th class="col-md-1">Instrument</th>
+                  <th class="col-md-10">Message</th>
+                </tr>
+              </tfoot>
+              <tbody id="instrument_logs_table_body">
+              </tbody>
+          </table>
         </div>
-    to
-    <div class='col-12'>
-      <div class='input-group input-group-sm date' id='datepick2'>
-        <input id="inp_date_2" type='text' class="form-control"/><span class="input-group-addon"><i class="input-group-text fa fa-calendar-alt"></i></span>
       </div>
+       <!-- Biomek logs tab -->
+       <div class="tab-pane fade" id="tab_biomeks">
+        <div id="biomek_errs_table_div">
+          <table class="table table-bordered narrow-headers" id="biomek_errs_table">
+              <thead>
+                <tr class="sticky darkth">
+                  <th class="col-md-1">Date</th>
+                  <th class="col-md-1">Instrument</th>
+                  <th class="col-md-1">Method</th>
+                  <th class="col-md-9">Message</th>
+                </tr>
+              </thead>
+              <tfoot>
+                <tr class="darkth">
+                  <th class="col-md-1">Date</th>
+                  <th class="col-md-1">Instrument</th>
+                  <th class="col-md-1">Method</th>
+                  <th class="col-md-9">Message</th>
+                </tr>
+              </tfoot>
+              <tbody id="biomek_errs_table_body">
+              </tbody>
+          </table>
+        </div>
+       </div>
     </div>
-    <button id="submit_interval" class="btn btn-primary btn-sm">Search</button>
-    <div class='col-12 ml-auto' id='instrument_logs_table_filter_col'></div>
-    </form>
-</div>
-<div id="main_table">
-<table class="table table-bordered narrow-headers" id="instrument_logs_table">
-    <thead>
-      <tr class="sticky darkth">
-        <th class="col-md-1">Date</th>
-        <th class="col-md-1">Instrument</th>
-        <th class="col-md-10">Message</th>
-      </tr>
-    </thead>
-    <tfoot>
-      <tr class="darkth">
-        <th class="col-md-1">Date</th>
-        <th class="col-md-1">Instrument</th>
-        <th class="col-md-10">Message</th>
-      </tr>
-    </tfoot>
-    <tbody>
-        {% for onedoc in docs %}
-        <tr>
-            <td class="col-md-1" data-sort="{{ (datetime.datetime.strptime(onedoc.get('timestamp'), "%Y-%m-%dT%H:%M:%S.%f") - datetime.datetime(1970, 1, 1)).total_seconds() }}">{{ datetime.datetime.strptime(onedoc.get('timestamp'), "%Y-%m-%dT%H:%M:%S.%f").strftime("%Y-%m-%d %H:%M:%S") }}</td>
-            <td class="col-md-1">{{ onedoc.get('instrument_name') }}</td>
-            <td class="col-md-10">{{ onedoc.get('message') }}</td>
-        </tr>
-        {% end %}
-    </tbody>
-</table>
 </div>
 
 

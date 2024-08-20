@@ -1,12 +1,11 @@
-
-const init_listjs = () => {
+const init_datatable = (table_name) => {
     // Setup - add a text input to each footer cell
-    $('#instrument_logs_table tfoot th').each(function () {
-        const title = $('#instrument_logs_table thead th').eq($(this).index()).text();
+    $('#'+table_name+' tfoot th').each(function () {
+        const title = $('#'+table_name+' thead th').eq($(this).index()).text();
         $(this).html(`<input size=10 type="text" placeholder="Search ${title}" />`);
     });
 
-    const table = $('#instrument_logs_table').DataTable({
+    const table = $('#'+table_name).DataTable({
         paging: false,
         info: false,
         order: [[0, 'desc']]
@@ -14,11 +13,11 @@ const init_listjs = () => {
 
     // Add the bootstrap classes to the search thingy
     $('div.dataTables_filter input').addClass('form-control search search-query');
-    $('#instrument_logs_table_filter').addClass('form-inline');
-    $('#instrument_logs_table_filter input').addClass('input-sm');
-    $("#instrument_logs_table_filter").appendTo("#instrument_logs_table_filter_col");
-    $('#instrument_logs_table_filter label ').html($('#instrument_logs_table_filter input'));
-    $("#instrument_logs_table_filter input").attr("placeholder", "Search..");
+    $('#'+table_name+'_filter').addClass('form-inline');
+    $('#'+table_name+'_filter input').addClass('input-sm');
+    $('#'+table_name+'_filter').appendTo('#'+table_name+'_filter_col');
+    $('#'+table_name+'_filter label ').html($('#'+table_name+'_filter input'));
+    $('#'+table_name+'_filter input').attr("placeholder", "Search..");
 
     // Apply the search
     table.columns().every(function () {
@@ -59,12 +58,39 @@ const init_submit_button = () => {
         } else {
             second_date = new Date();
         }
-
-        const loc = `/instrument_logs/${Math.round(first_date.getTime() / 1000)}-${Math.round(second_date.getTime() / 1000)}`;
-        window.location.href = loc;
+        load_table("instrument_logs_table",`${Math.round(first_date.getTime() / 1000)}-${Math.round(second_date.getTime() / 1000)}`);
         });
 };
 
-init_listjs();
-init_datepickers();
-init_submit_button();
+$(document).ready(function() {
+    // Load the data
+    init_datatable('biomek_errs_table');
+    init_datepickers();
+    init_submit_button();
+    load_table("instrument_logs_table");
+});
+
+
+function load_table(tablename, searchstring="") {
+    $('#'+tablename+'_body').html('<tr><td colspan="10" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
+    //searchstring = '1451602800-1483225200'
+    let inst = 'bravo';
+    if (tablename == 'biomek_errs_table')
+        inst = 'biomek';
+    return $.getJSON('/api/v1/instrument_logs/'+inst+'/'+searchstring, function(data) {
+      $('#'+tablename+'_body').empty();
+      $.each(data, function(key, value) {
+        let tbl_row = $('<tr>');
+        if(!($.isEmptyObject(value))){
+          timestamp = new Date(value['timestamp']);
+          tbl_row.append($('<td>').html(timestamp.toLocaleDateString('sv-SE')+' ' + timestamp.toLocaleTimeString(timestamp)));
+          tbl_row.append($('<td>').html(value['instrument_name']));
+          tbl_row.append($('<td>').html(value['message'])); 
+          $('#'+tablename+'_body').append(tbl_row);
+        }
+      });
+      if ( ! $.fn.dataTable.isDataTable('#'+tablename)){
+        init_datatable(tablename);
+      }
+    });
+  }
