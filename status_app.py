@@ -404,6 +404,7 @@ class Application(tornado.web.Application):
             self.bioinfo_db = couch["bioinfo_analysis"]
             self.cost_calculator_db = couch["cost_calculator"]
             self.cronjobs_db = couch["cronjobs"]
+            self.element_runs_db = couch["element_runs"]
             self.flowcells_db = couch["flowcells"]
             self.gs_users_db = couch["gs_users"]
             self.instruments_db = couch["instruments"]
