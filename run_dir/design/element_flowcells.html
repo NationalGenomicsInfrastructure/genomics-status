@@ -38,13 +38,13 @@
                     <td class="start_date">{{ onefc.key[:10] }}</td>
                     <td class = run_name>
                         <a class="text-decoration-none" href="/flowcells_element/{{ onefc.id }}">{{ onefc.value['RunName'] }}</a>
-                        {% if onefc.value.get('outcome') == 'OutcomeCompleted' %}
+                        {% if onefc.value.get('Outcome') == 'OutcomeCompleted' %}
                             <abbr title="Run completed"><span class="fa fa-check-circle"></span></abbr>
-                        {% elif onefc.value.get('outcome') == 'ongoing' %}
+                        {% elif onefc.value.get('Outcome') == 'ongoing' %}
                             <abbr title="Ongoing"><span class="fa fa-hourglass-half"></span></abbr>
-                        {% elif onefc.value.get('outcome') == 'OutcomeStopped' %}
+                        {% elif onefc.value.get('Outcome') == 'OutcomeStopped' %}
                             <abbr title="Run stopped"><span class="fa fa-file-dashed-line"></span></abbr>
-                        {% elif onefc.value.get('outcome') == 'OutcomeFailed' %}
+                        {% elif onefc.value.get('Outcome') == 'OutcomeFailed' %}
                            <abbr title="Run failed"><span class="fa fa-file-dashed-line"></span></abbr>
                         {% end %}
                     </td>
