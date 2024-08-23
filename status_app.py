@@ -32,7 +32,7 @@ from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandle
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
-from status.flowcell import FlowcellHandler, ONTFlowcellHandler, ONTReportHandler
+from status.flowcell import FlowcellHandler, ElementFlowcellHandler, ONTFlowcellHandler, ONTReportHandler
 from status.flowcells import (
     FlowcellDemultiplexHandler,
     FlowcellLinksDataHandler,
@@ -349,6 +349,7 @@ class Application(tornado.web.Application):
             ("/deliveries", DeliveriesPageHandler),
             ("/flowcells", FlowcellsHandler),
             (r"/flowcells/(\d{6,8}_[^/]*)$", FlowcellHandler),
+            (r"/flowcells_element/([^/]*)$", ElementFlowcellHandler),
             (r"/flowcells_ont/(\d{8}_[^/]*)$", ONTFlowcellHandler),
             (r"/flowcells_ont/(\d{8}_[^/]*)/[^/]*$", ONTReportHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
@@ -404,6 +405,7 @@ class Application(tornado.web.Application):
             self.bioinfo_db = couch["bioinfo_analysis"]
             self.cost_calculator_db = couch["cost_calculator"]
             self.cronjobs_db = couch["cronjobs"]
+            self.element_runs_db = couch["element_runs"]
             self.flowcells_db = couch["flowcells"]
             self.gs_users_db = couch["gs_users"]
             self.instruments_db = couch["instruments"]

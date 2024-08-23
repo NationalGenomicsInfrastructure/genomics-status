@@ -26,6 +26,9 @@ Description: Shows a table with all flow cells.
             <li class="nav-item">
                 <a class="nav-link" href="#tab_ont" role="tab" data-toggle="tab">ONT</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#tab_element" role="tab" data-toggle="tab">Element BioSciences (AVITI)</a>
+            </li>
         </ul>
 
         <div class="tab-content">
@@ -232,6 +235,10 @@ Description: Shows a table with all flow cells.
                 {% include "ont_flowcells.html" %}
             </div>
 
+            <!-- Element FCs -->
+            <div class="tab-pane fade" id="tab_element">
+                {% include "element_flowcells.html" %}
+            </div>
         </div>
 
     </div>

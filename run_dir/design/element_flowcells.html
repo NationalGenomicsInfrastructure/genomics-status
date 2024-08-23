@@ -1,0 +1,122 @@
+
+<div id="element_fc_table_div">
+    <h1>
+        <span id="element_page_title">Element BioSciences (AVITI) flowcells</span>
+    </h1>
+
+    <table class="table table-striped table-bordered sortable" id="element_fc_table">
+
+        <thead style="vertical-align: top">
+            <tr class="sticky darkth">
+                <th class="sort" data-sort="start_date">Start date</th>
+                <th class="sort" data-sort="run_name">Run name</th>
+                <th class="sort" data-sort="run_type">Run type</th>
+                <th class="sort" data-sort="side">Side</th>
+                <th class="sort" data-sort="cycles">Cycles</th>
+                <th class="sort" data-sort="throughput_selection">Throughput Selection</th>
+                <th class="sort" data-sort="kit_configuration">Kit Configuration</th>
+                <th class="sort" data-sort="chemistry_version">Chemistry Version</th>
+                <th class="sort text-center" data-sort="outcome">Outcome</th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr class="darkth">
+                <th class="sort searchable" data-sort="start_date">Start date</th>
+                <th class="sort searchable" data-sort="run_name">Run name</th>
+                <th class="sort searchable" data-sort="run_type">Run type</th>
+                <th class="sort searchable" data-sort="side">Side</th>
+                <th class="sort searchable" data-sort="cycles">Cycles</th>
+                <th class="sort searchable" data-sort="throughput_selection">Throughput Selection</th>
+                <th class="sort searchable" data-sort="kit_configuration">Kit Configuration</th>
+                <th class="sort searchable" data-sort="chemistry_version">Chemistry Version</th>
+                <th class="sort text-center" data-sort="outcome">Outcome</th>
+            </tr>
+        </tfoot>
+        <tbody class="list">
+            {% for onefc in element_fcs %}
+                <tr>
+                    <td class="start_date">{{ onefc.key[:10] }}</td>
+                    <td class = run_name>
+                        <a class="text-decoration-none" href="/flowcells_element/{{ onefc.id }}">{{ onefc.value['RunName'] }}</a>
+                        {% if onefc.value.get('Outcome') == 'OutcomeCompleted' %}
+                            <abbr title="Run completed"><span class="fa fa-check-circle"></span></abbr>
+                        {% elif onefc.value.get('Outcome') == 'ongoing' %}
+                            <abbr title="Ongoing"><span class="fa fa-hourglass-half"></span></abbr>
+                        {% elif onefc.value.get('Outcome') == 'OutcomeStopped' %}
+                            <abbr title="Run stopped"><span class="fa fa-file-dashed-line"></span></abbr>
+                        {% elif onefc.value.get('Outcome') == 'OutcomeFailed' %}
+                           <abbr title="Run failed"><span class="fa fa-file-dashed-line"></span></abbr>
+                        {% end %}
+                    </td>
+                    <td class="run_type">
+                        {{ onefc.value["RunType"] }}
+                    </td>
+                    <td class="side">
+                        {{ onefc.value["Side"] }}
+                    </td>
+                    <td class="cycles">
+                        {{ onefc.value["Cycles"] }}
+                    </td>
+                    <td class="throughput_selection">
+                        {{ onefc.value["ThroughputSelection"] }}
+                    </td>
+                    <td class="kit_configuration">
+                        {{ onefc.value["KitConfiguration"] }}
+                    </td>
+                    <td class="chemistry_version">
+                        {{ onefc.value["ChemistryVersion"] }}
+                    </td>
+                    <td class="outcome text-center">
+                        {{ onefc.value["Outcome"] }}
+                    </td>
+                </tr>
+            {% end %}
+        </tbody>
+    </table>
+</div>
+
+ <!-- Element Table Sorting -->
+<script type="text/javascript">
+$( document ).ready(function() {
+  init_listjs_element();
+});
+// Initialize sorting and searching javascript plugin
+function init_listjs_element() {
+    // Setup - add a text input to each footer cell
+    $('#element_fc_table tfoot th.searchable').each( function () {
+      var title = $('#element_fc_table thead th').eq( $(this).index() ).text();
+      $(this).html( '<input size=10 type="text" placeholder="Search '+title+'" />' );
+    } );
+
+    var table = $('#element_fc_table').DataTable({
+        "paging":false,
+        "info":false,
+        "order": [[ 0, "desc" ]],
+        "autoWidth":true,
+        dom: 'Bfrti',
+        colReorder: true,
+        buttons: [
+        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
+        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+      ]
+    });
+
+    //Add the bootstrap classes to the search thingy
+
+    $('#element_fc_table_filter').addClass('form-inline float-right pt-1');
+    $("#element_fc_table_filter").appendTo($('#element_page_title'));
+    $('#element_fc_table_filter label input').appendTo($('#element_fc_table_filter'));
+    $('#element_fc_table_filter label').remove();
+    $("#element_fc_table_filter input").attr("placeholder", "Search..");
+
+    // Apply the search
+    table.columns().every( function () {
+        var that = this;
+        $( 'input', this.footer() ).on( 'keyup change', function () {
+            that
+            .search( this.value )
+            .draw();
+        } );
+    } );
+}
+</script>

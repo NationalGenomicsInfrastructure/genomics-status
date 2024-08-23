@@ -161,12 +161,18 @@ class FlowcellsHandler(SafeHandler):
 
         return ont_flowcells, unfetched_runs
 
+    def list_element_flowcells(self):
+        return self.application.element_runs_db.view(
+            "info/summary", descending=True
+        )
+
     def get(self):
         # Default is to NOT show all flowcells
         all = self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
         fcs = self.list_flowcells(all=all)
         ont_fcs, unfetched_runs = self.list_ont_flowcells()
+        element_fcs = self.list_element_flowcells()
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
@@ -174,6 +180,7 @@ class FlowcellsHandler(SafeHandler):
                 user=self.get_current_user(),
                 flowcells=fcs,
                 ont_flowcells=ont_fcs,
+                element_fcs=element_fcs,
                 form_date=LatestRunningNoteHandler.formatDate,
                 find_id=find_id,
                 all=all,
