@@ -35,7 +35,7 @@
         <tbody class="list">
             {% for onefc in element_fcs %}
                 <tr>
-                    <td class="start_date">{{ onefc.key }}</td>
+                    <td class="start_date">{{ onefc.key[:10] }}</td>
                     <td class = run_name>
                         <a class="text-decoration-none" href="/flowcells_element/{{ onefc.id }}">{{ onefc.value['RunName'] }}</a>
                         {% if onefc.value.get('outcome') == 'OutcomeCompleted' %}
