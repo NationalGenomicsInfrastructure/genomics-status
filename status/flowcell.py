@@ -455,6 +455,20 @@ class ONTReportHandler(SafeHandler):
 
         self.write(open(report_path, "r").read())
 
+class ElementFlowcellHandler(SafeHandler):
+    def get(self, name):
+        t = self.application.loader.load("element_flowcell.html")
+        self.write(
+            t.generate(
+                gs_globals=self.application.gs_globals,
+                user=self.get_current_user(),
+            )
+        )
+
+class ElementFlowcellDataHandler(SafeHandler):
+    def get(self, name):
+        flowcell = self.application.element_runs_db.get(name)
+        self.write(flowcell)
 
 class ONTFlowcellHandler(SafeHandler):
     """Serves a page which shows information for a given ONT flowcell."""
