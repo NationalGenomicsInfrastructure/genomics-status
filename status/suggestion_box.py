@@ -90,7 +90,7 @@ class SuggestionBoxHandler(SafeHandler):
                     source= "jira"
                     )
         
-        response = self.cloudant.post_document(db='suggestions_box', document=doc).get_result()
+        response = self.application.cloudant.post_document(db='suggestion_box', document=doc).get_result()
         
         if not response.get('ok'):
             self.set_status(500)
