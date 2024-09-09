@@ -10,6 +10,8 @@ import requests
 from collections import OrderedDict
 from couchdb import Server
 
+from ibmcloudant import cloudant_v1, CouchDbSessionAuthenticator
+
 import tornado.autoreload
 import tornado.httpserver
 import tornado.ioloop
@@ -419,6 +421,11 @@ class Application(tornado.web.Application):
         else:
             print(settings.get("couch_server", None))
             raise IOError("Cannot connect to couchdb")
+        
+        cloudant = cloudant_v1.CloudantV1(authenticator=CouchDbSessionAuthenticator(settings.get("username"), settings.get("password")))
+        cloudant.set_service_url(settings.get("couch_url"))
+        if cloudant:
+            self.cloudant = cloudant
 
         # Load columns and presets from genstat-defaults user in StatusDB
         genstat_id = ""

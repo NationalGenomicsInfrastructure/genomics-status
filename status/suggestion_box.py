@@ -2,6 +2,7 @@ from collections import OrderedDict
 from datetime import datetime
 
 from atlassian import Jira
+from ibmcloudant.cloudant_v1 import Document
 from status.util import SafeHandler
 
 TITLE_TEMPLATE = "{title} ({area})"
@@ -75,19 +76,25 @@ class SuggestionBoxHandler(SafeHandler):
                 "issuetype": {"name": "Task"},
             }
         )
+        if not new_card:
+            self.set_status(500)
+            return
 
         # Save the information of the card in the database
-        self.application.suggestions_db.create(
-            {
-                "date": date.isoformat(),
-                "card_id": new_card.get('id'),
-                "description": description,
-                "name": summary,
-                "url": f"{self.application.jira_url}/jira/core/projects/{self.application.jira_project_key}/board?selectedIssue={new_card.get('key')}",
-                "archived": False,
-                "source": "jira",
-            }
-        )
+        doc = Document(
+                    date=date.isoformat(),
+                    card_id= new_card.get('id'),
+                    name=summary,
+                    url= f"{self.application.jira_url}/jira/core/projects/{self.application.jira_project_key}/board?selectedIssue={new_card.get('key')}",
+                    archived=False,
+                    source= "jira"
+                    )
+        
+        response = self.cloudant.post_document(db='suggestions_box', document=doc).get_result()
+        
+        if not response.get('ok'):
+            self.set_status(500)
+            return
 
         self.set_status(200)
 
