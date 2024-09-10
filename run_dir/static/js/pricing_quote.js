@@ -182,24 +182,26 @@ app.component('v-pricing-quote', {
             }
         },
         get_order_details(order_id){
-          axios
-              .get('/api/v1/get_order_det_invoicing/'+order_id)
-              .then(response => {
-                  this.proj_data['order_details'] = response.data
-              })
-              .catch(error => {
-                  this.$root.error_messages.push('Unable to fetch order data, please try again or contact a system administrator.')
-                  this.proj_data['order_details'] = { 'reference': '-', 
-                                                      'university': '-', 
-                                                      'department': '-', 
-                                                      'invoice_address': '-', 
-                                                      'invoice_zip': '-', 
-                                                      'invoice_city': '-', 
-                                                      'invoice_country': '-', 
-                                                      'invoice_vat': '-', 
-                                                      'invoice_organisation_number': '-'
-                                                    }
-              })
+          this.proj_data['order_details'] = { 'reference': '-', 
+                                              'university': '-', 
+                                              'department': '-', 
+                                              'invoice_address': '-', 
+                                              'invoice_zip': '-', 
+                                              'invoice_city': '-', 
+                                              'invoice_country': '-', 
+                                              'invoice_vat': '-', 
+                                              'invoice_organisation_number': '-'
+                                            }
+          if(order_id){
+            axios
+                .get('/api/v1/get_order_det_invoicing/'+order_id)
+                .then(response => {
+                    this.proj_data['order_details'] = response.data
+                })
+                .catch(error => {
+                    this.$root.error_messages.push('Unable to fetch order data, please try again or contact a system administrator.')
+                })
+          }
         },
         get_saved_agreement_data(proj_id){
           axios
