@@ -64,10 +64,10 @@ const init_submit_button = () => {
 
 $(document).ready(function() {
     // Load the data
-    init_datatable('biomek_errs_table');
     init_datepickers();
     init_submit_button();
     load_table("instrument_logs_table");
+    load_table('biomek_errs_table');
 });
 
 
@@ -85,6 +85,9 @@ function load_table(tablename, searchstring="") {
           timestamp = new Date(value['timestamp']);
           tbl_row.append($('<td>').html(timestamp.toLocaleDateString('sv-SE')+' ' + timestamp.toLocaleTimeString(timestamp)));
           tbl_row.append($('<td>').html(value['instrument_name']));
+          if (inst == 'biomek'){
+            tbl_row.append($('<td>').html(value['method']));
+          }
           tbl_row.append($('<td>').html(value['message'])); 
           $('#'+tablename+'_body').append(tbl_row);
         }

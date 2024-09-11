@@ -34,10 +34,10 @@ def recover_logs(handler, search_string=None, inst_type="bravo"):
             # by default, return all logs
             for row in handler.application.biomek_errs_db.view("names/timestamp"):
                 date = datetime.datetime.strptime(row.key, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=tz.tzutc()).astimezone(tz.tzlocal())
-                inst = row.value["instrument"]
-                method = row.value["method"]
+                inst = row.value["inst_id"]
+                method = row.value.get("method", 'diff')
                 errs = row.value["errors"]
-                valid_rows.append({"timestamp": date, "instrument_name": inst, "method": method, "message": errs})
+                valid_rows.append({"timestamp": f"{date}", "instrument_name": inst, "method": method, "message": errs})
             return valid_rows
 
 
@@ -49,10 +49,10 @@ class DataInstrumentLogsHandler(SafeHandler):
     """
 
     def get(self, inst_type="bravo", search_string=None):
-        docs = recover_logs(self, search_string, inst_type)
-        #biomek_logs = recover_logs(self, search_string, "biomek")
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(docs))
+        if inst_type in ["bravo", "biomek"]:
+            docs = recover_logs(self, search_string, inst_type)
+            self.set_header("Content-type", "application/json")
+            self.write(json.dumps(docs))
 
 
 class InstrumentLogsHandler(SafeHandler):
