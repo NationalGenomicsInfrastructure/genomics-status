@@ -2,6 +2,7 @@ from status.util import SafeHandler
 
 import datetime
 from dateutil import tz
+from dateutil.relativedelta import relativedelta
 import json
 
 
@@ -30,16 +31,23 @@ def recover_logs(handler, search_string=None, inst_type="bravo"):
             return valid_rows
     elif inst_type == "biomek":
         instruments_list = {row.key: row.value for row in handler.application.instruments_db.view("info/id_to_name").rows}
-        if not search_string:
-            valid_rows = []
-            # by default, return all logs
-            for row in handler.application.biomek_errs_db.view("names/timestamp"):
-                date = datetime.datetime.strptime(row.key, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=tz.tzutc()).astimezone(tz.tzlocal())
-                inst = f"{instruments_list[row.value["inst_id"]]}({row.value["inst_id"]})"
-                method = row.value.get("method", 'diff')
-                errs = row.value["errors"]
-                valid_rows.append({"timestamp": f"{date}", "instrument_name": inst, "method": method, "message": errs})
-            return valid_rows
+        # by default, return all logs from the last week
+        date_earlier = (datetime.datetime.now() - relativedelta(weeks=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
+        date_later = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+        valid_rows = []
+        if search_string:
+            ts1 = search_string.split("-")[0]
+            ts2 = search_string.split("-")[1]
+            date_earlier = datetime.datetime.fromtimestamp(int(ts1)).strftime('%Y-%m-%dT%H:%M:%SZ')
+            date_later = datetime.datetime.fromtimestamp(int(ts2)).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        for row in handler.application.biomek_errs_db.view("dates/timestamp", startkey=date_earlier, endkey=date_later):
+            date = datetime.datetime.strptime(row.key, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=tz.tzutc()).astimezone(tz.tzlocal())
+            inst = f"{instruments_list[row.value["inst_id"]]}({row.value["inst_id"]})"
+            method = row.value.get("method", 'diff')
+            errs = row.value["errors"]
+            valid_rows.append({"timestamp": f"{date}", "instrument_name": inst, "method": method, "message": errs})
+        return valid_rows
 
 
 class DataInstrumentLogsHandler(SafeHandler):

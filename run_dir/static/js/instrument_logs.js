@@ -58,7 +58,14 @@ const init_submit_button = () => {
         } else {
             second_date = new Date();
         }
-        load_table("instrument_logs_table",`${Math.round(first_date.getTime() / 1000)}-${Math.round(second_date.getTime() / 1000)}`);
+        let table_name = "";
+        if ($('.tab-content .active').attr('id') == 'tab_bravos'){
+            table_name = "instrument_logs_table";
+        }
+        else{
+            table_name = "biomek_errs_table";
+        }
+        load_table(table_name,`${Math.round(first_date.getTime() / 1000)}-${Math.round(second_date.getTime() / 1000)}`);
         });
 };
 
@@ -73,7 +80,6 @@ $(document).ready(function() {
 
 function load_table(tablename, searchstring="") {
     $('#'+tablename+'_body').html('<tr><td colspan="10" class="text-muted"><span class="fa fa-sync fa-spin"></span> <em>Loading..</em></td></tr>');
-    //searchstring = '1451602800-1483225200'
     let inst = 'bravo';
     if (tablename == 'biomek_errs_table')
         inst = 'biomek';
