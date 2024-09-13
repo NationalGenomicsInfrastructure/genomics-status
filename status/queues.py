@@ -754,8 +754,9 @@ class SmartSeq3ProgressPageDataHandler(SafeHandler):
             #Get reagent label
             sample_dict['Reagent Label'] = geno_queries.get_reagentlabel_for_sample(geno_session, sampleid)
 
-            #Get udfs specific to a step
+            #Get udfs specific to a step and the steps before it
             for step in stepid_to_stepindex:
+                # Only check steps before the current step
                 if stepid_to_stepindex[step]<= stepid_to_stepindex[stepid]:
                     if step in step_level_udfs_id:
                         step_level_udfs = geno_queries.get_sample_udfs_from_step(geno_session, sampleid, step, step_level_udfs_id[step])
