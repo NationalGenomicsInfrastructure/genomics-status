@@ -31,21 +31,21 @@ const init_datatable = (table_name) => {
 };
 
 const init_datepickers = () => {
-    $('#datepick1').datepicker({ orientation: 'left top' });
-    $('#datepick2').datepicker({ orientation: 'left top' });
+    $('#datepick1').datepicker({ orientation: 'left top', format: 'yyyy-mm-dd' });
+    $('#datepick2').datepicker({ orientation: 'left top', format: 'yyyy-mm-dd' });
 };
 
 const init_submit_button = () => {
     $('#submit_interval').click((e) => {
         e.preventDefault();
-        let m_d_y;
+        let y_m_d;
         let first_date;
         let second_date;
         let dp = $('#inp_date_1').val();
 
         if (dp !== '') {
-            m_d_y = dp.split('/');
-            first_date = new Date(m_d_y[2], m_d_y[0] - 1, m_d_y[1]);
+            y_m_d = dp.split('-');
+            first_date = new Date(y_m_d[0], y_m_d[1] -1, y_m_d[2]);
         } else {
             first_date = new Date(2016, 01, 01);
         }
@@ -53,8 +53,8 @@ const init_submit_button = () => {
         dp = $('#inp_date_2').val();
 
         if (dp !== '') {
-            m_d_y = dp.split('/');
-            second_date = new Date(m_d_y[2], m_d_y[0] - 1, m_d_y[1]);
+            y_m_d = dp.split('-');
+            second_date = new Date(y_m_d[0], y_m_d[1] -1, y_m_d[2]);
         } else {
             second_date = new Date();
         }
