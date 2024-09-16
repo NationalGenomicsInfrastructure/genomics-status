@@ -267,7 +267,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
             ("/api/v1/instrument_error_rates.png", InstrumentErrorratePlotHandler),
             ("/api/v1/instrument_logs", DataInstrumentLogsHandler),
-            ("/api/v1/instrument_logs/([^/]*)$", DataInstrumentLogsHandler),
+            ("/api/v1/instrument_logs/([^/]*)/([^/]*)$", DataInstrumentLogsHandler),
             ("/api/v1/instrument_names", InstrumentNamesHandler),
             ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
@@ -405,6 +405,7 @@ class Application(tornado.web.Application):
             self.analysis_db = couch["analysis"]
             self.application_categories_db = couch["application_categories"]
             self.bioinfo_db = couch["bioinfo_analysis"]
+            self.biomek_errs_db = couch["biomek_logs"]
             self.cost_calculator_db = couch["cost_calculator"]
             self.cronjobs_db = couch["cronjobs"]
             self.element_runs_db = couch["element_runs"]
