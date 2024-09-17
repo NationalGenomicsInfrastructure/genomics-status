@@ -1,14 +1,15 @@
-import json
-
-from status.util import SafeHandler
-import psycopg2
-from dateutil.parser import parse
 import ast
+import json
+import logging
+import psycopg2
+
+from dateutil.parser import parse
 
 from genologics_sql import queries as geno_queries
 from genologics_sql import utils as geno_utils
 
 from status.running_notes import LatestRunningNoteHandler
+from status.util import SafeHandler
 
 # Control names can be found in the table controltype in the lims backend. Will continue to check against this list for now, should
 # consider incorporating a check against this table directly into the queries in the future
@@ -709,6 +710,7 @@ class SmartSeq3ProgressPageDataHandler(SafeHandler):
     def get(self):
 
         # Get all samples in the SmartSeq3 workflow
+        gen_log = logging.getLogger("tornado.general")
         workflow_name = 'Smart-seq3 for NovaSeqXPlus v1.0'
         sample_level_udfs_list = ['Sample Type', 'Sample Links', 'Cell Type', 'Tissue Type', 'Species Name', 'Comment']
         project_level_udfs_list = ['Sequence units ordered (lanes)']
@@ -758,7 +760,13 @@ class SmartSeq3ProgressPageDataHandler(SafeHandler):
             if stepid in step_level_udfs_id:
                 step_level_udfs = geno_queries.get_sample_udfs_from_step(geno_session, sampleid, stepid, step_level_udfs_id[stepid])
                 for udfname, udfvalue, _ in step_level_udfs:
-                    sample_dict[udfname] = udfvalue 
+                    if udfvalue:
+                        if udfname in sample_dict:
+                            if sample_dict[udfname] != udfvalue:
+                                gen_log.warn(f'Sample {sample_name} has different values for udf {udfname} in step {stepname} '
+                                             f'previous value: {sample_dict[udfname]}, new value: {udfvalue}')
+                        else:
+                            sample_dict[udfname] = udfvalue
 
             samples_in_step_dict[stepid_to_stepindex[stepid]]['samples'][sample_name] = sample_dict
 
