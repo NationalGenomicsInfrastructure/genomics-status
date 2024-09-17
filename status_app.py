@@ -10,6 +10,8 @@ import requests
 from collections import OrderedDict
 from couchdb import Server
 
+from ibmcloudant import cloudant_v1, CouchDbSessionAuthenticator
+
 import tornado.autoreload
 import tornado.httpserver
 import tornado.ioloop
@@ -265,7 +267,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
             ("/api/v1/instrument_error_rates.png", InstrumentErrorratePlotHandler),
             ("/api/v1/instrument_logs", DataInstrumentLogsHandler),
-            ("/api/v1/instrument_logs/([^/]*)$", DataInstrumentLogsHandler),
+            ("/api/v1/instrument_logs/([^/]*)/([^/]*)$", DataInstrumentLogsHandler),
             ("/api/v1/instrument_names", InstrumentNamesHandler),
             ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
@@ -403,6 +405,7 @@ class Application(tornado.web.Application):
             self.analysis_db = couch["analysis"]
             self.application_categories_db = couch["application_categories"]
             self.bioinfo_db = couch["bioinfo_analysis"]
+            self.biomek_errs_db = couch["biomek_logs"]
             self.cost_calculator_db = couch["cost_calculator"]
             self.cronjobs_db = couch["cronjobs"]
             self.element_runs_db = couch["element_runs"]
@@ -423,6 +426,11 @@ class Application(tornado.web.Application):
         else:
             print(settings.get("couch_server", None))
             raise IOError("Cannot connect to couchdb")
+        
+        cloudant = cloudant_v1.CloudantV1(authenticator=CouchDbSessionAuthenticator(settings.get("username"), settings.get("password")))
+        cloudant.set_service_url(settings.get("couch_url"))
+        if cloudant:
+            self.cloudant = cloudant
 
         # Load columns and presets from genstat-defaults user in StatusDB
         genstat_id = ""
