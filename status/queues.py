@@ -714,6 +714,7 @@ class SmartSeq3ProgressPageDataHandler(SafeHandler):
         workflow_name = 'Smart-seq3 for NovaSeqXPlus v1.0'
         sample_level_udfs_list = ['Sample Type', 'Sample Links', 'Cell Type', 'Tissue Type', 'Species Name', 'Comment']
         project_level_udfs_list = ['Sequence units ordered (lanes)']
+        # Define the step level udfs and the step names they are associated with
         step_level_udfs_definition = {'Plates to Send': ['Sample plate sent date'],
                                         'Plates Sent': ['Sample plate received date'],
                                         'Lysis, RT and pre-Amp': ['PCR Cycles'],
@@ -723,7 +724,8 @@ class SmartSeq3ProgressPageDataHandler(SafeHandler):
         project_level_udfs = {}
 
         geno_session = geno_utils.get_session()
-        workflow_steps=geno_queries.get_all_steps_for_workflow(geno_session, workflow_name)
+        #Get all steps in the workflow with step ids and step name
+        workflow_steps = geno_queries.get_all_steps_for_workflow(geno_session, workflow_name)
         stepid_to_stepindex = {}
         
         for stepname, stepid, protocolname, stepindex in workflow_steps:
@@ -732,7 +734,8 @@ class SmartSeq3ProgressPageDataHandler(SafeHandler):
                                             'stepid': stepid,
                                             'samples': {}}
             stepid_to_stepindex[stepid] = stepindex
-            #Different versions of the workflow will have different stepids for the same stepname
+            #Connect stepid to udfname
+            #We need this cos different versions of the workflow will have different stepids for the same stepname
             if stepname in step_level_udfs_definition:
                 step_level_udfs_id[stepid] = step_level_udfs_definition[stepname]
         
@@ -760,11 +763,14 @@ class SmartSeq3ProgressPageDataHandler(SafeHandler):
             for step in stepid_to_stepindex:
                 # Only check steps before the current step
                 if stepid_to_stepindex[step]<= stepid_to_stepindex[stepid]:
+                    #Check if the step has any udfs associated with it that we are interested in
                     if step in step_level_udfs_id:
                         step_level_udfs = geno_queries.get_sample_udfs_from_step(geno_session, sampleid, step, step_level_udfs_id[step])
                         for udfname, udfvalue, _ in step_level_udfs:
                             if udfvalue:
+                                #If udfname was already set, check if the value is the same
                                 if udfname in sample_dict:
+                                    #If the value is different, log a warning
                                     if sample_dict[udfname] != udfvalue:
                                         gen_log.warn(f'Sample {sample_name} has different values for udf {udfname} in step {stepname} '
                                                      f'previous value: {sample_dict[udfname]}, new value: {udfvalue}')
