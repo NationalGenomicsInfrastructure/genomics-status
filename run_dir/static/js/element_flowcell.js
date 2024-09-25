@@ -5,6 +5,14 @@ const vElementApp = {
             ngi_run_id: "some_id",
             flowcell: {},
         }
+    },
+    methods: {
+        getValue(obj, key, defaultValue = "N/A") {
+            if (obj === null || obj === "N/A") {
+                return defaultValue;
+            }
+            return obj.hasOwnProperty(key) ? obj[key] : defaultValue;
+        }
     }
 }
 
@@ -17,115 +25,70 @@ app.component('v-element-flowcell', {
         flowcell() {
             return this.$root.flowcell;
         },
-        instrument_generated_files () {
-            // Check that the key exists
-            if (!this.flowcell.hasOwnProperty("instrument_generated_files")) {
-                return {};
-            } else {
-                return this.flowcell["instrument_generated_files"];
-            }
+        instrument_generated_files() {
+            return this.$root.getValue(this.flowcell, "instrument_generated_files", {});
         },
         aviti_run_stats() {
-            // Check that the key exists
-            if (!this.instrument_generated_files.hasOwnProperty("AvitiRunStats.json")) {
-                return {};
-            } else {
-                return this.instrument_generated_files["AvitiRunStats.json"];
-            }
+            return this.$root.getValue(this.instrument_generated_files, "AvitiRunStats.json", {});
         },
         run_parameters() {
-            // Check that the key exists
-            if (!this.instrument_generated_files.hasOwnProperty("RunParameters.json")) {
-                return {};
-            } else {
-                return this.instrument_generated_files["RunParameters.json"];
-            }
+            return this.$root.getValue(this.instrument_generated_files, "RunParameters.json", {});
         },
         start_time() {
-            if (this.run_parameters.hasOwnProperty("Date")) {
-                var date = new Date(this.run_parameters["Date"])
-                var date_string = date.toLocaleDateString();
-                var year = date_string.split("/")[2];
-                var month = date_string.split("/")[1];
-                var day = date_string.split("/")[0];
-                var date_formatted = year + "-" + month + "-" + day;
-                return date_formatted + " " + date.toLocaleTimeString();
-
+            const dateStr = this.$root.getValue(this.run_parameters, "Date", null);
+            if (dateStr) {
+                const date = new Date(dateStr);
+                const date_string = date.toLocaleDateString();
+                const [month, day, year] = date_string.split("/");
+                const date_formatted = `${year}-${month}-${day}`;
+                return `${date_formatted} ${date.toLocaleTimeString()}`;
             } else {
                 return "N/A";
             }
         },
         flowcell_id() {
-            if (this.run_parameters.hasOwnProperty("FlowcellID")) {
-                return this.run_parameters["FlowcellID"];
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.run_parameters, "FlowcellID");
         },
         side() {
-            if (this.run_parameters.hasOwnProperty("Side")) {
-                return this.run_parameters["Side"];
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.run_parameters, "Side");
         },
         instrument_name() {
-            if (this.run_parameters.hasOwnProperty("InstrumentName")) {
-                return this.run_parameters["InstrumentName"];
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.run_parameters, "InstrumentName");
         },
         run_setup() {
-            return ` ${this.chemistry_version} ${this.kit_configuration} (${this.cycles}); ${this.throughput_selection}`
+            return `${this.chemistry_version} ${this.kit_configuration} (${this.cycles}); ${this.throughput_selection}`;
         },
         cycles() {
-            if (this.run_parameters.hasOwnProperty("Cycles")) {
-                var return_str = "";
-                if (this.run_parameters["Cycles"].hasOwnProperty("R1")){
-                    return_str += "R1: " + this.run_parameters["Cycles"]["R1"];
-                }
-                if (this.run_parameters["Cycles"].hasOwnProperty("R2")){
-                    return_str += ", R2: " + this.run_parameters["Cycles"]["R2"];
-                }
-                if (this.run_parameters["Cycles"].hasOwnProperty("I1")){
-                    return_str += ", I1: " + this.run_parameters["Cycles"]["I1"];
-                }
-                if (this.run_parameters["Cycles"].hasOwnProperty("I2")){
-                    return_str += ", I2: " + this.run_parameters["Cycles"]["I2"];
-                }
-                return return_str;
-            } else {
+            const cycles = this.$root.getValue(this.run_parameters, "Cycles", {});
+            if (cycles === "N/A") {
                 return "N/A";
             }
+            let return_str = "";
+            if (cycles.hasOwnProperty("R1")) {
+                return_str += "R1: " + cycles["R1"];
+            }
+            if (cycles.hasOwnProperty("R2")) {
+                return_str += ", R2: " + cycles["R2"];
+            }
+            if (cycles.hasOwnProperty("I1")) {
+                return_str += ", I1: " + cycles["I1"];
+            }
+            if (cycles.hasOwnProperty("I2")) {
+                return_str += ", I2: " + cycles["I2"];
+            }
+            return return_str;
         },
         throughput_selection() {
-            if (this.run_parameters.hasOwnProperty("ThroughputSelection")) {
-                return this.run_parameters["ThroughputSelection"] + " Throughput";
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.run_parameters, "ThroughputSelection", "N/A") + " Throughput";
         },
         kit_configuration() {
-            if (this.run_parameters.hasOwnProperty("KitConfiguration")) {
-                return this.run_parameters["KitConfiguration"];
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.run_parameters, "KitConfiguration");
         },
         preparation_workflow() {
-            if (this.run_parameters.hasOwnProperty("PreparationWorkflow")) {
-                return this.run_parameters["PreparationWorkflow"];
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.run_parameters, "PreparationWorkflow");
         },
         chemistry_version() {
-            if (this.run_parameters.hasOwnProperty("ChemistryVersion")) {
-                return this.run_parameters["ChemistryVersion"];
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.run_parameters, "ChemistryVersion");
         }
     },
     mounted() {
@@ -140,7 +103,8 @@ app.component('v-element-flowcell', {
                 .catch(error => {
                     console.log(error);
                 });
-        }
+        },
+
     },
     template: `
     <div class="row">
@@ -208,60 +172,28 @@ app.component('v-element-flowcell', {
 app.component('v-run-stats', {
     computed: {
         aviti_run_stats() {
-            return this.$root.flowcell["instrument_generated_files"]["AvitiRunStats.json"];
+            return this.$root.getValue(this.$root.flowcell["instrument_generated_files"], "AvitiRunStats.json", {});
         },
         run_stats() {
-            return this.aviti_run_stats["RunStats"];
-        },
-        run_stats() {
-            // Check that the key exists
-            if (!this.aviti_run_stats.hasOwnProperty("RunStats")) {
-                return {};
-            } else {
-                return this.aviti_run_stats["RunStats"];
-            }
+            return this.$root.getValue(this.aviti_run_stats, "RunStats", {});
         },
         polony_count() {
-            if (this.run_stats.hasOwnProperty("PolonyCount")) {
-                return this.run_stats["PolonyCount"];
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.run_stats, "PolonyCount");
         },
         pf_count() {
-            if (this.run_stats.hasOwnProperty("PFCount")) {
-                return this.run_stats["PFCount"];
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.run_stats, "PFCount");
         },
         percent_pf() {
-            if (this.run_stats.hasOwnProperty("PercentPF")) {
-                return this.run_stats["PercentPF"];
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.run_stats, "PercentPF");
         },
         total_yield() {
-            if (this.run_stats.hasOwnProperty("TotalYield")) {
-                return this.run_stats["TotalYield"];
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.run_stats, "TotalYield");
         },
         index_assignment() {
-            if (this.run_stats.hasOwnProperty("IndexAssignment")) {
-                return this.run_stats["IndexAssignment"];
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.run_stats, "IndexAssignment", {});
         },
         percent_assigned_reads() {
-            if (this.index_assignment.hasOwnProperty("PercentAssignedReads")) {
-                return this.index_assignment["PercentAssignedReads"];
-            } else {
-                return "N/A";
-            }
+            return this.$root.getValue(this.index_assignment, "PercentAssignedReads");
         }
     },
     template: `
