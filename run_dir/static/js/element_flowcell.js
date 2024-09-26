@@ -7,6 +7,17 @@ const vElementApp = {
             flowcell_fetched: false,
         }
     },
+    computed: {
+        instrument_generated_files() {
+            return this.getValue(this.flowcell, "instrument_generated_files", {});
+        },
+        aviti_run_stats() {
+            return this.getValue(this.instrument_generated_files, "AvitiRunStats.json", {});
+        },
+        run_stats() {
+            return this.getValue(this.aviti_run_stats, "RunStats", {});
+        },
+    },
     methods: {
         getValue(obj, key, defaultValue = "N/A") {
             if (obj === null || obj == undefined || obj === "N/A") {
@@ -38,10 +49,10 @@ app.component('v-element-flowcell', {
             return this.$root.flowcell;
         },
         instrument_generated_files() {
-            return this.$root.getValue(this.flowcell, "instrument_generated_files", {});
+            return this.$root.instrument_generated_files;
         },
         aviti_run_stats() {
-            return this.$root.getValue(this.instrument_generated_files, "AvitiRunStats.json", {});
+            return this.$root.aviti_run_stats;
         },
         run_parameters() {
             return this.$root.getValue(this.instrument_generated_files, "RunParameters.json", {});
@@ -119,7 +130,7 @@ app.component('v-element-flowcell', {
         },
 
     },
-    template: `
+    template: /*html*/`
     <div v-if="!this.$root.flowcell_fetched">
         <div class="spinner-border" role="status">
             <span class="visually-hidden">Loading...</span>
@@ -192,10 +203,10 @@ app.component('v-element-flowcell', {
 app.component('v-element-run-stats', {
     computed: {
         aviti_run_stats() {
-            return this.$root.getValue(this.$root.flowcell["instrument_generated_files"], "AvitiRunStats.json", {});
+            return this.$root.aviti_run_stats;
         },
         run_stats() {
-            return this.$root.getValue(this.aviti_run_stats, "RunStats", {});
+            return this.$root.run_stats;
         },
         polony_count() {
             return this.$root.getValue(this.run_stats, "PolonyCount");
@@ -237,7 +248,91 @@ app.component('v-element-run-stats', {
                     <td>{{ percent_assigned_reads }}</td>
                 </tr>
             </tbody>
-        </table>`
+        </table>
+        
+        <v-element-summary-graph></v-element-summary-graph>
+        `
+});
+
+app.component('v-element-summary-graph', {
+    data() {
+        return {
+            lanes: [],
+        }
+    },
+    computed: {
+        flowcell() {
+            return this.$root.flowcell;
+        },
+        reads() {
+            return this.$root.getValue(this.$root.run_stats, "Reads", []);
+        },
+        R1_reads() {
+            /* filter the reads list to only include R1 reads */
+            return this.reads.filter(read => read['Read'] == 'R1');
+        },
+        data() {
+            return this.$root.getValue(this.R1_reads[0], 'Cycles', 'N/A');
+        },
+    },
+    methods: {
+        summary_graph() {
+
+            const cycles = this.data || [];
+            if (cycles.length === 0) {
+                return;
+            }
+            const categories = cycles.map(cycle => `Cycle ${cycle.Cycle}`);
+
+            const percentQ30 = cycles.map(cycle => cycle.PercentQ30);
+            const percentQ40 = cycles.map(cycle => cycle.PercentQ40);
+            const averageQScore = cycles.map(cycle => cycle.AverageQScore);
+
+            Highcharts.chart('SummaryPlot', {
+                chart: {
+                    type: 'line'
+                },
+                title: {
+                    text: 'Summary Plot'
+                },
+                xAxis: {
+                    categories: categories
+                },
+                yAxis: {
+                    title: {
+                        text: 'Values'
+                    },
+                    min: 0,
+                },
+                series: [
+                    {
+                        name: 'Percent Q30',
+                        data: percentQ30
+                    },
+                    {
+                        name: 'Percent Q40',
+                        data: percentQ40
+                    },
+                    {
+                        name: 'Average Q Score',
+                        data: averageQScore
+                    }
+                ]
+            });
+        },
+    },
+    mounted() {
+        this.$nextTick(function() {
+            if (this.$root.flowcell_fetched) { 
+                this.summary_graph();
+            }
+        });
+    },
+    template: /*html*/`
+        <h3>Summary Plot</h3>        
+        <div id="SummaryPlot">
+            <p>To be implemented</p>
+        </div>`
 });
 
 app.component('v-element-lane-stats', {
