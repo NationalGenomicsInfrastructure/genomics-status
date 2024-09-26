@@ -259,7 +259,10 @@ app.component('v-element-summary-graph', {
         return {
             include_R1: true,
             include_R2: true,
+            include_average_quality: false,
             graph_warnings: [],
+            filter_first_cycles: 1,
+            filter_last_cycles: 1,
         }
     },
     computed: {
@@ -319,6 +322,14 @@ app.component('v-element-summary-graph', {
             if (this.categories.length === 0) {
                 return;
             }
+            /* Filter the first categories */
+            this.categories = this.categories.slice(this.filter_first_cycles);
+
+            /* filter the last categories */
+            /* The last value seems to be weird for quality */
+            if (this.filter_last_cycles > 0) {
+                this.categories = this.categories.slice(0, -this.filter_last_cycles);
+            }
 
             let R1_percentQ30 = [];
             let R1_percentQ40 = [];
@@ -330,6 +341,18 @@ app.component('v-element-summary-graph', {
                 R1_percentQ40 = this.R1_read_cycles.map(cycle => cycle.PercentQ40);
                 R1_averageQScore = this.R1_read_cycles.map(cycle => cycle.AverageQScore);
 
+                /* Filter the first values */
+                R1_percentQ30 = R1_percentQ30.slice(this.filter_first_cycles);
+                R1_percentQ40 = R1_percentQ40.slice(this.filter_first_cycles);
+                R1_averageQScore = R1_averageQScore.slice(this.filter_first_cycles);
+
+                /* Filter the last values */
+                if (this.filter_last_cycles > 0) {
+                    R1_percentQ30 = R1_percentQ30.slice(0, -this.filter_last_cycles);
+                    R1_percentQ40 = R1_percentQ40.slice(0, -this.filter_last_cycles);
+                    R1_averageQScore = R1_averageQScore.slice(0, -this.filter_last_cycles);
+                }
+
                 series.push({
                     name: 'R1 Percent Q30',
                     data: R1_percentQ30
@@ -339,11 +362,14 @@ app.component('v-element-summary-graph', {
                     name: 'R1 Percent Q40',
                     data: R1_percentQ40
                 })
-                series.push(
-                {
-                    name: 'R1 Average Q Score',
-                    data: R1_averageQScore
-                })
+
+                if (this.include_average_quality) {
+                    series.push(
+                    {
+                        name: 'R1 Average Q Score',
+                        data: R1_averageQScore
+                    })
+                }
             }
 
             let R2_percentQ30 = [];
@@ -355,6 +381,17 @@ app.component('v-element-summary-graph', {
                 R2_percentQ40 = this.R2_read_cycles.map(cycle => cycle.PercentQ40);
                 R2_averageQScore = this.R2_read_cycles.map(cycle => cycle.AverageQScore);
 
+                /* Filter the first values */
+                R2_percentQ30 = R2_percentQ30.slice(this.filter_first_cycles);
+                R2_percentQ40 = R2_percentQ40.slice(this.filter_first_cycles);
+                R2_averageQScore = R2_averageQScore.slice(this.filter_first_cycles);
+
+                /* Filter the last values */
+                if (this.filter_last_cycles > 0) {
+                    R2_percentQ30 = R2_percentQ30.slice(0, -this.filter_last_cycles);
+                    R2_percentQ40 = R2_percentQ40.slice(0, -this.filter_last_cycles);
+                    R2_averageQScore = R2_averageQScore.slice(0, -this.filter_last_cycles);
+                }
                 series.push( {
                         name: 'R2 Percent Q30',
                         data: R2_percentQ30
@@ -363,15 +400,17 @@ app.component('v-element-summary-graph', {
                         name: 'R2 Percent Q40',
                         data: R2_percentQ40
                     })
-                series.push( {
-                        name: 'R2 Average Q Score',
-                        data: R2_averageQScore
-                    })
+                if (this.include_average_quality) {
+                    series.push( {
+                            name: 'R2 Average Q Score',
+                            data: R2_averageQScore
+                        })
+                }
             }
 
             Highcharts.chart('SummaryPlot', {
                 chart: {
-                    type: 'line'
+                    type: 'spline'
                 },
                 title: {
                     text: 'Summary Plot'
@@ -383,7 +422,6 @@ app.component('v-element-summary-graph', {
                     title: {
                         text: 'Values'
                     },
-                    min: 0,
                 },
                 series: series
             });
@@ -396,16 +434,66 @@ app.component('v-element-summary-graph', {
             }
         });
     },
+    watch: {
+        include_R1: function() {
+            this.summary_graph();
+        },
+        include_R2: function() {
+            this.summary_graph();
+        },
+        include_average_quality: function() {
+            this.summary_graph();
+        },
+        filter_first_cycles: function() {
+            this.summary_graph();
+        },
+        filter_last_cycles: function() {
+            this.summary_graph();
+        }
+    },
     template: /*html*/`
+    <div class="col-8">
         <h3>Summary Plot</h3>
         <div v-if="graph_warnings.length > 0" class="alert alert-warning" role="alert">
             <ul>
                 <li v-for="warning in graph_warnings">{{ warning }}</li>
             </ul>
         </div>
+        <div class="row my-3">
+            <div class="col-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" v-model="include_R1" id="include_R1_switch">
+                    <label class="form-check-label" for="include_R1_switch">
+                        Include R1
+                    </label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" v-model="include_R2" id="include_R2_switch">
+                    <label class="form-check-label" for="include_R2_switch">
+                        Include R2
+                    </label>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="form-group form-switch">
+                    <input class="form-check-input" type="checkbox" v-model="include_average_quality" id="include_avg_q_switch">
+                    <label class="form-check-label" for="include_avg_q_switch">
+                        Include Average Quality
+                    </label>
+                </div>
+            </div>
+            <div class="col-3">
+                <h3>Filter Cycles</h3>
+                <label for="filter_first_cycles" class="form-label">Filter first {{filter_first_cycles}} cycles</label>
+                <input type="range" class="form-range" min="0" :max="" v-model="filter_first_cycles" id="filter_first_cycles">
+
+                <label for="filter_last_cycles" class="form-label">Filter last {{filter_last_cycles}} cycles</label>
+                <input type="range" class="form-range" min="0" :max="" v-model="filter_last_cycles" id="filter_last_cycles">
+            </div>
+        </div>
         <div id="SummaryPlot">
-            <p>To be implemented</p>
-        </div>`
+        </div>
+    </div>`
 });
 
 app.component('v-element-lane-stats', {
