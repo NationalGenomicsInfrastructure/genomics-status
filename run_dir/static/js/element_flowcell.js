@@ -51,7 +51,7 @@ app.component('v-element-flowcell', {
             if (dateStr) {
                 const date = new Date(dateStr);
                 const date_string = date.toLocaleDateString();
-                const [month, day, year] = date_string.split("/");
+                const [day, month, year] = date_string.split("/");
                 const date_formatted = `${year}-${month}-${day}`;
                 return `${date_formatted} ${date.toLocaleTimeString()}`;
             } else {
@@ -261,10 +261,19 @@ app.component('v-element-lane-stats', {
         },
         total_lane_yield_formatted(lane) {
             return this.$root.formatNumberBases(this.$root.getValue(lane, "TotalYield"));
+        },
+        index_assignments(lane) {
+            return this.$root.getValue(lane, "IndexAssignment", {});
+        },
+        index_samples(lane) {
+            return this.$root.getValue(this.index_assignments(lane), "IndexSamples", {});
+        },
+        unassigned_sequences(lane) {
+            return this.$root.getValue(this.index_assignments(lane), "UnassignedSequences", {});
         }
     },
-    template: `
-        <div v-for="lane in lane_stats">
+    template: /*html*/`
+        <div v-for="lane in lane_stats" class="mb-3">
             <h2>Lane {{ lane["Lane"] }}</h2>
             <table class="table table-bordered narrow-headers no-margin right_align_headers">
                 <tbody>
@@ -282,6 +291,51 @@ app.component('v-element-lane-stats', {
                     </tr>
                 </tbody>
             </table>
+
+            <h3>Index Assignments</h3>
+            <table class="table table-bordered narrow-headers no-margin right_align_headers">
+                <thead>
+                    <tr class="darkth">
+                        <th>Project Name</th>
+                        <th>Sample Name</th>
+                        <th>% Assigned Reads</th>
+                        <th>% Assigned With Mismatches</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="sample in index_samples(lane)">
+                        <td>{{ sample["ProjectName"] }}</td>
+                        <td>{{ sample["SampleName"] }}</td>
+                        <td>{{ sample["PercentAssignedReads"] }}</td>
+                        <td>{{ sample["PercentMismatch"] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ lane['Lane']" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ lane['Lane']">
+                Show undetermined
+            </button>
+
+            <div class="collapse mt-3" :id="'collapseUndeterminedLane'+ lane['Lane']">
+                <div class="row">
+                <div class="card card-body">
+                    <div class="col-3">
+                        <table class="table table-bordered narrow-headers no-margin right_align_headers">
+                            <thead>
+                                <tr class="darkth">
+                                    <th>Sequence</th>
+                                    <th>% Occurence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="unassigned_item in unassigned_sequences(lane)">
+                                    <td>{{ unassigned_item["I1"] }}+{{ unassigned_item["I2"]}}</td>
+                                    <td>{{ unassigned_item["PercentOcurrence"] }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
         `
 
