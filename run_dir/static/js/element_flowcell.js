@@ -291,7 +291,22 @@ app.component('v-element-summary-graph', {
 
             var categories_R2 = this.R2_read_cycles.map(cycle => `Cycle ${cycle.Cycle}`);
 
-            if (categories_R1 !== categories_R2) {
+            if (categories_R1.length !== categories_R2.length) {
+                console.log("The lengths of categories_R1 and categories_R2 are different.");
+                console.log("Length of categories_R1:", categories_R1.length);
+                console.log("Length of categories_R2:", categories_R2.length);
+            }
+            var categories_differ = false;
+            for (let i = 0; i < Math.max(categories_R1.length, categories_R2.length); i++) {
+                if (categories_R1[i] !== categories_R2[i]) {
+                    categories_differ = true;
+                    console.log(`Difference found at index ${i}:`);
+                    console.log(`categories_R1[${i}]:`, categories_R1[i]);
+                    console.log(`categories_R2[${i}]:`, categories_R2[i]);
+                }
+            }
+
+            if (categories_differ) {
                 this.graph_warnings.push("Warning! R1 and R2 x-axis are note identical, using R1 axis");
             }
 
