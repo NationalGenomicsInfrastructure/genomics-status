@@ -265,6 +265,9 @@ app.component('v-element-lane-stats', {
         index_assignments(lane) {
             return this.$root.getValue(lane, "IndexAssignment", {});
         },
+        percent_assigned_reads(lane) {
+            return this.$root.getValue(this.index_assignments(lane), "PercentAssignedReads", {});
+        },
         index_samples(lane) {
             return this.$root.getValue(this.index_assignments(lane), "IndexSamples", {});
         },
@@ -287,7 +290,7 @@ app.component('v-element-lane-stats', {
                         <th>Polony Count</th> <td>{{ lane["PolonyCount"] }}</td>
                         <th>PF Count</th> <td>{{ lane["PFCount"] }}</td>
                         <th>% PF</th> <td>{{ lane["PercentPF"] }}</td>
-                        <th>% Assigned Reads</th> <td>{{ lane["PercentAssignedReads"] }}</td>
+                        <th>% Assigned Reads</th> <td>{{ percent_assigned_reads(lane) }}</td>
                     </tr>
                 </tbody>
             </table>
