@@ -134,8 +134,8 @@ app.component('v-element-flowcell', {
     <div v-if="!this.$root.flowcell_fetched">
         <div class="spinner-border" role="status">
             <span class="visually-hidden">Loading...</span>
-            </div>
-            <span class="ml-2">Loading...</span>
+        </div>
+        <span class="ml-2">Loading...</span>
     </div>
     <div v-else>
         <div class="row">
@@ -257,7 +257,9 @@ app.component('v-element-run-stats', {
 app.component('v-element-summary-graph', {
     data() {
         return {
-            lanes: [],
+            include_R1: true,
+            include_R2: true,
+            graph_warnings: [],
         }
     },
     computed: {
@@ -267,26 +269,90 @@ app.component('v-element-summary-graph', {
         reads() {
             return this.$root.getValue(this.$root.run_stats, "Reads", []);
         },
-        R1_reads() {
-            /* filter the reads list to only include R1 reads */
-            return this.reads.filter(read => read['Read'] == 'R1');
+        R1_read_cycles() {
+            let filtered_values = this.reads.filter(read => read['Read'] == 'R1')
+            if (filtered_values.length === 0) {
+                return [];
+            }
+
+            return this.$root.getValue(filtered_values[0], 'Cycles', [])
         },
-        data() {
-            return this.$root.getValue(this.R1_reads[0], 'Cycles', 'N/A');
+        R2_read_cycles() {
+            let filtered_values = this.reads.filter(read => read['Read'] == 'R2')
+            if (filtered_values.length === 0) {
+                return [];
+            }
+
+            return this.$root.getValue(filtered_values[0], 'Cycles', [])
+        },
+        categories() {
+            // Check if R1 is in end_filter
+            var categories_R1 = this.R1_read_cycles.map(cycle => `Cycle ${cycle.Cycle}`);
+
+            var categories_R2 = this.R2_read_cycles.map(cycle => `Cycle ${cycle.Cycle}`);
+
+            if (categories_R1 !== categories_R2) {
+                this.graph_warnings.push("Warning! R1 and R2 x-axis are note identical, using R1 axis");
+            }
+
+            return categories_R1;
         },
     },
     methods: {
         summary_graph() {
-
-            const cycles = this.data || [];
-            if (cycles.length === 0) {
+            console.log("Creating summary graph");
+            if (this.categories.length === 0) {
                 return;
             }
-            const categories = cycles.map(cycle => `Cycle ${cycle.Cycle}`);
 
-            const percentQ30 = cycles.map(cycle => cycle.PercentQ30);
-            const percentQ40 = cycles.map(cycle => cycle.PercentQ40);
-            const averageQScore = cycles.map(cycle => cycle.AverageQScore);
+            let R1_percentQ30 = [];
+            let R1_percentQ40 = [];
+            let R1_averageQScore = [];
+            let series = [];
+
+            if (this.include_R1) {
+                R1_percentQ30 = this.R1_read_cycles.map(cycle => cycle.PercentQ30);
+                R1_percentQ40 = this.R1_read_cycles.map(cycle => cycle.PercentQ40);
+                R1_averageQScore = this.R1_read_cycles.map(cycle => cycle.AverageQScore);
+
+                series.push({
+                    name: 'R1 Percent Q30',
+                    data: R1_percentQ30
+                })
+                series.push(
+                {
+                    name: 'R1 Percent Q40',
+                    data: R1_percentQ40
+                })
+                series.push(
+                {
+                    name: 'R1 Average Q Score',
+                    data: R1_averageQScore
+                })
+            }
+
+            let R2_percentQ30 = [];
+            let R2_percentQ40 = [];
+            let R2_averageQScore = [];
+
+            if (this.include_R2) {
+                R2_percentQ30 = this.R2_read_cycles.map(cycle => cycle.PercentQ30);
+                R2_percentQ40 = this.R2_read_cycles.map(cycle => cycle.PercentQ40);
+                R2_averageQScore = this.R2_read_cycles.map(cycle => cycle.AverageQScore);
+
+                series.push( {
+                        name: 'R2 Percent Q30',
+                        data: R2_percentQ30
+                    })
+                series.push( {
+                        name: 'R2 Percent Q40',
+                        data: R2_percentQ40
+                    })
+                series.push( {
+                        name: 'R2 Average Q Score',
+                        data: R2_averageQScore
+                    })
+            }
 
             Highcharts.chart('SummaryPlot', {
                 chart: {
@@ -296,7 +362,7 @@ app.component('v-element-summary-graph', {
                     text: 'Summary Plot'
                 },
                 xAxis: {
-                    categories: categories
+                    categories: this.categories
                 },
                 yAxis: {
                     title: {
@@ -304,20 +370,7 @@ app.component('v-element-summary-graph', {
                     },
                     min: 0,
                 },
-                series: [
-                    {
-                        name: 'Percent Q30',
-                        data: percentQ30
-                    },
-                    {
-                        name: 'Percent Q40',
-                        data: percentQ40
-                    },
-                    {
-                        name: 'Average Q Score',
-                        data: averageQScore
-                    }
-                ]
+                series: series
             });
         },
     },
@@ -329,7 +382,12 @@ app.component('v-element-summary-graph', {
         });
     },
     template: /*html*/`
-        <h3>Summary Plot</h3>        
+        <h3>Summary Plot</h3>
+        <div v-if="graph_warnings.length > 0" class="alert alert-warning" role="alert">
+            <ul>
+                <li v-for="warning in graph_warnings">{{ warning }}</li>
+            </ul>
+        </div>
         <div id="SummaryPlot">
             <p>To be implemented</p>
         </div>`
