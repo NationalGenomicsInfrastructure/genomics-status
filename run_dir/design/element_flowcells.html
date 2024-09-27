@@ -36,7 +36,7 @@
             {% for onefc in element_fcs %}
                 <tr>
                     <td class="ngi_run_id">
-                        <a class="text-decoration-none" href="/flowcells_element/{{ onefc.id }}">{{ onefc.key }}</a>
+                        <a class="text-decoration-none" href="/flowcells_element/{{ onefc.key }}">{{ onefc.key }}</a>
                         {% if onefc.value.get('Outcome') == 'OutcomeCompleted' %}
                             <abbr title="Run completed"><span class="fa fa-check-circle"></span></abbr>
                         {% elif onefc.value.get('Outcome') == 'ongoing' %}
