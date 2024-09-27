@@ -260,6 +260,8 @@ app.component('v-element-summary-graph', {
             include_R1: true,
             include_R2: true,
             include_average_quality: false,
+            include_percent_q30: true,
+            include_percent_q40: true,
             graph_warnings: [],
             filter_first_cycles: 1,
             filter_last_cycles: 1,
@@ -318,17 +320,16 @@ app.component('v-element-summary-graph', {
     },
     methods: {
         summary_graph() {
-            console.log("Creating summary graph");
             if (this.categories.length === 0) {
                 return;
             }
             /* Filter the first categories */
-            this.categories = this.categories.slice(this.filter_first_cycles);
+            var filtered_categories = this.categories.slice(this.filter_first_cycles);
 
             /* filter the last categories */
             /* The last value seems to be weird for quality */
             if (this.filter_last_cycles > 0) {
-                this.categories = this.categories.slice(0, -this.filter_last_cycles);
+                filtered_categories = filtered_categories.slice(0, -this.filter_last_cycles);
             }
 
             let R1_percentQ30 = [];
@@ -353,15 +354,20 @@ app.component('v-element-summary-graph', {
                     R1_averageQScore = R1_averageQScore.slice(0, -this.filter_last_cycles);
                 }
 
-                series.push({
-                    name: 'R1 Percent Q30',
-                    data: R1_percentQ30
-                })
-                series.push(
-                {
-                    name: 'R1 Percent Q40',
-                    data: R1_percentQ40
-                })
+                if (this.include_percent_q30) {
+                    series.push({
+                        name: 'R1 Percent Q30',
+                        data: R1_percentQ30
+                    })
+                }
+
+                if (this.include_percent_q40) {
+                    series.push(
+                    {
+                        name: 'R1 Percent Q40',
+                        data: R1_percentQ40
+                    })
+                }
 
                 if (this.include_average_quality) {
                     series.push(
@@ -392,14 +398,18 @@ app.component('v-element-summary-graph', {
                     R2_percentQ40 = R2_percentQ40.slice(0, -this.filter_last_cycles);
                     R2_averageQScore = R2_averageQScore.slice(0, -this.filter_last_cycles);
                 }
-                series.push( {
-                        name: 'R2 Percent Q30',
-                        data: R2_percentQ30
-                    })
-                series.push( {
-                        name: 'R2 Percent Q40',
-                        data: R2_percentQ40
-                    })
+                if (this.include_percent_q30) {
+                    series.push( {
+                            name: 'R2 Percent Q30',
+                            data: R2_percentQ30
+                        })
+                }
+                if (this.include_percent_q40) {
+                    series.push( {
+                            name: 'R2 Percent Q40',
+                            data: R2_percentQ40
+                        })
+                }
                 if (this.include_average_quality) {
                     series.push( {
                             name: 'R2 Average Q Score',
@@ -408,7 +418,7 @@ app.component('v-element-summary-graph', {
                 }
             }
 
-            Highcharts.chart('SummaryPlot', {
+            Highcharts.chart('SummaryPlotQuality', {
                 chart: {
                     type: 'spline'
                 },
@@ -416,14 +426,19 @@ app.component('v-element-summary-graph', {
                     text: 'Summary Plot'
                 },
                 xAxis: {
-                    categories: this.categories
+                    categories: filtered_categories
                 },
                 yAxis: {
                     title: {
                         text: 'Values'
                     },
                 },
-                series: series
+                series: series.map(s => ({
+                    ...s,
+                    marker: {
+                        enabled: false, // Set to false to hide markers
+                    }
+                }))
             });
         },
     },
@@ -444,6 +459,12 @@ app.component('v-element-summary-graph', {
         include_average_quality: function() {
             this.summary_graph();
         },
+        include_percent_q30: function() {
+            this.summary_graph();
+        },
+        include_percent_q40: function() {
+            this.summary_graph();
+        },
         filter_first_cycles: function() {
             this.summary_graph();
         },
@@ -452,14 +473,14 @@ app.component('v-element-summary-graph', {
         }
     },
     template: /*html*/`
-    <div class="col-8">
-        <h3>Summary Plot</h3>
-        <div v-if="graph_warnings.length > 0" class="alert alert-warning" role="alert">
-            <ul>
-                <li v-for="warning in graph_warnings">{{ warning }}</li>
-            </ul>
-        </div>
-        <div class="row my-3">
+    <h3>Summary Plot</h3>
+    <div v-if="graph_warnings.length > 0" class="alert alert-warning" role="alert">
+        <ul>
+            <li v-for="warning in graph_warnings">{{ warning }}</li>
+        </ul>
+    </div>
+    <div class="col-6">
+        <div class="row my-3 mx-5">
             <div class="col-3">
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" v-model="include_R1" id="include_R1_switch">
@@ -475,10 +496,22 @@ app.component('v-element-summary-graph', {
                 </div>
             </div>
             <div class="col-3">
-                <div class="form-group form-switch">
+                <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" v-model="include_average_quality" id="include_avg_q_switch">
                     <label class="form-check-label" for="include_avg_q_switch">
                         Include Average Quality
+                    </label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" v-model="include_percent_q30" id="include_q30_switch">
+                    <label class="form-check-label" for="include_q30_switch">
+                        Include % Q30
+                    </label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" v-model="include_percent_q40" id="include_q40_switch">
+                    <label class="form-check-label" for="include_q40_switch">
+                        Include % Q40
                     </label>
                 </div>
             </div>
@@ -491,7 +524,7 @@ app.component('v-element-summary-graph', {
                 <input type="range" class="form-range" min="0" :max="" v-model="filter_last_cycles" id="filter_last_cycles">
             </div>
         </div>
-        <div id="SummaryPlot">
+        <div id="SummaryPlotQuality">
         </div>
     </div>`
 });
