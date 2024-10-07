@@ -686,6 +686,9 @@ app.component('v-element-quality-graph', {
         },
     },
     methods: {
+        empirical_quality_score(percent_error_rate) {
+            return -10 * Math.log10(percent_error_rate/100);
+        },
         summary_graph() {
             if (this.categories.length === 0) {
                 return;
@@ -703,21 +706,25 @@ app.component('v-element-quality-graph', {
             let R1_percentQ40 = [];
             let R1_averageQScore = [];
             let R1_phiX_error_rate = [];
+            let R1_phiX_empirical_error_rate = [];
             let series = [];
             let avg_series = [];
             let phiX_error_rate_series = [];
+            let phiX_empirical_error_rate_series = [];
 
             if (this.include_R1) {
                 R1_percentQ30 = this.R1_read_cycles.map(cycle => cycle.PercentQ30);
                 R1_percentQ40 = this.R1_read_cycles.map(cycle => cycle.PercentQ40);
                 R1_averageQScore = this.R1_read_cycles.map(cycle => cycle.AverageQScore);
                 R1_phiX_error_rate = this.R1_read_cycles.map(cycle => cycle.PercentPhixErrorRate);
+                R1_phiX_empirical_error_rate = R1_phiX_error_rate.map(error_rate => this.empirical_quality_score(error_rate));
 
                 /* Filter the first values */
                 R1_percentQ30 = R1_percentQ30.slice(this.filter_first_cycles);
                 R1_percentQ40 = R1_percentQ40.slice(this.filter_first_cycles);
                 R1_averageQScore = R1_averageQScore.slice(this.filter_first_cycles);
                 R1_phiX_error_rate = R1_phiX_error_rate.slice(this.filter_first_cycles);
+                R1_phiX_empirical_error_rate = R1_phiX_empirical_error_rate.slice(this.filter_first_cycles);
 
                 /* Filter the last values */
                 if (this.filter_last_cycles > 0) {
@@ -725,6 +732,7 @@ app.component('v-element-quality-graph', {
                     R1_percentQ40 = R1_percentQ40.slice(0, -this.filter_last_cycles);
                     R1_averageQScore = R1_averageQScore.slice(0, -this.filter_last_cycles);
                     R1_phiX_error_rate = R1_phiX_error_rate.slice(0, -this.filter_last_cycles);
+                    R1_phiX_empirical_error_rate = R1_phiX_empirical_error_rate.slice(0, -this.filter_last_cycles);
                 }
 
                 series.push({
@@ -749,24 +757,33 @@ app.component('v-element-quality-graph', {
                     name: 'Percent PhiX Error Rate',
                     data: R1_phiX_error_rate
                 })
+
+                phiX_empirical_error_rate_series.push(
+                {
+                    name: 'PhiX Empirical Quality Score',
+                    data: R1_phiX_empirical_error_rate
+                })
             }
 
             let R2_percentQ30 = [];
             let R2_percentQ40 = [];
             let R2_averageQScore = [];
             let R2_phiX_error_rate = [];
+            let R2_phiX_empirical_error_rate = [];
 
             if (this.include_R2) {
                 R2_percentQ30 = this.R2_read_cycles.map(cycle => cycle.PercentQ30);
                 R2_percentQ40 = this.R2_read_cycles.map(cycle => cycle.PercentQ40);
                 R2_averageQScore = this.R2_read_cycles.map(cycle => cycle.AverageQScore);
                 R2_phiX_error_rate = this.R2_read_cycles.map(cycle => cycle.PercentPhixErrorRate);
+                R2_phiX_empirical_error_rate = R2_phiX_error_rate.map(error_rate => this.empirical_quality_score(error_rate));
 
                 /* Filter the first values */
                 R2_percentQ30 = R2_percentQ30.slice(this.filter_first_cycles);
                 R2_percentQ40 = R2_percentQ40.slice(this.filter_first_cycles);
                 R2_averageQScore = R2_averageQScore.slice(this.filter_first_cycles);
                 R2_phiX_error_rate = R2_phiX_error_rate.slice(this.filter_first_cycles);
+                R2_phiX_empirical_error_rate = R2_phiX_empirical_error_rate.slice(this.filter_first_cycles);
 
                 /* Filter the last values */
                 if (this.filter_last_cycles > 0) {
@@ -774,6 +791,7 @@ app.component('v-element-quality-graph', {
                     R2_percentQ40 = R2_percentQ40.slice(0, -this.filter_last_cycles);
                     R2_averageQScore = R2_averageQScore.slice(0, -this.filter_last_cycles);
                     R2_phiX_error_rate = R2_phiX_error_rate.slice(0, -this.filter_last_cycles);
+                    R2_phiX_empirical_error_rate = R2_phiX_empirical_error_rate.slice(0, -this.filter_last_cycles);
                 }
 
                 series.push({
@@ -797,6 +815,12 @@ app.component('v-element-quality-graph', {
                 phiX_error_rate_series.push({
                     name: 'R2 Percent PhiX Error Rate',
                     data: R2_phiX_error_rate,
+                    dashStyle: 'Dash' // Set dash style for R2 series
+                });
+
+                phiX_empirical_error_rate_series.push({
+                    name: 'R2 PhiX Empirical Quality Score',
+                    data: R2_phiX_empirical_error_rate,
                     dashStyle: 'Dash' // Set dash style for R2 series
                 });
             }
@@ -869,6 +893,29 @@ app.component('v-element-quality-graph', {
                     }
                 }))
             });
+
+            Highcharts.chart('SummaryPlotEmpiricalQuality', {
+                chart: {
+                    type: 'spline'
+                },
+                title: {
+                    text: 'PhiX Empirical Quality Score'
+                },
+                xAxis: {
+                    categories: filtered_categories
+                },
+                yAxis: {
+                    title: {
+                        text: 'Quality Score'
+                    },
+                },
+                series: phiX_empirical_error_rate_series.map(s => ({
+                    ...s,
+                    marker: {
+                        enabled: false, // Set to false to hide markers
+                    }
+                }))
+            });
         },
     },
     mounted() {
@@ -935,6 +982,10 @@ app.component('v-element-quality-graph', {
             <div class="row">
                 <div class="col-6">
                     <div id="SummaryPlotPhiXErrorRate">
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div id="SummaryPlotEmpiricalQuality">
                     </div>
                 </div>
             </div>
