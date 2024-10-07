@@ -28,6 +28,9 @@ const vElementApp = {
         },
         index_assignment_instrument() {
             return this.getValue(this.run_stats, "IndexAssignment", {});
+        },
+        unassiged_sequences_demultiplex() {
+            return this.getValue(this.demultiplex_stats, "Unassigned_Sequences", {});
         }
     },
     methods: {
@@ -186,31 +189,36 @@ app.component('v-element-flowcell', {
         <v-element-run-stats></v-element-run-stats>
 
         <div class="tabbable mb-3">
-        <ul class="nav nav-tabs">
-            <li class="nav-item">
-            <!--href="tab_details_content"-->
-            <a class="nav-link active" href="#tab_flowcell_information" role="tab" data-toggle="tab">Flowcell Information</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link" href="#tab_fc_project_yields_content" role="tab" data-toggle="tab">Project Yields</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#tab_element_quality_graph" role="tab" data-toggle="tab">Cycle Qualities</a>
-            </li>
-        </ul>
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#tab_lane_stats" role="tab" data-toggle="tab">Lane stats</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link" href="#tab_lane_stats_pre_demultiplex" role="tab" data-toggle="tab">Lane Stats (Pre-demultiplex)</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link" href="#tab_fc_project_yields_content" role="tab" data-toggle="tab">Project Yields</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#tab_element_quality_graph" role="tab" data-toggle="tab">Cycle Qualities</a>
+                </li>
+            </ul>
         </div>
 
         <div class="tab-content">
-        <div class="tab-pane fade show active" id="tab_flowcell_information">
-            <h3>Lane Information</h3>
-            <v-element-lane-stats></v-element-lane-stats>
-        </div>
-        <div class="tab-pane fade show" id="tab_fc_project_yields_content">
-            <h3>Project Yields</h3>
-            <p>To be implemented</p>
-        </div>
-        <div class="tab-pane fade show" id="tab_element_quality_graph">
-            <v-element-quality-graph></v-element-quality-graph>
+            <div class="tab-pane fade show active" id="tab_lane_stats">
+                <v-element-lane-stats></v-element-lane-stats>
+            </div>
+            <div class="tab-pane fade show" id="tab_lane_stats_pre_demultiplex">
+                <v-element-lane-stats-pre-demultiplex></v-element-lane-stats-pre-demultiplex>
+            </div>
+            <div class="tab-pane fade show" id="tab_fc_project_yields_content">
+                <h3>Project Yields</h3>
+                <p>To be implemented</p>
+            </div>
+            <div class="tab-pane fade show" id="tab_element_quality_graph">
+                <v-element-quality-graph></v-element-quality-graph>
+            </div>
         </div>
     </div>
 
@@ -267,6 +275,241 @@ app.component('v-element-run-stats', {
             </tbody>
         </table>
         `
+});
+
+app.component('v-element-lane-stats', {
+    computed: {
+        lane_stats() {
+            const groupedByLane = {};
+            if (this.$root.index_assignment_demultiplex && this.$root.index_assignment_demultiplex.length > 0) {
+                this.$root.index_assignment_demultiplex.forEach(sample => {
+                    const lane = sample["Lane"];
+                    if (!groupedByLane[lane]) {
+                        groupedByLane[lane] = [];
+                    }
+                    groupedByLane[lane].push(sample);
+                });
+            }
+
+            return groupedByLane;
+        },
+        unassigned_lane_stats() {
+            const groupedByLane = {};
+
+            if (this.$root.unassiged_sequences_demultiplex && this.$root.unassiged_sequences_demultiplex.length > 0) {
+                this.$root.unassiged_sequences_demultiplex.forEach(sample => {
+                    const lane = sample["Lane"];
+                    if (!groupedByLane[lane]) {
+                        groupedByLane[lane] = [];
+                    }
+                    groupedByLane[lane].push(sample);
+                });
+            }
+            return groupedByLane;
+        }
+    },
+    methods: {
+        barcode(sample) {
+            var barcode_str = "";
+            if (sample.hasOwnProperty("I1") && sample["I1"] !== "") {
+                barcode_str += sample["I1"];
+            } else {
+                barcode_str += "N/A"
+            }
+
+            if (sample.hasOwnProperty("I2") && sample["I2"] !== ""){
+                barcode_str += "+" + sample["I2"];
+            }
+            return barcode_str;
+        }
+    },
+    template: /*html*/`
+        <div v-for="laneKey in Object.keys(lane_stats)" class="mb-3">
+            <h2>
+                Lane {{ laneKey }}
+            </h2>
+
+            <table class="table table-bordered narrow-headers no-margin right_align_headers">
+                <thead>
+                    <tr class="darkth">
+                        <th>Sample Name</th>
+                        <th>Yield (Gb)</th>
+                        <th>Num Polonies Assigned</th>
+                        <th>% Q30</th>
+                        <th>% Q40</th>
+                        <th>Barcode(s)</th>
+                        <th>% Assigned Reads</th>
+                        <th>% Assigned With Mismatches</th>
+                        <th>Sub Demux Count</th>
+                        <th>Quality Score Mean</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="sample in lane_stats[laneKey]" :key="sample.SampleNumber">
+                        <td>{{ sample["SampleName"] }}</td>
+                        <td>{{ sample["Yield(Gb)"] }}</td>
+                        <td>{{ sample["NumPoloniesAssigned"] }}</td>
+                        <td>{{ parseFloat(sample["PercentQ30"]).toFixed(2) }}</td>
+                        <td>{{ parseFloat(sample["PercentQ40"]).toFixed(2) }}</td>
+                        <td style="font-size: 1.35rem;"><samp>{{ barcode(sample) }}</samp></td>
+                        <td>{{ parseFloat(sample["PercentPoloniesAssigned"]).toFixed(2) }}</td>
+                        <td>{{ parseFloat(sample["PercentMismatch"]).toFixed(2) }}</td>
+                        <td>{{ sample["sub_demux_count"] }}</td>
+                        <td>{{ parseFloat(sample["QualityScoreMean"]).toFixed(2) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ laneKey" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ laneKey">
+                Show undetermined
+            </button>
+            <div class="collapse mt-3" :id="'collapseUndeterminedLane'+ laneKey">
+                <div class="row">
+                    <div class="card card-body">
+                        <div class="col-3">
+                            <table class="table table-bordered narrow-headers no-margin right_align_headers">
+                                <thead>
+                                    <tr class="darkth">
+                                        <th>Sequence</th>
+                                        <th>% Occurence</th>
+                                        <td>Count</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="unassigned_item in this.unassigned_lane_stats[laneKey]">
+                                        <td style="font-size: 1.35rem;"><samp>{{ barcode(unassigned_item)}}</samp></td>
+                                        <td>{{ unassigned_item["% Polonies"] }}</td>
+                                        <td>{{ unassigned_item["Count"] }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `
+
+});
+
+app.component('v-element-lane-stats-pre-demultiplex', {
+    computed: {
+        lane_stats() {
+            return this.$root.getValue(this.$root.aviti_run_stats, "LaneStats", {});
+        },
+        lanes() {
+            return this.$root.getValue(this.lane_stats, "Lanes", []);
+        },
+    },
+    methods: {
+        total_lane_yield(lane) {
+            return this.$root.formatNumberBases(this.$root.getValue(lane, "TotalYield"));
+        },
+        total_lane_yield_formatted(lane) {
+            return this.$root.formatNumberBases(this.$root.getValue(lane, "TotalYield"));
+        },
+        index_assignments(lane) {
+            return this.$root.getValue(lane, "IndexAssignment", {});
+        },
+        percent_assigned_reads(lane) {
+            return this.$root.getValue(this.index_assignments(lane), "PercentAssignedReads", {});
+        },
+        index_samples(lane) {
+            return this.$root.getValue(this.index_assignments(lane), "IndexSamples", {});
+        },
+        unassigned_sequences(lane) {
+            return this.$root.getValue(this.index_assignments(lane), "UnassignedSequences", {});
+        }
+    },
+    template: /*html*/`
+        <div v-for="lane in lane_stats" class="mb-3">
+            <h2>
+                Lane {{ lane["Lane"] }}
+                <span class="badge rounded-pill bg-warning">Pre-demultiplexing</span>
+            </h2>
+            <table class="table table-bordered narrow-headers no-margin right_align_headers">
+                <tbody>
+                    <tr class="darkth">
+                        <th>Total Yield</th>
+                        <v-element-tooltip :title=lane["TotalYield"]>
+                        <td>
+                            {{ total_lane_yield_formatted(lane) }}
+                        </td>
+                        </v-element-tooltip>
+                        <th>Polony Count</th> <td>{{ lane["PolonyCount"] }}</td>
+                        <th>PF Count</th> <td>{{ lane["PFCount"] }}</td>
+                        <th>% PF</th> <td>{{ lane["PercentPF"] }}</td>
+                        <th>% Assigned Reads</th> <td>{{ percent_assigned_reads(lane) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Index Assignments</h3>
+            <table class="table table-bordered narrow-headers no-margin right_align_headers">
+                <thead>
+                    <tr class="darkth">
+                        <th>Project Name</th>
+                        <th>Sample Name</th>
+                        <th>% Assigned Reads</th>
+                        <th>% Assigned With Mismatches</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="sample in index_samples(lane)">
+                        <td>{{ sample["ProjectName"] }}</td>
+                        <td>{{ sample["SampleName"] }}</td>
+                        <td>{{ sample["PercentAssignedReads"] }}</td>
+                        <td>{{ sample["PercentMismatch"] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ lane['Lane']" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ lane['Lane']">
+                Show undetermined
+            </button>
+
+            <div class="collapse mt-3" :id="'collapseUndeterminedLane'+ lane['Lane']">
+                <div class="row">
+                <div class="card card-body">
+                    <div class="col-3">
+                        <table class="table table-bordered narrow-headers no-margin right_align_headers">
+                            <thead>
+                                <tr class="darkth">
+                                    <th>Sequence</th>
+                                    <th>% Occurence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="unassigned_item in unassigned_sequences(lane)">
+                                    <td>{{ unassigned_item["I1"] }}+{{ unassigned_item["I2"]}}</td>
+                                    <td>{{ unassigned_item["PercentOcurrence"] }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `
+
+});
+
+app.component('v-element-tooltip', {
+    props: ['title'],
+    mounted() {
+        this.$nextTick(function() {
+            this.tooltip = new bootstrap.Tooltip(this.$el)
+        })
+    },
+    template: `
+        <span
+            data-toggle="tooltip"
+            data-placement="top"
+            :title=title
+        >
+            <slot></slot>
+        </span>
+    `
 });
 
 app.component('v-element-quality-graph', {
@@ -541,128 +784,6 @@ app.component('v-element-quality-graph', {
         </div>
     </div>
 
-    `
-});
-
-app.component('v-element-lane-stats', {
-    computed: {
-        instrument_generated_files() {
-            return this.$root.getValue(this.$root.flowcell, "instrument_generated_files", {});
-        },
-        aviti_run_stats() {
-            return this.$root.getValue(this.instrument_generated_files, "AvitiRunStats.json", {});
-        },
-        lane_stats() {
-            return this.$root.getValue(this.aviti_run_stats, "LaneStats", {});
-        },
-        lanes() {
-            return this.$root.getValue(this.lane_stats, "Lanes", []);
-        },
-    },
-    methods: {
-        total_lane_yield(lane) {
-            return this.$root.formatNumberBases(this.$root.getValue(lane, "TotalYield"));
-        },
-        total_lane_yield_formatted(lane) {
-            return this.$root.formatNumberBases(this.$root.getValue(lane, "TotalYield"));
-        },
-        index_assignments(lane) {
-            return this.$root.getValue(lane, "IndexAssignment", {});
-        },
-        percent_assigned_reads(lane) {
-            return this.$root.getValue(this.index_assignments(lane), "PercentAssignedReads", {});
-        },
-        index_samples(lane) {
-            return this.$root.getValue(this.index_assignments(lane), "IndexSamples", {});
-        },
-        unassigned_sequences(lane) {
-            return this.$root.getValue(this.index_assignments(lane), "UnassignedSequences", {});
-        }
-    },
-    template: /*html*/`
-        <div v-for="lane in lane_stats" class="mb-3">
-            <h2>Lane {{ lane["Lane"] }}</h2>
-            <table class="table table-bordered narrow-headers no-margin right_align_headers">
-                <tbody>
-                    <tr class="darkth">
-                        <th>Total Yield</th>
-                        <v-element-tooltip :title=lane["TotalYield"]>
-                        <td>
-                            {{ total_lane_yield_formatted(lane) }}
-                        </td>
-                        </v-element-tooltip>
-                        <th>Polony Count</th> <td>{{ lane["PolonyCount"] }}</td>
-                        <th>PF Count</th> <td>{{ lane["PFCount"] }}</td>
-                        <th>% PF</th> <td>{{ lane["PercentPF"] }}</td>
-                        <th>% Assigned Reads</th> <td>{{ percent_assigned_reads(lane) }}</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h3>Index Assignments</h3>
-            <table class="table table-bordered narrow-headers no-margin right_align_headers">
-                <thead>
-                    <tr class="darkth">
-                        <th>Project Name</th>
-                        <th>Sample Name</th>
-                        <th>% Assigned Reads</th>
-                        <th>% Assigned With Mismatches</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="sample in index_samples(lane)">
-                        <td>{{ sample["ProjectName"] }}</td>
-                        <td>{{ sample["SampleName"] }}</td>
-                        <td>{{ sample["PercentAssignedReads"] }}</td>
-                        <td>{{ sample["PercentMismatch"] }}</td>
-                    </tr>
-                </tbody>
-            </table>
-            <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ lane['Lane']" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ lane['Lane']">
-                Show undetermined
-            </button>
-
-            <div class="collapse mt-3" :id="'collapseUndeterminedLane'+ lane['Lane']">
-                <div class="row">
-                <div class="card card-body">
-                    <div class="col-3">
-                        <table class="table table-bordered narrow-headers no-margin right_align_headers">
-                            <thead>
-                                <tr class="darkth">
-                                    <th>Sequence</th>
-                                    <th>% Occurence</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="unassigned_item in unassigned_sequences(lane)">
-                                    <td>{{ unassigned_item["I1"] }}+{{ unassigned_item["I2"]}}</td>
-                                    <td>{{ unassigned_item["PercentOcurrence"] }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        `
-
-});
-
-app.component('v-element-tooltip', {
-    props: ['title'],
-    mounted() {
-        this.$nextTick(function() {
-            this.tooltip = new bootstrap.Tooltip(this.$el)
-        })
-    },
-    template: `
-        <span
-            data-toggle="tooltip"
-            data-placement="top"
-            :title=title
-        >
-            <slot></slot>
-        </span>
     `
 });
 
