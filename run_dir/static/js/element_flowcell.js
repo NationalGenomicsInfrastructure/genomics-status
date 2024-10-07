@@ -34,6 +34,19 @@ const vElementApp = {
         }
     },
     methods: {
+        barcode(sample) {
+            var barcode_str = "";
+            if (sample.hasOwnProperty("I1") && sample["I1"] !== "") {
+                barcode_str += sample["I1"];
+            } else {
+                barcode_str += "N/A"
+            }
+
+            if (sample.hasOwnProperty("I2") && sample["I2"] !== ""){
+                barcode_str += "+" + sample["I2"];
+            }
+            return barcode_str;
+        },
         getValue(obj, key, defaultValue = "N/A") {
             if (obj === null || obj == undefined || obj === "N/A") {
                 return defaultValue;
@@ -50,6 +63,12 @@ const vElementApp = {
             } else {
                 return (number / 1000000000).toFixed(2) + " Gbp";
             }
+        },
+        formatNumberFloat(value) {
+            if (value === "N/A") {
+                return "N/A";
+            }
+            return parseFloat(value).toFixed(2);
         }
     }
 }
@@ -278,71 +297,74 @@ app.component('v-element-run-stats', {
 });
 
 app.component('v-element-lane-stats', {
+    data() {
+        return {
+            show_phiX_details: false
+        }
+    },
     computed: {
         lane_stats() {
             const groupedByLane = {};
-            if (this.$root.index_assignment_demultiplex && this.$root.index_assignment_demultiplex.length > 0) {
-                this.$root.index_assignment_demultiplex.forEach(sample => {
-                    const lane = sample["Lane"];
-                    if (!groupedByLane[lane]) {
-                        groupedByLane[lane] = [];
-                    }
-                    groupedByLane[lane].push(sample);
-                });
-            }
+            this.$root.index_assignment_demultiplex.forEach(sample => {
+                const lane = sample["Lane"];
+                if (!groupedByLane[lane]) {
+                    groupedByLane[lane] = [];
+                }
+                groupedByLane[lane].push(sample);
+            });
 
             return groupedByLane;
         },
         unassigned_lane_stats() {
             const groupedByLane = {};
 
-            if (this.$root.unassiged_sequences_demultiplex && this.$root.unassiged_sequences_demultiplex.length > 0) {
-                this.$root.unassiged_sequences_demultiplex.forEach(sample => {
-                    const lane = sample["Lane"];
-                    if (!groupedByLane[lane]) {
-                        groupedByLane[lane] = [];
-                    }
-                    groupedByLane[lane].push(sample);
-                });
-            }
+            this.$root.unassiged_sequences_demultiplex.forEach(sample => {
+                const lane = sample["Lane"];
+                if (!groupedByLane[lane]) {
+                    groupedByLane[lane] = [];
+                }
+                groupedByLane[lane].push(sample);
+            });
+
             return groupedByLane;
         },
         phiX_lane_stats_combined()  {
             /* Sum % Polonies and Count for each lane */
             const groupedByLane = {};
 
-            if (this.$root.index_assignment_demultiplex && this.$root.index_assignment_demultiplex.length > 0) {
-                this.$root.index_assignment_demultiplex.forEach((sample) => {
-                    if (sample["SampleName"] === "PhiX") {
-                        const lane = sample["Lane"];
-                        if (!groupedByLane[lane]) {
-                            groupedByLane[lane] = {
-                                "SampleName": "PhiX",
-                                "NumPoloniesAssigned": 0,
-                                "PercentPoloniesAssigned": 0,
-                                "Yield(Gb)": 0,
-                                "Lane": lane,
-                                "sub_demux_count": new Set(),
-                                "PercentMismatch": [],
-                                "PercentQ30": [],
-                                "PercentQ40": [],
-                                "QualityScoreMean": []
-                            }
+            this.$root.index_assignment_demultiplex.forEach((sample) => {
+                if (sample["SampleName"] === "PhiX") {
+                    const lane = sample["Lane"];
+                    if (!groupedByLane[lane]) {
+                        groupedByLane[lane] = {
+                            "SampleName": "PhiX",
+                            "NumPoloniesAssigned": 0,
+                            "PercentPoloniesAssigned": 0,
+                            "Yield(Gb)": 0,
+                            "Lane": lane,
+                            "sub_demux_count": new Set(),
+                            "PercentMismatch": [],
+                            "PercentQ30": [],
+                            "PercentQ40": [],
+                            "QualityScoreMean": []
                         }
-                        groupedByLane[lane]["NumPoloniesAssigned"] += parseFloat(sample["NumPoloniesAssigned"]);
-                        groupedByLane[lane]["PercentPoloniesAssigned"] += parseFloat(sample["PercentPoloniesAssigned"]);
-                        groupedByLane[lane]["Yield(Gb)"] += parseFloat(sample["Yield(Gb)"]);
-                        groupedByLane[lane]["sub_demux_count"].add(sample["sub_demux_count"]);
-                        groupedByLane[lane]["PercentMismatch"].push(sample["PercentMismatch"] * sample["NumPoloniesAssigned"]);
-                        groupedByLane[lane]["PercentQ30"].push(sample["PercentQ30"] * sample["NumPoloniesAssigned"]);
-                        groupedByLane[lane]["PercentQ40"].push(sample["PercentQ40"] * sample["NumPoloniesAssigned"]);
-                        groupedByLane[lane]["QualityScoreMean"].push(sample["QualityScoreMean"] * sample["NumPoloniesAssigned"]);
                     }
-                })
-            }
+                    // Summable values
+                    groupedByLane[lane]["NumPoloniesAssigned"] += parseFloat(sample["NumPoloniesAssigned"]);
+                    groupedByLane[lane]["PercentPoloniesAssigned"] += parseFloat(sample["PercentPoloniesAssigned"]);
+                    groupedByLane[lane]["Yield(Gb)"] += parseFloat(sample["Yield(Gb)"]);
+                    // List unique values
+                    groupedByLane[lane]["sub_demux_count"].add(sample["sub_demux_count"]);
+                    // Prepare for mean value-calculations
+                    groupedByLane[lane]["PercentMismatch"].push(sample["PercentMismatch"] * sample["NumPoloniesAssigned"]);
+                    groupedByLane[lane]["PercentQ30"].push(sample["PercentQ30"] * sample["NumPoloniesAssigned"]);
+                    groupedByLane[lane]["PercentQ40"].push(sample["PercentQ40"] * sample["NumPoloniesAssigned"]);
+                    groupedByLane[lane]["QualityScoreMean"].push(sample["QualityScoreMean"] * sample["NumPoloniesAssigned"]);
+                }
+            })
 
 
-            // Calculate the summary stat
+            // Calculate mean values
             Object.entries(groupedByLane).forEach(([laneKey, lane]) => {
                 lane["PercentMismatch"] = lane["PercentMismatch"].reduce((a, b) => a + b, 0) / lane["NumPoloniesAssigned"];
                 lane["PercentQ30"] = lane["PercentQ30"].reduce((a, b) => a + b, 0) / lane["NumPoloniesAssigned"];
@@ -360,31 +382,24 @@ app.component('v-element-lane-stats', {
                     const lane = unassigned_index["Lane"];
                     if (!groupedByLane[lane]) {
                         groupedByLane[lane] = {
-                            "% Polonies": 0,
-                            "Count": 0
-                        };
+                            "SampleName": "Unassigned",
+                            "NumPoloniesAssigned": 0,
+                            "PercentPoloniesAssigned": 0,
+                            "Yield(Gb)": "N/A",
+                            "Lane": lane,
+                            "sub_demux_count": "N/A",
+                            "PercentMismatch": "N/A",
+                            "PercentQ30": "N/A",
+                            "PercentQ40": "N/A",
+                            "QualityScoreMean": "N/A"
+                        }
                     }
-                    groupedByLane[lane]["% Polonies"] += parseFloat(unassigned_index["% Polonies"]);
-                    groupedByLane[lane]["Count"] += parseFloat(unassigned_index["Count"]);
+                    groupedByLane[lane]["PercentPoloniesAssigned"] += parseFloat(unassigned_index["% Polonies"]);
+                    groupedByLane[lane]["NumPoloniesAssigned"] += parseFloat(unassigned_index["Count"]);
                 });
             }
 
             return groupedByLane;
-        }
-    },
-    methods: {
-        barcode(sample) {
-            var barcode_str = "";
-            if (sample.hasOwnProperty("I1") && sample["I1"] !== "") {
-                barcode_str += sample["I1"];
-            } else {
-                barcode_str += "N/A"
-            }
-
-            if (sample.hasOwnProperty("I2") && sample["I2"] !== ""){
-                barcode_str += "+" + sample["I2"];
-            }
-            return barcode_str;
         }
     },
     template: /*html*/`
@@ -410,44 +425,19 @@ app.component('v-element-lane-stats', {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="sample in lane_stats[laneKey]" :key="sample.SampleNumber">
-                        <template v-if="sample['SampleName'] !== 'PhiX'">
-                            <td>{{ sample["SampleName"] }}</td>
-                            <td>{{ sample["Yield(Gb)"] }}</td>
-                            <td>{{ sample["NumPoloniesAssigned"] }}</td>
-                            <td>{{ parseFloat(sample["PercentQ30"]).toFixed(2) }}</td>
-                            <td>{{ parseFloat(sample["PercentQ40"]).toFixed(2) }}</td>
-                            <td style="font-size: 1.35rem;"><samp>{{ barcode(sample) }}</samp></td>
-                            <td>{{ parseFloat(sample["PercentPoloniesAssigned"]).toFixed(2) }}</td>
-                            <td>{{ parseFloat(sample["PercentMismatch"]).toFixed(2) }}</td>
-                            <td>{{ sample["sub_demux_count"] }}</td>
-                            <td>{{ parseFloat(sample["QualityScoreMean"]).toFixed(2) }}</td>
-                        </template>
-                    </tr>
-                    <tr>
-                        <td>PhiX</td>
-                        <td>{{ phiX_lane_stats_combined[laneKey]["Yield(Gb)"] }}</td>
-                        <td>{{ phiX_lane_stats_combined[laneKey]["NumPoloniesAssigned"] }}</td>
-                        <td>{{ parseFloat(phiX_lane_stats_combined[laneKey]["PercentQ30"]).toFixed(2) }}</td>
-                        <td>{{ parseFloat(phiX_lane_stats_combined[laneKey]["PercentQ40"]).toFixed(2) }}</td>
-                        <td>PhiX</td>
-                        <td>{{ parseFloat(phiX_lane_stats_combined[laneKey]["PercentPoloniesAssigned"]).toFixed(2) }}</td>
-                        <td>{{ parseFloat(phiX_lane_stats_combined[laneKey]["PercentMismatch"]).toFixed(2) }}</td>
-                        <td>{{ phiX_lane_stats_combined[laneKey]["sub_demux_count"] }}</td>
-                        <td>{{ parseFloat(phiX_lane_stats_combined[laneKey]["QualityScoreMean"]).toFixed(2) }}</td>
-                    </tr>
-                    <tr>
-                        <td>Unassigned</td>
-                        <td>N/A</td>
-                        <td>{{ unassigned_lane_stats_combined[laneKey]["Count"] }}</td>
-                        <td>N/A</td>
-                        <td>N/A</td>
-                        <td>N/A</td>
-                        <td>{{ parseFloat(unassigned_lane_stats_combined[laneKey]["% Polonies"]).toFixed(2) }}</td>
-                        <td>N/A</td>
-                        <td>N/A</td>
-                        <td>N/A</td>
-                    </tr>
+                    <template v-for="sample in lane_stats[laneKey]" :key="sample.SampleName">
+                        <v-lane-stats-row 
+                            v-if="sample['SampleName'] !== 'PhiX' || show_phiX_details"
+                            :sample="sample" 
+                            :laneKey="laneKey">
+                        </v-lane-stats-row>
+                    </template>
+                    <v-lane-stats-row 
+                        v-if="!show_phiX_details" 
+                        :sample="phiX_lane_stats_combined[laneKey]" 
+                        :laneKey="laneKey">
+                    </v-lane-stats-row>
+                    <v-lane-stats-row :sample="unassigned_lane_stats_combined[laneKey]" :laneKey="laneKey"></v-lane-stats-row>
                 </tbody>
             </table>
 
@@ -468,7 +458,7 @@ app.component('v-element-lane-stats', {
                                 </thead>
                                 <tbody>
                                     <tr v-for="unassigned_item in this.unassigned_lane_stats[laneKey]">
-                                        <td style="font-size: 1.35rem;"><samp>{{ barcode(unassigned_item)}}</samp></td>
+                                        <td style="font-size: 1.35rem;"><samp>{{ this.$root.barcode(unassigned_item)}}</samp></td>
                                         <td>{{ unassigned_item["% Polonies"] }}</td>
                                         <td>{{ unassigned_item["Count"] }}</td>
                                     </tr>
@@ -478,9 +468,40 @@ app.component('v-element-lane-stats', {
                     </div>
                 </div>
             </div>
+
+            <!-- Toggle Button for show_phiX_details -->
+            <button class="btn btn-info my-2 mx-3" @click="show_phiX_details = !show_phiX_details">
+                {{ show_phiX_details ? 'Hide PhiX Details' : 'Show PhiX Details' }}
+            </button>
         </div>
         `
+});
 
+app.component('v-lane-stats-row', {
+    props: ['sample', 'laneKey'],
+    computed: {
+        sub_demux_count() {
+            if (this.sample["sub_demux_count"] instanceof Set) {
+                return Array.from(this.sample["sub_demux_count"]).join(", ");
+            } else {
+                return this.sample["sub_demux_count"];
+            }
+        }
+    },
+    template: /*html*/`
+        <tr>
+            <td>{{ sample["SampleName"] }}</td>
+            <td>{{ sample["Yield(Gb)"] }}</td>
+            <td>{{ sample["NumPoloniesAssigned"] }}</td>
+            <td>{{ this.$root.formatNumberFloat(sample["PercentQ30"]) }}</td>
+            <td>{{ this.$root.formatNumberFloat(sample["PercentQ40"]) }}</td>
+            <td style="font-size: 1.35rem;"><samp>{{ this.$root.barcode(sample) }}</samp></td>
+            <td>{{ this.$root.formatNumberFloat(sample["PercentPoloniesAssigned"]) }}</td>
+            <td>{{ this.$root.formatNumberFloat(sample["PercentMismatch"]) }}</td>
+            <td>{{ this.sub_demux_count }}</td>
+            <td>{{ this.$root.formatNumberFloat(sample["QualityScoreMean"]) }}</td>
+        </tr>
+        `
 });
 
 app.component('v-element-lane-stats-pre-demultiplex', {
