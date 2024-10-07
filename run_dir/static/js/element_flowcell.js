@@ -702,24 +702,29 @@ app.component('v-element-quality-graph', {
             let R1_percentQ30 = [];
             let R1_percentQ40 = [];
             let R1_averageQScore = [];
+            let R1_phiX_error_rate = [];
             let series = [];
             let avg_series = [];
+            let phiX_error_rate_series = [];
 
             if (this.include_R1) {
                 R1_percentQ30 = this.R1_read_cycles.map(cycle => cycle.PercentQ30);
                 R1_percentQ40 = this.R1_read_cycles.map(cycle => cycle.PercentQ40);
                 R1_averageQScore = this.R1_read_cycles.map(cycle => cycle.AverageQScore);
+                R1_phiX_error_rate = this.R1_read_cycles.map(cycle => cycle.PercentPhixErrorRate);
 
                 /* Filter the first values */
                 R1_percentQ30 = R1_percentQ30.slice(this.filter_first_cycles);
                 R1_percentQ40 = R1_percentQ40.slice(this.filter_first_cycles);
                 R1_averageQScore = R1_averageQScore.slice(this.filter_first_cycles);
+                R1_phiX_error_rate = R1_phiX_error_rate.slice(this.filter_first_cycles);
 
                 /* Filter the last values */
                 if (this.filter_last_cycles > 0) {
                     R1_percentQ30 = R1_percentQ30.slice(0, -this.filter_last_cycles);
                     R1_percentQ40 = R1_percentQ40.slice(0, -this.filter_last_cycles);
                     R1_averageQScore = R1_averageQScore.slice(0, -this.filter_last_cycles);
+                    R1_phiX_error_rate = R1_phiX_error_rate.slice(0, -this.filter_last_cycles);
                 }
 
                 series.push({
@@ -738,27 +743,37 @@ app.component('v-element-quality-graph', {
                     name: 'R1 Average Q Score',
                     data: R1_averageQScore
                 })
+
+                phiX_error_rate_series.push(
+                {
+                    name: 'Percent PhiX Error Rate',
+                    data: R1_phiX_error_rate
+                })
             }
 
             let R2_percentQ30 = [];
             let R2_percentQ40 = [];
             let R2_averageQScore = [];
+            let R2_phiX_error_rate = [];
 
             if (this.include_R2) {
                 R2_percentQ30 = this.R2_read_cycles.map(cycle => cycle.PercentQ30);
                 R2_percentQ40 = this.R2_read_cycles.map(cycle => cycle.PercentQ40);
                 R2_averageQScore = this.R2_read_cycles.map(cycle => cycle.AverageQScore);
+                R2_phiX_error_rate = this.R2_read_cycles.map(cycle => cycle.PercentPhixErrorRate);
 
                 /* Filter the first values */
                 R2_percentQ30 = R2_percentQ30.slice(this.filter_first_cycles);
                 R2_percentQ40 = R2_percentQ40.slice(this.filter_first_cycles);
                 R2_averageQScore = R2_averageQScore.slice(this.filter_first_cycles);
+                R2_phiX_error_rate = R2_phiX_error_rate.slice(this.filter_first_cycles);
 
                 /* Filter the last values */
                 if (this.filter_last_cycles > 0) {
                     R2_percentQ30 = R2_percentQ30.slice(0, -this.filter_last_cycles);
                     R2_percentQ40 = R2_percentQ40.slice(0, -this.filter_last_cycles);
                     R2_averageQScore = R2_averageQScore.slice(0, -this.filter_last_cycles);
+                    R2_phiX_error_rate = R2_phiX_error_rate.slice(0, -this.filter_last_cycles);
                 }
 
                 series.push({
@@ -776,6 +791,12 @@ app.component('v-element-quality-graph', {
                 avg_series.push({
                     name: 'R2 Average Q Score',
                     data: R2_averageQScore,
+                    dashStyle: 'Dash' // Set dash style for R2 series
+                });
+
+                phiX_error_rate_series.push({
+                    name: 'R2 Percent PhiX Error Rate',
+                    data: R2_phiX_error_rate,
                     dashStyle: 'Dash' // Set dash style for R2 series
                 });
             }
@@ -825,6 +846,29 @@ app.component('v-element-quality-graph', {
                     }
                 }))
             });
+            
+            Highcharts.chart('SummaryPlotPhiXErrorRate', {
+                chart: {
+                    type: 'spline'
+                },
+                title: {
+                    text: '% PhiX Error Rate'
+                },
+                xAxis: {
+                    categories: filtered_categories
+                },
+                yAxis: {
+                    title: {
+                        text: '% Error Rate'
+                    },
+                },
+                series: phiX_error_rate_series.map(s => ({
+                    ...s,
+                    marker: {
+                        enabled: false, // Set to false to hide markers
+                    }
+                }))
+            });
         },
     },
     mounted() {
@@ -849,22 +893,6 @@ app.component('v-element-quality-graph', {
         }
     },
     template: /*html*/`
-    <div class="mx-5">
-        <div v-if="graph_warnings.length > 0" class="alert alert-warning" role="alert">
-            <ul>
-                <li v-for="warning in graph_warnings">{{ warning }}</li>
-            </ul>
-        </div>
-        <div class="row">
-            <div class="col-6">
-                <div id="SummaryPlotPercentQuality">
-                </div>
-            </div>
-            <div class="col-6">
-                <div id="SummaryPlotAvgQuality">
-                </div>
-            </div>
-        </div>
         <div class="row my-3 mx-5">
             <div class="col-3">
                 <div class="form-check form-switch">
@@ -888,8 +916,29 @@ app.component('v-element-quality-graph', {
                 <input type="range" class="form-range" min="0" :max="" v-model="filter_last_cycles" id="filter_last_cycles">
             </div>
         </div>
-    </div>
-
+        <div class="mx-5">
+            <div v-if="graph_warnings.length > 0" class="alert alert-warning" role="alert">
+                <ul>
+                    <li v-for="warning in graph_warnings">{{ warning }}</li>
+                </ul>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <div id="SummaryPlotPercentQuality">
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div id="SummaryPlotAvgQuality">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <div id="SummaryPlotPhiXErrorRate">
+                    </div>
+                </div>
+            </div>
+        </div>
     `
 });
 
