@@ -306,6 +306,70 @@ app.component('v-element-lane-stats', {
                 });
             }
             return groupedByLane;
+        },
+        phiX_lane_stats_combined()  {
+            /* Sum % Polonies and Count for each lane */
+            const groupedByLane = {};
+
+            if (this.$root.index_assignment_demultiplex && this.$root.index_assignment_demultiplex.length > 0) {
+                this.$root.index_assignment_demultiplex.forEach((sample) => {
+                    if (sample["SampleName"] === "PhiX") {
+                        const lane = sample["Lane"];
+                        if (!groupedByLane[lane]) {
+                            groupedByLane[lane] = {
+                                "SampleName": "PhiX",
+                                "NumPoloniesAssigned": 0,
+                                "PercentPoloniesAssigned": 0,
+                                "Yield(Gb)": 0,
+                                "Lane": lane,
+                                "sub_demux_count": new Set(),
+                                "PercentMismatch": [],
+                                "PercentQ30": [],
+                                "PercentQ40": [],
+                                "QualityScoreMean": []
+                            }
+                        }
+                        groupedByLane[lane]["NumPoloniesAssigned"] += parseFloat(sample["NumPoloniesAssigned"]);
+                        groupedByLane[lane]["PercentPoloniesAssigned"] += parseFloat(sample["PercentPoloniesAssigned"]);
+                        groupedByLane[lane]["Yield(Gb)"] += parseFloat(sample["Yield(Gb)"]);
+                        groupedByLane[lane]["sub_demux_count"].add(sample["sub_demux_count"]);
+                        groupedByLane[lane]["PercentMismatch"].push(sample["PercentMismatch"] * sample["NumPoloniesAssigned"]);
+                        groupedByLane[lane]["PercentQ30"].push(sample["PercentQ30"] * sample["NumPoloniesAssigned"]);
+                        groupedByLane[lane]["PercentQ40"].push(sample["PercentQ40"] * sample["NumPoloniesAssigned"]);
+                        groupedByLane[lane]["QualityScoreMean"].push(sample["QualityScoreMean"] * sample["NumPoloniesAssigned"]);
+                    }
+                })
+            }
+
+
+            // Calculate the summary stat
+            Object.entries(groupedByLane).forEach(([laneKey, lane]) => {
+                lane["PercentMismatch"] = lane["PercentMismatch"].reduce((a, b) => a + b, 0) / lane["NumPoloniesAssigned"];
+                lane["PercentQ30"] = lane["PercentQ30"].reduce((a, b) => a + b, 0) / lane["NumPoloniesAssigned"];
+                lane["PercentQ40"] = lane["PercentQ40"].reduce((a, b) => a + b, 0) / lane["NumPoloniesAssigned"];
+                lane["QualityScoreMean"] = lane["QualityScoreMean"].reduce((a, b) => a + b, 0) / lane["NumPoloniesAssigned"];
+            })
+            
+            return groupedByLane;
+        },
+        unassigned_lane_stats_combined() {
+            /* Sum % Polonies and Count for each lane */
+            const groupedByLane = {};
+            if (this.$root.unassiged_sequences_demultiplex && this.$root.unassiged_sequences_demultiplex.length > 0) {
+                this.$root.unassiged_sequences_demultiplex.forEach(unassigned_index => {
+                    const lane = unassigned_index["Lane"];
+                    if (!groupedByLane[lane]) {
+                        groupedByLane[lane] = {
+                            "% Polonies": 0,
+                            "Count": 0
+                        };
+                    }
+                    groupedByLane[lane]["% Polonies"] += parseFloat(unassigned_index["% Polonies"]);
+                    groupedByLane[lane]["Count"] += parseFloat(unassigned_index["Count"]);
+                });
+            }
+
+            return groupedByLane;
         }
     },
     methods: {
@@ -329,6 +393,7 @@ app.component('v-element-lane-stats', {
                 Lane {{ laneKey }}
             </h2>
 
+
             <table class="table table-bordered narrow-headers no-margin right_align_headers">
                 <thead>
                     <tr class="darkth">
@@ -346,16 +411,42 @@ app.component('v-element-lane-stats', {
                 </thead>
                 <tbody>
                     <tr v-for="sample in lane_stats[laneKey]" :key="sample.SampleNumber">
-                        <td>{{ sample["SampleName"] }}</td>
-                        <td>{{ sample["Yield(Gb)"] }}</td>
-                        <td>{{ sample["NumPoloniesAssigned"] }}</td>
-                        <td>{{ parseFloat(sample["PercentQ30"]).toFixed(2) }}</td>
-                        <td>{{ parseFloat(sample["PercentQ40"]).toFixed(2) }}</td>
-                        <td style="font-size: 1.35rem;"><samp>{{ barcode(sample) }}</samp></td>
-                        <td>{{ parseFloat(sample["PercentPoloniesAssigned"]).toFixed(2) }}</td>
-                        <td>{{ parseFloat(sample["PercentMismatch"]).toFixed(2) }}</td>
-                        <td>{{ sample["sub_demux_count"] }}</td>
-                        <td>{{ parseFloat(sample["QualityScoreMean"]).toFixed(2) }}</td>
+                        <template v-if="sample['SampleName'] !== 'PhiX'">
+                            <td>{{ sample["SampleName"] }}</td>
+                            <td>{{ sample["Yield(Gb)"] }}</td>
+                            <td>{{ sample["NumPoloniesAssigned"] }}</td>
+                            <td>{{ parseFloat(sample["PercentQ30"]).toFixed(2) }}</td>
+                            <td>{{ parseFloat(sample["PercentQ40"]).toFixed(2) }}</td>
+                            <td style="font-size: 1.35rem;"><samp>{{ barcode(sample) }}</samp></td>
+                            <td>{{ parseFloat(sample["PercentPoloniesAssigned"]).toFixed(2) }}</td>
+                            <td>{{ parseFloat(sample["PercentMismatch"]).toFixed(2) }}</td>
+                            <td>{{ sample["sub_demux_count"] }}</td>
+                            <td>{{ parseFloat(sample["QualityScoreMean"]).toFixed(2) }}</td>
+                        </template>
+                    </tr>
+                    <tr>
+                        <td>PhiX</td>
+                        <td>{{ phiX_lane_stats_combined[laneKey]["Yield(Gb)"] }}</td>
+                        <td>{{ phiX_lane_stats_combined[laneKey]["NumPoloniesAssigned"] }}</td>
+                        <td>{{ parseFloat(phiX_lane_stats_combined[laneKey]["PercentQ30"]).toFixed(2) }}</td>
+                        <td>{{ parseFloat(phiX_lane_stats_combined[laneKey]["PercentQ40"]).toFixed(2) }}</td>
+                        <td>PhiX</td>
+                        <td>{{ parseFloat(phiX_lane_stats_combined[laneKey]["PercentPoloniesAssigned"]).toFixed(2) }}</td>
+                        <td>{{ parseFloat(phiX_lane_stats_combined[laneKey]["PercentMismatch"]).toFixed(2) }}</td>
+                        <td>{{ phiX_lane_stats_combined[laneKey]["sub_demux_count"] }}</td>
+                        <td>{{ parseFloat(phiX_lane_stats_combined[laneKey]["QualityScoreMean"]).toFixed(2) }}</td>
+                    </tr>
+                    <tr>
+                        <td>Unassigned</td>
+                        <td>N/A</td>
+                        <td>{{ unassigned_lane_stats_combined[laneKey]["Count"] }}</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>{{ parseFloat(unassigned_lane_stats_combined[laneKey]["% Polonies"]).toFixed(2) }}</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
                     </tr>
                 </tbody>
             </table>
@@ -372,7 +463,7 @@ app.component('v-element-lane-stats', {
                                     <tr class="darkth">
                                         <th>Sequence</th>
                                         <th>% Occurence</th>
-                                        <td>Count</td>
+                                        <th>Count</th>
                                     </tr>
                                 </thead>
                                 <tbody>
