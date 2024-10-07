@@ -790,17 +790,11 @@ app.component('v-element-quality-graph', {
                 xAxis: {
                     categories: filtered_categories
                 },
-                yAxis: [{
+                yAxis: {
                     title: {
                         text: 'Percent Q30/Q40'
-                    },
-                    opposite: false // Primary y-axis on the left
-                }, {
-                    title: {
-                        text: 'Average Q Score'
-                    },
-                    opposite: true // Secondary y-axis on the right
-                }],
+                    }
+                },
                 series: series.map(s => ({
                     ...s,
                     marker: {
