@@ -632,6 +632,7 @@ app.component('v-element-quality-graph', {
             graph_warnings: [],
             filter_first_cycles: 1,
             filter_last_cycles: 1,
+            use_dynamic_yscale: true,
         }
     },
     computed: {
@@ -707,10 +708,14 @@ app.component('v-element-quality-graph', {
             let R1_averageQScore = [];
             let R1_phiX_error_rate = [];
             let R1_phiX_empirical_error_rate = [];
+            let R1_base_composition = {};
+
             let series = [];
             let avg_series = [];
             let phiX_error_rate_series = [];
             let phiX_empirical_error_rate_series = [];
+            let R1_base_composition_series = [];
+            let R2_base_composition_series = [];
 
             if (this.include_R1) {
                 R1_percentQ30 = this.R1_read_cycles.map(cycle => cycle.PercentQ30);
@@ -718,6 +723,10 @@ app.component('v-element-quality-graph', {
                 R1_averageQScore = this.R1_read_cycles.map(cycle => cycle.AverageQScore);
                 R1_phiX_error_rate = this.R1_read_cycles.map(cycle => cycle.PercentPhixErrorRate);
                 R1_phiX_empirical_error_rate = R1_phiX_error_rate.map(error_rate => this.empirical_quality_score(error_rate));
+                R1_base_composition['A'] = this.R1_read_cycles.map(cycle => cycle.BaseComposition['A']);
+                R1_base_composition['C'] = this.R1_read_cycles.map(cycle => cycle.BaseComposition['C']);
+                R1_base_composition['G'] = this.R1_read_cycles.map(cycle => cycle.BaseComposition['G']);
+                R1_base_composition['T'] = this.R1_read_cycles.map(cycle => cycle.BaseComposition['T']);
 
                 /* Filter the first values */
                 R1_percentQ30 = R1_percentQ30.slice(this.filter_first_cycles);
@@ -725,6 +734,10 @@ app.component('v-element-quality-graph', {
                 R1_averageQScore = R1_averageQScore.slice(this.filter_first_cycles);
                 R1_phiX_error_rate = R1_phiX_error_rate.slice(this.filter_first_cycles);
                 R1_phiX_empirical_error_rate = R1_phiX_empirical_error_rate.slice(this.filter_first_cycles);
+                R1_base_composition['A'] = R1_base_composition['A'].slice(this.filter_first_cycles);
+                R1_base_composition['C'] = this.R1_read_cycles.map(cycle => cycle.BaseComposition['C']).slice(this.filter_first_cycles);
+                R1_base_composition['G'] = this.R1_read_cycles.map(cycle => cycle.BaseComposition['G']).slice(this.filter_first_cycles);
+                R1_base_composition['T'] = this.R1_read_cycles.map(cycle => cycle.BaseComposition['T']).slice(this.filter_first_cycles);
 
                 /* Filter the last values */
                 if (this.filter_last_cycles > 0) {
@@ -733,6 +746,10 @@ app.component('v-element-quality-graph', {
                     R1_averageQScore = R1_averageQScore.slice(0, -this.filter_last_cycles);
                     R1_phiX_error_rate = R1_phiX_error_rate.slice(0, -this.filter_last_cycles);
                     R1_phiX_empirical_error_rate = R1_phiX_empirical_error_rate.slice(0, -this.filter_last_cycles);
+                    R1_base_composition['A'] = R1_base_composition['A'].slice(0, -this.filter_last_cycles);
+                    R1_base_composition['C'] = this.R1_read_cycles.map(cycle => cycle.BaseComposition['C']).slice(0, -this.filter_last_cycles);
+                    R1_base_composition['G'] = this.R1_read_cycles.map(cycle => cycle.BaseComposition['G']).slice(0, -this.filter_last_cycles);
+                    R1_base_composition['T'] = this.R1_read_cycles.map(cycle => cycle.BaseComposition['T']).slice(0, -this.filter_last_cycles);
                 }
 
                 series.push({
@@ -754,14 +771,35 @@ app.component('v-element-quality-graph', {
 
                 phiX_error_rate_series.push(
                 {
-                    name: 'Percent PhiX Error Rate',
+                    name: 'R1 Percent PhiX Error Rate',
                     data: R1_phiX_error_rate
                 })
 
                 phiX_empirical_error_rate_series.push(
                 {
-                    name: 'PhiX Empirical Quality Score',
+                    name: 'R1 PhiX Empirical Quality Score',
                     data: R1_phiX_empirical_error_rate
+                })
+
+                R1_base_composition_series.push(
+                {
+                    name: 'R1 Base Composition A',
+                    data: R1_base_composition['A']
+                })
+                R1_base_composition_series.push(
+                {
+                    name: 'R1 Base Composition C',
+                    data: this.R1_read_cycles.map(cycle => cycle.BaseComposition['C'])
+                })
+                R1_base_composition_series.push(
+                {
+                    name: 'R1 Base Composition G',
+                    data: this.R1_read_cycles.map(cycle => cycle.BaseComposition['G'])
+                })
+                R1_base_composition_series.push(
+                {
+                    name: 'R1 Base Composition T',
+                    data: this.R1_read_cycles.map(cycle => cycle.BaseComposition['T'])
                 })
             }
 
@@ -770,6 +808,7 @@ app.component('v-element-quality-graph', {
             let R2_averageQScore = [];
             let R2_phiX_error_rate = [];
             let R2_phiX_empirical_error_rate = [];
+            let R2_base_composition = {};
 
             if (this.include_R2) {
                 R2_percentQ30 = this.R2_read_cycles.map(cycle => cycle.PercentQ30);
@@ -777,6 +816,10 @@ app.component('v-element-quality-graph', {
                 R2_averageQScore = this.R2_read_cycles.map(cycle => cycle.AverageQScore);
                 R2_phiX_error_rate = this.R2_read_cycles.map(cycle => cycle.PercentPhixErrorRate);
                 R2_phiX_empirical_error_rate = R2_phiX_error_rate.map(error_rate => this.empirical_quality_score(error_rate));
+                R2_base_composition['A'] = this.R2_read_cycles.map(cycle => cycle.BaseComposition['A']);
+                R2_base_composition['C'] = this.R2_read_cycles.map(cycle => cycle.BaseComposition['C']);
+                R2_base_composition['G'] = this.R2_read_cycles.map(cycle => cycle.BaseComposition['G']);
+                R2_base_composition['T'] = this.R2_read_cycles.map(cycle => cycle.BaseComposition['T']);
 
                 /* Filter the first values */
                 R2_percentQ30 = R2_percentQ30.slice(this.filter_first_cycles);
@@ -784,6 +827,10 @@ app.component('v-element-quality-graph', {
                 R2_averageQScore = R2_averageQScore.slice(this.filter_first_cycles);
                 R2_phiX_error_rate = R2_phiX_error_rate.slice(this.filter_first_cycles);
                 R2_phiX_empirical_error_rate = R2_phiX_empirical_error_rate.slice(this.filter_first_cycles);
+                R2_base_composition['A'] = R2_base_composition['A'].slice(this.filter_first_cycles);
+                R2_base_composition['C'] = this.R2_read_cycles.map(cycle => cycle.BaseComposition['C']).slice(this.filter_first_cycles);
+                R2_base_composition['G'] = this.R2_read_cycles.map(cycle => cycle.BaseComposition['G']).slice(this.filter_first_cycles);
+                R2_base_composition['T'] = this.R2_read_cycles.map(cycle => cycle.BaseComposition['T']).slice(this.filter_first_cycles);
 
                 /* Filter the last values */
                 if (this.filter_last_cycles > 0) {
@@ -792,6 +839,10 @@ app.component('v-element-quality-graph', {
                     R2_averageQScore = R2_averageQScore.slice(0, -this.filter_last_cycles);
                     R2_phiX_error_rate = R2_phiX_error_rate.slice(0, -this.filter_last_cycles);
                     R2_phiX_empirical_error_rate = R2_phiX_empirical_error_rate.slice(0, -this.filter_last_cycles);
+                    R2_base_composition['A'] = R2_base_composition['A'].slice(0, -this.filter_last_cycles);
+                    R2_base_composition['C'] = this.R2_read_cycles.map(cycle => cycle.BaseComposition['C']).slice(0, -this.filter_last_cycles);
+                    R2_base_composition['G'] = this.R2_read_cycles.map(cycle => cycle.BaseComposition['G']).slice(0, -this.filter_last_cycles);
+                    R2_base_composition['T'] = this.R2_read_cycles.map(cycle => cycle.BaseComposition['T']).slice(0, -this.filter_last_cycles);
                 }
 
                 series.push({
@@ -823,6 +874,30 @@ app.component('v-element-quality-graph', {
                     data: R2_phiX_empirical_error_rate,
                     dashStyle: 'Dash' // Set dash style for R2 series
                 });
+
+                R2_base_composition_series.push({
+                    name: 'R2 Base Composition A',
+                    data: R2_base_composition['A'],
+                    dashStyle: 'Dash' // Set dash style for R2 series
+                });
+
+                R2_base_composition_series.push({
+                    name: 'R2 Base Composition C',
+                    data: R2_base_composition['C'],
+                    dashStyle: 'Dash' // Set dash style for R2 series
+                });
+
+                R2_base_composition_series.push({
+                    name: 'R2 Base Composition G',
+                    data: R2_base_composition['G'],
+                    dashStyle: 'Dash' // Set dash style for R2 series
+                });
+
+                R2_base_composition_series.push({
+                    name: 'R2 Base Composition T',
+                    data: R2_base_composition['T'],
+                    dashStyle: 'Dash' // Set dash style for R2 series
+                });
             }
 
             Highcharts.chart('SummaryPlotPercentQuality', {
@@ -838,7 +913,9 @@ app.component('v-element-quality-graph', {
                 yAxis: {
                     title: {
                         text: 'Percent Q30/Q40'
-                    }
+                    },
+                    min: this.use_dynamic_yscale ? null : 0,  // Conditionally set the minimum value
+                    max: this.use_dynamic_yscale ? null : 100 // Conditionally set the maximum value
                 },
                 series: series.map(s => ({
                     ...s,
@@ -862,6 +939,8 @@ app.component('v-element-quality-graph', {
                     title: {
                         text: 'Average Q Score'
                     },
+                    min: this.use_dynamic_yscale ? null : 0,
+                    max: this.use_dynamic_yscale ? null : 50,
                 },
                 series: avg_series.map(s => ({
                     ...s,
@@ -885,6 +964,8 @@ app.component('v-element-quality-graph', {
                     title: {
                         text: '% Error Rate'
                     },
+                    min: this.use_dynamic_yscale ? null : 0,
+                    max: this.use_dynamic_yscale ? null : 20,
                 },
                 series: phiX_error_rate_series.map(s => ({
                     ...s,
@@ -908,8 +989,60 @@ app.component('v-element-quality-graph', {
                     title: {
                         text: 'Quality Score'
                     },
+                    min: this.use_dynamic_yscale ? null : 0,
+                    max: this.use_dynamic_yscale ? null : 50,
                 },
                 series: phiX_empirical_error_rate_series.map(s => ({
+                    ...s,
+                    marker: {
+                        enabled: false, // Set to false to hide markers
+                    }
+                }))
+            });
+
+            Highcharts.chart('SummaryPlotBaseComposition_R1', {
+                chart: {
+                    type: 'spline'
+                },
+                title: {
+                    text: 'R1 Base Composition'
+                },
+                xAxis: {
+                    categories: filtered_categories
+                },
+                yAxis: {
+                    title: {
+                        text: 'Base Composition'
+                    },
+                    min: this.use_dynamic_yscale ? null : 0,
+                    max: this.use_dynamic_yscale ? null : 60,
+                },
+                series: R1_base_composition_series.map(s => ({
+                    ...s,
+                    marker: {
+                        enabled: false, // Set to false to hide markers
+                    }
+                }))
+            });
+
+            Highcharts.chart('SummaryPlotBaseComposition_R2', {
+                chart: {
+                    type: 'spline'
+                },
+                title: {
+                    text: 'R2 Base Composition'
+                },
+                xAxis: {
+                    categories: filtered_categories
+                },
+                yAxis: {
+                    title: {
+                        text: 'Base Composition'
+                    },
+                    min: this.use_dynamic_yscale ? null : 0,
+                    max: this.use_dynamic_yscale ? null : 60,
+                },
+                series: R2_base_composition_series.map(s => ({
                     ...s,
                     marker: {
                         enabled: false, // Set to false to hide markers
@@ -937,6 +1070,9 @@ app.component('v-element-quality-graph', {
         },
         filter_last_cycles: function() {
             this.summary_graph();
+        },
+        use_dynamic_yscale: function() {
+            this.summary_graph();
         }
     },
     template: /*html*/`
@@ -954,6 +1090,14 @@ app.component('v-element-quality-graph', {
                         Include R2
                     </label>
                 </div>
+
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" v-model="use_dynamic_yscale" id="use_dynamic_yscale">
+                    <label class="form-check-label" for="use_dynamic_yscale">
+                        Use dynamic y-scale
+                    </label>
+                </div>
+
             </div>
             <div class="col-3">
                 <label for="filter_first_cycles" class="form-label">Filter first {{filter_first_cycles}} cycles</label>
@@ -986,6 +1130,16 @@ app.component('v-element-quality-graph', {
                 </div>
                 <div class="col-6">
                     <div id="SummaryPlotEmpiricalQuality">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <div id="SummaryPlotBaseComposition_R1">
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div id="SummaryPlotBaseComposition_R2">
                     </div>
                 </div>
             </div>
