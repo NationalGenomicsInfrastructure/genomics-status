@@ -50,6 +50,16 @@ const vElementApp = {
             }
             return barcode_str;
         },
+        getFlowcell() {
+            axios.get("/api/v1/element_flowcell/" + this.ngi_run_id)
+                .then(response => {
+                    this.flowcell = response.data;
+                    this.flowcell_fetched = true;
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+        },
         getValue(obj, key, defaultValue = "N/A") {
             if (obj === null || obj == undefined || obj === "N/A") {
                 return defaultValue;
@@ -144,20 +154,8 @@ app.component('v-element-flowcell', {
         }
     },
     mounted() {
-        this.getFlowcell();
-    },
-    methods: {
-        getFlowcell() {
-            axios.get("/api/v1/element_flowcell/" + this.ngi_run_id)
-                .then(response => {
-                    this.$root.flowcell = response.data;
-                    this.$root.flowcell_fetched = true;
-                })
-                .catch(error => {
-                    console.log(error);
-                });
-        },
-
+        this.$root.ngi_run_id = this.ngi_run_id;
+        this.$root.getFlowcell();
     },
     template: /*html*/`
     <div v-if="!this.$root.flowcell_fetched">
@@ -241,32 +239,23 @@ app.component('v-element-flowcell', {
 
 app.component('v-element-run-stats', {
     computed: {
-        aviti_run_stats() {
-            return this.$root.aviti_run_stats;
-        },
-        run_stats() {
-            return this.$root.run_stats;
-        },
         polony_count() {
-            return this.$root.getValue(this.run_stats, "PolonyCount");
+            return this.$root.getValue(this.$root.run_stats, "PolonyCount");
         },
         pf_count() {
-            return this.$root.getValue(this.run_stats, "PFCount");
+            return this.$root.getValue(this.$root.run_stats, "PFCount");
         },
         percent_pf() {
-            return this.$root.getValue(this.run_stats, "PercentPF");
+            return this.$root.getValue(this.$root.run_stats, "PercentPF");
         },
         total_yield() {
-            return this.$root.getValue(this.run_stats, "TotalYield");
+            return this.$root.getValue(this.$root.run_stats, "TotalYield");
         },
         total_yield_formatted() {
-            return this.$root.formatNumberBases(this.$root.getValue(this.run_stats, "TotalYield"));
-        },
-        index_assignment() {
-            return this.$root.index_assignment;
+            return this.$root.formatNumberBases(this.$root.getValue(this.$root.run_stats, "TotalYield"));
         },
         percent_assigned_reads() {
-            return this.$root.getValue(this.index_assignment, "PercentAssignedReads");
+            return this.$root.getValue(this.$root.index_assignment, "PercentAssignedReads");
         }
     },
     template: `
