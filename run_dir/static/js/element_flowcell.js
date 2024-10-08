@@ -77,11 +77,15 @@ const vElementApp = {
                 return (number / 1000000000).toFixed(2) + " Gbp";
             }
         },
-        formatNumberFloat(value) {
+        formatNumberFloat(value, decimalPoints=2) {
             if (value === "N/A") {
                 return "N/A";
             }
-            return parseFloat(value).toFixed(2);
+            const number = parseFloat(value);
+            if (isNaN(number)) {
+                return "N/A";
+            }
+            return number.toFixed(decimalPoints);
         }
     }
 }
@@ -206,13 +210,13 @@ app.component('v-element-flowcell', {
                     <a class="nav-link active" href="#tab_lane_stats" role="tab" data-toggle="tab">Lane stats</a>
                 </li>
                 <li class="nav-item">
-                <a class="nav-link" href="#tab_lane_stats_pre_demultiplex" role="tab" data-toggle="tab">Lane Stats (Pre-demultiplex)</a>
+                    <a class="nav-link" href="#tab_lane_stats_pre_demultiplex" role="tab" data-toggle="tab">Lane Stats (Pre-demultiplex)</a>
                 </li>
                 <li class="nav-item">
-                <a class="nav-link" href="#tab_fc_project_yields_content" role="tab" data-toggle="tab">Project Yields</a>
+                    <a class="nav-link" href="#tab_fc_project_yields_content" role="tab" data-toggle="tab">Project Yields</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#tab_element_quality_graph" role="tab" data-toggle="tab">Cycle Qualities</a>
+                    <a class="nav-link" href="#tab_element_quality_graph" role="tab" data-toggle="tab">Graphs</a>
                 </li>
             </ul>
         </div>
@@ -313,11 +317,10 @@ app.component('v-element-lane-stats', {
             return groupedByLane;
         },
         phiX_lane_stats_combined()  {
-            /* Sum % Polonies and Count for each lane */
             const groupedByLane = {};
 
             this.$root.index_assignment_demultiplex.forEach((sample) => {
-                if (sample["SampleName"] === "PhiX") {
+                if (! this.is_not_phiX(sample)) {
                     const lane = sample["Lane"];
                     if (!groupedByLane[lane]) {
                         groupedByLane[lane] = {
@@ -359,7 +362,6 @@ app.component('v-element-lane-stats', {
             return groupedByLane;
         },
         unassigned_lane_stats_combined() {
-            /* Sum % Polonies and Count for each lane */
             const groupedByLane = {};
             if (this.$root.unassiged_sequences_demultiplex && this.$root.unassiged_sequences_demultiplex.length > 0) {
                 this.$root.unassiged_sequences_demultiplex.forEach(unassigned_index => {
@@ -386,6 +388,11 @@ app.component('v-element-lane-stats', {
             return groupedByLane;
         }
     },
+    methods: {
+        is_not_phiX(sample) {
+            return sample["SampleName"].indexOf("PhiX") === -1;
+        },
+    },
     template: /*html*/`
         <div v-for="laneKey in Object.keys(lane_stats)" class="mb-3">
             <h2>
@@ -411,7 +418,7 @@ app.component('v-element-lane-stats', {
                 <tbody>
                     <template v-for="sample in lane_stats[laneKey]" :key="sample.SampleName">
                         <v-lane-stats-row 
-                            v-if="sample['SampleName'] !== 'PhiX' || show_phiX_details"
+                            v-if="this.is_not_phiX(sample) || show_phiX_details"
                             :sample="sample" 
                             :laneKey="laneKey">
                         </v-lane-stats-row>
@@ -425,9 +432,16 @@ app.component('v-element-lane-stats', {
                 </tbody>
             </table>
 
-            <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ laneKey" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ laneKey">
-                Show undetermined
-            </button>
+            <div>
+                <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ laneKey" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ laneKey">
+                    Show undetermined
+                </button>
+
+                <!-- Toggle Button for show_phiX_details -->
+                <button class="btn btn-info my-2 mx-3" @click="show_phiX_details = !show_phiX_details">
+                    {{ show_phiX_details ? 'Hide PhiX Details' : 'Show PhiX Details' }}
+                </button>
+            </div>
             <div class="collapse mt-3" :id="'collapseUndeterminedLane'+ laneKey">
                 <div class="row">
                     <div class="card card-body">
@@ -443,7 +457,7 @@ app.component('v-element-lane-stats', {
                                 <tbody>
                                     <tr v-for="unassigned_item in this.unassigned_lane_stats[laneKey]">
                                         <td style="font-size: 1.35rem;"><samp>{{ this.$root.barcode(unassigned_item)}}</samp></td>
-                                        <td>{{ unassigned_item["% Polonies"] }}</td>
+                                        <td>{{ this.$root.formatNumberFloat( unassigned_item["% Polonies"], decimalPoints=5)}} </td>
                                         <td>{{ unassigned_item["Count"] }}</td>
                                     </tr>
                                 </tbody>
@@ -453,10 +467,7 @@ app.component('v-element-lane-stats', {
                 </div>
             </div>
 
-            <!-- Toggle Button for show_phiX_details -->
-            <button class="btn btn-info my-2 mx-3" @click="show_phiX_details = !show_phiX_details">
-                {{ show_phiX_details ? 'Hide PhiX Details' : 'Show PhiX Details' }}
-            </button>
+
         </div>
         `
 });
@@ -475,7 +486,7 @@ app.component('v-lane-stats-row', {
     template: /*html*/`
         <tr>
             <td>{{ sample["SampleName"] }}</td>
-            <td>{{ sample["Yield(Gb)"] }}</td>
+            <td>{{ this.$root.formatNumberFloat(sample["Yield(Gb)"]) }}</td>
             <td>{{ sample["NumPoloniesAssigned"] }}</td>
             <td>{{ this.$root.formatNumberFloat(sample["PercentQ30"]) }}</td>
             <td>{{ this.$root.formatNumberFloat(sample["PercentQ40"]) }}</td>
@@ -554,8 +565,8 @@ app.component('v-element-lane-stats-pre-demultiplex', {
                     <tr v-for="sample in index_samples(lane)">
                         <td>{{ sample["ProjectName"] }}</td>
                         <td>{{ sample["SampleName"] }}</td>
-                        <td>{{ sample["PercentAssignedReads"] }}</td>
-                        <td>{{ sample["PercentMismatch"] }}</td>
+                        <td>{{ this.$root.formatNumberFloat(sample["PercentAssignedReads"]) }}</td>
+                        <td>{{ this.$root.formatNumberFloat(sample["PercentMismatch"]) }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -578,7 +589,7 @@ app.component('v-element-lane-stats-pre-demultiplex', {
                             <tbody>
                                 <tr v-for="unassigned_item in unassigned_sequences(lane)">
                                     <td>{{ unassigned_item["I1"] }}+{{ unassigned_item["I2"]}}</td>
-                                    <td>{{ unassigned_item["PercentOcurrence"] }}</td>
+                                    <td>{{ this.$root.formatNumberFloat(unassigned_item["PercentOcurrence"], decimalPoints=5) }}</td>
                                 </tr>
                             </tbody>
                         </table>
