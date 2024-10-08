@@ -14,6 +14,9 @@ const vElementApp = {
         aviti_run_stats() {
             return this.getValue(this.instrument_generated_files, "AvitiRunStats.json", {});
         },
+        run_parameters() {
+            return this.$root.getValue(this.instrument_generated_files, "RunParameters.json", {});
+        },
         run_stats() {
             return this.getValue(this.aviti_run_stats, "RunStats", {});
         },
@@ -82,17 +85,9 @@ app.component('v-element-flowcell', {
         flowcell() {
             return this.$root.flowcell;
         },
-        instrument_generated_files() {
-            return this.$root.instrument_generated_files;
-        },
-        aviti_run_stats() {
-            return this.$root.aviti_run_stats;
-        },
-        run_parameters() {
-            return this.$root.getValue(this.instrument_generated_files, "RunParameters.json", {});
-        },
+
         start_time() {
-            const dateStr = this.$root.getValue(this.run_parameters, "Date", null);
+            const dateStr = this.$root.getValue(this.$root.run_parameters, "Date", null);
             if (dateStr) {
                 const date = new Date(dateStr);
                 const date_string = date.toLocaleDateString();
@@ -104,19 +99,19 @@ app.component('v-element-flowcell', {
             }
         },
         flowcell_id() {
-            return this.$root.getValue(this.run_parameters, "FlowcellID");
+            return this.$root.getValue(this.$root.run_parameters, "FlowcellID");
         },
         side() {
-            return this.$root.getValue(this.run_parameters, "Side");
+            return this.$root.getValue(this.$root.run_parameters, "Side");
         },
         instrument_name() {
-            return this.$root.getValue(this.run_parameters, "InstrumentName");
+            return this.$root.getValue(this.$root.run_parameters, "InstrumentName");
         },
         run_setup() {
             return `${this.chemistry_version} ${this.kit_configuration} (${this.cycles}); ${this.throughput_selection}`;
         },
         cycles() {
-            const cycles = this.$root.getValue(this.run_parameters, "Cycles", {});
+            const cycles = this.$root.getValue(this.$root.run_parameters, "Cycles", {});
             if (cycles === "N/A") {
                 return "N/A";
             }
@@ -136,16 +131,16 @@ app.component('v-element-flowcell', {
             return return_str;
         },
         throughput_selection() {
-            return this.$root.getValue(this.run_parameters, "ThroughputSelection", "N/A") + " Throughput";
+            return this.$root.getValue(this.$root.run_parameters, "ThroughputSelection", "N/A") + " Throughput";
         },
         kit_configuration() {
-            return this.$root.getValue(this.run_parameters, "KitConfiguration");
+            return this.$root.getValue(this.$root.run_parameters, "KitConfiguration");
         },
         preparation_workflow() {
-            return this.$root.getValue(this.run_parameters, "PreparationWorkflow");
+            return this.$root.getValue(this.$root.run_parameters, "PreparationWorkflow");
         },
         chemistry_version() {
-            return this.$root.getValue(this.run_parameters, "ChemistryVersion");
+            return this.$root.getValue(this.$root.run_parameters, "ChemistryVersion");
         }
     },
     mounted() {
