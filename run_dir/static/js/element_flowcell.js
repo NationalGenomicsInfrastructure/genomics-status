@@ -20,6 +20,9 @@ const vElementApp = {
         run_stats() {
             return this.getValue(this.aviti_run_stats, "RunStats", {});
         },
+        lane_stats() {
+            return this.getValue(this.aviti_run_stats, "LaneStats", {});
+        },
         demultiplex_stats() {
             return this.getValue(
                 this.getValue(this.flowcell, "Element", {}),
@@ -86,6 +89,12 @@ const vElementApp = {
                 return "N/A";
             }
             return number.toFixed(decimalPoints);
+        },
+        formatNumberLarge(value) {
+            if (value === "N/A") {
+                return "N/A";
+            }
+            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
         }
     }
 }
@@ -229,8 +238,7 @@ app.component('v-element-flowcell', {
                 <v-element-lane-stats-pre-demultiplex></v-element-lane-stats-pre-demultiplex>
             </div>
             <div class="tab-pane fade show" id="tab_fc_project_yields_content">
-                <h3>Project Yields</h3>
-                <p>To be implemented</p>
+                <v-element-project-yields></v-element-project-yields>
             </div>
             <div class="tab-pane fade show" id="tab_element_quality_graph">
                 <v-element-quality-graph></v-element-quality-graph>
@@ -271,11 +279,11 @@ app.component('v-element-run-stats', {
                         <td>{{ total_yield_formatted }}</td>
                     </v-element-tooltip>
                     <th>Polony Count</th>
-                    <td>{{ polony_count }}</td>
+                    <td class="text-right">{{ this.$root.formatNumberLarge(polony_count) }}</td>
                     <th>PF Count</th>
-                    <td>{{ pf_count }}</td>
+                    <td class="text-right">{{ this.$root.formatNumberLarge(pf_count) }}</td>
                     <th>% PF</th>
-                    <td>{{ percent_pf }}</td>
+                    <td>{{ this.$root.formatNumberFloat(percent_pf) }}</td>
                     <th>% Assigned Reads</th>
                     <td>{{ percent_assigned_reads }}</td>
                 </tr>
@@ -291,7 +299,7 @@ app.component('v-element-lane-stats', {
         }
     },
     computed: {
-        lane_stats() {
+        grouped_lane_stats() {
             const groupedByLane = {};
             this.$root.index_assignment_demultiplex.forEach(sample => {
                 const lane = sample["Lane"];
@@ -324,6 +332,7 @@ app.component('v-element-lane-stats', {
                     const lane = sample["Lane"];
                     if (!groupedByLane[lane]) {
                         groupedByLane[lane] = {
+                            "Project": "Control",
                             "SampleName": "PhiX",
                             "NumPoloniesAssigned": 0,
                             "PercentPoloniesAssigned": 0,
@@ -368,6 +377,7 @@ app.component('v-element-lane-stats', {
                     const lane = unassigned_index["Lane"];
                     if (!groupedByLane[lane]) {
                         groupedByLane[lane] = {
+                            "Project": "Unassigned",
                             "SampleName": "Unassigned",
                             "NumPoloniesAssigned": 0,
                             "PercentPoloniesAssigned": 0,
@@ -394,18 +404,20 @@ app.component('v-element-lane-stats', {
         },
     },
     template: /*html*/`
-        <div v-for="laneKey in Object.keys(lane_stats)" class="mb-3">
+        <div v-for="lane in this.$root.lane_stats" :key="lane['Lane']" class="mb-3">
             <h2>
-                Lane {{ laneKey }}
+                Lane {{ lane["Lane"] }}
             </h2>
 
+            <v-element-lane-summary :lane="lane"></v-element-lane-summary>
 
             <table class="table table-bordered narrow-headers no-margin right_align_headers">
                 <thead>
                     <tr class="darkth">
+                        <th>Project Name</th>
                         <th>Sample Name</th>
                         <th>Yield (Gb)</th>
-                        <th>Num Polonies Assigned</th>
+                        <th class="text-right">Num Polonies Assigned</th>
                         <th>% Q30</th>
                         <th>% Q40</th>
                         <th>Barcode(s)</th>
@@ -416,33 +428,31 @@ app.component('v-element-lane-stats', {
                     </tr>
                 </thead>
                 <tbody>
-                    <template v-for="sample in lane_stats[laneKey]" :key="sample.SampleName">
+                    <template v-for="sample in grouped_lane_stats[lane['Lane']]" :key="sample.SampleName">
                         <v-lane-stats-row 
                             v-if="this.is_not_phiX(sample) || show_phiX_details"
-                            :sample="sample" 
-                            :laneKey="laneKey">
+                            :sample="sample">
                         </v-lane-stats-row>
                     </template>
                     <v-lane-stats-row 
                         v-if="!show_phiX_details" 
-                        :sample="phiX_lane_stats_combined[laneKey]" 
-                        :laneKey="laneKey">
+                        :sample="phiX_lane_stats_combined[lane['Lane']]">
                     </v-lane-stats-row>
-                    <v-lane-stats-row :sample="unassigned_lane_stats_combined[laneKey]" :laneKey="laneKey"></v-lane-stats-row>
+                    <v-lane-stats-row :sample="unassigned_lane_stats_combined[lane['Lane']]" :laneKey="lane['Lane']"></v-lane-stats-row>
                 </tbody>
             </table>
 
             <div>
-                <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ laneKey" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ laneKey">
+                <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ lane['Lane']" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ lane['Lane']">
                     Show undetermined
                 </button>
 
-                <!-- Toggle Button for show_phiX_details -->
+
                 <button class="btn btn-info my-2 mx-3" @click="show_phiX_details = !show_phiX_details">
                     {{ show_phiX_details ? 'Hide PhiX Details' : 'Show PhiX Details' }}
                 </button>
             </div>
-            <div class="collapse mt-3" :id="'collapseUndeterminedLane'+ laneKey">
+            <div class="collapse mt-3" :id="'collapseUndeterminedLane'+ lane['Lane']">
                 <div class="row">
                     <div class="card card-body">
                         <div class="col-3">
@@ -455,7 +465,7 @@ app.component('v-element-lane-stats', {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="unassigned_item in this.unassigned_lane_stats[laneKey]">
+                                    <tr v-for="unassigned_item in this.unassigned_lane_stats[lane['Lane']]">
                                         <td style="font-size: 1.35rem;"><samp>{{ this.$root.barcode(unassigned_item)}}</samp></td>
                                         <td>{{ this.$root.formatNumberFloat( unassigned_item["% Polonies"], decimalPoints=5)}} </td>
                                         <td>{{ unassigned_item["Count"] }}</td>
@@ -466,15 +476,16 @@ app.component('v-element-lane-stats', {
                     </div>
                 </div>
             </div>
-
-
         </div>
         `
 });
 
 app.component('v-lane-stats-row', {
-    props: ['sample', 'laneKey'],
+    props: ['sample'],
     computed: {
+        project_name() {
+            return this.$root.getValue(this.sample, "Project", "N/A").replace(/__/g, '.');
+        },
         sub_demux_count() {
             if (this.sample["sub_demux_count"] instanceof Set) {
                 return Array.from(this.sample["sub_demux_count"]).join(", ");
@@ -485,9 +496,10 @@ app.component('v-lane-stats-row', {
     },
     template: /*html*/`
         <tr>
+            <td>{{this.project_name}}</td>
             <td>{{ sample["SampleName"] }}</td>
             <td>{{ this.$root.formatNumberFloat(sample["Yield(Gb)"]) }}</td>
-            <td>{{ sample["NumPoloniesAssigned"] }}</td>
+            <td class="text-right">{{ this.$root.formatNumberLarge(sample["NumPoloniesAssigned"]) }}</td>
             <td>{{ this.$root.formatNumberFloat(sample["PercentQ30"]) }}</td>
             <td>{{ this.$root.formatNumberFloat(sample["PercentQ40"]) }}</td>
             <td style="font-size: 1.35rem;"><samp>{{ this.$root.barcode(sample) }}</samp></td>
@@ -501,25 +513,13 @@ app.component('v-lane-stats-row', {
 
 app.component('v-element-lane-stats-pre-demultiplex', {
     computed: {
-        lane_stats() {
-            return this.$root.getValue(this.$root.aviti_run_stats, "LaneStats", {});
-        },
         lanes() {
             return this.$root.getValue(this.lane_stats, "Lanes", []);
         },
     },
     methods: {
-        total_lane_yield(lane) {
-            return this.$root.formatNumberBases(this.$root.getValue(lane, "TotalYield"));
-        },
-        total_lane_yield_formatted(lane) {
-            return this.$root.formatNumberBases(this.$root.getValue(lane, "TotalYield"));
-        },
         index_assignments(lane) {
             return this.$root.getValue(lane, "IndexAssignment", {});
-        },
-        percent_assigned_reads(lane) {
-            return this.$root.getValue(this.index_assignments(lane), "PercentAssignedReads", {});
         },
         index_samples(lane) {
             return this.$root.getValue(this.index_assignments(lane), "IndexSamples", {});
@@ -529,27 +529,13 @@ app.component('v-element-lane-stats-pre-demultiplex', {
         }
     },
     template: /*html*/`
-        <div v-for="lane in lane_stats" class="mb-3">
+        <div v-for="lane in this.$root.lane_stats" class="mb-3">
             <h2>
                 Lane {{ lane["Lane"] }}
                 <span class="badge rounded-pill bg-warning">Pre-demultiplexing</span>
             </h2>
-            <table class="table table-bordered narrow-headers no-margin right_align_headers">
-                <tbody>
-                    <tr class="darkth">
-                        <th>Total Yield</th>
-                        <v-element-tooltip :title=lane["TotalYield"]>
-                        <td>
-                            {{ total_lane_yield_formatted(lane) }}
-                        </td>
-                        </v-element-tooltip>
-                        <th>Polony Count</th> <td>{{ lane["PolonyCount"] }}</td>
-                        <th>PF Count</th> <td>{{ lane["PFCount"] }}</td>
-                        <th>% PF</th> <td>{{ lane["PercentPF"] }}</td>
-                        <th>% Assigned Reads</th> <td>{{ percent_assigned_reads(lane) }}</td>
-                    </tr>
-                </tbody>
-            </table>
+
+            <v-element-lane-summary :lane="lane"></v-element-lane-summary>
 
             <h3>Index Assignments</h3>
             <table class="table table-bordered narrow-headers no-margin right_align_headers">
@@ -599,6 +585,124 @@ app.component('v-element-lane-stats-pre-demultiplex', {
         </div>
         `
 
+});
+
+app.component('v-element-lane-summary', {
+    props: ['lane'],
+    methods: {
+        total_lane_yield(lane) {
+            return this.$root.formatNumberLarge(this.$root.getValue(lane, "TotalYield"));
+        },
+        total_lane_yield_formatted(lane) {
+            return this.$root.formatNumberBases(this.$root.getValue(lane, "TotalYield"));
+        },
+        percent_assigned_reads(lane) {
+            return this.$root.formatNumberFloat(this.$root.getValue(lane, "PercentAssignedReads"));
+        },
+        polony_count(lane) {
+            return this.$root.formatNumberLarge(this.$root.getValue(lane, "PolonyCount"));
+        },
+        pf_count(lane) {
+            return this.$root.formatNumberLarge(this.$root.getValue(lane, "PFCount"));
+        },
+        percent_pf(lane) {
+            return this.$root.formatNumberFloat(this.$root.getValue(lane, "PercentPF"));
+        }
+    },
+    template: /*html*/`
+        <table class="table table-bordered narrow-headers no-margin right_align_headers mb-5">
+            <tbody>
+                <tr class="darkth">
+                    <th>Total Yield</th>
+                    <v-element-tooltip :title="this.total_lane_yield(lane)">
+                        <td>
+                            {{ total_lane_yield_formatted(lane) }}
+                        </td>
+                    </v-element-tooltip>
+
+                    <th>Polony Count</th> 
+                    <td class="text-right">{{ polony_count(lane) }}</td>
+
+                    <th>PF Count</th>
+                    <td class="text-right">{{ pf_count(lane) }}</td>
+
+                    <th>% PF</th>
+                    <td>{{ percent_pf(lane) }}</td>
+
+                    <th>% Assigned Reads</th>
+                    <td>{{ percent_assigned_reads(lane) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    `
+})
+
+app.component('v-element-project-yields', {
+    methods: {
+        project_stats(lane) {
+            const groupedByProject = {};
+            this.$root.index_assignment_demultiplex.forEach(sample => {
+                const project = sample["Project"];
+                console.log(lane["Lane"]);
+                console.log(sample["Lane"]);
+                if (lane["Lane"] == sample["Lane"]) {
+
+                    if (!groupedByProject[project]) {
+                        groupedByProject[project] = {
+                            "Project": project,
+                            "TotalYield": 0,
+                            "NumPoloniesAssigned": 0,
+                            "PercentQ30": 0,
+                            "PercentQ40": 0
+                        }
+                    }
+                    groupedByProject[project]["TotalYield"] += parseFloat(sample["Yield(Gb)"]);
+                    groupedByProject[project]["NumPoloniesAssigned"] += parseFloat(sample["NumPoloniesAssigned"]);
+                    groupedByProject[project]["PercentQ30"] += parseFloat(sample["PercentQ30"] * sample["NumPoloniesAssigned"]);
+                    groupedByProject[project]["PercentQ40"] += parseFloat(sample["PercentQ40"] * sample["NumPoloniesAssigned"]);
+                }
+            });
+
+            Object.entries(groupedByProject).forEach(([projectKey, project]) => {
+                project["PercentQ30"] /= project["NumPoloniesAssigned"];
+                project["PercentQ40"] /= project["NumPoloniesAssigned"];
+            })
+
+            return groupedByProject;
+        },
+        fraction_of_lane(project, lane) {
+            return project['NumPoloniesAssigned'] / lane
+        }
+    },
+    template: /*html*/`
+        <div v-for="lane in this.$root.lane_stats" class="mb-5">
+            <h2>Lane {{ lane["Lane"] }}</h2>
+            <v-element-lane-summary :lane="lane"></v-element-lane-summary>
+            <table class="table table-bordered narrow-headers no-margin right_align_headers">
+                <thead>
+                    <tr class="darkth">
+                        <th>Project Name</th>
+                        <th>Total Yield (Gb)</th>
+                        <th class="text-right">Total Num Polonies Assigned</th>
+                        <th>Mean % Q30</th>
+                        <th>Mean % Q40</th>
+                        <th>Obtained Lane Yield %</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr v-for="project in project_stats(lane)">
+                        <td>{{ project["Project"].replace(/__/g, '.') }}</td>
+                        <td>{{ this.$root.formatNumberFloat(project["TotalYield"]) }}</td>
+                        <td class="text-right">{{ this.$root.formatNumberLarge(project["NumPoloniesAssigned"]) }}</td>
+                        <td>{{ this.$root.formatNumberFloat(project["PercentQ30"]) }}</td>
+                        <td>{{ this.$root.formatNumberFloat(project["PercentQ40"]) }}</td>
+                        <td>{{ this.$root.formatNumberFloat(this.fraction_of_lane(project, lane['PFCount']) * 100) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        `
 });
 
 app.component('v-element-tooltip', {
@@ -675,7 +779,7 @@ app.component('v-element-quality-graph', {
             }
 
             if (categories_differ) {
-                this.graph_warnings.push("Warning! R1 and R2 x-axis are note identical, using R1 axis");
+                this.graph_warnings.push("Warning! R1 and R2 x-axis are not identical, using R1 axis");
             }
 
             return categories_R1;
