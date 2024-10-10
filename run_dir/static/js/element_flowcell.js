@@ -428,8 +428,8 @@ app.component('v-element-lane-stats', {
                     </tr>
                 </thead>
                 <tbody>
-                    <template v-for="sample in grouped_lane_stats[lane['Lane']]" :key="sample.SampleName">
-                        <v-lane-stats-row 
+                    <template v-for="sample in grouped_lane_stats[lane['Lane']]">
+                        <v-lane-stats-row
                             v-if="this.is_not_phiX(sample) || show_phiX_details"
                             :sample="sample">
                         </v-lane-stats-row>
@@ -643,8 +643,6 @@ app.component('v-element-project-yields', {
             const groupedByProject = {};
             this.$root.index_assignment_demultiplex.forEach(sample => {
                 const project = sample["Project"];
-                console.log(lane["Lane"]);
-                console.log(sample["Lane"]);
                 if (lane["Lane"] == sample["Lane"]) {
 
                     if (!groupedByProject[project]) {
