@@ -182,30 +182,45 @@ app.component('v-element-flowcell', {
             <h1>Element BioSciences (AVITI) run <span id="page_title">{{ flowcell["NGI_run_id"]}}</span></h1>
             <div class="col-3">
                 <table class="table table-bordered narrow-headers" id="element_fc_info">
-                    <tr class="darkth">
-                        <th>NGI Run ID</th>
-                        <td>{{ flowcell["NGI_run_id"] }}</td>
-                    </tr>
-                    <tr class="darkth">
-                        <th>Start time</th>
-                        <td>{{ this.start_time }}</td>
-                    </tr>
-                    <tr class="darkth">
-                        <th>Flowcell ID</th>
-                        <td>{{ flowcell_id }}</td>
-                    </tr>
-                    <tr class="darkth">
-                        <th>Side</th>
-                        <td>{{ side }}</td>
-                    </tr>
-                    <tr class="darkth">
-                        <th>Instrument</th>
-                        <td>{{ instrument_name }}</td>
-                    </tr>
-                    <tr class="darkth">
-                        <th>Run setup</th>
-                        <td>{{ run_setup }}</td>
-                    </tr>
+                    <tbody>
+                        <tr class="darkth">
+                            <th>NGI Run ID</th>
+                            <td>{{ flowcell["NGI_run_id"] }}</td>
+                        </tr>
+                        <tr class="darkth">
+                            <th>Start time</th>
+                            <td>{{ this.start_time }}</td>
+                        </tr>
+                        <tr class="darkth">
+                            <th>Flowcell ID</th>
+                            <td>{{ flowcell_id }}</td>
+                        </tr>
+                        <tr class="darkth">
+                            <th>Side</th>
+                            <td>{{ side }}</td>
+                        </tr>
+                        <tr class="darkth">
+                            <th>Instrument</th>
+                            <td>{{ instrument_name }}</td>
+                        </tr>
+                        <tr class="darkth">
+                            <th>Run setup</th>
+                            <td>{{ run_setup }}</td>
+                        </tr>
+                        <tr class="darkth">
+                            <th>Projects:</th>
+                            <td>
+                                <div v-for="project in this.flowcell.projects" class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-sm btn-outline-dark dropdown-toggle" data-toggle="dropdown">
+                                    {{ project["project_name"] }} <span class="caret"></span></button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" :href="'/project/' + project['project_id']">Project Page</a></li>
+                                        <li><a class="dropdown-item" :href="'/bioinfo/' + project['project_id']">Bioinfo Tab</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
