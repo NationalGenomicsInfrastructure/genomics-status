@@ -31,6 +31,7 @@ const vPricingMain = {
             modal_product_id: "52",
             modal_type: "Regular",
             show_discontinued: false,
+            refresh_table: false,
 
             // Exchange rates
             USD_in_SEK: null,
@@ -652,7 +653,7 @@ app.component('v-products-table', {
      *   - show discontinued products
      *   - have buttons to add products to quote
      */
-    props: ['show_discontinued', 'quotable'],
+    props: ['show_discontinued', 'quotable', 'refresh_table'],
     data: function() {
         return {
             dataTable: null
@@ -665,15 +666,23 @@ app.component('v-products-table', {
     },
     watch: {
         show_discontinued(new_val, old_val) {
+            this.reset_table()
+        },
+        refresh_table(new_val, old_val){
+            if(new_val){
+                this.reset_table()
+                this.$root.refresh_table = false
+            }
+        }
+    },
+    methods: {
+        reset_table() {
             this.reset_listjs()
-
             // have to wait for the table to be drawn
             this.$nextTick(() => {
                 this.init_listjs()
             })
-        }
-    },
-    methods: {
+        },
         init_listjs() {
             /* Just the ordinary datatable initializing. */
             this.dataTable = $('#pricing_products_table').DataTable({

@@ -277,6 +277,7 @@ app.component('v-pricing-quote', {
                     this.$root.published_cost_calculator = response.data.cost_calculator
                     this.$root.all_products = response.data.cost_calculator.products
                     this.$root.all_components = response.data.cost_calculator.components
+                    this.$root.refresh_table= true
                   })
                   .catch(error => {
                     this.$root.error_messages.push('Unable to fetch used cost calculator data, please try again or contact a system administrator.')
@@ -310,6 +311,14 @@ app.component('v-pricing-quote', {
               this.template_text_data = sel_data['template_text']
             }
           }
+        },
+
+        reload_latest_cost_calculator(){
+          //reload the latest cost calculator and reload table
+          this.$root.published_cost_calculator = this.latest_cost_calculator
+          this.$root.all_products = this.latest_cost_calculator.products
+          this.$root.all_components = this.latest_cost_calculator.components
+          this.$root.refresh_table= true
         },
         mark_agreement_signed(){
           var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
@@ -704,6 +713,11 @@ app.component('v-pricing-quote', {
                   </div>
                 </div>
               </div>
+              <div class="row" v-if="this.saved_agreement_data['saved_agreements']">
+                <div class="col ml-2">
+                  <button v-if="this.has_admin_control" class="btn btn-warning m-1" type="submit" v-on:click="reload_latest_cost_calculator()" :disabled="this.invoice_downloaded" id="reload_with_latest_cost_calc__btn">Reload latest cost calculator version</button>
+                </div>
+              </div>
               <div class="card mt-5">
                 <div class="card-header">
                   <h4>Preview <small>Using template: {{this.template_text_data.doc_id}}-{{this.template_text_data.edition}}</small></h4>
@@ -802,7 +816,7 @@ app.component('v-pricing-quote', {
             <div class="row" id="table_h_and_search">
               <h2 class="col mr-auto">Available Products</h2>
             </div>
-            <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="true"/>
+            <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="true" :refresh_table="this.$root.refresh_table"/>
           </div>
         </template>
       `
