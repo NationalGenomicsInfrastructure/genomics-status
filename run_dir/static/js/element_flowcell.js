@@ -295,7 +295,7 @@ app.component('v-element-flowcell', {
                 <v-element-project-yields></v-element-project-yields>
             </div>
             <div class="tab-pane fade show" id="tab_element_quality_graph">
-                <v-element-quality-graph></v-element-quality-graph>
+                <v-element-graphs></v-element-graphs>
             </div>
         </div>
     </div>
@@ -773,7 +773,7 @@ app.component('v-element-tooltip', {
     `
 });
 
-app.component('v-element-quality-graph', {
+app.component('v-element-graphs', {
     data() {
         return {
             include_R1: true,
@@ -933,7 +933,7 @@ app.component('v-element-quality-graph', {
                 R1_base_composition_series.push(
                 {
                     name: 'R1 Base Composition A',
-                    data: R1_base_composition['A']
+                    data: this.R1_read_cycles.map(cycle => cycle.BaseComposition['A'])
                 })
                 R1_base_composition_series.push(
                 {
