@@ -277,7 +277,7 @@ app.component('v-pricing-quote', {
                     this.$root.published_cost_calculator = response.data.cost_calculator
                     this.$root.all_products = response.data.cost_calculator.products
                     this.$root.all_components = response.data.cost_calculator.components
-                    this.$root.refresh_table= true
+                    this.$root.refresh_table = true
                   })
                   .catch(error => {
                     this.$root.error_messages.push('Unable to fetch used cost calculator data, please try again or contact a system administrator.')
@@ -318,7 +318,7 @@ app.component('v-pricing-quote', {
           this.$root.published_cost_calculator = this.latest_cost_calculator
           this.$root.all_products = this.latest_cost_calculator.products
           this.$root.all_components = this.latest_cost_calculator.components
-          this.$root.refresh_table= true
+          this.$root.refresh_table = true
         },
         mark_agreement_signed(){
           var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
