@@ -472,7 +472,7 @@ def get_project_ids_from_names(project_names: list, projects_db) -> list[dict]:
     for project_name in project_names:
         rows = projects_db.view("projects/name_to_id")[project_name].rows
         if rows:
-            projects.append( 
+            projects.append(
                 {
                     "project_id": rows[0].value,
                     "project_name": project_name
@@ -488,7 +488,7 @@ def get_project_names_from_ids(project_ids: list, projects_db) -> list[dict]:
     for project_id in project_ids:
         rows = projects_db.view("projects/id_to_name")[project_id].rows
         if rows:
-            projects.append( 
+            projects.append(
                 {
                     "project_id": project_id,
                     "project_name": rows[0].value

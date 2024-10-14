@@ -23,6 +23,48 @@ const vElementApp = {
         lane_stats() {
             return this.getValue(this.aviti_run_stats, "LaneStats", {});
         },
+        grouped_lane_stats_pre_demultiplex() {
+            /* 
+              Lane stats from the instrument, which might not match the demultiplexed lane stats
+              in case the instrument run was not started with the correct manifest file.
+              This function groups the lane stats by lane number.
+            */
+
+            const groupedByLane = {};
+            this.lane_stats.forEach(lane => {
+                const lane_number = lane["Lane"];
+                if (!groupedByLane[lane_number]) {
+                    groupedByLane[lane_number] = [];
+                }
+                groupedByLane[lane_number].push(lane);
+            });
+
+            return groupedByLane;
+        },
+        grouped_index_assignment_post_demultiplex() {
+            /* 
+              Index assignment from and demultiplex info as presented by TACA
+              This function groups the info by lane number.
+            */
+            const groupedByLane = {};
+            this.index_assignment_demultiplex.forEach(sample => {
+                const lane = sample["Lane"];
+                if (!groupedByLane[lane]) {
+                    groupedByLane[lane] = [];
+                }
+                groupedByLane[lane].push(sample);
+            });
+
+            return groupedByLane;
+        },
+        lane_ids_match() {
+            /* Sometimes the lane numbers from the instrument and demultiplexing does not match */
+            const keysPreDemultiplex = Object.keys(this.grouped_lane_stats_pre_demultiplex).sort();
+            const keysPostDemultiplex = Object.keys(this.grouped_index_assignment_post_demultiplex).sort();
+
+            return keysPreDemultiplex.length === keysPostDemultiplex.length &&
+                   keysPreDemultiplex.every((key, index) => key === keysPostDemultiplex[index]);        
+        },
         demultiplex_stats() {
             return this.getValue(
                 this.getValue(this.flowcell, "Element", {}),
@@ -31,9 +73,6 @@ const vElementApp = {
         },
         index_assignment_demultiplex() {
             return this.getValue(this.demultiplex_stats, "Index_Assignment", {});
-        },
-        index_assignment_instrument() {
-            return this.getValue(this.run_stats, "IndexAssignment", {});
         },
         unassiged_sequences_demultiplex() {
             return this.getValue(this.demultiplex_stats, "Unassigned_Sequences", {});
@@ -314,18 +353,6 @@ app.component('v-element-lane-stats', {
         }
     },
     computed: {
-        grouped_lane_stats() {
-            const groupedByLane = {};
-            this.$root.index_assignment_demultiplex.forEach(sample => {
-                const lane = sample["Lane"];
-                if (!groupedByLane[lane]) {
-                    groupedByLane[lane] = [];
-                }
-                groupedByLane[lane].push(sample);
-            });
-
-            return groupedByLane;
-        },
         unassigned_lane_stats() {
             const groupedByLane = {};
 
@@ -419,13 +446,23 @@ app.component('v-element-lane-stats', {
         },
     },
     template: /*html*/`
-        <div v-for="lane in this.$root.lane_stats" :key="lane['Lane']" class="mb-3">
+        <v-template v-if="!this.$root.lane_ids_match">
+            <div class="alert alert-warning" role="alert">
+                <h2>Warning: Lane numbers from instrument and demultiplexing does not match:</h2>
+                <p>Instrument lane numbers: {{ Object.keys(this.$root.grouped_lane_stats_pre_demultiplex) }}</p>
+                <p>Demultiplex lane numbers: {{ Object.keys(this.$root.grouped_index_assignment_post_demultiplex) }}</p>
+                <p><strong>No lane statistics will be shown here, to avoid lane mixup</strong></p>
+            </div>
+        </v-template>
+        <div v-for="(samples_in_lane, laneKey) in this.$root.grouped_index_assignment_post_demultiplex" :key="laneKey" class="mb-3">
             <h2>
-                Lane {{ lane["Lane"] }}
+                Lane {{ laneKey }}
             </h2>
+            <!-- Lane stats is based on the instrument generated file pre-demultiplexing -->
 
-            <v-element-lane-summary :lane="lane"></v-element-lane-summary>
-
+            <v-element v-if="this.$root.lane_ids_match">
+                <v-element-lane-summary :lane="this.$root.getValue(this.$root.lane_stats, laneKey, {})"></v-element-lane-summary>
+            </v-element>
             <table class="table table-bordered narrow-headers no-margin right_align_headers">
                 <thead>
                     <tr class="darkth">
@@ -443,7 +480,7 @@ app.component('v-element-lane-stats', {
                     </tr>
                 </thead>
                 <tbody>
-                    <template v-for="sample in grouped_lane_stats[lane['Lane']]">
+                    <template v-for="sample in samples_in_lane">
                         <v-lane-stats-row
                             v-if="this.is_not_phiX(sample) || show_phiX_details"
                             :sample="sample">
@@ -451,14 +488,14 @@ app.component('v-element-lane-stats', {
                     </template>
                     <v-lane-stats-row 
                         v-if="!show_phiX_details" 
-                        :sample="phiX_lane_stats_combined[lane['Lane']]">
+                        :sample="phiX_lane_stats_combined[laneKey]">
                     </v-lane-stats-row>
-                    <v-lane-stats-row :sample="unassigned_lane_stats_combined[lane['Lane']]" :laneKey="lane['Lane']"></v-lane-stats-row>
+                    <v-lane-stats-row :sample="unassigned_lane_stats_combined[laneKey]" :laneKey="laneKey"></v-lane-stats-row>
                 </tbody>
             </table>
 
             <div>
-                <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ lane['Lane']" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ lane['Lane']">
+                <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ laneKey" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ laneKey">
                     Show undetermined
                 </button>
 
@@ -467,7 +504,7 @@ app.component('v-element-lane-stats', {
                     {{ show_phiX_details ? 'Hide PhiX Details' : 'Show PhiX Details' }}
                 </button>
             </div>
-            <div class="collapse mt-3" :id="'collapseUndeterminedLane'+ lane['Lane']">
+            <div class="collapse mt-3" :id="'collapseUndeterminedLane'+ laneKey">
                 <div class="row">
                     <div class="card card-body">
                         <div class="col-3">
@@ -480,7 +517,7 @@ app.component('v-element-lane-stats', {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="unassigned_item in this.unassigned_lane_stats[lane['Lane']]">
+                                    <tr v-for="unassigned_item in this.unassigned_lane_stats[laneKey]">
                                         <td style="font-size: 1.35rem;"><samp>{{ this.$root.barcode(unassigned_item)}}</samp></td>
                                         <td>{{ this.$root.formatNumberFloat( unassigned_item["% Polonies"], decimalPoints=5)}} </td>
                                         <td>{{ unassigned_item["Count"] }}</td>
