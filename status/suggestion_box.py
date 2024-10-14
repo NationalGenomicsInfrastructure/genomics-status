@@ -5,7 +5,7 @@ from atlassian import Jira
 from ibmcloudant.cloudant_v1 import Document
 from status.util import SafeHandler
 
-TITLE_TEMPLATE = "{title} ({area})"
+TITLE_TEMPLATE = "{deployment}{title} ({area})"
 
 DESCRIPTION_TEMPLATE = """
 * Created on: {date}
@@ -50,6 +50,7 @@ class SuggestionBoxHandler(SafeHandler):
         user = self.get_current_user()
         description = self.get_argument("description")
         suggestion = self.get_argument("suggestion")
+        deployment = "" if self.application.gs_globals['prod'] else "[STAGE] "
 
         jira = Jira(
              url=self.application.jira_url, 
@@ -57,7 +58,7 @@ class SuggestionBoxHandler(SafeHandler):
              password=self.application.jira_api_token
         )
 
-        summary = TITLE_TEMPLATE.format(title=title, area=area)
+        summary = TITLE_TEMPLATE.format(deployment=deployment, title=title, area=area)
         description = DESCRIPTION_TEMPLATE.format(
                     date=date.ctime(),
                     area=area,
