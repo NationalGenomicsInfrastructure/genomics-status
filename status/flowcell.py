@@ -508,7 +508,7 @@ class ElementFlowcellDataHandler(SafeHandler):
             project_names = []
 
             demultiplexing_done = False
-            if flowcell.get('Element', {}).get('Demultiplex_Stats'):
+            if flowcell.get('Element', {}).get('Demultiplex_Stats', {}).get('Index_Assignment'):
                 demultiplexing_done = True
 
             if demultiplexing_done:

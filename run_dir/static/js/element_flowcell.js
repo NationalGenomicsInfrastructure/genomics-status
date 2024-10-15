@@ -24,9 +24,7 @@ const vElementApp = {
             return this.getValue(this.aviti_run_stats, "LaneStats", {});
         },
         grouped_lane_stats_pre_demultiplex() {
-            /* 
-              Lane stats from the instrument, which might not match the demultiplexed lane stats
-              in case the instrument run was not started with the correct manifest file.
+            /*
               This function groups the lane stats by lane number.
             */
 
@@ -34,9 +32,9 @@ const vElementApp = {
             this.lane_stats.forEach(lane => {
                 const lane_number = lane["Lane"];
                 if (!groupedByLane[lane_number]) {
-                    groupedByLane[lane_number] = [];
+                    groupedByLane[lane_number] = {};
                 }
-                groupedByLane[lane_number].push(lane);
+                groupedByLane[lane_number] = lane;
             });
 
             return groupedByLane;
@@ -58,12 +56,21 @@ const vElementApp = {
             return groupedByLane;
         },
         lane_ids_match() {
-            /* Sometimes the lane numbers from the instrument and demultiplexing does not match */
+            /* Lane stats from the instrument might not match the demultiplexed lane stats
+              in case the instrument run was not started with a correct manifest file.
+            */
             const keysPreDemultiplex = Object.keys(this.grouped_lane_stats_pre_demultiplex).sort();
             const keysPostDemultiplex = Object.keys(this.grouped_index_assignment_post_demultiplex).sort();
 
             return keysPreDemultiplex.length === keysPostDemultiplex.length &&
                    keysPreDemultiplex.every((key, index) => key === keysPostDemultiplex[index]);        
+        },
+        demultiplex_stats_available() {
+            if (this.index_assignment_demultiplex) {
+                return true;
+            } else {
+                return false;
+            }
         },
         demultiplex_stats() {
             return this.getValue(
@@ -73,6 +80,9 @@ const vElementApp = {
         },
         index_assignment_demultiplex() {
             return this.getValue(this.demultiplex_stats, "Index_Assignment", {});
+        },
+        index_assignment_pre_demultiplex() {
+            return this.getValue(this.run_stats, "IndexAssignment", {});
         },
         unassiged_sequences_demultiplex() {
             return this.getValue(this.demultiplex_stats, "Unassigned_Sequences", {});
@@ -320,8 +330,11 @@ app.component('v-element-run-stats', {
         total_yield_formatted() {
             return this.$root.formatNumberBases(this.$root.getValue(this.$root.run_stats, "TotalYield"));
         },
+        index_assignment_pre_demultiplex() {
+            return this.$root.getValue(this.$root.run_stats, "IndexAssignment", {});
+        },
         percent_assigned_reads() {
-            return this.$root.getValue(this.$root.index_assignment, "PercentAssignedReads");
+            return this.$root.getValue(this.$root.index_assignment_pre_demultiplex, "PercentAssignedReads");
         }
     },
     template: `
@@ -446,89 +459,94 @@ app.component('v-element-lane-stats', {
         },
     },
     template: /*html*/`
-        <v-template v-if="!this.$root.lane_ids_match">
-            <div class="alert alert-warning" role="alert">
-                <h2>Warning: Lane numbers from instrument and demultiplexing does not match:</h2>
-                <p>Instrument lane numbers: {{ Object.keys(this.$root.grouped_lane_stats_pre_demultiplex) }}</p>
-                <p>Demultiplex lane numbers: {{ Object.keys(this.$root.grouped_index_assignment_post_demultiplex) }}</p>
-                <p><strong>No lane statistics will be shown here, to avoid lane mixup</strong></p>
-            </div>
+        <v-template v-if="!this.$root.demultiplex_stats_available">
+            <h2><small class="text-muted">No demultiplex stats available</small></h2>
         </v-template>
-        <div v-for="(samples_in_lane, laneKey) in this.$root.grouped_index_assignment_post_demultiplex" :key="laneKey" class="mb-3">
-            <h2>
-                Lane {{ laneKey }}
-            </h2>
-            <!-- Lane stats is based on the instrument generated file pre-demultiplexing -->
+        <v-template v-else>
+            <v-template v-if="!this.$root.lane_ids_match">
+                <div class="alert alert-warning" role="alert">
+                    <h2>Warning: Lane numbers from instrument and demultiplexing does not match:</h2>
+                    <p>Instrument lane numbers: {{ Object.keys(this.$root.grouped_lane_stats_pre_demultiplex) }}</p>
+                    <p>Demultiplex lane numbers: {{ Object.keys(this.$root.grouped_index_assignment_post_demultiplex) }}</p>
+                    <p><strong>No lane statistics will be shown here, to avoid lane mixup</strong></p>
+                </div>
+            </v-template>
+            <div v-for="(samples_in_lane, laneKey) in this.$root.grouped_index_assignment_post_demultiplex" :key="laneKey" class="mb-3">
+                <h2>
+                    Lane {{ laneKey }}
+                </h2>
+                <!-- Lane stats is based on the instrument generated file pre-demultiplexing -->
 
-            <v-element v-if="this.$root.lane_ids_match">
-                <v-element-lane-summary :lane="this.$root.getValue(this.$root.lane_stats, laneKey, {})"></v-element-lane-summary>
-            </v-element>
-            <table class="table table-bordered narrow-headers no-margin right_align_headers">
-                <thead>
-                    <tr class="darkth">
-                        <th>Project Name</th>
-                        <th>Sample Name</th>
-                        <th>Yield (Gb)</th>
-                        <th class="text-right">Num Polonies Assigned</th>
-                        <th>% Q30</th>
-                        <th>% Q40</th>
-                        <th>Barcode(s)</th>
-                        <th>% Assigned Reads</th>
-                        <th>% Assigned With Mismatches</th>
-                        <th>Sub Demux Count</th>
-                        <th>Quality Score Mean</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <template v-for="sample in samples_in_lane">
-                        <v-lane-stats-row
-                            v-if="this.is_not_phiX(sample) || show_phiX_details"
-                            :sample="sample">
+                <v-element v-if="this.$root.lane_ids_match">
+                    <v-element-lane-summary :lane="this.$root.getValue(this.$root.grouped_lane_stats_pre_demultiplex, laneKey, {})"></v-element-lane-summary>
+                </v-element>
+                <table class="table table-bordered narrow-headers no-margin right_align_headers">
+                    <thead>
+                        <tr class="darkth">
+                            <th>Project Name</th>
+                            <th>Sample Name</th>
+                            <th>Yield (Gb)</th>
+                            <th class="text-right">Num Polonies Assigned</th>
+                            <th>% Q30</th>
+                            <th>% Q40</th>
+                            <th>Barcode(s)</th>
+                            <th>% Assigned Reads</th>
+                            <th>% Assigned With Mismatches</th>
+                            <th>Sub Demux Count</th>
+                            <th>Quality Score Mean</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template v-for="sample in samples_in_lane">
+                            <v-lane-stats-row
+                                v-if="this.is_not_phiX(sample) || show_phiX_details"
+                                :sample="sample">
+                            </v-lane-stats-row>
+                        </template>
+                        <v-lane-stats-row 
+                            v-if="!show_phiX_details" 
+                            :sample="phiX_lane_stats_combined[laneKey]">
                         </v-lane-stats-row>
-                    </template>
-                    <v-lane-stats-row 
-                        v-if="!show_phiX_details" 
-                        :sample="phiX_lane_stats_combined[laneKey]">
-                    </v-lane-stats-row>
-                    <v-lane-stats-row :sample="unassigned_lane_stats_combined[laneKey]" :laneKey="laneKey"></v-lane-stats-row>
-                </tbody>
-            </table>
+                        <v-lane-stats-row :sample="unassigned_lane_stats_combined[laneKey]" :laneKey="laneKey"></v-lane-stats-row>
+                    </tbody>
+                </table>
 
-            <div>
-                <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ laneKey" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ laneKey">
-                    Show undetermined
-                </button>
+                <div>
+                    <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ laneKey" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ laneKey">
+                        Show undetermined
+                    </button>
 
 
-                <button class="btn btn-info my-2 mx-3" @click="show_phiX_details = !show_phiX_details">
-                    {{ show_phiX_details ? 'Hide PhiX Details' : 'Show PhiX Details' }}
-                </button>
-            </div>
-            <div class="collapse mt-3" :id="'collapseUndeterminedLane'+ laneKey">
-                <div class="row">
-                    <div class="card card-body">
-                        <div class="col-3">
-                            <table class="table table-bordered narrow-headers no-margin right_align_headers">
-                                <thead>
-                                    <tr class="darkth">
-                                        <th>Sequence</th>
-                                        <th>% Occurence</th>
-                                        <th>Count</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="unassigned_item in this.unassigned_lane_stats[laneKey]">
-                                        <td style="font-size: 1.35rem;"><samp>{{ this.$root.barcode(unassigned_item)}}</samp></td>
-                                        <td>{{ this.$root.formatNumberFloat( unassigned_item["% Polonies"], decimalPoints=5)}} </td>
-                                        <td>{{ unassigned_item["Count"] }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <button class="btn btn-info my-2 mx-3" @click="show_phiX_details = !show_phiX_details">
+                        {{ show_phiX_details ? 'Hide PhiX Details' : 'Show PhiX Details' }}
+                    </button>
+                </div>
+                <div class="collapse mt-3" :id="'collapseUndeterminedLane'+ laneKey">
+                    <div class="row">
+                        <div class="card card-body">
+                            <div class="col-3">
+                                <table class="table table-bordered narrow-headers no-margin right_align_headers">
+                                    <thead>
+                                        <tr class="darkth">
+                                            <th>Sequence</th>
+                                            <th>% Occurence</th>
+                                            <th>Count</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="unassigned_item in this.unassigned_lane_stats[laneKey]">
+                                            <td style="font-size: 1.35rem;"><samp>{{ this.$root.barcode(unassigned_item)}}</samp></td>
+                                            <td>{{ this.$root.formatNumberFloat( unassigned_item["% Polonies"], decimalPoints=5)}} </td>
+                                            <td>{{ unassigned_item["Count"] }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </v-template>
         `
 });
 
@@ -691,11 +709,11 @@ app.component('v-element-lane-summary', {
 
 app.component('v-element-project-yields', {
     methods: {
-        project_stats(lane) {
+        project_stats(laneKey) {
             const groupedByProject = {};
             this.$root.index_assignment_demultiplex.forEach(sample => {
                 const project = sample["Project"];
-                if (lane["Lane"] == sample["Lane"]) {
+                if (laneKey == sample["Lane"]) {
 
                     if (!groupedByProject[project]) {
                         groupedByProject[project] = {
@@ -720,38 +738,63 @@ app.component('v-element-project-yields', {
 
             return groupedByProject;
         },
-        fraction_of_lane(project, lane) {
-            return project['NumPoloniesAssigned'] / lane
+        fraction_of_lane(project, laneKey) {
+            if (this.$root.lane_ids_match) {
+                let lane_count = this.$root.getValue(this.$root.grouped_lane_stats_pre_demultiplex[laneKey], "PFCount", 0)
+                if (lane_count === 0) {
+                    return 'N/A'
+                } else {
+                    return this.$root.formatNumberFloat(project['NumPoloniesAssigned'] / lane_count * 100);
+                }
+            } else {
+                return 'N/A'
+            }
         }
     },
     template: /*html*/`
-        <div v-for="lane in this.$root.lane_stats" class="mb-5">
-            <h2>Lane {{ lane["Lane"] }}</h2>
-            <v-element-lane-summary :lane="lane"></v-element-lane-summary>
-            <table class="table table-bordered narrow-headers no-margin right_align_headers">
-                <thead>
-                    <tr class="darkth">
-                        <th>Project Name</th>
-                        <th>Total Yield (Gb)</th>
-                        <th class="text-right">Total Num Polonies Assigned</th>
-                        <th>Mean % Q30</th>
-                        <th>Mean % Q40</th>
-                        <th>Obtained Lane Yield %</th>
-                    </tr>
-                </thead>
+        <v-template v-if="!this.$root.demultiplex_stats_available">
+            <h2><small class="text-muted">No demultiplex stats available</small></h2>
+        </v-template>
+        <v-template v-else>
+            <v-template v-if="!this.$root.lane_ids_match">
+                <div class="alert alert-warning" role="alert">
+                    <h2>Warning: Lane numbers from instrument and demultiplexing does not match:</h2>
+                    <p>Instrument lane numbers: {{ Object.keys(this.$root.grouped_lane_stats_pre_demultiplex) }}</p>
+                    <p>Demultiplex lane numbers: {{ Object.keys(this.$root.grouped_index_assignment_post_demultiplex) }}</p>
+                    <p><strong>No lane statistics will be shown here, to avoid lane mixup</strong></p>
+                </div>
+            </v-template>
+            <div v-for="(samples_in_lane, laneKey) in this.$root.grouped_index_assignment_post_demultiplex" :key="laneKey" class="mb-5">
+                <h2>Lane {{ laneKey }}</h2>
 
-                <tbody>
-                    <tr v-for="project in project_stats(lane)">
-                        <td>{{ project["Project"].replace(/__/g, '.') }}</td>
-                        <td>{{ this.$root.formatNumberFloat(project["TotalYield"]) }}</td>
-                        <td class="text-right">{{ this.$root.formatNumberLarge(project["NumPoloniesAssigned"]) }}</td>
-                        <td>{{ this.$root.formatNumberFloat(project["PercentQ30"]) }}</td>
-                        <td>{{ this.$root.formatNumberFloat(project["PercentQ40"]) }}</td>
-                        <td>{{ this.$root.formatNumberFloat(this.fraction_of_lane(project, lane['PFCount']) * 100) }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                <v-element v-if="this.$root.lane_ids_match">
+                    <v-element-lane-summary :lane="this.$root.getValue(this.$root.grouped_lane_stats_pre_demultiplex, laneKey, {})"></v-element-lane-summary>
+                </v-element>
+                <table class="table table-bordered narrow-headers no-margin right_align_headers">
+                    <thead>
+                        <tr class="darkth">
+                            <th>Project Name</th>
+                            <th>Total Yield (Gb)</th>
+                            <th class="text-right">Total Num Polonies Assigned</th>
+                            <th>Mean % Q30</th>
+                            <th>Mean % Q40</th>
+                            <th>Obtained Lane Yield %</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr v-for="[project_name, project] in Object.entries(project_stats(laneKey))" :key=project_name>
+                            <td>{{ project_name.replace(/__/g, '.') }}</td>
+                            <td>{{ this.$root.formatNumberFloat(project["TotalYield"]) }}</td>
+                            <td class="text-right">{{ this.$root.formatNumberLarge(project["NumPoloniesAssigned"]) }}</td>
+                            <td>{{ this.$root.formatNumberFloat(project["PercentQ30"]) }}</td>
+                            <td>{{ this.$root.formatNumberFloat(project["PercentQ40"]) }}</td>
+                            <td>{{ fraction_of_lane(project, laneKey) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </v-template>
         `
 });
 
