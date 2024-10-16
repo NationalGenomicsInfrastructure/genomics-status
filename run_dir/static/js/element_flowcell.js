@@ -227,9 +227,9 @@ app.component('v-element-flowcell', {
         <span class="ml-2">Loading...</span>
     </div>
     <div v-else>
+        <h1>Element BioSciences (AVITI) run <span id="page_title">{{ flowcell["NGI_run_id"]}}</span></h1>
         <div class="row">
-            <h1>Element BioSciences (AVITI) run <span id="page_title">{{ flowcell["NGI_run_id"]}}</span></h1>
-            <div class="col-3">
+            <div class="col-4">
                 <table class="table table-bordered narrow-headers" id="element_fc_info">
                     <tbody>
                         <tr class="darkth">
@@ -272,10 +272,10 @@ app.component('v-element-flowcell', {
                     </tbody>
                 </table>
             </div>
+            <div class="col-4">
+                <v-element-run-stats></v-element-run-stats>
+            </div>
         </div>
-
-        <h2>Summary Run Stats</h2>
-        <v-element-run-stats></v-element-run-stats>
 
         <div class="tabbable mb-3">
             <ul class="nav nav-tabs">
@@ -342,15 +342,25 @@ app.component('v-element-run-stats', {
             <tbody>
                 <tr class="darkth">
                     <th>Total Yield</th>
-                    <v-element-tooltip :title=total_yield>
-                        <td>{{ total_yield_formatted }}</td>
-                    </v-element-tooltip>
+                    <td>
+                        <v-element-tooltip :title=total_yield>
+                            {{ total_yield_formatted }}
+                        </v-element-tooltip>
+                    </td>
+                </tr>
+                <tr class="darkth">
                     <th>Polony Count</th>
                     <td class="text-right">{{ this.$root.formatNumberLarge(polony_count) }}</td>
+                </tr>
+                <tr class="darkth">
                     <th>PF Count</th>
                     <td class="text-right">{{ this.$root.formatNumberLarge(pf_count) }}</td>
+                </tr>
+                <tr class="darkth">
                     <th>% PF</th>
                     <td>{{ this.$root.formatNumberFloat(percent_pf) }}</td>
+                </tr>
+                <tr class="darkth">
                     <th>% Assigned Reads</th>
                     <td>{{ percent_assigned_reads }}</td>
                 </tr>
@@ -667,7 +677,12 @@ app.component('v-element-lane-summary', {
             return this.$root.formatNumberBases(this.$root.getValue(lane, "TotalYield"));
         },
         percent_assigned_reads(lane) {
-            return this.$root.formatNumberFloat(this.$root.getValue(lane, "PercentAssignedReads"));
+            return this.$root.formatNumberFloat(
+                this.$root.getValue(
+                    this.$root.getValue(lane, "IndexAssignment", {}), 
+                    "PercentAssignedReads"
+                )
+            )
         },
         polony_count(lane) {
             return this.$root.formatNumberLarge(this.$root.getValue(lane, "PolonyCount"));
@@ -680,15 +695,15 @@ app.component('v-element-lane-summary', {
         }
     },
     template: /*html*/`
-        <table class="table table-bordered narrow-headers no-margin right_align_headers mb-5">
+        <table class="table table-bordered narrow-headers no-margin right_align_headers mb-0">
             <tbody>
                 <tr class="darkth">
                     <th>Total Yield</th>
-                    <v-element-tooltip :title="this.total_lane_yield(lane)">
-                        <td>
+                    <td>
+                        <v-element-tooltip :title="this.total_lane_yield(lane)">
                             {{ total_lane_yield_formatted(lane) }}
-                        </td>
-                    </v-element-tooltip>
+                        </v-element-tooltip>
+                    </td>
 
                     <th>Polony Count</th> 
                     <td class="text-right">{{ polony_count(lane) }}</td>
@@ -704,6 +719,8 @@ app.component('v-element-lane-summary', {
                 </tr>
             </tbody>
         </table>
+        <h3 class="mt-0 mb-5"><small class="text-muted"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Lane summary statistics is from pre-demultiplexing sources</small></h3>
+
     `
 })
 
