@@ -177,6 +177,7 @@ app.component('v-pricing-quote', {
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Unable to fetch project data, please try again or contact a system administrator.')
+                    console.log('Unable to fetch project data', error)
                 })
                 this.get_saved_agreement_data(proj_id)
             }
@@ -200,6 +201,7 @@ app.component('v-pricing-quote', {
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Unable to fetch order data, please try again or contact a system administrator.')
+                    console.log('Unable to fetch order data', error)
                 })
           }
         },
@@ -221,6 +223,7 @@ app.component('v-pricing-quote', {
               })
               .catch(error => {
                   this.$root.error_messages.push('Unable to fetch agreement data, please try again or contact a system administrator.')
+                  console.log('Unable to fetch agreement data', error)
               })
         },
         toggle_discontinued() {
@@ -281,6 +284,7 @@ app.component('v-pricing-quote', {
                   })
                   .catch(error => {
                     this.$root.error_messages.push('Unable to fetch used cost calculator data, please try again or contact a system administrator.')
+                    console.log('Unable to fetch used cost calculator data', error)
                   })
               }
             }
@@ -333,6 +337,7 @@ app.component('v-pricing-quote', {
             })
             .catch(error => {
                 this.$root.error_messages.push('Unable to mark agreement signed, please try again or contact a system administrator.')
+                console.log('Unable to mark agreement signed', error)
             })
           }
         },
@@ -358,6 +363,7 @@ app.component('v-pricing-quote', {
             })
             .catch(error => {
                 this.$root.error_messages.push('Unable to generate invoice spec, please try again or contact a system administrator.')
+                console.log('Unable to generate invoice spec', error)
             })
           }
         },
@@ -371,6 +377,7 @@ app.component('v-pricing-quote', {
               })
               .catch(error => {
                   this.$root.error_messages.push('Unable to fetch agreement template data, please try again or contact a system administrator.')
+                  console.log('Unable to fetch agreement template data', error)
               })
         },
         add_cost_label: function(){
@@ -412,6 +419,7 @@ app.component('v-pricing-quote', {
             })
             .catch(error => {
                 this.$root.error_messages.push('Unable to save agreement, please try again or contact a system administrator.')
+                console.log('Unable to save agreement', error)
             })
           }
         },
