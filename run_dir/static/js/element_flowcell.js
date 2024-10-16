@@ -800,7 +800,7 @@ app.component('v-element-project-yields', {
                     </thead>
 
                     <tbody>
-                        <tr v-for="[project_name, project] in Object.entries(project_stats(laneKey))" :key=project_name>
+                        <tr v-for="[project_name, project] in Object.entries(project_stats(laneKey) || {})" :key="project_name">
                             <td>{{ project_name.replace(/__/g, '.') }}</td>
                             <td>{{ this.$root.formatNumberFloat(project["TotalYield"]) }}</td>
                             <td class="text-right">{{ this.$root.formatNumberLarge(project["NumPoloniesAssigned"]) }}</td>
