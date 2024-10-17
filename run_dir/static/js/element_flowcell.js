@@ -8,6 +8,10 @@ const vElementApp = {
         }
     },
     computed: {
+        // Data getters //
+        run_status() {
+            return this.getValue(this.flowcell, "run_status", "N/A");
+        },
         instrument_generated_files() {
             return this.getValue(this.flowcell, "instrument_generated_files", {});
         },
@@ -23,6 +27,22 @@ const vElementApp = {
         lane_stats() {
             return this.getValue(this.aviti_run_stats, "LaneStats", {});
         },
+        demultiplex_stats() {
+            return this.getValue(
+                this.getValue(this.flowcell, "Element", {}),
+                "Demultiplex_Stats", {}
+            );
+        },
+        index_assignment_demultiplex() {
+            return this.getValue(this.demultiplex_stats, "Index_Assignment", {});
+        },
+        index_assignment_pre_demultiplex() {
+            return this.getValue(this.run_stats, "IndexAssignment", {});
+        },
+        unassiged_sequences_demultiplex() {
+            return this.getValue(this.demultiplex_stats, "Unassigned_Sequences", {});
+        },
+        // Re-structuring data //
         grouped_lane_stats_pre_demultiplex() {
             /*
               This function groups the lane stats by lane number.
@@ -41,7 +61,7 @@ const vElementApp = {
         },
         grouped_index_assignment_post_demultiplex() {
             /* 
-              Index assignment from and demultiplex info as presented by TACA
+              Index assignment from demultiplex info as presented by TACA
               This function groups the info by lane number.
             */
             const groupedByLane = {};
@@ -55,6 +75,7 @@ const vElementApp = {
 
             return groupedByLane;
         },
+        // Checks //
         lane_ids_match() {
             /* Lane stats from the instrument might not match the demultiplexed lane stats
               in case the instrument run was not started with a correct manifest file.
@@ -71,24 +92,28 @@ const vElementApp = {
             } else {
                 return false;
             }
-        },
-        demultiplex_stats() {
-            return this.getValue(
-                this.getValue(this.flowcell, "Element", {}),
-                "Demultiplex_Stats", {}
-            );
-        },
-        index_assignment_demultiplex() {
-            return this.getValue(this.demultiplex_stats, "Index_Assignment", {});
-        },
-        index_assignment_pre_demultiplex() {
-            return this.getValue(this.run_stats, "IndexAssignment", {});
-        },
-        unassiged_sequences_demultiplex() {
-            return this.getValue(this.demultiplex_stats, "Unassigned_Sequences", {});
         }
     },
     methods: {
+        // Data getters //
+        getFlowcell() {
+            axios.get("/api/v1/element_flowcell/" + this.ngi_run_id)
+                .then(response => {
+                    this.flowcell = response.data;
+                    this.flowcell_fetched = true;
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+        },
+        getValue(obj, key, defaultValue = "N/A") {
+            /* A helper function to get a value from an object, with a default value if not found */
+            if (obj === null || obj == undefined || obj === "N/A") {
+                return defaultValue;
+            }
+            return obj.hasOwnProperty(key) ? obj[key] : defaultValue;
+        },
+        // Formatting //
         barcode(sample) {
             var barcode_str = "";
             if (sample.hasOwnProperty("I1") && sample["I1"] !== "") {
@@ -101,22 +126,6 @@ const vElementApp = {
                 barcode_str += "+" + sample["I2"];
             }
             return barcode_str;
-        },
-        getFlowcell() {
-            axios.get("/api/v1/element_flowcell/" + this.ngi_run_id)
-                .then(response => {
-                    this.flowcell = response.data;
-                    this.flowcell_fetched = true;
-                })
-                .catch(error => {
-                    console.log(error);
-                });
-        },
-        getValue(obj, key, defaultValue = "N/A") {
-            if (obj === null || obj == undefined || obj === "N/A") {
-                return defaultValue;
-            }
-            return obj.hasOwnProperty(key) ? obj[key] : defaultValue;
         },
         formatNumberBases(number) {
             if (number === "N/A") {
@@ -157,7 +166,6 @@ app.component('v-element-flowcell', {
         flowcell() {
             return this.$root.flowcell;
         },
-
         start_time() {
             const dateStr = this.$root.getValue(this.$root.run_parameters, "Date", null);
             if (dateStr) {
@@ -213,6 +221,19 @@ app.component('v-element-flowcell', {
         },
         chemistry_version() {
             return this.$root.getValue(this.$root.run_parameters, "ChemistryVersion");
+        },
+        run_status_img_class() {
+            if (this.$root.run_status === "sequencing") {
+                return 'fa-solid fa-cash-register'
+            } else if (this.$root.run_status === "demultiplexing") {
+                return 'fa-solid fa-bring-front'
+            } else if (this.$root.run_status === "transferring") {
+                return 'fa-solid fa-upload'
+            } else if (this.$root.run_status === "archived") {
+                return 'fa-solid fa-check'
+            } else {
+                return 'fa-solid fa-question'
+            }
         }
     },
     mounted() {
@@ -227,7 +248,7 @@ app.component('v-element-flowcell', {
         <span class="ml-2">Loading...</span>
     </div>
     <div v-else>
-        <h1>Element BioSciences (AVITI) run <span id="page_title">{{ flowcell["NGI_run_id"]}}</span></h1>
+        <h1 class="align-middle">Element BioSciences (AVITI) run <span id="page_title">{{ flowcell["NGI_run_id"]}} </span><span class="badge rounded-pill bg-primary ml-3"><i :class="run_status_img_class + ' ml-1 mr-2'"></i>{{this.$root.run_status}}</span></h1>
         <div class="row">
             <div class="col-4">
                 <table class="table table-bordered narrow-headers" id="element_fc_info">
@@ -327,12 +348,6 @@ app.component('v-element-run-stats', {
         total_yield() {
             return this.$root.getValue(this.$root.run_stats, "TotalYield");
         },
-        total_yield_formatted() {
-            return this.$root.formatNumberBases(this.$root.getValue(this.$root.run_stats, "TotalYield"));
-        },
-        index_assignment_pre_demultiplex() {
-            return this.$root.getValue(this.$root.run_stats, "IndexAssignment", {});
-        },
         percent_assigned_reads() {
             return this.$root.getValue(this.$root.index_assignment_pre_demultiplex, "PercentAssignedReads");
         }
@@ -344,7 +359,7 @@ app.component('v-element-run-stats', {
                     <th>Total Yield</th>
                     <td>
                         <v-element-tooltip :title=total_yield>
-                            {{ total_yield_formatted }}
+                            {{ this.$root.formatNumberBases(this.total_yield) }}
                         </v-element-tooltip>
                     </td>
                 </tr>
@@ -539,14 +554,14 @@ app.component('v-element-lane-stats', {
                                     <thead>
                                         <tr class="darkth">
                                             <th>Sequence</th>
-                                            <th>% Occurence</th>
+                                            <th>% Unassigned</th>
                                             <th>Count</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr v-for="unassigned_item in this.unassigned_lane_stats[laneKey]">
                                             <td style="font-size: 1.35rem;"><samp>{{ this.$root.barcode(unassigned_item)}}</samp></td>
-                                            <td>{{ this.$root.formatNumberFloat( unassigned_item["% Polonies"], decimalPoints=5)}} </td>
+                                            <td>{{ this.$root.formatNumberFloat( this.$root.getValue(unassigned_item, "% Unassigned"), decimalPoints=5)}} </td>
                                             <td>{{ unassigned_item["Count"] }}</td>
                                         </tr>
                                     </tbody>
