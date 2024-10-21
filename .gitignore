@@ -1,5 +1,7 @@
+__pycache__/
 .DS_Store
-.vscode
+.ruff_cache/
+.vscode/
 *.orig
 *.pyc
 *.swp
