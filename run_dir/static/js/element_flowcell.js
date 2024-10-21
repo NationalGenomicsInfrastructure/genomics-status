@@ -2,7 +2,7 @@
 const vElementApp = {
     data() {
         return {
-            ngi_run_id: "some_id",
+            ngi_run_id: "",
             flowcell: {},
             flowcell_fetched: false,
         }
