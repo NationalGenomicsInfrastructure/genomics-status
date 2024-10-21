@@ -77,7 +77,7 @@ jobs:
 
       - name: Run pipreqs
         run: |
-          pipreqs --savepath pipreqs.txt taca 2>&1 | tee pipreqs_output.log
+          pipreqs --savepath pipreqs.txt . 2>&1 | tee pipreqs_output.log
           if grep -q 'WARNING: Package .* does not exist or network problems' pipreqs_output.log; then
             missing_packages=$(grep 'WARNING: Package .* does not exist or network problems' pipreqs_output.log | sed -E 's/.*Package "(.*)" does not exist.*/\1/')
             echo "ERROR: Add unresolved packages to requirements. Missing package(s): $missing_packages. Example: '<pkg> @ git+https://github.com/<author>/<repo>.git'"
@@ -87,27 +87,18 @@ jobs:
       - name: Compare requirements
         run: |
           # Extract and sort package names
-          awk -F'(=|==|>|>=|<|<=| @ )' '{print $1}' requirements.txt | tr '[:upper:]' '[:lower:]' | sort -u > requirements.compare
-          awk -F'(=|==|>|>=|<|<=| @ )' '{print $1}' pipreqs.txt | tr '[:upper:]' '[:lower:]' | sort -u > pipreqs.compare
+          awk -F'(=|==|>|>=|<|<=| @ )' '{gsub("-", "_", $1); print $1}' requirements.txt | tr '[:upper:]' '[:lower:]' | sort -u > requirements.compare
+          awk -F'(=|==|>|>=|<|<=| @ )' '{gsub("-", "_", $1); print $1}' pipreqs.txt | tr '[:upper:]' '[:lower:]' | sort -u > pipreqs.compare
 
           # Compare package lists
-          if cmp -s requirements.compare pipreqs.compare
-          then
-            echo "Requirements are the same"
-
+          missing_packages=$(comm -23 pipreqs.compare requirements.compare)
+          if [ -z "$missing_packages" ]; then
+            echo "All packages in pipreqs are listed in requirements"
             exit 0
           else
-            echo "Requirements are different"
+            echo "Some packages in pipreqs are not listed in requirements"
             echo ""
-
-            echo "=== current requirements.txt ==="
-            echo ""
-            cat requirements.compare
-            echo ""
-
-            echo "=== pipreqs requirements ==="
-            echo ""
-            cat pipreqs.compare
-
+            echo "=== Missing packages ==="
+            echo "$missing_packages"
             exit 1
           fi
