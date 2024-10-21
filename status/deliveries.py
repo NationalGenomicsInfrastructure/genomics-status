@@ -52,7 +52,7 @@ class DeliveriesPageHandler(SafeHandler):
         for row in view[project_id]:
             doc_id = row.value
             break
-        if doc_id == None:
+        if doc_id is None:
             self.set_status(400)
             self.write("Status DB has not been updated: project not found")
             return

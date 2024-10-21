@@ -434,7 +434,6 @@ class Application(tornado.web.Application):
 
         # Load columns and presets from genstat-defaults user in StatusDB
         genstat_id = ""
-        user_id = ""
         user = settings.get("username", None)
         for u in self.gs_users_db.view("authorized/users"):
             if u.get("key") == "genstat-defaults":

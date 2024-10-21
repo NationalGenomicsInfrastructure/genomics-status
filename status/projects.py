@@ -1028,12 +1028,11 @@ class CharonProjectHandler(SafeHandler):
                     self.application.settings["charon"]["api_token"]
                 )
             }
-            project_url = "{}/api/v1/project/{}".format(
+            "{}/api/v1/project/{}".format(
                 self.application.settings["charon"]["url"], projectid
             )
         except KeyError:
             url = f"https://charon.scilifelab.se/api/v1/summary?projectid={projectid}"
-            project_url = f"https://charon.scilifelab.se/api/v1/project/{projectid}"
             headers = {}
         r = requests.get(url, headers=headers)
         if r.status_code == requests.status_codes.codes.OK:
