@@ -1,1 +1,5 @@
+ipdb
+mypy
+pipreqs
+ruff
 selenium
