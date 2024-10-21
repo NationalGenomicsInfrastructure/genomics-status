@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-from nose.tools import assert_true
 import json
-import requests
-import re
 import os
+import re
 
+import requests
 import yaml
+from nose.tools import assert_true
 
 file_dir_path = os.path.dirname(__file__)
 TEST_ITEMS = os.path.join(file_dir_path, "test_items.yaml")
 
 
-class TestGet(object):
+class TestGet:
     def setUp(self):
         """Server Settings"""
         self.url = "http://localhost:9761"
@@ -28,7 +28,7 @@ class TestGet(object):
 
         assert_true(
             len(error_pages) == 0,
-            msg=("Pages resulted in error: {0} ".format(error_pages)),
+            msg=(f"Pages resulted in error: {error_pages} "),
         )
 
     def test_api_without_regexp(self):
@@ -53,7 +53,7 @@ class TestGet(object):
 
         assert_true(
             len(error_pages) == 0,
-            msg=("Requests resulted in error: {0} ".format(error_pages)),
+            msg=(f"Requests resulted in error: {error_pages} "),
         )
 
     def test_api_test(self):
@@ -78,7 +78,7 @@ class TestGet(object):
         error_pages = list(filter(lambda u: not requests.get(u).ok, urls))
         assert_true(
             len(error_pages) == 0,
-            msg=("Misc requests resulted in error {0} ".format(error_pages)),
+            msg=(f"Misc requests resulted in error {error_pages} "),
         )
 
         non_error_url = filter(lambda u: u not in error_pages, urls)
@@ -89,5 +89,5 @@ class TestGet(object):
         )
         assert_true(
             len(empty_json) == 0,
-            msg=("Misc requests are empty: {0} ".format(empty_json)),
+            msg=(f"Misc requests are empty: {empty_json} "),
         )

@@ -1,5 +1,6 @@
 from status.util import SafeHandler
 
+
 class NGISwedenHandler(SafeHandler):
     """Handles the yield_plot page
 

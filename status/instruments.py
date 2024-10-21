@@ -1,9 +1,10 @@
-from status.util import SafeHandler
-
 import datetime
+import json
+
 from dateutil import tz
 from dateutil.relativedelta import relativedelta
-import json
+
+from status.util import SafeHandler
 
 
 def recover_logs(handler, search_string=None, inst_type="bravo"):

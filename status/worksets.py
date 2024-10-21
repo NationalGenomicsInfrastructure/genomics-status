@@ -1,17 +1,18 @@
 """Handlers for worksets"""
 
 
-import json
-from status.util import SafeHandler
-from genologics import lims
-from genologics.entities import Process
-from genologics.config import BASEURI, USERNAME, PASSWORD
-from collections import OrderedDict
 import datetime
-from dateutil.relativedelta import relativedelta
+import json
+from collections import OrderedDict
+
 from dateutil.parser import parse
+from dateutil.relativedelta import relativedelta
+from genologics import lims
+from genologics.config import BASEURI, PASSWORD, USERNAME
+from genologics.entities import Process
 
 from status.running_notes import LatestRunningNoteHandler
+from status.util import SafeHandler
 
 
 class WorksetsDataHandler(SafeHandler):

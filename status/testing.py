@@ -1,9 +1,9 @@
 """ Status Handlers used to test some functionalities while building layouts.
 """
-import random
 import json
+import random
 
-from status.util import dthandler, UnsafeHandler
+from status.util import UnsafeHandler, dthandler
 
 
 class TestDataHandler(UnsafeHandler):

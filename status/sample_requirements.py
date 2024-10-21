@@ -1,7 +1,8 @@
-import json
 import datetime
+import json
 
 import tornado.web
+
 from status.util import SafeHandler
 
 
@@ -335,8 +336,8 @@ class RequirementsValidator:
                     id,
                     "unique",
                     (
-                        "Key combination {}:{} is included multiple "
-                        "times. ".format(keys, t)
+                        f"Key combination {keys}:{t} is included multiple "
+                        "times. "
                     ),
                 )
                 self.validation_result = False
@@ -357,10 +358,8 @@ class RequirementsValidator:
                             id,
                             "not_null",
                             (
-                                "{} cannot be empty."
-                                " Violated for item with id {}.".format(
-                                    not_null_key, id
-                                )
+                                f"{not_null_key} cannot be empty."
+                                f" Violated for item with id {id}."
                             ),
                         )
                         self.validation_result = False
@@ -395,14 +394,9 @@ class RequirementsValidator:
                             id,
                             "conserved",
                             (
-                                "{} should be conserved. "
-                                "Violated for item with id {}. "
-                                'Found "{}" for new and "{}" for current. '.format(
-                                    conserved_key,
-                                    id,
-                                    new_item[conserved_key],
-                                    current_items[str(id)][conserved_key],
-                                )
+                                f"{conserved_key} should be conserved. "
+                                f"Violated for item with id {id}. "
+                                f'Found "{new_item[conserved_key]}" for new and "{current_items[str(id)][conserved_key]}" for current. '
                             ),
                         )
                         self.validation_result = False

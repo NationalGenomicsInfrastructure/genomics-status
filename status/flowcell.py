@@ -1,10 +1,11 @@
-from status.util import SafeHandler
+import os
+import re
 from datetime import datetime
 from typing import Optional
-import pandas as pd
-import re
-import os
 
+import pandas as pd
+
+from status.util import SafeHandler
 
 thresholds = {
     "HiSeq X": 320,
@@ -453,7 +454,7 @@ class ONTReportHandler(SafeHandler):
         reports_dir = self.application.minknow_path
         report_path = os.path.join(reports_dir, f"report_{name}.html")
 
-        self.write(open(report_path, "r").read())
+        self.write(open(report_path).read())
 
 class ElementFlowcellHandler(SafeHandler):
     def get(self, name):

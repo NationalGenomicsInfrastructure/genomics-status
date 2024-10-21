@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """Setup file and install script SciLife python scripts.
 """
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 try:
-    with open("requirements.txt", "r") as f:
+    with open("requirements.txt") as f:
         install_requires = [x.strip() for x in f.readlines()]
-except IOError:
+except OSError:
     install_requires = []
 
 setup(

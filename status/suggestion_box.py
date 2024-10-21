@@ -3,6 +3,7 @@ from datetime import datetime
 
 from atlassian import Jira
 from ibmcloudant.cloudant_v1 import Document
+
 from status.util import SafeHandler
 
 TITLE_TEMPLATE = "{deployment}{title} ({area})"

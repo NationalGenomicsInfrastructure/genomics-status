@@ -1,10 +1,10 @@
 """ Handlers related to data production.
 """
 from datetime import datetime
+
 from dateutil import parser
 
-
-from status.util import dthandler, SafeHandler
+from status.util import SafeHandler
 
 
 class ProductionCronjobsHandler(SafeHandler):

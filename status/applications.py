@@ -2,6 +2,7 @@
 """
 import json
 from collections import Counter
+
 from status.util import SafeHandler
 
 

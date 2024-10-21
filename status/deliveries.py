@@ -1,11 +1,12 @@
 from collections import OrderedDict
 
-from status.util import SafeHandler
-from status.running_notes import LatestRunningNoteHandler
-
-from genologics.config import BASEURI, USERNAME, PASSWORD
 from genologics import lims
-from genologics.entities import Udfconfig, Project as LIMSProject
+from genologics.config import BASEURI, PASSWORD, USERNAME
+from genologics.entities import Project as LIMSProject
+from genologics.entities import Udfconfig
+
+from status.running_notes import LatestRunningNoteHandler
+from status.util import SafeHandler
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
@@ -21,13 +22,13 @@ class DeliveriesPageHandler(SafeHandler):
         lims_project = LIMSProject(lims, id=project_id)
         if not lims_project:
             self.set_status(400)
-            self.write("lims project not found: {}".format(project_id))
+            self.write(f"lims project not found: {project_id}")
             return
         project_name = lims_project.name
         stepname = ["Project Summary 1.3"]
         processes = lims.get_processes(type=stepname, projectname=project_name)
         if processes == []:
-            error = "{} for {} is not available in LIMS.".format(stepname, project_name)
+            error = f"{stepname} for {project_name} is not available in LIMS."
             self.set_status(400)
             self.write(error)
             return
@@ -290,9 +291,7 @@ class DeliveriesPageHandler(SafeHandler):
 
             else:
                 project_data = {
-                    "error": "could not find project information for {}".format(
-                        project_id
-                    )
+                    "error": f"could not find project information for {project_id}"
                 }
 
             ongoing_deliveries[project_id].update(project_data)
@@ -300,7 +299,7 @@ class DeliveriesPageHandler(SafeHandler):
             lims_responsibles = ["unassigned"] + sorted(
                 Udfconfig(lims, id="1128").presets
             )
-        except Exception as e:
+        except Exception:
             lims_responsibles = ["unassigned"] + sorted(responsible_list)
         template = self.application.loader.load("deliveries.html")
         self.write(

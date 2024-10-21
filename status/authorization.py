@@ -1,8 +1,9 @@
-import tornado.web
-import tornado.auth
 import json
 
-from status.util import UnsafeHandler, GoogleUser
+import tornado.auth
+import tornado.web
+
+from status.util import GoogleUser, UnsafeHandler
 
 
 class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
