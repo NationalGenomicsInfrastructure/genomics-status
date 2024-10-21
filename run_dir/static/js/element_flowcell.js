@@ -293,7 +293,8 @@ app.component('v-element-flowcell', {
                     </tbody>
                 </table>
             </div>
-            <div class="col-4">
+            <div class="col-3">
+                <h2>Flowcell Statistics</h2>
                 <v-element-run-stats></v-element-run-stats>
             </div>
         </div>
@@ -357,7 +358,7 @@ app.component('v-element-run-stats', {
             <tbody>
                 <tr class="darkth">
                     <th>Total Yield</th>
-                    <td>
+                    <td class="text-right">
                         <v-element-tooltip :title=total_yield>
                             {{ this.$root.formatNumberBases(this.total_yield) }}
                         </v-element-tooltip>
@@ -373,11 +374,11 @@ app.component('v-element-run-stats', {
                 </tr>
                 <tr class="darkth">
                     <th>% PF</th>
-                    <td>{{ this.$root.formatNumberFloat(percent_pf) }}</td>
+                    <td class="text-right">{{ this.$root.formatNumberFloat(percent_pf) }}</td>
                 </tr>
                 <tr class="darkth">
                     <th>% Assigned Reads</th>
-                    <td>{{ percent_assigned_reads }}</td>
+                    <td class="text-right">{{ this.$root.formatNumberFloat(percent_assigned_reads) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -387,7 +388,8 @@ app.component('v-element-run-stats', {
 app.component('v-element-lane-stats', {
     data() {
         return {
-            show_phiX_details: false
+            show_phiX_details_data: {},
+            items_to_show_data: {}
         }
     },
     computed: {
@@ -482,6 +484,34 @@ app.component('v-element-lane-stats', {
         is_not_phiX(sample) {
             return sample["SampleName"].indexOf("PhiX") === -1;
         },
+        items_to_show(laneKey) {
+            if (Object.keys(this.items_to_show_data).includes(laneKey)) {
+                return this.items_to_show_data[laneKey];
+            } else {
+                return 5;
+            }
+        },
+        show_more_items(laneKey) {
+            if (Object.keys(this.items_to_show_data).includes(laneKey)) {
+                this.items_to_show_data[laneKey] += 5;
+            } else {
+                this.items_to_show_data[laneKey] = 10;
+            }
+        },
+        toggle_phiX_details(laneKey) {
+            if (Object.keys(this.show_phiX_details_data).includes(laneKey)) {
+                this.show_phiX_details_data[laneKey] = !this.show_phiX_details_data[laneKey];
+            } else {
+                this.show_phiX_details_data[laneKey] = true;
+            }
+        },
+        show_phiX_details(laneKey) {
+            if (Object.keys(this.show_phiX_details_data).includes(laneKey)) {
+                return this.show_phiX_details_data[laneKey];
+            } else {
+                return false;
+            }
+        }
     },
     template: /*html*/`
         <v-template v-if="!this.$root.demultiplex_stats_available">
@@ -524,12 +554,12 @@ app.component('v-element-lane-stats', {
                     <tbody>
                         <template v-for="sample in samples_in_lane">
                             <v-lane-stats-row
-                                v-if="this.is_not_phiX(sample) || show_phiX_details"
+                                v-if="this.is_not_phiX(sample) || show_phiX_details(laneKey)"
                                 :sample="sample">
                             </v-lane-stats-row>
                         </template>
                         <v-lane-stats-row 
-                            v-if="!show_phiX_details" 
+                            v-if="!show_phiX_details(laneKey)" 
                             :sample="phiX_lane_stats_combined[laneKey]">
                         </v-lane-stats-row>
                         <v-lane-stats-row :sample="unassigned_lane_stats_combined[laneKey]" :laneKey="laneKey"></v-lane-stats-row>
@@ -542,8 +572,8 @@ app.component('v-element-lane-stats', {
                     </button>
 
 
-                    <button class="btn btn-info my-2 mx-3" @click="show_phiX_details = !show_phiX_details">
-                        {{ show_phiX_details ? 'Hide PhiX Details' : 'Show PhiX Details' }}
+                    <button class="btn btn-info my-2 mx-3" @click="toggle_phiX_details(laneKey)">
+                        {{ show_phiX_details(laneKey) ? 'Hide PhiX Details' : 'Show PhiX Details' }}
                     </button>
                 </div>
                 <div class="collapse mt-3" :id="'collapseUndeterminedLane'+ laneKey">
@@ -559,10 +589,15 @@ app.component('v-element-lane-stats', {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="unassigned_item in this.unassigned_lane_stats[laneKey]">
+                                        <tr v-for="unassigned_item in this.unassigned_lane_stats[laneKey].slice(0,items_to_show(laneKey))" :key="index">
                                             <td style="font-size: 1.35rem;"><samp>{{ this.$root.barcode(unassigned_item)}}</samp></td>
                                             <td>{{ this.$root.formatNumberFloat( this.$root.getValue(unassigned_item, "% Unassigned"), decimalPoints=5)}} </td>
                                             <td>{{ unassigned_item["Count"] }}</td>
+                                        </tr>
+                                        <tr v-if="this.unassigned_lane_stats[laneKey].length > items_to_show(laneKey)">
+                                            <td colspan="3">
+                                                <button class="btn btn-info" @click="show_more_items(laneKey)">Show 5 more...</button>
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
