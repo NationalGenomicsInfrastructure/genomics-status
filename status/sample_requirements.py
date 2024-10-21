@@ -335,10 +335,7 @@ class RequirementsValidator:
                 self._add_validation_msg(
                     id,
                     "unique",
-                    (
-                        f"Key combination {keys}:{t} is included multiple "
-                        "times. "
-                    ),
+                    (f"Key combination {keys}:{t} is included multiple " "times. "),
                 )
                 self.validation_result = False
             key_val_set.add(t)
@@ -383,9 +380,9 @@ class RequirementsValidator:
                             id,
                             "conserved",
                             (
-                                "{} column not found in new {} row with "
-                                "id {}. This column should be kept "
-                                "conserved.".format(conserved_key, id)
+                                f"{conserved_key} column not found in new row with "
+                                f"id {id}. This column should be kept "
+                                "conserved."
                             ),
                         )
                         self.validation_result = False
