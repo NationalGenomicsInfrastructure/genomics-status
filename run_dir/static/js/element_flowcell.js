@@ -115,7 +115,7 @@ const vElementApp = {
         },
         // Formatting //
         barcode(sample) {
-            var barcode_str = "";
+            let barcode_str = "";
             if (sample.hasOwnProperty("I1") && sample["I1"] !== "") {
                 barcode_str += sample["I1"];
             } else {
@@ -884,16 +884,16 @@ app.component('v-element-graphs', {
         },
         categories() {
             // Check if R1 is in end_filter
-            var categories_R1 = this.R1_read_cycles.map(cycle => `Cycle ${cycle.Cycle}`);
+            let categories_R1 = this.R1_read_cycles.map(cycle => `Cycle ${cycle.Cycle}`);
 
-            var categories_R2 = this.R2_read_cycles.map(cycle => `Cycle ${cycle.Cycle}`);
+            let categories_R2 = this.R2_read_cycles.map(cycle => `Cycle ${cycle.Cycle}`);
 
             if (categories_R1.length !== categories_R2.length) {
                 console.log("The lengths of categories_R1 and categories_R2 are different.");
                 console.log("Length of categories_R1:", categories_R1.length);
                 console.log("Length of categories_R2:", categories_R2.length);
             }
-            var categories_differ = false;
+            let categories_differ = false;
             for (let i = 0; i < Math.max(categories_R1.length, categories_R2.length); i++) {
                 if (categories_R1[i] !== categories_R2[i]) {
                     categories_differ = true;
@@ -919,7 +919,7 @@ app.component('v-element-graphs', {
                 return;
             }
             /* Filter the first categories */
-            var filtered_categories = this.categories.slice(this.filter_first_cycles);
+            let filtered_categories = this.categories.slice(this.filter_first_cycles);
 
             /* filter the last categories */
             /* The last value seems to be weird for quality */
