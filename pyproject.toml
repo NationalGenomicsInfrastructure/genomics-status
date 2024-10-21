@@ -19,8 +19,3 @@ ignore = [
     "E722", # Do not use bare 'except'
     "E741", # Ambiguous variable name
 ]
-
-[tool.mypy]
-ignore_missing_imports = true
-follow_imports = 'skip'
-exclude = 'build'
