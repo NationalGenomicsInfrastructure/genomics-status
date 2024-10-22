@@ -678,7 +678,7 @@ app.component('v-element-lane-stats-pre-demultiplex', {
         project_name(sample) {
             const project_id = sample["SampleName"].split("_")[0];
             if (!this.$root.project_ids_to_names[project_id]) {
-                return "N/A";
+                return project_id;
             } else {
                 return this.$root.project_ids_to_names[project_id].replace(/__/g, '.');
             }
