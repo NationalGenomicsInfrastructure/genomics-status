@@ -75,6 +75,13 @@ const vElementApp = {
 
             return groupedByLane;
         },
+        project_ids_to_names() {
+            const project_ids_to_names = {};
+            this.flowcell.projects.forEach(project => {
+                project_ids_to_names[project["project_id"]] = project["project_name"];
+            });
+            return project_ids_to_names;
+        },
         // Checks //
         lane_ids_match() {
             /* Lane stats from the instrument might not match the demultiplexed lane stats
@@ -664,6 +671,14 @@ app.component('v-element-lane-stats-pre-demultiplex', {
         index_samples(lane) {
             return this.$root.getValue(this.index_assignments(lane), "IndexSamples", {});
         },
+        project_name(sample) {
+            const project_id = sample["SampleName"].split("_")[0];
+            if (!this.$root.project_ids_to_names[project_id]) {
+                return "N/A";
+            } else {
+                return this.$root.project_ids_to_names[project_id].replace(/__/g, '.');
+            }
+        },
         unassigned_sequences(lane) {
             return this.$root.getValue(this.index_assignments(lane), "UnassignedSequences", {});
         },
@@ -695,7 +710,7 @@ app.component('v-element-lane-stats-pre-demultiplex', {
                 </thead>
                 <tbody>
                     <tr v-for="sample in index_samples(lane)">
-                        <td>{{ sample["ProjectName"] }}</td>
+                        <td>{{ this.project_name(sample) }}</td>
                         <td>{{ sample["SampleName"] }}</td>
                         <td>{{ this.$root.formatNumberFloat(sample["PercentAssignedReads"]) }}</td>
                         <td>{{ this.$root.formatNumberFloat(sample["PercentMismatch"]) }}</td>
