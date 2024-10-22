@@ -195,27 +195,27 @@ app.component('v-element-flowcell', {
             return this.$root.getValue(this.$root.run_parameters, "InstrumentName");
         },
         run_setup() {
-            return `${this.chemistry_version} ${this.kit_configuration} (${this.cycles}); ${this.throughput_selection}`;
+            return `${this.chemistry_version} ${this.kit_configuration}, ${this.throughput_selection}`;
         },
         cycles() {
-            const cycles = this.$root.getValue(this.$root.run_parameters, "Cycles", {});
+            const cycles = this.$root.getValue(this.$root.run_parameters, "Cycles", {});    
             if (cycles === "N/A") {
                 return "N/A";
             }
-            let return_str = "";
+            let parts = [];
             if (cycles.hasOwnProperty("R1")) {
-                return_str += "R1: " + cycles["R1"];
-            }
-            if (cycles.hasOwnProperty("R2")) {
-                return_str += ", R2: " + cycles["R2"];
+                parts.push(`${cycles["R1"]}nt(R1)`);
             }
             if (cycles.hasOwnProperty("I1")) {
-                return_str += ", I1: " + cycles["I1"];
+                parts.push(`${cycles["I1"]}nt(I1)`);
             }
             if (cycles.hasOwnProperty("I2")) {
-                return_str += ", I2: " + cycles["I2"];
+                parts.push(`${cycles["I2"]}nt(I2)`);
             }
-            return return_str;
+            if (cycles.hasOwnProperty("R2")) {
+                parts.push(`${cycles["R2"]}nt(R2)`);
+            }
+            return parts.join('-');
         },
         throughput_selection() {
             return this.$root.getValue(this.$root.run_parameters, "ThroughputSelection", "N/A") + " Throughput";
@@ -283,6 +283,10 @@ app.component('v-element-flowcell', {
                         <tr class="darkth">
                             <th>Run setup</th>
                             <td>{{ run_setup }}</td>
+                        </tr>
+                        <tr class="darkth">
+                            <th>Cycles</th>
+                            <td>{{ cycles }}</td>
                         </tr>
                         <tr class="darkth">
                             <th>Projects:</th>
