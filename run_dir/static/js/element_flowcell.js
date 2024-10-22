@@ -453,29 +453,39 @@ app.component('v-element-lane-stats', {
             return groupedByLane;
         },
         unassigned_lane_stats_combined() {
-            const groupedByLane = {};
-            if (this.$root.unassiged_sequences_demultiplex && this.$root.unassiged_sequences_demultiplex.length > 0) {
-                this.$root.unassiged_sequences_demultiplex.forEach(unassigned_index => {
-                    const lane = unassigned_index["Lane"];
-                    if (!groupedByLane[lane]) {
-                        groupedByLane[lane] = {
-                            "Project": "Unassigned",
-                            "SampleName": "Unassigned",
+            const samplesGroupedByLane = {};
+            Object.entries(this.$root.grouped_index_assignment_post_demultiplex).forEach(entry => {
+                [lane_nr, samples] = entry;
+                samples.forEach(sample => {
+                    if (!samplesGroupedByLane[lane_nr]) {
+                        samplesGroupedByLane[lane_nr] = {
                             "NumPoloniesAssigned": 0,
                             "PercentPoloniesAssigned": 0,
-                            "Yield(Gb)": "N/A",
-                            "Lane": lane,
-                            "sub_demux_count": "N/A",
-                            "PercentMismatch": "N/A",
-                            "PercentQ30": "N/A",
-                            "PercentQ40": "N/A",
-                            "QualityScoreMean": "N/A"
+                            "Lane": lane_nr,
                         }
+
                     }
-                    groupedByLane[lane]["PercentPoloniesAssigned"] += parseFloat(unassigned_index["% Polonies"]);
-                    groupedByLane[lane]["NumPoloniesAssigned"] += parseFloat(unassigned_index["Count"]);
+                    samplesGroupedByLane[lane_nr]["PercentPoloniesAssigned"] += parseFloat(sample["PercentPoloniesAssigned"]);
+                    samplesGroupedByLane[lane_nr]["NumPoloniesAssigned"] += parseFloat(sample["NumPoloniesAssigned"]);
                 });
-            }
+            });
+            const groupedByLane = {};
+            Object.values(samplesGroupedByLane).forEach(lane_summary => {
+                const lane = lane_summary["Lane"];
+                groupedByLane[lane] = {
+                    "Project": "Unassigned",
+                    "SampleName": "Unassigned",
+                    "NumPoloniesAssigned": '', // Need to fetch total from lane stats
+                    "PercentPoloniesAssigned": 100 - lane_summary["PercentPoloniesAssigned"],
+                    "Yield(Gb)": "",
+                    "Lane": lane,
+                    "sub_demux_count": "",
+                    "PercentMismatch": "",
+                    "PercentQ30": "",
+                    "PercentQ40": "",
+                    "QualityScoreMean": ""
+                }
+            });
 
             return groupedByLane;
         }
