@@ -645,7 +645,7 @@ app.component('v-element-lane-stats-pre-demultiplex', {
     computed: {
         lanes() {
             return this.$root.getValue(this.lane_stats, "Lanes", []);
-        },
+        }
     },
     methods: {
         index_assignments(lane) {
@@ -656,6 +656,12 @@ app.component('v-element-lane-stats-pre-demultiplex', {
         },
         unassigned_sequences(lane) {
             return this.$root.getValue(this.index_assignments(lane), "UnassignedSequences", {});
+        },
+        unassigned_sequences_percentage(lane) {
+            // Since not all unassigned sequences are reported, we calculate the percentage based on the assigned reads
+            return this.$root.formatNumberFloat(
+                100 - this.$root.getValue(this.index_assignments(lane), "PercentAssignedReads", 0)
+            )
         }
     },
     template: /*html*/`
@@ -683,6 +689,12 @@ app.component('v-element-lane-stats-pre-demultiplex', {
                         <td>{{ sample["SampleName"] }}</td>
                         <td>{{ this.$root.formatNumberFloat(sample["PercentAssignedReads"]) }}</td>
                         <td>{{ this.$root.formatNumberFloat(sample["PercentMismatch"]) }}</td>
+                    </tr>
+                    <tr>
+                        <td></td>  
+                        <td>Undetermined</td>
+                        <td>{{this.unassigned_sequences_percentage(lane)}}</td>
+                        <td></td>
                     </tr>
                 </tbody>
             </table>
