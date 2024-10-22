@@ -248,7 +248,7 @@ app.component('v-element-flowcell', {
         <span class="ml-2">Loading...</span>
     </div>
     <div v-else>
-        <h1 class="align-middle">Element BioSciences (AVITI) run <span id="page_title">{{ flowcell["NGI_run_id"]}} </span><span class="badge rounded-pill bg-primary ml-3"><i :class="run_status_img_class + ' ml-1 mr-2'"></i>{{this.$root.run_status}}</span></h1>
+        <h1 class="mb-4">Element BioSciences (AVITI) run <span id="page_title">{{ flowcell["NGI_run_id"]}} </span><span class="badge rounded-pill bg-primary ml-3"><i :class="run_status_img_class + ' ml-1 mr-2'"></i>{{this.$root.run_status}}</span></h1>
         <div class="row">
             <div class="col-4">
                 <table class="table table-bordered narrow-headers" id="element_fc_info">
