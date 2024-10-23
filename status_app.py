@@ -1,5 +1,5 @@
-""" Main genomics-status web application.
-"""
+"""Main genomics-status web application."""
+
 import base64
 import json
 import subprocess
@@ -34,8 +34,9 @@ from status.controls import ControlsHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
 from status.flowcell import (
-    ElementFlowcellHandler,
     FlowcellHandler,
+    ElementFlowcellHandler,
+    ElementFlowcellDataHandler,
     ONTFlowcellHandler,
     ONTReportHandler,
 )
@@ -237,6 +238,7 @@ class Application(tornado.web.Application):
             ),
             ("/api/v1/draft_cost_calculator", PricingDraftDataHandler),
             ("/api/v1/draft_sample_requirements", SampleRequirementsDraftDataHandler),
+            ("/api/v1/element_flowcell/([^/]*$)", ElementFlowcellDataHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
@@ -426,8 +428,12 @@ class Application(tornado.web.Application):
         else:
             print(settings.get("couch_server", None))
             raise OSError("Cannot connect to couchdb")
-        
-        cloudant = cloudant_v1.CloudantV1(authenticator=CouchDbSessionAuthenticator(settings.get("username"), settings.get("password")))
+
+        cloudant = cloudant_v1.CloudantV1(
+            authenticator=CouchDbSessionAuthenticator(
+                settings.get("username"), settings.get("password")
+            )
+        )
         cloudant.set_service_url(settings.get("couch_url"))
         if cloudant:
             self.cloudant = cloudant
@@ -490,7 +496,7 @@ class Application(tornado.web.Application):
         self.jira_url = settings["jira"]["url"]
         self.jira_user = settings["jira"]["user"]
         self.jira_api_token = settings["jira"]["api_token"]
-        self.jira_project_key = settings["jira"]["project_key"] 
+        self.jira_project_key = settings["jira"]["project_key"]
 
         # Slack
         self.slack_token = settings["slack"]["token"]

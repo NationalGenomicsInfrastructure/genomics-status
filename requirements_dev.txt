@@ -1,1 +1,3 @@
+ipdb
+ruff
 selenium
