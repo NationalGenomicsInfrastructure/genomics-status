@@ -34,9 +34,9 @@ from status.controls import ControlsHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
 from status.flowcell import (
-    FlowcellHandler,
-    ElementFlowcellHandler,
     ElementFlowcellDataHandler,
+    ElementFlowcellHandler,
+    FlowcellHandler,
     ONTFlowcellHandler,
     ONTReportHandler,
 )
