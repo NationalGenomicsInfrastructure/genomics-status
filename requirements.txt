@@ -10,7 +10,6 @@ ibmcloudant>=0.9.1
 markdown
 matplotlib>=2.0.0
 nest_asyncio
-nose
 numpy>=1.12.1
 oauth2>=1.9.0.post1
 openpyxl
