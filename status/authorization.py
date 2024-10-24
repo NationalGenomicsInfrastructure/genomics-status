@@ -35,9 +35,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                 if url is None:
                     url = "/"
             else:
-                url = "/unauthorized?email={}&contact={}".format(
-                    user.emails[0], self.application.settings["contact_person"]
-                )
+                url = f"/unauthorized?email={user.emails[0]}&contact={self.application.settings['contact_person']}"
             self.redirect(url)
 
         else:
