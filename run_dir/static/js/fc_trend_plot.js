@@ -106,22 +106,23 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
 
     var thresholdColors = ['#696868', '#696868', '#696868', '#696868', '#696868', '#696868', '#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff', '#e65c00', '#1B9E97'];
     var thresholdLabels = [
-        'MiSeq Nano threshold to pass',
-        'MiSeq v2 threshold to pass',
-        'MiSeq v3 threshold to pass',
-        'NextSeq P1 threshold to pass',
-        'NextSeq P2 threshold to pass',
-        'NextSeq P3 threshold to pass',
-        'NovaSeq SP threshold to pass',
-        'NovaSeq S1 threshold to pass',
-        'NovaSeq S2 threshold to pass',
-        'NovaSeq S4 threshold to pass',
-        'NovaSeqXPlus 10B threshold to pass',
-        'NovaSeqXPlus 1.5B threshold to pass',
-        'NovaSeqXPlus 25B threshold to pass'
+        ['M', 'MiSeq Nano threshold to pass'],
+        ['M', 'MiSeq v2 threshold to pass'],
+        ['M', 'MiSeq v3 threshold to pass'],
+        ['VH', 'NextSeq P1 threshold to pass'],
+        ['VH', 'NextSeq P2 threshold to pass'],
+        ['VH', 'NextSeq P3 threshold to pass'],
+        ['A', 'NovaSeq SP threshold to pass'],
+        ['A', 'NovaSeq S1 threshold to pass'],
+        ['A', 'NovaSeq S2 threshold to pass'],
+        ['A', 'NovaSeq S4 threshold to pass'],
+        ['LH', 'NovaSeqXPlus 10B threshold to pass'],
+        ['LH', 'NovaSeqXPlus 1.5B threshold to pass'],
+        ['LH', 'NovaSeqXPlus 25B threshold to pass']
     ];
 
     function applyThresholds(thresholdValues, leftAlignedIndexes) {
+        let filtered_inst_types = get_parameters()[4];
         toplot.yAxis = {
             title: {
                 enabled: true,
@@ -133,20 +134,24 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                 }
             },
             plotLines: thresholdValues.map(function (value, index) {
-                var align = leftAlignedIndexes.includes(index) ? 'left' : 'right';
-                var labelX = align === 'left' ? -10 : null;
-                return {
-                    color: thresholdColors[index],
-                    dashStyle: 'longdash',
-                    value: value,
-                    width: 1,
-                    zIndex: 1,
-                    label: {
-                        text: thresholdLabels[index],
-                        align: align,
-                        x: labelX,
-                    }
+                let align = leftAlignedIndexes.includes(index) ? 'left' : 'right';
+                let labelX = align === 'left' ? -10 : null;
+                let plot_options = {
+                        color: thresholdColors[index],
+                        dashStyle: 'longdash',
+                        value: value,
+                        width: 1,
+                        zIndex: 1,
+                        label: {
+                            text: thresholdLabels[index][1],
+                            align: align,
+                            x: labelX,
+                        }
                 };
+                if(filtered_inst_types.includes(thresholdLabels[index][0])){
+                    plot_options = {};
+                }
+                return plot_options;
             })
         };
     }
