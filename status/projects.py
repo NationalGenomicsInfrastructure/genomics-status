@@ -1,5 +1,5 @@
-""" Handlers for sequencing project information.
-"""
+"""Handlers for sequencing project information."""
+
 import base64
 import datetime
 import itertools
@@ -190,9 +190,9 @@ class ProjectsBaseDataHandler(SafeHandler):
                 end_date = dateutil.parser.parse(row.value["queued"])
             diff = (end_date - dateutil.parser.parse(row.value["open_date"])).days
             if "queued" not in row.value and diff > 14:
-                row.value[
-                    "days_in_reception_control"
-                ] = f'<b class="text-error">{diff}</b>'
+                row.value["days_in_reception_control"] = (
+                    f'<b class="text-error">{diff}</b>'
+                )
             else:
                 row.value["days_in_reception_control"] = diff
 
@@ -336,7 +336,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                         statusdb_statuses.add(status)
 
                 for status in statusdb_statuses:
-                    view_calls.append(summary_view[[status, "Z"]:[status, ""]])
+                    view_calls.append(summary_view[[status, "Z"] : [status, ""]])
 
         filtered_projects = []
 
@@ -534,12 +534,12 @@ class ProjectsBaseDataHandler(SafeHandler):
                 search_string in row_key.lower()
                 or search_string in row_value[0].lower()
                 or (row_value[1] and search_string in row_value[1].lower())
-                or search_string in f'{row_value[0]}, {row_key}'.lower()
+                or search_string in f"{row_value[0]}, {row_key}".lower()
                 or (row_value[2] and search_string in row_value[2].lower())
             ):
                 project = {
                     "url": "/project/" + row_value[0],
-                    "name": f"{row_value[0]}, {row_key}"
+                    "name": f"{row_value[0]}, {row_key}",
                 }
                 projects.append(project)
 
@@ -859,9 +859,7 @@ class ImagesDownloadHandler(SafeHandler):
                 reason="No files to be downloaded!!",
             )
         self.set_header("Content-Type", "application/zip")
-        self.set_header(
-            "Content-Disposition", f"attachment; filename={fileName}"
-        )
+        self.set_header("Content-Disposition", f"attachment; filename={fileName}")
         self.write(f.getvalue())
         f.close()
         self.finish()
@@ -1124,7 +1122,7 @@ class PrioProjectsTableHandler(SafeHandler):
             "project/summary_status", descending=True
         )
         for status in statuses:
-            view_calls.append(view[[status, "Z"]:[status, ""]])
+            view_calls.append(view[[status, "Z"] : [status, ""]])
         for row in itertools.chain.from_iterable(view_calls):
             proj_id_name_lib = (
                 row.value["project_name"]

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-"""Setup file and install script SciLife python scripts.
-"""
+"""Setup file and install script SciLife python scripts."""
+
 from setuptools import find_packages, setup
 
 try:

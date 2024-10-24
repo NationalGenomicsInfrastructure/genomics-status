@@ -220,7 +220,9 @@ class StatsAggregationHandler(UnsafeHandler):
             ),
         }
         self.flowcell_aggregates = {"bp_seq_per_week": ("dashboard/week_instr_bp", 2)}
-        self.nanopore_flowcell_aggregates = {"bp_seq_per_week": ("dashboard/week_instr_bp", 2)}
+        self.nanopore_flowcell_aggregates = {
+            "bp_seq_per_week": ("dashboard/week_instr_bp", 2)
+        }
 
         self.cleaning = get_clean_application_keys(self)
 
@@ -242,10 +244,10 @@ class StatsAggregationHandler(UnsafeHandler):
             )
         for fa in self.nanopore_flowcell_aggregates:
             nanopore_stats = get_stats_data(
-                    self.application.nanopore_runs_db,
-                    self.nanopore_flowcell_aggregates[fa][0],
-                    self.nanopore_flowcell_aggregates[fa][1],
-                    self.cleaning,
+                self.application.nanopore_runs_db,
+                self.nanopore_flowcell_aggregates[fa][0],
+                self.nanopore_flowcell_aggregates[fa][1],
+                self.cleaning,
             )
 
             # Use |= to merge the resulting dictionary with what's already

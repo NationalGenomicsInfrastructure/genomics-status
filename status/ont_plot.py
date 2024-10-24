@@ -16,9 +16,14 @@ class ONTFlowcellYieldHandler(SafeHandler):
             first_term = last_month.isoformat()[2:10].replace("-", "")
             second_term = datetime.datetime.now().isoformat()[2:10].replace("-", "")
         else:
-            first_term, second_term = search_string.split('-')
+            first_term, second_term = search_string.split("-")
 
-        docs= [x.value for x in self.application.nanopore_runs_db.view("info/all_stats")['20'+first_term:'20'+second_term+'ZZZZ'].rows]
+        docs = [
+            x.value
+            for x in self.application.nanopore_runs_db.view("info/all_stats")[
+                "20" + first_term : "20" + second_term + "ZZZZ"
+            ].rows
+        ]
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(docs))
@@ -26,7 +31,7 @@ class ONTFlowcellYieldHandler(SafeHandler):
 
 class ONTFlowcellPlotHandler(SafeHandler):
     """Handles the ONT flowcell plot page
-    
+
     Loaded through /ont_flowcell_plot/([^/]*)$
     """
 

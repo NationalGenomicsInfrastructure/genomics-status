@@ -1,5 +1,4 @@
-"""Set of handlers related with Flowcells
-"""
+"""Set of handlers related with Flowcells"""
 
 import datetime
 import json
@@ -161,9 +160,7 @@ class FlowcellsHandler(SafeHandler):
         return ont_flowcells, unfetched_runs
 
     def list_element_flowcells(self):
-        return self.application.element_runs_db.view(
-            "info/summary", descending=True
-        )
+        return self.application.element_runs_db.view("info/summary", descending=True)
 
     def get(self):
         # Default is to NOT show all flowcells
@@ -508,9 +505,7 @@ class ReadsTotalHandler(SafeHandler):
                 fc_date_run = fc_long_name.split("_")[0]
                 if len(fc_date_run) > 6:
                     fc_date_run = fc_date_run[-6:]
-                fc_short_name = (
-                    fc_date_run + "_" + fc_long_name.split("_")[-1]
-                )
+                fc_short_name = fc_date_run + "_" + fc_long_name.split("_")[-1]
                 for info_row in fc_view[fc_short_name]:
                     row.value["run_mode"] = info_row.value["run_mode"]
                     row.value["longer_read_length"] = info_row.value[
