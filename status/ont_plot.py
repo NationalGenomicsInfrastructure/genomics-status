@@ -1,7 +1,8 @@
-import json
 import datetime
+import json
 
 from status.util import SafeHandler
+
 
 class ONTFlowcellYieldHandler(SafeHandler):
     """Handles the api call to ont data

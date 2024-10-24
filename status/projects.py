@@ -1,25 +1,22 @@
 """ Handlers for sequencing project information.
 """
-import json
-import tornado.web
-import dateutil.parser
-import datetime
-import requests
 import base64
-import logging
+import datetime
 import itertools
-
+import json
+import logging
 from collections import OrderedDict
-from dateutil.relativedelta import relativedelta
 
+import dateutil.parser
+import requests
+import tornado.web
+from dateutil.relativedelta import relativedelta
 from genologics import lims
-from genologics.entities import Project, Artifact
-from genologics.config import BASEURI, USERNAME, PASSWORD
+from genologics.config import BASEURI, PASSWORD, USERNAME
+from genologics.entities import Artifact, Project
 from zenpy import ZenpyException
 
-from status.util import dthandler, SafeHandler
-from status.running_notes import LatestRunningNoteHandler
-
+from status.util import SafeHandler, dthandler
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 application_log = logging.getLogger("tornado.application")
@@ -140,9 +137,7 @@ class ProjectsBaseDataHandler(SafeHandler):
         if "pending_reviews" in row.value:
             links = ", ".join(
                 [
-                    '<a class="text-decoration-none" href="{0}/clarity/work-complete/{1}">{2} requested review from {3}</a>'.format(
-                        BASEURI, rid[0], rid[1], rid[2]
-                    )
+                    f'<a class="text-decoration-none" href="{BASEURI}/clarity/work-complete/{rid[0]}">{rid[1]} requested review from {rid[2]}</a>'
                     for rid in row.value["pending_reviews"]
                 ]
             )
@@ -197,7 +192,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             if "queued" not in row.value and diff > 14:
                 row.value[
                     "days_in_reception_control"
-                ] = '<b class="text-error">{}</b>'.format(diff)
+                ] = f'<b class="text-error">{diff}</b>'
             else:
                 row.value["days_in_reception_control"] = diff
 
@@ -421,7 +416,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                         "ongoing" in filter_projects
                         and queuedflag
                         and queued_condition
-                        and not "close_date" in p_info
+                        and "close_date" not in p_info
                     ):
                         filtered_projects.append(row)
                     elif (
@@ -434,7 +429,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 # pending projects
                 elif (
                     "pending" in filter_projects or filter_projects == "all"
-                ) and not "open_date" in p_info:
+                ) and "open_date" not in p_info:
                     filtered_projects.append(row)
 
         final_projects = OrderedDict()
@@ -667,7 +662,7 @@ class ProjectSamplesDataHandler(SafeHandler):
                                 "CaliperImageHandler",
                                 project,
                                 sample,
-                                "libval{0}".format(lib_prep),
+                                f"libval{lib_prep}",
                             )
                         if "frag_an_image" in libval:
                             # Go grab the image from the sftp server
@@ -677,7 +672,7 @@ class ProjectSamplesDataHandler(SafeHandler):
                                 "FragAnImageHandler",
                                 project,
                                 sample,
-                                "libval{0}".format(lib_prep),
+                                f"libval{lib_prep}",
                             )
 
         if "details" in sample_data:
@@ -785,8 +780,8 @@ class ImagesDownloadHandler(SafeHandler):
     """
 
     def post(self, project, type):
-        from io import BytesIO
         import zipfile as zp
+        from io import BytesIO
 
         name = ""
         if "frag_an" in type:
@@ -810,7 +805,7 @@ class ImagesDownloadHandler(SafeHandler):
             # can be triggered by the data.get().get() calls.
             raise tornado.web.HTTPError(404, reason="No caliper image found")
 
-        fileName = "{}_{}_images.zip".format(project, name)
+        fileName = f"{project}_{name}_images.zip"
         f = BytesIO()
         num_files = 0
         with zp.ZipFile(f, "w") as zf:
@@ -865,7 +860,7 @@ class ImagesDownloadHandler(SafeHandler):
             )
         self.set_header("Content-Type", "application/zip")
         self.set_header(
-            "Content-Disposition", "attachment; filename={}".format(fileName)
+            "Content-Disposition", f"attachment; filename={fileName}"
         )
         self.write(f.getvalue())
         f.close()
@@ -989,7 +984,7 @@ class ProjectTicketsDataHandler(SafeHandler):
             # Search for all tickets with the given project name
             total_tickets = OrderedDict()
             for ticket in self.application.zendesk.search(
-                query='fieldvalue:"{}"'.format(p_name)
+                query=f'fieldvalue:"{p_name}"'
             ):
                 total_tickets[ticket.id] = ticket.to_dict()
                 for comment in self.application.zendesk.tickets.comments(
@@ -1033,16 +1028,8 @@ class CharonProjectHandler(SafeHandler):
                     self.application.settings["charon"]["api_token"]
                 )
             }
-            project_url = "{}/api/v1/project/{}".format(
-                self.application.settings["charon"]["url"], projectid
-            )
         except KeyError:
-            url = "https://charon.scilifelab.se/api/v1/summary?projectid={}".format(
-                projectid
-            )
-            project_url = "https://charon.scilifelab.se/api/v1/project/{}".format(
-                projectid
-            )
+            url = f"https://charon.scilifelab.se/api/v1/summary?projectid={projectid}"
             headers = {}
         r = requests.get(url, headers=headers)
         if r.status_code == requests.status_codes.codes.OK:
@@ -1050,9 +1037,7 @@ class CharonProjectHandler(SafeHandler):
         else:
             self.set_status(400)
             self.finish(
-                "<html><body>There was a problem connecting to charon, please try it again later. {}</body></html>".format(
-                    r.reason
-                )
+                f"<html><body>There was a problem connecting to charon, please try it again later. {r.reason}</body></html>"
             )
 
 

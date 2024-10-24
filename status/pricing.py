@@ -1,8 +1,9 @@
-import json
 import datetime
-import markdown
+import json
 
+import markdown
 import tornado.web
+
 from status.util import SafeHandler
 
 
@@ -214,8 +215,8 @@ class PricingValidator:
                     id,
                     "unique",
                     (
-                        "Key combination {}:{} is included multiple "
-                        "times in the {} sheet. ".format(keys, t, type)
+                        f"Key combination {keys}:{t} is included multiple "
+                        f"times in the {type} sheet. "
                     ),
                 )
                 self.validation_result = False
@@ -237,10 +238,8 @@ class PricingValidator:
                             id,
                             "not_null",
                             (
-                                "{} cannot be empty for {}."
-                                " Violated for item with id {}.".format(
-                                    not_null_key, type, id
-                                )
+                                f"{not_null_key} cannot be empty for {type}."
+                                f" Violated for item with id {id}."
                             ),
                         )
                         self.validation_result = False
@@ -266,9 +265,9 @@ class PricingValidator:
                             id,
                             "conserved",
                             (
-                                "{} column not found in new {} row with "
-                                "id {}. This column should be kept "
-                                "conserved.".format(conserved_key, type, id)
+                                f"{conserved_key} column not found in new {type} row with "
+                                f"id {id}. This column should be kept "
+                                "conserved."
                             ),
                         )
                         self.validation_result = False
@@ -278,15 +277,9 @@ class PricingValidator:
                             id,
                             "conserved",
                             (
-                                "{} should be conserved for {}. "
-                                "Violated for item with id {}. "
-                                'Found "{}" for new and "{}" for current. '.format(
-                                    conserved_key,
-                                    type,
-                                    id,
-                                    new_item[conserved_key],
-                                    current_items[str(id)][conserved_key],
-                                )
+                                f"{conserved_key} should be conserved for {type}. "
+                                f"Violated for item with id {id}. "
+                                f'Found "{new_item[conserved_key]}" for new and "{current_items[str(id)][conserved_key]}" for current. '
                             ),
                         )
                         self.validation_result = False

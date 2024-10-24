@@ -1,9 +1,10 @@
 """Handlers related to test for barcode printing
 """
 
-import subprocess
-from status.util import SafeHandler
 import re
+import subprocess
+
+from status.util import SafeHandler
 
 
 class BarcodeHandler(SafeHandler):
@@ -156,7 +157,7 @@ def make_barcode(label, print_bc):
             xpositionText = "440"  # moves the text position because the bc is longer
             textHeight = "38"
         formattedLabel.append(
-            "^FO{0},27^AFN,{1},{2}^FN1^FS".format(xpositionText, textHeight, ch_size)
+            f"^FO{xpositionText},27^AFN,{textHeight},{ch_size}^FN1^FS"
         )  # AF = assign font F, field number 1 (FN1), print text at position field origin (FO) rel. to home
         formattedLabel.append(
             "^FO80,17^BCN,70,N,N^FN2^FS"
@@ -172,14 +173,14 @@ def make_barcode(label, print_bc):
             yposition = "30"
         # Scalable font ^A0N,32,32 should fit roughly 42 chars on our current labels
         formattedLabel.append(
-            "^FO20,{0}^A0N,{1},{1}^FB640,1,0,C,0^FN1^FS".format(yposition, ch_size)
+            f"^FO20,{yposition}^A0N,{ch_size},{ch_size}^FB640,1,0,C,0^FN1^FS"
         )  # FO = x,y relative field origin; A0N = scalable font height,width; FB = make into one line field block and center
     formattedLabel.append("^XZ")  # end format
     formattedLabel.append("^XA")  # start of label format
     formattedLabel.append("^XFFORMAT^FS")  # label home posision
-    formattedLabel.append("^FN1^FD{}^FS".format(label))  # this is readable
+    formattedLabel.append(f"^FN1^FD{label}^FS")  # this is readable
     if print_bc:
-        formattedLabel.append("^FN2^FD{}^FS".format(label))  # this is the barcode
+        formattedLabel.append(f"^FN2^FD{label}^FS")  # this is the barcode
     formattedLabel.append("^XZ")
     return formattedLabel
 
@@ -204,5 +205,5 @@ def print_barcode(barcodeFile):
     sp.stdin.write(barcodeFile.encode("utf-8"))
     print("lp command is called for printing.")
     stdout, stderr = sp.communicate()  # Will wait for sp to finish
-    print("lp stdout: {0}".format(stdout))
+    print(f"lp stdout: {stdout}")
     sp.stdin.close()

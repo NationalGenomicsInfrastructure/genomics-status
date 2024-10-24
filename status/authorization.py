@@ -1,8 +1,9 @@
-import tornado.web
-import tornado.auth
 import json
 
-from status.util import UnsafeHandler, GoogleUser
+import tornado.auth
+import tornado.web
+
+from status.util import GoogleUser, UnsafeHandler
 
 
 class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
@@ -34,9 +35,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                 if url is None:
                     url = "/"
             else:
-                url = "/unauthorized?email={0}&contact={1}".format(
-                    user.emails[0], self.application.settings["contact_person"]
-                )
+                url = f"/unauthorized?email={user.emails[0]}&contact={self.application.settings['contact_person']}"
             self.redirect(url)
 
         else:

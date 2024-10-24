@@ -1,9 +1,10 @@
-from status.util import SafeHandler
-
 import datetime
+import json
+
 from dateutil import tz
 from dateutil.relativedelta import relativedelta
-import json
+
+from status.util import SafeHandler
 
 
 def recover_logs(handler, search_string=None, inst_type="bravo"):
@@ -43,7 +44,7 @@ def recover_logs(handler, search_string=None, inst_type="bravo"):
 
         for row in handler.application.biomek_errs_db.view("dates/timestamp", startkey=date_earlier, endkey=date_later):
             date = datetime.datetime.strptime(row.key, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=tz.tzutc()).astimezone(tz.tzlocal())
-            inst = f"{instruments_list[row.value["inst_id"]]}({row.value["inst_id"]})"
+            inst = f"{instruments_list[row.value['inst_id']]}({row.value['inst_id']})"
             method = row.value.get("method", 'diff')
             errs = row.value["errors"]
             valid_rows.append({"timestamp": f"{date}", "instrument_name": inst, "method": method, "message": errs})

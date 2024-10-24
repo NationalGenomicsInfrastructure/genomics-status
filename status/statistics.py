@@ -6,7 +6,6 @@ from status.util import SafeHandler, UnsafeHandler
 def get_clean_application_keys(handler):
     categories_v = handler.application.application_categories_db.view("general/app_cat")
     clean_keys = {}
-    category = None
     for row in categories_v:
         clean_keys[row.key] = row.value
 
@@ -62,7 +61,7 @@ def get_stats_data(db, view, gl=0, cleaning=None, doreduce=True):
 
 class YearApplicationsProjectHandler(SafeHandler):
     def __init__(self, *args, **kwargs):
-        super(YearApplicationsProjectHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.cleaning = get_clean_application_keys(self)
 
     def get(self):
@@ -80,7 +79,7 @@ class YearApplicationsProjectHandler(SafeHandler):
 
 class YearApplicationsSamplesHandler(SafeHandler):
     def __init__(self, *args, **kwargs):
-        super(YearApplicationsSamplesHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.cleaning = get_clean_application_keys(self)
 
     def get(self):
@@ -124,7 +123,7 @@ class YearDeliverytimeProjectsHandler(SafeHandler):
 
 class ApplicationOpenProjectsHandler(SafeHandler):
     def __init__(self, *args, **kwargs):
-        super(ApplicationOpenProjectsHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.cleaning = get_clean_application_keys(self)
 
     def get(self):
@@ -142,7 +141,7 @@ class ApplicationOpenProjectsHandler(SafeHandler):
 
 class ApplicationOpenSamplesHandler(SafeHandler):
     def __init__(self, *args, **kwargs):
-        super(ApplicationOpenSamplesHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.cleaning = get_clean_application_keys(self)
 
     def get(self):
@@ -171,7 +170,7 @@ class WeekInstrumentTypeYieldHandler(SafeHandler):
 
 class YearDeliverytimeApplicationHandler(UnsafeHandler):
     def __init__(self, *args, **kwargs):
-        super(YearDeliverytimeApplicationHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.cleaning = get_clean_application_keys(self)
 
     def get(self):
@@ -189,7 +188,7 @@ class YearDeliverytimeApplicationHandler(UnsafeHandler):
 
 class StatsAggregationHandler(UnsafeHandler):
     def __init__(self, *args, **kwargs):
-        super(StatsAggregationHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.project_aggregates = {
             "num_projects": ("genomics-dashboard/year_application_count", 2),
             "num_samples": ("genomics-dashboard/year_application_count_samples", 2),

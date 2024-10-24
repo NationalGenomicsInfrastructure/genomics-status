@@ -1,10 +1,9 @@
 import ast
 import json
 import logging
+
 import psycopg2
-
 from dateutil.parser import parse
-
 from genologics_sql import queries as geno_queries
 from genologics_sql import utils as geno_utils
 
@@ -95,10 +94,8 @@ class qPCRPoolsDataHandler(SafeHandler):
             "from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm, entity_udf_view e where "
             "art.artifactid=st.artifactid and st.stageid in (select stageid from stage where membershipid in (select sectionid from workflowsection where protocolid=8)) "
             "and st.workflowrunid>0 and st.completedbyid is null and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and s.processid=asm.processid "
-            "and asm.artifactid=art.artifactid and art.name not in {} and s.projectid=e.attachtoid and e.udfname='Library construction method'"
-            "group by st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid, e.udfvalue;".format(
-                tuple(control_names)
-            )
+            f"and asm.artifactid=art.artifactid and art.name not in {tuple(control_names)} and s.projectid=e.attachtoid and e.udfname='Library construction method'"
+            "group by st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid, e.udfvalue;"
         )
 
         methods = queues.keys()
@@ -402,8 +399,8 @@ class SequencingQueuesDataHandler(SafeHandler):
                 if "NovaSeq" not in method:
                     non_novaseq_rerun_query = (
                         "select udfname, udfvalue from artifact_udf_view where udfname = 'Rerun' "
-                        "and artifactid={}"
-                    ).format(record[0])
+                        f"and artifactid={record[0]}"
+                    )
                     cursor.execute(non_novaseq_rerun_query)
                     rerun_res = cursor.fetchone()
                     is_rerun = False
@@ -526,10 +523,8 @@ class WorksetQueuesDataHandler(SafeHandler):
             query = (
                 "select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid "
                 "from artifact art, stagetransition st where art.artifactid=st.artifactid and "
-                "st.stageid in (select stageid from stage where stepid={}) and "
-                "st.completedbyid is null and st.workflowrunid>0 and art.name not in {};".format(
-                    queues[method], tuple(control_names)
-                )
+                f"st.stageid in (select stageid from stage where stepid={queues[method]}) and "
+                f"st.completedbyid is null and st.workflowrunid>0 and art.name not in {tuple(control_names)};"
             )
             cursor.execute(query)
             records = cursor.fetchall()

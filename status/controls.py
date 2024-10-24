@@ -1,9 +1,10 @@
 """
     Handler related to Controls page
 """
+from genologics.config import BASEURI
+
 from status.util import SafeHandler
-from genologics import lims
-from genologics.config import BASEURI, USERNAME, PASSWORD
+
 
 class ControlsHandler(SafeHandler):
 

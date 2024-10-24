@@ -1,11 +1,11 @@
 
 
 import requests
-from status.util import SafeHandler
-
 from genologics import lims
+from genologics.config import BASEURI, PASSWORD, USERNAME
 from genologics.entities import Project
-from genologics.config import BASEURI, USERNAME, PASSWORD
+
+from status.util import SafeHandler
 
 
 class CloneProjectHandler(SafeHandler):

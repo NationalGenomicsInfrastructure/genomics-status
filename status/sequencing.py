@@ -1,16 +1,16 @@
 """ Handlers related to data sequencing statistics.
 """
-from collections import defaultdict
-from io import BytesIO
-from datetime import datetime
 import json
+from collections import defaultdict
+from datetime import datetime
+from io import BytesIO
 
-from dateutil import parser
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 import numpy as np
+from dateutil import parser
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
-from status.util import dthandler, SafeHandler
+from status.util import SafeHandler, dthandler
 
 
 def make_instrument_series_handler(couchdb_view_name):
