@@ -1,21 +1,19 @@
-"""Set of handlers related with Flowcells
-"""
+"""Set of handlers related with Flowcells"""
 
-import json
 import datetime
-import re
+import json
 import logging
-
-from dateutil.relativedelta import relativedelta
+import re
 from collections import OrderedDict
 
-from genologics import lims
-from genologics.config import BASEURI, USERNAME, PASSWORD
 import pandas as pd
+from dateutil.relativedelta import relativedelta
+from genologics import lims
+from genologics.config import BASEURI, PASSWORD, USERNAME
 
-from status.util import SafeHandler
 from status.flowcell import fetch_ont_run_stats, thresholds
 from status.running_notes import LatestRunningNoteHandler
+from status.util import SafeHandler
 
 application_log = logging.getLogger("tornado.application")
 
@@ -142,7 +140,7 @@ class FlowcellsHandler(SafeHandler):
                     view_mux_scans=view_mux_scans,
                     view_pore_count_history=view_pore_count_history,
                 )
-            except Exception as e:
+            except Exception:
                 unfetched_runs.append(row.key)
                 application_log.exception(f"Failed to fetch run {row.key}")
 
@@ -156,15 +154,13 @@ class FlowcellsHandler(SafeHandler):
 
                 # Convert back to dictionary and return
                 ont_flowcells = df.to_dict(orient="index")
-            except Exception as e:
-                application_log.exception(f"Failed to compile ONT flowcell dataframe")
+            except Exception:
+                application_log.exception("Failed to compile ONT flowcell dataframe")
 
         return ont_flowcells, unfetched_runs
 
     def list_element_flowcells(self):
-        return self.application.element_runs_db.view(
-            "info/summary", descending=True
-        )
+        return self.application.element_runs_db.view("info/summary", descending=True)
 
     def get(self):
         # Default is to NOT show all flowcells
@@ -300,9 +296,7 @@ class FlowcellSearchHandler(SafeHandler):
                 if search_string in row_key.lower():
                     splitted_fc = row_key.split("_")
                     fc = {
-                        "url": "/flowcells/{}_{}".format(
-                            splitted_fc[0], splitted_fc[-1]
-                        ),
+                        "url": f"/flowcells/{splitted_fc[0]}_{splitted_fc[-1]}",
                         "name": row_key,
                     }
                     flowcells.append(fc)
@@ -325,9 +319,7 @@ class FlowcellSearchHandler(SafeHandler):
                 if search_string in row_key.lower():
                     splitted_fc = row_key.split("_")
                     fc = {
-                        "url": "/flowcells/{}_{}".format(
-                            splitted_fc[0], splitted_fc[-1]
-                        ),
+                        "url": f"/flowcells/{splitted_fc[0]}_{splitted_fc[-1]}",
                         "name": row_key,
                     }
                     flowcells.append(fc)
@@ -424,12 +416,12 @@ class FlowcellLinksDataHandler(SafeHandler):
         self.set_header("Content-type", "application/json")
         try:
             p = get_container_from_id(flowcell)
-        except (KeyError, IndexError) as e:
+        except (KeyError, IndexError):
             self.write("{}")
         else:
             try:
                 links = json.loads(p.udf["Links"]) if "Links" in p.udf else {}
-            except KeyError as e:
+            except KeyError:
                 links = {}
 
             # Sort by descending date, then hopefully have deviations on top
@@ -454,7 +446,7 @@ class FlowcellLinksDataHandler(SafeHandler):
         else:
             try:
                 p = get_container_from_id(flowcell)
-            except (KeyError, IndexError) as e:
+            except (KeyError, IndexError):
                 self.status(400)
                 self.write("Flowcell not found")
             else:
@@ -505,17 +497,15 @@ class ReadsTotalHandler(SafeHandler):
                 "info/summary", descending=True
             )
 
-            for row in xfc_view[query : "{}Z".format(query)]:
-                if not row.key in data:
+            for row in xfc_view[query : f"{query}Z"]:
+                if row.key not in data:
                     data[row.key] = []
                 # To add correct threshold values
                 fc_long_name = row.value["fcp"].split(":")[0]
                 fc_date_run = fc_long_name.split("_")[0]
                 if len(fc_date_run) > 6:
                     fc_date_run = fc_date_run[-6:]
-                fc_short_name = (
-                    fc_date_run + "_" + fc_long_name.split("_")[-1]
-                )
+                fc_short_name = fc_date_run + "_" + fc_long_name.split("_")[-1]
                 for info_row in fc_view[fc_short_name]:
                     row.value["run_mode"] = info_row.value["run_mode"]
                     row.value["longer_read_length"] = info_row.value[

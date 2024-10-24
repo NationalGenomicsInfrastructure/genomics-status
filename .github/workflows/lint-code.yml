@@ -1,0 +1,38 @@
+name: Lint code
+on: [push, pull_request]
+
+jobs:
+  # Use ruff to check for code style violations
+  ruff-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+      - name: ruff --> Check for style violations
+        # Configured in pyproject.toml
+        run: ruff check .
+
+  # Use ruff to check code formatting
+  ruff-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+      - name: ruff --> Check code formatting
+        run: ruff format --check .

@@ -1,7 +1,8 @@
-"""Handlers related to applications
-"""
+"""Handlers related to applications"""
+
 import json
 from collections import Counter
+
 from status.util import SafeHandler
 
 
@@ -77,7 +78,7 @@ class ApplicationsDataHandler(SafeHandler):
         # Projects per application
         applications = Counter()
         view = self.application.projects_db.view("project/date_applications")
-        for row in view[[start, ""]:[end, "z"]]:
+        for row in view[[start, ""] : [end, "z"]]:
             if row.key[1] is None:
                 # This corresponds to StatusDB:s notation
                 # and avoids conflict with 'None'.
@@ -88,7 +89,7 @@ class ApplicationsDataHandler(SafeHandler):
         # Samples per application
         samples = Counter()
         view = self.application.projects_db.view("project/date_samples_applications")
-        for row in view[[start, ""]:[end, "z"]]:
+        for row in view[[start, ""] : [end, "z"]]:
             if row.key[1] is None:
                 samples["null"] += row.value
             else:

@@ -1,7 +1,8 @@
-import json
 import datetime
+import json
 
 from status.util import SafeHandler
+
 
 class DataFlowcellYieldHandler(SafeHandler):
     """Handles the api call to reads_plot data
@@ -15,13 +16,18 @@ class DataFlowcellYieldHandler(SafeHandler):
             first_term = last_month.isoformat()[2:10].replace("-", "")
             second_term = datetime.datetime.now().isoformat()[2:10].replace("-", "")
         else:
-            first_term, second_term = search_string.split('-')
+            first_term, second_term = search_string.split("-")
 
-        docs = [x.value for x in self.application.x_flowcells_db.view("plot/reads_yield")[first_term:second_term+'ZZZZ'].rows]
+        docs = [
+            x.value
+            for x in self.application.x_flowcells_db.view("plot/reads_yield")[
+                first_term : second_term + "ZZZZ"
+            ].rows
+        ]
 
         for doc in docs:
-            fc_yield = int(doc.get('total_yield')) / 1000000
-            doc['total_yield'] = fc_yield
+            fc_yield = int(doc.get("total_yield")) / 1000000
+            doc["total_yield"] = fc_yield
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(docs))

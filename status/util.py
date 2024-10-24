@@ -1,11 +1,11 @@
-import tornado.web
 import json
-import requests
 import os
 import sys
 from datetime import datetime, timedelta
-from dateutil import parser
 
+import requests
+import tornado.web
+from dateutil import parser
 
 #########################
 #  Useful misc handlers #
@@ -30,7 +30,7 @@ ERROR_CODES = {
 }
 
 
-class User(object):
+class User:
     """A minimal user class"""
 
     def __init__(self, name, email, roles):
@@ -53,9 +53,7 @@ class User(object):
     @property
     def is_any_admin(self):
         return (
-            self.is_admin
-            or self.is_pricing_admin
-            or self.is_sample_requirements_admin
+            self.is_admin or self.is_pricing_admin or self.is_sample_requirements_admin
         )
 
     @property
@@ -139,7 +137,7 @@ class BaseHandler(tornado.web.RequestHandler):
         # Return JSON if this is an API call
         if "/api/v1/" in self.request.uri:
             jsondict = {
-                "page_title": "Error {}: {}".format(status_code, reason),
+                "page_title": f"Error {status_code}: {reason}",
                 "error_status": status_code,
                 "error_reason": reason,
                 "error_exception": self.application.gs_globals["exception_fulltext"],
@@ -176,10 +174,10 @@ class BaseHandler(tornado.web.RequestHandler):
         if project_name:
             multiqc_path = self.application.multiqc_path or ""
             for type in ["_", "_qc_", "_pipeline_"]:
-                multiqc_name = "{}{}multiqc_report.html".format(project_name, type)
+                multiqc_name = f"{project_name}{type}multiqc_report.html"
                 multiqc_file_path = os.path.join(multiqc_path, multiqc_name)
                 if os.path.exists(multiqc_file_path):
-                    with open(multiqc_file_path, "r", encoding="utf-8") as multiqc_file:
+                    with open(multiqc_file_path, encoding="utf-8") as multiqc_file:
                         html = multiqc_file.read()
                         multiqc_reports[type] = html
         return multiqc_reports
@@ -369,7 +367,7 @@ class LastPSULRunHandler(SafeHandler):
             text_timestamp = os.stat(logfile).st_mtime
             delta = datetime.now() - datetime.fromtimestamp(int(text_timestamp))
         except (OSError, KeyError, TypeError):
-            response["status"] = "Log File '{}' not found.".format(logfile)
+            response["status"] = f"Log File '{logfile}' not found."
         else:
             response["status"] = "Success"
             response["hours"] = int(delta.seconds / 3600)
@@ -385,7 +383,7 @@ class LastPSULRunHandler(SafeHandler):
 ########################
 
 
-class GoogleUser(object):
+class GoogleUser:
     """Stores the information that google returns from a user throuhgh its secured API."""
 
     def __init__(self, user_token):

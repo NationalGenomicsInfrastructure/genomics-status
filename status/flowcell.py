@@ -1,10 +1,11 @@
-from status.util import SafeHandler
+import os
+import re
 from datetime import datetime
 from typing import Optional
-import pandas as pd
-import re
-import os
 
+import pandas as pd
+
+from status.util import SafeHandler
 
 thresholds = {
     "HiSeq X": 320,
@@ -152,10 +153,16 @@ class FlowcellHandler(SafeHandler):
                         for lane in lane_details:
                             if lane["Project"] == proj and lane["clustersnb"]:
                                 if lane["overthirty"]:
-                                    weighted_sum_q30 += int(lane["clustersnb"].replace(",", "")) * float(lane["overthirty"])
+                                    weighted_sum_q30 += int(
+                                        lane["clustersnb"].replace(",", "")
+                                    ) * float(lane["overthirty"])
                                 else:
-                                    sum_yield_with_zero_q30 += int(lane["clustersnb"].replace(",", ""))
-                        weighted_mean_q30 = weighted_sum_q30 / (sum_project_lane_yield - sum_yield_with_zero_q30)
+                                    sum_yield_with_zero_q30 += int(
+                                        lane["clustersnb"].replace(",", "")
+                                    )
+                        weighted_mean_q30 = weighted_sum_q30 / (
+                            sum_project_lane_yield - sum_yield_with_zero_q30
+                        )
                     else:
                         weighted_mean_q30 = 0
                     proj_lane_percentage_obtained = (
@@ -225,15 +232,27 @@ class FlowcellHandler(SafeHandler):
                         for lane in lane_details:
                             if lane["SampleName"] == sample and lane["clustersnb"]:
                                 if lane["overthirty"]:
-                                    weighted_sum_q30 += int(lane["clustersnb"].replace(",", "")) * float(lane["overthirty"])
+                                    weighted_sum_q30 += int(
+                                        lane["clustersnb"].replace(",", "")
+                                    ) * float(lane["overthirty"])
                                 else:
-                                    sum_yield_with_zero_q30 += int(lane["clustersnb"].replace(",", ""))
+                                    sum_yield_with_zero_q30 += int(
+                                        lane["clustersnb"].replace(",", "")
+                                    )
                                 if lane["mqs"]:
-                                    weighted_sum_mqs += int(lane["clustersnb"].replace(",", "")) * float(lane["mqs"])
+                                    weighted_sum_mqs += int(
+                                        lane["clustersnb"].replace(",", "")
+                                    ) * float(lane["mqs"])
                                 else:
-                                    sum_yield_with_zero_mqs += int(lane["clustersnb"].replace(",", ""))
-                        weighted_mean_q30 = weighted_sum_q30 / (sum_sample_lane_yield - sum_yield_with_zero_q30)
-                        weighted_mqs = weighted_sum_mqs / (sum_sample_lane_yield - sum_yield_with_zero_mqs)
+                                    sum_yield_with_zero_mqs += int(
+                                        lane["clustersnb"].replace(",", "")
+                                    )
+                        weighted_mean_q30 = weighted_sum_q30 / (
+                            sum_sample_lane_yield - sum_yield_with_zero_q30
+                        )
+                        weighted_mqs = weighted_sum_mqs / (
+                            sum_sample_lane_yield - sum_yield_with_zero_mqs
+                        )
                     else:
                         weighted_mean_q30 = 0
                         weighted_mqs = 0
@@ -453,7 +472,8 @@ class ONTReportHandler(SafeHandler):
         reports_dir = self.application.minknow_path
         report_path = os.path.join(reports_dir, f"report_{name}.html")
 
-        self.write(open(report_path, "r").read())
+        self.write(open(report_path).read())
+
 
 class ElementFlowcellHandler(SafeHandler):
     def get(self, name):
@@ -462,13 +482,97 @@ class ElementFlowcellHandler(SafeHandler):
             t.generate(
                 gs_globals=self.application.gs_globals,
                 user=self.get_current_user(),
+                ngi_run_id=name,
             )
         )
 
+
+def get_project_ids_from_names(project_names: list, projects_db) -> list[dict]:
+    """Given a list of project names, perform a lookup to the projects db and return a json-style list of projects"""
+    projects = []
+    for project_name in project_names:
+        rows = projects_db.view("projects/name_to_id")[project_name].rows
+        if rows:
+            projects.append({"project_id": rows[0].value, "project_name": project_name})
+
+    return projects
+
+
+def get_project_names_from_ids(project_ids: list, projects_db) -> list[dict]:
+    """Given a list of project ids, perform a lookup to the projects db and return a json-style list of projects"""
+    projects = []
+    for project_id in project_ids:
+        rows = projects_db.view("projects/id_to_name")[project_id].rows
+        if rows:
+            projects.append({"project_id": project_id, "project_name": rows[0].value})
+
+    return projects
+
+
 class ElementFlowcellDataHandler(SafeHandler):
     def get(self, name):
-        flowcell = self.application.element_runs_db.get(name)
-        self.write(flowcell)
+        rows = self.application.element_runs_db.view("info/id", include_docs=True)[
+            name
+        ].rows
+        if rows:
+            flowcell = rows[0].doc
+
+            # Collect all project names
+            project_names = []
+
+            demultiplexing_done = False
+            if (
+                flowcell.get("Element", {})
+                .get("Demultiplex_Stats", {})
+                .get("Index_Assignment")
+            ):
+                demultiplexing_done = True
+
+            if demultiplexing_done:
+                samples_with_duplicates = [
+                    sample
+                    for sample in flowcell.get("Element", {})
+                    .get("Demultiplex_Stats", {})
+                    .get("Index_Assignment", [])
+                ]
+                project_names_with_duplicates = [
+                    sample.get("Project").replace("__", ".")
+                    for sample in samples_with_duplicates
+                    if sample.get("Project")
+                ]
+                project_names = list(set(project_names_with_duplicates))
+                projects = get_project_ids_from_names(
+                    project_names, self.application.projects_db
+                )
+            else:
+                project_ids = []
+                for lane in (
+                    flowcell.get("instrument_generated_files", {})
+                    .get("AvitiRunStats.json", {})
+                    .get("LaneStats", {})
+                ):
+                    for sample in lane.get("IndexAssignments", {}).get(
+                        "IndexSamples", {}
+                    ):
+                        sample_name = sample.get("SampleName")
+                        # Check that the sample name is on the format PX..X_Y..Y"
+                        if re.match(r"^P\d+_\d+$", sample_name):
+                            # Parse out the PXXXXXX number from the sample name on the format "
+                            project_id = sample_name.split("_")[0]
+                            project_ids.append(project_id)
+
+                project_ids = list(set(project_ids))
+                projects = get_project_names_from_ids(
+                    project_ids, self.application.projects_db
+                )
+
+            flowcell["projects"] = projects
+
+            self.write(flowcell)
+        else:
+            self.set_status(404)
+            self.write({"error": f"No element flowcell found for run ID {name}"})
+
 
 class ONTFlowcellHandler(SafeHandler):
     """Serves a page which shows information for a given ONT flowcell."""

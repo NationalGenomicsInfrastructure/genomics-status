@@ -6,7 +6,6 @@ from status.util import SafeHandler, UnsafeHandler
 def get_clean_application_keys(handler):
     categories_v = handler.application.application_categories_db.view("general/app_cat")
     clean_keys = {}
-    category = None
     for row in categories_v:
         clean_keys[row.key] = row.value
 
@@ -62,7 +61,7 @@ def get_stats_data(db, view, gl=0, cleaning=None, doreduce=True):
 
 class YearApplicationsProjectHandler(SafeHandler):
     def __init__(self, *args, **kwargs):
-        super(YearApplicationsProjectHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.cleaning = get_clean_application_keys(self)
 
     def get(self):
@@ -80,7 +79,7 @@ class YearApplicationsProjectHandler(SafeHandler):
 
 class YearApplicationsSamplesHandler(SafeHandler):
     def __init__(self, *args, **kwargs):
-        super(YearApplicationsSamplesHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.cleaning = get_clean_application_keys(self)
 
     def get(self):
@@ -124,7 +123,7 @@ class YearDeliverytimeProjectsHandler(SafeHandler):
 
 class ApplicationOpenProjectsHandler(SafeHandler):
     def __init__(self, *args, **kwargs):
-        super(ApplicationOpenProjectsHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.cleaning = get_clean_application_keys(self)
 
     def get(self):
@@ -142,7 +141,7 @@ class ApplicationOpenProjectsHandler(SafeHandler):
 
 class ApplicationOpenSamplesHandler(SafeHandler):
     def __init__(self, *args, **kwargs):
-        super(ApplicationOpenSamplesHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.cleaning = get_clean_application_keys(self)
 
     def get(self):
@@ -171,7 +170,7 @@ class WeekInstrumentTypeYieldHandler(SafeHandler):
 
 class YearDeliverytimeApplicationHandler(UnsafeHandler):
     def __init__(self, *args, **kwargs):
-        super(YearDeliverytimeApplicationHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.cleaning = get_clean_application_keys(self)
 
     def get(self):
@@ -189,7 +188,7 @@ class YearDeliverytimeApplicationHandler(UnsafeHandler):
 
 class StatsAggregationHandler(UnsafeHandler):
     def __init__(self, *args, **kwargs):
-        super(StatsAggregationHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.project_aggregates = {
             "num_projects": ("genomics-dashboard/year_application_count", 2),
             "num_samples": ("genomics-dashboard/year_application_count_samples", 2),
@@ -221,7 +220,9 @@ class StatsAggregationHandler(UnsafeHandler):
             ),
         }
         self.flowcell_aggregates = {"bp_seq_per_week": ("dashboard/week_instr_bp", 2)}
-        self.nanopore_flowcell_aggregates = {"bp_seq_per_week": ("dashboard/week_instr_bp", 2)}
+        self.nanopore_flowcell_aggregates = {
+            "bp_seq_per_week": ("dashboard/week_instr_bp", 2)
+        }
 
         self.cleaning = get_clean_application_keys(self)
 
@@ -243,10 +244,10 @@ class StatsAggregationHandler(UnsafeHandler):
             )
         for fa in self.nanopore_flowcell_aggregates:
             nanopore_stats = get_stats_data(
-                    self.application.nanopore_runs_db,
-                    self.nanopore_flowcell_aggregates[fa][0],
-                    self.nanopore_flowcell_aggregates[fa][1],
-                    self.cleaning,
+                self.application.nanopore_runs_db,
+                self.nanopore_flowcell_aggregates[fa][0],
+                self.nanopore_flowcell_aggregates[fa][1],
+                self.cleaning,
             )
 
             # Use |= to merge the resulting dictionary with what's already

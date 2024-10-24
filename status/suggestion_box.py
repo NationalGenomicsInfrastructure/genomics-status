@@ -3,6 +3,7 @@ from datetime import datetime
 
 from atlassian import Jira
 from ibmcloudant.cloudant_v1 import Document
+
 from status.util import SafeHandler
 
 TITLE_TEMPLATE = "{deployment}{title} ({area})"
@@ -50,25 +51,25 @@ class SuggestionBoxHandler(SafeHandler):
         user = self.get_current_user()
         description = self.get_argument("description")
         suggestion = self.get_argument("suggestion")
-        deployment = "" if self.application.gs_globals['prod'] else "[STAGE] "
+        deployment = "" if self.application.gs_globals["prod"] else "[STAGE] "
 
         jira = Jira(
-             url=self.application.jira_url, 
-             username=self.application.jira_user, 
-             password=self.application.jira_api_token
+            url=self.application.jira_url,
+            username=self.application.jira_user,
+            password=self.application.jira_api_token,
         )
 
         summary = TITLE_TEMPLATE.format(deployment=deployment, title=title, area=area)
         description = DESCRIPTION_TEMPLATE.format(
-                    date=date.ctime(),
-                    area=area,
-                    system=system,
-                    importance=importance,
-                    difficulty=difficulty,
-                    user=user.name,
-                    description=description,
-                    suggestion=suggestion,
-                )
+            date=date.ctime(),
+            area=area,
+            system=system,
+            importance=importance,
+            difficulty=difficulty,
+            user=user.name,
+            description=description,
+            suggestion=suggestion,
+        )
         new_card = jira.issue_create(
             fields={
                 "project": {"key": self.application.jira_project_key},
@@ -83,17 +84,19 @@ class SuggestionBoxHandler(SafeHandler):
 
         # Save the information of the card in the database
         doc = Document(
-                    date=date.isoformat(),
-                    card_id= new_card.get('id'),
-                    name=summary,
-                    url= f"{self.application.jira_url}/jira/core/projects/{self.application.jira_project_key}/board?selectedIssue={new_card.get('key')}",
-                    archived=False,
-                    source= "jira"
-                    )
-        
-        response = self.application.cloudant.post_document(db='suggestion_box', document=doc).get_result()
-        
-        if not response.get('ok'):
+            date=date.isoformat(),
+            card_id=new_card.get("id"),
+            name=summary,
+            url=f"{self.application.jira_url}/jira/core/projects/{self.application.jira_project_key}/board?selectedIssue={new_card.get('key')}",
+            archived=False,
+            source="jira",
+        )
+
+        response = self.application.cloudant.post_document(
+            db="suggestion_box", document=doc
+        ).get_result()
+
+        if not response.get("ok"):
             self.set_status(500)
             return
 
