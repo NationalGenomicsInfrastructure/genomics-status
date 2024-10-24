@@ -1028,9 +1028,6 @@ class CharonProjectHandler(SafeHandler):
                     self.application.settings["charon"]["api_token"]
                 )
             }
-            "{}/api/v1/project/{}".format(
-                self.application.settings["charon"]["url"], projectid
-            )
         except KeyError:
             url = f"https://charon.scilifelab.se/api/v1/summary?projectid={projectid}"
             headers = {}
