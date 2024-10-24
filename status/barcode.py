@@ -1,5 +1,4 @@
-"""Handlers related to test for barcode printing
-"""
+"""Handlers related to test for barcode printing"""
 
 import re
 import subprocess
@@ -52,9 +51,7 @@ class BarcodeHandler(SafeHandler):
                     for _ in range(copies):  # loops over copies to print
                         print_barcode(linesToPrint)
                 else:  # file submitted is a text file
-                    for (
-                        line
-                    ) in (
+                    for line in (
                         linesToPrint.splitlines()
                     ):  # split into the different lines of the text file
                         if self.get_argument(
@@ -112,9 +109,7 @@ class BarcodeHandler(SafeHandler):
                 if re.compile(r"^P\d+$").search(user_project_ID):
                     projectNo_only_extracted = re.search(
                         "P(.*)", user_project_ID
-                    ).group(
-                        1
-                    )  # have only the number of the project ID
+                    ).group(1)  # have only the number of the project ID
                     for projects in range(0, int(projectNo)):
                         new_projectNo = int(projectNo_only_extracted) + projects
                         new_projectID = "P" + str(new_projectNo)

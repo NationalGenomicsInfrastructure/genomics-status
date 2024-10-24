@@ -143,7 +143,9 @@ class RunningNotesDataHandler(SafeHandler):
             "updated_at_utc": created_time.isoformat(),
         }
         # Save in running notes db
-        gen_log.info(f"Running note to be created with id {newNote['_id']} by {user} at {created_time.isoformat()}")
+        gen_log.info(
+            f"Running note to be created with id {newNote['_id']} by {user} at {created_time.isoformat()}"
+        )
         application.running_notes_db.save(newNote)
         #### Check and send mail to tagged users (for project running notes as flowcell and workset notes are copied over)
         if note_type == "project":
@@ -207,7 +209,7 @@ class RunningNotesDataHandler(SafeHandler):
                     "project",
                     created_time,
                 )
-        created_note =  application.running_notes_db.get(newNote["_id"])
+        created_note = application.running_notes_db.get(newNote["_id"])
         return created_note
 
     @staticmethod
@@ -256,7 +258,9 @@ class RunningNotesDataHandler(SafeHandler):
                 if option == "Slack" or option == "Both":
                     nest_asyncio.apply()
                     client = slack_sdk.WebClient(token=application.slack_token)
-                    notification_text = f"{tagger} has {notf_text} in {project_id}, {project_name}!"
+                    notification_text = (
+                        f"{tagger} has {notf_text} in {project_id}, {project_name}!"
+                    )
                     blocks = [
                         {
                             "type": "section",
@@ -312,7 +316,9 @@ class RunningNotesDataHandler(SafeHandler):
                 # default is email
                 if option == "E-mail" or option == "Both":
                     msg = MIMEMultipart("alternative")
-                    msg["Subject"] = f"[GenStat] Running Note:{project_id}, {project_name}"
+                    msg["Subject"] = (
+                        f"[GenStat] Running Note:{project_id}, {project_name}"
+                    )
                     msg["From"] = "genomics-status"
                     msg["To"] = view_result[user]
                     text = f"{email_text} in the project {project_id}, {project_name}! The note is as follows\n\

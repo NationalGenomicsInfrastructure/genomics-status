@@ -462,15 +462,15 @@ class SequencingQueuesDataHandler(SafeHandler):
                             conc_qpcr = row[0]
 
                 pool_groups[method][project]["final_loading_conc"] = final_loading_conc
-                pool_groups[method][project]["plates"][container][
-                    "conc_qpcr"
-                ] = conc_qpcr
+                pool_groups[method][project]["plates"][container]["conc_qpcr"] = (
+                    conc_qpcr
+                )
                 pool_groups[method][project]["plates"][container]["pools"][-1][
                     "is_rerun"
                 ] = is_rerun
-                pool_groups[method][project]["plates"][container][
-                    "conc_pool"
-                ] = pool_conc
+                pool_groups[method][project]["plates"][container]["conc_pool"] = (
+                    pool_conc
+                )
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(pool_groups))
@@ -692,10 +692,11 @@ class SmartSeq3ProgressPageHandler(SafeHandler):
         t = self.application.loader.load("smartseq3_progress.html")
         self.write(
             t.generate(
-                gs_globals=self.application.gs_globals, 
+                gs_globals=self.application.gs_globals,
                 user=self.get_current_user(),
             )
         )
+
 
 class SmartSeq3ProgressPageDataHandler(SafeHandler):
     """Serves a page with SmartSeq3 progress table with all samples in the workflow
@@ -703,76 +704,102 @@ class SmartSeq3ProgressPageDataHandler(SafeHandler):
     """
 
     def get(self):
-
         # Get all samples in the SmartSeq3 workflow
         gen_log = logging.getLogger("tornado.general")
-        workflow_name = 'Smart-seq3 for NovaSeqXPlus v1.0'
-        sample_level_udfs_list = ['Sample Type', 'Sample Links', 'Cell Type', 'Tissue Type', 'Species Name', 'Comment']
-        project_level_udfs_list = ['Sequence units ordered (lanes)']
+        workflow_name = "Smart-seq3 for NovaSeqXPlus v1.0"
+        sample_level_udfs_list = [
+            "Sample Type",
+            "Sample Links",
+            "Cell Type",
+            "Tissue Type",
+            "Species Name",
+            "Comment",
+        ]
+        project_level_udfs_list = ["Sequence units ordered (lanes)"]
         # Define the step level udfs and the step names they are associated with
-        step_level_udfs_definition = {'Plates to Send': ['Sample plate sent date'],
-                                        'Plates Sent': ['Sample plate received date'],
-                                        'Lysis, RT and pre-Amp': ['PCR Cycles'],
-                                        'cDNA QC': ['Optimal Cycle Number']}
+        step_level_udfs_definition = {
+            "Plates to Send": ["Sample plate sent date"],
+            "Plates Sent": ["Sample plate received date"],
+            "Lysis, RT and pre-Amp": ["PCR Cycles"],
+            "cDNA QC": ["Optimal Cycle Number"],
+        }
         step_level_udfs_id = {}
-        samples_in_step_dict= {}
+        samples_in_step_dict = {}
         project_level_udfs = {}
 
         geno_session = geno_utils.get_session()
-        #Get all steps in the workflow with step ids and step name
-        workflow_steps = geno_queries.get_all_steps_for_workflow(geno_session, workflow_name)
+        # Get all steps in the workflow with step ids and step name
+        workflow_steps = geno_queries.get_all_steps_for_workflow(
+            geno_session, workflow_name
+        )
         stepid_to_stepindex = {}
-        
+
         for stepname, stepid, protocolname, stepindex in workflow_steps:
-            samples_in_step_dict[stepindex] = {'stepname': stepname, 
-                                            'protocolname': protocolname, 
-                                            'stepid': stepid,
-                                            'samples': {}}
+            samples_in_step_dict[stepindex] = {
+                "stepname": stepname,
+                "protocolname": protocolname,
+                "stepid": stepid,
+                "samples": {},
+            }
             stepid_to_stepindex[stepid] = stepindex
-            #Connect stepid to udfname
-            #We need this cos different versions of the workflow will have different stepids for the same stepname
+            # Connect stepid to udfname
+            # We need this cos different versions of the workflow will have different stepids for the same stepname
             if stepname in step_level_udfs_definition:
                 step_level_udfs_id[stepid] = step_level_udfs_definition[stepname]
-        
+
         # Get all the information for each sample in given workflow
-        samples = geno_queries.get_all_samples_in_a_workflow(geno_session, workflow_name)
+        samples = geno_queries.get_all_samples_in_a_workflow(
+            geno_session, workflow_name
+        )
         for _, sample_name, sampleid, stepid, projectid, _ in samples:
-            sample_dict = {'projectid': projectid}
+            sample_dict = {"projectid": projectid}
             if projectid not in project_level_udfs:
-                query_res = geno_queries.get_udfs_from_project(geno_session, projectid, project_level_udfs_list)
+                query_res = geno_queries.get_udfs_from_project(
+                    geno_session, projectid, project_level_udfs_list
+                )
                 proj_data = {}
                 for udfname, udfvalue, _, projectname in query_res:
                     proj_data[udfname] = udfvalue
-                    #This is redundant
-                    proj_data['projectname'] = projectname
+                    # This is redundant
+                    proj_data["projectname"] = projectname
                 project_level_udfs[projectid] = proj_data
-            #Get sample level udfs
-            sample_level_udfs = geno_queries.get_udfs_from_sample(geno_session, sampleid, sample_level_udfs_list)
+            # Get sample level udfs
+            sample_level_udfs = geno_queries.get_udfs_from_sample(
+                geno_session, sampleid, sample_level_udfs_list
+            )
             for udfname, udfvalue, _ in sample_level_udfs:
                 sample_dict[udfname] = udfvalue
-            
-            #Get reagent label
-            sample_dict['Reagent Label'] = geno_queries.get_reagentlabel_for_sample(geno_session, sampleid)
 
-            #Get udfs specific to a step and the steps before it
+            # Get reagent label
+            sample_dict["Reagent Label"] = geno_queries.get_reagentlabel_for_sample(
+                geno_session, sampleid
+            )
+
+            # Get udfs specific to a step and the steps before it
             for step in stepid_to_stepindex:
                 # Only check steps before the current step
-                if stepid_to_stepindex[step]<= stepid_to_stepindex[stepid]:
-                    #Check if the step has any udfs associated with it that we are interested in
+                if stepid_to_stepindex[step] <= stepid_to_stepindex[stepid]:
+                    # Check if the step has any udfs associated with it that we are interested in
                     if step in step_level_udfs_id:
-                        step_level_udfs = geno_queries.get_sample_udfs_from_step(geno_session, sampleid, step, step_level_udfs_id[step])
+                        step_level_udfs = geno_queries.get_sample_udfs_from_step(
+                            geno_session, sampleid, step, step_level_udfs_id[step]
+                        )
                         for udfname, udfvalue, _ in step_level_udfs:
                             if udfvalue:
-                                #If udfname was already set, check if the value is the same
+                                # If udfname was already set, check if the value is the same
                                 if udfname in sample_dict:
-                                    #If the value is different, log a warning
+                                    # If the value is different, log a warning
                                     if sample_dict[udfname] != udfvalue:
-                                        gen_log.warn(f'Sample {sample_name} has different values for udf {udfname} in step {stepname} '
-                                                     f'previous value: {sample_dict[udfname]}, new value: {udfvalue}')
+                                        gen_log.warn(
+                                            f"Sample {sample_name} has different values for udf {udfname} in step {stepname} "
+                                            f"previous value: {sample_dict[udfname]}, new value: {udfvalue}"
+                                        )
                                 else:
                                     sample_dict[udfname] = udfvalue
 
-            samples_in_step_dict[stepid_to_stepindex[stepid]]['samples'][sample_name] = sample_dict
+            samples_in_step_dict[stepid_to_stepindex[stepid]]["samples"][
+                sample_name
+            ] = sample_dict
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps([samples_in_step_dict, project_level_udfs]))

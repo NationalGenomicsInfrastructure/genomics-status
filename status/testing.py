@@ -1,5 +1,5 @@
-""" Status Handlers used to test some functionalities while building layouts.
-"""
+"""Status Handlers used to test some functionalities while building layouts."""
+
 import json
 import random
 

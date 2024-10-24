@@ -816,10 +816,10 @@ class GenerateQuoteHandler(AgreementsDBHandler):
             template_text["appendices"], extensions=["sane_lists"]
         )
         for condition in template_text["first_page_text"]["specific_conditions"]:
-            template_text["first_page_text"]["specific_conditions"][
-                condition
-            ] = markdown.markdown(
-                template_text["first_page_text"]["specific_conditions"][condition]
+            template_text["first_page_text"]["specific_conditions"][condition] = (
+                markdown.markdown(
+                    template_text["first_page_text"]["specific_conditions"][condition]
+                )
             )
 
         if "agreement_summary" not in quote_input.keys():

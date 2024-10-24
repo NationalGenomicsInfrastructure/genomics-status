@@ -75,7 +75,7 @@ class DeliveriesPageHandler(SafeHandler):
         summary_view = self.application.projects_db.view(
             "project/summary", descending=True
         )
-        summary_view = summary_view[["open", "Z"]:["open", ""]]
+        summary_view = summary_view[["open", "Z"] : ["open", ""]]
         summary_data = {}
         for project in summary_view:
             # todo: check if this one works
@@ -221,12 +221,12 @@ class DeliveriesPageHandler(SafeHandler):
 
                         lane_status = self.__aggregate_status(lane_statuses)
 
-                        runs_bioinfo[flowcell_id]["lanes"][lane_id][
-                            "lane_status"
-                        ] = lane_status
-                        runs_bioinfo[flowcell_id]["lanes"][lane_id][
-                            "checklist"
-                        ] = lane_checklists
+                        runs_bioinfo[flowcell_id]["lanes"][lane_id]["lane_status"] = (
+                            lane_status
+                        )
+                        runs_bioinfo[flowcell_id]["lanes"][lane_id]["checklist"] = (
+                            lane_checklists
+                        )
                         flowcell_statuses.append(lane_status)
 
                     # the same logic here -> agregate flowcell statuses
@@ -256,10 +256,7 @@ class DeliveriesPageHandler(SafeHandler):
 
                 # project type (needed for filters)
                 project_type = (
-                    summary_data[project_id]
-                    .get("details")
-                    .get("type")
-                    or "unknown"
+                    summary_data[project_id].get("details").get("type") or "unknown"
                 )
 
                 if project_type not in project_type_list:

@@ -1,6 +1,5 @@
 """Handlers for worksets"""
 
-
 import datetime
 import json
 from collections import OrderedDict

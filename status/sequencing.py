@@ -1,5 +1,5 @@
-""" Handlers related to data sequencing statistics.
-"""
+"""Handlers related to data sequencing statistics."""
+
 import json
 from collections import defaultdict
 from datetime import datetime
