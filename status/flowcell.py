@@ -546,20 +546,17 @@ class ElementFlowcellDataHandler(SafeHandler):
                 )
             else:
                 project_ids = []
-                for lane in (
+                for sample in (
                     flowcell.get("instrument_generated_files", {})
-                    .get("AvitiRunStats.json", {})
-                    .get("LaneStats", {})
+                    .get("RunManifest.json", {})
+                    .get("Samples", [])
                 ):
-                    for sample in lane.get("IndexAssignments", {}).get(
-                        "IndexSamples", {}
-                    ):
-                        sample_name = sample.get("SampleName")
-                        # Check that the sample name is on the format PX..X_Y..Y"
-                        if re.match(r"^P\d+_\d+$", sample_name):
-                            # Parse out the PXXXXXX number from the sample name on the format "
-                            project_id = sample_name.split("_")[0]
-                            project_ids.append(project_id)
+                    sample_name = sample.get("SampleName")
+                    # Check that the sample name is on the format PX..X_Y..Y"
+                    if re.match(r"^P\d+_\d+$", sample_name):
+                        # Parse out the PXXXXXX number from the sample name on the format "
+                        project_id = sample_name.split("_")[0]
+                        project_ids.append(project_id)
 
                 project_ids = list(set(project_ids))
                 projects = get_project_names_from_ids(
