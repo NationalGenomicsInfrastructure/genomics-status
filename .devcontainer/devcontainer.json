@@ -12,6 +12,7 @@
     "customizations": {
         "vscode": {
             "extensions": [
+                "charliermarsh.ruff",
                 "ms-python.python",
                 "vscode-es6-string-html"
             ]
