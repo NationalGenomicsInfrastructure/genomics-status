@@ -586,7 +586,6 @@ app.component('v-element-lane-stats', {
                         <v-lane-stats-row :sample="unassigned_lane_stats_combined[laneKey]" :laneKey="laneKey"></v-lane-stats-row>
                     </tbody>
                 </table>
-
                 <div>
                     <button class="btn btn-info my-2" type="button" data-toggle="collapse" :data-target="'#collapseUndeterminedLane'+ laneKey" aria-expanded="false" :aria-controls="'#collapseUndeterminedLane'+ laneKey">
                         Show undetermined
@@ -610,12 +609,12 @@ app.component('v-element-lane-stats', {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="unassigned_item in this.unassigned_lane_stats[laneKey].slice(0,items_to_show(laneKey))" :key="index">
+                                        <tr v-for="unassigned_item in this.$root.getValue(this.unassigned_lane_stats, laneKey, []).slice(0,items_to_show(laneKey))" :key="index">
                                             <td style="font-size: 1.35rem;"><samp>{{ this.$root.barcode(unassigned_item)}}</samp></td>
                                             <td>{{ this.$root.formatNumberFloat( this.$root.getValue(unassigned_item, "% Unassigned"), decimalPoints=5)}} </td>
                                             <td>{{ unassigned_item["Count"] }}</td>
                                         </tr>
-                                        <tr v-if="this.unassigned_lane_stats[laneKey].length > items_to_show(laneKey)">
+                                        <tr v-if="this.$root.getValue(this.unassigned_lane_stats, laneKey, []).length > items_to_show(laneKey)">
                                             <td colspan="3">
                                                 <button class="btn btn-info" @click="show_more_items(laneKey)">Show 5 more...</button>
                                             </td>
