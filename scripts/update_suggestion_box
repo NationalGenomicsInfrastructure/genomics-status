@@ -49,7 +49,7 @@ def main(config):
             if closed:
                 doc = sb_database.get(doc_id)
                 doc["archived"] = closed
-                log.info(f"Card with key {jira_card["key"]} and card_id {card_id} was archived")
+                log.info(f"Card with key {jira_card['key']} and card_id {card_id} was archived")
                 docs.append(doc)
         except HTTPError:
             log.warning(
