@@ -634,7 +634,7 @@ app.component('v-pricing-quote', {
               </div>
             </div>
             <div class="col-5 offset-1 status_limit_width_large">
-              <div class="row justify-content-end">
+              <div class="row justify-content-end" v-if="origin === 'Agreement'">
                 <div class="col-auto">
                   <div class="fw-bold p-2 border border-secondary rounded-3 my-2">
                    <span v-if="this.invoice_invalidated"> No</span> Invoicing Required 
