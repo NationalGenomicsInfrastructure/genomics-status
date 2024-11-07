@@ -223,7 +223,9 @@ class StatsAggregationHandler(UnsafeHandler):
         self.nanopore_flowcell_aggregates = {
             "bp_seq_per_week": ("dashboard/week_instr_bp", 2)
         }
-
+        self.element_flowcell_aggregates = {
+            "bp_seq_per_week": ("dashboard/week_instr_bp", 2)
+        }
         self.cleaning = get_clean_application_keys(self)
 
     def get(self):
@@ -249,15 +251,22 @@ class StatsAggregationHandler(UnsafeHandler):
                 self.nanopore_flowcell_aggregates[fa][1],
                 self.cleaning,
             )
-
+        for fa in self.element_flowcell_aggregates:
+            element_stats = get_stats_data(
+                self.application.element_runs_db,
+                self.element_flowcell_aggregates[fa][0],
+                self.element_flowcell_aggregates[fa][1],
+                self.cleaning,
+            )
             # Use |= to merge the resulting dictionary with what's already
             # inside data[fa][key], | works as a union for dictionaries.
             # Doesn't work recursively though, so we have to do it for the bottom level only
-            for key, value in nanopore_stats.items():
-                if key in data[fa]:
-                    data[fa][key] |= value
-                else:
-                    data[fa][key] = value
+            for stats in (nanopore_stats, element_stats):
+                for key, value in stats.items():
+                    if key in data[fa]:
+                        data[fa][key] |= value
+                    else:
+                        data[fa][key] = value
 
         self.set_header("Content-Type", "application/json")
         self.set_status(200)
