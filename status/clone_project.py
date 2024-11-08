@@ -1,3 +1,5 @@
+import re
+
 import requests
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
@@ -26,6 +28,12 @@ class LIMSProjectCloningHandler(SafeHandler):
     """
 
     def get(self, projectid):
+        if not re.match("^(P[0-9]{3,7})", projectid):
+            try:
+                projectid = self.application.projects_db.view("projects/name_to_id")[projectid].rows[0].value
+            except IndexError:
+                self.set_status(404)
+                return self.write({"error": "Project not found"})
         proj_values = self.get_project_data(projectid, "get")
         if not proj_values:
             self.set_status(404)
