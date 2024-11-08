@@ -320,7 +320,6 @@ function load_all_udfs(){
     let application = 'application' in data ? data['application'] : '';
     
     if(application.includes('single cell')){
-      console.log("here")
       $('.single_cell_udf').removeAttr('hidden');
     }
 
