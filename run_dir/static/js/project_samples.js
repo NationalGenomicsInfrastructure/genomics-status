@@ -316,6 +316,13 @@ function load_all_udfs(){
     $('#loading_spinner').hide();
     $('#page_content').show();
 
+    // Display hidden single cell section if application is single cell
+    let application = 'application' in data ? data['application'] : '';
+    
+    if(application.includes('single cell')){
+      $('.single_cell_udf').removeAttr('hidden');
+    }
+
     // Project not found
     if(Object.getOwnPropertyNames(data).length == 0){
       $('#page_content').html('<h1>Error - Project Not Found</h1><div class="alert alert-danger">Oops! Sorry about that, we can\'t find the project <strong>'+project+'</strong></div>');
