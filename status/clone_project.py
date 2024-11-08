@@ -30,7 +30,11 @@ class LIMSProjectCloningHandler(SafeHandler):
     def get(self, projectid):
         if not re.match("^(P[0-9]{3,7})", projectid):
             try:
-                projectid = self.application.projects_db.view("projects/name_to_id")[projectid].rows[0].value
+                projectid = (
+                    self.application.projects_db.view("projects/name_to_id")[projectid]
+                    .rows[0]
+                    .value
+                )
             except IndexError:
                 self.set_status(404)
                 return self.write({"error": "Project not found"})
