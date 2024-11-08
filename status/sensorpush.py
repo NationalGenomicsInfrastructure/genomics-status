@@ -1,8 +1,7 @@
-"""Set of handlers related with Sensorpush data
-"""
+"""Set of handlers related with Sensorpush data"""
 
-import json
 import datetime
+import json
 
 from status.util import SafeHandler
 
@@ -42,7 +41,7 @@ class SensorpushBaseHandler(SafeHandler):
                 "intervals_higher": [],
             }
             for sensor_daily_row in samples_view[
-                [sensor_original, start_time_str]:[sensor_original, "9999"]
+                [sensor_original, start_time_str] : [sensor_original, "9999"]
             ]:
                 _, timestamp = sensor_daily_row.key
                 doc = sensor_daily_row.value

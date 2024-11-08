@@ -1,17 +1,16 @@
-import json
 import datetime
-import markdown
-import os
+import json
 import logging
+import os
+
+import markdown
 import pandas as pd
 import requests
-from dateutil.relativedelta import relativedelta
-
 import tornado.web
-from weasyprint import HTML, CSS
+from weasyprint import CSS, HTML
 
-from status.util import SafeHandler
 from status.pricing import AgreementsDBHandler
+from status.util import SafeHandler
 
 logging.getLogger("fontTools").setLevel(logging.ERROR)
 logging.getLogger("weasyprint").setLevel(logging.ERROR)
@@ -102,30 +101,38 @@ class InvoiceSpecDateHandler(AgreementsDBHandler, InvoicingDataHandler):
             )
 
         post_data = tornado.escape.json_decode(self.request.body)
+        action_type = post_data["action_type"]
 
         proj_doc = self.get_proj_doc(post_data["proj_id"])
-        agreement_doc = self.fetch_agreement(post_data["proj_id"])
 
-        agreement_for_invoice_timestamp = post_data["timestamp"]
-        if agreement_for_invoice_timestamp not in agreement_doc["saved_agreements"]:
-            self.set_status(400)
-            return self.write("Error: Chosen agreement not found")
+        if action_type == "generate":
+            agreement_doc = self.fetch_agreement(post_data["proj_id"])
+            agreement_for_invoice_timestamp = post_data["timestamp"]
+            if agreement_for_invoice_timestamp not in agreement_doc["saved_agreements"]:
+                self.set_status(400)
+                return self.write("Error: Chosen agreement not found")
 
-        agreement_doc["invoice_spec_generated_for"] = agreement_for_invoice_timestamp
-        agreement_doc["invoice_spec_generated_by"] = self.get_current_user().name
-        generated_at = int(datetime.datetime.now().timestamp() * 1000)
-        agreement_doc["invoice_spec_generated_at"] = generated_at
+            agreement_doc["invoice_spec_generated_for"] = (
+                agreement_for_invoice_timestamp
+            )
+            agreement_doc["invoice_spec_generated_by"] = self.get_current_user().name
+            generated_at = int(datetime.datetime.now().timestamp() * 1000)
+            agreement_doc["invoice_spec_generated_at"] = generated_at
+            proj_doc["agreement_doc_id"] = agreement_doc["_id"]
+            return_msg = "Invoice spec generated"
+            # # probably add a try-except here in the future
+            self.application.agreements_db.save(agreement_doc)
+
+        if action_type == "invalidate":
+            generated_at = post_data["timestamp"]
+            return_msg = "Invoice spec invalidated"
 
         proj_doc["invoice_spec_generated"] = generated_at
-        proj_doc["agreement_doc_id"] = agreement_doc["_id"]
-
-        # probably add a try-except here in the future
-        self.application.agreements_db.save(agreement_doc)
         self.application.projects_db.save(proj_doc)
         # update proj db directly at same time as lims? Do we need it in lims?
 
         self.set_header("Content-type", "application/json")
-        self.write({"message": "Invoice spec generated"})
+        self.write({"message": return_msg})
 
 
 class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
@@ -153,8 +160,8 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
             return self.write("Error: Multiple projects specified!")
 
     def post(self):
-        from io import BytesIO
         import zipfile as zp
+        from io import BytesIO
 
         if not self.get_current_user().is_proj_coord:
             self.set_status(401)
@@ -213,12 +220,12 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
                     "1,00",
                     f'({proj_specs["cust_desc"]})',
                     account_dets["fakturaunderlag"],
-                    contact_dets["email"],
                     account_dets["fakturafragor"],
                     account_dets["support_email"],
                     " ",
+                    account_dets["artikelnr"],
                     " ",
-                    " ",
+                    account_dets["ftg"],
                     account_dets["unit"],
                     account_dets["number"],
                     " ",
@@ -242,9 +249,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
             )
 
         self.set_header("Content-Type", "application/zip")
-        self.set_header(
-            "Content-Disposition", "attachment; filename={}".format(fileName)
-        )
+        self.set_header("Content-Disposition", f"attachment; filename={fileName}")
         self.write(buff.getvalue())
         buff.close()
         self.finish()
@@ -272,6 +277,8 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
         account_dets["fakturaunderlag"] = inv_defs["account_details"]["fakturaunderlag"]
         account_dets["fakturafragor"] = inv_defs["account_details"]["fakturafragor"]
         account_dets["support_email"] = inv_defs["account_details"]["support_email"]
+        account_dets["artikelnr"] = inv_defs["account_details"].get("artikelnr", "")
+        account_dets["ftg"] = inv_defs["account_details"].get("ftg", "")
 
         contact_dets = {}
         fields = self.get_order_details(proj_doc["order_details"]["identifier"])
@@ -316,9 +323,9 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
         proj_specs["invoice_created"] = datetime.datetime.fromtimestamp(
             agreement_doc["invoice_spec_generated_at"] / 1000.0
         ).strftime("%Y-%m-%d")
-        proj_specs[
-            "contract_name"
-        ] = f'{proj_id}_{agreement_doc["invoice_spec_generated_for"]}'
+        proj_specs["contract_name"] = (
+            f'{proj_id}_{agreement_doc["invoice_spec_generated_for"]}'
+        )
         proj_specs["summary"] = markdown.markdown(
             invoiced_agreement["agreement_summary"], extensions=["sane_lists"]
         )

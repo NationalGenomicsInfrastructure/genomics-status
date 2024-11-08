@@ -1,7 +1,8 @@
-import json
 import datetime
-import dateutil
+import json
 import traceback
+
+import dateutil
 
 from status.util import SafeHandler
 
@@ -27,7 +28,7 @@ class BioinfoAnalysisHandler(SafeHandler):
         assert_project_id(project_id)
         # Fetching documents one by one generates too many requests to statusdb
         # Hopefully fetching all documents at once doesn't require too much memory
-        view = v[[project_id, "", "", ""]:[project_id, "Z", "Z", "Z"]]
+        view = v[[project_id, "", "", ""] : [project_id, "Z", "Z", "Z"]]
         cached_view = {}
         for row in view.rows:
             if tuple(row.key) in cached_view:
@@ -77,12 +78,10 @@ class BioinfoAnalysisHandler(SafeHandler):
         # couchdb bulk update
         try:
             save_result = self.application.bioinfo_db.update(to_save)
-        except Exception as err:
+        except Exception:
             self.set_status(400)
             self.finish(
-                "<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{}</pre></body></html>".format(
-                    traceback.format_exc()
-                )
+                f"<html><body><p>Could not save bioinfo data. Please try again later.</p><pre>{traceback.format_exc()}</pre></body></html>"
             )
             return None
         neg_save_res = []
@@ -118,9 +117,9 @@ class BioinfoAnalysisHandler(SafeHandler):
                     "lanes": {lane_id: bioinfo_qc}
                 }
             elif lane_id not in bioinfo1[sample_id]["flowcells"][flowcell_id]["lanes"]:
-                bioinfo1[sample_id]["flowcells"][flowcell_id]["lanes"][
-                    lane_id
-                ] = bioinfo_qc
+                bioinfo1[sample_id]["flowcells"][flowcell_id]["lanes"][lane_id] = (
+                    bioinfo_qc
+                )
             else:
                 bioinfo1[sample_id]["flowcells"][flowcell_id]["lanes"][lane_id].update(
                     bioinfo_qc
@@ -137,9 +136,9 @@ class BioinfoAnalysisHandler(SafeHandler):
                     "samples": {sample_id: bioinfo_qc}
                 }
             elif sample_id not in bioinfo2[flowcell_id]["lanes"][lane_id]["samples"]:
-                bioinfo2[flowcell_id]["lanes"][lane_id]["samples"][
-                    sample_id
-                ] = bioinfo_qc
+                bioinfo2[flowcell_id]["lanes"][lane_id]["samples"][sample_id] = (
+                    bioinfo_qc
+                )
             else:
                 bioinfo2[flowcell_id]["lanes"][lane_id]["samples"][sample_id].update(
                     bioinfo_qc

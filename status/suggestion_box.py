@@ -1,10 +1,12 @@
 from collections import OrderedDict
 from datetime import datetime
 
-from trello import TrelloClient
+from atlassian import Jira
+from ibmcloudant.cloudant_v1 import Document
+
 from status.util import SafeHandler
 
-TITLE_TEMPLATE = "{title} ({area})"
+TITLE_TEMPLATE = "{deployment}{title} ({area})"
 
 DESCRIPTION_TEMPLATE = """
 * Created on: {date}
@@ -14,10 +16,10 @@ DESCRIPTION_TEMPLATE = """
 * Difficulty: {difficulty}
 * Reporter: {user}
 
-**Description**
+*Description*
 {description}
 
-**Suggestion**
+*Suggestion*
 {suggestion}
 """
 
@@ -35,10 +37,9 @@ class SuggestionBoxHandler(SafeHandler):
         )
 
     def post(self):
-        """Collect data from the HTML form to fill in a Trello card.
+        """Collect data from the HTML form to fill in a Jira card.
 
-        That card will be uploaded to Suggestion Box board, on the corresponding
-        list, determined by the "System" attribute given in the form.
+        That card will be uploaded to the Suggestion Box status on the Stockholm developers project
         """
         # Get form data
         date = datetime.now()
@@ -50,56 +51,54 @@ class SuggestionBoxHandler(SafeHandler):
         user = self.get_current_user()
         description = self.get_argument("description")
         suggestion = self.get_argument("suggestion")
+        deployment = "" if self.application.gs_globals["prod"] else "[STAGE] "
 
-        client = TrelloClient(
-            api_key=self.application.trello_api_key,
-            api_secret=self.application.trello_api_secret,
-            token=self.application.trello_token,
+        jira = Jira(
+            url=self.application.jira_url,
+            username=self.application.jira_user,
+            password=self.application.jira_api_token,
         )
 
-        # Get Suggestion Box board
-        boards = client.list_boards()
-        suggestion_box = None
-        for b in boards:
-            if b.name == "Suggestion Box":
-                suggestion_box = client.get_board(b.id)
-                break
-
-        # Get the board lists (which correspond to System in the form data) and
-        # concretely get the list where the card will go
-        lists = suggestion_box.all_lists()
-        card_list = None
-        for l in lists:
-            if l.name == system:
-                card_list = l
-                break
-
-        # Create new card using the info from the form
-        new_card = card_list.add_card(TITLE_TEMPLATE.format(title=title, area=area))
-        new_card.set_description(
-            DESCRIPTION_TEMPLATE.format(
-                date=date.ctime(),
-                area=area,
-                system=system,
-                importance=importance,
-                difficulty=difficulty,
-                user=user.name,
-                description=description,
-                suggestion=suggestion,
-            )
+        summary = TITLE_TEMPLATE.format(deployment=deployment, title=title, area=area)
+        description = DESCRIPTION_TEMPLATE.format(
+            date=date.ctime(),
+            area=area,
+            system=system,
+            importance=importance,
+            difficulty=difficulty,
+            user=user.name,
+            description=description,
+            suggestion=suggestion,
         )
-
-        # Save the information of the card in the database
-        self.application.suggestions_db.create(
-            {
-                "date": date.isoformat(),
-                "card_id": new_card.id,
-                "description": new_card.description,
-                "name": new_card.name,
-                "url": new_card.url,
-                "archived": False,
+        new_card = jira.issue_create(
+            fields={
+                "project": {"key": self.application.jira_project_key},
+                "summary": summary,
+                "description": description,
+                "issuetype": {"name": "Task"},
             }
         )
+        if not new_card:
+            self.set_status(500)
+            return
+
+        # Save the information of the card in the database
+        doc = Document(
+            date=date.isoformat(),
+            card_id=new_card.get("id"),
+            name=summary,
+            url=f"{self.application.jira_url}/jira/core/projects/{self.application.jira_project_key}/board?selectedIssue={new_card.get('key')}",
+            archived=False,
+            source="jira",
+        )
+
+        response = self.application.cloudant.post_document(
+            db="suggestion_box", document=doc
+        ).get_result()
+
+        if not response.get("ok"):
+            self.set_status(500)
+            return
 
         self.set_status(200)
 

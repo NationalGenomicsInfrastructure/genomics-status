@@ -208,12 +208,16 @@
                           {% elif sample_q30 < q30_threshold %} table-warning
                           {% else %} table-success {% end %}">{{ sample_q30 }}</td>
                     {% end %}
-
+                    
+                    <td style="font-size: 1.35rem;">
                     {% if sample.get('multi_barcode') %}
-                      <td>{% for code in sample.get('multi_barcode')  %}{{ code }} {% end %}</td>
+                      {% for code in sample.get('multi_barcode')  %}
+                       <samp>  {{ code }} </samp>
+                      {% end %}
                     {% else %}
-                      <td>{{ sample.get('barcode') }}</td>
+                      <samp>{{ sample.get('barcode') }} </samp>
                     {% end %}
+                    </td>
 
                     {% if 'lanepc' in sample %} <td class="text-center">{{ float("{0:.2f}".format(float(sample['lanepc']))) }}</td> {% end %}
                     {% if 'mqs' in sample %}

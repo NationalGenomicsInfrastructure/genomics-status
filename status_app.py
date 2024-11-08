@@ -1,22 +1,21 @@
-""" Main genomics-status web application.
-"""
+"""Main genomics-status web application."""
+
 import base64
 import subprocess
 import uuid
-import yaml
-import json
-import requests
-
-from collections import OrderedDict
-from couchdb import Server
+from pathlib import Path
+from urllib.parse import urlsplit
 
 import tornado.autoreload
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
-
+import yaml
+from couchdb import Server
+from ibmcloudant import CouchDbSessionAuthenticator, cloudant_v1
 from tornado import template
 from tornado.options import define, options
+from zenpy import Zenpy
 
 from status.applications import (
     ApplicationDataHandler,
@@ -24,14 +23,20 @@ from status.applications import (
     ApplicationsDataHandler,
     ApplicationsHandler,
 )
-from status.barcode import BarcodeHandler
-from status.clone_project import CloneProjectHandler, LIMSProjectCloningHandler
-from status.user_management import UserManagementHandler, UserManagementDataHandler
 from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandler
+from status.barcode import BarcodeHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
+from status.clone_project import CloneProjectHandler, LIMSProjectCloningHandler
+from status.controls import ControlsHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
-from status.flowcell import FlowcellHandler, ONTFlowcellHandler, ONTReportHandler
+from status.flowcell import (
+    ElementFlowcellDataHandler,
+    ElementFlowcellHandler,
+    FlowcellHandler,
+    ONTFlowcellHandler,
+    ONTReportHandler,
+)
 from status.flowcells import (
     FlowcellDemultiplexHandler,
     FlowcellLinksDataHandler,
@@ -45,48 +50,55 @@ from status.flowcells import (
     ReadsTotalHandler,
 )
 from status.instruments import (
-    InstrumentLogsHandler,
     DataInstrumentLogsHandler,
+    InstrumentLogsHandler,
     InstrumentNamesHandler,
 )
 from status.invoicing import (
-    InvoicingPageHandler,
-    InvoiceSpecDateHandler,
-    InvoicingPageDataHandler,
-    GenerateInvoiceHandler,
     DeleteInvoiceHandler,
-    SentInvoiceHandler,
+    GenerateInvoiceHandler,
+    InvoiceSpecDateHandler,
     InvoicingOrderDetailsHandler,
+    InvoicingPageDataHandler,
+    InvoicingPageHandler,
+    SentInvoiceHandler,
 )
-from status.lanes_ordered import LanesOrderedHandler, LanesOrderedDataHandler
+from status.lanes_ordered import LanesOrderedDataHandler, LanesOrderedHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.ngisweden_stats import NGISwedenHandler
+from status.ont_plot import ONTFlowcellPlotHandler, ONTFlowcellYieldHandler
 from status.pricing import (
-    PricingDateToVersionDataHandler,
-    PricingExchangeRatesDataHandler,
-    PricingQuoteHandler,
-    PricingValidateDraftDataHandler,
-    PricingPublishDataHandler,
-    PricingReassignLockDataHandler,
-    PricingUpdateHandler,
-    PricingPreviewHandler,
-    PricingDataHandler,
-    PricingDraftDataHandler,
-    GenerateQuoteHandler,
-    AgreementTemplateTextHandler,
     AgreementDataHandler,
     AgreementMarkSignHandler,
+    AgreementTemplateTextHandler,
+    GenerateQuoteHandler,
+    PricingDataHandler,
+    PricingDateToVersionDataHandler,
+    PricingDraftDataHandler,
+    PricingExchangeRatesDataHandler,
+    PricingPreviewHandler,
+    PricingPublishDataHandler,
+    PricingQuoteHandler,
+    PricingReassignLockDataHandler,
+    PricingUpdateHandler,
+    PricingValidateDraftDataHandler,
     SaveQuoteHandler,
 )
 from status.production import (
     ProductionCronjobsHandler,
 )
+from status.project_cards import ProjectCardsHandler, ProjectCardsWebSocket
 from status.projects import (
     CaliperImageHandler,
     CharonProjectHandler,
+    FragAnImageHandler,
+    ImagesDownloadHandler,
     LinksDataHandler,
     PresetsHandler,
+    PresetsOnLoadHandler,
+    PrioProjectsTableHandler,
     ProjectDataHandler,
+    ProjectRNAMetaDataHandler,
     ProjectSamplesDataHandler,
     ProjectSamplesHandler,
     ProjectSamplesOldHandler,
@@ -95,44 +107,36 @@ from status.projects import (
     ProjectsHandler,
     ProjectsSearchHandler,
     ProjectTicketsDataHandler,
-    RecCtrlDataHandler,
     ProjMetaCompareHandler,
-    ProjectRNAMetaDataHandler,
-    FragAnImageHandler,
-    PresetsOnLoadHandler,
-    ImagesDownloadHandler,
-    PrioProjectsTableHandler,
+    RecCtrlDataHandler,
 )
-
-from status.project_cards import (
-    ProjectCardsHandler,
-    ProjectCardsWebSocket
-)
-
 from status.queues import (
-    qPCRPoolsDataHandler,
-    qPCRPoolsHandler,
+    LibraryPoolingQueuesDataHandler,
+    LibraryPoolingQueuesHandler,
     SequencingQueuesDataHandler,
     SequencingQueuesHandler,
-    WorksetQueuesHandler,
-    WorksetQueuesDataHandler,
-    LibraryPoolingQueuesHandler,
-    LibraryPoolingQueuesDataHandler,
-    SmartSeq3ProgressPageHandler,
     SmartSeq3ProgressPageDataHandler,
+    SmartSeq3ProgressPageHandler,
+    WorksetQueuesDataHandler,
+    WorksetQueuesHandler,
+    qPCRPoolsDataHandler,
+    qPCRPoolsHandler,
 )
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
-from status.ont_plot import ONTFlowcellYieldHandler, ONTFlowcellPlotHandler
-from status.running_notes import RunningNotesDataHandler, LatestStickyNoteHandler, LatestStickyNotesMultipleHandler
+from status.running_notes import (
+    LatestStickyNoteHandler,
+    LatestStickyNotesMultipleHandler,
+    RunningNotesDataHandler,
+)
 from status.sample_requirements import (
-    SampleRequirementsViewHandler,
     SampleRequirementsDataHandler,
-    SampleRequirementsUpdateHandler,
     SampleRequirementsDraftDataHandler,
-    SampleRequirementsValidateDraftDataHandler,
     SampleRequirementsPreviewHandler,
-    SampleRequirementsReassignLockDataHandler,
     SampleRequirementsPublishDataHandler,
+    SampleRequirementsReassignLockDataHandler,
+    SampleRequirementsUpdateHandler,
+    SampleRequirementsValidateDraftDataHandler,
+    SampleRequirementsViewHandler,
 )
 from status.sensorpush import (
     SensorpushDataHandler,
@@ -140,28 +144,30 @@ from status.sensorpush import (
     SensorpushWarningsDataHandler,
 )
 from status.sequencing import (
-    InstrumentClusterDensityPlotHandler,
-    InstrumentErrorratePlotHandler,
-    InstrumentUnmatchedPlotHandler,
-    InstrumentYieldPlotHandler,
     InstrumentClusterDensityDataHandler,
+    InstrumentClusterDensityPlotHandler,
     InstrumentErrorrateDataHandler,
+    InstrumentErrorratePlotHandler,
     InstrumentUnmatchedDataHandler,
+    InstrumentUnmatchedPlotHandler,
     InstrumentYieldDataHandler,
+    InstrumentYieldPlotHandler,
 )
 from status.statistics import (
-    YearApplicationsProjectHandler,
-    YearApplicationsSamplesHandler,
-    YearAffiliationProjectsHandler,
-    YearDeliverytimeProjectsHandler,
     ApplicationOpenProjectsHandler,
     ApplicationOpenSamplesHandler,
-    WeekInstrumentTypeYieldHandler,
     StatsAggregationHandler,
+    WeekInstrumentTypeYieldHandler,
+    YearAffiliationProjectsHandler,
+    YearApplicationsProjectHandler,
+    YearApplicationsSamplesHandler,
     YearDeliverytimeApplicationHandler,
+    YearDeliverytimeProjectsHandler,
 )
 from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
+from status.user_management import UserManagementDataHandler, UserManagementHandler
+from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b5
 from status.util import (
     BaseHandler,
     DataHandler,
@@ -169,20 +175,15 @@ from status.util import (
     MainHandler,
     UpdatedDocumentsDatahandler,
 )
-from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b5
 from status.worksets import (
-    WorksetHandler,
-    WorksetsHandler,
+    ClosedWorksetsHandler,
     WorksetDataHandler,
+    WorksetHandler,
     WorksetLinksHandler,
     WorksetsDataHandler,
     WorksetSearchHandler,
-    ClosedWorksetsHandler,
+    WorksetsHandler,
 )
-
-from zenpy import Zenpy
-from urllib.parse import urlsplit
-from pathlib import Path
 
 
 class Application(tornado.web.Application):
@@ -240,6 +241,7 @@ class Application(tornado.web.Application):
             ),
             ("/api/v1/draft_cost_calculator", PricingDraftDataHandler),
             ("/api/v1/draft_sample_requirements", SampleRequirementsDraftDataHandler),
+            ("/api/v1/element_flowcell/([^/]*$)", ElementFlowcellDataHandler),
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
@@ -270,7 +272,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
             ("/api/v1/instrument_error_rates.png", InstrumentErrorratePlotHandler),
             ("/api/v1/instrument_logs", DataInstrumentLogsHandler),
-            ("/api/v1/instrument_logs/([^/]*)$", DataInstrumentLogsHandler),
+            ("/api/v1/instrument_logs/([^/]*)/([^/]*)$", DataInstrumentLogsHandler),
             ("/api/v1/instrument_names", InstrumentNamesHandler),
             ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
@@ -339,7 +341,7 @@ class Application(tornado.web.Application):
             ),
             ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
-            ("/api/v1/test/(\w+)?", TestDataHandler),
+            (r"/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/user_management/users", UserManagementDataHandler),
             ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
             ("/api/v1/worksets", WorksetsDataHandler),
@@ -348,15 +350,17 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_queues", WorksetQueuesDataHandler),
             ("/api/v1/closed_worksets", ClosedWorksetsHandler),
             ("/barcode", BarcodeHandler),
+            ("/controls", ControlsHandler),
             ("/applications", ApplicationsHandler),
             ("/application/([^/]*)$", ApplicationHandler),
             ("/bioinfo/(P[^/]*)$", BioinfoAnalysisHandler),
             ("/clone_project", CloneProjectHandler),
             ("/deliveries", DeliveriesPageHandler),
             ("/flowcells", FlowcellsHandler),
-            ("/flowcells/(\d{6,8}_[^/]*)$", FlowcellHandler),
-            ("/flowcells_ont/(\d{8}_[^/]*)$", ONTFlowcellHandler),
-            ("/flowcells_ont/(\d{8}_[^/]*)/[^/]*$", ONTReportHandler),
+            (r"/flowcells/(\d{6,8}_[^/]*)$", FlowcellHandler),
+            (r"/flowcells_element/([^/]*)$", ElementFlowcellHandler),
+            (r"/flowcells_ont/(\d{8}_[^/]*)$", ONTFlowcellHandler),
+            (r"/flowcells_ont/(\d{8}_[^/]*)/[^/]*$", ONTReportHandler),
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/ont_flowcells_plot", ONTFlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
@@ -409,8 +413,10 @@ class Application(tornado.web.Application):
             self.analysis_db = couch["analysis"]
             self.application_categories_db = couch["application_categories"]
             self.bioinfo_db = couch["bioinfo_analysis"]
+            self.biomek_errs_db = couch["biomek_logs"]
             self.cost_calculator_db = couch["cost_calculator"]
             self.cronjobs_db = couch["cronjobs"]
+            self.element_runs_db = couch["element_runs"]
             self.flowcells_db = couch["flowcells"]
             self.gs_users_db = couch["gs_users"]
             self.instruments_db = couch["instruments"]
@@ -427,14 +433,24 @@ class Application(tornado.web.Application):
             self.running_notes_db = couch["running_notes"]
         else:
             print(settings.get("couch_server", None))
-            raise IOError("Cannot connect to couchdb")
+            raise OSError("Cannot connect to couchdb")
+
+        cloudant = cloudant_v1.CloudantV1(
+            authenticator=CouchDbSessionAuthenticator(
+                settings.get("username"), settings.get("password")
+            )
+        )
+        cloudant.set_service_url(settings.get("couch_url"))
+        if cloudant:
+            self.cloudant = cloudant
 
         # Load columns and presets from genstat-defaults user in StatusDB
         genstat_id = ""
-        user_id = ""
         user = settings.get("username", None)
 
-        genstat_id_rows = self.gs_users_db.view("authorized/users")['genstat-defaults'].rows
+        genstat_id_rows = self.gs_users_db.view("authorized/users")[
+            "genstat-defaults"
+        ].rows
         for row in genstat_id_rows:
             genstat_defaults_doc_id = row.get("value")
 
@@ -453,7 +469,7 @@ class Application(tornado.web.Application):
                 "Multiple genstat-default users found in the database, please fix"
             )
 
-        self.genstat_defaults = self.gs_users_db[genstat_defaults_doc_id] 
+        self.genstat_defaults = self.gs_users_db[genstat_defaults_doc_id]
 
         # Load private instrument listing
         self.instrument_list = settings.get("instruments")
@@ -474,10 +490,11 @@ class Application(tornado.web.Application):
             subdomain=urlsplit(self.zendesk_url).hostname.split(".")[0],
         )
 
-        # Trello
-        self.trello_api_key = settings["trello"]["api_key"]
-        self.trello_api_secret = settings["trello"]["api_secret"]
-        self.trello_token = settings["trello"]["token"]
+        # Jira
+        self.jira_url = settings["jira"]["url"]
+        self.jira_user = settings["jira"]["user"]
+        self.jira_api_token = settings["jira"]["api_token"]
+        self.jira_project_key = settings["jira"]["project_key"]
 
         # Slack
         self.slack_token = settings["slack"]["token"]
@@ -523,11 +540,13 @@ class Application(tornado.web.Application):
         if options["develop"]:
             tornado.autoreload.watch("design/application.html")
             tornado.autoreload.watch("design/applications.html")
+            tornado.autoreload.watch("design/barcode.html")
             tornado.autoreload.watch("design/base.html")
             tornado.autoreload.watch("design/base_b5.html")
             tornado.autoreload.watch("design/bioinfo_tab.html")
             tornado.autoreload.watch("design/bioinfo_tab/run_lane_sample_view.html")
             tornado.autoreload.watch("design/bioinfo_tab/sample_run_lane_view.html")
+            tornado.autoreload.watch("design/controls.html")
             tornado.autoreload.watch("design/cronjobs.html")
             tornado.autoreload.watch("design/clone_project.html")
             tornado.autoreload.watch("design/data_delivered_plot.html")
@@ -536,15 +555,14 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/flowcell.html")
             tornado.autoreload.watch("design/flowcell_error.html")
             tornado.autoreload.watch("design/flowcell_trend_plot.html")
-            tornado.autoreload.watch("design/ont_trend_plot.html")
             tornado.autoreload.watch("design/flowcells.html")
-            tornado.autoreload.watch("design/lanes_ordered.html")
             tornado.autoreload.watch("design/index.html")
             tornado.autoreload.watch("design/instrument_logs.html")
             tornado.autoreload.watch("design/invoicing.html")
-            tornado.autoreload.watch("design/barcode.html")
+            tornado.autoreload.watch("design/lanes_ordered.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/ngisweden_stats.html")
+            tornado.autoreload.watch("design/ont_trend_plot.html")
             tornado.autoreload.watch("design/qpcr_pools.html")
             tornado.autoreload.watch("design/pricing_products.html")
             tornado.autoreload.watch("design/pricing_quote.html")

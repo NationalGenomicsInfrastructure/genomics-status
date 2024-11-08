@@ -8,7 +8,7 @@ app.component('v-pricing-quote', {
       return {
         md_message: '',
         md_src_message: '',
-        proj_data: {'pi_name':'', 'affiliation':'', 'invoice_downloaded': '', 'order_details':{}},
+        proj_data: {'pi_name':'', 'affiliation':'', 'invoice_downloaded': '', 'order_details':{}, 'invoice_generated': ''},
         cLabel_index: 0,
         active_cost_labels: {},
         template_text_data: {},
@@ -111,12 +111,18 @@ app.component('v-pricing-quote', {
         },
         invoice_downloaded(){
           return this.proj_data['invoice_downloaded']!==''? true:false
-        }
+        },
+        invoice_invalidated(){
+          return this.proj_data['invoice_generated']==='NA'? true:false
+        },
+        invoice_generated(){
+          return this.proj_data['invoice_generated']!==''? true:false
+        },
     },
     created: function() {
         this.$root.fetchPublishedCostCalculator(true),
         this.$root.fetchExchangeRates(),
-        this.fetch_latest_agreement_doc()
+        this.fetch_latest_agreement_template_doc()
     },
     mounted: function () {
         this.get_project_specific_data()
@@ -155,6 +161,9 @@ app.component('v-pricing-quote', {
                     if('invoice_spec_downloaded' in pdata){
                       this.proj_data['invoice_downloaded'] = pdata['invoice_spec_downloaded']
                     }
+                    if('invoice_spec_generated' in pdata){
+                      this.proj_data['invoice_generated'] = pdata['invoice_spec_generated']
+                    }
                     if(pdata['type']==='Application'){
                       this.applProj = true
                     }
@@ -168,29 +177,33 @@ app.component('v-pricing-quote', {
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Unable to fetch project data, please try again or contact a system administrator.')
+                    console.log('Unable to fetch project data', error)
                 })
                 this.get_saved_agreement_data(proj_id)
             }
         },
         get_order_details(order_id){
-          axios
-              .get('/api/v1/get_order_det_invoicing/'+order_id)
-              .then(response => {
-                  this.proj_data['order_details'] = response.data
-              })
-              .catch(error => {
-                  this.$root.error_messages.push('Unable to fetch order data, please try again or contact a system administrator.')
-                  this.proj_data['order_details'] = { 'reference': '-', 
-                                                      'university': '-', 
-                                                      'department': '-', 
-                                                      'invoice_address': '-', 
-                                                      'invoice_zip': '-', 
-                                                      'invoice_city': '-', 
-                                                      'invoice_country': '-', 
-                                                      'invoice_vat': '-', 
-                                                      'invoice_organisation_number': '-'
-                                                    }
-              })
+          this.proj_data['order_details'] = { 'reference': '-', 
+                                              'university': '-', 
+                                              'department': '-', 
+                                              'invoice_address': '-', 
+                                              'invoice_zip': '-', 
+                                              'invoice_city': '-', 
+                                              'invoice_country': '-', 
+                                              'invoice_vat': '-', 
+                                              'invoice_organisation_number': '-'
+                                            }
+          if(order_id){
+            axios
+                .get('/api/v1/get_order_det_invoicing/'+order_id)
+                .then(response => {
+                    this.proj_data['order_details'] = response.data
+                })
+                .catch(error => {
+                    this.$root.error_messages.push('Unable to fetch order data, please try again or contact a system administrator.')
+                    console.log('Unable to fetch order data', error)
+                })
+          }
         },
         get_saved_agreement_data(proj_id){
           axios
@@ -200,9 +213,17 @@ app.component('v-pricing-quote', {
                   if(Object.keys(this.saved_agreement_data).includes('signed')){
                     this.load_saved_agreement(this.saved_agreement_data['signed'])
                   }
+                  else{
+                    if('saved_agreements' in this.saved_agreement_data){
+                      let timestamps = Object.keys(this.saved_agreement_data['saved_agreements'])
+                      //Load latest saved agreement
+                      this.load_saved_agreement(timestamps.reduce((a,b) => a > b ? a : b))
+                    }
+                  }
               })
               .catch(error => {
                   this.$root.error_messages.push('Unable to fetch agreement data, please try again or contact a system administrator.')
+                  console.log('Unable to fetch agreement data', error)
               })
         },
         toggle_discontinued() {
@@ -221,7 +242,7 @@ app.component('v-pricing-quote', {
             day: "2-digit",
           }).format(date) + ', ' + date.toLocaleTimeString(date)
         },
-        load_saved_agreement(signed_timestamp){
+        load_saved_agreement(timestamp_selected){
           //Reset fields
           this.applProj = false
           this.noQCProj = false
@@ -236,9 +257,11 @@ app.component('v-pricing-quote', {
             timestamp_val = query_timestamp_radio.value
             loaded_version = query_timestamp_radio.labels[0].innerText.split('\n')[0]
           }
-          else if(signed_timestamp){
-            timestamp_val = signed_timestamp
-            loaded_version = this.timestamp_to_date(this.saved_agreement_data['signed_at']) + ', ' + this.saved_agreement_data['signed_by']
+          else if(timestamp_selected){
+            timestamp_val = timestamp_selected
+            agreement_selected =  this.saved_agreement_data['saved_agreements'][timestamp_selected]
+            loaded_version = this.timestamp_to_date(timestamp_selected) + ', ' + agreement_selected['created_by'] +
+                              ' ('+ agreement_selected['total_cost']+' SEK on cost calc v'+ agreement_selected['cost_calculator_version']+')'
           }
           else{
             alert("No agreement selected")
@@ -257,9 +280,11 @@ app.component('v-pricing-quote', {
                     this.$root.published_cost_calculator = response.data.cost_calculator
                     this.$root.all_products = response.data.cost_calculator.products
                     this.$root.all_components = response.data.cost_calculator.components
+                    this.$root.refresh_table = true
                   })
                   .catch(error => {
                     this.$root.error_messages.push('Unable to fetch used cost calculator data, please try again or contact a system administrator.')
+                    console.log('Unable to fetch used cost calculator data', error)
                   })
               }
             }
@@ -291,6 +316,14 @@ app.component('v-pricing-quote', {
             }
           }
         },
+
+        reload_latest_cost_calculator(){
+          //reload the latest cost calculator and reload table
+          this.$root.published_cost_calculator = this.latest_cost_calculator
+          this.$root.all_products = this.latest_cost_calculator.products
+          this.$root.all_components = this.latest_cost_calculator.components
+          this.$root.refresh_table = true
+        },
         mark_agreement_signed(){
           var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
           var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : ""
@@ -304,27 +337,38 @@ app.component('v-pricing-quote', {
             })
             .catch(error => {
                 this.$root.error_messages.push('Unable to mark agreement signed, please try again or contact a system administrator.')
+                console.log('Unable to mark agreement signed', error)
             })
           }
         },
-        generate_invoice_spec(){
-          var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
-          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : ""
+        generate_invoice_spec(action_type){
+          let timestamp_val = ""
+          if(action_type === 'generate'){
+            let query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
+            timestamp_val= query_timestamp_radio ? query_timestamp_radio.value : ""
+          }
+          else if(action_type === 'invalidate'){
+            timestamp_val = "NA"
+          }
           if(timestamp_val!==""){
             proj_id = this.proj_data['project_id']
             axios.post('/api/v1/generate_invoice_spec', {
                 proj_id: proj_id,
-                timestamp: timestamp_val
+                timestamp: timestamp_val,
+                action_type: action_type
             }).then(response => {
-                this.get_saved_agreement_data(proj_id)
+                if(action_type === 'generate' && response.data['message']==='Invoice spec generated'){
+                  this.get_saved_agreement_data(proj_id)
+                }
             })
             .catch(error => {
                 this.$root.error_messages.push('Unable to generate invoice spec, please try again or contact a system administrator.')
+                console.log('Unable to generate invoice spec', error)
             })
           }
         },
 
-        fetch_latest_agreement_doc: function(){
+        fetch_latest_agreement_template_doc: function(){
           axios
               .get('/api/v1/get_agreement_template_text')
               .then(response => {
@@ -333,6 +377,7 @@ app.component('v-pricing-quote', {
               })
               .catch(error => {
                   this.$root.error_messages.push('Unable to fetch agreement template data, please try again or contact a system administrator.')
+                  console.log('Unable to fetch agreement template data', error)
               })
         },
         add_cost_label: function(){
@@ -374,6 +419,7 @@ app.component('v-pricing-quote', {
             })
             .catch(error => {
                 this.$root.error_messages.push('Unable to save agreement, please try again or contact a system administrator.')
+                console.log('Unable to save agreement', error)
             })
           }
         },
@@ -383,16 +429,9 @@ app.component('v-pricing-quote', {
           product_list = {}
           for (prod_id in this.$root.quote_prod_ids){
             product = this.$root.all_products[prod_id]
-            prod_cost = (this.$root.productCost(prod_id)[this.$root.price_type] * this.$root.quote_prod_ids[prod_id]).toFixed(2)
-            if(product['Category'] in product_list){
-              product_list[product['Category']] = (parseFloat(product_list[product['Category']]) + parseFloat(prod_cost)).toFixed(2)
-            }
-            else{
-              product_list[product['Category']] = prod_cost
-            }
-          }
-          for (category in product_list){
-            product_list[category] = Math.round(parseFloat(product_list[category]))
+            prod_name = product['Name']+' ('+this.$root.quote_prod_ids[prod_id]+')'
+            prod_cost = Math.round((this.$root.productCost(prod_id)[this.$root.price_type] * this.$root.quote_prod_ids[prod_id]))
+            product_list[prod_name] = prod_cost
           }
           agreement_data['price_breakup'] = product_list
           agreement_data['total_products_cost'] = Math.round(this.product_cost_sum[this.$root.price_type])
@@ -595,12 +634,39 @@ app.component('v-pricing-quote', {
               </div>
             </div>
             <div class="col-5 offset-1 status_limit_width_large">
+              <div class="row justify-content-end">
+                <div class="col-auto">
+                  <div class="fw-bold p-2 border border-secondary rounded-3 my-2">
+                   <span v-if="this.invoice_invalidated"> No</span> Invoicing Required 
+                   <button v-if="this.has_admin_control" class="btn btn-warning m-1" data-toggle="modal" data-target="#confirm_invalidate_inv_spec" :disabled="this.invoice_invalidated || this.invoice_generated">
+                   <i class="far fa-ban fa-lg"></i> No</button>
+                  </div>
+                </div>
+                <!-- Confirm Inv invalidation Modal -->
+                <div class="modal fade" id="confirm_invalidate_inv_spec" tabindex="-1" role="dialog" aria-labelledby="invalidate_inv_spec_label">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h4 class="modal-title" id="invalidate_inv_spec_label">Confirm invoice invalidation</h4>
+                        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        Confirm that no invoicing is required for this project.
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button id='invalidate-inv-gen-btn' type="button" class="btn btn-primary" @click="generate_invoice_spec('invalidate')" data-dismiss="modal">Continue</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="row" v-if="this.saved_agreement_data['saved_agreements']">
                 <h4 v-if="this.saved_agreement_data">Generated Agreements</h4>
                 <div class="col ml-2">
                   <template v-for="(agreement, timestamp) in this.saved_agreement_data['saved_agreements']" :key="timestamp">
                         <div class="form-check m-2">
-                          <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp" :checked="this.saved_agreement_data['signed']===timestamp">
+                          <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp" :checked="this.loaded_timestamp===timestamp">
                           <label class="form-check-label" :for="timestamp">
                           <div v-bind:class="{ 'fw-bold' : timestamp === this.loaded_timestamp}"> {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}} ({{ agreement['total_cost'] }} SEK on cost calc v{{ agreement['cost_calculator_version'] }})</div>
                           <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger fs-6">
@@ -614,7 +680,7 @@ app.component('v-pricing-quote', {
                     <button class="btn btn-primary m-1" @click="load_saved_agreement()">Load</button>
                     <button v-if="this.has_admin_control" class="btn btn-secondary m-1" type="submit" v-on:click="generate_quote('display')" :disabled="this.invoice_downloaded" id="generate_quote_btn">Display Agreement</button>
                     <button v-if="this.has_admin_control" class="btn btn-danger m-1" @click="mark_agreement_signed" :disabled="this.invoice_downloaded"><i class="far fa-file-signature fa-lg"></i> Mark Signed</button>
-                    <button v-if="this.has_admin_control" class="btn btn-success m-1" data-toggle="modal" data-target="#confirm_submit_inv_spec"   :disabled="this.invoice_downloaded"><i class="far fa-file-invoice fa-lg"></i> Generate Invoice specification</button>
+                    <button v-if="this.has_admin_control" class="btn btn-success m-1" data-toggle="modal" data-target="#confirm_submit_inv_spec" :disabled="this.invoice_downloaded"><i class="far fa-file-invoice fa-lg"></i> Generate Invoice specification</button>
                     <!-- Confirm Inv Spec submission Modal -->
                     <div class="modal fade" id="confirm_submit_inv_spec" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
                       <div class="modal-dialog" role="document">
@@ -647,12 +713,17 @@ app.component('v-pricing-quote', {
                           </div>
                           <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button id='datepicker-btn' type="button" class="btn btn-primary" @click="generate_invoice_spec" data-dismiss="modal">Continue</button>
+                            <button id='generate_invoice_spec-btn' type="button" class="btn btn-primary" @click="generate_invoice_spec('generate')" data-dismiss="modal">Continue</button>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+              <div class="row" v-if="this.saved_agreement_data['saved_agreements']">
+                <div class="col ml-2">
+                  <button v-if="this.has_admin_control" class="btn btn-warning m-1" type="submit" v-on:click="reload_latest_cost_calculator()" :disabled="this.invoice_downloaded" id="reload_with_latest_cost_calc__btn">Reload latest cost calculator version</button>
                 </div>
               </div>
               <div class="card mt-5">
@@ -753,7 +824,7 @@ app.component('v-pricing-quote', {
             <div class="row" id="table_h_and_search">
               <h2 class="col mr-auto">Available Products</h2>
             </div>
-            <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="true"/>
+            <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="true" :refresh_table="this.$root.refresh_table"/>
           </div>
         </template>
       `

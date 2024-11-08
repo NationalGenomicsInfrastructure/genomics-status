@@ -14,7 +14,7 @@ Genomics Status interfaces with StatusDB; the CouchDB database instance used to 
 1 - Clone the repository with the `--recursive` option (this will also download [nvd3](http://nvd3.org/) library):
 
 ```
-git clone --recursive https://github.com/SciLifeLab/status.git
+git clone --recursive https://github.com/NationalGenomicsInfrastructure/genomics-status.git
 ```
 
 2 - Install the package (the `pip install -r requirements_dev.txt` can be skipped on a production server)
@@ -37,7 +37,7 @@ serve the web app to. You will also need a .genologicsrc file with the API crede
 
 `<status_dir>/run_dir/settings.yaml`:
 ```yaml
-couch_server: http://<username>:<password>@tools-dev.scilifelab.se:5984
+couch_server: http://<username>:<password>@ngi-statusdb-dev.scilifelab.se:5984
 username: <tools_username> # same as input above
 password: <tools_password> # same as input above
 port: 9761
@@ -82,7 +82,7 @@ uppmax_projects
 `~/.genologicsrc`:
 ```yaml
 [genologics]
-BASEURI=https://genologics-stage.scilifelab.se:8443
+BASEURI=https://ngi-lims-stage.scilifelab.se:8443
 USERNAME=<lims_api_username>
 PASSWORD=<lims_api_password>
 ```
@@ -123,7 +123,7 @@ sass custom.scss custom-bootstrap-5-alpha.css
 This pictures illustrates the architecture of how Genomics Status is built with a real example, a request to https://genomics-status.scilifelab.se/projects/all. It is simplified for the sake of comprehension, in reality there are a few more API calls.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/guillermo-carrasco/status/master/doc/genomics_status.png"
+  <img src="https://raw.githubusercontent.com/NationalGenomicsInfrastructure/genomics-status/master/doc/genomics_status.png"
        alt="Genomics Status Architecture"/>
 </p>
 

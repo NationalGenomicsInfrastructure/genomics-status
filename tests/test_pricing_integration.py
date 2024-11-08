@@ -1,16 +1,17 @@
+import json
 import time
 import unittest
+
 import requests
-import json
 from selenium import webdriver
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    ElementNotInteractableException,
+)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import (
-    ElementNotInteractableException,
-    ElementClickInterceptedException,
-)
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 class TestPricingQuote(unittest.TestCase):
@@ -71,7 +72,7 @@ class TestPricingQuote(unittest.TestCase):
 
         e = self.driver.find_element(
             By.CSS_SELECTOR,
-            ".quote-product-list input[data-product-id='{}']".format(id),
+            f".quote-product-list input[data-product-id='{id}']",
         )
         self.assertEqual(
             e.get_attribute("value"), "1", msg="One item of this product is added"
@@ -84,7 +85,7 @@ class TestPricingQuote(unittest.TestCase):
 
         e = self.driver.find_element(
             By.CSS_SELECTOR,
-            ".quote-product-list input[data-product-id='{}']".format(id),
+            f".quote-product-list input[data-product-id='{id}']",
         )
         self.assertEqual(
             e.get_attribute("value"), "1", msg="Two items of this product are added"
@@ -138,7 +139,7 @@ class TestPricingQuote(unittest.TestCase):
             time.sleep(1.0)
             self.driver.find_element(
                 By.CSS_SELECTOR,
-                ".status_available:nth-child({}) td:nth-child(1) > a > i".format(i + 1),
+                f".status_available:nth-child({i + 1}) td:nth-child(1) > a > i",
             ).click()
         time.sleep(1.0)
 

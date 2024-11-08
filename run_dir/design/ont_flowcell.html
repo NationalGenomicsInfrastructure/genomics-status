@@ -70,9 +70,22 @@
 
     <div class="tabbable mb-3">
       <ul class="nav nav-tabs">
+
+        <!-- Parse sample data -->
+        {% try %}
+          {% set sample_data = flowcell['lims']['loading'][0]['sample_data'] %}
+        {% except (KeyError, IndexError) %}
+          {% set sample_data = None %}
+        {% end %}
+
+        {% if sample_data %}
+          <li class="nav-item">
+            <a class="nav-link active" href="#tab_samples_information" role="tab" data-toggle="tab">LIMS sample info</a>
+          </li>
+        {% end %}
         {% if barcodes %}
           <li class="nav-item">
-            <a class="nav-link active" href="#tab_barcode_information" role="tab" data-toggle="tab">Barcode Information</a>
+            <a class="nav-link {{ 'active' if not sample_data else '' }}" href="#tab_barcode_information" role="tab" data-toggle="tab">Barcode counts</a>
           </li>
         {% end %}
         {% if flowcell.get('TACA_run_status') == "finished" %}
@@ -86,9 +99,32 @@
       </ul>
     </div>
     <div class="tab-content">
+    {% if sample_data %}
+      <div class="tab-pane fade show active" id="tab_samples_information">
+        <button type="button" id="ont_copy_samples" class="btn btn-sm btn-outline-dark mb-2" data-clipboard-target="#ont_samples"><span class="fa fa-copy"></span> Copy LIMS sample info</button>
+        <table class="table table-bordered narrow-headers no-margin right_align_headers" id="ont_samples">
+            <thead id="ont_fc_table_head">
+                <tr class="sticky darkth">
+                  {% for k in sample_data[0].keys() %}
+                  <th>{{ k }}</th>
+                  {% end %}
+                </tr>
+            </thead>
+            <tbody>
+              {% for sample in sample_data %}
+              <tr>
+                  {% for k,v in sample.items() %}
+                  <td>{{ v }}</td>
+                  {% end %}
+              </tr>
+              {% end %} 
+            </tbody>
+        </table>
+      </div>
+    {% end %}
     {% if barcodes %}
-      <div class="tab-pane fade show active" id="tab_barcode_information">
-        <button type="button" id="ont_copy_table" class="btn btn-sm btn-outline-dark mb-2" data-clipboard-target="#ont_barcodes"><span class="fa fa-copy"></span> Copy table</button>
+      <div class="tab-pane fade show {{ 'active' if not sample_data else '' }}" id="tab_barcode_information">
+        <button type="button" id="ont_copy_barcodes" class="btn btn-sm btn-outline-dark mb-2" data-clipboard-target="#ont_barcodes"><span class="fa fa-copy"></span> Copy barcode counts</button>
         <table class="table table-bordered narrow-headers no-margin right_align_headers" id="ont_barcodes">
             <thead id="ont_fc_table_head">
                 <tr class="sticky darkth">
@@ -148,13 +184,22 @@ function init_listjs() {
       "info":false,
       "order": [[ 0, "asc" ]]
     });
-    // Copy workset table to clipboard
-    var clipboard = new Clipboard('#ont_copy_table');
+    // Copy LIMS sample info to clipboard
+    var clipboard = new Clipboard('#ont_copy_samples');
     clipboard.on('success', function(e) {
      e.clearSelection();
-      $('#ont_copy_table').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+      $('#ont_copy_samples').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
       setTimeout(function(){
-        $('#ont_copy_table').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
+        $('#ont_copy_samples').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy LIMS sample info');
+      }, 2000);
+    });
+    // Copy barcode info to clipboard
+    var clipboard = new Clipboard('#ont_copy_barcodes');
+    clipboard.on('success', function(e) {
+     e.clearSelection();
+      $('#ont_copy_barcodes').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+      setTimeout(function(){
+        $('#ont_copy_barcodes').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy barcode counts');
       }, 2000);
     });
 }

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+<!--
+Template file: controls.html
+URL: /controls/
+Title: Controls
+Description: Overview of positive and negative controls
+-->
+
+{% block stuff %}
+<h1 class="worksets_page_heading"><span id="page_title">Positive and Negative Controls</span></h1>
+</div>
+  <div id="page_content" >
+    <div class="tabbable">
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item"><a class="nav-link active" href="#tab_negative_controls" role="tab" data-toggle="tab" aria-selected="true">Negative Controls</a></li>
+        <li class="nav-item"><a class="nav-link" href="#tab_positive_controls" role="tab" data-toggle="tab" aria-selected="true">Positive Controls</a></li>
+      </ul>
+      <div class="tab-content">
+        <!-- loop through the two control types -->
+        {% for control_type in ["negative", "positive"] %} 
+          <!-- adding data to specific tabs -->
+          <div class="tab-pane fade show  {% if control_type == 'negative' %} active {%end%}" id="tab_{{ control_type }}_controls"> 
+            <h2><span id="{{ control_type }}_controls_heading"><small class="text-muted">All {{ control_type }} controls with initiated worksets</small></span></h2>
+            <div id="{{ control_type }}_control-list">
+              <!-- creating the data table -->
+              <table class="table table-striped table-bordered sortable" id="{{ control_type }}_controls_table">
+                <thead id="{{ control_type }}_controls_table_head">
+                  <tr class="sticky darkth">
+                  {% for onekey in headers %}
+                      <th class="sort">{{ onekey[0] }}</th>
+                  {% end %}
+                  </tr>
+                </thead>
+                <!-- footer content to be replaced by search boxes -->
+                <tfoot id="{{ control_type }}_controls_table_footer">
+                  <tr class="darkth">
+                    {% for onekey in headers %}
+                      <th class="sort">{{ onekey[0] }}</th>
+                    {% end %}
+                  </tr>
+                </tfoot>
+                <!-- filling the data table with control sample info -->
+                <tbody id="{{ control_type }}_controls_table_body">
+                  {% for control in all_control_data[control_type]%}
+                  <tr>
+                    {% for onekey in headers %}
+                      {% if onekey[1] == 'project' %}
+                        <td><span class="label label-date sentenceCase">{{ all_control_data[control_type][control].get(onekey[1]) }}</span></td>
+                      {% elif onekey[1] == 'sample_id' %}
+                        <td><a href="{{ lims_uri }}/clarity/search?scope=Sample&query={{ all_control_data[control_type][control].get(onekey[1]) }}">{{ all_control_data[control_type][control].get(onekey[1])}}</a></td>
+                      {% elif onekey[1] == 'customer_name' %} <!-- equals sample name -->
+                        <td><span class="label label-date sentenceCase">{{ all_control_data[control_type][control].get(onekey[1]) }}</span></td>
+                      {% elif onekey[1] == 'status_manual' %}
+                        <td><span class="label label-date sentenceCase">{{ all_control_data[control_type][control].get(onekey[1]) }}</span></td>
+                      {% elif onekey[1] == 'workset_name' %}
+                        <td><a href="/workset/{{ all_control_data[control_type][control].get(onekey[1]) }}" style="color:#000000;">{{ all_control_data[control_type][control].get(onekey[1]) }}</a></td>
+                      {% elif onekey[1] == 'workset_projects' %}
+                        {% if all_control_data[control_type][control].get(onekey[1]) != None %}
+                          {% set projects = all_control_data[control_type][control].get(onekey[1]) %}
+                          <td>
+                            {% for project in projects  %}
+                            <a href="/project/{{ projects[project] }}" class="text-success text-decoration-none pr-2"><i class="fa fa-folder-open pr-1"></i>{{ project }}</a>
+                          {%end%}
+                          </td>
+                        {% else %}
+                          <td><span>Workset not found</span></td>
+                          <!--This can happen when an existing plate has been imported into the "setup workset" step in LIMS and the control was added to that plate-->
+                        {%end%}
+                      {% elif onekey[1] == 'prep_status' %}
+                        <td>
+                          <span
+                          {% if all_control_data[control_type][control].get(onekey[1]) == "PASSED" %}
+                             class="badge bg-success"
+                          {% elif all_control_data[control_type][control].get(onekey[1]) == "FAILED" %}
+                            class="badge bg-danger"
+                          {%end%}
+                         >{{ all_control_data[control_type][control].get(onekey[1]) }}
+                        </span></td>
+                      {% elif onekey[1] == 'sequenced_fc' %}
+                        <td>
+                          {% for fc in all_control_data[control_type].get(control).get(onekey[1]) %}
+                            <a href="/flowcells/{{ fc }}" style="color:#2856E5;text-decoration: none;" class="pr-2"><i class="fa fa-folder-open pr-1"></i> {{ fc }} </a>                     
+                          {%end%}
+                        </td>
+                      {%end%}
+                    {%end%}
+                  </tr>
+                  {%end%}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {%end%}
+      </div>
+    </div>
+  </div> 
+</div>
+
+<script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
+<script src="/static/js/controls.js?v={{ gs_globals['git_commit'] }}" id="controls-js" ></script>
+{% end %}

@@ -1,7 +1,7 @@
 import json
 
-from status.util import SafeHandler
 from status.projects import PresetsHandler as ph
+from status.util import SafeHandler
 
 
 class UserPrefPageHandler(SafeHandler):

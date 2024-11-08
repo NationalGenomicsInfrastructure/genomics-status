@@ -104,18 +104,26 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.bp_yield:,.0f}</b>';
     }
 
-    var thresholdColors = ['#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff', '#e65c00', '#1B9E97'];
+    var thresholdColors = ['#696868', '#696868', '#696868', '#696868', '#696868', '#696868', '#696868', '#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff', '#e65c00', '#1B9E97'];
     var thresholdLabels = [
-        'NovaSeq SP threshold to pass',
-        'NovaSeq S1 threshold to pass',
-        'NovaSeq S2 threshold to pass',
-        'NovaSeq S4 threshold to pass',
-        'NovaSeqXPlus 10B threshold to pass',
-        'NovaSeqXPlus 1.5B threshold to pass',
-        'NovaSeqXPlus 25B threshold to pass'
+        ['M', 'MiSeq Nano threshold to pass'],
+        ['M', 'MiSeq Micro threshold to pass'],
+        ['M', 'MiSeq v2 threshold to pass'],
+        ['M', 'MiSeq v3 threshold to pass'],
+        ['VH', 'NextSeq P1 threshold to pass'],
+        ['VH', 'NextSeq P2 threshold to pass'],
+        ['VH', 'NextSeq P3 threshold to pass'],
+        ['A', 'NovaSeq SP threshold to pass'],
+        ['A', 'NovaSeq S1 threshold to pass'],
+        ['A', 'NovaSeq S2 threshold to pass'],
+        ['A', 'NovaSeq S4 threshold to pass'],
+        ['LH', 'NovaSeqXPlus 10B threshold to pass'],
+        ['LH', 'NovaSeqXPlus 1.5B threshold to pass'],
+        ['LH', 'NovaSeqXPlus 25B threshold to pass']
     ];
 
     function applyThresholds(thresholdValues, leftAlignedIndexes) {
+        let filtered_inst_types = get_parameters()[4];
         toplot.yAxis = {
             title: {
                 enabled: true,
@@ -127,32 +135,36 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
                 }
             },
             plotLines: thresholdValues.map(function (value, index) {
-                var align = leftAlignedIndexes.includes(index) ? 'left' : 'right';
-                var labelX = align === 'left' ? -10 : null;
-                return {
-                    color: thresholdColors[index],
-                    dashStyle: 'longdash',
-                    value: value,
-                    width: 1,
-                    zIndex: 1,
-                    label: {
-                        text: thresholdLabels[index],
-                        align: align,
-                        x: labelX,
-                    }
+                let align = leftAlignedIndexes.includes(index) ? 'left' : 'right';
+                let labelX = align === 'left' ? -10 : null;
+                let plot_options = {
+                        color: thresholdColors[index],
+                        dashStyle: 'longdash',
+                        value: value,
+                        width: 1,
+                        zIndex: 1,
+                        label: {
+                            text: thresholdLabels[index][1],
+                            align: align,
+                            x: labelX,
+                        }
                 };
+                if(filtered_inst_types.includes(thresholdLabels[index][0])){
+                    plot_options = {};
+                }
+                return plot_options;
             })
         };
     }
 
     // Styling the default view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell") {
-        applyThresholds([650e6, 1300e6, 3300e6, 8000e6, 8000e6, 1500e6, 24000e6], [0, 1, 2]);
+        applyThresholds([0.75e6, 3e6, 10e6, 18e6, 100e6, 400e6, 1100e6, 650e6, 1300e6, 3300e6, 8000e6, 8000e6, 1500e6, 24000e6], [0, 1, 2]);
     }
 
     // Styling the lane view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "lane") {
-        applyThresholds([325e6, 650e6, 1650e6, 2000e6, 1000e6, 750e6, 3000e6], [0, 1, 2]);
+        applyThresholds([0.75e6, 3e6, 10e6, 18e6, 100e6, 400e6, 550e6, 325e6, 650e6, 1650e6, 2000e6, 1000e6, 750e6, 3000e6], [0, 1, 2]);
     }
 
     var serie = build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
@@ -207,8 +219,17 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             if (data[d].mode == '2'){
                 series_name = "MiSeq Nano";
                 }
-            if (data[d].cver.includes('2000')){
-                series_name = "NextSeq 2000";
+            if (data[d].mode == '4'){
+                series_name = "MiSeq Micro";
+                }
+            if (data[d].cver.includes('P1')){
+                series_name = "NextSeq P1";
+                }
+            if (data[d].cver.includes('P2')){
+                series_name = "NextSeq P2";
+                }
+            if (data[d].cver.includes('P3')){
+                series_name = "NextSeq P3";
                 }
             if (data[d].cver.includes('10B')){
                 series_name = "10B";
@@ -487,7 +508,7 @@ function update_months_list(){
 function update_color_schemes(){
     var inst_type_cs=chroma.scale(['#90ee90','#7866df','#ad00af','#ff0000']).domain([0, 3]);
     var inst_cs=chroma.scale(['lightgreen', 'blue', 'red']).domain([0, window.current_instrument_list.length-1]);
-    var chem_cs = chroma.scale(['#ff00ae', '#0080ff', '#11ad11', '#ffb700', '#e65c00', '#8400ff', '#1B9E97', '#00b7d4', '#a34929', '#a84da8', '#575757', '#0300bf']).domain([0, 11])
+    var chem_cs = chroma.scale(['#ff00ae', '#0080ff', '#cf3d08', '#11ad11', '#ffb700', '#4a4847', '#e65c00', '#8400ff', '#1B9E97', '#00b7d4', '#a34929', '#a84da8', '#575757', '#0300bf']).domain([0, 13])
     var month_cs=chroma.scale(['yellow', 'lightblue', 'pink', 'orange']).domain([0,window.current_months_list.length-1]);
     window.current_color_schemes=[inst_type_cs, inst_cs, chem_cs, month_cs];
 }
@@ -498,6 +519,8 @@ function update_chemistries_list(){
         if (window.current_plot_data[d].mode == '2'){
             // MiSeq Nano is special (cver collides with MiSeq Version 2)
             version = 'Mnano'
+        } else if (window.current_plot_data[d].mode == '4'){
+            version = 'Mmicro'
         } else {
             version = window.current_plot_data[d].instrument.substr(0,1) + window.current_plot_data[d].cver;
         }

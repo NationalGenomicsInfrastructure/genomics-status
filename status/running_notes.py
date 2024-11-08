@@ -1,13 +1,12 @@
 import datetime
 import json
+import logging
 import re
 import smtplib
 import unicodedata
-import logging
-
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from collections import OrderedDict
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import markdown
 import nest_asyncio
@@ -144,7 +143,9 @@ class RunningNotesDataHandler(SafeHandler):
             "updated_at_utc": created_time.isoformat(),
         }
         # Save in running notes db
-        gen_log.info(f"Running note to be created with id {newNote['_id']} by {user} at {created_time.isoformat()}")
+        gen_log.info(
+            f"Running note to be created with id {newNote['_id']} by {user} at {created_time.isoformat()}"
+        )
         application.running_notes_db.save(newNote)
         #### Check and send mail to tagged users (for project running notes as flowcell and workset notes are copied over)
         if note_type == "project":
@@ -208,7 +209,7 @@ class RunningNotesDataHandler(SafeHandler):
                     "project",
                     created_time,
                 )
-        created_note =  application.running_notes_db.get(newNote["_id"])
+        created_note = application.running_notes_db.get(newNote["_id"])
         return created_note
 
     @staticmethod
@@ -241,14 +242,12 @@ class RunningNotesDataHandler(SafeHandler):
 
         if tagtype == "userTag":
             notf_text = "tagged you"
-            slack_notf_text = "You have been tagged by *{}* in a running note".format(
-                tagger
-            )
-            email_text = "You have been tagged by {} in a running note".format(tagger)
+            slack_notf_text = f"You have been tagged by *{tagger}* in a running note"
+            email_text = f"You have been tagged by {tagger} in a running note"
         else:
             notf_text = "created note"
-            slack_notf_text = "Running note created by *{}*".format(tagger)
-            email_text = "Running note created by {}".format(tagger)
+            slack_notf_text = f"Running note created by *{tagger}*"
+            email_text = f"Running note created by {tagger}"
 
         for user in userTags:
             if user in view_result:
@@ -259,8 +258,8 @@ class RunningNotesDataHandler(SafeHandler):
                 if option == "Slack" or option == "Both":
                     nest_asyncio.apply()
                     client = slack_sdk.WebClient(token=application.slack_token)
-                    notification_text = "{} has {} in {}, {}!".format(
-                        tagger, notf_text, project_id, project_name
+                    notification_text = (
+                        f"{tagger} has {notf_text} in {project_id}, {project_name}!"
                     )
                     blocks = [
                         {
@@ -317,22 +316,14 @@ class RunningNotesDataHandler(SafeHandler):
                 # default is email
                 if option == "E-mail" or option == "Both":
                     msg = MIMEMultipart("alternative")
-                    msg["Subject"] = "[GenStat] Running Note:{}, {}".format(
-                        project_id, project_name
+                    msg["Subject"] = (
+                        f"[GenStat] Running Note:{project_id}, {project_name}"
                     )
                     msg["From"] = "genomics-status"
                     msg["To"] = view_result[user]
-                    text = "{} in the project {}, {}! The note is as follows\n\
-                    >{} - {}{}\
-                    >{}".format(
-                        email_text,
-                        project_id,
-                        project_name,
-                        tagger,
-                        time_in_format,
-                        category,
-                        note,
-                    )
+                    text = f"{email_text} in the project {project_id}, {project_name}! The note is as follows\n\
+                    >{tagger} - {time_in_format}{category}\
+                    >{note}"
 
                     html = '<html>\
                     <body>\
