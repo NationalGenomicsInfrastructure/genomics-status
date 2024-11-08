@@ -321,7 +321,7 @@ function load_all_udfs(){
     
     if(application.includes('single cell')){
       console.log("here")
-      $('.single_cell').removeAttr('hidden');
+      $('.single_cell_udf').removeAttr('hidden');
     }
 
     // Project not found
