@@ -1,6 +1,8 @@
-from status.util import SafeHandler, SafeSocketHandler
-import random
 import logging
+import random
+
+from status.util import SafeHandler, SafeSocketHandler
+
 
 class ProjectCardsHandler(SafeHandler):
 
@@ -19,7 +21,7 @@ class ProjectCardsWebSocket(SafeSocketHandler):
 
     def open(self):
         # Create an infinite loop that sends a message every 5 seconds
-        self.write_message(u"WebSocket opened")
+        self.write_message("WebSocket opened")
         self.send_message()
 
         print("WebSocket opened")
@@ -30,9 +32,9 @@ class ProjectCardsWebSocket(SafeSocketHandler):
         try:
             number = int(number)
         except ValueError:
-            self.write_message(u"Please send a number")
+            self.write_message("Please send a number")
             return
-        ProjectStatusWebSocket.number = number
+        ProjectCardsWebSocket.number = number
 
     def on_close(self):
         print("WebSocket closed")
@@ -52,7 +54,7 @@ class ProjectCardsWebSocket(SafeSocketHandler):
         log = logging.getLogger(__name__)
         log.info("Sending message")
         # Create a list of number random numbers
-        numbers = [str(random.random()) for i in range(ProjectStatusWebSocket.number)]
+        numbers = [str(random.random()) for i in range(ProjectCardsWebSocket.number)]
 
-        self.write_message(u"Random numbers: " + ", ".join(numbers))
+        self.write_message("Random numbers: " + ", ".join(numbers))
         self.application.ioloop.add_timeout(self.application.ioloop.time() + 5, self.send_message)

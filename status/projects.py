@@ -641,7 +641,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             for date_row in date_result.rows:
                 for date_type, date in date_row.value.items():
                     summary_row.value[date_type] = date
-                    field_sources[date_type] = f"StatusDB view project/summary_dates"
+                    field_sources[date_type] = "StatusDB view project/summary_dates"
 
         summary_row.value["_doc_id"] = summary_row.id
         field_sources["_doc_id"] = "StatusDB, inserted by Genomics Status (backend)"
