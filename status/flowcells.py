@@ -259,6 +259,7 @@ class FlowcellSearchHandler(SafeHandler):
     cached_fc_list = None
     cached_xfc_list = None
     cached_ont_fc_list = None
+    cached_element_fc_list = None
     last_fetched = None
 
     def get(self, search_string):
@@ -287,6 +288,13 @@ class FlowcellSearchHandler(SafeHandler):
             )
             FlowcellSearchHandler.cached_ont_fc_list = [row.key for row in ont_fc_view]
 
+            element_fc_view = self.application.element_runs_db.view(
+                "info/name", descending=True
+            )
+            FlowcellSearchHandler.cached_element_fc_list = [
+                row.key for row in element_fc_view
+            ]
+
             FlowcellSearchHandler.last_fetched = datetime.datetime.now()
 
         search_string = search_string.lower()
@@ -308,6 +316,17 @@ class FlowcellSearchHandler(SafeHandler):
                 if search_string in row_key.lower():
                     fc = {
                         "url": f"/flowcells_ont/{row_key}",
+                        "name": row_key,
+                    }
+                    flowcells.append(fc)
+            except AttributeError:
+                pass
+
+        for row_key in FlowcellSearchHandler.cached_element_fc_list:
+            try:
+                if search_string in row_key.lower():
+                    fc = {
+                        "url": f"/flowcells_element/{row_key}",
                         "name": row_key,
                     }
                     flowcells.append(fc)
