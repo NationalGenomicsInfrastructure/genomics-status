@@ -100,17 +100,24 @@ class BioinfoAnalysisHandler(SafeHandler):
         edit_history = {}
         for row in view[project_id].rows:
             flowcell_id = row.value.get("run_id")
+            instrument_type = row.value.get("instrument_type", "illumina")
             lane_id = row.value.get("lane")
             sample_id = row.value.get("sample")
             changes = row.value.get("values", {})
             last_timestamp = max(list(changes))
             bioinfo_qc = changes.get(last_timestamp, {})
+            bioinfo_data["instrument_type"] = instrument_type
 
             # building first view
             bioinfo1 = bioinfo_data["sample_run_lane_view"]
             if sample_id not in bioinfo1:
                 bioinfo1[sample_id] = {
-                    "flowcells": {flowcell_id: {"lanes": {lane_id: bioinfo_qc}}}
+                    "flowcells": {
+                        flowcell_id: {
+                            "lanes": {lane_id: bioinfo_qc},
+                            "instrument_type": instrument_type,
+                        }
+                    }
                 }
             elif flowcell_id not in bioinfo1[sample_id]["flowcells"]:
                 bioinfo1[sample_id]["flowcells"][flowcell_id] = {
@@ -129,7 +136,8 @@ class BioinfoAnalysisHandler(SafeHandler):
             bioinfo2 = bioinfo_data["run_lane_sample_view"]
             if flowcell_id not in bioinfo2:
                 bioinfo2[flowcell_id] = {
-                    "lanes": {lane_id: {"samples": {sample_id: bioinfo_qc}}}
+                    "lanes": {lane_id: {"samples": {sample_id: bioinfo_qc}}},
+                    "instrument_type": instrument_type,
                 }
             elif lane_id not in bioinfo2[flowcell_id]["lanes"]:
                 bioinfo2[flowcell_id]["lanes"][lane_id] = {
