@@ -5,7 +5,6 @@ from status.util import SafeHandler, SafeSocketHandler
 
 
 class ProjectCardsHandler(SafeHandler):
-
     def get(self):
         t = self.application.loader.load("project_cards.html")
 
@@ -15,6 +14,7 @@ class ProjectCardsHandler(SafeHandler):
                 user=self.get_current_user(),
             )
         )
+
 
 class ProjectCardsWebSocket(SafeSocketHandler):
     """Proof of concept implementation of a WebSocket handler,
@@ -32,7 +32,6 @@ class ProjectCardsWebSocket(SafeSocketHandler):
         print("WebSocket opened")
 
     def on_message(self, number):
-
         # Check if the message is a number
         try:
             number = int(number)
@@ -44,9 +43,7 @@ class ProjectCardsWebSocket(SafeSocketHandler):
     def on_close(self):
         print("WebSocket closed")
 
-
     def send_message(self):
-
         # Check if connection is open
         if self.ws_connection is None:
             return
@@ -62,4 +59,6 @@ class ProjectCardsWebSocket(SafeSocketHandler):
         numbers = [str(random.random()) for i in range(ProjectCardsWebSocket.number)]
 
         self.write_message("Random numbers: " + ", ".join(numbers))
-        self.application.ioloop.add_timeout(self.application.ioloop.time() + 5, self.send_message)
+        self.application.ioloop.add_timeout(
+            self.application.ioloop.time() + 5, self.send_message
+        )
