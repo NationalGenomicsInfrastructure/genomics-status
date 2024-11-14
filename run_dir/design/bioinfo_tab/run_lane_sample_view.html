@@ -69,12 +69,16 @@
   <tbody class="text-center">
       {% for flowcell_id, flowcell in sorted(bioinfo['run_lane_sample_view'].items()) %}
         {% set disabled = True if flowcell.get('flowcell_status') in ['Demultiplexing', 'Transferring', 'Sequencing', 'ERROR', 'Failed', 'Delivered'] else False %}
+        {% set url_addition = "" %}
+        {% if flowcell.get("instrument_type") == "element"%}
+          {% set url_addition = "_element" %}
+        {% end %}
         <tr class="bioinfo-fc  {% if disabled %} bioinfo-status-disabled {% end %}"
             id="bioinfo-fc-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">
           <td class="bioinfo-status-expand"><a class="bioinfo-expand text-decoration-none" href="#bioinfo-fc-{{ flowcell_id }}">
             <span class="fa fa-chevron-right"></span></a></td>
           <td></td>
-          <td><samp><a class="text-decoration-none" href="/flowcells/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
+          <td><samp><a class="text-decoration-none" href="/flowcells{{url_addition}}/{{ flowcell_id }}">{{ flowcell_id }}</a></samp></td>
           <td class="bioinfo-status-runstate"><span class="badge {{ status_css.get(flowcell['flowcell_status'], 'bg-secondary') }}">{{ flowcell['flowcell_status'] }}</span></td>
           <td class="bioinfo-status-row ?"><span class="fa fa-arrow-alt-right"></span></td>
           <td class="bioinfo-status-qc undemultiplexedreads unknown">?</td>
