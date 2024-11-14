@@ -76,7 +76,8 @@ const vProjectsStatus = {
     computed: {
         /* Only used on project cards page*/
         visibleProjects() {
-            /* Filters and sorts the projects */
+            /* Filters and sorts the projects.
+               Searching is applied here as well. */
             if (Object.keys(this.all_projects).length == 0) {
                 // No need to filter if there are no projects
                 return this.all_projects

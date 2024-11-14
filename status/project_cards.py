@@ -17,6 +17,11 @@ class ProjectCardsHandler(SafeHandler):
         )
 
 class ProjectCardsWebSocket(SafeSocketHandler):
+    """Proof of concept implementation of a WebSocket handler,
+
+    meant to be used for live updating running notes or similar things when looking at project cards.
+    """
+
     number = 2
 
     def open(self):
