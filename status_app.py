@@ -445,9 +445,6 @@ class Application(tornado.web.Application):
             self.cloudant = cloudant
 
         # Load columns and presets from genstat-defaults user in StatusDB
-        genstat_id = ""
-        user = settings.get("username", None)
-
         genstat_id_rows = self.gs_users_db.view("authorized/users")[
             "genstat-defaults"
         ].rows
