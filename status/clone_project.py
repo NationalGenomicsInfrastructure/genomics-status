@@ -1,3 +1,5 @@
+import re
+
 import requests
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
@@ -25,8 +27,25 @@ class LIMSProjectCloningHandler(SafeHandler):
     URL: /api/v1/lims_project_data/([^/]*)$
     """
 
-    def get(self, projectid):
-        proj_values = self.get_project_data(projectid, "get")
+    def get(self, project_identifier):
+        # Check if the project_identifier matches a project id.
+        # If not, assuming it's a project name, try to get the project id from the project name,
+        # since the LIMS API only accepts project ids
+        if not re.match("^(P[0-9]{3,7})", project_identifier):
+            try:
+                projectid = (
+                    self.application.projects_db.view("projects/name_to_id")[
+                        project_identifier
+                    ]
+                    .rows[0]
+                    .value
+                )
+            except IndexError:
+                self.set_status(404)
+                return self.write({"error": "Project not found"})
+        else:
+            projectid = project_identifier
+        proj_values = self.get_project_data_from_lims(projectid, "get")
         if not proj_values:
             self.set_status(404)
             self.write({"error": "Project not found"})
@@ -44,7 +63,7 @@ class LIMSProjectCloningHandler(SafeHandler):
                 "Error: You do not have the permissions for this operation!"
             )
 
-        new_proj = self.get_project_data(projectid, "post")
+        new_proj = self.get_project_data_from_lims(projectid, "post")
         if "error" in new_proj:
             self.set_status(400)
             self.write({"error": new_proj["error"]})
@@ -53,7 +72,7 @@ class LIMSProjectCloningHandler(SafeHandler):
         self.set_status(201)
         self.write(new_proj)
 
-    def get_project_data(self, projectid, type):
+    def get_project_data_from_lims(self, projectid, type):
         copy_udfs = {
             "Customer project reference",
             "Project Comment",
