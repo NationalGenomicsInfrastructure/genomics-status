@@ -511,6 +511,11 @@ def get_project_names_from_ids(project_ids: list, projects_db) -> list[dict]:
 
 
 class ElementFlowcellDataHandler(SafeHandler):
+    """Serves information for a given element flowcell.
+
+    Loaded through /api/v1/element_flowcell/([^/]*$)
+    """
+
     def get(self, name):
         rows = self.application.element_runs_db.view("info/id", include_docs=True)[
             name
