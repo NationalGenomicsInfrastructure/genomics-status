@@ -236,8 +236,10 @@ app.component('v-element-flowcell', {
                 return 'fa-solid fa-bring-front'
             } else if (this.$root.run_status === "transferring") {
                 return 'fa-solid fa-upload'
-            } else if (this.$root.run_status === "archived") {
+            } else if (this.$root.run_status === "processed") {
                 return 'fa-solid fa-check'
+            } else if (this.$root.run_status === "archived") {
+                return 'fa-solid fa-box-archive'
             } else {
                 return 'fa-solid fa-question'
             }
