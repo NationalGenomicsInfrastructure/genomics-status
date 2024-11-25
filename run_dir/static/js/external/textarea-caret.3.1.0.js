@@ -1,4 +1,5 @@
 /* jshint browser: true */
+/* Fetched from https://www.npmjs.com/package/textarea-caret?activeTab=code */
 
 (function () {
 
