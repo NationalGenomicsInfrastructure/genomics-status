@@ -680,6 +680,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             "_pipeline_": "Pipeline MultiQC",
         }
         for report_type in self.get_multiqc(project, read_file=False).keys():
+            # Attempt to assign a name of the report type, otherwise default to the type itself
             report_name = type_to_name.get(report_type, report_type)
             reports[report_name] = f"/multiqc_report/{project}?type={report_type}"
         summary_row.value["reports"] = reports
