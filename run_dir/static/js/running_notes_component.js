@@ -436,7 +436,7 @@ export const vRunningNoteSingle = {
                 </template>
             </div>
             <div class="card-body bi-project-note-text">
-                <div class="running-note-body text-muted" v-html="formatted_note"/>
+                <div class="running-note-body" v-html="formatted_note"/>
             </div>
         </div>
     </div>
