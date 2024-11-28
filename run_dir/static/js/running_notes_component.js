@@ -148,7 +148,7 @@ export const vRunningNotesTab = {
 
             if (current_word.startsWith('@')) {
                 current_word = current_word.substring(1).toLowerCase();
-                let user_suggestions = this.all_users.filter(user => user.startsWith(current_word));
+                let user_suggestions = this.all_users.filter(user => user.includes(current_word));
                 this.user_suggestions = user_suggestions;
             } else {
                 this.user_suggestions = [];
