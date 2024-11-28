@@ -70,7 +70,7 @@ export const vProjectDetails = {
             } else if (this.project_data['status'] == 'Reception Control') {
                 return 'bg-warning'
             } else if (this.project_data['status'] == 'Pending') {
-                return 'bg-light text-dark'
+                return 'bg-secondary'
             }
         }
     },
