@@ -192,7 +192,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             diff = now - dateutil.parser.parse(queued)
             row.value["days_in_production"] = diff.days
             field_sources["days_in_production"] = (
-                "Number of days from queue date until close/aborted date, or until today. Calculated by Genomics Status (backend)"
+                "Number of days from queue date until close/aborted date, or until today. Calculated by Genomics Status (backend). For this project it's until today."
             )
         elif row.key[0] in ["aborted", "closed"] and "queued" in row.value:
             # Days project was in production
@@ -203,7 +203,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             diff = close - dateutil.parser.parse(row.value["queued"])
             row.value["days_in_production"] = diff.days
             field_sources["days_in_production"] = (
-                "Number of days from queue date until close/aborted date, or until today. Calculated by Genomics Status (backend)"
+                "Number of days from queue date until close/aborted date, or until today. Calculated by Genomics Status (backend). For this project it's until close/aborted date."
             )
         if (
             row.key[0] in ["review", "ongoing", "reception control"]
