@@ -218,15 +218,15 @@ export const vRunningNotesTab = {
                 <div class="col form-inline">
                     <label>Choose category:</label>
                     <div class="mt-2" data-toggle="buttons">
-                        <button class="btn btn-sm btn-inf mr-2" value="Decision" data-toggle="tooltip" title="For when an executive decision has been made" @click="toggleFormCategory('Decision')">Decision <span class="fa fa-thumbs-up"></span></button>
-                        <button class="btn btn-sm btn-succe mr-2" value="Lab" data-toggle="tooltip" title="For lab-related work" @click="toggleFormCategory('Lab')">Lab <span class="fa fa-flask"></span></button>
-                        <button class="btn btn-sm btn-warn mr-2" value="Bioinformatics" data-toggle="tooltip" title="For all bioinformatics work" @click="toggleFormCategory('Bioinformatics')">Bioinformatics <span class="fa fa-laptop-code"></span></button>
-                        <button class="btn btn-sm btn-usr mr-2" value="User Communication" data-toggle="tooltip" title="For notes influenced by user-contact" @click="toggleFormCategory('User Communication')">User Communication <span class="fa fa-people-arrows"></span></button>
-                        <button class="btn btn-sm btn-dang mr-2" value="Administration" data-toggle="tooltip" title="For notes involving documentation" @click="toggleFormCategory('Administration')">Administration <span class="fa fa-folder-open"></span></button>
-                        <button class="btn btn-sm btn-imp mr-2" value="Important" data-toggle="tooltip" title="For when a note needs to be highlighted" @click="toggleFormCategory('Important')">Important <span class="fa fa-exclamation-circle"></span></button>
-                        <button class="btn btn-sm btn-devi mr-2" value="Deviation" data-toggle="tooltip" title="For notes about a deviation" @click="toggleFormCategory('Deviation')">Deviation <span class="fa fa-frown"></span></button>
-                        <button class="btn btn-sm btn-inv mr-2" value="Invoice" data-toggle="tooltip" title="For notes about an invoice" @click="toggleFormCategory('Invoice')">Invoicing <span class="fa fa-file-invoice-dollar"></span></button>
-                        <button class="btn btn-sm btn-sticky" value="Sticky" data-toggle="tooltip" title="For sticky notes" @click="toggleFormCategory('Sticky')">Sticky <span class="fa fa-note-sticky"></span></button>
+                        <button class="btn btn-sm btn-inf mr-2" value="Decision" data-toggle="tooltip" title="For when an executive decision has been made" @click="toggleFormCategory($event, 'Decision')">Decision <span class="fa fa-thumbs-up"></span></button>
+                        <button class="btn btn-sm btn-succe mr-2" value="Lab" data-toggle="tooltip" title="For lab-related work" @click="toggleFormCategory($event, 'Lab')">Lab <span class="fa fa-flask"></span></button>
+                        <button class="btn btn-sm btn-warn mr-2" value="Bioinformatics" data-toggle="tooltip" title="For all bioinformatics work" @click="toggleFormCategory($event, 'Bioinformatics')">Bioinformatics <span class="fa fa-laptop-code"></span></button>
+                        <button class="btn btn-sm btn-usr mr-2" value="User Communication" data-toggle="tooltip" title="For notes influenced by user-contact" @click="toggleFormCategory($event, 'User Communication')">User Communication <span class="fa fa-people-arrows"></span></button>
+                        <button class="btn btn-sm btn-dang mr-2" value="Administration" data-toggle="tooltip" title="For notes involving documentation" @click="toggleFormCategory($event, 'Administration')">Administration <span class="fa fa-folder-open"></span></button>
+                        <button class="btn btn-sm btn-imp mr-2" value="Important" data-toggle="tooltip" title="For when a note needs to be highlighted" @click="toggleFormCategory($event, 'Important')">Important <span class="fa fa-exclamation-circle"></span></button>
+                        <button class="btn btn-sm btn-devi mr-2" value="Deviation" data-toggle="tooltip" title="For notes about a deviation" @click="toggleFormCategory($event, 'Deviation')">Deviation <span class="fa fa-frown"></span></button>
+                        <button class="btn btn-sm btn-inv mr-2" value="Invoice" data-toggle="tooltip" title="For notes about an invoice" @click="toggleFormCategory($event, 'Invoice')">Invoicing <span class="fa fa-file-invoice-dollar"></span></button>
+                        <button class="btn btn-sm btn-sticky" value="Sticky" data-toggle="tooltip" title="For sticky notes" @click="toggleFormCategory($event, 'Sticky')">Sticky <span class="fa fa-note-sticky"></span></button>
                     </div>
                 </div>
             </div>
