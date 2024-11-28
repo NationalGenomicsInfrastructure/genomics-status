@@ -178,6 +178,7 @@ export const vRunningNotesTab = {
             let new_text = text_before_cursor.substring(0, text_before_cursor.length - current_word.length) + '@' + user + ' ' + text_after_cursor.substring(current_word_after.length);
             this.form_note_text = new_text;
             this.user_suggestions = [];
+            form_note_text_field.focus();
         },
         toggleNewNoteForm() {
             let new_note_form = this.$refs.new_note_form;
