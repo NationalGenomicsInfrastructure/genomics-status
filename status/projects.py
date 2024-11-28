@@ -153,13 +153,14 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         ord_det = row.value.get("order_details", {})
         # Try to fetch a name for the contact field, not just an e-mail
+        field_sources["emails"] = {}
         if "contact" in row.value and row.value.get("contact", ""):
             if "owner" in ord_det and row.value["contact"] == ord_det["owner"]["email"]:
                 row.value["contact"] = (
                     ord_det["owner"]["name"] + ": " + ord_det["owner"]["email"]
                 )
                 field_sources["contact"] = (
-                    "LIMS (researcher.email) and Order Portal, formatted by Genomics Status (backend)"
+                    "Either from LIMS or Order Portal (Owner), formatted by Genomics Status (backend). For this project it's from Order Portal."
                 )
             elif "fields" in ord_det:
                 if row.value["contact"] == ord_det["fields"]["project_lab_email"]:
@@ -169,7 +170,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                         + ord_det["fields"]["project_lab_email"]
                     )
                     field_sources["contact"] = (
-                        "LIMS (researcher.email) and Order Portal, formatted by Genomics Status (backend)"
+                        "Either from LIMS or Order Portal (Owner), formatted by Genomics Status (backend). For this project it's from LIMS (lab email)"
                     )
                 elif row.value["contact"] == ord_det["fields"]["project_pi_email"]:
                     row.value["contact"] = (
@@ -178,7 +179,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                         + ord_det["fields"]["project_pi_email"]
                     )
                     field_sources["contact"] = (
-                        "LIMS (researcher.email) and Order Portal, formatted by Genomics Status (backend)"
+                        "Either from LIMS or Order Portal (Owner), formatted by Genomics Status (backend). For this project it's from LIMS (PI email)"
                     )
         # The status "open" is added here since this method is reused with only the statuses open/closed.
         if (
@@ -644,6 +645,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             view_adress = "project/summary_with_sources"
         else:
             view_adress = "project/summary"
+        # In this view, projects can only be closed or open, nothing else
         view = self.application.projects_db.view(view_adress)["open", project]
         if not view.rows:
             view = self.application.projects_db.view(view_adress)["closed", project]
