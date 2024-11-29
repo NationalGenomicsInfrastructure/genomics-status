@@ -325,83 +325,85 @@ export const vRunningNotesTab = {
                 <div class="modal-body">
                     <p><strong>Remember:</strong> <u>Two</u> line breaks are required to split a line in two!</p>
                     <table class="table table-bordered">
-                        <tr class="darkth">
-                            <th>You Write</th>
-                            <th>Running Note Shows</th>
-                        </tr>
-                        <tr>
-                            <td>Some *italic* text</td>
-                            <td class="mkdown">Some <em>italic</em> text</td>
-                        </tr>
-                        <tr>
-                            <td>Some **bold** text</td>
-                            <td class="mkdown">Some <strong>bold</strong> text</td>
-                        </tr>
-                        <tr>
-                            <td>Some ***bold italic*** text</td>
-                            <td class="mkdown">Some <strong><em>bold italic</em></strong> text</td>
-                        </tr>
-                        <tr>
-                            <td>* Bullet pointed<br>* List of items<br>&nbsp;* With nested<br>* Items</td>
-                            <td class="mkdown">
-                                <ul>
-                                    <li>Bullet pointed</li>
-                                    <li>List of items
-                                        <ul>
-                                            <li>With nested</li>
-                                        </ul>
-                                    </li>
-                                    <li>Items</li>
-                                </ul>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>1. Numbered list<br>1. Of items</td>
-                            <td class="mkdown">
-                                <ol>
-                                    <li>Numbered list</li>
-                                    <li>Of items</li>
-                                </ol>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Links [are easy](https://genomics-status.scilifelab.se/)!</td>
-                            <td class="mkdown">Links <a href="https://genomics-status.scilifelab.se/">are easy</a>!</td>
-                        </tr>
-                        <tr>
-                            <td>You can do e-mail addresses too: &lt;genomics_support@scilifelab.se&gt;</td>
-                            <td>You can do e-mail addresses too: <a href="mailto:genomics_support@scilifelab.se">genomics_support@scilifelab.se</a></td>
-                        </tr>
-                        <tr>
-                            <td>Markdown even has a logo: ![Awesome Logo](https://genomics-status.scilifelab.se/static/img/markdown.png)</td>
-                            <td class="mkdown">Markdown even has a logo: <img src="/static/img/markdown.png" title="Awesome Logo"></td>
-                        </tr>
-                        <tr>
-                            <td>You can put things like flow cell IDs in \`back ticks\`</td>
-                            <td class="mkdown">You can put things like flow cell IDs in <code>back ticks</code></td>
-                        </tr>
-                        <tr>
-                            <td>\`\`\`<br>Larger chunks of code-like stuff<br>can go in 'code-fences' of<br>three back ticks<br>\`\`\`</td>
-                            <td class="mkdown">
-                                <pre><code>Larger chunks for code-like stuff<br>can go in 'code-fences' of<br>three back ticks</code></pre>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>&gt; You can quote someone<br>&gt; with greater than symbols</td>
-                            <td class="mkdown"><blockquote>You can quote someone with greater than symbols</blockquote></td>
-                        </tr>
-                        <tr>
-                            <td>Split up content<br>***<br>with three or more asterisks</td>
-                            <td>Split up content<hr>with three or more asterisks</td>
-                        </tr>
-                        <tr>
-                            <td># Headings<br>## Use these<br>### Symbols</td>
-                            <td>
-                                <h1>Headings</h1>
-                                <h2>Use these</h2>
-                                <h3>Symbols</h3>
-                            </td>
-                        </tr>
+                        <tbody>
+                            <tr class="darkth">
+                                <th>You Write</th>
+                                <th>Running Note Shows</th>
+                            </tr>
+                            <tr>
+                                <td>Some *italic* text</td>
+                                <td class="mkdown">Some <em>italic</em> text</td>
+                            </tr>
+                            <tr>
+                                <td>Some **bold** text</td>
+                                <td class="mkdown">Some <strong>bold</strong> text</td>
+                            </tr>
+                            <tr>
+                                <td>Some ***bold italic*** text</td>
+                                <td class="mkdown">Some <strong><em>bold italic</em></strong> text</td>
+                            </tr>
+                            <tr>
+                                <td>* Bullet pointed<br>* List of items<br>&nbsp;* With nested<br>* Items</td>
+                                <td class="mkdown">
+                                    <ul>
+                                        <li>Bullet pointed</li>
+                                        <li>List of items
+                                            <ul>
+                                                <li>With nested</li>
+                                            </ul>
+                                        </li>
+                                        <li>Items</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>1. Numbered list<br>1. Of items</td>
+                                <td class="mkdown">
+                                    <ol>
+                                        <li>Numbered list</li>
+                                        <li>Of items</li>
+                                    </ol>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Links [are easy](https://genomics-status.scilifelab.se/)!</td>
+                                <td class="mkdown">Links <a href="https://genomics-status.scilifelab.se/">are easy</a>!</td>
+                            </tr>
+                            <tr>
+                                <td>You can do e-mail addresses too: &lt;genomics_support@scilifelab.se&gt;</td>
+                                <td>You can do e-mail addresses too: <a href="mailto:genomics_support@scilifelab.se">genomics_support@scilifelab.se</a></td>
+                            </tr>
+                            <tr>
+                                <td>Markdown even has a logo: ![Awesome Logo](https://genomics-status.scilifelab.se/static/img/markdown.png)</td>
+                                <td class="mkdown">Markdown even has a logo: <img src="/static/img/markdown.png" title="Awesome Logo"></td>
+                            </tr>
+                            <tr>
+                                <td>You can put things like flow cell IDs in \`back ticks\`</td>
+                                <td class="mkdown">You can put things like flow cell IDs in <code>back ticks</code></td>
+                            </tr>
+                            <tr>
+                                <td>\`\`\`<br>Larger chunks of code-like stuff<br>can go in 'code-fences' of<br>three back ticks<br>\`\`\`</td>
+                                <td class="mkdown">
+                                    <pre><code>Larger chunks for code-like stuff<br>can go in 'code-fences' of<br>three back ticks</code></pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>&gt; You can quote someone<br>&gt; with greater than symbols</td>
+                                <td class="mkdown"><blockquote>You can quote someone with greater than symbols</blockquote></td>
+                            </tr>
+                            <tr>
+                                <td>Split up content<br>***<br>with three or more asterisks</td>
+                                <td>Split up content<hr>with three or more asterisks</td>
+                            </tr>
+                            <tr>
+                                <td># Headings<br>## Use these<br>### Symbols</td>
+                                <td>
+                                    <h1>Headings</h1>
+                                    <h2>Use these</h2>
+                                    <h3>Symbols</h3>
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                     <p>For further reference, see the <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">syntax document</a>.
                         Live editing tools such as <a href="http://dillinger.io/" target="_blank">dillinger.io</a> or
