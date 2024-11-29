@@ -63,7 +63,7 @@ export const vRunningNotesTab = {
         }
     },
     methods: {
-        async fetchAllRunningNotes(partition_id) {
+        fetchAllRunningNotes(partition_id) {
             axios
                 .get('/api/v1/running_notes/' + partition_id)
                 .then(response => {
