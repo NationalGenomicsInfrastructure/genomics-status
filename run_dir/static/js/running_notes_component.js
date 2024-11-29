@@ -102,10 +102,12 @@ export const vRunningNotesTab = {
             this.submitting = true;
             if (this.form_note_text === '') {
                 alert("Error: No running note entered.");
+                this.submitting = false
                 return
             }
             if (this.form_categories.length === 0) {
                 if (!confirm("Are you sure that you want to submit without choosing a category?")) {
+                    this.submitting = false
                     return
                 }
             }
