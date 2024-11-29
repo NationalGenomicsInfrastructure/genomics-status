@@ -195,8 +195,7 @@ export const vRunningNotesTab = {
                 this.openNewNoteForm();
             }
         },
-        toggleFormCategory(event, category) {
-            event.preventDefault();
+        toggleFormCategory(category) {
             if (this.form_categories.includes(category)) {
                 this.form_categories = this.form_categories.filter(item => item !== category);
             } else {
