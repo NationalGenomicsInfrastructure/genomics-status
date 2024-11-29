@@ -273,7 +273,7 @@ export const vRunningNotesTab = {
                         </button>
                     </template>
                     <template v-else>
-                       <button type="submit" class="btn btn-primary" id="save_note_button" @click="submitRunningNote">Submit Running Note</button>
+                       <button type="submit" class="btn btn-primary" id="save_note_button" @click.prevent="submitRunningNote">Submit Running Note</button>
                     </template>
                 </div>
             </div>
