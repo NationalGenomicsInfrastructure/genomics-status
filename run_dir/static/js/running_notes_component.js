@@ -417,15 +417,18 @@ export const vRunningNotesTab = {
 
     <!-- display running notes -->
     <template v-for="running_note in visible_running_notes">
-        <v-running-note-single :running_note_obj="running_note" :compact="false"/>
+        <v-running-note-single :running_note_obj="running_note" :compact="false" :partition_id="partition_id"/>
     </template>
     `
 }
 
 
 export const vRunningNoteSingle = {
-    props: ['running_note_obj', 'compact'],
+    props: ['running_note_obj', 'compact', "partition_id"],
 
+    mounted() {
+        this.make_selected_card_glow()
+    },
     computed: {
         categories() {
             return this.getRunningNoteProperty('categories')
@@ -494,6 +497,9 @@ export const vRunningNoteSingle = {
             let running_note_json = JSON.parse(this.running_note_obj)
             return Object.values(running_note_json)[0];
         },
+        note_id() {
+            return 'running_note_'+this.partition_id+'_'+(new Date(this.created_at_utc).getTime());
+        },
         email() {
             return this.getRunningNoteProperty('email')
         },
@@ -535,16 +541,38 @@ export const vRunningNoteSingle = {
                 }
             }
             return undefined
+        },
+        make_selected_card_glow(event) {
+            let run_note_hash = ''
+            if (event != undefined) {
+                run_note_hash = event.target.parentElement.hash
+            }
+            if (window.location.hash.startsWith('#running_note_')){
+                run_note_hash = window.location.hash
+            }
+            if (run_note_hash !== '') {
+                let elem_to_glow = document.querySelector(`a[href="${run_note_hash}"]`).parentElement.parentElement;
+                elem_to_glow.scrollIntoView({ block: "center" });
+                if (elem_to_glow) {
+                elem_to_glow.classList.add('glow');
+                setTimeout(() => {
+                    elem_to_glow.classList.remove('glow');
+                    history.replaceState("", document.title, window.location.pathname);
+                    }, 3000);
+                }
+              }
         }
     },
     template:
     /*html*/`
     <div class="pb-3">
         <div class="card">
-            <div class="card-header bi-project-note-header" :class="mark_card_important">
+            <div class="card-header bi-project-note-header" :class="mark_card_important" :id="note_id">
                 <a class="text-decoration-none" :href="'mailto:' + this.email">{{this.user}}</a>
                 <template v-if="!compact">
-                - <span class="todays_date">{{ formattedTimeStamp }}</span>
+                - <a @click.prevent="make_selected_card_glow($event)" class="text-decoration-none" :href="'#'+note_id">
+                    <span class="todays_date">{{ formattedTimeStamp }}</span>
+                </a>
                 </template>
                 <span> - {{timestampAge}}</span>
                 <template v-if="categories">
