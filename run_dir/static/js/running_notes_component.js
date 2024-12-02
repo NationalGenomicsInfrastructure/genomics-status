@@ -541,7 +541,7 @@ export const vRunningNoteSingle = {
     /*html*/`
     <div class="pb-3">
         <div class="card">
-            <div class="card-header bi-project-note-header">
+            <div class="card-header bi-project-note-header" :class="mark_card_important">
                 <a class="text-decoration-none" :href="'mailto:' + this.email">{{this.user}}</a>
                 <template v-if="!compact">
                 - <span class="todays_date">{{ formattedTimeStamp }}</span>
