@@ -1,14 +1,11 @@
 """Main genomics-status web application."""
 
 import base64
-import json
 import subprocess
 import uuid
-from collections import OrderedDict
 from pathlib import Path
 from urllib.parse import urlsplit
 
-import requests
 import tornado.autoreload
 import tornado.httpserver
 import tornado.ioloop
@@ -90,6 +87,7 @@ from status.pricing import (
 from status.production import (
     ProductionCronjobsHandler,
 )
+from status.project_cards import ProjectCardsHandler, ProjectCardsWebSocket
 from status.projects import (
     CaliperImageHandler,
     CharonProjectHandler,
@@ -103,6 +101,7 @@ from status.projects import (
     ProjectRNAMetaDataHandler,
     ProjectSamplesDataHandler,
     ProjectSamplesHandler,
+    ProjectSamplesOldHandler,
     ProjectsDataHandler,
     ProjectsFieldsDataHandler,
     ProjectsHandler,
@@ -124,7 +123,11 @@ from status.queues import (
     qPCRPoolsHandler,
 )
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
-from status.running_notes import LatestStickyNoteHandler, RunningNotesDataHandler
+from status.running_notes import (
+    LatestStickyNoteHandler,
+    LatestStickyNotesMultipleHandler,
+    RunningNotesDataHandler,
+)
 from status.sample_requirements import (
     SampleRequirementsDataHandler,
     SampleRequirementsDraftDataHandler,
@@ -279,6 +282,7 @@ class Application(tornado.web.Application):
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/latest_sticky_run_note/([^/]*)", LatestStickyNoteHandler),
+            ("/api/v1/latest_sticky_run_note", LatestStickyNotesMultipleHandler),
             ("/api/v1/libpooling_queues", LibraryPoolingQueuesDataHandler),
             ("/api/v1/lims_project_data/([^/]*)$", LIMSProjectCloningHandler),
             ("/api/v1/mark_agreement_signed", AgreementMarkSignHandler),
@@ -295,6 +299,7 @@ class Application(tornado.web.Application):
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
+            ("/api/v1/project_websocket", ProjectCardsWebSocket),
             ("/api/v1/presets", PresetsHandler),
             ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
             ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
@@ -372,9 +377,10 @@ class Application(tornado.web.Application):
             ("/pricing_quote", PricingQuoteHandler),
             ("/pricing_update", PricingUpdateHandler),
             ("/production/cronjobs", ProductionCronjobsHandler),
-            ("/project/([^/]*)$", ProjectSamplesHandler),
-            ("/project/(P[^/]*)/([^/]*)$", ProjectSamplesHandler),
+            ("/project/([^/]*)$", ProjectSamplesOldHandler),
+            ("/project_new/([^/]*)$", ProjectSamplesHandler),
             ("/projects", ProjectsHandler),
+            ("/project_cards", ProjectCardsHandler),
             ("/proj_meta", ProjMetaCompareHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
@@ -439,14 +445,14 @@ class Application(tornado.web.Application):
             self.cloudant = cloudant
 
         # Load columns and presets from genstat-defaults user in StatusDB
-        genstat_id = ""
-        user = settings.get("username", None)
-        for u in self.gs_users_db.view("authorized/users"):
-            if u.get("key") == "genstat-defaults":
-                genstat_id = u.get("value")
+        genstat_id_rows = self.gs_users_db.view("authorized/users")[
+            "genstat-defaults"
+        ].rows
+        for row in genstat_id_rows:
+            genstat_defaults_doc_id = row.get("value")
 
         # It's important to check that this user exists!
-        if not genstat_id:
+        if not genstat_defaults_doc_id:
             raise RuntimeError(
                 "genstat-defaults user not found on {}, please "
                 "make sure that the user is available with the "
@@ -454,24 +460,13 @@ class Application(tornado.web.Application):
                     settings.get("couch_server", None)
                 )
             )
+        elif len(genstat_id_rows) > 1:
+            # Not sure this can actually happen, but worth checking
+            raise RuntimeError(
+                "Multiple genstat-default users found in the database, please fix"
+            )
 
-        # We need to get this database as OrderedDict, so the pv_columns doesn't
-        # mess up
-        password = settings.get("password", None)
-        headers = {
-            "Accept": "application/json",
-            "Authorization": "Basic "
-            + "{}:{}".format(
-                base64.b64encode(bytes(user, "ascii")),
-                base64.b64encode(bytes(password, "ascii")),
-            ),
-        }
-        decoder = json.JSONDecoder(object_pairs_hook=OrderedDict)
-        user_url = "{}/gs_users/{}".format(settings.get("couch_server"), genstat_id)
-        json_user = (
-            requests.get(user_url, headers=headers).content.rstrip().decode("ascii")
-        )
-        self.genstat_defaults = decoder.decode(json_user)
+        self.genstat_defaults = self.gs_users_db[genstat_defaults_doc_id]
 
         # Load private instrument listing
         self.instrument_list = settings.get("instruments")
@@ -571,7 +566,9 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/pricing_quote_tbody.html")
             tornado.autoreload.watch("design/proj_meta_compare.html")
             tornado.autoreload.watch("design/project_samples.html")
+            tornado.autoreload.watch("design/project_samples_old.html")
             tornado.autoreload.watch("design/projects.html")
+            tornado.autoreload.watch("design/project_cards.html")
             tornado.autoreload.watch("design/reads_total.html")
             tornado.autoreload.watch("design/rec_ctrl_view.html")
             tornado.autoreload.watch("design/running_notes_help.html")
@@ -642,6 +639,8 @@ if __name__ == "__main__":
 
     # Get a handle to the instance of IOLoop
     ioloop = tornado.ioloop.IOLoop.instance()
+
+    application.ioloop = ioloop
 
     # Start the IOLoop
     ioloop.start()
