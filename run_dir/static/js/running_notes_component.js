@@ -567,7 +567,7 @@ export const vRunningNoteSingle = {
     /*html*/`
     <div class="pb-3">
         <div class="card">
-            <div class="card-header bi-project-note-header" :class="mark_card_important" :id="note_id">
+            <div class="card-header" :class="mark_card_important" :id="note_id">
                 <a class="text-decoration-none" :href="'mailto:' + this.email">{{this.user}}</a>
                 <template v-if="!compact">
                 - <a @click.prevent="make_selected_card_glow($event)" class="text-decoration-none" :href="'#'+note_id">
@@ -579,7 +579,7 @@ export const vRunningNoteSingle = {
                 - <span v-html="categories_labels"/>
                 </template>
             </div>
-            <div class="card-body bi-project-note-text">
+            <div class="card-body">
                 <div class="running-note-body" v-html="formatted_note"/>
             </div>
         </div>
