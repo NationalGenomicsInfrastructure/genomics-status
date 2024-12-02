@@ -189,7 +189,8 @@ marked.Renderer.prototype.heading =function(text,level,raw){
 };
 function make_project_links(s){
   // Searches for P[\d+] and replaces with a link to the project page
-  s = s.replace(/([\W])(P[\d]{3,5})(?!\w)/g, '$1<a class="text-decoration-none" href="/project/$2">$2</a>');
+  //(?!#) is a negative lookahead to make sure that we ignore Pid occurences in a running note link
+  s = s.replace(/([\W])(P[\d]{3,5})(?!\w)(?!#)/g, '$1<a class="text-decoration-none" href="/project/$2">$2</a>');
 
   // Searches for FlowCell IDs and replaces with a link (Most complicated regex ever)
   // - $1 = Captures a non-word character (javascript can't do lookbehind)
