@@ -436,6 +436,9 @@ export const vRunningNoteSingle = {
             }
             return this.generate_category_label(this.categories)
         },
+        mark_card_important() {
+            return this.categories.includes('Important') ? 'card-important' : ''
+        },
         created_at_utc() {
             return this.getRunningNoteProperty('created_at_utc')
         },
