@@ -63,6 +63,15 @@ export const vRunningNotesTab = {
         }
     },
     methods: {
+        check_uri_hash(){
+            // If the uri is a link to a specific note, we send that to each note with a props so that the correct one can glow up
+            if (window.location.hash) {
+                if (window.location.hash.startsWith('#running_note_')) {
+                    return window.location.hash
+                }
+            }
+            return null
+        },
         fetchAllRunningNotes(partition_id) {
             axios
                 .get('/api/v1/running_notes/' + partition_id)
@@ -417,17 +426,23 @@ export const vRunningNotesTab = {
 
     <!-- display running notes -->
     <template v-for="running_note in visible_running_notes">
-        <v-running-note-single :running_note_obj="running_note" :compact="false" :partition_id="partition_id"/>
+        <v-running-note-single :running_note_obj="running_note" :compact="false" :partition_id="partition_id" :uri_hash="this.check_uri_hash()"/>
     </template>
     `
 }
 
 
 export const vRunningNoteSingle = {
-    props: ['running_note_obj', 'compact', "partition_id"],
-
+    props: ['running_note_obj', 'compact', "partition_id", "uri_hash"],
+    data: function() {
+        return {
+            glowingCard: false
+        }
+    },
     mounted() {
-        this.make_selected_card_glow()
+        if (this.uri_hash === '#' + this.note_id) {
+            this.make_selected_card_glow()
+        }
     },
     computed: {
         categories() {
@@ -497,8 +512,11 @@ export const vRunningNoteSingle = {
             let running_note_json = JSON.parse(this.running_note_obj)
             return Object.values(running_note_json)[0];
         },
+        note_hash(){
+            return (new Date(this.created_at_utc).getTime());
+        },
         note_id() {
-            return 'running_note_'+this.partition_id+'_'+(new Date(this.created_at_utc).getTime());
+            return 'running_note_'+this.partition_id+'_'+this.note_hash;
         },
         email() {
             return this.getRunningNoteProperty('email')
@@ -508,7 +526,10 @@ export const vRunningNoteSingle = {
         },
         user() {
             return this.getRunningNoteProperty('user')
-        }
+        },
+        href(){
+            return '/project_new/' + this.partition_id + '#' + this.note_id
+        },
     },    
     methods: {
         generate_category_label(categories){
@@ -543,34 +564,23 @@ export const vRunningNoteSingle = {
             return undefined
         },
         make_selected_card_glow(event) {
-            let run_note_hash = ''
-            if (event != undefined) {
-                run_note_hash = event.target.parentElement.hash
-            }
-            if (window.location.hash.startsWith('#running_note_')){
-                run_note_hash = window.location.hash
-            }
-            if (run_note_hash !== '') {
-                let elem_to_glow = document.querySelector(`a[href="${run_note_hash}"]`).parentElement.parentElement;
-                elem_to_glow.scrollIntoView({ block: "center" });
-                if (elem_to_glow) {
-                elem_to_glow.classList.add('glow');
+            this.$nextTick(() => {
+                this.$refs.card_div.scrollIntoView({ block: "center" });
+                this.glowingCard = true;
                 setTimeout(() => {
-                    elem_to_glow.classList.remove('glow');
-                    history.replaceState("", document.title, window.location.pathname);
-                    }, 3000);
-                }
-              }
+                    this.glowingCard = false;
+                }, 3000);
+            });
         }
     },
     template:
     /*html*/`
     <div class="pb-3">
-        <div class="card">
+        <div :class="['card', {glow: glowingCard}]" ref="card_div">
             <div class="card-header" :class="mark_card_important" :id="note_id">
                 <a class="text-decoration-none" :href="'mailto:' + this.email">{{this.user}}</a>
                 <template v-if="!compact">
-                - <a @click.prevent="make_selected_card_glow($event)" class="text-decoration-none" :href="'#'+note_id">
+                - <a @click.prevent="make_selected_card_glow" class="text-decoration-none" :href=this.href>
                     <span class="todays_date">{{ formattedTimeStamp }}</span>
                 </a>
                 </template>
