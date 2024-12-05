@@ -125,6 +125,7 @@ function setupPlate(){
 }
 
 function drawWell(centerX, centerY, sid, stat, control_sample){
+    let control_text = '';
     ctx.beginPath();
     ctx.arc(centerX,centerY,32,0,2*Math.PI);
 
@@ -146,15 +147,26 @@ function drawWell(centerX, centerY, sid, stat, control_sample){
         ctx.fillStyle="#666666";
     }
     ctx.stroke();
-    if(control_sample){
+    if(control_sample>0){
         ctx.beginPath();
         ctx.arc(centerX,centerY,36,0,2*Math.PI);
         ctx.lineWidth = 4;
         ctx.stroke();
+        control_text = (control_sample==1 ? '-' : '+');
     }
     ctx.font = '10pt Calibri';
     ctx.textAlign = 'center';
     ctx.fillText(sid, centerX, centerY+4);
+    if(control_text){
+        ctx.beginPath();
+        ctx.lineWidth = 1;
+        ctx.fillStyle="black";
+        ctx.strokeStyle="black";
+        ctx.arc(centerX+0.5,centerY+16,6,0,2*Math.PI);
+        ctx.stroke();
+        ctx.font = '13pt Calibri';
+        ctx.fillText(control_text, centerX, centerY+20);
+    }
 }
 
 function updateSample(sample_id,sample_data, level, control_sample){
@@ -191,7 +203,9 @@ function updatePlate(level){
 }
 
 function is_control_project(project){
-    if(project.toLowerCase().startsWith('n.egative')|| project.toLowerCase().startsWith('p.ositive'))
-        return true;
-    return false;
+    if(project.toLowerCase().startsWith('n.egative'))
+        return 1;
+    else if( project.toLowerCase().startsWith('p.ositive'))
+        return 2;
+    return 0;
 }
