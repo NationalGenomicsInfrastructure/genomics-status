@@ -88,9 +88,14 @@
             <a class="nav-link {{ 'active' if not sample_data else '' }}" href="#tab_barcode_information" role="tab" data-toggle="tab">Barcode counts</a>
           </li>
         {% end %}
-        {% if flowcell.get('TACA_run_status') == "finished" %}
+        {% if has_minknow_report %}
           <li class="nav-item">
-            <a class="nav-link" href="/flowcells_ont/{{ flowcell.get('run_name') }}/report" target="_blank">MinKNOW run report</a>
+            <a class="nav-link" href="/flowcells_ont/{{ flowcell.get('run_name') }}/minknow_report" target="_blank">MinKNOW report</a>
+          </li>
+        {% end %}
+        {% if has_toulligqc_report %}
+          <li class="nav-item">
+            <a class="nav-link" href="/flowcells_ont/{{ flowcell.get('run_name') }}/toulligqc_report" target="_blank">ToulligQC report</a>
           </li>
         {% end %}
         <li class="nav-item">
