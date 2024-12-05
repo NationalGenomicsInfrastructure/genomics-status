@@ -62,7 +62,7 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
                      <th class="col-md-1">Location</th> \
                  </tr> ';
         $.each(project_data.samples, function(sample_id, sample_data){
-        updateSample(sample_id,sample_data)
+        updateSample(sample_id,sample_data, '', is_control_project(project_data.name));
         content+="<tr><td>"+sample_id+"</td> \
                   <td>"+sample_data['customer_name']+"</td> \
                   <td>"+auto_format(sample_data['rec_ctrl']['status'])+"</td> \
@@ -124,10 +124,12 @@ function setupPlate(){
         }
     }
 }
-function drawWell(centerX, centerY, sid, stat ){
+
+function drawWell(centerX, centerY, sid, stat, control_sample){
     ctx.beginPath();
     ctx.arc(centerX,centerY,32,0,2*Math.PI);
 
+    ctx.lineWidth = 1;
     if (stat == 'FAILED'){
         ctx.fillStyle="#f2dede";
         ctx.strokeStyle="#DDC4C4";
@@ -144,22 +146,30 @@ function drawWell(centerX, centerY, sid, stat ){
         ctx.fill()
         ctx.fillStyle="#666666";
     }
+    ctx.stroke();
+    if(control_sample){
+        console.log('here')
+        ctx.beginPath();
+        ctx.arc(centerX,centerY,36,0,2*Math.PI);
+        ctx.lineWidth = 4;
+        ctx.stroke();
+    }
     ctx.font = '10pt Calibri';
     ctx.textAlign = 'center';
     ctx.fillText(sid, centerX, centerY+4);
-
-    ctx.stroke();
 }
-function updateSample(sample_id,sample_data, level){
+
+function updateSample(sample_id,sample_data, level, control_sample){
     var positions=sample_data['location'].split(':');
     var positionX=parseInt(positions[1]-1)*interval+margin_left;
     var positionY=(positions[0].charCodeAt(0)-65)*interval+margin_top;
     if(level == 'seq'){
-        drawWell(positionX, positionY, sample_id, sample_data['sequencing_status']);
+        drawWell(positionX, positionY, sample_id, sample_data['sequencing_status'], control_sample);
     }else if (level == 'rec_ctrl'){
-        drawWell(positionX, positionY, sample_id, sample_data['rec_ctrl']['status']);
+        drawWell(positionX, positionY, sample_id, sample_data['rec_ctrl']['status'], control_sample);
     }else{
-        drawWell(positionX, positionY, sample_id, sample_data['library_status']);
+        console.log(sample_id, sample_data['library_status'], control_sample)
+        drawWell(positionX, positionY, sample_id, sample_data['library_status'], control_sample);
     }
 }
 
@@ -177,8 +187,14 @@ function updatePlate(level){
     if(wsdata.hasOwnProperty("projects")){
         $.each(wsdata.projects, function(project_id, project_data){
             $.each(project_data.samples, function(sample_id, sample_data){
-                updateSample(sample_id, sample_data, level);
+                updateSample(sample_id, sample_data, level, is_control_project(project_data.name));
             });
         });
     }
+}
+
+function is_control_project(project){
+    if(project.toLowerCase().startsWith('n.egative')|| project.toLowerCase().startsWith('p.ositive'))
+        return true;
+    return false;
 }
