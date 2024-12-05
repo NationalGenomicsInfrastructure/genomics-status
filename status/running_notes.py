@@ -399,6 +399,25 @@ class LatestStickyNotesMultipleHandler(SafeHandler):
         self.set_header("Content-type", "application/json")
         self.write(latest_sticky_notes)
 
+class LatestRunningNotesAllDataHandler(SafeHandler):
+    """Serves the latest running notes, without any filtering.
+
+    Can be paginated with limit and skip parameters."""
+
+    def get(self):
+        limit = self.get_argument("limit", 100)
+        skip = self.get_argument("skip", None)
+
+        latest_running_notes_rows = self.application.running_notes_db.view(
+            "all_latest_note_previews/all", reduce=False, limit=limit, descending=True
+        ).rows
+
+        latest_running_notes = {
+            row.key: row.value for row in latest_running_notes_rows if row.value
+        }
+        self.set_header("Content-type", "application/json")
+        self.write(latest_running_notes)
+
 
 class LatestRunningNoteHandler(SafeHandler):
     """Handler for methods related to running notes which are used in other classes"""
