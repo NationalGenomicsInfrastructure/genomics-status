@@ -95,7 +95,6 @@ $.getJSON("/api/v1/workset/"+workset_name, function(data) {
     $('#loading_spinner').hide();
     $('#page_content').show();
 
-    // console.log(data)
 }).fail(function(){
     // workset not found - probably
     $('#page_content').html('<h1>Error - Workset Not Found</h1><div class="alert alert-danger">Oops! Sorry about that, we can\'t find the Workset <strong>'+workset_name+'</strong></div>');
@@ -148,7 +147,6 @@ function drawWell(centerX, centerY, sid, stat, control_sample){
     }
     ctx.stroke();
     if(control_sample){
-        console.log('here')
         ctx.beginPath();
         ctx.arc(centerX,centerY,36,0,2*Math.PI);
         ctx.lineWidth = 4;
@@ -168,7 +166,6 @@ function updateSample(sample_id,sample_data, level, control_sample){
     }else if (level == 'rec_ctrl'){
         drawWell(positionX, positionY, sample_id, sample_data['rec_ctrl']['status'], control_sample);
     }else{
-        console.log(sample_id, sample_data['library_status'], control_sample)
         drawWell(positionX, positionY, sample_id, sample_data['library_status'], control_sample);
     }
 }
