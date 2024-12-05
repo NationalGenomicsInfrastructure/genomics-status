@@ -162,10 +162,10 @@ function drawWell(centerX, centerY, sid, stat, control_sample){
         ctx.lineWidth = 1;
         ctx.fillStyle="black";
         ctx.strokeStyle="black";
-        ctx.arc(centerX+0.5,centerY+16,6,0,2*Math.PI);
+        ctx.arc(centerX+0.5,centerY+16.4,6,0,2*Math.PI);
         ctx.stroke();
         ctx.font = '13pt Calibri';
-        ctx.fillText(control_text, centerX, centerY+20);
+        ctx.fillText(control_text, centerX+0.5, centerY+20.5);
     }
 }
 
