@@ -14,22 +14,19 @@
             "extensions": [
                 "charliermarsh.ruff",
                 "ms-python.python",
-                "vscode-es6-string-html"
+                "Tobermory.es6-string-html" 
             ]
         }
     },
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
-    // "forwardPorts": [],
-    "postCreateCommand": [
-        "pip3 install -e .",
-        "ln -s /root/conf/.genologicsrc /root/.genologicsrc",
-        "ln -s /root/conf/genosqlrc.yaml /root/.genosqlrc.yaml"
-    ],
+    "forwardPorts": [9761],
+    "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
+    "postStartCommand": "cd run_dir && python ../status_app.py --develop --testing_mode",
     // Configure tool-specific properties.
     // "customizations": {},
     // Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
-    // "remoteUser": "devcontainer"
+    "remoteUser": "mambauser",
     "mounts": [
-        "source=${localEnv:HOME}/conf,target=/root/conf,type=bind,consistency=cached"
+        "source=${localEnv:HOME}/conf,target=/home/mambauser/conf,type=bind,consistency=cached"
     ]
 }
