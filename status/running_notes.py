@@ -406,15 +406,22 @@ class LatestRunningNotesAllDataHandler(SafeHandler):
 
     def get(self):
         limit = self.get_argument("limit", 100)
-        skip = self.get_argument("skip", None)
+        skip = self.get_argument("skip", 0)
 
         latest_running_notes_rows = self.application.running_notes_db.view(
-            "all_latest_note_previews/all", reduce=False, limit=limit, descending=True
+            "all_latest_note_previews/all",
+            reduce=False,
+            limit=limit,
+            skip=skip,
+            descending=True,
         ).rows
 
         latest_running_notes = {
-            row.key: row.value for row in latest_running_notes_rows if row.value
+            "_".join(row.key): row.value
+            for row in latest_running_notes_rows
+            if row.value
         }
+
         self.set_header("Content-type", "application/json")
         self.write(latest_running_notes)
 
