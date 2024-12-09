@@ -463,14 +463,27 @@ def fetch_ont_run_stats(
     return run_dict
 
 
-class ONTReportHandler(SafeHandler):
+class ONTMinKNOWReportHandler(SafeHandler):
     """Serves a page showing the MinKNOW .html report of a given run"""
 
     def __init__(self, application, request, **kwargs):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
     def get(self, name):
-        reports_dir = self.application.minknow_path
+        reports_dir = self.application.minknow_reports_path
+        report_path = os.path.join(reports_dir, f"report_{name}.html")
+
+        self.write(open(report_path).read())
+
+
+class ONTToulligQCReportHandler(SafeHandler):
+    """Serves a page showing the ToulligQC .html report of a given run"""
+
+    def __init__(self, application, request, **kwargs):
+        super(SafeHandler, self).__init__(application, request, **kwargs)
+
+    def get(self, name):
+        reports_dir = self.application.toulligqc_reports_path
         report_path = os.path.join(reports_dir, f"report_{name}.html")
 
         self.write(open(report_path).read())
@@ -744,6 +757,12 @@ class ONTFlowcellHandler(SafeHandler):
                 flowcell=self.fetch_ont_flowcell(name),
                 barcodes=self.fetch_barcodes(name),
                 args=self.fetch_args(name),
+                has_minknow_report=os.path.exists(
+                    f"{self.application.minknow_reports_path}/report_{name}.html"
+                ),
+                has_toulligqc_report=os.path.exists(
+                    f"{self.application.toulligqc_reports_path}/report_{name}.html"
+                ),
                 user=self.get_current_user(),
             )
         )
