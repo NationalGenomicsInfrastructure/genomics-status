@@ -9,7 +9,24 @@ export const vRunningNotesTab = {
             user_suggestions: [],
             running_notes: [],
             search_term: '',
-            submitting: false
+            submitting: false,
+            cat_classes: {
+                'automatic': {
+                                'Workset': ['primary', 'calendar-plus'],
+                                'Flowcell': ['success', 'grip-vertical']
+                             },
+                'manual':    {
+                                'Decision': ['info', 'thumbs-up'],
+                                'Lab': ['succe', 'flask'],
+                                'Bioinformatics': ['warning', 'laptop-code'],
+                                'User Communication': ['usr', 'people-arrows'],
+                                'Administration': ['danger', 'folder-open'],
+                                'Important': ['imp', 'exclamation-circle'],
+                                'Deviation': ['devi', 'frown'],
+                                'Invoicing': ['inv', 'file-invoice-dollar'],
+                                'Sticky': ['sticky', 'note-sticky']
+                }
+            }
         }
     },
     computed: {
@@ -218,6 +235,23 @@ export const vRunningNotesTab = {
         },
         openHelpModal() {
             this.help_modal.show();
+        },
+
+        count_cards(category) {
+            if(category === 'All') {
+                return Object.values(this.running_notes).length
+            }
+            return Object.values(this.running_notes).filter(running_note => running_note.categories.includes(category)).length
+        },
+        label_color(category) {
+            if (category === 'All') {
+                return 'badge bg-secondary'
+            }
+            if(Object.values(this.cat_classes).some(subCat => subCat.hasOwnProperty(category))){
+                const subCat = Object.values(this.cat_classes).find(subCat => subCat.hasOwnProperty(category));
+                return 'badge bg-'+subCat[category][0];
+            }
+            return ''
         }
     },
     mounted() {
@@ -299,23 +333,26 @@ export const vRunningNotesTab = {
         <label>Filter :</label>
 
         <div class="dropdown">
-            <button class="btn btn-outline-secondary text-dark dropdown-toggle btn_count" type="button" id="rn_category" data-toggle="dropdown" aria-expanded="false"></button>
+            <button class="btn btn-outline-secondary text-dark dropdown-toggle btn_count" type="button" id="rn_category" data-toggle="dropdown" aria-expanded="false">
+             <span :class="['mr-2', label_color(category_filter)]">{{count_cards(category_filter) }}</span> {{category_filter}}
+            </button>
             <ul class="dropdown-menu" aria-labelledby="rn_category">
-                <li><button class="dropdown-item" type="button" @click="setFilter('All')">All</button></li>
-                <li><div class="dropdown-divider"></div></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Workset')">Workset</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Flowcell')">Flowcell</button></li>
+                <li><button class="dropdown-item" type="button" @click="setFilter('All')"><span :class="['mr-2', label_color('All')]">{{count_cards('All') }}</span>All</button></li>
+                <li v-show="count_cards('All')>0"><div class="dropdown-divider"></div></li>
+                <li v-for="item in Object.keys(cat_classes['automatic'])" :key="item" v-show="count_cards(item)>0">
+                    <button class="dropdown-item" type="button" @click="setFilter(item)">
+                        <span :class="['mr-2', label_color(item)]">{{ count_cards(item) }}</span>
+                         {{ item }}
+                    </button>
+                </li>
 
-                <li><div class="dropdown-divider"></div></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Decision')">Decision</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Lab')">Lab</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Bioinformatics')">Bioinformatics</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('User Communication')">User Communication</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Administration')">Administration</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Important')">Important</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Invoicing')">Invoicing</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Deviation')">Deviation</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Sticky')">Sticky</button></li>
+                <li v-show="count_cards('All')>0"><div class="dropdown-divider"></div></li>
+                <li v-for="item in Object.keys(cat_classes['manual'])" :key="item" v-show="count_cards(item)>0">
+                    <button class="dropdown-item" type="button" @click="setFilter(item)">
+                        <span :class="['mr-2', label_color(item)]">{{ count_cards(item) }}</span>
+                         {{ item }}
+                    </button>
+                </li>
             </ul>
         </div>
       </div>
@@ -426,14 +463,14 @@ export const vRunningNotesTab = {
 
     <!-- display running notes -->
     <template v-for="running_note in visible_running_notes">
-        <v-running-note-single :running_note_obj="running_note" :compact="false" :partition_id="partition_id" :uri_hash="this.check_uri_hash()"/>
+        <v-running-note-single :running_note_obj="running_note" :compact="false" :partition_id="partition_id" :uri_hash="this.check_uri_hash()" :cat_classes="cat_classes"/>
     </template>
     `
 }
 
 
 export const vRunningNoteSingle = {
-    props: ['running_note_obj', 'compact', "partition_id", "uri_hash"],
+    props: ['running_note_obj', 'compact', "partition_id", "uri_hash", "cat_classes"],
     data: function() {
         return {
             glowingCard: false
@@ -446,7 +483,7 @@ export const vRunningNoteSingle = {
     },
     computed: {
         categories() {
-            return this.getRunningNoteProperty('categories')
+            return this.getRunningNoteProperty('categories').map(category => category.trim())
         },
         categories_labels() {
             if (this.categories == undefined) {
@@ -498,7 +535,7 @@ export const vRunningNoteSingle = {
             if (this.note == undefined) {
                 return ''
             }
-            return marked.parse(this.note)
+            return make_markdown(this.note)
         },
         running_note() {
             if (this.running_note_obj == undefined) {
@@ -533,24 +570,15 @@ export const vRunningNoteSingle = {
     },    
     methods: {
         generate_category_label(categories){
-            let cat_classes = {
-               'Workset': ['primary', 'calendar-plus'],
-               'Flowcell': ['success', 'grip-vertical'],
-               'Decision': ['info', 'thumbs-up'],
-               'Lab': ['succe', 'flask'],
-               'Bioinformatics': ['warning', 'laptop-code'],
-               'User Communication': ['usr', 'people-arrows'],
-               'Administration': ['danger', 'folder-open'],
-               'Important': ['imp', 'exclamation-circle'],
-               'Deviation': ['devi', 'frown'],
-               'Invoicing': ['inv', 'file-invoice-dollar'],
-               'Sticky': ['sticky', 'note-sticky']
-           }
            let cat_label = '';
+           if (this.cat_classes === undefined) {
+             return ''
+           }
+           let cat_classes = this.cat_classes;
            Object.values(categories).forEach(function(val){
-             var cat = val.trim()
-             if (Object.keys(cat_classes).indexOf(cat) != -1){
-                 cat_label += '<span class="badge bg-'+cat_classes[cat][0]+'">'+cat+'&nbsp;'+'<span class="fa fa-'+ cat_classes[cat][1] +'">'+"</span></span> ";
+             if (Object.values(cat_classes).some(subCat => subCat.hasOwnProperty(val))){
+                const subCat = Object.values(cat_classes).find(subCat => subCat.hasOwnProperty(val));
+                 cat_label += '<span class="badge bg-'+subCat[val][0]+'">'+val+'&nbsp;'+'<span class="fa fa-'+ subCat[val][1] +'">'+"</span></span> ";
              }
            });
            return cat_label;
