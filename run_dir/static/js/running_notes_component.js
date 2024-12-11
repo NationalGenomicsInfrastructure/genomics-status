@@ -1,3 +1,21 @@
+const cat_classes = {
+    'automatic': {
+      'Workset': ['primary', 'calendar-plus'],
+      'Flowcell': ['success', 'grip-vertical']
+    },
+    'manual': {
+      'Decision': ['info', 'thumbs-up'],
+      'Lab': ['success', 'flask'],
+      'Bioinformatics': ['warning', 'laptop-code'],
+      'User Communication': ['usr', 'people-arrows'],
+      'Administration': ['danger', 'folder-open'],
+      'Important': ['imp', 'exclamation-circle'],
+      'Deviation': ['devi', 'frown'],
+      'Invoicing': ['inv', 'file-invoice-dollar'],
+      'Sticky': ['sticky', 'note-sticky']
+    }
+  }
+
 export const vRunningNotesTab = {
     props: ['user', 'partition_id', 'all_users', 'note_type'],
     data() {
@@ -11,23 +29,6 @@ export const vRunningNotesTab = {
             search_term: '',
             submitting: false,
             show_help: false,
-            cat_classes: {
-                'automatic': {
-                                'Workset': ['primary', 'calendar-plus'],
-                                'Flowcell': ['success', 'grip-vertical']
-                             },
-                'manual':    {
-                                'Decision': ['info', 'thumbs-up'],
-                                'Lab': ['succe', 'flask'],
-                                'Bioinformatics': ['warning', 'laptop-code'],
-                                'User Communication': ['usr', 'people-arrows'],
-                                'Administration': ['danger', 'folder-open'],
-                                'Important': ['imp', 'exclamation-circle'],
-                                'Deviation': ['devi', 'frown'],
-                                'Invoicing': ['inv', 'file-invoice-dollar'],
-                                'Sticky': ['sticky', 'note-sticky']
-                }
-            }
         }
     },
     computed: {
@@ -245,8 +246,8 @@ export const vRunningNotesTab = {
             if (category === 'All') {
                 return 'badge bg-secondary'
             }
-            if(Object.values(this.cat_classes).some(subCat => subCat.hasOwnProperty(category))){
-                const subCat = Object.values(this.cat_classes).find(subCat => subCat.hasOwnProperty(category));
+            if(Object.values(cat_classes).some(subCat => subCat.hasOwnProperty(category))){
+                const subCat = Object.values(cat_classes).find(subCat => subCat.hasOwnProperty(category));
                 return 'badge bg-'+subCat[category][0];
             }
             return ''
@@ -453,14 +454,14 @@ export const vRunningNotesTab = {
 
     <!-- display running notes -->
     <template v-for="running_note in visible_running_notes">
-        <v-running-note-single :running_note_obj="running_note" :compact="false" :partition_id="partition_id" :uri_hash="this.check_uri_hash()" :cat_classes="cat_classes"/>
+        <v-running-note-single :running_note_obj="running_note" :compact="false" :partition_id="partition_id" :uri_hash="this.check_uri_hash()"/>
     </template>
     `
 }
 
 
 export const vRunningNoteSingle = {
-    props: ['running_note_obj', 'compact', "partition_id", "uri_hash", "cat_classes"],
+    props: ['running_note_obj', 'compact', "partition_id", "uri_hash"],
     data: function() {
         return {
             glowingCard: false
@@ -561,10 +562,6 @@ export const vRunningNoteSingle = {
     methods: {
         generate_category_label(categories){
            let cat_label = '';
-           if (this.cat_classes === undefined) {
-             return ''
-           }
-           let cat_classes = this.cat_classes;
            Object.values(categories).forEach(function(val){
              if (Object.values(cat_classes).some(subCat => subCat.hasOwnProperty(val))){
                 const subCat = Object.values(cat_classes).find(subCat => subCat.hasOwnProperty(val));
