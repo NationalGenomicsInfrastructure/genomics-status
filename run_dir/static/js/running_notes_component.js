@@ -1,18 +1,18 @@
 const cat_classes = {
     'automatic': {
-      'Workset': ['primary', 'calendar-plus'],
-      'Flowcell': ['success', 'grip-vertical']
+      'Workset': ['primary', 'calendar-plus', 'btn-primary', 'For workset-related work'],
+      'Flowcell': ['success', 'grip-vertical', 'btn-success', 'For flowcell-related work'],
     },
     'manual': {
-      'Decision': ['info', 'thumbs-up'],
-      'Lab': ['success', 'flask'],
-      'Bioinformatics': ['warning', 'laptop-code'],
-      'User Communication': ['usr', 'people-arrows'],
-      'Administration': ['danger', 'folder-open'],
-      'Important': ['imp', 'exclamation-circle'],
-      'Deviation': ['devi', 'frown'],
-      'Invoicing': ['inv', 'file-invoice-dollar'],
-      'Sticky': ['sticky', 'note-sticky']
+      'Decision': ['info', 'thumbs-up', 'btn-inf', 'For when an executive decision has been made'],
+      'Lab': ['success', 'flask', 'btn-succe', 'For lab-related work'],
+      'Bioinformatics': ['warning', 'laptop-code', 'btn-warn', 'For all bioinformatics work'],
+      'User Communication': ['usr', 'people-arrows', 'btn-usr', 'For notes influenced by user-contact'],
+      'Administration': ['danger', 'folder-open', 'btn-dang', 'For notes involving documentation'],
+      'Important': ['imp', 'exclamation-circle', 'btn-imp', 'For when a note needs to be highlighted'],
+      'Deviation': ['devi', 'frown', 'btn-devi', 'For notes about a deviation'],
+      'Invoicing': ['inv', 'file-invoice-dollar', 'btn-inv', 'For notes about an invoice'],
+      'Sticky': ['sticky', 'note-sticky', 'btn-sticky', 'For sticky notes']
     }
   }
 
@@ -29,6 +29,7 @@ export const vRunningNotesTab = {
             search_term: '',
             submitting: false,
             show_help: false,
+            cat_classes: cat_classes
         }
     },
     computed: {
@@ -269,15 +270,9 @@ export const vRunningNotesTab = {
                 <div class="col form-inline">
                     <label>Choose category:</label>
                     <div class="mt-2" data-toggle="buttons">
-                        <button class="btn btn-sm btn-inf mr-2" value="Decision" data-toggle="tooltip" title="For when an executive decision has been made" @click.prevent="toggleFormCategory('Decision')">Decision <span class="fa fa-thumbs-up"></span></button>
-                        <button class="btn btn-sm btn-succe mr-2" value="Lab" data-toggle="tooltip" title="For lab-related work" @click.prevent="toggleFormCategory('Lab')">Lab <span class="fa fa-flask"></span></button>
-                        <button class="btn btn-sm btn-warn mr-2" value="Bioinformatics" data-toggle="tooltip" title="For all bioinformatics work" @click.prevent="toggleFormCategory('Bioinformatics')">Bioinformatics <span class="fa fa-laptop-code"></span></button>
-                        <button class="btn btn-sm btn-usr mr-2" value="User Communication" data-toggle="tooltip" title="For notes influenced by user-contact" @click.prevent="toggleFormCategory('User Communication')">User Communication <span class="fa fa-people-arrows"></span></button>
-                        <button class="btn btn-sm btn-dang mr-2" value="Administration" data-toggle="tooltip" title="For notes involving documentation" @click.prevent="toggleFormCategory('Administration')">Administration <span class="fa fa-folder-open"></span></button>
-                        <button class="btn btn-sm btn-imp mr-2" value="Important" data-toggle="tooltip" title="For when a note needs to be highlighted" @click.prevent="toggleFormCategory('Important')">Important <span class="fa fa-exclamation-circle"></span></button>
-                        <button class="btn btn-sm btn-devi mr-2" value="Deviation" data-toggle="tooltip" title="For notes about a deviation" @click.prevent="toggleFormCategory('Deviation')">Deviation <span class="fa fa-frown"></span></button>
-                        <button class="btn btn-sm btn-inv mr-2" value="Invoice" data-toggle="tooltip" title="For notes about an invoice" @click.prevent="toggleFormCategory('Invoice')">Invoicing <span class="fa fa-file-invoice-dollar"></span></button>
-                        <button class="btn btn-sm btn-sticky" value="Sticky" data-toggle="tooltip" title="For sticky notes" @click.prevent="toggleFormCategory('Sticky')">Sticky <span class="fa fa-note-sticky"></span></button>
+                        <button v-for="(config, key) in cat_classes['manual']" :class="['btn', 'btn-sm', config[2], 'mr-2']" :value="key" data-toggle="tooltip" :title="config[3]" @click.prevent="toggleFormCategory(key)">{{ key }}
+                            <span :class="'fa fa-' + config[1]"></span>
+                        </button>
                     </div>
                 </div>
             </div>
