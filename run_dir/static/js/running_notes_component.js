@@ -237,13 +237,13 @@ export const vRunningNotesTab = {
             this.show_help = !this.show_help;
         },
 
-        count_cards(category) {
+        countCards(category) {
             if(category === 'All') {
                 return Object.values(this.running_notes).length
             }
             return Object.values(this.running_notes).filter(running_note => running_note.categories.includes(category)).length
         },
-        label_color(category) {
+        labelColor(category) {
             if (category === 'All') {
                 return 'badge bg-secondary'
             }
@@ -423,22 +423,22 @@ export const vRunningNotesTab = {
 
         <div class="dropdown">
             <button class="btn btn-outline-secondary text-dark dropdown-toggle btn_count" type="button" id="rn_category" data-toggle="dropdown" aria-expanded="false">
-             <span :class="['mr-2', label_color(category_filter)]">{{count_cards(category_filter) }}</span> {{category_filter}}
+             <span :class="['mr-2', labelColor(category_filter)]">{{countCards(category_filter) }}</span> {{category_filter}}
             </button>
             <ul class="dropdown-menu" aria-labelledby="rn_category">
-                <li><button class="dropdown-item" type="button" @click="setFilter('All')"><span :class="['mr-2', label_color('All')]">{{count_cards('All') }}</span>All</button></li>
-                <li v-show="count_cards('All')>0"><div class="dropdown-divider"></div></li>
-                <li v-for="item in Object.keys(cat_classes['automatic'])" :key="item" v-show="count_cards(item)>0">
+                <li><button class="dropdown-item" type="button" @click="setFilter('All')"><span :class="['mr-2', labelColor('All')]">{{countCards('All') }}</span>All</button></li>
+                <li v-show="countCards('All')>0"><div class="dropdown-divider"></div></li>
+                <li v-for="item in Object.keys(cat_classes['automatic'])" :key="item" v-show="countCards(item)>0">
                     <button class="dropdown-item" type="button" @click="setFilter(item)">
-                        <span :class="['mr-2', label_color(item)]">{{ count_cards(item) }}</span>
+                        <span :class="['mr-2', labelColor(item)]">{{ countCards(item) }}</span>
                          {{ item }}
                     </button>
                 </li>
 
-                <li v-show="count_cards('All')>0"><div class="dropdown-divider"></div></li>
-                <li v-for="item in Object.keys(cat_classes['manual'])" :key="item" v-show="count_cards(item)>0">
+                <li v-show="countCards('All')>0"><div class="dropdown-divider"></div></li>
+                <li v-for="item in Object.keys(cat_classes['manual'])" :key="item" v-show="countCards(item)>0">
                     <button class="dropdown-item" type="button" @click="setFilter(item)">
-                        <span :class="['mr-2', label_color(item)]">{{ count_cards(item) }}</span>
+                        <span :class="['mr-2', labelColor(item)]">{{ countCards(item) }}</span>
                          {{ item }}
                     </button>
                 </li>
@@ -475,7 +475,7 @@ export const vRunningNoteSingle = {
             if (this.categories == undefined) {
                 return ''
             }
-            return this.generate_category_label(this.categories)
+            return this.generateCategoryLabel(this.categories)
         },
         mark_card_important() {
             return this.categories.includes('Important') ? 'card-important' : ''
@@ -555,7 +555,7 @@ export const vRunningNoteSingle = {
         },
     },    
     methods: {
-        generate_category_label(categories){
+        generateCategoryLabel(categories){
            let cat_label = '';
            Object.values(categories).forEach(function(val){
              if (Object.values(cat_classes).some(subCat => subCat.hasOwnProperty(val))){
@@ -573,7 +573,7 @@ export const vRunningNoteSingle = {
             }
             return undefined
         },
-        make_selected_card_glow(event) {
+        makeSelectedCardGlow(event) {
             this.$nextTick(() => {
                 this.$refs.card_div.scrollIntoView({ block: "center" });
                 this.glowingCard = true;
@@ -590,7 +590,7 @@ export const vRunningNoteSingle = {
             <div class="card-header" :class="mark_card_important" :id="note_id">
                 <a class="text-decoration-none" :href="'mailto:' + this.email">{{this.user}}</a>
                 <template v-if="!compact">
-                - <a @click.prevent="make_selected_card_glow" class="text-decoration-none" :href=this.href>
+                - <a @click.prevent="makeSelectedCardGlow" class="text-decoration-none" :href=this.href>
                     <span class="todays_date">{{ formattedTimeStamp }}</span>
                 </a>
                 </template>
