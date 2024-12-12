@@ -1,3 +1,21 @@
+const cat_classes = {
+    'automatic': {
+      'Workset': ['primary', 'calendar-plus', 'btn-primary', 'For workset-related work'],
+      'Flowcell': ['success', 'grip-vertical', 'btn-success', 'For flowcell-related work'],
+    },
+    'manual': {
+      'Decision': ['info', 'thumbs-up', 'btn-inf', 'For when an executive decision has been made'],
+      'Lab': ['success', 'flask', 'btn-succe', 'For lab-related work'],
+      'Bioinformatics': ['warning', 'laptop-code', 'btn-warn', 'For all bioinformatics work'],
+      'User Communication': ['usr', 'people-arrows', 'btn-usr', 'For notes influenced by user-contact'],
+      'Administration': ['danger', 'folder-open', 'btn-dang', 'For notes involving documentation'],
+      'Important': ['imp', 'exclamation-circle', 'btn-imp', 'For when a note needs to be highlighted'],
+      'Deviation': ['devi', 'frown', 'btn-devi', 'For notes about a deviation'],
+      'Invoicing': ['inv', 'file-invoice-dollar', 'btn-inv', 'For notes about an invoice'],
+      'Sticky': ['sticky', 'note-sticky', 'btn-sticky', 'For sticky notes']
+    }
+  }
+
 export const vRunningNotesTab = {
     props: ['user', 'partition_id', 'all_users', 'note_type'],
     data() {
@@ -9,7 +27,9 @@ export const vRunningNotesTab = {
             user_suggestions: [],
             running_notes: [],
             search_term: '',
-            submitting: false
+            submitting: false,
+            show_help: false,
+            cat_classes: cat_classes
         }
     },
     computed: {
@@ -212,12 +232,26 @@ export const vRunningNotesTab = {
             }
         },
 
-        /* Markdown Help Modal */
-        closeHelpModal() {
-            this.help_modal.hide();
+        /* Toggle Markdown Help visibility*/
+        showMarkdownHelp() {
+            this.show_help = !this.show_help;
         },
-        openHelpModal() {
-            this.help_modal.show();
+
+        countCards(category) {
+            if(category === 'All') {
+                return Object.values(this.running_notes).length
+            }
+            return Object.values(this.running_notes).filter(running_note => running_note.categories.includes(category)).length
+        },
+        labelColor(category) {
+            if (category === 'All') {
+                return 'badge bg-secondary'
+            }
+            if(Object.values(cat_classes).some(subCat => subCat.hasOwnProperty(category))){
+                const subCat = Object.values(cat_classes).find(subCat => subCat.hasOwnProperty(category));
+                return 'badge bg-'+subCat[category][0];
+            }
+            return ''
         }
     },
     mounted() {
@@ -226,7 +260,6 @@ export const vRunningNotesTab = {
             return
         }
         this.fetchAllRunningNotes(this.partition_id);
-        this.help_modal = new bootstrap.Modal(this.$refs.help_modal);
     },
     template: /*html*/`
     <div class="card text-dark info-border mb-3 mt-3">
@@ -237,15 +270,9 @@ export const vRunningNotesTab = {
                 <div class="col form-inline">
                     <label>Choose category:</label>
                     <div class="mt-2" data-toggle="buttons">
-                        <button class="btn btn-sm btn-inf mr-2" value="Decision" data-toggle="tooltip" title="For when an executive decision has been made" @click.prevent="toggleFormCategory('Decision')">Decision <span class="fa fa-thumbs-up"></span></button>
-                        <button class="btn btn-sm btn-succe mr-2" value="Lab" data-toggle="tooltip" title="For lab-related work" @click.prevent="toggleFormCategory('Lab')">Lab <span class="fa fa-flask"></span></button>
-                        <button class="btn btn-sm btn-warn mr-2" value="Bioinformatics" data-toggle="tooltip" title="For all bioinformatics work" @click.prevent="toggleFormCategory('Bioinformatics')">Bioinformatics <span class="fa fa-laptop-code"></span></button>
-                        <button class="btn btn-sm btn-usr mr-2" value="User Communication" data-toggle="tooltip" title="For notes influenced by user-contact" @click.prevent="toggleFormCategory('User Communication')">User Communication <span class="fa fa-people-arrows"></span></button>
-                        <button class="btn btn-sm btn-dang mr-2" value="Administration" data-toggle="tooltip" title="For notes involving documentation" @click.prevent="toggleFormCategory('Administration')">Administration <span class="fa fa-folder-open"></span></button>
-                        <button class="btn btn-sm btn-imp mr-2" value="Important" data-toggle="tooltip" title="For when a note needs to be highlighted" @click.prevent="toggleFormCategory('Important')">Important <span class="fa fa-exclamation-circle"></span></button>
-                        <button class="btn btn-sm btn-devi mr-2" value="Deviation" data-toggle="tooltip" title="For notes about a deviation" @click.prevent="toggleFormCategory('Deviation')">Deviation <span class="fa fa-frown"></span></button>
-                        <button class="btn btn-sm btn-inv mr-2" value="Invoice" data-toggle="tooltip" title="For notes about an invoice" @click.prevent="toggleFormCategory('Invoice')">Invoicing <span class="fa fa-file-invoice-dollar"></span></button>
-                        <button class="btn btn-sm btn-sticky" value="Sticky" data-toggle="tooltip" title="For sticky notes" @click.prevent="toggleFormCategory('Sticky')">Sticky <span class="fa fa-note-sticky"></span></button>
+                        <button v-for="(config, key) in cat_classes['manual']" :class="['btn', 'btn-sm', config[2], 'mr-2']" :value="key" data-toggle="tooltip" :title="config[3]" @click.prevent="toggleFormCategory(key)">{{ key }}
+                            <span :class="'fa fa-' + config[1]"></span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -273,7 +300,7 @@ export const vRunningNotesTab = {
             </div>
             <div class="row">
                 <div class="col-md-6 text-right">
-                    <button type="button" class="btn btn-link" @click=openHelpModal>Markdown Help</button>
+                    <button type="button" class="btn btn-link" @click=showMarkdownHelp>Markdown Help</button>
                     <template v-if="submitting">
                         <button class="btn btn-primary" type="button" disabled>
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -284,6 +311,102 @@ export const vRunningNotesTab = {
                        <button type="submit" class="btn btn-primary" id="save_note_button" @click.prevent="submitRunningNote">Submit Running Note</button>
                     </template>
                 </div>
+            </div>
+            <div class="row justify-content-md-center" v-show="show_help">
+              <div class="col-md-9 mt-4">
+                <div class="card">
+                    <div class="card-header" id="markdown_help">
+                        <h3 class="card-title">Running Notes - Markdown Help</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Remember:</strong> <u>Two</u> line breaks are required to split a line in two!</p>
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr class="darkth">
+                                    <th>You Write</th>
+                                    <th>Running Note Shows</th>
+                                </tr>
+                                <tr>
+                                    <td>Some *italic* text</td>
+                                    <td class="mkdown">Some <em>italic</em> text</td>
+                                </tr>
+                                <tr>
+                                    <td>Some **bold** text</td>
+                                    <td class="mkdown">Some <strong>bold</strong> text</td>
+                                </tr>
+                                <tr>
+                                    <td>Some ***bold italic*** text</td>
+                                    <td class="mkdown">Some <strong><em>bold italic</em></strong> text</td>
+                                </tr>
+                                <tr>
+                                    <td>* Bullet pointed<br>* List of items<br>&nbsp;* With nested<br>* Items</td>
+                                    <td class="mkdown">
+                                        <ul>
+                                            <li>Bullet pointed</li>
+                                            <li>List of items
+                                                <ul>
+                                                    <li>With nested</li>
+                                                </ul>
+                                            </li>
+                                            <li>Items</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>1. Numbered list<br>1. Of items</td>
+                                    <td class="mkdown">
+                                        <ol>
+                                            <li>Numbered list</li>
+                                            <li>Of items</li>
+                                        </ol>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Links [are easy](https://genomics-status.scilifelab.se/)!</td>
+                                    <td class="mkdown">Links <a href="https://genomics-status.scilifelab.se/">are easy</a>!</td>
+                                </tr>
+                                <tr>
+                                    <td>You can do e-mail addresses too: &lt;genomics_support@scilifelab.se&gt;</td>
+                                    <td>You can do e-mail addresses too: <a href="mailto:genomics_support@scilifelab.se">genomics_support@scilifelab.se</a></td>
+                                </tr>
+                                <tr>
+                                    <td>Markdown even has a logo: ![Awesome Logo](https://genomics-status.scilifelab.se/static/img/markdown.png)</td>
+                                    <td class="mkdown">Markdown even has a logo: <img src="/static/img/markdown.png" title="Awesome Logo"></td>
+                                </tr>
+                                <tr>
+                                    <td>You can put things like flow cell IDs in \`back ticks\`</td>
+                                    <td class="mkdown">You can put things like flow cell IDs in <code>back ticks</code></td>
+                                </tr>
+                                <tr>
+                                    <td>\`\`\`<br>Larger chunks of code-like stuff<br>can go in 'code-fences' of<br>three back ticks<br>\`\`\`</td>
+                                    <td class="mkdown">
+                                        <pre><code>Larger chunks for code-like stuff<br>can go in 'code-fences' of<br>three back ticks</code></pre>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>&gt; You can quote someone<br>&gt; with greater than symbols</td>
+                                    <td class="mkdown"><blockquote>You can quote someone with greater than symbols</blockquote></td>
+                                </tr>
+                                <tr>
+                                    <td>Split up content<br>***<br>with three or more asterisks</td>
+                                    <td>Split up content<hr>with three or more asterisks</td>
+                                </tr>
+                                <tr>
+                                    <td># Headings<br>## Use these<br>### Symbols</td>
+                                    <td>
+                                        <h1>Headings</h1>
+                                        <h2>Use these</h2>
+                                        <h3>Symbols</h3>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p>For further reference, see the <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">syntax document</a>.
+                            Live editing tools such as <a href="http://dillinger.io/" target="_blank">dillinger.io</a> or
+                            <a href="http://25.io/mou/" target="_blank">Mou</a> may also be of use.</p>
+                    </div>
+                </div>
+               </div>
             </div>
             </fieldset>
         </form>
@@ -299,129 +422,29 @@ export const vRunningNotesTab = {
         <label>Filter :</label>
 
         <div class="dropdown">
-            <button class="btn btn-outline-secondary text-dark dropdown-toggle btn_count" type="button" id="rn_category" data-toggle="dropdown" aria-expanded="false"></button>
+            <button class="btn btn-outline-secondary text-dark dropdown-toggle btn_count" type="button" id="rn_category" data-toggle="dropdown" aria-expanded="false">
+             <span :class="['mr-2', labelColor(category_filter)]">{{countCards(category_filter) }}</span> {{category_filter}}
+            </button>
             <ul class="dropdown-menu" aria-labelledby="rn_category">
-                <li><button class="dropdown-item" type="button" @click="setFilter('All')">All</button></li>
-                <li><div class="dropdown-divider"></div></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Workset')">Workset</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Flowcell')">Flowcell</button></li>
+                <li><button class="dropdown-item" type="button" @click="setFilter('All')"><span :class="['mr-2', labelColor('All')]">{{countCards('All') }}</span>All</button></li>
+                <li v-show="countCards('All')>0"><div class="dropdown-divider"></div></li>
+                <li v-for="item in Object.keys(cat_classes['automatic'])" :key="item" v-show="countCards(item)>0">
+                    <button class="dropdown-item" type="button" @click="setFilter(item)">
+                        <span :class="['mr-2', labelColor(item)]">{{ countCards(item) }}</span>
+                         {{ item }}
+                    </button>
+                </li>
 
-                <li><div class="dropdown-divider"></div></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Decision')">Decision</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Lab')">Lab</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Bioinformatics')">Bioinformatics</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('User Communication')">User Communication</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Administration')">Administration</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Important')">Important</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Invoicing')">Invoicing</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Deviation')">Deviation</button></li>
-                <li><button class="dropdown-item" type="button" @click="setFilter('Sticky')">Sticky</button></li>
+                <li v-show="countCards('All')>0"><div class="dropdown-divider"></div></li>
+                <li v-for="item in Object.keys(cat_classes['manual'])" :key="item" v-show="countCards(item)>0">
+                    <button class="dropdown-item" type="button" @click="setFilter(item)">
+                        <span :class="['mr-2', labelColor(item)]">{{ countCards(item) }}</span>
+                         {{ item }}
+                    </button>
+                </li>
             </ul>
         </div>
       </div>
-    </div>
-
-
-    <!-- RUNNING NOTES HELP -->
-    <div id="markdown_help" class="modal fade" ref="help_modal">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title">Running Notes - Markdown Help</h3>
-                    <button type="button" class="btn-close" @click="closeHelpModal" aria-hidden="true"></button>
-                </div>
-                <div class="modal-body">
-                    <p><strong>Remember:</strong> <u>Two</u> line breaks are required to split a line in two!</p>
-                    <table class="table table-bordered">
-                        <tbody>
-                            <tr class="darkth">
-                                <th>You Write</th>
-                                <th>Running Note Shows</th>
-                            </tr>
-                            <tr>
-                                <td>Some *italic* text</td>
-                                <td class="mkdown">Some <em>italic</em> text</td>
-                            </tr>
-                            <tr>
-                                <td>Some **bold** text</td>
-                                <td class="mkdown">Some <strong>bold</strong> text</td>
-                            </tr>
-                            <tr>
-                                <td>Some ***bold italic*** text</td>
-                                <td class="mkdown">Some <strong><em>bold italic</em></strong> text</td>
-                            </tr>
-                            <tr>
-                                <td>* Bullet pointed<br>* List of items<br>&nbsp;* With nested<br>* Items</td>
-                                <td class="mkdown">
-                                    <ul>
-                                        <li>Bullet pointed</li>
-                                        <li>List of items
-                                            <ul>
-                                                <li>With nested</li>
-                                            </ul>
-                                        </li>
-                                        <li>Items</li>
-                                    </ul>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>1. Numbered list<br>1. Of items</td>
-                                <td class="mkdown">
-                                    <ol>
-                                        <li>Numbered list</li>
-                                        <li>Of items</li>
-                                    </ol>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Links [are easy](https://genomics-status.scilifelab.se/)!</td>
-                                <td class="mkdown">Links <a href="https://genomics-status.scilifelab.se/">are easy</a>!</td>
-                            </tr>
-                            <tr>
-                                <td>You can do e-mail addresses too: &lt;genomics_support@scilifelab.se&gt;</td>
-                                <td>You can do e-mail addresses too: <a href="mailto:genomics_support@scilifelab.se">genomics_support@scilifelab.se</a></td>
-                            </tr>
-                            <tr>
-                                <td>Markdown even has a logo: ![Awesome Logo](https://genomics-status.scilifelab.se/static/img/markdown.png)</td>
-                                <td class="mkdown">Markdown even has a logo: <img src="/static/img/markdown.png" title="Awesome Logo"></td>
-                            </tr>
-                            <tr>
-                                <td>You can put things like flow cell IDs in \`back ticks\`</td>
-                                <td class="mkdown">You can put things like flow cell IDs in <code>back ticks</code></td>
-                            </tr>
-                            <tr>
-                                <td>\`\`\`<br>Larger chunks of code-like stuff<br>can go in 'code-fences' of<br>three back ticks<br>\`\`\`</td>
-                                <td class="mkdown">
-                                    <pre><code>Larger chunks for code-like stuff<br>can go in 'code-fences' of<br>three back ticks</code></pre>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>&gt; You can quote someone<br>&gt; with greater than symbols</td>
-                                <td class="mkdown"><blockquote>You can quote someone with greater than symbols</blockquote></td>
-                            </tr>
-                            <tr>
-                                <td>Split up content<br>***<br>with three or more asterisks</td>
-                                <td>Split up content<hr>with three or more asterisks</td>
-                            </tr>
-                            <tr>
-                                <td># Headings<br>## Use these<br>### Symbols</td>
-                                <td>
-                                    <h1>Headings</h1>
-                                    <h2>Use these</h2>
-                                    <h3>Symbols</h3>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <p>For further reference, see the <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">syntax document</a>.
-                        Live editing tools such as <a href="http://dillinger.io/" target="_blank">dillinger.io</a> or
-                        <a href="http://25.io/mou/" target="_blank">Mou</a> may also be of use.</p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary" @click="closeHelpModal" aria-hidden="true">Close</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- display running notes -->
@@ -446,13 +469,13 @@ export const vRunningNoteSingle = {
     },
     computed: {
         categories() {
-            return this.getRunningNoteProperty('categories')
+            return this.getRunningNoteProperty('categories').map(category => category.trim())
         },
         categories_labels() {
             if (this.categories == undefined) {
                 return ''
             }
-            return this.generate_category_label(this.categories)
+            return this.generateCategoryLabel(this.categories)
         },
         mark_card_important() {
             return this.categories.includes('Important') ? 'card-important' : ''
@@ -498,7 +521,7 @@ export const vRunningNoteSingle = {
             if (this.note == undefined) {
                 return ''
             }
-            return marked.parse(this.note)
+            return make_markdown(this.note)
         },
         running_note() {
             if (this.running_note_obj == undefined) {
@@ -532,25 +555,12 @@ export const vRunningNoteSingle = {
         },
     },    
     methods: {
-        generate_category_label(categories){
-            let cat_classes = {
-               'Workset': ['primary', 'calendar-plus'],
-               'Flowcell': ['success', 'grip-vertical'],
-               'Decision': ['info', 'thumbs-up'],
-               'Lab': ['succe', 'flask'],
-               'Bioinformatics': ['warning', 'laptop-code'],
-               'User Communication': ['usr', 'people-arrows'],
-               'Administration': ['danger', 'folder-open'],
-               'Important': ['imp', 'exclamation-circle'],
-               'Deviation': ['devi', 'frown'],
-               'Invoicing': ['inv', 'file-invoice-dollar'],
-               'Sticky': ['sticky', 'note-sticky']
-           }
+        generateCategoryLabel(categories){
            let cat_label = '';
            Object.values(categories).forEach(function(val){
-             var cat = val.trim()
-             if (Object.keys(cat_classes).indexOf(cat) != -1){
-                 cat_label += '<span class="badge bg-'+cat_classes[cat][0]+'">'+cat+'&nbsp;'+'<span class="fa fa-'+ cat_classes[cat][1] +'">'+"</span></span> ";
+             if (Object.values(cat_classes).some(subCat => subCat.hasOwnProperty(val))){
+                const subCat = Object.values(cat_classes).find(subCat => subCat.hasOwnProperty(val));
+                 cat_label += '<span class="badge bg-'+subCat[val][0]+'">'+val+'&nbsp;'+'<span class="fa fa-'+ subCat[val][1] +'">'+"</span></span> ";
              }
            });
            return cat_label;
@@ -563,7 +573,7 @@ export const vRunningNoteSingle = {
             }
             return undefined
         },
-        make_selected_card_glow(event) {
+        makeSelectedCardGlow(event) {
             this.$nextTick(() => {
                 this.$refs.card_div.scrollIntoView({ block: "center" });
                 this.glowingCard = true;
@@ -580,7 +590,7 @@ export const vRunningNoteSingle = {
             <div class="card-header" :class="mark_card_important" :id="note_id">
                 <a class="text-decoration-none" :href="'mailto:' + this.email">{{this.user}}</a>
                 <template v-if="!compact">
-                - <a @click.prevent="make_selected_card_glow" class="text-decoration-none" :href=this.href>
+                - <a @click.prevent="makeSelectedCardGlow" class="text-decoration-none" :href=this.href>
                     <span class="todays_date">{{ formattedTimeStamp }}</span>
                 </a>
                 </template>
