@@ -584,6 +584,23 @@ export const vProjectCards = {
     components: {
         vProjectCard
     },
+    computed: {
+        checkedValuesCount() {
+            return Object.keys(this.$root.all_filters).reduce((counts, key) => {
+                counts[key] = this.$root.all_filters[key]['filter_values'].length;
+                return counts;
+            }, {});
+        }
+    },
+    watch: {
+        checkedValuesCount(newCounts) {
+            Object.keys(newCounts).forEach(key => {
+                if (newCounts[key] === 0) {
+                    this.$root.all_filters[key]['include_all'] = true;
+                }
+            });
+        }
+    },
     methods: {
         selectFilterValue(event, filter_name, value) {
             /* A method to save a click on the 'All' switch when trying to filter */
