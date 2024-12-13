@@ -377,7 +377,7 @@ class LatestStickyNoteHandler(SafeHandler):
 class LatestStickyNotesMultipleHandler(SafeHandler):
     """Serves the latest sticky running note for multiple projects.
 
-    URL: /api/v1/latest_sticky_run_note)
+    URL: /api/v1/latest_sticky_run_note
     """
 
     def post(self):
