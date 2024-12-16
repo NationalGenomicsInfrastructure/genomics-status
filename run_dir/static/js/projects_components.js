@@ -584,6 +584,13 @@ export const vProjectCards = {
     components: {
         vProjectCard
     },
+    data: function() {
+        return {
+            max_card_cols_height: 0,
+            col_header_heights: {},
+            max_col_header_height: 0
+        }
+    },
     computed: {
         checkedValuesCount() {
             return Object.keys(this.$root.all_filters).reduce((counts, key) => {
@@ -599,7 +606,27 @@ export const vProjectCards = {
                     this.$root.all_filters[key]['include_all'] = true;
                 }
             });
-        }
+        },
+        '$root.allColumnValues': {
+            handler(newValue) {
+              if (newValue) {
+                this.$nextTick(() => {
+                  this.calculateCardColsHeaderHeight();
+                });
+              }
+            },
+            immediate: true
+          },
+          "this.$root.card_columns": {
+            handler(newValue) {
+              if (newValue) {
+                this.$nextTick(() => {
+                  this.calculateCardColsHeaderHeight();
+                });
+              }
+            },
+            immediate: true
+          }
     },
     methods: {
         selectFilterValue(event, filter_name, value) {
@@ -685,6 +712,27 @@ export const vProjectCards = {
                 filter_menu_caret.classList.remove('fa-caret-right');
                 filter_menu_caret.classList.add('fa-caret-down');
             }
+        },
+        updateCardsMaxHeight() {
+            const viewportHeight = window.innerHeight;
+            const offset = viewportHeight*0.45; // 45% of the viewport height
+            this.max_card_cols_height = viewportHeight - offset;
+          },
+        calculateCardColsHeaderHeight() {
+            let maxH = 0;
+            // Loop through each h3 element ref
+            Object.keys(this.$refs).forEach(ref => {
+                // We are interested only in the h3 elements, so check for 'header' prefix
+                if (ref.startsWith('header')) {
+                    const header = this.$refs[ref];
+                    if (header && header[0] && header[0].offsetHeight) {
+                        this.col_header_heights[ref] = header[0].offsetHeight;
+                        maxH = Math.max(maxH, header[0].offsetHeight); // Update maxH with the largest height
+                    }
+                }
+            });
+            // Set the maxHeight to the largest height found
+            this.max_col_header_height = maxH;
         }
     },
     created: function() {
@@ -693,6 +741,11 @@ export const vProjectCards = {
     },
     mounted: function() {
         document.addEventListener('keyup', this.handleKeyUp);
+        this.updateCardsMaxHeight();
+        window.addEventListener('resize', this.updateCardsMaxHeight);
+    },
+    beforeDestroy() {
+      window.removeEventListener('resize', this.updateCardsMaxHeight);
     },
     template:
     /*html*/`
@@ -849,14 +902,16 @@ export const vProjectCards = {
         <template v-else>
             <div class="project_status_board overflow-scroll bg-white py-3">
                 <div class="row flex-nowrap">
-                    <template v-for="(project_ids_for_value, value) in this.$root.allColumnValues">
-                        <div class="col-3 col-xxl-2 mx-3 pt-4 border bg-light rounded-3 align-self-start">
-                            <h3 my-4>{{ value }}</h3>
+                    <template v-for="(project_ids_for_value, value, index) in this.$root.allColumnValues">
+                        <div class="col-3 col-xxl-2 mx-3 pt-4 border bg-light rounded-3 align-self-start" >
+                            <h3 :ref="'header' + index" my-4>{{ value }}</h3>
                             <div class="row row-cols-1">
-                                <div class="col">
-                                    <template v-for="(project_id, index) in project_ids_for_value" :key="project_id">
-                                        <v-project-card v-if="project_id in this.$root.visibleProjects" :user="this.user" :project_id="project_id" :ref="'project_card_' + project_id" :next_project_id="project_ids_for_value[index + 1]" :previous_project_id="project_ids_for_value[index-1]"></v-project-card>
-                                    </template>
+                                <div :style="[{marginTop: max_col_header_height - this.col_header_heights['header'+index] + 'px'}, {maxHeight: this.max_card_cols_height + 'px' }, 'overflowY: auto']" >
+                                    <div class="col">
+                                        <template v-for="(project_id, index) in project_ids_for_value" :key="project_id">
+                                            <v-project-card v-if="project_id in this.$root.visibleProjects" :user="this.user" :project_id="project_id" :ref="'project_card_' + project_id" :next_project_id="project_ids_for_value[index + 1]" :previous_project_id="project_ids_for_value[index-1]"></v-project-card>
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
                         </div>
