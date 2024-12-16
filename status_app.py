@@ -35,7 +35,8 @@ from status.flowcell import (
     ElementFlowcellHandler,
     FlowcellHandler,
     ONTFlowcellHandler,
-    ONTReportHandler,
+    ONTMinKNOWReportHandler,
+    ONTToulligQCReportHandler,
 )
 from status.flowcells import (
     FlowcellDemultiplexHandler,
@@ -185,6 +186,8 @@ from status.worksets import (
     WorksetSearchHandler,
     WorksetsHandler,
 )
+
+ONT_RUN_PATTERN = r"\d{8}_\d{4}_[0-9a-zA-Z]+_[0-9a-zA-Z]+_[0-9a-zA-Z]+"
 
 
 class Application(tornado.web.Application):
@@ -361,8 +364,15 @@ class Application(tornado.web.Application):
             ("/flowcells", FlowcellsHandler),
             (r"/flowcells/(\d{6,8}_[^/]*)$", FlowcellHandler),
             (r"/flowcells_element/([^/]*)$", ElementFlowcellHandler),
-            (r"/flowcells_ont/(\d{8}_[^/]*)$", ONTFlowcellHandler),
-            (r"/flowcells_ont/(\d{8}_[^/]*)/[^/]*$", ONTReportHandler),
+            (rf"/flowcells_ont/({ONT_RUN_PATTERN})$", ONTFlowcellHandler),
+            (
+                rf"/flowcells_ont/({ONT_RUN_PATTERN})/minknow_report$",
+                ONTMinKNOWReportHandler,
+            ),
+            (
+                rf"/flowcells_ont/({ONT_RUN_PATTERN})/toulligqc_report$",
+                ONTToulligQCReportHandler,
+            ),
             ("/flowcells_plot", FlowcellPlotHandler),
             ("/ont_flowcells_plot", ONTFlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
@@ -515,7 +525,10 @@ class Application(tornado.web.Application):
         self.multiqc_path = settings.get("multiqc_path")
 
         # MinKNOW reports
-        self.minknow_path = settings.get("minknow_path")
+        self.minknow_reports_path = settings.get("minknow_reports_path")
+
+        # ToulligQC reports
+        self.toulligqc_reports_path = settings.get("toulligqc_reports_path")
 
         # lims backend credentials
         limsbackend_cred_loc = Path(

@@ -530,7 +530,7 @@ export const vProjectCard = {
         <div class="card-body">
             <div class="d-flex justify-content-between align-center mb-3">
                 <h5 class="my-1">
-                    <a class="text-decoration-none" href='#' @click=openModal>
+                    <a class="text-decoration-none" href='#' @click.prevent=openModal>
                         {{ project_name }}
                     </a>
 
@@ -583,6 +583,23 @@ export const vProjectCards = {
     props: ['user'],
     components: {
         vProjectCard
+    },
+    computed: {
+        checkedValuesCount() {
+            return Object.keys(this.$root.all_filters).reduce((counts, key) => {
+                counts[key] = this.$root.all_filters[key]['filter_values'].length;
+                return counts;
+            }, {});
+        }
+    },
+    watch: {
+        checkedValuesCount(newCounts) {
+            Object.keys(newCounts).forEach(key => {
+                if (newCounts[key] === 0) {
+                    this.$root.all_filters[key]['include_all'] = true;
+                }
+            });
+        }
     },
     methods: {
         selectFilterValue(event, filter_name, value) {
