@@ -720,7 +720,7 @@ export const vProjectCards = {
             const footerHeight = document.querySelector('.footer').offsetHeight;
 
             const headerHeight =this.$refs.project_cards_header.offsetHeight;
-            const offset = navbarHeight + footerHeight + headerHeight + 100; //100px for the margin
+            const offset = navbarHeight + footerHeight + headerHeight + 160; //160px for the margin
             this.max_card_cols_height = viewportHeight - offset;
           },
         calculateCardColsHeaderHeight() {
