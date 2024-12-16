@@ -63,7 +63,6 @@
         <thead>
           <tr class="darkth">
             <th>Server</th>
-            <th>Instrument</th>
             <th>Disk (Used / Quota)</th>
           </tr>
         </thead>
@@ -71,7 +70,6 @@
           {% for server, status in server_status %}
           <tr>
             <td>{{ server }}</td>
-            <td>{{ status.get('instrument') }}</td>
             <td class="disk-quotas-highcharts {{ status.get('css_class') }}"><div class="wrapper"><span class="val" style="width:{{ status.get('used_percentage') }};">
               <span>{{ status.get('space_used') }}</span></span>
               <span class="percent float-right">{{ status.get('disk_size') }}</span></div>
