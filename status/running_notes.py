@@ -399,17 +399,19 @@ class LatestStickyNotesMultipleHandler(SafeHandler):
         self.set_header("Content-type", "application/json")
         self.write(latest_sticky_notes)
 
-class LatestRunningNotesAllDataHandler(SafeHandler):
-    """Serves the latest running notes, without any filtering.
+class LatestRunningNotesWithMetaDataHandler(SafeHandler):
+    """Serves the latest project running notes, with metadata regarding the projects.
 
-    Can be paginated with limit and skip parameters."""
+    Can be paginated with limit and skip parameters.
+    The metadata is intended to be used for filtering the running notes.
+    """
 
     def get(self):
         limit = self.get_argument("limit", 100)
         skip = self.get_argument("skip", 0)
 
         latest_running_notes_rows = self.application.running_notes_db.view(
-            "all_latest_note_previews/all",
+            "all_latest_note_previews/project",
             reduce=False,
             limit=limit,
             skip=skip,
@@ -422,8 +424,20 @@ class LatestRunningNotesAllDataHandler(SafeHandler):
             if row.value
         }
 
+        projects = [note["parent"] for note in latest_running_notes.values()]
+
+        metadata_view = self.application.projects_db.view(
+            "project/info_for_filtering_running_notes", keys=projects
+        )
+        metadata = {row.key: row.value for row in metadata_view.rows}
+
         self.set_header("Content-type", "application/json")
-        self.write(latest_running_notes)
+        self.write(
+            {
+                "running_notes": latest_running_notes,
+                "projects_metadata": metadata,
+            }
+        )
 
 
 class LatestRunningNoteHandler(SafeHandler):
