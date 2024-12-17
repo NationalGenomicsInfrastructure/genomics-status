@@ -72,6 +72,8 @@
         {% set url_addition = "" %}
         {% if flowcell.get("instrument_type") == "element"%}
           {% set url_addition = "_element" %}
+        {% elif flowcell.get("instrument_type") == "ont"%}
+          {% set url_addition = "_ont" %}
         {% end %}
         <tr class="bioinfo-fc  {% if disabled %} bioinfo-status-disabled {% end %}"
             id="bioinfo-fc-{{ flowcell_id }}" data-parent="#bioinfo-project-{{ project_id }}">

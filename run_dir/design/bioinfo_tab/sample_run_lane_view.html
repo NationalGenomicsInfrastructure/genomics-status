@@ -116,6 +116,8 @@
           {% set url_addition = "" %}
           {% if flowcell.get("instrument_type") == "element"%}
             {% set url_addition = "_element" %}
+          {% elif flowcell.get("instrument_type") == "ont"%}
+            {% set url_addition = "_ont" %}
           {% end %}
           <tr class="bioinfo-fc  {% if flowcell.get('flowcell_status') in ['Demultiplexing', 'Transferring', 'Sequencing', 'ERROR', 'Failed', 'Delivered'] %} bioinfo-status-disabled {% end %}"
               id="bioinfo-fc-{{ sample_id }}-{{ flowcell_id }}"

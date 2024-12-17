@@ -4,7 +4,7 @@ cffi
 CouchDB==1.1
 ecdsa>=0.13
 genologics @ git+https://github.com/SciLifeLab/genologics.git
-genologics_sql @ git+https://github.com/SciLifeLab/genologics_sql.git
+genologics_sql @ git+https://github.com/NationalGenomicsInfrastructure/genologics_sql.git
 httplib2>=0.10.3
 ibmcloudant>=0.9.1
 markdown
