@@ -399,6 +399,7 @@ class LatestStickyNotesMultipleHandler(SafeHandler):
         self.set_header("Content-type", "application/json")
         self.write(latest_sticky_notes)
 
+
 class LatestRunningNotesWithMetaDataHandler(SafeHandler):
     """Serves the latest project running notes, with metadata regarding the projects.
 
