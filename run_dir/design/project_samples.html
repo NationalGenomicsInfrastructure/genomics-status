@@ -9,9 +9,11 @@ Description: Project details
 
 
 {% block stuff %}
+<div class="container-xxl">
 
-<div id="v_projects_main">
-    <v-project-details project_id="{{project_id}}" :user="{email: '{{user.email}}', user: '{{user.name}}'}" :single_project_mode="true" :as_modal="false"/>
+    <div id="v_projects_main">
+        <v-project-details project_id="{{project_id}}" :user="{email: '{{user.email}}', user: '{{user.name}}'}" :single_project_mode="true" :as_modal="false"/>
+    </div>
 </div>
 {% end %}
 
