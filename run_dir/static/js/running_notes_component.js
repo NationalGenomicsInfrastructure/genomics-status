@@ -20,13 +20,11 @@ export const vRunningNotesTab = {
     props: ['user', 'partition_id', 'all_users', 'note_type'],
     data() {
         return {
-            category_filter: 'All',
             dropdown_position: {},
             form_categories: [],
             form_note_text: '',
             user_suggestions: [],
             running_notes: [],
-            search_term: '',
             submitting: false,
             show_help: false,
             cat_classes: cat_classes
@@ -57,26 +55,6 @@ export const vRunningNotesTab = {
                 height: this.dropdown_position.height + 'px'
             }   
         },
-        visible_running_notes() {
-            let running_notes_tmp = Object.entries(this.running_notes)
-
-            if (this.search_term !== '') {
-                running_notes_tmp = running_notes_tmp.filter(([running_note_key, running_note]) => {
-                    return (running_note.note.toLowerCase().includes(this.search_term.toLowerCase())) ||
-                                (running_note.user.toLowerCase().includes(this.search_term.toLowerCase())) ||
-                                (running_note.categories.join(' ').toLowerCase().includes(this.search_term.toLowerCase()))
-                })
-            }
-
-            // Filter by category
-            if (this.category_filter !== 'All') {
-                running_notes_tmp = running_notes_tmp.filter(([running_note_key, running_note]) => {
-                    return running_note.categories.includes(this.category_filter)
-                })
-            }
-
-            return Object.fromEntries(running_notes_tmp)
-        },
         visible_user_suggestions() {
             // Only show the first 5 suggestions
             return this.user_suggestions.slice(0, 5)
@@ -91,19 +69,6 @@ export const vRunningNotesTab = {
                 }
             }
             return null
-        },
-        fetchAllRunningNotes(partition_id) {
-            axios
-                .get('/api/v1/running_notes/' + partition_id)
-                .then(response => {
-                    let data = response.data
-                    if (data !== null) {
-                        this.running_notes = data;
-                    }
-                })
-                .catch(error => {
-                    this.$root.error_messages.push('Unable to fetch running notes, please try again or contact a system administrator.')
-                })
         },
         openNewNoteForm() {
             let new_note_form = this.$refs.new_note_form;
@@ -123,9 +88,6 @@ export const vRunningNotesTab = {
                 return {}
             }
             this.dropdown_position = this.$root.getDropdownPositionHelper(textarea, 100);
-        },
-        setFilter(filter) {
-            this.category_filter = filter
         },
         submitRunningNote() {
             this.submitting = true;
@@ -160,6 +122,7 @@ export const vRunningNotesTab = {
             axios
                 .post('/api/v1/running_notes/' + this.partition_id, post_body)
                 .then(response => {
+                    alert("TODO: fetch new running notes automatically")
                     this.fetchAllRunningNotes(this.partition_id)
                     this.form_note_text = ''
                     this.form_categories = []
@@ -236,30 +199,12 @@ export const vRunningNotesTab = {
         showMarkdownHelp() {
             this.show_help = !this.show_help;
         },
-
-        countCards(category) {
-            if(category === 'All') {
-                return Object.values(this.running_notes).length
-            }
-            return Object.values(this.running_notes).filter(running_note => running_note.categories.includes(category)).length
-        },
-        labelColor(category) {
-            if (category === 'All') {
-                return 'badge bg-secondary'
-            }
-            if(Object.values(cat_classes).some(subCat => subCat.hasOwnProperty(category))){
-                const subCat = Object.values(cat_classes).find(subCat => subCat.hasOwnProperty(category));
-                return 'badge bg-'+subCat[category][0];
-            }
-            return ''
-        }
     },
     mounted() {
         if ( !( ["flowcell", "workset", "flowcell_ont", "project"].includes(this.note_type))) {
             alert("Error: Invalid note type given, will not fetch notes")
             return
         }
-        this.fetchAllRunningNotes(this.partition_id);
     },
     template: /*html*/`
     <div class="card text-dark info-border mb-3 mt-3">
@@ -402,8 +347,7 @@ export const vRunningNotesTab = {
                             </tbody>
                         </table>
                         <p>For further reference, see the <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">syntax document</a>.
-                            Live editing tools such as <a href="http://dillinger.io/" target="_blank">dillinger.io</a> or
-                            <a href="http://25.io/mou/" target="_blank">Mou</a> may also be of use.</p>
+                            Live editing tools such as <a href="http://dillinger.io/" target="_blank">dillinger.io</a> may also be of use.</p>
                     </div>
                 </div>
                </div>
@@ -412,70 +356,42 @@ export const vRunningNotesTab = {
         </form>
     </div>
 
-    <!-- filter running notes -->
-    <div id="running_notes_filter" class="row" style="margin-bottom:12px;">
-      <div class="col-3 ml-2">
-        <label>Search :</label>
-        <input type="text" v-model="search_term" class="form-control" ref="note_search"/>
-      </div>
-      <div class="col-2">
-        <label>Filter :</label>
 
-        <div class="dropdown">
-            <button class="btn btn-outline-secondary text-dark dropdown-toggle btn_count" type="button" id="rn_category" data-toggle="dropdown" aria-expanded="false">
-             <span :class="['mr-2', labelColor(category_filter)]">{{countCards(category_filter) }}</span> {{category_filter}}
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="rn_category">
-                <li><button class="dropdown-item" type="button" @click="setFilter('All')"><span :class="['mr-2', labelColor('All')]">{{countCards('All') }}</span>All</button></li>
-                <li v-show="countCards('All')>0"><div class="dropdown-divider"></div></li>
-                <li v-for="item in Object.keys(cat_classes['automatic'])" :key="item" v-show="countCards(item)>0">
-                    <button class="dropdown-item" type="button" @click="setFilter(item)">
-                        <span :class="['mr-2', labelColor(item)]">{{ countCards(item) }}</span>
-                         {{ item }}
-                    </button>
-                </li>
-
-                <li v-show="countCards('All')>0"><div class="dropdown-divider"></div></li>
-                <li v-for="item in Object.keys(cat_classes['manual'])" :key="item" v-show="countCards(item)>0">
-                    <button class="dropdown-item" type="button" @click="setFilter(item)">
-                        <span :class="['mr-2', labelColor(item)]">{{ countCards(item) }}</span>
-                         {{ item }}
-                    </button>
-                </li>
-            </ul>
-        </div>
-      </div>
-    </div>
 
     <!-- display running notes -->
-    <template v-for="running_note in visible_running_notes">
-        <v-running-note-single :running_note_obj="running_note" :compact="false" :partition_id="partition_id" :uri_hash="this.check_uri_hash()"/>
-    </template>
+    <p>This is the notes</p>
+    <v-running-notes-list current_user_name='hello' current_user_email='hello@email.com' :running_notes="running_notes" :partition_id="this.partition_id"/>
     `
 }
 
 
-/* The list of running notes show on e.g. the index page */
-export const vRunningNotesListDecoupled = {
-    name: 'v-running-notes-list-decoupled',
+/* The component responsible for showing a list of running notes and filtering/searching */
+export const vRunningNotesList = {
+    name: 'v-running-notes-list',
     props: {
         current_user_name: "",
         current_user_email: "",
+        partition_id: null,
+        dynamic: false, // If false, no older running notes will be fetched
     },
     data() {
         return {
             running_notes: {},
             projects_metadata: {},
-            filter_choice: 'tagged',
+            filter_choice: 'all',
             include_production: true,
             include_application: true,
-            include_others: true,
+            include_internal: true,
+            include_control: true,
             assigned_lab_responsible: true,
             assigned_bioinfo_responsible: true,
             assigned_project_coordinator: true,
             assigned_bp_responsible: true,
             include_self_written: false,
             include_tagged: true,
+            search_term: '',
+            cat_classes: cat_classes,
+            category_filter: 'All',
         }
     },
     computed: {
@@ -503,14 +419,12 @@ export const vRunningNotesListDecoupled = {
             return this.current_user_email.split('@')[0];
         },
         visibleRunningNotes() {
-            const runningNotesArray = Object.values(this.running_notes);
+            var runningNotesArray = Object.values(this.running_notes);
 
             if (this.filterAll) {
-                return runningNotesArray;
-            }
-
-            if (this.filterOnTagged) {
-                return runningNotesArray.filter(running_note => {
+                // do nothing
+            } else if (this.filterOnTagged) {
+                runningNotesArray = runningNotesArray.filter(running_note => {
                     // Filter based on who created the running note
                     let self_written_bool = (this.include_self_written && running_note.email === this.current_user_email)
                     // Filter on who is tagged in the running note
@@ -519,55 +433,71 @@ export const vRunningNotesListDecoupled = {
                     // Keep running notes if either of the above is true
                     return self_written_bool || user_tagged_bool;
                 })
-            }
-
-            // Filter based on projects, filter the projects first
-            let projects_to_include = [];
-            if (this.filterOnType) {
-                for (let project in this.projects_metadata) {
-                    if (this.include_production && this.projects_metadata[project].type === 'Production') {
-                        projects_to_include.push(project);
-                        continue
+            } else {
+                // Filter based on projects, filter the projects first
+                let projects_to_include = [];
+                if (this.filterOnType) {
+                    for (let project in this.projects_metadata) {
+                        if (this.include_production && this.projects_metadata[project].type === 'Production') {
+                            projects_to_include.push(project);
+                            continue
+                        }
+                        if (this.include_application && this.projects_metadata[project].type === 'Application') {
+                            projects_to_include.push(project);
+                            continue
+                        }
+                        if (this.include_other_types) {
+                            projects_to_include.push(project);
+                            continue
+                        }
                     }
-                    if (this.include_application && this.projects_metadata[project].type === 'Application') {
-                        projects_to_include.push(project);
-                        continue
-                    }
-                    if (this.include_other_types) {
-                        projects_to_include.push(project);
-                        continue
-                    }
-                }
-            }
-
-            if (this.filterOnAssigned) {
-                for (let project in this.projects_metadata) {
-                    if (this.assigned_lab_responsible && this.projects_metadata[project].lab_responsible === this.current_user_name) {
-                        projects_to_include.push(project);
-                        continue;
-                    }
-                    if (this.assigned_bioinfo_responsible && this.projects_metadata[project].bioinfo_responsible === this.current_user_name) {
-                        projects_to_include.push(project);
-                        continue;
-                    }
-                    if (this.assigned_project_coordinator && this.projects_metadata[project].project_coordinator === this.current_user_name) {
-                        projects_to_include.push(project);
-                        continue;
-                    }
-                    if (this.assigned_bp_responsible && this.projects_metadata[project].bp_responsible === this.current_user_name) {
-                        projects_to_include.push(project);
-                        continue;
+                } else if (this.filterOnAssigned) {
+                    for (let project in this.projects_metadata) {
+                        if (this.assigned_lab_responsible && this.projects_metadata[project].lab_responsible === this.current_user_name) {
+                            projects_to_include.push(project);
+                            continue;
+                        }
+                        if (this.assigned_bioinfo_responsible && this.projects_metadata[project].bioinfo_responsible === this.current_user_name) {
+                            projects_to_include.push(project);
+                            continue;
+                        }
+                        if (this.assigned_project_coordinator && this.projects_metadata[project].project_coordinator === this.current_user_name) {
+                            projects_to_include.push(project);
+                            continue;
+                        }
+                        if (this.assigned_bp_responsible && this.projects_metadata[project].bp_responsible === this.current_user_name) {
+                            projects_to_include.push(project);
+                            continue;
+                        }
                     }
                 }
+
+                runningNotesArray = runningNotesArray.filter(running_note => {
+                    return projects_to_include.includes(running_note.parent);
+                });
             }
 
-            return runningNotesArray.filter(running_note => {
-                return projects_to_include.includes(running_note.parent);
-            });
+            // Apply searching here
+            if (this.search_term !== '') {
+                runningNotesArray = runningNotesArray.filter(running_note => {
+                    return (running_note.note.toLowerCase().includes(this.search_term.toLowerCase())) ||
+                                (running_note.user.toLowerCase().includes(this.search_term.toLowerCase())) ||
+                                (running_note.categories.join(' ').toLowerCase().includes(this.search_term.toLowerCase()))
+                })
+            }
+
+            // Filter by category
+            if (this.category_filter !== 'All') {
+                runningNotesArray = runningNotesArray.filter(running_note => {
+                    return running_note.categories.includes(this.category_filter)
+                })
+            }
+
+            return runningNotesArray
         }
     },
     methods: {
-        async fetchRunningNotes(skip = 0) {
+        async fetchAllRunningNotes(skip = 0) {
             axios
                 .get(`/api/v1/latest_running_notes_with_meta?skip=${skip}&limit=20`)
                 .then(response => {
@@ -581,6 +511,22 @@ export const vRunningNotesListDecoupled = {
                     this.error_messages.push('Unable to fetch running notes, please try again or contact a system administrator.');
                 });
         },
+        fetchPartitionRunningNotes(partition_id) {
+            axios
+                .get('/api/v1/running_notes/' + partition_id)
+                .then(response => {
+                    let data = response.data
+                    if (data !== null) {
+                        this.running_notes = data;
+                    }
+                })
+                .catch(error => {
+                    this.$root.error_messages.push('Unable to fetch running notes, please try again or contact a system administrator.')
+                })
+        },
+        setFilter(filter) {
+            this.category_filter = filter
+        },
         taggedUsersFromRunningNote(running_note) {
             const regex = /@([a-zA-Z0-9.-]+)/g;
             const matches = running_note.note.matchAll(regex);
@@ -588,94 +534,156 @@ export const vRunningNotesListDecoupled = {
             const tagged_users = Array.from(matches, match => match[1])
             return tagged_users;
 
+        },
+        labelColor(category) {
+            if (category === 'All') {
+                return 'badge bg-secondary'
+            }
+            if(Object.values(cat_classes).some(subCat => subCat.hasOwnProperty(category))){
+                const subCat = Object.values(cat_classes).find(subCat => subCat.hasOwnProperty(category));
+                return 'badge bg-'+subCat[category][0];
+            }
+            return ''
+        },
+        countCards(category) {
+            if(category === 'All') {
+                return Object.values(this.running_notes).length
+            }
+            return Object.values(this.running_notes).filter(running_note => running_note.categories.includes(category)).length
         }
     },
     mounted() {
-        this.fetchRunningNotes(0);
+        if (this.partition_id !== null) {
+            console.log("Fetching partition running notes for partition_id: " + this.partition_id);
+            this.fetchPartitionRunningNotes(this.partition_id);
+        } else {
+            this.fetchAllRunningNotes(0);
+        }
     },
     template: /*html*/`
         <div>
             <div class="row">
                 <h3 class="col">Latest Running Notes <small>Showing {{numberOfVisibleRunningNotes}} of {{numberOfFetchedRunningNotes}}</small></h3>
-                <div class="col-auto ml-auto">
+                <div class="col-auto">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary text-dark dropdown-toggle btn_count" type="button" id="rn_category" data-toggle="dropdown" aria-expanded="false">
+                            <span class="mr-2">Category:</span>
+                            <span :class="['mr-2', labelColor(category_filter)]">{{countCards(category_filter) }}</span> {{category_filter}}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="rn_category">
+                            <li><button class="dropdown-item" type="button" @click="setFilter('All')"><span :class="['mr-2', labelColor('All')]">{{countCards('All') }}</span>All</button></li>
+                            <li v-show="countCards('All')>0"><div class="dropdown-divider"></div></li>
+                            <li v-for="item in Object.keys(cat_classes['automatic'])" :key="item" v-show="countCards(item)>0">
+                                <button class="dropdown-item" type="button" @click="setFilter(item)">
+                                    <span :class="['mr-2', labelColor(item)]">{{ countCards(item) }}</span>
+                                    {{ item }}
+                                </button>
+                            </li>
+
+                            <li v-show="countCards('All')>0"><div class="dropdown-divider"></div></li>
+                            <li v-for="item in Object.keys(cat_classes['manual'])" :key="item" v-show="countCards(item)>0">
+                                <button class="dropdown-item" type="button" @click="setFilter(item)">
+                                    <span :class="['mr-2', labelColor(item)]">{{ countCards(item) }}</span>
+                                    {{ item }}
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <input type="text" v-model="search_term" class="form-control" ref="note_search" id="noteSearchInput" placeholder="Search"/>
+                </div>
+            </div>
+
+            <div class="row mb-4 mt-2">
+                <div class="col-lg-4">
                     <div class="btn-group mb-2" role="group" aria-label="Basic radio toggle button group">
                         <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" value="all" v-model="filter_choice">
                         <label class="btn btn-outline-primary" for="btnradio1">All</label>
+                        <template v-if="this.partition_id === null">
+                            <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" value="type" v-model="filter_choice">
+                            <label class="btn btn-outline-primary" for="btnradio2">Project Type</label>
 
-                        <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" value="type" v-model="filter_choice">
-                        <label class="btn btn-outline-primary" for="btnradio2">Project Type</label>
-
-                        <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" value="assigned" v-model="filter_choice">
-                        <label class="btn btn-outline-primary" for="btnradio3">Assigned</label>
+                            <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" value="assigned" v-model="filter_choice">
+                            <label class="btn btn-outline-primary" for="btnradio3">Assigned</label>
+                        </template>
 
                         <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off" value="tagged" v-model="filter_choice">
                         <label class="btn btn-outline-primary" for="btnradio4">@</label>
                     </div>
                 </div>
+
+                <template v-if="filterOnType">
+                    <div class="col-lg-8">
+                        <div class="row">
+                            <div class="form-check form-switch mt-2 mb-2 col-3">
+                                <input class="form-check-input" type="checkbox" id="productionSwitch" v-model="include_production">
+                                <label class="form-check-label" for="productionSwitch">Production</label>
+                            </div>
+                            <div class="form-check form-switch mt-2 mb-2 col-3">
+                                <input class="form-check-input" type="checkbox" id="applicationSwitch" v-model="include_application">
+                                <label class="form-check-label" for="applicationSwitch">Application</label>
+                            </div>
+                            <div class="form-check form-switch mt-2 mb-2 col-3">
+                                <input class="form-check-input" type="checkbox" id="controlSwitch" v-model="include_controls">
+                                <label class="form-check-label" for="controlSwitch">Control</label>
+                            </div>
+                            <div class="form-check form-switch mt-2 mb-2 col-3">
+                                <input class="form-check-input" type="checkbox" id="internalTypeSwitch" v-model="include_internal">
+                                <label class="form-check-label" for="internalTypeSwitch">Internal</label>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <template v-else-if="filterOnAssigned" class="mt-0">
+                    <div class="col-lg-8">
+                        <div class="row">
+                            <div class="form-check form-switch mt-2 mb-2 col-3">
+                                <input class="form-check-input" type="checkbox" id="labSwitch" v-model="assigned_lab_responsible">
+                                <label class="form-check-label" for="labSwitch">Lab Responsible</label>
+                            </div>
+                            <div class="form-check form-switch mt-2 mb-2 col-3">
+                                <input class="form-check-input" type="checkbox" id="bioinfoSwitch" v-model="assigned_bioinfo_responsible">
+                                <label class="form-check-label" for="bioinfoSwitch">Bioinfo Responsible</label>
+                            </div>
+                            <div class="form-check form-switch mt-2 mb-2 col-3">
+                                <input class="form-check-input" type="checkbox" id="pcSwitch" v-model="assigned_project_coordinator">
+                                <label class="form-check-label" for="pcSwitch">Project Coordinator</label>
+                            </div>
+                            <div class="form-check form-switch mt-2 mb-2 col-3">
+                                <input class="form-check-input" type="checkbox" id="bpSwitch" v-model="assigned_bp_responsible">
+                                <label class="form-check-label" for="bpSwitch">BP Responsible</label>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <template v-else-if="filterOnTagged" class="mt-0">
+                    <div class="col-lg-8">
+                        <div class="row">
+                            <div class="form-check form-switch mt-2 mb-2 col-3">
+                                <input class="form-check-input" type="checkbox" id="taggedSwitch" v-model="include_tagged">
+                                <label class="form-check-label" for="taggedSwitch">@{{this.userTaggedName}}</label>
+                            </div>
+                            <div class="form-check form-switch mt-2 mb-2 col-3">
+                                <input class="form-check-input" type="checkbox" id="selfWrittenSwitch" v-model="include_self_written">
+                                <label class="form-check-label" for="selfWrittenSwitch">Written by you</label>
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </div>
-            <template v-if="filterOnType">
-                <div class="row mx-0">
-                    <div class="form-check form-switch mt-0 mb-2 col-3">
-                        <input class="form-check-input" type="checkbox" id="productionSwitch" v-model="include_production">
-                        <label class="form-check-label" for="productionSwitch">Production</label>
-                    </div>
-                    <div class="form-check form-switch mt-0 mb-2 col-3">
-                        <input class="form-check-input" type="checkbox" id="applicationSwitch" v-model="include_application">
-                        <label class="form-check-label" for="applicationSwitch">Application</label>
-                    </div>
-                    <div class="form-check form-switch mt-0 mb-2 col-3">
-                        <input class="form-check-input" type="checkbox" id="controlSwitch" v-model="include_controls">
-                        <label class="form-check-label" for="controlSwitch">Control</label>
-                    </div>
-                    <div class="form-check form-switch mt-0 mb-2 col-3">
-                        <input class="form-check-input" type="checkbox" id="internalTypeSwitch" v-model="include_internal">
-                        <label class="form-check-label" for="internalTypeSwitch">Internal</label>
-                    </div>
-                </div>
-            </template>
-            <template v-else-if="filterOnAssigned" class="mt-0">
-                <div class="row mx-0">
-                    <div class="form-check form-switch mt-0 mb-2 col-3">
-                        <input class="form-check-input" type="checkbox" id="labSwitch" v-model="assigned_lab_responsible">
-                        <label class="form-check-label" for="labSwitch">Lab Responsible</label>
-                    </div>
-                    <div class="form-check form-switch mt-0 mb-2 col-3">
-                        <input class="form-check-input" type="checkbox" id="bioinfoSwitch" v-model="assigned_bioinfo_responsible">
-                        <label class="form-check-label" for="bioinfoSwitch">Bioinfo Responsible</label>
-                    </div>
-                    <div class="form-check form-switch mt-0 mb-2 col-3">
-                        <input class="form-check-input" type="checkbox" id="pcSwitch" v-model="assigned_project_coordinator">
-                        <label class="form-check-label" for="pcSwitch">Project Coordinator</label>
-                    </div>
-                    <div class="form-check form-switch mt-0 mb-2 col-3">
-                        <input class="form-check-input" type="checkbox" id="bpSwitch" v-model="assigned_bp_responsible">
-                        <label class="form-check-label" for="bpSwitch">BP Responsible</label>
-                    </div>
-                </div>
-            </template>
-            <template v-else-if="filterOnTagged" class="mt-0">
-                <div class="row mx-0">
-                    <div class="form-check form-switch mt-0 mb-2 col-3">
-                        <input class="form-check-input" type="checkbox" id="taggedSwitch" v-model="include_tagged">
-                        <label class="form-check-label" for="taggedSwitch">@{{this.userTaggedName}}</label>
-                    </div>
-                    <div class="form-check form-switch mt-0 mb-2 col-3">
-                        <input class="form-check-input" type="checkbox" id="selfWrittenSwitch" v-model="include_self_written">
-                        <label class="form-check-label" for="selfWrittenSwitch">Written by you</label>
-                    </div>
-                </div>
-            </template>
             <template v-for="running_note in visibleRunningNotes">
                 <v-running-note-single :running_note_obj="running_note" :compact="false" :partition_id="running_note.parent"/>
             </template>
-            <div class="d-flex justify-content-center w-100">
-                <template v-if="numberOfVisibleRunningNotes == 0">
-                    <p class="text-muted">No running notes matched your selected filters.</p>
-                </template>
-            </div>
-            <div class="d-flex justify-content-center w-100">
-                <button class="btn btn-primary mb-3" @click="fetchRunningNotes(skip=numberOfFetchedRunningNotes)">Load More Notes</button>
-            </div>
+        </div>
+
+        <div class="d-flex justify-content-center w-100">
+            <template v-if="numberOfVisibleRunningNotes == 0">
+                <p class="text-muted">No running notes matched your selected filters.</p>
+            </template>
+        </div>
+        <div class="d-flex justify-content-center w-100">
+            <button class="btn btn-primary mb-3" @click="fetchAllRunningNotes(skip=numberOfFetchedRunningNotes)">Load More Notes</button>
         </div>
     `,
 }
