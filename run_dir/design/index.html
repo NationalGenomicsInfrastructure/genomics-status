@@ -55,7 +55,7 @@
 
   <div class="row pt-5">
     <div class="col-lg-8 pr-4" id="vue_index_main">
-      <v-running-notes-list :current_user_name="'{{user.name}}'" :current_user_email="'{{user.email}}'" :partition_id="null"></v-running-notes-list-decoupled>
+      <v-running-notes-list :user="{email: '{{user.email}}', user: '{{user.name}}'}" :partition_id="null"></v-running-notes-list-decoupled>
     </div>
 
     <div class="col-lg-4">

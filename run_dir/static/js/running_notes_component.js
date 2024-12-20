@@ -360,7 +360,7 @@ export const vRunningNotesTab = {
 
     <!-- display running notes -->
     <p>This is the notes</p>
-    <v-running-notes-list current_user_name='hello' current_user_email='hello@email.com' :running_notes="running_notes" :partition_id="this.partition_id"/>
+    <v-running-notes-list :user="this.user" :running_notes="running_notes" :partition_id="this.partition_id"/>
     `
 }
 
@@ -369,8 +369,7 @@ export const vRunningNotesTab = {
 export const vRunningNotesList = {
     name: 'v-running-notes-list',
     props: {
-        current_user_name: "",
-        current_user_email: "",
+        user: null,
         partition_id: null,
         dynamic: false, // If false, no older running notes will be fetched
     },
@@ -395,6 +394,12 @@ export const vRunningNotesList = {
         }
     },
     computed: {
+        current_user_email() {
+            return this.user.email;
+        },
+        current_user_name() {
+            return this.user.user;
+        },
         // Filters
         filterAll() {
             // Do not apply any filter
