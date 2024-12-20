@@ -37,6 +37,7 @@ class RunningNotesDataHandler(SafeHandler):
                 "categories",
                 "created_at_utc",
                 "updated_at_utc",
+                "note_type",
             ]:
                 note_contents[item] = running_note[item]
             running_notes_json[note_contents["created_at_utc"]] = note_contents
@@ -453,6 +454,7 @@ class LatestRunningNoteHandler(SafeHandler):
         if view[partition_id].rows:
             note = view[partition_id].rows[0].value
             latest_note = {note["created_at_utc"]: note}
+
         return latest_note
 
     @staticmethod

@@ -529,6 +529,9 @@ export const vRunningNotesList = {
                     this.$root.error_messages.push('Unable to fetch running notes, please try again or contact a system administrator.')
                 })
         },
+        parent_metadata(running_note) {
+            return this.projects_metadata[running_note.parent]
+        },
         setFilter(filter) {
             this.category_filter = filter
         },
@@ -678,7 +681,7 @@ export const vRunningNotesList = {
                 </template>
             </div>
             <template v-for="running_note in visibleRunningNotes">
-                <v-running-note-single :running_note_obj="running_note" :compact="false" :partition_id="running_note.parent"/>
+                <v-running-note-single :running_note_obj="running_note" :compact="false" :partition_id="running_note.parent" :display_link_to_parent="(this.partition_id == null)" :parent_metadata="this.parent_metadata(running_note)"/>
             </template>
         </div>
 
@@ -694,7 +697,7 @@ export const vRunningNotesList = {
 }
 
 export const vRunningNoteSingle = {
-    props: ['running_note_obj', 'compact', "partition_id", "uri_hash"],
+    props: ['running_note_obj', 'compact', "partition_id", "uri_hash", "display_link_to_parent", "parent_metadata"],
     data: function() {
         return {
             glowingCard: false
@@ -773,11 +776,29 @@ export const vRunningNoteSingle = {
             let running_note_json = JSON.parse(this.running_note_obj)
             return Object.values(running_note_json)[0];
         },
+        link_to_partition() {
+            if (this.note_type === 'project') {
+                return '/project_new/' + this.partition_id
+            }
+        },
+        metadata_link_title() {
+            let title = '';
+            if (this.note_type === 'project') {
+                title = this.partition_id
+                if (this.parent_metadata !== undefined) {
+                    title += ': ' + this.parent_metadata.project_name
+                }
+            }
+            return title
+        },
         note_hash(){
             return (new Date(this.created_at_utc).getTime());
         },
         note_id() {
             return 'running_note_'+this.partition_id+'_'+this.note_hash;
+        },
+        note_type() {
+            return this.getRunningNoteProperty('note_type')
         },
         email() {
             return this.getRunningNoteProperty('email')
@@ -826,6 +847,10 @@ export const vRunningNoteSingle = {
     <div class="pb-3">
         <div :class="['card', {glow: glowingCard}]" ref="card_div">
             <div class="card-header" :class="mark_card_important" :id="note_id">
+                <template v-if="display_link_to_parent">
+                    <a class="text-decoration-none mr-2" :href="this.link_to_partition">{{this.metadata_link_title}}</a>
+                </template>
+                <span>- </span>
                 <a class="text-decoration-none" :href="'mailto:' + this.email">{{this.user}}</a>
                 <template v-if="!compact">
                 - <a @click.prevent="makeSelectedCardGlow" class="text-decoration-none" :href=this.href>
