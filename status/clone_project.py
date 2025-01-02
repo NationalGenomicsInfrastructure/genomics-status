@@ -28,32 +28,21 @@ class LIMSProjectCloningHandler(SafeHandler):
     """
 
     def get(self, project_identifier):
-        # Check if the project_identifier matches a project id.
-        # If not, assuming it's a project name, try to get the project id from the project name,
-        # since the LIMS API only accepts project ids
-        if not re.match("^(P[0-9]{3,7})", project_identifier):
-            try:
-                projectid = (
-                    self.application.projects_db.view("projects/name_to_id")[
-                        project_identifier
-                    ]
-                    .rows[0]
-                    .value
-                )
-            except IndexError:
-                self.set_status(404)
-                return self.write({"error": "Project not found"})
-        else:
-            projectid = project_identifier
+        projectid = self.get_project_id(project_identifier)
+        if not projectid:
+            self.set_status(404)
+            return self.write({"error": "Project not found"})
+
         proj_values = self.get_project_data_from_lims(projectid, "get")
         if not proj_values:
             self.set_status(404)
             self.write({"error": "Project not found"})
             return
+
         self.set_header("Content-type", "application/json")
         self.write(proj_values)
 
-    def post(self, projectid):
+    def post(self, project_identifier):
         if not (
             self.get_current_user().is_proj_coord
             or self.get_current_user().is_any_admin
@@ -62,6 +51,11 @@ class LIMSProjectCloningHandler(SafeHandler):
             return self.write(
                 "Error: You do not have the permissions for this operation!"
             )
+
+        projectid = self.get_project_id(project_identifier)
+        if not projectid:
+            self.set_status(404)
+            return self.write({"error": "Project not found"})
 
         new_proj = self.get_project_data_from_lims(projectid, "post")
         if "error" in new_proj:
@@ -72,7 +66,7 @@ class LIMSProjectCloningHandler(SafeHandler):
         self.set_status(201)
         self.write(new_proj)
 
-    def get_project_data_from_lims(self, projectid, type):
+    def get_project_data_from_lims(self, projectid, req_type):
         copy_udfs = {
             "Customer project reference",
             "Project Comment",
@@ -128,7 +122,7 @@ class LIMSProjectCloningHandler(SafeHandler):
                 udfs[udf] = existing_project.udf[udf]
         proj_values["udfs"] = udfs
 
-        if type == "get":
+        if req_type == "get":
             return proj_values
 
         else:
@@ -149,3 +143,24 @@ class LIMSProjectCloningHandler(SafeHandler):
                 return {"error": e.message}
 
             return {"project_id": new_project.id, "project_name": new_project.name}
+
+    def get_project_id(self, project_identifier):
+        """Return projectid for the provided identifier"""
+        # Check if the project_identifier matches a project id.
+        # If not, assuming it's a project name, try to get the project id from the project name,
+        # since the LIMS API only accepts project ids
+        projectid = None
+        if re.match("^(P[0-9]{3,7})", project_identifier):
+            projectid = project_identifier
+        else:
+            try:
+                projectid = (
+                    self.application.projects_db.view("projects/name_to_id")[
+                        project_identifier
+                    ]
+                    .rows[0]
+                    .value
+                )
+            except IndexError:
+                pass
+        return projectid
