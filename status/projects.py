@@ -13,7 +13,8 @@ import tornado.web
 from dateutil.relativedelta import relativedelta
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
-from genologics.entities import Artifact, Project
+from genologics.entities import Artifact
+from ibm_cloud_sdk_core.api_exception import ApiException
 from zenpy import ZenpyException
 
 from status.util import SafeHandler, dthandler
@@ -1001,11 +1002,15 @@ class LinksDataHandler(SafeHandler):
     """
 
     def get(self, project):
-        self.set_header("Content-type", "application/json")
-        p = Project(lims, id=project)
-        p.get(force=True)
-
-        links = json.loads(p.udf["Links"]) if "Links" in p.udf else {}
+        links_doc = {}
+        try:
+            links_doc = self.application.cloudant.get_document(
+                db="gs_links", doc_id=project
+            ).get_result()
+        except ApiException as e:
+            if e.message == "not_found":
+                pass
+        links = links_doc.get("links", {})
 
         # Sort by descending date, then hopefully have deviations on top
         sorted_links = OrderedDict()
@@ -1014,6 +1019,8 @@ class LinksDataHandler(SafeHandler):
         sorted_links = OrderedDict(
             sorted(sorted_links.items(), key=lambda k: k[1]["type"])
         )
+
+        self.set_header("Content-type", "application/json")
         self.write(sorted_links)
 
     def post(self, project):
@@ -1027,19 +1034,39 @@ class LinksDataHandler(SafeHandler):
             self.set_status(400)
             self.finish("<html><body>Link title and type is required</body></html>")
         else:
-            p = Project(lims, id=project)
-            p.get(force=True)
-            links = json.loads(p.udf["Links"]) if "Links" in p.udf else {}
-            links[str(datetime.datetime.now())] = {
-                "user": user.name,
-                "email": user.email,
-                "type": a_type,
-                "title": title,
-                "url": url,
-                "desc": desc,
-            }
-            p.udf["Links"] = json.dumps(links)
-            p.put()
+            links_doc = {}
+            links = {}
+            try:
+                links_doc = self.application.cloudant.get_document(
+                    db="gs_links", doc_id=project
+                ).get_result()
+            except ApiException as e:
+                if e.message == "not_found":
+                    links_doc["_id"] = project
+                    links_doc["links"] = {}
+            links = links_doc.get("links", {})
+            links.update(
+                {
+                    str(datetime.datetime.now()): {
+                        "user": user.name,
+                        "email": user.email,
+                        "type": a_type,
+                        "title": title,
+                        "url": url,
+                        "desc": desc,
+                    }
+                }
+            )
+            links_doc["links"] = links
+
+            response = self.application.cloudant.post_document(
+                db="gs_links", document=links_doc
+            ).get_result()
+
+            if not response.get("ok"):
+                self.set_status(500)
+                return
+
             self.set_status(200)
             # ajax cries if it does not get anything back
             self.set_header("Content-type", "application/json")
