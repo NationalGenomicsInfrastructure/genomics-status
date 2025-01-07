@@ -172,7 +172,27 @@ const vProjectsStatus = {
                     columnValues[columnValue] = [project_id]
                 }
             }
-            return columnValues
+            let sortedKeys = [];
+            if (Object.values(this.card_columns)[0] == 'status_fields') {
+                sortedKeys = ['Pending', 'Reception Control', 'Ongoing'];
+
+                // Add any additional status fields (shouldn't be any)
+                for (let key of Object.keys(columnValues)) {
+                    if (!(key in sortedKeys)) {
+                        sortedKeys.push(key)
+                    }
+                }
+            } else {
+                sortedKeys = Object.keys(columnValues).sort((a, b) => {
+                    return a.toLowerCase().localeCompare(b.toLowerCase());
+                });
+            }
+
+            let sorted_columnValues = {};
+            sortedKeys.forEach(key => {
+                sorted_columnValues[key] = columnValues[key] || [];
+            });
+            return sorted_columnValues
         },
         currentActiveFilters() {
             // List the currently active filters for display purposes
