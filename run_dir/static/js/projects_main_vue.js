@@ -274,7 +274,7 @@ const vProjectsStatus = {
         /* Only used on project cards page */
         fetchProjects() {
             axios
-                .get('/api/v1/projects?list=pending,reception_control,review,ongoing&type=All')
+                .get('/api/v1/projects?list=pending,open&type=All')
                 .then(response => {
                     let data = response.data
                     if (data !== null) {
