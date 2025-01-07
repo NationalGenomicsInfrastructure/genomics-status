@@ -328,7 +328,7 @@ class RunningNotesDataHandler(SafeHandler):
                     html = '<html>\
                     <body>\
                     <p> \
-                    {} in the project <a href="{}/project/{}#{}">{}, {}</a>! The note is as follows</p>\
+                    {} in the project <a href="{}/project/{}#{}">{}, {}</a><br>The note is as follows</p>\
                     <blockquote>\
                     <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
                     <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
