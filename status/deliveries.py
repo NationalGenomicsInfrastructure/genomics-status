@@ -159,6 +159,7 @@ class DeliveriesPageHandler(SafeHandler):
 
                             # define bioinfo checklist
                             sample_data = flowcells[flowcell_id][lane_id][sample_id]
+                            instrument_type = sample_data.get("instrument_type")
                             checklist = self.__fill_checklist(sample_data)
                             if checklist["total"] and len(checklist["total"]) == len(
                                 checklist["passed"]
@@ -233,6 +234,7 @@ class DeliveriesPageHandler(SafeHandler):
                     flowcell_status = self.__aggregate_status(flowcell_statuses)
                     runs_bioinfo[flowcell_id]["flowcell_status"] = flowcell_status
                     runs_bioinfo[flowcell_id]["checklist"] = flowcell_checklists
+                    runs_bioinfo[flowcell_id]["instrument_type"] = instrument_type
 
                     # add flowcell_status to the status_list (needed for filtering)
                     if flowcell_status not in status_list:
