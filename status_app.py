@@ -68,6 +68,7 @@ from status.lanes_ordered import LanesOrderedDataHandler, LanesOrderedHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.ngisweden_stats import NGISwedenHandler
 from status.ont_plot import ONTFlowcellPlotHandler, ONTFlowcellYieldHandler
+from status.people_assignments import PeopleAssignmentsDataHandler
 from status.pricing import (
     AgreementDataHandler,
     AgreementMarkSignHandler,
@@ -299,6 +300,7 @@ class Application(tornado.web.Application):
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project/([^/]*)$", ProjectSamplesDataHandler),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
+            ("/api/v1/people_assignments", PeopleAssignmentsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
@@ -432,6 +434,7 @@ class Application(tornado.web.Application):
             self.instruments_db = couch["instruments"]
             self.instrument_logs_db = couch["instrument_logs"]
             self.nanopore_runs_db = couch["nanopore_runs"]
+            self.people_assignments_db = couch["people_assignments"]
             self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
             self.projects_db = couch["projects"]
             self.sample_requirements_db = couch["sample_requirements"]

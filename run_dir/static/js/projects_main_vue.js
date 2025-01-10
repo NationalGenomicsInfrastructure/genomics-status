@@ -1,4 +1,4 @@
-import {vProjectCards, vProjectDataField, vProjectDetails} from './projects_components.js'
+import {vProjectCards, vProjectDataField, vProjectDetails, vProjectPeopleAssignments} from './projects_components.js'
 import { getDropdownPosition } from './smart_suggestion.js';
 import { vRunningNotesTab, vRunningNoteSingle } from './running_notes_component.js'
 
@@ -11,6 +11,7 @@ const vProjectsStatus = {
             project_samples: {},
             sticky_running_notes: {},
             running_notes: {},
+            project_people_assignments: {},
             error_messages: [],
             websocket_message:'',
             websocket: null,
@@ -273,6 +274,31 @@ const vProjectsStatus = {
                     this.error_messages.push('Unable to fetch sticky running notes, please try again or contact a system administrator.')
                 })
         },
+        async fetchPeopleAssignments(project_id) {
+            let post_body;
+            if (project_id !== undefined) {
+                post_body = {project_ids: [project_id]};
+            } else {
+                post_body = {project_ids: Object.keys(this.all_projects)};
+            }
+            const sleep = (delay) => new Promise((resolve) => setTimeout(resolve,delay))
+
+            if (Object.keys(this.all_projects).length === 0){
+                // Wait for projects to be fetched even though the request should already have returned
+                await sleep(1000);
+            }
+            axios
+                .post('/api/v1/people_assignments', post_body)
+                .then(response => {
+                    let data = response.data
+                    if (data !== null) {
+                        this.project_people_assignments = Object.assign({}, this.project_people_assignments, data);
+                    }
+                })
+                .catch(error => {
+                    this.error_messages.push('Unable to fetch people assignments, please try again or contact a system administrator.')
+                })
+        },
         setupWebsocket() {
             /* This is still a proof of concept */
             // Taken from https://stackoverflow.com/a/10418013
@@ -461,4 +487,5 @@ app.component('v-projects-cards', vProjectCards)
 app.component('v-project-details', vProjectDetails)
 app.component('v-running-note-single', vRunningNoteSingle)
 app.component('v-running-notes-tab', vRunningNotesTab)
+app.component('v-project-people-assignments', vProjectPeopleAssignments)
 app.mount('#v_projects_main')

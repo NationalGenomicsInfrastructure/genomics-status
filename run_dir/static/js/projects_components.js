@@ -128,6 +128,7 @@ export const vProjectDetails = {
         if (this.$root.single_project_mode) {
             this.$root.fetchProjectDetails(this.project_id);
             this.$root.fetchAllUsers();
+            this.$root.fetchPeopleAssignments(this.project_id);
         }
     },
     mounted: function() {
@@ -150,11 +151,18 @@ export const vProjectDetails = {
                             <button type="button" class="btn-close" @click="$emit('closeModal')"></button>
                         </template>
                     </div>
-                    <h3 :class="{'mt-3': true, 'ml-3': as_modal}">
-                        <a :href="'/project/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                            <i class="fa-regular fa-arrow-up-right-from-square"></i> Old Project Page
-                        </a>
-                    </h3>
+                    <div class="row">
+                        <h3 :class="{'mt-3': true, 'ml-3': as_modal, 'col-auto': true}">
+                            <a :href="'/project/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+                                <i class="fa-regular fa-arrow-up-right-from-square"></i> Old Project Page
+                            </a>
+                        </h3>
+                        <div class="col-auto ml-auto">
+                            <h2>
+                                <v-project-people-assignments :project_id="project_id" :as_modal="as_modal"></v-project-people-assignments>
+                            </h2>
+                        </div>
+                    </div>
                     <h2><span :class="'badge w-100 mt-1 mb-4 ' + status_bg_class">{{project_data.status}}</span></h2>
                 </div>
                 <div class="col-4">
@@ -551,11 +559,18 @@ export const vProjectCard = {
                     </template>
                 </div>
             </div>
-            <div class="col">
-                <div class="d-flex">
-                    <h5>
-                        <span :class="'badge bg-' + this.$root.projectStatusColor(project)">{{ project['status_fields']['status'] }}</span>
-                    </h5>
+            <div class="row">
+                <div class="col">
+                    <div class="d-flex">
+                        <h5>
+                            <span :class="'badge bg-' + this.$root.projectStatusColor(project)">{{ project['status_fields']['status'] }}</span>
+                        </h5>
+                    </div>
+                </div>
+                <div class="col-auto ml-auto">
+                    <h4>
+                        <v-project-people-assignments></v-project-people-assignments>
+                    </h4>
                 </div>
             </div>
             <div>
@@ -576,6 +591,24 @@ export const vProjectCard = {
             </div>
         </div>
     </div>`,
+}
+
+export const vProjectPeopleAssignments = {
+    name: 'v-project-people-assignments',
+    props: ['project_id', 'as_modal'],
+    computed: {
+        people() {
+            return this.$root.project_people_assignments[this.project_id]
+        }
+    },
+    template:
+    /*html*/`
+    <template v-for="person in people">
+        <span class="badge rounded-pill bg-success mr-1">
+            {{ person.initials }}
+        </span>
+    </template>
+    `
 }
 
 export const vProjectCards = {
@@ -743,6 +776,7 @@ export const vProjectCards = {
     created: function() {
         this.$root.fetchProjects();
         this.$root.fetchAllUsers();
+        this.$root.fetchPeopleAssignments();
     },
     mounted: function() {
         document.addEventListener('keyup', this.handleKeyUp);
