@@ -35,7 +35,7 @@ class InvoicingDataHandler(SafeHandler):
 
     def get_order_details(self, order_id: str) -> dict:
         order_url = (
-            f'{self.application.order_portal_conf["api_get_order_url"]}/{order_id}'
+            f"{self.application.order_portal_conf['api_get_order_url']}/{order_id}"
         )
         headers = {
             "X-OrderPortal-API-key": self.application.order_portal_conf["api_token"]
@@ -216,9 +216,9 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
                 row = [
                     proj_specs["total_cost"],
                     " ",
-                    f'{proj_specs["id"]}, {proj_specs["name"]}',
+                    f"{proj_specs['id']}, {proj_specs['name']}",
                     "1,00",
-                    f'({proj_specs["cust_desc"]})',
+                    f"({proj_specs['cust_desc']})",
                     account_dets["fakturaunderlag"],
                     account_dets["fakturafragor"],
                     account_dets["support_email"],
@@ -229,7 +229,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
                     account_dets["unit"],
                     account_dets["number"],
                     " ",
-                    f'{proj_specs["id"]}, {proj_specs["name"]}',
+                    f"{proj_specs['id']}, {proj_specs['name']}",
                     contact_dets["reference"],
                     account_dets["ansvarig"],
                     proj_specs["close_date"],
@@ -324,7 +324,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
             agreement_doc["invoice_spec_generated_at"] / 1000.0
         ).strftime("%Y-%m-%d")
         proj_specs["contract_name"] = (
-            f'{proj_id}_{agreement_doc["invoice_spec_generated_for"]}'
+            f"{proj_id}_{agreement_doc['invoice_spec_generated_for']}"
         )
         proj_specs["summary"] = markdown.markdown(
             invoiced_agreement["agreement_summary"], extensions=["sane_lists"]
