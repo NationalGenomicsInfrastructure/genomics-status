@@ -582,6 +582,13 @@ class ProjectsBaseDataHandler(SafeHandler):
                 }
                 projects.append(project)
 
+        # Sort projects by project number so that the latest P-number is first
+        projects = sorted(
+            projects,
+            key=lambda x: int(x["name"].split(",")[0].replace("P", "")),
+            reverse=True,
+        )
+
         return projects
 
 
