@@ -27,8 +27,12 @@ class UserManagementDataHandler(SafeHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
         view_result = {}
-        for row in self.application.gs_users_db.view("authorized/roles"):
-            view_result[row.key] = row.value
+        for row in self.application.gs_users_db.view("authorized/info"):
+            view_result[row.key] = {
+                "initials": row.value.get("initials", ""),
+                "roles": row.value.get("roles", []),
+                "name": row.value.get("name", ""),
+            }
         self.write(view_result)
 
     def post(self):
@@ -58,6 +62,8 @@ class UserManagementDataHandler(SafeHandler):
                 user_doc = self.application.gs_users_db.get(idtoChange)
                 if action == "modify" and idtoChange:
                     user_doc["roles"] = data["roles"]
+                    user_doc["name"] = data["name"]
+                    user_doc["initials"] = data["initials"]
                     try:
                         self.application.gs_users_db.save(user_doc)
                     except Exception as e:

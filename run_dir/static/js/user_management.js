@@ -20,8 +20,9 @@ $(function(){
 
     $.getJSON('/api/v1/user_management/users', function (data) {
       tableData=data;
-      $.each(data, function(name, role) {
+      $.each(data, function(name, info) {
         //Main table
+        let role = info['roles']
         var tbl_row = $('<tr>');
         user_td = '<div class="btn-group">' +
                   '<button class="btn btn-sm ml-2 btn-outline-primary btn-large modify-user-btn" data-user=' + name + '><i class="fa fa-wrench mr-1"></i>Modify</button>' +
@@ -33,6 +34,10 @@ $(function(){
         user_td += '<span class="ml-3">' + name + '</span>'
 
         tbl_row.append($('<td>').html(user_td));
+
+        tbl_row.append($('<td>').html(info['name']));
+
+        tbl_row.append($('<td>').html(info['initials']));
 
         if(role){
           role_list = Object.values(role).join(', ')
@@ -50,17 +55,21 @@ $(function(){
 
       $('.modify-user-btn').click(function() {
           user = $(this).attr('data-user')
-          roles = tableData[user]
+          info = tableData[user]
           /* reset the checkboxes */
           $('.modify-user-role-checkbox input').each(function() {
               $(this).prop("checked", false);
           })
 
+          roles = info['roles']
           /* Fill in the checkboxed based on the chosen users roles */
           $.each(roles, function(role_key, role_value) {
               checkbox_id = '#check_' + role_key;
               $(checkbox_id).prop("checked", true);
           });
+
+          $('#formModifyName').prop('value', info['name']);
+          $('#formModifyInitials').prop('value', info['initials']);
       });
     })
  }
@@ -121,6 +130,7 @@ $(function(){
 
   $('#saveUserSettingsBtn').click(function(event){
     var chosenUser=$.trim($('#formModifyUserName').val());
+    var info={};
     var roles={};
     $(this).addClass('disabled').text('Saving...');
     $('.modify-user-role-checkbox input:checked').each(function() {
@@ -128,23 +138,29 @@ $(function(){
       role_label = $(this).attr('data-label')
       roles[role_key] = role_label
     })
-    modifyUser('modify', 'saveUserSettingsBtn', 'Save', chosenUser, roles);
+    info['roles'] = roles
+    info['name'] = $('#formModifyName').val()
+    info['initials'] = $('#formModifyInitials').val()
+
+    modifyUser('modify', 'saveUserSettingsBtn', 'Save', chosenUser, info);
   });
 
   $('body').on('click', '#delUserConfirmBtnModal', function(event){
     var chosenUser=$.trim($('#formDeleteUserName').prop('value'));
-    var roles={};
+    var info={};
     $('#delUserConfirmBtnModal').addClass('disabled').text('Saving...');
-    modifyUser('delete', 'delUserConfirmBtnModal', 'Delete', chosenUser, roles);
+    modifyUser('delete', 'delUserConfirmBtnModal', 'Delete', chosenUser, info);
   });
 
-  function modifyUser(option, button, text, username, roles){
+  function modifyUser(option, button, text, username, info){
      $.ajax({
       type: 'POST',
       dataType: 'json',
       url: '/api/v1/user_management/users?action='+option,
       data: JSON.stringify({ 'username' : username,
-        'roles' : roles}),
+        'roles' : info['roles'],
+        'name' : info['name'],
+        'initials' : info['initials'] }),
       error: function(xhr, textStatus, errorThrown) {
         alert('There was an error in saving the settings: '+xhr.responseText);
         $('#'+button).removeClass('disabled').text(text);
