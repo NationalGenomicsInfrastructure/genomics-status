@@ -281,12 +281,7 @@ const vProjectsStatus = {
             } else {
                 post_body = {project_ids: Object.keys(this.all_projects)};
             }
-            const sleep = (delay) => new Promise((resolve) => setTimeout(resolve,delay))
 
-            if (Object.keys(this.all_projects).length === 0){
-                // Wait for projects to be fetched even though the request should already have returned
-                await sleep(1000);
-            }
             axios
                 .post('/api/v1/people_assignments', post_body)
                 .then(response => {
@@ -326,7 +321,9 @@ const vProjectsStatus = {
                     if (data !== null) {
                         this.all_projects = data
                     }
+                    // These are dependent on the projects being fetched
                     this.fetchStickyRunningNotes()
+                    this.fetchPeopleAssignments()
                 })
                 .catch(error => {
                     console.log(error)

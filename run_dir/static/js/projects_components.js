@@ -569,7 +569,7 @@ export const vProjectCard = {
                 </div>
                 <div class="col-auto ml-auto">
                     <h4>
-                        <v-project-people-assignments></v-project-people-assignments>
+                        <v-project-people-assignments :project_id="this.project_id" :as_modal="True"></v-project-people-assignments>
                     </h4>
                 </div>
             </div>
@@ -605,7 +605,7 @@ export const vProjectPeopleAssignments = {
     /*html*/`
     <template v-for="person in people">
         <span class="badge rounded-pill bg-success mr-1">
-            {{ person.initials }}
+            {{ person }}
         </span>
     </template>
     `
@@ -776,7 +776,6 @@ export const vProjectCards = {
     created: function() {
         this.$root.fetchProjects();
         this.$root.fetchAllUsers();
-        this.$root.fetchPeopleAssignments();
     },
     mounted: function() {
         document.addEventListener('keyup', this.handleKeyUp);

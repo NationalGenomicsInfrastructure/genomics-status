@@ -1,16 +1,3 @@
-import datetime
-import json
-import logging
-import re
-import smtplib
-import unicodedata
-from collections import OrderedDict
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-
-import markdown
-import nest_asyncio
-import slack_sdk
 import tornado
 
 from status.util import SafeHandler
@@ -30,13 +17,16 @@ class PeopleAssignmentsDataHandler(SafeHandler):
 
         project_ids = data["project_ids"]
 
-        # TODO Switch to cloudant instead
-        people_assignments_rows = self.application.people_assignments_db.get(
-            id=project_ids, include_docs=True
-        ).rows
+        people_assignments_rows = self.application.cloudant.post_bulk_get(
+            db="people_assignments", docs=[{"id": doc_id} for doc_id in project_ids]
+        ).get_result()
 
-        people_assignments = {
-            row.key: row.people for row in people_assignments_rows if row.value
-        }
+        people_assignments = {}
+        for data in people_assignments_rows["results"]:
+            for data_row in data["docs"]:
+                # Filter out the "not found" documents
+                if "ok" in data_row:
+                    people_assignments[data_row["ok"]["_id"]] = data_row["ok"]["people"]
+
         self.set_header("Content-type", "application/json")
         self.write(people_assignments)
