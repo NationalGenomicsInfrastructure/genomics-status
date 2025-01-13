@@ -336,10 +336,7 @@ const vProjectsStatus = {
                 .then(response => {
                     let data = response.data
                     if (data !== null) {
-                        this.all_users = Object.keys(data)
-                            .map(email=>{
-                                return email.split('@')[0]
-                            })
+                        this.all_users = data
                     }
                 })
                 .catch(error => {

@@ -33,6 +33,9 @@ export const vRunningNotesTab = {
         }
     },
     computed: {
+        all_user_names() {
+            return Object.keys(this.all_users).map(email => email.split('@')[0].toLowerCase())
+        },
         anySuggestion() {
             return this.user_suggestions.length > 0
         },
@@ -179,7 +182,7 @@ export const vRunningNotesTab = {
 
             if (current_word.startsWith('@')) {
                 current_word = current_word.substring(1).toLowerCase();
-                let user_suggestions = this.all_users.filter(user => user.includes(current_word));
+                let user_suggestions = this.all_user_names.filter(user => user.includes(current_word));
                 this.user_suggestions = user_suggestions;
             } else {
                 this.user_suggestions = [];

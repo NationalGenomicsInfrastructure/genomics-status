@@ -27,12 +27,19 @@ class UserManagementDataHandler(SafeHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
         view_result = {}
+        add_roles = False
+        if self.get_current_user().is_admin:
+            add_roles = True
+
         for row in self.application.gs_users_db.view("authorized/info"):
             view_result[row.key] = {
                 "initials": row.value.get("initials", ""),
-                "roles": row.value.get("roles", []),
                 "name": row.value.get("name", ""),
             }
+
+            if add_roles:
+                view_result[row.key]["roles"] = row.value.get("roles", [])
+
         self.write(view_result)
 
     def post(self):

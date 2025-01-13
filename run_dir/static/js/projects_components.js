@@ -601,11 +601,20 @@ export const vProjectPeopleAssignments = {
             return this.$root.project_people_assignments[this.project_id]
         }
     },
+    methods: {
+        initials(identifier) {
+            if (this.$root.all_users[identifier]['initials'] != '') {
+                return this.$root.all_users[identifier]['initials']
+            } else {
+                return identifier
+            }
+        }
+    },
     template:
     /*html*/`
     <template v-for="person in people">
         <span class="badge rounded-pill bg-success mr-1">
-            {{ person }}
+            {{ initials(person) }}
         </span>
     </template>
     `
@@ -790,6 +799,7 @@ export const vProjectCards = {
     <div class="mx-2">
         <div ref="project_cards_header">
             <h1>Project Cards</h1>
+            {{ this.$root.all_users}}
             <div class="card">
                 <div class="card-header py-3" @click="toggleCardFilterMenu">
                     <h5 class="mb-0">
