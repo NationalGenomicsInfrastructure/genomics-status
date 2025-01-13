@@ -321,9 +321,11 @@ class RunningNotesDataHandler(SafeHandler):
                     )
                     msg["From"] = "genomics-status"
                     msg["To"] = view_result[user]
-                    text = f"{email_text} in the project {project_id}, {project_name}! The note is as follows\n\
+                    text = (
+                        f"{email_text} in the project {project_id}, {project_name}! The note is as follows\n\
                     >{tagger} - {time_in_format}{category}\
                     >{note}"
+                    )
 
                     html = '<html>\
                     <body>\

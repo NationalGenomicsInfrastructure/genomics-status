@@ -85,7 +85,7 @@ class FlowcellsHandler(SafeHandler):
             note_key = row.key
             # NovaSeqXPlus has whole year in name
             if "LH" in row.value["instrument"]:
-                note_key = f'{row.value["run id"].split("_")[0]}_{row.value["run id"].split("_")[-1]}'
+                note_key = f"{row.value['run id'].split('_')[0]}_{row.value['run id'].split('_')[-1]}"
             note_keys.append(note_key)
             temp_flowcells[row.key] = row.value
 

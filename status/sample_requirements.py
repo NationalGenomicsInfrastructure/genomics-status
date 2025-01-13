@@ -335,7 +335,7 @@ class RequirementsValidator:
                 self._add_validation_msg(
                     id,
                     "unique",
-                    (f"Key combination {keys}:{t} is included multiple " "times. "),
+                    (f"Key combination {keys}:{t} is included multiple times. "),
                 )
                 self.validation_result = False
             key_val_set.add(t)
