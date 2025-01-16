@@ -283,7 +283,7 @@ const vProjectsStatus = {
             }
 
             axios
-                .post('/api/v1/people_assignments', post_body)
+                .post('/api/v1/list_people_assignments', post_body)
                 .then(response => {
                     let data = response.data
                     if (data !== null) {
@@ -291,8 +291,39 @@ const vProjectsStatus = {
                     }
                 })
                 .catch(error => {
+                    console.log(error)
                     this.error_messages.push('Unable to fetch people assignments, please try again or contact a system administrator.')
                 })
+        },
+        async addPersonToProject(project_id, person_id) {
+            axios
+                .put(`/api/v1/project/${project_id}/people/${person_id}`)
+                .then(response => {
+                    let data = response.data
+                    if ((data !== null) && (data[project_id] !== null)) {
+                        this.project_people_assignments[project_id] = data['people'];
+                    }
+                })
+                .catch(error => {
+                    console.log(error)
+                    this.error_messages.push('Unable to assign person to project, please try again or contact a system administrator.')
+                }
+            )
+        },
+        async removePersonFromProject(project_id, person_id) {
+            axios
+                .delete(`/api/v1/project/${project_id}/people/${person_id}`)
+                .then(response => {
+                    let data = response.data
+                    if ((data !== null) && (data[project_id] !== null)) {
+                        this.project_people_assignments[project_id] = data['people'];
+                    }
+                })
+                .catch(error => {
+                    console.log(error)
+                    this.error_messages.push('Unable to remove person from project, please try again or contact a system administrator.')
+                }
+            )
         },
         setupWebsocket() {
             /* This is still a proof of concept */

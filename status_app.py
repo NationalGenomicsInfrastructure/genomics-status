@@ -68,7 +68,10 @@ from status.lanes_ordered import LanesOrderedDataHandler, LanesOrderedHandler
 from status.multiqc_report import MultiQCReportHandler
 from status.ngisweden_stats import NGISwedenHandler
 from status.ont_plot import ONTFlowcellPlotHandler, ONTFlowcellYieldHandler
-from status.people_assignments import PeopleAssignmentsDataHandler
+from status.people_assignments import (
+    PeopleAssignmentsDataHandler,
+    ProjectPeopleAssignmentDataHandler,
+)
 from status.pricing import (
     AgreementDataHandler,
     AgreementMarkSignHandler,
@@ -289,6 +292,7 @@ class Application(tornado.web.Application):
             ("/api/v1/latest_sticky_run_note", LatestStickyNotesMultipleHandler),
             ("/api/v1/libpooling_queues", LibraryPoolingQueuesDataHandler),
             ("/api/v1/lims_project_data/([^/]*)$", LIMSProjectCloningHandler),
+            ("/api/v1/list_people_assignments", PeopleAssignmentsDataHandler),
             ("/api/v1/mark_agreement_signed", AgreementMarkSignHandler),
             ("/api/v1/pricing_date_to_version", PricingDateToVersionDataHandler),
             ("/api/v1/pricing_exchange_rates", PricingExchangeRatesDataHandler),
@@ -299,8 +303,12 @@ class Application(tornado.web.Application):
             ("/api/v1/proj_staged/([^/]*)$", DataDeliveryHandler),
             ("/api/v1/projects", ProjectsDataHandler),
             ("/api/v1/project/([^/]*)$", ProjectSamplesDataHandler),
+            ("/api/v1/project/([^/]*)/people", ProjectPeopleAssignmentDataHandler),
+            (
+                "/api/v1/project/([^/]*)/people/([^/]*)$",
+                ProjectPeopleAssignmentDataHandler,
+            ),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
-            ("/api/v1/people_assignments", PeopleAssignmentsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
