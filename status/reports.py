@@ -144,15 +144,16 @@ class SingleCellSampleSummaryReportHandler(SafeHandler):
 
         else:
             reports = []
-            for item in os.listdir(sample_summary_reports_path):
-                if os.path.isdir(
-                    os.path.join(sample_summary_reports_path, item)
-                ) and item.startswith(f"{project_id}_"):
-                    if os.path.exists(
-                        os.path.join(
-                            sample_summary_reports_path, item, f"{item}_report.pdf"
-                        )
-                    ):
-                        reports.append(item)
+            if os.path.exists(sample_summary_reports_path):
+                for item in os.listdir(sample_summary_reports_path):
+                    if os.path.isdir(
+                        os.path.join(sample_summary_reports_path, item)
+                    ) and item.startswith(f"{project_id}_"):
+                        if os.path.exists(
+                            os.path.join(
+                                sample_summary_reports_path, item, f"{item}_report.pdf"
+                            )
+                        ):
+                            reports.append(item)
 
             return reports
