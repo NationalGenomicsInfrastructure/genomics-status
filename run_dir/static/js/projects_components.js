@@ -631,6 +631,9 @@ export const vProjectPeopleAssignments = {
     },
     methods: {
         initials(identifier) {
+            if (this.$root.all_users[identifier] == undefined) {
+                return identifier
+            }
             if (this.$root.all_users[identifier]['initials'] != '') {
                 return this.$root.all_users[identifier]['initials']
             } else {
@@ -645,7 +648,6 @@ export const vProjectPeopleAssignments = {
             }
         },
         remove_from_project(person_id) {
-            console.log('Removing person from project')
             this.$root.removePersonFromProject(this.project_id, person_id)
         },
         add_to_project(person_id) {
@@ -687,7 +689,7 @@ export const vProjectPeopleAssignments = {
             <template v-if="people_menu_open">
                 <h3>
                     <template v-for="person_id in people">
-                        <span class="badge rounded-pill bg-success mr-1" @click="togglePeopleMenu">
+                        <span class="badge rounded-pill bg-success mr-1">
                             {{ name(person_id) }}
                             <button type="button" class="btn btn-lg m-0" @click="remove_from_project(person_id)"><i class="fa-regular fa-trash-can text-white"></i></button>
                         </span>

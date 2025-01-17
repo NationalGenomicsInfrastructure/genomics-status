@@ -287,6 +287,7 @@ const vProjectsStatus = {
                 .then(response => {
                     let data = response.data
                     if (data !== null) {
+
                         this.project_people_assignments = Object.assign({}, this.project_people_assignments, data);
                     }
                 })
@@ -301,7 +302,7 @@ const vProjectsStatus = {
                 .then(response => {
                     let data = response.data
                     if ((data !== null) && (data[project_id] !== null)) {
-                        this.project_people_assignments[project_id] = data['people'];
+                        this.project_people_assignments[project_id] = data[project_id];
                     }
                 })
                 .catch(error => {
@@ -316,7 +317,7 @@ const vProjectsStatus = {
                 .then(response => {
                     let data = response.data
                     if ((data !== null) && (data[project_id] !== null)) {
-                        this.project_people_assignments[project_id] = data['people'];
+                        this.project_people_assignments[project_id] = data[project_id];
                     }
                 })
                 .catch(error => {
