@@ -528,14 +528,15 @@ class Application(tornado.web.Application):
         # to display instruments in the server status
         self.server_status = settings.get("server_status")
 
-        # project summary - reports tab, for multiqc reports and yggdrasil reports
+        # project summary - reports tab
+        # Structure of the reports folder:
+        # <reports_path>/
+        # ├── other_reports/
+        # │    └── toulligqc_reports/
+        # ├── minknow_reports/
+        # ├── mqc_reports/
+        # └── yggdrasil/<project_id>/
         self.reports_path = settings.get("reports_path")
-
-        # MinKNOW reports
-        self.minknow_reports_path = settings.get("minknow_reports_path")
-
-        # ToulligQC reports
-        self.toulligqc_reports_path = settings.get("toulligqc_reports_path")
 
         # lims backend credentials
         limsbackend_cred_loc = Path(
