@@ -1,10 +1,11 @@
 import os
+from typing import Any, Optional, Union
 
 from status.util import SafeHandler
 
 
 class MultiQCReportHandler(SafeHandler):
-    def get(self, project):
+    def get(self, project: str) -> None:
         report_type = self.get_argument("type")
         multiqc_report = self.get_multiqc(self.application, project)
         if multiqc_report:
@@ -21,7 +22,9 @@ class MultiQCReportHandler(SafeHandler):
             )
 
     @staticmethod
-    def get_multiqc(app, project_id, read_file=True):
+    def get_multiqc(
+        app: Any, project_id: str, read_file: bool = True
+    ) -> Union[str, dict, None]:
         """
         Getting multiqc reports for requested project from the filesystem
         Returns a string containing html if report exists, otherwise None
@@ -54,7 +57,7 @@ class MultiQCReportHandler(SafeHandler):
 class ProjectSummaryReportHandler(SafeHandler):
     """Handler for project summary reports generated using yggdrasil"""
 
-    def get(self, project_id):
+    def get(self, project_id: str) -> None:
         report = self.get_summary_report(self.application, project_id)
         if report:
             self.write(report)
@@ -70,7 +73,9 @@ class ProjectSummaryReportHandler(SafeHandler):
             )
 
     @staticmethod
-    def get_summary_report(app, project_id, read_file=True):
+    def get_summary_report(
+        app: Any, project_id: str, read_file: bool = True
+    ) -> Union[str, bool, None]:
         """If read_file is false, the function will return True if the file exists, otherwise None
         If read_file is True, it returns a string containing the report in html if it exists"""
         project_name = ""
@@ -102,7 +107,7 @@ class ProjectSummaryReportHandler(SafeHandler):
 class SingleCellSampleSummaryReportHandler(SafeHandler):
     """Handler for Single Cell sample summary reports generated using yggdrasil"""
 
-    def get(self, project_id, sample_id):
+    def get(self, project_id: str, sample_id: str) -> None:
         report = self.get_sample_summary_report(
             self.application, project_id, sample_id=sample_id
         )
@@ -125,7 +130,9 @@ class SingleCellSampleSummaryReportHandler(SafeHandler):
             )
 
     @staticmethod
-    def get_sample_summary_report(app, project_id, sample_id=None):
+    def get_sample_summary_report(
+        app: Any, project_id: str, sample_id: Optional[str] = None
+    ) -> Union[bytes, list[str], None]:
         """Returns a list of sample summary reports for the requested project if sample_id is None,
         otherwise returns the report for the requested sample"""
 
