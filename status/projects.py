@@ -960,6 +960,8 @@ class ProjectSamplesOldHandler(SafeHandler):
                 self.application, project, read_file=False
             ).keys()
         )
+        if multiqc:
+            reports["multiqc"] = multiqc
         if ProjectSummaryReportHandler.get_summary_report(
             self.application, project, read_file=False
         ):
@@ -981,7 +983,6 @@ class ProjectSamplesOldHandler(SafeHandler):
                 lims_dashboard_url=self.application.settings["lims_dashboard_url"],
                 prettify=prettify_css_names,
                 worksets=worksets_view[project],
-                multiqc=multiqc,
                 reports=reports,
                 lims_uri=BASEURI,
             )

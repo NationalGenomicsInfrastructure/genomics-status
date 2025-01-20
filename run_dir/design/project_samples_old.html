@@ -137,9 +137,12 @@ Description: Details page for a single project
     <li class="nav-item"><a class="nav-link" href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
     <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" id="reports_dropdown">Reports</a>
       <div class="dropdown-menu" aria-labelledby="reports_dropdown">
-        {% if multiqc %}
+        {% if not reports%}
+          <a class="dropdown-item" href="#" disabled>No reports to show</a>
+        {% end %}
+        {% if 'multiqc' in reports%}
         <h6 class="dropdown-header">MultiQC Reports</h6>
-        {% for key in multiqc %}
+        {% for key in reports['multiqc'] %}
           {% if 'qc' in key %}
             {% set rep_name = ' QC' %}
           {% else %}
