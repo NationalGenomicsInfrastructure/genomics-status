@@ -470,7 +470,7 @@ class ONTMinKNOWReportHandler(SafeHandler):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
     def get(self, name):
-        reports_dir = self.application.minknow_reports_path
+        reports_dir = os.path.join(self.application.reports_path, "minknow_reports")
         report_path = os.path.join(reports_dir, f"report_{name}.html")
 
         self.write(open(report_path).read())
@@ -483,7 +483,9 @@ class ONTToulligQCReportHandler(SafeHandler):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
     def get(self, name):
-        reports_dir = self.application.toulligqc_reports_path
+        reports_dir = os.path.join(
+            self.application.reports_path, "other_reports", "toulligqc_reports"
+        )
         report_path = os.path.join(reports_dir, f"report_{name}.html")
 
         self.write(open(report_path).read())

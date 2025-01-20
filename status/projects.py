@@ -17,6 +17,11 @@ from genologics.entities import Artifact
 from ibm_cloud_sdk_core.api_exception import ApiException
 from zenpy import ZenpyException
 
+from status.reports import (
+    MultiQCReportHandler,
+    ProjectSummaryReportHandler,
+    SingleCellSampleSummaryReportHandler,
+)
 from status.util import SafeHandler, dthandler
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
@@ -689,7 +694,9 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             "_qc_": "QC MultiQC",
             "_pipeline_": "Pipeline MultiQC",
         }
-        for report_type in self.get_multiqc(project, read_file=False).keys():
+        for report_type in MultiQCReportHandler.get_multiqc(
+            self.application, project, read_file=False
+        ).keys():
             # Attempt to assign a name of the report type, otherwise default to the type itself
             report_name = type_to_name.get(report_type, report_type)
             reports[report_name] = f"/multiqc_report/{project}?type={report_type}"
@@ -946,8 +953,26 @@ class ProjectSamplesOldHandler(SafeHandler):
         worksets_view = self.application.worksets_db.view(
             "project/ws_name", descending=True
         )
-        # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
-        multiqc = list(self.get_multiqc(project).keys())
+
+        reports = {}
+        multiqc = list(
+            MultiQCReportHandler.get_multiqc(
+                self.application, project, read_file=False
+            ).keys()
+        )
+        if multiqc:
+            reports["multiqc"] = multiqc
+        if ProjectSummaryReportHandler.get_summary_report(
+            self.application, project, read_file=False
+        ):
+            reports["project_summary"] = True
+        sample_summary_reports = (
+            SingleCellSampleSummaryReportHandler.get_sample_summary_report(
+                self.application, project
+            )
+        )
+        if sample_summary_reports:
+            reports["sample_summary_reports"] = sample_summary_reports
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
@@ -958,7 +983,7 @@ class ProjectSamplesOldHandler(SafeHandler):
                 lims_dashboard_url=self.application.settings["lims_dashboard_url"],
                 prettify=prettify_css_names,
                 worksets=worksets_view[project],
-                multiqc=multiqc,
+                reports=reports,
                 lims_uri=BASEURI,
             )
         )

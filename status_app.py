@@ -65,7 +65,6 @@ from status.invoicing import (
     SentInvoiceHandler,
 )
 from status.lanes_ordered import LanesOrderedDataHandler, LanesOrderedHandler
-from status.multiqc_report import MultiQCReportHandler
 from status.ngisweden_stats import NGISwedenHandler
 from status.ont_plot import ONTFlowcellPlotHandler, ONTFlowcellYieldHandler
 from status.pricing import (
@@ -124,6 +123,11 @@ from status.queues import (
     qPCRPoolsHandler,
 )
 from status.reads_plot import DataFlowcellYieldHandler, FlowcellPlotHandler
+from status.reports import (
+    MultiQCReportHandler,
+    ProjectSummaryReportHandler,
+    SingleCellSampleSummaryReportHandler,
+)
 from status.running_notes import (
     LatestStickyNoteHandler,
     LatestStickyNotesMultipleHandler,
@@ -392,6 +396,7 @@ class Application(tornado.web.Application):
             ("/projects", ProjectsHandler),
             ("/project_cards", ProjectCardsHandler),
             ("/proj_meta", ProjMetaCompareHandler),
+            ("/proj_summary_report/([^/]*)$", ProjectSummaryReportHandler),
             ("/reads_total/([^/]*)$", ReadsTotalHandler),
             ("/rec_ctrl_view/([^/]*)$", RecCtrlDataHandler),
             ("/sample_requirements", SampleRequirementsViewHandler),
@@ -399,6 +404,10 @@ class Application(tornado.web.Application):
             ("/sample_requirements_update", SampleRequirementsUpdateHandler),
             ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
+            (
+                "/singlecell_sample_summary_report/(P[^/]*)/([^/]*)$",
+                SingleCellSampleSummaryReportHandler,
+            ),
             ("/smartseq3_progress", SmartSeq3ProgressPageHandler),
             ("/suggestion_box", SuggestionBoxHandler),
             ("/user_management", UserManagementHandler),
@@ -519,14 +528,15 @@ class Application(tornado.web.Application):
         # to display instruments in the server status
         self.server_status = settings.get("server_status")
 
-        # project summary - multiqc tab
-        self.multiqc_path = settings.get("multiqc_path")
-
-        # MinKNOW reports
-        self.minknow_reports_path = settings.get("minknow_reports_path")
-
-        # ToulligQC reports
-        self.toulligqc_reports_path = settings.get("toulligqc_reports_path")
+        # project summary - reports tab
+        # Structure of the reports folder:
+        # <reports_path>/
+        # ├── other_reports/
+        # │    └── toulligqc_reports/
+        # ├── minknow_reports/
+        # ├── mqc_reports/
+        # └── yggdrasil/<project_id>/
+        self.reports_path = settings.get("reports_path")
 
         # lims backend credentials
         limsbackend_cred_loc = Path(
