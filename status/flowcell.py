@@ -760,10 +760,10 @@ class ONTFlowcellHandler(SafeHandler):
                 barcodes=self.fetch_barcodes(name),
                 args=self.fetch_args(name),
                 has_minknow_report=os.path.exists(
-                    f"{self.application.minknow_reports_path}/report_{name}.html"
+                    os.path.join(self.application.reports_path, "minknow_reports", f"report_{name}.html")
                 ),
                 has_toulligqc_report=os.path.exists(
-                    f"{self.application.toulligqc_reports_path}/report_{name}.html"
+                    os.path.join(self.application.reports_path,"other_reports", "toulligqc_reports", f"report_{name}.html")
                 ),
                 user=self.get_current_user(),
             )
