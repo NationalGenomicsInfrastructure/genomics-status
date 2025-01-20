@@ -33,7 +33,6 @@ function load_table() {
 // Initialize sorting and searching javascript plugin
 function init_listjs() {
     // Setup - add a text input to each footer cell
-    console.log('asder')
     $('#workset_table tfoot th').each( function () {
       var title = $('#workset_table thead th').eq( $(this).index() ).text();
       $(this).html( '<input size=10 type="text" placeholder="Search..." />' );
