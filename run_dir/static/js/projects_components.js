@@ -128,6 +128,7 @@ export const vProjectDetails = {
         if (this.$root.single_project_mode) {
             this.$root.fetchProjectDetails(this.project_id);
             this.$root.fetchAllUsers();
+            this.$root.fetchPeopleAssignments(this.project_id);
         }
     },
     mounted: function() {
@@ -150,11 +151,14 @@ export const vProjectDetails = {
                             <button type="button" class="btn-close" @click="$emit('closeModal')"></button>
                         </template>
                     </div>
-                    <h3 :class="{'mt-3': true, 'ml-3': as_modal}">
-                        <a :href="'/project/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                            <i class="fa-regular fa-arrow-up-right-from-square"></i> Old Project Page
-                        </a>
-                    </h3>
+                    <div class="row">
+                        <h3 :class="{'mt-3': true, 'ml-3': as_modal, 'col-auto': true}">
+                            <a :href="'/project/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+                                <i class="fa-regular fa-arrow-up-right-from-square"></i> Old Project Page
+                            </a>
+                        </h3>
+                        <v-project-people-assignments :project_id="project_id" :as_modal="as_modal" :in_card="false"></v-project-people-assignments>
+                    </div>
                     <h2><span :class="'badge w-100 mt-1 mb-4 ' + status_bg_class">{{project_data.status}}</span></h2>
                 </div>
                 <div class="col-4">
@@ -551,11 +555,18 @@ export const vProjectCard = {
                     </template>
                 </div>
             </div>
-            <div class="col">
-                <div class="d-flex">
-                    <h5>
-                        <span :class="'badge bg-' + this.$root.projectStatusColor(project)">{{ project['status_fields']['status'] }}</span>
-                    </h5>
+            <div class="row">
+                <div class="col">
+                    <div class="d-flex">
+                        <h5>
+                            <span :class="'badge bg-' + this.$root.projectStatusColor(project)">{{ project['status_fields']['status'] }}</span>
+                        </h5>
+                    </div>
+                </div>
+                <div class="col-auto ml-auto">
+                    <h4>
+                        <v-project-people-assignments :project_id="this.project_id" :as_modal="true" :in_card="true"></v-project-people-assignments>
+                    </h4>
                 </div>
             </div>
             <div>
@@ -576,6 +587,142 @@ export const vProjectCard = {
             </div>
         </div>
     </div>`,
+}
+
+export const vProjectPeopleAssignments = {
+    name: 'v-project-people-assignments',
+    props: ['project_id', 'as_modal', 'in_card'],
+    data: function() {
+        return {
+            people_menu_open: false,
+            search_phrase: ''
+        }
+    },
+    computed: {
+        people() {
+            if (this.project_id in this.$root.project_people_assignments) {
+                return this.$root.project_people_assignments[this.project_id]
+            } else {
+                return []
+            }
+        },
+        matching_people() {
+            let people_list = {} // New object to be returned
+            for (let person_id in this.$root.all_users) {
+                let person = this.$root.all_users[person_id]
+                if (this.search_phrase == '') {
+                    people_list[person_id] = person;
+                } else if (person.name == undefined) {
+                    continue
+                } else if (person.name.toLowerCase().includes(this.search_phrase.toLowerCase())) {
+                    people_list[person_id] = person
+                }
+            }
+
+            let sorted_people_list = Object.entries(people_list)
+                .sort(([, a], [, b]) => a.name.localeCompare(b.name))
+                .reduce((acc, [key, value]) => {
+                    acc[key] = value;
+                    return acc;
+                }, {});
+
+                return sorted_people_list;
+        }
+    },
+    methods: {
+        initials(identifier) {
+            if (this.$root.all_users[identifier] == undefined) {
+                return identifier
+            }
+            if (this.$root.all_users[identifier]['initials'] != '') {
+                return this.$root.all_users[identifier]['initials']
+            } else {
+                return identifier
+            }
+        },
+        name(identifier) {
+            if (this.$root.all_users[identifier]['name'] != '') {
+                return this.$root.all_users[identifier]['name']
+            } else {
+                return identifier
+            }
+        },
+        remove_from_project(person_id) {
+            this.$root.removePersonFromProject(this.project_id, person_id)
+        },
+        add_to_project(person_id) {
+            this.$root.addPersonToProject(this.project_id, person_id)
+            this.search_phrase = ''
+        },
+        togglePeopleMenu(event) {
+            if (this.people_menu_open) {
+                this.people_menu_open = false;
+            } else {
+                this.people_menu_open = true;
+            }
+        },
+    },
+    template:
+    /*html*/`
+    <div class="col-auto ml-auto">
+        <v-template v-if="in_card">
+            <h4>
+                <template v-for="person in people">
+                    <span class="badge rounded-pill bg-success mr-1">
+                        {{ initials(person) }}
+                    </span>
+                </template>
+            </h4>
+        </v-template>
+        <v-template v-else>
+            <v-template v-if="!people_menu_open">
+                <h2>
+                    <template v-for="person in people">
+                        <span class="badge rounded-pill bg-success mr-1" @click="togglePeopleMenu">
+                            {{ initials(person) }}
+                        </span>
+                    </template>
+                    <button class="btn ml-2" @click="togglePeopleMenu"><i class="fa-solid fa-users mr-2"></i><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
+                </h2>
+            </v-template>
+
+            <template v-if="people_menu_open">
+                <h3>
+                    <template v-for="person_id in people">
+                        <span class="badge rounded-pill bg-success mr-1">
+                            {{ name(person_id) }}
+                            <button type="button" class="btn btn-lg m-0" @click="remove_from_project(person_id)"><i class="fa-regular fa-trash-can text-white"></i></button>
+                        </span>
+                    </template>
+
+                    <div class="btn-group">
+                        <span class="badge rounded-pill bg-success mr-1">
+                            <button type="button" class="btn btn-lg" id="dropdown_add_person" data-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-plus text-white"></i>
+                            </button>
+                            <div :class="['dropdown-menu', {'dropdown-menu-right': !as_modal}]" aria-labelledby="dropdown_add_person">
+                                <form class="px-3 py-3">
+                                    <div class="form-group">
+                                        <label for="addPeopleInput" class="form-label">Add People</label>
+                                        <input type="text" class="form-control" id="addPeopleInput" placeholder="Search for person" v-model="this.search_phrase">
+                                    </div>
+                                    <div>
+                                        <template v-for="person_id in Object.keys(this.matching_people)">
+                                            <a class="dropdown-item" href="#" @click="add_to_project(person_id)">
+                                                {{ this.matching_people[person_id]['name'] }}
+                                            </a>
+                                        </template>
+                                    </div>
+                                </form>
+                            </div>
+                        </span>
+                    </div>
+                    <button type="button" class="btn btn-close ml-1" aria-label="Close" @click="togglePeopleMenu"></button>
+                </h3>
+            </template>
+        </template>
+    </div>
+    `
 }
 
 export const vProjectCards = {

@@ -35,12 +35,16 @@ Description: Shows a table with all genomics-status users with options to modify
         <thead>
           <tr class="sticky darkth">
             <th class="sort" data-sort="user_name">User Name</th>
+            <th class="sort" data-sort="name">Name</th>
+            <th class="sort" data-sort="initials">Initials</th>
             <th class="sort" data-sort="permissions">Permissions</th>
           </tr>
         </thead>
         <tfoot>
           <tr class="darkth">
             <th class="sort" data-sort="user_name">User Name</th>
+            <th class="sort" data-sort="name">Name</th>
+            <th class="sort" data-sort="initials">Initials</th>
             <th class="sort" data-sort="permissions">Permissions</th>
           </tr>
         </tfoot>
@@ -106,10 +110,14 @@ Description: Shows a table with all genomics-status users with options to modify
             </div>
             <div class="row my-2">
               <div class="col mr-4">
-                <label for="pickUser" class="fw-bold">Modify Name</label>
+                <label for="pickUser" class="fw-bold">User Name</label>
                 <div>
                   <input class="form-control" id="formModifyUserName" placeholder="" disabled type="text">
                 </div>
+                <label for="modifyName" class="fw-bold">Name</label>
+                <input class="form-control" id="formModifyName" placeholder="Name..." type="text">
+                <label for="modifyInitials" class="fw-bold">Initials</label>
+                <input class="form-control" id="formModifyInitials" placeholder="Initials..." type="text">
               </div>
               <div class="col">
                 <label class="fw-bold">Permissions</label>

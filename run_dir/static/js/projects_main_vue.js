@@ -1,4 +1,4 @@
-import {vProjectCards, vProjectDataField, vProjectDetails} from './projects_components.js'
+import {vProjectCards, vProjectDataField, vProjectDetails, vProjectPeopleAssignments} from './projects_components.js'
 import { getDropdownPosition } from './smart_suggestion.js';
 import { vRunningNotesTab, vRunningNoteSingle } from './running_notes_component.js'
 
@@ -11,6 +11,7 @@ const vProjectsStatus = {
             project_samples: {},
             sticky_running_notes: {},
             running_notes: {},
+            project_people_assignments: {},
             error_messages: [],
             websocket_message:'',
             websocket: null,
@@ -172,7 +173,27 @@ const vProjectsStatus = {
                     columnValues[columnValue] = [project_id]
                 }
             }
-            return columnValues
+            let sortedKeys = [];
+            if (Object.values(this.card_columns)[0] == 'status_fields') {
+                sortedKeys = ['Pending', 'Reception Control', 'Ongoing'];
+
+                // Add any additional status fields (shouldn't be any)
+                for (let key of Object.keys(columnValues)) {
+                    if (!(key in sortedKeys)) {
+                        sortedKeys.push(key)
+                    }
+                }
+            } else {
+                sortedKeys = Object.keys(columnValues).sort((a, b) => {
+                    return a.toLowerCase().localeCompare(b.toLowerCase());
+                });
+            }
+
+            let sorted_columnValues = {};
+            sortedKeys.forEach(key => {
+                sorted_columnValues[key] = columnValues[key] || [];
+            });
+            return sorted_columnValues
         },
         currentActiveFilters() {
             // List the currently active filters for display purposes
@@ -253,6 +274,58 @@ const vProjectsStatus = {
                     this.error_messages.push('Unable to fetch sticky running notes, please try again or contact a system administrator.')
                 })
         },
+        async fetchPeopleAssignments(project_id) {
+            let post_body;
+            if (project_id !== undefined) {
+                post_body = {project_ids: [project_id]};
+            } else {
+                post_body = {project_ids: Object.keys(this.all_projects)};
+            }
+
+            axios
+                .post('/api/v1/list_people_assignments', post_body)
+                .then(response => {
+                    let data = response.data
+                    if (data !== null) {
+
+                        this.project_people_assignments = Object.assign({}, this.project_people_assignments, data);
+                    }
+                })
+                .catch(error => {
+                    console.log(error)
+                    this.error_messages.push('Unable to fetch people assignments, please try again or contact a system administrator.')
+                })
+        },
+        async addPersonToProject(project_id, person_id) {
+            axios
+                .put(`/api/v1/project/${project_id}/people/${person_id}`)
+                .then(response => {
+                    let data = response.data
+                    if ((data !== null) && (data[project_id] !== null)) {
+                        this.project_people_assignments[project_id] = data[project_id];
+                    }
+                })
+                .catch(error => {
+                    console.log(error)
+                    this.error_messages.push('Unable to assign person to project, please try again or contact a system administrator.')
+                }
+            )
+        },
+        async removePersonFromProject(project_id, person_id) {
+            axios
+                .delete(`/api/v1/project/${project_id}/people/${person_id}`)
+                .then(response => {
+                    let data = response.data
+                    if ((data !== null) && (data[project_id] !== null)) {
+                        this.project_people_assignments[project_id] = data[project_id];
+                    }
+                })
+                .catch(error => {
+                    console.log(error)
+                    this.error_messages.push('Unable to remove person from project, please try again or contact a system administrator.')
+                }
+            )
+        },
         setupWebsocket() {
             /* This is still a proof of concept */
             // Taken from https://stackoverflow.com/a/10418013
@@ -274,13 +347,15 @@ const vProjectsStatus = {
         /* Only used on project cards page */
         fetchProjects() {
             axios
-                .get('/api/v1/projects?list=pending,reception_control,review,ongoing&type=All')
+                .get('/api/v1/projects?list=pending,open&type=All')
                 .then(response => {
                     let data = response.data
                     if (data !== null) {
                         this.all_projects = data
                     }
+                    // These are dependent on the projects being fetched
                     this.fetchStickyRunningNotes()
+                    this.fetchPeopleAssignments()
                 })
                 .catch(error => {
                     console.log(error)
@@ -293,10 +368,7 @@ const vProjectsStatus = {
                 .then(response => {
                     let data = response.data
                     if (data !== null) {
-                        this.all_users = Object.keys(data)
-                            .map(email=>{
-                                return email.split('@')[0]
-                            })
+                        this.all_users = data
                     }
                 })
                 .catch(error => {
@@ -441,4 +513,5 @@ app.component('v-projects-cards', vProjectCards)
 app.component('v-project-details', vProjectDetails)
 app.component('v-running-note-single', vRunningNoteSingle)
 app.component('v-running-notes-tab', vRunningNotesTab)
+app.component('v-project-people-assignments', vProjectPeopleAssignments)
 app.mount('#v_projects_main')
