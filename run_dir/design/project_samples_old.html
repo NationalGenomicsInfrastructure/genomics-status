@@ -141,22 +141,20 @@ Description: Details page for a single project
           <a class="dropdown-item" href="#" disabled>No reports to show</a>
         {% end %}
         {% if 'multiqc' in reports%}
-        <h6 class="dropdown-header">MultiQC Reports</h6>
         {% for key in reports['multiqc'] %}
           {% if 'qc' in key %}
             {% set rep_name = ' QC' %}
           {% else %}
             {% set rep_name = ' '+key.strip('_').capitalize() %}
           {% end %}
-         <a class="dropdown-item" href="/multiqc_report/{{ project }}?type={{ key }}" target="_blank">Open{{ rep_name }} MultiQC report</a>
+         <a class="dropdown-item" href="/multiqc_report/{{ project }}?type={{ key }}" target="_blank">MultiQC {{ rep_name }}</a>
          {% end %}
         {% end %}
         {% if 'project_summary' in reports %}
-          <h6 class="dropdown-header">Project Summary Report</h6>
-          <a class="dropdown-item" href="/proj_summary_report/{{ project }}" target="_blank">Open Project Summary report</a>
+          <a class="dropdown-item" href="/proj_summary_report/{{ project }}" target="_blank">Project Summary</a>
         {% end %}
         {% if 'sample_summary_reports' in reports %}
-        <h6 class="dropdown-header">Single Cell Sample Summary Reports</h6>
+        <h6 class="dropdown-header">Single Cell Sample Summary</h6>
           {% for sample in reports['sample_summary_reports'] %}
           <a class="dropdown-item" href="/singlecell_sample_summary_report/{{ project }}/{{ sample }}" target="_blank"> {{ sample}} </a>
           {% end %}
