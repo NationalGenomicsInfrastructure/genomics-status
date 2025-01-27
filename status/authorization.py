@@ -74,7 +74,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                 # Update the gs_user name, so that it's possible to change name in google and have it updated in statusdb
                 current_doc = row["doc"]
                 current_doc["name"] = user_name
-                self.cloudant.put_document(
+                self.application.cloudant.put_document(
                     db="gs_users", doc_id=current_doc["_id"], document=current_doc
                 )
 
