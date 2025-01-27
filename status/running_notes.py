@@ -37,6 +37,7 @@ class RunningNotesDataHandler(SafeHandler):
                 "categories",
                 "created_at_utc",
                 "updated_at_utc",
+                "note_type",
             ]:
                 note_contents[item] = running_note[item]
             running_notes_json[note_contents["created_at_utc"]] = note_contents
@@ -402,6 +403,47 @@ class LatestStickyNotesMultipleHandler(SafeHandler):
         self.write(latest_sticky_notes)
 
 
+class LatestRunningNotesWithMetaDataHandler(SafeHandler):
+    """Serves the latest project running notes, with metadata regarding the projects.
+
+    Can be paginated with limit and skip parameters.
+    The metadata is intended to be used for filtering the running notes.
+    """
+
+    def get(self):
+        limit = self.get_argument("limit", 100)
+        skip = self.get_argument("skip", 0)
+
+        latest_running_notes_rows = self.application.running_notes_db.view(
+            "all_latest_note_previews/project",
+            reduce=False,
+            limit=limit,
+            skip=skip,
+            descending=True,
+        ).rows
+
+        latest_running_notes = {
+            "_".join(row.key): row.value
+            for row in latest_running_notes_rows
+            if row.value
+        }
+
+        projects = [note["parent"] for note in latest_running_notes.values()]
+
+        metadata_view = self.application.projects_db.view(
+            "project/info_for_filtering_running_notes", keys=projects
+        )
+        metadata = {row.key: row.value for row in metadata_view.rows}
+
+        self.set_header("Content-type", "application/json")
+        self.write(
+            {
+                "running_notes": latest_running_notes,
+                "projects_metadata": metadata,
+            }
+        )
+
+
 class LatestRunningNoteHandler(SafeHandler):
     """Handler for methods related to running notes which are used in other classes"""
 
@@ -414,6 +456,7 @@ class LatestRunningNoteHandler(SafeHandler):
         if view[partition_id].rows:
             note = view[partition_id].rows[0].value
             latest_note = {note["created_at_utc"]: note}
+
         return latest_note
 
     @staticmethod

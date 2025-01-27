@@ -133,6 +133,7 @@ from status.reports import (
     SingleCellSampleSummaryReportHandler,
 )
 from status.running_notes import (
+    LatestRunningNotesWithMetaDataHandler,
     LatestStickyNoteHandler,
     LatestStickyNotesMultipleHandler,
     RunningNotesDataHandler,
@@ -292,6 +293,10 @@ class Application(tornado.web.Application):
             ("/api/v1/lanes_ordered", LanesOrderedDataHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
+            (
+                "/api/v1/latest_running_notes_with_meta",
+                LatestRunningNotesWithMetaDataHandler,
+            ),
             ("/api/v1/latest_sticky_run_note/([^/]*)", LatestStickyNoteHandler),
             ("/api/v1/latest_sticky_run_note", LatestStickyNotesMultipleHandler),
             ("/api/v1/libpooling_queues", LibraryPoolingQueuesDataHandler),
