@@ -77,6 +77,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                 self.application.cloudant.put_document(
                     db="gs_users", doc_id=current_doc["_id"], document=current_doc
                 )
+        # We'll ignore the other cases
 
 
 class LogoutHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
