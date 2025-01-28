@@ -836,6 +836,17 @@ export const vProjectCards = {
                 }
             }
         },
+        person_assigned_name(identifier) {
+            // check that it's not undefined
+            if (! (identifier in this.$root.all_users)) {
+                return identifier
+            }
+            if (this.$root.all_users[identifier]['name'] != '') {
+                return this.$root.all_users[identifier]['name']
+            } else {
+                return identifier
+            }
+        },
         removeFilter(event, filter_list_name, value) {
             let filter_values = this.$root.all_filters[filter_list_name]['filter_values']
             if (filter_values.includes(value)) {
@@ -992,6 +1003,19 @@ export const vProjectCards = {
                                 </div>
                             </template>
                         </div>
+                        <div class="col">
+                            <h4>People Assigned</h4>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="people_assigned_all_switch" v-model="this.$root.all_filters['people_assigned']['include_all']"/>
+                                <label class="form-check-label" for="people_assigned_all_switch">All</label>
+                            </div>
+                            <template v-for="(nr_with_person_assigned, person_assigned) in this.$root.allValues('people_assigned')">
+                                <div class="form-check" @click="(event) => selectFilterValue(event, 'people_assigned', person_assigned)">
+                                    <input class="form-check-input" type="checkbox" :id="'people_assigned_filter_'+person_assigned" :value="person_assigned" v-model="this.$root.all_filters['people_assigned']['filter_values']" :disabled="this.$root.all_filters['people_assigned']['include_all']"/>
+                                    <label class="form-check-label" :for="'people_assigned_filter_' + person_assigned">{{ this.person_assigned_name(person_assigned) }} ({{this.$root.nrVisibleWith('people_assigned', person_assigned)}}/{{nr_with_person_assigned}})</label>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -1000,7 +1024,13 @@ export const vProjectCards = {
                     <div>
                         <h5>{{this.$root.all_filters[filter_key]['title']}}</h5>
                         <button type="button" class="btn btn-primary btn-lg position-relative mr-2" v-for="value in this.$root.all_filters[filter_key]['filter_values']" @click="removeFilter(event, filter_key, value)">
-                        {{value}} <i class="fa-solid fa-xmark ml-2"></i>
+                            <template v-if="filter_key == 'people_assigned'">
+                                {{ this.person_assigned_name(value) }}
+                            </template>
+                            <template v-else>
+                                {{value}}
+                            </template>
+                            <i class="fa-solid fa-xmark ml-2"></i>
                         </button>
                     </div>
                 </div>

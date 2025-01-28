@@ -34,42 +34,56 @@ const vProjectsStatus = {
                     'key': 'application',
                     'secondary_key': null,
                     'filter_values': [],
-                    'include_all': true
+                    'include_all': true,
+                    'is_list': false
                 },
                 'lab_responsible': {
                     'title': 'Lab Responsible',
                     'key': 'lab_responsible',
                     'secondary_key': null,
                     'filter_values': [],
-                    'include_all': true
+                    'include_all': true,
+                    'is_list': false
                 },
                 'library_construction_method': {
                     'title': 'Library Construction Method',
                     'key': 'library_construction_method',
                     'secondary_key': null,
                     'filter_values': [],
-                    'include_all': true
+                    'include_all': true,
+                    'is_list': false
                 },
                 'status': {
                     'title': 'Status',
                     'key': 'status',
                     'secondary_key': 'status_fields',
                     'filter_values': [],
-                    'include_all': true
+                    'include_all': true,
+                    'is_list': false
                 },
                 'type': {
                     'title': 'Type',
                     'key': 'type',
                     'secondary_key': null,
                     'filter_values': [],
-                    'include_all': true
+                    'include_all': true,
+                    'is_list': false
+                },
+                'people_assigned': {
+                    'title': 'People Assigned',
+                    'key': 'people_assigned',
+                    'secondary_key': null,
+                    'filter_values': [],
+                    'include_all': true,
+                    'is_list': true
                 },
                 'project_coordinator': {
                     'title': 'Project Coordinator',
                     'key': 'project_coordinator',
                     'secondary_key': null,
                     'filter_values': [],
-                    'include_all': true
+                    'include_all': true,
+                    'is_list': false
                 }
             }
         }
@@ -90,6 +104,7 @@ const vProjectsStatus = {
             for (let filter in this.all_filters) {
                 let filter_values = this.all_filters[filter]['filter_values']
                 let include_all = this.all_filters[filter]['include_all']
+                let is_list = this.all_filters[filter]['is_list']
 
                 if (include_all == false) {
                     tempProjects = tempProjects.filter(([project_id, project]) => {
@@ -110,7 +125,20 @@ const vProjectsStatus = {
                                 return true
                             }
                         }
-                        return filter_values.includes(project_value)
+                        // Special case for lists, e.g. people_assigned
+                        if (is_list) {
+                            if (project_value == undefined) {
+                                return filter_values.includes('undefined')
+                            }
+                            for (let value of project_value) {
+                                if (filter_values.includes(value)) {
+                                    return true
+                                }
+                            }
+                            return false
+                        } else {
+                            return filter_values.includes(project_value)
+                        }
                     })
                 }
             }
@@ -400,10 +428,20 @@ const vProjectsStatus = {
             }
 
             for (let item in list) {
+                let value = null
                 if (secondary_key != null) {
-                    items.push(list[item][secondary_key][filter_key])
+                    value = list[item][secondary_key][filter_key]
                 } else {
-                    items.push(list[item][filter_key])
+                    value = list[item][filter_key]
+                }
+
+                // Check if value is a list
+                if (Array.isArray(value)) {
+                    for (let sub_value of value) {
+                        items.push(sub_value)
+                    }
+                } else {
+                    items.push(value)
                 }
             }
 
