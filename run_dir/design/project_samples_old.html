@@ -155,8 +155,10 @@ Description: Details page for a single project
         {% end %}
         {% if 'sample_summary_reports' in reports %}
         <h6 class="dropdown-header">Single Cell Sample Summary</h6>
-          {% for sample in reports['sample_summary_reports'] %}
-          <a class="dropdown-item" href="/singlecell_sample_summary_report/{{ project }}/{{ sample }}" target="_blank"> {{ sample}} </a>
+          {% for sample, values in reports['sample_summary_reports'].items() %}
+            {% for method, report in values.items() %}
+              <a class="dropdown-item" href="/singlecell_sample_summary_report/{{ project }}/{{ sample }}/{{ report }}" target="_blank"> {{ sample }} {{ method }} </a>
+            {% end %}
           {% end %}
         {% end %}
       </div>

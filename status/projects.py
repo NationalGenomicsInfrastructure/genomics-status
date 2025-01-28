@@ -5,6 +5,7 @@ import datetime
 import itertools
 import json
 import logging
+import re
 from collections import OrderedDict
 
 import dateutil.parser
@@ -972,7 +973,19 @@ class ProjectSamplesOldHandler(SafeHandler):
             )
         )
         if sample_summary_reports:
-            reports["sample_summary_reports"] = sample_summary_reports
+            group_summary_reports = {}
+            for report in sample_summary_reports:
+                # Match report names in the format <sample_id(projid_int)>_(<Method>_<(optional)>)_report.html/pdf
+                match = re.match(
+                    rf"^({project}_\d+)_([^_]+(_[^_]+)?)_report\.(pdf|html)", report
+                )
+                if match:
+                    sample_id = match.group(1)
+                    method = match.group(2)
+                    if sample_id not in group_summary_reports:
+                        group_summary_reports[sample_id] = {}
+                    group_summary_reports[sample_id][method] = report
+            reports["sample_summary_reports"] = group_summary_reports
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
