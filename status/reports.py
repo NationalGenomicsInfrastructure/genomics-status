@@ -111,15 +111,13 @@ class SingleCellSampleSummaryReportHandler(SafeHandler):
             self.application, project_id, sample_id=sample_id, rep_name=rep_name
         )
         if report:
-            if "html" in rep_name:
-                self.write(report)
-            elif "pdf" in rep_name:
+            if "pdf" in rep_name:
                 self.set_header("Content-Type", "application/pdf")
                 self.set_header(
                     "Content-Disposition",
                     f"inline; filename={sample_id}_single_cell_sample_summary_report.pdf",
                 )
-                self.write(report)
+            self.write(report)
         else:
             t = self.application.loader.load("error_page.html")
             self.write(
