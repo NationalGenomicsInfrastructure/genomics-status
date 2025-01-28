@@ -128,7 +128,6 @@ export const vProjectDetails = {
         if (this.$root.single_project_mode) {
             this.$root.fetchProjectDetails(this.project_id);
             this.$root.fetchAllUsers();
-            this.$root.fetchPeopleAssignments(this.project_id);
         }
     },
     mounted: function() {
@@ -490,7 +489,7 @@ export const vProjectCard = {
             return ('summary_dates' in this.project) && (Object.keys(this.project['summary_dates']).length > 0)
         },
         project() {
-            return this.$root.all_projects[this.project_id]
+            return this.$root.project_details[this.project_id]
         },
         project_name() {
             if ('project_name' in this.project) {
@@ -600,11 +599,14 @@ export const vProjectPeopleAssignments = {
     },
     computed: {
         people() {
-            if (this.project_id in this.$root.project_people_assignments) {
-                return this.$root.project_people_assignments[this.project_id]
-            } else {
-                return []
+            if (this.project_id in this.$root.project_details) {
+                if (this.$root.project_details[this.project_id]['people_assigned'] == undefined) {
+                    return []
+                }
+                return this.$root.project_details[this.project_id]['people_assigned']
             }
+
+            return []
         },
         matching_people() {
             let people_list = {} // New object to be returned
@@ -1039,7 +1041,7 @@ export const vProjectCards = {
                 <div class="col-2 align-self-end">
                     <h4 my-1>
                         <i :class="'fa-solid ' + this.$root.sorting_icon + ' mr-2'" @click="this.$root.toggleSorting"></i>
-                        Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.all_projects).length}} projects in {{Object.keys(this.$root.allColumnValues).length}} columns
+                        Showing {{Object.keys(this.$root.visibleProjects).length}} of {{Object.keys(this.$root.project_details).length}} projects in {{Object.keys(this.$root.allColumnValues).length}} columns
                     </h4>
                 </div>
                 <div class="col-2 form-floating">
@@ -1070,7 +1072,7 @@ export const vProjectCards = {
             </div>
         </div>
         <template v-if="Object.keys(this.$root.visibleProjects).length == 0">
-            <template v-if="Object.keys(this.$root.all_projects).length == 0">
+            <template v-if="Object.keys(this.$root.project_details).length == 0">
                 <div class="d-flex justify-content-center m-5">
                     <div class="spinner-border" role="status">
                         <span class="visually-hidden">Loading...</span>

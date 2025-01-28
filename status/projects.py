@@ -699,6 +699,18 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             reports[report_name] = f"/multiqc_report/{project}?type={report_type}"
         summary_row.value["reports"] = reports
 
+        # Get people assignments
+        people_assignments_view_result = self.application.cloudant.post_view(
+            db="people_assignments",
+            ddoc="current",
+            view="assignments",
+            keys=[project],
+        ).get_result()
+
+        summary_row.value["people_assigned"] = []
+        for people_row in people_assignments_view_result.get("rows", []):
+            summary_row.value["people_assigned"] = people_row["value"]
+
         return summary_row.value
 
 
