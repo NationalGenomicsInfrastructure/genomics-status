@@ -255,7 +255,12 @@ const vProjectsStatus = {
                 .get(`/api/v1/project_summary/${project_id}?view_with_sources=True`)
                 .then(response => {
                     if (response.data !== null) {
-                        Object.assign(this.project_details[project_id], response.data);                    }
+                        if (this.project_details[project_id] == undefined) {
+                            this.project_details[project_id] = response.data;
+                        } else {
+                            Object.assign(this.project_details[project_id], response.data);
+                        }
+                    }
                 })
                 .catch(error => {
                     this.error_messages.push('Error fetching project details for project ' + project_id + '. Please try again or contact a system administrator.');
