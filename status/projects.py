@@ -5,6 +5,7 @@ import datetime
 import itertools
 import json
 import logging
+import re
 from collections import OrderedDict
 
 import dateutil.parser
@@ -13,9 +14,15 @@ import tornado.web
 from dateutil.relativedelta import relativedelta
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
-from genologics.entities import Artifact, Project
+from genologics.entities import Artifact
+from ibm_cloud_sdk_core.api_exception import ApiException
 from zenpy import ZenpyException
 
+from status.reports import (
+    MultiQCReportHandler,
+    ProjectSummaryReportHandler,
+    SingleCellSampleSummaryReportHandler,
+)
 from status.util import SafeHandler, dthandler
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
@@ -593,6 +600,13 @@ class ProjectsBaseDataHandler(SafeHandler):
                 }
                 projects.append(project)
 
+        # Sort projects by project number so that the latest P-number is first
+        projects = sorted(
+            projects,
+            key=lambda x: int(x["name"].split(",")[0].replace("P", "")),
+            reverse=True,
+        )
+
         return projects
 
 
@@ -693,7 +707,9 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             "_qc_": "QC MultiQC",
             "_pipeline_": "Pipeline MultiQC",
         }
-        for report_type in self.get_multiqc(project, read_file=False).keys():
+        for report_type in MultiQCReportHandler.get_multiqc(
+            self.application, project, read_file=False
+        ).keys():
             # Attempt to assign a name of the report type, otherwise default to the type itself
             report_name = type_to_name.get(report_type, report_type)
             reports[report_name] = f"/multiqc_report/{project}?type={report_type}"
@@ -962,8 +978,38 @@ class ProjectSamplesOldHandler(SafeHandler):
         worksets_view = self.application.worksets_db.view(
             "project/ws_name", descending=True
         )
-        # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
-        multiqc = list(self.get_multiqc(project).keys())
+
+        reports = {}
+        multiqc = list(
+            MultiQCReportHandler.get_multiqc(
+                self.application, project, read_file=False
+            ).keys()
+        )
+        if multiqc:
+            reports["multiqc"] = multiqc
+        if ProjectSummaryReportHandler.get_summary_report(
+            self.application, project, read_file=False
+        ):
+            reports["project_summary"] = True
+        sample_summary_reports = (
+            SingleCellSampleSummaryReportHandler.get_sample_summary_reports(
+                self.application, project
+            )
+        )
+        if sample_summary_reports:
+            group_summary_reports = {}
+            for report in sample_summary_reports:
+                # Match report names in the format <sample_id(projid_int)>_(<Method>_<(optional)>)_report.html/pdf
+                match = re.match(
+                    rf"^({project}_\d+)_([^_]+(_[^_]+)?)_report\.(pdf|html)", report
+                )
+                if match:
+                    sample_id = match.group(1)
+                    method = match.group(2)
+                    if sample_id not in group_summary_reports:
+                        group_summary_reports[sample_id] = {}
+                    group_summary_reports[sample_id][method] = report
+            reports["sample_summary_reports"] = group_summary_reports
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
@@ -974,7 +1020,7 @@ class ProjectSamplesOldHandler(SafeHandler):
                 lims_dashboard_url=self.application.settings["lims_dashboard_url"],
                 prettify=prettify_css_names,
                 worksets=worksets_view[project],
-                multiqc=multiqc,
+                reports=reports,
                 lims_uri=BASEURI,
             )
         )
@@ -1025,11 +1071,15 @@ class LinksDataHandler(SafeHandler):
     """
 
     def get(self, project):
-        self.set_header("Content-type", "application/json")
-        p = Project(lims, id=project)
-        p.get(force=True)
-
-        links = json.loads(p.udf["Links"]) if "Links" in p.udf else {}
+        links_doc = {}
+        try:
+            links_doc = self.application.cloudant.get_document(
+                db="gs_links", doc_id=project
+            ).get_result()
+        except ApiException as e:
+            if e.message == "not_found":
+                pass
+        links = links_doc.get("links", {})
 
         # Sort by descending date, then hopefully have deviations on top
         sorted_links = OrderedDict()
@@ -1038,6 +1088,8 @@ class LinksDataHandler(SafeHandler):
         sorted_links = OrderedDict(
             sorted(sorted_links.items(), key=lambda k: k[1]["type"])
         )
+
+        self.set_header("Content-type", "application/json")
         self.write(sorted_links)
 
     def post(self, project):
@@ -1051,19 +1103,39 @@ class LinksDataHandler(SafeHandler):
             self.set_status(400)
             self.finish("<html><body>Link title and type is required</body></html>")
         else:
-            p = Project(lims, id=project)
-            p.get(force=True)
-            links = json.loads(p.udf["Links"]) if "Links" in p.udf else {}
-            links[str(datetime.datetime.now())] = {
-                "user": user.name,
-                "email": user.email,
-                "type": a_type,
-                "title": title,
-                "url": url,
-                "desc": desc,
-            }
-            p.udf["Links"] = json.dumps(links)
-            p.put()
+            links_doc = {}
+            links = {}
+            try:
+                links_doc = self.application.cloudant.get_document(
+                    db="gs_links", doc_id=project
+                ).get_result()
+            except ApiException as e:
+                if e.message == "not_found":
+                    links_doc["_id"] = project
+                    links_doc["links"] = {}
+            links = links_doc.get("links", {})
+            links.update(
+                {
+                    str(datetime.datetime.now()): {
+                        "user": user.name,
+                        "email": user.email,
+                        "type": a_type,
+                        "title": title,
+                        "url": url,
+                        "desc": desc,
+                    }
+                }
+            )
+            links_doc["links"] = links
+
+            response = self.application.cloudant.post_document(
+                db="gs_links", document=links_doc
+            ).get_result()
+
+            if not response.get("ok"):
+                self.set_status(500)
+                return
+
             self.set_status(200)
             # ajax cries if it does not get anything back
             self.set_header("Content-type", "application/json")

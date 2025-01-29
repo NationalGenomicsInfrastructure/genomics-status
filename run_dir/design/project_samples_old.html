@@ -135,23 +135,34 @@ Description: Details page for a single project
     <li class="nav-item"><a class="nav-link" href="#tab_running_notes_content" role="tab" data-toggle="tab">Running Notes</a></li>
     <li class="nav-item"><a class="nav-link" href="#tab_com_content" role="tab" data-toggle="tab" id="tab_communication">User communication</a></li>
     <li class="nav-item"><a class="nav-link" href="#tab_links_content" role="tab" data-toggle="tab">Links</a></li>
-    {% if not multiqc %}
-    <li class="nav-item" data-toggle="tooltip" data-html="true" data-placement="bottom" title="No MultiQC report available" ><a class="nav-link disabled">Open MultiQC reports</a></li>
-    {% else %}
-     <li class="nav-item dropdown">
-       <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Open MultiQC reports</a>
-       <div class="dropdown-menu">
-         {% for key in multiqc %}
+    <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" id="reports_dropdown">Reports</a>
+      <div class="dropdown-menu" aria-labelledby="reports_dropdown">
+        {% if not reports%}
+          <a class="dropdown-item" href="#" disabled>No reports to show</a>
+        {% end %}
+        {% if 'multiqc' in reports%}
+        {% for key in reports['multiqc'] %}
           {% if 'qc' in key %}
             {% set rep_name = ' QC' %}
           {% else %}
             {% set rep_name = ' '+key.strip('_').capitalize() %}
           {% end %}
-         <a class="dropdown-item" href="/multiqc_report/{{ project }}?type={{ key }}" target="_blank">Open{{ rep_name }} MultiQC report</a>
+         <a class="dropdown-item" href="/multiqc_report/{{ project }}?type={{ key }}" target="_blank">MultiQC {{ rep_name }}</a>
          {% end %}
-       </div>
-     </li>
-    {% end %}
+        {% end %}
+        {% if 'project_summary' in reports %}
+          <a class="dropdown-item" href="/proj_summary_report/{{ project }}" target="_blank">Project Summary</a>
+        {% end %}
+        {% if 'sample_summary_reports' in reports %}
+        <h6 class="dropdown-header">Single Cell Sample Summary</h6>
+          {% for sample, values in reports['sample_summary_reports'].items() %}
+            {% for method, report in values.items() %}
+              <a class="dropdown-item" href="/singlecell_sample_summary_report/{{ project }}/{{ sample }}/{{ report }}" target="_blank"> {{ sample }} {{ method }} </a>
+            {% end %}
+          {% end %}
+        {% end %}
+      </div>
+    </li>
     <li class="nav-item"><a class="nav-link" href="/bioinfo/{{ project }}" target="_blank">Open bioinfo tab</a></li>
     <li class="nav-item"><a class="nav-link" href="#tab_agreements_content" role="tab" data-toggle="tab" id="tab_agreements">Agreements</a></li>
   </ul>

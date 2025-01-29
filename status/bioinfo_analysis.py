@@ -4,6 +4,7 @@ import traceback
 
 import dateutil
 
+from status.reports import MultiQCReportHandler
 from status.util import SafeHandler
 
 
@@ -282,8 +283,8 @@ class BioinfoAnalysisHandler(SafeHandler):
             if application in app_classes[key]:
                 application = key
                 break
-        # to check if multiqc report exists (get_multiqc() is defined in util.BaseHandler)
-        multiqc = self.get_multiqc(project_id) or ""
+
+        multiqc = MultiQCReportHandler.get_multiqc(self.application, project_id) or ""
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
