@@ -19,14 +19,20 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                 "authorized/users", reduce=False
             )
             user_roles = self.application.gs_users_db.view(
-                "authorized/roles", reduce=False
+                "authorized/info", reduce=False
             )
             if user.authenticated and user.is_authorized(user_view):
                 self.set_secure_cookie("user", user.display_name)
+
+                self.check_and_update_statusdb_user_name(
+                    user.emails[0], user.display_name
+                )
+
                 # It will have at least one email (otherwise she couldn't log in)
                 self.set_secure_cookie("email", user.emails[0])
-                if user_roles[user.emails[0]].rows[0].value:
-                    user_roles = [*user_roles[user.emails[0]].rows[0].value]
+                user_info_row = user_roles[user.emails[0]].rows[0]
+                if user_info_row.value and "roles" in user_info_row.value:
+                    user_roles = [*user_info_row.value["roles"]]
                 else:
                     user_roles = ["user"]
                 self.set_secure_cookie("roles", json.dumps(user_roles))
@@ -46,6 +52,32 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                 scope=["profile", "email"],
                 response_type="code",
             )
+
+    def check_and_update_statusdb_user_name(self, user_email: str, user_name: str):
+        """
+        Check if the user name is already in the status database and update it if necessary
+        """
+
+        gs_user_info = self.application.cloudant.post_view(
+            db="gs_users",
+            ddoc="authorized",
+            view="info",
+            key=user_email,
+            include_docs=True,
+        ).get_result()
+
+        if len(gs_user_info["rows"]) == 1:
+            row = gs_user_info["rows"][0]
+            gs_user_name = row["value"]["name"]
+
+            if gs_user_name != user_name:
+                # Update the gs_user name, so that it's possible to change name in google and have it updated in statusdb
+                current_doc = row["doc"]
+                current_doc["name"] = user_name
+                self.application.cloudant.put_document(
+                    db="gs_users", doc_id=current_doc["_id"], document=current_doc
+                )
+        # We'll ignore the other cases
 
 
 class LogoutHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
