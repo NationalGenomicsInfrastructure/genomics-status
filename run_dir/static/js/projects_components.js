@@ -840,14 +840,10 @@ export const vProjectCards = {
         },
         person_assigned_name(identifier) {
             // check that it's not undefined
-            if (! (identifier in this.$root.all_users)) {
-                return identifier
-            }
-            if (this.$root.all_users[identifier]['name'] != '') {
+            if ((identifier in this.$root.all_users) && this.$root.all_users[identifier]['name'] != '') {
                 return this.$root.all_users[identifier]['name']
-            } else {
-                return identifier
-            }
+            } 
+             return identifier
         },
         removeFilter(event, filter_list_name, value) {
             let filter_values = this.$root.all_filters[filter_list_name]['filter_values']
