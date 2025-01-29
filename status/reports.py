@@ -107,9 +107,16 @@ class SingleCellSampleSummaryReportHandler(SafeHandler):
     """Handler for Single Cell sample summary reports generated using yggdrasil"""
 
     def get(self, project_id: str, sample_id: str, rep_name: str) -> None:
-        report = self.get_sample_summary_report(
-            self.application, project_id, sample_id=sample_id, rep_name=rep_name
-        )
+        proj_path = os.path.join(self.application.report_path["yggdrasil"], project_id)
+        file_type = rep_name.split(".")[-1]
+        mode = "rb" if file_type == "pdf" else "r"
+        encoding = None if file_type == "pdf" else "utf-8"
+        report_path = os.path.join(proj_path, sample_id, rep_name)
+        report = None
+        if os.path.exists(report_path):
+            with open(report_path, mode, encoding=encoding) as report_file:
+                report = report_file.read()
+
         if report:
             if "pdf" in rep_name:
                 self.set_header("Content-Type", "application/pdf")
@@ -130,46 +137,32 @@ class SingleCellSampleSummaryReportHandler(SafeHandler):
             )
 
     @staticmethod
-    def get_sample_summary_report(
+    def get_sample_summary_reports(
         app: Any,
         project_id: str,
-        sample_id: Optional[str] = None,
-        rep_name: Optional[str] = None,
-    ) -> Union[bytes, list[str], None]:
+    ) -> Union[list[str], None]:
         """Returns a list of sample summary reports for the requested project if sample_id is None,
         otherwise returns the report for the requested sample"""
 
         proj_path = os.path.join(app.report_path["yggdrasil"], project_id)
-        if sample_id:
-            file_type = rep_name.split(".")[-1]
-            mode = "rb" if file_type == "pdf" else "r"
-            encoding = None if file_type == "pdf" else "utf-8"
-            report_path = os.path.join(proj_path, sample_id, rep_name)
-            if os.path.exists(report_path):
-                with open(report_path, mode, encoding=encoding) as report_file:
-                    return report_file.read()
-            else:
-                return None
+        reports = []
 
-        else:
-            reports = []
+        if os.path.exists(proj_path):
+            for item in os.listdir(proj_path):
+                if os.path.isdir(os.path.join(proj_path, item)) and item.startswith(
+                    f"{project_id}_"
+                ):
+                    sample_path = os.path.join(proj_path, item)
+                    if os.path.exists(sample_path):
+                        # Reports will be named as <sample_id>_<Method>_<(optional)>_report.html/pdf
+                        reports = [
+                            f
+                            for f in os.listdir(sample_path)
+                            if os.path.isfile(os.path.join(sample_path, f))
+                            and (
+                                f.startswith(f"{item}_")
+                                and f.endswith(("_report.pdf", "_report.html"))
+                            )
+                        ]
 
-            if os.path.exists(proj_path):
-                for item in os.listdir(proj_path):
-                    if os.path.isdir(os.path.join(proj_path, item)) and item.startswith(
-                        f"{project_id}_"
-                    ):
-                        sample_path = os.path.join(proj_path, item)
-                        if os.path.exists(sample_path):
-                            # Reports will be named as <sample_id>_<Method>_<(optional)>_report.html/pdf
-                            reports = [
-                                f
-                                for f in os.listdir(sample_path)
-                                if os.path.isfile(os.path.join(sample_path, f))
-                                and (
-                                    f.startswith(f"{item}_")
-                                    and f.endswith(("_report.pdf", "_report.html"))
-                                )
-                            ]
-
-            return reports
+        return reports

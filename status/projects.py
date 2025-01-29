@@ -968,7 +968,7 @@ class ProjectSamplesOldHandler(SafeHandler):
         ):
             reports["project_summary"] = True
         sample_summary_reports = (
-            SingleCellSampleSummaryReportHandler.get_sample_summary_report(
+            SingleCellSampleSummaryReportHandler.get_sample_summary_reports(
                 self.application, project
             )
         )
