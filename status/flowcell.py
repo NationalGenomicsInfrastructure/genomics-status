@@ -767,7 +767,7 @@ class ONTFlowcellHandler(SafeHandler):
                 ),
                 has_toulligqc_report=os.path.exists(
                     os.path.join(
-                        self.application.report_path["tooulligqc"],
+                        self.application.report_path["toulligqc"],
                         f"report_{name}.html",
                     )
                 ),
