@@ -1,5 +1,5 @@
 import os
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 from status.util import SafeHandler
 
@@ -40,7 +40,7 @@ class MultiQCReportHandler(SafeHandler):
             project_name = query_res["rows"][0]["value"]
 
         if project_name:
-            multiqc_path = os.path.join(app.reports_path, "mqc_reports") or ""
+            multiqc_path = app.report_path["multiqc"] or ""
             for report_type in ["_", "_qc_", "_pipeline_"]:
                 multiqc_name = f"{project_name}{report_type}multiqc_report.html"
                 multiqc_file_path = os.path.join(multiqc_path, multiqc_name)
@@ -89,8 +89,7 @@ class ProjectSummaryReportHandler(SafeHandler):
 
         if project_name:
             report_path = os.path.join(
-                app.reports_path,
-                "yggdrasil",
+                app.report_path["yggdrasil"],
                 project_id,
                 f"{project_name}_project_summary.html",
             )
@@ -107,16 +106,24 @@ class ProjectSummaryReportHandler(SafeHandler):
 class SingleCellSampleSummaryReportHandler(SafeHandler):
     """Handler for Single Cell sample summary reports generated using yggdrasil"""
 
-    def get(self, project_id: str, sample_id: str) -> None:
-        report = self.get_sample_summary_report(
-            self.application, project_id, sample_id=sample_id
-        )
+    def get(self, project_id: str, sample_id: str, rep_name: str) -> None:
+        proj_path = os.path.join(self.application.report_path["yggdrasil"], project_id)
+        file_type = rep_name.split(".")[-1]
+        mode = "rb" if file_type == "pdf" else "r"
+        encoding = None if file_type == "pdf" else "utf-8"
+        report_path = os.path.join(proj_path, sample_id, rep_name)
+        report = None
+        if os.path.exists(report_path):
+            with open(report_path, mode, encoding=encoding) as report_file:
+                report = report_file.read()
+
         if report:
-            self.set_header("Content-Type", "application/pdf")
-            self.set_header(
-                "Content-Disposition",
-                f"inline; filename={sample_id}_single_cell_sample_summary_report.pdf",
-            )
+            if "pdf" in rep_name:
+                self.set_header("Content-Type", "application/pdf")
+                self.set_header(
+                    "Content-Disposition",
+                    f"inline; filename={sample_id}_single_cell_sample_summary_report.pdf",
+                )
             self.write(report)
         else:
             t = self.application.loader.load("error_page.html")
@@ -130,37 +137,32 @@ class SingleCellSampleSummaryReportHandler(SafeHandler):
             )
 
     @staticmethod
-    def get_sample_summary_report(
-        app: Any, project_id: str, sample_id: Optional[str] = None
-    ) -> Union[bytes, list[str], None]:
+    def get_sample_summary_reports(
+        app: Any,
+        project_id: str,
+    ) -> Union[list[str], None]:
         """Returns a list of sample summary reports for the requested project if sample_id is None,
         otherwise returns the report for the requested sample"""
 
-        sample_summary_reports_path = os.path.join(
-            app.reports_path, "yggdrasil", project_id
-        )
-        if sample_id:
-            report_path = os.path.join(
-                sample_summary_reports_path, sample_id, f"{sample_id}_report.pdf"
-            )
-            if os.path.exists(report_path):
-                with open(report_path, "rb") as report_file:
-                    return report_file.read()
-            else:
-                return None
+        proj_path = os.path.join(app.report_path["yggdrasil"], project_id)
+        reports = []
 
-        else:
-            reports = []
-            if os.path.exists(sample_summary_reports_path):
-                for item in os.listdir(sample_summary_reports_path):
-                    if os.path.isdir(
-                        os.path.join(sample_summary_reports_path, item)
-                    ) and item.startswith(f"{project_id}_"):
-                        if os.path.exists(
-                            os.path.join(
-                                sample_summary_reports_path, item, f"{item}_report.pdf"
+        if os.path.exists(proj_path):
+            for item in os.listdir(proj_path):
+                if os.path.isdir(os.path.join(proj_path, item)) and item.startswith(
+                    f"{project_id}_"
+                ):
+                    sample_path = os.path.join(proj_path, item)
+                    if os.path.exists(sample_path):
+                        # Reports will be named as <sample_id>_<Method>_<(optional)>_report.html/pdf
+                        reports = [
+                            f
+                            for f in os.listdir(sample_path)
+                            if os.path.isfile(os.path.join(sample_path, f))
+                            and (
+                                f.startswith(f"{item}_")
+                                and f.endswith(("_report.pdf", "_report.html"))
                             )
-                        ):
-                            reports.append(item)
+                        ]
 
-            return reports
+        return reports

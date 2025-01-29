@@ -415,7 +415,7 @@ class Application(tornado.web.Application):
             ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
             (
-                "/singlecell_sample_summary_report/(P[^/]*)/([^/]*)$",
+                "/singlecell_sample_summary_report/(P[^/]*)/([^/]*)/([^/]*)$",
                 SingleCellSampleSummaryReportHandler,
             ),
             ("/smartseq3_progress", SmartSeq3ProgressPageHandler),
@@ -548,6 +548,13 @@ class Application(tornado.web.Application):
         # ├── mqc_reports/
         # └── yggdrasil/<project_id>/
         self.reports_path = settings.get("reports_path")
+        self.report_path = {}
+        self.report_path["minknow"] = Path(self.reports_path, "minknow_reports")
+        self.report_path["multiqc"] = Path(self.reports_path, "mqc_reports")
+        self.report_path["toullingqc"] = Path(
+            self.reports_path, "other_reports", "toulligqc_reports"
+        )
+        self.report_path["yggdrasil"] = Path(self.reports_path, "yggdrasil")
 
         # lims backend credentials
         limsbackend_cred_loc = Path(
