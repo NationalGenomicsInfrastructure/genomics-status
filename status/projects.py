@@ -536,6 +536,18 @@ class ProjectsBaseDataHandler(SafeHandler):
             final_projects[row.key]["latest_running_note"] = json.dumps(
                 {row.value["created_at_utc"]: row.value}
             )
+
+        # Get people assignments
+        people_assignments_view_result = self.application.cloudant.post_view(
+            db="people_assignments",
+            ddoc="current",
+            view="assignments",
+            keys=list(final_projects.keys()),
+        ).get_result()
+
+        for row in people_assignments_view_result.get("rows", []):
+            final_projects[row["id"]]["people_assigned"] = row["value"]
+
         return final_projects
 
     def list_project_fields(self, undefined=False, project_list="all"):
@@ -702,6 +714,18 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             report_name = type_to_name.get(report_type, report_type)
             reports[report_name] = f"/multiqc_report/{project}?type={report_type}"
         summary_row.value["reports"] = reports
+
+        # Get people assignments
+        people_assignments_view_result = self.application.cloudant.post_view(
+            db="people_assignments",
+            ddoc="current",
+            view="assignments",
+            keys=[project],
+        ).get_result()
+
+        summary_row.value["people_assigned"] = []
+        for people_row in people_assignments_view_result.get("rows", []):
+            summary_row.value["people_assigned"] = people_row["value"]
 
         return summary_row.value
 

@@ -11,7 +11,6 @@ const vProjectsStatus = {
             project_samples: {},
             sticky_running_notes: {},
             running_notes: {},
-            project_people_assignments: {},
             error_messages: [],
             websocket_message:'',
             websocket: null,
@@ -21,7 +20,6 @@ const vProjectsStatus = {
             /* Used to determine behaviour of the app depending on if it's a single project or multiple projects */
             single_project_mode: false,
             /* Only used on project cards page */
-            all_projects: {},
             sortBy: 'status',
             card_columns: ['library_construction_method'],
             descending: true,
@@ -34,42 +32,56 @@ const vProjectsStatus = {
                     'key': 'application',
                     'secondary_key': null,
                     'filter_values': [],
-                    'include_all': true
+                    'include_all': true,
+                    'is_list': false
                 },
                 'lab_responsible': {
                     'title': 'Lab Responsible',
                     'key': 'lab_responsible',
                     'secondary_key': null,
                     'filter_values': [],
-                    'include_all': true
+                    'include_all': true,
+                    'is_list': false
                 },
                 'library_construction_method': {
                     'title': 'Library Construction Method',
                     'key': 'library_construction_method',
                     'secondary_key': null,
                     'filter_values': [],
-                    'include_all': true
+                    'include_all': true,
+                    'is_list': false
                 },
                 'status': {
                     'title': 'Status',
                     'key': 'status',
                     'secondary_key': 'status_fields',
                     'filter_values': [],
-                    'include_all': true
+                    'include_all': true,
+                    'is_list': false
                 },
                 'type': {
                     'title': 'Type',
                     'key': 'type',
                     'secondary_key': null,
                     'filter_values': [],
-                    'include_all': true
+                    'include_all': true,
+                    'is_list': false
+                },
+                'people_assigned': {
+                    'title': 'People Assigned',
+                    'key': 'people_assigned',
+                    'secondary_key': null,
+                    'filter_values': [],
+                    'include_all': true,
+                    'is_list': true
                 },
                 'project_coordinator': {
                     'title': 'Project Coordinator',
                     'key': 'project_coordinator',
                     'secondary_key': null,
                     'filter_values': [],
-                    'include_all': true
+                    'include_all': true,
+                    'is_list': false
                 }
             }
         }
@@ -79,17 +91,18 @@ const vProjectsStatus = {
         visibleProjects() {
             /* Filters and sorts the projects.
                Searching is applied here as well. */
-            if (Object.keys(this.all_projects).length == 0) {
+            if (Object.keys(this.project_details).length == 0) {
                 // No need to filter if there are no projects
-                return this.all_projects
+                return this.project_details
             }
 
-            let tempProjects = Object.entries(this.all_projects)
+            let tempProjects = Object.entries(this.project_details)
 
             // Filter on all filters
             for (let filter in this.all_filters) {
                 let filter_values = this.all_filters[filter]['filter_values']
                 let include_all = this.all_filters[filter]['include_all']
+                let is_list = this.all_filters[filter]['is_list']
 
                 if (include_all == false) {
                     tempProjects = tempProjects.filter(([project_id, project]) => {
@@ -110,7 +123,20 @@ const vProjectsStatus = {
                                 return true
                             }
                         }
-                        return filter_values.includes(project_value)
+                        // Special case for lists, e.g. people_assigned
+                        if (is_list) {
+                            if (project_value == undefined) {
+                                return filter_values.includes('undefined')
+                            }
+                            for (let value of project_value) {
+                                if (filter_values.includes(value)) {
+                                    return true
+                                }
+                            }
+                            return false
+                        } else {
+                            return filter_values.includes(project_value)
+                        }
                     })
                 }
             }
@@ -139,8 +165,8 @@ const vProjectsStatus = {
             } else if (this.sortBy == 'status') {
                 // Sort on status
                 tempProjects = tempProjects.sort((a, b) => {
-                    let proj_a = this.all_projects[a[0]]
-                    let proj_b = this.all_projects[b[0]]
+                    let proj_a = this.project_details[a[0]]
+                    let proj_b = this.project_details[b[0]]
                     if (proj_a['status_fields']['status'] > proj_b['status_fields']['status']) {
                         return 1
                     } else if (proj_a['status_fields']['status'] < proj_b['status_fields']['status']) {
@@ -229,7 +255,11 @@ const vProjectsStatus = {
                 .get(`/api/v1/project_summary/${project_id}?view_with_sources=True`)
                 .then(response => {
                     if (response.data !== null) {
-                        this.project_details[project_id] = response.data;
+                        if (this.project_details[project_id] == undefined) {
+                            this.project_details[project_id] = response.data;
+                        } else {
+                            Object.assign(this.project_details[project_id], response.data);
+                        }
                     }
                 })
                 .catch(error => {
@@ -254,11 +284,11 @@ const vProjectsStatus = {
             if (project_id !== undefined) {
                 post_body = {project_ids: [project_id]};
             } else {
-                post_body = {project_ids: Object.keys(this.all_projects)};
+                post_body = {project_ids: Object.keys(this.project_details)};
             }
             const sleep = (delay) => new Promise((resolve) => setTimeout(resolve,delay))
 
-            if (Object.keys(this.all_projects).length === 0){
+            if (Object.keys(this.project_details).length === 0){
                 // Wait for projects to be fetched even though the request should already have returned
                 await sleep(1000);
             }
@@ -274,35 +304,13 @@ const vProjectsStatus = {
                     this.error_messages.push('Unable to fetch sticky running notes, please try again or contact a system administrator.')
                 })
         },
-        async fetchPeopleAssignments(project_id) {
-            let post_body;
-            if (project_id !== undefined) {
-                post_body = {project_ids: [project_id]};
-            } else {
-                post_body = {project_ids: Object.keys(this.all_projects)};
-            }
-
-            axios
-                .post('/api/v1/list_people_assignments', post_body)
-                .then(response => {
-                    let data = response.data
-                    if (data !== null) {
-
-                        this.project_people_assignments = Object.assign({}, this.project_people_assignments, data);
-                    }
-                })
-                .catch(error => {
-                    console.log(error)
-                    this.error_messages.push('Unable to fetch people assignments, please try again or contact a system administrator.')
-                })
-        },
         async addPersonToProject(project_id, person_id) {
             axios
                 .put(`/api/v1/project/${project_id}/people/${person_id}`)
                 .then(response => {
                     let data = response.data
                     if ((data !== null) && (data[project_id] !== null)) {
-                        this.project_people_assignments[project_id] = data[project_id];
+                        this.project_details[project_id]['people_assigned'] = data[project_id];
                     }
                 })
                 .catch(error => {
@@ -317,7 +325,7 @@ const vProjectsStatus = {
                 .then(response => {
                     let data = response.data
                     if ((data !== null) && (data[project_id] !== null)) {
-                        this.project_people_assignments[project_id] = data[project_id];
+                        this.project_details[project_id]['people_assigned'] = data[project_id];
                     }
                 })
                 .catch(error => {
@@ -351,7 +359,7 @@ const vProjectsStatus = {
                 .then(response => {
                     let data = response.data
                     if (data !== null) {
-                        this.all_projects = data
+                        this.project_details = data
                     }
                     // These are dependent on the projects being fetched
                     this.fetchStickyRunningNotes()
@@ -378,7 +386,7 @@ const vProjectsStatus = {
         },
         // Helper methods
         allValues(filter_name){
-            return this.itemCounts(this.all_projects, filter_name)
+            return this.itemCounts(this.project_details, filter_name)
         },
         allVisibleValues(filter_name){
             return this.itemCounts(this.visibleProjects, filter_name)
@@ -400,10 +408,20 @@ const vProjectsStatus = {
             }
 
             for (let item in list) {
+                let value = null
                 if (secondary_key != null) {
-                    items.push(list[item][secondary_key][filter_key])
+                    value = list[item][secondary_key][filter_key]
                 } else {
-                    items.push(list[item][filter_key])
+                    value = list[item][filter_key]
+                }
+
+                // Check if value is a list
+                if (Array.isArray(value)) {
+                    for (let sub_value of value) {
+                        items.push(sub_value)
+                    }
+                } else {
+                    items.push(value)
                 }
             }
 
@@ -476,8 +494,8 @@ const vProjectsStatus = {
         sortOnMostRecentDate(projects_to_be_sorted) {
             // Sort by most recent date            
             projects_to_be_sorted = projects_to_be_sorted.sort((a, b) => {
-                let proj_a = this.all_projects[a[0]]
-                let proj_b = this.all_projects[b[0]]
+                let proj_a = this.project_details[a[0]]
+                let proj_b = this.project_details[b[0]]
 
                 if (this.sortBy == 'most_recent_date') {
                     /* First deal with missing dates */
