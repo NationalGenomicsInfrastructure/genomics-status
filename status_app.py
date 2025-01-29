@@ -551,7 +551,7 @@ class Application(tornado.web.Application):
         self.report_path = {}
         self.report_path["minknow"] = Path(self.reports_path, "minknow_reports")
         self.report_path["multiqc"] = Path(self.reports_path, "mqc_reports")
-        self.report_path["toullingqc"] = Path(
+        self.report_path["toulligqc"] = Path(
             self.reports_path, "other_reports", "toulligqc_reports"
         )
         self.report_path["yggdrasil"] = Path(self.reports_path, "yggdrasil")
