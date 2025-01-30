@@ -1,6 +1,6 @@
 import {vProjectCards, vProjectDataField, vProjectDetails, vProjectPeopleAssignments} from './projects_components.js'
 import { getDropdownPosition } from './smart_suggestion.js';
-import { vRunningNotesTab, vRunningNoteSingle } from './running_notes_component.js'
+import { vRunningNotesTab, vRunningNotesList, vRunningNoteSingle } from './running_notes_component.js'
 
 
 const vProjectsStatus = {
@@ -530,6 +530,7 @@ app.component('v-project-data-field-tooltip', vProjectDataField)
 app.component('v-projects-cards', vProjectCards)
 app.component('v-project-details', vProjectDetails)
 app.component('v-running-note-single', vRunningNoteSingle)
+app.component('v-running-notes-list', vRunningNotesList)
 app.component('v-running-notes-tab', vRunningNotesTab)
 app.component('v-project-people-assignments', vProjectPeopleAssignments)
 app.mount('#v_projects_main')
