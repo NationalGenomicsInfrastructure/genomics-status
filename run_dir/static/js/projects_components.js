@@ -36,10 +36,17 @@ export const vProjectDetails = {
     props: ['project_id', 'as_modal', 'single_project_mode', 'user'],
     data: function() {
         return {
-            active_tab: 'project-running-notes-pane'
+            active_tab: 'project-running-notes-pane',
+            show_link_form: false,
+            proj_links: [],
+            link_error: '',
+            visible_info_ids: []
         }
     },
     computed: {
+        can_delete_project_folder_links() {
+            return (this.user.roles.includes('admin') || this.user.roles.includes('proj_coord'))
+        },
         project_data() {
             return this.$root.project_details[this.project_id]
         },
@@ -118,6 +125,60 @@ export const vProjectDetails = {
         },
         copy_orderportal_title(event) {
             this.copy_to_clipboard(event, this.project_data['customer_project_reference'])
+        },
+        showLinkForm() {
+            this.show_link_form = !this.show_link_form;
+            this.new_link = '';
+            this.new_link_name = '';
+            this.new_link_desc = '';
+            this.new_link_type = '';
+        },
+        addLink() {
+            if (this.new_link.trim() == '' || this.new_link_name.trim() == '') {
+                this.link_error = 'URL and title are required';
+                return
+            }
+            // Add link
+            axios.post('/api/v1/links/' + this.project_id, new URLSearchParams({
+                url: this.new_link,
+                title: this.new_link_name,
+                desc: this.new_link_desc,
+                type: this.new_link_type
+            })).then((response) => {
+                this.$root.fetchProjectDetails(this.project_id);
+                this.show_link_form = false;
+                this.new_link = '';
+                this.new_link_name = '';
+                this.new_link_desc = '';
+                this.new_link_type = '';
+            }).catch((error) => {
+                console.log('Error in adding a link:', error);
+                this.link_error = error.response ? error.response.statusText : 'An error occurred';
+            });
+        },
+        confirmDelete(link_id) {
+            if (window.confirm("Are you sure you want to delete this link?")) {
+                this.deleteLink(link_id);
+            }
+        },
+        deleteLink(link_id) {
+            axios.delete('/api/v1/links/' + this.project_id, {
+                data: { link_id: link_id }
+            }).then((response) => {
+                this.$root.fetchProjectDetails(this.project_id);
+            }).catch((error) => {
+                console.log('Error in deleting a link:', error);
+            });
+        },
+        toggleInfo(link_id) {
+            if (this.visible_info_ids.includes(link_id)) {
+                this.visible_info_ids = this.visible_info_ids.filter(i => i !== link_id);
+            } else {
+                this.visible_info_ids.push(link_id);
+            }
+        },
+        isVisibleInfo(link_id) {
+            return this.visible_info_ids.includes(link_id)
         }
     },
     created: function() {
@@ -274,7 +335,33 @@ export const vProjectDetails = {
                                 </dd>
                             </div>
                         </dl>
-                    <h4>Links</h4>
+                    <h4>Links
+                        <button class="btn btn-sm btn-outline-primary" @click.prevent="showLinkForm">
+                        Add link <i class="fa-regular fa-sharp fa-link"></i>
+                        </button>
+                    </h4>
+                    <form ref="new_note_form" @submit.prevent="addLink">
+                        <div class="row mb-2" v-show="show_link_form">
+                            <div class="col offset-1">
+                                <div class="form-floating col-5 mb-2">
+                                    <select id="new_link_type" class="form-select" v-model="new_link_type">
+                                        <option value="project_folder">Project Folder</option>
+                                        <option value="deviation">Deviation</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <label for="new_link_type">Type</label>
+                                </div>
+                                <input type="text" class="form-control" v-model="new_link" placeholder="URL">
+                                <input type="text" class="form-control mt-2" v-model="new_link_name" placeholder="Title">
+                                <textarea class="form-control mt-2" v-model="new_link_desc" placeholder="Description"></textarea>
+                                <button class="btn btn-sm btn-primary mt-2 mr-1" type="submit">Add</button>
+                                <button class="btn btn-sm btn-secondary mt-2" @click.prevent="showLinkForm">Cancel</button>
+                                <div class="mt-2" v-if="link_error">
+                                    <span class="text-danger">{{link_error}}</span>
+                                </div>
+                            </div>
+                        </div>
+                     </form>
                     <div class="row mr-2">
                         <div :class="{'col-9': !this.as_modal}">
                             <div class="rounded-3">
@@ -287,20 +374,73 @@ export const vProjectDetails = {
                                     </button>
                                 </h3>
                             </div>
-                            <template v-for="(report_url, report_name) in project_data.reports">
-                                <div class="mt-1 p-1 rounded-3">
-                                    <h3 class="row mb-0">
-                                        <button class="btn btn-large badge text-primary border" :href="report_url">
-                                            <a :href="report_url">
-                                                <span class="col float-left">{{report_name}}</span>
-                                                <template v-if="report_url.includes('multiqc_report')">
-                                                    <img class="col-4 float-right" src="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png#gh-light-mode-only" alt="MultiQC" style="height: 1em; width: auto">
-                                                </template>
-                                            </a>
-                                        </button>
-                                    </h3>
-                                </div>
+                            <template v-if="project_data.links">
+                                <template v-for="link_type in ['project_folder', 'deviation', 'other']">
+                                    <template v-for="(link, link_id) in project_data.links[link_type]">
+                                        <div class="mt-1 p-1 rounded-3">
+                                            <h3 class="row mb-0">
+                                                <button class="btn btn-large badge text-primary border" :class="{'col-11': (link_type=='project_folder' && can_delete_project_folder_links) || link_type!='project_folder'}" :href="link.url" :title="link.desc">
+                                                    <a :href="link.url" target="_blank" class="text-decoration-none row px-0">
+                                                            <span class="col-6 float-left d-inline-flex text-wrap text-left">{{link.title}}</span>
+                                                            <span class="col-5 fs-6 fw-lighter">{{link.user}}</span>
+                                                            <template v-if="link.type.toLowerCase()=='other'">
+                                                                <i class="fa fa-solid fa-link float-right text-primary col-1 px-0" style="height: 1em; width: auto">
+                                                            </template>
+                                                            <template v-if="link.type=='project_folder'">
+                                                                <i class="fa fa-file float-right text-primary col-1 px-0" style="height: 1em; width: auto">
+                                                            </template>
+                                                            <template v-if="link.type.toLowerCase()=='deviation'">
+                                                                <i class="fa fa-exclamation-circle float-right text-danger col-1 px-0" style="height: 1em; width: auto">
+                                                            </template>
+                                                            <span v-if="isVisibleInfo(link_id)" class="text-muted text-start d-flex justify-content-start">{{link.desc}}</span>
+                                                    </a>
+                                                </button>
+                                                <div class="col-1 d-flex align-items-center p-1">
+                                                    <i role="button" class="fa-regular fa-circle-info fa-xs pr-1" @click.prevent="toggleInfo(link_id)"></i>
+                                                    <i v-if="(link_type=='project_folder' && can_delete_project_folder_links) || link_type!='project_folder'" role="button" class="far fa-times-square fa-xs text-danger" aria-hidden="true" @click="confirmDelete(link_id)"></i>
+                                                </div>
+                                            </h3>
+                                        </div>
+                                    </template>
+                                </template>
                             </template>
+                            <div v-if="'reports' in project_data && 'project_summary' in project_data.reports" class="mt-1 p-1 rounded-3">
+                                <h3 class="row mb-0">
+                                    <button class="btn btn-large badge text-primary border" :href="'/proj_summary_report/'+project_id">
+                                        <a :href="'/proj_summary_report/'+project_id" target="_blank">
+                                            <span class="col float-left">Project Summary</span>
+                                            <i class="fa-regular fa-clipboard-list-check float-right text-primary"></i>
+                                        </a>
+                                    </button>
+                                    <div class="col-1 d-flex align-items-center" v-if="(link_type=='project_folder' && can_delete_project_folder_links) || link_type!='project_folder'">
+                                </h3>
+                            </div>
+                            <div v-if="'reports' in project_data && 'multiqc' in project_data.reports" class="dropright row">
+                                <a class="btn btn-lg border dropdown-toggle ml-1 mt-1 p-1" href="#" role="button" data-toggle="dropdown" id="mqc_dropdown">
+                                    <img class="col-4" src="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png#gh-light-mode-only" alt="MultiQC" style="height: 1em; width: auto">
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="mqc_dropdown" style="width: 50%">
+                                    <template v-for="(report_url, report_name) in project_data.reports['multiqc']">
+                                        <a :href="report_url" class="dropdown-item" target="_blank">
+                                            <span class="col float-left">{{report_name}}</span>
+                                        </a>
+                                    </template>
+                                </div>
+                            </div>
+                            <div v-if="'reports' in project_data && 'sample_summary_reports' in project_data.reports" class="dropright row">
+                                <a class="btn btn-lg border dropdown-toggle ml-1 mt-1 p-1" href="#" role="button" data-toggle="dropdown" id="sample_reports_dropdown">
+                                    <i class="fa-regular fa-vial"></i> Sample reports
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="sample_reports_dropdown" style="width: 50%">
+                                    <template v-for="(values, sample) in project_data.reports['sample_summary_reports']" :key="sample">
+                                        <template v-for="(report, method) in values" :key="method">
+                                            <a :href="'/singlecell_sample_summary_report/'+project_id+'/'+sample+'/'+report" class="dropdown-item" target="_blank">
+                                                <span class="col float-left">{{sample}} {{method}}</span>
+                                            </a>
+                                        </template>
+                                    </template>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -457,9 +597,6 @@ export const vProjectDetails = {
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" ref="project-user-communication-pane-btn" @click="switchTab('project-user-communication-pane')" type="button" role="tab" aria-controls="project-user-communication-pane" aria-selected="false">User communication</button>
                         </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" ref="project-links-pane-btn" @click="switchTab('project-links-pane')" type="button" role="tab" aria-controls="project-links-pane" aria-selected="false">Links</button>
-                        </li>
                     </ul>
                     <div class="tab-content" id="myTabContent">
                         <div class="tab-pane fade show active" ref="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-pane-btn" tabindex="0">
@@ -468,7 +605,6 @@ export const vProjectDetails = {
                         <div class="tab-pane fade" ref="project-details-pane" role="tabpanel" aria-labelledby="project-details-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
                         <div class="tab-pane fade" ref="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
                         <div class="tab-pane fade" ref="project-user-communication-pane" role="tabpanel" aria-labelledby="project-user-communication-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
-                        <div class="tab-pane fade" ref="project-links-pane" role="tabpanel" aria-labelledby="project-links-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
                     </div>
                 </div>
 

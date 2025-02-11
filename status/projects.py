@@ -701,6 +701,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
         summary_row.value["field_sources"] = field_sources
 
+        summary_row.value["reports"] = {}
         reports = {}
         type_to_name = {
             "_": "MultiQC",
@@ -713,7 +714,33 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             # Attempt to assign a name of the report type, otherwise default to the type itself
             report_name = type_to_name.get(report_type, report_type)
             reports[report_name] = f"/multiqc_report/{project}?type={report_type}"
-        summary_row.value["reports"] = reports
+        if reports:
+            summary_row.value["reports"] = {"multiqc": reports}
+        if ProjectSummaryReportHandler.get_summary_report(
+            self.application, project, read_file=False
+        ):
+            summary_row.value["reports"]["project_summary"] = True
+        sample_summary_reports = (
+            SingleCellSampleSummaryReportHandler.get_sample_summary_reports(
+                self.application, project
+            )
+        )
+        if sample_summary_reports:
+            group_summary_reports = {}
+            for report in sample_summary_reports:
+                # Match report names in the format <sample_id(projid_int)>_(<Method>_<(optional)>)_report.html/pdf
+                match = re.match(
+                    rf"^({project}_\d+)_([^_]+(_[^_]+)?)_report\.(pdf|html)", report
+                )
+                if match:
+                    sample_id = match.group(1)
+                    method = match.group(2)
+                    if sample_id not in group_summary_reports:
+                        group_summary_reports[sample_id] = {}
+                    group_summary_reports[sample_id][method] = report
+            summary_row.value["reports"]["sample_summary_reports"] = (
+                group_summary_reports
+            )
 
         # Get people assignments
         people_assignments_view_result = self.application.cloudant.post_view(
@@ -1083,14 +1110,21 @@ class LinksDataHandler(SafeHandler):
 
         # Sort by descending date, then hopefully have deviations on top
         sorted_links = OrderedDict()
+        grouped_links = {}
         for k, v in sorted(links.items(), key=lambda t: t[0], reverse=True):
             sorted_links[k] = v
         sorted_links = OrderedDict(
             sorted(sorted_links.items(), key=lambda k: k[1]["type"])
         )
 
+        for link_type in ["project_folder", "deviation", "other"]:
+            grouped_links[link_type] = {
+                k: v for k, v in sorted_links.items() if v["type"].lower() == link_type
+            }
+
+        grouped_links["old_links"] = sorted_links
         self.set_header("Content-type", "application/json")
-        self.write(sorted_links)
+        self.write(grouped_links)
 
     def post(self, project):
         user = self.get_current_user()
@@ -1140,6 +1174,45 @@ class LinksDataHandler(SafeHandler):
             # ajax cries if it does not get anything back
             self.set_header("Content-type", "application/json")
             self.finish(json.dumps(links))
+
+    def delete(self, project):
+        link_id = json.loads(self.request.body)["link_id"]
+        if not link_id:
+            self.set_status(400)
+            self.finish("<html><body>Link id is required</body></html>")
+        else:
+            links_doc = {}
+            links = {}
+            try:
+                links_doc = self.application.cloudant.get_document(
+                    db="gs_links", doc_id=project
+                ).get_result()
+            except ApiException as e:
+                if e.message == "not_found":
+                    pass
+            links = links_doc.get("links", {})
+            if link_id in links:
+                del links[link_id]
+                links_doc["links"] = links
+                # If there are no links left, delete the document instead
+                if links:
+                    response = self.application.cloudant.post_document(
+                        db="gs_links", document=links_doc
+                    ).get_result()
+                else:
+                    response = self.application.cloudant.delete_document(
+                        db="gs_links", doc_id=project
+                    ).get_result()
+                if not response.get("ok"):
+                    self.set_status(500)
+                    return
+                self.set_status(200)
+                # ajax cries if it does not get anything back
+                self.set_header("Content-type", "application/json")
+                self.finish(json.dumps(links))
+            else:
+                self.set_status(404)
+                self.finish("<html><body>Link id not found</body></html>")
 
 
 class ProjectTicketsDataHandler(SafeHandler):

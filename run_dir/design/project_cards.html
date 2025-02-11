@@ -10,7 +10,7 @@ Title: Project cards
 {% block stuff %}
 
 <div id="v_projects_main">
-    <v-projects-cards :user="{email: '{{user.email}}', user: '{{user.name}}'}"/>
+    <v-projects-cards :user="{email: '{{user.email}}', user: '{{user.name}}', roles: {{user.roles}}}"/>
 </div>
 {% end %}
 

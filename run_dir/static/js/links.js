@@ -30,6 +30,9 @@ function load_links() {
   $("#links_tab").hide();
   $.getJSON(link_url, function(data) {
     $("#links_tab").show();
+    if ('old_links' in data) {
+      data = data['old_links'];
+    }
     $.each(data, function(key, link) {
       var link_href = link['url'] === "" ? "" : (' href="' + link['url'] + '"');
       var date = key.replace(/-/g, '/');
