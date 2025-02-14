@@ -155,7 +155,7 @@ class SingleCellSampleSummaryReportHandler(SafeHandler):
                     sample_path = os.path.join(proj_path, item)
                     if os.path.exists(sample_path):
                         # Reports will be named as <sample_id>_<Method>_<(optional)>_report.html/pdf
-                        reports = [
+                        sample_reps = [
                             f
                             for f in os.listdir(sample_path)
                             if os.path.isfile(os.path.join(sample_path, f))
@@ -164,5 +164,6 @@ class SingleCellSampleSummaryReportHandler(SafeHandler):
                                 and f.endswith(("_report.pdf", "_report.html"))
                             )
                         ]
+                        reports.extend(sample_reps)
 
         return reports
