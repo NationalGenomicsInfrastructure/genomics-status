@@ -278,6 +278,25 @@ const vProjectsStatus = {
                     console.log(error);
                 });
             this.fetchStickyRunningNotes(project_id);
+            this.fetchProjectLinks(project_id);
+        },
+        async fetchProjectLinks(project_id) {
+            const sleep = (delay) => new Promise((resolve) => setTimeout(resolve,delay))
+            if (Object.keys(this.project_details).length === 0){
+                // Wait for projects to be fetched even though the request should already have returned
+                await sleep(1000);
+            }
+            axios
+            .get(`/api/v1/links/${project_id}`)
+            .then(response => {
+                if (response.data !== null) {
+                    this.project_details[project_id]['links'] = response.data;
+                }
+            })
+            .catch(error => {
+                this.error_messages.push('Error fetching links for project ' + project_id + '. Please try again or contact a system administrator.');
+                console.log(error);
+            });
         },
         async fetchStickyRunningNotes(project_id) {
             let post_body;
