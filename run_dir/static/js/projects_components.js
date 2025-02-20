@@ -379,7 +379,7 @@ export const vProjectDetails = {
                                     <template v-for="(link, link_id) in project_data.links[link_type]">
                                         <div class="mt-1 p-1 rounded-3">
                                             <h3 class="row mb-0">
-                                                <button class="btn btn-large badge text-primary border" :class="{'col-11': (link_type=='project_folder' && can_delete_project_folder_links) || link_type!='project_folder'}" :href="link.url" :title="link.desc">
+                                                <button class="btn btn-large badge text-primary border" :class="{'col-11': (link_type=='project_folder' && can_delete_project_folder_links) || link_type!='project_folder'}" :href="link.url">
                                                     <a :href="link.url" target="_blank" class="text-decoration-none row px-0">
                                                             <span class="col-6 float-left d-inline-flex text-wrap text-left">{{link.title}}</span>
                                                             <span class="col-5 fs-6 fw-lighter">{{link.user}}</span>
@@ -392,12 +392,12 @@ export const vProjectDetails = {
                                                             <template v-if="link.type.toLowerCase()=='deviation'">
                                                                 <i class="fa fa-exclamation-circle float-right text-danger col-1 px-0" style="height: 1em; width: auto">
                                                             </template>
-                                                            <span v-if="isVisibleInfo(link_id)" class="text-muted text-start d-flex justify-content-start">{{link.desc}}</span>
+                                                            <span v-if="isVisibleInfo(link_id)" class="text-muted text-start d-flex justify-content-start fs-6">{{link.desc}}</span>
                                                     </a>
                                                 </button>
                                                 <div class="col-1 d-flex align-items-center p-1">
-                                                    <i role="button" class="fa-regular fa-circle-info fa-xs pr-1" @click.prevent="toggleInfo(link_id)"></i>
-                                                    <i v-if="(link_type=='project_folder' && can_delete_project_folder_links) || link_type!='project_folder'" role="button" class="far fa-times-square fa-xs text-danger" aria-hidden="true" @click="confirmDelete(link_id)"></i>
+                                                    <i role="button" class="fa-regular fa-circle-info fa-xs pr-1" @click.prevent="toggleInfo(link_id)" title="Show link description"></i>
+                                                    <i v-if="(link_type=='project_folder' && can_delete_project_folder_links) || link_type!='project_folder'" role="button" class="far fa-times-square fa-xs text-danger" aria-hidden="true" @click="confirmDelete(link_id)" title="Delete link"></i>
                                                 </div>
                                             </h3>
                                         </div>
