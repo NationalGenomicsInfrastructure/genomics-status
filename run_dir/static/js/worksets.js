@@ -76,7 +76,8 @@ function init_listjs() {
               body: function ( data, row, column, node ) {
                 // Replace <hr> with a comma, remove all other html tags, remove newlines, remove &nbsp;
                 // These are required since modfying format retains all the html tags
-                return data.replace(/<hr\s*[^>]*\s*\/?>/gi, ', ')
+                return data.replace(/<hr\s*[^>]*\s*\/?>/gi, '; ')
+                          .replace(/<br>/g, '; ')
                           .replace(/<[^>]*>/g, '')
                           .replace(/\r?\n|\r/g, '')
                           .replace(/&nbsp;/g, ' ');
