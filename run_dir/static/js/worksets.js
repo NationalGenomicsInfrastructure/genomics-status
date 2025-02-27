@@ -45,8 +45,46 @@ function init_listjs() {
       dom: 'Bfrti',
       colReorder: true,
       buttons: [
-        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
-        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+        {
+          extend: 'copy',
+          className: 'btn btn-outline-dark mb-3',
+          // Remove top two lines with Page title and blank line in output
+          messageTop: null,
+          title: null,
+          exportOptions: {
+            format: {
+              body: function ( data, row, column, node ) {
+                // Replace <hr> and <br> with a semicolon, remove all other html tags, remove newlines, remove &nbsp;
+                // These are required since modfying format retains all the html tags
+                return data.replace(/<hr\s*[^>]*\s*\/?>/gi, '; ')
+                           .replace(/<br>/g, '; ')
+                           .replace(/<[^>]*>/g, '')
+                           .replace(/\r?\n|\r/g, '')
+                           .replace(/&nbsp;/g, ' ');
+              }
+            }
+          }
+        },
+        {
+          extend: 'excel',
+          className: 'btn btn-outline-dark mb-3' ,
+          // Remove top two lines with Page title and blank line in output
+          messageTop: null,
+          title: null,
+          exportOptions: {
+            format: {
+              body: function ( data, row, column, node ) {
+                // Replace <hr> with a comma, remove all other html tags, remove newlines, remove &nbsp;
+                // These are required since modfying format retains all the html tags
+                return data.replace(/<hr\s*[^>]*\s*\/?>/gi, '; ')
+                          .replace(/<br>/g, '; ')
+                          .replace(/<[^>]*>/g, '')
+                          .replace(/\r?\n|\r/g, '')
+                          .replace(/&nbsp;/g, ' ');
+              }
+            }
+          }
+        }
       ]
     });
      //Keep markdown format when dragging around the columns
