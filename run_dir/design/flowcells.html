@@ -271,8 +271,18 @@ function init_listjs() {
       colReorder: true,
       dom: 'Bfrti',
       buttons: [
-        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
-        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+        {
+            extend: 'copy',
+            className: 'btn btn-outline-dark mb-3',
+            messageTop: null,
+            title: null,
+        },
+        {
+            extend: 'excel',
+            className: 'btn btn-outline-dark mb-3',
+            messageTop: null,
+            title: null,
+        }
       ]
     });
     //Keep markdown format when dragging around the columns

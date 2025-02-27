@@ -26,8 +26,18 @@ function init_datatable_controls(table_name) {
     "destroy": true,
     dom: 'Bfrti',
     buttons: [
-      { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
-      { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+      {
+          extend: 'copy',
+          className: 'btn btn-outline-dark mb-3',
+          messageTop: null,
+          title: null,
+      },
+      {
+          extend: 'excel',
+          className: 'btn btn-outline-dark mb-3',
+          messageTop: null,
+          title: null,
+      }
     ]
   });
 

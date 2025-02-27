@@ -78,8 +78,18 @@ function init_listjs() {
       "order": [],
       dom: 'Bfrti',
       buttons: [
-        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
-        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+        {
+          extend: 'copy',
+          className: 'btn btn-outline-dark mb-3',
+          messageTop: null,
+          title: null,
+        },
+        {
+          extend: 'excel',
+          className: 'btn btn-outline-dark mb-3',
+          messageTop: null,
+          title: null,
+        }
       ],
       "drawCallback": function ( settings ) {
         var api = this.api();

@@ -104,8 +104,18 @@ function init_datatable() {
       "order": [[ 0, "asc" ]],
       dom: 'Bfrti',
       buttons: [
-        { extend: 'copy', className: 'btn btn-outline-dark mb-3' },
-        { extend: 'excel', className: 'btn btn-outline-dark mb-3' }
+        {
+          extend: 'copy',
+          className: 'btn btn-outline-dark mb-3',
+          messageTop: null,
+          title: null,
+        },
+        {
+          extend: 'excel',
+          className: 'btn btn-outline-dark mb-3',
+          messageTop: null,
+          title: null,
+        }
       ]
     });
   //Add the bootstrap classes to the search thingy
