@@ -24,7 +24,7 @@ function get_link_url() {
 
 function load_links() {
   link_url=get_link_url();
-  var link_icon = {'Deviation':'exclamation-circle text-danger', 'Other':'file text-primary'};
+  var link_icon = {'deviation':'exclamation-circle text-danger', 'other':'file text-primary', 'project_folder': 'folder-open'};
   $("#existing_links").empty();
   $("#existing_links_projinfo").empty();
   $("#links_tab").hide();
@@ -40,7 +40,7 @@ function load_links() {
       date = new Date(date);
       $("#existing_links_projinfo").append('<tr><td>'+
       '<div><a class="pr-2"'+link_href+' target="_blank">'+
-        '<span style="font-size:18px;" class="fa fa-'+link_icon[link['type']]+'"></span></a>'+
+        '<span style="font-size:18px;" class="fa fa-'+link_icon[link['type'].toLowerCase()]+'"></span></a>'+
         '<span class="align-top"><a class="text-decoration-none" "'+link_href+' target="_blank"'+'>'+link['title']+'</a>'
         +'</td><td>'+link['desc']+'<small> &nbsp;<a class="text-decoration-none" href="mailto:'+link['email']+'">'+link['user']+'</a>'+
         ' - '+date.toDateString()+'</span></td></tr>');
@@ -48,7 +48,7 @@ function load_links() {
                                     <div class="container"> \
                                     <div class="row justify-content-center">  \
                                       <div class="col-1 pr-0"> \
-                                        <a class="float-right"'+link_href+' target="_blank"><i style="font-size:18px;" class="fa fa-'+link_icon[link['type']]+'"></i> \
+                                        <a class="float-right"'+link_href+' target="_blank"><i style="font-size:18px;" class="fa fa-'+link_icon[link['type'].toLowerCase()]+'"></i> \
                                         </a> \
                                       </div> \
                                       <div class="col-9"> \
