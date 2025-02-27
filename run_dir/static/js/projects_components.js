@@ -337,7 +337,7 @@ export const vProjectDetails = {
                         </dl>
                     <h4>Links
                         <button class="btn btn-sm btn-outline-primary" @click.prevent="showLinkForm">
-                        Add link <i class="fa-regular fa-sharp fa-link"></i>
+                        <i class="fa-solid fa-plus"></i>
                         </button>
                     </h4>
                     <form ref="new_note_form" @submit.prevent="addLink">
@@ -366,10 +366,10 @@ export const vProjectDetails = {
                         <div :class="{'col-9': !this.as_modal}">
                             <div class="rounded-3">
                                 <h3 class="row mb-0" v-if="project_data['portal_id'] !== undefined">
-                                    <button class="btn btn-large badge text-primary border py-3">
+                                    <button class="btn btn-large badge text-primary border col-11" style="padding: 0.85rem !important;">
                                         <a :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']">
                                             <span class="col float-left">Order Portal</span>
-                                            <i class="col fa-sharp fa-regular fa-clipboard-list-check float-right"></i>
+                                            <i class="col-1 fa-sharp fa-regular fa-clipboard-list-check float-right"></i>
                                         </a>
                                     </button>
                                 </h3>
@@ -377,9 +377,9 @@ export const vProjectDetails = {
                             <template v-if="project_data.links">
                                 <template v-for="link_type in ['project_folder', 'deviation', 'other']">
                                     <template v-for="(link, link_id) in project_data.links[link_type]">
-                                        <div class="mt-1 p-1 rounded-3">
+                                        <div class="mt-1 pt-1 rounded-3">
                                             <h3 class="row mb-0">
-                                                <button class="btn btn-large badge text-primary border" :class="{'col-11': (link_type=='project_folder' && can_delete_project_folder_links) || link_type!='project_folder'}" :href="link.url">
+                                                <button class="btn btn-large badge text-primary border col-11" :href="link.url" style="padding: 0.85rem !important;">
                                                     <a :href="link.url" target="_blank" class="text-decoration-none row px-0">
                                                             <span class="col-6 float-left d-inline-flex text-wrap text-left">{{link.title}}</span>
                                                             <span class="col-5 fs-6 fw-lighter">{{link.user}}</span>
@@ -387,12 +387,12 @@ export const vProjectDetails = {
                                                                 <i class="fa fa-solid fa-link float-right text-primary col-1 px-0" style="height: 1em; width: auto">
                                                             </template>
                                                             <template v-if="link.type=='project_folder'">
-                                                                <i class="fa fa-file float-right text-primary col-1 px-0" style="height: 1em; width: auto">
+                                                                <i class="fa-solid fa-folder-open float-right text-primary col-1 px-0" style="height: 1em; width: auto">
                                                             </template>
                                                             <template v-if="link.type.toLowerCase()=='deviation'">
                                                                 <i class="fa fa-exclamation-circle float-right text-danger col-1 px-0" style="height: 1em; width: auto">
                                                             </template>
-                                                            <span v-if="isVisibleInfo(link_id)" class="text-muted text-start d-flex justify-content-start fs-6">{{link.desc}}</span>
+                                                            <span v-if="isVisibleInfo(link_id)" class="text-muted text-start d-flex justify-content-start fs-6 m-1">{{link.desc}}</span>
                                                     </a>
                                                 </button>
                                                 <div class="col-1 d-flex align-items-center p-1">
@@ -416,7 +416,7 @@ export const vProjectDetails = {
                                 </h3>
                             </div>
                             <div v-if="'reports' in project_data && 'multiqc' in project_data.reports" class="dropright row">
-                                <a class="btn btn-lg border dropdown-toggle ml-1 mt-1 p-1" href="#" role="button" data-toggle="dropdown" id="mqc_dropdown">
+                                <a class="btn btn-lg border dropdown-toggle mt-1 col-11" style="padding: 0.85rem !important;" href="#" role="button" data-toggle="dropdown" id="mqc_dropdown">
                                     <img class="col-4" src="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png#gh-light-mode-only" alt="MultiQC" style="height: 1em; width: auto">
                                 </a>
                                 <div class="dropdown-menu" aria-labelledby="mqc_dropdown" style="width: 50%">
