@@ -351,7 +351,7 @@ export const vProjectDetails = {
                                     </select>
                                     <label for="new_link_type">Type</label>
                                 </div>
-                                <input type="text" class="form-control" v-model="new_link" placeholder="URL">
+                                <input type="text" class="form-control" v-model="new_link" placeholder="URL: https://docs.google.com/example">
                                 <input type="text" class="form-control mt-2" v-model="new_link_name" placeholder="Title">
                                 <textarea class="form-control mt-2" v-model="new_link_desc" placeholder="Description"></textarea>
                                 <button class="btn btn-sm btn-primary mt-2 mr-1" type="submit">Add</button>
@@ -368,7 +368,7 @@ export const vProjectDetails = {
                                 <h3 class="row mb-0" v-if="project_data['portal_id'] !== undefined">
                                     <button class="btn btn-large badge text-primary border col-11" style="padding: 0.85rem !important;">
                                         <a :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']">
-                                            <span class="col float-left">Order Portal</span>
+                                            <span class="col-11 float-left text-left">Order Portal</span>
                                             <i class="col-1 fa-sharp fa-regular fa-clipboard-list-check float-right"></i>
                                         </a>
                                     </button>
@@ -382,7 +382,7 @@ export const vProjectDetails = {
                                                 <button class="btn btn-large badge text-primary border col-11" :href="link.url" style="padding: 0.85rem !important;">
                                                     <a :href="link.url" target="_blank" class="text-decoration-none row px-0">
                                                             <span class="col-6 float-left d-inline-flex text-wrap text-left">{{link.title}}</span>
-                                                            <span class="col-5 fs-6 fw-lighter">{{link.user}}</span>
+                                                            <span class="col-5 fs-6 fw-lighter pr-0">{{link.user}}</span>
                                                             <template v-if="link.type.toLowerCase()=='other'">
                                                                 <i class="fa fa-solid fa-link float-right text-primary col-1 px-0" style="height: 1em; width: auto">
                                                             </template>
