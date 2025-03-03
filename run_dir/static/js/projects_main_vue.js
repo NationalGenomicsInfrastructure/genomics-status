@@ -260,6 +260,8 @@ const vProjectsStatus = {
                         } else {
                             Object.assign(this.project_details[project_id], response.data);
                         }
+                        //Fetch link only if this.project_details[project_id] has a value
+                        this.fetchProjectLinks(project_id);
                     }
                 })
                 .catch(error => {
@@ -278,14 +280,8 @@ const vProjectsStatus = {
                     console.log(error);
                 });
             this.fetchStickyRunningNotes(project_id);
-            this.fetchProjectLinks(project_id);
         },
         async fetchProjectLinks(project_id) {
-            const sleep = (delay) => new Promise((resolve) => setTimeout(resolve,delay))
-            if (Object.keys(this.project_details).length === 0){
-                // Wait for projects to be fetched even though the request should already have returned
-                await sleep(1000);
-            }
             axios
             .get(`/api/v1/links/${project_id}`)
             .then(response => {
