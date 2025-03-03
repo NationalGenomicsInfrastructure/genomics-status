@@ -240,10 +240,10 @@ class MainHandler(UnsafeHandler):
                 used_percentage = float(
                     row.value.get("used_percentage", "0").replace("%", "")
                 )
-                if used_percentage > 60:
-                    server_status[server]["css_class"] = "q-warning"
-                elif used_percentage > 80:
+                if used_percentage > 80:
                     server_status[server]["css_class"] = "q-danger"
+                elif used_percentage > 60:
+                    server_status[server]["css_class"] = "q-warning"
                 else:
                     server_status[server]["css_class"] = ""
         # sort by used space
