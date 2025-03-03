@@ -396,9 +396,9 @@ class LatestStickyNotesMultipleHandler(SafeHandler):
             keys=project_ids,
             reduce=True,
             group=True,
-        ).get_result()['rows']
+        ).get_result()["rows"]
         latest_sticky_notes = {
-            row['key']: row['value'] for row in latest_sticky_notes if row['value']
+            row["key"]: row["value"] for row in latest_sticky_notes if row["value"]
         }
         self.set_header("Content-type", "application/json")
         self.write(latest_sticky_notes)
