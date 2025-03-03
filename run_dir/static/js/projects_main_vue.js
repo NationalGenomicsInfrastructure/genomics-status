@@ -382,7 +382,6 @@ const vProjectsStatus = {
                     }
                     // These are dependent on the projects being fetched
                     this.fetchStickyRunningNotes()
-                    this.fetchPeopleAssignments()
                 })
                 .catch(error => {
                     console.log(error)
