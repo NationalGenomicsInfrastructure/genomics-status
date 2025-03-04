@@ -337,13 +337,18 @@ export const vProjectDetails = {
                         </dl>
                     <h4>Links
                         <button class="btn btn-sm btn-outline-primary" @click.prevent="showLinkForm">
-                        <i class="fa-solid fa-plus"></i>
+                            <template v-if="show_link_form">
+                                <i class="fa-solid fa-minus"></i>
+                            </template>
+                            <template v-else>
+                                <i class="fa-solid fa-plus"></i>
+                            </template>
                         </button>
                     </h4>
-                    <form ref="new_note_form" @submit.prevent="addLink">
-                        <div class="row mb-2" v-show="show_link_form">
-                            <div class="col offset-1">
-                                <div class="form-floating col-5 mb-2">
+                    <div :class="{'col-9': !this.as_modal}">
+                        <form ref="new_note_form" @submit.prevent="addLink">
+                            <div class="row mb-5" v-show="show_link_form">
+                                <div class="form-floating col-5 mb-2 pl-0">
                                     <select id="new_link_type" class="form-select" v-model="new_link_type">
                                         <option value="project_folder">Project Folder</option>
                                         <option value="deviation">Deviation</option>
@@ -354,14 +359,14 @@ export const vProjectDetails = {
                                 <input type="text" class="form-control" v-model="new_link" placeholder="URL: https://docs.google.com/example">
                                 <input type="text" class="form-control mt-2" v-model="new_link_name" placeholder="Title">
                                 <textarea class="form-control mt-2" v-model="new_link_desc" placeholder="Description"></textarea>
-                                <button class="btn btn-sm btn-primary mt-2 mr-1" type="submit">Add</button>
-                                <button class="btn btn-sm btn-secondary mt-2" @click.prevent="showLinkForm">Cancel</button>
+                                <button class="btn btn btn-primary mt-2 mr-1 col-3" type="submit">Add</button>
+                                <button class="btn btn btn-secondary mt-2 col-3" @click.prevent="showLinkForm">Cancel</button>
                                 <div class="mt-2" v-if="link_error">
                                     <span class="text-danger">{{link_error}}</span>
                                 </div>
                             </div>
-                        </div>
-                     </form>
+                        </form>
+                    </div>
                     <div class="row mr-2">
                         <div :class="{'col-9': !this.as_modal}">
                             <div class="rounded-3">
