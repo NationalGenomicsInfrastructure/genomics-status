@@ -347,7 +347,7 @@ export const vProjectDetails = {
                     </h4>
                     <div :class="{'col-9': !this.as_modal}">
                         <form ref="new_note_form" @submit.prevent="addLink">
-                            <div class="row mb-5" v-show="show_link_form">
+                            <div class="row mb-5 ml-0" v-show="show_link_form">
                                 <div class="form-floating col-5 mb-2 pl-0">
                                     <select id="new_link_type" class="form-select" v-model="new_link_type">
                                         <option value="project_folder">Project Folder</option>
