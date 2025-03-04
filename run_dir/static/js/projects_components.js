@@ -367,7 +367,7 @@ export const vProjectDetails = {
                             <div class="rounded-3">
                                 <h3 class="row mb-0" v-if="project_data['portal_id'] !== undefined">
                                     <button class="btn btn-large badge text-primary border col-11" style="padding: 0.85rem !important;">
-                                        <a :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" class="row">
+                                        <a :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" class="row text-decoration-none d-inline">
                                             <span class="col-11 float-left text-left">Order Portal</span>
                                             <i class="col-1 fa-sharp fa-regular fa-clipboard-list-check float-right px-0"></i>
                                         </a>
@@ -380,8 +380,8 @@ export const vProjectDetails = {
                                         <div class="mt-1 pt-1 rounded-3">
                                             <h3 class="row mb-0">
                                                 <button class="btn btn-large badge text-primary border col-11" :href="link.url" style="padding: 0.85rem !important;">
-                                                    <a :href="link.url" target="_blank" class="text-decoration-none row">
-                                                            <span class="col-6 float-left d-inline-flex text-wrap text-left">{{link.title}}</span>
+                                                    <a :href="link.url" target="_blank" class="text-decoration-none row d-inline">
+                                                            <span class="col-6 float-left text-wrap text-left">{{link.title}}</span>
                                                             <span class="col-5 fs-6 fw-lighter text-wrap pr-0">{{link.user}}</span>
                                                             <template v-if="link.type.toLowerCase()=='other'">
                                                                 <i class="fa fa-solid fa-link float-right text-primary col-1 px-0">
