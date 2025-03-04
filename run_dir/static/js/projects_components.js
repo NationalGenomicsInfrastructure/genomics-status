@@ -367,9 +367,9 @@ export const vProjectDetails = {
                             <div class="rounded-3">
                                 <h3 class="row mb-0" v-if="project_data['portal_id'] !== undefined">
                                     <button class="btn btn-large badge text-primary border col-11" style="padding: 0.85rem !important;">
-                                        <a :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']">
+                                        <a :href="'https://ngisweden.scilifelab.se/orders/order/' + project_data['portal_id']" class="row">
                                             <span class="col-11 float-left text-left">Order Portal</span>
-                                            <i class="col-1 fa-sharp fa-regular fa-clipboard-list-check float-right"></i>
+                                            <i class="col-1 fa-sharp fa-regular fa-clipboard-list-check float-right px-0"></i>
                                         </a>
                                     </button>
                                 </h3>
@@ -380,19 +380,19 @@ export const vProjectDetails = {
                                         <div class="mt-1 pt-1 rounded-3">
                                             <h3 class="row mb-0">
                                                 <button class="btn btn-large badge text-primary border col-11" :href="link.url" style="padding: 0.85rem !important;">
-                                                    <a :href="link.url" target="_blank" class="text-decoration-none row px-0">
+                                                    <a :href="link.url" target="_blank" class="text-decoration-none row">
                                                             <span class="col-6 float-left d-inline-flex text-wrap text-left">{{link.title}}</span>
-                                                            <span class="col-5 fs-6 fw-lighter pr-0">{{link.user}}</span>
+                                                            <span class="col-5 fs-6 fw-lighter text-wrap pr-0">{{link.user}}</span>
                                                             <template v-if="link.type.toLowerCase()=='other'">
-                                                                <i class="fa fa-solid fa-link float-right text-primary col-1 px-0" style="height: 1em; width: auto">
+                                                                <i class="fa fa-solid fa-link float-right text-primary col-1 px-0">
                                                             </template>
                                                             <template v-if="link.type=='project_folder'">
-                                                                <i class="fa-solid fa-folder-open float-right text-primary col-1 px-0" style="height: 1em; width: auto">
+                                                                <i class="fa-solid fa-folder-open float-right text-primary col-1 px-0">
                                                             </template>
                                                             <template v-if="link.type.toLowerCase()=='deviation'">
-                                                                <i class="fa fa-exclamation-circle float-right text-danger col-1 px-0" style="height: 1em; width: auto">
+                                                                <i class="fa fa-exclamation-circle float-right text-danger col-1 px-0">
                                                             </template>
-                                                            <span v-if="isVisibleInfo(link_id)" class="text-muted text-start d-flex justify-content-start fs-6 m-1">{{link.desc}}</span>
+                                                            <span v-if="isVisibleInfo(link_id)" class="text-muted text-start d-flex justify-content-start fs-6 mt-2 mb-1">{{link.desc}}</span>
                                                     </a>
                                                 </button>
                                                 <div class="col-1 d-flex align-items-center p-1">
