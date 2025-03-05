@@ -1,6 +1,7 @@
 """Main genomics-status web application."""
 
 import base64
+import logging
 import subprocess
 import uuid
 from pathlib import Path
@@ -14,6 +15,7 @@ import yaml
 from couchdb import Server
 from ibmcloudant import CouchDbSessionAuthenticator, cloudant_v1
 from tornado import template
+from tornado.log import LogFormatter
 from tornado.options import define, options
 from zenpy import Zenpy
 
@@ -650,6 +652,9 @@ if __name__ == "__main__":
     )
     # After parsing the command line, the command line flags are stored in tornado.options
     tornado.options.parse_command_line()
+    logging_format = f"%(color)s[%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d] [port:{options['port']}]%(end_color)s %(message)s"
+    log_formatter = LogFormatter(fmt=logging_format, color=True)
+    logging.getLogger().handlers[0].setFormatter(log_formatter)
 
     # Load configuration file
     with open("settings.yaml") as settings_file:
