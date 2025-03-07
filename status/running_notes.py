@@ -389,14 +389,16 @@ class LatestStickyNotesMultipleHandler(SafeHandler):
             return self.write("Error: no project_ids supplied")
 
         project_ids = data["project_ids"]
-        latest_sticky_notes = self.application.running_notes_db.view(
-            "latest_sticky_note_previews/project",
+        latest_sticky_notes = self.application.cloudant.post_view(
+            db="running_notes",
+            ddoc="latest_sticky_note_previews",
+            view="project",
             keys=project_ids,
             reduce=True,
             group=True,
-        ).rows
+        ).get_result()["rows"]
         latest_sticky_notes = {
-            row.key: row.value for row in latest_sticky_notes if row.value
+            row["key"]: row["value"] for row in latest_sticky_notes if row["value"]
         }
         self.set_header("Content-type", "application/json")
         self.write(latest_sticky_notes)

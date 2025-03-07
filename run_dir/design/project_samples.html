@@ -11,7 +11,7 @@ Description: Project details
 {% block stuff %}
 
 <div id="v_projects_main">
-    <v-project-details project_id="{{project_id}}" :user="{email: '{{user.email}}', user: '{{user.name}}'}" :single_project_mode="true" :as_modal="false"/>
+    <v-project-details project_id="{{project_id}}" :user="{email: '{{user.email}}', user: '{{user.name}}', roles: {{user.roles}}}" :single_project_mode="true" :as_modal="false"/>
 </div>
 {% end %}
 

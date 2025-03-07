@@ -260,6 +260,8 @@ const vProjectsStatus = {
                         } else {
                             Object.assign(this.project_details[project_id], response.data);
                         }
+                        //Fetch link only if this.project_details[project_id] has a value
+                        this.fetchProjectLinks(project_id);
                     }
                 })
                 .catch(error => {
@@ -278,6 +280,19 @@ const vProjectsStatus = {
                     console.log(error);
                 });
             this.fetchStickyRunningNotes(project_id);
+        },
+        async fetchProjectLinks(project_id) {
+            axios
+            .get(`/api/v1/links/${project_id}`)
+            .then(response => {
+                if (response.data !== null) {
+                    this.project_details[project_id]['links'] = response.data;
+                }
+            })
+            .catch(error => {
+                this.error_messages.push('Error fetching links for project ' + project_id + '. Please try again or contact a system administrator.');
+                console.log(error);
+            });
         },
         async fetchStickyRunningNotes(project_id) {
             let post_body;
@@ -363,7 +378,6 @@ const vProjectsStatus = {
                     }
                     // These are dependent on the projects being fetched
                     this.fetchStickyRunningNotes()
-                    this.fetchPeopleAssignments()
                 })
                 .catch(error => {
                     console.log(error)
