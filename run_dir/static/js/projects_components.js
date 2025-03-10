@@ -409,15 +409,14 @@ export const vProjectDetails = {
                                     </template>
                                 </template>
                             </template>
-                            <div v-if="'reports' in project_data && 'project_summary' in project_data.reports" class="mt-1 p-1 rounded-3">
+                            <div v-if="'reports' in project_data && 'project_summary' in project_data.reports" class="mt-1 pt-1 rounded-3">
                                 <h3 class="row mb-0">
-                                    <button class="btn btn-large badge text-primary border" :href="'/proj_summary_report/'+project_id">
-                                        <a :href="'/proj_summary_report/'+project_id" target="_blank">
-                                            <span class="col float-left">Project Summary</span>
-                                            <i class="fa-regular fa-clipboard-list-check float-right text-primary"></i>
+                                    <button class="btn btn-large badge text-primary border col-11" :href="'/proj_summary_report/'+project_id" style="padding: 0.85rem !important;">
+                                        <a :href="'/proj_summary_report/'+project_id" target="_blank" class="text-decoration-none row d-inline">
+                                            <span class="col-6 float-left text-left">Project Summary</span>
+                                            <i class="fa-regular fa-clipboard-list-check float-right text-primary col-1 px-0"></i>
                                         </a>
                                     </button>
-                                    <div class="col-1 d-flex align-items-center" v-if="(link_type=='project_folder' && can_delete_project_folder_links) || link_type!='project_folder'">
                                 </h3>
                             </div>
                             <div v-if="'reports' in project_data && 'multiqc' in project_data.reports" class="dropright row">
@@ -433,7 +432,7 @@ export const vProjectDetails = {
                                 </div>
                             </div>
                             <div v-if="'reports' in project_data && 'sample_summary_reports' in project_data.reports" class="dropright row">
-                                <a class="btn btn-lg border dropdown-toggle ml-1 mt-1 p-1" href="#" role="button" data-toggle="dropdown" id="sample_reports_dropdown">
+                                <a class="btn btn-lg border dropdown-toggle mt-1 col-11" href="#" role="button" data-toggle="dropdown" id="sample_reports_dropdown">
                                     <i class="fa-regular fa-vial"></i> Sample reports
                                 </a>
                                 <div class="dropdown-menu" aria-labelledby="sample_reports_dropdown" style="width: 50%">
