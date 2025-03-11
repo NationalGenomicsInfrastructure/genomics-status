@@ -135,6 +135,7 @@ from status.reports import (
     SingleCellSampleSummaryReportHandler,
 )
 from status.running_notes import (
+    InvoicingNotesHandler,
     LatestStickyNoteHandler,
     LatestStickyNotesMultipleHandler,
     RunningNotesDataHandler,
@@ -291,6 +292,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
             ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
+            ("/api/v1/invoicing_notes/([^/]*)", InvoicingNotesHandler),
             ("/api/v1/lanes_ordered", LanesOrderedDataHandler),
             ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
