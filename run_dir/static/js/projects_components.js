@@ -705,7 +705,7 @@ export const vProjectCard = {
             <div class="d-flex justify-content-between align-center mb-3">
                 <h5 class="my-1">
                     <a class="text-decoration-none" href='#' @click.prevent=openModal>
-                        {{ project_name }}
+                        {{project_id }}, {{ project_name }}
                     </a>
 
                 </h5>
