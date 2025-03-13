@@ -472,7 +472,7 @@ const vHashtagCSV = {
                             <div class="col-6">
                                 <div class="pl-3 py-3">
                                     <template v-if="chosen_project">
-                                        <h1 class="mb-3">{{chosen_project}} <small>- <a class="text-decoration-none" :href="'/project/' + chosen_project">project page <i class="fa-solid fa-arrow-up-right-from-square"></i></a></small></h1>
+                                        <h1 class="mb-3">{{chosen_project}} <small>- <a class="text-decoration-none" :href="'/project/' + chosen_project" target="_blank">project page <i class="fa-solid fa-arrow-up-right-from-square"></i></a></small></h1>
                                         <ul>
                                             <li>{{project_details['project_name']}}</li>
                                             <li>{{project_details['application']}}</li>
