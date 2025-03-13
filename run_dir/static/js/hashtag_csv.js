@@ -494,7 +494,7 @@ const vHashtagCSV = {
                             <div class="my-4">
                                 <h1>Create CSV</h1>
                                 <div class="mb-3">
-                                <button class="btn btn-primary mr-2" @click="this.addAntibodyColumn"><i class="fa-solid fa-plus mr-2"></i>Add Antibydoy Column</button>
+                                <button class="btn btn-primary mr-2" @click="this.addAntibodyColumn"><i class="fa-solid fa-plus mr-2"></i>Add Antibody Column</button>
                                 <button class="btn btn-primary mr-2" @click="this.removeAntibodyColumn"><i class="fa-solid fa-minus mr-2"></i>Remove Antibody Column</button>
                                 <button class="btn btn-primary" @click="this.replicateFirstValue"><i class="fa-solid fa-copy mr-2"></i>Replicate first values of first row</button>
                                 </div>
@@ -540,7 +540,6 @@ const vHashtagCSV = {
                                     <th scope="col">Species</th>
                                     <th scope="col">For 10X method</th>
                                     <th scope="col">Total-Seq version</th>
-                                    <th scope="col">Amount in stock</th>
                                     <th scope="col">URL</th>
                                 </tr>
                             </thead>
@@ -551,8 +550,14 @@ const vHashtagCSV = {
                                     <td>{{ antibody['Species'] }}</td>
                                     <td>{{ antibody['For 10X method'] }}</td>
                                     <td>{{ antibody['Total-Seq version'] }}</td>
-                                    <td>{{ antibody['Amount in stock'] }}</td>
-                                    <td><a :href="antibody['URL']">{{ antibody['URL'] }}</a></td>
+                                    <td>
+                                        <template v-if="antibody['URL'] !== 'None'">
+                                            <a :href="antibody['URL']">{{ antibody['URL'] }}</a>
+                                        </template>
+                                        <template v-else>
+                                            None
+                                        </template>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
