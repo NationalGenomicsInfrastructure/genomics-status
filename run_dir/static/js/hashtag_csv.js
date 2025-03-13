@@ -522,7 +522,7 @@ const vHashtagCSV = {
                                         </tr>
                                     </tbody>
                                 </table>
-                                <button class="btn btn-lg btn-primary float-right mt-4">Download CSV</button>
+                                <button class="btn btn-lg btn-primary float-right mt-4" disabled>Download CSV</button>
                             </div>
                         </template>
                         <template v-else>
