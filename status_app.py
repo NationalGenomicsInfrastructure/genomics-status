@@ -52,6 +52,7 @@ from status.flowcells import (
     OldFlowcellsInfoDataHandler,
     ReadsTotalHandler,
 )
+from status.hashtag_csv import HashTagCSVHandler
 from status.instruments import (
     DataInstrumentLogsHandler,
     InstrumentLogsHandler,
@@ -388,6 +389,7 @@ class Application(tornado.web.Application):
                 ONTToulligQCReportHandler,
             ),
             ("/flowcells_plot", FlowcellPlotHandler),
+            ("/hashtag_csv", HashTagCSVHandler),
             ("/ont_flowcells_plot", ONTFlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
             ("/generate_quote", GenerateQuoteHandler),
