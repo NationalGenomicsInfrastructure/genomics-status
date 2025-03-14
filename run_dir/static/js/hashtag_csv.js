@@ -8,328 +8,7 @@ const vHashtagCSV = {
             ],
             chosen_project: null,
             assignments: {},
-            possible_antibodies: {
-                "None": {
-                    "Name": "None",
-                    "Product nr": "None",
-                    "Species": "None",
-                    "For 10X method": "None",
-                    "Total-Seq version": "None",
-                    "URL": "None"
-                },
-                "155801": {
-                    "Name": "TotalSeq™-A0301 anti-mouse Hashtag 1 Antibody",
-                    "Product nr": "155801",
-                    "Species": "Mouse",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "A",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-a0301-anti-mouse-hashtag-1-antibody-16103"
-                },
-                "155803": {
-                    "Name": "TotalSeq™-A0302 anti-mouse Hashtag 2 Antibody",
-                    "Product nr": "155803",
-                    "Species": "Mouse",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "A",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-a0302-anti-mouse-hashtag-2-antibody-16104"
-                },
-                "155805": {
-                    "Name": "TotalSeq™-A0303 anti-mouse Hashtag 3 Antibody",
-                    "Product nr": "155805",
-                    "Species": "Mouse",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "A",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-a0303-anti-mouse-hashtag-3-antibody-16105"
-                },
-                "155807": {
-                    "Name": "TotalSeq™-A0304 anti-mouse Hashtag 4 Antibody",
-                    "Product nr": "155807",
-                    "Species": "Mouse",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "A",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-a0304-anti-mouse-hashtag-4-antibody-16106"
-                },
-                "155809": {
-                    "Name": "TotalSeq™-A0305 anti-mouse Hashtag 5 Antibody",
-                    "Product nr": "155809",
-                    "Species": "Mouse",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "A",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-a0305-anti-mouse-hashtag-5-antibody-16107"
-                },
-                "155811": {
-                    "Name": "TotalSeq™-A0306 anti-mouse Hashtag 6 Antibody",
-                    "Product nr": "155811",
-                    "Species": "Mouse",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "A",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-a0306-anti-mouse-hashtag-6-antibody-16108"
-                },
-                "682205": {
-                    "Name": "TotalSeq™-A0451 anti-Nuclear Pore Complex Proteins Hashtag 1 Antibody",
-                    "Product nr": "682205",
-                    "Species": "All",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "A",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-a0451-anti-nuclear-pore-complex-proteins-hashtag-1-antibody-19321"
-                },
-                "682207": {
-                    "Name": "TotalSeq™-A0452 anti-Nuclear Pore Complex Proteins Hashtag 2 Antibody",
-                    "Product nr": "682207",
-                    "Species": "All",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "A",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-a0452-anti-nuclear-pore-complex-proteins-hashtag-2-antibody-19322"
-                },
-                "682209": {
-                    "Name": "TotalSeq™-A0453 anti-Nuclear Pore Complex Proteins Hashtag 3 Antibody",
-                    "Product nr": "682209",
-                    "Species": "All",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "A",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-a0453-anti-nuclear-pore-complex-proteins-hashtag-3-antibody-19323"
-                },
-                "682211": {
-                    "Name": "TotalSeq™-A0454 anti-Nuclear Pore Complex Proteins Hashtag 4 Antibody",
-                    "Product nr": "682211",
-                    "Species": "All",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "A",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-a0454-anti-nuclear-pore-complex-proteins-hashtag-4-antibody-19324"
-                },
-                "682213": {
-                    "Name": "TotalSeq™-A0455 anti-Nuclear Pore Complex Proteins Hashtag 5 Antibody",
-                    "Product nr": "682213",
-                    "Species": "All",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "A",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-a0455-anti-nuclear-pore-complex-proteins-hashtag-5-antibody-19359"
-                },
-                "682215": {
-                    "Name": "TotalSeq™-A0456 anti-Nuclear Pore Complex Proteins Hashtag 6 Antibody",
-                    "Product nr": "682215",
-                    "Species": "All",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "A",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-a0456-anti-nuclear-pore-complex-proteins-hashtag-6-antibody-19325"
-                },
-                "394631": {
-                    "Name": "TotalSeq™-B0251 anti-human Hashtag 1 Antibody",
-                    "Product nr": "394631",
-                    "Species": "Human",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "B",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-b0251-anti-human-hashtag-1-antibody-17931"
-                },
-                "394633": {
-                    "Name": "TotalSeq™-B0252 anti-human Hashtag 2 Antibody",
-                    "Product nr": "394633",
-                    "Species": "Human",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "B",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-b0252-anti-human-hashtag-2-antibody-17932"
-                },
-                "394635": {
-                    "Name": "TotalSeq™-B0253 anti-human Hashtag 3 Antibody",
-                    "Product nr": "394635",
-                    "Species": "Human",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "B",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-b0253-anti-human-hashtag-3-antibody-17933"
-                },
-                "394637": {
-                    "Name": "TotalSeq™-B0254 anti-human Hashtag 4 Antibody",
-                    "Product nr": "394637",
-                    "Species": "Human",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "B",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-b0254-anti-human-hashtag-4-antibody-17934"
-                },
-                "394639": {
-                    "Name": "TotalSeq™-B0255 anti-human Hashtag 5 Antibody",
-                    "Product nr": "394639",
-                    "Species": "Human",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "B",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-b0255-anti-human-hashtag-5-antibody-17935"
-                },
-                "155831": {
-                    "Name": "TotalSeq™-B0301 anti-mouse Hashtag 1 Antibody",
-                    "Product nr": "155831",
-                    "Species": "Mouse",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "B",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-b0301-anti-mouse-hashtag-1-antibody-17771"
-                },
-                "155833": {
-                    "Name": "TotalSeq™-B0302 anti-mouse Hashtag 2 Antibody",
-                    "Product nr": "155833",
-                    "Species": "Mouse",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "B",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-b0302-anti-mouse-hashtag-2-antibody-17772"
-                },
-                "155835": {
-                    "Name": "TotalSeq™-B0303 anti-mouse Hashtag 3 Antibody",
-                    "Product nr": "155835",
-                    "Species": "Mouse",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "B",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-b0303-anti-mouse-hashtag-3-antibody-17773"
-                },
-                "155837": {
-                    "Name": "TotalSeq™-B0304 anti-mouse Hashtag 4 Antibody",
-                    "Product nr": "155837",
-                    "Species": "Mouse",
-                    "For 10X method": "3'GE",
-                    "Total-Seq version": "B",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-b0304-anti-mouse-hashtag-4-antibody-17774"
-                },
-                "394661": {
-                    "Name": "TotalSeq™-C0251 anti-human Hashtag 1 Antibody",
-                    "Product nr": "394661",
-                    "Species": "Human",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0251-anti-human-hashtag-1-antibody-17162"
-                },
-                "394663": {
-                    "Name": "TotalSeq™-C0252 anti-human Hashtag 2 Antibody",
-                    "Product nr": "394663",
-                    "Species": "Human",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0252-anti-human-hashtag-2-antibody-17163"
-                },
-                "394665": {
-                    "Name": "TotalSeq™-C0253 anti-human Hashtag 3 Antibody",
-                    "Product nr": "394665",
-                    "Species": "Human",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0253-anti-human-hashtag-3-antibody-17164"
-                },
-                "394667": {
-                    "Name": "TotalSeq™-C0254 anti-human Hashtag 4 Antibody",
-                    "Product nr": "394667",
-                    "Species": "Human",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0254-anti-human-hashtag-4-antibody-17165"
-                },
-                "394669": {
-                    "Name": "TotalSeq™-C0255 anti-human Hashtag 5 Antibody",
-                    "Product nr": "394669",
-                    "Species": "Human",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0255-anti-human-hashtag-5-antibody-17166"
-                },
-                "394671": {
-                    "Name": "TotalSeq™-C0256 anti-human Hashtag 6 Antibody",
-                    "Product nr": "394671",
-                    "Species": "Human",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0256-anti-human-hashtag-6-antibody-18373"
-                },
-                "394673": {
-                    "Name": "TotalSeq™-C0257 anti-human Hashtag 7 Antibody",
-                    "Product nr": "394673",
-                    "Species": "Human",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0257-anti-human-hashtag-7-antibody-18374"
-                },
-                "394675": {
-                    "Name": "TotalSeq™-C0258 anti-human Hashtag 8 Antibody",
-                    "Product nr": "394675",
-                    "Species": "Human",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0258-anti-human-hashtag-8-antibody-18375"
-                },
-                "155861": {
-                    "Name": "TotalSeq™-C0301 anti-mouse Hashtag 1 Antibody",
-                    "Product nr": "155861",
-                    "Species": "Mouse",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0301-anti-mouse-hashtag-1-antibody-17157"
-                },
-                "155863": {
-                    "Name": "TotalSeq™-C0302 anti-mouse Hashtag 2 Antibody",
-                    "Product nr": "155863",
-                    "Species": "Mouse",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0302-anti-mouse-hashtag-2-antibody-17158"
-                },
-                "155865": {
-                    "Name": "TotalSeq™-C0303 anti-mouse Hashtag 3 Antibody",
-                    "Product nr": "155865",
-                    "Species": "Mouse",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0303-anti-mouse-hashtag-3-antibody-17159"
-                },
-                "155867": {
-                    "Name": "TotalSeq™-C0304 anti-mouse Hashtag 4 Antibody",
-                    "Product nr": "155867",
-                    "Species": "Mouse",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0304-anti-mouse-hashtag-4-antibody-17160"
-                },
-                "155869": {
-                    "Name": "TotalSeq™-C0305 anti-mouse Hashtag 5 Antibody",
-                    "Product nr": "155869",
-                    "Species": "Mouse",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0305-anti-mouse-hashtag-5-antibody-17161"
-                },
-                "155871": {
-                    "Name": "TotalSeq™-C0306 anti-mouse Hashtag 6 Antibody",
-                    "Product nr": "155871",
-                    "Species": "Mouse",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0306-anti-mouse-hashtag-6-antibody-18443"
-                },
-                "155873": {
-                    "Name": "TotalSeq™-C0307 anti-mouse Hashtag 7 Antibody",
-                    "Product nr": "155873",
-                    "Species": "Mouse",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0307-anti-mouse-hashtag-7-antibody-18444"
-                },
-                "155875": {
-                    "Name": "TotalSeq™-C0308 anti-mouse Hashtag 8 Antibody",
-                    "Product nr": "155875",
-                    "Species": "Mouse",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0308-anti-mouse-hashtag-8-antibody-18445"
-                },
-                "155877": {
-                    "Name": "TotalSeq™-C0309 anti-mouse Hashtag 9 Antibody",
-                    "Product nr": "155877",
-                    "Species": "Mouse",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0309-anti-mouse-hashtag-9-antibody-18446"
-                },
-                "155879": {
-                    "Name": "TotalSeq™-C0310 anti-mouse Hashtag 10 Antibody",
-                    "Product nr": "155879",
-                    "Species": "Mouse",
-                    "For 10X method": "V(D)J",
-                    "Total-Seq version": "C",
-                    "URL": "https://www.biolegend.com/en-us/products/totalseq-c0310-anti-mouse-hashtag-10-antibody-18447"
-                }
-            },            
+            possible_antibodies: {},
             project_suggestions: [],
             project_details: {},
             project_samples: {},
@@ -338,6 +17,17 @@ const vHashtagCSV = {
         }
     },
     computed: {
+        assignments_csv() {
+            // Create a CSV string from the assignments object
+            let csv = 'Sample_ID,Antibodies\n';
+            Object.keys(this.assignments).forEach(sample_id => {
+                let sample_values = Object.values(this.assignments[sample_id]);
+                // Remove all None values
+                sample_values = sample_values.filter(value => value !== 'None');
+                csv += sample_id + ',' + sample_values.join(';') + '\n';
+            });
+            return csv;
+        },
         order_title() {
             if ('order_details' in this.project_details) {
                 return this.project_details['order_details']['title'];
@@ -375,6 +65,30 @@ const vHashtagCSV = {
             Object.keys(this.assignments).forEach(sample_id => {
                 this.assignments[sample_id][column_to_be_added] = 'None';
             });
+        },
+        clearAssignments(sample_id) {
+            Object.keys(this.assignments[sample_id]).forEach(antibody_column => {
+                this.assignments[sample_id][antibody_column] = 'None';
+            });
+        },
+        fetchPossibleAntibodies() {
+            axios
+                .get('/api/v1/configs/possible_antibodies_sc')
+                .then(response => {
+                    if (response.data !== null) {
+                        this.possible_antibodies = response.data['possible_antibodies'];
+                        // Add a None option to the possible antibodies
+                        this.possible_antibodies['None'] = {};
+                        let first_key = Object.keys(this.possible_antibodies)[0];
+                        Object.keys(this.possible_antibodies[first_key]).forEach(key => {
+                            this.possible_antibodies['None'][key] = 'None';
+                        });
+                    }
+                })
+                .catch(error => {
+                    this.error_messages.push('Error fetching possible antibodies. Please try again or contact a system administrator.');
+                    console.log(error);
+                });
         },
         fetchProjectDetails(project_id) {
             axios
@@ -444,7 +158,38 @@ const vHashtagCSV = {
             this.search_term = '';
             this.project_suggestions = [];
             this.fetchProjectDetails(project_id);
+        },
+        triggerDownload() {
+            // Generated by AI and used without shame
+            // Create a Blob from the CSV string
+            const blob = new Blob([this.assignments_csv], { type: 'text/csv' });
+
+            // Create a URL for the Blob
+            const url = URL.createObjectURL(blob);
+
+            // Create a temporary anchor element to trigger the download
+            const a = document.createElement('a');
+            a.href = url;
+            // Timestamp date, hours and minute string
+            const timestamp = new Date().toISOString().replace(/[-:.]/g, '').replace('T', '_').slice(0, 13);
+
+            a.download = `${this.chosen_project}_${timestamp}.csv`; // Set the desired file name
+
+            // Append the anchor to the body
+            document.body.appendChild(a);
+
+            // Trigger a click event on the anchor to start the download
+            a.click();
+
+            // Remove the anchor from the document
+            document.body.removeChild(a);
+
+            // Revoke the object URL to free up memory
+            URL.revokeObjectURL(url);
         }
+    },
+    mounted() {
+        this.fetchPossibleAntibodies();
     },
     template: 
         /*html*/`
@@ -493,6 +238,10 @@ const vHashtagCSV = {
                         <template v-if="chosen_project">
                             <div class="my-4">
                                 <h1>Create CSV</h1>
+                                <div class="my-4">
+                                    <h2>CSV preview</h2>
+                                    <pre>{{assignments_csv}}</pre>
+                                </div>
                                 <div class="mb-3">
                                 <button class="btn btn-primary mr-2" @click="this.addAntibodyColumn"><i class="fa-solid fa-plus mr-2"></i>Add Antibody Column</button>
                                 <button class="btn btn-primary mr-2" @click="this.removeAntibodyColumn"><i class="fa-solid fa-minus mr-2"></i>Remove Antibody Column</button>
@@ -515,14 +264,15 @@ const vHashtagCSV = {
                                             <td v-for="antibody_column in antibody_columns" :key="antibody_column">
                                                 <select class="form-select" aria-label="Default select example" v-model="assignments[sample['scilife_name']][antibody_column]">
                                                     <template v-for="(antibody, key) in possible_antibodies" :key="key">
-                                                        <option :value="key">{{ antibody['Name'] }}</option>
+                                                        <option :value="key">{{ antibody['Nickname'] }}</option>
                                                     </template>
                                                 </select>
                                             </td>
+                                            <td><button class="btn" @click="clearAssignments(sample['scilife_name'])"><i class="fa-solid fa-eraser"></i></button></td>
                                         </tr>
                                     </tbody>
                                 </table>
-                                <button class="btn btn-lg btn-primary float-right mt-4" disabled>Download CSV</button>
+                                <button class="btn btn-lg btn-primary float-right mt-4" @click="triggerDownload">Download CSV</button>
                             </div>
                         </template>
                         <template v-else>
@@ -531,10 +281,11 @@ const vHashtagCSV = {
                     </div>
                     <div class="row mt-5">
                         <h1>Antibodies</h1>
-                        <p>Items added to any sample is highlighted in green</p>
+                        <p>Items added to any sample are highlighted in green</p>
                         <table class="table">
                             <thead>
                                 <tr>
+                                    <th scope="col">Nickname</th>
                                     <th scope="col">Name</th>
                                     <th scope="col">Product nr</th>
                                     <th scope="col">Species</th>
@@ -545,6 +296,7 @@ const vHashtagCSV = {
                             </thead>
                             <tbody>
                                 <tr v-for="antibody in possible_antibodies_assigned_first" :class="{'table-success': unique_assigned_antibodies.includes(antibody['Product nr'])}">
+                                    <td>{{ antibody['Nickname'] }}</td>
                                     <td>{{ antibody['Name'] }}</td>
                                     <td>{{ antibody['Product nr'] }}</td>
                                     <td>{{ antibody['Species'] }}</td>
