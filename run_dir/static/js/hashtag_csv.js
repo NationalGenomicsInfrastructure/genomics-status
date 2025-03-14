@@ -79,6 +79,11 @@ const vHashtagCSV = {
                 this.assignments[sample_id][antibody_column] = 'None';
             });
         },
+        containsDuplicateValues(antibody_ids) {
+            // Remove Nones
+            let values = Object.values(antibody_ids).filter(value => value !== 'None');
+            return new Set(values).size !== values.length;
+        },
         fetchPossibleAntibodies() {
             axios
                 .get('/api/v1/configs/possible_antibodies_sc')
@@ -182,6 +187,7 @@ const vHashtagCSV = {
             this.chosen_project = project_id;
             this.search_term = '';
             this.project_suggestions = [];
+            this.assignments = {};
             this.fetchProjectDetails(project_id);
         },
         toggleOverrule() {
@@ -308,7 +314,7 @@ const vHashtagCSV = {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="sample in project_samples" :class="{'table-secondary': isDisabled(sample['scilife_name'])}">
+                                        <tr v-for="sample in project_samples" :class="{'table-secondary': isDisabled(sample['scilife_name']), 'table-danger': containsDuplicateValues(assignments[sample['scilife_name']])}">
                                             <th scope="row">{{sample['scilife_name']}}</th>
                                             <th scope="row">{{sample['customer_name']}}</th>
                                             <td v-for="antibody_column in antibody_columns" :key="antibody_column">
