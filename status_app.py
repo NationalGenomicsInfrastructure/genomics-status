@@ -30,6 +30,7 @@ from status.barcode import BarcodeHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.clone_project import CloneProjectHandler, LIMSProjectCloningHandler
 from status.controls import ControlsHandler
+from status.config_handler import ConfigDataHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
 from status.flowcell import (
@@ -246,6 +247,7 @@ class Application(tornado.web.Application):
                 name="CaliperImageHandler",
             ),
             ("/api/v1/charon_summary/([^/]*)$", CharonProjectHandler),
+            ("/api/v1/configs/([^/]*)$", ConfigDataHandler),
             ("/api/v1/cost_calculator", PricingDataHandler),
             ("/api/v1/delete_invoice", DeleteInvoiceHandler),
             tornado.web.URLSpec(
