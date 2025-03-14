@@ -29,8 +29,8 @@ from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandle
 from status.barcode import BarcodeHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.clone_project import CloneProjectHandler, LIMSProjectCloningHandler
-from status.controls import ControlsHandler
 from status.config_handler import ConfigDataHandler
+from status.controls import ControlsHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
 from status.flowcell import (
