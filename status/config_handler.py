@@ -11,8 +11,7 @@ class ConfigDataHandler(SafeHandler):
 
         try:
             config_doc = self.application.cloudant.get_document(
-                'gs_configs',
-                config_id
+                "gs_configs", config_id
             ).get_result()
         except ibm_cloud_sdk_core.api_exception.ApiException as e:
             log.exception(f"Failed to get config document {config_id} due to {e}")
