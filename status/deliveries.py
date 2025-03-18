@@ -286,6 +286,9 @@ class DeliveriesPageHandler(SafeHandler):
                     "bioinfo_responsible": bioinfo_responsible,
                     "runs": runs_bioinfo,
                     "latest_running_note": latest_running_note,
+                    "sequencing_platform": summary_data[project_id]["details"].get(
+                        "sequencing_platform", "-"
+                    ),
                 }
 
             else:
