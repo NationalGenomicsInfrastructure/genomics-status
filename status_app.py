@@ -391,7 +391,7 @@ class Application(tornado.web.Application):
                 ONTToulligQCReportHandler,
             ),
             ("/flowcells_plot", FlowcellPlotHandler),
-            ("/hashtag_csv", HashTagCSVHandler),
+            ("/10X_chromium_hashtag_csv", HashTagCSVHandler),
             ("/ont_flowcells_plot", ONTFlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
             ("/generate_quote", GenerateQuoteHandler),

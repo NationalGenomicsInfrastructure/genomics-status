@@ -242,7 +242,7 @@ const vHashtagCSV = {
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                    <h1>Hashtag CSV</h1>
+                    <h1>10X Chromium Hashtag CSV</h1>
                     <p>
                         This page enables the creation and download of a CSV file with all the hashtag information for a chosen project. 
                         The created csv file can then be parsed by LIMS to assign sample level UDFs with corresponding antibody IDs
