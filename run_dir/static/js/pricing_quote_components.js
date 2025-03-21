@@ -165,7 +165,7 @@ export const vPricingQuote = {
           return this.proj_data['invoice_downloaded']!==''? true:false
         },
         invoice_invalidated(){
-          return this.proj_data['invoice_generated']==='NA'? true:false
+          return this.proj_data['invoice_generated']==='No invoicing'? true:false
         },
         invoice_generated(){
           return this.proj_data['invoice_generated']!==''? true:false
@@ -409,7 +409,7 @@ export const vPricingQuote = {
             timestamp_val= this.selected_timestamp
           }
           else if(action_type === 'invalidate'){
-            timestamp_val = "NA"
+            timestamp_val = "No invoicing"
           }
           if(timestamp_val!==""){
             const proj_id = this.proj_data['project_id']
