@@ -29,6 +29,7 @@ from status.authorization import LoginHandler, LogoutHandler, UnAuthorizedHandle
 from status.barcode import BarcodeHandler
 from status.bioinfo_analysis import BioinfoAnalysisHandler
 from status.clone_project import CloneProjectHandler, LIMSProjectCloningHandler
+from status.config_handler import ConfigDataHandler
 from status.controls import ControlsHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
@@ -52,6 +53,7 @@ from status.flowcells import (
     OldFlowcellsInfoDataHandler,
     ReadsTotalHandler,
 )
+from status.hashtag_csv import HashTagCSVHandler
 from status.instruments import (
     DataInstrumentLogsHandler,
     InstrumentLogsHandler,
@@ -245,6 +247,7 @@ class Application(tornado.web.Application):
                 name="CaliperImageHandler",
             ),
             ("/api/v1/charon_summary/([^/]*)$", CharonProjectHandler),
+            ("/api/v1/configs/([^/]*)$", ConfigDataHandler),
             ("/api/v1/cost_calculator", PricingDataHandler),
             ("/api/v1/delete_invoice", DeleteInvoiceHandler),
             tornado.web.URLSpec(
@@ -388,6 +391,7 @@ class Application(tornado.web.Application):
                 ONTToulligQCReportHandler,
             ),
             ("/flowcells_plot", FlowcellPlotHandler),
+            ("/10X_chromium_hashtag_csv", HashTagCSVHandler),
             ("/ont_flowcells_plot", ONTFlowcellPlotHandler),
             ("/data_delivered_plot", DeliveryPlotHandler),
             ("/generate_quote", GenerateQuoteHandler),
