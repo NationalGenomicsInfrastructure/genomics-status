@@ -113,7 +113,7 @@ app.component('v-pricing-quote', {
           return this.proj_data['invoice_downloaded']!==''? true:false
         },
         invoice_invalidated(){
-          return this.proj_data['invoice_generated']==='NA'? true:false
+          return this.proj_data['invoice_generated']==='No invoicing'? true:false
         },
         invoice_generated(){
           return this.proj_data['invoice_generated']!==''? true:false
@@ -348,7 +348,7 @@ app.component('v-pricing-quote', {
             timestamp_val= query_timestamp_radio ? query_timestamp_radio.value : ""
           }
           else if(action_type === 'invalidate'){
-            timestamp_val = "NA"
+            timestamp_val = "No invoicing"
           }
           if(timestamp_val!==""){
             proj_id = this.proj_data['project_id']
