@@ -146,6 +146,7 @@ class DeliveriesPageHandler(SafeHandler):
                 project = summary_data[project_id]
                 flowcells = bioinfo_data[project_id]
                 runs_bioinfo = {}
+                platforms = set()
                 for flowcell_id in flowcells:
                     number_of_flowcells += 1
                     flowcell_statuses = []
@@ -160,6 +161,7 @@ class DeliveriesPageHandler(SafeHandler):
                             # define bioinfo checklist
                             sample_data = flowcells[flowcell_id][lane_id][sample_id]
                             instrument_type = sample_data.get("instrument_type")
+                            platforms.add(sample_data.get("instrument"))
                             checklist = self.__fill_checklist(sample_data)
                             if checklist["total"] and len(checklist["total"]) == len(
                                 checklist["passed"]
@@ -276,6 +278,7 @@ class DeliveriesPageHandler(SafeHandler):
                 if bioinfo_responsible not in responsible_list:
                     responsible_list[bioinfo_responsible] = 0
                 responsible_list[bioinfo_responsible] += 1
+                platforms.remove(None)
 
                 project_data = {
                     "project_name": summary_data[project_id]["project_name"],
@@ -286,9 +289,7 @@ class DeliveriesPageHandler(SafeHandler):
                     "bioinfo_responsible": bioinfo_responsible,
                     "runs": runs_bioinfo,
                     "latest_running_note": latest_running_note,
-                    "sequencing_platform": summary_data[project_id]["details"].get(
-                        "sequencing_platform", "-"
-                    ),
+                    "sequencing_platforms": list(platforms),
                 }
 
             else:
