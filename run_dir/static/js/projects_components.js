@@ -231,7 +231,7 @@ export const vProjectDetails = {
                     </div>
                     <div class="row">
                         <h3 :class="{'mt-3': true, 'ml-3': as_modal, 'col-auto': true}">
-                            <a :href="'/project/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+                            <a :href="'/project/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis" target="_blank">
                                 <i class="fa-regular fa-arrow-up-right-from-square"></i> Old Project Page
                             </a>
                         </h3>
