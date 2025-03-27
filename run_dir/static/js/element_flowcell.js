@@ -91,7 +91,7 @@ const vElementApp = {
             const keysPostDemultiplex = Object.keys(this.grouped_index_assignment_post_demultiplex).sort();
 
             return keysPreDemultiplex.length === keysPostDemultiplex.length &&
-                   keysPreDemultiplex.every((key, index) => key === keysPostDemultiplex[index]);        
+                   keysPreDemultiplex.every((key, index) => key === keysPostDemultiplex[index]);
         },
         demultiplex_stats_available() {
             if (this.index_assignment_demultiplex) {
@@ -465,31 +465,46 @@ app.component('v-element-lane-stats', {
             
             return groupedByLane;
         },
-        unassigned_lane_stats_combined() {
-            const samplesGroupedByLane = {};
-            Object.entries(this.$root.grouped_index_assignment_post_demultiplex).forEach(entry => {
-                [lane_nr, samples] = entry;
-                samples.forEach(sample => {
-                    if (!samplesGroupedByLane[lane_nr]) {
-                        samplesGroupedByLane[lane_nr] = {
-                            "NumPoloniesAssigned": 0,
-                            "PercentPoloniesAssigned": 0,
-                            "Lane": lane_nr,
-                        }
-
+        total_assigned_per_lane() {
+            const assigned_per_lane = {};
+            this.$root.index_assignment_demultiplex.forEach(sample => {
+                const lane = sample['Lane']
+                if (!assigned_per_lane[lane]) {
+                    assigned_per_lane[lane] = {
+                        "NumPoloniesAssigned": 0,
                     }
-                    samplesGroupedByLane[lane_nr]["PercentPoloniesAssigned"] += parseFloat(sample["PercentPoloniesAssigned"]);
-                    samplesGroupedByLane[lane_nr]["NumPoloniesAssigned"] += parseFloat(sample["NumPoloniesAssigned"]);
-                });
+                }
+                assigned_per_lane[lane]["NumPoloniesAssigned"] += parseFloat(sample['NumPoloniesAssigned'])
+            })
+
+            return assigned_per_lane
+        },
+        total_pfcount_per_lane() {
+            const total_polonies_per_lane = {};
+            Object.values(this.$root.grouped_lane_stats_pre_demultiplex).forEach(lane_summary => {
+                let lane = lane_summary["Lane"];
+                total_polonies_per_lane[lane] = this.$root.getValue(lane_summary, "PFCount");
             });
+            return total_polonies_per_lane;
+        },
+        unassigned_lane_stats_combined() {
+            /*            
+            Note that number of unassigned cannot be determined by summing the unassigned sequences presented since its only 
+            the most common unknown index sequences that are presented in the demultiplexing stats.
+            */
             const groupedByLane = {};
-            Object.values(samplesGroupedByLane).forEach(lane_summary => {
-                const lane = lane_summary["Lane"];
+
+            Object.keys(this.total_assigned_per_lane).forEach(lane => {
+
+                let PFCount_for_lane = this.$root.getValue(this.total_pfcount_per_lane, lane)
+                let num_assigned_polonies = this.total_assigned_per_lane[lane]["NumPoloniesAssigned"]
+                let numPoloniesAssigned = PFCount_for_lane - num_assigned_polonies;
+
                 groupedByLane[lane] = {
                     "Project": "Unassigned",
                     "SampleName": "Unassigned",
-                    "NumPoloniesAssigned": '', // Need to fetch total from lane stats
-                    "PercentPoloniesAssigned": 100 - lane_summary["PercentPoloniesAssigned"],
+                    "NumPoloniesAssigned": numPoloniesAssigned,
+                    "PercentPoloniesAssigned": numPoloniesAssigned / PFCount_for_lane * 100,
                     "Yield(Gb)": "",
                     "Lane": lane,
                     "sub_demux_count": "",
@@ -554,7 +569,6 @@ app.component('v-element-lane-stats', {
                     Lane {{ laneKey }}
                 </h2>
                 <!-- Lane stats is based on the instrument generated file pre-demultiplexing -->
-
                 <v-element v-if="this.$root.lane_ids_match">
                     <v-element-lane-summary :lane="this.$root.getValue(this.$root.grouped_lane_stats_pre_demultiplex, laneKey, {})"></v-element-lane-summary>
                 </v-element>
@@ -616,7 +630,8 @@ app.component('v-element-lane-stats', {
                                             <td>{{ this.$root.formatNumberFloat( this.$root.getValue(unassigned_item, "% Unassigned"), decimalPoints=5)}} </td>
                                             <td>{{ unassigned_item["Count"] }}</td>
                                         </tr>
-                                        <tr v-if="this.$root.getValue(this.unassigned_lane_stats, laneKey, []).length > items_to_show(laneKey)">
+
+                                        <tr v-if="this.$root.getValue(this.unassigned_lane_stats_combined, laneKey, []).length > items_to_show(laneKey)">
                                             <td colspan="3">
                                                 <button class="btn btn-info" @click="show_more_items(laneKey)">Show 5 more...</button>
                                             </td>
@@ -644,7 +659,17 @@ app.component('v-lane-stats-row', {
             } else {
                 return this.sample["sub_demux_count"];
             }
-        }
+        },
+        percent_assigned_reads() {
+            /* The number given in the sample is for the entire flowcell, but we want the number per lane */
+            let laneKey = this.sample['Lane'];
+            let lane_count = this.$root.getValue(this.$root.grouped_lane_stats_pre_demultiplex[laneKey], "PFCount", 0)
+            if (lane_count === 0) {
+                return 'N/A'
+            } else {
+                return this.$root.formatNumberFloat(this.sample["NumPoloniesAssigned"] / lane_count * 100);
+            }
+        },
     },
     template: /*html*/`
         <tr>
@@ -655,7 +680,7 @@ app.component('v-lane-stats-row', {
             <td>{{ this.$root.formatNumberFloat(sample["PercentQ30"]) }}</td>
             <td>{{ this.$root.formatNumberFloat(sample["PercentQ40"]) }}</td>
             <td style="font-size: 1.35rem;"><samp>{{ this.$root.barcode(sample) }}</samp></td>
-            <td>{{ this.$root.formatNumberFloat(sample["PercentPoloniesAssigned"]) }}</td>
+            <td>{{ this.percent_assigned_reads }}</td>
             <td>{{ this.$root.formatNumberFloat(sample["PercentMismatch"]) }}</td>
             <td>{{ this.sub_demux_count }}</td>
             <td>{{ this.$root.formatNumberFloat(sample["QualityScoreMean"]) }}</td>
